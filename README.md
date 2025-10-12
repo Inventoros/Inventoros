@@ -48,7 +48,7 @@ Inventoros aims to democratize warehouse and inventory management by providing s
 
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/inventoros.git
+git clone https://github.com/inventoros/inventoros.git
 cd inventoros
 
 # Install dependencies and set up
@@ -165,8 +165,8 @@ php artisan test --testsuite=Unit
 
 ## Community & Support
 
-- **Issues**: [GitHub Issues](https://github.com/yourusername/inventoros/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/yourusername/inventoros/discussions)
+- **Issues**: [GitHub Issues](https://github.com/inventoros/inventoros/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/inventoros/inventoros/discussions)
 - **Security**: See [SECURITY.md](SECURITY.md) for reporting vulnerabilities
 
 ## License

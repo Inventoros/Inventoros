@@ -83,7 +83,7 @@ We actively welcome your pull requests! Here's the process:
 
 ```bash
 # Fork and clone the repository
-git clone https://github.com/yourusername/inventoros.git
+git clone https://github.com/inventoros/inventoros.git
 cd inventoros
 
 # Install dependencies
