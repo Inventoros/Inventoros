@@ -11,21 +11,23 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('product_categories', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('organization_id')->constrained()->cascadeOnDelete();
-            $table->string('name');
-            $table->string('slug');
-            $table->text('description')->nullable();
-            $table->foreignId('parent_id')->nullable()->constrained('product_categories')->nullOnDelete();
-            $table->boolean('is_active')->default(true);
-            $table->timestamps();
-            $table->softDeletes();
+        if (!Schema::hasTable('product_categories')) {
+            Schema::create('product_categories', function (Blueprint $table) {
+                $table->id();
+                $table->foreignId('organization_id')->constrained()->cascadeOnDelete();
+                $table->string('name');
+                $table->string('slug');
+                $table->text('description')->nullable();
+                $table->foreignId('parent_id')->nullable()->constrained('product_categories')->nullOnDelete();
+                $table->boolean('is_active')->default(true);
+                $table->timestamps();
+                $table->softDeletes();
 
-            $table->index(['organization_id', 'slug']);
-            $table->index('parent_id');
-            $table->index('is_active');
-        });
+                $table->index(['organization_id', 'slug']);
+                $table->index('parent_id');
+                $table->index('is_active');
+            });
+        }
     }
 
     /**

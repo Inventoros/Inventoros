@@ -115,9 +115,6 @@ class InstallerController extends Controller
                 'DB_DATABASE' => $request->database,
                 'DB_USERNAME' => $request->username,
                 'DB_PASSWORD' => $request->password ?? '',
-                'SESSION_DRIVER' => 'file', // Use file sessions during install
-                'CACHE_STORE' => 'file', // Use file cache during install
-                'QUEUE_CONNECTION' => 'sync', // Use sync queue during install
             ]);
 
             // Clear all caches
