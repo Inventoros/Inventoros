@@ -92,15 +92,15 @@ const deleteUser = (user) => {
 
     <AuthenticatedLayout>
         <template #header>
-            <h2 class="font-semibold text-xl text-gray-100 leading-tight">
+            <h2 class="font-semibold text-xl text-gray-900 dark:text-gray-100 leading-tight">
                 Settings
             </h2>
         </template>
 
-        <div class="py-12">
+        <div class="py-12 bg-gray-50 dark:bg-dark-bg min-h-screen">
             <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
                 <!-- Tabs -->
-                <div class="mb-6 border-b border-dark-border">
+                <div class="mb-6 border-b border-gray-200 dark:border-dark-border">
                     <nav class="-mb-px flex space-x-8">
                         <button
                             @click="activeTab = 'organization'"
@@ -129,98 +129,98 @@ const deleteUser = (user) => {
                 </div>
 
                 <!-- Organization Tab -->
-                <div v-show="activeTab === 'organization'" class="bg-dark-card border border-dark-border overflow-hidden shadow-lg sm:rounded-lg">
+                <div v-show="activeTab === 'organization'" class="bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border overflow-hidden shadow-lg sm:rounded-lg">
                     <form @submit.prevent="submitOrganization" class="p-6 space-y-6">
                         <div>
-                            <h3 class="text-lg font-semibold text-gray-100 mb-4">Organization Information</h3>
+                            <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Organization Information</h3>
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div>
-                                    <label class="block text-sm font-medium text-gray-300 mb-2">Organization Name</label>
+                                    <label class="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-2">Organization Name</label>
                                     <input
                                         v-model="orgForm.name"
                                         type="text"
-                                        class="w-full bg-dark-bg border border-dark-border text-gray-100 rounded-md px-4 py-2 focus:outline-none focus:border-primary-400"
+                                        class="w-full bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-border text-gray-900 dark:text-gray-100 rounded-md px-4 py-2 focus:outline-none focus:border-primary-400"
                                         :disabled="!user.is_admin"
                                     />
                                 </div>
                                 <div>
-                                    <label class="block text-sm font-medium text-gray-300 mb-2">Email</label>
+                                    <label class="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-2">Email</label>
                                     <input
                                         v-model="orgForm.email"
                                         type="email"
-                                        class="w-full bg-dark-bg border border-dark-border text-gray-100 rounded-md px-4 py-2 focus:outline-none focus:border-primary-400"
+                                        class="w-full bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-border text-gray-900 dark:text-gray-100 rounded-md px-4 py-2 focus:outline-none focus:border-primary-400"
                                         :disabled="!user.is_admin"
                                     />
                                 </div>
                                 <div>
-                                    <label class="block text-sm font-medium text-gray-300 mb-2">Phone</label>
+                                    <label class="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-2">Phone</label>
                                     <input
                                         v-model="orgForm.phone"
                                         type="text"
-                                        class="w-full bg-dark-bg border border-dark-border text-gray-100 rounded-md px-4 py-2 focus:outline-none focus:border-primary-400"
+                                        class="w-full bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-border text-gray-900 dark:text-gray-100 rounded-md px-4 py-2 focus:outline-none focus:border-primary-400"
                                         :disabled="!user.is_admin"
                                     />
                                 </div>
                                 <div>
-                                    <label class="block text-sm font-medium text-gray-300 mb-2">Address</label>
+                                    <label class="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-2">Address</label>
                                     <input
                                         v-model="orgForm.address"
                                         type="text"
-                                        class="w-full bg-dark-bg border border-dark-border text-gray-100 rounded-md px-4 py-2 focus:outline-none focus:border-primary-400"
+                                        class="w-full bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-border text-gray-900 dark:text-gray-100 rounded-md px-4 py-2 focus:outline-none focus:border-primary-400"
                                         :disabled="!user.is_admin"
                                     />
                                 </div>
                                 <div>
-                                    <label class="block text-sm font-medium text-gray-300 mb-2">City</label>
+                                    <label class="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-2">City</label>
                                     <input
                                         v-model="orgForm.city"
                                         type="text"
-                                        class="w-full bg-dark-bg border border-dark-border text-gray-100 rounded-md px-4 py-2 focus:outline-none focus:border-primary-400"
+                                        class="w-full bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-border text-gray-900 dark:text-gray-100 rounded-md px-4 py-2 focus:outline-none focus:border-primary-400"
                                         :disabled="!user.is_admin"
                                     />
                                 </div>
                                 <div>
-                                    <label class="block text-sm font-medium text-gray-300 mb-2">State/Province</label>
+                                    <label class="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-2">State/Province</label>
                                     <input
                                         v-model="orgForm.state"
                                         type="text"
-                                        class="w-full bg-dark-bg border border-dark-border text-gray-100 rounded-md px-4 py-2 focus:outline-none focus:border-primary-400"
+                                        class="w-full bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-border text-gray-900 dark:text-gray-100 rounded-md px-4 py-2 focus:outline-none focus:border-primary-400"
                                         :disabled="!user.is_admin"
                                     />
                                 </div>
                                 <div>
-                                    <label class="block text-sm font-medium text-gray-300 mb-2">ZIP/Postal Code</label>
+                                    <label class="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-2">ZIP/Postal Code</label>
                                     <input
                                         v-model="orgForm.zip"
                                         type="text"
-                                        class="w-full bg-dark-bg border border-dark-border text-gray-100 rounded-md px-4 py-2 focus:outline-none focus:border-primary-400"
+                                        class="w-full bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-border text-gray-900 dark:text-gray-100 rounded-md px-4 py-2 focus:outline-none focus:border-primary-400"
                                         :disabled="!user.is_admin"
                                     />
                                 </div>
                                 <div>
-                                    <label class="block text-sm font-medium text-gray-300 mb-2">Country</label>
+                                    <label class="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-2">Country</label>
                                     <input
                                         v-model="orgForm.country"
                                         type="text"
-                                        class="w-full bg-dark-bg border border-dark-border text-gray-100 rounded-md px-4 py-2 focus:outline-none focus:border-primary-400"
+                                        class="w-full bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-border text-gray-900 dark:text-gray-100 rounded-md px-4 py-2 focus:outline-none focus:border-primary-400"
                                         :disabled="!user.is_admin"
                                     />
                                 </div>
                                 <div>
-                                    <label class="block text-sm font-medium text-gray-300 mb-2">Currency</label>
+                                    <label class="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-2">Currency</label>
                                     <input
                                         v-model="orgForm.currency"
                                         type="text"
-                                        class="w-full bg-dark-bg border border-dark-border text-gray-100 rounded-md px-4 py-2 focus:outline-none focus:border-primary-400"
+                                        class="w-full bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-border text-gray-900 dark:text-gray-100 rounded-md px-4 py-2 focus:outline-none focus:border-primary-400"
                                         :disabled="!user.is_admin"
                                     />
                                 </div>
                                 <div>
-                                    <label class="block text-sm font-medium text-gray-300 mb-2">Timezone</label>
+                                    <label class="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-2">Timezone</label>
                                     <input
                                         v-model="orgForm.timezone"
                                         type="text"
-                                        class="w-full bg-dark-bg border border-dark-border text-gray-100 rounded-md px-4 py-2 focus:outline-none focus:border-primary-400"
+                                        class="w-full bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-border text-gray-900 dark:text-gray-100 rounded-md px-4 py-2 focus:outline-none focus:border-primary-400"
                                         :disabled="!user.is_admin"
                                     />
                                 </div>
@@ -250,28 +250,28 @@ const deleteUser = (user) => {
                         </button>
                     </div>
 
-                    <div class="bg-dark-card border border-dark-border overflow-hidden shadow-lg sm:rounded-lg">
-                        <table class="min-w-full divide-y divide-dark-border">
-                            <thead class="bg-dark-bg">
+                    <div class="bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border overflow-hidden shadow-lg sm:rounded-lg">
+                        <table class="min-w-full divide-y divide-gray-200 dark:divide-dark-border">
+                            <thead class="bg-gray-50 dark:bg-dark-bg">
                                 <tr>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Name</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Email</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Role</th>
-                                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-400 uppercase tracking-wider">Actions</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Name</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Email</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Role</th>
+                                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Actions</th>
                                 </tr>
                             </thead>
-                            <tbody class="divide-y divide-dark-border">
-                                <tr v-for="orgUser in organization.users" :key="orgUser.id" class="hover:bg-dark-bg/50">
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-100">
+                            <tbody class="divide-y divide-gray-200 dark:divide-dark-border">
+                                <tr v-for="orgUser in organization.users" :key="orgUser.id" class="hover:bg-gray-100 dark:hover:bg-dark-bg/50">
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
                                         {{ orgUser.name }}
                                     </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-400">
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
                                         {{ orgUser.email }}
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap">
                                         <span :class="[
                                             'px-2 py-1 text-xs font-semibold rounded-full',
-                                            orgUser.is_admin ? 'bg-purple-900/30 text-purple-300' : 'bg-gray-900/30 text-gray-400'
+                                            orgUser.is_admin ? 'bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-300' : 'bg-gray-900/30 text-gray-400'
                                         ]">
                                             {{ orgUser.is_admin ? 'Admin' : 'User' }}
                                         </span>
@@ -302,47 +302,47 @@ const deleteUser = (user) => {
                     <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
                         <div class="fixed inset-0 transition-opacity bg-gray-900 bg-opacity-75" @click="showUserModal = false"></div>
 
-                        <div class="inline-block align-bottom bg-dark-card border border-dark-border rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+                        <div class="inline-block align-bottom bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
                             <form @submit.prevent="submitUser">
                                 <div class="p-6">
-                                    <h3 class="text-lg font-semibold text-gray-100 mb-4">
+                                    <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
                                         {{ editingUser ? 'Edit User' : 'Add New User' }}
                                     </h3>
                                     <div class="space-y-4">
                                         <div>
-                                            <label class="block text-sm font-medium text-gray-300 mb-2">Name</label>
+                                            <label class="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-2">Name</label>
                                             <input
                                                 v-model="userForm.name"
                                                 type="text"
                                                 required
-                                                class="w-full bg-dark-bg border border-dark-border text-gray-100 rounded-md px-4 py-2 focus:outline-none focus:border-primary-400"
+                                                class="w-full bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-border text-gray-900 dark:text-gray-100 rounded-md px-4 py-2 focus:outline-none focus:border-primary-400"
                                             />
                                         </div>
                                         <div>
-                                            <label class="block text-sm font-medium text-gray-300 mb-2">Email</label>
+                                            <label class="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-2">Email</label>
                                             <input
                                                 v-model="userForm.email"
                                                 type="email"
                                                 required
-                                                class="w-full bg-dark-bg border border-dark-border text-gray-100 rounded-md px-4 py-2 focus:outline-none focus:border-primary-400"
+                                                class="w-full bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-border text-gray-900 dark:text-gray-100 rounded-md px-4 py-2 focus:outline-none focus:border-primary-400"
                                             />
                                         </div>
                                         <div v-if="!editingUser">
-                                            <label class="block text-sm font-medium text-gray-300 mb-2">Password</label>
+                                            <label class="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-2">Password</label>
                                             <input
                                                 v-model="userForm.password"
                                                 type="password"
                                                 required
-                                                class="w-full bg-dark-bg border border-dark-border text-gray-100 rounded-md px-4 py-2 focus:outline-none focus:border-primary-400"
+                                                class="w-full bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-border text-gray-900 dark:text-gray-100 rounded-md px-4 py-2 focus:outline-none focus:border-primary-400"
                                             />
                                         </div>
                                         <div v-if="!editingUser">
-                                            <label class="block text-sm font-medium text-gray-300 mb-2">Confirm Password</label>
+                                            <label class="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-2">Confirm Password</label>
                                             <input
                                                 v-model="userForm.password_confirmation"
                                                 type="password"
                                                 required
-                                                class="w-full bg-dark-bg border border-dark-border text-gray-100 rounded-md px-4 py-2 focus:outline-none focus:border-primary-400"
+                                                class="w-full bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-border text-gray-900 dark:text-gray-100 rounded-md px-4 py-2 focus:outline-none focus:border-primary-400"
                                             />
                                         </div>
                                         <div class="flex items-center">
@@ -350,19 +350,19 @@ const deleteUser = (user) => {
                                                 v-model="userForm.is_admin"
                                                 type="checkbox"
                                                 id="is_admin"
-                                                class="h-4 w-4 text-primary-400 border-dark-border rounded focus:ring-primary-400"
+                                                class="h-4 w-4 text-primary-400 border-gray-200 dark:border-dark-border rounded focus:ring-primary-400"
                                             />
-                                            <label for="is_admin" class="ml-2 block text-sm text-gray-300">
+                                            <label for="is_admin" class="ml-2 block text-sm text-gray-600 dark:text-gray-300">
                                                 Administrator
                                             </label>
                                         </div>
                                     </div>
                                 </div>
-                                <div class="bg-dark-bg px-6 py-3 flex justify-end gap-3">
+                                <div class="bg-gray-50 dark:bg-dark-bg px-6 py-3 flex justify-end gap-3">
                                     <button
                                         type="button"
                                         @click="showUserModal = false"
-                                        class="px-4 py-2 bg-dark-card border border-dark-border rounded-md font-semibold text-xs text-gray-300 uppercase tracking-widest hover:bg-dark-bg transition"
+                                        class="px-4 py-2 bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border rounded-md font-semibold text-xs text-gray-600 dark:text-gray-300 uppercase tracking-widest hover:bg-gray-100 dark:hover:bg-dark-bg transition"
                                     >
                                         Cancel
                                     </button>

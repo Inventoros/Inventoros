@@ -69,17 +69,17 @@ const deletePlugin = (slug, name) => {
 
     <AuthenticatedLayout>
         <template #header>
-            <h2 class="font-semibold text-xl text-gray-100 leading-tight">
+            <h2 class="font-semibold text-xl text-gray-900 dark:text-gray-100 leading-tight">
                 Plugins
             </h2>
         </template>
 
-        <div class="py-12">
+        <div class="py-12 bg-gray-50 dark:bg-dark-bg min-h-screen">
             <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
                 <!-- Upload Section -->
-                <div class="mb-6 bg-dark-card border border-dark-border overflow-hidden shadow-lg sm:rounded-lg">
+                <div class="mb-6 bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border overflow-hidden shadow-lg sm:rounded-lg">
                     <div class="p-6">
-                        <h3 class="text-lg font-semibold text-gray-100 mb-4">Upload New Plugin</h3>
+                        <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Upload New Plugin</h3>
                         <div
                             @dragover.prevent="isDragging = true"
                             @dragleave.prevent="isDragging = false"
@@ -92,7 +92,7 @@ const deletePlugin = (slug, name) => {
                             ]"
                         >
                             <svg
-                                class="mx-auto h-12 w-12 text-gray-400"
+                                class="mx-auto h-12 w-12 text-gray-500 dark:text-gray-400"
                                 fill="none"
                                 stroke="currentColor"
                                 viewBox="0 0 24 24"
@@ -111,7 +111,7 @@ const deletePlugin = (slug, name) => {
                                 >
                                     Choose a ZIP file
                                 </label>
-                                <span class="text-gray-400"> or drag and drop</span>
+                                <span class="text-gray-500 dark:text-gray-400"> or drag and drop</span>
                                 <input
                                     ref="fileInput"
                                     id="plugin-upload"
@@ -140,27 +140,27 @@ const deletePlugin = (slug, name) => {
                     <div
                         v-for="plugin in plugins"
                         :key="plugin.slug"
-                        class="bg-dark-card border border-dark-border overflow-hidden shadow-lg sm:rounded-lg"
+                        class="bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border overflow-hidden shadow-lg sm:rounded-lg"
                     >
                         <div class="p-6">
                             <div class="flex items-start justify-between">
                                 <div class="flex-1">
                                     <div class="flex items-center gap-3 mb-2">
-                                        <h3 class="text-xl font-bold text-gray-100">
+                                        <h3 class="text-xl font-bold text-gray-900 dark:text-gray-100">
                                             {{ plugin.name }}
                                         </h3>
                                         <span
                                             :class="[
                                                 'px-2 py-1 text-xs font-semibold rounded-full',
                                                 plugin.is_active
-                                                    ? 'bg-green-900/30 text-green-300'
+                                                    ? 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300'
                                                     : 'bg-gray-900/30 text-gray-400'
                                             ]"
                                         >
                                             {{ plugin.is_active ? 'Active' : 'Inactive' }}
                                         </span>
                                     </div>
-                                    <p class="text-sm text-gray-400 mb-3">
+                                    <p class="text-sm text-gray-500 dark:text-gray-400 mb-3">
                                         {{ plugin.description }}
                                     </p>
                                     <div class="flex flex-wrap gap-4 text-xs text-gray-500">
@@ -214,7 +214,7 @@ const deletePlugin = (slug, name) => {
                     <!-- Empty State -->
                     <div
                         v-if="plugins.length === 0"
-                        class="bg-dark-card border border-dark-border overflow-hidden shadow-lg sm:rounded-lg"
+                        class="bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border overflow-hidden shadow-lg sm:rounded-lg"
                     >
                         <div class="p-12 text-center">
                             <svg
@@ -230,7 +230,7 @@ const deletePlugin = (slug, name) => {
                                     d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"
                                 />
                             </svg>
-                            <h3 class="mt-4 text-lg font-medium text-gray-300">No plugins installed</h3>
+                            <h3 class="mt-4 text-lg font-medium text-gray-600 dark:text-gray-300">No plugins installed</h3>
                             <p class="mt-2 text-sm text-gray-500">
                                 Get started by uploading your first plugin above.
                             </p>
