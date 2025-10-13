@@ -12,10 +12,14 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('users', function (Blueprint $table) {
-            $table->foreignId('organization_id')->nullable()->after('id')->constrained()->nullOnDelete();
-            $table->string('role')->default('member')->after('password'); // admin, manager, member
-            $table->index('organization_id');
-            $table->index('role');
+            if (!Schema::hasColumn('users', 'organization_id')) {
+                $table->foreignId('organization_id')->nullable()->after('id')->constrained()->nullOnDelete();
+                $table->index('organization_id');
+            }
+            if (!Schema::hasColumn('users', 'role')) {
+                $table->string('role')->default('member')->after('password'); // admin, manager, member
+                $table->index('role');
+            }
         });
     }
 
