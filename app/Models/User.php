@@ -3,9 +3,11 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
+use App\Enums\Permission;
 use App\Models\Auth\Organization;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
@@ -51,6 +53,22 @@ class User extends Authenticatable
     }
 
     /**
+     * Get is_admin attribute for backward compatibility.
+     */
+    public function getIsAdminAttribute(): bool
+    {
+        return $this->role === 'admin';
+    }
+
+    /**
+     * Get is_manager attribute.
+     */
+    public function getIsManagerAttribute(): bool
+    {
+        return in_array($this->role, ['admin', 'manager']);
+    }
+
+    /**
      * Get the organization that owns the user.
      */
     public function organization(): BelongsTo
@@ -59,11 +77,19 @@ class User extends Authenticatable
     }
 
     /**
+     * Get the roles that belong to the user.
+     */
+    public function roles(): BelongsToMany
+    {
+        return $this->belongsToMany(Role::class, 'role_user');
+    }
+
+    /**
      * Check if user is an admin of their organization.
      */
     public function isAdmin(): bool
     {
-        return $this->role === 'admin';
+        return $this->role === 'admin' || $this->hasRole('admin');
     }
 
     /**
@@ -71,7 +97,129 @@ class User extends Authenticatable
      */
     public function isManager(): bool
     {
-        return in_array($this->role, ['admin', 'manager']);
+        return in_array($this->role, ['admin', 'manager']) || $this->hasAnyRole(['admin', 'manager']);
+    }
+
+    /**
+     * Check if the user has a specific role.
+     */
+    public function hasRole(string $roleSlug): bool
+    {
+        return $this->roles()->where('slug', $roleSlug)->exists();
+    }
+
+    /**
+     * Check if the user has any of the given roles.
+     */
+    public function hasAnyRole(array $roleSlugs): bool
+    {
+        return $this->roles()->whereIn('slug', $roleSlugs)->exists();
+    }
+
+    /**
+     * Check if the user has all of the given roles.
+     */
+    public function hasAllRoles(array $roleSlugs): bool
+    {
+        return $this->roles()->whereIn('slug', $roleSlugs)->count() === count($roleSlugs);
+    }
+
+    /**
+     * Check if the user has a specific permission.
+     */
+    public function hasPermission(Permission|string $permission): bool
+    {
+        // Admins have all permissions
+        if ($this->isAdmin()) {
+            return true;
+        }
+
+        $permissionValue = $permission instanceof Permission ? $permission->value : $permission;
+
+        // Check all user roles for the permission
+        return $this->roles->contains(function ($role) use ($permissionValue) {
+            return $role->hasPermission($permissionValue);
+        });
+    }
+
+    /**
+     * Check if the user has any of the given permissions.
+     */
+    public function hasAnyPermission(array $permissions): bool
+    {
+        // Admins have all permissions
+        if ($this->isAdmin()) {
+            return true;
+        }
+
+        foreach ($permissions as $permission) {
+            if ($this->hasPermission($permission)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Check if the user has all of the given permissions.
+     */
+    public function hasAllPermissions(array $permissions): bool
+    {
+        // Admins have all permissions
+        if ($this->isAdmin()) {
+            return true;
+        }
+
+        foreach ($permissions as $permission) {
+            if (!$this->hasPermission($permission)) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    /**
+     * Assign a role to the user.
+     */
+    public function assignRole(Role|string $role): void
+    {
+        if ($role instanceof Role) {
+            $this->roles()->syncWithoutDetaching([$role->id]);
+        } else {
+            $roleModel = Role::where('slug', $role)->first();
+            if ($roleModel) {
+                $this->roles()->syncWithoutDetaching([$roleModel->id]);
+            }
+        }
+    }
+
+    /**
+     * Remove a role from the user.
+     */
+    public function removeRole(Role|string $role): void
+    {
+        if ($role instanceof Role) {
+            $this->roles()->detach($role->id);
+        } else {
+            $roleModel = Role::where('slug', $role)->first();
+            if ($roleModel) {
+                $this->roles()->detach($roleModel->id);
+            }
+        }
+    }
+
+    /**
+     * Sync roles for the user.
+     */
+    public function syncRoles(array $roles): void
+    {
+        $roleIds = collect($roles)->map(function ($role) {
+            return $role instanceof Role ? $role->id : Role::where('slug', $role)->first()?->id;
+        })->filter()->values()->toArray();
+
+        $this->roles()->sync($roleIds);
     }
 
     /**

@@ -1,8 +1,10 @@
 <?php
 
 use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Admin\SettingsController;
 use App\Http\Controllers\Admin\PluginController;
+use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Install\InstallerController;
 use App\Http\Controllers\Inventory\ProductController;
 use App\Http\Controllers\Inventory\ProductCategoryController;
@@ -58,13 +60,44 @@ Route::middleware('auth')->group(function () {
         Route::delete('/{plugin}', [PluginController::class, 'destroy'])->name('destroy');
     });
 
+    // User Management (Admin only)
+    Route::middleware('permission:view_users')->group(function () {
+        Route::resource('users', UserController::class)->only(['index', 'show']);
+    });
+
+    Route::middleware('permission:create_users')->group(function () {
+        Route::resource('users', UserController::class)->only(['create', 'store']);
+    });
+
+    Route::middleware('permission:edit_users')->group(function () {
+        Route::resource('users', UserController::class)->only(['edit', 'update']);
+    });
+
+    Route::middleware('permission:delete_users')->group(function () {
+        Route::resource('users', UserController::class)->only(['destroy']);
+    });
+
+    // Role Management (Admin only)
+    Route::middleware('permission:view_roles')->group(function () {
+        Route::resource('roles', RoleController::class)->only(['index', 'show']);
+    });
+
+    Route::middleware('permission:create_roles')->group(function () {
+        Route::resource('roles', RoleController::class)->only(['create', 'store']);
+    });
+
+    Route::middleware('permission:edit_roles')->group(function () {
+        Route::resource('roles', RoleController::class)->only(['edit', 'update']);
+    });
+
+    Route::middleware('permission:delete_roles')->group(function () {
+        Route::resource('roles', RoleController::class)->only(['destroy']);
+    });
+
     // Settings
     Route::prefix('settings')->name('settings.')->group(function () {
         Route::get('/', [SettingsController::class, 'index'])->name('index');
-        Route::patch('/organization', [SettingsController::class, 'updateOrganization'])->name('organization.update');
-        Route::post('/users', [SettingsController::class, 'storeUser'])->name('users.store');
-        Route::patch('/users/{user}', [SettingsController::class, 'updateUser'])->name('users.update');
-        Route::delete('/users/{user}', [SettingsController::class, 'destroyUser'])->name('users.destroy');
+        Route::patch('/organization', [SettingsController::class, 'updateOrganization'])->middleware('permission:manage_organization')->name('organization.update');
     });
 });
 
