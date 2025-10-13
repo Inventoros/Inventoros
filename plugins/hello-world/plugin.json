@@ -1,0 +1,9 @@
+{
+    "name": "Hello World Plugin",
+    "description": "👋 A friendly plugin that literally does nothing useful. Perfect for testing or just saying hi to your inventory system. Feel free to delete it anytime - we promise it won't get offended!",
+    "version": "1.0.0",
+    "author": "InventorOS Team",
+    "author_url": "https://inventoros.com",
+    "requires": "1.0.0",
+    "main_file": "Plugin.php"
+}

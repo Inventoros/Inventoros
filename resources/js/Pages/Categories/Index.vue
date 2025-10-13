@@ -208,19 +208,27 @@ const deleteCategory = (category) => {
                         </div>
                         <div>
                             <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px">
-                                <Link
-                                    v-for="link in categories.links"
-                                    :key="link.label"
-                                    :href="link.url"
-                                    :class="[
-                                        'relative inline-flex items-center px-4 py-2 border text-sm font-medium',
-                                        link.active
-                                            ? 'z-10 bg-primary-400/20 border-primary-400 text-primary-400'
-                                            : 'bg-dark-card border-dark-border text-gray-400 hover:bg-dark-bg/50',
-                                        !link.url && 'opacity-50 cursor-not-allowed'
-                                    ]"
-                                    v-html="link.label"
-                                />
+                                <template v-for="link in categories.links" :key="link.label">
+                                    <Link
+                                        v-if="link.url"
+                                        :href="link.url"
+                                        :class="[
+                                            'relative inline-flex items-center px-4 py-2 border text-sm font-medium',
+                                            link.active
+                                                ? 'z-10 bg-primary-400/20 border-primary-400 text-primary-400'
+                                                : 'bg-dark-card border-dark-border text-gray-400 hover:bg-dark-bg/50'
+                                        ]"
+                                        v-html="link.label"
+                                    />
+                                    <span
+                                        v-else
+                                        :class="[
+                                            'relative inline-flex items-center px-4 py-2 border text-sm font-medium',
+                                            'bg-dark-card border-dark-border text-gray-600 opacity-50 cursor-not-allowed'
+                                        ]"
+                                        v-html="link.label"
+                                    />
+                                </template>
                             </nav>
                         </div>
                     </div>

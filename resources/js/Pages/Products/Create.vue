@@ -346,7 +346,7 @@ const submit = () => {
                                                 <button
                                                     type="button"
                                                     @click="removeCurrency(index)"
-                                                    class="px-3 py-2 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 rounded-md hover:bg-red-200 dark:hover:bg-red-900/50"
+                                                    class="px-3 py-2 bg-red-900/30 text-red-400 rounded-md hover:bg-red-900/50"
                                                 >
                                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
@@ -375,7 +375,7 @@ const submit = () => {
                                             <button
                                                 type="button"
                                                 @click="showCurrencySelect = false"
-                                                class="px-4 py-2 bg-gray-300 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-md hover:bg-gray-400 dark:hover:bg-gray-600"
+                                                class="px-4 py-2 bg-dark-bg text-gray-300 rounded-md hover:bg-dark-bg/50"
                                             >
                                                 Cancel
                                             </button>
@@ -386,7 +386,7 @@ const submit = () => {
                                         v-if="!showCurrencySelect && availableCurrencies.length > 0"
                                         type="button"
                                         @click="showCurrencySelect = true"
-                                        class="text-sm text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 font-medium"
+                                        class="text-sm text-primary-400 hover:text-primary-300 font-medium"
                                     >
                                         + Add price in another currency
                                     </button>
@@ -439,7 +439,7 @@ const submit = () => {
                                             <button
                                                 type="button"
                                                 @click="showCategoryModal = true"
-                                                class="text-xs text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 font-medium"
+                                                class="text-xs text-primary-400 hover:text-primary-300 font-medium"
                                             >
                                                 + Quick Add
                                             </button>
@@ -469,7 +469,7 @@ const submit = () => {
                                             <button
                                                 type="button"
                                                 @click="showLocationModal = true"
-                                                class="text-xs text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 font-medium"
+                                                class="text-xs text-primary-400 hover:text-primary-300 font-medium"
                                             >
                                                 + Quick Add
                                             </button>
@@ -513,13 +513,13 @@ const submit = () => {
                             <div class="mt-6 flex items-center justify-end gap-4">
                                 <Link
                                     :href="route('products.index')"
-                                    class="inline-flex items-center px-4 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-500 rounded-md font-semibold text-xs text-gray-700 dark:text-gray-300 uppercase tracking-widest shadow-sm hover:bg-gray-50 dark:hover:bg-gray-700"
+                                    class="inline-flex items-center px-4 py-2 bg-dark-card border border-dark-border rounded-md font-semibold text-xs text-gray-300 uppercase tracking-widest shadow-sm hover:bg-dark-bg/50"
                                 >
                                     Cancel
                                 </Link>
                                 <button
                                     type="submit"
-                                    class="inline-flex items-center px-4 py-2 bg-blue-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-blue-700 focus:bg-blue-700 active:bg-blue-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800 transition ease-in-out duration-150"
+                                    class="inline-flex items-center px-4 py-2 bg-primary-400 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-primary-500 focus:bg-primary-500 active:bg-primary-600 focus:outline-none focus:ring-2 focus:ring-primary-400 focus:ring-offset-2 focus:ring-offset-dark-bg transition ease-in-out duration-150"
                                     :class="{ 'opacity-25': form.processing }"
                                     :disabled="form.processing"
                                 >
@@ -541,14 +541,14 @@ const submit = () => {
             <div class="flex items-center justify-center min-h-screen px-4">
                 <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"></div>
 
-                <div class="relative bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-md w-full p-6" @click.stop>
+                <div class="relative bg-dark-card rounded-lg shadow-xl max-w-md w-full p-6" @click.stop>
                     <div class="flex items-center justify-between mb-4">
                         <h3 class="text-lg font-semibold text-gray-100">
                             Quick Add Category
                         </h3>
                         <button
                             @click="showCategoryModal = false"
-                            class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
+                            class="text-gray-400 hover:text-gray-200"
                         >
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
@@ -586,7 +586,7 @@ const submit = () => {
                             <button
                                 type="button"
                                 @click="showCategoryModal = false"
-                                class="px-4 py-2 bg-gray-300 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-md hover:bg-gray-400 dark:hover:bg-gray-600"
+                                class="px-4 py-2 bg-dark-bg text-gray-300 rounded-md hover:bg-dark-bg/50"
                             >
                                 Cancel
                             </button>
@@ -594,7 +594,7 @@ const submit = () => {
                                 type="button"
                                 @click="createCategory"
                                 :disabled="categoryLoading || !categoryForm.name"
-                                class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
+                                class="px-4 py-2 bg-primary-400 text-white rounded-md hover:bg-primary-500 disabled:opacity-50"
                             >
                                 <span v-if="categoryLoading">Creating...</span>
                                 <span v-else>Create Category</span>
@@ -610,14 +610,14 @@ const submit = () => {
             <div class="flex items-center justify-center min-h-screen px-4">
                 <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"></div>
 
-                <div class="relative bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-md w-full p-6" @click.stop>
+                <div class="relative bg-dark-card rounded-lg shadow-xl max-w-md w-full p-6" @click.stop>
                     <div class="flex items-center justify-between mb-4">
                         <h3 class="text-lg font-semibold text-gray-100">
                             Quick Add Location
                         </h3>
                         <button
                             @click="showLocationModal = false"
-                            class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
+                            class="text-gray-400 hover:text-gray-200"
                         >
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
@@ -668,7 +668,7 @@ const submit = () => {
                             <button
                                 type="button"
                                 @click="showLocationModal = false"
-                                class="px-4 py-2 bg-gray-300 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-md hover:bg-gray-400 dark:hover:bg-gray-600"
+                                class="px-4 py-2 bg-dark-bg text-gray-300 rounded-md hover:bg-dark-bg/50"
                             >
                                 Cancel
                             </button>
@@ -676,7 +676,7 @@ const submit = () => {
                                 type="button"
                                 @click="createLocation"
                                 :disabled="locationLoading || !locationForm.name || !locationForm.code"
-                                class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
+                                class="px-4 py-2 bg-primary-400 text-white rounded-md hover:bg-primary-500 disabled:opacity-50"
                             >
                                 <span v-if="locationLoading">Creating...</span>
                                 <span v-else>Create Location</span>

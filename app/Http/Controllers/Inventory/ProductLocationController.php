@@ -27,11 +27,14 @@ class ProductLocationController extends Controller
             })
             ->latest()
             ->paginate(15)
-            ->withQueryString();
+            ->withQueryString()
+            ->through(fn($location) => $location);
 
         return Inertia::render('Locations/Index', [
             'locations' => $locations,
-            'filters' => $request->only(['search']),
+            'filters' => [
+                'search' => $request->input('search', ''),
+            ],
         ]);
     }
 
