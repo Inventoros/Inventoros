@@ -52,6 +52,7 @@ class RoleSeeder extends Seeder
 
                     Permission::VIEW_REPORTS->value,
                     Permission::EXPORT_DATA->value,
+                    Permission::IMPORT_DATA->value,
 
                     Permission::VIEW_SETTINGS->value,
                 ],
