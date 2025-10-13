@@ -2,9 +2,11 @@
 import { ref, onMounted } from 'vue';
 import ApplicationLogo from '@/Components/ApplicationLogo.vue';
 import { Link } from '@inertiajs/vue3';
+import { usePermissions } from '@/composables/usePermissions';
 
 const sidebarOpen = ref(false);
 const isDark = ref(true);
+const { hasPermission } = usePermissions();
 
 const toggleTheme = () => {
     isDark.value = !isDark.value;
@@ -83,6 +85,7 @@ onMounted(() => {
 
                     <!-- Inventory -->
                     <Link
+                        v-if="hasPermission('view_products')"
                         :href="route('products.index')"
                         :class="[
                             'flex items-center gap-3 px-3 py-3 rounded-lg transition-all duration-150',
@@ -99,6 +102,7 @@ onMounted(() => {
 
                     <!-- Orders -->
                     <Link
+                        v-if="hasPermission('view_orders')"
                         :href="route('orders.index')"
                         :class="[
                             'flex items-center gap-3 px-3 py-3 rounded-lg transition-all duration-150',
@@ -115,6 +119,7 @@ onMounted(() => {
 
                     <!-- Categories -->
                     <Link
+                        v-if="hasPermission('manage_categories')"
                         :href="route('categories.index')"
                         :class="[
                             'flex items-center gap-3 px-3 py-3 rounded-lg transition-all duration-150',
@@ -131,6 +136,7 @@ onMounted(() => {
 
                     <!-- Locations -->
                     <Link
+                        v-if="hasPermission('manage_locations')"
                         :href="route('locations.index')"
                         :class="[
                             'flex items-center gap-3 px-3 py-3 rounded-lg transition-all duration-150',
@@ -147,18 +153,18 @@ onMounted(() => {
                     </Link>
 
                     <!-- Divider -->
-                    <div class="pt-4 pb-4">
+                    <div class="pt-4 pb-4" v-if="hasPermission('view_users') || hasPermission('view_roles') || hasPermission('view_plugins') || hasPermission('view_settings')">
                         <div class="border-t border-dark-border"></div>
                     </div>
 
                     <!-- Admin Section Label -->
-                    <div class="px-3 mb-2" v-if="$page.props.auth.user.role === 'admin'">
+                    <div class="px-3 mb-2" v-if="hasPermission('view_users') || hasPermission('view_roles')">
                         <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider">Administration</p>
                     </div>
 
-                    <!-- Users (Admin only) -->
+                    <!-- Users -->
                     <Link
-                        v-if="$page.props.auth.user.role === 'admin'"
+                        v-if="hasPermission('view_users')"
                         :href="route('users.index')"
                         :class="[
                             'flex items-center gap-3 px-3 py-3 rounded-lg transition-all duration-150',
@@ -173,9 +179,9 @@ onMounted(() => {
                         <span class="font-medium">Users</span>
                     </Link>
 
-                    <!-- Roles (Admin only) -->
+                    <!-- Roles -->
                     <Link
-                        v-if="$page.props.auth.user.role === 'admin'"
+                        v-if="hasPermission('view_roles')"
                         :href="route('roles.index')"
                         :class="[
                             'flex items-center gap-3 px-3 py-3 rounded-lg transition-all duration-150',
@@ -191,12 +197,13 @@ onMounted(() => {
                     </Link>
 
                     <!-- Divider for admin section -->
-                    <div class="pt-4 pb-4" v-if="$page.props.auth.user.role === 'admin'">
+                    <div class="pt-4 pb-4" v-if="(hasPermission('view_users') || hasPermission('view_roles')) && (hasPermission('view_plugins') || hasPermission('view_settings'))">
                         <div class="border-t border-dark-border"></div>
                     </div>
 
                     <!-- Plugins -->
                     <Link
+                        v-if="hasPermission('view_plugins')"
                         :href="route('plugins.index')"
                         :class="[
                             'flex items-center gap-3 px-3 py-3 rounded-lg transition-all duration-150',
@@ -213,6 +220,7 @@ onMounted(() => {
 
                     <!-- Settings -->
                     <Link
+                        v-if="hasPermission('view_settings')"
                         :href="route('settings.index')"
                         :class="[
                             'flex items-center gap-3 px-3 py-3 rounded-lg transition-all duration-150',

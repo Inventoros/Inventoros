@@ -329,7 +329,7 @@ const getSourceBadgeClass = (orderSource) => {
                                                 v-else
                                                 :class="[
                                                     'relative inline-flex items-center px-4 py-2 border text-sm font-medium',
-                                                    'bg-dark-card border-dark-border text-gray-400 opacity-50 cursor-not-allowed'
+                                                    'bg-gray-100 dark:bg-dark-card border-gray-200 dark:border-dark-border text-gray-400 dark:text-gray-500 opacity-50 cursor-not-allowed'
                                                 ]"
                                                 v-html="link.label"
                                             />
