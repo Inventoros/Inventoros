@@ -6,6 +6,7 @@ use App\Http\Controllers\Install\InstallerController;
 use App\Http\Controllers\Inventory\ProductController;
 use App\Http\Controllers\Inventory\ProductCategoryController;
 use App\Http\Controllers\Inventory\ProductLocationController;
+use App\Http\Controllers\Order\OrderController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
@@ -43,6 +44,9 @@ Route::middleware('auth')->group(function () {
     Route::resource('products', ProductController::class);
     Route::resource('categories', ProductCategoryController::class)->except(['create', 'show', 'edit']);
     Route::resource('locations', ProductLocationController::class)->except(['create', 'show', 'edit']);
+
+    // Order Management
+    Route::resource('orders', OrderController::class);
 
     // Settings
     Route::prefix('settings')->name('settings.')->group(function () {
