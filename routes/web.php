@@ -1,23 +1,35 @@
 <?php
 
+use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\Install\InstallerController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
-Route::get('/', function () {
-    return Inertia::render('Welcome', [
-        'canLogin' => Route::has('login'),
-        'canRegister' => Route::has('register'),
-        'laravelVersion' => Application::VERSION,
-        'phpVersion' => PHP_VERSION,
-    ]);
+// Installer routes
+Route::prefix('install')->name('install.')->group(function () {
+    Route::get('/', [InstallerController::class, 'index'])->name('index');
+    Route::get('/requirements', [InstallerController::class, 'requirements'])->name('requirements');
+    Route::get('/database', [InstallerController::class, 'database'])->name('database');
+    Route::post('/database/test', [InstallerController::class, 'testDatabase'])->name('database.test');
+    Route::post('/database/install', [InstallerController::class, 'installDatabase'])->name('database.install');
+    Route::get('/admin', [InstallerController::class, 'admin'])->name('admin');
+    Route::post('/admin', [InstallerController::class, 'createAdmin'])->name('admin.create');
+    Route::get('/complete', [InstallerController::class, 'complete'])->name('complete');
 });
 
-Route::get('/dashboard', function () {
-    return Inertia::render('Dashboard');
-})->middleware(['auth', 'verified'])->name('dashboard');
+Route::get('/', function () {
+    if (auth()->check()) {
+        return redirect()->route('dashboard');
+    }
+    return redirect()->route('login');
+});
+
+Route::get('/dashboard', [DashboardController::class, 'index'])
+    ->middleware(['auth', 'verified'])
+    ->name('dashboard');
 
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');

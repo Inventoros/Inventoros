@@ -11,22 +11,24 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('organizations', function (Blueprint $table) {
-            $table->id();
-            $table->string('name');
-            $table->string('slug')->unique();
-            $table->text('description')->nullable();
-            $table->string('email')->nullable();
-            $table->string('phone')->nullable();
-            $table->text('address')->nullable();
-            $table->boolean('is_active')->default(true);
-            $table->json('settings')->nullable();
-            $table->timestamps();
-            $table->softDeletes();
+        if (!Schema::hasTable('organizations')) {
+            Schema::create('organizations', function (Blueprint $table) {
+                $table->id();
+                $table->string('name');
+                $table->string('slug')->unique();
+                $table->text('description')->nullable();
+                $table->string('email')->nullable();
+                $table->string('phone')->nullable();
+                $table->text('address')->nullable();
+                $table->boolean('is_active')->default(true);
+                $table->json('settings')->nullable();
+                $table->timestamps();
+                $table->softDeletes();
 
-            $table->index('slug');
-            $table->index('is_active');
-        });
+                $table->index('slug');
+                $table->index('is_active');
+            });
+        }
     }
 
     /**
