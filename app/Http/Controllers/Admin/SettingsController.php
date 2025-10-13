@@ -116,4 +116,111 @@ class SettingsController extends Controller
 
         return redirect()->back()->with('success', 'Notification preferences updated successfully.');
     }
+
+    /**
+     * Store a new user in the organization.
+     */
+    public function storeUser(Request $request)
+    {
+        $user = $request->user();
+
+        // Ensure only admins can create users
+        if (!$user->is_admin) {
+            abort(403, 'Only administrators can create users.');
+        }
+
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|max:255|unique:users,email',
+            'password' => 'required|string|min:8|confirmed',
+            'is_admin' => 'boolean',
+        ]);
+
+        $newUser = \App\Models\User::create([
+            'name' => $validated['name'],
+            'email' => $validated['email'],
+            'password' => bcrypt($validated['password']),
+            'organization_id' => $user->organization_id,
+            'is_admin' => $validated['is_admin'] ?? false,
+        ]);
+
+        return redirect()->back()->with('success', 'User created successfully.');
+    }
+
+    /**
+     * Update an existing user.
+     */
+    public function updateUser(Request $request, \App\Models\User $user)
+    {
+        $currentUser = $request->user();
+
+        // Ensure only admins can update users
+        if (!$currentUser->is_admin) {
+            abort(403, 'Only administrators can update users.');
+        }
+
+        // Ensure the user belongs to the same organization
+        if ($user->organization_id !== $currentUser->organization_id) {
+            abort(403, 'You can only update users in your organization.');
+        }
+
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|max:255|unique:users,email,' . $user->id,
+            'is_admin' => 'boolean',
+        ]);
+
+        // Don't allow removing admin from the last admin
+        if (isset($validated['is_admin']) && !$validated['is_admin']) {
+            $adminCount = \App\Models\User::where('organization_id', $currentUser->organization_id)
+                ->where('is_admin', true)
+                ->count();
+
+            if ($adminCount <= 1 && $user->is_admin) {
+                return redirect()->back()->withErrors(['is_admin' => 'Cannot remove admin role from the last administrator.']);
+            }
+        }
+
+        $user->update($validated);
+
+        return redirect()->back()->with('success', 'User updated successfully.');
+    }
+
+    /**
+     * Delete a user from the organization.
+     */
+    public function destroyUser(Request $request, \App\Models\User $user)
+    {
+        $currentUser = $request->user();
+
+        // Ensure only admins can delete users
+        if (!$currentUser->is_admin) {
+            abort(403, 'Only administrators can delete users.');
+        }
+
+        // Ensure the user belongs to the same organization
+        if ($user->organization_id !== $currentUser->organization_id) {
+            abort(403, 'You can only delete users in your organization.');
+        }
+
+        // Don't allow deleting yourself
+        if ($user->id === $currentUser->id) {
+            return redirect()->back()->withErrors(['user' => 'You cannot delete your own account.']);
+        }
+
+        // Don't allow deleting the last admin
+        if ($user->is_admin) {
+            $adminCount = \App\Models\User::where('organization_id', $currentUser->organization_id)
+                ->where('is_admin', true)
+                ->count();
+
+            if ($adminCount <= 1) {
+                return redirect()->back()->withErrors(['user' => 'Cannot delete the last administrator.']);
+            }
+        }
+
+        $user->delete();
+
+        return redirect()->back()->with('success', 'User deleted successfully.');
+    }
 }

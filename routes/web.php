@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\SettingsController;
+use App\Http\Controllers\Admin\PluginController;
 use App\Http\Controllers\Install\InstallerController;
 use App\Http\Controllers\Inventory\ProductController;
 use App\Http\Controllers\Inventory\ProductCategoryController;
@@ -48,13 +49,22 @@ Route::middleware('auth')->group(function () {
     // Order Management
     Route::resource('orders', OrderController::class);
 
+    // Plugins
+    Route::prefix('plugins')->name('plugins.')->group(function () {
+        Route::get('/', [PluginController::class, 'index'])->name('index');
+        Route::post('/upload', [PluginController::class, 'upload'])->name('upload');
+        Route::post('/{plugin}/activate', [PluginController::class, 'activate'])->name('activate');
+        Route::post('/{plugin}/deactivate', [PluginController::class, 'deactivate'])->name('deactivate');
+        Route::delete('/{plugin}', [PluginController::class, 'destroy'])->name('destroy');
+    });
+
     // Settings
     Route::prefix('settings')->name('settings.')->group(function () {
         Route::get('/', [SettingsController::class, 'index'])->name('index');
         Route::patch('/organization', [SettingsController::class, 'updateOrganization'])->name('organization.update');
-        Route::patch('/profile', [SettingsController::class, 'updateProfile'])->name('profile.update');
-        Route::patch('/password', [SettingsController::class, 'updatePassword'])->name('password.update');
-        Route::patch('/notifications', [SettingsController::class, 'updateNotifications'])->name('notifications.update');
+        Route::post('/users', [SettingsController::class, 'storeUser'])->name('users.store');
+        Route::patch('/users/{user}', [SettingsController::class, 'updateUser'])->name('users.update');
+        Route::delete('/users/{user}', [SettingsController::class, 'destroyUser'])->name('users.destroy');
     });
 });
 
