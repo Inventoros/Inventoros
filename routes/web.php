@@ -5,6 +5,7 @@ use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Admin\SettingsController;
 use App\Http\Controllers\Admin\PluginController;
 use App\Http\Controllers\Admin\UserController;
+use App\Http\Controllers\Import\ImportExportController;
 use App\Http\Controllers\Install\InstallerController;
 use App\Http\Controllers\Inventory\ProductController;
 use App\Http\Controllers\Inventory\ProductCategoryController;
@@ -106,6 +107,14 @@ Route::middleware('auth')->group(function () {
     Route::prefix('settings')->name('settings.')->group(function () {
         Route::get('/', [SettingsController::class, 'index'])->middleware('permission:view_settings')->name('index');
         Route::patch('/organization', [SettingsController::class, 'updateOrganization'])->middleware('permission:manage_organization')->name('organization.update');
+    });
+
+    // Import/Export - Permission based
+    Route::prefix('import-export')->name('import-export.')->group(function () {
+        Route::get('/', [ImportExportController::class, 'index'])->middleware('permission:export_data|import_data')->name('index');
+        Route::get('/export-products', [ImportExportController::class, 'exportProducts'])->middleware('permission:export_data')->name('export-products');
+        Route::get('/download-template', [ImportExportController::class, 'downloadTemplate'])->middleware('permission:import_data')->name('download-template');
+        Route::post('/import-products', [ImportExportController::class, 'importProducts'])->middleware('permission:import_data')->name('import-products');
     });
 });
 

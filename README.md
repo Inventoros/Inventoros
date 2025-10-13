@@ -97,22 +97,26 @@ php artisan queue:work # Queue worker (if needed)
 ## Development Roadmap
 
 ### Phase 1 - MVP Foundation (Current)
-- [ ] Base Laravel + Inertia scaffolding
-- [ ] Multi-tenant architecture foundation
-- [ ] Installer & Update Manager (CLI + UI)
-- [ ] Basic Inventory module (CRUD operations)
-- [ ] Role-Based Access Control
+- [x] Base Laravel + Inertia scaffolding
+- [x] Multi-tenant architecture foundation
+- [x] Installer & Update Manager (CLI + UI)
+- [x] Basic Inventory module (CRUD operations)
+- [x] Role-Based Access Control (Permission-based system)
+- [x] Product categorization and locations
+- [x] Multi-currency support
 - [ ] CSV Import/Export foundation
 
 ### Phase 2 - Core WMS Features
-- [ ] Warehouse location management
-- [ ] Order fulfillment workflows
-- [ ] Stock movement tracking
+- [x] Warehouse location management
+- [x] Order management (CRUD with inventory tracking)
+- [x] Stock movement tracking (automatic on orders)
+- [x] Product categorization system
 - [ ] Supplier management
-- [ ] Product categorization and variants
+- [ ] Product variants
+- [ ] Advanced stock movement workflows
 
 ### Phase 3 - Extensions & API
-- [ ] Plugin system architecture
+- [x] Plugin system architecture (WordPress-style hooks)
 - [ ] REST API endpoints
 - [ ] GraphQL API layer
 - [ ] Basic plugin examples
@@ -122,8 +126,29 @@ php artisan queue:work # Queue worker (if needed)
 - [ ] Barcode/QR code support
 - [ ] Reporting and analytics
 - [ ] Audit logging
-- [ ] Advanced permissions
+- [ ] Advanced permissions (custom permission sets)
 - [ ] Multi-warehouse support
+
+## Current Features
+
+### ✅ Completed
+- **User Management**: Full CRUD with role assignment and permission-based access control
+- **Role Management**: Custom roles with granular permissions, system roles (Administrator, Manager, Member)
+- **Product Management**: Complete inventory CRUD with SKU, pricing, stock levels, categories, locations, and barcodes
+- **Multi-Currency Support**: Product pricing in multiple currencies with conversion support
+- **Order Management**: Full order lifecycle (create, view, edit, delete) with automatic inventory adjustments
+- **Categories & Locations**: Organize products by category and track warehouse locations
+- **Plugin System**: WordPress-style hooks and filters for extensibility
+- **Installer Wizard**: Guided setup with database validation and admin account creation
+- **Permission System**: Granular permission checks at route and UI levels
+- **Custom Error Pages**: Beautiful 403 access denied pages with light/dark mode
+- **Dark Mode**: Full application support with persistent theme preferences
+- **Responsive Design**: Mobile-friendly UI throughout the application
+
+### 🚧 In Progress
+- CSV Import/Export for bulk operations
+- Dashboard analytics and reporting
+- Advanced inventory workflows
 
 ## Contributing
 
