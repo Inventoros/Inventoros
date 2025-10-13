@@ -2,9 +2,11 @@
 import { ref, onMounted } from 'vue';
 import ApplicationLogo from '@/Components/ApplicationLogo.vue';
 import { Link } from '@inertiajs/vue3';
+import { usePermissions } from '@/composables/usePermissions';
 
 const sidebarOpen = ref(false);
 const isDark = ref(true);
+const { hasPermission } = usePermissions();
 
 const toggleTheme = () => {
     isDark.value = !isDark.value;
@@ -21,9 +23,14 @@ onMounted(() => {
     const savedTheme = localStorage.getItem('theme');
     if (savedTheme) {
         isDark.value = savedTheme === 'dark';
-        if (!isDark.value) {
+        if (isDark.value) {
+            document.documentElement.classList.add('dark');
+        } else {
             document.documentElement.classList.remove('dark');
         }
+    } else {
+        // Default to dark mode
+        document.documentElement.classList.add('dark');
     }
 });
 </script>
@@ -45,13 +52,13 @@ onMounted(() => {
                     <button
                         @click="toggleTheme"
                         class="p-2 text-gray-400 hover:text-primary-400 hover:bg-dark-bg/50 rounded-lg transition"
-                        title="Toggle theme"
+                        :title="isDark ? 'Switch to light mode' : 'Switch to dark mode'"
                     >
-                        <!-- Sun icon for light mode -->
+                        <!-- Sun icon for light mode (shown when IN dark mode) -->
                         <svg v-if="isDark" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
                         </svg>
-                        <!-- Moon icon for dark mode -->
+                        <!-- Moon icon for dark mode (shown when IN light mode) -->
                         <svg v-else class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
                         </svg>
@@ -78,6 +85,7 @@ onMounted(() => {
 
                     <!-- Inventory -->
                     <Link
+                        v-if="hasPermission('view_products')"
                         :href="route('products.index')"
                         :class="[
                             'flex items-center gap-3 px-3 py-3 rounded-lg transition-all duration-150',
@@ -94,6 +102,7 @@ onMounted(() => {
 
                     <!-- Orders -->
                     <Link
+                        v-if="hasPermission('view_orders')"
                         :href="route('orders.index')"
                         :class="[
                             'flex items-center gap-3 px-3 py-3 rounded-lg transition-all duration-150',
@@ -110,6 +119,7 @@ onMounted(() => {
 
                     <!-- Categories -->
                     <Link
+                        v-if="hasPermission('manage_categories')"
                         :href="route('categories.index')"
                         :class="[
                             'flex items-center gap-3 px-3 py-3 rounded-lg transition-all duration-150',
@@ -126,6 +136,7 @@ onMounted(() => {
 
                     <!-- Locations -->
                     <Link
+                        v-if="hasPermission('manage_locations')"
                         :href="route('locations.index')"
                         :class="[
                             'flex items-center gap-3 px-3 py-3 rounded-lg transition-all duration-150',
@@ -142,18 +153,18 @@ onMounted(() => {
                     </Link>
 
                     <!-- Divider -->
-                    <div class="pt-4 pb-4">
+                    <div class="pt-4 pb-4" v-if="hasPermission('view_users') || hasPermission('view_roles') || hasPermission('view_plugins') || hasPermission('view_settings')">
                         <div class="border-t border-dark-border"></div>
                     </div>
 
                     <!-- Admin Section Label -->
-                    <div class="px-3 mb-2" v-if="$page.props.auth.user.role === 'admin'">
+                    <div class="px-3 mb-2" v-if="hasPermission('view_users') || hasPermission('view_roles')">
                         <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider">Administration</p>
                     </div>
 
-                    <!-- Users (Admin only) -->
+                    <!-- Users -->
                     <Link
-                        v-if="$page.props.auth.user.role === 'admin'"
+                        v-if="hasPermission('view_users')"
                         :href="route('users.index')"
                         :class="[
                             'flex items-center gap-3 px-3 py-3 rounded-lg transition-all duration-150',
@@ -168,9 +179,9 @@ onMounted(() => {
                         <span class="font-medium">Users</span>
                     </Link>
 
-                    <!-- Roles (Admin only) -->
+                    <!-- Roles -->
                     <Link
-                        v-if="$page.props.auth.user.role === 'admin'"
+                        v-if="hasPermission('view_roles')"
                         :href="route('roles.index')"
                         :class="[
                             'flex items-center gap-3 px-3 py-3 rounded-lg transition-all duration-150',
@@ -186,12 +197,13 @@ onMounted(() => {
                     </Link>
 
                     <!-- Divider for admin section -->
-                    <div class="pt-4 pb-4" v-if="$page.props.auth.user.role === 'admin'">
+                    <div class="pt-4 pb-4" v-if="(hasPermission('view_users') || hasPermission('view_roles')) && (hasPermission('view_plugins') || hasPermission('view_settings'))">
                         <div class="border-t border-dark-border"></div>
                     </div>
 
                     <!-- Plugins -->
                     <Link
+                        v-if="hasPermission('view_plugins')"
                         :href="route('plugins.index')"
                         :class="[
                             'flex items-center gap-3 px-3 py-3 rounded-lg transition-all duration-150',
@@ -208,6 +220,7 @@ onMounted(() => {
 
                     <!-- Settings -->
                     <Link
+                        v-if="hasPermission('view_settings')"
                         :href="route('settings.index')"
                         :class="[
                             'flex items-center gap-3 px-3 py-3 rounded-lg transition-all duration-150',
@@ -294,7 +307,7 @@ onMounted(() => {
 
             <!-- Page Heading -->
             <header
-                class="bg-dark-card border-b border-dark-border"
+                class="bg-white dark:bg-dark-card border-b border-gray-200 dark:border-dark-border"
                 v-if="$slots.header"
             >
                 <div class="px-4 py-6 sm:px-6 lg:px-8">

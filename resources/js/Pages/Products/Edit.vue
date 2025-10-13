@@ -87,12 +87,12 @@ const submit = () => {
     <AuthenticatedLayout>
         <template #header>
             <div class="flex items-center justify-between">
-                <h2 class="font-semibold text-xl text-gray-100 leading-tight">
+                <h2 class="font-semibold text-xl text-gray-900 dark:text-gray-100 leading-tight">
                     Edit Product
                 </h2>
                 <Link
                     :href="route('products.index')"
-                    class="inline-flex items-center px-4 py-2 bg-dark-card border border-dark-border rounded-md font-semibold text-xs text-gray-300 uppercase tracking-widest shadow-sm hover:bg-dark-bg/50"
+                    class="inline-flex items-center px-4 py-2 bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border rounded-md font-semibold text-xs text-gray-600 dark:text-gray-300 uppercase tracking-widest shadow-sm hover:bg-gray-100 dark:hover:bg-dark-bg/50"
                 >
                     <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
@@ -102,30 +102,30 @@ const submit = () => {
             </div>
         </template>
 
-        <div class="py-12">
+        <div class="py-12 bg-gray-50 dark:bg-dark-bg min-h-screen">
             <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-                <div class="bg-dark-card border border-dark-border overflow-hidden shadow-lg sm:rounded-lg">
+                <div class="bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border overflow-hidden shadow-lg sm:rounded-lg">
                     <div class="p-6">
                         <form @submit.prevent="submit">
                             <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
                                 <!-- Basic Information -->
                                 <div class="space-y-6">
                                     <div>
-                                        <h3 class="text-lg font-semibold text-gray-100 mb-4">
+                                        <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
                                             Basic Information
                                         </h3>
                                     </div>
 
                                     <!-- Product Name -->
                                     <div>
-                                        <label for="name" class="block text-sm font-medium text-gray-300">
+                                        <label for="name" class="block text-sm font-medium text-gray-600 dark:text-gray-300">
                                             Product Name <span class="text-red-500">*</span>
                                         </label>
                                         <input
                                             id="name"
                                             v-model="form.name"
                                             type="text"
-                                            class="mt-1 block w-full rounded-md bg-dark-bg border-dark-border text-gray-100 placeholder-gray-500 shadow-sm focus:border-primary-400 focus:ring-primary-400"
+                                            class="mt-1 block w-full rounded-md bg-gray-50 dark:bg-dark-bg border-gray-200 dark:border-dark-border text-gray-900 dark:text-gray-100 placeholder-gray-500 shadow-sm focus:border-primary-400 focus:ring-primary-400"
                                             required
                                         />
                                         <p v-if="form.errors.name" class="mt-1 text-sm text-red-400">
@@ -135,14 +135,14 @@ const submit = () => {
 
                                     <!-- SKU -->
                                     <div>
-                                        <label for="sku" class="block text-sm font-medium text-gray-300">
+                                        <label for="sku" class="block text-sm font-medium text-gray-600 dark:text-gray-300">
                                             SKU <span class="text-red-500">*</span>
                                         </label>
                                         <input
                                             id="sku"
                                             v-model="form.sku"
                                             type="text"
-                                            class="mt-1 block w-full rounded-md bg-dark-bg border-dark-border text-gray-100 placeholder-gray-500 shadow-sm focus:border-primary-400 focus:ring-primary-400"
+                                            class="mt-1 block w-full rounded-md bg-gray-50 dark:bg-dark-bg border-gray-200 dark:border-dark-border text-gray-900 dark:text-gray-100 placeholder-gray-500 shadow-sm focus:border-primary-400 focus:ring-primary-400"
                                             required
                                         />
                                         <p v-if="form.errors.sku" class="mt-1 text-sm text-red-400">
@@ -152,14 +152,14 @@ const submit = () => {
 
                                     <!-- Barcode -->
                                     <div>
-                                        <label for="barcode" class="block text-sm font-medium text-gray-300">
+                                        <label for="barcode" class="block text-sm font-medium text-gray-600 dark:text-gray-300">
                                             Barcode
                                         </label>
                                         <input
                                             id="barcode"
                                             v-model="form.barcode"
                                             type="text"
-                                            class="mt-1 block w-full rounded-md bg-dark-bg border-dark-border text-gray-100 placeholder-gray-500 shadow-sm focus:border-primary-400 focus:ring-primary-400"
+                                            class="mt-1 block w-full rounded-md bg-gray-50 dark:bg-dark-bg border-gray-200 dark:border-dark-border text-gray-900 dark:text-gray-100 placeholder-gray-500 shadow-sm focus:border-primary-400 focus:ring-primary-400"
                                         />
                                         <p v-if="form.errors.barcode" class="mt-1 text-sm text-red-400">
                                             {{ form.errors.barcode }}
@@ -168,14 +168,14 @@ const submit = () => {
 
                                     <!-- Description -->
                                     <div>
-                                        <label for="description" class="block text-sm font-medium text-gray-300">
+                                        <label for="description" class="block text-sm font-medium text-gray-600 dark:text-gray-300">
                                             Description
                                         </label>
                                         <textarea
                                             id="description"
                                             v-model="form.description"
                                             rows="4"
-                                            class="mt-1 block w-full rounded-md bg-dark-bg border-dark-border text-gray-100 placeholder-gray-500 shadow-sm focus:border-primary-400 focus:ring-primary-400"
+                                            class="mt-1 block w-full rounded-md bg-gray-50 dark:bg-dark-bg border-gray-200 dark:border-dark-border text-gray-900 dark:text-gray-100 placeholder-gray-500 shadow-sm focus:border-primary-400 focus:ring-primary-400"
                                         ></textarea>
                                         <p v-if="form.errors.description" class="mt-1 text-sm text-red-400">
                                             {{ form.errors.description }}
@@ -186,19 +186,19 @@ const submit = () => {
                                 <!-- Pricing & Inventory -->
                                 <div class="space-y-6">
                                     <div>
-                                        <h3 class="text-lg font-semibold text-gray-100 mb-4">
+                                        <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
                                             Pricing & Inventory
                                         </h3>
                                     </div>
 
                                     <!-- Purchase Price (Cost) -->
                                     <div>
-                                        <label for="purchase_price" class="block text-sm font-medium text-gray-300 mb-2">
+                                        <label for="purchase_price" class="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-2">
                                             Purchase Price (Cost)
                                         </label>
                                         <div class="relative rounded-md shadow-sm">
                                             <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                                <span class="text-gray-400 sm:text-sm">$</span>
+                                                <span class="text-gray-500 dark:text-gray-400 sm:text-sm">$</span>
                                             </div>
                                             <input
                                                 id="purchase_price"
@@ -206,10 +206,10 @@ const submit = () => {
                                                 type="number"
                                                 step="0.01"
                                                 min="0"
-                                                class="pl-10 block w-full rounded-md bg-dark-bg border-dark-border text-gray-100 placeholder-gray-500 shadow-sm focus:border-primary-400 focus:ring-primary-400"
+                                                class="pl-10 block w-full rounded-md bg-gray-50 dark:bg-dark-bg border-gray-200 dark:border-dark-border text-gray-900 dark:text-gray-100 placeholder-gray-500 shadow-sm focus:border-primary-400 focus:ring-primary-400"
                                             />
                                         </div>
-                                        <p class="mt-1 text-xs text-gray-400">
+                                        <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
                                             What you paid for this item
                                         </p>
                                         <p v-if="form.errors.purchase_price" class="mt-1 text-sm text-red-400">
@@ -219,12 +219,12 @@ const submit = () => {
 
                                     <!-- Selling Price -->
                                     <div>
-                                        <label for="price" class="block text-sm font-medium text-gray-300 mb-2">
+                                        <label for="price" class="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-2">
                                             Selling Price <span class="text-red-500">*</span>
                                         </label>
                                         <div class="relative rounded-md shadow-sm">
                                             <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                                <span class="text-gray-400 sm:text-sm">$</span>
+                                                <span class="text-gray-500 dark:text-gray-400 sm:text-sm">$</span>
                                             </div>
                                             <input
                                                 id="price"
@@ -232,11 +232,11 @@ const submit = () => {
                                                 type="number"
                                                 step="0.01"
                                                 min="0"
-                                                class="pl-10 block w-full rounded-md bg-dark-bg border-dark-border text-gray-100 placeholder-gray-500 shadow-sm focus:border-primary-400 focus:ring-primary-400"
+                                                class="pl-10 block w-full rounded-md bg-gray-50 dark:bg-dark-bg border-gray-200 dark:border-dark-border text-gray-900 dark:text-gray-100 placeholder-gray-500 shadow-sm focus:border-primary-400 focus:ring-primary-400"
                                                 required
                                             />
                                         </div>
-                                        <p class="mt-1 text-xs text-gray-400">
+                                        <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
                                             What you sell this item for
                                         </p>
                                         <p v-if="form.errors.price" class="mt-1 text-sm text-red-400">
@@ -262,7 +262,7 @@ const submit = () => {
 
                                     <!-- Stock Quantity -->
                                     <div>
-                                        <label for="stock" class="block text-sm font-medium text-gray-300">
+                                        <label for="stock" class="block text-sm font-medium text-gray-600 dark:text-gray-300">
                                             Current Stock <span class="text-red-500">*</span>
                                         </label>
                                         <input
@@ -270,7 +270,7 @@ const submit = () => {
                                             v-model="form.stock"
                                             type="number"
                                             min="0"
-                                            class="mt-1 block w-full rounded-md bg-dark-bg border-dark-border text-gray-100 placeholder-gray-500 shadow-sm focus:border-primary-400 focus:ring-primary-400"
+                                            class="mt-1 block w-full rounded-md bg-gray-50 dark:bg-dark-bg border-gray-200 dark:border-dark-border text-gray-900 dark:text-gray-100 placeholder-gray-500 shadow-sm focus:border-primary-400 focus:ring-primary-400"
                                             required
                                         />
                                         <p v-if="form.errors.stock" class="mt-1 text-sm text-red-400">
@@ -280,7 +280,7 @@ const submit = () => {
 
                                     <!-- Minimum Stock -->
                                     <div>
-                                        <label for="min_stock" class="block text-sm font-medium text-gray-300">
+                                        <label for="min_stock" class="block text-sm font-medium text-gray-600 dark:text-gray-300">
                                             Minimum Stock Level <span class="text-red-500">*</span>
                                         </label>
                                         <input
@@ -288,10 +288,10 @@ const submit = () => {
                                             v-model="form.min_stock"
                                             type="number"
                                             min="0"
-                                            class="mt-1 block w-full rounded-md bg-dark-bg border-dark-border text-gray-100 placeholder-gray-500 shadow-sm focus:border-primary-400 focus:ring-primary-400"
+                                            class="mt-1 block w-full rounded-md bg-gray-50 dark:bg-dark-bg border-gray-200 dark:border-dark-border text-gray-900 dark:text-gray-100 placeholder-gray-500 shadow-sm focus:border-primary-400 focus:ring-primary-400"
                                             required
                                         />
-                                        <p class="mt-1 text-sm text-gray-400">
+                                        <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
                                             Alert when stock falls below this level
                                         </p>
                                         <p v-if="form.errors.min_stock" class="mt-1 text-sm text-red-400">
@@ -302,7 +302,7 @@ const submit = () => {
                                     <!-- Category -->
                                     <div>
                                         <div class="flex items-center justify-between mb-1">
-                                            <label for="category" class="block text-sm font-medium text-gray-300">
+                                            <label for="category" class="block text-sm font-medium text-gray-600 dark:text-gray-300">
                                                 Category <span class="text-red-500">*</span>
                                             </label>
                                             <button
@@ -316,7 +316,7 @@ const submit = () => {
                                         <select
                                             id="category"
                                             v-model="form.category_id"
-                                            class="mt-1 block w-full rounded-md bg-dark-bg border-dark-border text-gray-100 placeholder-gray-500 shadow-sm focus:border-primary-400 focus:ring-primary-400"
+                                            class="mt-1 block w-full rounded-md bg-gray-50 dark:bg-dark-bg border-gray-200 dark:border-dark-border text-gray-900 dark:text-gray-100 placeholder-gray-500 shadow-sm focus:border-primary-400 focus:ring-primary-400"
                                             required
                                         >
                                             <option value="">Select a category</option>
@@ -332,7 +332,7 @@ const submit = () => {
                                     <!-- Location -->
                                     <div>
                                         <div class="flex items-center justify-between mb-1">
-                                            <label for="location" class="block text-sm font-medium text-gray-300">
+                                            <label for="location" class="block text-sm font-medium text-gray-600 dark:text-gray-300">
                                                 Location <span class="text-red-500">*</span>
                                             </label>
                                             <button
@@ -346,7 +346,7 @@ const submit = () => {
                                         <select
                                             id="location"
                                             v-model="form.location_id"
-                                            class="mt-1 block w-full rounded-md bg-dark-bg border-dark-border text-gray-100 placeholder-gray-500 shadow-sm focus:border-primary-400 focus:ring-primary-400"
+                                            class="mt-1 block w-full rounded-md bg-gray-50 dark:bg-dark-bg border-gray-200 dark:border-dark-border text-gray-900 dark:text-gray-100 placeholder-gray-500 shadow-sm focus:border-primary-400 focus:ring-primary-400"
                                             required
                                         >
                                             <option value="">Select a location</option>
@@ -362,14 +362,14 @@ const submit = () => {
 
                                 <!-- Notes (Full Width) -->
                                 <div class="lg:col-span-2">
-                                    <label for="notes" class="block text-sm font-medium text-gray-300">
+                                    <label for="notes" class="block text-sm font-medium text-gray-600 dark:text-gray-300">
                                         Notes
                                     </label>
                                     <textarea
                                         id="notes"
                                         v-model="form.notes"
                                         rows="3"
-                                        class="mt-1 block w-full rounded-md bg-dark-bg border-dark-border text-gray-100 placeholder-gray-500 shadow-sm focus:border-primary-400 focus:ring-primary-400"
+                                        class="mt-1 block w-full rounded-md bg-gray-50 dark:bg-dark-bg border-gray-200 dark:border-dark-border text-gray-900 dark:text-gray-100 placeholder-gray-500 shadow-sm focus:border-primary-400 focus:ring-primary-400"
                                         placeholder="Additional notes about this product..."
                                     ></textarea>
                                     <p v-if="form.errors.notes" class="mt-1 text-sm text-red-400">
@@ -382,7 +382,7 @@ const submit = () => {
                             <div class="mt-6 flex items-center justify-end gap-4">
                                 <Link
                                     :href="route('products.index')"
-                                    class="inline-flex items-center px-4 py-2 bg-dark-card border border-dark-border rounded-md font-semibold text-xs text-gray-300 uppercase tracking-widest shadow-sm hover:bg-dark-bg/50"
+                                    class="inline-flex items-center px-4 py-2 bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border rounded-md font-semibold text-xs text-gray-600 dark:text-gray-300 uppercase tracking-widest shadow-sm hover:bg-gray-100 dark:hover:bg-dark-bg/50"
                                 >
                                     Cancel
                                 </Link>
@@ -410,14 +410,14 @@ const submit = () => {
             <div class="flex items-center justify-center min-h-screen px-4">
                 <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"></div>
 
-                <div class="relative bg-dark-card rounded-lg shadow-xl max-w-md w-full p-6" @click.stop>
+                <div class="relative bg-white dark:bg-dark-card rounded-lg shadow-xl max-w-md w-full p-6" @click.stop>
                     <div class="flex items-center justify-between mb-4">
-                        <h3 class="text-lg font-semibold text-gray-100">
+                        <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">
                             Quick Add Category
                         </h3>
                         <button
                             @click="showCategoryModal = false"
-                            class="text-gray-400 hover:text-gray-200"
+                            class="text-gray-500 dark:text-gray-400 hover:text-gray-200"
                         >
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
@@ -427,26 +427,26 @@ const submit = () => {
 
                     <div class="space-y-4">
                         <div>
-                            <label class="block text-sm font-medium text-gray-300 mb-1">
+                            <label class="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-1">
                                 Category Name <span class="text-red-500">*</span>
                             </label>
                             <input
                                 v-model="categoryForm.name"
                                 type="text"
-                                class="block w-full rounded-md bg-dark-bg border-dark-border text-gray-100 placeholder-gray-500 shadow-sm focus:border-primary-400 focus:ring-primary-400"
+                                class="block w-full rounded-md bg-gray-50 dark:bg-dark-bg border-gray-200 dark:border-dark-border text-gray-900 dark:text-gray-100 placeholder-gray-500 shadow-sm focus:border-primary-400 focus:ring-primary-400"
                                 placeholder="e.g., Electronics"
                                 required
                             />
                         </div>
 
                         <div>
-                            <label class="block text-sm font-medium text-gray-300 mb-1">
+                            <label class="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-1">
                                 Description
                             </label>
                             <textarea
                                 v-model="categoryForm.description"
                                 rows="3"
-                                class="block w-full rounded-md bg-dark-bg border-dark-border text-gray-100 placeholder-gray-500 shadow-sm focus:border-primary-400 focus:ring-primary-400"
+                                class="block w-full rounded-md bg-gray-50 dark:bg-dark-bg border-gray-200 dark:border-dark-border text-gray-900 dark:text-gray-100 placeholder-gray-500 shadow-sm focus:border-primary-400 focus:ring-primary-400"
                                 placeholder="Optional description..."
                             ></textarea>
                         </div>
@@ -455,7 +455,7 @@ const submit = () => {
                             <button
                                 type="button"
                                 @click="showCategoryModal = false"
-                                class="px-4 py-2 bg-dark-bg text-gray-300 rounded-md hover:bg-dark-bg/50"
+                                class="px-4 py-2 bg-dark-bg text-gray-600 dark:text-gray-300 rounded-md hover:bg-gray-100 dark:hover:bg-dark-bg/50"
                             >
                                 Cancel
                             </button>
@@ -479,14 +479,14 @@ const submit = () => {
             <div class="flex items-center justify-center min-h-screen px-4">
                 <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"></div>
 
-                <div class="relative bg-dark-card rounded-lg shadow-xl max-w-md w-full p-6" @click.stop>
+                <div class="relative bg-white dark:bg-dark-card rounded-lg shadow-xl max-w-md w-full p-6" @click.stop>
                     <div class="flex items-center justify-between mb-4">
-                        <h3 class="text-lg font-semibold text-gray-100">
+                        <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">
                             Quick Add Location
                         </h3>
                         <button
                             @click="showLocationModal = false"
-                            class="text-gray-400 hover:text-gray-200"
+                            class="text-gray-500 dark:text-gray-400 hover:text-gray-200"
                         >
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
@@ -496,39 +496,39 @@ const submit = () => {
 
                     <div class="space-y-4">
                         <div>
-                            <label class="block text-sm font-medium text-gray-300 mb-1">
+                            <label class="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-1">
                                 Location Name <span class="text-red-500">*</span>
                             </label>
                             <input
                                 v-model="locationForm.name"
                                 type="text"
-                                class="block w-full rounded-md bg-dark-bg border-dark-border text-gray-100 placeholder-gray-500 shadow-sm focus:border-primary-400 focus:ring-primary-400"
+                                class="block w-full rounded-md bg-gray-50 dark:bg-dark-bg border-gray-200 dark:border-dark-border text-gray-900 dark:text-gray-100 placeholder-gray-500 shadow-sm focus:border-primary-400 focus:ring-primary-400"
                                 placeholder="e.g., Warehouse A"
                                 required
                             />
                         </div>
 
                         <div>
-                            <label class="block text-sm font-medium text-gray-300 mb-1">
+                            <label class="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-1">
                                 Location Code <span class="text-red-500">*</span>
                             </label>
                             <input
                                 v-model="locationForm.code"
                                 type="text"
-                                class="block w-full rounded-md bg-dark-bg border-dark-border text-gray-100 placeholder-gray-500 shadow-sm focus:border-primary-400 focus:ring-primary-400"
+                                class="block w-full rounded-md bg-gray-50 dark:bg-dark-bg border-gray-200 dark:border-dark-border text-gray-900 dark:text-gray-100 placeholder-gray-500 shadow-sm focus:border-primary-400 focus:ring-primary-400"
                                 placeholder="e.g., WH-A"
                                 required
                             />
                         </div>
 
                         <div>
-                            <label class="block text-sm font-medium text-gray-300 mb-1">
+                            <label class="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-1">
                                 Description
                             </label>
                             <textarea
                                 v-model="locationForm.description"
                                 rows="3"
-                                class="block w-full rounded-md bg-dark-bg border-dark-border text-gray-100 placeholder-gray-500 shadow-sm focus:border-primary-400 focus:ring-primary-400"
+                                class="block w-full rounded-md bg-gray-50 dark:bg-dark-bg border-gray-200 dark:border-dark-border text-gray-900 dark:text-gray-100 placeholder-gray-500 shadow-sm focus:border-primary-400 focus:ring-primary-400"
                                 placeholder="Optional description..."
                             ></textarea>
                         </div>
@@ -537,7 +537,7 @@ const submit = () => {
                             <button
                                 type="button"
                                 @click="showLocationModal = false"
-                                class="px-4 py-2 bg-dark-bg text-gray-300 rounded-md hover:bg-dark-bg/50"
+                                class="px-4 py-2 bg-dark-bg text-gray-600 dark:text-gray-300 rounded-md hover:bg-gray-100 dark:hover:bg-dark-bg/50"
                             >
                                 Cancel
                             </button>
