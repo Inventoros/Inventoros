@@ -87,8 +87,8 @@ const deletePlugin = (slug, name) => {
                             :class="[
                                 'border-2 border-dashed rounded-lg p-8 text-center transition-colors',
                                 isDragging
-                                    ? 'border-primary-400 bg-primary-900/20'
-                                    : 'border-dark-border bg-dark-bg/50'
+                                    ? 'border-primary-400 bg-primary-100/50 dark:bg-primary-900/20'
+                                    : 'border-gray-300 dark:border-dark-border bg-gray-50 dark:bg-dark-bg/50'
                             ]"
                         >
                             <svg

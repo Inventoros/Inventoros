@@ -72,7 +72,7 @@ defineProps({
                                 <div class="flex gap-2">
                                     <Link
                                         :href="route('roles.show', role.id)"
-                                        class="flex-1 px-3 py-2 text-center text-sm font-medium text-gray-600 dark:text-gray-300 bg-dark-bg/50 hover:bg-gray-100 dark:hover:bg-dark-bg rounded-md transition"
+                                        class="flex-1 px-3 py-2 text-center text-sm font-medium text-gray-600 dark:text-gray-300 bg-gray-100 dark:bg-dark-bg/50 hover:bg-gray-200 dark:hover:bg-dark-bg rounded-md transition"
                                     >
                                         View
                                     </Link>
@@ -113,8 +113,8 @@ defineProps({
                                         link.active
                                             ? 'bg-primary-500 text-white'
                                             : link.url
-                                            ? 'bg-dark-bg text-gray-400 hover:bg-dark-bg/80 hover:text-gray-200'
-                                            : 'bg-dark-bg/50 text-gray-600 cursor-not-allowed'
+                                            ? 'bg-gray-100 dark:bg-dark-bg text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-dark-bg/80 hover:text-gray-900 dark:hover:text-gray-200'
+                                            : 'bg-gray-100 dark:bg-dark-bg/50 text-gray-400 dark:text-gray-600 cursor-not-allowed opacity-50'
                                     ]"
                                     :disabled="!link.url"
                                     v-html="link.label"
