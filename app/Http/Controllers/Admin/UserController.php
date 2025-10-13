@@ -35,7 +35,11 @@ class UserController extends Controller
             ->paginate(20)
             ->withQueryString();
 
-        $roles = Role::forOrganization($user->organization_id)->get();
+        // Get both organization-specific roles and system roles for filtering
+        $roles = Role::where(function ($query) use ($user) {
+            $query->where('organization_id', $user->organization_id)
+                  ->orWhereNull('organization_id');
+        })->orderByRaw('is_system DESC, name ASC')->get();
 
         return Inertia::render('Admin/Users/Index', [
             'users' => $users,
@@ -50,7 +54,12 @@ class UserController extends Controller
     public function create(Request $request): Response
     {
         $user = $request->user();
-        $roles = Role::forOrganization($user->organization_id)->get();
+
+        // Get only organization-specific custom roles (exclude system roles)
+        $roles = Role::where('organization_id', $user->organization_id)
+            ->where('is_system', false)
+            ->orderBy('name', 'ASC')
+            ->get();
 
         return Inertia::render('Admin/Users/Create', [
             'roles' => $roles,
@@ -81,7 +90,7 @@ class UserController extends Controller
             'role' => $validated['role'],
         ]);
 
-        // Assign roles if provided
+        // Assign additional custom roles if provided
         if (!empty($validated['role_ids'])) {
             $newUser->roles()->sync($validated['role_ids']);
         }
@@ -122,7 +131,12 @@ class UserController extends Controller
         }
 
         $user->load('roles');
-        $roles = Role::forOrganization($currentUser->organization_id)->get();
+
+        // Get only organization-specific custom roles (exclude system roles)
+        $roles = Role::where('organization_id', $currentUser->organization_id)
+            ->where('is_system', false)
+            ->orderBy('name', 'ASC')
+            ->get();
 
         return Inertia::render('Admin/Users/Edit', [
             'user' => $user,
