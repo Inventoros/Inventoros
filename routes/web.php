@@ -61,37 +61,9 @@ Route::middleware('auth')->group(function () {
     });
 
     // User Management (Admin only)
-    Route::middleware('permission:view_users')->group(function () {
-        Route::resource('users', UserController::class)->only(['index', 'show']);
-    });
-
-    Route::middleware('permission:create_users')->group(function () {
-        Route::resource('users', UserController::class)->only(['create', 'store']);
-    });
-
-    Route::middleware('permission:edit_users')->group(function () {
-        Route::resource('users', UserController::class)->only(['edit', 'update']);
-    });
-
-    Route::middleware('permission:delete_users')->group(function () {
-        Route::resource('users', UserController::class)->only(['destroy']);
-    });
-
-    // Role Management (Admin only)
-    Route::middleware('permission:view_roles')->group(function () {
-        Route::resource('roles', RoleController::class)->only(['index', 'show']);
-    });
-
-    Route::middleware('permission:create_roles')->group(function () {
-        Route::resource('roles', RoleController::class)->only(['create', 'store']);
-    });
-
-    Route::middleware('permission:edit_roles')->group(function () {
-        Route::resource('roles', RoleController::class)->only(['edit', 'update']);
-    });
-
-    Route::middleware('permission:delete_roles')->group(function () {
-        Route::resource('roles', RoleController::class)->only(['destroy']);
+    Route::middleware('admin')->group(function () {
+        Route::resource('users', UserController::class);
+        Route::resource('roles', RoleController::class);
     });
 
     // Settings
