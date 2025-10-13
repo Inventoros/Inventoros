@@ -13,8 +13,8 @@ class RoleSeeder extends Seeder
      */
     public function run(): void
     {
-        // Create system-wide default roles (no organization)
-        // These serve as templates that can be copied for new organizations
+        // Create 3 base system roles matching the base user roles
+        // These are system-wide and cannot be deleted
 
         // Administrator Role - Full system access
         Role::updateOrCreate(
@@ -58,82 +58,21 @@ class RoleSeeder extends Seeder
             ]
         );
 
-        // Staff Role - Basic inventory and order management
+        // Member Role - Basic access
         Role::updateOrCreate(
-            ['slug' => 'system-staff'],
+            ['slug' => 'system-member'],
             [
-                'name' => 'Staff',
-                'description' => 'Can view and manage inventory and orders.',
-                'organization_id' => null,
-                'is_system' => true,
-                'permissions' => [
-                    Permission::VIEW_PRODUCTS->value,
-                    Permission::CREATE_PRODUCTS->value,
-                    Permission::EDIT_PRODUCTS->value,
-
-                    Permission::VIEW_ORDERS->value,
-                    Permission::CREATE_ORDERS->value,
-                    Permission::EDIT_ORDERS->value,
-                ],
-            ]
-        );
-
-        // Viewer Role - Read-only access
-        Role::updateOrCreate(
-            ['slug' => 'system-viewer'],
-            [
-                'name' => 'Viewer',
-                'description' => 'Read-only access to inventory and orders.',
+                'name' => 'Member',
+                'description' => 'Basic access to view and manage assigned tasks.',
                 'organization_id' => null,
                 'is_system' => true,
                 'permissions' => [
                     Permission::VIEW_PRODUCTS->value,
                     Permission::VIEW_ORDERS->value,
-                    Permission::VIEW_REPORTS->value,
                 ],
             ]
         );
 
-        // Warehouse Role - Focused on inventory management
-        Role::updateOrCreate(
-            ['slug' => 'system-warehouse'],
-            [
-                'name' => 'Warehouse',
-                'description' => 'Focused on inventory and location management.',
-                'organization_id' => null,
-                'is_system' => true,
-                'permissions' => [
-                    Permission::VIEW_PRODUCTS->value,
-                    Permission::CREATE_PRODUCTS->value,
-                    Permission::EDIT_PRODUCTS->value,
-                    Permission::MANAGE_CATEGORIES->value,
-                    Permission::MANAGE_LOCATIONS->value,
-
-                    Permission::VIEW_ORDERS->value,
-                ],
-            ]
-        );
-
-        // Sales Role - Focused on orders
-        Role::updateOrCreate(
-            ['slug' => 'system-sales'],
-            [
-                'name' => 'Sales',
-                'description' => 'Focused on order management and customer interactions.',
-                'organization_id' => null,
-                'is_system' => true,
-                'permissions' => [
-                    Permission::VIEW_PRODUCTS->value,
-
-                    Permission::VIEW_ORDERS->value,
-                    Permission::CREATE_ORDERS->value,
-                    Permission::EDIT_ORDERS->value,
-
-                    Permission::VIEW_REPORTS->value,
-                ],
-            ]
-        );
-
-        $this->command->info('Default system roles created successfully.');
+        $this->command->info('3 base system roles created successfully.');
     }
 }
