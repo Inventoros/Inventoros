@@ -89,7 +89,8 @@ class User extends Authenticatable
      */
     public function isAdmin(): bool
     {
-        return $this->role === 'admin' || $this->hasRole('admin');
+        // Check if user has the Administrator system role
+        return $this->hasRole('system-administrator') || $this->role === 'admin';
     }
 
     /**
@@ -97,7 +98,8 @@ class User extends Authenticatable
      */
     public function isManager(): bool
     {
-        return in_array($this->role, ['admin', 'manager']) || $this->hasAnyRole(['admin', 'manager']);
+        // Check if user has Administrator or Manager roles
+        return $this->isAdmin() || $this->hasAnyRole(['manager', 'system-manager']);
     }
 
     /**
