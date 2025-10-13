@@ -23,6 +23,8 @@ class Product extends Model
         'name',
         'description',
         'price',
+        'currency',
+        'price_in_currencies',
         'cost',
         'stock',
         'min_stock',
@@ -50,6 +52,7 @@ class Product extends Model
             'max_stock' => 'integer',
             'is_active' => 'boolean',
             'metadata' => 'array',
+            'price_in_currencies' => 'array',
         ];
     }
 

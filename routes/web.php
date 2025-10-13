@@ -1,8 +1,11 @@
 <?php
 
-use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Admin\SettingsController;
 use App\Http\Controllers\Install\InstallerController;
-use App\Http\Controllers\ProductController;
+use App\Http\Controllers\Inventory\ProductController;
+use App\Http\Controllers\Inventory\ProductCategoryController;
+use App\Http\Controllers\Inventory\ProductLocationController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
@@ -36,8 +39,19 @@ Route::middleware('auth')->group(function () {
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
-    // Products
+    // Inventory Management
     Route::resource('products', ProductController::class);
+    Route::resource('categories', ProductCategoryController::class)->except(['create', 'show', 'edit']);
+    Route::resource('locations', ProductLocationController::class)->except(['create', 'show', 'edit']);
+
+    // Settings
+    Route::prefix('settings')->name('settings.')->group(function () {
+        Route::get('/', [SettingsController::class, 'index'])->name('index');
+        Route::patch('/organization', [SettingsController::class, 'updateOrganization'])->name('organization.update');
+        Route::patch('/profile', [SettingsController::class, 'updateProfile'])->name('profile.update');
+        Route::patch('/password', [SettingsController::class, 'updatePassword'])->name('password.update');
+        Route::patch('/notifications', [SettingsController::class, 'updateNotifications'])->name('notifications.update');
+    });
 });
 
 require __DIR__.'/auth.php';

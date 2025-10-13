@@ -1,7 +1,8 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Admin;
 
+use App\Http\Controllers\Controller;
 use App\Models\Inventory\Product;
 use App\Models\Inventory\ProductCategory;
 use App\Models\Inventory\ProductLocation;
@@ -16,9 +17,16 @@ class DashboardController extends Controller
         $user = auth()->user();
 
         // Get statistics
+        // Calculate total value as sum of (price * stock) for each product
+        $totalValue = Product::where('organization_id', $user->organization_id)
+            ->get()
+            ->sum(function ($product) {
+                return $product->price * $product->stock;
+            });
+
         $stats = [
             'totalProducts' => Product::where('organization_id', $user->organization_id)->count(),
-            'totalValue' => Product::where('organization_id', $user->organization_id)->sum('price'),
+            'totalValue' => $totalValue,
             'lowStockProducts' => Product::where('organization_id', $user->organization_id)
                 ->whereColumn('stock', '<=', 'min_stock')
                 ->count(),
