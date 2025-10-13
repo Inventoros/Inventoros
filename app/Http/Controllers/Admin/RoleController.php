@@ -19,12 +19,16 @@ class RoleController extends Controller
     {
         $user = $request->user();
 
+        // Get organization-specific roles and system roles
         $roles = Role::with(['users'])
-            ->forOrganization($user->organization_id)
+            ->where(function ($query) use ($user) {
+                $query->where('organization_id', $user->organization_id)
+                      ->orWhereNull('organization_id'); // Include system roles
+            })
             ->when($request->input('search'), function ($query, $search) {
                 $query->where('name', 'like', "%{$search}%");
             })
-            ->orderBy('name')
+            ->orderByRaw('is_system DESC, name ASC') // System roles first, then alphabetical
             ->paginate(20)
             ->withQueryString();
 
@@ -91,8 +95,8 @@ class RoleController extends Controller
     {
         $currentUser = $request->user();
 
-        // Ensure the role belongs to the same organization
-        if ($role->organization_id !== $currentUser->organization_id) {
+        // Allow viewing system roles or roles in the same organization
+        if ($role->organization_id && $role->organization_id !== $currentUser->organization_id) {
             abort(403, 'You can only view roles in your organization.');
         }
 
@@ -128,15 +132,15 @@ class RoleController extends Controller
     {
         $currentUser = $request->user();
 
-        // Ensure the role belongs to the same organization
-        if ($role->organization_id !== $currentUser->organization_id) {
+        // Allow editing system roles or organization roles
+        if ($role->organization_id && $role->organization_id !== $currentUser->organization_id) {
             abort(403, 'You can only edit roles in your organization.');
         }
 
-        // Don't allow editing system roles
-        if ($role->is_system) {
+        // Don't allow editing Administrator role (system-administrator slug)
+        if ($role->slug === 'system-administrator') {
             return redirect()->route('roles.index')
-                ->withErrors(['role' => 'System roles cannot be edited.']);
+                ->withErrors(['role' => 'The Administrator role cannot be edited.']);
         }
 
         $permissions = Permission::grouped();
@@ -154,15 +158,15 @@ class RoleController extends Controller
     {
         $currentUser = $request->user();
 
-        // Ensure the role belongs to the same organization
-        if ($role->organization_id !== $currentUser->organization_id) {
+        // Allow updating system roles or organization roles
+        if ($role->organization_id && $role->organization_id !== $currentUser->organization_id) {
             abort(403, 'You can only update roles in your organization.');
         }
 
-        // Don't allow editing system roles
-        if ($role->is_system) {
+        // Don't allow editing Administrator role
+        if ($role->slug === 'system-administrator') {
             return redirect()->back()
-                ->withErrors(['role' => 'System roles cannot be edited.']);
+                ->withErrors(['role' => 'The Administrator role cannot be edited.']);
         }
 
         $validated = $request->validate([
