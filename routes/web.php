@@ -44,12 +44,10 @@ Route::middleware('auth')->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
     // Inventory Management - Permission based
-    Route::middleware('permission:view_products')->group(function () {
-        Route::get('/products', [ProductController::class, 'index'])->name('products.index');
-        Route::get('/products/{product}', [ProductController::class, 'show'])->name('products.show');
-    });
-    Route::post('/products', [ProductController::class, 'store'])->name('products.store')->middleware('permission:create_products');
+    Route::get('/products', [ProductController::class, 'index'])->name('products.index')->middleware('permission:view_products');
     Route::get('/products/create', [ProductController::class, 'create'])->name('products.create')->middleware('permission:create_products');
+    Route::post('/products', [ProductController::class, 'store'])->name('products.store')->middleware('permission:create_products');
+    Route::get('/products/{product}', [ProductController::class, 'show'])->name('products.show')->middleware('permission:view_products');
     Route::get('/products/{product}/edit', [ProductController::class, 'edit'])->name('products.edit')->middleware('permission:edit_products');
     Route::put('/products/{product}', [ProductController::class, 'update'])->name('products.update')->middleware('permission:edit_products');
     Route::patch('/products/{product}', [ProductController::class, 'update'])->middleware('permission:edit_products');
@@ -66,36 +64,30 @@ Route::middleware('auth')->group(function () {
         ->middleware('permission:manage_locations');
 
     // Order Management - Permission based
-    Route::middleware('permission:view_orders')->group(function () {
-        Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');
-        Route::get('/orders/{order}', [OrderController::class, 'show'])->name('orders.show');
-    });
-    Route::post('/orders', [OrderController::class, 'store'])->name('orders.store')->middleware('permission:create_orders');
+    Route::get('/orders', [OrderController::class, 'index'])->name('orders.index')->middleware('permission:view_orders');
     Route::get('/orders/create', [OrderController::class, 'create'])->name('orders.create')->middleware('permission:create_orders');
+    Route::post('/orders', [OrderController::class, 'store'])->name('orders.store')->middleware('permission:create_orders');
     Route::get('/orders/{order}/edit', [OrderController::class, 'edit'])->name('orders.edit')->middleware('permission:edit_orders');
     Route::put('/orders/{order}', [OrderController::class, 'update'])->name('orders.update')->middleware('permission:edit_orders');
     Route::patch('/orders/{order}', [OrderController::class, 'update'])->middleware('permission:edit_orders');
+    Route::get('/orders/{order}', [OrderController::class, 'show'])->name('orders.show')->middleware('permission:view_orders');
     Route::delete('/orders/{order}', [OrderController::class, 'destroy'])->name('orders.destroy')->middleware('permission:delete_orders');
 
     // User Management - Permission based
-    Route::middleware('permission:view_users')->group(function () {
-        Route::get('/users', [UserController::class, 'index'])->name('users.index');
-        Route::get('/users/{user}', [UserController::class, 'show'])->name('users.show');
-    });
-    Route::post('/users', [UserController::class, 'store'])->name('users.store')->middleware('permission:create_users');
+    Route::get('/users', [UserController::class, 'index'])->name('users.index')->middleware('permission:view_users');
     Route::get('/users/create', [UserController::class, 'create'])->name('users.create')->middleware('permission:create_users');
+    Route::post('/users', [UserController::class, 'store'])->name('users.store')->middleware('permission:create_users');
+    Route::get('/users/{user}', [UserController::class, 'show'])->name('users.show')->middleware('permission:view_users');
     Route::get('/users/{user}/edit', [UserController::class, 'edit'])->name('users.edit')->middleware('permission:edit_users');
     Route::put('/users/{user}', [UserController::class, 'update'])->name('users.update')->middleware('permission:edit_users');
     Route::patch('/users/{user}', [UserController::class, 'update'])->middleware('permission:edit_users');
     Route::delete('/users/{user}', [UserController::class, 'destroy'])->name('users.destroy')->middleware('permission:delete_users');
 
     // Role Management - Permission based
-    Route::middleware('permission:view_roles')->group(function () {
-        Route::get('/roles', [RoleController::class, 'index'])->name('roles.index');
-        Route::get('/roles/{role}', [RoleController::class, 'show'])->name('roles.show');
-    });
-    Route::post('/roles', [RoleController::class, 'store'])->name('roles.store')->middleware('permission:create_roles');
+    Route::get('/roles', [RoleController::class, 'index'])->name('roles.index')->middleware('permission:view_roles');
     Route::get('/roles/create', [RoleController::class, 'create'])->name('roles.create')->middleware('permission:create_roles');
+    Route::post('/roles', [RoleController::class, 'store'])->name('roles.store')->middleware('permission:create_roles');
+    Route::get('/roles/{role}', [RoleController::class, 'show'])->name('roles.show')->middleware('permission:view_roles');
     Route::get('/roles/{role}/edit', [RoleController::class, 'edit'])->name('roles.edit')->middleware('permission:edit_roles');
     Route::put('/roles/{role}', [RoleController::class, 'update'])->name('roles.update')->middleware('permission:edit_roles');
     Route::patch('/roles/{role}', [RoleController::class, 'update'])->middleware('permission:edit_roles');
