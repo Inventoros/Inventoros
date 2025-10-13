@@ -16,6 +16,12 @@ return Application::configure(basePath: dirname(__DIR__))
             \App\Http\Middleware\CheckInstallation::class,
             \App\Http\Middleware\HandleInertiaRequests::class,
         ]);
+
+        $middleware->alias([
+            'admin' => \App\Http\Middleware\EnsureUserIsAdmin::class,
+            'manager' => \App\Http\Middleware\EnsureUserIsManager::class,
+            'permission' => \App\Http\Middleware\CheckPermission::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //
