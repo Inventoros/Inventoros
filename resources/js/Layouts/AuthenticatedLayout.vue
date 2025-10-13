@@ -1,190 +1,231 @@
 <script setup>
-import { ref } from 'vue';
+import { ref, onMounted } from 'vue';
 import ApplicationLogo from '@/Components/ApplicationLogo.vue';
-import Dropdown from '@/Components/Dropdown.vue';
-import DropdownLink from '@/Components/DropdownLink.vue';
-import NavLink from '@/Components/NavLink.vue';
-import ResponsiveNavLink from '@/Components/ResponsiveNavLink.vue';
 import { Link } from '@inertiajs/vue3';
 
-const showingNavigationDropdown = ref(false);
+const sidebarOpen = ref(false);
+const isDark = ref(true);
+
+const toggleTheme = () => {
+    isDark.value = !isDark.value;
+    if (isDark.value) {
+        document.documentElement.classList.add('dark');
+        localStorage.setItem('theme', 'dark');
+    } else {
+        document.documentElement.classList.remove('dark');
+        localStorage.setItem('theme', 'light');
+    }
+};
+
+onMounted(() => {
+    const savedTheme = localStorage.getItem('theme');
+    if (savedTheme) {
+        isDark.value = savedTheme === 'dark';
+        if (!isDark.value) {
+            document.documentElement.classList.remove('dark');
+        }
+    }
+});
 </script>
 
 <template>
-    <div>
-        <div class="min-h-screen bg-gray-100 dark:bg-gray-900">
-            <nav
-                class="border-b border-gray-100 bg-white dark:border-gray-700 dark:bg-gray-800"
-            >
-                <!-- Primary Navigation Menu -->
-                <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-                    <div class="flex h-16 justify-between">
-                        <div class="flex">
-                            <!-- Logo -->
-                            <div class="flex shrink-0 items-center">
-                                <Link :href="route('dashboard')">
-                                    <ApplicationLogo
-                                        class="block h-9 w-auto fill-current text-gray-800 dark:text-gray-200"
-                                    />
-                                </Link>
-                            </div>
+    <div class="min-h-screen bg-dark-bg">
+        <!-- Sidebar for desktop -->
+        <aside class="fixed inset-y-0 left-0 z-50 w-64 bg-dark-card border-r border-dark-border transform transition-transform duration-200 lg:translate-x-0"
+               :class="{ '-translate-x-full': !sidebarOpen, 'translate-x-0': sidebarOpen }">
+            <div class="flex flex-col h-full">
+                <!-- Logo -->
+                <div class="flex items-center justify-between h-20 px-6 border-b border-dark-border">
+                    <Link :href="route('dashboard')" class="flex items-center gap-3">
+                        <ApplicationLogo class="h-9 w-auto fill-current text-primary-400" />
+                        <span class="text-xl font-bold text-gray-100">InventorOS</span>
+                    </Link>
 
-                            <!-- Navigation Links -->
-                            <div
-                                class="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex"
-                            >
-                                <NavLink
-                                    :href="route('dashboard')"
-                                    :active="route().current('dashboard')"
-                                >
-                                    Dashboard
-                                </NavLink>
-                            </div>
-                        </div>
-
-                        <div class="hidden sm:ms-6 sm:flex sm:items-center">
-                            <!-- Settings Dropdown -->
-                            <div class="relative ms-3">
-                                <Dropdown align="right" width="48">
-                                    <template #trigger>
-                                        <span class="inline-flex rounded-md">
-                                            <button
-                                                type="button"
-                                                class="inline-flex items-center rounded-md border border-transparent bg-white px-3 py-2 text-sm font-medium leading-4 text-gray-500 transition duration-150 ease-in-out hover:text-gray-700 focus:outline-none dark:bg-gray-800 dark:text-gray-400 dark:hover:text-gray-300"
-                                            >
-                                                {{ $page.props.auth.user.name }}
-
-                                                <svg
-                                                    class="-me-0.5 ms-2 h-4 w-4"
-                                                    xmlns="http://www.w3.org/2000/svg"
-                                                    viewBox="0 0 20 20"
-                                                    fill="currentColor"
-                                                >
-                                                    <path
-                                                        fill-rule="evenodd"
-                                                        d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
-                                                        clip-rule="evenodd"
-                                                    />
-                                                </svg>
-                                            </button>
-                                        </span>
-                                    </template>
-
-                                    <template #content>
-                                        <DropdownLink
-                                            :href="route('profile.edit')"
-                                        >
-                                            Profile
-                                        </DropdownLink>
-                                        <DropdownLink
-                                            :href="route('logout')"
-                                            method="post"
-                                            as="button"
-                                        >
-                                            Log Out
-                                        </DropdownLink>
-                                    </template>
-                                </Dropdown>
-                            </div>
-                        </div>
-
-                        <!-- Hamburger -->
-                        <div class="-me-2 flex items-center sm:hidden">
-                            <button
-                                @click="
-                                    showingNavigationDropdown =
-                                        !showingNavigationDropdown
-                                "
-                                class="inline-flex items-center justify-center rounded-md p-2 text-gray-400 transition duration-150 ease-in-out hover:bg-gray-100 hover:text-gray-500 focus:bg-gray-100 focus:text-gray-500 focus:outline-none dark:text-gray-500 dark:hover:bg-gray-900 dark:hover:text-gray-400 dark:focus:bg-gray-900 dark:focus:text-gray-400"
-                            >
-                                <svg
-                                    class="h-6 w-6"
-                                    stroke="currentColor"
-                                    fill="none"
-                                    viewBox="0 0 24 24"
-                                >
-                                    <path
-                                        :class="{
-                                            hidden: showingNavigationDropdown,
-                                            'inline-flex':
-                                                !showingNavigationDropdown,
-                                        }"
-                                        stroke-linecap="round"
-                                        stroke-linejoin="round"
-                                        stroke-width="2"
-                                        d="M4 6h16M4 12h16M4 18h16"
-                                    />
-                                    <path
-                                        :class="{
-                                            hidden: !showingNavigationDropdown,
-                                            'inline-flex':
-                                                showingNavigationDropdown,
-                                        }"
-                                        stroke-linecap="round"
-                                        stroke-linejoin="round"
-                                        stroke-width="2"
-                                        d="M6 18L18 6M6 6l12 12"
-                                    />
-                                </svg>
-                            </button>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Responsive Navigation Menu -->
-                <div
-                    :class="{
-                        block: showingNavigationDropdown,
-                        hidden: !showingNavigationDropdown,
-                    }"
-                    class="sm:hidden"
-                >
-                    <div class="space-y-1 pb-3 pt-2">
-                        <ResponsiveNavLink
-                            :href="route('dashboard')"
-                            :active="route().current('dashboard')"
-                        >
-                            Dashboard
-                        </ResponsiveNavLink>
-                    </div>
-
-                    <!-- Responsive Settings Options -->
-                    <div
-                        class="border-t border-gray-200 pb-1 pt-4 dark:border-gray-600"
+                    <!-- Theme Toggle -->
+                    <button
+                        @click="toggleTheme"
+                        class="p-2 text-gray-400 hover:text-primary-400 hover:bg-dark-bg/50 rounded-lg transition"
+                        title="Toggle theme"
                     >
-                        <div class="px-4">
-                            <div
-                                class="text-base font-medium text-gray-800 dark:text-gray-200"
-                            >
-                                {{ $page.props.auth.user.name }}
-                            </div>
-                            <div class="text-sm font-medium text-gray-500">
-                                {{ $page.props.auth.user.email }}
-                            </div>
-                        </div>
+                        <!-- Sun icon for light mode -->
+                        <svg v-if="isDark" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+                        </svg>
+                        <!-- Moon icon for dark mode -->
+                        <svg v-else class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+                        </svg>
+                    </button>
+                </div>
 
-                        <div class="mt-3 space-y-1">
-                            <ResponsiveNavLink :href="route('profile.edit')">
-                                Profile
-                            </ResponsiveNavLink>
-                            <ResponsiveNavLink
-                                :href="route('logout')"
-                                method="post"
-                                as="button"
-                            >
-                                Log Out
-                            </ResponsiveNavLink>
+                <!-- Navigation Links -->
+                <nav class="flex-1 px-4 py-6 space-y-1 overflow-y-auto">
+                    <!-- Dashboard -->
+                    <Link
+                        :href="route('dashboard')"
+                        :class="[
+                            'flex items-center gap-3 px-3 py-3 rounded-lg transition-all duration-150',
+                            route().current('dashboard')
+                                ? 'bg-primary-400/10 text-primary-400 border border-primary-400/30'
+                                : 'text-gray-400 hover:text-gray-200 hover:bg-dark-bg/50'
+                        ]"
+                    >
+                        <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                        </svg>
+                        <span class="font-medium">Dashboard</span>
+                    </Link>
+
+                    <!-- Inventory -->
+                    <Link
+                        :href="route('products.index')"
+                        :class="[
+                            'flex items-center gap-3 px-3 py-3 rounded-lg transition-all duration-150',
+                            route().current('products.*')
+                                ? 'bg-primary-400/10 text-primary-400 border border-primary-400/30'
+                                : 'text-gray-400 hover:text-gray-200 hover:bg-dark-bg/50'
+                        ]"
+                    >
+                        <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                        </svg>
+                        <span class="font-medium">Inventory</span>
+                    </Link>
+
+                    <!-- Orders -->
+                    <Link
+                        :href="route('orders.index')"
+                        :class="[
+                            'flex items-center gap-3 px-3 py-3 rounded-lg transition-all duration-150',
+                            route().current('orders.*')
+                                ? 'bg-pink-400/10 text-pink-400 border border-pink-400/30'
+                                : 'text-gray-400 hover:text-gray-200 hover:bg-dark-bg/50'
+                        ]"
+                    >
+                        <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+                        </svg>
+                        <span class="font-medium">Orders</span>
+                    </Link>
+
+                    <!-- Divider -->
+                    <div class="pt-4 pb-4">
+                        <div class="border-t border-dark-border"></div>
+                    </div>
+
+                    <!-- Section Header -->
+                    <div class="px-3 pb-3 pt-2">
+                        <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider">Organization</p>
+                    </div>
+
+                    <!-- Categories -->
+                    <Link
+                        :href="route('categories.index')"
+                        :class="[
+                            'flex items-center gap-3 px-3 py-3 rounded-lg transition-all duration-150',
+                            route().current('categories.*')
+                                ? 'bg-accent-purple/10 text-accent-purple border border-accent-purple/30'
+                                : 'text-gray-400 hover:text-gray-200 hover:bg-dark-bg/50'
+                        ]"
+                    >
+                        <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+                        </svg>
+                        <span class="font-medium">Categories</span>
+                    </Link>
+
+                    <!-- Locations -->
+                    <Link
+                        :href="route('locations.index')"
+                        :class="[
+                            'flex items-center gap-3 px-3 py-3 rounded-lg transition-all duration-150',
+                            route().current('locations.*')
+                                ? 'bg-orange-400/10 text-orange-400 border border-orange-400/30'
+                                : 'text-gray-400 hover:text-gray-200 hover:bg-dark-bg/50'
+                        ]"
+                    >
+                        <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                        </svg>
+                        <span class="font-medium">Locations</span>
+                    </Link>
+                </nav>
+
+                <!-- User Profile at Bottom -->
+                <div class="border-t border-dark-border px-4 py-4">
+                    <div class="flex items-center gap-3 px-3 py-3 rounded-lg bg-dark-bg/30">
+                        <div class="flex-shrink-0">
+                            <div class="w-10 h-10 rounded-full bg-gradient-to-br from-primary-400 to-primary-600 flex items-center justify-center ring-2 ring-primary-400/30">
+                                <span class="text-sm font-bold text-white">{{ $page.props.auth.user.name.charAt(0).toUpperCase() }}</span>
+                            </div>
                         </div>
+                        <div class="flex-1 min-w-0">
+                            <p class="text-sm font-semibold text-gray-100 truncate">{{ $page.props.auth.user.name }}</p>
+                            <p class="text-xs text-gray-400 truncate">{{ $page.props.auth.user.email }}</p>
+                        </div>
+                        <Link
+                            :href="route('logout')"
+                            method="post"
+                            as="button"
+                            class="flex-shrink-0 p-2 text-gray-500 hover:text-red-400 hover:bg-red-400/10 rounded-lg transition"
+                            title="Logout"
+                        >
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                            </svg>
+                        </Link>
                     </div>
                 </div>
-            </nav>
+            </div>
+        </aside>
+
+        <!-- Mobile sidebar overlay -->
+        <div
+            v-show="sidebarOpen"
+            @click="sidebarOpen = false"
+            class="fixed inset-0 z-40 bg-black/50 lg:hidden"
+        ></div>
+
+        <!-- Main content area -->
+        <div class="lg:pl-64">
+            <!-- Top bar for mobile -->
+            <div class="sticky top-0 z-30 bg-dark-card border-b border-dark-border lg:hidden">
+                <div class="flex items-center justify-between px-4 h-16">
+                    <button
+                        @click="sidebarOpen = !sidebarOpen"
+                        class="text-gray-400 hover:text-primary-400 transition"
+                    >
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                        </svg>
+                    </button>
+                    <Link :href="route('dashboard')" class="flex items-center gap-2">
+                        <ApplicationLogo class="h-7 w-auto fill-current text-primary-400" />
+                        <span class="text-lg font-bold text-gray-100">InventorOS</span>
+                    </Link>
+                    <!-- Theme Toggle for mobile -->
+                    <button
+                        @click="toggleTheme"
+                        class="p-2 text-gray-400 hover:text-primary-400 transition"
+                        title="Toggle theme"
+                    >
+                        <svg v-if="isDark" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+                        </svg>
+                        <svg v-else class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
 
             <!-- Page Heading -->
             <header
-                class="bg-white shadow dark:bg-gray-800"
+                class="bg-dark-card border-b border-dark-border"
                 v-if="$slots.header"
             >
-                <div class="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+                <div class="px-4 py-6 sm:px-6 lg:px-8">
                     <slot name="header" />
                 </div>
             </header>

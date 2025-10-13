@@ -23,11 +23,15 @@ class Product extends Model
         'name',
         'description',
         'price',
-        'cost',
+        'selling_price',
+        'currency',
+        'price_in_currencies',
+        'purchase_price',
         'stock',
         'min_stock',
         'max_stock',
         'barcode',
+        'notes',
         'image',
         'category_id',
         'location_id',
@@ -44,12 +48,14 @@ class Product extends Model
     {
         return [
             'price' => 'decimal:2',
-            'cost' => 'decimal:2',
+            'selling_price' => 'decimal:2',
+            'purchase_price' => 'decimal:2',
             'stock' => 'integer',
             'min_stock' => 'integer',
             'max_stock' => 'integer',
             'is_active' => 'boolean',
             'metadata' => 'array',
+            'price_in_currencies' => 'array',
         ];
     }
 
@@ -115,5 +121,35 @@ class Product extends Model
     public function isOutOfStock(): bool
     {
         return $this->stock <= 0;
+    }
+
+    /**
+     * Get the profit per unit.
+     */
+    public function getProfitAttribute(): float
+    {
+        if (!$this->purchase_price || !$this->price) {
+            return 0;
+        }
+        return $this->price - $this->purchase_price;
+    }
+
+    /**
+     * Get the profit margin percentage.
+     */
+    public function getProfitMarginAttribute(): float
+    {
+        if (!$this->purchase_price || !$this->price || $this->price == 0) {
+            return 0;
+        }
+        return (($this->price - $this->purchase_price) / $this->price) * 100;
+    }
+
+    /**
+     * Get the total profit for all stock.
+     */
+    public function getTotalProfitAttribute(): float
+    {
+        return $this->profit * $this->stock;
     }
 }

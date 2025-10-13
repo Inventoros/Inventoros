@@ -1,7 +1,8 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Inventory;
 
+use App\Http\Controllers\Controller;
 use App\Models\Inventory\Product;
 use App\Models\Inventory\ProductCategory;
 use App\Models\Inventory\ProductLocation;
@@ -40,9 +41,19 @@ class ProductController extends Controller
             ->paginate(15)
             ->withQueryString();
 
+        $categories = ProductCategory::forOrganization($organizationId)
+            ->active()
+            ->get(['id', 'name']);
+
+        $locations = ProductLocation::forOrganization($organizationId)
+            ->active()
+            ->get(['id', 'name']);
+
         return Inertia::render('Products/Index', [
             'products' => $products,
             'filters' => $request->only(['search', 'category', 'location', 'low_stock']),
+            'categories' => $categories,
+            'locations' => $locations,
         ]);
     }
 
@@ -61,9 +72,14 @@ class ProductController extends Controller
             ->active()
             ->get(['id', 'name', 'code']);
 
+        $currencies = config('currencies.supported');
+        $defaultCurrency = config('currencies.default');
+
         return Inertia::render('Products/Create', [
             'categories' => $categories,
             'locations' => $locations,
+            'currencies' => $currencies,
+            'defaultCurrency' => $defaultCurrency,
         ]);
     }
 
@@ -77,17 +93,31 @@ class ProductController extends Controller
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
             'price' => 'required|numeric|min:0',
-            'cost' => 'nullable|numeric|min:0',
+            'purchase_price' => 'nullable|numeric|min:0',
+            'currency' => 'required|string|max:3',
+            'price_in_currencies' => 'nullable|array',
+            'price_in_currencies.*.currency' => 'required|string|max:3',
+            'price_in_currencies.*.price' => 'required|numeric|min:0',
             'stock' => 'required|integer|min:0',
             'min_stock' => 'required|integer|min:0',
             'max_stock' => 'nullable|integer|min:0',
             'barcode' => 'nullable|string|max:255',
+            'notes' => 'nullable|string',
             'category_id' => 'nullable|exists:product_categories,id',
             'location_id' => 'nullable|exists:product_locations,id',
             'is_active' => 'boolean',
         ]);
 
         $validated['organization_id'] = $request->user()->organization_id;
+
+        // Convert price_in_currencies array to proper format
+        if (!empty($validated['price_in_currencies'])) {
+            $currencies = [];
+            foreach ($validated['price_in_currencies'] as $currencyPrice) {
+                $currencies[$currencyPrice['currency']] = $currencyPrice['price'];
+            }
+            $validated['price_in_currencies'] = $currencies;
+        }
 
         Product::create($validated);
 
@@ -154,11 +184,12 @@ class ProductController extends Controller
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
             'price' => 'required|numeric|min:0',
-            'cost' => 'nullable|numeric|min:0',
+            'purchase_price' => 'nullable|numeric|min:0',
             'stock' => 'required|integer|min:0',
             'min_stock' => 'required|integer|min:0',
             'max_stock' => 'nullable|integer|min:0',
             'barcode' => 'nullable|string|max:255',
+            'notes' => 'nullable|string',
             'category_id' => 'nullable|exists:product_categories,id',
             'location_id' => 'nullable|exists:product_locations,id',
             'is_active' => 'boolean',
