@@ -77,12 +77,19 @@ defineProps({
                                         View
                                     </Link>
                                     <Link
-                                        v-if="!role.is_system"
+                                        v-if="role.slug !== 'system-administrator'"
                                         :href="route('roles.edit', role.id)"
                                         class="flex-1 px-3 py-2 text-center text-sm font-medium text-primary-400 bg-primary-400/10 hover:bg-primary-400/20 rounded-md transition"
                                     >
                                         Edit
                                     </Link>
+                                    <div
+                                        v-else
+                                        class="flex-1 px-3 py-2 text-center text-sm font-medium text-gray-600 bg-dark-bg/30 rounded-md cursor-not-allowed"
+                                        title="Administrator role cannot be edited"
+                                    >
+                                        Locked
+                                    </div>
                                 </div>
                             </div>
 
