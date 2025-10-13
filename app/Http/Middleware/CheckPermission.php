@@ -24,16 +24,26 @@ class CheckPermission
         // Split permission string if multiple permissions are provided
         $permissions = explode('|', $permission);
 
+        $hasPermission = false;
+
         if ($guard === 'all') {
             // User must have ALL specified permissions
-            if (!$request->user()->hasAllPermissions($permissions)) {
-                abort(403, 'You do not have the required permissions to perform this action.');
-            }
+            $hasPermission = $request->user()->hasAllPermissions($permissions);
         } else {
             // User must have ANY of the specified permissions (default)
-            if (!$request->user()->hasAnyPermission($permissions)) {
-                abort(403, 'You do not have the required permissions to perform this action.');
+            $hasPermission = $request->user()->hasAnyPermission($permissions);
+        }
+
+        if (!$hasPermission) {
+            // If it's an Inertia request, render the 403 page
+            if ($request->header('X-Inertia')) {
+                return \Inertia\Inertia::render('Errors/403', [
+                    'previousUrl' => url()->previous(),
+                ])->toResponse($request)->setStatusCode(403);
             }
+
+            // Otherwise, abort with plain error
+            abort(403, 'You do not have the required permissions to perform this action.');
         }
 
         return $next($request);

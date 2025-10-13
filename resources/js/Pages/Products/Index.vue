@@ -56,7 +56,7 @@ const isLowStock = (product) => {
     <AuthenticatedLayout>
         <template #header>
             <div class="flex items-center justify-between">
-                <h2 class="font-semibold text-xl text-gray-100 leading-tight">
+                <h2 class="font-semibold text-xl text-gray-900 dark:text-gray-100 leading-tight">
                     Inventory
                 </h2>
                 <Link
@@ -71,16 +71,16 @@ const isLowStock = (product) => {
             </div>
         </template>
 
-        <div class="py-12">
+        <div class="py-12 bg-gray-50 dark:bg-dark-bg min-h-screen">
             <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
                 <!-- Search and Filters -->
-                <div class="mb-6 bg-dark-card border border-dark-border overflow-hidden shadow-lg sm:rounded-lg">
+                <div class="mb-6 bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border overflow-hidden shadow-lg sm:rounded-lg">
                     <div class="p-6">
                         <form @submit.prevent="searchProducts" class="space-y-4">
                             <div class="grid grid-cols-1 gap-4 md:grid-cols-4">
                                 <!-- Search -->
                                 <div class="md:col-span-2">
-                                    <label for="search" class="block text-sm font-medium text-gray-300 mb-1">
+                                    <label for="search" class="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-1">
                                         Search Products
                                     </label>
                                     <input
@@ -88,19 +88,19 @@ const isLowStock = (product) => {
                                         v-model="search"
                                         type="text"
                                         placeholder="Search by name, SKU, or barcode..."
-                                        class="block w-full rounded-md bg-dark-bg border-dark-border text-gray-100 placeholder-gray-500 shadow-sm focus:border-primary-400 focus:ring-primary-400"
+                                        class="block w-full rounded-md bg-gray-50 dark:bg-dark-bg border-gray-200 dark:border-dark-border text-gray-900 dark:text-gray-100 placeholder-gray-500 shadow-sm focus:border-primary-400 focus:ring-primary-400"
                                     />
                                 </div>
 
                                 <!-- Category Filter -->
                                 <div>
-                                    <label for="category" class="block text-sm font-medium text-gray-300 mb-1">
+                                    <label for="category" class="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-1">
                                         Category
                                     </label>
                                     <select
                                         id="category"
                                         v-model="category"
-                                        class="block w-full rounded-md bg-dark-bg border-dark-border text-gray-100 placeholder-gray-500 shadow-sm focus:border-primary-400 focus:ring-primary-400"
+                                        class="block w-full rounded-md bg-gray-50 dark:bg-dark-bg border-gray-200 dark:border-dark-border text-gray-900 dark:text-gray-100 placeholder-gray-500 shadow-sm focus:border-primary-400 focus:ring-primary-400"
                                     >
                                         <option value="">All Categories</option>
                                         <option v-for="cat in categories" :key="cat.id" :value="cat.id">
@@ -111,13 +111,13 @@ const isLowStock = (product) => {
 
                                 <!-- Location Filter -->
                                 <div>
-                                    <label for="location" class="block text-sm font-medium text-gray-300 mb-1">
+                                    <label for="location" class="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-1">
                                         Location
                                     </label>
                                     <select
                                         id="location"
                                         v-model="location"
-                                        class="block w-full rounded-md bg-dark-bg border-dark-border text-gray-100 placeholder-gray-500 shadow-sm focus:border-primary-400 focus:ring-primary-400"
+                                        class="block w-full rounded-md bg-gray-50 dark:bg-dark-bg border-gray-200 dark:border-dark-border text-gray-900 dark:text-gray-100 placeholder-gray-500 shadow-sm focus:border-primary-400 focus:ring-primary-400"
                                     >
                                         <option value="">All Locations</option>
                                         <option v-for="loc in locations" :key="loc.id" :value="loc.id">
@@ -141,7 +141,7 @@ const isLowStock = (product) => {
                                 <button
                                     type="button"
                                     @click="clearFilters"
-                                    class="inline-flex items-center px-4 py-2 bg-dark-bg border border-dark-border rounded-md font-semibold text-xs text-gray-300 uppercase tracking-widest hover:bg-dark-bg/50"
+                                    class="inline-flex items-center px-4 py-2 bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-border rounded-md font-semibold text-xs text-gray-600 dark:text-gray-300 uppercase tracking-widest hover:bg-gray-100 dark:hover:bg-dark-bg/50"
                                 >
                                     Clear Filters
                                 </button>
@@ -151,41 +151,41 @@ const isLowStock = (product) => {
                 </div>
 
                 <!-- Products Table -->
-                <div class="bg-dark-card border border-dark-border overflow-hidden shadow-lg sm:rounded-lg">
+                <div class="bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border overflow-hidden shadow-lg sm:rounded-lg">
                     <div class="overflow-x-auto">
-                        <table class="min-w-full divide-y divide-dark-border">
-                            <thead class="bg-dark-bg/50">
+                        <table class="min-w-full divide-y divide-gray-200 dark:divide-dark-border">
+                            <thead class="bg-gray-50 dark:bg-dark-bg/50">
                                 <tr>
-                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                                         Product
                                     </th>
-                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                                         SKU / Barcode
                                     </th>
-                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                                         Category
                                     </th>
-                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                                         Location
                                     </th>
-                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                                         Stock
                                     </th>
-                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                                         Price
                                     </th>
-                                    <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-400 uppercase tracking-wider">
+                                    <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                                         Actions
                                     </th>
                                 </tr>
                             </thead>
-                            <tbody class="bg-dark-card divide-y divide-dark-border">
+                            <tbody class="bg-white dark:bg-dark-card divide-y divide-gray-200 dark:divide-dark-border">
                                 <tr v-if="products.data.length === 0">
                                     <td colspan="7" class="px-6 py-12 text-center">
-                                        <svg class="w-12 h-12 text-gray-400 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <svg class="w-12 h-12 text-gray-500 dark:text-gray-400 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
                                         </svg>
-                                        <p class="text-gray-400 mb-3">No products found</p>
+                                        <p class="text-gray-500 dark:text-gray-400 mb-3">No products found</p>
                                         <Link
                                             :href="route('products.create')"
                                             class="inline-flex items-center px-4 py-2 bg-primary-400 text-white text-sm font-semibold rounded-lg hover:bg-primary-500 transition"
@@ -197,30 +197,30 @@ const isLowStock = (product) => {
                                         </Link>
                                     </td>
                                 </tr>
-                                <tr v-for="product in products.data" :key="product.id" class="hover:bg-dark-bg/50">
+                                <tr v-for="product in products.data" :key="product.id" class="hover:bg-gray-100 dark:hover:bg-dark-bg/50">
                                     <td class="px-6 py-4 whitespace-nowrap">
                                         <div class="flex items-center">
                                             <div>
-                                                <div class="text-sm font-medium text-gray-100">
+                                                <div class="text-sm font-medium text-gray-900 dark:text-gray-100">
                                                     {{ product.name }}
                                                 </div>
-                                                <div v-if="product.description" class="text-sm text-gray-400 truncate max-w-xs">
+                                                <div v-if="product.description" class="text-sm text-gray-500 dark:text-gray-400 truncate max-w-xs">
                                                     {{ product.description }}
                                                 </div>
                                             </div>
                                         </div>
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap">
-                                        <div class="text-sm text-gray-100">{{ product.sku }}</div>
-                                        <div v-if="product.barcode" class="text-sm text-gray-400">{{ product.barcode }}</div>
+                                        <div class="text-sm text-gray-900 dark:text-gray-100">{{ product.sku }}</div>
+                                        <div v-if="product.barcode" class="text-sm text-gray-500 dark:text-gray-400">{{ product.barcode }}</div>
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap">
-                                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-purple-900/30 text-purple-300">
+                                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-300">
                                             {{ product.category?.name || 'N/A' }}
                                         </span>
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap">
-                                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-orange-900/30 text-orange-300">
+                                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-orange-100 dark:bg-orange-900/30 text-orange-800 dark:text-orange-300">
                                             {{ product.location?.name || 'N/A' }}
                                         </span>
                                     </td>
@@ -231,7 +231,7 @@ const isLowStock = (product) => {
                                                     'text-sm font-medium',
                                                     isLowStock(product)
                                                         ? 'text-red-400'
-                                                        : 'text-gray-100'
+                                                        : 'text-gray-900 dark:text-gray-100'
                                                 ]"
                                             >
                                                 {{ product.stock }}
@@ -245,11 +245,11 @@ const isLowStock = (product) => {
                                                 <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
                                             </svg>
                                         </div>
-                                        <div class="text-xs text-gray-400">
+                                        <div class="text-xs text-gray-500 dark:text-gray-400">
                                             Min: {{ product.min_stock }}
                                         </div>
                                     </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-100">
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
                                         {{ formatCurrency(product.price) }}
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
@@ -287,27 +287,27 @@ const isLowStock = (product) => {
                     </div>
 
                     <!-- Pagination -->
-                    <div v-if="products.data.length > 0" class="bg-dark-card px-4 py-3 border-t border-dark-border sm:px-6">
+                    <div v-if="products.data.length > 0" class="bg-white dark:bg-dark-card px-4 py-3 border-t border-gray-200 dark:border-dark-border sm:px-6">
                         <div class="flex items-center justify-between">
                             <div class="flex-1 flex justify-between sm:hidden">
                                 <Link
                                     v-if="products.prev_page_url"
                                     :href="products.prev_page_url"
-                                    class="relative inline-flex items-center px-4 py-2 border border-dark-border text-sm font-medium rounded-md text-gray-300 bg-dark-card hover:bg-dark-bg/50"
+                                    class="relative inline-flex items-center px-4 py-2 border border-primary-300 dark:border-dark-border text-sm font-semibold rounded-md text-primary-600 dark:text-gray-300 bg-white dark:bg-dark-card hover:bg-primary-50 dark:hover:bg-dark-bg/50 transition"
                                 >
                                     Previous
                                 </Link>
                                 <Link
                                     v-if="products.next_page_url"
                                     :href="products.next_page_url"
-                                    class="ml-3 relative inline-flex items-center px-4 py-2 border border-dark-border text-sm font-medium rounded-md text-gray-300 bg-dark-card hover:bg-dark-bg/50"
+                                    class="ml-3 relative inline-flex items-center px-4 py-2 border border-primary-300 dark:border-dark-border text-sm font-semibold rounded-md text-primary-600 dark:text-gray-300 bg-white dark:bg-dark-card hover:bg-primary-50 dark:hover:bg-dark-bg/50 transition"
                                 >
                                     Next
                                 </Link>
                             </div>
                             <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
                                 <div>
-                                    <p class="text-sm text-gray-300">
+                                    <p class="text-sm text-gray-600 dark:text-gray-300">
                                         Showing
                                         <span class="font-medium">{{ products.from }}</span>
                                         to
@@ -326,8 +326,8 @@ const isLowStock = (product) => {
                                                 :class="[
                                                     'relative inline-flex items-center px-4 py-2 border text-sm font-medium',
                                                     link.active
-                                                        ? 'z-10 bg-primary-900/30 border-primary-500 text-primary-400'
-                                                        : 'bg-dark-card border-dark-border text-gray-400 hover:bg-dark-bg/50'
+                                                        ? 'z-10 bg-primary-100 dark:bg-primary-900/30 border-primary-400 text-primary-600 dark:text-primary-400'
+                                                        : 'bg-white dark:bg-dark-card border-gray-200 dark:border-dark-border text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-dark-bg/50'
                                                 ]"
                                                 v-html="link.label"
                                             />
@@ -335,7 +335,7 @@ const isLowStock = (product) => {
                                                 v-else
                                                 :class="[
                                                     'relative inline-flex items-center px-4 py-2 border text-sm font-medium',
-                                                    'bg-dark-card border-dark-border text-gray-400 opacity-50 cursor-not-allowed'
+                                                    'bg-gray-100 dark:bg-dark-card border-gray-200 dark:border-dark-border text-gray-400 dark:text-gray-500 opacity-50 cursor-not-allowed'
                                                 ]"
                                                 v-html="link.label"
                                             />
