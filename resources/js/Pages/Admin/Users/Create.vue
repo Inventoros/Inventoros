@@ -32,19 +32,19 @@ const submit = () => {
     <AuthenticatedLayout>
         <template #header>
             <div class="flex items-center justify-between">
-                <h2 class="font-semibold text-2xl text-gray-100">Create User</h2>
+                <h2 class="font-semibold text-2xl text-gray-900 dark:text-gray-100">Create User</h2>
                 <Link
                     :href="route('users.index')"
-                    class="px-4 py-2 bg-dark-bg hover:bg-dark-bg/80 text-gray-300 font-medium rounded-lg transition border border-dark-border"
+                    class="px-4 py-2 bg-dark-bg hover:bg-gray-100 dark:hover:bg-dark-bg/80 text-gray-600 dark:text-gray-300 font-medium rounded-lg transition border border-gray-200 dark:border-dark-border"
                 >
                     Back to Users
                 </Link>
             </div>
         </template>
 
-        <div class="py-12">
+        <div class="py-12 bg-gray-50 dark:bg-dark-bg min-h-screen">
             <div class="max-w-3xl mx-auto sm:px-6 lg:px-8">
-                <div class="bg-dark-card shadow-sm sm:rounded-lg border border-dark-border overflow-hidden">
+                <div class="bg-white dark:bg-dark-card shadow-sm sm:rounded-lg border border-gray-200 dark:border-dark-border overflow-hidden">
                     <form @submit.prevent="submit" class="p-6 space-y-6">
                         <!-- Name -->
                         <div>
@@ -110,7 +110,7 @@ const submit = () => {
                             <select
                                 id="role"
                                 v-model="form.role"
-                                class="mt-1 block w-full border-gray-600 bg-dark-bg text-gray-100 focus:border-primary-500 focus:ring-primary-500 rounded-md shadow-sm"
+                                class="mt-1 block w-full border-gray-600 bg-gray-50 dark:bg-dark-bg text-gray-900 dark:text-gray-100 focus:border-primary-500 focus:ring-primary-500 rounded-md shadow-sm"
                                 required
                             >
                                 <option value="member">Member</option>
@@ -126,20 +126,20 @@ const submit = () => {
                         <!-- Additional Roles (if any custom roles exist) -->
                         <div v-if="roles && roles.length > 0">
                             <InputLabel value="Additional Roles (Optional)" />
-                            <div class="mt-2 space-y-2 max-h-48 overflow-y-auto border border-dark-border rounded-md p-4 bg-dark-bg/50">
+                            <div class="mt-2 space-y-2 max-h-48 overflow-y-auto border border-gray-200 dark:border-dark-border rounded-md p-4 bg-gray-50 dark:bg-dark-bg/50">
                                 <label
                                     v-for="role in roles"
                                     :key="role.id"
-                                    class="flex items-center space-x-3 cursor-pointer hover:bg-dark-bg/50 p-2 rounded"
+                                    class="flex items-center space-x-3 cursor-pointer hover:bg-gray-100 dark:hover:bg-dark-bg/50 p-2 rounded"
                                 >
                                     <input
                                         type="checkbox"
                                         :value="role.id"
                                         v-model="form.role_ids"
-                                        class="rounded border-gray-600 text-primary-600 shadow-sm focus:ring-primary-500 bg-dark-bg"
+                                        class="rounded border-gray-600 text-primary-600 shadow-sm focus:ring-primary-500 bg-gray-50 dark:bg-dark-bg"
                                     />
                                     <div class="flex-1">
-                                        <div class="text-sm font-medium text-gray-300">{{ role.name }}</div>
+                                        <div class="text-sm font-medium text-gray-600 dark:text-gray-300">{{ role.name }}</div>
                                         <div class="text-xs text-gray-500" v-if="role.description">{{ role.description }}</div>
                                     </div>
                                     <span class="text-xs text-gray-500">
@@ -153,14 +153,14 @@ const submit = () => {
                         </div>
 
                         <!-- Actions -->
-                        <div class="flex items-center gap-4 pt-4 border-t border-dark-border">
+                        <div class="flex items-center gap-4 pt-4 border-t border-gray-200 dark:border-dark-border">
                             <PrimaryButton :disabled="form.processing">
                                 Create User
                             </PrimaryButton>
 
                             <Link
                                 :href="route('users.index')"
-                                class="text-sm text-gray-400 hover:text-gray-300 transition"
+                                class="text-sm text-gray-500 dark:text-gray-400 hover:text-gray-600 dark:text-gray-300 transition"
                             >
                                 Cancel
                             </Link>

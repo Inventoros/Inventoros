@@ -48,19 +48,19 @@ const isCategorySelected = (category) => {
     <AuthenticatedLayout>
         <template #header>
             <div class="flex items-center justify-between">
-                <h2 class="font-semibold text-2xl text-gray-100">Create Role</h2>
+                <h2 class="font-semibold text-2xl text-gray-900 dark:text-gray-100">Create Role</h2>
                 <Link
                     :href="route('roles.index')"
-                    class="px-4 py-2 bg-dark-bg hover:bg-dark-bg/80 text-gray-300 font-medium rounded-lg transition border border-dark-border"
+                    class="px-4 py-2 bg-dark-bg hover:bg-gray-100 dark:hover:bg-dark-bg/80 text-gray-600 dark:text-gray-300 font-medium rounded-lg transition border border-gray-200 dark:border-dark-border"
                 >
                     Back to Roles
                 </Link>
             </div>
         </template>
 
-        <div class="py-12">
+        <div class="py-12 bg-gray-50 dark:bg-dark-bg min-h-screen">
             <div class="max-w-4xl mx-auto sm:px-6 lg:px-8">
-                <div class="bg-dark-card shadow-sm sm:rounded-lg border border-dark-border overflow-hidden">
+                <div class="bg-white dark:bg-dark-card shadow-sm sm:rounded-lg border border-gray-200 dark:border-dark-border overflow-hidden">
                     <form @submit.prevent="submit" class="p-6 space-y-6">
                         <!-- Name -->
                         <div>
@@ -84,7 +84,7 @@ const isCategorySelected = (category) => {
                                 id="description"
                                 v-model="form.description"
                                 rows="3"
-                                class="mt-1 block w-full border-gray-600 bg-dark-bg text-gray-100 focus:border-primary-500 focus:ring-primary-500 rounded-md shadow-sm"
+                                class="mt-1 block w-full border-gray-600 bg-gray-50 dark:bg-dark-bg text-gray-900 dark:text-gray-100 focus:border-primary-500 focus:ring-primary-500 rounded-md shadow-sm"
                                 placeholder="Describe the purpose and responsibilities of this role..."
                             ></textarea>
                             <InputError class="mt-2" :message="form.errors.description" />
@@ -101,10 +101,10 @@ const isCategorySelected = (category) => {
                                 <div
                                     v-for="(perms, category) in permissions"
                                     :key="category"
-                                    class="border border-dark-border rounded-lg p-4 bg-dark-bg/30"
+                                    class="border border-gray-200 dark:border-dark-border rounded-lg p-4 bg-gray-50 dark:bg-dark-bg/30"
                                 >
                                     <!-- Category Header -->
-                                    <div class="flex items-center justify-between mb-3 pb-2 border-b border-dark-border">
+                                    <div class="flex items-center justify-between mb-3 pb-2 border-b border-gray-200 dark:border-dark-border">
                                         <h4 class="font-semibold text-gray-200">{{ category }}</h4>
                                         <button
                                             type="button"
@@ -123,16 +123,16 @@ const isCategorySelected = (category) => {
                                         <label
                                             v-for="permission in perms"
                                             :key="permission.value"
-                                            class="flex items-start space-x-3 cursor-pointer hover:bg-dark-bg/50 p-2 rounded transition"
+                                            class="flex items-start space-x-3 cursor-pointer hover:bg-gray-100 dark:hover:bg-dark-bg/50 p-2 rounded transition"
                                         >
                                             <input
                                                 type="checkbox"
                                                 :value="permission.value"
                                                 v-model="form.permissions"
-                                                class="mt-1 rounded border-gray-600 text-primary-600 shadow-sm focus:ring-primary-500 bg-dark-bg"
+                                                class="mt-1 rounded border-gray-600 text-primary-600 shadow-sm focus:ring-primary-500 bg-gray-50 dark:bg-dark-bg"
                                             />
                                             <div class="flex-1">
-                                                <div class="text-sm font-medium text-gray-300">{{ permission.label }}</div>
+                                                <div class="text-sm font-medium text-gray-600 dark:text-gray-300">{{ permission.label }}</div>
                                                 <div class="text-xs text-gray-500">{{ permission.description }}</div>
                                             </div>
                                         </label>
@@ -150,14 +150,14 @@ const isCategorySelected = (category) => {
                         </div>
 
                         <!-- Actions -->
-                        <div class="flex items-center gap-4 pt-4 border-t border-dark-border">
+                        <div class="flex items-center gap-4 pt-4 border-t border-gray-200 dark:border-dark-border">
                             <PrimaryButton :disabled="form.processing">
                                 Create Role
                             </PrimaryButton>
 
                             <Link
                                 :href="route('roles.index')"
-                                class="text-sm text-gray-400 hover:text-gray-300 transition"
+                                class="text-sm text-gray-500 dark:text-gray-400 hover:text-gray-600 dark:text-gray-300 transition"
                             >
                                 Cancel
                             </Link>

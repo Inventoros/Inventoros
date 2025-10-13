@@ -74,7 +74,7 @@ const deleteCategory = (category) => {
     <AuthenticatedLayout>
         <template #header>
             <div class="flex items-center justify-between">
-                <h2 class="font-semibold text-xl text-gray-100 leading-tight">
+                <h2 class="font-semibold text-xl text-gray-900 dark:text-gray-100 leading-tight">
                     Product Categories
                 </h2>
                 <button
@@ -89,10 +89,10 @@ const deleteCategory = (category) => {
             </div>
         </template>
 
-        <div class="py-12">
+        <div class="py-12 bg-gray-50 dark:bg-dark-bg min-h-screen">
             <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
                 <!-- Search -->
-                <div class="mb-6 bg-dark-card border border-dark-border overflow-hidden shadow-lg sm:rounded-lg">
+                <div class="mb-6 bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border overflow-hidden shadow-lg sm:rounded-lg">
                     <div class="p-6">
                         <form @submit.prevent="searchCategories" class="flex gap-4">
                             <div class="flex-1">
@@ -100,7 +100,7 @@ const deleteCategory = (category) => {
                                     v-model="search"
                                     type="text"
                                     placeholder="Search categories..."
-                                    class="block w-full rounded-md bg-dark-bg border-dark-border text-gray-100 placeholder-gray-500 shadow-sm focus:border-primary-400 focus:ring-primary-400"
+                                    class="block w-full rounded-md bg-gray-50 dark:bg-dark-bg border-gray-200 dark:border-dark-border text-gray-900 dark:text-gray-100 placeholder-gray-500 shadow-sm focus:border-primary-400 focus:ring-primary-400"
                                 />
                             </div>
                             <button
@@ -115,7 +115,7 @@ const deleteCategory = (category) => {
                             <button
                                 type="button"
                                 @click="clearFilters"
-                                class="inline-flex items-center px-4 py-2 bg-dark-bg border border-dark-border rounded-md font-semibold text-xs text-gray-300 uppercase tracking-widest hover:bg-dark-bg/50"
+                                class="inline-flex items-center px-4 py-2 bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-border rounded-md font-semibold text-xs text-gray-600 dark:text-gray-300 uppercase tracking-widest hover:bg-gray-100 dark:hover:bg-dark-bg/50"
                             >
                                 Clear
                             </button>
@@ -128,24 +128,24 @@ const deleteCategory = (category) => {
                     <div
                         v-for="category in categories.data"
                         :key="category.id"
-                        class="bg-dark-card border border-dark-border overflow-hidden shadow-lg sm:rounded-lg hover:shadow-xl transition-shadow"
+                        class="bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border overflow-hidden shadow-lg sm:rounded-lg hover:shadow-xl transition-shadow"
                     >
                         <div class="p-6">
                             <div class="flex items-start justify-between mb-3">
                                 <div class="flex-1">
-                                    <h3 class="text-lg font-semibold text-gray-100 mb-1">
+                                    <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-1">
                                         {{ category.name }}
                                     </h3>
-                                    <p v-if="category.description" class="text-sm text-gray-400">
+                                    <p v-if="category.description" class="text-sm text-gray-500 dark:text-gray-400">
                                         {{ category.description }}
                                     </p>
                                 </div>
-                                <span class="px-2 py-1 text-xs font-semibold rounded-full bg-purple-900/30 text-purple-300">
+                                <span class="px-2 py-1 text-xs font-semibold rounded-full bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-300">
                                     {{ category.products_count }} products
                                 </span>
                             </div>
 
-                            <div class="flex items-center gap-2 mt-4 pt-4 border-t border-dark-border">
+                            <div class="flex items-center gap-2 mt-4 pt-4 border-t border-gray-200 dark:border-dark-border">
                                 <button
                                     @click="openEditModal(category)"
                                     class="flex-1 inline-flex items-center justify-center px-3 py-2 bg-primary-400/20 text-primary-400 rounded-md hover:bg-primary-400/30 text-sm font-medium"
@@ -172,12 +172,12 @@ const deleteCategory = (category) => {
 
                     <!-- Empty State -->
                     <div v-if="categories.data.length === 0" class="col-span-full">
-                        <div class="bg-dark-card border border-dark-border overflow-hidden shadow-lg sm:rounded-lg">
+                        <div class="bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border overflow-hidden shadow-lg sm:rounded-lg">
                             <div class="p-12 text-center">
-                                <svg class="w-16 h-16 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <svg class="w-16 h-16 text-gray-500 dark:text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
                                 </svg>
-                                <p class="text-gray-400 mb-4">No categories found</p>
+                                <p class="text-gray-500 dark:text-gray-400 mb-4">No categories found</p>
                                 <button
                                     @click="openCreateModal"
                                     class="inline-flex items-center px-4 py-2 bg-primary-400 hover:bg-primary-500 text-white text-sm font-semibold rounded-lg transition"
@@ -193,10 +193,10 @@ const deleteCategory = (category) => {
                 </div>
 
                 <!-- Pagination -->
-                <div v-if="categories.data.length > 0" class="mt-6 bg-dark-card border border-dark-border px-4 py-3 rounded-lg shadow-lg">
+                <div v-if="categories.data.length > 0" class="mt-6 bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border px-4 py-3 rounded-lg shadow-lg">
                     <div class="flex items-center justify-between">
                         <div>
-                            <p class="text-sm text-gray-300">
+                            <p class="text-sm text-gray-600 dark:text-gray-300">
                                 Showing
                                 <span class="font-medium">{{ categories.from }}</span>
                                 to
@@ -216,7 +216,7 @@ const deleteCategory = (category) => {
                                             'relative inline-flex items-center px-4 py-2 border text-sm font-medium',
                                             link.active
                                                 ? 'z-10 bg-primary-400/20 border-primary-400 text-primary-400'
-                                                : 'bg-dark-card border-dark-border text-gray-400 hover:bg-dark-bg/50'
+                                                : 'bg-white dark:bg-dark-card border-gray-200 dark:border-dark-border text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-dark-bg/50'
                                         ]"
                                         v-html="link.label"
                                     />
@@ -241,14 +241,14 @@ const deleteCategory = (category) => {
             <div class="flex items-center justify-center min-h-screen px-4">
                 <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"></div>
 
-                <div class="relative bg-dark-card border border-dark-border rounded-lg shadow-xl max-w-md w-full p-6" @click.stop>
+                <div class="relative bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border rounded-lg shadow-xl max-w-md w-full p-6" @click.stop>
                     <div class="flex items-center justify-between mb-4">
-                        <h3 class="text-lg font-semibold text-gray-100">
+                        <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">
                             Create Category
                         </h3>
                         <button
                             @click="showCreateModal = false"
-                            class="text-gray-400 hover:text-gray-200"
+                            class="text-gray-500 dark:text-gray-400 hover:text-gray-200"
                         >
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
@@ -258,26 +258,26 @@ const deleteCategory = (category) => {
 
                     <form @submit.prevent="createCategory" class="space-y-4">
                         <div>
-                            <label class="block text-sm font-medium text-gray-300 mb-1">
+                            <label class="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-1">
                                 Category Name <span class="text-red-500">*</span>
                             </label>
                             <input
                                 v-model="categoryForm.name"
                                 type="text"
-                                class="block w-full rounded-md bg-dark-bg border-dark-border text-gray-100 placeholder-gray-500 shadow-sm focus:border-primary-400 focus:ring-primary-400"
+                                class="block w-full rounded-md bg-gray-50 dark:bg-dark-bg border-gray-200 dark:border-dark-border text-gray-900 dark:text-gray-100 placeholder-gray-500 shadow-sm focus:border-primary-400 focus:ring-primary-400"
                                 placeholder="e.g., Electronics"
                                 required
                             />
                         </div>
 
                         <div>
-                            <label class="block text-sm font-medium text-gray-300 mb-1">
+                            <label class="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-1">
                                 Description
                             </label>
                             <textarea
                                 v-model="categoryForm.description"
                                 rows="3"
-                                class="block w-full rounded-md bg-dark-bg border-dark-border text-gray-100 placeholder-gray-500 shadow-sm focus:border-primary-400 focus:ring-primary-400"
+                                class="block w-full rounded-md bg-gray-50 dark:bg-dark-bg border-gray-200 dark:border-dark-border text-gray-900 dark:text-gray-100 placeholder-gray-500 shadow-sm focus:border-primary-400 focus:ring-primary-400"
                                 placeholder="Optional description..."
                             ></textarea>
                         </div>
@@ -286,7 +286,7 @@ const deleteCategory = (category) => {
                             <button
                                 type="button"
                                 @click="showCreateModal = false"
-                                class="px-4 py-2 bg-dark-bg border border-dark-border text-gray-300 rounded-md hover:bg-dark-bg/50"
+                                class="px-4 py-2 bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-border text-gray-600 dark:text-gray-300 rounded-md hover:bg-gray-100 dark:hover:bg-dark-bg/50"
                             >
                                 Cancel
                             </button>
@@ -307,14 +307,14 @@ const deleteCategory = (category) => {
             <div class="flex items-center justify-center min-h-screen px-4">
                 <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"></div>
 
-                <div class="relative bg-dark-card border border-dark-border rounded-lg shadow-xl max-w-md w-full p-6" @click.stop>
+                <div class="relative bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border rounded-lg shadow-xl max-w-md w-full p-6" @click.stop>
                     <div class="flex items-center justify-between mb-4">
-                        <h3 class="text-lg font-semibold text-gray-100">
+                        <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">
                             Edit Category
                         </h3>
                         <button
                             @click="showEditModal = false"
-                            class="text-gray-400 hover:text-gray-200"
+                            class="text-gray-500 dark:text-gray-400 hover:text-gray-200"
                         >
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
@@ -324,25 +324,25 @@ const deleteCategory = (category) => {
 
                     <form @submit.prevent="updateCategory" class="space-y-4">
                         <div>
-                            <label class="block text-sm font-medium text-gray-300 mb-1">
+                            <label class="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-1">
                                 Category Name <span class="text-red-500">*</span>
                             </label>
                             <input
                                 v-model="categoryForm.name"
                                 type="text"
-                                class="block w-full rounded-md bg-dark-bg border-dark-border text-gray-100 placeholder-gray-500 shadow-sm focus:border-primary-400 focus:ring-primary-400"
+                                class="block w-full rounded-md bg-gray-50 dark:bg-dark-bg border-gray-200 dark:border-dark-border text-gray-900 dark:text-gray-100 placeholder-gray-500 shadow-sm focus:border-primary-400 focus:ring-primary-400"
                                 required
                             />
                         </div>
 
                         <div>
-                            <label class="block text-sm font-medium text-gray-300 mb-1">
+                            <label class="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-1">
                                 Description
                             </label>
                             <textarea
                                 v-model="categoryForm.description"
                                 rows="3"
-                                class="block w-full rounded-md bg-dark-bg border-dark-border text-gray-100 placeholder-gray-500 shadow-sm focus:border-primary-400 focus:ring-primary-400"
+                                class="block w-full rounded-md bg-gray-50 dark:bg-dark-bg border-gray-200 dark:border-dark-border text-gray-900 dark:text-gray-100 placeholder-gray-500 shadow-sm focus:border-primary-400 focus:ring-primary-400"
                             ></textarea>
                         </div>
 
@@ -350,7 +350,7 @@ const deleteCategory = (category) => {
                             <button
                                 type="button"
                                 @click="showEditModal = false"
-                                class="px-4 py-2 bg-dark-bg border border-dark-border text-gray-300 rounded-md hover:bg-dark-bg/50"
+                                class="px-4 py-2 bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-border text-gray-600 dark:text-gray-300 rounded-md hover:bg-gray-100 dark:hover:bg-dark-bg/50"
                             >
                                 Cancel
                             </button>

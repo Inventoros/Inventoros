@@ -15,12 +15,12 @@ const formatCurrency = (value) => {
 
 const getStockStatus = () => {
     if (props.product.stock <= 0) {
-        return { text: 'Out of Stock', class: 'bg-red-900/30 text-red-300' };
+        return { text: 'Out of Stock', class: 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300' };
     }
     if (props.product.stock <= props.product.min_stock) {
-        return { text: 'Low Stock', class: 'bg-amber-900/30 text-amber-300' };
+        return { text: 'Low Stock', class: 'bg-amber-100 dark:bg-amber-900/30 text-amber-800 dark:text-amber-300' };
     }
-    return { text: 'In Stock', class: 'bg-green-900/30 text-green-300' };
+    return { text: 'In Stock', class: 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300' };
 };
 
 const stockStatus = getStockStatus();
@@ -32,7 +32,7 @@ const stockStatus = getStockStatus();
     <AuthenticatedLayout>
         <template #header>
             <div class="flex items-center justify-between">
-                <h2 class="font-semibold text-xl text-gray-100 leading-tight">
+                <h2 class="font-semibold text-xl text-gray-900 dark:text-gray-100 leading-tight">
                     Product Details
                 </h2>
                 <div class="flex gap-3">
@@ -47,7 +47,7 @@ const stockStatus = getStockStatus();
                     </Link>
                     <Link
                         :href="route('products.index')"
-                        class="inline-flex items-center px-4 py-2 bg-dark-card border border-dark-border rounded-md font-semibold text-xs text-gray-300 uppercase tracking-widest shadow-sm hover:bg-dark-bg transition"
+                        class="inline-flex items-center px-4 py-2 bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border rounded-md font-semibold text-xs text-gray-600 dark:text-gray-300 uppercase tracking-widest shadow-sm hover:bg-gray-100 dark:hover:bg-dark-bg transition"
                     >
                         <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
@@ -58,23 +58,23 @@ const stockStatus = getStockStatus();
             </div>
         </template>
 
-        <div class="py-12">
+        <div class="py-12 bg-gray-50 dark:bg-dark-bg min-h-screen">
             <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                     <!-- Main Info -->
                     <div class="lg:col-span-2 space-y-6">
                         <!-- Basic Information -->
-                        <div class="bg-dark-card border border-dark-border overflow-hidden shadow-lg sm:rounded-lg">
+                        <div class="bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border overflow-hidden shadow-lg sm:rounded-lg">
                             <div class="p-6">
                                 <div class="flex items-start justify-between mb-4">
                                     <div>
-                                        <h3 class="text-2xl font-bold text-gray-100 mb-2">
+                                        <h3 class="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-2">
                                             {{ product.name }}
                                         </h3>
-                                        <p class="text-sm text-gray-400">
+                                        <p class="text-sm text-gray-500 dark:text-gray-400">
                                             SKU: {{ product.sku }}
                                         </p>
-                                        <p v-if="product.barcode" class="text-sm text-gray-400">
+                                        <p v-if="product.barcode" class="text-sm text-gray-500 dark:text-gray-400">
                                             Barcode: {{ product.barcode }}
                                         </p>
                                     </div>
@@ -84,8 +84,8 @@ const stockStatus = getStockStatus();
                                 </div>
 
                                 <div v-if="product.description" class="mb-6">
-                                    <h4 class="text-sm font-medium text-gray-400 mb-2">Description</h4>
-                                    <p class="text-gray-100">{{ product.description }}</p>
+                                    <h4 class="text-sm font-medium text-gray-500 dark:text-gray-400 mb-2">Description</h4>
+                                    <p class="text-gray-900 dark:text-gray-100">{{ product.description }}</p>
                                 </div>
 
                                 <div v-if="product.notes" class="mb-6 p-4 bg-yellow-900/20 rounded-lg border border-yellow-800">
@@ -95,14 +95,14 @@ const stockStatus = getStockStatus();
 
                                 <div class="grid grid-cols-2 gap-4">
                                     <div>
-                                        <h4 class="text-sm font-medium text-gray-400 mb-1">Category</h4>
-                                        <p class="text-gray-100">
+                                        <h4 class="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Category</h4>
+                                        <p class="text-gray-900 dark:text-gray-100">
                                             {{ product.category?.name || 'Uncategorized' }}
                                         </p>
                                     </div>
                                     <div>
-                                        <h4 class="text-sm font-medium text-gray-400 mb-1">Location</h4>
-                                        <p class="text-gray-100">
+                                        <h4 class="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Location</h4>
+                                        <p class="text-gray-900 dark:text-gray-100">
                                             {{ product.location?.name || 'No location' }}
                                         </p>
                                     </div>
@@ -111,27 +111,27 @@ const stockStatus = getStockStatus();
                         </div>
 
                         <!-- Pricing -->
-                        <div class="bg-dark-card border border-dark-border overflow-hidden shadow-lg sm:rounded-lg">
+                        <div class="bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border overflow-hidden shadow-lg sm:rounded-lg">
                             <div class="p-6">
-                                <h3 class="text-lg font-semibold text-gray-100 mb-4">
+                                <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
                                     Pricing Information
                                 </h3>
                                 <div class="grid grid-cols-2 gap-4 mb-6">
                                     <div>
-                                        <h4 class="text-sm font-medium text-gray-400 mb-1">Selling Price</h4>
-                                        <p class="text-2xl font-bold text-gray-100">
+                                        <h4 class="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Selling Price</h4>
+                                        <p class="text-2xl font-bold text-gray-900 dark:text-gray-100">
                                             {{ formatCurrency(product.price) }}
                                         </p>
-                                        <p v-if="product.currency" class="text-xs text-gray-400 mt-1">
+                                        <p v-if="product.currency" class="text-xs text-gray-500 dark:text-gray-400 mt-1">
                                             Currency: {{ product.currency }}
                                         </p>
                                     </div>
                                     <div v-if="product.purchase_price">
-                                        <h4 class="text-sm font-medium text-gray-400 mb-1">Purchase Price</h4>
-                                        <p class="text-2xl font-bold text-gray-100">
+                                        <h4 class="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Purchase Price</h4>
+                                        <p class="text-2xl font-bold text-gray-900 dark:text-gray-100">
                                             {{ formatCurrency(product.purchase_price) }}
                                         </p>
-                                        <p class="text-xs text-gray-400 mt-1">
+                                        <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
                                             What you paid
                                         </p>
                                     </div>
@@ -161,15 +161,15 @@ const stockStatus = getStockStatus();
 
                                 <!-- Additional Currencies -->
                                 <div v-if="product.price_in_currencies && Object.keys(product.price_in_currencies).length > 0" class="mt-6">
-                                    <h4 class="text-sm font-medium text-gray-400 mb-3">Alternative Currencies</h4>
+                                    <h4 class="text-sm font-medium text-gray-500 dark:text-gray-400 mb-3">Alternative Currencies</h4>
                                     <div class="grid grid-cols-3 gap-3">
                                         <div
                                             v-for="(price, currency) in product.price_in_currencies"
                                             :key="currency"
-                                            class="p-3 bg-dark-bg/50 rounded-lg border border-dark-border"
+                                            class="p-3 bg-gray-50 dark:bg-dark-bg/50 rounded-lg border border-gray-200 dark:border-dark-border"
                                         >
-                                            <p class="text-xs text-gray-400">{{ currency }}</p>
-                                            <p class="text-lg font-semibold text-gray-100">
+                                            <p class="text-xs text-gray-500 dark:text-gray-400">{{ currency }}</p>
+                                            <p class="text-lg font-semibold text-gray-900 dark:text-gray-100">
                                                 {{ new Intl.NumberFormat('en-US', { style: 'currency', currency: currency }).format(price) }}
                                             </p>
                                         </div>
@@ -182,34 +182,34 @@ const stockStatus = getStockStatus();
                     <!-- Sidebar -->
                     <div class="space-y-6">
                         <!-- Stock Information -->
-                        <div class="bg-dark-card border border-dark-border overflow-hidden shadow-lg sm:rounded-lg">
+                        <div class="bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border overflow-hidden shadow-lg sm:rounded-lg">
                             <div class="p-6">
-                                <h3 class="text-lg font-semibold text-gray-100 mb-4">
+                                <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
                                     Stock Information
                                 </h3>
                                 <div class="space-y-4">
                                     <div class="p-4 bg-primary-900/20 rounded-lg border border-primary-800">
-                                        <p class="text-sm text-gray-400 mb-1">Current Stock</p>
+                                        <p class="text-sm text-gray-500 dark:text-gray-400 mb-1">Current Stock</p>
                                         <p class="text-3xl font-bold text-primary-400">
                                             {{ product.stock }}
                                         </p>
                                     </div>
                                     <div class="grid grid-cols-2 gap-3">
-                                        <div class="p-3 bg-dark-bg/50 rounded-lg border border-dark-border">
-                                            <p class="text-xs text-gray-400 mb-1">Min Stock</p>
-                                            <p class="text-lg font-semibold text-gray-100">
+                                        <div class="p-3 bg-gray-50 dark:bg-dark-bg/50 rounded-lg border border-gray-200 dark:border-dark-border">
+                                            <p class="text-xs text-gray-500 dark:text-gray-400 mb-1">Min Stock</p>
+                                            <p class="text-lg font-semibold text-gray-900 dark:text-gray-100">
                                                 {{ product.min_stock }}
                                             </p>
                                         </div>
-                                        <div v-if="product.max_stock" class="p-3 bg-dark-bg/50 rounded-lg border border-dark-border">
-                                            <p class="text-xs text-gray-400 mb-1">Max Stock</p>
-                                            <p class="text-lg font-semibold text-gray-100">
+                                        <div v-if="product.max_stock" class="p-3 bg-gray-50 dark:bg-dark-bg/50 rounded-lg border border-gray-200 dark:border-dark-border">
+                                            <p class="text-xs text-gray-500 dark:text-gray-400 mb-1">Max Stock</p>
+                                            <p class="text-lg font-semibold text-gray-900 dark:text-gray-100">
                                                 {{ product.max_stock }}
                                             </p>
                                         </div>
                                     </div>
                                     <div class="p-3 bg-green-900/20 rounded-lg border border-green-800">
-                                        <p class="text-xs text-gray-400 mb-1">Total Value</p>
+                                        <p class="text-xs text-gray-500 dark:text-gray-400 mb-1">Total Value</p>
                                         <p class="text-xl font-bold text-green-400">
                                             {{ formatCurrency(product.price * product.stock) }}
                                         </p>
@@ -219,32 +219,32 @@ const stockStatus = getStockStatus();
                         </div>
 
                         <!-- Status -->
-                        <div class="bg-dark-card border border-dark-border overflow-hidden shadow-lg sm:rounded-lg">
+                        <div class="bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border overflow-hidden shadow-lg sm:rounded-lg">
                             <div class="p-6">
-                                <h3 class="text-lg font-semibold text-gray-100 mb-4">
+                                <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
                                     Status
                                 </h3>
                                 <div class="space-y-3">
                                     <div class="flex items-center justify-between">
-                                        <span class="text-sm text-gray-400">Active</span>
+                                        <span class="text-sm text-gray-500 dark:text-gray-400">Active</span>
                                         <span :class="[
                                             'px-2 py-1 text-xs font-semibold rounded-full',
                                             product.is_active
-                                                ? 'bg-green-900/30 text-green-300'
-                                                : 'bg-gray-900/30 text-gray-300'
+                                                ? 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300'
+                                                : 'bg-gray-100 dark:bg-gray-900/30 text-gray-800 dark:text-gray-300'
                                         ]">
                                             {{ product.is_active ? 'Yes' : 'No' }}
                                         </span>
                                     </div>
-                                    <div class="pt-3 border-t border-dark-border">
-                                        <p class="text-xs text-gray-400 mb-1">Created</p>
-                                        <p class="text-sm text-gray-100">
+                                    <div class="pt-3 border-t border-gray-200 dark:border-dark-border">
+                                        <p class="text-xs text-gray-500 dark:text-gray-400 mb-1">Created</p>
+                                        <p class="text-sm text-gray-900 dark:text-gray-100">
                                             {{ new Date(product.created_at).toLocaleString() }}
                                         </p>
                                     </div>
                                     <div>
-                                        <p class="text-xs text-gray-400 mb-1">Last Updated</p>
-                                        <p class="text-sm text-gray-100">
+                                        <p class="text-xs text-gray-500 dark:text-gray-400 mb-1">Last Updated</p>
+                                        <p class="text-sm text-gray-900 dark:text-gray-100">
                                             {{ new Date(product.updated_at).toLocaleString() }}
                                         </p>
                                     </div>
