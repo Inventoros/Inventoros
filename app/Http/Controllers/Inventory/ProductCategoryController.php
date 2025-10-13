@@ -24,11 +24,14 @@ class ProductCategoryController extends Controller
             })
             ->latest()
             ->paginate(15)
-            ->withQueryString();
+            ->withQueryString()
+            ->through(fn($category) => $category);
 
         return Inertia::render('Categories/Index', [
             'categories' => $categories,
-            'filters' => $request->only(['search']),
+            'filters' => [
+                'search' => $request->input('search', ''),
+            ],
         ]);
     }
 

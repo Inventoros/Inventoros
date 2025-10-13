@@ -129,32 +129,32 @@ const deleteLocation = (location) => {
                     <div
                         v-for="location in locations.data"
                         :key="location.id"
-                        class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg hover:shadow-md transition-shadow"
+                        class="bg-dark-card border border-dark-border overflow-hidden shadow-lg sm:rounded-lg hover:shadow-xl transition-shadow"
                     >
                         <div class="p-6">
                             <div class="flex items-start justify-between mb-3">
                                 <div class="flex-1">
                                     <div class="flex items-center gap-2 mb-1">
-                                        <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                                        <h3 class="text-lg font-semibold text-gray-100">
                                             {{ location.name }}
                                         </h3>
-                                        <span class="px-2 py-0.5 text-xs font-mono rounded bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300">
+                                        <span class="px-2 py-0.5 text-xs font-mono rounded bg-dark-bg text-gray-300">
                                             {{ location.code }}
                                         </span>
                                     </div>
-                                    <p v-if="location.description" class="text-sm text-gray-600 dark:text-gray-400">
+                                    <p v-if="location.description" class="text-sm text-gray-400">
                                         {{ location.description }}
                                     </p>
                                 </div>
-                                <span class="px-2 py-1 text-xs font-semibold rounded-full bg-orange-100 dark:bg-orange-900/30 text-orange-800 dark:text-orange-300">
+                                <span class="px-2 py-1 text-xs font-semibold rounded-full bg-orange-900/30 text-orange-300">
                                     {{ location.products_count }} products
                                 </span>
                             </div>
 
-                            <div class="flex items-center gap-2 mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+                            <div class="flex items-center gap-2 mt-4 pt-4 border-t border-dark-border">
                                 <button
                                     @click="openEditModal(location)"
-                                    class="flex-1 inline-flex items-center justify-center px-3 py-2 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400 rounded-md hover:bg-blue-100 dark:hover:bg-blue-900/30 text-sm font-medium"
+                                    class="flex-1 inline-flex items-center justify-center px-3 py-2 bg-primary-400/20 text-primary-400 rounded-md hover:bg-primary-400/30 text-sm font-medium"
                                 >
                                     <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
@@ -178,16 +178,16 @@ const deleteLocation = (location) => {
 
                     <!-- Empty State -->
                     <div v-if="locations.data.length === 0" class="col-span-full">
-                        <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
+                        <div class="bg-dark-card border border-dark-border overflow-hidden shadow-lg sm:rounded-lg">
                             <div class="p-12 text-center">
                                 <svg class="w-16 h-16 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                                 </svg>
-                                <p class="text-gray-500 dark:text-gray-400 mb-4">No locations found</p>
+                                <p class="text-gray-400 mb-4">No locations found</p>
                                 <button
                                     @click="openCreateModal"
-                                    class="inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-semibold rounded-lg hover:bg-blue-700 transition"
+                                    class="inline-flex items-center px-4 py-2 bg-primary-400 hover:bg-primary-500 text-white text-sm font-semibold rounded-lg transition"
                                 >
                                     <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
@@ -200,10 +200,10 @@ const deleteLocation = (location) => {
                 </div>
 
                 <!-- Pagination -->
-                <div v-if="locations.data.length > 0" class="mt-6 bg-white dark:bg-gray-800 px-4 py-3 rounded-lg shadow-sm">
+                <div v-if="locations.data.length > 0" class="mt-6 bg-dark-card border border-dark-border px-4 py-3 rounded-lg shadow-lg">
                     <div class="flex items-center justify-between">
                         <div>
-                            <p class="text-sm text-gray-700 dark:text-gray-300">
+                            <p class="text-sm text-gray-300">
                                 Showing
                                 <span class="font-medium">{{ locations.from }}</span>
                                 to
@@ -215,19 +215,27 @@ const deleteLocation = (location) => {
                         </div>
                         <div>
                             <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px">
-                                <Link
-                                    v-for="link in locations.links"
-                                    :key="link.label"
-                                    :href="link.url"
-                                    :class="[
-                                        'relative inline-flex items-center px-4 py-2 border text-sm font-medium',
-                                        link.active
-                                            ? 'z-10 bg-blue-50 dark:bg-blue-900/30 border-blue-500 text-blue-600 dark:text-blue-400'
-                                            : 'bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700',
-                                        !link.url && 'opacity-50 cursor-not-allowed'
-                                    ]"
-                                    v-html="link.label"
-                                />
+                                <template v-for="link in locations.links" :key="link.label">
+                                    <Link
+                                        v-if="link.url"
+                                        :href="link.url"
+                                        :class="[
+                                            'relative inline-flex items-center px-4 py-2 border text-sm font-medium',
+                                            link.active
+                                                ? 'z-10 bg-primary-400/20 border-primary-400 text-primary-400'
+                                                : 'bg-dark-card border-dark-border text-gray-400 hover:bg-dark-bg/50'
+                                        ]"
+                                        v-html="link.label"
+                                    />
+                                    <span
+                                        v-else
+                                        :class="[
+                                            'relative inline-flex items-center px-4 py-2 border text-sm font-medium',
+                                            'bg-dark-card border-dark-border text-gray-600 opacity-50 cursor-not-allowed'
+                                        ]"
+                                        v-html="link.label"
+                                    />
+                                </template>
                             </nav>
                         </div>
                     </div>
@@ -240,14 +248,14 @@ const deleteLocation = (location) => {
             <div class="flex items-center justify-center min-h-screen px-4">
                 <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"></div>
 
-                <div class="relative bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-md w-full p-6" @click.stop>
+                <div class="relative bg-dark-card border border-dark-border rounded-lg shadow-xl max-w-md w-full p-6" @click.stop>
                     <div class="flex items-center justify-between mb-4">
-                        <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                        <h3 class="text-lg font-semibold text-gray-100">
                             Create Location
                         </h3>
                         <button
                             @click="showCreateModal = false"
-                            class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
+                            class="text-gray-400 hover:text-gray-200"
                         >
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
@@ -257,39 +265,39 @@ const deleteLocation = (location) => {
 
                     <form @submit.prevent="createLocation" class="space-y-4">
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                            <label class="block text-sm font-medium text-gray-300 mb-1">
                                 Location Name <span class="text-red-500">*</span>
                             </label>
                             <input
                                 v-model="locationForm.name"
                                 type="text"
-                                class="block w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                                class="block w-full rounded-md bg-dark-bg border-dark-border text-gray-100 placeholder-gray-500 shadow-sm focus:border-primary-400 focus:ring-primary-400"
                                 placeholder="e.g., Warehouse A"
                                 required
                             />
                         </div>
 
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                            <label class="block text-sm font-medium text-gray-300 mb-1">
                                 Location Code <span class="text-red-500">*</span>
                             </label>
                             <input
                                 v-model="locationForm.code"
                                 type="text"
-                                class="block w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                                class="block w-full rounded-md bg-dark-bg border-dark-border text-gray-100 placeholder-gray-500 shadow-sm focus:border-primary-400 focus:ring-primary-400"
                                 placeholder="e.g., WH-A"
                                 required
                             />
                         </div>
 
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                            <label class="block text-sm font-medium text-gray-300 mb-1">
                                 Description
                             </label>
                             <textarea
                                 v-model="locationForm.description"
                                 rows="3"
-                                class="block w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                                class="block w-full rounded-md bg-dark-bg border-dark-border text-gray-100 placeholder-gray-500 shadow-sm focus:border-primary-400 focus:ring-primary-400"
                                 placeholder="Optional description..."
                             ></textarea>
                         </div>
@@ -298,13 +306,13 @@ const deleteLocation = (location) => {
                             <button
                                 type="button"
                                 @click="showCreateModal = false"
-                                class="px-4 py-2 bg-gray-300 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-md hover:bg-gray-400 dark:hover:bg-gray-600"
+                                class="px-4 py-2 bg-dark-bg border border-dark-border text-gray-300 rounded-md hover:bg-dark-bg/50"
                             >
                                 Cancel
                             </button>
                             <button
                                 type="submit"
-                                class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+                                class="px-4 py-2 bg-primary-400 hover:bg-primary-500 text-white rounded-md"
                             >
                                 Create Location
                             </button>
@@ -319,14 +327,14 @@ const deleteLocation = (location) => {
             <div class="flex items-center justify-center min-h-screen px-4">
                 <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"></div>
 
-                <div class="relative bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-md w-full p-6" @click.stop>
+                <div class="relative bg-dark-card border border-dark-border rounded-lg shadow-xl max-w-md w-full p-6" @click.stop>
                     <div class="flex items-center justify-between mb-4">
-                        <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                        <h3 class="text-lg font-semibold text-gray-100">
                             Edit Location
                         </h3>
                         <button
                             @click="showEditModal = false"
-                            class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
+                            class="text-gray-400 hover:text-gray-200"
                         >
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
@@ -336,37 +344,37 @@ const deleteLocation = (location) => {
 
                     <form @submit.prevent="updateLocation" class="space-y-4">
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                            <label class="block text-sm font-medium text-gray-300 mb-1">
                                 Location Name <span class="text-red-500">*</span>
                             </label>
                             <input
                                 v-model="locationForm.name"
                                 type="text"
-                                class="block w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                                class="block w-full rounded-md bg-dark-bg border-dark-border text-gray-100 placeholder-gray-500 shadow-sm focus:border-primary-400 focus:ring-primary-400"
                                 required
                             />
                         </div>
 
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                            <label class="block text-sm font-medium text-gray-300 mb-1">
                                 Location Code <span class="text-red-500">*</span>
                             </label>
                             <input
                                 v-model="locationForm.code"
                                 type="text"
-                                class="block w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                                class="block w-full rounded-md bg-dark-bg border-dark-border text-gray-100 placeholder-gray-500 shadow-sm focus:border-primary-400 focus:ring-primary-400"
                                 required
                             />
                         </div>
 
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                            <label class="block text-sm font-medium text-gray-300 mb-1">
                                 Description
                             </label>
                             <textarea
                                 v-model="locationForm.description"
                                 rows="3"
-                                class="block w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                                class="block w-full rounded-md bg-dark-bg border-dark-border text-gray-100 placeholder-gray-500 shadow-sm focus:border-primary-400 focus:ring-primary-400"
                             ></textarea>
                         </div>
 
@@ -374,13 +382,13 @@ const deleteLocation = (location) => {
                             <button
                                 type="button"
                                 @click="showEditModal = false"
-                                class="px-4 py-2 bg-gray-300 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-md hover:bg-gray-400 dark:hover:bg-gray-600"
+                                class="px-4 py-2 bg-dark-bg border border-dark-border text-gray-300 rounded-md hover:bg-dark-bg/50"
                             >
                                 Cancel
                             </button>
                             <button
                                 type="submit"
-                                class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+                                class="px-4 py-2 bg-primary-400 hover:bg-primary-500 text-white rounded-md"
                             >
                                 Update Location
                             </button>
