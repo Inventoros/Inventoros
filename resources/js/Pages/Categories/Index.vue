@@ -1,11 +1,13 @@
 <script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
+import PluginSlot from '@/Components/PluginSlot.vue';
 import { Head, Link, router } from '@inertiajs/vue3';
 import { ref } from 'vue';
 
 const props = defineProps({
     categories: Object,
     filters: Object,
+    pluginComponents: Object,
 });
 
 const search = ref(props.filters?.search || '');
@@ -91,6 +93,9 @@ const deleteCategory = (category) => {
 
         <div class="py-12 bg-gray-50 dark:bg-dark-bg min-h-screen">
             <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
+                <!-- Plugin Slot: Header -->
+                <PluginSlot slot="header" :components="pluginComponents?.header" />
+
                 <!-- Search -->
                 <div class="mb-6 bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border overflow-hidden shadow-lg sm:rounded-lg">
                     <div class="p-6">
@@ -233,6 +238,9 @@ const deleteCategory = (category) => {
                         </div>
                     </div>
                 </div>
+
+                <!-- Plugin Slot: Footer -->
+                <PluginSlot slot="footer" :components="pluginComponents?.footer" />
             </div>
         </div>
 

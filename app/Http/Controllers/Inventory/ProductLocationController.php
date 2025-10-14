@@ -35,6 +35,10 @@ class ProductLocationController extends Controller
             'filters' => [
                 'search' => $request->input('search', ''),
             ],
+            'pluginComponents' => [
+                'header' => get_page_components('locations.index', 'header'),
+                'footer' => get_page_components('locations.index', 'footer'),
+            ],
         ]);
     }
 
