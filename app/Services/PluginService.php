@@ -80,8 +80,12 @@ class PluginService
             $activatedPlugins[] = $slug;
             $this->saveActivatedPlugins($activatedPlugins);
 
-            // Run activation hook if exists
-            $this->runPluginHook($slug, 'activate');
+            // Load the plugin first so its hooks are registered
+            $this->loadPlugin($slug);
+
+            // Fire activation action hook
+            do_action('plugin_activated', $slug);
+            do_action("plugin_activated_{$slug}");
         }
 
         return true;
@@ -94,11 +98,14 @@ class PluginService
     {
         $activatedPlugins = $this->getActivatedPlugins();
 
-        $activatedPlugins = array_filter($activatedPlugins, fn($plugin) => $plugin !== $slug);
-        $this->saveActivatedPlugins(array_values($activatedPlugins));
+        if (in_array($slug, $activatedPlugins)) {
+            // Fire deactivation action hook BEFORE removing from list
+            do_action('plugin_deactivated', $slug);
+            do_action("plugin_deactivated_{$slug}");
 
-        // Run deactivation hook if exists
-        $this->runPluginHook($slug, 'deactivate');
+            $activatedPlugins = array_filter($activatedPlugins, fn($plugin) => $plugin !== $slug);
+            $this->saveActivatedPlugins(array_values($activatedPlugins));
+        }
 
         return true;
     }
@@ -114,11 +121,17 @@ class PluginService
             return false;
         }
 
+        // Load plugin so its uninstall hooks can run
+        if (in_array($slug, $this->getActivatedPlugins())) {
+            $this->loadPlugin($slug);
+        }
+
+        // Fire uninstall action hook
+        do_action('plugin_uninstalling', $slug);
+        do_action("plugin_uninstalling_{$slug}");
+
         // Deactivate first if active
         $this->deactivatePlugin($slug);
-
-        // Run uninstall hook if exists
-        $this->runPluginHook($slug, 'uninstall');
 
         // Delete the plugin directory
         File::deleteDirectory($pluginPath);
@@ -219,19 +232,6 @@ class PluginService
 
             // Run the plugin's init action if it exists
             do_action('plugin_loaded', $slug, $manifest);
-        }
-    }
-
-    /**
-     * Run a plugin hook (activate, deactivate, uninstall)
-     */
-    protected function runPluginHook(string $slug, string $hook): void
-    {
-        $pluginPath = $this->pluginsPath . '/' . $slug;
-        $hookFile = $pluginPath . '/hooks/' . $hook . '.php';
-
-        if (File::exists($hookFile)) {
-            require_once $hookFile;
         }
     }
 

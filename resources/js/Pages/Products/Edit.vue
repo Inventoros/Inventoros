@@ -1,13 +1,16 @@
 <script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
+import PluginSlot from '@/Components/PluginSlot.vue';
 import { Head, Link, useForm, router } from '@inertiajs/vue3';
 import { ref, computed } from 'vue';
 import axios from 'axios';
+import ImageUploader from '@/Components/ImageUploader.vue';
 
 const props = defineProps({
     product: Object,
     categories: Array,
     locations: Array,
+    pluginComponents: Object,
 });
 
 const form = useForm({
@@ -22,6 +25,12 @@ const form = useForm({
     location_id: props.product.location_id,
     barcode: props.product.barcode || '',
     notes: props.product.notes || '',
+    images: (props.product.images || []).map(url => ({
+        url: `/storage/${url}`,
+        preview: `/storage/${url}`,
+        name: url.split('/').pop(),
+        size: 0 // Existing images don't have size info
+    })),
 });
 
 // Quick-add modals
@@ -104,8 +113,14 @@ const submit = () => {
 
         <div class="py-12 bg-gray-50 dark:bg-dark-bg min-h-screen">
             <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
+                <!-- Plugin Slot: Header -->
+                <PluginSlot slot="header" :components="pluginComponents?.header" />
+
                 <div class="bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border overflow-hidden shadow-lg sm:rounded-lg">
                     <div class="p-6">
+                        <!-- Plugin Slot: Before Form -->
+                        <PluginSlot slot="before-form" :components="pluginComponents?.beforeForm" />
+
                         <form @submit.prevent="submit">
                             <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
                                 <!-- Basic Information -->
@@ -360,6 +375,21 @@ const submit = () => {
                                     </div>
                                 </div>
 
+                                <!-- Product Images (Full Width) -->
+                                <div class="lg:col-span-2">
+                                    <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
+                                        Product Images
+                                    </h3>
+                                    <ImageUploader
+                                        v-model="form.images"
+                                        :max-images="5"
+                                        :max-size-in-m-b="5"
+                                    />
+                                    <p v-if="form.errors.images" class="mt-2 text-sm text-red-400">
+                                        {{ form.errors.images }}
+                                    </p>
+                                </div>
+
                                 <!-- Notes (Full Width) -->
                                 <div class="lg:col-span-2">
                                     <label for="notes" class="block text-sm font-medium text-gray-600 dark:text-gray-300">
@@ -400,6 +430,9 @@ const submit = () => {
                                 </button>
                             </div>
                         </form>
+
+                        <!-- Plugin Slot: After Form -->
+                        <PluginSlot slot="after-form" :components="pluginComponents?.afterForm" />
                     </div>
                 </div>
             </div>

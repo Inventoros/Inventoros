@@ -1,5 +1,6 @@
 <script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
+import PluginSlot from '@/Components/PluginSlot.vue';
 import { Head, Link } from '@inertiajs/vue3';
 
 const props = defineProps({
@@ -8,6 +9,7 @@ const props = defineProps({
     lowStockProducts: Array,
     recentOrders: Array,
     stockByCategory: Array,
+    pluginComponents: Object,
 });
 
 const formatCurrency = (value) => {
@@ -49,6 +51,12 @@ const formatCompactCurrency = (value) => {
 
         <div class="py-12 bg-gray-50 dark:bg-dark-bg min-h-screen">
             <div class="mx-auto max-w-7xl sm:px-6 lg:px-8">
+                <!-- Plugin Slot: Header (top of dashboard) -->
+                <PluginSlot slot="header" :components="pluginComponents?.header" />
+
+                <!-- Plugin Slot: Before Stats -->
+                <PluginSlot slot="before-stats" :components="pluginComponents?.beforeStats" />
+
                 <!-- Stats Grid -->
                 <div class="grid grid-cols-1 gap-6 mb-6 sm:grid-cols-2 lg:grid-cols-4">
                     <!-- Total Products -->
@@ -166,6 +174,9 @@ const formatCompactCurrency = (value) => {
                     </div>
                 </div>
 
+                <!-- Plugin Slot: After Stats -->
+                <PluginSlot slot="after-stats" :components="pluginComponents?.afterStats" />
+
                 <!-- Secondary Stats -->
                 <div class="grid grid-cols-1 gap-6 mb-6 sm:grid-cols-2 lg:grid-cols-5">
                     <!-- Pending Orders -->
@@ -218,6 +229,9 @@ const formatCompactCurrency = (value) => {
                         </Link>
                     </div>
                 </div>
+
+                <!-- Plugin Slot: Before Content Grid -->
+                <PluginSlot slot="before-content" :components="pluginComponents?.beforeContent" />
 
                 <!-- Three Column Layout -->
                 <div class="grid grid-cols-1 gap-6 lg:grid-cols-3">
@@ -396,6 +410,9 @@ const formatCompactCurrency = (value) => {
                     </div>
                 </div>
 
+                <!-- Plugin Slot: After Content Grid -->
+                <PluginSlot slot="after-content" :components="pluginComponents?.afterContent" />
+
                 <!-- Stock by Category -->
                 <div v-if="stockByCategory.length > 0" class="mt-6 bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border overflow-hidden shadow-sm dark:shadow-lg sm:rounded-lg hover:border-accent-purple/30 transition">
                     <div class="p-6">
@@ -483,6 +500,9 @@ const formatCompactCurrency = (value) => {
                         </div>
                     </div>
                 </div>
+
+                <!-- Plugin Slot: Footer (bottom of dashboard) -->
+                <PluginSlot slot="footer" :components="pluginComponents?.footer" />
             </div>
         </div>
     </AuthenticatedLayout>

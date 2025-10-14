@@ -19,7 +19,8 @@ class ProductController extends Controller
     {
         $organizationId = $request->user()->organization_id;
 
-        $products = Product::with(['category', 'location'])
+        // Hook: Allow plugins to modify the product query
+        $query = Product::with(['category', 'location'])
             ->forOrganization($organizationId)
             ->when($request->input('search'), function ($query, $search) {
                 $query->where(function ($q) use ($search) {
@@ -37,9 +38,15 @@ class ProductController extends Controller
             ->when($request->input('low_stock'), function ($query) {
                 $query->lowStock();
             })
-            ->latest()
-            ->paginate(15)
-            ->withQueryString();
+            ->latest();
+
+        // Hook: Modify product list query
+        $query = apply_filters('product_list_query', $query, $request);
+
+        $products = $query->paginate(15)->withQueryString();
+
+        // Hook: Modify products collection before rendering
+        $products = apply_filters('product_list_data', $products, $request);
 
         $categories = ProductCategory::forOrganization($organizationId)
             ->active()
@@ -49,12 +56,25 @@ class ProductController extends Controller
             ->active()
             ->get(['id', 'name']);
 
-        return Inertia::render('Products/Index', [
+        $data = [
             'products' => $products,
             'filters' => $request->only(['search', 'category', 'location', 'low_stock']),
             'categories' => $categories,
             'locations' => $locations,
-        ]);
+            'pluginComponents' => [
+                'header' => get_page_components('products.index', 'header'),
+                'beforeTable' => get_page_components('products.index', 'before-table'),
+                'footer' => get_page_components('products.index', 'footer'),
+            ],
+        ];
+
+        // Hook: Modify all data before rendering
+        $data = apply_filters('product_list_page_data', $data, $request);
+
+        // Action: Products list viewed
+        do_action('product_list_viewed', $products, $request->user());
+
+        return Inertia::render('Products/Index', $data);
     }
 
     /**
@@ -80,6 +100,11 @@ class ProductController extends Controller
             'locations' => $locations,
             'currencies' => $currencies,
             'defaultCurrency' => $defaultCurrency,
+            'pluginComponents' => [
+                'header' => get_page_components('products.create', 'header'),
+                'beforeForm' => get_page_components('products.create', 'before-form'),
+                'afterForm' => get_page_components('products.create', 'after-form'),
+            ],
         ]);
     }
 
@@ -88,7 +113,8 @@ class ProductController extends Controller
      */
     public function store(Request $request)
     {
-        $validated = $request->validate([
+        // Hook: Modify validation rules before validation
+        $rules = apply_filters('product_store_validation_rules', [
             'sku' => 'required|string|max:255|unique:products,sku',
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
@@ -106,9 +132,21 @@ class ProductController extends Controller
             'category_id' => 'nullable|exists:product_categories,id',
             'location_id' => 'nullable|exists:product_locations,id',
             'is_active' => 'boolean',
-        ]);
+            'images' => 'nullable|array|max:5',
+            'images.*.file' => 'nullable',
+            'images.*.preview' => 'nullable|string',
+            'images.*.name' => 'nullable|string',
+        ], $request);
+
+        $validated = $request->validate($rules);
 
         $validated['organization_id'] = $request->user()->organization_id;
+
+        // Hook: Allow plugins to modify validated data before saving
+        $validated = apply_filters('product_store_data', $validated, $request);
+
+        // Action: Before product creation
+        do_action('product_before_create', $validated, $request);
 
         // Convert price_in_currencies array to proper format
         if (!empty($validated['price_in_currencies'])) {
@@ -119,10 +157,61 @@ class ProductController extends Controller
             $validated['price_in_currencies'] = $currencies;
         }
 
-        Product::create($validated);
+        // Handle image uploads
+        if (!empty($validated['images'])) {
+            $imagePaths = [];
+            foreach ($validated['images'] as $index => $imageData) {
+                if (isset($imageData['preview']) && str_starts_with($imageData['preview'], 'data:image/')) {
+                    // Extract base64 data
+                    $base64 = substr($imageData['preview'], strpos($imageData['preview'], ',') + 1);
+                    $imageContent = base64_decode($base64);
 
-        return redirect()->route('products.index')
-            ->with('success', 'Product created successfully.');
+                    // Generate unique filename
+                    $extension = $this->getImageExtensionFromBase64($imageData['preview']);
+                    $filename = 'products/' . uniqid() . '_' . time() . '.' . $extension;
+
+                    // Store image
+                    \Storage::disk('public')->put($filename, $imageContent);
+                    $imagePaths[] = $filename;
+
+                    // Set thumbnail (first image)
+                    if ($index === 0) {
+                        $validated['thumbnail'] = $filename;
+                    }
+                }
+            }
+            $validated['images'] = $imagePaths;
+        }
+
+        $product = Product::create($validated);
+
+        // Action: After product creation
+        do_action('product_created', $product, $request->user());
+        do_action('product_after_create', $product, $request);
+
+        // Hook: Modify redirect response
+        $response = apply_filters('product_store_response',
+            redirect()->route('products.index')->with('success', 'Product created successfully.'),
+            $product,
+            $request
+        );
+
+        return $response;
+    }
+
+    /**
+     * Get image extension from base64 string
+     */
+    private function getImageExtensionFromBase64(string $base64): string
+    {
+        $mimeType = substr($base64, 5, strpos($base64, ';') - 5);
+        return match($mimeType) {
+            'image/jpeg' => 'jpg',
+            'image/png' => 'png',
+            'image/gif' => 'gif',
+            'image/webp' => 'webp',
+            default => 'jpg',
+        };
     }
 
     /**
@@ -137,9 +226,26 @@ class ProductController extends Controller
             abort(403, 'Unauthorized action.');
         }
 
-        return Inertia::render('Products/Show', [
+        // Hook: Modify product before displaying
+        $product = apply_filters('product_show_data', $product, auth()->user());
+
+        $data = [
             'product' => $product,
-        ]);
+            'pluginComponents' => [
+                'header' => get_page_components('products.show', 'header'),
+                'sidebar' => get_page_components('products.show', 'sidebar'),
+                'tabs' => get_page_components('products.show', 'tabs'),
+                'footer' => get_page_components('products.show', 'footer'),
+            ],
+        ];
+
+        // Hook: Modify all show page data
+        $data = apply_filters('product_show_page_data', $data, $product);
+
+        // Action: Product viewed
+        do_action('product_viewed', $product, auth()->user());
+
+        return Inertia::render('Products/Show', $data);
     }
 
     /**
@@ -166,6 +272,11 @@ class ProductController extends Controller
             'product' => $product,
             'categories' => $categories,
             'locations' => $locations,
+            'pluginComponents' => [
+                'header' => get_page_components('products.edit', 'header'),
+                'beforeForm' => get_page_components('products.edit', 'before-form'),
+                'afterForm' => get_page_components('products.edit', 'after-form'),
+            ],
         ]);
     }
 
@@ -179,7 +290,8 @@ class ProductController extends Controller
             abort(403, 'Unauthorized action.');
         }
 
-        $validated = $request->validate([
+        // Hook: Modify validation rules
+        $rules = apply_filters('product_update_validation_rules', [
             'sku' => 'required|string|max:255|unique:products,sku,' . $product->id,
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
@@ -193,9 +305,66 @@ class ProductController extends Controller
             'category_id' => 'nullable|exists:product_categories,id',
             'location_id' => 'nullable|exists:product_locations,id',
             'is_active' => 'boolean',
-        ]);
+            'images' => 'nullable|array|max:5',
+            'images.*.file' => 'nullable',
+            'images.*.preview' => 'nullable|string',
+            'images.*.url' => 'nullable|string',
+            'images.*.name' => 'nullable|string',
+        ], $product, $request);
+
+        $validated = $request->validate($rules);
+
+        // Hook: Modify validated data
+        $validated = apply_filters('product_update_data', $validated, $product, $request);
+
+        // Action: Before update
+        do_action('product_before_update', $product, $validated, $request);
+
+        // Handle image uploads
+        if (isset($validated['images'])) {
+            $imagePaths = [];
+            $oldImages = $product->images ?? [];
+
+            foreach ($validated['images'] as $index => $imageData) {
+                // If image has a URL (existing image), keep it
+                if (isset($imageData['url']) && !str_starts_with($imageData['preview'], 'data:image/')) {
+                    // Extract path from URL (/storage/products/...)
+                    $path = str_replace('/storage/', '', $imageData['url']);
+                    $imagePaths[] = $path;
+                }
+                // If image has preview as base64 (new image), upload it
+                elseif (isset($imageData['preview']) && str_starts_with($imageData['preview'], 'data:image/')) {
+                    $base64 = substr($imageData['preview'], strpos($imageData['preview'], ',') + 1);
+                    $imageContent = base64_decode($base64);
+
+                    $extension = $this->getImageExtensionFromBase64($imageData['preview']);
+                    $filename = 'products/' . uniqid() . '_' . time() . '.' . $extension;
+
+                    \Storage::disk('public')->put($filename, $imageContent);
+                    $imagePaths[] = $filename;
+                }
+
+                // Set thumbnail (first image)
+                if ($index === 0 && !empty($imagePaths)) {
+                    $validated['thumbnail'] = end($imagePaths);
+                }
+            }
+
+            // Delete removed images
+            foreach ($oldImages as $oldImage) {
+                if (!in_array($oldImage, $imagePaths)) {
+                    \Storage::disk('public')->delete($oldImage);
+                }
+            }
+
+            $validated['images'] = $imagePaths;
+        }
 
         $product->update($validated);
+
+        // Action: After update
+        do_action('product_updated', $product, $request->user());
+        do_action('product_after_update', $product, $request);
 
         return redirect()->route('products.index')
             ->with('success', 'Product updated successfully.');
@@ -211,7 +380,14 @@ class ProductController extends Controller
             abort(403, 'Unauthorized action.');
         }
 
+        // Action: Before delete
+        do_action('product_before_delete', $product, $request);
+
         $product->delete();
+
+        // Action: After delete
+        do_action('product_deleted', $product, $request->user());
+        do_action('product_after_delete', $product, $request);
 
         return redirect()->route('products.index')
             ->with('success', 'Product deleted successfully.');

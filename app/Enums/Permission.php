@@ -44,6 +44,7 @@ enum Permission: string
     case VIEW_REPORTS = 'view_reports';
     case EXPORT_DATA = 'export_data';
     case IMPORT_DATA = 'import_data';
+    case VIEW_ACTIVITY_LOG = 'view_activity_log';
 
     /**
      * Get permission label for display
@@ -84,6 +85,7 @@ enum Permission: string
             self::VIEW_REPORTS => 'View Reports',
             self::EXPORT_DATA => 'Export Data',
             self::IMPORT_DATA => 'Import Data',
+            self::VIEW_ACTIVITY_LOG => 'View Activity Log',
         };
     }
 
@@ -126,6 +128,7 @@ enum Permission: string
             self::VIEW_REPORTS => 'Can view system reports',
             self::EXPORT_DATA => 'Can export data from the system',
             self::IMPORT_DATA => 'Can import data into the system',
+            self::VIEW_ACTIVITY_LOG => 'Can view activity and audit logs',
         };
     }
 
@@ -143,7 +146,7 @@ enum Permission: string
             self::APPROVE_ORDERS => 'Order Management',
             self::VIEW_SETTINGS, self::EDIT_SETTINGS, self::MANAGE_ORGANIZATION => 'Settings',
             self::VIEW_PLUGINS, self::MANAGE_PLUGINS => 'Plugins',
-            self::VIEW_REPORTS, self::EXPORT_DATA, self::IMPORT_DATA => 'Reports & Data',
+            self::VIEW_REPORTS, self::EXPORT_DATA, self::IMPORT_DATA, self::VIEW_ACTIVITY_LOG => 'Reports & Data',
         };
     }
 

@@ -114,3 +114,77 @@ if (!function_exists('remove_filter')) {
         Hook::removeFilter($tag, $callback);
     }
 }
+
+// ========================================
+// PLUGIN UI HELPERS
+// ========================================
+
+if (!function_exists('register_menu_item')) {
+    /**
+     * Register a custom menu item
+     *
+     * @param array $item Menu item configuration
+     * @return void
+     */
+    function register_menu_item(array $item): void
+    {
+        app(\App\Services\PluginUIService::class)->addMenuItem($item);
+    }
+}
+
+if (!function_exists('register_page')) {
+    /**
+     * Register a custom page route
+     *
+     * @param string $route Route name
+     * @param string $component Inertia component name
+     * @param array $options Additional options
+     * @return void
+     */
+    function register_page(string $route, string $component, array $options = []): void
+    {
+        app(\App\Services\PluginUIService::class)->registerPage($route, $component, $options);
+    }
+}
+
+if (!function_exists('register_dashboard_widget')) {
+    /**
+     * Register a dashboard widget
+     *
+     * @param array $widget Widget configuration
+     * @return void
+     */
+    function register_dashboard_widget(array $widget): void
+    {
+        app(\App\Services\PluginUIService::class)->addDashboardWidget($widget);
+    }
+}
+
+if (!function_exists('add_page_component')) {
+    /**
+     * Add a component to an existing page
+     *
+     * @param string $page Page identifier
+     * @param string $slot Slot name
+     * @param array $component Component configuration
+     * @return void
+     */
+    function add_page_component(string $page, string $slot, array $component): void
+    {
+        app(\App\Services\PluginUIService::class)->addPageComponent($page, $slot, $component);
+    }
+}
+
+if (!function_exists('get_page_components')) {
+    /**
+     * Get components for a specific page and slot
+     *
+     * @param string $page Page identifier
+     * @param string $slot Slot name
+     * @return array
+     */
+    function get_page_components(string $page, string $slot): array
+    {
+        return app(\App\Services\PluginUIService::class)->getPageComponents($page, $slot);
+    }
+}

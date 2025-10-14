@@ -3,12 +3,16 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\ActivityLog;
 use App\Models\Inventory\Product;
 use App\Models\Inventory\ProductCategory;
 use App\Models\Inventory\ProductLocation;
+use App\Models\Inventory\StockAdjustment;
 use App\Models\Order\Order;
 use App\Models\User;
+use App\Services\PluginUIService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 
 class DashboardController extends Controller
@@ -47,6 +51,12 @@ class DashboardController extends Controller
             'pendingOrders' => $pendingOrders,
             'revenueThisMonth' => $revenueThisMonth,
         ];
+
+        // Hook: Allow plugins to modify stats
+        $stats = apply_filters('dashboard_stats_data', $stats, $user);
+
+        // Action: Stats calculated
+        do_action('dashboard_stats_calculated', $stats, $user);
 
         // Get recent products
         $recentProducts = Product::where('organization_id', $user->organization_id)
@@ -92,12 +102,78 @@ class DashboardController extends Controller
             })
             ->values();
 
-        return Inertia::render('Dashboard', [
+        // Get recent activity logs
+        $recentActivity = ActivityLog::where('organization_id', $user->organization_id)
+            ->with('user')
+            ->latest()
+            ->limit(10)
+            ->get()
+            ->map(function ($log) {
+                return [
+                    'id' => $log->id,
+                    'user' => $log->user->name,
+                    'action' => $log->action,
+                    'description' => $log->description,
+                    'created_at' => $log->created_at->diffForHumans(),
+                ];
+            });
+
+        // Get stock movements (last 7 days)
+        $stockMovements = StockAdjustment::where('organization_id', $user->organization_id)
+            ->where('created_at', '>=', now()->subDays(7))
+            ->select(DB::raw('DATE(created_at) as date'), DB::raw('SUM(adjustment_quantity) as total'))
+            ->groupBy('date')
+            ->orderBy('date')
+            ->get()
+            ->map(function ($movement) {
+                return [
+                    'date' => $movement->date,
+                    'total' => $movement->total,
+                ];
+            });
+
+        // Get top products by value
+        $topProducts = Product::where('organization_id', $user->organization_id)
+            ->get()
+            ->sortByDesc(function ($product) {
+                return $product->price * $product->stock;
+            })
+            ->take(5)
+            ->map(function ($product) {
+                return [
+                    'name' => $product->name,
+                    'value' => $product->price * $product->stock,
+                    'stock' => $product->stock,
+                ];
+            })
+            ->values();
+
+        $data = [
             'stats' => $stats,
             'recentProducts' => $recentProducts,
             'lowStockProducts' => $lowStockProducts,
             'recentOrders' => $recentOrders,
             'stockByCategory' => $stockByCategory,
-        ]);
+            'recentActivity' => $recentActivity,
+            'stockMovements' => $stockMovements,
+            'topProducts' => $topProducts,
+            'pluginComponents' => [
+                'header' => get_page_components('dashboard', 'header'),
+                'beforeStats' => get_page_components('dashboard', 'before-stats'),
+                'afterStats' => get_page_components('dashboard', 'after-stats'),
+                'beforeContent' => get_page_components('dashboard', 'before-content'),
+                'afterContent' => get_page_components('dashboard', 'after-content'),
+                'widgets' => get_page_components('dashboard', 'widgets'),
+                'footer' => get_page_components('dashboard', 'footer'),
+            ],
+        ];
+
+        // Hook: Allow plugins to modify all dashboard data
+        $data = apply_filters('dashboard_page_data', $data, $user);
+
+        // Action: Dashboard viewed
+        do_action('dashboard_viewed', $user);
+
+        return Inertia::render('Dashboard', $data);
     }
 }
