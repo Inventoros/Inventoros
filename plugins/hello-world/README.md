@@ -41,12 +41,10 @@ There are commented examples you can uncomment to see actions and filters in act
 hello-world/
 ├── plugin.json           # Plugin metadata (with a quirky description)
 ├── Plugin.php            # Main file that does nothing productively
-├── hooks/
-│   ├── activate.php      # Says "hi" when activated
-│   ├── deactivate.php    # Says "bye" when deactivated
-│   └── uninstall.php     # Says "goodbye forever" when deleted
 └── README.md             # This file you're reading right now
 ```
+
+That's it! Just two required files. Everything is handled through function-based hooks in `Plugin.php`.
 
 ## License
 

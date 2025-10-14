@@ -54,6 +54,21 @@ Route::middleware('auth')->group(function () {
     Route::patch('/products/{product}', [ProductController::class, 'update'])->middleware('permission:edit_products');
     Route::delete('/products/{product}', [ProductController::class, 'destroy'])->name('products.destroy')->middleware('permission:delete_products');
 
+    // Barcode Management
+    Route::prefix('products/{product}/barcode')->name('products.barcode.')->middleware('permission:view_products')->group(function () {
+        Route::get('/generate', [\App\Http\Controllers\Inventory\BarcodeController::class, 'generate'])->name('generate');
+        Route::get('/print', [\App\Http\Controllers\Inventory\BarcodeController::class, 'print'])->name('print');
+        Route::post('/generate-random', [\App\Http\Controllers\Inventory\BarcodeController::class, 'generateRandom'])->middleware('permission:edit_products')->name('generate-random');
+        Route::post('/generate-from-sku', [\App\Http\Controllers\Inventory\BarcodeController::class, 'generateFromSKU'])->middleware('permission:edit_products')->name('generate-from-sku');
+    });
+
+    // SKU Management
+    Route::prefix('sku')->name('sku.')->middleware('permission:view_products')->group(function () {
+        Route::get('/patterns', [\App\Http\Controllers\Inventory\SKUController::class, 'patterns'])->name('patterns');
+        Route::post('/generate', [\App\Http\Controllers\Inventory\SKUController::class, 'generate'])->name('generate');
+        Route::post('/check-unique', [\App\Http\Controllers\Inventory\SKUController::class, 'checkUnique'])->name('check-unique');
+    });
+
     // Categories - Permission based
     Route::resource('categories', ProductCategoryController::class)
         ->except(['create', 'show', 'edit'])
@@ -108,6 +123,11 @@ Route::middleware('auth')->group(function () {
         Route::get('/', [SettingsController::class, 'index'])->middleware('permission:view_settings')->name('index');
         Route::patch('/organization', [SettingsController::class, 'updateOrganization'])->middleware('permission:manage_organization')->name('organization.update');
     });
+
+    // Activity Log - Permission based
+    Route::get('/activity-log', [\App\Http\Controllers\Admin\ActivityLogController::class, 'index'])
+        ->middleware('permission:view_activity_log')
+        ->name('activity-log.index');
 
     // Import/Export - Permission based
     Route::prefix('import-export')->name('import-export.')->group(function () {
