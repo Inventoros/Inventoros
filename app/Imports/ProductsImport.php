@@ -83,6 +83,10 @@ class ProductsImport implements ToCollection, WithHeadingRow, SkipsOnFailure
                     ->where('organization_id', $this->organizationId)
                     ->first();
 
+                // Convert status string to is_active boolean
+                $status = $row['status'] ?? 'active';
+                $isActive = strtolower($status) === 'active';
+
                 $productData = [
                     'name' => $row['name'],
                     'sku' => $row['sku'],
@@ -95,7 +99,7 @@ class ProductsImport implements ToCollection, WithHeadingRow, SkipsOnFailure
                     'purchase_price' => $row['purchase_price'] ?? null,
                     'stock' => $row['stock'],
                     'min_stock' => $row['min_stock'] ?? 0,
-                    'status' => $row['status'] ?? 'active',
+                    'is_active' => $isActive,
                     'notes' => $row['notes'] ?? null,
                     'organization_id' => $this->organizationId,
                 ];
