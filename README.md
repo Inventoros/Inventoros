@@ -1,7 +1,7 @@
 # Inventoros
 
-> **⚠️ PROJECT IN ACTIVE DEVELOPMENT**
-> Inventoros is currently in early development. Features are incomplete, APIs are subject to change, and the system is not yet ready for production use. Contributions and feedback are welcome!
+> **⚠️ PROJECT IN ACTIVE DEVELOPMENT / BETA**
+> Inventoros is currently in early development. Contributions and feedback are welcome!
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Laravel 12](https://img.shields.io/badge/Laravel-12-FF2D20?logo=laravel)](https://laravel.com)
