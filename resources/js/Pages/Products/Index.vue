@@ -1,5 +1,6 @@
 <script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
+import PluginSlot from '@/Components/PluginSlot.vue';
 import { Head, Link, router } from '@inertiajs/vue3';
 import { ref, computed } from 'vue';
 
@@ -8,6 +9,7 @@ const props = defineProps({
     filters: Object,
     categories: Array,
     locations: Array,
+    pluginComponents: Object,
 });
 
 const search = ref(props.filters?.search || '');
@@ -73,6 +75,9 @@ const isLowStock = (product) => {
 
         <div class="py-12 bg-gray-50 dark:bg-dark-bg min-h-screen">
             <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
+                <!-- Plugin Slot: Header -->
+                <PluginSlot slot="header" :components="pluginComponents?.header" />
+
                 <!-- Search and Filters -->
                 <div class="mb-6 bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border overflow-hidden shadow-lg sm:rounded-lg">
                     <div class="p-6">
@@ -149,6 +154,9 @@ const isLowStock = (product) => {
                         </form>
                     </div>
                 </div>
+
+                <!-- Plugin Slot: Before Table -->
+                <PluginSlot slot="before-table" :components="pluginComponents?.beforeTable" />
 
                 <!-- Products Table -->
                 <div class="bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border overflow-hidden shadow-lg sm:rounded-lg">
@@ -346,6 +354,9 @@ const isLowStock = (product) => {
                         </div>
                     </div>
                 </div>
+
+                <!-- Plugin Slot: Footer -->
+                <PluginSlot slot="footer" :components="pluginComponents?.footer" />
             </div>
         </div>
     </AuthenticatedLayout>

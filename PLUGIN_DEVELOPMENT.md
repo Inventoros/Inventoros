@@ -189,18 +189,32 @@ register_page('my-plugin.index', 'MyPlugin/Index', [
 ### Add Components to Existing Pages
 
 ```php
-// Add a component to the product show page sidebar
-add_page_component('product.show', 'sidebar', [
-    'component' => 'MyPlugin/ProductWidget',
-    'data' => ['custom' => 'value'],
-    'position' => 10,
+// Add a component to the dashboard header
+add_page_component('dashboard', 'header', [
+    'component' => 'HelloWorldBanner',  // Component name (without .vue)
+    'plugin' => 'hello-world',          // Your plugin slug
+    'data' => ['custom' => 'value'],    // Optional data to pass to component
+    'position' => 1,                     // Lower numbers appear first
 ]);
 
 // Available pages and slots:
-// - 'product.show' => ['sidebar', 'tabs', 'footer']
-// - 'product.index' => ['header', 'filters', 'actions']
-// - 'dashboard' => ['widgets', 'header']
-// - 'order.show' => ['sidebar', 'tabs']
+
+// Dashboard
+// - 'dashboard' => ['header', 'before-stats', 'after-stats', 'before-content', 'after-content', 'widgets', 'footer']
+
+// Products
+// - 'products.index' => ['header', 'before-table', 'footer']
+// - 'products.show' => ['header', 'sidebar', 'tabs', 'footer']
+// - 'products.create' => ['header', 'before-form', 'after-form']
+// - 'products.edit' => ['header', 'before-form', 'after-form']
+
+// Orders
+// - 'orders.index' => ['header', 'before-table', 'footer']
+// - 'orders.show' => ['header', 'sidebar', 'tabs', 'footer']
+
+// Categories & Locations
+// - 'categories.index' => ['header', 'footer']
+// - 'locations.index' => ['header', 'footer']
 ```
 
 ### Register Dashboard Widgets
@@ -249,9 +263,92 @@ See `app/Services/HookRegistry.php` for a complete list of all available hooks w
 
 Unlike some systems, Inventoros does **not** use file-based hooks (no `hooks/activate.php`, etc.). Everything is handled through function-based hooks in your `Plugin.php` file. This keeps plugins simple and all logic in one place.
 
+## Creating Vue Components for Plugins
+
+Plugins can include Vue.js components that get injected into existing pages. Here's how:
+
+### 1. Plugin Structure with Vue Components
+
+```
+plugins/
+  your-plugin/
+    ├── plugin.json
+    ├── Plugin.php
+    └── resources/
+        └── js/
+            ├── app.js              # Entry point (required)
+            └── Components/
+                └── YourComponent.vue
+```
+
+### 2. Create Your Component
+
+Create your Vue component in `plugins/your-plugin/resources/js/Components/YourComponent.vue`:
+
+```vue
+<script setup>
+import { ref } from 'vue';
+
+// Accept props passed from the plugin registration
+const props = defineProps({
+    message: String,
+    data: Object,
+});
+</script>
+
+<template>
+    <div class="mb-6 bg-white dark:bg-dark-card border rounded-lg p-6">
+        <h3 class="text-lg font-bold text-gray-900 dark:text-white">
+            {{ message }}
+        </h3>
+        <!-- Your component content -->
+    </div>
+</template>
+```
+
+### 3. Create Plugin Entry Point
+
+Create `plugins/your-plugin/resources/js/app.js`:
+
+```javascript
+// Export your components
+import YourComponent from './Components/YourComponent.vue';
+
+export {
+    YourComponent,
+};
+```
+
+### 4. Register Component in Plugin.php
+
+```php
+add_action('plugin_loaded', function ($slug, $manifest) {
+    if ($slug === 'your-plugin') {
+        add_page_component('dashboard', 'header', [
+            'component' => 'YourComponent',    // Name matches export
+            'plugin' => 'your-plugin',          // Your plugin slug
+            'data' => [                         // Optional props
+                'message' => 'Hello from plugin!',
+                'data' => ['key' => 'value'],
+            ],
+            'position' => 10,
+        ]);
+    }
+});
+```
+
+### Important Notes
+
+- Vue components must be in `plugins/{plugin}/resources/js/Components/`
+- Components are loaded dynamically at runtime
+- All components must be exported from `resources/js/app.js`
+- Use Tailwind CSS classes for styling (both light and dark mode)
+- Components receive props via the `data` parameter in registration
+
 ## Getting Help
 
 - Check the example plugin at `plugins/hello-world/`
 - Review the Hook facade at `app/Facades/Hook.php`
 - Review HookRegistry at `app/Services/HookRegistry.php` for all available hooks
 - Look at helper functions in `app/Support/helpers.php`
+- See `resources/js/Components/PluginSlot.vue` for slot rendering logic
