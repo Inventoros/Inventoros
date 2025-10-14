@@ -3,6 +3,7 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head, Link, useForm, router } from '@inertiajs/vue3';
 import { ref, computed } from 'vue';
 import axios from 'axios';
+import ImageUploader from '@/Components/ImageUploader.vue';
 
 const props = defineProps({
     product: Object,
@@ -22,6 +23,12 @@ const form = useForm({
     location_id: props.product.location_id,
     barcode: props.product.barcode || '',
     notes: props.product.notes || '',
+    images: (props.product.images || []).map(url => ({
+        url: `/storage/${url}`,
+        preview: `/storage/${url}`,
+        name: url.split('/').pop(),
+        size: 0 // Existing images don't have size info
+    })),
 });
 
 // Quick-add modals
@@ -358,6 +365,21 @@ const submit = () => {
                                             {{ form.errors.location_id }}
                                         </p>
                                     </div>
+                                </div>
+
+                                <!-- Product Images (Full Width) -->
+                                <div class="lg:col-span-2">
+                                    <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
+                                        Product Images
+                                    </h3>
+                                    <ImageUploader
+                                        v-model="form.images"
+                                        :max-images="5"
+                                        :max-size-in-m-b="5"
+                                    />
+                                    <p v-if="form.errors.images" class="mt-2 text-sm text-red-400">
+                                        {{ form.errors.images }}
+                                    </p>
                                 </div>
 
                                 <!-- Notes (Full Width) -->

@@ -1,8 +1,9 @@
 <script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head, Link, router } from '@inertiajs/vue3';
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, computed } from 'vue';
 import axios from 'axios';
+import ImageGallery from '@/Components/ImageGallery.vue';
 
 const props = defineProps({
     product: Object,
@@ -78,6 +79,14 @@ const generateFromSKU = async () => {
         alert('Failed to generate barcode from SKU');
     }
 };
+
+// Prepare product images for gallery
+const productImages = computed(() => {
+    if (!props.product.images || props.product.images.length === 0) {
+        return [];
+    }
+    return props.product.images.map(imagePath => `/storage/${imagePath}`);
+});
 </script>
 
 <template>
@@ -235,6 +244,19 @@ const generateFromSKU = async () => {
 
                     <!-- Sidebar -->
                     <div class="space-y-6">
+                        <!-- Product Images -->
+                        <div class="bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border overflow-hidden shadow-lg sm:rounded-lg">
+                            <div class="p-6">
+                                <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
+                                    Product Images
+                                </h3>
+                                <ImageGallery
+                                    :images="productImages"
+                                    :product-name="product.name"
+                                />
+                            </div>
+                        </div>
+
                         <!-- Barcode -->
                         <div v-if="product.barcode || product.sku" class="bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border overflow-hidden shadow-lg sm:rounded-lg">
                             <div class="p-6">

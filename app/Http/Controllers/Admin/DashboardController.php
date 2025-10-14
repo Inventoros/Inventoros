@@ -10,6 +10,7 @@ use App\Models\Inventory\ProductLocation;
 use App\Models\Inventory\StockAdjustment;
 use App\Models\Order\Order;
 use App\Models\User;
+use App\Services\PluginUIService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
@@ -50,6 +51,12 @@ class DashboardController extends Controller
             'pendingOrders' => $pendingOrders,
             'revenueThisMonth' => $revenueThisMonth,
         ];
+
+        // Hook: Allow plugins to modify stats
+        $stats = apply_filters('dashboard_stats_data', $stats, $user);
+
+        // Action: Stats calculated
+        do_action('dashboard_stats_calculated', $stats, $user);
 
         // Get recent products
         $recentProducts = Product::where('organization_id', $user->organization_id)
@@ -141,7 +148,7 @@ class DashboardController extends Controller
             })
             ->values();
 
-        return Inertia::render('Dashboard', [
+        $data = [
             'stats' => $stats,
             'recentProducts' => $recentProducts,
             'lowStockProducts' => $lowStockProducts,
@@ -150,6 +157,18 @@ class DashboardController extends Controller
             'recentActivity' => $recentActivity,
             'stockMovements' => $stockMovements,
             'topProducts' => $topProducts,
-        ]);
+            'pluginComponents' => [
+                'header' => get_page_components('dashboard', 'header'),
+                'widgets' => get_page_components('dashboard', 'widgets'),
+            ],
+        ];
+
+        // Hook: Allow plugins to modify all dashboard data
+        $data = apply_filters('dashboard_page_data', $data, $user);
+
+        // Action: Dashboard viewed
+        do_action('dashboard_viewed', $user);
+
+        return Inertia::render('Dashboard', $data);
     }
 }

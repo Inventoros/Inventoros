@@ -1,6 +1,7 @@
 <script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head, Link } from '@inertiajs/vue3';
+import { defineAsyncComponent } from 'vue';
 
 const props = defineProps({
     stats: Object,
@@ -8,7 +9,15 @@ const props = defineProps({
     lowStockProducts: Array,
     recentOrders: Array,
     stockByCategory: Array,
+    pluginComponents: Object,
 });
+
+// Load plugin components dynamically
+const loadPluginComponent = (plugin, component) => {
+    return defineAsyncComponent(() =>
+        import(`../../../plugins/${plugin}/resources/js/Components/${component}.vue`)
+    );
+};
 
 const formatCurrency = (value) => {
     return new Intl.NumberFormat('en-US', {
@@ -49,6 +58,16 @@ const formatCompactCurrency = (value) => {
 
         <div class="py-12 bg-gray-50 dark:bg-dark-bg min-h-screen">
             <div class="mx-auto max-w-7xl sm:px-6 lg:px-8">
+                <!-- Plugin Components: Header -->
+                <template v-if="pluginComponents?.header?.length > 0">
+                    <component
+                        v-for="(pluginComp, index) in pluginComponents.header"
+                        :key="`header-${index}`"
+                        :is="loadPluginComponent(pluginComp.plugin, pluginComp.component)"
+                        v-bind="pluginComp.data || {}"
+                    />
+                </template>
+
                 <!-- Stats Grid -->
                 <div class="grid grid-cols-1 gap-6 mb-6 sm:grid-cols-2 lg:grid-cols-4">
                     <!-- Total Products -->
