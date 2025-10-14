@@ -4,6 +4,7 @@ use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Admin\SettingsController;
 use App\Http\Controllers\Admin\PluginController;
+use App\Http\Controllers\Admin\UpdateController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Import\ImportExportController;
 use App\Http\Controllers\Install\InstallerController;
@@ -127,14 +128,51 @@ Route::middleware('auth')->group(function () {
 
     // Settings - Permission based
     Route::prefix('settings')->name('settings.')->group(function () {
-        Route::get('/', [SettingsController::class, 'index'])->middleware('permission:view_settings')->name('index');
-        Route::patch('/organization', [SettingsController::class, 'updateOrganization'])->middleware('permission:manage_organization')->name('organization.update');
+        // Legacy settings route - redirect to organization settings
+        Route::get('/', function () {
+            return redirect()->route('settings.organization.index');
+        })->middleware('permission:view_settings')->name('index');
+
+        // Organization Settings
+        Route::prefix('organization')->name('organization.')->middleware('permission:view_settings')->group(function () {
+            Route::get('/', [\App\Http\Controllers\Admin\OrganizationSettingsController::class, 'index'])->name('index');
+            Route::patch('/general', [\App\Http\Controllers\Admin\OrganizationSettingsController::class, 'updateGeneral'])->middleware('permission:manage_organization')->name('update.general');
+            Route::patch('/regional', [\App\Http\Controllers\Admin\OrganizationSettingsController::class, 'updateRegional'])->middleware('permission:manage_organization')->name('update.regional');
+
+            // User management within organization settings (admin only)
+            Route::middleware('permission:manage_organization')->group(function () {
+                Route::get('/users', [\App\Http\Controllers\Admin\OrganizationSettingsController::class, 'users'])->name('users.index');
+                Route::post('/users', [\App\Http\Controllers\Admin\OrganizationSettingsController::class, 'storeUser'])->name('users.store');
+                Route::patch('/users/{user}', [\App\Http\Controllers\Admin\OrganizationSettingsController::class, 'updateUser'])->name('users.update');
+                Route::delete('/users/{user}', [\App\Http\Controllers\Admin\OrganizationSettingsController::class, 'destroyUser'])->name('users.destroy');
+            });
+        });
+
+        // Account Settings (accessible by all authenticated users)
+        Route::prefix('account')->name('account.')->group(function () {
+            Route::get('/', [\App\Http\Controllers\Admin\AccountSettingsController::class, 'index'])->name('index');
+            Route::patch('/profile', [\App\Http\Controllers\Admin\AccountSettingsController::class, 'updateProfile'])->name('update.profile');
+            Route::patch('/password', [\App\Http\Controllers\Admin\AccountSettingsController::class, 'updatePassword'])->name('update.password');
+            Route::patch('/notifications', [\App\Http\Controllers\Admin\AccountSettingsController::class, 'updateNotifications'])->name('update.notifications');
+            Route::patch('/preferences', [\App\Http\Controllers\Admin\AccountSettingsController::class, 'updatePreferences'])->name('update.preferences');
+        });
     });
 
     // Activity Log - Permission based
     Route::get('/activity-log', [\App\Http\Controllers\Admin\ActivityLogController::class, 'index'])
         ->middleware('permission:view_activity_log')
         ->name('activity-log.index');
+
+    // System Update - Admin only
+    Route::prefix('admin/update')->name('admin.update.')->middleware('permission:manage_organization')->group(function () {
+        Route::get('/', [UpdateController::class, 'index'])->name('index');
+        Route::get('/check', [UpdateController::class, 'check'])->name('check');
+        Route::post('/perform', [UpdateController::class, 'update'])->name('perform');
+        Route::post('/backup', [UpdateController::class, 'backup'])->name('backup');
+        Route::get('/backups', [UpdateController::class, 'listBackups'])->name('backups.list');
+        Route::post('/restore', [UpdateController::class, 'restore'])->name('restore');
+        Route::delete('/backup', [UpdateController::class, 'deleteBackup'])->name('backup.delete');
+    });
 
     // Reports - Permission based
     Route::prefix('reports')->name('reports.')->middleware('permission:view_reports')->group(function () {
