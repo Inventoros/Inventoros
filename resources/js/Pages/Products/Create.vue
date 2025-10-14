@@ -66,6 +66,58 @@ const locationForm = ref({ name: '', code: '', description: '' });
 const categoryLoading = ref(false);
 const locationLoading = ref(false);
 
+// SKU Generator
+const showSKUGenerator = ref(false);
+const skuPatterns = ref({ variables: [], presets: [] });
+const selectedPattern = ref('');
+const customPattern = ref('');
+const skuPreview = ref('');
+const skuGenerating = ref(false);
+
+// Load SKU patterns
+const loadSKUPatterns = async () => {
+    try {
+        const response = await axios.get(route('sku.patterns'));
+        skuPatterns.value = response.data;
+    } catch (error) {
+        console.error('Error loading SKU patterns:', error);
+    }
+};
+
+// Generate SKU preview
+const generateSKUPreview = async (pattern) => {
+    if (!pattern) {
+        skuPreview.value = '';
+        return;
+    }
+
+    skuGenerating.value = true;
+    try {
+        const response = await axios.post(route('sku.generate'), {
+            pattern: pattern,
+            product_name: form.name || null,
+            category_id: form.category_id || null,
+        });
+        skuPreview.value = response.data.sku;
+    } catch (error) {
+        console.error('Error generating SKU:', error);
+        skuPreview.value = 'Error generating preview';
+    } finally {
+        skuGenerating.value = false;
+    }
+};
+
+// Apply generated SKU
+const applySKU = () => {
+    if (skuPreview.value) {
+        form.sku = skuPreview.value;
+        showSKUGenerator.value = false;
+        selectedPattern.value = '';
+        customPattern.value = '';
+        skuPreview.value = '';
+    }
+};
+
 const createCategory = async () => {
     categoryLoading.value = true;
     try {
@@ -174,9 +226,21 @@ const submit = () => {
 
                                     <!-- SKU -->
                                     <div>
-                                        <label for="sku" class="block text-sm font-medium text-gray-600 dark:text-gray-300">
-                                            SKU <span class="text-red-500">*</span>
-                                        </label>
+                                        <div class="flex items-center justify-between mb-1">
+                                            <label for="sku" class="block text-sm font-medium text-gray-600 dark:text-gray-300">
+                                                SKU <span class="text-red-500">*</span>
+                                            </label>
+                                            <button
+                                                type="button"
+                                                @click="showSKUGenerator = true; loadSKUPatterns()"
+                                                class="text-xs text-primary-400 hover:text-primary-300 font-medium flex items-center gap-1"
+                                            >
+                                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                                                </svg>
+                                                Generate SKU
+                                            </button>
+                                        </div>
                                         <input
                                             id="sku"
                                             v-model="form.sku"
@@ -680,6 +744,117 @@ const submit = () => {
                             >
                                 <span v-if="locationLoading">Creating...</span>
                                 <span v-else>Create Location</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- SKU Generator Modal -->
+        <div v-if="showSKUGenerator" class="fixed inset-0 z-50 overflow-y-auto" @click="showSKUGenerator = false">
+            <div class="flex items-center justify-center min-h-screen px-4">
+                <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"></div>
+
+                <div class="relative bg-white dark:bg-dark-card rounded-lg shadow-xl max-w-2xl w-full p-6" @click.stop>
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                            SKU Generator
+                        </h3>
+                        <button
+                            @click="showSKUGenerator = false"
+                            class="text-gray-500 dark:text-gray-400 hover:text-gray-200"
+                        >
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </button>
+                    </div>
+
+                    <div class="space-y-4">
+                        <!-- Preset Patterns -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-2">
+                                Choose a Preset Pattern
+                            </label>
+                            <div class="grid grid-cols-2 gap-2">
+                                <button
+                                    v-for="preset in skuPatterns.presets"
+                                    :key="preset.pattern"
+                                    type="button"
+                                    @click="selectedPattern = preset.pattern; customPattern = ''; generateSKUPreview(preset.pattern)"
+                                    :class="[
+                                        'p-3 text-left rounded-lg border-2 transition',
+                                        selectedPattern === preset.pattern
+                                            ? 'border-primary-400 bg-primary-400/10'
+                                            : 'border-gray-200 dark:border-dark-border hover:border-primary-400/50'
+                                    ]"
+                                >
+                                    <div class="font-medium text-sm text-gray-900 dark:text-gray-100">{{ preset.name }}</div>
+                                    <div class="text-xs text-gray-500 dark:text-gray-400 font-mono mt-1">{{ preset.example }}</div>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="relative">
+                            <div class="absolute inset-0 flex items-center">
+                                <div class="w-full border-t border-gray-200 dark:border-dark-border"></div>
+                            </div>
+                            <div class="relative flex justify-center text-sm">
+                                <span class="px-2 bg-white dark:bg-dark-card text-gray-500 dark:text-gray-400">OR</span>
+                            </div>
+                        </div>
+
+                        <!-- Custom Pattern -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-2">
+                                Custom Pattern
+                            </label>
+                            <input
+                                v-model="customPattern"
+                                @input="selectedPattern = ''; generateSKUPreview(customPattern)"
+                                type="text"
+                                class="block w-full rounded-md bg-gray-50 dark:bg-dark-bg border-gray-200 dark:border-dark-border text-gray-900 dark:text-gray-100 placeholder-gray-500 shadow-sm focus:border-primary-400 focus:ring-primary-400"
+                                placeholder="e.g., {category}-{year}-{number}"
+                            />
+                        </div>
+
+                        <!-- Available Variables -->
+                        <div class="p-4 bg-gray-50 dark:bg-dark-bg rounded-lg">
+                            <p class="text-sm font-medium text-gray-600 dark:text-gray-300 mb-2">Available Variables:</p>
+                            <div class="grid grid-cols-2 gap-2">
+                                <div v-for="variable in skuPatterns.variables" :key="variable.key" class="text-xs">
+                                    <code class="px-1 py-0.5 bg-gray-200 dark:bg-dark-card rounded text-primary-400">{{ variable.key }}</code>
+                                    <span class="text-gray-600 dark:text-gray-400 ml-1">{{ variable.description }}</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Preview -->
+                        <div v-if="skuPreview || skuGenerating" class="p-4 bg-primary-900/20 rounded-lg border border-primary-800">
+                            <p class="text-sm font-medium text-gray-300 mb-2">Preview:</p>
+                            <div v-if="skuGenerating" class="flex items-center gap-2">
+                                <div class="animate-spin rounded-full h-4 w-4 border-b-2 border-primary-400"></div>
+                                <span class="text-sm text-gray-400">Generating...</span>
+                            </div>
+                            <p v-else class="text-lg font-mono font-bold text-primary-400">{{ skuPreview }}</p>
+                        </div>
+
+                        <div class="flex gap-3 justify-end mt-6">
+                            <button
+                                type="button"
+                                @click="showSKUGenerator = false"
+                                class="px-4 py-2 bg-dark-bg text-gray-600 dark:text-gray-300 rounded-md hover:bg-gray-100 dark:hover:bg-dark-bg/50"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                type="button"
+                                @click="applySKU"
+                                :disabled="!skuPreview"
+                                class="px-4 py-2 bg-primary-400 text-white rounded-md hover:bg-primary-500 disabled:opacity-50"
+                            >
+                                Apply SKU
                             </button>
                         </div>
                     </div>

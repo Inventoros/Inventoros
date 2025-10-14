@@ -3,6 +3,7 @@
 namespace App\Models\Inventory;
 
 use App\Models\Auth\Organization;
+use App\Traits\LogsActivity;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -10,7 +11,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Product extends Model
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory, SoftDeletes, LogsActivity;
 
     /**
      * The attributes that are mass assignable.
@@ -33,6 +34,8 @@ class Product extends Model
         'barcode',
         'notes',
         'image',
+        'images',
+        'thumbnail',
         'category_id',
         'location_id',
         'is_active',
@@ -56,6 +59,7 @@ class Product extends Model
             'is_active' => 'boolean',
             'metadata' => 'array',
             'price_in_currencies' => 'array',
+            'images' => 'array',
         ];
     }
 
@@ -81,6 +85,14 @@ class Product extends Model
     public function location(): BelongsTo
     {
         return $this->belongsTo(ProductLocation::class, 'location_id');
+    }
+
+    /**
+     * Get all stock adjustments for this product
+     */
+    public function stockAdjustments()
+    {
+        return $this->hasMany(StockAdjustment::class)->latest();
     }
 
     /**
