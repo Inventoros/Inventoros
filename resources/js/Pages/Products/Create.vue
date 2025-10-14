@@ -1,5 +1,6 @@
 <script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
+import PluginSlot from '@/Components/PluginSlot.vue';
 import { Head, Link, useForm, router } from '@inertiajs/vue3';
 import { ref, computed } from 'vue';
 import axios from 'axios';
@@ -10,6 +11,7 @@ const props = defineProps({
     locations: Array,
     currencies: Object,
     defaultCurrency: String,
+    pluginComponents: Object,
 });
 
 const form = useForm({
@@ -197,8 +199,14 @@ const submit = () => {
 
         <div class="py-12 bg-gray-50 dark:bg-dark-bg min-h-screen">
             <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
+                <!-- Plugin Slot: Header -->
+                <PluginSlot slot="header" :components="pluginComponents?.header" />
+
                 <div class="bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border overflow-hidden shadow-lg sm:rounded-lg">
                     <div class="p-6">
+                        <!-- Plugin Slot: Before Form -->
+                        <PluginSlot slot="before-form" :components="pluginComponents?.beforeForm" />
+
                         <form @submit.prevent="submit">
                             <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
                                 <!-- Basic Information -->
@@ -612,6 +620,9 @@ const submit = () => {
                                 </button>
                             </div>
                         </form>
+
+                        <!-- Plugin Slot: After Form -->
+                        <PluginSlot slot="after-form" :components="pluginComponents?.afterForm" />
                     </div>
                 </div>
             </div>

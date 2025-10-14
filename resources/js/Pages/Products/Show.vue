@@ -1,5 +1,6 @@
 <script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
+import PluginSlot from '@/Components/PluginSlot.vue';
 import { Head, Link, router } from '@inertiajs/vue3';
 import { ref, onMounted, computed } from 'vue';
 import axios from 'axios';
@@ -7,6 +8,7 @@ import ImageGallery from '@/Components/ImageGallery.vue';
 
 const props = defineProps({
     product: Object,
+    pluginComponents: Object,
 });
 
 const barcodeImage = ref(null);
@@ -123,6 +125,9 @@ const productImages = computed(() => {
 
         <div class="py-12 bg-gray-50 dark:bg-dark-bg min-h-screen">
             <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
+                <!-- Plugin Slot: Header -->
+                <PluginSlot slot="header" :components="pluginComponents?.header" />
+
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                     <!-- Main Info -->
                     <div class="lg:col-span-2 space-y-6">
@@ -244,6 +249,9 @@ const productImages = computed(() => {
 
                     <!-- Sidebar -->
                     <div class="space-y-6">
+                        <!-- Plugin Slot: Sidebar -->
+                        <PluginSlot slot="sidebar" :components="pluginComponents?.sidebar" />
+
                         <!-- Product Images -->
                         <div class="bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border overflow-hidden shadow-lg sm:rounded-lg">
                             <div class="p-6">
@@ -391,6 +399,9 @@ const productImages = computed(() => {
                         </div>
                     </div>
                 </div>
+
+                <!-- Plugin Slot: Footer -->
+                <PluginSlot slot="footer" :components="pluginComponents?.footer" />
             </div>
         </div>
     </AuthenticatedLayout>

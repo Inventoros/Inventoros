@@ -159,7 +159,12 @@ class DashboardController extends Controller
             'topProducts' => $topProducts,
             'pluginComponents' => [
                 'header' => get_page_components('dashboard', 'header'),
+                'beforeStats' => get_page_components('dashboard', 'before-stats'),
+                'afterStats' => get_page_components('dashboard', 'after-stats'),
+                'beforeContent' => get_page_components('dashboard', 'before-content'),
+                'afterContent' => get_page_components('dashboard', 'after-content'),
                 'widgets' => get_page_components('dashboard', 'widgets'),
+                'footer' => get_page_components('dashboard', 'footer'),
             ],
         ];
 

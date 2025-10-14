@@ -61,6 +61,11 @@ class ProductController extends Controller
             'filters' => $request->only(['search', 'category', 'location', 'low_stock']),
             'categories' => $categories,
             'locations' => $locations,
+            'pluginComponents' => [
+                'header' => get_page_components('products.index', 'header'),
+                'beforeTable' => get_page_components('products.index', 'before-table'),
+                'footer' => get_page_components('products.index', 'footer'),
+            ],
         ];
 
         // Hook: Modify all data before rendering
@@ -95,6 +100,11 @@ class ProductController extends Controller
             'locations' => $locations,
             'currencies' => $currencies,
             'defaultCurrency' => $defaultCurrency,
+            'pluginComponents' => [
+                'header' => get_page_components('products.create', 'header'),
+                'beforeForm' => get_page_components('products.create', 'before-form'),
+                'afterForm' => get_page_components('products.create', 'after-form'),
+            ],
         ]);
     }
 
@@ -221,6 +231,12 @@ class ProductController extends Controller
 
         $data = [
             'product' => $product,
+            'pluginComponents' => [
+                'header' => get_page_components('products.show', 'header'),
+                'sidebar' => get_page_components('products.show', 'sidebar'),
+                'tabs' => get_page_components('products.show', 'tabs'),
+                'footer' => get_page_components('products.show', 'footer'),
+            ],
         ];
 
         // Hook: Modify all show page data
@@ -256,6 +272,11 @@ class ProductController extends Controller
             'product' => $product,
             'categories' => $categories,
             'locations' => $locations,
+            'pluginComponents' => [
+                'header' => get_page_components('products.edit', 'header'),
+                'beforeForm' => get_page_components('products.edit', 'before-form'),
+                'afterForm' => get_page_components('products.edit', 'after-form'),
+            ],
         ]);
     }
 
