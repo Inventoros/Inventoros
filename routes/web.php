@@ -4,6 +4,7 @@ use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Admin\SettingsController;
 use App\Http\Controllers\Admin\PluginController;
+use App\Http\Controllers\Admin\UpdateController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Import\ImportExportController;
 use App\Http\Controllers\Install\InstallerController;
@@ -161,6 +162,17 @@ Route::middleware('auth')->group(function () {
     Route::get('/activity-log', [\App\Http\Controllers\Admin\ActivityLogController::class, 'index'])
         ->middleware('permission:view_activity_log')
         ->name('activity-log.index');
+
+    // System Update - Admin only
+    Route::prefix('admin/update')->name('admin.update.')->middleware('permission:manage_organization')->group(function () {
+        Route::get('/', [UpdateController::class, 'index'])->name('index');
+        Route::get('/check', [UpdateController::class, 'check'])->name('check');
+        Route::post('/perform', [UpdateController::class, 'update'])->name('perform');
+        Route::post('/backup', [UpdateController::class, 'backup'])->name('backup');
+        Route::get('/backups', [UpdateController::class, 'listBackups'])->name('backups.list');
+        Route::post('/restore', [UpdateController::class, 'restore'])->name('restore');
+        Route::delete('/backup', [UpdateController::class, 'deleteBackup'])->name('backup.delete');
+    });
 
     // Reports - Permission based
     Route::prefix('reports')->name('reports.')->middleware('permission:view_reports')->group(function () {

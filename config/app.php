@@ -123,4 +123,28 @@ return [
         'store' => env('APP_MAINTENANCE_STORE', 'database'),
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Application Version
+    |--------------------------------------------------------------------------
+    |
+    | This value represents the current version of your application. It is
+    | used by the update system to check for new releases.
+    |
+    */
+
+    'version' => env('APP_VERSION', '1.0.0'),
+
+    /*
+    |--------------------------------------------------------------------------
+    | GitHub Repository
+    |--------------------------------------------------------------------------
+    |
+    | This value represents your GitHub repository in the format "owner/repo".
+    | It is used by the update system to fetch new releases from GitHub.
+    |
+    */
+
+    'github_repo' => 'inventoros/inventoros',
+
 ];
