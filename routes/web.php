@@ -127,8 +127,34 @@ Route::middleware('auth')->group(function () {
 
     // Settings - Permission based
     Route::prefix('settings')->name('settings.')->group(function () {
-        Route::get('/', [SettingsController::class, 'index'])->middleware('permission:view_settings')->name('index');
-        Route::patch('/organization', [SettingsController::class, 'updateOrganization'])->middleware('permission:manage_organization')->name('organization.update');
+        // Legacy settings route - redirect to organization settings
+        Route::get('/', function () {
+            return redirect()->route('settings.organization.index');
+        })->middleware('permission:view_settings')->name('index');
+
+        // Organization Settings
+        Route::prefix('organization')->name('organization.')->middleware('permission:view_settings')->group(function () {
+            Route::get('/', [\App\Http\Controllers\Admin\OrganizationSettingsController::class, 'index'])->name('index');
+            Route::patch('/general', [\App\Http\Controllers\Admin\OrganizationSettingsController::class, 'updateGeneral'])->middleware('permission:manage_organization')->name('update.general');
+            Route::patch('/regional', [\App\Http\Controllers\Admin\OrganizationSettingsController::class, 'updateRegional'])->middleware('permission:manage_organization')->name('update.regional');
+
+            // User management within organization settings (admin only)
+            Route::middleware('permission:manage_organization')->group(function () {
+                Route::get('/users', [\App\Http\Controllers\Admin\OrganizationSettingsController::class, 'users'])->name('users.index');
+                Route::post('/users', [\App\Http\Controllers\Admin\OrganizationSettingsController::class, 'storeUser'])->name('users.store');
+                Route::patch('/users/{user}', [\App\Http\Controllers\Admin\OrganizationSettingsController::class, 'updateUser'])->name('users.update');
+                Route::delete('/users/{user}', [\App\Http\Controllers\Admin\OrganizationSettingsController::class, 'destroyUser'])->name('users.destroy');
+            });
+        });
+
+        // Account Settings (accessible by all authenticated users)
+        Route::prefix('account')->name('account.')->group(function () {
+            Route::get('/', [\App\Http\Controllers\Admin\AccountSettingsController::class, 'index'])->name('index');
+            Route::patch('/profile', [\App\Http\Controllers\Admin\AccountSettingsController::class, 'updateProfile'])->name('update.profile');
+            Route::patch('/password', [\App\Http\Controllers\Admin\AccountSettingsController::class, 'updatePassword'])->name('update.password');
+            Route::patch('/notifications', [\App\Http\Controllers\Admin\AccountSettingsController::class, 'updateNotifications'])->name('update.notifications');
+            Route::patch('/preferences', [\App\Http\Controllers\Admin\AccountSettingsController::class, 'updatePreferences'])->name('update.preferences');
+        });
     });
 
     // Activity Log - Permission based
