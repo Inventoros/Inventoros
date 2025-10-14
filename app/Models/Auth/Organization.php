@@ -28,9 +28,13 @@ class Organization extends Model
         'address',
         'city',
         'state',
+        'zip',
         'zip_code',
         'country',
+        'currency',
         'timezone',
+        'date_format',
+        'time_format',
         'is_active',
         'settings',
     ];
