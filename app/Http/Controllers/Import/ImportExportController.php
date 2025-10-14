@@ -17,7 +17,22 @@ class ImportExportController extends Controller
      */
     public function index(Request $request): Response
     {
-        return Inertia::render('ImportExport/Index');
+        $organizationId = $request->user()->organization_id;
+
+        $categories = \App\Models\Inventory\ProductCategory::forOrganization($organizationId)
+            ->select('id', 'name')
+            ->orderBy('name')
+            ->get();
+
+        $locations = \App\Models\Inventory\ProductLocation::forOrganization($organizationId)
+            ->select('id', 'name')
+            ->orderBy('name')
+            ->get();
+
+        return Inertia::render('ImportExport/Index', [
+            'categories' => $categories,
+            'locations' => $locations,
+        ]);
     }
 
     /**
@@ -27,10 +42,13 @@ class ImportExportController extends Controller
     {
         $organizationId = $request->user()->organization_id;
 
+        // Get filters from request
+        $filters = $request->only(['category_id', 'location_id', 'status', 'low_stock']);
+
         $filename = 'products_' . now()->format('Y-m-d_His') . '.xlsx';
 
         return Excel::download(
-            new ProductsExport($organizationId),
+            new ProductsExport($organizationId, $filters),
             $filename
         );
     }

@@ -1,10 +1,15 @@
 <script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
-import { Head, Link } from '@inertiajs/vue3';
+import { Head, Link, router } from '@inertiajs/vue3';
+import { ref, onMounted } from 'vue';
+import axios from 'axios';
 
 const props = defineProps({
     product: Object,
 });
+
+const barcodeImage = ref(null);
+const barcodeLoading = ref(false);
 
 const formatCurrency = (value) => {
     return new Intl.NumberFormat('en-US', {
@@ -24,6 +29,55 @@ const getStockStatus = () => {
 };
 
 const stockStatus = getStockStatus();
+
+// Load barcode on mount if product has barcode or SKU
+onMounted(() => {
+    if (props.product.barcode || props.product.sku) {
+        loadBarcode();
+    }
+});
+
+const loadBarcode = async () => {
+    barcodeLoading.value = true;
+    try {
+        const response = await axios.get(route('products.barcode.generate', props.product.id));
+        barcodeImage.value = response.data.barcode;
+    } catch (error) {
+        console.error('Failed to load barcode:', error);
+    } finally {
+        barcodeLoading.value = false;
+    }
+};
+
+const printBarcode = () => {
+    window.open(route('products.barcode.print', props.product.id), '_blank');
+};
+
+const generateRandomBarcode = async () => {
+    if (!confirm('Generate a new random barcode for this product?')) return;
+
+    try {
+        await axios.post(route('products.barcode.generate-random', props.product.id));
+        router.reload({ only: ['product'] });
+        setTimeout(loadBarcode, 100);
+    } catch (error) {
+        console.error('Failed to generate barcode:', error);
+        alert('Failed to generate barcode');
+    }
+};
+
+const generateFromSKU = async () => {
+    if (!confirm('Generate barcode from SKU?')) return;
+
+    try {
+        await axios.post(route('products.barcode.generate-from-sku', props.product.id));
+        router.reload({ only: ['product'] });
+        setTimeout(loadBarcode, 100);
+    } catch (error) {
+        console.error('Failed to generate barcode:', error);
+        alert('Failed to generate barcode from SKU');
+    }
+};
 </script>
 
 <template>
@@ -181,6 +235,68 @@ const stockStatus = getStockStatus();
 
                     <!-- Sidebar -->
                     <div class="space-y-6">
+                        <!-- Barcode -->
+                        <div v-if="product.barcode || product.sku" class="bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border overflow-hidden shadow-lg sm:rounded-lg">
+                            <div class="p-6">
+                                <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
+                                    Barcode
+                                </h3>
+
+                                <div v-if="barcodeLoading" class="flex items-center justify-center py-8">
+                                    <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-400"></div>
+                                </div>
+
+                                <div v-else-if="barcodeImage" class="space-y-4">
+                                    <div class="flex justify-center p-4 bg-white rounded-lg border-2 border-gray-200 dark:border-dark-border">
+                                        <img :src="barcodeImage" alt="Barcode" class="max-w-full h-auto" />
+                                    </div>
+
+                                    <div class="text-center">
+                                        <p class="text-sm font-mono text-gray-600 dark:text-gray-400">
+                                            {{ product.barcode || product.sku }}
+                                        </p>
+                                    </div>
+
+                                    <div class="flex gap-2">
+                                        <button
+                                            @click="printBarcode"
+                                            class="flex-1 px-3 py-2 bg-primary-600 hover:bg-primary-700 text-white text-sm rounded-lg font-medium transition"
+                                        >
+                                            <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+                                            </svg>
+                                            Print
+                                        </button>
+                                    </div>
+
+                                    <div class="pt-3 border-t border-gray-200 dark:border-dark-border space-y-2">
+                                        <button
+                                            @click="generateRandomBarcode"
+                                            class="w-full px-3 py-2 bg-gray-100 dark:bg-dark-bg hover:bg-gray-200 dark:hover:bg-dark-bg/80 text-gray-700 dark:text-gray-300 text-sm rounded-lg font-medium border border-gray-200 dark:border-dark-border transition"
+                                        >
+                                            Generate New Random
+                                        </button>
+                                        <button
+                                            @click="generateFromSKU"
+                                            class="w-full px-3 py-2 bg-gray-100 dark:bg-dark-bg hover:bg-gray-200 dark:hover:bg-dark-bg/80 text-gray-700 dark:text-gray-300 text-sm rounded-lg font-medium border border-gray-200 dark:border-dark-border transition"
+                                        >
+                                            Generate from SKU
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div v-else class="text-center py-4">
+                                    <p class="text-gray-500 dark:text-gray-400 text-sm mb-3">No barcode available</p>
+                                    <button
+                                        @click="generateRandomBarcode"
+                                        class="px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white text-sm rounded-lg font-medium transition"
+                                    >
+                                        Generate Barcode
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
                         <!-- Stock Information -->
                         <div class="bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border overflow-hidden shadow-lg sm:rounded-lg">
                             <div class="p-6">

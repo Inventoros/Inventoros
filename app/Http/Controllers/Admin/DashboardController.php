@@ -3,12 +3,15 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\ActivityLog;
 use App\Models\Inventory\Product;
 use App\Models\Inventory\ProductCategory;
 use App\Models\Inventory\ProductLocation;
+use App\Models\Inventory\StockAdjustment;
 use App\Models\Order\Order;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 
 class DashboardController extends Controller
@@ -92,12 +95,61 @@ class DashboardController extends Controller
             })
             ->values();
 
+        // Get recent activity logs
+        $recentActivity = ActivityLog::where('organization_id', $user->organization_id)
+            ->with('user')
+            ->latest()
+            ->limit(10)
+            ->get()
+            ->map(function ($log) {
+                return [
+                    'id' => $log->id,
+                    'user' => $log->user->name,
+                    'action' => $log->action,
+                    'description' => $log->description,
+                    'created_at' => $log->created_at->diffForHumans(),
+                ];
+            });
+
+        // Get stock movements (last 7 days)
+        $stockMovements = StockAdjustment::where('organization_id', $user->organization_id)
+            ->where('created_at', '>=', now()->subDays(7))
+            ->select(DB::raw('DATE(created_at) as date'), DB::raw('SUM(adjustment_quantity) as total'))
+            ->groupBy('date')
+            ->orderBy('date')
+            ->get()
+            ->map(function ($movement) {
+                return [
+                    'date' => $movement->date,
+                    'total' => $movement->total,
+                ];
+            });
+
+        // Get top products by value
+        $topProducts = Product::where('organization_id', $user->organization_id)
+            ->get()
+            ->sortByDesc(function ($product) {
+                return $product->price * $product->stock;
+            })
+            ->take(5)
+            ->map(function ($product) {
+                return [
+                    'name' => $product->name,
+                    'value' => $product->price * $product->stock,
+                    'stock' => $product->stock,
+                ];
+            })
+            ->values();
+
         return Inertia::render('Dashboard', [
             'stats' => $stats,
             'recentProducts' => $recentProducts,
             'lowStockProducts' => $lowStockProducts,
             'recentOrders' => $recentOrders,
             'stockByCategory' => $stockByCategory,
+            'recentActivity' => $recentActivity,
+            'stockMovements' => $stockMovements,
+            'topProducts' => $topProducts,
         ]);
     }
 }

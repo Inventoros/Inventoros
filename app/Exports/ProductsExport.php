@@ -12,10 +12,12 @@ use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 class ProductsExport implements FromQuery, WithHeadings, WithMapping, WithStyles
 {
     protected $organizationId;
+    protected $filters;
 
-    public function __construct($organizationId)
+    public function __construct($organizationId, array $filters = [])
     {
         $this->organizationId = $organizationId;
+        $this->filters = $filters;
     }
 
     /**
@@ -23,10 +25,28 @@ class ProductsExport implements FromQuery, WithHeadings, WithMapping, WithStyles
      */
     public function query()
     {
-        return Product::query()
+        $query = Product::query()
             ->with(['category', 'location'])
-            ->forOrganization($this->organizationId)
-            ->orderBy('created_at', 'desc');
+            ->forOrganization($this->organizationId);
+
+        // Apply filters
+        if (!empty($this->filters['category_id'])) {
+            $query->where('category_id', $this->filters['category_id']);
+        }
+
+        if (!empty($this->filters['location_id'])) {
+            $query->where('location_id', $this->filters['location_id']);
+        }
+
+        if (!empty($this->filters['status'])) {
+            $query->where('status', $this->filters['status']);
+        }
+
+        if (!empty($this->filters['low_stock'])) {
+            $query->whereRaw('stock <= min_stock');
+        }
+
+        return $query->orderBy('created_at', 'desc');
     }
 
     /**
