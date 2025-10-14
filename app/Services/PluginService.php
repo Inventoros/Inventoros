@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\Plugin;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Storage;
 use ZipArchive;
@@ -9,12 +10,10 @@ use ZipArchive;
 class PluginService
 {
     protected string $pluginsPath;
-    protected string $activatedPluginsFile;
 
     public function __construct()
     {
         $this->pluginsPath = base_path('plugins');
-        $this->activatedPluginsFile = storage_path('framework/activated_plugins.json');
 
         // Ensure plugins directory exists
         if (!File::exists($this->pluginsPath)) {
@@ -28,8 +27,6 @@ class PluginService
     public function getAllPlugins(): array
     {
         $plugins = [];
-        $activatedPlugins = $this->getActivatedPlugins();
-
         $directories = File::directories($this->pluginsPath);
 
         foreach ($directories as $directory) {
@@ -38,6 +35,9 @@ class PluginService
 
             if (File::exists($manifestPath)) {
                 $manifest = json_decode(File::get($manifestPath), true);
+
+                // Get activation status from database
+                $dbPlugin = Plugin::where('slug', $pluginSlug)->first();
 
                 $plugins[] = [
                     'slug' => $pluginSlug,
@@ -48,7 +48,8 @@ class PluginService
                     'author_url' => $manifest['author_url'] ?? '',
                     'requires' => $manifest['requires'] ?? '1.0.0',
                     'main_file' => $manifest['main_file'] ?? 'Plugin.php',
-                    'is_active' => in_array($pluginSlug, $activatedPlugins),
+                    'is_active' => $dbPlugin ? $dbPlugin->is_active : false,
+                    'activated_at' => $dbPlugin ? $dbPlugin->activated_at : null,
                     'path' => $directory,
                 ];
             }
@@ -62,11 +63,12 @@ class PluginService
      */
     public function getActivatedPlugins(): array
     {
-        if (!File::exists($this->activatedPluginsFile)) {
+        try {
+            return Plugin::active()->pluck('slug')->toArray();
+        } catch (\Exception $e) {
+            // If table doesn't exist yet (e.g., during migration), return empty array
             return [];
         }
-
-        return json_decode(File::get($this->activatedPluginsFile), true) ?? [];
     }
 
     /**
@@ -74,11 +76,22 @@ class PluginService
      */
     public function activatePlugin(string $slug): bool
     {
-        $activatedPlugins = $this->getActivatedPlugins();
+        $plugin = Plugin::where('slug', $slug)->first();
 
-        if (!in_array($slug, $activatedPlugins)) {
-            $activatedPlugins[] = $slug;
-            $this->saveActivatedPlugins($activatedPlugins);
+        if (!$plugin) {
+            // Create new plugin record if it doesn't exist
+            $plugin = Plugin::create([
+                'slug' => $slug,
+                'is_active' => false,
+            ]);
+        }
+
+        if (!$plugin->is_active) {
+            $plugin->update([
+                'is_active' => true,
+                'activated_at' => now(),
+                'deactivated_at' => null,
+            ]);
 
             // Load the plugin first so its hooks are registered
             $this->loadPlugin($slug);
@@ -96,15 +109,17 @@ class PluginService
      */
     public function deactivatePlugin(string $slug): bool
     {
-        $activatedPlugins = $this->getActivatedPlugins();
+        $plugin = Plugin::where('slug', $slug)->first();
 
-        if (in_array($slug, $activatedPlugins)) {
-            // Fire deactivation action hook BEFORE removing from list
+        if ($plugin && $plugin->is_active) {
+            // Fire deactivation action hook BEFORE deactivating
             do_action('plugin_deactivated', $slug);
             do_action("plugin_deactivated_{$slug}");
 
-            $activatedPlugins = array_filter($activatedPlugins, fn($plugin) => $plugin !== $slug);
-            $this->saveActivatedPlugins(array_values($activatedPlugins));
+            $plugin->update([
+                'is_active' => false,
+                'deactivated_at' => now(),
+            ]);
         }
 
         return true;
@@ -121,8 +136,10 @@ class PluginService
             return false;
         }
 
+        $plugin = Plugin::where('slug', $slug)->first();
+
         // Load plugin so its uninstall hooks can run
-        if (in_array($slug, $this->getActivatedPlugins())) {
+        if ($plugin && $plugin->is_active) {
             $this->loadPlugin($slug);
         }
 
@@ -132,6 +149,11 @@ class PluginService
 
         // Deactivate first if active
         $this->deactivatePlugin($slug);
+
+        // Delete database record
+        if ($plugin) {
+            $plugin->delete();
+        }
 
         // Delete the plugin directory
         File::deleteDirectory($pluginPath);
@@ -235,17 +257,4 @@ class PluginService
         }
     }
 
-    /**
-     * Save activated plugins list
-     */
-    protected function saveActivatedPlugins(array $plugins): void
-    {
-        $directory = dirname($this->activatedPluginsFile);
-
-        if (!File::exists($directory)) {
-            File::makeDirectory($directory, 0755, true);
-        }
-
-        File::put($this->activatedPluginsFile, json_encode($plugins, JSON_PRETTY_PRINT));
-    }
 }
