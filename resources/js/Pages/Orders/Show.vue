@@ -1,5 +1,6 @@
 <script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
+import PluginSlot from '@/Components/PluginSlot.vue';
 import { Head, Link, router } from '@inertiajs/vue3';
 import { ref } from 'vue';
 import { usePermissions } from '@/composables/usePermissions';
@@ -8,6 +9,7 @@ const { hasPermission } = usePermissions();
 
 const props = defineProps({
     order: Object,
+    pluginComponents: Object,
 });
 
 const showDeleteModal = ref(false);
@@ -100,6 +102,9 @@ const formatDateShort = (date) => {
 
         <div class="py-12 bg-gray-50 dark:bg-dark-bg min-h-screen">
             <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
+                <!-- Plugin Slot: Header -->
+                <PluginSlot slot="header" :components="pluginComponents?.header" />
+
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                     <!-- Left Column: Order Items & Details -->
                     <div class="lg:col-span-2 space-y-6">
@@ -223,6 +228,9 @@ const formatDateShort = (date) => {
 
                     <!-- Right Column: Summary & Actions -->
                     <div class="space-y-6">
+                        <!-- Plugin Slot: Sidebar -->
+                        <PluginSlot slot="sidebar" :components="pluginComponents?.sidebar" />
+
                         <!-- Order Summary -->
                         <div class="bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border shadow-sm sm:rounded-lg p-6">
                             <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
@@ -314,6 +322,9 @@ const formatDateShort = (date) => {
                         </div>
                     </div>
                 </div>
+
+                <!-- Plugin Slot: Footer -->
+                <PluginSlot slot="footer" :components="pluginComponents?.footer" />
             </div>
         </div>
 

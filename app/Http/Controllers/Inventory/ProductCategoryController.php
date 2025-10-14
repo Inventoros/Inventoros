@@ -32,6 +32,10 @@ class ProductCategoryController extends Controller
             'filters' => [
                 'search' => $request->input('search', ''),
             ],
+            'pluginComponents' => [
+                'header' => get_page_components('categories.index', 'header'),
+                'footer' => get_page_components('categories.index', 'footer'),
+            ],
         ]);
     }
 
