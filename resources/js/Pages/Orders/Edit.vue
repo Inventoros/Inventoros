@@ -17,6 +17,12 @@ const form = useForm({
     shipping: props.order.shipping || 0,
     tax: props.order.tax || 0,
     notes: props.order.notes || '',
+    items: props.order.items.map(item => ({
+        id: item.id,
+        product_id: item.product_id,
+        quantity: item.quantity,
+        unit_price: parseFloat(item.unit_price),
+    })),
 });
 
 const submit = () => {
@@ -37,12 +43,42 @@ const getStatusClass = (status) => {
 };
 
 const subtotal = computed(() => {
-    return parseFloat(props.order.subtotal || 0);
+    return form.items.reduce((sum, item) => {
+        return sum + (parseFloat(item.quantity || 0) * parseFloat(item.unit_price || 0));
+    }, 0);
 });
 
 const total = computed(() => {
     return subtotal.value + parseFloat(form.tax || 0) + parseFloat(form.shipping || 0);
 });
+
+const addItem = () => {
+    form.items.push({
+        id: null,
+        product_id: '',
+        quantity: 1,
+        unit_price: 0,
+    });
+};
+
+const removeItem = (index) => {
+    form.items.splice(index, 1);
+};
+
+const updateItemPrice = (index) => {
+    const item = form.items[index];
+    if (item.product_id) {
+        const product = props.products.find(p => p.id === item.product_id);
+        if (product) {
+            item.unit_price = parseFloat(product.price);
+        }
+    }
+};
+
+const getProductStock = (productId) => {
+    const product = props.products.find(p => p.id === productId);
+    return product ? product.stock : 0;
+};
 </script>
 
 <template>
@@ -132,50 +168,131 @@ const total = computed(() => {
                                 </div>
                             </div>
 
-                            <!-- Order Items (Read-only) -->
+                            <!-- Order Items (Editable) -->
                             <div class="bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border shadow-sm sm:rounded-lg p-6">
-                                <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
-                                    Order Items
-                                </h3>
-
-                                <div class="bg-blue-900/10 border border-blue-800/30 rounded-lg p-4 mb-4">
-                                    <div class="flex items-start gap-3">
-                                        <svg class="w-5 h-5 text-blue-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                        </svg>
-                                        <div class="text-sm text-blue-300">
-                                            <p class="font-semibold mb-1">Order items cannot be modified</p>
-                                            <p>Once an order is created, items are locked to maintain inventory accuracy. Create a new order or cancel this one if changes are needed.</p>
-                                        </div>
-                                    </div>
+                                <div class="flex items-center justify-between mb-4">
+                                    <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                                        Order Items
+                                    </h3>
+                                    <button
+                                        type="button"
+                                        @click="addItem"
+                                        class="px-4 py-2 bg-primary-500 hover:bg-primary-600 text-white text-sm font-medium rounded-lg transition"
+                                    >
+                                        Add Item
+                                    </button>
                                 </div>
 
-                                <div v-if="order.items && order.items.length > 0" class="space-y-3">
-                                    <div
-                                        v-for="(item, index) in order.items"
-                                        :key="index"
-                                        class="flex items-center gap-4 p-4 bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-border rounded-lg"
+                                <div v-if="form.errors.items" class="mb-4 p-4 bg-red-900/20 border border-red-800/30 rounded-lg">
+                                    <p class="text-sm text-red-300">{{ form.errors.items }}</p>
+                                </div>
+
+                                <div v-if="form.items.length === 0" class="text-center py-12">
+                                    <svg class="w-16 h-16 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
+                                    </svg>
+                                    <p class="text-gray-500 dark:text-gray-400 mb-4">No items in this order</p>
+                                    <button
+                                        type="button"
+                                        @click="addItem"
+                                        class="px-4 py-2 bg-primary-500 hover:bg-primary-600 text-white font-medium rounded-lg transition"
                                     >
-                                        <div class="flex-1">
-                                            <p class="font-medium text-gray-900 dark:text-gray-100">{{ item.product_name }}</p>
-                                            <p class="text-sm text-gray-500 dark:text-gray-400">SKU: {{ item.sku }}</p>
-                                        </div>
+                                        Add First Item
+                                    </button>
+                                </div>
 
-                                        <div class="text-right">
-                                            <p class="text-sm text-gray-500 dark:text-gray-400">Quantity</p>
-                                            <p class="font-medium text-gray-900 dark:text-gray-100">{{ item.quantity }}</p>
-                                        </div>
+                                <div v-else class="space-y-4">
+                                    <div
+                                        v-for="(item, index) in form.items"
+                                        :key="index"
+                                        class="p-4 bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-border rounded-lg"
+                                    >
+                                        <div class="grid grid-cols-1 md:grid-cols-12 gap-4">
+                                            <!-- Product Selection -->
+                                            <div class="md:col-span-5">
+                                                <label :for="`product-${index}`" class="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-1">
+                                                    Product <span class="text-red-500">*</span>
+                                                </label>
+                                                <select
+                                                    :id="`product-${index}`"
+                                                    v-model="item.product_id"
+                                                    @change="updateItemPrice(index)"
+                                                    class="block w-full rounded-md bg-white dark:bg-dark-card border-gray-200 dark:border-dark-border text-gray-900 dark:text-gray-100 shadow-sm focus:border-primary-400 focus:ring-primary-400 text-sm"
+                                                    required
+                                                >
+                                                    <option value="">Select a product</option>
+                                                    <option v-for="product in products" :key="product.id" :value="product.id">
+                                                        {{ product.name }} ({{ product.sku }}) - Stock: {{ product.stock }}
+                                                    </option>
+                                                </select>
+                                                <p v-if="form.errors[`items.${index}.product_id`]" class="mt-1 text-xs text-red-400">
+                                                    {{ form.errors[`items.${index}.product_id`] }}
+                                                </p>
+                                            </div>
 
-                                        <div class="text-right">
-                                            <p class="text-sm text-gray-500 dark:text-gray-400">Unit Price</p>
-                                            <p class="font-medium text-gray-900 dark:text-gray-100">${{ parseFloat(item.unit_price).toFixed(2) }}</p>
-                                        </div>
+                                            <!-- Quantity -->
+                                            <div class="md:col-span-2">
+                                                <label :for="`quantity-${index}`" class="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-1">
+                                                    Qty <span class="text-red-500">*</span>
+                                                </label>
+                                                <input
+                                                    :id="`quantity-${index}`"
+                                                    v-model.number="item.quantity"
+                                                    type="number"
+                                                    min="1"
+                                                    step="1"
+                                                    class="block w-full rounded-md bg-white dark:bg-dark-card border-gray-200 dark:border-dark-border text-gray-900 dark:text-gray-100 shadow-sm focus:border-primary-400 focus:ring-primary-400 text-sm"
+                                                    required
+                                                />
+                                                <p v-if="form.errors[`items.${index}.quantity`]" class="mt-1 text-xs text-red-400">
+                                                    {{ form.errors[`items.${index}.quantity`] }}
+                                                </p>
+                                            </div>
 
-                                        <div class="text-right min-w-[100px]">
-                                            <p class="text-sm text-gray-500 dark:text-gray-400">Total</p>
-                                            <p class="font-semibold text-gray-900 dark:text-gray-100">
-                                                ${{ parseFloat(item.total || item.subtotal || (item.quantity * item.unit_price)).toFixed(2) }}
-                                            </p>
+                                            <!-- Unit Price -->
+                                            <div class="md:col-span-2">
+                                                <label :for="`price-${index}`" class="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-1">
+                                                    Unit Price <span class="text-red-500">*</span>
+                                                </label>
+                                                <input
+                                                    :id="`price-${index}`"
+                                                    v-model.number="item.unit_price"
+                                                    type="number"
+                                                    min="0"
+                                                    step="0.01"
+                                                    class="block w-full rounded-md bg-white dark:bg-dark-card border-gray-200 dark:border-dark-border text-gray-900 dark:text-gray-100 shadow-sm focus:border-primary-400 focus:ring-primary-400 text-sm"
+                                                    required
+                                                />
+                                                <p v-if="form.errors[`items.${index}.unit_price`]" class="mt-1 text-xs text-red-400">
+                                                    {{ form.errors[`items.${index}.unit_price`] }}
+                                                </p>
+                                            </div>
+
+                                            <!-- Subtotal -->
+                                            <div class="md:col-span-2">
+                                                <label class="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-1">
+                                                    Subtotal
+                                                </label>
+                                                <div class="flex items-center h-[38px] px-3 bg-gray-100 dark:bg-dark-bg/50 border border-gray-200 dark:border-dark-border rounded-md">
+                                                    <span class="text-sm font-semibold text-gray-900 dark:text-gray-100">
+                                                        ${{ ((item.quantity || 0) * (item.unit_price || 0)).toFixed(2) }}
+                                                    </span>
+                                                </div>
+                                            </div>
+
+                                            <!-- Remove Button -->
+                                            <div class="md:col-span-1 flex items-end">
+                                                <button
+                                                    type="button"
+                                                    @click="removeItem(index)"
+                                                    class="w-full px-3 py-2 bg-red-900/30 hover:bg-red-900/50 text-red-400 border border-red-800/30 rounded-md transition text-sm"
+                                                    title="Remove item"
+                                                >
+                                                    <svg class="w-4 h-4 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                                    </svg>
+                                                </button>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>

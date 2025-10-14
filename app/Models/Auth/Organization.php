@@ -26,6 +26,11 @@ class Organization extends Model
         'email',
         'phone',
         'address',
+        'city',
+        'state',
+        'zip_code',
+        'country',
+        'timezone',
         'is_active',
         'settings',
     ];
