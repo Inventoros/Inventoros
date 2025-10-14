@@ -23,9 +23,32 @@ class UpdateService
     {
         $this->githubRepo = config('app.github_repo', 'owner/repository');
         $this->githubApiUrl = "https://api.github.com/repos/{$this->githubRepo}";
-        $this->currentVersion = config('app.version', '1.0.0');
+        $this->currentVersion = $this->readVersionFile();
         $this->backupPath = storage_path('app/backups');
         $this->tempPath = storage_path('app/temp');
+    }
+
+    /**
+     * Read version from VERSION file
+     */
+    protected function readVersionFile(): string
+    {
+        $versionFile = base_path('VERSION');
+
+        if (File::exists($versionFile)) {
+            return trim(File::get($versionFile));
+        }
+
+        return '1.0.0';
+    }
+
+    /**
+     * Write version to VERSION file
+     */
+    protected function writeVersionFile(string $version): void
+    {
+        $versionFile = base_path('VERSION');
+        File::put($versionFile, $version);
     }
 
     /**
@@ -134,9 +157,9 @@ class UpdateService
                 $this->log($progressCallback, 'Rebuilding caches...');
                 Artisan::call('optimize');
 
-                // Step 9: Update version in config
+                // Step 9: Update version file
                 if ($newVersion !== 'unknown') {
-                    $this->updateVersionInEnv($newVersion);
+                    $this->writeVersionFile($this->stripVersion($newVersion));
                 }
 
                 // Step 10: Cleanup temp files
@@ -381,28 +404,6 @@ class UpdateService
                 File::copy("{$sourcePath}/{$file}", "{$basePath}/{$file}");
             }
         }
-    }
-
-    /**
-     * Update version in .env file
-     */
-    protected function updateVersionInEnv(string $newVersion): void
-    {
-        $envPath = base_path('.env');
-
-        if (!File::exists($envPath)) {
-            return;
-        }
-
-        $envContent = File::get($envPath);
-
-        if (preg_match('/^APP_VERSION=.*/m', $envContent)) {
-            $envContent = preg_replace('/^APP_VERSION=.*/m', "APP_VERSION={$newVersion}", $envContent);
-        } else {
-            $envContent .= "\nAPP_VERSION={$newVersion}\n";
-        }
-
-        File::put($envPath, $envContent);
     }
 
     /**
