@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\Auth\Organization;
+use App\Models\System\SystemSetting;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
@@ -18,6 +19,9 @@ class AccountSettingsControllerTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
+
+        // Mark system as installed
+        SystemSetting::set('installed', true, 'boolean');
 
         // Create test organization
         $this->organization = Organization::create([
