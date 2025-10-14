@@ -30,6 +30,7 @@ class PluginUIService
             'parent' => null,
             'badge' => null,
             'active_routes' => [],
+            'submenu' => [], // Array of submenu items
         ];
 
         $this->menuItems[] = array_merge($defaults, $item);
@@ -45,6 +46,38 @@ class PluginUIService
     {
         foreach ($items as $item) {
             $this->addMenuItem($item);
+        }
+    }
+
+    /**
+     * Add a submenu item to an existing menu item
+     *
+     * @param string $parentLabel The label of the parent menu item
+     * @param array $submenuItem Submenu item configuration
+     * @return void
+     */
+    public function addSubmenuItem(string $parentLabel, array $submenuItem): void
+    {
+        $defaults = [
+            'label' => 'Submenu Item',
+            'route' => null,
+            'url' => null,
+            'icon' => null,
+            'permission' => null,
+            'active_routes' => [],
+        ];
+
+        $submenuItem = array_merge($defaults, $submenuItem);
+
+        // Find the parent menu item and add the submenu item
+        foreach ($this->menuItems as &$menuItem) {
+            if ($menuItem['label'] === $parentLabel) {
+                if (!isset($menuItem['submenu'])) {
+                    $menuItem['submenu'] = [];
+                }
+                $menuItem['submenu'][] = $submenuItem;
+                break;
+            }
         }
     }
 
