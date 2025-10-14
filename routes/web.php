@@ -10,6 +10,7 @@ use App\Http\Controllers\Install\InstallerController;
 use App\Http\Controllers\Inventory\ProductController;
 use App\Http\Controllers\Inventory\ProductCategoryController;
 use App\Http\Controllers\Inventory\ProductLocationController;
+use App\Http\Controllers\Inventory\StockAdjustmentController;
 use App\Http\Controllers\Order\OrderController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Foundation\Application;
@@ -79,6 +80,12 @@ Route::middleware('auth')->group(function () {
         ->except(['create', 'show', 'edit'])
         ->middleware('permission:manage_locations');
 
+    // Stock Adjustments - Permission based
+    Route::get('/stock-adjustments', [StockAdjustmentController::class, 'index'])->name('stock-adjustments.index')->middleware('permission:manage_stock');
+    Route::get('/stock-adjustments/create', [StockAdjustmentController::class, 'create'])->name('stock-adjustments.create')->middleware('permission:manage_stock');
+    Route::post('/stock-adjustments', [StockAdjustmentController::class, 'store'])->name('stock-adjustments.store')->middleware('permission:manage_stock');
+    Route::get('/stock-adjustments/{stockAdjustment}', [StockAdjustmentController::class, 'show'])->name('stock-adjustments.show')->middleware('permission:manage_stock');
+
     // Order Management - Permission based
     Route::get('/orders', [OrderController::class, 'index'])->name('orders.index')->middleware('permission:view_orders');
     Route::get('/orders/create', [OrderController::class, 'create'])->name('orders.create')->middleware('permission:create_orders');
@@ -128,6 +135,26 @@ Route::middleware('auth')->group(function () {
     Route::get('/activity-log', [\App\Http\Controllers\Admin\ActivityLogController::class, 'index'])
         ->middleware('permission:view_activity_log')
         ->name('activity-log.index');
+
+    // Reports - Permission based
+    Route::prefix('reports')->name('reports.')->middleware('permission:view_reports')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Reports\ReportController::class, 'index'])->name('index');
+        Route::get('/inventory-valuation', [\App\Http\Controllers\Reports\ReportController::class, 'inventoryValuation'])->name('inventory-valuation');
+        Route::get('/stock-movement', [\App\Http\Controllers\Reports\ReportController::class, 'stockMovement'])->name('stock-movement');
+        Route::get('/sales-analysis', [\App\Http\Controllers\Reports\ReportController::class, 'salesAnalysis'])->name('sales-analysis');
+        Route::get('/low-stock', [\App\Http\Controllers\Reports\ReportController::class, 'lowStock'])->name('low-stock');
+        Route::get('/category-performance', [\App\Http\Controllers\Reports\ReportController::class, 'categoryPerformance'])->name('category-performance');
+    });
+
+    // Notifications
+    Route::prefix('notifications')->name('notifications.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\NotificationController::class, 'index'])->name('index');
+        Route::get('/unread-count', [\App\Http\Controllers\NotificationController::class, 'unreadCount'])->name('unread-count');
+        Route::post('/{notification}/read', [\App\Http\Controllers\NotificationController::class, 'markAsRead'])->name('mark-as-read');
+        Route::post('/mark-all-read', [\App\Http\Controllers\NotificationController::class, 'markAllAsRead'])->name('mark-all-read');
+        Route::delete('/{notification}', [\App\Http\Controllers\NotificationController::class, 'destroy'])->name('destroy');
+        Route::delete('/clear/read', [\App\Http\Controllers\NotificationController::class, 'clearRead'])->name('clear-read');
+    });
 
     // Import/Export - Permission based
     Route::prefix('import-export')->name('import-export.')->group(function () {
