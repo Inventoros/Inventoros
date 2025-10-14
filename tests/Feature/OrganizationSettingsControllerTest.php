@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\Auth\Organization;
 use App\Models\Role;
+use App\Models\System\SystemSetting;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -19,6 +20,9 @@ class OrganizationSettingsControllerTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
+
+        // Mark system as installed
+        SystemSetting::set('installed', true, 'boolean');
 
         // Create test organization
         $this->organization = Organization::create([
@@ -168,11 +172,10 @@ class OrganizationSettingsControllerTest extends TestCase
         $response->assertRedirect();
         $response->assertSessionHas('success', 'Regional settings updated successfully.');
 
-        $this->assertDatabaseHas('organizations', [
-            'id' => $this->organization->id,
-            'currency' => 'EUR',
-            'timezone' => 'Europe/Paris',
-        ]);
+        // Refresh the organization and check it was updated
+        $this->organization->refresh();
+        $this->assertEquals('EUR', $this->organization->currency);
+        $this->assertEquals('Europe/Paris', $this->organization->timezone);
     }
 
     public function test_validation_fails_for_invalid_general_settings(): void
