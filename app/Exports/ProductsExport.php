@@ -39,7 +39,9 @@ class ProductsExport implements FromQuery, WithHeadings, WithMapping, WithStyles
         }
 
         if (!empty($this->filters['status'])) {
-            $query->where('status', $this->filters['status']);
+            // Convert status to is_active boolean
+            $isActive = $this->filters['status'] === 'active';
+            $query->where('is_active', $isActive);
         }
 
         if (!empty($this->filters['low_stock'])) {
@@ -91,7 +93,7 @@ class ProductsExport implements FromQuery, WithHeadings, WithMapping, WithStyles
             $product->purchase_price,
             $product->stock,
             $product->min_stock,
-            $product->status,
+            $product->is_active ? 'active' : 'inactive',
             $product->notes,
             $product->created_at->format('Y-m-d H:i:s'),
         ];
