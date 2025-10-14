@@ -42,6 +42,11 @@ class OrderController extends Controller
             'filters' => $request->only(['search', 'status', 'source']),
             'statuses' => ['pending', 'processing', 'shipped', 'delivered', 'cancelled'],
             'sources' => ['manual', 'ebay', 'shopify', 'amazon'],
+            'pluginComponents' => [
+                'header' => get_page_components('orders.index', 'header'),
+                'beforeTable' => get_page_components('orders.index', 'before-table'),
+                'footer' => get_page_components('orders.index', 'footer'),
+            ],
         ]);
     }
 
@@ -136,6 +141,12 @@ class OrderController extends Controller
 
         return Inertia::render('Orders/Show', [
             'order' => $order,
+            'pluginComponents' => [
+                'header' => get_page_components('orders.show', 'header'),
+                'sidebar' => get_page_components('orders.show', 'sidebar'),
+                'tabs' => get_page_components('orders.show', 'tabs'),
+                'footer' => get_page_components('orders.show', 'footer'),
+            ],
         ]);
     }
 
