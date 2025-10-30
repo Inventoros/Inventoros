@@ -1,7 +1,7 @@
 # Inventoros
 
-> **⚠️ PROJECT IN ACTIVE DEVELOPMENT**
-> Inventoros is currently in early development. Features are incomplete, APIs are subject to change, and the system is not yet ready for production use. Contributions and feedback are welcome!
+> **⚠️ PROJECT IN ACTIVE DEVELOPMENT / BETA**
+> Inventoros is currently in early development. Contributions and feedback are welcome!
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Laravel 12](https://img.shields.io/badge/Laravel-12-FF2D20?logo=laravel)](https://laravel.com)
@@ -96,7 +96,7 @@ php artisan queue:work # Queue worker (if needed)
 
 ## Development Roadmap
 
-### Phase 1 - MVP Foundation (Current)
+### Phase 1 - MVP Foundation ✅ (v1.0 Beta)
 - [x] Base Laravel + Inertia scaffolding
 - [x] Multi-tenant architecture foundation
 - [x] Installer & Update Manager (CLI + UI)
@@ -104,9 +104,11 @@ php artisan queue:work # Queue worker (if needed)
 - [x] Role-Based Access Control (Permission-based system)
 - [x] Product categorization and locations
 - [x] Multi-currency support
-- [ ] CSV Import/Export foundation
+- [x] CSV Import/Export foundation
+- [x] Backup system
+- [x] Unit and feature tests
 
-### Phase 2 - Core WMS Features
+### Phase 2 - Core WMS Features ✅ (v1.0 Beta)
 - [x] Warehouse location management
 - [x] Order management (CRUD with inventory tracking)
 - [x] Stock movement tracking (automatic on orders)
@@ -115,40 +117,74 @@ php artisan queue:work # Queue worker (if needed)
 - [ ] Product variants
 - [ ] Advanced stock movement workflows
 
-### Phase 3 - Extensions & API
+### Phase 3 - Extensions & API 🚧 (Partial - v1.0 Beta)
 - [x] Plugin system architecture (WordPress-style hooks)
+- [x] Database plugin activation system
+- [x] Plugin slot system with multiple hooks
+- [x] Sample plugin with documentation
 - [ ] REST API endpoints
 - [ ] GraphQL API layer
-- [ ] Basic plugin examples
 - [ ] API documentation
 
-### Phase 4 - Advanced Features
-- [ ] Barcode/QR code support
-- [ ] Reporting and analytics
+### Phase 4 - Advanced Features 🔜 (Planned)
+- [x] Barcode/QR code generation
+- [ ] Barcode/QR code scanning
+- [ ] Reporting and analytics dashboard
 - [ ] Audit logging
 - [ ] Advanced permissions (custom permission sets)
 - [ ] Multi-warehouse support
 
-## Current Features
+## Current Features (v1.0 Beta)
 
 ### ✅ Completed
-- **User Management**: Full CRUD with role assignment and permission-based access control
-- **Role Management**: Custom roles with granular permissions, system roles (Administrator, Manager, Member)
+
+**Inventory & Product Management**
 - **Product Management**: Complete inventory CRUD with SKU, pricing, stock levels, categories, locations, and barcodes
 - **Multi-Currency Support**: Product pricing in multiple currencies with conversion support
-- **Order Management**: Full order lifecycle (create, view, edit, delete) with automatic inventory adjustments
 - **Categories & Locations**: Organize products by category and track warehouse locations
-- **Plugin System**: WordPress-style hooks and filters for extensibility
-- **Installer Wizard**: Guided setup with database validation and admin account creation
+- **Barcode Generation**: Automatic barcode generation for products
+- **CSV Import/Export**: Bulk import and export of product data
+
+**Order & Warehouse Management**
+- **Order Management**: Full order lifecycle (create, view, edit, delete) with automatic inventory adjustments
+- **Stock Movement Tracking**: Automatic tracking of inventory changes through orders
+- **Warehouse Locations**: Location-based inventory tracking
+
+**User & Access Management**
+- **User Management**: Full CRUD with role assignment and permission-based access control
+- **Role Management**: Custom roles with granular permissions, system roles (Administrator, Manager, Member)
 - **Permission System**: Granular permission checks at route and UI levels
 - **Custom Error Pages**: Beautiful 403 access denied pages with light/dark mode
+
+**System & Extensions**
+- **Plugin System**: WordPress-style hooks and filters with database activation
+- **Plugin Slots**: Extensible UI component system with multiple hook points
+- **Sample Plugin**: Comprehensive example plugin with documentation
+- **Installer Wizard**: Guided setup with database validation and admin account creation
+- **Update Manager**: Version-controlled updates with automatic backup system
+- **Backup System**: Automatic backups before system updates
+- **Notification System**: Header dropdown with notification management
+
+**User Experience**
 - **Dark Mode**: Full application support with persistent theme preferences
 - **Responsive Design**: Mobile-friendly UI throughout the application
+- **Modern UI**: Built with Vue 3, Inertia.js, and Tailwind CSS
+- **Proper Sidebar Navigation**: Intuitive navigation structure
 
-### 🚧 In Progress
-- CSV Import/Export for bulk operations
+**Testing & Quality**
+- **Unit Tests**: Comprehensive unit test coverage
+- **Feature Tests**: Integration tests for critical workflows
+- **Code Quality**: PSR-12 compliant with Laravel Pint formatting
+
+### 🔜 Coming Next
+- REST API endpoints with authentication
+- GraphQL API layer
 - Dashboard analytics and reporting
+- Supplier management
+- Product variants
 - Advanced inventory workflows
+- Barcode scanning support
+- Multi-warehouse support
 
 ## Contributing
 
