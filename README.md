@@ -220,6 +220,7 @@ php artisan test --testsuite=Unit
 
 ## Documentation
 
+- [cPanel Deployment Guide](CPANEL.md) - Deploy Inventoros on shared hosting with cPanel
 - [Installation Guide](docs/installation.md) (Coming Soon)
 - [Plugin Development](docs/plugins.md) (Coming Soon)
 - [API Documentation](docs/api.md) (Coming Soon)
