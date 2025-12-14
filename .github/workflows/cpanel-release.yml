@@ -1,0 +1,307 @@
+name: Build cPanel Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Release version (e.g., 1.0.0)'
+        required: false
+        default: 'dev'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          extensions: mbstring, xml, ctype, iconv, intl, pdo_sqlite, pdo_mysql, dom, filter, gd, json, libxml, openssl, pcre, phar, tokenizer, zip
+          coverage: none
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Get Composer Cache Directory
+        id: composer-cache
+        run: echo "dir=$(composer config cache-files-dir)" >> $GITHUB_OUTPUT
+
+      - name: Cache Composer dependencies
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.composer-cache.outputs.dir }}
+          key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
+          restore-keys: ${{ runner.os }}-composer-
+
+      - name: Install Composer dependencies (production)
+        run: composer install --no-dev --optimize-autoloader --no-interaction --prefer-dist
+
+      - name: Install NPM dependencies
+        run: npm ci
+
+      - name: Build frontend assets
+        run: npm run build
+
+      - name: Determine version
+        id: version
+        run: |
+          if [[ "${{ github.event_name }}" == "push" && "${{ github.ref_type }}" == "tag" ]]; then
+            echo "version=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+            echo "tag_name=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+          elif [[ -n "${{ github.event.inputs.version }}" && "${{ github.event.inputs.version }}" != "dev" ]]; then
+            echo "version=${{ github.event.inputs.version }}" >> $GITHUB_OUTPUT
+            echo "tag_name=v${{ github.event.inputs.version }}" >> $GITHUB_OUTPUT
+          else
+            echo "version=dev-$(date +%Y%m%d%H%M%S)" >> $GITHUB_OUTPUT
+            echo "tag_name=dev" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Create cPanel directory structure
+        run: |
+          mkdir -p cpanel-release/inventoros
+          mkdir -p cpanel-release/public_html
+
+          # Copy all Laravel files to inventoros (excluding public, node_modules, tests, etc.)
+          rsync -av --progress . cpanel-release/inventoros/ \
+            --exclude='cpanel-release' \
+            --exclude='node_modules' \
+            --exclude='.git' \
+            --exclude='.github' \
+            --exclude='tests' \
+            --exclude='phpunit.xml' \
+            --exclude='.env' \
+            --exclude='.env.example' \
+            --exclude='public' \
+            --exclude='*.md' \
+            --exclude='todo.txt' \
+            --exclude='.editorconfig' \
+            --exclude='.gitattributes' \
+            --exclude='.gitignore'
+
+          # Copy public folder contents to public_html
+          cp -r public/* cpanel-release/public_html/
+
+          # Copy .env.example to inventoros
+          cp .env.example cpanel-release/inventoros/.env.example
+
+          # Create storage directories with proper structure
+          mkdir -p cpanel-release/inventoros/storage/app/public
+          mkdir -p cpanel-release/inventoros/storage/framework/cache/data
+          mkdir -p cpanel-release/inventoros/storage/framework/sessions
+          mkdir -p cpanel-release/inventoros/storage/framework/views
+          mkdir -p cpanel-release/inventoros/storage/logs
+
+          # Create .gitkeep files for empty directories
+          touch cpanel-release/inventoros/storage/app/.gitkeep
+          touch cpanel-release/inventoros/storage/app/public/.gitkeep
+          touch cpanel-release/inventoros/storage/framework/.gitkeep
+          touch cpanel-release/inventoros/storage/framework/cache/.gitkeep
+          touch cpanel-release/inventoros/storage/framework/cache/data/.gitkeep
+          touch cpanel-release/inventoros/storage/framework/sessions/.gitkeep
+          touch cpanel-release/inventoros/storage/framework/views/.gitkeep
+          touch cpanel-release/inventoros/storage/logs/.gitkeep
+
+          # Create bootstrap/cache directory
+          mkdir -p cpanel-release/inventoros/bootstrap/cache
+          touch cpanel-release/inventoros/bootstrap/cache/.gitkeep
+
+      - name: Create cPanel-compatible index.php
+        run: |
+          cat > cpanel-release/public_html/index.php << 'EOF'
+          <?php
+
+          use Illuminate\Foundation\Application;
+          use Illuminate\Http\Request;
+
+          define('LARAVEL_START', microtime(true));
+
+          // Path to the Laravel installation directory
+          // Adjust this path based on your cPanel directory structure
+          $laravelPath = __DIR__ . '/../inventoros';
+
+          // Determine if the application is in maintenance mode...
+          if (file_exists($maintenance = $laravelPath . '/storage/framework/maintenance.php')) {
+              require $maintenance;
+          }
+
+          // Register the Composer autoloader...
+          require $laravelPath . '/vendor/autoload.php';
+
+          // Bootstrap Laravel and handle the request...
+          /** @var Application $app */
+          $app = require_once $laravelPath . '/bootstrap/app.php';
+
+          $app->handleRequest(Request::capture());
+          EOF
+
+      - name: Create .htaccess for public_html
+        run: |
+          cat > cpanel-release/public_html/.htaccess << 'EOF'
+          <IfModule mod_rewrite.c>
+              <IfModule mod_negotiation.c>
+                  Options -MultiViews -Indexes
+              </IfModule>
+
+              RewriteEngine On
+
+              # Handle Authorization Header
+              RewriteCond %{HTTP:Authorization} .
+              RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
+
+              # Redirect Trailing Slashes If Not A Folder...
+              RewriteCond %{REQUEST_FILENAME} !-d
+              RewriteCond %{REQUEST_URI} (.+)/$
+              RewriteRule ^ %1 [L,R=301]
+
+              # Send Requests To Front Controller...
+              RewriteCond %{REQUEST_FILENAME} !-d
+              RewriteCond %{REQUEST_FILENAME} !-f
+              RewriteRule ^ index.php [L]
+          </IfModule>
+          EOF
+
+      - name: Create installation README
+        run: |
+          cat > cpanel-release/INSTALL.md << 'EOF'
+          # Inventoros - cPanel Installation Guide
+
+          This package is specifically built for cPanel shared hosting environments.
+
+          ## Directory Structure
+
+          ```
+          /home/username/
+          ├── inventoros/          <- Laravel application files
+          │   ├── app/
+          │   ├── bootstrap/
+          │   ├── config/
+          │   ├── database/
+          │   ├── resources/
+          │   ├── routes/
+          │   ├── storage/
+          │   ├── vendor/
+          │   └── ...
+          └── public_html/         <- Web-accessible files
+              ├── index.php        <- Modified to point to ../inventoros
+              ├── build/           <- Compiled frontend assets
+              ├── .htaccess
+              └── ...
+          ```
+
+          ## Installation Steps
+
+          1. **Upload Files**
+             - Upload the `inventoros` folder to your home directory (e.g., `/home/username/inventoros`)
+             - Upload the contents of `public_html` to your `public_html` directory
+
+          2. **Set Permissions**
+             ```bash
+             chmod -R 755 ~/inventoros
+             chmod -R 775 ~/inventoros/storage
+             chmod -R 775 ~/inventoros/bootstrap/cache
+             ```
+
+          3. **Configure Environment**
+             - Copy `.env.example` to `.env` in the inventoros directory
+             - Edit `.env` with your database credentials and app settings
+             ```bash
+             cd ~/inventoros
+             cp .env.example .env
+             nano .env
+             ```
+
+          4. **Generate Application Key**
+             ```bash
+             cd ~/inventoros
+             php artisan key:generate
+             ```
+
+          5. **Run Migrations**
+             ```bash
+             cd ~/inventoros
+             php artisan migrate
+             ```
+
+          6. **Create Storage Link**
+             Since the standard storage:link won't work with this structure,
+             create a symbolic link manually:
+             ```bash
+             ln -s ~/inventoros/storage/app/public ~/public_html/storage
+             ```
+
+          7. **Clear Caches**
+             ```bash
+             cd ~/inventoros
+             php artisan config:cache
+             php artisan route:cache
+             php artisan view:cache
+             ```
+
+          ## Troubleshooting
+
+          ### 500 Internal Server Error
+          - Check file permissions on storage and bootstrap/cache
+          - Verify .env file exists and has correct database settings
+          - Check ~/inventoros/storage/logs/laravel.log for errors
+
+          ### Assets Not Loading
+          - Ensure the `build` folder was uploaded to public_html
+          - Check that .htaccess is present in public_html
+
+          ### Database Connection Issues
+          - Verify database credentials in .env
+          - Ensure database exists and user has proper permissions
+
+          ## Support
+
+          For issues, please visit: https://github.com/Inventoros/Inventoros/issues
+          EOF
+
+      - name: Create release zip
+        run: |
+          cd cpanel-release
+          zip -r ../inventoros-cpanel-${{ steps.version.outputs.version }}.zip .
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: inventoros-cpanel-${{ steps.version.outputs.version }}
+          path: inventoros-cpanel-${{ steps.version.outputs.version }}.zip
+          retention-days: 30
+
+      - name: Create GitHub Release
+        if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v1
+        with:
+          files: inventoros-cpanel-${{ steps.version.outputs.version }}.zip
+          name: Release ${{ steps.version.outputs.tag_name }}
+          body: |
+            ## Inventoros ${{ steps.version.outputs.tag_name }}
+
+            ### cPanel Installation Package
+
+            This release includes a pre-built package optimized for cPanel shared hosting.
+
+            **Download:** `inventoros-cpanel-${{ steps.version.outputs.version }}.zip`
+
+            See `INSTALL.md` inside the zip for installation instructions.
+
+            ### What's Included
+            - Pre-compiled frontend assets (no npm required on server)
+            - Production-optimized Composer dependencies
+            - cPanel-compatible directory structure
+            - Modified index.php for split directory setup
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
