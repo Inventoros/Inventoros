@@ -21,5 +21,6 @@
         "vue": "^3.4.0"
     },
     "dependencies": {
+        "html5-qrcode": "^2.3.8"
     }
 }
