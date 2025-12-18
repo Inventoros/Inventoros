@@ -112,12 +112,22 @@ class ActivityLog extends Model
         Model $subject,
         ?string $description = null,
         ?array $properties = null
-    ): self {
+    ): ?self {
+        // Guard against missing auth context
+        if (!auth()->check()) {
+            return null;
+        }
+
+        $user = auth()->user();
+        if (!$user || !$user->organization_id) {
+            return null;
+        }
+
         return self::create([
-            'organization_id' => auth()->user()->organization_id,
-            'user_id' => auth()->id(),
+            'organization_id' => $user->organization_id,
+            'user_id' => $user->id,
             'subject_type' => get_class($subject),
-            'subject_id' => $subject->id,
+            'subject_id' => $subject->id ?? $subject->getKey(),
             'action' => $action,
             'description' => $description,
             'properties' => $properties,

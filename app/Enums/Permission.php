@@ -24,6 +24,19 @@ enum Permission: string
     case MANAGE_CATEGORIES = 'manage_categories';
     case MANAGE_LOCATIONS = 'manage_locations';
 
+    // Supplier Management
+    case VIEW_SUPPLIERS = 'view_suppliers';
+    case CREATE_SUPPLIERS = 'create_suppliers';
+    case EDIT_SUPPLIERS = 'edit_suppliers';
+    case DELETE_SUPPLIERS = 'delete_suppliers';
+
+    // Purchase Order Management
+    case VIEW_PURCHASE_ORDERS = 'view_purchase_orders';
+    case CREATE_PURCHASE_ORDERS = 'create_purchase_orders';
+    case EDIT_PURCHASE_ORDERS = 'edit_purchase_orders';
+    case DELETE_PURCHASE_ORDERS = 'delete_purchase_orders';
+    case RECEIVE_PURCHASE_ORDERS = 'receive_purchase_orders';
+
     // Order Management
     case VIEW_ORDERS = 'view_orders';
     case CREATE_ORDERS = 'create_orders';
@@ -69,6 +82,17 @@ enum Permission: string
             self::MANAGE_CATEGORIES => 'Manage Categories',
             self::MANAGE_LOCATIONS => 'Manage Locations',
 
+            self::VIEW_SUPPLIERS => 'View Suppliers',
+            self::CREATE_SUPPLIERS => 'Create Suppliers',
+            self::EDIT_SUPPLIERS => 'Edit Suppliers',
+            self::DELETE_SUPPLIERS => 'Delete Suppliers',
+
+            self::VIEW_PURCHASE_ORDERS => 'View Purchase Orders',
+            self::CREATE_PURCHASE_ORDERS => 'Create Purchase Orders',
+            self::EDIT_PURCHASE_ORDERS => 'Edit Purchase Orders',
+            self::DELETE_PURCHASE_ORDERS => 'Delete Purchase Orders',
+            self::RECEIVE_PURCHASE_ORDERS => 'Receive Purchase Orders',
+
             self::VIEW_ORDERS => 'View Orders',
             self::CREATE_ORDERS => 'Create Orders',
             self::EDIT_ORDERS => 'Edit Orders',
@@ -112,6 +136,17 @@ enum Permission: string
             self::MANAGE_CATEGORIES => 'Can create and manage product categories',
             self::MANAGE_LOCATIONS => 'Can create and manage storage locations',
 
+            self::VIEW_SUPPLIERS => 'Can view supplier list and details',
+            self::CREATE_SUPPLIERS => 'Can create new suppliers',
+            self::EDIT_SUPPLIERS => 'Can edit existing suppliers',
+            self::DELETE_SUPPLIERS => 'Can delete suppliers',
+
+            self::VIEW_PURCHASE_ORDERS => 'Can view purchase orders',
+            self::CREATE_PURCHASE_ORDERS => 'Can create new purchase orders',
+            self::EDIT_PURCHASE_ORDERS => 'Can edit purchase orders',
+            self::DELETE_PURCHASE_ORDERS => 'Can delete purchase orders',
+            self::RECEIVE_PURCHASE_ORDERS => 'Can receive items from purchase orders',
+
             self::VIEW_ORDERS => 'Can view orders',
             self::CREATE_ORDERS => 'Can create new orders',
             self::EDIT_ORDERS => 'Can modify orders',
@@ -142,6 +177,9 @@ enum Permission: string
             self::VIEW_ROLES, self::CREATE_ROLES, self::EDIT_ROLES, self::DELETE_ROLES => 'Role Management',
             self::VIEW_PRODUCTS, self::CREATE_PRODUCTS, self::EDIT_PRODUCTS, self::DELETE_PRODUCTS,
             self::MANAGE_CATEGORIES, self::MANAGE_LOCATIONS => 'Inventory Management',
+            self::VIEW_SUPPLIERS, self::CREATE_SUPPLIERS, self::EDIT_SUPPLIERS, self::DELETE_SUPPLIERS => 'Supplier Management',
+            self::VIEW_PURCHASE_ORDERS, self::CREATE_PURCHASE_ORDERS, self::EDIT_PURCHASE_ORDERS,
+            self::DELETE_PURCHASE_ORDERS, self::RECEIVE_PURCHASE_ORDERS => 'Purchase Order Management',
             self::VIEW_ORDERS, self::CREATE_ORDERS, self::EDIT_ORDERS, self::DELETE_ORDERS,
             self::APPROVE_ORDERS => 'Order Management',
             self::VIEW_SETTINGS, self::EDIT_SETTINGS, self::MANAGE_ORGANIZATION => 'Settings',

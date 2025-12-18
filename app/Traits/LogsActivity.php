@@ -10,31 +10,43 @@ trait LogsActivity
     protected static function bootLogsActivity()
     {
         static::created(function (Model $model) {
-            if (auth()->check()) {
-                $model->logActivity('created', 'Created ' . class_basename($model));
+            try {
+                if (auth()->check() && auth()->user()->organization_id) {
+                    $model->logActivity('created', 'Created ' . class_basename($model));
+                }
+            } catch (\Exception $e) {
+                // Silently fail if logging fails
             }
         });
 
         static::updated(function (Model $model) {
-            if (auth()->check()) {
-                $changes = $model->getChanges();
-                $original = array_intersect_key($model->getOriginal(), $changes);
+            try {
+                if (auth()->check() && auth()->user()->organization_id) {
+                    $changes = $model->getChanges();
+                    $original = array_intersect_key($model->getOriginal(), $changes);
 
-                // Remove timestamps from changes
-                unset($changes['updated_at'], $original['updated_at']);
+                    // Remove timestamps from changes
+                    unset($changes['updated_at'], $original['updated_at']);
 
-                if (!empty($changes)) {
-                    $model->logActivity('updated', 'Updated ' . class_basename($model), [
-                        'old' => $original,
-                        'new' => $changes,
-                    ]);
+                    if (!empty($changes)) {
+                        $model->logActivity('updated', 'Updated ' . class_basename($model), [
+                            'old' => $original,
+                            'new' => $changes,
+                        ]);
+                    }
                 }
+            } catch (\Exception $e) {
+                // Silently fail if logging fails
             }
         });
 
         static::deleted(function (Model $model) {
-            if (auth()->check()) {
-                $model->logActivity('deleted', 'Deleted ' . class_basename($model));
+            try {
+                if (auth()->check() && auth()->user()->organization_id) {
+                    $model->logActivity('deleted', 'Deleted ' . class_basename($model));
+                }
+            } catch (\Exception $e) {
+                // Silently fail if logging fails
             }
         });
     }
