@@ -232,6 +232,40 @@ onMounted(() => {
                         <span class="font-medium">Orders</span>
                     </Link>
 
+                    <!-- Purchase Orders -->
+                    <Link
+                        v-if="hasPermission('view_purchase_orders')"
+                        :href="route('purchase-orders.index')"
+                        :class="[
+                            'flex items-center gap-3 px-3 py-3 rounded-lg transition-all duration-150',
+                            route().current('purchase-orders.*')
+                                ? 'bg-emerald-400/10 text-emerald-400 border border-emerald-400/30'
+                                : 'text-gray-400 hover:text-gray-200 hover:bg-dark-bg/50'
+                        ]"
+                    >
+                        <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+                        </svg>
+                        <span class="font-medium">Purchase Orders</span>
+                    </Link>
+
+                    <!-- Suppliers -->
+                    <Link
+                        v-if="hasPermission('view_suppliers')"
+                        :href="route('suppliers.index')"
+                        :class="[
+                            'flex items-center gap-3 px-3 py-3 rounded-lg transition-all duration-150',
+                            route().current('suppliers.*')
+                                ? 'bg-amber-400/10 text-amber-400 border border-amber-400/30'
+                                : 'text-gray-400 hover:text-gray-200 hover:bg-dark-bg/50'
+                        ]"
+                    >
+                        <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                        </svg>
+                        <span class="font-medium">Suppliers</span>
+                    </Link>
+
                     <!-- Categories -->
                     <Link
                         v-if="hasPermission('manage_categories')"

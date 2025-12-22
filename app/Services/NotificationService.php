@@ -10,6 +10,29 @@ use App\Models\Order\Order;
 class NotificationService
 {
     /**
+     * Check if user wants to receive a specific notification type.
+     */
+    private static function shouldNotifyUser(User $user, string $notificationType): bool
+    {
+        $preferences = $user->notification_preferences ?? [];
+
+        // Map notification types to preference keys
+        $preferenceMap = [
+            'low_stock' => 'low_stock_alerts',
+            'out_of_stock' => 'low_stock_alerts',
+            'order_created' => 'order_notifications',
+            'order_status_updated' => 'order_notifications',
+            'order_shipped' => 'order_notifications',
+            'order_delivered' => 'order_notifications',
+        ];
+
+        $preferenceKey = $preferenceMap[$notificationType] ?? 'system_notifications';
+
+        // Default to true if preference not set
+        return $preferences[$preferenceKey] ?? true;
+    }
+
+    /**
      * Create a low stock notification for all users with appropriate permissions.
      */
     public static function createLowStockNotification(Product $product): void
@@ -24,6 +47,11 @@ class NotificationService
             ->get();
 
         foreach ($users as $user) {
+            // Check if user wants low stock alerts
+            if (!self::shouldNotifyUser($user, 'low_stock')) {
+                continue;
+            }
+
             Notification::create([
                 'organization_id' => $product->organization_id,
                 'user_id' => $user->id,
@@ -58,6 +86,11 @@ class NotificationService
             ->get();
 
         foreach ($users as $user) {
+            // Check if user wants low stock alerts
+            if (!self::shouldNotifyUser($user, 'out_of_stock')) {
+                continue;
+            }
+
             Notification::create([
                 'organization_id' => $product->organization_id,
                 'user_id' => $user->id,
@@ -91,6 +124,11 @@ class NotificationService
             ->get();
 
         foreach ($users as $user) {
+            // Check if user wants order notifications
+            if (!self::shouldNotifyUser($user, 'order_created')) {
+                continue;
+            }
+
             Notification::create([
                 'organization_id' => $order->organization_id,
                 'user_id' => $user->id,
@@ -114,6 +152,12 @@ class NotificationService
      */
     public static function createOrderStatusNotification(Order $order, string $oldStatus): void
     {
+        // Get the user to check preferences
+        $user = User::find($order->user_id);
+        if (!$user || !self::shouldNotifyUser($user, 'order_status_updated')) {
+            return;
+        }
+
         // Notify the order creator
         Notification::create([
             'organization_id' => $order->organization_id,
@@ -137,6 +181,12 @@ class NotificationService
      */
     public static function createOrderShippedNotification(Order $order): void
     {
+        // Get the user to check preferences
+        $user = User::find($order->user_id);
+        if (!$user || !self::shouldNotifyUser($user, 'order_shipped')) {
+            return;
+        }
+
         // Notify the order creator
         Notification::create([
             'organization_id' => $order->organization_id,
@@ -159,6 +209,12 @@ class NotificationService
      */
     public static function createOrderDeliveredNotification(Order $order): void
     {
+        // Get the user to check preferences
+        $user = User::find($order->user_id);
+        if (!$user || !self::shouldNotifyUser($user, 'order_delivered')) {
+            return;
+        }
+
         // Notify the order creator
         Notification::create([
             'organization_id' => $order->organization_id,

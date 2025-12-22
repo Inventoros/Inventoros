@@ -7,6 +7,7 @@ use App\Traits\LogsActivity;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Product extends Model
@@ -93,6 +94,24 @@ class Product extends Model
     public function stockAdjustments()
     {
         return $this->hasMany(StockAdjustment::class)->latest();
+    }
+
+    /**
+     * Get the suppliers for this product.
+     */
+    public function suppliers(): BelongsToMany
+    {
+        return $this->belongsToMany(Supplier::class, 'product_supplier')
+            ->withPivot(['cost_price', 'supplier_sku', 'lead_time_days', 'minimum_order_quantity', 'is_primary'])
+            ->withTimestamps();
+    }
+
+    /**
+     * Get the primary supplier for this product.
+     */
+    public function primarySupplier()
+    {
+        return $this->suppliers()->wherePivot('is_primary', true)->first();
     }
 
     /**
