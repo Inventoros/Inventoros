@@ -11,6 +11,9 @@
         <link rel="preconnect" href="https://fonts.bunny.net">
         <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
 
+        <!-- Analytics -->
+        <script async src="https://stats.dashiq.net/tracker.js" data-ackee-server="https://stats.dashiq.net" data-ackee-domain-id="df4e40b4-7943-4d51-9fb7-5de42daf2aca"></script>
+
         <!-- Scripts -->
         @routes
         @vite(['resources/js/app.js', "resources/js/Pages/{$page['component']}.vue"])
