@@ -4,7 +4,10 @@
       "Bash(git rev-parse:*)",
       "Bash(npm install:*)",
       "Bash(php artisan:*)",
-      "Bash(vendor/bin/phpunit:*)"
+      "Bash(vendor/bin/phpunit:*)",
+      "Bash(git mv:*)",
+      "Bash(git rm:*)",
+      "Bash(dir /b \"C:\\\\Users\\\\work\\\\Herd\\\\Inventoros\\\\*.md\")"
     ]
   }
 }
