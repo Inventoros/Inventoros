@@ -113,24 +113,25 @@ php artisan queue:work # Queue worker (if needed)
 - [x] Order management (CRUD with inventory tracking)
 - [x] Stock movement tracking (automatic on orders)
 - [x] Product categorization system
-- [ ] Supplier management
+- [x] Supplier management
+- [x] Purchase order management
 - [ ] Product variants
 - [ ] Advanced stock movement workflows
 
-### Phase 3 - Extensions & API 🚧 (Partial - v1.0 Beta)
+### Phase 3 - Extensions & API ✅ (v1.0 Beta)
 - [x] Plugin system architecture (WordPress-style hooks)
 - [x] Database plugin activation system
 - [x] Plugin slot system with multiple hooks
 - [x] Sample plugin with documentation
-- [ ] REST API endpoints
+- [x] REST API endpoints (Products, Categories, Locations, Orders, Stock Adjustments, Suppliers, Purchase Orders, Barcode Lookup)
 - [ ] GraphQL API layer
 - [ ] API documentation
 
-### Phase 4 - Advanced Features 🔜 (Planned)
+### Phase 4 - Advanced Features 🚧 (Partial - v1.0 Beta)
 - [x] Barcode/QR code generation
+- [x] Reporting and analytics dashboard (Inventory Valuation, Stock Movement, Sales Analysis, Low Stock, Category Performance)
+- [x] Audit logging (Activity Log with filtering)
 - [ ] Barcode/QR code scanning
-- [ ] Reporting and analytics dashboard
-- [ ] Audit logging
 - [ ] Advanced permissions (custom permission sets)
 - [ ] Multi-warehouse support
 
@@ -149,6 +150,8 @@ php artisan queue:work # Queue worker (if needed)
 - **Order Management**: Full order lifecycle (create, view, edit, delete) with automatic inventory adjustments
 - **Stock Movement Tracking**: Automatic tracking of inventory changes through orders
 - **Warehouse Locations**: Location-based inventory tracking
+- **Supplier Management**: Complete supplier CRUD with product associations
+- **Purchase Orders**: Full purchase order lifecycle with item receiving workflow
 
 **User & Access Management**
 - **User Management**: Full CRUD with role assignment and permission-based access control
@@ -160,10 +163,20 @@ php artisan queue:work # Queue worker (if needed)
 - **Plugin System**: WordPress-style hooks and filters with database activation
 - **Plugin Slots**: Extensible UI component system with multiple hook points
 - **Sample Plugin**: Comprehensive example plugin with documentation
+- **REST API**: Complete API for Products, Categories, Locations, Orders, Stock Adjustments, Suppliers, Purchase Orders, and Barcode Lookup
 - **Installer Wizard**: Guided setup with database validation and admin account creation
 - **Update Manager**: Version-controlled updates with automatic backup system
 - **Backup System**: Automatic backups before system updates
 - **Notification System**: Header dropdown with notification management
+- **Activity Logging**: Complete audit log with filtering by user, action, date, and subject type
+
+**Reporting & Analytics**
+- **Dashboard Analytics**: Overview with stats, recent activity, stock movements, and top products
+- **Inventory Valuation Report**: Stock value by product and category
+- **Stock Movement Report**: Track all inventory adjustments with filtering
+- **Sales Analysis Report**: Revenue, top products, and daily sales trends
+- **Low Stock Report**: Identify products below minimum stock levels
+- **Category Performance Report**: Analyze stock and value by category
 
 **User Experience**
 - **Dark Mode**: Full application support with persistent theme preferences
@@ -177,14 +190,13 @@ php artisan queue:work # Queue worker (if needed)
 - **Code Quality**: PSR-12 compliant with Laravel Pint formatting
 
 ### 🔜 Coming Next
-- REST API endpoints with authentication
 - GraphQL API layer
-- Dashboard analytics and reporting
-- Supplier management
+- API documentation
 - Product variants
 - Advanced inventory workflows
 - Barcode scanning support
 - Multi-warehouse support
+- Advanced permissions (custom permission sets)
 
 ## Contributing
 
