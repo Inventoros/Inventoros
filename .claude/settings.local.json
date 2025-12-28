@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "WebSearch",
+      "Bash(grep:*)",
+      "WebFetch(domain:shopify.dev)",
+      "WebFetch(domain:help.shopify.com)",
+      "WebFetch(domain:www.shopify.com)"
+    ]
+  }
+}
