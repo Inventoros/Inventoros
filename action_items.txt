@@ -1,0 +1,29 @@
+INVENTOROS ACTION ITEMS
+========================
+Status: 95% Complete (All Critical Items Done)
+
+CRITICAL (HIGH PRIORITY)
+------------------------
+[x] 1. Create Users Show Page - /resources/js/Pages/Admin/Users/Show.vue (COMPLETE)
+[x] 2. Create Roles Show Page - /resources/js/Pages/Admin/Roles/Show.vue (COMPLETE)
+[x] 3. Stock Adjustment System - Controller + 3 Vue pages all complete (COMPLETE)
+[x] 4. Fix Order Items Editing - OrderController::update() fully handles line items (COMPLETE)
+[x] 5. Fix Product Status Field Mismatch - Import/Export properly converts status<->is_active (COMPLETE)
+
+MEDIUM PRIORITY
+---------------
+[ ] 6. Activity Log Viewer Page (backend complete, needs UI)
+[ ] 7. Reports & Analytics System (no controllers, routes, or UI)
+[ ] 8. Order Approval Workflow (permission exists but no logic)
+[ ] 9. Notification System (incomplete - no database or sending logic)
+[ ] 10. Organization Address Fields database mismatch
+[ ] 11. Barcode Printing UI integration (backend ready but hidden)
+[ ] 12. Purchase Order System (completely missing)
+
+LOW PRIORITY
+------------
+[ ] 13. SKU Generator UI integration
+[ ] 14. Product Activity History Timeline
+[ ] 15. Bulk Barcode Printing interface
+[ ] 16. API endpoints (routes/api.php missing)
+[ ] 17. Empty duplicate controllers cleanup
