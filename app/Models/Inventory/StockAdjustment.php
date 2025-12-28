@@ -13,6 +13,7 @@ class StockAdjustment extends Model
     protected $fillable = [
         'organization_id',
         'product_id',
+        'product_variant_id',
         'user_id',
         'type',
         'quantity_before',
@@ -57,11 +58,27 @@ class StockAdjustment extends Model
     }
 
     /**
+     * Get the variant associated with the adjustment
+     */
+    public function variant(): BelongsTo
+    {
+        return $this->belongsTo(ProductVariant::class, 'product_variant_id');
+    }
+
+    /**
      * Get the reference model (Order, Purchase, etc.)
      */
     public function reference(): MorphTo
     {
         return $this->morphTo();
+    }
+
+    /**
+     * Scope to filter by variant
+     */
+    public function scopeForVariant($query, $variantId)
+    {
+        return $query->where('product_variant_id', $variantId);
     }
 
     /**
@@ -119,6 +136,42 @@ class StockAdjustment extends Model
 
         // Update the product stock
         $product->update(['stock' => $quantityAfter]);
+
+        return $adjustment;
+    }
+
+    /**
+     * Create a stock adjustment for a product variant
+     */
+    public static function adjustVariant(
+        ProductVariant $variant,
+        int $quantity,
+        string $type,
+        ?string $reason = null,
+        ?string $notes = null,
+        ?Model $reference = null
+    ): self {
+        $quantityBefore = $variant->stock;
+        $quantityAfter = $quantityBefore + $quantity;
+
+        // Create the adjustment record
+        $adjustment = self::create([
+            'organization_id' => $variant->organization_id,
+            'product_id' => $variant->product_id,
+            'product_variant_id' => $variant->id,
+            'user_id' => auth()->id(),
+            'type' => $type,
+            'quantity_before' => $quantityBefore,
+            'quantity_after' => $quantityAfter,
+            'adjustment_quantity' => $quantity,
+            'reason' => $reason,
+            'notes' => $notes,
+            'reference_type' => $reference ? get_class($reference) : null,
+            'reference_id' => $reference?->id,
+        ]);
+
+        // Update the variant stock
+        $variant->update(['stock' => $quantityAfter]);
 
         return $adjustment;
     }
