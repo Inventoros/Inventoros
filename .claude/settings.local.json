@@ -3,7 +3,8 @@
     "allow": [
       "Bash(git rev-parse:*)",
       "Bash(npm install:*)",
-      "Bash(php artisan:*)"
+      "Bash(php artisan:*)",
+      "Bash(vendor/bin/phpunit:*)"
     ]
   }
 }
