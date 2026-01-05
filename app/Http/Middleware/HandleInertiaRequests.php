@@ -31,12 +31,20 @@ class HandleInertiaRequests extends Middleware
     {
         $user = $request->user();
 
+        // Get plugin menu items
+        $pluginMenuItems = [];
+        if ($user) {
+            $pluginUIService = app(\App\Services\PluginUIService::class);
+            $pluginMenuItems = $pluginUIService->getMenuItems();
+        }
+
         return [
             ...parent::share($request),
             'auth' => [
                 'user' => $user,
                 'permissions' => $user ? $user->getAllPermissions() : [],
             ],
+            'pluginMenuItems' => $pluginMenuItems,
         ];
     }
 }
