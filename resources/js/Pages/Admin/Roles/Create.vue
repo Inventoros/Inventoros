@@ -8,13 +8,53 @@ import { Head, Link, useForm } from '@inertiajs/vue3';
 
 const props = defineProps({
     permissions: Object,
+    permissionSets: Array,
 });
 
 const form = useForm({
     name: '',
     description: '',
     permissions: [],
+    permission_set_ids: [],
 });
+
+// Toggle a permission set
+const togglePermissionSet = (setId) => {
+    const index = form.permission_set_ids.indexOf(setId);
+    if (index > -1) {
+        form.permission_set_ids.splice(index, 1);
+    } else {
+        form.permission_set_ids.push(setId);
+    }
+};
+
+// Get permissions from selected sets
+const getSetPermissions = () => {
+    const setPerms = [];
+    props.permissionSets
+        .filter(set => form.permission_set_ids.includes(set.id))
+        .forEach(set => setPerms.push(...set.permissions));
+    return [...new Set(setPerms)];
+};
+
+// Get total unique permissions count
+const getTotalPermissions = () => {
+    const direct = form.permissions;
+    const fromSets = getSetPermissions();
+    return [...new Set([...direct, ...fromSets])].length;
+};
+
+// Category icons
+const getCategoryIcon = (category) => {
+    const icons = {
+        inventory: 'M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4',
+        orders: 'M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z',
+        purchasing: 'M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4',
+        admin: 'M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z',
+        reports: 'M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z',
+    };
+    return icons[category] || icons.admin;
+};
 
 const submit = () => {
     form.post(route('roles.store'), {
@@ -90,11 +130,59 @@ const isCategorySelected = (category) => {
                             <InputError class="mt-2" :message="form.errors.description" />
                         </div>
 
-                        <!-- Permissions -->
-                        <div>
-                            <InputLabel value="Permissions" />
+                        <!-- Permission Sets (Quick Templates) -->
+                        <div v-if="permissionSets && permissionSets.length > 0">
+                            <InputLabel value="Permission Sets (Quick Templates)" />
                             <p class="mt-1 text-sm text-gray-500 mb-4">
-                                Select the permissions this role should have. You can click category names to select/deselect all permissions in that category.
+                                Apply pre-configured permission sets to quickly assign common permission groups.
+                            </p>
+
+                            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                                <button
+                                    v-for="set in permissionSets"
+                                    :key="set.id"
+                                    type="button"
+                                    @click="togglePermissionSet(set.id)"
+                                    :class="[
+                                        'p-4 rounded-lg border-2 text-left transition',
+                                        form.permission_set_ids.includes(set.id)
+                                            ? 'border-primary-400 bg-primary-400/10'
+                                            : 'border-gray-200 dark:border-dark-border hover:border-primary-400/50'
+                                    ]"
+                                >
+                                    <div class="flex items-start gap-3">
+                                        <div class="flex-shrink-0">
+                                            <svg class="w-6 h-6 text-primary-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" :d="getCategoryIcon(set.category)" />
+                                            </svg>
+                                        </div>
+                                        <div class="flex-1 min-w-0">
+                                            <div class="font-medium text-gray-900 dark:text-gray-100">{{ set.name }}</div>
+                                            <div class="text-xs text-gray-500 mt-1">{{ set.description }}</div>
+                                            <div class="flex items-center gap-2 mt-2">
+                                                <span class="text-xs px-2 py-0.5 bg-gray-200 dark:bg-dark-bg rounded-full text-gray-600 dark:text-gray-400">
+                                                    {{ set.permission_count }} permissions
+                                                </span>
+                                                <span v-if="set.is_template" class="text-xs px-2 py-0.5 bg-blue-500/20 text-blue-400 rounded-full">
+                                                    Template
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <div v-if="form.permission_set_ids.includes(set.id)" class="flex-shrink-0">
+                                            <svg class="w-5 h-5 text-primary-400" fill="currentColor" viewBox="0 0 20 20">
+                                                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+                                            </svg>
+                                        </div>
+                                    </div>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Individual Permissions -->
+                        <div>
+                            <InputLabel value="Individual Permissions" />
+                            <p class="mt-1 text-sm text-gray-500 mb-4">
+                                Select additional permissions. You can click category names to select/deselect all permissions in that category.
                             </p>
 
                             <div class="space-y-4">
@@ -144,7 +232,10 @@ const isCategorySelected = (category) => {
 
                             <div class="mt-4 p-3 bg-primary-500/10 border border-primary-500/30 rounded-md">
                                 <p class="text-sm text-primary-400">
-                                    <strong>{{ form.permissions.length }}</strong> permission(s) selected
+                                    <strong>{{ getTotalPermissions() }}</strong> total permission(s)
+                                    <span v-if="form.permission_set_ids.length > 0" class="text-gray-500">
+                                        ({{ form.permissions.length }} direct + {{ getSetPermissions().length }} from {{ form.permission_set_ids.length }} set(s))
+                                    </span>
                                 </p>
                             </div>
                         </div>

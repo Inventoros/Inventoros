@@ -40,12 +40,63 @@ class Role extends Model
     }
 
     /**
+     * Get the permission sets assigned to this role.
+     */
+    public function permissionSets(): BelongsToMany
+    {
+        return $this->belongsToMany(PermissionSet::class, 'role_permission_set')
+            ->withTimestamps();
+    }
+
+    /**
+     * Get all permissions including those from permission sets.
+     */
+    public function getAllPermissions(): array
+    {
+        $directPermissions = $this->permissions ?? [];
+
+        $setPermissions = $this->permissionSets()
+            ->where('is_active', true)
+            ->get()
+            ->flatMap(fn($set) => $set->permissions)
+            ->toArray();
+
+        return array_values(array_unique(array_merge($directPermissions, $setPermissions)));
+    }
+
+    /**
+     * Apply a permission set to this role.
+     */
+    public function applyPermissionSet(PermissionSet $set): void
+    {
+        $this->permissionSets()->syncWithoutDetaching([$set->id]);
+    }
+
+    /**
+     * Remove a permission set from this role.
+     */
+    public function removePermissionSet(PermissionSet $set): void
+    {
+        $this->permissionSets()->detach($set->id);
+    }
+
+    /**
      * Check if the role has a specific permission.
      */
     public function hasPermission(Permission|string $permission): bool
     {
         $permissionValue = $permission instanceof Permission ? $permission->value : $permission;
-        return in_array($permissionValue, $this->permissions ?? []);
+
+        // Check direct permissions first
+        if (in_array($permissionValue, $this->permissions ?? [])) {
+            return true;
+        }
+
+        // Check permission sets
+        return $this->permissionSets()
+            ->where('is_active', true)
+            ->get()
+            ->contains(fn($set) => $set->hasPermission($permissionValue));
     }
 
     /**
