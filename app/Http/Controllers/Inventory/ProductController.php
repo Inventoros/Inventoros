@@ -6,7 +6,10 @@ use App\Http\Controllers\Controller;
 use App\Models\Inventory\Product;
 use App\Models\Inventory\ProductCategory;
 use App\Models\Inventory\ProductLocation;
+use App\Models\Inventory\ProductOption;
+use App\Models\Inventory\ProductVariant;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -136,6 +139,20 @@ class ProductController extends Controller
             'images.*.file' => 'nullable',
             'images.*.preview' => 'nullable|string',
             'images.*.name' => 'nullable|string',
+            'has_variants' => 'boolean',
+            'options' => 'nullable|array|max:3',
+            'options.*.name' => 'required_with:options|string|max:255',
+            'options.*.values' => 'required_with:options|array|min:1',
+            'options.*.values.*' => 'string|max:255',
+            'variants' => 'nullable|array',
+            'variants.*.option_values' => 'required_with:variants|array',
+            'variants.*.sku' => 'nullable|string|max:255',
+            'variants.*.barcode' => 'nullable|string|max:255',
+            'variants.*.price' => 'nullable|numeric|min:0',
+            'variants.*.purchase_price' => 'nullable|numeric|min:0',
+            'variants.*.stock' => 'nullable|integer|min:0',
+            'variants.*.min_stock' => 'nullable|integer|min:0',
+            'variants.*.is_active' => 'boolean',
         ], $request);
 
         $validated = $request->validate($rules);
@@ -183,7 +200,46 @@ class ProductController extends Controller
             $validated['images'] = $imagePaths;
         }
 
-        $product = Product::create($validated);
+        // Extract options and variants before creating product
+        $options = $validated['options'] ?? [];
+        $variants = $validated['variants'] ?? [];
+        unset($validated['options'], $validated['variants']);
+
+        $product = DB::transaction(function () use ($validated, $options, $variants, $request) {
+            $product = Product::create($validated);
+
+            // Create options if has_variants is true
+            if ($product->has_variants && !empty($options)) {
+                foreach ($options as $index => $optionData) {
+                    ProductOption::create([
+                        'product_id' => $product->id,
+                        'name' => $optionData['name'],
+                        'values' => $optionData['values'],
+                        'position' => $index,
+                    ]);
+                }
+
+                // Create variants
+                foreach ($variants as $index => $variantData) {
+                    ProductVariant::create([
+                        'product_id' => $product->id,
+                        'organization_id' => $product->organization_id,
+                        'sku' => $variantData['sku'] ?? null,
+                        'barcode' => $variantData['barcode'] ?? null,
+                        'title' => $variantData['title'] ?? implode(' / ', array_values($variantData['option_values'])),
+                        'option_values' => $variantData['option_values'],
+                        'price' => $variantData['price'] ?? null,
+                        'purchase_price' => $variantData['purchase_price'] ?? null,
+                        'stock' => $variantData['stock'] ?? 0,
+                        'min_stock' => $variantData['min_stock'] ?? 0,
+                        'is_active' => $variantData['is_active'] ?? true,
+                        'position' => $index,
+                    ]);
+                }
+            }
+
+            return $product;
+        });
 
         // Action: After product creation
         do_action('product_created', $product, $request->user());
@@ -219,7 +275,7 @@ class ProductController extends Controller
      */
     public function show(Product $product): Response
     {
-        $product->load(['category', 'location', 'organization']);
+        $product->load(['category', 'location', 'organization', 'options', 'variants']);
 
         // Ensure user can only view products from their organization
         if ($product->organization_id !== auth()->user()->organization_id) {
@@ -268,10 +324,18 @@ class ProductController extends Controller
             ->active()
             ->get(['id', 'name', 'code']);
 
+        // Load options and variants
+        $product->load(['options', 'variants']);
+
+        $currencies = config('currencies.supported');
+        $defaultCurrency = config('currencies.default');
+
         return Inertia::render('Products/Edit', [
             'product' => $product,
             'categories' => $categories,
             'locations' => $locations,
+            'currencies' => $currencies,
+            'defaultCurrency' => $defaultCurrency,
             'pluginComponents' => [
                 'header' => get_page_components('products.edit', 'header'),
                 'beforeForm' => get_page_components('products.edit', 'before-form'),

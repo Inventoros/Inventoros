@@ -6,9 +6,12 @@ use App\Http\Controllers\Api\OrderController;
 use App\Http\Controllers\Api\ProductCategoryController;
 use App\Http\Controllers\Api\ProductController;
 use App\Http\Controllers\Api\ProductLocationController;
+use App\Http\Controllers\Api\ProductOptionController;
+use App\Http\Controllers\Api\ProductVariantController;
 use App\Http\Controllers\Api\PurchaseOrderController;
 use App\Http\Controllers\Api\StockAdjustmentController;
 use App\Http\Controllers\Api\SupplierController;
+use App\Http\Controllers\Api\PermissionSetController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -38,6 +41,19 @@ Route::prefix('v1')->group(function () {
         // Products
         Route::apiResource('products', ProductController::class)
             ->middleware('api.permission:view_products|manage_products');
+
+        // Product Options (nested under products)
+        Route::prefix('products/{product}')->middleware('api.permission:view_products|manage_products')->group(function () {
+            Route::apiResource('options', ProductOptionController::class);
+            Route::post('options/reorder', [ProductOptionController::class, 'reorder']);
+        });
+
+        // Product Variants (nested under products)
+        Route::prefix('products/{product}')->middleware('api.permission:view_products|manage_products')->group(function () {
+            Route::apiResource('variants', ProductVariantController::class);
+            Route::post('variants/{variant}/adjust-stock', [ProductVariantController::class, 'adjustStock']);
+            Route::post('variants/bulk', [ProductVariantController::class, 'bulkCreate']);
+        });
 
         // Product Categories
         Route::apiResource('categories', ProductCategoryController::class)
@@ -73,5 +89,11 @@ Route::prefix('v1')->group(function () {
         // Barcode Lookup
         Route::get('barcode/{code}', [BarcodeLookupController::class, 'lookup'])
             ->middleware('api.permission:view_products');
+
+        // Permission Sets
+        Route::get('permission-sets/categories', [PermissionSetController::class, 'categories'])
+            ->middleware('api.permission:view_roles');
+        Route::apiResource('permission-sets', PermissionSetController::class)
+            ->middleware('api.permission:view_roles|manage_roles');
     });
 });

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Enums\Permission;
 use App\Http\Controllers\Controller;
+use App\Models\PermissionSet;
 use App\Models\Role;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
@@ -41,12 +42,30 @@ class RoleController extends Controller
     /**
      * Show the form for creating a new role.
      */
-    public function create(): Response
+    public function create(Request $request): Response
     {
         $permissions = Permission::grouped();
+        $organizationId = $request->user()->organization_id;
+
+        // Get available permission sets (templates + organization-specific)
+        $permissionSets = PermissionSet::forOrganization($organizationId)
+            ->active()
+            ->orderBy('position')
+            ->get()
+            ->map(fn($set) => [
+                'id' => $set->id,
+                'name' => $set->name,
+                'description' => $set->description,
+                'category' => $set->category,
+                'icon' => $set->icon,
+                'permissions' => $set->permissions,
+                'permission_count' => $set->permission_count,
+                'is_template' => $set->is_template,
+            ]);
 
         return Inertia::render('Admin/Roles/Create', [
             'permissions' => $permissions,
+            'permissionSets' => $permissionSets,
         ]);
     }
 
@@ -62,6 +81,8 @@ class RoleController extends Controller
             'description' => 'nullable|string',
             'permissions' => 'nullable|array',
             'permissions.*' => 'string',
+            'permission_set_ids' => 'nullable|array',
+            'permission_set_ids.*' => 'integer|exists:permission_sets,id',
         ]);
 
         // Generate slug from name
@@ -84,6 +105,11 @@ class RoleController extends Controller
             'is_system' => false,
         ]);
 
+        // Attach permission sets if provided
+        if (!empty($validated['permission_set_ids'])) {
+            $role->permissionSets()->sync($validated['permission_set_ids']);
+        }
+
         return redirect()->route('roles.index')
             ->with('success', 'Role created successfully.');
     }
@@ -100,9 +126,9 @@ class RoleController extends Controller
             abort(403, 'You can only view roles in your organization.');
         }
 
-        $role->load(['users']);
+        $role->load(['users', 'permissionSets']);
 
-        // Get permission details
+        // Get permission details (direct permissions)
         $rolePermissions = [];
         foreach ($role->permissions ?? [] as $permissionValue) {
             try {
@@ -119,9 +145,20 @@ class RoleController extends Controller
             }
         }
 
+        // Get all effective permissions (including from sets)
+        $allPermissions = $role->getAllPermissions();
+
         return Inertia::render('Admin/Roles/Show', [
             'role' => $role,
             'rolePermissions' => $rolePermissions,
+            'allPermissions' => $allPermissions,
+            'permissionSets' => $role->permissionSets->map(fn($set) => [
+                'id' => $set->id,
+                'name' => $set->name,
+                'description' => $set->description,
+                'category' => $set->category,
+                'permission_count' => $set->permission_count,
+            ]),
         ]);
     }
 
@@ -144,10 +181,32 @@ class RoleController extends Controller
         }
 
         $permissions = Permission::grouped();
+        $organizationId = $request->user()->organization_id;
+
+        // Load permission sets for the role
+        $role->load('permissionSets');
+
+        // Get available permission sets
+        $permissionSets = PermissionSet::forOrganization($organizationId)
+            ->active()
+            ->orderBy('position')
+            ->get()
+            ->map(fn($set) => [
+                'id' => $set->id,
+                'name' => $set->name,
+                'description' => $set->description,
+                'category' => $set->category,
+                'icon' => $set->icon,
+                'permissions' => $set->permissions,
+                'permission_count' => $set->permission_count,
+                'is_template' => $set->is_template,
+            ]);
 
         return Inertia::render('Admin/Roles/Edit', [
             'role' => $role,
             'permissions' => $permissions,
+            'permissionSets' => $permissionSets,
+            'selectedSetIds' => $role->permissionSets->pluck('id')->toArray(),
         ]);
     }
 
@@ -174,6 +233,8 @@ class RoleController extends Controller
             'description' => 'nullable|string',
             'permissions' => 'nullable|array',
             'permissions.*' => 'string',
+            'permission_set_ids' => 'nullable|array',
+            'permission_set_ids.*' => 'integer|exists:permission_sets,id',
         ]);
 
         // Update slug if name changed
@@ -200,6 +261,9 @@ class RoleController extends Controller
             'description' => $validated['description'] ?? null,
             'permissions' => $validated['permissions'] ?? [],
         ]);
+
+        // Sync permission sets
+        $role->permissionSets()->sync($validated['permission_set_ids'] ?? []);
 
         return redirect()->route('roles.index')
             ->with('success', 'Role updated successfully.');

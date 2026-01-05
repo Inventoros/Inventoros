@@ -1,6 +1,7 @@
 <script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import PluginSlot from '@/Components/PluginSlot.vue';
+import ProductVariantManager from '@/Components/ProductVariantManager.vue';
 import { Head, Link, useForm, router } from '@inertiajs/vue3';
 import { ref, computed } from 'vue';
 import axios from 'axios';
@@ -29,7 +30,25 @@ const form = useForm({
     barcode: '',
     notes: '',
     images: [],
+    has_variants: false,
+    options: [],
+    variants: [],
 });
+
+// Variant management
+const showVariantSection = ref(false);
+const variantData = ref({ options: [], variants: [] });
+
+const toggleVariants = () => {
+    showVariantSection.value = !showVariantSection.value;
+    form.has_variants = showVariantSection.value;
+};
+
+const updateVariantData = (data) => {
+    variantData.value = data;
+    form.options = data.options;
+    form.variants = data.variants;
+};
 
 // Multi-currency management
 const additionalCurrencies = ref([]);
@@ -578,6 +597,51 @@ const submit = () => {
                                     <p v-if="form.errors.images" class="mt-2 text-sm text-red-400">
                                         {{ form.errors.images }}
                                     </p>
+                                </div>
+
+                                <!-- Product Variants Section (Full Width) -->
+                                <div class="lg:col-span-2">
+                                    <div class="border border-gray-200 dark:border-dark-border rounded-lg overflow-hidden">
+                                        <button
+                                            type="button"
+                                            @click="toggleVariants"
+                                            class="w-full flex items-center justify-between p-4 bg-gray-50 dark:bg-dark-bg hover:bg-gray-100 dark:hover:bg-dark-border/50 transition"
+                                        >
+                                            <div class="flex items-center gap-3">
+                                                <svg class="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                                                </svg>
+                                                <span class="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                                                    Product Variants
+                                                </span>
+                                                <span v-if="form.variants.length > 0" class="px-2 py-1 text-xs bg-primary-400/20 text-primary-400 rounded-full">
+                                                    {{ form.variants.length }} variants
+                                                </span>
+                                            </div>
+                                            <svg
+                                                :class="['w-5 h-5 text-gray-500 transition-transform', showVariantSection ? 'rotate-180' : '']"
+                                                fill="none"
+                                                stroke="currentColor"
+                                                viewBox="0 0 24 24"
+                                            >
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                                            </svg>
+                                        </button>
+
+                                        <div v-if="showVariantSection" class="p-4 border-t border-gray-200 dark:border-dark-border">
+                                            <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">
+                                                Add options like Size or Color to sell different versions of this product.
+                                                Each combination creates a variant with its own price and stock.
+                                            </p>
+                                            <ProductVariantManager
+                                                :model-value="variantData"
+                                                @update:model-value="updateVariantData"
+                                                :product-price="form.price"
+                                                :product-purchase-price="form.purchase_price"
+                                                :currency-symbol="getCurrencySymbol(form.currency)"
+                                            />
+                                        </div>
+                                    </div>
                                 </div>
 
                                 <!-- Notes (Full Width) -->

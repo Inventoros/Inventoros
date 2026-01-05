@@ -215,6 +215,25 @@ onMounted(() => {
                         <span class="font-medium">Inventory</span>
                     </Link>
 
+                    <!-- Plugin Menu Items -->
+                    <template v-for="item in $page.props.pluginMenuItems" :key="item.label">
+                        <Link
+                            v-if="!item.permission || hasPermission(item.permission)"
+                            :href="item.route ? route(item.route) : item.url"
+                            :class="[
+                                'flex items-center gap-3 px-3 py-3 rounded-lg transition-all duration-150',
+                                (item.active_routes && item.active_routes.some(r => route().current(r))) || route().current(item.route)
+                                    ? 'bg-primary-400/10 text-primary-400 border border-primary-400/30'
+                                    : 'text-gray-400 hover:text-gray-200 hover:bg-dark-bg/50'
+                            ]"
+                        >
+                            <svg v-if="item.icon" class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" :d="item.icon" />
+                            </svg>
+                            <span class="font-medium">{{ item.label }}</span>
+                        </Link>
+                    </template>
+
                     <!-- Orders -->
                     <Link
                         v-if="hasPermission('view_orders')"
