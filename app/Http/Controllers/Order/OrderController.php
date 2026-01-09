@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Order;
 use App\Http\Controllers\Controller;
 use App\Models\Inventory\Product;
 use App\Models\Order\Order;
+use App\Services\NotificationService;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -88,8 +89,10 @@ class OrderController extends Controller
         ]);
 
         $validated['organization_id'] = $request->user()->organization_id;
+        $validated['created_by'] = $request->user()->id;
         $validated['order_number'] = Order::generateOrderNumber();
         $validated['source'] = 'manual';
+        $validated['approval_status'] = 'pending';
 
         // Calculate order totals
         $subtotal = 0;
@@ -132,15 +135,19 @@ class OrderController extends Controller
      */
     public function show(Order $order): Response
     {
-        $order->load(['items.product', 'organization']);
+        $order->load(['items.product', 'organization', 'creator', 'approver']);
 
         // Ensure user can only view orders from their organization
         if ($order->organization_id !== auth()->user()->organization_id) {
             abort(403, 'Unauthorized action.');
         }
 
+        // Check if user can approve orders
+        $canApprove = auth()->user()->hasPermission('approve_orders');
+
         return Inertia::render('Orders/Show', [
             'order' => $order,
+            'canApprove' => $canApprove,
             'pluginComponents' => [
                 'header' => get_page_components('orders.show', 'header'),
                 'sidebar' => get_page_components('orders.show', 'sidebar'),
@@ -313,5 +320,75 @@ class OrderController extends Controller
 
         return redirect()->route('orders.index')
             ->with('success', 'Order deleted successfully.');
+    }
+
+    /**
+     * Approve an order.
+     */
+    public function approve(Request $request, Order $order)
+    {
+        // Ensure user can only approve orders from their organization
+        if ($order->organization_id !== $request->user()->organization_id) {
+            abort(403, 'Unauthorized action.');
+        }
+
+        // Check if order is pending approval
+        if (!$order->isPendingApproval()) {
+            return redirect()->back()->with('error', 'Order has already been processed.');
+        }
+
+        $validated = $request->validate([
+            'notes' => 'nullable|string|max:500',
+        ]);
+
+        $order->update([
+            'approval_status' => 'approved',
+            'approved_by' => $request->user()->id,
+            'approved_at' => now(),
+            'approval_notes' => $validated['notes'] ?? null,
+        ]);
+
+        // Load the approver relationship for notification
+        $order->load('approver');
+
+        // Send notification to order creator
+        NotificationService::createOrderApprovalNotification($order);
+
+        return redirect()->back()->with('success', 'Order approved successfully.');
+    }
+
+    /**
+     * Reject an order.
+     */
+    public function reject(Request $request, Order $order)
+    {
+        // Ensure user can only reject orders from their organization
+        if ($order->organization_id !== $request->user()->organization_id) {
+            abort(403, 'Unauthorized action.');
+        }
+
+        // Check if order is pending approval
+        if (!$order->isPendingApproval()) {
+            return redirect()->back()->with('error', 'Order has already been processed.');
+        }
+
+        $validated = $request->validate([
+            'notes' => 'required|string|max:500',
+        ]);
+
+        $order->update([
+            'approval_status' => 'rejected',
+            'approved_by' => $request->user()->id,
+            'approved_at' => now(),
+            'approval_notes' => $validated['notes'],
+        ]);
+
+        // Load the approver relationship for notification
+        $order->load('approver');
+
+        // Send notification to order creator
+        NotificationService::createOrderApprovalNotification($order);
+
+        return redirect()->back()->with('success', 'Order rejected.');
     }
 }

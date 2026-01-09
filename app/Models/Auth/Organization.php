@@ -29,7 +29,6 @@ class Organization extends Model
         'city',
         'state',
         'zip',
-        'zip_code',
         'country',
         'currency',
         'timezone',

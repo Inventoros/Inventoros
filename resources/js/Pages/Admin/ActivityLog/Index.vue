@@ -81,6 +81,34 @@ const formatRelativeTime = (dateString) => {
     if (minutes > 0) return `${minutes} minute${minutes > 1 ? 's' : ''} ago`;
     return 'Just now';
 };
+
+const formatFieldName = (field) => {
+    return field.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+};
+
+const formatValue = (value) => {
+    if (value === null || value === undefined) return '-';
+    if (typeof value === 'boolean') return value ? 'Yes' : 'No';
+    if (typeof value === 'object') return JSON.stringify(value);
+    return String(value);
+};
+
+const getChangedFields = (properties) => {
+    if (!properties) return [];
+    const oldVals = properties.old || {};
+    const newVals = properties.new || {};
+    const allKeys = new Set([...Object.keys(oldVals), ...Object.keys(newVals)]);
+    const changes = [];
+
+    for (const key of allKeys) {
+        const oldVal = oldVals[key];
+        const newVal = newVals[key];
+        if (JSON.stringify(oldVal) !== JSON.stringify(newVal)) {
+            changes.push({ field: key, old: oldVal, new: newVal });
+        }
+    }
+    return changes;
+};
 </script>
 
 <template>
@@ -242,22 +270,37 @@ const formatRelativeTime = (dateString) => {
                                             </div>
 
                                             <!-- Properties (old/new values) -->
-                                            <div v-if="activity.properties && (activity.properties.old || activity.properties.new)" class="mt-3 space-y-2">
+                                            <div v-if="activity.properties && (activity.properties.old || activity.properties.new) && getChangedFields(activity.properties).length > 0" class="mt-3 space-y-2">
                                                 <details class="group">
-                                                    <summary class="cursor-pointer text-xs text-primary-400 hover:text-primary-300 font-medium">
-                                                        View Changes
+                                                    <summary class="cursor-pointer text-xs text-primary-400 hover:text-primary-300 font-medium inline-flex items-center gap-1">
+                                                        <svg class="w-4 h-4 transition-transform group-open:rotate-90" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                                                        </svg>
+                                                        View {{ getChangedFields(activity.properties).length }} Change{{ getChangedFields(activity.properties).length > 1 ? 's' : '' }}
                                                     </summary>
-                                                    <div class="mt-2 p-3 bg-gray-50 dark:bg-dark-bg rounded-lg border border-gray-200 dark:border-dark-border">
-                                                        <div class="grid grid-cols-2 gap-4 text-xs">
-                                                            <div v-if="activity.properties.old">
-                                                                <p class="font-medium text-red-400 mb-2">Old Values:</p>
-                                                                <pre class="text-gray-600 dark:text-gray-400 whitespace-pre-wrap font-mono">{{ JSON.stringify(activity.properties.old, null, 2) }}</pre>
-                                                            </div>
-                                                            <div v-if="activity.properties.new">
-                                                                <p class="font-medium text-green-400 mb-2">New Values:</p>
-                                                                <pre class="text-gray-600 dark:text-gray-400 whitespace-pre-wrap font-mono">{{ JSON.stringify(activity.properties.new, null, 2) }}</pre>
-                                                            </div>
-                                                        </div>
+                                                    <div class="mt-2 p-3 bg-gray-50 dark:bg-dark-bg rounded-lg border border-gray-200 dark:border-dark-border overflow-x-auto">
+                                                        <table class="w-full text-xs">
+                                                            <thead>
+                                                                <tr class="border-b border-gray-200 dark:border-dark-border">
+                                                                    <th class="text-left py-2 px-3 font-semibold text-gray-600 dark:text-gray-300">Field</th>
+                                                                    <th class="text-left py-2 px-3 font-semibold text-red-400">Before</th>
+                                                                    <th class="text-left py-2 px-3 font-semibold text-green-400">After</th>
+                                                                </tr>
+                                                            </thead>
+                                                            <tbody class="divide-y divide-gray-100 dark:divide-dark-border">
+                                                                <tr v-for="change in getChangedFields(activity.properties)" :key="change.field">
+                                                                    <td class="py-2 px-3 font-medium text-gray-700 dark:text-gray-300">
+                                                                        {{ formatFieldName(change.field) }}
+                                                                    </td>
+                                                                    <td class="py-2 px-3 text-red-400 font-mono max-w-xs truncate" :title="formatValue(change.old)">
+                                                                        <span class="line-through opacity-75">{{ formatValue(change.old) }}</span>
+                                                                    </td>
+                                                                    <td class="py-2 px-3 text-green-400 font-mono max-w-xs truncate" :title="formatValue(change.new)">
+                                                                        {{ formatValue(change.new) }}
+                                                                    </td>
+                                                                </tr>
+                                                            </tbody>
+                                                        </table>
                                                     </div>
                                                 </details>
                                             </div>
