@@ -3,6 +3,7 @@
 namespace App\Models\Order;
 
 use App\Models\Auth\Organization;
+use App\Models\Auth\User;
 use App\Traits\LogsActivity;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -21,6 +22,7 @@ class Order extends Model
      */
     protected $fillable = [
         'organization_id',
+        'created_by',
         'order_number',
         'source',
         'external_id',
@@ -28,6 +30,10 @@ class Order extends Model
         'customer_email',
         'customer_address',
         'status',
+        'approval_status',
+        'approved_by',
+        'approved_at',
+        'approval_notes',
         'subtotal',
         'tax',
         'shipping',
@@ -55,6 +61,7 @@ class Order extends Model
             'order_date' => 'datetime',
             'shipped_at' => 'datetime',
             'delivered_at' => 'datetime',
+            'approved_at' => 'datetime',
             'metadata' => 'array',
         ];
     }
@@ -65,6 +72,22 @@ class Order extends Model
     public function organization(): BelongsTo
     {
         return $this->belongsTo(Organization::class);
+    }
+
+    /**
+     * Get the user who created the order.
+     */
+    public function creator(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'created_by');
+    }
+
+    /**
+     * Get the user who approved/rejected the order.
+     */
+    public function approver(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'approved_by');
     }
 
     /**
@@ -97,6 +120,46 @@ class Order extends Model
     public function scopeBySource($query, $source)
     {
         return $query->where('source', $source);
+    }
+
+    /**
+     * Scope a query to filter by approval status.
+     */
+    public function scopeByApprovalStatus($query, $status)
+    {
+        return $query->where('approval_status', $status);
+    }
+
+    /**
+     * Scope a query to only include orders pending approval.
+     */
+    public function scopeNeedsApproval($query)
+    {
+        return $query->where('approval_status', 'pending');
+    }
+
+    /**
+     * Check if the order is pending approval.
+     */
+    public function isPendingApproval(): bool
+    {
+        return $this->approval_status === 'pending';
+    }
+
+    /**
+     * Check if the order is approved.
+     */
+    public function isApproved(): bool
+    {
+        return $this->approval_status === 'approved';
+    }
+
+    /**
+     * Check if the order is rejected.
+     */
+    public function isRejected(): bool
+    {
+        return $this->approval_status === 'rejected';
     }
 
     /**

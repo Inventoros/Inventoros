@@ -1,6 +1,7 @@
 <script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import PluginSlot from '@/Components/PluginSlot.vue';
+import ActivityTimeline from '@/Components/ActivityTimeline.vue';
 import { Head, Link, router } from '@inertiajs/vue3';
 import { ref, onMounted, computed } from 'vue';
 import axios from 'axios';
@@ -8,6 +9,7 @@ import ImageGallery from '@/Components/ImageGallery.vue';
 
 const props = defineProps({
     product: Object,
+    activities: Array,
     pluginComponents: Object,
 });
 
@@ -397,6 +399,16 @@ const productImages = computed(() => {
                                 </div>
                             </div>
                         </div>
+                    </div>
+                </div>
+
+                <!-- Activity Timeline -->
+                <div class="mt-6 bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border overflow-hidden shadow-lg sm:rounded-lg">
+                    <div class="p-6">
+                        <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
+                            Activity History
+                        </h3>
+                        <ActivityTimeline :activities="activities || []" />
                     </div>
                 </div>
 

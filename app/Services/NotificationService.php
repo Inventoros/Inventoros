@@ -120,8 +120,10 @@ class NotificationService
                     $q->where('name', 'view_orders');
                 });
             })
-            ->where('id', '!=', $order->user_id) // Don't notify the creator
+            ->where('id', '!=', $order->created_by) // Don't notify the creator
             ->get();
+
+        $creatorName = $order->creator ? $order->creator->name : 'Unknown';
 
         foreach ($users as $user) {
             // Check if user wants order notifications
@@ -134,7 +136,7 @@ class NotificationService
                 'user_id' => $user->id,
                 'type' => 'order_created',
                 'title' => 'New Order Created',
-                'message' => "Order #{$order->order_number} has been created by {$order->user->name}",
+                'message' => "Order #{$order->order_number} has been created by {$creatorName}",
                 'data' => [
                     'order_id' => $order->id,
                     'order_number' => $order->order_number,
@@ -153,7 +155,7 @@ class NotificationService
     public static function createOrderStatusNotification(Order $order, string $oldStatus): void
     {
         // Get the user to check preferences
-        $user = User::find($order->user_id);
+        $user = User::find($order->created_by);
         if (!$user || !self::shouldNotifyUser($user, 'order_status_updated')) {
             return;
         }
@@ -161,7 +163,7 @@ class NotificationService
         // Notify the order creator
         Notification::create([
             'organization_id' => $order->organization_id,
-            'user_id' => $order->user_id,
+            'user_id' => $order->created_by,
             'type' => 'order_status_updated',
             'title' => 'Order Status Updated',
             'message' => "Order #{$order->order_number} status changed from {$oldStatus} to {$order->status}",
@@ -182,7 +184,7 @@ class NotificationService
     public static function createOrderShippedNotification(Order $order): void
     {
         // Get the user to check preferences
-        $user = User::find($order->user_id);
+        $user = User::find($order->created_by);
         if (!$user || !self::shouldNotifyUser($user, 'order_shipped')) {
             return;
         }
@@ -190,7 +192,7 @@ class NotificationService
         // Notify the order creator
         Notification::create([
             'organization_id' => $order->organization_id,
-            'user_id' => $order->user_id,
+            'user_id' => $order->created_by,
             'type' => 'order_shipped',
             'title' => 'Order Shipped',
             'message' => "Order #{$order->order_number} has been shipped to {$order->customer_name}",
@@ -210,7 +212,7 @@ class NotificationService
     public static function createOrderDeliveredNotification(Order $order): void
     {
         // Get the user to check preferences
-        $user = User::find($order->user_id);
+        $user = User::find($order->created_by);
         if (!$user || !self::shouldNotifyUser($user, 'order_delivered')) {
             return;
         }
@@ -218,7 +220,7 @@ class NotificationService
         // Notify the order creator
         Notification::create([
             'organization_id' => $order->organization_id,
-            'user_id' => $order->user_id,
+            'user_id' => $order->created_by,
             'type' => 'order_delivered',
             'title' => 'Order Delivered',
             'message' => "Order #{$order->order_number} has been delivered successfully",
@@ -228,6 +230,39 @@ class NotificationService
             ],
             'action_url' => route('orders.show', $order->id),
             'priority' => 'normal',
+        ]);
+    }
+
+    /**
+     * Create an order approval notification.
+     */
+    public static function createOrderApprovalNotification(Order $order): void
+    {
+        // Get the user to check preferences
+        $user = User::find($order->created_by);
+        if (!$user) {
+            return;
+        }
+
+        $status = $order->approval_status;
+        $approverName = $order->approver ? $order->approver->name : 'Unknown';
+
+        // Notify the order creator
+        Notification::create([
+            'organization_id' => $order->organization_id,
+            'user_id' => $order->created_by,
+            'type' => 'order_' . $status,
+            'title' => 'Order ' . ucfirst($status),
+            'message' => "Order #{$order->order_number} has been {$status} by {$approverName}",
+            'data' => [
+                'order_id' => $order->id,
+                'order_number' => $order->order_number,
+                'status' => $status,
+                'notes' => $order->approval_notes,
+                'approver' => $approverName,
+            ],
+            'action_url' => route('orders.show', $order->id),
+            'priority' => $status === 'rejected' ? 'high' : 'normal',
         ]);
     }
 }

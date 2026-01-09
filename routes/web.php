@@ -2,7 +2,6 @@
 
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\RoleController;
-use App\Http\Controllers\Admin\SettingsController;
 use App\Http\Controllers\Admin\PluginController;
 use App\Http\Controllers\Admin\UpdateController;
 use App\Http\Controllers\Admin\UserController;
@@ -66,6 +65,11 @@ Route::middleware('auth')->group(function () {
         Route::post('/generate-from-sku', [\App\Http\Controllers\Inventory\BarcodeController::class, 'generateFromSKU'])->middleware('permission:edit_products')->name('generate-from-sku');
     });
 
+    // Bulk Barcode Printing
+    Route::get('/products/barcode/bulk-print', [\App\Http\Controllers\Inventory\BarcodeController::class, 'bulkPrint'])
+        ->name('products.barcode.bulk-print')
+        ->middleware('permission:view_products');
+
     // SKU Management
     Route::prefix('sku')->name('sku.')->middleware('permission:view_products')->group(function () {
         Route::get('/patterns', [\App\Http\Controllers\Inventory\SKUController::class, 'patterns'])->name('patterns');
@@ -122,6 +126,8 @@ Route::middleware('auth')->group(function () {
     Route::patch('/orders/{order}', [OrderController::class, 'update'])->middleware('permission:edit_orders');
     Route::get('/orders/{order}', [OrderController::class, 'show'])->name('orders.show')->middleware('permission:view_orders');
     Route::delete('/orders/{order}', [OrderController::class, 'destroy'])->name('orders.destroy')->middleware('permission:delete_orders');
+    Route::post('/orders/{order}/approve', [OrderController::class, 'approve'])->name('orders.approve')->middleware('permission:approve_orders');
+    Route::post('/orders/{order}/reject', [OrderController::class, 'reject'])->name('orders.reject')->middleware('permission:approve_orders');
 
     // User Management - Permission based
     Route::get('/users', [UserController::class, 'index'])->name('users.index')->middleware('permission:view_users');

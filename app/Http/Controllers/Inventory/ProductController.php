@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Inventory;
 
 use App\Http\Controllers\Controller;
+use App\Models\ActivityLog;
 use App\Models\Inventory\Product;
 use App\Models\Inventory\ProductCategory;
 use App\Models\Inventory\ProductLocation;
@@ -285,8 +286,17 @@ class ProductController extends Controller
         // Hook: Modify product before displaying
         $product = apply_filters('product_show_data', $product, auth()->user());
 
+        // Get product activity history
+        $activities = ActivityLog::where('subject_type', Product::class)
+            ->where('subject_id', $product->id)
+            ->with('user:id,name')
+            ->latest()
+            ->take(20)
+            ->get();
+
         $data = [
             'product' => $product,
+            'activities' => $activities,
             'pluginComponents' => [
                 'header' => get_page_components('products.show', 'header'),
                 'sidebar' => get_page_components('products.show', 'sidebar'),
