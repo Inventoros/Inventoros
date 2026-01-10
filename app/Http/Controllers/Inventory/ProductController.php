@@ -384,6 +384,22 @@ class ProductController extends Controller
             'images.*.preview' => 'nullable|string',
             'images.*.url' => 'nullable|string',
             'images.*.name' => 'nullable|string',
+            'has_variants' => 'boolean',
+            'options' => 'nullable|array|max:3',
+            'options.*.id' => 'nullable|integer',
+            'options.*.name' => 'required_with:options|string|max:255',
+            'options.*.values' => 'required_with:options|array|min:1',
+            'options.*.values.*' => 'string|max:255',
+            'variants' => 'nullable|array',
+            'variants.*.id' => 'nullable|integer',
+            'variants.*.option_values' => 'required_with:variants|array',
+            'variants.*.sku' => 'nullable|string|max:255',
+            'variants.*.barcode' => 'nullable|string|max:255',
+            'variants.*.price' => 'nullable|numeric|min:0',
+            'variants.*.purchase_price' => 'nullable|numeric|min:0',
+            'variants.*.stock' => 'nullable|integer|min:0',
+            'variants.*.min_stock' => 'nullable|integer|min:0',
+            'variants.*.is_active' => 'boolean',
         ], $product, $request);
 
         $validated = $request->validate($rules);
@@ -434,7 +450,24 @@ class ProductController extends Controller
             $validated['images'] = $imagePaths;
         }
 
-        $product->update($validated);
+        // Extract options and variants before updating product
+        $options = $validated['options'] ?? [];
+        $variants = $validated['variants'] ?? [];
+        unset($validated['options'], $validated['variants']);
+
+        DB::transaction(function () use ($product, $validated, $options, $variants) {
+            $product->update($validated);
+
+            // Sync options and variants if has_variants is true
+            if ($validated['has_variants'] ?? $product->has_variants) {
+                $this->syncOptions($product, $options);
+                $this->syncVariants($product, $variants);
+            } else {
+                // If variants are disabled, delete all options and variants
+                $product->options()->delete();
+                $product->variants()->delete();
+            }
+        });
 
         // Action: After update
         do_action('product_updated', $product, $request->user());
@@ -442,6 +475,90 @@ class ProductController extends Controller
 
         return redirect()->route('products.index')
             ->with('success', 'Product updated successfully.');
+    }
+
+    /**
+     * Sync product options.
+     */
+    private function syncOptions(Product $product, array $options): void
+    {
+        $existingOptionIds = $product->options()->pluck('id')->toArray();
+        $incomingOptionIds = [];
+
+        foreach ($options as $index => $optionData) {
+            if (!empty($optionData['id'])) {
+                // Update existing option
+                $option = ProductOption::find($optionData['id']);
+                if ($option && $option->product_id === $product->id) {
+                    $option->update([
+                        'name' => $optionData['name'],
+                        'values' => $optionData['values'],
+                        'position' => $index,
+                    ]);
+                    $incomingOptionIds[] = $optionData['id'];
+                }
+            } else {
+                // Create new option
+                $option = ProductOption::create([
+                    'product_id' => $product->id,
+                    'name' => $optionData['name'],
+                    'values' => $optionData['values'],
+                    'position' => $index,
+                ]);
+                $incomingOptionIds[] = $option->id;
+            }
+        }
+
+        // Delete removed options
+        $optionsToDelete = array_diff($existingOptionIds, $incomingOptionIds);
+        if (!empty($optionsToDelete)) {
+            ProductOption::whereIn('id', $optionsToDelete)->delete();
+        }
+    }
+
+    /**
+     * Sync product variants.
+     */
+    private function syncVariants(Product $product, array $variants): void
+    {
+        $existingVariantIds = $product->variants()->pluck('id')->toArray();
+        $incomingVariantIds = [];
+
+        foreach ($variants as $index => $variantData) {
+            $variantPayload = [
+                'product_id' => $product->id,
+                'organization_id' => $product->organization_id,
+                'sku' => $variantData['sku'] ?? null,
+                'barcode' => $variantData['barcode'] ?? null,
+                'title' => $variantData['title'] ?? implode(' / ', array_values($variantData['option_values'])),
+                'option_values' => $variantData['option_values'],
+                'price' => $variantData['price'] ?? null,
+                'purchase_price' => $variantData['purchase_price'] ?? null,
+                'stock' => $variantData['stock'] ?? 0,
+                'min_stock' => $variantData['min_stock'] ?? 0,
+                'is_active' => $variantData['is_active'] ?? true,
+                'position' => $index,
+            ];
+
+            if (!empty($variantData['id'])) {
+                // Update existing variant
+                $variant = ProductVariant::find($variantData['id']);
+                if ($variant && $variant->product_id === $product->id) {
+                    $variant->update($variantPayload);
+                    $incomingVariantIds[] = $variantData['id'];
+                }
+            } else {
+                // Create new variant
+                $variant = ProductVariant::create($variantPayload);
+                $incomingVariantIds[] = $variant->id;
+            }
+        }
+
+        // Delete removed variants
+        $variantsToDelete = array_diff($existingVariantIds, $incomingVariantIds);
+        if (!empty($variantsToDelete)) {
+            ProductVariant::whereIn('id', $variantsToDelete)->delete();
+        }
     }
 
     /**

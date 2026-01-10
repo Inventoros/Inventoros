@@ -2,6 +2,7 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import PluginSlot from '@/Components/PluginSlot.vue';
 import ActivityTimeline from '@/Components/ActivityTimeline.vue';
+import VariantsTable from '@/Components/VariantsTable.vue';
 import { Head, Link, router } from '@inertiajs/vue3';
 import { ref, onMounted, computed } from 'vue';
 import axios from 'axios';
@@ -90,6 +91,25 @@ const productImages = computed(() => {
         return [];
     }
     return props.product.images.map(imagePath => `/storage/${imagePath}`);
+});
+
+// Variants
+const variants = ref(props.product.variants || []);
+
+const getCurrencySymbol = () => {
+    const symbols = { USD: '$', EUR: '\u20AC', GBP: '\u00A3', JPY: '\u00A5' };
+    return symbols[props.product.currency] || '$';
+};
+
+const onVariantUpdated = (updatedVariant) => {
+    const index = variants.value.findIndex(v => v.id === updatedVariant.id);
+    if (index !== -1) {
+        variants.value[index] = updatedVariant;
+    }
+};
+
+const totalVariantStock = computed(() => {
+    return variants.value.reduce((sum, v) => sum + (v.stock || 0), 0);
 });
 </script>
 
@@ -244,6 +264,38 @@ const productImages = computed(() => {
                                             </p>
                                         </div>
                                     </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Product Variants -->
+                        <div v-if="product.has_variants && variants.length > 0" class="bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border overflow-hidden shadow-lg sm:rounded-lg">
+                            <div class="p-6">
+                                <div class="flex items-center justify-between mb-4">
+                                    <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                                        Product Variants
+                                    </h3>
+                                    <span class="px-2 py-1 text-xs bg-primary-400/20 text-primary-400 rounded-full">
+                                        {{ variants.length }} variants
+                                    </span>
+                                </div>
+
+                                <VariantsTable
+                                    :variants="variants"
+                                    :product-id="product.id"
+                                    :currency-symbol="getCurrencySymbol()"
+                                    :show-stock-adjust="true"
+                                    @variant-updated="onVariantUpdated"
+                                />
+
+                                <!-- Variant Stock Note -->
+                                <div class="mt-4 p-3 bg-blue-900/20 rounded-lg border border-blue-800">
+                                    <p class="text-sm text-blue-300">
+                                        <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                        </svg>
+                                        Stock is tracked per variant. Total variant stock: <span class="font-semibold">{{ totalVariantStock }}</span>
+                                    </p>
                                 </div>
                             </div>
                         </div>
