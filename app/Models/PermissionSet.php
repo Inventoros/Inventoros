@@ -4,15 +4,15 @@ namespace App\Models;
 
 use App\Enums\Permission;
 use App\Models\Auth\Organization;
+use App\Traits\HasSlug;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
-use Illuminate\Support\Str;
 
 class PermissionSet extends Model
 {
-    use HasFactory;
+    use HasFactory, HasSlug;
 
     protected $fillable = [
         'organization_id',
@@ -35,24 +35,6 @@ class PermissionSet extends Model
             'is_active' => 'boolean',
             'position' => 'integer',
         ];
-    }
-
-    /**
-     * Boot the model.
-     */
-    protected static function booted(): void
-    {
-        static::creating(function (PermissionSet $set) {
-            if (empty($set->slug)) {
-                $set->slug = Str::slug($set->name);
-
-                // Ensure unique slug
-                $count = static::where('slug', 'like', $set->slug . '%')->count();
-                if ($count > 0) {
-                    $set->slug = $set->slug . '-' . ($count + 1);
-                }
-            }
-        });
     }
 
     /**
