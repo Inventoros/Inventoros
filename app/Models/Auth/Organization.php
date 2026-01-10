@@ -4,15 +4,15 @@ namespace App\Models\Auth;
 
 use App\Models\Inventory\Product;
 use App\Models\User;
+use App\Traits\HasSlug;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Illuminate\Support\Str;
 
 class Organization extends Model
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory, SoftDeletes, HasSlug;
 
     /**
      * The attributes that are mass assignable.
@@ -52,17 +52,11 @@ class Organization extends Model
     }
 
     /**
-     * Boot the model.
+     * No organization scope for Organization model (global uniqueness).
      */
-    protected static function boot(): void
+    protected function getSlugScopeColumn(): ?string
     {
-        parent::boot();
-
-        static::creating(function ($organization) {
-            if (empty($organization->slug)) {
-                $organization->slug = Str::slug($organization->name);
-            }
-        });
+        return null;
     }
 
     /**
