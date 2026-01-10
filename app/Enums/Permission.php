@@ -21,6 +21,7 @@ enum Permission: string
     case CREATE_PRODUCTS = 'create_products';
     case EDIT_PRODUCTS = 'edit_products';
     case DELETE_PRODUCTS = 'delete_products';
+    case MANAGE_STOCK = 'manage_stock';
     case MANAGE_CATEGORIES = 'manage_categories';
     case MANAGE_LOCATIONS = 'manage_locations';
 
@@ -79,6 +80,7 @@ enum Permission: string
             self::CREATE_PRODUCTS => 'Create Products',
             self::EDIT_PRODUCTS => 'Edit Products',
             self::DELETE_PRODUCTS => 'Delete Products',
+            self::MANAGE_STOCK => 'Manage Stock',
             self::MANAGE_CATEGORIES => 'Manage Categories',
             self::MANAGE_LOCATIONS => 'Manage Locations',
 
@@ -133,6 +135,7 @@ enum Permission: string
             self::CREATE_PRODUCTS => 'Can add new products',
             self::EDIT_PRODUCTS => 'Can modify product details',
             self::DELETE_PRODUCTS => 'Can remove products',
+            self::MANAGE_STOCK => 'Can adjust stock levels and manage stock movements',
             self::MANAGE_CATEGORIES => 'Can create and manage product categories',
             self::MANAGE_LOCATIONS => 'Can create and manage storage locations',
 
@@ -176,7 +179,7 @@ enum Permission: string
             self::VIEW_USERS, self::CREATE_USERS, self::EDIT_USERS, self::DELETE_USERS => 'User Management',
             self::VIEW_ROLES, self::CREATE_ROLES, self::EDIT_ROLES, self::DELETE_ROLES => 'Role Management',
             self::VIEW_PRODUCTS, self::CREATE_PRODUCTS, self::EDIT_PRODUCTS, self::DELETE_PRODUCTS,
-            self::MANAGE_CATEGORIES, self::MANAGE_LOCATIONS => 'Inventory Management',
+            self::MANAGE_STOCK, self::MANAGE_CATEGORIES, self::MANAGE_LOCATIONS => 'Inventory Management',
             self::VIEW_SUPPLIERS, self::CREATE_SUPPLIERS, self::EDIT_SUPPLIERS, self::DELETE_SUPPLIERS => 'Supplier Management',
             self::VIEW_PURCHASE_ORDERS, self::CREATE_PURCHASE_ORDERS, self::EDIT_PURCHASE_ORDERS,
             self::DELETE_PURCHASE_ORDERS, self::RECEIVE_PURCHASE_ORDERS => 'Purchase Order Management',

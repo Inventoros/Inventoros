@@ -5,6 +5,7 @@ namespace App\Http\Middleware;
 use App\Models\System\SystemSetting;
 use Closure;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Symfony\Component\HttpFoundation\Response;
 
 class CheckInstallation
@@ -37,7 +38,9 @@ class CheckInstallation
         try {
             return SystemSetting::get('installed', false) === true;
         } catch (\Exception $e) {
-            // If we can't check (e.g., no database connection), assume not installed
+            Log::warning('Installation check failed - assuming not installed', [
+                'error' => $e->getMessage(),
+            ]);
             return false;
         }
     }
