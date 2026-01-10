@@ -35,7 +35,7 @@ class OrderController extends Controller
                 $query->bySource($source);
             })
             ->latest('order_date')
-            ->paginate(15)
+            ->paginate(config('limits.pagination.default'))
             ->withQueryString();
 
         return Inertia::render('Orders/Index', [
