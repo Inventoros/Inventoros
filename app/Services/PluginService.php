@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Plugin;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use ZipArchive;
 
@@ -66,7 +67,9 @@ class PluginService
         try {
             return Plugin::active()->pluck('slug')->toArray();
         } catch (\Exception $e) {
-            // If table doesn't exist yet (e.g., during migration), return empty array
+            Log::debug('Could not retrieve activated plugins - table may not exist yet', [
+                'error' => $e->getMessage(),
+            ]);
             return [];
         }
     }
