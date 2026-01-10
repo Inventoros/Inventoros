@@ -196,6 +196,7 @@ enum Permission: string
             self::VIEW_ROLES, self::CREATE_ROLES, self::EDIT_ROLES, self::DELETE_ROLES => 'Role Management',
             self::VIEW_PRODUCTS, self::CREATE_PRODUCTS, self::EDIT_PRODUCTS, self::DELETE_PRODUCTS,
             self::MANAGE_STOCK, self::MANAGE_CATEGORIES, self::MANAGE_LOCATIONS => 'Inventory Management',
+            self::VIEW_CUSTOMERS, self::CREATE_CUSTOMERS, self::EDIT_CUSTOMERS, self::DELETE_CUSTOMERS => 'Customer Management',
             self::VIEW_SUPPLIERS, self::CREATE_SUPPLIERS, self::EDIT_SUPPLIERS, self::DELETE_SUPPLIERS => 'Supplier Management',
             self::VIEW_PURCHASE_ORDERS, self::CREATE_PURCHASE_ORDERS, self::EDIT_PURCHASE_ORDERS,
             self::DELETE_PURCHASE_ORDERS, self::RECEIVE_PURCHASE_ORDERS => 'Purchase Order Management',
