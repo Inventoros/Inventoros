@@ -25,6 +25,12 @@ enum Permission: string
     case MANAGE_CATEGORIES = 'manage_categories';
     case MANAGE_LOCATIONS = 'manage_locations';
 
+    // Customer Management
+    case VIEW_CUSTOMERS = 'view_customers';
+    case CREATE_CUSTOMERS = 'create_customers';
+    case EDIT_CUSTOMERS = 'edit_customers';
+    case DELETE_CUSTOMERS = 'delete_customers';
+
     // Supplier Management
     case VIEW_SUPPLIERS = 'view_suppliers';
     case CREATE_SUPPLIERS = 'create_suppliers';
@@ -84,6 +90,11 @@ enum Permission: string
             self::MANAGE_CATEGORIES => 'Manage Categories',
             self::MANAGE_LOCATIONS => 'Manage Locations',
 
+            self::VIEW_CUSTOMERS => 'View Customers',
+            self::CREATE_CUSTOMERS => 'Create Customers',
+            self::EDIT_CUSTOMERS => 'Edit Customers',
+            self::DELETE_CUSTOMERS => 'Delete Customers',
+
             self::VIEW_SUPPLIERS => 'View Suppliers',
             self::CREATE_SUPPLIERS => 'Create Suppliers',
             self::EDIT_SUPPLIERS => 'Edit Suppliers',
@@ -138,6 +149,11 @@ enum Permission: string
             self::MANAGE_STOCK => 'Can adjust stock levels and manage stock movements',
             self::MANAGE_CATEGORIES => 'Can create and manage product categories',
             self::MANAGE_LOCATIONS => 'Can create and manage storage locations',
+
+            self::VIEW_CUSTOMERS => 'Can view customer list and details',
+            self::CREATE_CUSTOMERS => 'Can create new customers',
+            self::EDIT_CUSTOMERS => 'Can edit existing customers',
+            self::DELETE_CUSTOMERS => 'Can delete customers',
 
             self::VIEW_SUPPLIERS => 'Can view supplier list and details',
             self::CREATE_SUPPLIERS => 'Can create new suppliers',
