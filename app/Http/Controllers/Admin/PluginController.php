@@ -35,7 +35,7 @@ class PluginController extends Controller
     public function upload(Request $request)
     {
         $request->validate([
-            'plugin' => 'required|file|mimes:zip|max:51200', // 50MB max
+            'plugin' => 'required|file|mimes:zip|max:' . config('limits.uploads.plugin_max_kb'),
         ]);
 
         try {

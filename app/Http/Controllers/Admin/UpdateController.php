@@ -73,7 +73,7 @@ class UpdateController extends Controller
             abort(403, 'Only administrators can perform updates.');
         }
 
-        set_time_limit(600); // 10 minutes
+        set_time_limit(config('limits.timeouts.update_operation'));
 
         $result = $this->updateService->update();
 
@@ -146,7 +146,7 @@ class UpdateController extends Controller
             ], 404);
         }
 
-        set_time_limit(600); // 10 minutes
+        set_time_limit(config('limits.timeouts.update_operation'));
 
         $result = $this->updateService->restoreFromBackup($backupPath);
 
