@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use App\Models\ActivityLog;
+use App\Models\Customer;
 use App\Models\Inventory\Product;
 use App\Models\Inventory\ProductCategory;
 use App\Models\Inventory\ProductLocation;
@@ -14,6 +15,7 @@ use App\Models\Purchasing\PurchaseOrder;
 use App\Models\Role;
 use App\Models\User;
 use App\Policies\ActivityLogPolicy;
+use App\Policies\CustomerPolicy;
 use App\Policies\OrderPolicy;
 use App\Policies\PluginPolicy;
 use App\Policies\ProductCategoryPolicy;
@@ -39,6 +41,7 @@ class AuthServiceProvider extends ServiceProvider
         Product::class => ProductPolicy::class,
         ProductCategory::class => ProductCategoryPolicy::class,
         ProductLocation::class => ProductLocationPolicy::class,
+        Customer::class => CustomerPolicy::class,
         Supplier::class => SupplierPolicy::class,
         Order::class => OrderPolicy::class,
         PurchaseOrder::class => PurchaseOrderPolicy::class,

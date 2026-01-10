@@ -3,7 +3,9 @@
 namespace App\Http\Controllers\Import;
 
 use App\Http\Controllers\Controller;
+use App\Exports\OrdersExport;
 use App\Exports\ProductsExport;
+use App\Exports\UsersExport;
 use App\Imports\ProductsImport;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -137,5 +139,39 @@ class ImportExportController extends Controller
             return redirect()->route('import-export.index')
                 ->with('error', 'Import failed: ' . $e->getMessage());
         }
+    }
+
+    /**
+     * Export orders to CSV
+     */
+    public function exportOrders(Request $request)
+    {
+        $organizationId = $request->user()->organization_id;
+
+        $filters = $request->only(['status', 'date_from', 'date_to', 'customer_id']);
+
+        $filename = 'orders_' . now()->format('Y-m-d_His') . '.xlsx';
+
+        return Excel::download(
+            new OrdersExport($organizationId, $filters),
+            $filename
+        );
+    }
+
+    /**
+     * Export users to CSV
+     */
+    public function exportUsers(Request $request)
+    {
+        $organizationId = $request->user()->organization_id;
+
+        $filters = $request->only(['role_id', 'is_active']);
+
+        $filename = 'users_' . now()->format('Y-m-d_His') . '.xlsx';
+
+        return Excel::download(
+            new UsersExport($organizationId, $filters),
+            $filename
+        );
     }
 }
