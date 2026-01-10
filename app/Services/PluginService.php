@@ -18,7 +18,7 @@ class PluginService
 
         // Ensure plugins directory exists
         if (!File::exists($this->pluginsPath)) {
-            File::makeDirectory($this->pluginsPath, 0755, true);
+            File::makeDirectory($this->pluginsPath, config('limits.permissions.directory'), true);
         }
     }
 

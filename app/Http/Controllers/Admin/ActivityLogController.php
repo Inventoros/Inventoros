@@ -45,7 +45,7 @@ class ActivityLogController extends Controller
         }
 
         $activities = $query->latest()
-            ->paginate(50)
+            ->paginate(config('limits.pagination.large'))
             ->withQueryString();
 
         // Get filter options

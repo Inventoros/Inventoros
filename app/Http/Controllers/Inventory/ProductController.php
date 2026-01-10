@@ -47,7 +47,7 @@ class ProductController extends Controller
         // Hook: Modify product list query
         $query = apply_filters('product_list_query', $query, $request);
 
-        $products = $query->paginate(15)->withQueryString();
+        $products = $query->paginate(config('limits.pagination.default'))->withQueryString();
 
         // Hook: Modify products collection before rendering
         $products = apply_filters('product_list_data', $products, $request);

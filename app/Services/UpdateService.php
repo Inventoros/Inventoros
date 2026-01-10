@@ -57,7 +57,7 @@ class UpdateService
     public function getLatestRelease(): ?array
     {
         try {
-            $response = Http::timeout(30)
+            $response = Http::timeout(config('limits.timeouts.github_api'))
                 ->get("{$this->githubApiUrl}/releases/latest");
 
             if ($response->successful()) {
@@ -207,7 +207,7 @@ class UpdateService
     public function createBackup(): string
     {
         if (!File::exists($this->backupPath)) {
-            File::makeDirectory($this->backupPath, 0755, true);
+            File::makeDirectory($this->backupPath, config('limits.permissions.directory'), true);
         }
 
         $timestamp = now()->format('Y-m-d_His');
@@ -303,12 +303,12 @@ class UpdateService
     protected function downloadRelease(string $url): string
     {
         if (!File::exists($this->tempPath)) {
-            File::makeDirectory($this->tempPath, 0755, true);
+            File::makeDirectory($this->tempPath, config('limits.permissions.directory'), true);
         }
 
         $zipPath = "{$this->tempPath}/update_" . time() . ".zip";
 
-        $response = Http::timeout(300)->get($url);
+        $response = Http::timeout(config('limits.timeouts.file_download'))->get($url);
 
         if (!$response->successful()) {
             throw new Exception('Failed to download release');
