@@ -8,6 +8,7 @@ use App\Exports\ProductsExport;
 use App\Exports\UsersExport;
 use App\Imports\ProductsImport;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
 use Inertia\Response;
 use Maatwebsite\Excel\Facades\Excel;
@@ -136,6 +137,12 @@ class ImportExportController extends Controller
             return redirect()->route('import-export.index')
                 ->with('success', 'Products imported successfully! Created: ' . $stats['imported'] . ', Updated: ' . $stats['updated']);
         } catch (\Exception $e) {
+            Log::error('Product import failed', [
+                'user_id' => $request->user()->id,
+                'organization_id' => $request->user()->organization_id,
+                'file' => $request->file('file')?->getClientOriginalName(),
+                'error' => $e->getMessage(),
+            ]);
             return redirect()->route('import-export.index')
                 ->with('error', 'Import failed: ' . $e->getMessage());
         }

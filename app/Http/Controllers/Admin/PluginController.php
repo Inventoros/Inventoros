@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Services\PluginService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -44,6 +45,10 @@ class PluginController extends Controller
             return redirect()->route('plugins.index')
                 ->with('success', 'Plugin uploaded successfully. You can now activate it.');
         } catch (\Exception $e) {
+            Log::error('Plugin upload failed', [
+                'error' => $e->getMessage(),
+                'file' => $request->file('plugin')?->getClientOriginalName(),
+            ]);
             return redirect()->back()
                 ->with('error', 'Failed to upload plugin: ' . $e->getMessage());
         }
@@ -60,6 +65,10 @@ class PluginController extends Controller
             return redirect()->back()
                 ->with('success', 'Plugin activated successfully.');
         } catch (\Exception $e) {
+            Log::error('Plugin activation failed', [
+                'slug' => $slug,
+                'error' => $e->getMessage(),
+            ]);
             return redirect()->back()
                 ->with('error', 'Failed to activate plugin: ' . $e->getMessage());
         }
@@ -76,6 +85,10 @@ class PluginController extends Controller
             return redirect()->back()
                 ->with('success', 'Plugin deactivated successfully.');
         } catch (\Exception $e) {
+            Log::error('Plugin deactivation failed', [
+                'slug' => $slug,
+                'error' => $e->getMessage(),
+            ]);
             return redirect()->back()
                 ->with('error', 'Failed to deactivate plugin: ' . $e->getMessage());
         }
@@ -92,6 +105,10 @@ class PluginController extends Controller
             return redirect()->back()
                 ->with('success', 'Plugin deleted successfully.');
         } catch (\Exception $e) {
+            Log::error('Plugin deletion failed', [
+                'slug' => $slug,
+                'error' => $e->getMessage(),
+            ]);
             return redirect()->back()
                 ->with('error', 'Failed to delete plugin: ' . $e->getMessage());
         }

@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Services\UpdateService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -101,6 +102,10 @@ class UpdateController extends Controller
                 'backupPath' => $backupPath,
             ]);
         } catch (\Exception $e) {
+            Log::error('Backup creation failed', [
+                'user_id' => $user->id,
+                'error' => $e->getMessage(),
+            ]);
             return response()->json([
                 'success' => false,
                 'message' => 'Backup failed: ' . $e->getMessage(),
