@@ -180,6 +180,9 @@ class ProductController extends Controller
             $imagePaths = [];
             foreach ($validated['images'] as $index => $imageData) {
                 if (isset($imageData['preview']) && str_starts_with($imageData['preview'], 'data:image/')) {
+                    // Validate image before processing
+                    $this->validateBase64Image($imageData['preview']);
+
                     // Extract base64 data
                     $base64 = substr($imageData['preview'], strpos($imageData['preview'], ',') + 1);
                     $imageContent = base64_decode($base64);
@@ -269,6 +272,52 @@ class ProductController extends Controller
             'image/webp' => 'webp',
             default => 'jpg',
         };
+    }
+
+    /**
+     * Validate base64 image data
+     * Returns true if valid, throws exception if invalid
+     */
+    private function validateBase64Image(string $base64Data): bool
+    {
+        // Check data URL format
+        if (!preg_match('/^data:image\/(jpeg|jpg|png|gif|webp);base64,/', $base64Data)) {
+            throw new \InvalidArgumentException('Invalid image format. Only JPEG, PNG, GIF, and WebP are allowed.');
+        }
+
+        // Extract base64 content
+        $base64Content = substr($base64Data, strpos($base64Data, ',') + 1);
+        $imageContent = base64_decode($base64Content, true);
+
+        if ($imageContent === false) {
+            throw new \InvalidArgumentException('Invalid base64 encoding.');
+        }
+
+        // Check file size (max 5MB)
+        $maxSize = 5 * 1024 * 1024;
+        if (strlen($imageContent) > $maxSize) {
+            throw new \InvalidArgumentException('Image size must be less than 5MB.');
+        }
+
+        // Validate actual image content using getimagesizefromstring
+        $imageInfo = @getimagesizefromstring($imageContent);
+        if ($imageInfo === false) {
+            throw new \InvalidArgumentException('Invalid image data. File does not appear to be a valid image.');
+        }
+
+        // Verify MIME type matches allowed types
+        $allowedMimes = [IMAGETYPE_JPEG, IMAGETYPE_PNG, IMAGETYPE_GIF, IMAGETYPE_WEBP];
+        if (!in_array($imageInfo[2], $allowedMimes)) {
+            throw new \InvalidArgumentException('Invalid image type. Only JPEG, PNG, GIF, and WebP are allowed.');
+        }
+
+        // Check image dimensions (max 4096x4096)
+        $maxDimension = 4096;
+        if ($imageInfo[0] > $maxDimension || $imageInfo[1] > $maxDimension) {
+            throw new \InvalidArgumentException("Image dimensions must not exceed {$maxDimension}x{$maxDimension} pixels.");
+        }
+
+        return true;
     }
 
     /**
@@ -424,6 +473,9 @@ class ProductController extends Controller
                 }
                 // If image has preview as base64 (new image), upload it
                 elseif (isset($imageData['preview']) && str_starts_with($imageData['preview'], 'data:image/')) {
+                    // Validate image before processing
+                    $this->validateBase64Image($imageData['preview']);
+
                     $base64 = substr($imageData['preview'], strpos($imageData['preview'], ',') + 1);
                     $imageContent = base64_decode($base64);
 
