@@ -7,6 +7,7 @@ use App\Models\Inventory\Product;
 use App\Models\Order\Order;
 use App\Services\NotificationService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -94,40 +95,63 @@ class OrderController extends Controller
         $validated['source'] = 'manual';
         $validated['approval_status'] = 'pending';
 
-        // Calculate order totals
-        $subtotal = 0;
-        $orderItems = [];
+        // Use transaction with locking to prevent race conditions on stock updates
+        try {
+            $order = DB::transaction(function () use ($validated) {
+                $subtotal = 0;
+                $orderItems = [];
 
-        foreach ($validated['items'] as $item) {
-            $product = Product::find($item['product_id']);
-            $itemSubtotal = $item['quantity'] * $item['unit_price'];
-            $subtotal += $itemSubtotal;
+                foreach ($validated['items'] as $item) {
+                    // Lock the product row for update to prevent concurrent modifications
+                    $product = Product::where('id', $item['product_id'])
+                        ->lockForUpdate()
+                        ->first();
 
-            $orderItems[] = [
-                'product_id' => $item['product_id'],
-                'product_name' => $product->name,
-                'sku' => $product->sku,
-                'quantity' => $item['quantity'],
-                'unit_price' => $item['unit_price'],
-                'subtotal' => $itemSubtotal,
-                'tax' => 0,
-                'total' => $itemSubtotal,
-            ];
+                    if (!$product) {
+                        throw new \Exception("Product not found: {$item['product_id']}");
+                    }
 
-            // Reduce product stock
-            $product->decrement('stock', $item['quantity']);
+                    // Check if sufficient stock is available
+                    if ($product->stock < $item['quantity']) {
+                        throw new \Exception("Insufficient stock for {$product->name}. Available: {$product->stock}, Requested: {$item['quantity']}");
+                    }
+
+                    $itemSubtotal = $item['quantity'] * $item['unit_price'];
+                    $subtotal += $itemSubtotal;
+
+                    $orderItems[] = [
+                        'product_id' => $item['product_id'],
+                        'product_name' => $product->name,
+                        'sku' => $product->sku,
+                        'quantity' => $item['quantity'],
+                        'unit_price' => $item['unit_price'],
+                        'subtotal' => $itemSubtotal,
+                        'tax' => 0,
+                        'total' => $itemSubtotal,
+                    ];
+
+                    // Reduce product stock (within transaction with lock)
+                    $product->decrement('stock', $item['quantity']);
+                }
+
+                $validated['subtotal'] = $subtotal;
+                $validated['tax'] = $validated['tax'] ?? 0;
+                $validated['shipping'] = $validated['shipping'] ?? 0;
+                $validated['total'] = $subtotal + $validated['tax'] + $validated['shipping'];
+
+                $order = Order::create($validated);
+                $order->items()->createMany($orderItems);
+
+                return $order;
+            });
+
+            return redirect()->route('orders.index')
+                ->with('success', 'Order created successfully.');
+        } catch (\Exception $e) {
+            return redirect()->back()
+                ->withInput()
+                ->with('error', $e->getMessage());
         }
-
-        $validated['subtotal'] = $subtotal;
-        $validated['tax'] = $validated['tax'] ?? 0;
-        $validated['shipping'] = $validated['shipping'] ?? 0;
-        $validated['total'] = $subtotal + $validated['tax'] + $validated['shipping'];
-
-        $order = Order::create($validated);
-        $order->items()->createMany($orderItems);
-
-        return redirect()->route('orders.index')
-            ->with('success', 'Order created successfully.');
     }
 
     /**
