@@ -39,9 +39,10 @@ class ActivityLogController extends Controller
             $query->whereDate('created_at', '<=', $request->date_to);
         }
 
-        // Search
+        // Search - escape LIKE wildcards to prevent unintended pattern matching
         if ($request->filled('search')) {
-            $query->where('description', 'like', '%' . $request->search . '%');
+            $search = str_replace(['%', '_'], ['\%', '\_'], $request->search);
+            $query->where('description', 'like', '%' . $search . '%');
         }
 
         $activities = $query->latest()
