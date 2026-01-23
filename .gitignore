@@ -23,3 +23,10 @@ Homestead.json
 Homestead.yaml
 Thumbs.db
 /storage/framework/activated_plugins.json
+
+# Playwright
+/e2e/.auth/
+/e2e/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/

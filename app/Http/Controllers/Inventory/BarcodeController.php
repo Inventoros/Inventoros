@@ -103,4 +103,36 @@ class BarcodeController extends Controller
             'message' => 'Barcode generated from SKU successfully',
         ]);
     }
+
+    /**
+     * Bulk print barcodes for multiple products
+     */
+    public function bulkPrint(Request $request)
+    {
+        $ids = array_filter(explode(',', $request->query('ids', '')));
+
+        if (empty($ids)) {
+            abort(400, 'No product IDs provided');
+        }
+
+        $products = Product::whereIn('id', $ids)
+            ->where('organization_id', $request->user()->organization_id)
+            ->get();
+
+        $barcodes = [];
+        foreach ($products as $product) {
+            $code = $product->barcode ?? $product->sku;
+            if ($code) {
+                $barcodes[] = [
+                    'product' => $product,
+                    'barcode' => $this->barcodeService->generateSVG($code, 2, 60),
+                    'code' => $code,
+                ];
+            }
+        }
+
+        return view('barcode.bulk-print', [
+            'barcodes' => $barcodes,
+        ]);
+    }
 }

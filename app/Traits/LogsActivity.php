@@ -4,6 +4,7 @@ namespace App\Traits;
 
 use App\Models\ActivityLog;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Log;
 
 trait LogsActivity
 {
@@ -15,7 +16,10 @@ trait LogsActivity
                     $model->logActivity('created', 'Created ' . class_basename($model));
                 }
             } catch (\Exception $e) {
-                // Silently fail if logging fails
+                Log::warning('Activity logging failed for created event', [
+                    'model' => get_class($model),
+                    'error' => $e->getMessage(),
+                ]);
             }
         });
 
@@ -36,7 +40,10 @@ trait LogsActivity
                     }
                 }
             } catch (\Exception $e) {
-                // Silently fail if logging fails
+                Log::warning('Activity logging failed for updated event', [
+                    'model' => get_class($model),
+                    'error' => $e->getMessage(),
+                ]);
             }
         });
 
@@ -46,7 +53,10 @@ trait LogsActivity
                     $model->logActivity('deleted', 'Deleted ' . class_basename($model));
                 }
             } catch (\Exception $e) {
-                // Silently fail if logging fails
+                Log::warning('Activity logging failed for deleted event', [
+                    'model' => get_class($model),
+                    'error' => $e->getMessage(),
+                ]);
             }
         });
     }

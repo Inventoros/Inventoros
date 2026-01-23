@@ -2,10 +2,10 @@
 
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\RoleController;
-use App\Http\Controllers\Admin\SettingsController;
 use App\Http\Controllers\Admin\PluginController;
 use App\Http\Controllers\Admin\UpdateController;
 use App\Http\Controllers\Admin\UserController;
+use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\Import\ImportExportController;
 use App\Http\Controllers\Install\InstallerController;
 use App\Http\Controllers\Inventory\ProductController;
@@ -66,6 +66,11 @@ Route::middleware('auth')->group(function () {
         Route::post('/generate-from-sku', [\App\Http\Controllers\Inventory\BarcodeController::class, 'generateFromSKU'])->middleware('permission:edit_products')->name('generate-from-sku');
     });
 
+    // Bulk Barcode Printing
+    Route::get('/products/barcode/bulk-print', [\App\Http\Controllers\Inventory\BarcodeController::class, 'bulkPrint'])
+        ->name('products.barcode.bulk-print')
+        ->middleware('permission:view_products');
+
     // SKU Management
     Route::prefix('sku')->name('sku.')->middleware('permission:view_products')->group(function () {
         Route::get('/patterns', [\App\Http\Controllers\Inventory\SKUController::class, 'patterns'])->name('patterns');
@@ -99,6 +104,16 @@ Route::middleware('auth')->group(function () {
     Route::patch('/suppliers/{supplier}', [SupplierController::class, 'update'])->middleware('permission:edit_suppliers');
     Route::delete('/suppliers/{supplier}', [SupplierController::class, 'destroy'])->name('suppliers.destroy')->middleware('permission:delete_suppliers');
 
+    // Customer Management - Permission based
+    Route::get('/customers', [CustomerController::class, 'index'])->name('customers.index')->middleware('permission:view_customers');
+    Route::get('/customers/create', [CustomerController::class, 'create'])->name('customers.create')->middleware('permission:create_customers');
+    Route::post('/customers', [CustomerController::class, 'store'])->name('customers.store')->middleware('permission:create_customers');
+    Route::get('/customers/{customer}', [CustomerController::class, 'show'])->name('customers.show')->middleware('permission:view_customers');
+    Route::get('/customers/{customer}/edit', [CustomerController::class, 'edit'])->name('customers.edit')->middleware('permission:edit_customers');
+    Route::put('/customers/{customer}', [CustomerController::class, 'update'])->name('customers.update')->middleware('permission:edit_customers');
+    Route::patch('/customers/{customer}', [CustomerController::class, 'update'])->middleware('permission:edit_customers');
+    Route::delete('/customers/{customer}', [CustomerController::class, 'destroy'])->name('customers.destroy')->middleware('permission:delete_customers');
+
     // Purchase Order Management - Permission based
     Route::get('/purchase-orders', [PurchaseOrderController::class, 'index'])->name('purchase-orders.index')->middleware('permission:view_purchase_orders');
     Route::get('/purchase-orders/create', [PurchaseOrderController::class, 'create'])->name('purchase-orders.create')->middleware('permission:create_purchase_orders');
@@ -122,6 +137,8 @@ Route::middleware('auth')->group(function () {
     Route::patch('/orders/{order}', [OrderController::class, 'update'])->middleware('permission:edit_orders');
     Route::get('/orders/{order}', [OrderController::class, 'show'])->name('orders.show')->middleware('permission:view_orders');
     Route::delete('/orders/{order}', [OrderController::class, 'destroy'])->name('orders.destroy')->middleware('permission:delete_orders');
+    Route::post('/orders/{order}/approve', [OrderController::class, 'approve'])->name('orders.approve')->middleware('permission:approve_orders');
+    Route::post('/orders/{order}/reject', [OrderController::class, 'reject'])->name('orders.reject')->middleware('permission:approve_orders');
 
     // User Management - Permission based
     Route::get('/users', [UserController::class, 'index'])->name('users.index')->middleware('permission:view_users');
@@ -224,6 +241,8 @@ Route::middleware('auth')->group(function () {
     Route::prefix('import-export')->name('import-export.')->group(function () {
         Route::get('/', [ImportExportController::class, 'index'])->middleware('permission:export_data|import_data')->name('index');
         Route::get('/export-products', [ImportExportController::class, 'exportProducts'])->middleware('permission:export_data')->name('export-products');
+        Route::get('/export-orders', [ImportExportController::class, 'exportOrders'])->middleware('permission:export_data')->name('export-orders');
+        Route::get('/export-users', [ImportExportController::class, 'exportUsers'])->middleware('permission:export_data')->name('export-users');
         Route::get('/download-template', [ImportExportController::class, 'downloadTemplate'])->middleware('permission:import_data')->name('download-template');
         Route::post('/import-products', [ImportExportController::class, 'importProducts'])->middleware('permission:import_data')->name('import-products');
     });
