@@ -3,12 +3,14 @@
 namespace App\Models;
 
 use App\Enums\Permission;
+use App\Traits\HasSlug;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class Role extends Model
 {
+    use HasSlug;
     protected $fillable = [
         'name',
         'slug',
