@@ -5,7 +5,9 @@ namespace App\Http\Controllers\Order;
 use App\Http\Controllers\Controller;
 use App\Models\Inventory\Product;
 use App\Models\Order\Order;
+use App\Services\NotificationService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -34,7 +36,7 @@ class OrderController extends Controller
                 $query->bySource($source);
             })
             ->latest('order_date')
-            ->paginate(15)
+            ->paginate(config('limits.pagination.default'))
             ->withQueryString();
 
         return Inertia::render('Orders/Index', [
@@ -88,43 +90,68 @@ class OrderController extends Controller
         ]);
 
         $validated['organization_id'] = $request->user()->organization_id;
+        $validated['created_by'] = $request->user()->id;
         $validated['order_number'] = Order::generateOrderNumber();
         $validated['source'] = 'manual';
+        $validated['approval_status'] = 'pending';
 
-        // Calculate order totals
-        $subtotal = 0;
-        $orderItems = [];
+        // Use transaction with locking to prevent race conditions on stock updates
+        try {
+            $order = DB::transaction(function () use ($validated) {
+                $subtotal = 0;
+                $orderItems = [];
 
-        foreach ($validated['items'] as $item) {
-            $product = Product::find($item['product_id']);
-            $itemSubtotal = $item['quantity'] * $item['unit_price'];
-            $subtotal += $itemSubtotal;
+                foreach ($validated['items'] as $item) {
+                    // Lock the product row for update to prevent concurrent modifications
+                    $product = Product::where('id', $item['product_id'])
+                        ->lockForUpdate()
+                        ->first();
 
-            $orderItems[] = [
-                'product_id' => $item['product_id'],
-                'product_name' => $product->name,
-                'sku' => $product->sku,
-                'quantity' => $item['quantity'],
-                'unit_price' => $item['unit_price'],
-                'subtotal' => $itemSubtotal,
-                'tax' => 0,
-                'total' => $itemSubtotal,
-            ];
+                    if (!$product) {
+                        throw new \Exception("Product not found: {$item['product_id']}");
+                    }
 
-            // Reduce product stock
-            $product->decrement('stock', $item['quantity']);
+                    // Check if sufficient stock is available
+                    if ($product->stock < $item['quantity']) {
+                        throw new \Exception("Insufficient stock for {$product->name}. Available: {$product->stock}, Requested: {$item['quantity']}");
+                    }
+
+                    $itemSubtotal = $item['quantity'] * $item['unit_price'];
+                    $subtotal += $itemSubtotal;
+
+                    $orderItems[] = [
+                        'product_id' => $item['product_id'],
+                        'product_name' => $product->name,
+                        'sku' => $product->sku,
+                        'quantity' => $item['quantity'],
+                        'unit_price' => $item['unit_price'],
+                        'subtotal' => $itemSubtotal,
+                        'tax' => 0,
+                        'total' => $itemSubtotal,
+                    ];
+
+                    // Reduce product stock (within transaction with lock)
+                    $product->decrement('stock', $item['quantity']);
+                }
+
+                $validated['subtotal'] = $subtotal;
+                $validated['tax'] = $validated['tax'] ?? 0;
+                $validated['shipping'] = $validated['shipping'] ?? 0;
+                $validated['total'] = $subtotal + $validated['tax'] + $validated['shipping'];
+
+                $order = Order::create($validated);
+                $order->items()->createMany($orderItems);
+
+                return $order;
+            });
+
+            return redirect()->route('orders.index')
+                ->with('success', 'Order created successfully.');
+        } catch (\Exception $e) {
+            return redirect()->back()
+                ->withInput()
+                ->with('error', $e->getMessage());
         }
-
-        $validated['subtotal'] = $subtotal;
-        $validated['tax'] = $validated['tax'] ?? 0;
-        $validated['shipping'] = $validated['shipping'] ?? 0;
-        $validated['total'] = $subtotal + $validated['tax'] + $validated['shipping'];
-
-        $order = Order::create($validated);
-        $order->items()->createMany($orderItems);
-
-        return redirect()->route('orders.index')
-            ->with('success', 'Order created successfully.');
     }
 
     /**
@@ -132,15 +159,19 @@ class OrderController extends Controller
      */
     public function show(Order $order): Response
     {
-        $order->load(['items.product', 'organization']);
+        $order->load(['items.product', 'organization', 'creator', 'approver']);
 
         // Ensure user can only view orders from their organization
         if ($order->organization_id !== auth()->user()->organization_id) {
             abort(403, 'Unauthorized action.');
         }
 
+        // Check if user can approve orders
+        $canApprove = auth()->user()->hasPermission('approve_orders');
+
         return Inertia::render('Orders/Show', [
             'order' => $order,
+            'canApprove' => $canApprove,
             'pluginComponents' => [
                 'header' => get_page_components('orders.show', 'header'),
                 'sidebar' => get_page_components('orders.show', 'sidebar'),
@@ -313,5 +344,75 @@ class OrderController extends Controller
 
         return redirect()->route('orders.index')
             ->with('success', 'Order deleted successfully.');
+    }
+
+    /**
+     * Approve an order.
+     */
+    public function approve(Request $request, Order $order)
+    {
+        // Ensure user can only approve orders from their organization
+        if ($order->organization_id !== $request->user()->organization_id) {
+            abort(403, 'Unauthorized action.');
+        }
+
+        // Check if order is pending approval
+        if (!$order->isPendingApproval()) {
+            return redirect()->back()->with('error', 'Order has already been processed.');
+        }
+
+        $validated = $request->validate([
+            'notes' => 'nullable|string|max:500',
+        ]);
+
+        $order->update([
+            'approval_status' => 'approved',
+            'approved_by' => $request->user()->id,
+            'approved_at' => now(),
+            'approval_notes' => $validated['notes'] ?? null,
+        ]);
+
+        // Load the approver relationship for notification
+        $order->load('approver');
+
+        // Send notification to order creator
+        NotificationService::createOrderApprovalNotification($order);
+
+        return redirect()->back()->with('success', 'Order approved successfully.');
+    }
+
+    /**
+     * Reject an order.
+     */
+    public function reject(Request $request, Order $order)
+    {
+        // Ensure user can only reject orders from their organization
+        if ($order->organization_id !== $request->user()->organization_id) {
+            abort(403, 'Unauthorized action.');
+        }
+
+        // Check if order is pending approval
+        if (!$order->isPendingApproval()) {
+            return redirect()->back()->with('error', 'Order has already been processed.');
+        }
+
+        $validated = $request->validate([
+            'notes' => 'required|string|max:500',
+        ]);
+
+        $order->update([
+            'approval_status' => 'rejected',
+            'approved_by' => $request->user()->id,
+            'approved_at' => now(),
+            'approval_notes' => $validated['notes'],
+        ]);
+
+        // Load the approver relationship for notification
+        $order->load('approver');
+
+        // Send notification to order creator
+        NotificationService::createOrderApprovalNotification($order);
+
+        return redirect()->back()->with('success', 'Order rejected.');
     }
 }

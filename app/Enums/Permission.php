@@ -21,8 +21,15 @@ enum Permission: string
     case CREATE_PRODUCTS = 'create_products';
     case EDIT_PRODUCTS = 'edit_products';
     case DELETE_PRODUCTS = 'delete_products';
+    case MANAGE_STOCK = 'manage_stock';
     case MANAGE_CATEGORIES = 'manage_categories';
     case MANAGE_LOCATIONS = 'manage_locations';
+
+    // Customer Management
+    case VIEW_CUSTOMERS = 'view_customers';
+    case CREATE_CUSTOMERS = 'create_customers';
+    case EDIT_CUSTOMERS = 'edit_customers';
+    case DELETE_CUSTOMERS = 'delete_customers';
 
     // Supplier Management
     case VIEW_SUPPLIERS = 'view_suppliers';
@@ -79,8 +86,14 @@ enum Permission: string
             self::CREATE_PRODUCTS => 'Create Products',
             self::EDIT_PRODUCTS => 'Edit Products',
             self::DELETE_PRODUCTS => 'Delete Products',
+            self::MANAGE_STOCK => 'Manage Stock',
             self::MANAGE_CATEGORIES => 'Manage Categories',
             self::MANAGE_LOCATIONS => 'Manage Locations',
+
+            self::VIEW_CUSTOMERS => 'View Customers',
+            self::CREATE_CUSTOMERS => 'Create Customers',
+            self::EDIT_CUSTOMERS => 'Edit Customers',
+            self::DELETE_CUSTOMERS => 'Delete Customers',
 
             self::VIEW_SUPPLIERS => 'View Suppliers',
             self::CREATE_SUPPLIERS => 'Create Suppliers',
@@ -133,8 +146,14 @@ enum Permission: string
             self::CREATE_PRODUCTS => 'Can add new products',
             self::EDIT_PRODUCTS => 'Can modify product details',
             self::DELETE_PRODUCTS => 'Can remove products',
+            self::MANAGE_STOCK => 'Can adjust stock levels and manage stock movements',
             self::MANAGE_CATEGORIES => 'Can create and manage product categories',
             self::MANAGE_LOCATIONS => 'Can create and manage storage locations',
+
+            self::VIEW_CUSTOMERS => 'Can view customer list and details',
+            self::CREATE_CUSTOMERS => 'Can create new customers',
+            self::EDIT_CUSTOMERS => 'Can edit existing customers',
+            self::DELETE_CUSTOMERS => 'Can delete customers',
 
             self::VIEW_SUPPLIERS => 'Can view supplier list and details',
             self::CREATE_SUPPLIERS => 'Can create new suppliers',
@@ -176,7 +195,8 @@ enum Permission: string
             self::VIEW_USERS, self::CREATE_USERS, self::EDIT_USERS, self::DELETE_USERS => 'User Management',
             self::VIEW_ROLES, self::CREATE_ROLES, self::EDIT_ROLES, self::DELETE_ROLES => 'Role Management',
             self::VIEW_PRODUCTS, self::CREATE_PRODUCTS, self::EDIT_PRODUCTS, self::DELETE_PRODUCTS,
-            self::MANAGE_CATEGORIES, self::MANAGE_LOCATIONS => 'Inventory Management',
+            self::MANAGE_STOCK, self::MANAGE_CATEGORIES, self::MANAGE_LOCATIONS => 'Inventory Management',
+            self::VIEW_CUSTOMERS, self::CREATE_CUSTOMERS, self::EDIT_CUSTOMERS, self::DELETE_CUSTOMERS => 'Customer Management',
             self::VIEW_SUPPLIERS, self::CREATE_SUPPLIERS, self::EDIT_SUPPLIERS, self::DELETE_SUPPLIERS => 'Supplier Management',
             self::VIEW_PURCHASE_ORDERS, self::CREATE_PURCHASE_ORDERS, self::EDIT_PURCHASE_ORDERS,
             self::DELETE_PURCHASE_ORDERS, self::RECEIVE_PURCHASE_ORDERS => 'Purchase Order Management',

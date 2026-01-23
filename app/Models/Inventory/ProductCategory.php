@@ -3,17 +3,17 @@
 namespace App\Models\Inventory;
 
 use App\Models\Auth\Organization;
+use App\Traits\HasSlug;
 use App\Traits\LogsActivity;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Illuminate\Support\Str;
 
 class ProductCategory extends Model
 {
-    use HasFactory, SoftDeletes, LogsActivity;
+    use HasFactory, SoftDeletes, LogsActivity, HasSlug;
 
     /**
      * The attributes that are mass assignable.
@@ -39,20 +39,6 @@ class ProductCategory extends Model
         return [
             'is_active' => 'boolean',
         ];
-    }
-
-    /**
-     * Boot the model.
-     */
-    protected static function boot(): void
-    {
-        parent::boot();
-
-        static::creating(function ($category) {
-            if (empty($category->slug)) {
-                $category->slug = Str::slug($category->name);
-            }
-        });
     }
 
     /**

@@ -1,6 +1,9 @@
 <script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import PluginSlot from '@/Components/PluginSlot.vue';
+import ProductVariantManager from '@/Components/ProductVariantManager.vue';
+import QuickAddModal from '@/Components/QuickAddModal.vue';
+import SKUGeneratorModal from '@/Components/SKUGeneratorModal.vue';
 import { Head, Link, useForm, router } from '@inertiajs/vue3';
 import { ref, computed } from 'vue';
 import axios from 'axios';
@@ -10,8 +13,36 @@ const props = defineProps({
     product: Object,
     categories: Array,
     locations: Array,
+    currencies: Object,
+    defaultCurrency: String,
     pluginComponents: Object,
 });
+
+// Prepare existing options and variants for the variant manager
+const prepareExistingOptions = () => {
+    return (props.product.options || []).map(opt => ({
+        id: opt.id,
+        name: opt.name,
+        values: opt.values,
+        position: opt.position
+    }));
+};
+
+const prepareExistingVariants = () => {
+    return (props.product.variants || []).map(v => ({
+        id: v.id,
+        option_values: v.option_values,
+        title: v.title,
+        sku: v.sku || '',
+        barcode: v.barcode || '',
+        price: v.price,
+        purchase_price: v.purchase_price,
+        stock: v.stock || 0,
+        min_stock: v.min_stock || 0,
+        is_active: v.is_active ?? true,
+        position: v.position
+    }));
+};
 
 const form = useForm({
     name: props.product.name,
@@ -29,9 +60,51 @@ const form = useForm({
         url: `/storage/${url}`,
         preview: `/storage/${url}`,
         name: url.split('/').pop(),
-        size: 0 // Existing images don't have size info
+        size: 0
     })),
+    has_variants: props.product.has_variants || false,
+    options: prepareExistingOptions(),
+    variants: prepareExistingVariants(),
 });
+
+// Variant management
+const showVariantSection = ref(props.product.has_variants || false);
+const variantData = ref({
+    options: prepareExistingOptions(),
+    variants: prepareExistingVariants()
+});
+
+const toggleVariants = () => {
+    showVariantSection.value = !showVariantSection.value;
+    form.has_variants = showVariantSection.value;
+};
+
+const updateVariantData = (data) => {
+    variantData.value = data;
+    form.options = data.options.map((opt, idx) => ({
+        id: opt.id || null,
+        name: opt.name,
+        values: opt.values,
+        position: idx
+    }));
+    form.variants = data.variants.map((v, idx) => ({
+        id: v.id || null,
+        option_values: v.option_values,
+        title: v.title,
+        sku: v.sku,
+        barcode: v.barcode,
+        price: v.price,
+        purchase_price: v.purchase_price,
+        stock: v.stock,
+        min_stock: v.min_stock,
+        is_active: v.is_active,
+        position: idx
+    }));
+};
+
+const getCurrencySymbol = (code) => {
+    return props.currencies?.[code]?.symbol || code || '$';
+};
 
 // Quick-add modals
 const showCategoryModal = ref(false);
@@ -40,6 +113,13 @@ const categoryForm = ref({ name: '', description: '' });
 const locationForm = ref({ name: '', code: '', description: '' });
 const categoryLoading = ref(false);
 const locationLoading = ref(false);
+
+// SKU Generator
+const showSKUGenerator = ref(false);
+
+const applySKUFromModal = (sku) => {
+    form.sku = sku;
+};
 
 const createCategory = async () => {
     categoryLoading.value = true;
@@ -150,9 +230,21 @@ const submit = () => {
 
                                     <!-- SKU -->
                                     <div>
-                                        <label for="sku" class="block text-sm font-medium text-gray-600 dark:text-gray-300">
-                                            SKU <span class="text-red-500">*</span>
-                                        </label>
+                                        <div class="flex items-center justify-between mb-1">
+                                            <label for="sku" class="block text-sm font-medium text-gray-600 dark:text-gray-300">
+                                                SKU <span class="text-red-500">*</span>
+                                            </label>
+                                            <button
+                                                type="button"
+                                                @click="showSKUGenerator = true"
+                                                class="text-xs text-primary-400 hover:text-primary-300 font-medium flex items-center gap-1"
+                                            >
+                                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                                                </svg>
+                                                Generate SKU
+                                            </button>
+                                        </div>
                                         <input
                                             id="sku"
                                             v-model="form.sku"
@@ -390,6 +482,62 @@ const submit = () => {
                                     </p>
                                 </div>
 
+                                <!-- Product Variants Section (Full Width) -->
+                                <div class="lg:col-span-2">
+                                    <div class="border border-gray-200 dark:border-dark-border rounded-lg overflow-hidden">
+                                        <button
+                                            type="button"
+                                            @click="toggleVariants"
+                                            class="w-full flex items-center justify-between p-4 bg-gray-50 dark:bg-dark-bg hover:bg-gray-100 dark:hover:bg-dark-border/50 transition"
+                                        >
+                                            <div class="flex items-center gap-3">
+                                                <svg class="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                                                </svg>
+                                                <span class="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                                                    Product Variants
+                                                </span>
+                                                <span v-if="form.variants.length > 0" class="px-2 py-1 text-xs bg-primary-400/20 text-primary-400 rounded-full">
+                                                    {{ form.variants.length }} variants
+                                                </span>
+                                            </div>
+                                            <svg
+                                                :class="['w-5 h-5 text-gray-500 transition-transform', showVariantSection ? 'rotate-180' : '']"
+                                                fill="none"
+                                                stroke="currentColor"
+                                                viewBox="0 0 24 24"
+                                            >
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                                            </svg>
+                                        </button>
+
+                                        <div v-if="showVariantSection" class="p-4 border-t border-gray-200 dark:border-dark-border">
+                                            <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">
+                                                Add options like Size or Color to sell different versions of this product.
+                                                Each combination creates a variant with its own price and stock.
+                                            </p>
+
+                                            <!-- Note about stock tracking -->
+                                            <div v-if="form.variants.length > 0" class="mb-4 p-3 bg-blue-900/20 rounded-lg border border-blue-800">
+                                                <p class="text-sm text-blue-300">
+                                                    <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                    </svg>
+                                                    Stock is tracked per variant when variants are enabled.
+                                                </p>
+                                            </div>
+
+                                            <ProductVariantManager
+                                                :model-value="variantData"
+                                                @update:model-value="updateVariantData"
+                                                :product-price="form.price"
+                                                :product-purchase-price="form.purchase_price"
+                                                :currency-symbol="getCurrencySymbol(product.currency || defaultCurrency)"
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+
                                 <!-- Notes (Full Width) -->
                                 <div class="lg:col-span-2">
                                     <label for="notes" class="block text-sm font-medium text-gray-600 dark:text-gray-300">
@@ -588,5 +736,14 @@ const submit = () => {
                 </div>
             </div>
         </div>
+
+        <!-- SKU Generator Modal -->
+        <SKUGeneratorModal
+            :show="showSKUGenerator"
+            :product-name="form.name"
+            :category-id="form.category_id"
+            @apply="applySKUFromModal"
+            @close="showSKUGenerator = false"
+        />
     </AuthenticatedLayout>
 </template>

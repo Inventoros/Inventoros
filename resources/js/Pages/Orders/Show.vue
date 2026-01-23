@@ -1,7 +1,7 @@
 <script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import PluginSlot from '@/Components/PluginSlot.vue';
-import { Head, Link, router } from '@inertiajs/vue3';
+import { Head, Link, router, useForm } from '@inertiajs/vue3';
 import { ref } from 'vue';
 import { usePermissions } from '@/composables/usePermissions';
 
@@ -9,11 +9,47 @@ const { hasPermission } = usePermissions();
 
 const props = defineProps({
     order: Object,
+    canApprove: Boolean,
     pluginComponents: Object,
 });
 
 const showDeleteModal = ref(false);
 const deleting = ref(false);
+
+// Approval functionality
+const showApprovalModal = ref(false);
+const approvalAction = ref('approve');
+const approvalNotes = ref('');
+const processing = ref(false);
+
+const openApprovalModal = (action) => {
+    approvalAction.value = action;
+    approvalNotes.value = '';
+    showApprovalModal.value = true;
+};
+
+const submitApproval = () => {
+    processing.value = true;
+    const routeName = approvalAction.value === 'approve' ? 'orders.approve' : 'orders.reject';
+
+    router.post(route(routeName, props.order.id), {
+        notes: approvalNotes.value,
+    }, {
+        onFinish: () => {
+            processing.value = false;
+            showApprovalModal.value = false;
+        },
+    });
+};
+
+const getApprovalStatusClass = (status) => {
+    const classes = {
+        pending: 'bg-yellow-900/30 text-yellow-400 border border-yellow-800',
+        approved: 'bg-green-900/30 text-green-400 border border-green-800',
+        rejected: 'bg-red-900/30 text-red-400 border border-red-800',
+    };
+    return classes[status] || 'bg-gray-900/30 text-gray-400 border border-gray-800';
+};
 
 const getStatusClass = (status) => {
     const classes = {
@@ -70,6 +106,9 @@ const formatDateShort = (date) => {
                         </h2>
                         <span :class="getStatusClass(order.status)" class="px-3 py-1 rounded-full text-xs font-semibold uppercase">
                             {{ order.status }}
+                        </span>
+                        <span v-if="order.approval_status" :class="getApprovalStatusClass(order.approval_status)" class="px-3 py-1 rounded-full text-xs font-semibold uppercase">
+                            {{ order.approval_status }}
                         </span>
                     </div>
                     <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
@@ -304,6 +343,60 @@ const formatDateShort = (date) => {
                             </dl>
                         </div>
 
+                        <!-- Approval Status -->
+                        <div v-if="order.approval_status" class="bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border shadow-sm sm:rounded-lg p-6">
+                            <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
+                                Approval Status
+                            </h3>
+
+                            <dl class="space-y-3">
+                                <div>
+                                    <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Status</dt>
+                                    <dd class="mt-1">
+                                        <span :class="getApprovalStatusClass(order.approval_status)" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium capitalize">
+                                            {{ order.approval_status }}
+                                        </span>
+                                    </dd>
+                                </div>
+
+                                <div v-if="order.creator">
+                                    <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Created By</dt>
+                                    <dd class="mt-1 text-sm text-gray-900 dark:text-gray-100">{{ order.creator.name }}</dd>
+                                </div>
+
+                                <div v-if="order.approver">
+                                    <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">{{ order.approval_status === 'approved' ? 'Approved' : 'Rejected' }} By</dt>
+                                    <dd class="mt-1 text-sm text-gray-900 dark:text-gray-100">{{ order.approver.name }}</dd>
+                                </div>
+
+                                <div v-if="order.approved_at">
+                                    <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Decision Date</dt>
+                                    <dd class="mt-1 text-sm text-gray-900 dark:text-gray-100">{{ formatDate(order.approved_at) }}</dd>
+                                </div>
+
+                                <div v-if="order.approval_notes">
+                                    <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Notes</dt>
+                                    <dd class="mt-1 text-sm text-gray-600 dark:text-gray-300">{{ order.approval_notes }}</dd>
+                                </div>
+                            </dl>
+
+                            <!-- Approval Actions -->
+                            <div v-if="canApprove && order.approval_status === 'pending'" class="mt-4 pt-4 border-t border-gray-200 dark:border-dark-border space-y-2">
+                                <button
+                                    @click="openApprovalModal('approve')"
+                                    class="w-full px-4 py-2 bg-green-600 text-white rounded-md font-semibold text-sm hover:bg-green-700 transition"
+                                >
+                                    Approve Order
+                                </button>
+                                <button
+                                    @click="openApprovalModal('reject')"
+                                    class="w-full px-4 py-2 bg-red-600 text-white rounded-md font-semibold text-sm hover:bg-red-700 transition"
+                                >
+                                    Reject Order
+                                </button>
+                            </div>
+                        </div>
+
                         <!-- Actions -->
                         <div v-if="hasPermission('delete_orders')" class="bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border shadow-sm sm:rounded-lg p-6">
                             <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
@@ -382,6 +475,76 @@ const formatDateShort = (date) => {
                         >
                             <span v-if="deleting">Deleting...</span>
                             <span v-else>Delete Order</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Approval Modal -->
+        <div v-if="showApprovalModal" class="fixed inset-0 z-50 overflow-y-auto" @click="showApprovalModal = false">
+            <div class="flex items-center justify-center min-h-screen px-4">
+                <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"></div>
+
+                <div class="relative bg-white dark:bg-dark-card rounded-lg shadow-xl max-w-md w-full p-6" @click.stop>
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                            {{ approvalAction === 'approve' ? 'Approve Order' : 'Reject Order' }}
+                        </h3>
+                        <button
+                            @click="showApprovalModal = false"
+                            class="text-gray-500 dark:text-gray-400 hover:text-gray-200"
+                        >
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </button>
+                    </div>
+
+                    <div class="mb-6">
+                        <p class="text-gray-600 dark:text-gray-300 mb-4">
+                            {{ approvalAction === 'approve'
+                                ? `Are you sure you want to approve order #${order.order_number}?`
+                                : `Are you sure you want to reject order #${order.order_number}?`
+                            }}
+                        </p>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-1">
+                                Notes {{ approvalAction === 'reject' ? '(Required)' : '(Optional)' }}
+                            </label>
+                            <textarea
+                                v-model="approvalNotes"
+                                rows="3"
+                                class="block w-full rounded-md bg-gray-50 dark:bg-dark-bg border-gray-200 dark:border-dark-border text-gray-900 dark:text-gray-100 placeholder-gray-500 shadow-sm focus:border-primary-400 focus:ring-primary-400"
+                                :placeholder="approvalAction === 'approve' ? 'Optional notes about this approval...' : 'Reason for rejection...'"
+                                :required="approvalAction === 'reject'"
+                            ></textarea>
+                        </div>
+                    </div>
+
+                    <div class="flex gap-3 justify-end">
+                        <button
+                            type="button"
+                            @click="showApprovalModal = false"
+                            class="px-4 py-2 bg-gray-100 dark:bg-dark-bg text-gray-600 dark:text-gray-300 rounded-md hover:bg-gray-200 dark:hover:bg-dark-bg/50"
+                            :disabled="processing"
+                        >
+                            Cancel
+                        </button>
+                        <button
+                            type="button"
+                            @click="submitApproval"
+                            :disabled="processing || (approvalAction === 'reject' && !approvalNotes)"
+                            :class="[
+                                'px-4 py-2 text-white rounded-md disabled:opacity-50',
+                                approvalAction === 'approve'
+                                    ? 'bg-green-600 hover:bg-green-700'
+                                    : 'bg-red-600 hover:bg-red-700'
+                            ]"
+                        >
+                            <span v-if="processing">Processing...</span>
+                            <span v-else>{{ approvalAction === 'approve' ? 'Approve' : 'Reject' }}</span>
                         </button>
                     </div>
                 </div>

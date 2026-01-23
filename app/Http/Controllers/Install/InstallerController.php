@@ -10,6 +10,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
 
 class InstallerController extends Controller
@@ -87,6 +88,11 @@ class InstallerController extends Controller
                 'message' => 'Database connection successful!',
             ]);
         } catch (\Exception $e) {
+            Log::warning('Database connection test failed', [
+                'host' => $request->host,
+                'database' => $request->database,
+                'error' => $e->getMessage(),
+            ]);
             return response()->json([
                 'success' => false,
                 'message' => 'Database connection failed: ' . $e->getMessage(),
@@ -133,6 +139,11 @@ class InstallerController extends Controller
                 'message' => 'Database installed successfully!',
             ]);
         } catch (\Exception $e) {
+            Log::error('Database installation failed', [
+                'host' => $request->host,
+                'database' => $request->database,
+                'error' => $e->getMessage(),
+            ]);
             return response()->json([
                 'success' => false,
                 'message' => 'Installation failed: ' . $e->getMessage(),
@@ -203,6 +214,11 @@ class InstallerController extends Controller
             ]);
         } catch (\Exception $e) {
             DB::rollBack();
+            Log::error('Admin account creation failed during installation', [
+                'organization_name' => $validated['organization_name'] ?? null,
+                'admin_email' => $validated['admin_email'] ?? null,
+                'error' => $e->getMessage(),
+            ]);
 
             return response()->json([
                 'success' => false,
