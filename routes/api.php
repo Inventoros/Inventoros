@@ -26,7 +26,7 @@ use Illuminate\Support\Facades\Route;
 */
 
 // API Version 1
-Route::prefix('v1')->group(function () {
+Route::prefix('v1')->as('api.')->group(function () {
     // Public routes
     Route::post('/login', [AuthController::class, 'login']);
 
