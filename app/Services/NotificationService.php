@@ -2,7 +2,7 @@
 
 namespace App\Services;
 
-use App\Models\Auth\User;
+use App\Models\User;
 use App\Models\Inventory\Product;
 use App\Models\Notification;
 use App\Models\Order\Order;
@@ -39,10 +39,8 @@ class NotificationService
     {
         // Get all users in the organization with manage_stock permission
         $users = User::where('organization_id', $product->organization_id)
-            ->whereHas('role', function ($query) {
-                $query->whereHas('permissions', function ($q) {
-                    $q->where('name', 'manage_stock');
-                });
+            ->whereHas('roles', function ($query) {
+                $query->whereJsonContains('permissions', 'manage_stock');
             })
             ->get();
 
@@ -78,10 +76,8 @@ class NotificationService
     {
         // Get all users in the organization with manage_stock permission
         $users = User::where('organization_id', $product->organization_id)
-            ->whereHas('role', function ($query) {
-                $query->whereHas('permissions', function ($q) {
-                    $q->where('name', 'manage_stock');
-                });
+            ->whereHas('roles', function ($query) {
+                $query->whereJsonContains('permissions', 'manage_stock');
             })
             ->get();
 
@@ -115,10 +111,8 @@ class NotificationService
     {
         // Get all users in the organization with view_orders permission
         $users = User::where('organization_id', $order->organization_id)
-            ->whereHas('role', function ($query) {
-                $query->whereHas('permissions', function ($q) {
-                    $q->where('name', 'view_orders');
-                });
+            ->whereHas('roles', function ($query) {
+                $query->whereJsonContains('permissions', 'view_orders');
             })
             ->where('id', '!=', $order->created_by) // Don't notify the creator
             ->get();
