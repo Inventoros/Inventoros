@@ -90,7 +90,9 @@ const submit = () => {
 };
 
 const availableProducts = computed(() => {
-    return props.products.filter(p => p.stock > 0);
+    return [...props.products]
+    .filter(p => p.stock > 0)
+    .sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: 'base' }));
 });
 </script>
 
