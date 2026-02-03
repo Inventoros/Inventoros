@@ -2,7 +2,7 @@
 
 namespace App\Services;
 
-use App\Models\Auth\User;
+use App\Models\User;
 use App\Models\Inventory\Product;
 use App\Models\Notification;
 use App\Models\Order\Order;
