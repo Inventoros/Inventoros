@@ -2,12 +2,14 @@
 
 namespace App\Services;
 
-use App\Models\User;
 use App\Models\Inventory\Product;
 use App\Models\Notification;
 use App\Models\Order\Order;
-use Illuminate\Support\Facades\Mail;
+use App\Models\User;
+use App\Services\EmailLogger;
+use App\Services\SettingsService;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 
 class NotificationService
 {
@@ -71,6 +73,11 @@ class NotificationService
             return;
         }
 
+        // Validate email address before sending
+        if (empty($user->email) || !filter_var($user->email, FILTER_VALIDATE_EMAIL)) {
+            return;
+        }
+
         try {
             // HOOK: Allow plugins to provide custom mailable
             $mailableClass = apply_filters('email_mailable_class', null, $type, $data);
@@ -91,6 +98,12 @@ class NotificationService
                     case 'order_rejected':
                         Mail::to($user->email)->send(new \App\Mail\OrderApprovalEmail($data));
                         break;
+                    default:
+                        Log::warning('No email mailable configured for notification type', [
+                            'type' => $type,
+                            'user_id' => $user->id
+                        ]);
+                        return;
                 }
             }
 
@@ -189,6 +202,12 @@ class NotificationService
                 ],
                 'action_url' => route('products.show', $product->id),
                 'priority' => 'urgent',
+            ]);
+
+            // Send email notification
+            self::sendEmailNotification($user, 'out_of_stock', [
+                'product' => $product,
+                'notification_url' => route('products.show', $product->id),
             ]);
         }
     }
