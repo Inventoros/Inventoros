@@ -26,7 +26,7 @@ class OrderStatusEmail extends Mailable
      */
     public function build()
     {
-        return $this->subject('Order Status Updated - #' . $this->data['order']->order_number)
+        return $this->subject('Order Status Updated - #' . ($this->data['order']?->order_number ?? 'N/A'))
             ->view('emails.order-status')
             ->with($this->data);
     }
