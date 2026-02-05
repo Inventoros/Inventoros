@@ -6,6 +6,9 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
+    /**
+     * Run the migrations.
+     */
     public function up(): void
     {
         Schema::create('email_logs', function (Blueprint $table) {
@@ -15,12 +18,15 @@ return new class extends Migration
             $table->string('type');
             $table->enum('status', ['sent', 'failed']);
             $table->text('error_message')->nullable();
-            $table->timestamp('created_at');
+            $table->timestamps();
 
             $table->index(['organization_id', 'created_at']);
         });
     }
 
+    /**
+     * Reverse the migrations.
+     */
     public function down(): void
     {
         Schema::dropIfExists('email_logs');
