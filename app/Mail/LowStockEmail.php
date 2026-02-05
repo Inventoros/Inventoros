@@ -26,7 +26,7 @@ class LowStockEmail extends Mailable
      */
     public function build()
     {
-        return $this->subject('Low Stock Alert - ' . $this->data['product']->name)
+        return $this->subject('Low Stock Alert - ' . ($this->data['product']?->name ?? 'Unknown Product'))
             ->view('emails.low-stock-alert')
             ->with($this->data);
     }
