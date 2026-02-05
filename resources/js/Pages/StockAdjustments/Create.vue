@@ -1,7 +1,8 @@
 <script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head, Link, useForm } from '@inertiajs/vue3';
-import { computed, watch } from 'vue';
+import BarcodeScannerModal from '@/Components/BarcodeScannerModal.vue';
+import { computed, watch, ref, nextTick } from 'vue';
 
 const props = defineProps({
     products: Array,
@@ -15,6 +16,28 @@ const form = useForm({
     reason: '',
     notes: '',
 });
+
+// Barcode scanner state
+const showScannerModal = ref(false);
+
+const openScanner = () => {
+    showScannerModal.value = true;
+};
+
+const closeScanner = () => {
+    showScannerModal.value = false;
+};
+
+const handleProductFound = (product) => {
+    form.product_id = product.id;
+    closeScanner();
+
+    // Focus next field (adjustment quantity)
+    nextTick(() => {
+        const qtyInput = document.querySelector('input[type="number"]');
+        if (qtyInput) qtyInput.focus();
+    });
+};
 
 const selectedProduct = computed(() => {
     return props.products.find(p => p.id === form.product_id);
@@ -77,17 +100,31 @@ const submit = () => {
                             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                                 Product <span class="text-red-500">*</span>
                             </label>
-                            <select
-                                v-model="form.product_id"
-                                required
-                                class="block w-full rounded-md bg-gray-50 dark:bg-dark-bg border-gray-200 dark:border-dark-border text-gray-900 dark:text-gray-100 shadow-sm focus:border-primary-400 focus:ring-primary-400"
-                                :class="{ 'border-red-500': form.errors.product_id }"
-                            >
-                                <option value="">Select a product</option>
-                                <option v-for="product in products" :key="product.id" :value="product.id">
-                                    {{ product.name }} ({{ product.sku }}) - Current Stock: {{ product.stock }}
-                                </option>
-                            </select>
+                            <div class="relative">
+                                <select
+                                    v-model="form.product_id"
+                                    required
+                                    class="block w-full rounded-md bg-gray-50 dark:bg-dark-bg border-gray-200 dark:border-dark-border text-gray-900 dark:text-gray-100 shadow-sm focus:border-primary-400 focus:ring-primary-400 pr-12"
+                                    :class="{ 'border-red-500': form.errors.product_id }"
+                                >
+                                    <option value="">Select a product</option>
+                                    <option v-for="product in products" :key="product.id" :value="product.id">
+                                        {{ product.name }} ({{ product.sku }}) - Current Stock: {{ product.stock }}
+                                    </option>
+                                </select>
+                                <!-- Scan Icon Button -->
+                                <button
+                                    v-if="$page.props.auth.permissions.includes('stock_adjustments.create')"
+                                    type="button"
+                                    @click="openScanner"
+                                    class="absolute right-2 top-1/2 -translate-y-1/2 p-2 text-gray-400 hover:text-primary-400 transition-colors"
+                                    title="Scan barcode to find product"
+                                >
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" />
+                                    </svg>
+                                </button>
+                            </div>
                             <p v-if="form.errors.product_id" class="mt-1 text-sm text-red-600 dark:text-red-400">
                                 {{ form.errors.product_id }}
                             </p>
@@ -228,5 +265,12 @@ const submit = () => {
                 </form>
             </div>
         </div>
+
+        <!-- Barcode Scanner Modal -->
+        <BarcodeScannerModal
+            :show="showScannerModal"
+            @close="closeScanner"
+            @product-found="handleProductFound"
+        />
     </AuthenticatedLayout>
 </template>
