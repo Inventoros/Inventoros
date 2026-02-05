@@ -30,7 +30,7 @@
                 <span style="color: #6b7280; font-size: 14px;">Organization:</span>
             </td>
             <td width="60%" style="padding: 8px 0;">
-                <strong style="color: #111827; font-size: 14px;">{{ $organization }}</strong>
+                <strong style="color: #111827; font-size: 14px;">{{ $organization ?? 'Your Organization' }}</strong>
             </td>
         </tr>
         <tr>
@@ -38,7 +38,7 @@
                 <span style="color: #6b7280; font-size: 14px;">Tested By:</span>
             </td>
             <td width="60%" style="padding: 8px 0;">
-                <strong style="color: #111827; font-size: 14px;">{{ $tested_by }}</strong>
+                <strong style="color: #111827; font-size: 14px;">{{ $tested_by ?? 'Unknown' }}</strong>
             </td>
         </tr>
         <tr>

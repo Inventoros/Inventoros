@@ -17,10 +17,10 @@
                     <tr>
                         <td>
                             <strong style="color: #92400e; font-size: 18px; display: block; margin-bottom: 8px;">
-                                {{ $product->name }}
+                                {{ $product->name ?? 'Unknown Product' }}
                             </strong>
                             <span style="color: #78350f; font-size: 14px;">
-                                SKU: {{ $product->sku }}
+                                SKU: {{ $product->sku ?? 'N/A' }}
                             </span>
                         </td>
                     </tr>
@@ -33,7 +33,7 @@
                                             Current Stock
                                         </span>
                                         <strong style="color: #dc2626; font-size: 24px;">
-                                            {{ $product->stock }}
+                                            {{ $product->stock ?? 0 }}
                                         </strong>
                                     </td>
                                     <td width="50%">
@@ -41,7 +41,7 @@
                                             Minimum Stock
                                         </span>
                                         <strong style="color: #92400e; font-size: 24px;">
-                                            {{ $product->min_stock }}
+                                            {{ $product->min_stock ?? 0 }}
                                         </strong>
                                     </td>
                                 </tr>
@@ -60,7 +60,7 @@
     <table width="100%" cellpadding="0" cellspacing="0" style="margin-top: 30px;">
         <tr>
             <td align="center">
-                <a href="{{ $notification_url }}" style="display: inline-block; padding: 14px 32px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: #ffffff; text-decoration: none; border-radius: 6px; font-weight: 600; font-size: 16px;">
+                <a href="{{ $notification_url ?? '#' }}" style="display: inline-block; padding: 14px 32px; background-color: #667eea; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: #ffffff; text-decoration: none; border-radius: 6px; font-weight: 600; font-size: 16px;">
                     View Product Details
                 </a>
             </td>
