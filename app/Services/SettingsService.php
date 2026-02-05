@@ -4,25 +4,38 @@ namespace App\Services;
 
 use App\Models\Setting;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Config;
+use Illuminate\Support\Facades\Log;
+use RuntimeException;
 
 class SettingsService
 {
     /**
      * Get a setting value for current organization.
      */
-    public static function get(string $key, $default = null)
+    public static function get(string $key, mixed $default = null): mixed
     {
-        $organizationId = auth()->user()->organization_id;
+        $organizationId = auth()->user()?->organization_id;
+        if (!$organizationId) {
+            throw new RuntimeException('User must be authenticated to access settings');
+        }
 
-        return Cache::remember("settings.{$organizationId}.{$key}", 3600, function () use ($organizationId, $key, $default) {
-            $setting = Setting::where('organization_id', $organizationId)
-                ->where('key', $key)
-                ->first();
+        // First check if this is an encrypted setting - if so, skip cache
+        $setting = Setting::where('organization_id', $organizationId)
+            ->where('key', $key)
+            ->first();
 
-            if (!$setting) {
-                return $default;
-            }
+        if (!$setting) {
+            return $default;
+        }
 
+        // Don't cache encrypted settings for security
+        if ($setting->encrypted) {
+            return $setting->value;
+        }
+
+        // For non-encrypted settings, use cache
+        return Cache::remember("settings.{$organizationId}.{$key}", 3600, function () use ($setting) {
             return $setting->value;
         });
     }
@@ -32,7 +45,10 @@ class SettingsService
      */
     public static function set(string $key, $value, bool $encrypted = false): void
     {
-        $organizationId = auth()->user()->organization_id;
+        $organizationId = auth()->user()?->organization_id;
+        if (!$organizationId) {
+            throw new RuntimeException('User must be authenticated to access settings');
+        }
 
         Setting::updateOrCreate(
             [
@@ -81,26 +97,34 @@ class SettingsService
     {
         $config = self::getEmailConfig();
 
-        \Config::set('mail.default', $config['provider']);
-        \Config::set('mail.from.address', $config['from_address']);
-        \Config::set('mail.from.name', $config['from_name']);
+        // Validate critical configuration
+        if (empty($config['from_address'])) {
+            Log::warning('Email configuration missing critical field: from_address');
+        }
+        if (empty($config['provider'])) {
+            Log::warning('Email configuration missing critical field: provider');
+        }
+
+        Config::set('mail.default', $config['provider']);
+        Config::set('mail.from.address', $config['from_address']);
+        Config::set('mail.from.name', $config['from_name']);
 
         switch ($config['provider']) {
             case 'smtp':
-                \Config::set('mail.mailers.smtp.host', $config['smtp']['host']);
-                \Config::set('mail.mailers.smtp.port', $config['smtp']['port']);
-                \Config::set('mail.mailers.smtp.username', $config['smtp']['username']);
-                \Config::set('mail.mailers.smtp.password', $config['smtp']['password']);
-                \Config::set('mail.mailers.smtp.encryption', $config['smtp']['encryption']);
+                Config::set('mail.mailers.smtp.host', $config['smtp']['host']);
+                Config::set('mail.mailers.smtp.port', $config['smtp']['port']);
+                Config::set('mail.mailers.smtp.username', $config['smtp']['username']);
+                Config::set('mail.mailers.smtp.password', $config['smtp']['password']);
+                Config::set('mail.mailers.smtp.encryption', $config['smtp']['encryption']);
                 break;
 
             case 'mailgun':
-                \Config::set('services.mailgun.domain', $config['mailgun']['domain']);
-                \Config::set('services.mailgun.secret', $config['mailgun']['secret']);
+                Config::set('services.mailgun.domain', $config['mailgun']['domain']);
+                Config::set('services.mailgun.secret', $config['mailgun']['secret']);
                 break;
 
             case 'sendgrid':
-                \Config::set('services.sendgrid.api_key', $config['sendgrid']['api_key']);
+                Config::set('services.sendgrid.api_key', $config['sendgrid']['api_key']);
                 break;
         }
     }
