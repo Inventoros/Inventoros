@@ -5,6 +5,7 @@ namespace App\Mail;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
 use Illuminate\Queue\SerializesModels;
+use Illuminate\Support\Str;
 
 class OrderApprovalEmail extends Mailable
 {
@@ -26,9 +27,9 @@ class OrderApprovalEmail extends Mailable
      */
     public function build()
     {
-        $status = $this->data['order']->approval_status;
+        $status = $this->data['order']?->approval_status ?? 'pending';
 
-        return $this->subject('Order ' . ucfirst($status) . ' - #' . $this->data['order']->order_number)
+        return $this->subject('Order ' . Str::title(str_replace('_', ' ', $status)) . ' - #' . ($this->data['order']?->order_number ?? 'N/A'))
             ->view('emails.order-approval')
             ->with($this->data);
     }
