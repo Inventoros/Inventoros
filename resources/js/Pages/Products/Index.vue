@@ -40,7 +40,11 @@ const handleProductFound = (product) => {
 const handleKeydown = (e) => {
     if ((e.ctrlKey || e.metaKey) && e.key === 'b') {
         e.preventDefault();
-        showScannerModal.value = !showScannerModal.value;
+        if (showScannerModal.value) {
+            closeScanner();
+        } else {
+            openScanner();
+        }
     }
 };
 
