@@ -9,13 +9,13 @@
     @endphp
 
     <h2 style="margin: 0 0 20px 0; color: #111827; font-size: 22px; font-weight: 600;">
-        {{ $icon }} Order {{ ucfirst($order->approval_status) }}
+        {{ $icon }} Order {{ ucfirst($order->approval_status ?? 'pending') }}
     </h2>
 
     <p style="margin: 0 0 20px 0; color: #374151; font-size: 16px; line-height: 1.6;">
-        Your order <strong>#{{ $order->order_number }}</strong> has been
-        <strong style="color: {{ $statusColor }};">{{ $order->approval_status }}</strong>
-        by {{ $order->approver->name }}.
+        Your order <strong>#{{ $order->order_number ?? 'N/A' }}</strong> has been
+        <strong style="color: {{ $statusColor }};">{{ $order->approval_status ?? 'pending' }}</strong>
+        by {{ optional($order->approver)->name ?? 'System' }}.
     </p>
 
     <!-- Status Box -->
@@ -23,12 +23,12 @@
         <tr>
             <td style="padding: 20px;">
                 <strong style="color: {{ $statusColor }}; font-size: 16px; display: block; margin-bottom: 10px;">
-                    Status: {{ ucfirst($order->approval_status) }}
+                    Status: {{ ucfirst($order->approval_status ?? 'pending') }}
                 </strong>
 
-                @if($order->approval_notes)
+                @if($order->approval_notes ?? '')
                     <p style="margin: 10px 0 0 0; color: #374151; font-size: 14px; line-height: 1.5;">
-                        <strong>Notes:</strong> {{ $order->approval_notes }}
+                        <strong>Notes:</strong> {{ $order->approval_notes ?? '' }}
                     </p>
                 @endif
             </td>
@@ -42,7 +42,7 @@
                 <span style="color: #6b7280; font-size: 14px;">Order Number:</span>
             </td>
             <td width="50%" style="padding: 8px 0; text-align: right;">
-                <strong style="color: #111827; font-size: 14px;">#{{ $order->order_number }}</strong>
+                <strong style="color: #111827; font-size: 14px;">#{{ $order->order_number ?? 'N/A' }}</strong>
             </td>
         </tr>
         <tr>
@@ -50,7 +50,7 @@
                 <span style="color: #6b7280; font-size: 14px;">Customer:</span>
             </td>
             <td width="50%" style="padding: 8px 0; text-align: right;">
-                <strong style="color: #111827; font-size: 14px;">{{ $order->customer_name }}</strong>
+                <strong style="color: #111827; font-size: 14px;">{{ $order->customer_name ?? 'Unknown' }}</strong>
             </td>
         </tr>
         <tr>
@@ -58,7 +58,7 @@
                 <span style="color: #6b7280; font-size: 14px;">Total:</span>
             </td>
             <td width="50%" style="padding: 8px 0; text-align: right;">
-                <strong style="color: #111827; font-size: 14px;">${{ number_format($order->total, 2) }}</strong>
+                <strong style="color: #111827; font-size: 14px;">${{ number_format($order->total ?? 0, 2) }}</strong>
             </td>
         </tr>
         <tr>
@@ -66,7 +66,7 @@
                 <span style="color: #6b7280; font-size: 14px;">{{ $isApproved ? 'Approved' : 'Reviewed' }} By:</span>
             </td>
             <td width="50%" style="padding: 8px 0; text-align: right;">
-                <strong style="color: #111827; font-size: 14px;">{{ $order->approver->name }}</strong>
+                <strong style="color: #111827; font-size: 14px;">{{ optional($order->approver)->name ?? 'System' }}</strong>
             </td>
         </tr>
     </table>
@@ -78,7 +78,7 @@
     <table width="100%" cellpadding="0" cellspacing="0" style="margin-top: 30px;">
         <tr>
             <td align="center">
-                <a href="{{ $notification_url }}" style="display: inline-block; padding: 14px 32px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: #ffffff; text-decoration: none; border-radius: 6px; font-weight: 600; font-size: 16px;">
+                <a href="{{ $notification_url ?? '#' }}" style="display: inline-block; padding: 14px 32px; background-color: #667eea; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: #ffffff; text-decoration: none; border-radius: 6px; font-weight: 600; font-size: 16px;">
                     View Order Details
                 </a>
             </td>
