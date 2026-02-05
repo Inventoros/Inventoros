@@ -23,6 +23,7 @@ Homestead.json
 Homestead.yaml
 Thumbs.db
 /storage/framework/activated_plugins.json
+.worktrees
 
 # Playwright
 /e2e/.auth/

@@ -1,8 +1,9 @@
 <script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import PluginSlot from '@/Components/PluginSlot.vue';
+import BarcodeScannerModal from '@/Components/BarcodeScannerModal.vue';
 import { Head, Link, router } from '@inertiajs/vue3';
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted, onUnmounted } from 'vue';
 
 const props = defineProps({
     products: Object,
@@ -19,6 +20,41 @@ const location = ref(props.filters?.location || '');
 // Bulk selection for barcode printing
 const selectedProducts = ref([]);
 const selectAll = ref(false);
+
+// Barcode scanner state
+const showScannerModal = ref(false);
+
+const openScanner = () => {
+    showScannerModal.value = true;
+};
+
+const closeScanner = () => {
+    showScannerModal.value = false;
+};
+
+const handleProductFound = (product) => {
+    router.visit(route('products.show', product.id));
+};
+
+// Keyboard shortcut: Ctrl+B to open scanner
+const handleKeydown = (e) => {
+    if ((e.ctrlKey || e.metaKey) && e.key === 'b') {
+        e.preventDefault();
+        if (showScannerModal.value) {
+            closeScanner();
+        } else {
+            openScanner();
+        }
+    }
+};
+
+onMounted(() => {
+    window.addEventListener('keydown', handleKeydown);
+});
+
+onUnmounted(() => {
+    window.removeEventListener('keydown', handleKeydown);
+});
 
 const toggleSelectAll = () => {
     if (selectAll.value) {
@@ -453,5 +489,24 @@ const isLowStock = (product) => {
                 <PluginSlot slot="footer" :components="pluginComponents?.footer" />
             </div>
         </div>
+
+        <!-- Floating Barcode Scan Button -->
+        <button
+            v-if="$page.props.auth.permissions.includes('products.view')"
+            @click="openScanner"
+            class="fixed bottom-6 right-6 w-14 h-14 bg-primary-400 hover:bg-primary-500 text-white rounded-full shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-110 flex items-center justify-center z-40"
+            title="Scan Barcode (Ctrl+B)"
+        >
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" />
+            </svg>
+        </button>
+
+        <!-- Barcode Scanner Modal -->
+        <BarcodeScannerModal
+            :show="showScannerModal"
+            @close="closeScanner"
+            @product-found="handleProductFound"
+        />
     </AuthenticatedLayout>
 </template>
