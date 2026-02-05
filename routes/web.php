@@ -6,6 +6,7 @@ use App\Http\Controllers\Admin\PluginController;
 use App\Http\Controllers\Admin\UpdateController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\CustomerController;
+use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\Import\ImportExportController;
 use App\Http\Controllers\Install\InstallerController;
 use App\Http\Controllers\Inventory\ProductController;
@@ -198,6 +199,13 @@ Route::middleware('auth')->group(function () {
             Route::patch('/password', [\App\Http\Controllers\Admin\AccountSettingsController::class, 'updatePassword'])->name('update.password');
             Route::patch('/notifications', [\App\Http\Controllers\Admin\AccountSettingsController::class, 'updateNotifications'])->name('update.notifications');
             Route::patch('/preferences', [\App\Http\Controllers\Admin\AccountSettingsController::class, 'updatePreferences'])->name('update.preferences');
+        });
+
+        // Email Settings (admin only)
+        Route::middleware('permission:manage_organization')->group(function () {
+            Route::get('/email', [SettingsController::class, 'index'])->name('email.index');
+            Route::post('/email', [SettingsController::class, 'updateEmail'])->name('email.update');
+            Route::post('/email/test', [SettingsController::class, 'testEmail'])->name('email.test');
         });
     });
 
