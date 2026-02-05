@@ -23,7 +23,7 @@ const closeNotifications = () => {
 
 onMounted(() => {
     // Auto-expand settings submenu if on a settings page
-    if (route().current('settings.*') || route().current('account.*')) {
+    if (route().current('settings.*') || route().current('account.*') || route().current('settings.email.*')) {
         settingsSubmenuOpen.value = true;
     }
 });
@@ -307,6 +307,22 @@ const navItems = {
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
                                 </svg>
                                 <span class="font-medium">Organization</span>
+                            </Link>
+
+                            <Link
+                                v-if="hasPermission('manage_organization')"
+                                :href="route('settings.email.index')"
+                                :class="[
+                                    'flex items-center gap-3 px-3 py-2 rounded-lg transition-all duration-150 text-sm',
+                                    route().current('settings.email.*')
+                                        ? 'bg-primary-400/10 text-primary-400'
+                                        : 'text-gray-400 hover:text-gray-200 hover:bg-dark-bg/50'
+                                ]"
+                            >
+                                <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                                </svg>
+                                <span class="font-medium">Email</span>
                             </Link>
 
                             <Link
