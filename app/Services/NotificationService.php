@@ -6,6 +6,8 @@ use App\Models\User;
 use App\Models\Inventory\Product;
 use App\Models\Notification;
 use App\Models\Order\Order;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Log;
 
 class NotificationService
 {
@@ -30,6 +32,87 @@ class NotificationService
 
         // Default to true if preference not set
         return $preferences[$preferenceKey] ?? true;
+    }
+
+    /**
+     * Send email notification to user.
+     */
+    private static function sendEmailNotification(User $user, string $type, array $data): void
+    {
+        // Check if user has email enabled
+        $preferences = $user->notification_preferences ?? [];
+        if (!($preferences['email_enabled'] ?? true)) {
+            return;
+        }
+
+        // Check specific email preference
+        $emailPreferenceMap = [
+            'low_stock' => 'email_low_stock',
+            'out_of_stock' => 'email_low_stock',
+            'order_created' => 'email_orders',
+            'order_status_updated' => 'email_orders',
+            'order_approved' => 'email_approvals',
+            'order_rejected' => 'email_approvals',
+        ];
+
+        $prefKey = $emailPreferenceMap[$type] ?? null;
+        if ($prefKey && !($preferences[$prefKey] ?? true)) {
+            return;
+        }
+
+        // Apply organization's email configuration
+        SettingsService::applyEmailConfig();
+
+        // HOOK: Allow plugins to modify email data
+        $data = apply_filters('email_notification_data', $data, $type, $user);
+
+        // HOOK: Allow plugins to prevent sending
+        if (!apply_filters('should_send_email', true, $type, $user, $data)) {
+            return;
+        }
+
+        try {
+            // HOOK: Allow plugins to provide custom mailable
+            $mailableClass = apply_filters('email_mailable_class', null, $type, $data);
+
+            if ($mailableClass) {
+                Mail::to($user->email)->send(new $mailableClass($data));
+            } else {
+                // Use default email types
+                switch ($type) {
+                    case 'low_stock':
+                    case 'out_of_stock':
+                        Mail::to($user->email)->send(new \App\Mail\LowStockEmail($data));
+                        break;
+                    case 'order_status_updated':
+                        Mail::to($user->email)->send(new \App\Mail\OrderStatusEmail($data));
+                        break;
+                    case 'order_approved':
+                    case 'order_rejected':
+                        Mail::to($user->email)->send(new \App\Mail\OrderApprovalEmail($data));
+                        break;
+                }
+            }
+
+            // HOOK: After email sent
+            do_action('email_notification_sent', $type, $user, $data);
+
+            // Log success
+            EmailLogger::logSent($type, $user, $data);
+
+        } catch (\Exception $e) {
+            // HOOK: Email failed
+            do_action('email_notification_failed', $type, $user, $data, $e);
+
+            // Log failure
+            EmailLogger::logFailed($type, $user, $e);
+
+            Log::error('Failed to send email notification', [
+                'user_id' => $user->id,
+                'type' => $type,
+                'error' => $e->getMessage()
+            ]);
+        }
     }
 
     /**
@@ -65,6 +148,12 @@ class NotificationService
                 ],
                 'action_url' => route('products.show', $product->id),
                 'priority' => $product->stock == 0 ? 'urgent' : 'high',
+            ]);
+
+            // Send email notification
+            self::sendEmailNotification($user, 'low_stock', [
+                'product' => $product,
+                'notification_url' => route('products.show', $product->id),
             ]);
         }
     }
@@ -170,6 +259,13 @@ class NotificationService
             'action_url' => route('orders.show', $order->id),
             'priority' => $order->status === 'cancelled' ? 'high' : 'normal',
         ]);
+
+        // Send email notification
+        self::sendEmailNotification($user, 'order_status_updated', [
+            'order' => $order,
+            'old_status' => $oldStatus,
+            'notification_url' => route('orders.show', $order->id),
+        ]);
     }
 
     /**
@@ -257,6 +353,12 @@ class NotificationService
             ],
             'action_url' => route('orders.show', $order->id),
             'priority' => $status === 'rejected' ? 'high' : 'normal',
+        ]);
+
+        // Send email notification
+        self::sendEmailNotification($user, 'order_' . $status, [
+            'order' => $order,
+            'notification_url' => route('orders.show', $order->id),
         ]);
     }
 }
