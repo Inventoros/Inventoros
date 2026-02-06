@@ -115,7 +115,7 @@ php artisan queue:work # Queue worker (if needed)
 - [x] Product categorization system
 - [x] Supplier management
 - [x] Purchase order management
-- [ ] Product variants
+- [x] Product variants with options (size, color, material)
 - [ ] Advanced stock movement workflows
 
 ### Phase 3 - Extensions & API ✅ (v1.0 Beta)
@@ -127,11 +127,13 @@ php artisan queue:work # Queue worker (if needed)
 - [ ] GraphQL API layer
 - [ ] API documentation
 
-### Phase 4 - Advanced Features 🚧 (Partial - v1.0 Beta)
+### Phase 4 - Advanced Features ✅ (v1.0 Beta)
 - [x] Barcode/QR code generation
+- [x] Barcode scanning integration (Products, Stock Adjustments, Purchase Orders)
 - [x] Reporting and analytics dashboard (Inventory Valuation, Stock Movement, Sales Analysis, Low Stock, Category Performance)
 - [x] Audit logging (Activity Log with filtering)
-- [ ] Barcode/QR code scanning
+- [x] Email notification system (multi-provider, templates, user preferences)
+- [x] Webhook system (event subscriptions, HMAC signing, retry logic, delivery logs)
 - [ ] Advanced permissions (custom permission sets)
 - [ ] Multi-warehouse support
 
@@ -141,9 +143,11 @@ php artisan queue:work # Queue worker (if needed)
 
 **Inventory & Product Management**
 - **Product Management**: Complete inventory CRUD with SKU, pricing, stock levels, categories, locations, and barcodes
+- **Product Variants**: Support for product variants with options (size, color, material) and variant-specific SKUs, pricing, and stock
 - **Multi-Currency Support**: Product pricing in multiple currencies with conversion support
 - **Categories & Locations**: Organize products by category and track warehouse locations
-- **Barcode Generation**: Automatic barcode generation for products
+- **Barcode Generation**: Automatic barcode generation (UPC/EAN/Code128) with bulk printing
+- **Barcode Scanning**: Camera-based barcode scanning in Products, Stock Adjustments, and Purchase Orders
 - **CSV Import/Export**: Bulk import and export of product data
 
 **Order & Warehouse Management**
@@ -170,6 +174,10 @@ php artisan queue:work # Queue worker (if needed)
 - **Notification System**: Header dropdown with notification management
 - **Activity Logging**: Complete audit log with filtering by user, action, date, and subject type
 
+**Notifications & Integrations**
+- **Email Notifications**: Multi-provider support (SMTP, Mailgun, SendGrid), customizable templates, per-user preferences
+- **Webhook System**: Event subscriptions, HMAC-SHA256 signing, exponential backoff retry, delivery logs with response tracking
+
 **Reporting & Analytics**
 - **Dashboard Analytics**: Overview with stats, recent activity, stock movements, and top products
 - **Inventory Valuation Report**: Stock value by product and category
@@ -191,11 +199,11 @@ php artisan queue:work # Queue worker (if needed)
 
 ### 🔜 Coming Next
 - GraphQL API layer
-- API documentation
-- Product variants
+- API documentation (OpenAPI/Swagger)
+- Stock transfers between locations
 - Advanced inventory workflows
-- Barcode scanning support
 - Multi-warehouse support
+- Custom report builder
 - Advanced permissions (custom permission sets)
 
 ## Contributing
@@ -233,6 +241,8 @@ php artisan test --testsuite=Unit
 ## Documentation
 
 - [cPanel Deployment Guide](CPANEL.md) - Deploy Inventoros on shared hosting with cPanel
+- [Email Notifications](docs/features/email-notifications.md) - Configuration and usage guide
+- [Barcode Scanning](docs/features/barcode-scanning.md) - Camera-based barcode scanning integration
 - [Installation Guide](docs/installation.md) (Coming Soon)
 - [Plugin Development](docs/plugins.md) (Coming Soon)
 - [API Documentation](docs/api.md) (Coming Soon)
