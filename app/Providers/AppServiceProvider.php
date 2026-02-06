@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Listeners\WebhookEventSubscriber;
 use App\Models\Inventory\Product;
 use App\Models\Order\Order;
 use App\Observers\OrderObserver;
@@ -40,5 +41,8 @@ class AppServiceProvider extends ServiceProvider
             $pluginService = app(PluginService::class);
             $pluginService->loadActivePlugins();
         }
+
+        // Register webhook event subscriber
+        WebhookEventSubscriber::subscribe();
     }
 }
