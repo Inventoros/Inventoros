@@ -44,6 +44,7 @@ class WebhookController extends Controller
         return Inertia::render('Settings/Webhooks/Index', [
             'webhooks' => $webhooks,
             'availableEvents' => WebhookService::availableEvents(),
+            'eventGroups' => WebhookService::eventGroups(),
         ]);
     }
 
@@ -97,6 +98,7 @@ class WebhookController extends Controller
             'webhook' => $webhook,
             'deliveries' => $deliveries,
             'availableEvents' => WebhookService::availableEvents(),
+            'eventGroups' => WebhookService::eventGroups(),
         ]);
     }
 
