@@ -2,7 +2,10 @@
 
 ## Git Commit Guidelines
 
-**IMPORTANT:** Never include "Co-Authored-By: Claude" in commit messages. All commits should be attributed to the human developer only.
+**IMPORTANT:**
+- Never include "Co-Authored-By: Claude" in commit messages
+- Never mention "Claude Code" or "Claude" in commits, PRs, or generated content
+- All commits should be attributed to the human developer only
 
 ## Worktree Directory
 
