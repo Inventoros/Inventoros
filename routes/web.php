@@ -7,6 +7,7 @@ use App\Http\Controllers\Admin\UpdateController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\SettingsController;
+use App\Http\Controllers\WebhookController;
 use App\Http\Controllers\Import\ImportExportController;
 use App\Http\Controllers\Install\InstallerController;
 use App\Http\Controllers\Inventory\ProductController;
@@ -207,6 +208,14 @@ Route::middleware('auth')->group(function () {
             Route::post('/email', [SettingsController::class, 'updateEmail'])->name('email.update');
             Route::post('/email/test', [SettingsController::class, 'testEmail'])->name('email.test');
         });
+    });
+
+    // Webhooks
+    Route::middleware('permission:manage_organization')->group(function () {
+        Route::resource('webhooks', WebhookController::class);
+        Route::post('webhooks/{webhook}/regenerate-secret', [WebhookController::class, 'regenerateSecret'])->name('webhooks.regenerate-secret');
+        Route::post('webhooks/{webhook}/test', [WebhookController::class, 'test'])->name('webhooks.test');
+        Route::post('webhook-deliveries/{delivery}/retry', [WebhookController::class, 'retryDelivery'])->name('webhook-deliveries.retry');
     });
 
     // Activity Log - Permission based
