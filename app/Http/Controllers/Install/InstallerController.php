@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers\Install;
 
 use App\Http\Controllers\Controller;
@@ -13,10 +15,18 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
 
+/**
+ * Controller for handling application installation.
+ *
+ * Manages the installation wizard including system requirements check,
+ * database configuration, and admin account creation.
+ */
 class InstallerController extends Controller
 {
     /**
      * Show the installer welcome page.
+     *
+     * @return \Inertia\Response|\Illuminate\Http\RedirectResponse
      */
     public function index()
     {
@@ -29,6 +39,8 @@ class InstallerController extends Controller
 
     /**
      * Check system requirements.
+     *
+     * @return \Inertia\Response|\Illuminate\Http\RedirectResponse
      */
     public function requirements()
     {
@@ -46,6 +58,8 @@ class InstallerController extends Controller
 
     /**
      * Show database configuration form.
+     *
+     * @return \Inertia\Response|\Illuminate\Http\RedirectResponse
      */
     public function database()
     {
@@ -65,6 +79,9 @@ class InstallerController extends Controller
 
     /**
      * Test database connection.
+     *
+     * @param Request $request The incoming HTTP request containing database credentials
+     * @return \Illuminate\Http\JsonResponse
      */
     public function testDatabase(Request $request)
     {
@@ -102,6 +119,9 @@ class InstallerController extends Controller
 
     /**
      * Save database configuration and run migrations.
+     *
+     * @param Request $request The incoming HTTP request containing database credentials
+     * @return \Illuminate\Http\JsonResponse
      */
     public function installDatabase(Request $request)
     {
@@ -153,6 +173,8 @@ class InstallerController extends Controller
 
     /**
      * Show admin account creation form.
+     *
+     * @return \Inertia\Response|\Illuminate\Http\RedirectResponse
      */
     public function admin()
     {
@@ -165,6 +187,9 @@ class InstallerController extends Controller
 
     /**
      * Create admin account and organization.
+     *
+     * @param Request $request The incoming HTTP request containing admin account data
+     * @return \Illuminate\Http\JsonResponse
      */
     public function createAdmin(Request $request)
     {
@@ -229,6 +254,8 @@ class InstallerController extends Controller
 
     /**
      * Show installation complete page.
+     *
+     * @return \Inertia\Response|\Illuminate\Http\RedirectResponse
      */
     public function complete()
     {
@@ -241,6 +268,8 @@ class InstallerController extends Controller
 
     /**
      * Check if the application is already installed.
+     *
+     * @return bool
      */
     protected function isInstalled(): bool
     {
@@ -253,6 +282,8 @@ class InstallerController extends Controller
 
     /**
      * Check system requirements.
+     *
+     * @return array<string, array{name: string, required: string, current: string, met: bool}>
      */
     protected function checkRequirements(): array
     {
@@ -316,6 +347,9 @@ class InstallerController extends Controller
 
     /**
      * Update .env file with new values.
+     *
+     * @param array<string, string> $data The key-value pairs to update
+     * @return void
      */
     protected function updateEnvFile(array $data): void
     {

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Models;
 
 use App\Models\Auth\Organization;
@@ -9,6 +11,18 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
+/**
+ * Represents an organization-specific setting.
+ *
+ * @property int $id
+ * @property int $organization_id
+ * @property string $key
+ * @property string|null $value
+ * @property bool $encrypted
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property-read \App\Models\Auth\Organization $organization
+ */
 class Setting extends Model
 {
     use HasFactory, LogsActivity;
@@ -39,6 +53,8 @@ class Setting extends Model
 
     /**
      * Get the organization that owns the setting.
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo<\App\Models\Auth\Organization, $this>
      */
     public function organization(): BelongsTo
     {
@@ -48,7 +64,7 @@ class Setting extends Model
     /**
      * Get/set the value attribute with automatic encryption/decryption.
      *
-     * @return \Illuminate\Database\Eloquent\Casts\Attribute
+     * @return \Illuminate\Database\Eloquent\Casts\Attribute<string, string>
      */
     protected function value(): Attribute
     {
@@ -61,9 +77,9 @@ class Setting extends Model
     /**
      * Scope a query to only include settings from a specific organization.
      *
-     * @param \Illuminate\Database\Eloquent\Builder $query
+     * @param \Illuminate\Database\Eloquent\Builder<static> $query
      * @param int $organizationId
-     * @return \Illuminate\Database\Eloquent\Builder
+     * @return \Illuminate\Database\Eloquent\Builder<static>
      */
     public function scopeForOrganization($query, $organizationId)
     {

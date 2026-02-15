@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Requests\Auth;
 
 use Illuminate\Auth\Events\Lockout;
@@ -9,8 +11,14 @@ use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 
-class LoginRequest extends FormRequest
+/**
+ * Form request for handling user authentication.
+ *
+ * Validates credentials and manages rate limiting for login attempts.
+ */
+final class LoginRequest extends FormRequest
 {
+    public const MAX_LOGIN_ATTEMPTS = 5;
     /**
      * Determine if the user is authorized to make this request.
      */
@@ -59,7 +67,7 @@ class LoginRequest extends FormRequest
      */
     public function ensureIsNotRateLimited(): void
     {
-        if (! RateLimiter::tooManyAttempts($this->throttleKey(), 5)) {
+        if (! RateLimiter::tooManyAttempts($this->throttleKey(), self::MAX_LOGIN_ATTEMPTS)) {
             return;
         }
 

@@ -1,9 +1,23 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Models\System;
 
 use Illuminate\Database\Eloquent\Model;
 
+/**
+ * Represents a system-wide setting.
+ *
+ * @property int $id
+ * @property string $key
+ * @property string|null $value
+ * @property string $type
+ * @property string|null $description
+ * @property bool $is_public
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ */
 class SystemSetting extends Model
 {
     /**
@@ -33,6 +47,10 @@ class SystemSetting extends Model
 
     /**
      * Get a setting value by key.
+     *
+     * @param string $key
+     * @param mixed $default
+     * @return mixed
      */
     public static function get(string $key, mixed $default = null): mixed
     {
@@ -47,6 +65,12 @@ class SystemSetting extends Model
 
     /**
      * Set a setting value by key.
+     *
+     * @param string $key
+     * @param mixed $value
+     * @param string $type
+     * @param string|null $description
+     * @return void
      */
     public static function set(string $key, mixed $value, string $type = 'string', string $description = null): void
     {
@@ -62,6 +86,9 @@ class SystemSetting extends Model
 
     /**
      * Check if a setting exists.
+     *
+     * @param string $key
+     * @return bool
      */
     public static function has(string $key): bool
     {
@@ -70,6 +97,10 @@ class SystemSetting extends Model
 
     /**
      * Cast value to the appropriate type.
+     *
+     * @param mixed $value
+     * @param string $type
+     * @return mixed
      */
     protected static function castValue(mixed $value, string $type): mixed
     {

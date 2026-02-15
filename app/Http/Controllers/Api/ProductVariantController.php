@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
@@ -12,10 +14,20 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Support\Facades\DB;
 
+/**
+ * API Controller for managing product variants.
+ *
+ * Handles RESTful API operations for product variant CRUD operations
+ * and stock adjustments for variants.
+ */
 class ProductVariantController extends Controller
 {
     /**
      * Display a listing of variants for a product.
+     *
+     * @param Request $request The incoming HTTP request
+     * @param Product $product The product to list variants for
+     * @return AnonymousResourceCollection|JsonResponse
      */
     public function index(Request $request, Product $product): AnonymousResourceCollection|JsonResponse
     {
@@ -38,6 +50,10 @@ class ProductVariantController extends Controller
 
     /**
      * Store a newly created variant.
+     *
+     * @param Request $request The incoming HTTP request containing variant data
+     * @param Product $product The product to create variant for
+     * @return JsonResponse
      */
     public function store(Request $request, Product $product): JsonResponse
     {
@@ -89,6 +105,11 @@ class ProductVariantController extends Controller
 
     /**
      * Display the specified variant.
+     *
+     * @param Request $request The incoming HTTP request
+     * @param Product $product The parent product
+     * @param ProductVariant $variant The variant to display
+     * @return JsonResponse
      */
     public function show(Request $request, Product $product, ProductVariant $variant): JsonResponse
     {
@@ -107,6 +128,11 @@ class ProductVariantController extends Controller
 
     /**
      * Update the specified variant.
+     *
+     * @param Request $request The incoming HTTP request containing updated variant data
+     * @param Product $product The parent product
+     * @param ProductVariant $variant The variant to update
+     * @return JsonResponse
      */
     public function update(Request $request, Product $product, ProductVariant $variant): JsonResponse
     {
@@ -147,6 +173,11 @@ class ProductVariantController extends Controller
 
     /**
      * Remove the specified variant.
+     *
+     * @param Request $request The incoming HTTP request
+     * @param Product $product The parent product
+     * @param ProductVariant $variant The variant to delete
+     * @return JsonResponse
      */
     public function destroy(Request $request, Product $product, ProductVariant $variant): JsonResponse
     {
@@ -174,6 +205,11 @@ class ProductVariantController extends Controller
 
     /**
      * Adjust stock for a variant.
+     *
+     * @param Request $request The incoming HTTP request containing adjustment data
+     * @param Product $product The parent product
+     * @param ProductVariant $variant The variant to adjust stock for
+     * @return JsonResponse
      */
     public function adjustStock(Request $request, Product $product, ProductVariant $variant): JsonResponse
     {
@@ -216,6 +252,10 @@ class ProductVariantController extends Controller
 
     /**
      * Bulk create variants from option combinations.
+     *
+     * @param Request $request The incoming HTTP request containing multiple variant data
+     * @param Product $product The product to create variants for
+     * @return JsonResponse
      */
     public function bulkCreate(Request $request, Product $product): JsonResponse
     {

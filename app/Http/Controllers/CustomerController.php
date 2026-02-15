@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers;
 
 use App\Models\Customer;
@@ -7,10 +9,19 @@ use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 
+/**
+ * Controller for managing customers.
+ *
+ * Handles CRUD operations for customers including listing,
+ * creating, updating, and deleting customer records.
+ */
 class CustomerController extends Controller
 {
     /**
      * Display a listing of customers.
+     *
+     * @param Request $request The incoming HTTP request
+     * @return Response
      */
     public function index(Request $request): Response
     {
@@ -36,6 +47,8 @@ class CustomerController extends Controller
 
     /**
      * Show the form for creating a new customer.
+     *
+     * @return Response
      */
     public function create(): Response
     {
@@ -44,6 +57,9 @@ class CustomerController extends Controller
 
     /**
      * Store a newly created customer.
+     *
+     * @param Request $request The incoming HTTP request containing customer data
+     * @return \Illuminate\Http\RedirectResponse|\Illuminate\Http\JsonResponse
      */
     public function store(Request $request)
     {
@@ -90,6 +106,10 @@ class CustomerController extends Controller
 
     /**
      * Display the specified customer.
+     *
+     * @param Request $request The incoming HTTP request
+     * @param Customer $customer The customer to display
+     * @return Response
      */
     public function show(Request $request, Customer $customer): Response
     {
@@ -106,6 +126,10 @@ class CustomerController extends Controller
 
     /**
      * Show the form for editing the specified customer.
+     *
+     * @param Request $request The incoming HTTP request
+     * @param Customer $customer The customer to edit
+     * @return Response
      */
     public function edit(Request $request, Customer $customer): Response
     {
@@ -120,6 +144,10 @@ class CustomerController extends Controller
 
     /**
      * Update the specified customer.
+     *
+     * @param Request $request The incoming HTTP request containing updated customer data
+     * @param Customer $customer The customer to update
+     * @return \Illuminate\Http\RedirectResponse|\Illuminate\Http\JsonResponse
      */
     public function update(Request $request, Customer $customer)
     {
@@ -167,6 +195,10 @@ class CustomerController extends Controller
 
     /**
      * Remove the specified customer.
+     *
+     * @param Request $request The incoming HTTP request
+     * @param Customer $customer The customer to delete
+     * @return \Illuminate\Http\RedirectResponse|\Illuminate\Http\JsonResponse
      */
     public function destroy(Request $request, Customer $customer)
     {

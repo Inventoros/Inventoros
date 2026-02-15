@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Models\Inventory;
 
 use App\Models\Auth\Organization;
@@ -11,6 +13,49 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
+/**
+ * Represents a product in the inventory.
+ *
+ * @property int $id
+ * @property int $organization_id
+ * @property string|null $sku
+ * @property string $name
+ * @property string|null $description
+ * @property string $price
+ * @property string|null $selling_price
+ * @property string|null $currency
+ * @property array|null $price_in_currencies
+ * @property string|null $purchase_price
+ * @property int $stock
+ * @property int|null $min_stock
+ * @property int|null $max_stock
+ * @property string|null $barcode
+ * @property string|null $notes
+ * @property string|null $image
+ * @property array|null $images
+ * @property string|null $thumbnail
+ * @property int|null $category_id
+ * @property int|null $location_id
+ * @property bool $is_active
+ * @property bool $has_variants
+ * @property array|null $metadata
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property \Illuminate\Support\Carbon|null $deleted_at
+ * @property-read int $total_stock
+ * @property-read array{min: string, max: string} $price_range
+ * @property-read float $profit
+ * @property-read float $profit_margin
+ * @property-read float $total_profit
+ * @property-read \App\Models\Auth\Organization $organization
+ * @property-read \App\Models\Inventory\ProductCategory|null $category
+ * @property-read \App\Models\Inventory\ProductLocation|null $location
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Inventory\StockAdjustment[] $stockAdjustments
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Inventory\Supplier[] $suppliers
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Inventory\ProductOption[] $options
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Inventory\ProductVariant[] $variants
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Inventory\ProductVariant[] $activeVariants
+ */
 class Product extends Model
 {
     use HasFactory, SoftDeletes, LogsActivity;
@@ -69,6 +114,8 @@ class Product extends Model
 
     /**
      * Get the organization that owns the product.
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo<\App\Models\Auth\Organization, $this>
      */
     public function organization(): BelongsTo
     {
@@ -77,6 +124,8 @@ class Product extends Model
 
     /**
      * Get the category of the product.
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo<\App\Models\Inventory\ProductCategory, $this>
      */
     public function category(): BelongsTo
     {
@@ -85,6 +134,8 @@ class Product extends Model
 
     /**
      * Get the location of the product.
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo<\App\Models\Inventory\ProductLocation, $this>
      */
     public function location(): BelongsTo
     {
@@ -92,7 +143,9 @@ class Product extends Model
     }
 
     /**
-     * Get all stock adjustments for this product
+     * Get all stock adjustments for this product.
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany<\App\Models\Inventory\StockAdjustment, $this>
      */
     public function stockAdjustments()
     {
@@ -101,6 +154,8 @@ class Product extends Model
 
     /**
      * Get the suppliers for this product.
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany<\App\Models\Inventory\Supplier, $this>
      */
     public function suppliers(): BelongsToMany
     {
@@ -111,6 +166,8 @@ class Product extends Model
 
     /**
      * Get the primary supplier for this product.
+     *
+     * @return \App\Models\Inventory\Supplier|null
      */
     public function primarySupplier()
     {
@@ -119,6 +176,8 @@ class Product extends Model
 
     /**
      * Get the options for this product.
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany<\App\Models\Inventory\ProductOption, $this>
      */
     public function options(): HasMany
     {
@@ -127,6 +186,8 @@ class Product extends Model
 
     /**
      * Get the variants for this product.
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany<\App\Models\Inventory\ProductVariant, $this>
      */
     public function variants(): HasMany
     {
@@ -135,6 +196,8 @@ class Product extends Model
 
     /**
      * Get active variants for this product.
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany<\App\Models\Inventory\ProductVariant, $this>
      */
     public function activeVariants(): HasMany
     {
@@ -143,6 +206,8 @@ class Product extends Model
 
     /**
      * Get the total stock across all variants (or product stock if no variants).
+     *
+     * @return int
      */
     public function getTotalStockAttribute(): int
     {
@@ -154,6 +219,8 @@ class Product extends Model
 
     /**
      * Get the price range for products with variants.
+     *
+     * @return array{min: string, max: string}
      */
     public function getPriceRangeAttribute(): array
     {
@@ -174,6 +241,9 @@ class Product extends Model
 
     /**
      * Find a variant by its option values.
+     *
+     * @param array<string, string> $optionValues
+     * @return \App\Models\Inventory\ProductVariant|null
      */
     public function findVariant(array $optionValues): ?ProductVariant
     {
@@ -182,6 +252,8 @@ class Product extends Model
 
     /**
      * Generate all possible variant combinations from options.
+     *
+     * @return array<int, array<string, string>>
      */
     public function generateVariantCombinations(): array
     {
@@ -208,6 +280,10 @@ class Product extends Model
 
     /**
      * Scope a query to only include products from a specific organization.
+     *
+     * @param \Illuminate\Database\Eloquent\Builder<static> $query
+     * @param int $organizationId
+     * @return \Illuminate\Database\Eloquent\Builder<static>
      */
     public function scopeForOrganization($query, $organizationId)
     {
@@ -216,6 +292,9 @@ class Product extends Model
 
     /**
      * Scope a query to only include active products.
+     *
+     * @param \Illuminate\Database\Eloquent\Builder<static> $query
+     * @return \Illuminate\Database\Eloquent\Builder<static>
      */
     public function scopeActive($query)
     {
@@ -224,6 +303,9 @@ class Product extends Model
 
     /**
      * Scope a query to only include products with low stock.
+     *
+     * @param \Illuminate\Database\Eloquent\Builder<static> $query
+     * @return \Illuminate\Database\Eloquent\Builder<static>
      */
     public function scopeLowStock($query)
     {
@@ -232,6 +314,8 @@ class Product extends Model
 
     /**
      * Check if the product is low on stock.
+     *
+     * @return bool
      */
     public function isLowStock(): bool
     {
@@ -240,6 +324,8 @@ class Product extends Model
 
     /**
      * Check if the product is out of stock.
+     *
+     * @return bool
      */
     public function isOutOfStock(): bool
     {
@@ -248,6 +334,8 @@ class Product extends Model
 
     /**
      * Get the profit per unit.
+     *
+     * @return float
      */
     public function getProfitAttribute(): float
     {
@@ -259,6 +347,8 @@ class Product extends Model
 
     /**
      * Get the profit margin percentage.
+     *
+     * @return float
      */
     public function getProfitMarginAttribute(): float
     {
@@ -270,6 +360,8 @@ class Product extends Model
 
     /**
      * Get the total profit for all stock.
+     *
+     * @return float
      */
     public function getTotalProfitAttribute(): float
     {

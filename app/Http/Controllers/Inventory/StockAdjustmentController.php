@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers\Inventory;
 
 use App\Http\Controllers\Controller;
@@ -9,10 +11,19 @@ use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 
+/**
+ * Controller for managing stock adjustments.
+ *
+ * Handles listing, creating, and viewing stock adjustment records
+ * for inventory management.
+ */
 class StockAdjustmentController extends Controller
 {
     /**
      * Display a listing of stock adjustments.
+     *
+     * @param Request $request The incoming HTTP request
+     * @return Response
      */
     public function index(Request $request): Response
     {
@@ -76,6 +87,9 @@ class StockAdjustmentController extends Controller
 
     /**
      * Show the form for creating a new stock adjustment.
+     *
+     * @param Request $request The incoming HTTP request
+     * @return Response
      */
     public function create(Request $request): Response
     {
@@ -103,6 +117,9 @@ class StockAdjustmentController extends Controller
 
     /**
      * Store a newly created stock adjustment.
+     *
+     * @param Request $request The incoming HTTP request containing adjustment data
+     * @return \Illuminate\Http\RedirectResponse
      */
     public function store(Request $request)
     {
@@ -134,6 +151,10 @@ class StockAdjustmentController extends Controller
 
     /**
      * Display the specified stock adjustment.
+     *
+     * @param Request $request The incoming HTTP request
+     * @param StockAdjustment $stockAdjustment The stock adjustment to display
+     * @return Response
      */
     public function show(Request $request, StockAdjustment $stockAdjustment): Response
     {

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers\Inventory;
 
 use App\Http\Controllers\Controller;
@@ -14,10 +16,20 @@ use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
 
+/**
+ * Controller for managing products.
+ *
+ * Handles CRUD operations for products including listing,
+ * creating, updating, and deleting product records.
+ * Supports product variants, images, and plugin hooks.
+ */
 class ProductController extends Controller
 {
     /**
-     * Display a listing of the resource.
+     * Display a listing of products.
+     *
+     * @param Request $request The incoming HTTP request
+     * @return Response
      */
     public function index(Request $request): Response
     {
@@ -82,7 +94,10 @@ class ProductController extends Controller
     }
 
     /**
-     * Show the form for creating a new resource.
+     * Show the form for creating a new product.
+     *
+     * @param Request $request The incoming HTTP request
+     * @return Response
      */
     public function create(Request $request): Response
     {
@@ -113,7 +128,10 @@ class ProductController extends Controller
     }
 
     /**
-     * Store a newly created resource in storage.
+     * Store a newly created product.
+     *
+     * @param Request $request The incoming HTTP request containing product data
+     * @return \Illuminate\Http\RedirectResponse
      */
     public function store(Request $request)
     {
@@ -260,7 +278,10 @@ class ProductController extends Controller
     }
 
     /**
-     * Get image extension from base64 string
+     * Get image extension from base64 string.
+     *
+     * @param string $base64 The base64 encoded image string
+     * @return string The image file extension
      */
     private function getImageExtensionFromBase64(string $base64): string
     {
@@ -275,8 +296,13 @@ class ProductController extends Controller
     }
 
     /**
-     * Validate base64 image data
-     * Returns true if valid, throws exception if invalid
+     * Validate base64 image data.
+     *
+     * Returns true if valid, throws exception if invalid.
+     *
+     * @param string $base64Data The base64 encoded image data
+     * @return bool
+     * @throws \InvalidArgumentException If the image is invalid
      */
     private function validateBase64Image(string $base64Data): bool
     {
@@ -321,7 +347,10 @@ class ProductController extends Controller
     }
 
     /**
-     * Display the specified resource.
+     * Display the specified product.
+     *
+     * @param Product $product The product to display
+     * @return Response
      */
     public function show(Product $product): Response
     {
@@ -364,7 +393,11 @@ class ProductController extends Controller
     }
 
     /**
-     * Show the form for editing the specified resource.
+     * Show the form for editing the specified product.
+     *
+     * @param Request $request The incoming HTTP request
+     * @param Product $product The product to edit
+     * @return Response
      */
     public function edit(Request $request, Product $product): Response
     {
@@ -404,7 +437,11 @@ class ProductController extends Controller
     }
 
     /**
-     * Update the specified resource in storage.
+     * Update the specified product.
+     *
+     * @param Request $request The incoming HTTP request containing updated product data
+     * @param Product $product The product to update
+     * @return \Illuminate\Http\RedirectResponse
      */
     public function update(Request $request, Product $product)
     {
@@ -531,6 +568,10 @@ class ProductController extends Controller
 
     /**
      * Sync product options.
+     *
+     * @param Product $product The product to sync options for
+     * @param array $options The options data to sync
+     * @return void
      */
     private function syncOptions(Product $product, array $options): void
     {
@@ -570,6 +611,10 @@ class ProductController extends Controller
 
     /**
      * Sync product variants.
+     *
+     * @param Product $product The product to sync variants for
+     * @param array $variants The variants data to sync
+     * @return void
      */
     private function syncVariants(Product $product, array $variants): void
     {
@@ -614,7 +659,11 @@ class ProductController extends Controller
     }
 
     /**
-     * Remove the specified resource from storage.
+     * Remove the specified product.
+     *
+     * @param Request $request The incoming HTTP request
+     * @param Product $product The product to delete
+     * @return \Illuminate\Http\RedirectResponse
      */
     public function destroy(Request $request, Product $product)
     {

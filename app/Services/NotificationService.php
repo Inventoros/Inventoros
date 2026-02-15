@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Services;
 
 use App\Models\Inventory\Product;
@@ -11,10 +13,20 @@ use App\Services\SettingsService;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 
-class NotificationService
+/**
+ * Service for creating and sending notifications.
+ *
+ * Handles in-app notifications and email notifications for various
+ * events like low stock, order status changes, and approvals.
+ */
+final class NotificationService
 {
     /**
      * Check if user wants to receive a specific notification type.
+     *
+     * @param User $user The user to check
+     * @param string $notificationType The notification type to check
+     * @return bool True if user should receive this notification type
      */
     private static function shouldNotifyUser(User $user, string $notificationType): bool
     {
@@ -38,6 +50,14 @@ class NotificationService
 
     /**
      * Send email notification to user.
+     *
+     * Applies organization email config and respects user preferences.
+     * Triggers hooks for customization.
+     *
+     * @param User $user The user to notify
+     * @param string $type The notification type
+     * @param array $data Data to pass to the mailable
+     * @return void
      */
     private static function sendEmailNotification(User $user, string $type, array $data): void
     {
@@ -130,6 +150,9 @@ class NotificationService
 
     /**
      * Create a low stock notification for all users with appropriate permissions.
+     *
+     * @param Product $product The product with low stock
+     * @return void
      */
     public static function createLowStockNotification(Product $product): void
     {
@@ -173,6 +196,9 @@ class NotificationService
 
     /**
      * Create an out of stock notification.
+     *
+     * @param Product $product The product that is out of stock
+     * @return void
      */
     public static function createOutOfStockNotification(Product $product): void
     {
@@ -214,6 +240,11 @@ class NotificationService
 
     /**
      * Create an order created notification.
+     *
+     * Notifies all users with view_orders permission except the creator.
+     *
+     * @param Order $order The newly created order
+     * @return void
      */
     public static function createOrderCreatedNotification(Order $order): void
     {
@@ -253,6 +284,12 @@ class NotificationService
 
     /**
      * Create an order status updated notification.
+     *
+     * Notifies the order creator of status changes.
+     *
+     * @param Order $order The order with updated status
+     * @param string $oldStatus The previous status
+     * @return void
      */
     public static function createOrderStatusNotification(Order $order, string $oldStatus): void
     {
@@ -289,6 +326,9 @@ class NotificationService
 
     /**
      * Create an order shipped notification.
+     *
+     * @param Order $order The shipped order
+     * @return void
      */
     public static function createOrderShippedNotification(Order $order): void
     {
@@ -317,6 +357,9 @@ class NotificationService
 
     /**
      * Create an order delivered notification.
+     *
+     * @param Order $order The delivered order
+     * @return void
      */
     public static function createOrderDeliveredNotification(Order $order): void
     {
@@ -344,6 +387,11 @@ class NotificationService
 
     /**
      * Create an order approval notification.
+     *
+     * Notifies the order creator when order is approved or rejected.
+     *
+     * @param Order $order The order with updated approval status
+     * @return void
      */
     public static function createOrderApprovalNotification(Order $order): void
     {

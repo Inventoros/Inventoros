@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
@@ -8,10 +10,18 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules\Password;
 
+/**
+ * Controller for password updates.
+ *
+ * Handles updating the authenticated user's password.
+ */
 class PasswordController extends Controller
 {
     /**
      * Update the user's password.
+     *
+     * @param Request $request The incoming HTTP request containing password data
+     * @return RedirectResponse
      */
     public function update(Request $request): RedirectResponse
     {

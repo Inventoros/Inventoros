@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Services\Update;
 
 use Exception;
@@ -7,17 +9,33 @@ use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Http;
 use ZipArchive;
 
-class FileUpdateService
+/**
+ * Service for handling file operations during updates.
+ *
+ * Downloads release archives, extracts them, and replaces
+ * application files with new versions.
+ */
+final class FileUpdateService
 {
+    /**
+     * @var string Path to temporary storage directory for update files
+     */
     protected string $tempPath;
 
+    /**
+     * Initialize the service and set up temp path.
+     */
     public function __construct()
     {
         $this->tempPath = storage_path('app/temp');
     }
 
     /**
-     * Download release from URL
+     * Download release from URL.
+     *
+     * @param string $url The URL to download the release from
+     * @return string Path to the downloaded ZIP file
+     * @throws Exception If download fails
      */
     public function downloadRelease(string $url): string
     {
@@ -37,7 +55,13 @@ class FileUpdateService
     }
 
     /**
-     * Extract ZIP file
+     * Extract ZIP file to temporary directory.
+     *
+     * Handles GitHub's root folder structure by flattening if necessary.
+     *
+     * @param string $zipPath Path to the ZIP file
+     * @return string Path to the extracted directory
+     * @throws Exception If extraction fails
      */
     public function extractZip(string $zipPath): string
     {
@@ -67,7 +91,12 @@ class FileUpdateService
     }
 
     /**
-     * Replace application files with new ones
+     * Replace application files with new ones.
+     *
+     * Copies directories and key files from source to base path.
+     *
+     * @param string $sourcePath Path to the extracted update files
+     * @return void
      */
     public function replaceFiles(string $sourcePath): void
     {
@@ -114,7 +143,11 @@ class FileUpdateService
     }
 
     /**
-     * Cleanup temporary files
+     * Cleanup temporary files after update.
+     *
+     * @param string $zipPath Path to the downloaded ZIP file
+     * @param string $extractPath Path to the extracted directory
+     * @return void
      */
     public function cleanup(string $zipPath, string $extractPath): void
     {
@@ -128,7 +161,9 @@ class FileUpdateService
     }
 
     /**
-     * Get temp path
+     * Get temp path.
+     *
+     * @return string The temporary storage path
      */
     public function getTempPath(): string
     {
@@ -136,7 +171,9 @@ class FileUpdateService
     }
 
     /**
-     * Ensure temp directory exists
+     * Ensure temp directory exists.
+     *
+     * @return void
      */
     protected function ensureTempDirectoryExists(): void
     {

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Models\Inventory;
 
 use App\Models\Auth\Organization;
@@ -11,6 +13,24 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
+/**
+ * Represents a product category in the inventory.
+ *
+ * @property int $id
+ * @property int $organization_id
+ * @property string $name
+ * @property string $slug
+ * @property string|null $description
+ * @property int|null $parent_id
+ * @property bool $is_active
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property \Illuminate\Support\Carbon|null $deleted_at
+ * @property-read \App\Models\Auth\Organization $organization
+ * @property-read \App\Models\Inventory\ProductCategory|null $parent
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Inventory\ProductCategory[] $children
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Inventory\Product[] $products
+ */
 class ProductCategory extends Model
 {
     use HasFactory, SoftDeletes, LogsActivity, HasSlug;
@@ -43,6 +63,8 @@ class ProductCategory extends Model
 
     /**
      * Get the organization that owns the category.
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo<\App\Models\Auth\Organization, $this>
      */
     public function organization(): BelongsTo
     {
@@ -51,6 +73,8 @@ class ProductCategory extends Model
 
     /**
      * Get the parent category.
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo<\App\Models\Inventory\ProductCategory, $this>
      */
     public function parent(): BelongsTo
     {
@@ -59,6 +83,8 @@ class ProductCategory extends Model
 
     /**
      * Get the child categories.
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany<\App\Models\Inventory\ProductCategory, $this>
      */
     public function children(): HasMany
     {
@@ -67,6 +93,8 @@ class ProductCategory extends Model
 
     /**
      * Get the products in this category.
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany<\App\Models\Inventory\Product, $this>
      */
     public function products(): HasMany
     {
@@ -75,6 +103,10 @@ class ProductCategory extends Model
 
     /**
      * Scope a query to only include categories from a specific organization.
+     *
+     * @param \Illuminate\Database\Eloquent\Builder<static> $query
+     * @param int $organizationId
+     * @return \Illuminate\Database\Eloquent\Builder<static>
      */
     public function scopeForOrganization($query, $organizationId)
     {
@@ -83,6 +115,9 @@ class ProductCategory extends Model
 
     /**
      * Scope a query to only include active categories.
+     *
+     * @param \Illuminate\Database\Eloquent\Builder<static> $query
+     * @return \Illuminate\Database\Eloquent\Builder<static>
      */
     public function scopeActive($query)
     {
@@ -91,6 +126,9 @@ class ProductCategory extends Model
 
     /**
      * Scope a query to only include root categories (no parent).
+     *
+     * @param \Illuminate\Database\Eloquent\Builder<static> $query
+     * @return \Illuminate\Database\Eloquent\Builder<static>
      */
     public function scopeRoot($query)
     {

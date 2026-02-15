@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Exports;
 
 use App\Models\Order\Order;
@@ -9,11 +11,33 @@ use Maatwebsite\Excel\Concerns\WithMapping;
 use Maatwebsite\Excel\Concerns\WithStyles;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 
-class OrdersExport implements FromQuery, WithHeadings, WithMapping, WithStyles
+/**
+ * Export class for generating order data Excel files.
+ *
+ * Handles exporting order data with optional filtering by status, date range, and customer.
+ */
+final class OrdersExport implements FromQuery, WithHeadings, WithMapping, WithStyles
 {
+    /**
+     * The organization ID to filter orders by.
+     *
+     * @var int
+     */
     protected $organizationId;
+
+    /**
+     * Filters to apply to the export query.
+     *
+     * @var array
+     */
     protected $filters;
 
+    /**
+     * Create a new export instance.
+     *
+     * @param int $organizationId The organization to export orders from
+     * @param array $filters Optional filters (status, date_from, date_to, customer_id)
+     */
     public function __construct($organizationId, array $filters = [])
     {
         $this->organizationId = $organizationId;
@@ -23,7 +47,7 @@ class OrdersExport implements FromQuery, WithHeadings, WithMapping, WithStyles
     /**
      * Query for orders to export
      */
-    public function query()
+    public function query(): \Illuminate\Database\Eloquent\Builder
     {
         $query = Order::query()
             ->with(['items.product', 'customer'])
@@ -98,7 +122,7 @@ class OrdersExport implements FromQuery, WithHeadings, WithMapping, WithStyles
     /**
      * Style the worksheet
      */
-    public function styles(Worksheet $sheet)
+    public function styles(Worksheet $sheet): array
     {
         return [
             1 => ['font' => ['bold' => true]],

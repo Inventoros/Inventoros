@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers;
 
 use App\Models\Notification;
@@ -8,10 +10,19 @@ use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 
+/**
+ * Controller for managing user notifications.
+ *
+ * Handles displaying, marking as read, and deleting
+ * user notifications within an organization.
+ */
 class NotificationController extends Controller
 {
     /**
      * Display a listing of notifications.
+     *
+     * @param Request $request The incoming HTTP request
+     * @return Response
      */
     public function index(Request $request): Response
     {
@@ -47,8 +58,11 @@ class NotificationController extends Controller
 
     /**
      * Get unread notification count.
+     *
+     * @param Request $request The incoming HTTP request
+     * @return \Illuminate\Http\JsonResponse
      */
-    public function unreadCount(Request $request)
+    public function unreadCount(Request $request): \Illuminate\Http\JsonResponse
     {
         $user = $request->user();
 
@@ -62,6 +76,10 @@ class NotificationController extends Controller
 
     /**
      * Mark a notification as read.
+     *
+     * @param Request $request The incoming HTTP request
+     * @param Notification $notification The notification to mark as read
+     * @return RedirectResponse
      */
     public function markAsRead(Request $request, Notification $notification): RedirectResponse
     {
@@ -84,6 +102,9 @@ class NotificationController extends Controller
 
     /**
      * Mark all notifications as read.
+     *
+     * @param Request $request The incoming HTTP request
+     * @return RedirectResponse
      */
     public function markAllAsRead(Request $request): RedirectResponse
     {
@@ -99,6 +120,10 @@ class NotificationController extends Controller
 
     /**
      * Delete a notification.
+     *
+     * @param Request $request The incoming HTTP request
+     * @param Notification $notification The notification to delete
+     * @return RedirectResponse
      */
     public function destroy(Request $request, Notification $notification): RedirectResponse
     {
@@ -116,6 +141,9 @@ class NotificationController extends Controller
 
     /**
      * Delete all read notifications.
+     *
+     * @param Request $request The incoming HTTP request
+     * @return RedirectResponse
      */
     public function clearRead(Request $request): RedirectResponse
     {

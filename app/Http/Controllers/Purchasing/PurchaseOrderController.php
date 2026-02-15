@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers\Purchasing;
 
 use App\Http\Controllers\Controller;
@@ -11,10 +13,19 @@ use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 
+/**
+ * Controller for managing purchase orders.
+ *
+ * Handles CRUD operations for purchase orders including creating,
+ * editing, receiving, and managing purchase order lifecycle.
+ */
 class PurchaseOrderController extends Controller
 {
     /**
-     * Display a listing of the resource.
+     * Display a listing of purchase orders.
+     *
+     * @param Request $request The incoming HTTP request
+     * @return Response
      */
     public function index(Request $request): Response
     {
@@ -60,7 +71,10 @@ class PurchaseOrderController extends Controller
     }
 
     /**
-     * Show the form for creating a new resource.
+     * Show the form for creating a new purchase order.
+     *
+     * @param Request $request The incoming HTTP request
+     * @return Response
      */
     public function create(Request $request): Response
     {
@@ -86,7 +100,10 @@ class PurchaseOrderController extends Controller
     }
 
     /**
-     * Store a newly created resource in storage.
+     * Store a newly created purchase order.
+     *
+     * @param Request $request The incoming HTTP request containing purchase order data
+     * @return \Illuminate\Http\RedirectResponse
      */
     public function store(Request $request)
     {
@@ -156,7 +173,11 @@ class PurchaseOrderController extends Controller
     }
 
     /**
-     * Display the specified resource.
+     * Display the specified purchase order.
+     *
+     * @param Request $request The incoming HTTP request
+     * @param PurchaseOrder $purchaseOrder The purchase order to display
+     * @return Response
      */
     public function show(Request $request, PurchaseOrder $purchaseOrder): Response
     {
@@ -178,7 +199,11 @@ class PurchaseOrderController extends Controller
     }
 
     /**
-     * Show the form for editing the specified resource.
+     * Show the form for editing the specified purchase order.
+     *
+     * @param Request $request The incoming HTTP request
+     * @param PurchaseOrder $purchaseOrder The purchase order to edit
+     * @return Response|\Illuminate\Http\RedirectResponse
      */
     public function edit(Request $request, PurchaseOrder $purchaseOrder): Response
     {
@@ -218,7 +243,11 @@ class PurchaseOrderController extends Controller
     }
 
     /**
-     * Update the specified resource in storage.
+     * Update the specified purchase order.
+     *
+     * @param Request $request The incoming HTTP request containing updated purchase order data
+     * @param PurchaseOrder $purchaseOrder The purchase order to update
+     * @return \Illuminate\Http\RedirectResponse
      */
     public function update(Request $request, PurchaseOrder $purchaseOrder)
     {
@@ -326,7 +355,11 @@ class PurchaseOrderController extends Controller
     }
 
     /**
-     * Remove the specified resource from storage.
+     * Remove the specified purchase order.
+     *
+     * @param Request $request The incoming HTTP request
+     * @param PurchaseOrder $purchaseOrder The purchase order to delete
+     * @return \Illuminate\Http\RedirectResponse
      */
     public function destroy(Request $request, PurchaseOrder $purchaseOrder)
     {
@@ -349,6 +382,10 @@ class PurchaseOrderController extends Controller
 
     /**
      * Show the receiving form for a purchase order.
+     *
+     * @param Request $request The incoming HTTP request
+     * @param PurchaseOrder $purchaseOrder The purchase order to receive items for
+     * @return Response|\Illuminate\Http\RedirectResponse
      */
     public function receive(Request $request, PurchaseOrder $purchaseOrder): Response
     {
@@ -376,6 +413,10 @@ class PurchaseOrderController extends Controller
 
     /**
      * Process receiving items for a purchase order.
+     *
+     * @param Request $request The incoming HTTP request containing received quantities
+     * @param PurchaseOrder $purchaseOrder The purchase order to process receiving for
+     * @return \Illuminate\Http\RedirectResponse
      */
     public function processReceiving(Request $request, PurchaseOrder $purchaseOrder)
     {
@@ -422,6 +463,10 @@ class PurchaseOrderController extends Controller
 
     /**
      * Mark a purchase order as sent to supplier.
+     *
+     * @param Request $request The incoming HTTP request
+     * @param PurchaseOrder $purchaseOrder The purchase order to mark as sent
+     * @return \Illuminate\Http\RedirectResponse
      */
     public function sendToSupplier(Request $request, PurchaseOrder $purchaseOrder)
     {
@@ -443,6 +488,10 @@ class PurchaseOrderController extends Controller
 
     /**
      * Cancel a purchase order.
+     *
+     * @param Request $request The incoming HTTP request
+     * @param PurchaseOrder $purchaseOrder The purchase order to cancel
+     * @return \Illuminate\Http\RedirectResponse
      */
     public function cancel(Request $request, PurchaseOrder $purchaseOrder)
     {

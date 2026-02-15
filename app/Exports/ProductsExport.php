@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Exports;
 
 use App\Models\Inventory\Product;
@@ -9,11 +11,33 @@ use Maatwebsite\Excel\Concerns\WithMapping;
 use Maatwebsite\Excel\Concerns\WithStyles;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 
-class ProductsExport implements FromQuery, WithHeadings, WithMapping, WithStyles
+/**
+ * Export class for generating product data Excel files.
+ *
+ * Handles exporting product data with optional filtering by category, location, status, and stock level.
+ */
+final class ProductsExport implements FromQuery, WithHeadings, WithMapping, WithStyles
 {
+    /**
+     * The organization ID to filter products by.
+     *
+     * @var int
+     */
     protected $organizationId;
+
+    /**
+     * Filters to apply to the export query.
+     *
+     * @var array
+     */
     protected $filters;
 
+    /**
+     * Create a new export instance.
+     *
+     * @param int $organizationId The organization to export products from
+     * @param array $filters Optional filters (category_id, location_id, status, low_stock)
+     */
     public function __construct($organizationId, array $filters = [])
     {
         $this->organizationId = $organizationId;
@@ -23,7 +47,7 @@ class ProductsExport implements FromQuery, WithHeadings, WithMapping, WithStyles
     /**
      * Query for products to export
      */
-    public function query()
+    public function query(): \Illuminate\Database\Eloquent\Builder
     {
         $query = Product::query()
             ->with(['category', 'location'])
@@ -102,7 +126,7 @@ class ProductsExport implements FromQuery, WithHeadings, WithMapping, WithStyles
     /**
      * Style the worksheet
      */
-    public function styles(Worksheet $sheet)
+    public function styles(Worksheet $sheet): array
     {
         return [
             1 => ['font' => ['bold' => true]],

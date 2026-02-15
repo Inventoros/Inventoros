@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
@@ -9,10 +11,23 @@ use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
 use Inertia\Response;
 
+/**
+ * Controller for managing plugins.
+ *
+ * Handles plugin listing, upload, activation, deactivation, and deletion.
+ */
 class PluginController extends Controller
 {
+    /**
+     * @var PluginService The plugin service instance
+     */
     protected PluginService $pluginService;
 
+    /**
+     * Create a new controller instance.
+     *
+     * @param PluginService $pluginService The plugin service instance
+     */
     public function __construct(PluginService $pluginService)
     {
         $this->pluginService = $pluginService;
@@ -20,6 +35,8 @@ class PluginController extends Controller
 
     /**
      * Display a listing of plugins.
+     *
+     * @return Response
      */
     public function index(): Response
     {
@@ -32,6 +49,9 @@ class PluginController extends Controller
 
     /**
      * Upload a new plugin.
+     *
+     * @param Request $request The incoming HTTP request containing the plugin file
+     * @return \Illuminate\Http\RedirectResponse
      */
     public function upload(Request $request)
     {
@@ -56,6 +76,9 @@ class PluginController extends Controller
 
     /**
      * Activate a plugin.
+     *
+     * @param string $slug The plugin slug to activate
+     * @return \Illuminate\Http\RedirectResponse
      */
     public function activate(string $slug)
     {
@@ -76,6 +99,9 @@ class PluginController extends Controller
 
     /**
      * Deactivate a plugin.
+     *
+     * @param string $slug The plugin slug to deactivate
+     * @return \Illuminate\Http\RedirectResponse
      */
     public function deactivate(string $slug)
     {
@@ -96,6 +122,9 @@ class PluginController extends Controller
 
     /**
      * Delete a plugin.
+     *
+     * @param string $slug The plugin slug to delete
+     * @return \Illuminate\Http\RedirectResponse
      */
     public function destroy(string $slug)
     {

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Listeners;
 
 use App\Models\Inventory\Product;
@@ -16,7 +18,7 @@ use Illuminate\Support\Facades\Log;
  * This class registers callbacks with the hook system to trigger
  * webhook deliveries when key events occur in the application.
  */
-class WebhookEventSubscriber
+final class WebhookEventSubscriber
 {
     /**
      * Register the listeners for the subscriber.

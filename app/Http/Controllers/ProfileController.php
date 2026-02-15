@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers;
 
 use App\Http\Requests\ProfileUpdateRequest;
@@ -11,10 +13,19 @@ use Illuminate\Support\Facades\Redirect;
 use Inertia\Inertia;
 use Inertia\Response;
 
+/**
+ * Controller for managing user profile.
+ *
+ * Handles displaying, updating, and deleting the authenticated
+ * user's profile information.
+ */
 class ProfileController extends Controller
 {
     /**
      * Display the user's profile form.
+     *
+     * @param Request $request The incoming HTTP request
+     * @return Response
      */
     public function edit(Request $request): Response
     {
@@ -26,6 +37,9 @@ class ProfileController extends Controller
 
     /**
      * Update the user's profile information.
+     *
+     * @param ProfileUpdateRequest $request The validated profile update request
+     * @return RedirectResponse
      */
     public function update(ProfileUpdateRequest $request): RedirectResponse
     {
@@ -42,6 +56,9 @@ class ProfileController extends Controller
 
     /**
      * Delete the user's account.
+     *
+     * @param Request $request The incoming HTTP request with password confirmation
+     * @return RedirectResponse
      */
     public function destroy(Request $request): RedirectResponse
     {

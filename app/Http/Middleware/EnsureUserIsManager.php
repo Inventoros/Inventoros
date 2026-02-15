@@ -1,12 +1,19 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Middleware;
 
 use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 
-class EnsureUserIsManager
+/**
+ * Middleware to ensure the user has manager or administrator role.
+ *
+ * Aborts with 403 if the user is not a manager or admin.
+ */
+final class EnsureUserIsManager
 {
     /**
      * Handle an incoming request.

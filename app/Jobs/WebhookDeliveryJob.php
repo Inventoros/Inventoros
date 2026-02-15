@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Jobs;
 
 use App\Models\WebhookDelivery;
@@ -17,8 +19,14 @@ use Throwable;
 /**
  * Job for delivering webhook payloads to external URLs.
  */
-class WebhookDeliveryJob implements ShouldQueue
+final class WebhookDeliveryJob implements ShouldQueue
 {
+    public const MAX_TRIES = 5;
+    public const TIMEOUT_SECONDS = 30;
+    public const RESPONSE_BODY_LIMIT = 5000;
+
+    private const BACKOFF_DELAYS = [60, 300, 1800, 7200, 86400];
+
     use Dispatchable;
     use InteractsWithQueue;
     use Queueable;

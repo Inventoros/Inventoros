@@ -1,10 +1,18 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Console\Commands;
 
 use App\Services\UpdateService;
 use Illuminate\Console\Command;
 
+/**
+ * Console command for managing application updates from GitHub releases.
+ *
+ * Supports checking for updates, creating backups, listing backups,
+ * and restoring from backups.
+ */
 class UpdateCommand extends Command
 {
     /**
@@ -25,10 +33,17 @@ class UpdateCommand extends Command
      */
     protected $description = 'Update the application from GitHub releases';
 
+    /**
+     * The update service instance.
+     *
+     * @var UpdateService
+     */
     protected UpdateService $updateService;
 
     /**
      * Create a new command instance.
+     *
+     * @param UpdateService $updateService
      */
     public function __construct(UpdateService $updateService)
     {

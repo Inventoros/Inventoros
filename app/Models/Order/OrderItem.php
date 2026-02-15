@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Models\Order;
 
 use App\Models\Inventory\Product;
@@ -7,6 +9,25 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
+/**
+ * Represents an item within an order.
+ *
+ * @property int $id
+ * @property int $order_id
+ * @property int|null $product_id
+ * @property string $product_name
+ * @property string|null $sku
+ * @property int $quantity
+ * @property string $unit_price
+ * @property string $subtotal
+ * @property string $tax
+ * @property string $total
+ * @property array|null $metadata
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property-read \App\Models\Order\Order $order
+ * @property-read \App\Models\Inventory\Product|null $product
+ */
 class OrderItem extends Model
 {
     use HasFactory;
@@ -48,6 +69,8 @@ class OrderItem extends Model
 
     /**
      * Get the order that owns the item.
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo<\App\Models\Order\Order, $this>
      */
     public function order(): BelongsTo
     {
@@ -56,6 +79,8 @@ class OrderItem extends Model
 
     /**
      * Get the product associated with the order item.
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo<\App\Models\Inventory\Product, $this>
      */
     public function product(): BelongsTo
     {

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers\Inventory;
 
 use App\Http\Controllers\Controller;
@@ -8,10 +10,20 @@ use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 
+/**
+ * Controller for managing suppliers.
+ *
+ * Handles CRUD operations for suppliers including listing,
+ * creating, updating, and deleting supplier records.
+ * Supports plugin hooks for extensibility.
+ */
 class SupplierController extends Controller
 {
     /**
      * Display a listing of suppliers.
+     *
+     * @param Request $request The incoming HTTP request
+     * @return Response
      */
     public function index(Request $request): Response
     {
@@ -56,6 +68,9 @@ class SupplierController extends Controller
 
     /**
      * Show the form for creating a new supplier.
+     *
+     * @param Request $request The incoming HTTP request
+     * @return Response
      */
     public function create(Request $request): Response
     {
@@ -69,6 +84,9 @@ class SupplierController extends Controller
 
     /**
      * Store a newly created supplier.
+     *
+     * @param Request $request The incoming HTTP request containing supplier data
+     * @return \Illuminate\Http\RedirectResponse|\Illuminate\Http\JsonResponse
      */
     public function store(Request $request)
     {
@@ -114,6 +132,10 @@ class SupplierController extends Controller
 
     /**
      * Display the specified supplier.
+     *
+     * @param Request $request The incoming HTTP request
+     * @param Supplier $supplier The supplier to display
+     * @return Response
      */
     public function show(Request $request, Supplier $supplier): Response
     {
@@ -141,6 +163,10 @@ class SupplierController extends Controller
 
     /**
      * Show the form for editing the specified supplier.
+     *
+     * @param Request $request The incoming HTTP request
+     * @param Supplier $supplier The supplier to edit
+     * @return Response
      */
     public function edit(Request $request, Supplier $supplier): Response
     {
@@ -160,6 +186,10 @@ class SupplierController extends Controller
 
     /**
      * Update the specified supplier.
+     *
+     * @param Request $request The incoming HTTP request containing updated supplier data
+     * @param Supplier $supplier The supplier to update
+     * @return \Illuminate\Http\RedirectResponse|\Illuminate\Http\JsonResponse
      */
     public function update(Request $request, Supplier $supplier)
     {
@@ -207,6 +237,10 @@ class SupplierController extends Controller
 
     /**
      * Remove the specified supplier.
+     *
+     * @param Request $request The incoming HTTP request
+     * @param Supplier $supplier The supplier to delete
+     * @return \Illuminate\Http\RedirectResponse|\Illuminate\Http\JsonResponse
      */
     public function destroy(Request $request, Supplier $supplier)
     {

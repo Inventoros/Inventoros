@@ -1,11 +1,19 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Observers;
 
 use App\Models\Order\Order;
 use App\Services\NotificationService;
 
-class OrderObserver
+/**
+ * Observer for Order model events.
+ *
+ * Monitors order lifecycle events and triggers appropriate
+ * notifications for order creation and status changes.
+ */
+final class OrderObserver
 {
     /**
      * Handle the Order "created" event.

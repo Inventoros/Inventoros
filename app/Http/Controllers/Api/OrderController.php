@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
@@ -12,10 +14,19 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Support\Facades\DB;
 
+/**
+ * API Controller for managing orders.
+ *
+ * Handles RESTful API operations for order CRUD operations
+ * with automatic stock management.
+ */
 class OrderController extends Controller
 {
     /**
      * Display a listing of orders.
+     *
+     * @param Request $request The incoming HTTP request
+     * @return AnonymousResourceCollection
      */
     public function index(Request $request): AnonymousResourceCollection
     {
@@ -56,6 +67,9 @@ class OrderController extends Controller
 
     /**
      * Store a newly created order.
+     *
+     * @param Request $request The incoming HTTP request containing order data
+     * @return JsonResponse
      */
     public function store(Request $request): JsonResponse
     {
@@ -149,6 +163,10 @@ class OrderController extends Controller
 
     /**
      * Display the specified order.
+     *
+     * @param Request $request The incoming HTTP request
+     * @param Order $order The order to display
+     * @return JsonResponse
      */
     public function show(Request $request, Order $order): JsonResponse
     {
@@ -168,6 +186,10 @@ class OrderController extends Controller
 
     /**
      * Update the specified order.
+     *
+     * @param Request $request The incoming HTTP request containing updated order data
+     * @param Order $order The order to update
+     * @return JsonResponse
      */
     public function update(Request $request, Order $order): JsonResponse
     {
@@ -208,6 +230,10 @@ class OrderController extends Controller
 
     /**
      * Remove the specified order.
+     *
+     * @param Request $request The incoming HTTP request
+     * @param Order $order The order to delete
+     * @return JsonResponse
      */
     public function destroy(Request $request, Order $order): JsonResponse
     {
@@ -217,6 +243,8 @@ class OrderController extends Controller
                 'error' => 'not_found',
             ], 404);
         }
+
+        $order->load('items.product');
 
         return DB::transaction(function () use ($order) {
             // Restore stock for each item

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
@@ -9,10 +11,20 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
 
+/**
+ * API Controller for authentication.
+ *
+ * Handles API token-based authentication including login,
+ * logout, token management, and user info retrieval.
+ */
 class AuthController extends Controller
 {
     /**
      * Handle API login request.
+     *
+     * @param Request $request The incoming HTTP request containing credentials
+     * @return JsonResponse
+     * @throws ValidationException
      */
     public function login(Request $request): JsonResponse
     {
@@ -49,6 +61,9 @@ class AuthController extends Controller
 
     /**
      * Handle API logout request.
+     *
+     * @param Request $request The incoming HTTP request
+     * @return JsonResponse
      */
     public function logout(Request $request): JsonResponse
     {
@@ -62,6 +77,9 @@ class AuthController extends Controller
 
     /**
      * Get the authenticated user.
+     *
+     * @param Request $request The incoming HTTP request
+     * @return JsonResponse
      */
     public function user(Request $request): JsonResponse
     {
@@ -83,6 +101,9 @@ class AuthController extends Controller
 
     /**
      * Create a new API token.
+     *
+     * @param Request $request The incoming HTTP request containing token name and abilities
+     * @return JsonResponse
      */
     public function createToken(Request $request): JsonResponse
     {
@@ -105,10 +126,14 @@ class AuthController extends Controller
 
     /**
      * Revoke a specific token.
+     *
+     * @param Request $request The incoming HTTP request
+     * @param int $tokenId The ID of the token to revoke
+     * @return JsonResponse
      */
     public function revokeToken(Request $request, int $tokenId): JsonResponse
     {
-        $token = $request->user()->tokens()->where('id', $tokenId)->first();
+        $token = $request->user()->tokens()->find($tokenId);
 
         if (!$token) {
             return response()->json([

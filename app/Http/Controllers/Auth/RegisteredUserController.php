@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
@@ -13,10 +15,17 @@ use Illuminate\Validation\Rules;
 use Inertia\Inertia;
 use Inertia\Response;
 
+/**
+ * Controller for user registration.
+ *
+ * Handles displaying registration form and creating new user accounts.
+ */
 class RegisteredUserController extends Controller
 {
     /**
      * Display the registration view.
+     *
+     * @return Response
      */
     public function create(): Response
     {
@@ -26,6 +35,8 @@ class RegisteredUserController extends Controller
     /**
      * Handle an incoming registration request.
      *
+     * @param Request $request The incoming HTTP request containing registration data
+     * @return RedirectResponse
      * @throws \Illuminate\Validation\ValidationException
      */
     public function store(Request $request): RedirectResponse

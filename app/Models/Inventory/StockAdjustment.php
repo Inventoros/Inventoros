@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Models\Inventory;
 
 use App\Models\Auth\Organization;
@@ -8,6 +10,30 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 
+/**
+ * Represents a stock adjustment record for a product or variant.
+ *
+ * @property int $id
+ * @property int $organization_id
+ * @property int $product_id
+ * @property int|null $product_variant_id
+ * @property int|null $user_id
+ * @property string $type
+ * @property int $quantity_before
+ * @property int $quantity_after
+ * @property int $adjustment_quantity
+ * @property string|null $reason
+ * @property string|null $notes
+ * @property string|null $reference_type
+ * @property int|null $reference_id
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property-read \App\Models\Auth\Organization $organization
+ * @property-read \App\Models\Inventory\Product $product
+ * @property-read \App\Models\User|null $user
+ * @property-read \App\Models\Inventory\ProductVariant|null $variant
+ * @property-read \Illuminate\Database\Eloquent\Model|null $reference
+ */
 class StockAdjustment extends Model
 {
     protected $fillable = [
@@ -34,7 +60,9 @@ class StockAdjustment extends Model
     ];
 
     /**
-     * Get the organization that owns the stock adjustment
+     * Get the organization that owns the stock adjustment.
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo<\App\Models\Auth\Organization, $this>
      */
     public function organization(): BelongsTo
     {
@@ -42,7 +70,9 @@ class StockAdjustment extends Model
     }
 
     /**
-     * Get the product associated with the adjustment
+     * Get the product associated with the adjustment.
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo<\App\Models\Inventory\Product, $this>
      */
     public function product(): BelongsTo
     {
@@ -50,7 +80,9 @@ class StockAdjustment extends Model
     }
 
     /**
-     * Get the user who made the adjustment
+     * Get the user who made the adjustment.
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo<\App\Models\User, $this>
      */
     public function user(): BelongsTo
     {
@@ -58,7 +90,9 @@ class StockAdjustment extends Model
     }
 
     /**
-     * Get the variant associated with the adjustment
+     * Get the variant associated with the adjustment.
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo<\App\Models\Inventory\ProductVariant, $this>
      */
     public function variant(): BelongsTo
     {
@@ -66,7 +100,9 @@ class StockAdjustment extends Model
     }
 
     /**
-     * Get the reference model (Order, Purchase, etc.)
+     * Get the reference model (Order, Purchase, etc.).
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\MorphTo<\Illuminate\Database\Eloquent\Model, $this>
      */
     public function reference(): MorphTo
     {
@@ -74,7 +110,11 @@ class StockAdjustment extends Model
     }
 
     /**
-     * Scope to filter by variant
+     * Scope to filter by variant.
+     *
+     * @param \Illuminate\Database\Eloquent\Builder<static> $query
+     * @param int $variantId
+     * @return \Illuminate\Database\Eloquent\Builder<static>
      */
     public function scopeForVariant($query, $variantId)
     {
@@ -82,7 +122,11 @@ class StockAdjustment extends Model
     }
 
     /**
-     * Scope to filter by organization
+     * Scope to filter by organization.
+     *
+     * @param \Illuminate\Database\Eloquent\Builder<static> $query
+     * @param int $organizationId
+     * @return \Illuminate\Database\Eloquent\Builder<static>
      */
     public function scopeForOrganization($query, $organizationId)
     {
@@ -90,7 +134,11 @@ class StockAdjustment extends Model
     }
 
     /**
-     * Scope to filter by product
+     * Scope to filter by product.
+     *
+     * @param \Illuminate\Database\Eloquent\Builder<static> $query
+     * @param int $productId
+     * @return \Illuminate\Database\Eloquent\Builder<static>
      */
     public function scopeForProduct($query, $productId)
     {
@@ -98,7 +146,11 @@ class StockAdjustment extends Model
     }
 
     /**
-     * Scope to filter by type
+     * Scope to filter by type.
+     *
+     * @param \Illuminate\Database\Eloquent\Builder<static> $query
+     * @param string $type
+     * @return \Illuminate\Database\Eloquent\Builder<static>
      */
     public function scopeOfType($query, $type)
     {
@@ -106,7 +158,15 @@ class StockAdjustment extends Model
     }
 
     /**
-     * Create a stock adjustment and update product stock
+     * Create a stock adjustment and update product stock.
+     *
+     * @param \App\Models\Inventory\Product $product
+     * @param int $quantity
+     * @param string $type
+     * @param string|null $reason
+     * @param string|null $notes
+     * @param \Illuminate\Database\Eloquent\Model|null $reference
+     * @return static
      */
     public static function adjust(
         Product $product,
@@ -141,7 +201,15 @@ class StockAdjustment extends Model
     }
 
     /**
-     * Create a stock adjustment for a product variant
+     * Create a stock adjustment for a product variant.
+     *
+     * @param \App\Models\Inventory\ProductVariant $variant
+     * @param int $quantity
+     * @param string $type
+     * @param string|null $reason
+     * @param string|null $notes
+     * @param \Illuminate\Database\Eloquent\Model|null $reference
+     * @return static
      */
     public static function adjustVariant(
         ProductVariant $variant,

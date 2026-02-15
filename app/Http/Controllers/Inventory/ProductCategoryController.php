@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers\Inventory;
 
 use App\Http\Controllers\Controller;
@@ -8,10 +10,19 @@ use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 
+/**
+ * Controller for managing product categories.
+ *
+ * Handles CRUD operations for product categories
+ * with plugin integration support.
+ */
 class ProductCategoryController extends Controller
 {
     /**
      * Display a listing of categories.
+     *
+     * @param Request $request The incoming HTTP request
+     * @return Response
      */
     public function index(Request $request): Response
     {
@@ -41,6 +52,9 @@ class ProductCategoryController extends Controller
 
     /**
      * Store a newly created category.
+     *
+     * @param Request $request The incoming HTTP request containing category data
+     * @return \Illuminate\Http\RedirectResponse|\Illuminate\Http\JsonResponse
      */
     public function store(Request $request)
     {
@@ -70,6 +84,10 @@ class ProductCategoryController extends Controller
 
     /**
      * Update the specified category.
+     *
+     * @param Request $request The incoming HTTP request containing updated category data
+     * @param ProductCategory $category The category to update
+     * @return \Illuminate\Http\RedirectResponse
      */
     public function update(Request $request, ProductCategory $category)
     {
@@ -92,6 +110,10 @@ class ProductCategoryController extends Controller
 
     /**
      * Remove the specified category.
+     *
+     * @param Request $request The incoming HTTP request
+     * @param ProductCategory $category The category to delete
+     * @return \Illuminate\Http\RedirectResponse
      */
     public function destroy(Request $request, ProductCategory $category)
     {

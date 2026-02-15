@@ -1,10 +1,18 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Providers;
 
 use App\Support\HookManager;
 use Illuminate\Support\ServiceProvider;
 
+/**
+ * Service provider for the hook/action system.
+ *
+ * Registers the HookManager as a singleton for managing
+ * WordPress-style actions and filters throughout the application.
+ */
 class HookServiceProvider extends ServiceProvider
 {
     /**
@@ -22,6 +30,5 @@ class HookServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
     }
 }

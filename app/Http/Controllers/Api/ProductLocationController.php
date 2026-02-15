@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
@@ -9,10 +11,18 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
+/**
+ * API Controller for managing product locations.
+ *
+ * Handles RESTful API operations for product location CRUD operations.
+ */
 class ProductLocationController extends Controller
 {
     /**
      * Display a listing of locations.
+     *
+     * @param Request $request The incoming HTTP request
+     * @return AnonymousResourceCollection
      */
     public function index(Request $request): AnonymousResourceCollection
     {
@@ -43,6 +53,9 @@ class ProductLocationController extends Controller
 
     /**
      * Store a newly created location.
+     *
+     * @param Request $request The incoming HTTP request containing location data
+     * @return JsonResponse
      */
     public function store(Request $request): JsonResponse
     {
@@ -69,6 +82,10 @@ class ProductLocationController extends Controller
 
     /**
      * Display the specified location.
+     *
+     * @param Request $request The incoming HTTP request
+     * @param ProductLocation $location The location to display
+     * @return JsonResponse
      */
     public function show(Request $request, ProductLocation $location): JsonResponse
     {
@@ -88,6 +105,10 @@ class ProductLocationController extends Controller
 
     /**
      * Update the specified location.
+     *
+     * @param Request $request The incoming HTTP request containing updated location data
+     * @param ProductLocation $location The location to update
+     * @return JsonResponse
      */
     public function update(Request $request, ProductLocation $location): JsonResponse
     {
@@ -118,6 +139,10 @@ class ProductLocationController extends Controller
 
     /**
      * Remove the specified location.
+     *
+     * @param Request $request The incoming HTTP request
+     * @param ProductLocation $location The location to delete
+     * @return JsonResponse
      */
     public function destroy(Request $request, ProductLocation $location): JsonResponse
     {

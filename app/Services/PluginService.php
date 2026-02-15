@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Services;
 
 use App\Models\Plugin;
@@ -8,10 +10,22 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use ZipArchive;
 
-class PluginService
+/**
+ * Service for managing plugins.
+ *
+ * Handles plugin discovery, activation, deactivation, deletion,
+ * and loading of active plugins at runtime.
+ */
+final class PluginService
 {
+    /**
+     * @var string Path to the plugins directory
+     */
     protected string $pluginsPath;
 
+    /**
+     * Initialize the service and ensure plugins directory exists.
+     */
     public function __construct()
     {
         $this->pluginsPath = base_path('plugins');
@@ -23,7 +37,9 @@ class PluginService
     }
 
     /**
-     * Get all installed plugins with their metadata
+     * Get all installed plugins with their metadata.
+     *
+     * @return array<int, array{slug: string, name: string, description: string, version: string, author: string, author_url: string, requires: string, main_file: string, is_active: bool, activated_at: string|null, path: string}> List of plugin data arrays
      */
     public function getAllPlugins(): array
     {
@@ -60,7 +76,9 @@ class PluginService
     }
 
     /**
-     * Get list of activated plugin slugs
+     * Get list of activated plugin slugs.
+     *
+     * @return array<int, string> List of active plugin slugs
      */
     public function getActivatedPlugins(): array
     {
@@ -75,7 +93,12 @@ class PluginService
     }
 
     /**
-     * Activate a plugin
+     * Activate a plugin.
+     *
+     * Fires plugin activation hooks and loads the plugin.
+     *
+     * @param string $slug The plugin slug to activate
+     * @return bool True on successful activation
      */
     public function activatePlugin(string $slug): bool
     {
@@ -108,7 +131,12 @@ class PluginService
     }
 
     /**
-     * Deactivate a plugin
+     * Deactivate a plugin.
+     *
+     * Fires plugin deactivation hooks before deactivating.
+     *
+     * @param string $slug The plugin slug to deactivate
+     * @return bool True on successful deactivation
      */
     public function deactivatePlugin(string $slug): bool
     {
@@ -129,7 +157,12 @@ class PluginService
     }
 
     /**
-     * Delete a plugin
+     * Delete a plugin.
+     *
+     * Runs uninstall hooks, deactivates, removes database record, and deletes files.
+     *
+     * @param string $slug The plugin slug to delete
+     * @return bool True if plugin existed and was deleted, false if not found
      */
     public function deletePlugin(string $slug): bool
     {
@@ -165,7 +198,11 @@ class PluginService
     }
 
     /**
-     * Upload and extract a plugin ZIP file
+     * Upload and extract a plugin ZIP file.
+     *
+     * @param mixed $file The uploaded file instance
+     * @return array{slug: string, path: string} The extracted plugin slug and path
+     * @throws \Exception If ZIP cannot be opened, structure is invalid, plugin exists, or plugin.json missing
      */
     public function uploadPlugin($file): array
     {
@@ -224,7 +261,9 @@ class PluginService
     }
 
     /**
-     * Load all active plugins
+     * Load all active plugins.
+     *
+     * @return void
      */
     public function loadActivePlugins(): void
     {
@@ -236,7 +275,12 @@ class PluginService
     }
 
     /**
-     * Load a specific plugin
+     * Load a specific plugin.
+     *
+     * Requires the main plugin file and fires plugin_loaded action.
+     *
+     * @param string $slug The plugin slug to load
+     * @return void
      */
     protected function loadPlugin(string $slug): void
     {

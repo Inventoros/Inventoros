@@ -1,15 +1,21 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Services;
 
 /**
  * Central registry of all available hooks and filters in the application.
- * This class serves as documentation - plugins can reference this to know what's available.
+ *
+ * This class serves as documentation - plugins can reference this to know
+ * what actions and filters are available for hooking into application events.
  */
-class HookRegistry
+final class HookRegistry
 {
     /**
-     * Get all available action hooks
+     * Get all available action hooks.
+     *
+     * @return array<string, array{description: string, parameters: array<int, string>, example: string}> Action hooks keyed by hook name
      */
     public static function getActions(): array
     {
@@ -244,7 +250,9 @@ class HookRegistry
     }
 
     /**
-     * Get all available filter hooks
+     * Get all available filter hooks.
+     *
+     * @return array<string, array{description: string, parameters: array<int, string>, example: string}> Filter hooks keyed by hook name
      */
     public static function getFilters(): array
     {
@@ -387,7 +395,9 @@ class HookRegistry
     }
 
     /**
-     * Get all hooks (both actions and filters)
+     * Get all hooks (both actions and filters).
+     *
+     * @return array{actions: array, filters: array} All hooks grouped by type
      */
     public static function getAllHooks(): array
     {

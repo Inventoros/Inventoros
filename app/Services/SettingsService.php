@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Services;
 
 use App\Models\Setting;
@@ -8,10 +10,23 @@ use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Log;
 use RuntimeException;
 
-class SettingsService
+/**
+ * Service for managing organization-specific settings.
+ *
+ * Provides cached access to settings stored in the database,
+ * with support for encrypted values and email configuration.
+ */
+final class SettingsService
 {
+    public const CACHE_TTL_SECONDS = 3600;
+    public const DEFAULT_SMTP_PORT = 587;
     /**
      * Get a setting value for current organization.
+     *
+     * @param string $key The setting key to retrieve
+     * @param mixed $default Default value if setting not found
+     * @return mixed The setting value or default
+     * @throws RuntimeException If no authenticated user with organization
      */
     public static function get(string $key, mixed $default = null): mixed
     {
@@ -42,6 +57,12 @@ class SettingsService
 
     /**
      * Set a setting value.
+     *
+     * @param string $key The setting key to set
+     * @param mixed $value The value to store
+     * @param bool $encrypted Whether to encrypt the value (default: false)
+     * @return void
+     * @throws RuntimeException If no authenticated user with organization
      */
     public static function set(string $key, $value, bool $encrypted = false): void
     {
@@ -66,6 +87,8 @@ class SettingsService
 
     /**
      * Get all email settings as array.
+     *
+     * @return array{provider: string, from_address: string|null, from_name: string|null, smtp: array, mailgun: array, sendgrid: array} Email configuration array
      */
     public static function getEmailConfig(): array
     {
@@ -92,6 +115,11 @@ class SettingsService
 
     /**
      * Apply email configuration to Laravel's mail config.
+     *
+     * Configures mail driver, from address, and provider-specific settings
+     * based on stored organization settings.
+     *
+     * @return void
      */
     public static function applyEmailConfig(): void
     {
@@ -99,10 +127,14 @@ class SettingsService
 
         // Validate critical configuration
         if (empty($config['from_address'])) {
-            Log::warning('Email configuration missing critical field: from_address');
+            Log::warning('Email configuration missing critical field: from_address', [
+                'organization_id' => auth()->user()?->organization_id,
+            ]);
         }
         if (empty($config['provider'])) {
-            Log::warning('Email configuration missing critical field: provider');
+            Log::warning('Email configuration missing critical field: provider', [
+                'organization_id' => auth()->user()?->organization_id,
+            ]);
         }
 
         Config::set('mail.default', $config['provider']);

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Providers;
 
 use App\Listeners\WebhookEventSubscriber;
@@ -12,6 +14,12 @@ use App\Services\PluginUIService;
 use Illuminate\Support\Facades\Vite;
 use Illuminate\Support\ServiceProvider;
 
+/**
+ * Main application service provider.
+ *
+ * Handles registration of application services and bootstrapping
+ * of core functionality including observers and plugins.
+ */
 class AppServiceProvider extends ServiceProvider
 {
     /**

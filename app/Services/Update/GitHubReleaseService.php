@@ -1,16 +1,34 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Services\Update;
 
 use Exception;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
-class GitHubReleaseService
+/**
+ * Service for interacting with GitHub releases API.
+ *
+ * Fetches release information and determines update availability
+ * by comparing versions with the GitHub repository.
+ */
+final class GitHubReleaseService
 {
+    /**
+     * @var string The base URL for GitHub API requests
+     */
     protected string $githubApiUrl;
+
+    /**
+     * @var string The GitHub repository in owner/repo format
+     */
     protected string $githubRepo;
 
+    /**
+     * Initialize the service with repository configuration.
+     */
     public function __construct()
     {
         $this->githubRepo = config('app.github_repo', 'owner/repository');
@@ -18,7 +36,9 @@ class GitHubReleaseService
     }
 
     /**
-     * Get the latest release information from GitHub
+     * Get the latest release information from GitHub.
+     *
+     * @return array|null Release data containing version, name, body, published_at, download_url, and html_url, or null on failure
      */
     public function getLatestRelease(): ?array
     {
@@ -41,13 +61,19 @@ class GitHubReleaseService
 
             return null;
         } catch (Exception $e) {
-            Log::error('Failed to fetch latest release', ['error' => $e->getMessage()]);
+            Log::error('Failed to fetch latest release', [
+                'repository' => $this->githubRepo,
+                'error' => $e->getMessage(),
+            ]);
             return null;
         }
     }
 
     /**
-     * Check if an update is available compared to current version
+     * Check if an update is available compared to current version.
+     *
+     * @param string $currentVersion The currently installed version
+     * @return bool True if a newer version is available on GitHub
      */
     public function isUpdateAvailable(string $currentVersion): bool
     {
@@ -65,7 +91,10 @@ class GitHubReleaseService
     }
 
     /**
-     * Get ZIP download URL from release data
+     * Get ZIP download URL from release data.
+     *
+     * @param array $release The release data from GitHub API
+     * @return string|null The download URL for the ZIP file, or null if not found
      */
     protected function getZipDownloadUrl(array $release): ?string
     {
@@ -83,7 +112,10 @@ class GitHubReleaseService
     }
 
     /**
-     * Strip 'v' prefix from version string
+     * Strip 'v' prefix from version string.
+     *
+     * @param string $version The version string (e.g., 'v1.0.0')
+     * @return string The version without 'v' prefix (e.g., '1.0.0')
      */
     public function stripVersion(string $version): string
     {

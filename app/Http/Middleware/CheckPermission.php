@@ -1,12 +1,21 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Middleware;
 
 use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 
-class CheckPermission
+/**
+ * Middleware for checking user permissions on web routes.
+ *
+ * Renders Inertia 403 page for unauthorized Inertia requests,
+ * or aborts with plain error for regular requests.
+ * Supports checking for any or all of specified permissions.
+ */
+final class CheckPermission
 {
     /**
      * Handle an incoming request.

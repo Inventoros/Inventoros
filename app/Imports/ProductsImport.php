@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Imports;
 
 use App\Models\Inventory\Product;
@@ -13,15 +15,49 @@ use Maatwebsite\Excel\Concerns\WithValidation;
 use Maatwebsite\Excel\Concerns\SkipsOnFailure;
 use Maatwebsite\Excel\Concerns\SkipsFailures;
 
-class ProductsImport implements ToCollection, WithHeadingRow, SkipsOnFailure
+/**
+ * Import class for processing product data from Excel files.
+ *
+ * Handles importing and updating products from spreadsheet data,
+ * including automatic creation of categories and locations.
+ */
+final class ProductsImport implements ToCollection, WithHeadingRow, SkipsOnFailure
 {
     use SkipsFailures;
 
+    /**
+     * The organization ID to import products into.
+     *
+     * @var int
+     */
     protected $organizationId;
+
+    /**
+     * Count of newly imported products.
+     *
+     * @var int
+     */
     protected $imported = 0;
+
+    /**
+     * Count of updated existing products.
+     *
+     * @var int
+     */
     protected $updated = 0;
+
+    /**
+     * Array of errors encountered during import.
+     *
+     * @var array
+     */
     protected $errors = [];
 
+    /**
+     * Create a new import instance.
+     *
+     * @param int $organizationId The organization to import products into
+     */
     public function __construct($organizationId)
     {
         $this->organizationId = $organizationId;

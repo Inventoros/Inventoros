@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
@@ -9,10 +11,18 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
+/**
+ * API Controller for managing products.
+ *
+ * Handles RESTful API operations for product CRUD operations.
+ */
 class ProductController extends Controller
 {
     /**
      * Display a listing of products.
+     *
+     * @param Request $request The incoming HTTP request
+     * @return AnonymousResourceCollection
      */
     public function index(Request $request): AnonymousResourceCollection
     {
@@ -53,6 +63,9 @@ class ProductController extends Controller
 
     /**
      * Store a newly created product.
+     *
+     * @param Request $request The incoming HTTP request containing product data
+     * @return JsonResponse
      */
     public function store(Request $request): JsonResponse
     {
@@ -90,6 +103,10 @@ class ProductController extends Controller
 
     /**
      * Display the specified product.
+     *
+     * @param Request $request The incoming HTTP request
+     * @param Product $product The product to display
+     * @return JsonResponse
      */
     public function show(Request $request, Product $product): JsonResponse
     {
@@ -110,6 +127,10 @@ class ProductController extends Controller
 
     /**
      * Update the specified product.
+     *
+     * @param Request $request The incoming HTTP request containing updated product data
+     * @param Product $product The product to update
+     * @return JsonResponse
      */
     public function update(Request $request, Product $product): JsonResponse
     {
@@ -151,6 +172,10 @@ class ProductController extends Controller
 
     /**
      * Remove the specified product.
+     *
+     * @param Request $request The incoming HTTP request
+     * @param Product $product The product to delete
+     * @return JsonResponse
      */
     public function destroy(Request $request, Product $product): JsonResponse
     {

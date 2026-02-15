@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Models\Purchasing;
 
 use App\Models\Auth\Organization;
@@ -13,6 +15,36 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
+/**
+ * Represents a purchase order in the system.
+ *
+ * @property int $id
+ * @property int $organization_id
+ * @property int $supplier_id
+ * @property int|null $created_by
+ * @property string $po_number
+ * @property string $status
+ * @property \Illuminate\Support\Carbon|null $order_date
+ * @property \Illuminate\Support\Carbon|null $expected_date
+ * @property \Illuminate\Support\Carbon|null $received_date
+ * @property string $subtotal
+ * @property string $tax
+ * @property string $shipping
+ * @property string $total
+ * @property string|null $currency
+ * @property string|null $notes
+ * @property array|null $metadata
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property \Illuminate\Support\Carbon|null $deleted_at
+ * @property-read string $status_color
+ * @property-read string $status_label
+ * @property-read \App\Models\Auth\Organization $organization
+ * @property-read \App\Models\Inventory\Supplier $supplier
+ * @property-read \App\Models\User|null $creator
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Purchasing\PurchaseOrderItem[] $items
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Inventory\StockAdjustment[] $stockAdjustments
+ */
 class PurchaseOrder extends Model
 {
     use LogsActivity, SoftDeletes;
@@ -59,7 +91,9 @@ class PurchaseOrder extends Model
     public const STATUS_CANCELLED = 'cancelled';
 
     /**
-     * Get the organization that owns the purchase order
+     * Get the organization that owns the purchase order.
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo<\App\Models\Auth\Organization, $this>
      */
     public function organization(): BelongsTo
     {
@@ -67,7 +101,9 @@ class PurchaseOrder extends Model
     }
 
     /**
-     * Get the supplier for this purchase order
+     * Get the supplier for this purchase order.
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo<\App\Models\Inventory\Supplier, $this>
      */
     public function supplier(): BelongsTo
     {
@@ -75,7 +111,9 @@ class PurchaseOrder extends Model
     }
 
     /**
-     * Get the user who created this purchase order
+     * Get the user who created this purchase order.
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo<\App\Models\User, $this>
      */
     public function creator(): BelongsTo
     {
@@ -83,7 +121,9 @@ class PurchaseOrder extends Model
     }
 
     /**
-     * Get the items for this purchase order
+     * Get the items for this purchase order.
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany<\App\Models\Purchasing\PurchaseOrderItem, $this>
      */
     public function items(): HasMany
     {
@@ -91,7 +131,9 @@ class PurchaseOrder extends Model
     }
 
     /**
-     * Get the stock adjustments for this purchase order
+     * Get the stock adjustments for this purchase order.
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\MorphMany<\App\Models\Inventory\StockAdjustment, $this>
      */
     public function stockAdjustments(): MorphMany
     {
@@ -99,7 +141,11 @@ class PurchaseOrder extends Model
     }
 
     /**
-     * Scope to filter by organization
+     * Scope to filter by organization.
+     *
+     * @param \Illuminate\Database\Eloquent\Builder<static> $query
+     * @param int $organizationId
+     * @return \Illuminate\Database\Eloquent\Builder<static>
      */
     public function scopeForOrganization($query, $organizationId)
     {
@@ -107,7 +153,11 @@ class PurchaseOrder extends Model
     }
 
     /**
-     * Scope to filter by status
+     * Scope to filter by status.
+     *
+     * @param \Illuminate\Database\Eloquent\Builder<static> $query
+     * @param string $status
+     * @return \Illuminate\Database\Eloquent\Builder<static>
      */
     public function scopeByStatus($query, $status)
     {
@@ -115,7 +165,11 @@ class PurchaseOrder extends Model
     }
 
     /**
-     * Scope to filter by supplier
+     * Scope to filter by supplier.
+     *
+     * @param \Illuminate\Database\Eloquent\Builder<static> $query
+     * @param int $supplierId
+     * @return \Illuminate\Database\Eloquent\Builder<static>
      */
     public function scopeBySupplier($query, $supplierId)
     {
@@ -123,7 +177,11 @@ class PurchaseOrder extends Model
     }
 
     /**
-     * Scope for search
+     * Scope for search.
+     *
+     * @param \Illuminate\Database\Eloquent\Builder<static> $query
+     * @param string $search
+     * @return \Illuminate\Database\Eloquent\Builder<static>
      */
     public function scopeSearch($query, $search)
     {
@@ -136,7 +194,10 @@ class PurchaseOrder extends Model
     }
 
     /**
-     * Generate a unique PO number
+     * Generate a unique PO number.
+     *
+     * @param int $organizationId
+     * @return string
      */
     public static function generatePONumber(int $organizationId): string
     {
@@ -160,7 +221,9 @@ class PurchaseOrder extends Model
     }
 
     /**
-     * Calculate and update totals from items
+     * Calculate and update totals from items.
+     *
+     * @return void
      */
     public function calculateTotals(): void
     {
@@ -171,7 +234,9 @@ class PurchaseOrder extends Model
     }
 
     /**
-     * Check if the PO can be edited
+     * Check if the PO can be edited.
+     *
+     * @return bool
      */
     public function canBeEdited(): bool
     {
@@ -179,7 +244,9 @@ class PurchaseOrder extends Model
     }
 
     /**
-     * Check if the PO can be sent
+     * Check if the PO can be sent.
+     *
+     * @return bool
      */
     public function canBeSent(): bool
     {
@@ -187,7 +254,9 @@ class PurchaseOrder extends Model
     }
 
     /**
-     * Check if the PO can receive items
+     * Check if the PO can receive items.
+     *
+     * @return bool
      */
     public function canReceiveItems(): bool
     {
@@ -195,7 +264,9 @@ class PurchaseOrder extends Model
     }
 
     /**
-     * Check if the PO can be cancelled
+     * Check if the PO can be cancelled.
+     *
+     * @return bool
      */
     public function canBeCancelled(): bool
     {
@@ -203,7 +274,9 @@ class PurchaseOrder extends Model
     }
 
     /**
-     * Check if all items have been fully received
+     * Check if all items have been fully received.
+     *
+     * @return bool
      */
     public function isFullyReceived(): bool
     {
@@ -211,7 +284,9 @@ class PurchaseOrder extends Model
     }
 
     /**
-     * Check if any items have been partially received
+     * Check if any items have been partially received.
+     *
+     * @return bool
      */
     public function isPartiallyReceived(): bool
     {
@@ -220,7 +295,9 @@ class PurchaseOrder extends Model
     }
 
     /**
-     * Update status based on receiving state
+     * Update status based on receiving state.
+     *
+     * @return void
      */
     public function updateReceivingStatus(): void
     {
@@ -234,7 +311,9 @@ class PurchaseOrder extends Model
     }
 
     /**
-     * Mark as sent
+     * Mark as sent.
+     *
+     * @return void
      */
     public function markAsSent(): void
     {
@@ -243,7 +322,9 @@ class PurchaseOrder extends Model
     }
 
     /**
-     * Cancel the purchase order
+     * Cancel the purchase order.
+     *
+     * @return void
      */
     public function cancel(): void
     {
@@ -252,7 +333,9 @@ class PurchaseOrder extends Model
     }
 
     /**
-     * Get status badge color
+     * Get status badge color.
+     *
+     * @return string
      */
     public function getStatusColorAttribute(): string
     {
@@ -267,7 +350,9 @@ class PurchaseOrder extends Model
     }
 
     /**
-     * Get status label
+     * Get status label.
+     *
+     * @return string
      */
     public function getStatusLabelAttribute(): string
     {

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
@@ -7,10 +9,19 @@ use App\Models\PermissionSet;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
+/**
+ * API Controller for managing permission sets.
+ *
+ * Handles RESTful API operations for permission set CRUD operations
+ * and retrieving available categories.
+ */
 class PermissionSetController extends Controller
 {
     /**
      * Display a listing of permission sets.
+     *
+     * @param Request $request The incoming HTTP request
+     * @return JsonResponse
      */
     public function index(Request $request): JsonResponse
     {
@@ -47,6 +58,9 @@ class PermissionSetController extends Controller
 
     /**
      * Store a newly created permission set.
+     *
+     * @param Request $request The incoming HTTP request containing permission set data
+     * @return JsonResponse
      */
     public function store(Request $request): JsonResponse
     {
@@ -80,6 +94,10 @@ class PermissionSetController extends Controller
 
     /**
      * Display the specified permission set.
+     *
+     * @param Request $request The incoming HTTP request
+     * @param PermissionSet $permissionSet The permission set to display
+     * @return JsonResponse
      */
     public function show(Request $request, PermissionSet $permissionSet): JsonResponse
     {
@@ -108,6 +126,10 @@ class PermissionSetController extends Controller
 
     /**
      * Update the specified permission set.
+     *
+     * @param Request $request The incoming HTTP request containing updated permission set data
+     * @param PermissionSet $permissionSet The permission set to update
+     * @return JsonResponse
      */
     public function update(Request $request, PermissionSet $permissionSet): JsonResponse
     {
@@ -144,6 +166,10 @@ class PermissionSetController extends Controller
 
     /**
      * Remove the specified permission set.
+     *
+     * @param Request $request The incoming HTTP request
+     * @param PermissionSet $permissionSet The permission set to delete
+     * @return JsonResponse
      */
     public function destroy(Request $request, PermissionSet $permissionSet): JsonResponse
     {
@@ -169,6 +195,8 @@ class PermissionSetController extends Controller
 
     /**
      * Get available categories.
+     *
+     * @return JsonResponse
      */
     public function categories(): JsonResponse
     {

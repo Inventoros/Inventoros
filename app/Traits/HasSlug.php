@@ -1,13 +1,23 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Traits;
 
 use Illuminate\Support\Str;
 
+/**
+ * Trait for automatic slug generation on models.
+ *
+ * Automatically generates URL-friendly slugs from a source field
+ * (default: 'name') with uniqueness checking within organization scope.
+ */
 trait HasSlug
 {
     /**
-     * Boot the trait.
+     * Boot the trait and register model event listeners.
+     *
+     * @return void
      */
     public static function bootHasSlug(): void
     {
@@ -27,6 +37,8 @@ trait HasSlug
 
     /**
      * Get the source value for the slug.
+     *
+     * @return string
      */
     protected function getSlugSource(): string
     {
@@ -35,6 +47,8 @@ trait HasSlug
 
     /**
      * Get the field to use as slug source. Override to customize.
+     *
+     * @return string
      */
     protected function getSlugSourceField(): string
     {
@@ -43,6 +57,8 @@ trait HasSlug
 
     /**
      * Whether the slug should be unique within scope. Override to customize.
+     *
+     * @return bool
      */
     protected function slugShouldBeUnique(): bool
     {
@@ -51,6 +67,8 @@ trait HasSlug
 
     /**
      * Whether to update slug when source field changes. Override to customize.
+     *
+     * @return bool
      */
     protected function shouldUpdateSlugOnChange(): bool
     {
@@ -60,6 +78,8 @@ trait HasSlug
     /**
      * Get the scope column for uniqueness (e.g., 'organization_id'). Override to customize.
      * Return null for global uniqueness.
+     *
+     * @return string|null
      */
     protected function getSlugScopeColumn(): ?string
     {
@@ -69,7 +89,11 @@ trait HasSlug
     }
 
     /**
-     * Generate a unique slug.
+     * Generate a unique slug from the source string.
+     *
+     * @param string $source The string to convert to a slug
+     * @param mixed $excludeId Optional model ID to exclude from uniqueness check
+     * @return string
      */
     public function generateUniqueSlug(string $source, $excludeId = null): string
     {
@@ -91,7 +115,11 @@ trait HasSlug
     }
 
     /**
-     * Check if a slug already exists.
+     * Check if a slug already exists within the current scope.
+     *
+     * @param string $slug The slug to check
+     * @param mixed $excludeId Optional model ID to exclude from the check
+     * @return bool
      */
     protected function slugExists(string $slug, $excludeId = null): bool
     {

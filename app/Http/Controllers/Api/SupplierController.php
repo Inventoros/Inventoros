@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
@@ -9,10 +11,18 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
+/**
+ * API Controller for managing suppliers.
+ *
+ * Handles RESTful API operations for supplier CRUD operations.
+ */
 class SupplierController extends Controller
 {
     /**
      * Display a listing of suppliers.
+     *
+     * @param Request $request The incoming HTTP request
+     * @return AnonymousResourceCollection
      */
     public function index(Request $request): AnonymousResourceCollection
     {
@@ -40,6 +50,9 @@ class SupplierController extends Controller
 
     /**
      * Store a newly created supplier.
+     *
+     * @param Request $request The incoming HTTP request containing supplier data
+     * @return JsonResponse
      */
     public function store(Request $request): JsonResponse
     {
@@ -75,6 +88,10 @@ class SupplierController extends Controller
 
     /**
      * Display the specified supplier.
+     *
+     * @param Request $request The incoming HTTP request
+     * @param Supplier $supplier The supplier to display
+     * @return JsonResponse
      */
     public function show(Request $request, Supplier $supplier): JsonResponse
     {
@@ -95,6 +112,10 @@ class SupplierController extends Controller
 
     /**
      * Update the specified supplier.
+     *
+     * @param Request $request The incoming HTTP request containing updated supplier data
+     * @param Supplier $supplier The supplier to update
+     * @return JsonResponse
      */
     public function update(Request $request, Supplier $supplier): JsonResponse
     {
@@ -134,6 +155,10 @@ class SupplierController extends Controller
 
     /**
      * Remove the specified supplier.
+     *
+     * @param Request $request The incoming HTTP request
+     * @param Supplier $supplier The supplier to delete
+     * @return JsonResponse
      */
     public function destroy(Request $request, Supplier $supplier): JsonResponse
     {

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
@@ -10,17 +12,34 @@ use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
 use Inertia\Response;
 
+/**
+ * Controller for managing application updates.
+ *
+ * Handles checking for updates, performing updates, and
+ * managing backups for the application.
+ */
 class UpdateController extends Controller
 {
+    /**
+     * @var UpdateService The update service instance
+     */
     protected UpdateService $updateService;
 
+    /**
+     * Create a new controller instance.
+     *
+     * @param UpdateService $updateService The update service instance
+     */
     public function __construct(UpdateService $updateService)
     {
         $this->updateService = $updateService;
     }
 
     /**
-     * Display the update management page
+     * Display the update management page.
+     *
+     * @param Request $request The incoming HTTP request
+     * @return Response
      */
     public function index(Request $request): Response
     {
@@ -46,7 +65,9 @@ class UpdateController extends Controller
     }
 
     /**
-     * Check for available updates
+     * Check for available updates.
+     *
+     * @return JsonResponse
      */
     public function check(): JsonResponse
     {
@@ -63,7 +84,10 @@ class UpdateController extends Controller
     }
 
     /**
-     * Perform the update
+     * Perform the update.
+     *
+     * @param Request $request The incoming HTTP request
+     * @return JsonResponse
      */
     public function update(Request $request): JsonResponse
     {
@@ -82,7 +106,10 @@ class UpdateController extends Controller
     }
 
     /**
-     * Create a backup
+     * Create a backup.
+     *
+     * @param Request $request The incoming HTTP request
+     * @return JsonResponse
      */
     public function backup(Request $request): JsonResponse
     {
@@ -114,7 +141,9 @@ class UpdateController extends Controller
     }
 
     /**
-     * List available backups
+     * List available backups.
+     *
+     * @return JsonResponse
      */
     public function listBackups(): JsonResponse
     {
@@ -127,7 +156,10 @@ class UpdateController extends Controller
     }
 
     /**
-     * Restore from a backup
+     * Restore from a backup.
+     *
+     * @param Request $request The incoming HTTP request containing backup file name
+     * @return JsonResponse
      */
     public function restore(Request $request): JsonResponse
     {
@@ -159,7 +191,10 @@ class UpdateController extends Controller
     }
 
     /**
-     * Delete a backup
+     * Delete a backup.
+     *
+     * @param Request $request The incoming HTTP request containing backup file name
+     * @return JsonResponse
      */
     public function deleteBackup(Request $request): JsonResponse
     {

@@ -1,16 +1,36 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Models;
 
 use App\Enums\Permission;
+use App\Models\Auth\Organization;
 use App\Traits\HasSlug;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
+/**
+ * Represents a role that can be assigned to users.
+ *
+ * @property int $id
+ * @property string $name
+ * @property string $slug
+ * @property string|null $description
+ * @property int|null $organization_id
+ * @property array|null $permissions
+ * @property bool $is_system
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property-read \App\Models\Auth\Organization|null $organization
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\User[] $users
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\PermissionSet[] $permissionSets
+ */
 class Role extends Model
 {
     use HasSlug;
+
     protected $fillable = [
         'name',
         'slug',
@@ -27,6 +47,8 @@ class Role extends Model
 
     /**
      * Get the organization that owns the role.
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo<\App\Models\Auth\Organization, $this>
      */
     public function organization(): BelongsTo
     {
@@ -35,6 +57,8 @@ class Role extends Model
 
     /**
      * Get the users that have this role.
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany<\App\Models\User, $this>
      */
     public function users(): BelongsToMany
     {
@@ -43,6 +67,8 @@ class Role extends Model
 
     /**
      * Get the permission sets assigned to this role.
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany<\App\Models\PermissionSet, $this>
      */
     public function permissionSets(): BelongsToMany
     {
@@ -52,6 +78,8 @@ class Role extends Model
 
     /**
      * Get all permissions including those from permission sets.
+     *
+     * @return array<string>
      */
     public function getAllPermissions(): array
     {
@@ -68,6 +96,9 @@ class Role extends Model
 
     /**
      * Apply a permission set to this role.
+     *
+     * @param \App\Models\PermissionSet $set
+     * @return void
      */
     public function applyPermissionSet(PermissionSet $set): void
     {
@@ -76,6 +107,9 @@ class Role extends Model
 
     /**
      * Remove a permission set from this role.
+     *
+     * @param \App\Models\PermissionSet $set
+     * @return void
      */
     public function removePermissionSet(PermissionSet $set): void
     {
@@ -84,6 +118,9 @@ class Role extends Model
 
     /**
      * Check if the role has a specific permission.
+     *
+     * @param \App\Enums\Permission|string $permission
+     * @return bool
      */
     public function hasPermission(Permission|string $permission): bool
     {
@@ -103,6 +140,9 @@ class Role extends Model
 
     /**
      * Check if the role has any of the given permissions.
+     *
+     * @param array<\App\Enums\Permission|string> $permissions
+     * @return bool
      */
     public function hasAnyPermission(array $permissions): bool
     {
@@ -116,6 +156,9 @@ class Role extends Model
 
     /**
      * Check if the role has all of the given permissions.
+     *
+     * @param array<\App\Enums\Permission|string> $permissions
+     * @return bool
      */
     public function hasAllPermissions(array $permissions): bool
     {
@@ -129,6 +172,9 @@ class Role extends Model
 
     /**
      * Grant a permission to the role.
+     *
+     * @param \App\Enums\Permission|string $permission
+     * @return void
      */
     public function grantPermission(Permission|string $permission): void
     {
@@ -144,6 +190,9 @@ class Role extends Model
 
     /**
      * Revoke a permission from the role.
+     *
+     * @param \App\Enums\Permission|string $permission
+     * @return void
      */
     public function revokePermission(Permission|string $permission): void
     {
@@ -159,6 +208,9 @@ class Role extends Model
 
     /**
      * Sync permissions for the role.
+     *
+     * @param array<\App\Enums\Permission|string> $permissions
+     * @return void
      */
     public function syncPermissions(array $permissions): void
     {
@@ -172,6 +224,10 @@ class Role extends Model
 
     /**
      * Scope a query to only include roles from a specific organization.
+     *
+     * @param \Illuminate\Database\Eloquent\Builder<static> $query
+     * @param int $organizationId
+     * @return \Illuminate\Database\Eloquent\Builder<static>
      */
     public function scopeForOrganization($query, $organizationId)
     {
@@ -180,6 +236,9 @@ class Role extends Model
 
     /**
      * Scope a query to only include non-system roles.
+     *
+     * @param \Illuminate\Database\Eloquent\Builder<static> $query
+     * @return \Illuminate\Database\Eloquent\Builder<static>
      */
     public function scopeCustom($query)
     {
