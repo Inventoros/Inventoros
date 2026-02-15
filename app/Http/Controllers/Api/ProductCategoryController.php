@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
@@ -9,10 +11,18 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
+/**
+ * API Controller for managing product categories.
+ *
+ * Handles RESTful API operations for product category CRUD operations.
+ */
 class ProductCategoryController extends Controller
 {
     /**
      * Display a listing of categories.
+     *
+     * @param Request $request The incoming HTTP request
+     * @return AnonymousResourceCollection
      */
     public function index(Request $request): AnonymousResourceCollection
     {
@@ -43,6 +53,9 @@ class ProductCategoryController extends Controller
 
     /**
      * Store a newly created category.
+     *
+     * @param Request $request The incoming HTTP request containing category data
+     * @return JsonResponse
      */
     public function store(Request $request): JsonResponse
     {
@@ -67,6 +80,10 @@ class ProductCategoryController extends Controller
 
     /**
      * Display the specified category.
+     *
+     * @param Request $request The incoming HTTP request
+     * @param ProductCategory $category The category to display
+     * @return JsonResponse
      */
     public function show(Request $request, ProductCategory $category): JsonResponse
     {
@@ -87,6 +104,10 @@ class ProductCategoryController extends Controller
 
     /**
      * Update the specified category.
+     *
+     * @param Request $request The incoming HTTP request containing updated category data
+     * @param ProductCategory $category The category to update
+     * @return JsonResponse
      */
     public function update(Request $request, ProductCategory $category): JsonResponse
     {
@@ -115,6 +136,10 @@ class ProductCategoryController extends Controller
 
     /**
      * Remove the specified category.
+     *
+     * @param Request $request The incoming HTTP request
+     * @param ProductCategory $category The category to delete
+     * @return JsonResponse
      */
     public function destroy(Request $request, ProductCategory $category): JsonResponse
     {

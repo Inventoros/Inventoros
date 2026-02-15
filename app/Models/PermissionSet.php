@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Models;
 
 use App\Enums\Permission;
@@ -10,6 +12,27 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
+/**
+ * Represents a collection of permissions that can be assigned to roles.
+ *
+ * @property int $id
+ * @property int|null $organization_id
+ * @property string $name
+ * @property string $slug
+ * @property string|null $description
+ * @property array|null $permissions
+ * @property string|null $category
+ * @property string|null $icon
+ * @property bool $is_template
+ * @property bool $is_active
+ * @property int $position
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property-read int $permission_count
+ * @property-read array<\App\Enums\Permission> $permission_enums
+ * @property-read \App\Models\Auth\Organization|null $organization
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Role[] $roles
+ */
 class PermissionSet extends Model
 {
     use HasFactory, HasSlug;
@@ -39,6 +62,8 @@ class PermissionSet extends Model
 
     /**
      * Get the organization that owns this permission set.
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo<\App\Models\Auth\Organization, $this>
      */
     public function organization(): BelongsTo
     {
@@ -47,6 +72,8 @@ class PermissionSet extends Model
 
     /**
      * Get the roles that have this permission set.
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany<\App\Models\Role, $this>
      */
     public function roles(): BelongsToMany
     {
@@ -56,6 +83,9 @@ class PermissionSet extends Model
 
     /**
      * Check if this set contains a specific permission.
+     *
+     * @param \App\Enums\Permission|string $permission
+     * @return bool
      */
     public function hasPermission(Permission|string $permission): bool
     {
@@ -65,6 +95,8 @@ class PermissionSet extends Model
 
     /**
      * Get permission count.
+     *
+     * @return int
      */
     public function getPermissionCountAttribute(): int
     {
@@ -73,6 +105,8 @@ class PermissionSet extends Model
 
     /**
      * Get permissions as Permission enum objects.
+     *
+     * @return array<\App\Enums\Permission>
      */
     public function getPermissionEnumsAttribute(): array
     {
@@ -83,6 +117,9 @@ class PermissionSet extends Model
 
     /**
      * Scope for templates only.
+     *
+     * @param \Illuminate\Database\Eloquent\Builder<static> $query
+     * @return \Illuminate\Database\Eloquent\Builder<static>
      */
     public function scopeTemplates($query)
     {
@@ -91,6 +128,9 @@ class PermissionSet extends Model
 
     /**
      * Scope for custom (non-template) sets.
+     *
+     * @param \Illuminate\Database\Eloquent\Builder<static> $query
+     * @return \Illuminate\Database\Eloquent\Builder<static>
      */
     public function scopeCustom($query)
     {
@@ -99,6 +139,9 @@ class PermissionSet extends Model
 
     /**
      * Scope for active sets.
+     *
+     * @param \Illuminate\Database\Eloquent\Builder<static> $query
+     * @return \Illuminate\Database\Eloquent\Builder<static>
      */
     public function scopeActive($query)
     {
@@ -107,6 +150,10 @@ class PermissionSet extends Model
 
     /**
      * Scope for organization.
+     *
+     * @param \Illuminate\Database\Eloquent\Builder<static> $query
+     * @param int $organizationId
+     * @return \Illuminate\Database\Eloquent\Builder<static>
      */
     public function scopeForOrganization($query, $organizationId)
     {
@@ -118,6 +165,10 @@ class PermissionSet extends Model
 
     /**
      * Scope by category.
+     *
+     * @param \Illuminate\Database\Eloquent\Builder<static> $query
+     * @param string $category
+     * @return \Illuminate\Database\Eloquent\Builder<static>
      */
     public function scopeInCategory($query, string $category)
     {
@@ -126,6 +177,8 @@ class PermissionSet extends Model
 
     /**
      * Get default permission set templates.
+     *
+     * @return array<int, array{name: string, slug: string, description: string, category: string, icon: string, permissions: array<string>}>
      */
     public static function getDefaultTemplates(): array
     {

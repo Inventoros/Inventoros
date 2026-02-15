@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
@@ -8,10 +10,19 @@ use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 
+/**
+ * Controller for managing organization settings.
+ *
+ * Handles organization general settings, regional settings,
+ * and user management within the organization.
+ */
 class OrganizationSettingsController extends Controller
 {
     /**
      * Display the organization settings page.
+     *
+     * @param Request $request The incoming HTTP request
+     * @return Response
      */
     public function index(Request $request): Response
     {
@@ -26,6 +37,9 @@ class OrganizationSettingsController extends Controller
 
     /**
      * Update organization general settings.
+     *
+     * @param Request $request The incoming HTTP request containing organization data
+     * @return \Illuminate\Http\RedirectResponse
      */
     public function updateGeneral(Request $request)
     {
@@ -55,6 +69,9 @@ class OrganizationSettingsController extends Controller
 
     /**
      * Update organization regional settings.
+     *
+     * @param Request $request The incoming HTTP request containing regional settings
+     * @return \Illuminate\Http\RedirectResponse
      */
     public function updateRegional(Request $request)
     {
@@ -80,6 +97,9 @@ class OrganizationSettingsController extends Controller
 
     /**
      * Display user management for the organization.
+     *
+     * @param Request $request The incoming HTTP request
+     * @return Response
      */
     public function users(Request $request): Response
     {
@@ -94,6 +114,9 @@ class OrganizationSettingsController extends Controller
 
     /**
      * Store a new user in the organization.
+     *
+     * @param Request $request The incoming HTTP request containing user data
+     * @return \Illuminate\Http\RedirectResponse
      */
     public function storeUser(Request $request)
     {
@@ -124,6 +147,10 @@ class OrganizationSettingsController extends Controller
 
     /**
      * Update an existing user.
+     *
+     * @param Request $request The incoming HTTP request containing updated user data
+     * @param \App\Models\User $user The user to update
+     * @return \Illuminate\Http\RedirectResponse
      */
     public function updateUser(Request $request, \App\Models\User $user)
     {
@@ -167,6 +194,10 @@ class OrganizationSettingsController extends Controller
 
     /**
      * Delete a user from the organization.
+     *
+     * @param Request $request The incoming HTTP request
+     * @param \App\Models\User $user The user to delete
+     * @return \Illuminate\Http\RedirectResponse
      */
     public function destroyUser(Request $request, \App\Models\User $user)
     {

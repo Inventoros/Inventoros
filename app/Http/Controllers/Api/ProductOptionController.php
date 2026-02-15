@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
@@ -11,10 +13,20 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Support\Facades\DB;
 
+/**
+ * API Controller for managing product options.
+ *
+ * Handles RESTful API operations for product option CRUD operations
+ * including reordering options.
+ */
 class ProductOptionController extends Controller
 {
     /**
      * Display a listing of options for a product.
+     *
+     * @param Request $request The incoming HTTP request
+     * @param Product $product The product to list options for
+     * @return AnonymousResourceCollection|JsonResponse
      */
     public function index(Request $request, Product $product): AnonymousResourceCollection|JsonResponse
     {
@@ -29,6 +41,10 @@ class ProductOptionController extends Controller
 
     /**
      * Store a newly created option.
+     *
+     * @param Request $request The incoming HTTP request containing option data
+     * @param Product $product The product to create option for
+     * @return JsonResponse
      */
     public function store(Request $request, Product $product): JsonResponse
     {
@@ -72,6 +88,11 @@ class ProductOptionController extends Controller
 
     /**
      * Display the specified option.
+     *
+     * @param Request $request The incoming HTTP request
+     * @param Product $product The parent product
+     * @param ProductOption $option The option to display
+     * @return JsonResponse
      */
     public function show(Request $request, Product $product, ProductOption $option): JsonResponse
     {
@@ -90,6 +111,11 @@ class ProductOptionController extends Controller
 
     /**
      * Update the specified option.
+     *
+     * @param Request $request The incoming HTTP request containing updated option data
+     * @param Product $product The parent product
+     * @param ProductOption $option The option to update
+     * @return JsonResponse
      */
     public function update(Request $request, Product $product, ProductOption $option): JsonResponse
     {
@@ -128,6 +154,11 @@ class ProductOptionController extends Controller
 
     /**
      * Remove the specified option.
+     *
+     * @param Request $request The incoming HTTP request
+     * @param Product $product The parent product
+     * @param ProductOption $option The option to delete
+     * @return JsonResponse
      */
     public function destroy(Request $request, Product $product, ProductOption $option): JsonResponse
     {
@@ -161,6 +192,10 @@ class ProductOptionController extends Controller
 
     /**
      * Reorder options for a product.
+     *
+     * @param Request $request The incoming HTTP request containing new order
+     * @param Product $product The product to reorder options for
+     * @return JsonResponse
      */
     public function reorder(Request $request, Product $product): JsonResponse
     {

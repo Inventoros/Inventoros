@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
@@ -10,10 +12,18 @@ use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
 
+/**
+ * Controller for password confirmation.
+ *
+ * Handles displaying and processing password confirmation
+ * for sensitive actions.
+ */
 class ConfirmablePasswordController extends Controller
 {
     /**
      * Show the confirm password view.
+     *
+     * @return Response
      */
     public function show(): Response
     {
@@ -22,6 +32,10 @@ class ConfirmablePasswordController extends Controller
 
     /**
      * Confirm the user's password.
+     *
+     * @param Request $request The incoming HTTP request containing password
+     * @return RedirectResponse
+     * @throws ValidationException
      */
     public function store(Request $request): RedirectResponse
     {

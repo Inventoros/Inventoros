@@ -1,15 +1,32 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Services;
 
 use Picqer\Barcode\BarcodeGeneratorPNG;
 use Picqer\Barcode\BarcodeGeneratorHTML;
 use Picqer\Barcode\BarcodeGeneratorSVG;
 
-class BarcodeService
+/**
+ * Service for generating and validating barcodes.
+ *
+ * Supports CODE_128 barcode format and EAN-13 validation
+ * with multiple output formats (PNG, HTML, SVG).
+ */
+final class BarcodeService
 {
+    public const DEFAULT_WIDTH_FACTOR = 2;
+    public const DEFAULT_HEIGHT = 50;
+    public const EAN13_LENGTH = 13;
+    public const EAN13_DATA_LENGTH = 12;
     /**
-     * Generate barcode as PNG image
+     * Generate barcode as PNG image.
+     *
+     * @param string $code The barcode content
+     * @param int $widthFactor Width multiplier (default: 2)
+     * @param int $height Height in pixels (default: 50)
+     * @return string Base64-encoded PNG image data
      */
     public function generatePNG(string $code, int $widthFactor = 2, int $height = 50): string
     {
@@ -18,7 +35,12 @@ class BarcodeService
     }
 
     /**
-     * Generate barcode as HTML
+     * Generate barcode as HTML.
+     *
+     * @param string $code The barcode content
+     * @param int $widthFactor Width multiplier (default: 2)
+     * @param int $height Height in pixels (default: 50)
+     * @return string HTML representation of the barcode
      */
     public function generateHTML(string $code, int $widthFactor = 2, int $height = 50): string
     {
@@ -27,7 +49,12 @@ class BarcodeService
     }
 
     /**
-     * Generate barcode as SVG
+     * Generate barcode as SVG.
+     *
+     * @param string $code The barcode content
+     * @param int $widthFactor Width multiplier (default: 2)
+     * @param int $height Height in pixels (default: 50)
+     * @return string SVG markup for the barcode
      */
     public function generateSVG(string $code, int $widthFactor = 2, int $height = 50): string
     {
@@ -36,7 +63,12 @@ class BarcodeService
     }
 
     /**
-     * Generate a random barcode number
+     * Generate a random barcode number.
+     *
+     * Generates a valid EAN-13 barcode with proper check digit.
+     *
+     * @param int $length Total length including check digit (default: 13)
+     * @return string A valid EAN-13 barcode
      */
     public function generateRandomBarcode(int $length = 13): string
     {
@@ -50,7 +82,10 @@ class BarcodeService
     }
 
     /**
-     * Calculate EAN-13 check digit
+     * Calculate EAN-13 check digit.
+     *
+     * @param string $code The first 12 digits of the barcode
+     * @return int The calculated check digit (0-9)
      */
     private function calculateEAN13CheckDigit(string $code): int
     {
@@ -64,7 +99,12 @@ class BarcodeService
     }
 
     /**
-     * Generate barcode from SKU
+     * Generate barcode from SKU.
+     *
+     * Converts SKU to numeric format and appends EAN-13 check digit.
+     *
+     * @param string $sku The product SKU to convert
+     * @return string A valid EAN-13 barcode
      */
     public function generateFromSKU(string $sku): string
     {
@@ -80,7 +120,10 @@ class BarcodeService
     }
 
     /**
-     * Validate EAN-13 barcode
+     * Validate EAN-13 barcode.
+     *
+     * @param string $barcode The barcode to validate
+     * @return bool True if barcode is a valid EAN-13
      */
     public function validateEAN13(string $barcode): bool
     {

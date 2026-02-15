@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Models;
 
 use App\Models\Auth\Organization;
@@ -9,7 +11,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Str;
 
 /**
- * Webhook model for storing webhook configurations.
+ * Represents a webhook configuration for external integrations.
  *
  * @property int $id
  * @property int $organization_id
@@ -21,6 +23,9 @@ use Illuminate\Support\Str;
  * @property int|null $created_by
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property-read \App\Models\Auth\Organization $organization
+ * @property-read \App\Models\User|null $creator
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\WebhookDelivery[] $deliveries
  */
 class Webhook extends Model
 {
@@ -54,6 +59,8 @@ class Webhook extends Model
 
     /**
      * Boot the model.
+     *
+     * @return void
      */
     protected static function boot(): void
     {
@@ -68,6 +75,8 @@ class Webhook extends Model
 
     /**
      * Get the organization that owns the webhook.
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo<\App\Models\Auth\Organization, $this>
      */
     public function organization(): BelongsTo
     {
@@ -76,6 +85,8 @@ class Webhook extends Model
 
     /**
      * Get the user who created the webhook.
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo<\App\Models\User, $this>
      */
     public function creator(): BelongsTo
     {
@@ -84,6 +95,8 @@ class Webhook extends Model
 
     /**
      * Get the deliveries for this webhook.
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany<\App\Models\WebhookDelivery, $this>
      */
     public function deliveries(): HasMany
     {
@@ -93,9 +106,9 @@ class Webhook extends Model
     /**
      * Scope a query to only include webhooks for a specific organization.
      *
-     * @param \Illuminate\Database\Eloquent\Builder $query
+     * @param \Illuminate\Database\Eloquent\Builder<static> $query
      * @param int $organizationId
-     * @return \Illuminate\Database\Eloquent\Builder
+     * @return \Illuminate\Database\Eloquent\Builder<static>
      */
     public function scopeForOrganization($query, int $organizationId)
     {
@@ -105,8 +118,8 @@ class Webhook extends Model
     /**
      * Scope a query to only include active webhooks.
      *
-     * @param \Illuminate\Database\Eloquent\Builder $query
-     * @return \Illuminate\Database\Eloquent\Builder
+     * @param \Illuminate\Database\Eloquent\Builder<static> $query
+     * @return \Illuminate\Database\Eloquent\Builder<static>
      */
     public function scopeActive($query)
     {
@@ -116,9 +129,9 @@ class Webhook extends Model
     /**
      * Scope a query to only include webhooks subscribed to a specific event.
      *
-     * @param \Illuminate\Database\Eloquent\Builder $query
+     * @param \Illuminate\Database\Eloquent\Builder<static> $query
      * @param string $event
-     * @return \Illuminate\Database\Eloquent\Builder
+     * @return \Illuminate\Database\Eloquent\Builder<static>
      */
     public function scopeSubscribedTo($query, string $event)
     {

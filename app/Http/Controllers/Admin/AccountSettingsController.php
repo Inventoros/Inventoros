@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
@@ -9,10 +11,19 @@ use Illuminate\Validation\Rules\Password;
 use Inertia\Inertia;
 use Inertia\Response;
 
+/**
+ * Controller for managing user account settings.
+ *
+ * Handles profile updates, password changes, notification
+ * preferences, and user preferences.
+ */
 class AccountSettingsController extends Controller
 {
     /**
      * Display the account settings page.
+     *
+     * @param Request $request The incoming HTTP request
+     * @return Response
      */
     public function index(Request $request): Response
     {
@@ -25,6 +36,9 @@ class AccountSettingsController extends Controller
 
     /**
      * Update user profile information.
+     *
+     * @param Request $request The incoming HTTP request containing profile data
+     * @return \Illuminate\Http\RedirectResponse
      */
     public function updateProfile(Request $request)
     {
@@ -42,6 +56,9 @@ class AccountSettingsController extends Controller
 
     /**
      * Update user password.
+     *
+     * @param Request $request The incoming HTTP request containing password data
+     * @return \Illuminate\Http\RedirectResponse
      */
     public function updatePassword(Request $request)
     {
@@ -66,6 +83,9 @@ class AccountSettingsController extends Controller
 
     /**
      * Update notification preferences.
+     *
+     * @param Request $request The incoming HTTP request containing notification preferences
+     * @return \Illuminate\Http\RedirectResponse
      */
     public function updateNotifications(Request $request)
     {
@@ -88,6 +108,9 @@ class AccountSettingsController extends Controller
 
     /**
      * Update user preferences.
+     *
+     * @param Request $request The incoming HTTP request containing user preferences
+     * @return \Illuminate\Http\RedirectResponse
      */
     public function updatePreferences(Request $request)
     {

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
@@ -10,10 +12,19 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
+/**
+ * API Controller for managing stock adjustments.
+ *
+ * Handles RESTful API operations for stock adjustment records
+ * including listing and creating adjustments.
+ */
 class StockAdjustmentController extends Controller
 {
     /**
      * Display a listing of stock adjustments.
+     *
+     * @param Request $request The incoming HTTP request
+     * @return AnonymousResourceCollection
      */
     public function index(Request $request): AnonymousResourceCollection
     {
@@ -47,6 +58,9 @@ class StockAdjustmentController extends Controller
 
     /**
      * Store a newly created stock adjustment.
+     *
+     * @param Request $request The incoming HTTP request containing adjustment data
+     * @return JsonResponse
      */
     public function store(Request $request): JsonResponse
     {
@@ -91,6 +105,10 @@ class StockAdjustmentController extends Controller
 
     /**
      * Display the specified stock adjustment.
+     *
+     * @param Request $request The incoming HTTP request
+     * @param StockAdjustment $stockAdjustment The stock adjustment to display
+     * @return JsonResponse
      */
     public function show(Request $request, StockAdjustment $stockAdjustment): JsonResponse
     {

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Services;
 
 use App\Services\Update\BackupService;
@@ -10,10 +12,26 @@ use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Log;
 
-class UpdateService
+/**
+ * Service for managing application updates from GitHub releases.
+ *
+ * Handles the complete update process including backup creation,
+ * downloading releases, file replacement, and database migrations.
+ */
+final class UpdateService
 {
+    public const MAINTENANCE_RETRY_SECONDS = 60;
+
+    /**
+     * @var string The current installed version of the application
+     */
     protected string $currentVersion;
 
+    /**
+     * @param GitHubReleaseService $githubService Service for interacting with GitHub API
+     * @param BackupService $backupService Service for creating and managing backups
+     * @param FileUpdateService $fileService Service for downloading and extracting update files
+     */
     public function __construct(
         protected GitHubReleaseService $githubService,
         protected BackupService $backupService,
@@ -23,7 +41,9 @@ class UpdateService
     }
 
     /**
-     * Get current installed version
+     * Get current installed version.
+     *
+     * @return string The current version string
      */
     public function getCurrentVersion(): string
     {
@@ -31,7 +51,9 @@ class UpdateService
     }
 
     /**
-     * Get the latest release information from GitHub
+     * Get the latest release information from GitHub.
+     *
+     * @return array|null Release information containing version, name, body, download_url, etc., or null if unavailable
      */
     public function getLatestRelease(): ?array
     {
@@ -39,7 +61,9 @@ class UpdateService
     }
 
     /**
-     * Check if an update is available
+     * Check if an update is available.
+     *
+     * @return bool True if a newer version is available
      */
     public function isUpdateAvailable(): bool
     {
@@ -47,7 +71,10 @@ class UpdateService
     }
 
     /**
-     * Create a backup of the current installation
+     * Create a backup of the current installation.
+     *
+     * @return string Path to the created backup file
+     * @throws Exception If backup creation fails
      */
     public function createBackup(): string
     {
@@ -55,7 +82,9 @@ class UpdateService
     }
 
     /**
-     * List available backups
+     * List available backups.
+     *
+     * @return array<int, array{filename: string, path: string, size: int, created_at: int}> List of backup files sorted by creation time
      */
     public function listBackups(): array
     {
@@ -63,7 +92,12 @@ class UpdateService
     }
 
     /**
-     * Perform the update process
+     * Perform the update process.
+     *
+     * @param string|null $downloadUrl Optional direct download URL, otherwise fetches from GitHub
+     * @param callable|null $progressCallback Optional callback for progress updates
+     * @return array{success: bool, message: string, backup_path?: string, new_version?: string, error?: string} Update result
+     * @throws Exception If critical update steps fail
      */
     public function update(?string $downloadUrl = null, callable $progressCallback = null): array
     {
@@ -162,7 +196,10 @@ class UpdateService
     }
 
     /**
-     * Restore from backup
+     * Restore from backup.
+     *
+     * @param string $backupPath Path to the backup file
+     * @return array{success: bool, message: string, error?: string} Restore result
      */
     public function restoreFromBackup(string $backupPath): array
     {
@@ -208,7 +245,9 @@ class UpdateService
             try {
                 Artisan::call('up');
             } catch (Exception $upException) {
-                Log::error('Failed to bring application up after restore error');
+                Log::error('Failed to bring application up after restore error', [
+                    'error' => $upException->getMessage(),
+                ]);
             }
 
             return [
@@ -220,7 +259,9 @@ class UpdateService
     }
 
     /**
-     * Read version from VERSION file
+     * Read version from VERSION file.
+     *
+     * @return string The version string from file, or '1.0.0' as default
      */
     protected function readVersionFile(): string
     {
@@ -234,7 +275,10 @@ class UpdateService
     }
 
     /**
-     * Write version to VERSION file
+     * Write version to VERSION file.
+     *
+     * @param string $version The version string to write
+     * @return void
      */
     protected function writeVersionFile(string $version): void
     {
@@ -243,11 +287,15 @@ class UpdateService
     }
 
     /**
-     * Log message and call progress callback
+     * Log message and call progress callback.
+     *
+     * @param callable|null $callback Optional callback to receive progress messages
+     * @param string $message The message to log
+     * @return void
      */
     protected function log(?callable $callback, string $message): void
     {
-        Log::info($message);
+        Log::info($message, ['component' => 'update_service']);
 
         if ($callback) {
             $callback($message);

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Middleware;
 
 use App\Models\System\SystemSetting;
@@ -8,7 +10,12 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Symfony\Component\HttpFoundation\Response;
 
-class CheckInstallation
+/**
+ * Middleware to check if the application has been installed.
+ *
+ * Redirects uninstalled applications to the installation wizard.
+ */
+final class CheckInstallation
 {
     /**
      * Handle an incoming request.

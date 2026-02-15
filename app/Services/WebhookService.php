@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Services;
 
 use App\Jobs\WebhookDeliveryJob;
@@ -9,9 +11,14 @@ use Illuminate\Support\Str;
 
 /**
  * Service for managing webhook dispatching and delivery.
+ *
+ * Provides static methods for dispatching webhooks to subscribed endpoints,
+ * generating and verifying HMAC signatures, and managing event definitions.
  */
-class WebhookService
+final class WebhookService
 {
+    public const SIGNATURE_ALGORITHM = 'sha256';
+    public const STATUS_PENDING = 'pending';
     /**
      * Dispatch webhook for an event to all subscribed webhooks.
      *

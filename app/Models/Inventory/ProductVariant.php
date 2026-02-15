@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Models\Inventory;
 
 use App\Models\Auth\Organization;
@@ -10,6 +12,40 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
+/**
+ * Represents a specific variant of a product (e.g., red shirt size M).
+ *
+ * @property int $id
+ * @property int $product_id
+ * @property int $organization_id
+ * @property string|null $sku
+ * @property string|null $barcode
+ * @property string|null $title
+ * @property array|null $option_values
+ * @property string|null $price
+ * @property string|null $purchase_price
+ * @property string|null $compare_at_price
+ * @property int $stock
+ * @property int|null $min_stock
+ * @property string|null $image
+ * @property string|null $weight
+ * @property string|null $weight_unit
+ * @property bool $is_active
+ * @property bool $requires_shipping
+ * @property int $position
+ * @property array|null $metadata
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property \Illuminate\Support\Carbon|null $deleted_at
+ * @property-read float $effective_price
+ * @property-read float $effective_purchase_price
+ * @property-read float $profit
+ * @property-read float $profit_margin
+ * @property-read float $discount_percentage
+ * @property-read \App\Models\Inventory\Product $product
+ * @property-read \App\Models\Auth\Organization $organization
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Inventory\StockAdjustment[] $stockAdjustments
+ */
 class ProductVariant extends Model
 {
     use HasFactory, SoftDeletes, LogsActivity;
@@ -64,6 +100,8 @@ class ProductVariant extends Model
 
     /**
      * Get the product that owns this variant.
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo<\App\Models\Inventory\Product, $this>
      */
     public function product(): BelongsTo
     {
@@ -72,6 +110,8 @@ class ProductVariant extends Model
 
     /**
      * Get the organization that owns this variant.
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo<\App\Models\Auth\Organization, $this>
      */
     public function organization(): BelongsTo
     {
@@ -80,6 +120,8 @@ class ProductVariant extends Model
 
     /**
      * Get stock adjustments for this variant.
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany<\App\Models\Inventory\StockAdjustment, $this>
      */
     public function stockAdjustments(): HasMany
     {
@@ -88,6 +130,8 @@ class ProductVariant extends Model
 
     /**
      * Get the effective price (variant price or fallback to product price).
+     *
+     * @return float
      */
     public function getEffectivePriceAttribute(): float
     {
@@ -96,6 +140,8 @@ class ProductVariant extends Model
 
     /**
      * Get the effective purchase price (variant or fallback to product).
+     *
+     * @return float
      */
     public function getEffectivePurchasePriceAttribute(): float
     {
@@ -104,6 +150,8 @@ class ProductVariant extends Model
 
     /**
      * Get the profit per unit.
+     *
+     * @return float
      */
     public function getProfitAttribute(): float
     {
@@ -118,6 +166,8 @@ class ProductVariant extends Model
 
     /**
      * Get the profit margin percentage.
+     *
+     * @return float
      */
     public function getProfitMarginAttribute(): float
     {
@@ -132,6 +182,8 @@ class ProductVariant extends Model
 
     /**
      * Check if the variant is low on stock.
+     *
+     * @return bool
      */
     public function isLowStock(): bool
     {
@@ -140,6 +192,8 @@ class ProductVariant extends Model
 
     /**
      * Check if the variant is out of stock.
+     *
+     * @return bool
      */
     public function isOutOfStock(): bool
     {
@@ -148,6 +202,8 @@ class ProductVariant extends Model
 
     /**
      * Check if this variant is on sale.
+     *
+     * @return bool
      */
     public function isOnSale(): bool
     {
@@ -156,6 +212,8 @@ class ProductVariant extends Model
 
     /**
      * Get the discount percentage.
+     *
+     * @return float
      */
     public function getDiscountPercentageAttribute(): float
     {
@@ -167,6 +225,8 @@ class ProductVariant extends Model
 
     /**
      * Generate title from option values.
+     *
+     * @return string
      */
     public function generateTitle(): string
     {
@@ -178,6 +238,8 @@ class ProductVariant extends Model
 
     /**
      * Auto-generate title before saving.
+     *
+     * @return void
      */
     protected static function booted(): void
     {
@@ -190,6 +252,10 @@ class ProductVariant extends Model
 
     /**
      * Scope a query to only include variants from a specific organization.
+     *
+     * @param \Illuminate\Database\Eloquent\Builder<static> $query
+     * @param int $organizationId
+     * @return \Illuminate\Database\Eloquent\Builder<static>
      */
     public function scopeForOrganization($query, $organizationId)
     {
@@ -198,6 +264,9 @@ class ProductVariant extends Model
 
     /**
      * Scope a query to only include active variants.
+     *
+     * @param \Illuminate\Database\Eloquent\Builder<static> $query
+     * @return \Illuminate\Database\Eloquent\Builder<static>
      */
     public function scopeActive($query)
     {
@@ -206,6 +275,9 @@ class ProductVariant extends Model
 
     /**
      * Scope a query to only include variants with low stock.
+     *
+     * @param \Illuminate\Database\Eloquent\Builder<static> $query
+     * @return \Illuminate\Database\Eloquent\Builder<static>
      */
     public function scopeLowStock($query)
     {
@@ -214,6 +286,9 @@ class ProductVariant extends Model
 
     /**
      * Scope to order by position.
+     *
+     * @param \Illuminate\Database\Eloquent\Builder<static> $query
+     * @return \Illuminate\Database\Eloquent\Builder<static>
      */
     public function scopeOrdered($query)
     {
@@ -222,6 +297,9 @@ class ProductVariant extends Model
 
     /**
      * Get a specific option value.
+     *
+     * @param string $optionName
+     * @return string|null
      */
     public function getOptionValue(string $optionName): ?string
     {
@@ -230,6 +308,9 @@ class ProductVariant extends Model
 
     /**
      * Check if variant matches given option values.
+     *
+     * @param array<string, string> $optionValues
+     * @return bool
      */
     public function matchesOptions(array $optionValues): bool
     {

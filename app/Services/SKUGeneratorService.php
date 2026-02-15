@@ -1,26 +1,45 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Services;
 
 use App\Models\Inventory\Product;
 use App\Models\Inventory\ProductCategory;
 use Illuminate\Support\Str;
 
-class SKUGeneratorService
+/**
+ * Service for generating product SKUs based on configurable patterns.
+ *
+ * Supports various pattern variables including category codes,
+ * product names, dates, random strings, and sequential numbers.
+ */
+final class SKUGeneratorService
 {
+    public const CATEGORY_CODE_LENGTH = 3;
+    public const CATEGORY_ID_PAD_LENGTH = 2;
+    public const RANDOM_LENGTH = 6;
+    public const SEQUENTIAL_PAD_LENGTH = 6;
+    public const SEQUENTIAL_DATA_LENGTH = 12;
     /**
-     * Generate SKU based on pattern
-     * 
+     * Generate SKU based on pattern.
+     *
      * Available patterns:
-     * {category} - Category code (first 3 letters uppercase)
-     * {category_id} - Category ID padded to 2 digits
-     * {name} - Product name (first 3 letters uppercase)
-     * {random} - Random alphanumeric (6 chars)
-     * {number} - Sequential number (6 digits)
-     * {date} - Current date (YYMMDD)
-     * {year} - Current year (YYYY)
-     * {month} - Current month (MM)
-     * {timestamp} - Unix timestamp
+     * - {category} - Category code (first 3 letters uppercase)
+     * - {category_id} - Category ID padded to 2 digits
+     * - {name} - Product name (first 3 letters uppercase)
+     * - {random} - Random alphanumeric (6 chars)
+     * - {number} - Sequential number (6 digits)
+     * - {date} - Current date (YYMMDD)
+     * - {year} - Current year (YYYY)
+     * - {month} - Current month (MM)
+     * - {timestamp} - Unix timestamp
+     *
+     * @param string $pattern The SKU pattern with placeholders
+     * @param int $organizationId The organization ID for uniqueness checks
+     * @param string|null $productName Optional product name for {name} placeholder
+     * @param int|null $categoryId Optional category ID for {category} placeholder
+     * @return string The generated SKU
      */
     public function generate(
         string $pattern,
@@ -97,7 +116,12 @@ class SKUGeneratorService
     }
 
     /**
-     * Check if SKU is unique within organization
+     * Check if SKU is unique within organization.
+     *
+     * @param string $sku The SKU to check
+     * @param int $organizationId The organization ID to check within
+     * @param int|null $excludeProductId Optional product ID to exclude from check
+     * @return bool True if SKU is unique
      */
     public function isUnique(string $sku, int $organizationId, ?int $excludeProductId = null): bool
     {
@@ -112,7 +136,16 @@ class SKUGeneratorService
     }
 
     /**
-     * Generate unique SKU (adds suffix if duplicate)
+     * Generate unique SKU (adds suffix if duplicate).
+     *
+     * If the generated SKU already exists, appends a numeric suffix.
+     *
+     * @param string $pattern The SKU pattern with placeholders
+     * @param int $organizationId The organization ID for uniqueness checks
+     * @param string|null $productName Optional product name for {name} placeholder
+     * @param int|null $categoryId Optional category ID for {category} placeholder
+     * @param int|null $excludeProductId Optional product ID to exclude from check
+     * @return string A unique SKU
      */
     public function generateUnique(
         string $pattern,
@@ -122,7 +155,7 @@ class SKUGeneratorService
         ?int $excludeProductId = null
     ): string {
         $baseSku = $this->generate($pattern, $organizationId, $productName, $categoryId);
-        
+
         if ($this->isUnique($baseSku, $organizationId, $excludeProductId)) {
             return $baseSku;
         }
@@ -138,7 +171,9 @@ class SKUGeneratorService
     }
 
     /**
-     * Get available pattern variables
+     * Get available pattern variables.
+     *
+     * @return array<int, array{key: string, description: string, example: string}> List of pattern variables
      */
     public static function getAvailablePatterns(): array
     {
@@ -192,7 +227,9 @@ class SKUGeneratorService
     }
 
     /**
-     * Get preset patterns
+     * Get preset patterns.
+     *
+     * @return array<int, array{name: string, pattern: string, example: string}> List of preset patterns
      */
     public static function getPresetPatterns(): array
     {

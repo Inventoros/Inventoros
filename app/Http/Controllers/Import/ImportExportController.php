@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers\Import;
 
 use App\Http\Controllers\Controller;
@@ -13,10 +15,19 @@ use Inertia\Inertia;
 use Inertia\Response;
 use Maatwebsite\Excel\Facades\Excel;
 
+/**
+ * Controller for handling data import and export.
+ *
+ * Manages importing and exporting products, orders, and users
+ * via Excel/CSV files.
+ */
 class ImportExportController extends Controller
 {
     /**
-     * Display the import/export page
+     * Display the import/export page.
+     *
+     * @param Request $request The incoming HTTP request
+     * @return Response
      */
     public function index(Request $request): Response
     {
@@ -39,7 +50,10 @@ class ImportExportController extends Controller
     }
 
     /**
-     * Export products to CSV
+     * Export products to Excel file.
+     *
+     * @param Request $request The incoming HTTP request containing export filters
+     * @return \Symfony\Component\HttpFoundation\BinaryFileResponse
      */
     public function exportProducts(Request $request)
     {
@@ -57,7 +71,10 @@ class ImportExportController extends Controller
     }
 
     /**
-     * Download product import template
+     * Download product import template.
+     *
+     * @param Request $request The incoming HTTP request
+     * @return \Illuminate\Http\Response
      */
     public function downloadTemplate(Request $request)
     {
@@ -110,7 +127,10 @@ class ImportExportController extends Controller
     }
 
     /**
-     * Import products from CSV
+     * Import products from Excel/CSV file.
+     *
+     * @param Request $request The incoming HTTP request containing the import file
+     * @return \Illuminate\Http\RedirectResponse
      */
     public function importProducts(Request $request)
     {
@@ -149,7 +169,10 @@ class ImportExportController extends Controller
     }
 
     /**
-     * Export orders to CSV
+     * Export orders to Excel file.
+     *
+     * @param Request $request The incoming HTTP request containing export filters
+     * @return \Symfony\Component\HttpFoundation\BinaryFileResponse
      */
     public function exportOrders(Request $request)
     {
@@ -166,7 +189,10 @@ class ImportExportController extends Controller
     }
 
     /**
-     * Export users to CSV
+     * Export users to Excel file.
+     *
+     * @param Request $request The incoming HTTP request containing export filters
+     * @return \Symfony\Component\HttpFoundation\BinaryFileResponse
      */
     public function exportUsers(Request $request)
     {

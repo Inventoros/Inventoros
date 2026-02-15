@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers\Inventory;
 
 use App\Http\Controllers\Controller;
@@ -8,10 +10,19 @@ use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 
+/**
+ * Controller for managing product locations.
+ *
+ * Handles CRUD operations for product storage locations
+ * with plugin integration support.
+ */
 class ProductLocationController extends Controller
 {
     /**
      * Display a listing of locations.
+     *
+     * @param Request $request The incoming HTTP request
+     * @return Response
      */
     public function index(Request $request): Response
     {
@@ -44,6 +55,9 @@ class ProductLocationController extends Controller
 
     /**
      * Store a newly created location.
+     *
+     * @param Request $request The incoming HTTP request containing location data
+     * @return \Illuminate\Http\RedirectResponse|\Illuminate\Http\JsonResponse
      */
     public function store(Request $request)
     {
@@ -74,6 +88,10 @@ class ProductLocationController extends Controller
 
     /**
      * Update the specified location.
+     *
+     * @param Request $request The incoming HTTP request containing updated location data
+     * @param ProductLocation $location The location to update
+     * @return \Illuminate\Http\RedirectResponse
      */
     public function update(Request $request, ProductLocation $location)
     {
@@ -97,6 +115,10 @@ class ProductLocationController extends Controller
 
     /**
      * Remove the specified location.
+     *
+     * @param Request $request The incoming HTTP request
+     * @param ProductLocation $location The location to delete
+     * @return \Illuminate\Http\RedirectResponse
      */
     public function destroy(Request $request, ProductLocation $location)
     {

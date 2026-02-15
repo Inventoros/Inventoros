@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Models;
 
 use App\Models\Auth\Organization;
@@ -11,6 +13,42 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
+/**
+ * Represents a customer in the system.
+ *
+ * @property int $id
+ * @property int $organization_id
+ * @property string $name
+ * @property string|null $code
+ * @property string|null $company_name
+ * @property string|null $contact_name
+ * @property string|null $email
+ * @property string|null $phone
+ * @property string|null $billing_address
+ * @property string|null $billing_city
+ * @property string|null $billing_state
+ * @property string|null $billing_zip_code
+ * @property string|null $billing_country
+ * @property string|null $shipping_address
+ * @property string|null $shipping_city
+ * @property string|null $shipping_state
+ * @property string|null $shipping_zip_code
+ * @property string|null $shipping_country
+ * @property string|null $tax_id
+ * @property string|null $payment_terms
+ * @property string|null $credit_limit
+ * @property string|null $currency
+ * @property string|null $notes
+ * @property array|null $metadata
+ * @property bool $is_active
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property \Illuminate\Support\Carbon|null $deleted_at
+ * @property-read string $full_billing_address
+ * @property-read string $full_shipping_address
+ * @property-read \App\Models\Auth\Organization $organization
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Order\Order[] $orders
+ */
 class Customer extends Model
 {
     use HasFactory, SoftDeletes, LogsActivity;
@@ -63,6 +101,8 @@ class Customer extends Model
 
     /**
      * Get the organization that owns the customer.
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo<\App\Models\Auth\Organization, $this>
      */
     public function organization(): BelongsTo
     {
@@ -71,6 +111,8 @@ class Customer extends Model
 
     /**
      * Get the orders for this customer.
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany<\App\Models\Order\Order, $this>
      */
     public function orders(): HasMany
     {
@@ -79,6 +121,10 @@ class Customer extends Model
 
     /**
      * Scope a query to only include customers from a specific organization.
+     *
+     * @param \Illuminate\Database\Eloquent\Builder<static> $query
+     * @param int $organizationId
+     * @return \Illuminate\Database\Eloquent\Builder<static>
      */
     public function scopeForOrganization($query, $organizationId)
     {
@@ -87,6 +133,9 @@ class Customer extends Model
 
     /**
      * Scope a query to only include active customers.
+     *
+     * @param \Illuminate\Database\Eloquent\Builder<static> $query
+     * @return \Illuminate\Database\Eloquent\Builder<static>
      */
     public function scopeActive($query)
     {
@@ -95,6 +144,10 @@ class Customer extends Model
 
     /**
      * Scope a query to search customers.
+     *
+     * @param \Illuminate\Database\Eloquent\Builder<static> $query
+     * @param string $term
+     * @return \Illuminate\Database\Eloquent\Builder<static>
      */
     public function scopeSearch($query, $term)
     {
@@ -109,6 +162,8 @@ class Customer extends Model
 
     /**
      * Get the full billing address as a single string.
+     *
+     * @return string
      */
     public function getFullBillingAddressAttribute(): string
     {
@@ -125,6 +180,8 @@ class Customer extends Model
 
     /**
      * Get the full shipping address as a single string.
+     *
+     * @return string
      */
     public function getFullShippingAddressAttribute(): string
     {
@@ -141,6 +198,8 @@ class Customer extends Model
 
     /**
      * Check if billing and shipping addresses are the same.
+     *
+     * @return bool
      */
     public function hasSameAddresses(): bool
     {

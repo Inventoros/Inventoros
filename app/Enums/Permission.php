@@ -1,7 +1,16 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Enums;
 
+/**
+ * Enum defining all available permissions in the system.
+ *
+ * Permissions are organized into categories: User Management, Role Management,
+ * Inventory Management, Customer Management, Supplier Management,
+ * Purchase Order Management, Order Management, Settings, Plugins, and Reports & Data.
+ */
 enum Permission: string
 {
     // User Management
@@ -67,7 +76,9 @@ enum Permission: string
     case VIEW_ACTIVITY_LOG = 'view_activity_log';
 
     /**
-     * Get permission label for display
+     * Get permission label for display.
+     *
+     * @return string
      */
     public function label(): string
     {
@@ -127,7 +138,9 @@ enum Permission: string
     }
 
     /**
-     * Get permission description
+     * Get permission description.
+     *
+     * @return string
      */
     public function description(): string
     {
@@ -187,7 +200,9 @@ enum Permission: string
     }
 
     /**
-     * Get permission category
+     * Get permission category.
+     *
+     * @return string
      */
     public function category(): string
     {
@@ -209,7 +224,9 @@ enum Permission: string
     }
 
     /**
-     * Get all permissions grouped by category
+     * Get all permissions grouped by category.
+     *
+     * @return array<string, array<int, array{value: string, label: string, description: string}>>
      */
     public static function grouped(): array
     {

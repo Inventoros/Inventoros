@@ -1,11 +1,34 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Models;
 
+use App\Models\Auth\Organization;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 
+/**
+ * Represents an activity log entry for tracking changes in the system.
+ *
+ * @property int $id
+ * @property int $organization_id
+ * @property int|null $user_id
+ * @property string|null $subject_type
+ * @property int|null $subject_id
+ * @property string $action
+ * @property string|null $description
+ * @property array|null $properties
+ * @property string|null $ip_address
+ * @property string|null $user_agent
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property-read array $changes
+ * @property-read \App\Models\Auth\Organization $organization
+ * @property-read \App\Models\User|null $user
+ * @property-read \Illuminate\Database\Eloquent\Model|null $subject
+ */
 class ActivityLog extends Model
 {
     protected $fillable = [
@@ -27,7 +50,9 @@ class ActivityLog extends Model
     ];
 
     /**
-     * Get the organization that owns the activity log
+     * Get the organization that owns the activity log.
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo<\App\Models\Auth\Organization, $this>
      */
     public function organization(): BelongsTo
     {
@@ -35,7 +60,9 @@ class ActivityLog extends Model
     }
 
     /**
-     * Get the user who performed the action
+     * Get the user who performed the action.
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo<\App\Models\User, $this>
      */
     public function user(): BelongsTo
     {
@@ -43,7 +70,9 @@ class ActivityLog extends Model
     }
 
     /**
-     * Get the subject model (product, order, etc.)
+     * Get the subject model (product, order, etc.).
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\MorphTo<\Illuminate\Database\Eloquent\Model, $this>
      */
     public function subject(): MorphTo
     {
@@ -51,7 +80,11 @@ class ActivityLog extends Model
     }
 
     /**
-     * Scope to filter by organization
+     * Scope to filter by organization.
+     *
+     * @param \Illuminate\Database\Eloquent\Builder<static> $query
+     * @param int $organizationId
+     * @return \Illuminate\Database\Eloquent\Builder<static>
      */
     public function scopeForOrganization($query, $organizationId)
     {
@@ -59,7 +92,12 @@ class ActivityLog extends Model
     }
 
     /**
-     * Scope to filter by subject type
+     * Scope to filter by subject type.
+     *
+     * @param \Illuminate\Database\Eloquent\Builder<static> $query
+     * @param string $subjectType
+     * @param int|null $subjectId
+     * @return \Illuminate\Database\Eloquent\Builder<static>
      */
     public function scopeForSubject($query, $subjectType, $subjectId = null)
     {
@@ -73,7 +111,11 @@ class ActivityLog extends Model
     }
 
     /**
-     * Scope to filter by action
+     * Scope to filter by action.
+     *
+     * @param \Illuminate\Database\Eloquent\Builder<static> $query
+     * @param string $action
+     * @return \Illuminate\Database\Eloquent\Builder<static>
      */
     public function scopeForAction($query, $action)
     {
@@ -81,7 +123,9 @@ class ActivityLog extends Model
     }
 
     /**
-     * Get formatted changes for display
+     * Get formatted changes for display.
+     *
+     * @return array<string, array{old: mixed, new: mixed}>
      */
     public function getChangesAttribute(): array
     {
@@ -105,7 +149,13 @@ class ActivityLog extends Model
     }
 
     /**
-     * Log an activity
+     * Log an activity.
+     *
+     * @param string $action
+     * @param \Illuminate\Database\Eloquent\Model $subject
+     * @param string|null $description
+     * @param array|null $properties
+     * @return static|null
      */
     public static function log(
         string $action,

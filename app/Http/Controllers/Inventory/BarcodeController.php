@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers\Inventory;
 
 use App\Http\Controllers\Controller;
@@ -7,17 +9,35 @@ use App\Models\Inventory\Product;
 use App\Services\BarcodeService;
 use Illuminate\Http\Request;
 
+/**
+ * Controller for managing product barcodes.
+ *
+ * Handles barcode generation, printing, and lookup functionality
+ * for inventory products.
+ */
 class BarcodeController extends Controller
 {
+    /**
+     * @var BarcodeService The barcode service instance
+     */
     protected $barcodeService;
 
+    /**
+     * Create a new controller instance.
+     *
+     * @param BarcodeService $barcodeService The barcode service instance
+     */
     public function __construct(BarcodeService $barcodeService)
     {
         $this->barcodeService = $barcodeService;
     }
 
     /**
-     * Generate barcode image for a product
+     * Generate barcode image for a product.
+     *
+     * @param Request $request The incoming HTTP request
+     * @param Product $product The product to generate barcode for
+     * @return \Illuminate\Http\JsonResponse
      */
     public function generate(Request $request, Product $product)
     {
@@ -38,7 +58,11 @@ class BarcodeController extends Controller
     }
 
     /**
-     * Generate barcode for printing
+     * Generate barcode for printing.
+     *
+     * @param Request $request The incoming HTTP request
+     * @param Product $product The product to print barcode for
+     * @return \Illuminate\Http\Response
      */
     public function print(Request $request, Product $product)
     {
@@ -63,7 +87,11 @@ class BarcodeController extends Controller
     }
 
     /**
-     * Generate random barcode for a product
+     * Generate random barcode for a product.
+     *
+     * @param Request $request The incoming HTTP request
+     * @param Product $product The product to generate random barcode for
+     * @return \Illuminate\Http\JsonResponse
      */
     public function generateRandom(Request $request, Product $product)
     {
@@ -84,7 +112,11 @@ class BarcodeController extends Controller
     }
 
     /**
-     * Generate barcode from SKU
+     * Generate barcode from SKU.
+     *
+     * @param Request $request The incoming HTTP request
+     * @param Product $product The product to generate barcode from SKU for
+     * @return \Illuminate\Http\JsonResponse
      */
     public function generateFromSKU(Request $request, Product $product)
     {
@@ -105,7 +137,10 @@ class BarcodeController extends Controller
     }
 
     /**
-     * Bulk print barcodes for multiple products
+     * Bulk print barcodes for multiple products.
+     *
+     * @param Request $request The incoming HTTP request containing product IDs
+     * @return \Illuminate\View\View
      */
     public function bulkPrint(Request $request)
     {

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Mail;
 
 use Illuminate\Bus\Queueable;
@@ -7,6 +9,11 @@ use Illuminate\Mail\Mailable;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Str;
 
+/**
+ * Mailable for sending order approval notification emails.
+ *
+ * Used to notify users when an order has been approved or rejected.
+ */
 class OrderApprovalEmail extends Mailable
 {
     use Queueable, SerializesModels;

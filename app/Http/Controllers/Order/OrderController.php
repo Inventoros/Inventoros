@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers\Order;
 
 use App\Http\Controllers\Controller;
@@ -11,10 +13,19 @@ use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
 
+/**
+ * Controller for managing orders.
+ *
+ * Handles CRUD operations for orders including listing,
+ * creating, updating, deleting, and order approval workflow.
+ */
 class OrderController extends Controller
 {
     /**
-     * Display a listing of the resource.
+     * Display a listing of orders.
+     *
+     * @param Request $request The incoming HTTP request
+     * @return Response
      */
     public function index(Request $request): Response
     {
@@ -53,7 +64,10 @@ class OrderController extends Controller
     }
 
     /**
-     * Show the form for creating a new resource.
+     * Show the form for creating a new order.
+     *
+     * @param Request $request The incoming HTTP request
+     * @return Response
      */
     public function create(Request $request): Response
     {
@@ -70,7 +84,10 @@ class OrderController extends Controller
     }
 
     /**
-     * Store a newly created resource in storage.
+     * Store a newly created order.
+     *
+     * @param Request $request The incoming HTTP request containing order data
+     * @return \Illuminate\Http\RedirectResponse
      */
     public function store(Request $request)
     {
@@ -155,7 +172,10 @@ class OrderController extends Controller
     }
 
     /**
-     * Display the specified resource.
+     * Display the specified order.
+     *
+     * @param Order $order The order to display
+     * @return Response
      */
     public function show(Order $order): Response
     {
@@ -182,7 +202,11 @@ class OrderController extends Controller
     }
 
     /**
-     * Show the form for editing the specified resource.
+     * Show the form for editing the specified order.
+     *
+     * @param Request $request The incoming HTTP request
+     * @param Order $order The order to edit
+     * @return Response
      */
     public function edit(Request $request, Order $order): Response
     {
@@ -207,7 +231,11 @@ class OrderController extends Controller
     }
 
     /**
-     * Update the specified resource in storage.
+     * Update the specified order.
+     *
+     * @param Request $request The incoming HTTP request containing updated order data
+     * @param Order $order The order to update
+     * @return \Illuminate\Http\RedirectResponse
      */
     public function update(Request $request, Order $order)
     {
@@ -232,8 +260,8 @@ class OrderController extends Controller
             'items.*.unit_price' => 'required|numeric|min:0',
         ]);
 
-        // Load existing items
-        $order->load('items');
+        // Load existing items with product relationship
+        $order->load('items.product');
         $existingItems = $order->items->keyBy('id');
 
         // Track which items to keep
@@ -324,7 +352,11 @@ class OrderController extends Controller
     }
 
     /**
-     * Remove the specified resource from storage.
+     * Remove the specified order.
+     *
+     * @param Request $request The incoming HTTP request
+     * @param Order $order The order to delete
+     * @return \Illuminate\Http\RedirectResponse
      */
     public function destroy(Request $request, Order $order)
     {
@@ -332,6 +364,9 @@ class OrderController extends Controller
         if ($order->organization_id !== $request->user()->organization_id) {
             abort(403, 'Unauthorized action.');
         }
+
+        // Load items with product relationship for stock restoration
+        $order->load('items.product');
 
         // Restore stock for all items
         foreach ($order->items as $item) {
@@ -348,6 +383,10 @@ class OrderController extends Controller
 
     /**
      * Approve an order.
+     *
+     * @param Request $request The incoming HTTP request
+     * @param Order $order The order to approve
+     * @return \Illuminate\Http\RedirectResponse
      */
     public function approve(Request $request, Order $order)
     {
@@ -383,6 +422,10 @@ class OrderController extends Controller
 
     /**
      * Reject an order.
+     *
+     * @param Request $request The incoming HTTP request
+     * @param Order $order The order to reject
+     * @return \Illuminate\Http\RedirectResponse
      */
     public function reject(Request $request, Order $order)
     {

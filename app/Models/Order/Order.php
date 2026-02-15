@@ -1,8 +1,11 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Models\Order;
 
 use App\Models\Auth\Organization;
+use App\Models\Customer;
 use App\Models\User;
 use App\Traits\LogsActivity;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -11,9 +14,51 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
+/**
+ * Represents an order in the system.
+ *
+ * @property int $id
+ * @property int $organization_id
+ * @property int|null $created_by
+ * @property string $order_number
+ * @property string|null $source
+ * @property string|null $external_id
+ * @property string|null $customer_name
+ * @property string|null $customer_email
+ * @property string|null $customer_address
+ * @property string $status
+ * @property string $approval_status
+ * @property int|null $approved_by
+ * @property \Illuminate\Support\Carbon|null $approved_at
+ * @property string|null $approval_notes
+ * @property string $subtotal
+ * @property string $tax
+ * @property string $shipping
+ * @property string $total
+ * @property string|null $currency
+ * @property \Illuminate\Support\Carbon|null $order_date
+ * @property \Illuminate\Support\Carbon|null $shipped_at
+ * @property \Illuminate\Support\Carbon|null $delivered_at
+ * @property string|null $notes
+ * @property array|null $metadata
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property \Illuminate\Support\Carbon|null $deleted_at
+ * @property-read \App\Models\Auth\Organization $organization
+ * @property-read \App\Models\User|null $creator
+ * @property-read \App\Models\User|null $approver
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Order\OrderItem[] $items
+ */
 class Order extends Model
 {
     use HasFactory, SoftDeletes, LogsActivity;
+
+    public const APPROVAL_STATUS_PENDING = 'pending';
+    public const APPROVAL_STATUS_APPROVED = 'approved';
+    public const APPROVAL_STATUS_REJECTED = 'rejected';
+
+    private const ORDER_NUMBER_PREFIX = 'ORD-';
+    private const ORDER_NUMBER_PAD_LENGTH = 4;
 
     /**
      * The attributes that are mass assignable.
@@ -68,6 +113,8 @@ class Order extends Model
 
     /**
      * Get the organization that owns the order.
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo<\App\Models\Auth\Organization, $this>
      */
     public function organization(): BelongsTo
     {
@@ -76,6 +123,8 @@ class Order extends Model
 
     /**
      * Get the user who created the order.
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo<\App\Models\User, $this>
      */
     public function creator(): BelongsTo
     {
@@ -84,6 +133,8 @@ class Order extends Model
 
     /**
      * Get the user who approved/rejected the order.
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo<\App\Models\User, $this>
      */
     public function approver(): BelongsTo
     {
@@ -92,6 +143,8 @@ class Order extends Model
 
     /**
      * Get the items for the order.
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany<\App\Models\Order\OrderItem, $this>
      */
     public function items(): HasMany
     {
@@ -100,6 +153,10 @@ class Order extends Model
 
     /**
      * Scope a query to only include orders from a specific organization.
+     *
+     * @param \Illuminate\Database\Eloquent\Builder<static> $query
+     * @param int $organizationId
+     * @return \Illuminate\Database\Eloquent\Builder<static>
      */
     public function scopeForOrganization($query, $organizationId)
     {
@@ -108,6 +165,10 @@ class Order extends Model
 
     /**
      * Scope a query to filter by status.
+     *
+     * @param \Illuminate\Database\Eloquent\Builder<static> $query
+     * @param string $status
+     * @return \Illuminate\Database\Eloquent\Builder<static>
      */
     public function scopeByStatus($query, $status)
     {
@@ -116,6 +177,10 @@ class Order extends Model
 
     /**
      * Scope a query to filter by source.
+     *
+     * @param \Illuminate\Database\Eloquent\Builder<static> $query
+     * @param string $source
+     * @return \Illuminate\Database\Eloquent\Builder<static>
      */
     public function scopeBySource($query, $source)
     {
@@ -124,6 +189,10 @@ class Order extends Model
 
     /**
      * Scope a query to filter by approval status.
+     *
+     * @param \Illuminate\Database\Eloquent\Builder<static> $query
+     * @param string $status
+     * @return \Illuminate\Database\Eloquent\Builder<static>
      */
     public function scopeByApprovalStatus($query, $status)
     {
@@ -132,6 +201,9 @@ class Order extends Model
 
     /**
      * Scope a query to only include orders pending approval.
+     *
+     * @param \Illuminate\Database\Eloquent\Builder<static> $query
+     * @return \Illuminate\Database\Eloquent\Builder<static>
      */
     public function scopeNeedsApproval($query)
     {
@@ -140,6 +212,8 @@ class Order extends Model
 
     /**
      * Check if the order is pending approval.
+     *
+     * @return bool
      */
     public function isPendingApproval(): bool
     {
@@ -148,6 +222,8 @@ class Order extends Model
 
     /**
      * Check if the order is approved.
+     *
+     * @return bool
      */
     public function isApproved(): bool
     {
@@ -156,6 +232,8 @@ class Order extends Model
 
     /**
      * Check if the order is rejected.
+     *
+     * @return bool
      */
     public function isRejected(): bool
     {
@@ -164,6 +242,8 @@ class Order extends Model
 
     /**
      * Generate a unique order number.
+     *
+     * @return string
      */
     public static function generateOrderNumber(): string
     {

@@ -1,12 +1,14 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
- * WebhookDelivery model for tracking webhook delivery attempts.
+ * Represents a webhook delivery attempt and its result.
  *
  * @property int $id
  * @property int $webhook_id
@@ -19,9 +21,14 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property string $status
  * @property \Illuminate\Support\Carbon|null $completed_at
  * @property \Illuminate\Support\Carbon $created_at
+ * @property-read \App\Models\Webhook $webhook
  */
 class WebhookDelivery extends Model
 {
+    public const STATUS_PENDING = 'pending';
+    public const STATUS_SUCCESS = 'success';
+    public const STATUS_FAILED = 'failed';
+
     /**
      * Indicates if the model should be timestamped.
      *
@@ -63,6 +70,8 @@ class WebhookDelivery extends Model
 
     /**
      * Boot the model.
+     *
+     * @return void
      */
     protected static function boot(): void
     {
@@ -75,6 +84,8 @@ class WebhookDelivery extends Model
 
     /**
      * Get the webhook that owns this delivery.
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo<\App\Models\Webhook, $this>
      */
     public function webhook(): BelongsTo
     {
@@ -84,8 +95,8 @@ class WebhookDelivery extends Model
     /**
      * Scope a query to only include pending deliveries.
      *
-     * @param \Illuminate\Database\Eloquent\Builder $query
-     * @return \Illuminate\Database\Eloquent\Builder
+     * @param \Illuminate\Database\Eloquent\Builder<static> $query
+     * @return \Illuminate\Database\Eloquent\Builder<static>
      */
     public function scopePending($query)
     {
@@ -95,8 +106,8 @@ class WebhookDelivery extends Model
     /**
      * Scope a query to only include failed deliveries.
      *
-     * @param \Illuminate\Database\Eloquent\Builder $query
-     * @return \Illuminate\Database\Eloquent\Builder
+     * @param \Illuminate\Database\Eloquent\Builder<static> $query
+     * @return \Illuminate\Database\Eloquent\Builder<static>
      */
     public function scopeFailed($query)
     {
@@ -106,8 +117,8 @@ class WebhookDelivery extends Model
     /**
      * Scope a query to only include successful deliveries.
      *
-     * @param \Illuminate\Database\Eloquent\Builder $query
-     * @return \Illuminate\Database\Eloquent\Builder
+     * @param \Illuminate\Database\Eloquent\Builder<static> $query
+     * @return \Illuminate\Database\Eloquent\Builder<static>
      */
     public function scopeSuccessful($query)
     {
@@ -117,8 +128,8 @@ class WebhookDelivery extends Model
     /**
      * Scope a query to only include deliveries ready for retry.
      *
-     * @param \Illuminate\Database\Eloquent\Builder $query
-     * @return \Illuminate\Database\Eloquent\Builder
+     * @param \Illuminate\Database\Eloquent\Builder<static> $query
+     * @return \Illuminate\Database\Eloquent\Builder<static>
      */
     public function scopeReadyForRetry($query)
     {

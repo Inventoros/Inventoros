@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
@@ -15,8 +17,19 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 
+/**
+ * Controller for the admin dashboard.
+ *
+ * Displays main dashboard with statistics, recent activity,
+ * and plugin integration points.
+ */
 class DashboardController extends Controller
 {
+    /**
+     * Display the admin dashboard.
+     *
+     * @return \Inertia\Response
+     */
     public function index()
     {
         $user = auth()->user();

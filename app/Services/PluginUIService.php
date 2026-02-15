@@ -1,21 +1,42 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Services;
 
 /**
- * Service for plugins to register custom UI elements (pages, menus, etc.)
+ * Service for plugins to register custom UI elements (pages, menus, etc).
+ *
+ * Provides a centralized registry for menu items, custom pages,
+ * dashboard widgets, and page components that plugins can add to.
  */
-class PluginUIService
+final class PluginUIService
 {
+    public const DEFAULT_POSITION = 100;
+    /**
+     * @var array<int, array> Registered menu items
+     */
     protected array $menuItems = [];
+
+    /**
+     * @var array<string, array> Registered custom pages keyed by route name
+     */
     protected array $customPages = [];
+
+    /**
+     * @var array<int, array> Registered dashboard widgets
+     */
     protected array $dashboardWidgets = [];
+
+    /**
+     * @var array<string, array<string, array>> Page components keyed by page then slot
+     */
     protected array $pageComponents = [];
 
     /**
-     * Register a custom menu item
+     * Register a custom menu item.
      *
-     * @param array $item Menu item configuration
+     * @param array $item Menu item configuration (label, route, url, icon, permission, position, parent, badge, active_routes, submenu)
      * @return void
      */
     public function addMenuItem(array $item): void
@@ -37,7 +58,7 @@ class PluginUIService
     }
 
     /**
-     * Register multiple menu items at once
+     * Register multiple menu items at once.
      *
      * @param array $items Array of menu item configurations
      * @return void
@@ -50,7 +71,7 @@ class PluginUIService
     }
 
     /**
-     * Add a submenu item to an existing menu item
+     * Add a submenu item to an existing menu item.
      *
      * @param string $parentLabel The label of the parent menu item
      * @param array $submenuItem Submenu item configuration
@@ -82,9 +103,9 @@ class PluginUIService
     }
 
     /**
-     * Get all registered menu items
+     * Get all registered menu items.
      *
-     * @return array
+     * @return array<int, array> Menu items sorted by position
      */
     public function getMenuItems(): array
     {
@@ -94,11 +115,11 @@ class PluginUIService
     }
 
     /**
-     * Register a custom page route
+     * Register a custom page route.
      *
      * @param string $route Route name
      * @param string $component Inertia component name
-     * @param array $options Additional options
+     * @param array $options Additional options (middleware, permission, title)
      * @return void
      */
     public function registerPage(string $route, string $component, array $options = []): void
@@ -116,9 +137,9 @@ class PluginUIService
     }
 
     /**
-     * Get all registered custom pages
+     * Get all registered custom pages.
      *
-     * @return array
+     * @return array<string, array> Custom pages keyed by route name
      */
     public function getCustomPages(): array
     {
@@ -126,9 +147,9 @@ class PluginUIService
     }
 
     /**
-     * Register a dashboard widget
+     * Register a dashboard widget.
      *
-     * @param array $widget Widget configuration
+     * @param array $widget Widget configuration (id, title, component, data, position, width, permission)
      * @return void
      */
     public function addDashboardWidget(array $widget): void
@@ -147,9 +168,9 @@ class PluginUIService
     }
 
     /**
-     * Get all registered dashboard widgets
+     * Get all registered dashboard widgets.
      *
-     * @return array
+     * @return array<int, array> Widgets sorted by position
      */
     public function getDashboardWidgets(): array
     {
@@ -159,11 +180,11 @@ class PluginUIService
     }
 
     /**
-     * Register a component to be injected into an existing page
+     * Register a component to be injected into an existing page.
      *
-     * @param string $page Page identifier (e.g., 'product.show', 'dashboard', 'product.index')
+     * @param string $page Page identifier (e.g., 'product.show', 'dashboard')
      * @param string $slot Slot name (e.g., 'sidebar', 'header', 'footer', 'tabs')
-     * @param array $component Component configuration
+     * @param array $component Component configuration (component, data, position, permission)
      * @return void
      */
     public function addPageComponent(string $page, string $slot, array $component): void
@@ -187,11 +208,11 @@ class PluginUIService
     }
 
     /**
-     * Get components registered for a specific page and slot
+     * Get components registered for a specific page and slot.
      *
      * @param string $page Page identifier
      * @param string $slot Slot name
-     * @return array
+     * @return array<int, array> Components sorted by position
      */
     public function getPageComponents(string $page, string $slot): array
     {
@@ -208,10 +229,10 @@ class PluginUIService
     }
 
     /**
-     * Get all components for a specific page
+     * Get all components for a specific page.
      *
      * @param string $page Page identifier
-     * @return array
+     * @return array<string, array<int, array>> Components keyed by slot name
      */
     public function getAllPageComponents(string $page): array
     {
@@ -219,7 +240,9 @@ class PluginUIService
     }
 
     /**
-     * Clear all registered UI elements (useful for testing)
+     * Clear all registered UI elements.
+     *
+     * Useful for testing or resetting the UI state.
      *
      * @return void
      */

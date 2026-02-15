@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Models\Purchasing;
 
 use App\Models\Inventory\Product;
@@ -7,6 +9,29 @@ use App\Models\Inventory\StockAdjustment;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
+/**
+ * Represents an item within a purchase order.
+ *
+ * @property int $id
+ * @property int $purchase_order_id
+ * @property int|null $product_id
+ * @property string $product_name
+ * @property string|null $sku
+ * @property string|null $supplier_sku
+ * @property int $quantity_ordered
+ * @property int $quantity_received
+ * @property string $unit_cost
+ * @property string $subtotal
+ * @property string $tax
+ * @property string $total
+ * @property string|null $notes
+ * @property array|null $metadata
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property-read int $remaining_quantity
+ * @property-read \App\Models\Purchasing\PurchaseOrder $purchaseOrder
+ * @property-read \App\Models\Inventory\Product|null $product
+ */
 class PurchaseOrderItem extends Model
 {
     protected $fillable = [
@@ -38,7 +63,9 @@ class PurchaseOrderItem extends Model
     ];
 
     /**
-     * Get the purchase order this item belongs to
+     * Get the purchase order this item belongs to.
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo<\App\Models\Purchasing\PurchaseOrder, $this>
      */
     public function purchaseOrder(): BelongsTo
     {
@@ -46,7 +73,9 @@ class PurchaseOrderItem extends Model
     }
 
     /**
-     * Get the product associated with this item
+     * Get the product associated with this item.
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo<\App\Models\Inventory\Product, $this>
      */
     public function product(): BelongsTo
     {
@@ -54,7 +83,9 @@ class PurchaseOrderItem extends Model
     }
 
     /**
-     * Calculate and set totals based on quantity and unit cost
+     * Calculate and set totals based on quantity and unit cost.
+     *
+     * @return void
      */
     public function calculateTotals(): void
     {
@@ -63,7 +94,9 @@ class PurchaseOrderItem extends Model
     }
 
     /**
-     * Check if item is fully received
+     * Check if item is fully received.
+     *
+     * @return bool
      */
     public function isFullyReceived(): bool
     {
@@ -71,7 +104,9 @@ class PurchaseOrderItem extends Model
     }
 
     /**
-     * Get remaining quantity to receive
+     * Get remaining quantity to receive.
+     *
+     * @return int
      */
     public function getRemainingQuantityAttribute(): int
     {
@@ -79,11 +114,12 @@ class PurchaseOrderItem extends Model
     }
 
     /**
-     * Receive a quantity of this item
-     * Creates a stock adjustment and updates product stock
+     * Receive a quantity of this item.
+     *
+     * Creates a stock adjustment and updates product stock.
      *
      * @param int $quantity The quantity to receive
-     * @return StockAdjustment|null
+     * @return \App\Models\Inventory\StockAdjustment|null
      */
     public function receive(int $quantity): ?StockAdjustment
     {
@@ -122,7 +158,12 @@ class PurchaseOrderItem extends Model
     }
 
     /**
-     * Static method to create item from product
+     * Static method to create item from product.
+     *
+     * @param \App\Models\Inventory\Product $product
+     * @param int $quantity
+     * @param float|null $unitCost
+     * @return static
      */
     public static function fromProduct(Product $product, int $quantity, ?float $unitCost = null): self
     {

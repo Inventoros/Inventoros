@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
@@ -7,10 +9,19 @@ use Illuminate\Auth\Events\Verified;
 use Illuminate\Foundation\Auth\EmailVerificationRequest;
 use Illuminate\Http\RedirectResponse;
 
+/**
+ * Controller for email verification.
+ *
+ * Handles marking user email as verified after clicking
+ * the verification link.
+ */
 class VerifyEmailController extends Controller
 {
     /**
      * Mark the authenticated user's email address as verified.
+     *
+     * @param EmailVerificationRequest $request The email verification request
+     * @return RedirectResponse
      */
     public function __invoke(EmailVerificationRequest $request): RedirectResponse
     {

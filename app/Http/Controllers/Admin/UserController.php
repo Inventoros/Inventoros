@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
@@ -11,10 +13,19 @@ use Illuminate\Validation\Rules\Password;
 use Inertia\Inertia;
 use Inertia\Response;
 
+/**
+ * Controller for managing users.
+ *
+ * Handles CRUD operations for users within an organization
+ * including role assignments.
+ */
 class UserController extends Controller
 {
     /**
      * Display a listing of users.
+     *
+     * @param Request $request The incoming HTTP request
+     * @return Response
      */
     public function index(Request $request): Response
     {
@@ -50,6 +61,9 @@ class UserController extends Controller
 
     /**
      * Show the form for creating a new user.
+     *
+     * @param Request $request The incoming HTTP request
+     * @return Response
      */
     public function create(Request $request): Response
     {
@@ -68,6 +82,9 @@ class UserController extends Controller
 
     /**
      * Store a newly created user.
+     *
+     * @param Request $request The incoming HTTP request containing user data
+     * @return \Illuminate\Http\RedirectResponse
      */
     public function store(Request $request)
     {
@@ -101,6 +118,10 @@ class UserController extends Controller
 
     /**
      * Display the specified user.
+     *
+     * @param Request $request The incoming HTTP request
+     * @param User $user The user to display
+     * @return Response
      */
     public function show(Request $request, User $user): Response
     {
@@ -120,6 +141,10 @@ class UserController extends Controller
 
     /**
      * Show the form for editing the specified user.
+     *
+     * @param Request $request The incoming HTTP request
+     * @param User $user The user to edit
+     * @return Response
      */
     public function edit(Request $request, User $user): Response
     {
@@ -146,6 +171,10 @@ class UserController extends Controller
 
     /**
      * Update the specified user.
+     *
+     * @param Request $request The incoming HTTP request containing updated user data
+     * @param User $user The user to update
+     * @return \Illuminate\Http\RedirectResponse
      */
     public function update(Request $request, User $user)
     {
@@ -200,6 +229,10 @@ class UserController extends Controller
 
     /**
      * Remove the specified user.
+     *
+     * @param Request $request The incoming HTTP request
+     * @param User $user The user to delete
+     * @return \Illuminate\Http\RedirectResponse
      */
     public function destroy(Request $request, User $user)
     {

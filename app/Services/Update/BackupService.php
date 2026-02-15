@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Services\Update;
 
 use Exception;
@@ -7,17 +9,34 @@ use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Log;
 use ZipArchive;
 
-class BackupService
+/**
+ * Service for managing application backups.
+ *
+ * Creates, lists, and restores backups of the application files
+ * and database for safe updates.
+ */
+final class BackupService
 {
+    /**
+     * @var string Path to the backup storage directory
+     */
     protected string $backupPath;
 
+    /**
+     * Initialize the service and set up backup path.
+     */
     public function __construct()
     {
         $this->backupPath = storage_path('app/backups');
     }
 
     /**
-     * Create a backup of the current installation
+     * Create a backup of the current installation.
+     *
+     * Backs up application directories, configuration, and database.
+     *
+     * @return string Path to the created backup file
+     * @throws Exception If backup creation fails
      */
     public function createBackup(): string
     {
@@ -64,7 +83,9 @@ class BackupService
     }
 
     /**
-     * List available backups
+     * List available backups.
+     *
+     * @return array<int, array{filename: string, path: string, size: int, created_at: int}> List of backup files sorted by creation time (newest first)
      */
     public function listBackups(): array
     {
@@ -93,7 +114,10 @@ class BackupService
     }
 
     /**
-     * Delete a backup file
+     * Delete a backup file.
+     *
+     * @param string $filename The backup filename to delete
+     * @return bool True if deletion was successful, false if file not found
      */
     public function deleteBackup(string $filename): bool
     {
@@ -107,7 +131,9 @@ class BackupService
     }
 
     /**
-     * Get backup path
+     * Get backup path.
+     *
+     * @return string The backup storage directory path
      */
     public function getBackupPath(): string
     {
@@ -115,7 +141,9 @@ class BackupService
     }
 
     /**
-     * Ensure backup directory exists
+     * Ensure backup directory exists.
+     *
+     * @return void
      */
     protected function ensureBackupDirectoryExists(): void
     {
@@ -125,7 +153,12 @@ class BackupService
     }
 
     /**
-     * Add directory recursively to zip
+     * Add directory recursively to zip.
+     *
+     * @param ZipArchive $zip The zip archive to add files to
+     * @param string $path The filesystem path to the directory
+     * @param string $zipPath The path within the zip archive
+     * @return void
      */
     protected function addDirectoryToZip(ZipArchive $zip, string $path, string $zipPath): void
     {
@@ -139,7 +172,12 @@ class BackupService
     }
 
     /**
-     * Backup database to SQL file
+     * Backup database to SQL file.
+     *
+     * Currently supports MySQL databases via mysqldump.
+     *
+     * @param string $outputPath Path to write the SQL backup file
+     * @return void
      */
     protected function backupDatabase(string $outputPath): void
     {
@@ -163,7 +201,9 @@ class BackupService
                     Log::warning('Database backup failed', ['return_code' => $returnCode]);
                 }
             } else {
-                Log::info('Database backup skipped for non-MySQL database');
+                Log::info('Database backup skipped for non-MySQL database', [
+                    'driver' => $dbConfig['driver'] ?? 'unknown',
+                ]);
             }
         } catch (Exception $e) {
             Log::warning('Database backup failed', ['error' => $e->getMessage()]);

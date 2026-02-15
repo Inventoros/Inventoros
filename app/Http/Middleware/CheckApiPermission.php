@@ -1,12 +1,20 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Middleware;
 
 use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 
-class CheckApiPermission
+/**
+ * Middleware for checking user permissions on API routes.
+ *
+ * Returns JSON error responses for unauthenticated and unauthorized access.
+ * Supports checking for any or all of specified permissions.
+ */
+final class CheckApiPermission
 {
     /**
      * Handle an incoming API request.

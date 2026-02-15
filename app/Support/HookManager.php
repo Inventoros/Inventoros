@@ -1,10 +1,31 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Support;
 
-class HookManager
+/**
+ * Manager for WordPress-style action and filter hooks.
+ *
+ * Provides a plugin-friendly hook system that allows external code
+ * to register callbacks for actions and filters throughout the application.
+ */
+final class HookManager
 {
+    public const DEFAULT_PRIORITY = 10;
+
+    /**
+     * Registered action hooks grouped by tag and priority.
+     *
+     * @var array<string, array<int, array<callable>>>
+     */
     protected array $actions = [];
+
+    /**
+     * Registered filter hooks grouped by tag and priority.
+     *
+     * @var array<string, array<int, array<callable>>>
+     */
     protected array $filters = [];
 
     /**

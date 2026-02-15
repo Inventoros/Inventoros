@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
@@ -8,10 +10,19 @@ use App\Models\Inventory\Product;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
+/**
+ * API Controller for barcode lookup.
+ *
+ * Handles looking up products by barcode or SKU.
+ */
 class BarcodeLookupController extends Controller
 {
     /**
      * Lookup a product by barcode or SKU.
+     *
+     * @param Request $request The incoming HTTP request
+     * @param string $code The barcode or SKU to lookup
+     * @return JsonResponse
      */
     public function lookup(Request $request, string $code): JsonResponse
     {

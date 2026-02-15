@@ -1,11 +1,18 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Mail;
 
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
 use Illuminate\Queue\SerializesModels;
 
+/**
+ * Mailable for sending low stock alert emails.
+ *
+ * Used to notify staff when product inventory falls below minimum levels.
+ */
 class LowStockEmail extends Mailable
 {
     use Queueable, SerializesModels;

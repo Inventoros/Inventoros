@@ -1,11 +1,19 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Observers;
 
 use App\Models\Inventory\Product;
 use App\Services\NotificationService;
 
-class ProductObserver
+/**
+ * Observer for Product model events.
+ *
+ * Monitors product changes and triggers notifications for
+ * low stock and out of stock conditions.
+ */
+final class ProductObserver
 {
     /**
      * Handle the Product "updated" event.

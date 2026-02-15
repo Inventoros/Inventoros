@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
@@ -11,10 +13,18 @@ use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use Inertia\Response;
 
+/**
+ * Controller for user authentication sessions.
+ *
+ * Handles displaying login form, authenticating users,
+ * and destroying sessions (logout).
+ */
 class AuthenticatedSessionController extends Controller
 {
     /**
      * Display the login view.
+     *
+     * @return Response
      */
     public function create(): Response
     {
@@ -26,6 +36,9 @@ class AuthenticatedSessionController extends Controller
 
     /**
      * Handle an incoming authentication request.
+     *
+     * @param LoginRequest $request The validated login request
+     * @return RedirectResponse
      */
     public function store(LoginRequest $request): RedirectResponse
     {
@@ -38,6 +51,9 @@ class AuthenticatedSessionController extends Controller
 
     /**
      * Destroy an authenticated session.
+     *
+     * @param Request $request The incoming HTTP request
+     * @return RedirectResponse
      */
     public function destroy(Request $request): RedirectResponse
     {

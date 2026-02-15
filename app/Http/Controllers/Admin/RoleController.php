@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers\Admin;
 
 use App\Enums\Permission;
@@ -10,10 +12,19 @@ use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 
+/**
+ * Controller for managing roles.
+ *
+ * Handles CRUD operations for roles including permission management
+ * and permission set assignments.
+ */
 class RoleController extends Controller
 {
     /**
      * Display a listing of roles.
+     *
+     * @param Request $request The incoming HTTP request
+     * @return Response
      */
     public function index(Request $request): Response
     {
@@ -40,6 +51,9 @@ class RoleController extends Controller
 
     /**
      * Show the form for creating a new role.
+     *
+     * @param Request $request The incoming HTTP request
+     * @return Response
      */
     public function create(Request $request): Response
     {
@@ -70,6 +84,9 @@ class RoleController extends Controller
 
     /**
      * Store a newly created role.
+     *
+     * @param Request $request The incoming HTTP request containing role data
+     * @return \Illuminate\Http\RedirectResponse
      */
     public function store(Request $request)
     {
@@ -104,6 +121,10 @@ class RoleController extends Controller
 
     /**
      * Display the specified role.
+     *
+     * @param Request $request The incoming HTTP request
+     * @param Role $role The role to display
+     * @return Response
      */
     public function show(Request $request, Role $role): Response
     {
@@ -152,6 +173,10 @@ class RoleController extends Controller
 
     /**
      * Show the form for editing the specified role.
+     *
+     * @param Request $request The incoming HTTP request
+     * @param Role $role The role to edit
+     * @return Response|\Illuminate\Http\RedirectResponse
      */
     public function edit(Request $request, Role $role): Response
     {
@@ -200,6 +225,10 @@ class RoleController extends Controller
 
     /**
      * Update the specified role.
+     *
+     * @param Request $request The incoming HTTP request containing updated role data
+     * @param Role $role The role to update
+     * @return \Illuminate\Http\RedirectResponse
      */
     public function update(Request $request, Role $role)
     {
@@ -247,6 +276,10 @@ class RoleController extends Controller
 
     /**
      * Remove the specified role.
+     *
+     * @param Request $request The incoming HTTP request
+     * @param Role $role The role to delete
+     * @return \Illuminate\Http\RedirectResponse
      */
     public function destroy(Request $request, Role $role)
     {

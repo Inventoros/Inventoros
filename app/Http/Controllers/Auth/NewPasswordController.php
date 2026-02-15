@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
@@ -14,10 +16,19 @@ use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
 
+/**
+ * Controller for password reset.
+ *
+ * Handles displaying the reset password form and resetting
+ * user passwords via email token.
+ */
 class NewPasswordController extends Controller
 {
     /**
      * Display the password reset view.
+     *
+     * @param Request $request The incoming HTTP request
+     * @return Response
      */
     public function create(Request $request): Response
     {
@@ -30,7 +41,9 @@ class NewPasswordController extends Controller
     /**
      * Handle an incoming new password request.
      *
-     * @throws \Illuminate\Validation\ValidationException
+     * @param Request $request The incoming HTTP request containing new password data
+     * @return RedirectResponse
+     * @throws ValidationException
      */
     public function store(Request $request): RedirectResponse
     {

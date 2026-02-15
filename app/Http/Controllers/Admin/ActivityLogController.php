@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
@@ -7,8 +9,19 @@ use App\Models\ActivityLog;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
+/**
+ * Controller for managing activity logs.
+ *
+ * Handles displaying and filtering system activity logs.
+ */
 class ActivityLogController extends Controller
 {
+    /**
+     * Display a listing of activity logs.
+     *
+     * @param Request $request The incoming HTTP request
+     * @return \Inertia\Response
+     */
     public function index(Request $request)
     {
         $query = ActivityLog::query()

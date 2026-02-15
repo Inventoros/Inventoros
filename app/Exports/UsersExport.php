@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Exports;
 
 use App\Models\User;
@@ -9,11 +11,33 @@ use Maatwebsite\Excel\Concerns\WithMapping;
 use Maatwebsite\Excel\Concerns\WithStyles;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 
-class UsersExport implements FromQuery, WithHeadings, WithMapping, WithStyles
+/**
+ * Export class for generating user data Excel files.
+ *
+ * Handles exporting user data with optional filtering by role and status.
+ */
+final class UsersExport implements FromQuery, WithHeadings, WithMapping, WithStyles
 {
+    /**
+     * The organization ID to filter users by.
+     *
+     * @var int
+     */
     protected $organizationId;
+
+    /**
+     * Filters to apply to the export query.
+     *
+     * @var array
+     */
     protected $filters;
 
+    /**
+     * Create a new export instance.
+     *
+     * @param int $organizationId The organization to export users from
+     * @param array $filters Optional filters (role_id, is_active)
+     */
     public function __construct($organizationId, array $filters = [])
     {
         $this->organizationId = $organizationId;
@@ -23,7 +47,7 @@ class UsersExport implements FromQuery, WithHeadings, WithMapping, WithStyles
     /**
      * Query for users to export
      */
-    public function query()
+    public function query(): \Illuminate\Database\Eloquent\Builder
     {
         $query = User::query()
             ->with(['roles'])
@@ -80,7 +104,7 @@ class UsersExport implements FromQuery, WithHeadings, WithMapping, WithStyles
     /**
      * Style the worksheet
      */
-    public function styles(Worksheet $sheet)
+    public function styles(Worksheet $sheet): array
     {
         return [
             1 => ['font' => ['bold' => true]],

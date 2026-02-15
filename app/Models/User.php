@@ -1,8 +1,9 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
 use App\Enums\Permission;
 use App\Models\Auth\Organization;
 use App\Traits\LogsActivity;
@@ -13,6 +14,25 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 
+/**
+ * Represents a user in the system.
+ *
+ * @property int $id
+ * @property string $name
+ * @property string $email
+ * @property string $password
+ * @property int|null $organization_id
+ * @property string|null $role
+ * @property array|null $notification_preferences
+ * @property \Illuminate\Support\Carbon|null $email_verified_at
+ * @property string|null $remember_token
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property-read bool $is_admin
+ * @property-read bool $is_manager
+ * @property-read \App\Models\Auth\Organization $organization
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Role[] $roles
+ */
 class User extends Authenticatable
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
@@ -58,6 +78,8 @@ class User extends Authenticatable
 
     /**
      * Get is_admin attribute for backward compatibility.
+     *
+     * @return bool
      */
     public function getIsAdminAttribute(): bool
     {
@@ -66,6 +88,8 @@ class User extends Authenticatable
 
     /**
      * Get is_manager attribute.
+     *
+     * @return bool
      */
     public function getIsManagerAttribute(): bool
     {
@@ -74,6 +98,8 @@ class User extends Authenticatable
 
     /**
      * Get the organization that owns the user.
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo<\App\Models\Auth\Organization, $this>
      */
     public function organization(): BelongsTo
     {
@@ -82,6 +108,8 @@ class User extends Authenticatable
 
     /**
      * Get the roles that belong to the user.
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany<\App\Models\Role, $this>
      */
     public function roles(): BelongsToMany
     {
@@ -90,6 +118,8 @@ class User extends Authenticatable
 
     /**
      * Check if user is an admin of their organization.
+     *
+     * @return bool
      */
     public function isAdmin(): bool
     {
@@ -99,6 +129,8 @@ class User extends Authenticatable
 
     /**
      * Check if user is a manager of their organization.
+     *
+     * @return bool
      */
     public function isManager(): bool
     {
@@ -108,6 +140,9 @@ class User extends Authenticatable
 
     /**
      * Check if the user has a specific role.
+     *
+     * @param string $roleSlug
+     * @return bool
      */
     public function hasRole(string $roleSlug): bool
     {
@@ -116,6 +151,9 @@ class User extends Authenticatable
 
     /**
      * Check if the user has any of the given roles.
+     *
+     * @param array<string> $roleSlugs
+     * @return bool
      */
     public function hasAnyRole(array $roleSlugs): bool
     {
@@ -124,6 +162,9 @@ class User extends Authenticatable
 
     /**
      * Check if the user has all of the given roles.
+     *
+     * @param array<string> $roleSlugs
+     * @return bool
      */
     public function hasAllRoles(array $roleSlugs): bool
     {
@@ -132,6 +173,9 @@ class User extends Authenticatable
 
     /**
      * Check if the user has a specific permission.
+     *
+     * @param \App\Enums\Permission|string $permission
+     * @return bool
      */
     public function hasPermission(Permission|string $permission): bool
     {
@@ -158,6 +202,9 @@ class User extends Authenticatable
 
     /**
      * Check if the user has any of the given permissions.
+     *
+     * @param array<\App\Enums\Permission|string> $permissions
+     * @return bool
      */
     public function hasAnyPermission(array $permissions): bool
     {
@@ -177,6 +224,9 @@ class User extends Authenticatable
 
     /**
      * Check if the user has all of the given permissions.
+     *
+     * @param array<\App\Enums\Permission|string> $permissions
+     * @return bool
      */
     public function hasAllPermissions(array $permissions): bool
     {
@@ -196,6 +246,8 @@ class User extends Authenticatable
 
     /**
      * Get all permissions for the user across all their roles.
+     *
+     * @return array<string>
      */
     public function getAllPermissions(): array
     {
@@ -226,6 +278,9 @@ class User extends Authenticatable
 
     /**
      * Assign a role to the user.
+     *
+     * @param \App\Models\Role|string $role
+     * @return void
      */
     public function assignRole(Role|string $role): void
     {
@@ -241,6 +296,9 @@ class User extends Authenticatable
 
     /**
      * Remove a role from the user.
+     *
+     * @param \App\Models\Role|string $role
+     * @return void
      */
     public function removeRole(Role|string $role): void
     {
@@ -256,6 +314,9 @@ class User extends Authenticatable
 
     /**
      * Sync roles for the user.
+     *
+     * @param array<\App\Models\Role|string> $roles
+     * @return void
      */
     public function syncRoles(array $roles): void
     {
@@ -268,6 +329,10 @@ class User extends Authenticatable
 
     /**
      * Scope a query to only include users from a specific organization.
+     *
+     * @param \Illuminate\Database\Eloquent\Builder<static> $query
+     * @param int $organizationId
+     * @return \Illuminate\Database\Eloquent\Builder<static>
      */
     public function scopeForOrganization($query, $organizationId)
     {

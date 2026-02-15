@@ -1,15 +1,29 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers;
 
-use App\Services\SettingsService;
 use App\Mail\TestEmail;
+use App\Services\SettingsService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
 use Inertia\Inertia;
 
+/**
+ * Controller for managing application settings.
+ *
+ * Handles organization-wide settings including email configuration
+ * and user notification preferences.
+ */
 class SettingsController extends Controller
 {
+    /**
+     * Display the settings index page.
+     *
+     * @param Request $request The incoming HTTP request
+     * @return \Inertia\Response|\Illuminate\Http\RedirectResponse
+     */
     public function index()
     {
         if (!auth()->user()->isAdmin()) {
@@ -22,6 +36,12 @@ class SettingsController extends Controller
         ]);
     }
 
+    /**
+     * Update email configuration settings.
+     *
+     * @param Request $request The incoming HTTP request containing email settings
+     * @return \Illuminate\Http\RedirectResponse
+     */
     public function updateEmail(Request $request)
     {
         if (!auth()->user()->isAdmin()) {
@@ -67,6 +87,12 @@ class SettingsController extends Controller
         return back()->with('success', 'Email settings saved successfully');
     }
 
+    /**
+     * Send a test email to verify email configuration.
+     *
+     * @param Request $request The incoming HTTP request containing test email address
+     * @return \Illuminate\Http\RedirectResponse
+     */
     public function testEmail(Request $request)
     {
         if (!auth()->user()->isAdmin()) {

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
@@ -11,10 +13,19 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
+/**
+ * API Controller for managing purchase orders.
+ *
+ * Handles RESTful API operations for purchase order CRUD operations,
+ * receiving items, and order status management.
+ */
 class PurchaseOrderController extends Controller
 {
     /**
      * Display a listing of purchase orders.
+     *
+     * @param Request $request The incoming HTTP request
+     * @return AnonymousResourceCollection
      */
     public function index(Request $request): AnonymousResourceCollection
     {
@@ -46,6 +57,9 @@ class PurchaseOrderController extends Controller
 
     /**
      * Store a newly created purchase order.
+     *
+     * @param Request $request The incoming HTTP request containing purchase order data
+     * @return JsonResponse
      */
     public function store(Request $request): JsonResponse
     {
@@ -115,6 +129,10 @@ class PurchaseOrderController extends Controller
 
     /**
      * Display the specified purchase order.
+     *
+     * @param Request $request The incoming HTTP request
+     * @param PurchaseOrder $purchaseOrder The purchase order to display
+     * @return JsonResponse
      */
     public function show(Request $request, PurchaseOrder $purchaseOrder): JsonResponse
     {
@@ -134,6 +152,10 @@ class PurchaseOrderController extends Controller
 
     /**
      * Update the specified purchase order.
+     *
+     * @param Request $request The incoming HTTP request containing updated purchase order data
+     * @param PurchaseOrder $purchaseOrder The purchase order to update
+     * @return JsonResponse
      */
     public function update(Request $request, PurchaseOrder $purchaseOrder): JsonResponse
     {
@@ -232,6 +254,10 @@ class PurchaseOrderController extends Controller
 
     /**
      * Remove the specified purchase order.
+     *
+     * @param Request $request The incoming HTTP request
+     * @param PurchaseOrder $purchaseOrder The purchase order to delete
+     * @return JsonResponse
      */
     public function destroy(Request $request, PurchaseOrder $purchaseOrder): JsonResponse
     {
@@ -258,6 +284,10 @@ class PurchaseOrderController extends Controller
 
     /**
      * Receive items for a purchase order.
+     *
+     * @param Request $request The incoming HTTP request containing received quantities
+     * @param PurchaseOrder $purchaseOrder The purchase order to receive items for
+     * @return JsonResponse
      */
     public function receive(Request $request, PurchaseOrder $purchaseOrder): JsonResponse
     {
@@ -311,6 +341,10 @@ class PurchaseOrderController extends Controller
 
     /**
      * Mark a purchase order as sent.
+     *
+     * @param Request $request The incoming HTTP request
+     * @param PurchaseOrder $purchaseOrder The purchase order to mark as sent
+     * @return JsonResponse
      */
     public function send(Request $request, PurchaseOrder $purchaseOrder): JsonResponse
     {
@@ -338,6 +372,10 @@ class PurchaseOrderController extends Controller
 
     /**
      * Cancel a purchase order.
+     *
+     * @param Request $request The incoming HTTP request
+     * @param PurchaseOrder $purchaseOrder The purchase order to cancel
+     * @return JsonResponse
      */
     public function cancel(Request $request, PurchaseOrder $purchaseOrder): JsonResponse
     {

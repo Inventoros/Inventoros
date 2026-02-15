@@ -1,11 +1,26 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Models\Inventory;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
+/**
+ * Represents an option (like size or color) for a product with variants.
+ *
+ * @property int $id
+ * @property int $product_id
+ * @property string $name
+ * @property int $position
+ * @property array|null $values
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property-read int $value_count
+ * @property-read \App\Models\Inventory\Product $product
+ */
 class ProductOption extends Model
 {
     use HasFactory;
@@ -37,6 +52,8 @@ class ProductOption extends Model
 
     /**
      * Get the product that owns this option.
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo<\App\Models\Inventory\Product, $this>
      */
     public function product(): BelongsTo
     {
@@ -45,6 +62,8 @@ class ProductOption extends Model
 
     /**
      * Get the number of values for this option.
+     *
+     * @return int
      */
     public function getValueCountAttribute(): int
     {
@@ -53,6 +72,9 @@ class ProductOption extends Model
 
     /**
      * Check if a value exists in this option.
+     *
+     * @param string $value
+     * @return bool
      */
     public function hasValue(string $value): bool
     {
@@ -61,6 +83,9 @@ class ProductOption extends Model
 
     /**
      * Add a value to this option.
+     *
+     * @param string $value
+     * @return void
      */
     public function addValue(string $value): void
     {
@@ -74,6 +99,9 @@ class ProductOption extends Model
 
     /**
      * Remove a value from this option.
+     *
+     * @param string $value
+     * @return void
      */
     public function removeValue(string $value): void
     {
@@ -84,6 +112,9 @@ class ProductOption extends Model
 
     /**
      * Scope to order by position.
+     *
+     * @param \Illuminate\Database\Eloquent\Builder<static> $query
+     * @return \Illuminate\Database\Eloquent\Builder<static>
      */
     public function scopeOrdered($query)
     {

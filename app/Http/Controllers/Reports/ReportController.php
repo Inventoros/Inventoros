@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers\Reports;
 
 use App\Http\Controllers\Controller;
@@ -12,10 +14,19 @@ use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
 
+/**
+ * Controller for generating reports.
+ *
+ * Handles various inventory and sales reports including
+ * inventory valuation, stock movement, sales analysis,
+ * low stock alerts, and category performance.
+ */
 class ReportController extends Controller
 {
     /**
-     * Display the reports dashboard
+     * Display the reports dashboard.
+     *
+     * @return Response
      */
     public function index(): Response
     {
@@ -23,7 +34,10 @@ class ReportController extends Controller
     }
 
     /**
-     * Inventory Valuation Report
+     * Inventory Valuation Report.
+     *
+     * @param Request $request The incoming HTTP request
+     * @return Response
      */
     public function inventoryValuation(Request $request): Response
     {
@@ -75,7 +89,10 @@ class ReportController extends Controller
     }
 
     /**
-     * Stock Movement Report
+     * Stock Movement Report.
+     *
+     * @param Request $request The incoming HTTP request
+     * @return Response
      */
     public function stockMovement(Request $request): Response
     {
@@ -129,7 +146,10 @@ class ReportController extends Controller
     }
 
     /**
-     * Sales Analysis Report
+     * Sales Analysis Report.
+     *
+     * @param Request $request The incoming HTTP request
+     * @return Response
      */
     public function salesAnalysis(Request $request): Response
     {
@@ -208,7 +228,10 @@ class ReportController extends Controller
     }
 
     /**
-     * Low Stock Report
+     * Low Stock Report.
+     *
+     * @param Request $request The incoming HTTP request
+     * @return Response
      */
     public function lowStock(Request $request): Response
     {
@@ -251,7 +274,10 @@ class ReportController extends Controller
     }
 
     /**
-     * Category Performance Report
+     * Category Performance Report.
+     *
+     * @param Request $request The incoming HTTP request
+     * @return Response
      */
     public function categoryPerformance(Request $request): Response
     {
