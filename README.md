@@ -34,6 +34,7 @@ Inventoros aims to democratize warehouse and inventory management by providing s
 - **Database**: MySQL / PostgreSQL (abstraction-ready)
 - **Queueing & Events**: Redis + Laravel Horizon (planned)
 - **Extensions**: Composer-based + JSON manifest layer for plugin registration
+- **Architecture**: Multi-tenant with organization-based data isolation
 
 ## Requirements
 
@@ -147,32 +148,41 @@ php artisan queue:work # Queue worker (if needed)
 - **Multi-Currency Support**: Product pricing in multiple currencies with conversion support
 - **Categories & Locations**: Organize products by category and track warehouse locations
 - **Barcode Generation**: Automatic barcode generation (UPC/EAN/Code128) with bulk printing
+- **Bulk Barcode Printing**: Print barcodes for multiple products at once
 - **Barcode Scanning**: Camera-based barcode scanning in Products, Stock Adjustments, and Purchase Orders
+- **SKU Management**: Configurable SKU patterns, auto-generation, and uniqueness validation
 - **CSV Import/Export**: Bulk import and export of product data
 
 **Order & Warehouse Management**
 - **Order Management**: Full order lifecycle (create, view, edit, delete) with automatic inventory adjustments
+- **Order Approval Workflow**: Approve or reject orders with status tracking
 - **Stock Movement Tracking**: Automatic tracking of inventory changes through orders
 - **Warehouse Locations**: Location-based inventory tracking
 - **Supplier Management**: Complete supplier CRUD with product associations
 - **Purchase Orders**: Full purchase order lifecycle with item receiving workflow
+- **Purchase Order Workflow**: Send to supplier, receive items, cancel orders with status tracking
+- **Customer Management**: Complete customer CRM with order history and contact details
 
 **User & Access Management**
 - **User Management**: Full CRUD with role assignment and permission-based access control
 - **Role Management**: Custom roles with granular permissions, system roles (Administrator, Manager, Member)
 - **Permission System**: Granular permission checks at route and UI levels
 - **Custom Error Pages**: Beautiful 403 access denied pages with light/dark mode
+- **API Token Management**: Create, list, and revoke API tokens via REST API
 
 **System & Extensions**
 - **Plugin System**: WordPress-style hooks and filters with database activation
 - **Plugin Slots**: Extensible UI component system with multiple hook points
 - **Sample Plugin**: Comprehensive example plugin with documentation
-- **REST API**: Complete API for Products, Categories, Locations, Orders, Stock Adjustments, Suppliers, Purchase Orders, and Barcode Lookup
+- **REST API**: Complete API for Products, Categories, Locations, Orders, Stock Adjustments, Suppliers, Purchase Orders, Barcode Lookup, and Permission Sets
 - **Installer Wizard**: Guided setup with database validation and admin account creation
-- **Update Manager**: Version-controlled updates with automatic backup system
+- **Update Manager**: Version-controlled updates with automatic backup system (UI + CLI)
+- **CLI Update Command**: `php artisan app:update` with check, backup, restore, and list-backups options
 - **Backup System**: Automatic backups before system updates
 - **Notification System**: Header dropdown with notification management
 - **Activity Logging**: Complete audit log with filtering by user, action, date, and subject type
+- **Organization Settings**: General settings, regional configuration, and user management
+- **Account Settings**: Profile, password, notification preferences, and user preferences per account
 
 **Notifications & Integrations**
 - **Email Notifications**: Multi-provider support (SMTP, Mailgun, SendGrid), customizable templates, per-user preferences
@@ -193,9 +203,12 @@ php artisan queue:work # Queue worker (if needed)
 - **Proper Sidebar Navigation**: Intuitive navigation structure
 
 **Testing & Quality**
-- **Unit Tests**: Comprehensive unit test coverage
-- **Feature Tests**: Integration tests for critical workflows
+- **Unit Tests**: Comprehensive unit test coverage for services, traits, and utilities
+- **Feature Tests**: Integration tests for critical workflows and controllers
+- **Validation Tests**: Request validation failure test cases
+- **Model Factories**: Test factories for all major models
 - **Code Quality**: PSR-12 compliant with Laravel Pint formatting
+- **Type Safety**: Strict types enabled, comprehensive PHPDoc, and return type declarations
 
 ### 🔜 Coming Next
 - GraphQL API layer
@@ -213,9 +226,11 @@ We welcome contributions! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for guid
 ### Development Guidelines
 
 - Follow [PSR-12](https://www.php-fig.org/psr/psr-12/) coding standards
+- Use `declare(strict_types=1)` in all PHP files
 - Write tests for new features
 - Use conventional commit messages
 - Update documentation for significant changes
+- Add PHPDoc blocks to all classes and public methods
 
 ## Testing
 
@@ -238,13 +253,72 @@ php artisan test --testsuite=Unit
 ./vendor/bin/phpstan analyse
 ```
 
+## CLI Commands
+
+Inventoros provides several Artisan commands for system management:
+
+```bash
+# Check for available updates
+php artisan app:update --check
+
+# Perform update with automatic backup
+php artisan app:update
+
+# Create a manual backup
+php artisan app:update --backup
+
+# List all available backups
+php artisan app:update --list-backups
+
+# Restore from a specific backup
+php artisan app:update --restore=backup_filename.zip
+```
+
+## REST API
+
+The REST API is available at `/api/v1/` and uses Laravel Sanctum for authentication.
+
+### Authentication
+
+```bash
+# Login and get token
+POST /api/v1/login
+
+# Get current user
+GET /api/v1/user
+
+# Create API token
+POST /api/v1/tokens
+
+# Revoke token
+DELETE /api/v1/tokens/{id}
+```
+
+### Available Endpoints
+
+| Resource | Endpoints |
+|----------|-----------|
+| Products | `GET`, `POST`, `GET/{id}`, `PUT/{id}`, `DELETE/{id}` |
+| Product Options | `GET`, `POST`, `PUT/{id}`, `DELETE/{id}` (nested under products) |
+| Product Variants | `GET`, `POST`, `PUT/{id}`, `DELETE/{id}`, `POST/adjust-stock` |
+| Categories | `GET`, `POST`, `GET/{id}`, `PUT/{id}`, `DELETE/{id}` |
+| Locations | `GET`, `POST`, `GET/{id}`, `PUT/{id}`, `DELETE/{id}` |
+| Orders | `GET`, `POST`, `GET/{id}`, `PUT/{id}`, `DELETE/{id}` |
+| Stock Adjustments | `GET`, `POST`, `GET/{id}` |
+| Suppliers | `GET`, `POST`, `GET/{id}`, `PUT/{id}`, `DELETE/{id}` |
+| Purchase Orders | `GET`, `POST`, `GET/{id}`, `PUT/{id}`, `DELETE/{id}`, `POST/receive`, `POST/send`, `POST/cancel` |
+| Barcode Lookup | `GET/{code}` |
+| Permission Sets | `GET`, `POST`, `GET/{id}`, `PUT/{id}`, `DELETE/{id}`, `GET/categories` |
+
+All endpoints are protected by permission-based middleware.
+
 ## Documentation
 
 - [cPanel Deployment Guide](CPANEL.md) - Deploy Inventoros on shared hosting with cPanel
 - [Email Notifications](docs/features/email-notifications.md) - Configuration and usage guide
 - [Barcode Scanning](docs/features/barcode-scanning.md) - Camera-based barcode scanning integration
+- [Plugin Development](docs/PLUGIN_DEVELOPMENT.md) - Complete guide to creating plugins with hooks and filters
 - [Installation Guide](docs/installation.md) (Coming Soon)
-- [Plugin Development](docs/plugins.md) (Coming Soon)
 - [API Documentation](docs/api.md) (Coming Soon)
 - [Architecture Overview](docs/architecture.md) (Coming Soon)
 
