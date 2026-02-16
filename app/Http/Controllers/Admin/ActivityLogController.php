@@ -8,6 +8,7 @@ use App\Http\Controllers\Controller;
 use App\Models\ActivityLog;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
+use Inertia\Response;
 
 /**
  * Controller for managing activity logs.
@@ -20,9 +21,9 @@ class ActivityLogController extends Controller
      * Display a listing of activity logs.
      *
      * @param Request $request The incoming HTTP request
-     * @return \Inertia\Response
+     * @return Response
      */
-    public function index(Request $request)
+    public function index(Request $request): Response
     {
         $query = ActivityLog::query()
             ->with(['user', 'organization'])

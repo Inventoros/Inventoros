@@ -20,6 +20,7 @@ final class SettingsService
 {
     public const CACHE_TTL_SECONDS = 3600;
     public const DEFAULT_SMTP_PORT = 587;
+
     /**
      * Get a setting value for current organization.
      *

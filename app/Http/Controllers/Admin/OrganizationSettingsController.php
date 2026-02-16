@@ -6,7 +6,10 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Auth\Organization;
+use App\Models\User;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -39,9 +42,9 @@ class OrganizationSettingsController extends Controller
      * Update organization general settings.
      *
      * @param Request $request The incoming HTTP request containing organization data
-     * @return \Illuminate\Http\RedirectResponse
+     * @return RedirectResponse
      */
-    public function updateGeneral(Request $request)
+    public function updateGeneral(Request $request): RedirectResponse
     {
         $user = $request->user();
 
@@ -71,9 +74,9 @@ class OrganizationSettingsController extends Controller
      * Update organization regional settings.
      *
      * @param Request $request The incoming HTTP request containing regional settings
-     * @return \Illuminate\Http\RedirectResponse
+     * @return RedirectResponse
      */
-    public function updateRegional(Request $request)
+    public function updateRegional(Request $request): RedirectResponse
     {
         $user = $request->user();
 
@@ -116,9 +119,9 @@ class OrganizationSettingsController extends Controller
      * Store a new user in the organization.
      *
      * @param Request $request The incoming HTTP request containing user data
-     * @return \Illuminate\Http\RedirectResponse
+     * @return RedirectResponse
      */
-    public function storeUser(Request $request)
+    public function storeUser(Request $request): RedirectResponse
     {
         $user = $request->user();
 
@@ -134,7 +137,7 @@ class OrganizationSettingsController extends Controller
             'is_admin' => 'boolean',
         ]);
 
-        $newUser = \App\Models\User::create([
+        User::create([
             'name' => $validated['name'],
             'email' => $validated['email'],
             'password' => bcrypt($validated['password']),
@@ -149,10 +152,10 @@ class OrganizationSettingsController extends Controller
      * Update an existing user.
      *
      * @param Request $request The incoming HTTP request containing updated user data
-     * @param \App\Models\User $user The user to update
-     * @return \Illuminate\Http\RedirectResponse
+     * @param User $user The user to update
+     * @return RedirectResponse
      */
-    public function updateUser(Request $request, \App\Models\User $user)
+    public function updateUser(Request $request, User $user): RedirectResponse
     {
         $currentUser = $request->user();
 
@@ -174,7 +177,7 @@ class OrganizationSettingsController extends Controller
 
         // Don't allow removing admin from the last admin
         if (isset($validated['is_admin']) && !$validated['is_admin']) {
-            $adminCount = \App\Models\User::where('organization_id', $currentUser->organization_id)
+            $adminCount = User::where('organization_id', $currentUser->organization_id)
                 ->where('role', 'admin')
                 ->count();
 
@@ -196,10 +199,10 @@ class OrganizationSettingsController extends Controller
      * Delete a user from the organization.
      *
      * @param Request $request The incoming HTTP request
-     * @param \App\Models\User $user The user to delete
-     * @return \Illuminate\Http\RedirectResponse
+     * @param User $user The user to delete
+     * @return RedirectResponse
      */
-    public function destroyUser(Request $request, \App\Models\User $user)
+    public function destroyUser(Request $request, User $user): RedirectResponse
     {
         $currentUser = $request->user();
 
@@ -220,7 +223,7 @@ class OrganizationSettingsController extends Controller
 
         // Don't allow deleting the last admin
         if ($user->role === 'admin') {
-            $adminCount = \App\Models\User::where('organization_id', $currentUser->organization_id)
+            $adminCount = User::where('organization_id', $currentUser->organization_id)
                 ->where('role', 'admin')
                 ->count();
 

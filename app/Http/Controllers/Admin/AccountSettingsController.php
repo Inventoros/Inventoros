@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules\Password;
@@ -38,9 +39,9 @@ class AccountSettingsController extends Controller
      * Update user profile information.
      *
      * @param Request $request The incoming HTTP request containing profile data
-     * @return \Illuminate\Http\RedirectResponse
+     * @return RedirectResponse
      */
-    public function updateProfile(Request $request)
+    public function updateProfile(Request $request): RedirectResponse
     {
         $user = $request->user();
 
@@ -58,9 +59,9 @@ class AccountSettingsController extends Controller
      * Update user password.
      *
      * @param Request $request The incoming HTTP request containing password data
-     * @return \Illuminate\Http\RedirectResponse
+     * @return RedirectResponse
      */
-    public function updatePassword(Request $request)
+    public function updatePassword(Request $request): RedirectResponse
     {
         $user = $request->user();
 
@@ -85,9 +86,9 @@ class AccountSettingsController extends Controller
      * Update notification preferences.
      *
      * @param Request $request The incoming HTTP request containing notification preferences
-     * @return \Illuminate\Http\RedirectResponse
+     * @return RedirectResponse
      */
-    public function updateNotifications(Request $request)
+    public function updateNotifications(Request $request): RedirectResponse
     {
         $user = $request->user();
 
@@ -110,9 +111,9 @@ class AccountSettingsController extends Controller
      * Update user preferences.
      *
      * @param Request $request The incoming HTTP request containing user preferences
-     * @return \Illuminate\Http\RedirectResponse
+     * @return RedirectResponse
      */
-    public function updatePreferences(Request $request)
+    public function updatePreferences(Request $request): RedirectResponse
     {
         $user = $request->user();
 
@@ -122,7 +123,7 @@ class AccountSettingsController extends Controller
             'items_per_page' => 'nullable|integer|min:10|max:100',
         ]);
 
-        // Store user preferences
+        // Store user preferences nested within notification_preferences
         $preferences = $user->notification_preferences ?? [];
         $user->notification_preferences = array_merge($preferences, ['preferences' => $validated]);
         $user->save();
