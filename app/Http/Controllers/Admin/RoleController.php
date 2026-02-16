@@ -8,6 +8,7 @@ use App\Enums\Permission;
 use App\Http\Controllers\Controller;
 use App\Models\PermissionSet;
 use App\Models\Role;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -86,9 +87,9 @@ class RoleController extends Controller
      * Store a newly created role.
      *
      * @param Request $request The incoming HTTP request containing role data
-     * @return \Illuminate\Http\RedirectResponse
+     * @return RedirectResponse
      */
-    public function store(Request $request)
+    public function store(Request $request): RedirectResponse
     {
         $user = $request->user();
 
@@ -176,9 +177,9 @@ class RoleController extends Controller
      *
      * @param Request $request The incoming HTTP request
      * @param Role $role The role to edit
-     * @return Response|\Illuminate\Http\RedirectResponse
+     * @return Response|RedirectResponse
      */
-    public function edit(Request $request, Role $role): Response
+    public function edit(Request $request, Role $role): Response|RedirectResponse
     {
         $currentUser = $request->user();
 
@@ -228,9 +229,9 @@ class RoleController extends Controller
      *
      * @param Request $request The incoming HTTP request containing updated role data
      * @param Role $role The role to update
-     * @return \Illuminate\Http\RedirectResponse
+     * @return RedirectResponse
      */
-    public function update(Request $request, Role $role)
+    public function update(Request $request, Role $role): RedirectResponse
     {
         $currentUser = $request->user();
 
@@ -279,9 +280,9 @@ class RoleController extends Controller
      *
      * @param Request $request The incoming HTTP request
      * @param Role $role The role to delete
-     * @return \Illuminate\Http\RedirectResponse
+     * @return RedirectResponse
      */
-    public function destroy(Request $request, Role $role)
+    public function destroy(Request $request, Role $role): RedirectResponse
     {
         $currentUser = $request->user();
 

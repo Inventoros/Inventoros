@@ -6,6 +6,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Services\PluginService;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
@@ -51,9 +52,9 @@ class PluginController extends Controller
      * Upload a new plugin.
      *
      * @param Request $request The incoming HTTP request containing the plugin file
-     * @return \Illuminate\Http\RedirectResponse
+     * @return RedirectResponse
      */
-    public function upload(Request $request)
+    public function upload(Request $request): RedirectResponse
     {
         $request->validate([
             'plugin' => 'required|file|mimes:zip|max:' . config('limits.uploads.plugin_max_kb'),
@@ -78,9 +79,9 @@ class PluginController extends Controller
      * Activate a plugin.
      *
      * @param string $slug The plugin slug to activate
-     * @return \Illuminate\Http\RedirectResponse
+     * @return RedirectResponse
      */
-    public function activate(string $slug)
+    public function activate(string $slug): RedirectResponse
     {
         try {
             $this->pluginService->activatePlugin($slug);
@@ -101,9 +102,9 @@ class PluginController extends Controller
      * Deactivate a plugin.
      *
      * @param string $slug The plugin slug to deactivate
-     * @return \Illuminate\Http\RedirectResponse
+     * @return RedirectResponse
      */
-    public function deactivate(string $slug)
+    public function deactivate(string $slug): RedirectResponse
     {
         try {
             $this->pluginService->deactivatePlugin($slug);
@@ -124,9 +125,9 @@ class PluginController extends Controller
      * Delete a plugin.
      *
      * @param string $slug The plugin slug to delete
-     * @return \Illuminate\Http\RedirectResponse
+     * @return RedirectResponse
      */
-    public function destroy(string $slug)
+    public function destroy(string $slug): RedirectResponse
     {
         try {
             $this->pluginService->deletePlugin($slug);
