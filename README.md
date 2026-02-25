@@ -18,9 +18,9 @@ Inventoros is an open-source Inventory and Warehouse Management System (WMS) bui
 |-----------|----------|--------|
 | ![Dashboard](screenshots/dashboard.png) | ![Products](screenshots/products.png) | ![Orders](screenshots/orders.png) |
 
-| Reports | Customers | Purchase Orders |
+| Reports | Locations | Purchase Orders |
 |---------|-----------|-----------------|
-| ![Reports](screenshots/reports.png) | ![Customers](screenshots/customers.png) | ![Purchase Orders](screenshots/purchase-orders.png) |
+| ![Reports](screenshots/reports.png) | ![Locations](screenshots/locations.png) | ![Purchase Orders](screenshots/purchase-orders.png) |
 
 <details>
 <summary>More screenshots</summary>

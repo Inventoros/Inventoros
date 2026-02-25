@@ -9,7 +9,7 @@ const pages = [
     { name: 'dashboard', path: '/dashboard', waitFor: 'h2' },
     { name: 'products', path: '/products', waitFor: 'table' },
     { name: 'orders', path: '/orders', waitFor: 'table' },
-    { name: 'customers', path: '/customers', waitFor: 'table' },
+    { name: 'locations', path: '/locations', waitFor: 'table' },
     { name: 'purchase-orders', path: '/purchase-orders', waitFor: 'table' },
     { name: 'reports', path: '/reports', waitFor: 'main' },
     { name: 'categories', path: '/categories', waitFor: 'table' },
