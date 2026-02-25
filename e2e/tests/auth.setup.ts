@@ -22,7 +22,7 @@ setup('authenticate', async ({ page }) => {
     await page.waitForURL('/dashboard');
 
     // Verify we're logged in
-    await expect(page.locator('text=Dashboard')).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Dashboard' })).toBeVisible();
 
     // Save authentication state
     await page.context().storageState({ path: authFile });
