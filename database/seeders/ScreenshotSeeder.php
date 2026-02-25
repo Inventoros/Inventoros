@@ -12,6 +12,7 @@ use App\Models\Inventory\ProductLocation;
 use App\Models\Inventory\Supplier;
 use App\Models\Order\Order;
 use App\Models\Purchasing\PurchaseOrder;
+use App\Models\User;
 use Illuminate\Database\Seeder;
 
 class ScreenshotSeeder extends Seeder
@@ -131,29 +132,41 @@ class ScreenshotSeeder extends Seeder
             );
         }
 
+        // Get the E2E test user for created_by fields
+        $user = User::where('email', E2ETestSeeder::TEST_EMAIL)->firstOrFail();
+
         // Create orders with varied statuses
-        $statuses = ['pending', 'approved', 'completed', 'completed', 'pending', 'approved', 'completed', 'completed'];
-        foreach ($statuses as $i => $status) {
+        $orderStatuses = ['pending', 'processing', 'shipped', 'delivered', 'pending', 'processing', 'shipped', 'delivered'];
+        foreach ($orderStatuses as $i => $status) {
+            $customer = $customers[array_rand($customers)];
+            $total = fake()->randomFloat(2, 100, 5000);
             Order::updateOrCreate(
                 ['order_number' => 'ORD-' . (50001 + $i), 'organization_id' => $orgId],
                 [
-                    'customer_id' => $customers[array_rand($customers)]->id,
+                    'created_by' => $user->id,
+                    'customer_name' => $customer->name,
+                    'customer_email' => $customer->email,
                     'status' => $status,
-                    'total_amount' => fake()->randomFloat(2, 100, 5000),
+                    'subtotal' => $total,
+                    'total' => $total,
                     'currency' => 'USD',
                 ]
             );
         }
 
         // Create purchase orders
-        $poStatuses = ['pending', 'sent', 'received', 'pending', 'sent', 'received'];
+        $poStatuses = ['draft', 'sent', 'received', 'draft', 'sent', 'received'];
         foreach ($poStatuses as $i => $status) {
+            $total = fake()->randomFloat(2, 200, 8000);
             PurchaseOrder::updateOrCreate(
-                ['order_number' => 'PO-' . (60001 + $i), 'organization_id' => $orgId],
+                ['po_number' => 'PO-' . (60001 + $i), 'organization_id' => $orgId],
                 [
                     'supplier_id' => $suppliers->random()->id,
+                    'created_by' => $user->id,
                     'status' => $status,
-                    'total_amount' => fake()->randomFloat(2, 200, 8000),
+                    'order_date' => now()->subDays(rand(1, 30)),
+                    'subtotal' => $total,
+                    'total' => $total,
                     'currency' => 'USD',
                 ]
             );
