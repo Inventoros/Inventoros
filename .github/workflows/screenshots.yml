@@ -1,0 +1,72 @@
+name: screenshots
+
+on:
+  push:
+    branches: [main, master]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  screenshots:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          tools: composer:v2
+          extensions: sqlite3, gd, bcmath
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Install PHP dependencies
+        run: composer install --no-interaction --prefer-dist --optimize-autoloader
+
+      - name: Install Node dependencies
+        run: npm ci
+
+      - name: Setup environment
+        run: |
+          cp .env.example .env
+          php artisan key:generate
+          touch database/database.sqlite
+
+      - name: Build frontend assets
+        run: npm run build
+
+      - name: Seed database
+        run: |
+          php artisan migrate --force
+          php artisan db:seed --class=ScreenshotSeeder --force
+
+      - name: Install Playwright
+        run: npx playwright install chromium
+
+      - name: Create required directories
+        run: |
+          mkdir -p screenshots
+          mkdir -p e2e/.auth
+
+      - name: Start server and take screenshots
+        run: |
+          php artisan serve --host=127.0.0.1 --port=8000 &
+          sleep 3
+          APP_URL=http://127.0.0.1:8000 npx playwright test e2e/tests/screenshots.spec.ts --project=setup --project=chromium
+        env:
+          CI: true
+
+      - name: Commit screenshots to repo
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add screenshots/
+          git diff --cached --quiet && echo "No screenshot changes" || git commit -m "Update screenshots [skip ci]" && git push

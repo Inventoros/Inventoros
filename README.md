@@ -12,6 +12,25 @@
 
 Inventoros is an open-source Inventory and Warehouse Management System (WMS) built with Laravel, Inertia.js, and Vue 3. Designed to bridge the gap between complex enterprise-grade WMS tools and user-friendly systems, Inventoros provides powerful inventory management capabilities with a developer-focused, extensible architecture.
 
+## Screenshots
+
+| Dashboard | Products | Orders |
+|-----------|----------|--------|
+| ![Dashboard](screenshots/dashboard.png) | ![Products](screenshots/products.png) | ![Orders](screenshots/orders.png) |
+
+| Reports | Customers | Purchase Orders |
+|---------|-----------|-----------------|
+| ![Reports](screenshots/reports.png) | ![Customers](screenshots/customers.png) | ![Purchase Orders](screenshots/purchase-orders.png) |
+
+<details>
+<summary>More screenshots</summary>
+
+| Categories | Suppliers | Settings |
+|------------|-----------|----------|
+| ![Categories](screenshots/categories.png) | ![Suppliers](screenshots/suppliers.png) | ![Settings](screenshots/settings.png) |
+
+</details>
+
 ## Vision
 
 Inventoros aims to democratize warehouse and inventory management by providing small and medium businesses with tools typically found only in expensive enterprise software, while offering developers a flexible, plugin-ready foundation for customization.
