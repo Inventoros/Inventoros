@@ -17,15 +17,28 @@ const pages = [
     { name: 'settings', path: '/settings/organization', waitFor: 'form' },
 ];
 
-for (const pg of pages) {
-    test(`screenshot: ${pg.name}`, async ({ page }) => {
-        await page.goto(pg.path, { waitUntil: 'networkidle' });
-        await page.locator(pg.waitFor).first().waitFor({ timeout: 10000 }).catch(() => {});
-        // Let animations settle
-        await page.waitForTimeout(500);
-        await page.screenshot({
-            path: path.join(screenshotDir, `${pg.name}.png`),
-            fullPage: false,
+const themes = [
+    { name: 'dark', suffix: '', setup: null },
+    { name: 'light', suffix: '-light', setup: async (page: any) => {
+        await page.evaluate(() => {
+            document.documentElement.classList.remove('dark');
+            localStorage.setItem('theme', 'light');
         });
-    });
+    }},
+];
+
+for (const theme of themes) {
+    for (const pg of pages) {
+        test(`screenshot ${theme.name}: ${pg.name}`, async ({ page }) => {
+            await page.goto(pg.path, { waitUntil: 'networkidle' });
+            if (theme.setup) await theme.setup(page);
+            await page.locator(pg.waitFor).first().waitFor({ timeout: 10000 }).catch(() => {});
+            // Let animations settle
+            await page.waitForTimeout(500);
+            await page.screenshot({
+                path: path.join(screenshotDir, `${pg.name}${theme.suffix}.png`),
+                fullPage: false,
+            });
+        });
+    }
 }
