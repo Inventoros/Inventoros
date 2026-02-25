@@ -22,7 +22,7 @@ class SupplierFactory extends Factory
             'address' => fake()->streetAddress(),
             'city' => fake()->city(),
             'state' => fake()->state(),
-            'zip' => fake()->postcode(),
+            'zip_code' => fake()->postcode(),
             'country' => fake()->country(),
             'is_active' => true,
         ];
