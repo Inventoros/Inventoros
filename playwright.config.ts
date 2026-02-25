@@ -1,4 +1,8 @@
 import { defineConfig, devices } from '@playwright/test';
+import { fileURLToPath } from 'url';
+import path from 'path';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 /**
  * Playwright configuration for Inventoros E2E testing
@@ -9,10 +13,10 @@ export default defineConfig({
     testDir: './e2e/tests',
 
     // Global setup - runs E2E seeder to create test user
-    globalSetup: require.resolve('./e2e/global-setup'),
+    globalSetup: path.resolve(__dirname, './e2e/global-setup'),
 
     // Global teardown - cleanup after tests
-    globalTeardown: require.resolve('./e2e/global-teardown'),
+    globalTeardown: path.resolve(__dirname, './e2e/global-teardown'),
 
     // Run tests in parallel
     fullyParallel: true,
