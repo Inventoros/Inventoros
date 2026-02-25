@@ -64,7 +64,7 @@ class ScreenshotSeeder extends Seeder
                 'address' => fake()->streetAddress(),
                 'city' => fake()->city(),
                 'state' => fake()->stateAbbr(),
-                'zip' => fake()->postcode(),
+                'zip_code' => fake()->postcode(),
                 'country' => 'United States',
                 'is_active' => true,
             ]
