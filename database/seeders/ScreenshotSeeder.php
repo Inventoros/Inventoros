@@ -12,6 +12,7 @@ use App\Models\Inventory\ProductLocation;
 use App\Models\Inventory\Supplier;
 use App\Models\Order\Order;
 use App\Models\Purchasing\PurchaseOrder;
+use App\Models\System\SystemSetting;
 use App\Models\User;
 use Illuminate\Database\Seeder;
 
@@ -23,6 +24,11 @@ class ScreenshotSeeder extends Seeder
      */
     public function run(): void
     {
+        // Mark the app as installed so CheckInstallation middleware doesn't redirect
+        SystemSetting::set('installed', true, 'boolean', 'Installation completed');
+        SystemSetting::set('installed_at', now()->toDateTimeString(), 'string', 'Installation date');
+        SystemSetting::set('app_version', config('app.version', '0.1.0'), 'string', 'Application version');
+
         // Create the E2E test user and organization first
         $this->call(E2ETestSeeder::class);
 
