@@ -9,7 +9,8 @@
         "test:e2e:ui": "playwright test --ui",
         "test:e2e:headed": "playwright test --headed",
         "test:e2e:debug": "playwright test --debug",
-        "test:e2e:report": "playwright show-report"
+        "test:e2e:report": "playwright show-report",
+        "test:screenshots": "playwright test e2e/tests/screenshots.spec.ts --project=setup --project=chromium"
     },
     "devDependencies": {
         "@playwright/test": "^1.40.0",
