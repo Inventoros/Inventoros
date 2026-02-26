@@ -175,7 +175,7 @@ php artisan queue:work # Queue worker (if needed)
 - [x] Audit logging (Activity Log with filtering)
 - [x] Email notification system (multi-provider, templates, user preferences)
 - [x] Webhook system (event subscriptions, HMAC signing, retry logic, delivery logs)
-- [ ] Advanced permissions (custom permission sets)
+- [x] Advanced permissions (custom permission sets with templates)
 - [ ] Multi-warehouse support
 
 ## Current Features (v1.0 Beta)
@@ -209,6 +209,7 @@ php artisan queue:work # Queue worker (if needed)
 - **Permission System**: Granular permission checks at route and UI levels
 - **Custom Error Pages**: Beautiful 403 access denied pages with light/dark mode
 - **API Token Management**: Create, list, and revoke API tokens via REST API
+- **Custom Permission Sets**: Reusable permission templates (Inventory Manager, Order Processor, Warehouse Staff, etc.) with full CRUD API
 
 **System & Extensions**
 - **Plugin System**: WordPress-style hooks and filters with database activation
@@ -245,10 +246,15 @@ php artisan queue:work # Queue worker (if needed)
 **Testing & Quality**
 - **Unit Tests**: Comprehensive unit test coverage for services, traits, and utilities
 - **Feature Tests**: Integration tests for critical workflows and controllers
+- **E2E Tests**: Playwright-based end-to-end testing across multiple browsers
 - **Validation Tests**: Request validation failure test cases
 - **Model Factories**: Test factories for all major models
 - **Code Quality**: PSR-12 compliant with Laravel Pint formatting
 - **Type Safety**: Strict types enabled, comprehensive PHPDoc, and return type declarations
+
+**DevOps & CI**
+- **Automated Screenshots**: GitHub Actions pipeline generates dark and light mode screenshots on every push
+- **E2E Testing Framework**: Playwright configured with multi-browser support (Chromium, Firefox, WebKit, Mobile)
 
 ### 🔜 Coming Next
 - GraphQL API layer
@@ -257,7 +263,6 @@ php artisan queue:work # Queue worker (if needed)
 - Advanced inventory workflows
 - Multi-warehouse support
 - Custom report builder
-- Advanced permissions (custom permission sets)
 
 ## Contributing
 
