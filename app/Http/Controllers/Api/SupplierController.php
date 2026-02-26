@@ -10,20 +10,21 @@ use App\Models\Inventory\Supplier;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Dedoc\Scramble\Attributes\QueryParameter;
 
 /**
- * API Controller for managing suppliers.
- *
- * Handles RESTful API operations for supplier CRUD operations.
+ * @tags Suppliers
  */
 class SupplierController extends Controller
 {
     /**
-     * Display a listing of suppliers.
-     *
-     * @param Request $request The incoming HTTP request
-     * @return AnonymousResourceCollection
+     * List suppliers.
      */
+    #[QueryParameter('search', description: 'Search by name, code, contact name, or email', type: 'string')]
+    #[QueryParameter('is_active', description: 'Filter by active status', type: 'boolean')]
+    #[QueryParameter('sort_by', description: 'Sort field (default: created_at)', type: 'string')]
+    #[QueryParameter('sort_dir', description: 'Sort direction: asc or desc (default: desc)', type: 'string', enum: ['asc', 'desc'])]
+    #[QueryParameter('per_page', description: 'Items per page (default: 15, max: 100)', type: 'integer')]
     public function index(Request $request): AnonymousResourceCollection
     {
         $organizationId = $request->user()->organization_id;

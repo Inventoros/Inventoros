@@ -166,7 +166,7 @@ php artisan queue:work # Queue worker (if needed)
 - [x] Sample plugin with documentation
 - [x] REST API endpoints (Products, Categories, Locations, Orders, Stock Adjustments, Suppliers, Purchase Orders, Barcode Lookup)
 - [ ] GraphQL API layer
-- [ ] API documentation
+- [x] API documentation (OpenAPI/Scramble)
 
 ### Phase 4 - Advanced Features ✅ (v1.0 Beta)
 - [x] Barcode/QR code generation
@@ -216,6 +216,7 @@ php artisan queue:work # Queue worker (if needed)
 - **Plugin Slots**: Extensible UI component system with multiple hook points
 - **Sample Plugin**: Comprehensive example plugin with documentation
 - **REST API**: Complete API for Products, Categories, Locations, Orders, Stock Adjustments, Suppliers, Purchase Orders, Barcode Lookup, and Permission Sets
+- **API Documentation**: Auto-generated OpenAPI 3.1 docs via Scramble with interactive "Try It" UI at `/docs/api`
 - **Installer Wizard**: Guided setup with database validation and admin account creation
 - **Update Manager**: Version-controlled updates with automatic backup system (UI + CLI)
 - **CLI Update Command**: `php artisan app:update` with check, backup, restore, and list-backups options
@@ -258,7 +259,6 @@ php artisan queue:work # Queue worker (if needed)
 
 ### 🔜 Coming Next
 - GraphQL API layer
-- API documentation (OpenAPI/Swagger)
 - Stock transfers between locations
 - Advanced inventory workflows
 - Multi-warehouse support
@@ -364,7 +364,7 @@ All endpoints are protected by permission-based middleware.
 - [Barcode Scanning](docs/features/barcode-scanning.md) - Camera-based barcode scanning integration
 - [Plugin Development](docs/PLUGIN_DEVELOPMENT.md) - Complete guide to creating plugins with hooks and filters
 - [Installation Guide](docs/installation.md) (Coming Soon)
-- [API Documentation](docs/api.md) (Coming Soon)
+- [API Documentation](/docs/api) - Interactive OpenAPI docs (available when running the app)
 - [Architecture Overview](docs/architecture.md) (Coming Soon)
 
 ## Community & Support

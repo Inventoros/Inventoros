@@ -11,9 +11,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 /**
- * API Controller for barcode lookup.
- *
- * Handles looking up products by barcode or SKU.
+ * @tags Barcode Lookup
  */
 class BarcodeLookupController extends Controller
 {

@@ -8,21 +8,18 @@ use App\Http\Controllers\Controller;
 use App\Models\PermissionSet;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Dedoc\Scramble\Attributes\QueryParameter;
 
 /**
- * API Controller for managing permission sets.
- *
- * Handles RESTful API operations for permission set CRUD operations
- * and retrieving available categories.
+ * @tags Permission Sets
  */
 class PermissionSetController extends Controller
 {
     /**
-     * Display a listing of permission sets.
-     *
-     * @param Request $request The incoming HTTP request
-     * @return JsonResponse
+     * List permission sets.
      */
+    #[QueryParameter('category', description: 'Filter by category (inventory, orders, purchasing, admin, reports)', type: 'string')]
+    #[QueryParameter('templates_only', description: 'Show only template permission sets', type: 'boolean')]
     public function index(Request $request): JsonResponse
     {
         $organizationId = $request->user()->organization_id;

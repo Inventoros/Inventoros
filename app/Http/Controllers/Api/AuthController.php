@@ -12,15 +12,14 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
 
 /**
- * API Controller for authentication.
- *
- * Handles API token-based authentication including login,
- * logout, token management, and user info retrieval.
+ * @tags Authentication
  */
 class AuthController extends Controller
 {
     /**
      * Handle API login request.
+     *
+     * @unauthenticated
      *
      * @param Request $request The incoming HTTP request containing credentials
      * @return JsonResponse

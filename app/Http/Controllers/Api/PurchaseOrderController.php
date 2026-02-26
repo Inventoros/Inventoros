@@ -12,21 +12,22 @@ use App\Models\Purchasing\PurchaseOrderItem;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Dedoc\Scramble\Attributes\QueryParameter;
 
 /**
- * API Controller for managing purchase orders.
- *
- * Handles RESTful API operations for purchase order CRUD operations,
- * receiving items, and order status management.
+ * @tags Purchase Orders
  */
 class PurchaseOrderController extends Controller
 {
     /**
-     * Display a listing of purchase orders.
-     *
-     * @param Request $request The incoming HTTP request
-     * @return AnonymousResourceCollection
+     * List purchase orders.
      */
+    #[QueryParameter('search', description: 'Search by PO number or supplier name', type: 'string')]
+    #[QueryParameter('status', description: 'Filter by status', type: 'string', enum: ['draft', 'sent', 'partial', 'received', 'cancelled'])]
+    #[QueryParameter('supplier_id', description: 'Filter by supplier ID', type: 'integer')]
+    #[QueryParameter('sort_by', description: 'Sort field (default: order_date)', type: 'string')]
+    #[QueryParameter('sort_dir', description: 'Sort direction: asc or desc (default: desc)', type: 'string', enum: ['asc', 'desc'])]
+    #[QueryParameter('per_page', description: 'Items per page (default: 15, max: 100)', type: 'integer')]
     public function index(Request $request): AnonymousResourceCollection
     {
         $organizationId = $request->user()->organization_id;

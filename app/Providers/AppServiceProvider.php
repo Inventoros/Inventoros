@@ -11,6 +11,10 @@ use App\Observers\OrderObserver;
 use App\Observers\ProductObserver;
 use App\Services\PluginService;
 use App\Services\PluginUIService;
+use Dedoc\Scramble\Scramble;
+use Dedoc\Scramble\Support\Generator\OpenApi;
+use Dedoc\Scramble\Support\Generator\SecurityScheme;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Vite;
 use Illuminate\Support\ServiceProvider;
 
@@ -52,5 +56,17 @@ class AppServiceProvider extends ServiceProvider
 
         // Register webhook event subscriber
         WebhookEventSubscriber::subscribe();
+
+        // Scramble API documentation - Bearer token security
+        Scramble::afterOpenApiGenerated(function (OpenApi $openApi) {
+            $openApi->secure(
+                SecurityScheme::http('bearer', 'JWT')
+            );
+        });
+
+        // Gate for viewing API docs in production
+        Gate::define('viewApiDocs', function ($user = null) {
+            return true;
+        });
     }
 }

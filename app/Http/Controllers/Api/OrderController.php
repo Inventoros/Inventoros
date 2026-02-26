@@ -13,21 +13,24 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Support\Facades\DB;
+use Dedoc\Scramble\Attributes\QueryParameter;
 
 /**
- * API Controller for managing orders.
- *
- * Handles RESTful API operations for order CRUD operations
- * with automatic stock management.
+ * @tags Orders
  */
 class OrderController extends Controller
 {
     /**
-     * Display a listing of orders.
-     *
-     * @param Request $request The incoming HTTP request
-     * @return AnonymousResourceCollection
+     * List orders.
      */
+    #[QueryParameter('search', description: 'Search by order number, customer name, or email', type: 'string')]
+    #[QueryParameter('status', description: 'Filter by status', type: 'string', enum: ['pending', 'processing', 'shipped', 'delivered', 'cancelled'])]
+    #[QueryParameter('source', description: 'Filter by order source', type: 'string')]
+    #[QueryParameter('date_from', description: 'Filter orders from this date (YYYY-MM-DD)', type: 'string', example: '2025-01-01')]
+    #[QueryParameter('date_to', description: 'Filter orders until this date (YYYY-MM-DD)', type: 'string', example: '2025-12-31')]
+    #[QueryParameter('sort_by', description: 'Sort field (default: created_at)', type: 'string')]
+    #[QueryParameter('sort_dir', description: 'Sort direction: asc or desc (default: desc)', type: 'string', enum: ['asc', 'desc'])]
+    #[QueryParameter('per_page', description: 'Items per page (default: 15, max: 100)', type: 'integer')]
     public function index(Request $request): AnonymousResourceCollection
     {
         $organizationId = $request->user()->organization_id;

@@ -10,20 +10,22 @@ use App\Models\Inventory\ProductCategory;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Dedoc\Scramble\Attributes\QueryParameter;
 
 /**
- * API Controller for managing product categories.
- *
- * Handles RESTful API operations for product category CRUD operations.
+ * @tags Categories
  */
 class ProductCategoryController extends Controller
 {
     /**
-     * Display a listing of categories.
-     *
-     * @param Request $request The incoming HTTP request
-     * @return AnonymousResourceCollection
+     * List categories.
      */
+    #[QueryParameter('search', description: 'Search by name', type: 'string')]
+    #[QueryParameter('is_active', description: 'Filter by active status', type: 'boolean')]
+    #[QueryParameter('root_only', description: 'Show only root categories (no parent)', type: 'boolean')]
+    #[QueryParameter('sort_by', description: 'Sort field (default: name)', type: 'string')]
+    #[QueryParameter('sort_dir', description: 'Sort direction: asc or desc (default: asc)', type: 'string', enum: ['asc', 'desc'])]
+    #[QueryParameter('per_page', description: 'Items per page (default: 15, max: 100)', type: 'integer')]
     public function index(Request $request): AnonymousResourceCollection
     {
         $organizationId = $request->user()->organization_id;
