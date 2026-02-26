@@ -11,21 +11,23 @@ use App\Models\Inventory\StockAdjustment;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Dedoc\Scramble\Attributes\QueryParameter;
 
 /**
- * API Controller for managing stock adjustments.
- *
- * Handles RESTful API operations for stock adjustment records
- * including listing and creating adjustments.
+ * @tags Stock Adjustments
  */
 class StockAdjustmentController extends Controller
 {
     /**
-     * Display a listing of stock adjustments.
-     *
-     * @param Request $request The incoming HTTP request
-     * @return AnonymousResourceCollection
+     * List stock adjustments.
      */
+    #[QueryParameter('product_id', description: 'Filter by product ID', type: 'integer')]
+    #[QueryParameter('type', description: 'Filter by adjustment type', type: 'string', enum: ['manual', 'count', 'damage', 'return', 'transfer'])]
+    #[QueryParameter('date_from', description: 'Filter adjustments from this date', type: 'string', example: '2025-01-01')]
+    #[QueryParameter('date_to', description: 'Filter adjustments until this date', type: 'string', example: '2025-12-31')]
+    #[QueryParameter('sort_by', description: 'Sort field (default: created_at)', type: 'string')]
+    #[QueryParameter('sort_dir', description: 'Sort direction: asc or desc (default: desc)', type: 'string', enum: ['asc', 'desc'])]
+    #[QueryParameter('per_page', description: 'Items per page (default: 15, max: 100)', type: 'integer')]
     public function index(Request $request): AnonymousResourceCollection
     {
         $organizationId = $request->user()->organization_id;

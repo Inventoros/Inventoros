@@ -14,10 +14,7 @@ use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Support\Facades\DB;
 
 /**
- * API Controller for managing product options.
- *
- * Handles RESTful API operations for product option CRUD operations
- * including reordering options.
+ * @tags Product Options
  */
 class ProductOptionController extends Controller
 {

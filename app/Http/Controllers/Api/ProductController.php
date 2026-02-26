@@ -10,20 +10,24 @@ use App\Models\Inventory\Product;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Dedoc\Scramble\Attributes\QueryParameter;
 
 /**
- * API Controller for managing products.
- *
- * Handles RESTful API operations for product CRUD operations.
+ * @tags Products
  */
 class ProductController extends Controller
 {
     /**
-     * Display a listing of products.
-     *
-     * @param Request $request The incoming HTTP request
-     * @return AnonymousResourceCollection
+     * List products.
      */
+    #[QueryParameter('search', description: 'Search by name, SKU, or barcode', type: 'string')]
+    #[QueryParameter('category_id', description: 'Filter by category ID', type: 'integer')]
+    #[QueryParameter('location_id', description: 'Filter by location ID', type: 'integer')]
+    #[QueryParameter('is_active', description: 'Filter by active status', type: 'boolean')]
+    #[QueryParameter('low_stock', description: 'Show only products below minimum stock', type: 'boolean')]
+    #[QueryParameter('sort_by', description: 'Sort field (default: created_at)', type: 'string', example: 'name')]
+    #[QueryParameter('sort_dir', description: 'Sort direction: asc or desc (default: desc)', type: 'string', enum: ['asc', 'desc'])]
+    #[QueryParameter('per_page', description: 'Items per page (default: 15, max: 100)', type: 'integer')]
     public function index(Request $request): AnonymousResourceCollection
     {
         $organizationId = $request->user()->organization_id;

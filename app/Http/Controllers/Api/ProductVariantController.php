@@ -13,22 +13,18 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Support\Facades\DB;
+use Dedoc\Scramble\Attributes\QueryParameter;
 
 /**
- * API Controller for managing product variants.
- *
- * Handles RESTful API operations for product variant CRUD operations
- * and stock adjustments for variants.
+ * @tags Product Variants
  */
 class ProductVariantController extends Controller
 {
     /**
-     * Display a listing of variants for a product.
-     *
-     * @param Request $request The incoming HTTP request
-     * @param Product $product The product to list variants for
-     * @return AnonymousResourceCollection|JsonResponse
+     * List variants for a product.
      */
+    #[QueryParameter('is_active', description: 'Filter by active status', type: 'boolean')]
+    #[QueryParameter('low_stock', description: 'Show only variants below minimum stock', type: 'boolean')]
     public function index(Request $request, Product $product): AnonymousResourceCollection|JsonResponse
     {
         if ($product->organization_id !== $request->user()->organization_id) {
