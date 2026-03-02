@@ -1,5 +1,8 @@
 <script setup>
 import { Head, Link } from '@inertiajs/vue3';
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
 
 const props = defineProps({
     requirements: Array,
@@ -8,14 +11,14 @@ const props = defineProps({
 </script>
 
 <template>
-    <Head title="System Requirements" />
+    <Head :title="t('install.requirements.title')" />
 
     <div class="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center p-4">
         <div class="max-w-3xl w-full">
             <!-- Header -->
             <div class="text-center mb-8">
-                <h1 class="text-3xl font-bold text-gray-900 mb-2">System Requirements</h1>
-                <p class="text-gray-600">Checking your server configuration</p>
+                <h1 class="text-3xl font-bold text-gray-900 mb-2">{{ t('install.requirements.title') }}</h1>
+                <p class="text-gray-600">{{ t('install.requirements.subtitle') }}</p>
             </div>
 
             <!-- Requirements Card -->
@@ -27,8 +30,8 @@ const props = defineProps({
                             <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
                         </svg>
                         <div class="ml-3">
-                            <h3 class="text-sm font-semibold text-green-900">All requirements met!</h3>
-                            <p class="text-sm text-green-800 mt-1">Your server meets all the requirements to run Inventoros.</p>
+                            <h3 class="text-sm font-semibold text-green-900">{{ t('install.requirements.allMet') }}</h3>
+                            <p class="text-sm text-green-800 mt-1">{{ t('install.requirements.allMetDesc') }}</p>
                         </div>
                     </div>
                 </div>
@@ -39,8 +42,8 @@ const props = defineProps({
                             <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
                         </svg>
                         <div class="ml-3">
-                            <h3 class="text-sm font-semibold text-red-900">Some requirements are not met</h3>
-                            <p class="text-sm text-red-800 mt-1">Please fix the issues below before continuing.</p>
+                            <h3 class="text-sm font-semibold text-red-900">{{ t('install.requirements.notMet') }}</h3>
+                            <p class="text-sm text-red-800 mt-1">{{ t('install.requirements.notMetDesc') }}</p>
                         </div>
                     </div>
                 </div>
@@ -81,11 +84,11 @@ const props = defineProps({
                                 </h3>
                                 <div class="text-sm mt-1">
                                     <span :class="requirement.met ? 'text-green-700' : 'text-red-700'">
-                                        Current: {{ requirement.current }}
+                                        {{ t('install.requirements.current') }}: {{ requirement.current }}
                                     </span>
                                     <span class="text-gray-500 mx-2">•</span>
                                     <span class="text-gray-600">
-                                        Required: {{ requirement.required }}
+                                        {{ t('install.requirements.required') }}: {{ requirement.required }}
                                     </span>
                                 </div>
                             </div>
@@ -102,7 +105,7 @@ const props = defineProps({
                         <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
                         </svg>
-                        Back
+                        {{ t('common.back') }}
                     </Link>
 
                     <Link
@@ -110,7 +113,7 @@ const props = defineProps({
                         :href="route('install.database')"
                         class="inline-flex items-center px-6 py-2 bg-gray-900 text-white font-semibold rounded-lg hover:bg-gray-800 transition"
                     >
-                        Continue
+                        {{ t('install.requirements.continue') }}
                         <svg class="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
                         </svg>
@@ -121,7 +124,7 @@ const props = defineProps({
                         disabled
                         class="inline-flex items-center px-6 py-2 bg-gray-300 text-gray-500 font-semibold rounded-lg cursor-not-allowed"
                     >
-                        Fix Issues First
+                        {{ t('install.requirements.fixFirst') }}
                     </button>
                 </div>
             </div>

@@ -3,12 +3,15 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head, Link, router } from '@inertiajs/vue3';
 import { ref } from 'vue';
 
+import { useI18n } from 'vue-i18n';
 const props = defineProps({
     notifications: Object,
     stats: Object,
     currentFilter: String,
 });
 
+
+const { t } = useI18n();
 const filterNotifications = (filter) => {
     router.get(route('notifications.index'), { filter }, {
         preserveState: true,
@@ -90,13 +93,13 @@ const formatDate = (date) => {
 </script>
 
 <template>
-    <Head title="Notifications" />
+    <Head :title="t('notifications.title')" />
 
     <AuthenticatedLayout>
         <template #header>
             <div class="flex items-center justify-between">
                 <div>
-                    <h2 class="font-semibold text-2xl text-gray-900 dark:text-gray-100">Notifications</h2>
+                    <h2 class="font-semibold text-2xl text-gray-900 dark:text-gray-100">{{ t('nav.notifications') }}</h2>
                     <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Manage your notifications and alerts</p>
                 </div>
                 <div class="flex gap-3">
@@ -123,7 +126,7 @@ const formatDate = (date) => {
                 <!-- Stats Cards -->
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
                     <div class="bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border rounded-lg shadow-sm p-6">
-                        <p class="text-sm text-gray-500 dark:text-gray-400 mb-2">Total</p>
+                        <p class="text-sm text-gray-500 dark:text-gray-400 mb-2">{{ t('common.total') }}</p>
                         <p class="text-3xl font-bold text-gray-900 dark:text-gray-100">{{ stats.total }}</p>
                     </div>
 
@@ -229,7 +232,7 @@ const formatDate = (date) => {
                                             @click="markAsRead(notification)"
                                             class="text-sm text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300 font-medium"
                                         >
-                                            View Details ’
+                                            View Details ï¿½
                                         </Link>
                                         <button
                                             v-if="!notification.read_at"
@@ -242,7 +245,7 @@ const formatDate = (date) => {
                                             @click="deleteNotification(notification)"
                                             class="text-sm text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 font-medium"
                                         >
-                                            Delete
+                                            {{ t('common.delete') }}
                                         </button>
                                     </div>
                                 </div>
@@ -255,7 +258,7 @@ const formatDate = (date) => {
                         <svg class="w-16 h-16 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
                         </svg>
-                        <p class="text-gray-500 dark:text-gray-400 text-lg font-medium">No notifications</p>
+                        <p class="text-gray-500 dark:text-gray-400 text-lg font-medium">{{ t('notifications.noNotifications') }}</p>
                         <p class="text-gray-400 dark:text-gray-500 text-sm mt-1">You're all caught up!</p>
                     </div>
 

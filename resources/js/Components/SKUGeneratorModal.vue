@@ -3,6 +3,7 @@ import { ref, watch } from 'vue';
 import axios from 'axios';
 import QuickAddModal from './QuickAddModal.vue';
 
+import { useI18n } from 'vue-i18n';
 const props = defineProps({
     show: {
         type: Boolean,
@@ -18,6 +19,8 @@ const props = defineProps({
     }
 });
 
+
+const { t } = useI18n();
 const emit = defineEmits(['apply', 'close']);
 
 const skuPatterns = ref({ variables: [], presets: [] });
@@ -180,7 +183,7 @@ const close = () => {
                 @click="close"
                 class="px-4 py-2 bg-dark-bg text-gray-600 dark:text-gray-300 rounded-md hover:bg-gray-100 dark:hover:bg-dark-bg/50"
             >
-                Cancel
+                {{ t('common.cancel') }}
             </button>
             <button
                 type="button"

@@ -6,12 +6,15 @@ import Modal from '@/Components/Modal.vue';
 import InputLabel from '@/Components/InputLabel.vue';
 import InputError from '@/Components/InputError.vue';
 
+import { useI18n } from 'vue-i18n';
 const props = defineProps({
     webhooks: Array,
     availableEvents: Array,
     eventGroups: Object,
 });
 
+
+const { t } = useI18n();
 // Modal state
 const showCreateModal = ref(false);
 const showEditModal = ref(false);
@@ -141,13 +144,13 @@ const getDeliveryStats = (webhook) => {
 </script>
 
 <template>
-    <Head title="Webhooks" />
+    <Head :title="t('nav.webhooks')" />
 
     <AuthenticatedLayout>
         <template #header>
             <div class="flex items-center justify-between">
                 <h2 class="font-semibold text-xl text-gray-900 dark:text-gray-100 leading-tight">
-                    Webhooks
+                    {{ t('settings.webhooks.title') }}
                 </h2>
                 <button
                     @click="openCreateModal"
@@ -186,7 +189,7 @@ const getDeliveryStats = (webhook) => {
                             <thead class="bg-gray-50 dark:bg-dark-bg/50">
                                 <tr>
                                     <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                                        Name
+                                        {{ t('common.name') }}
                                     </th>
                                     <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                                         URL
@@ -195,13 +198,13 @@ const getDeliveryStats = (webhook) => {
                                         Events
                                     </th>
                                     <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                                        Status
+                                        {{ t('common.status') }}
                                     </th>
                                     <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                                         Deliveries
                                     </th>
                                     <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                                        Actions
+                                        {{ t('common.actions') }}
                                     </th>
                                 </tr>
                             </thead>
@@ -304,7 +307,7 @@ const getDeliveryStats = (webhook) => {
             <div class="p-6">
                 <div class="flex items-center justify-between mb-6">
                     <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">
-                        Create Webhook
+                        {{ t('settings.webhooks.createWebhook') }}
                     </h3>
                     <button @click="closeCreateModal" class="text-gray-400 hover:text-gray-500 dark:hover:text-gray-300">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -390,7 +393,7 @@ const getDeliveryStats = (webhook) => {
                             class="rounded border-gray-300 dark:border-dark-border text-primary-400 focus:ring-primary-400 bg-gray-50 dark:bg-dark-bg"
                         />
                         <label for="create-active" class="ml-2 text-sm text-gray-900 dark:text-gray-100">
-                            Active
+                            {{ t('common.active') }}
                         </label>
                         <span class="ml-2 text-xs text-gray-500 dark:text-gray-400">
                             (Inactive webhooks will not receive any deliveries)
@@ -404,7 +407,7 @@ const getDeliveryStats = (webhook) => {
                             @click="closeCreateModal"
                             class="px-4 py-2 bg-gray-100 dark:bg-dark-bg text-gray-700 dark:text-gray-300 rounded-md hover:bg-gray-200 dark:hover:bg-dark-bg/50 font-medium text-sm"
                         >
-                            Cancel
+                            {{ t('common.cancel') }}
                         </button>
                         <button
                             type="submit"
@@ -412,7 +415,7 @@ const getDeliveryStats = (webhook) => {
                             class="px-4 py-2 bg-primary-400 text-white rounded-md hover:bg-primary-500 font-medium text-sm disabled:opacity-50"
                         >
                             <span v-if="createForm.processing">Creating...</span>
-                            <span v-else>Create Webhook</span>
+                            <span v-else>{{ t('settings.webhooks.createWebhook') }}</span>
                         </button>
                     </div>
                 </form>
@@ -510,7 +513,7 @@ const getDeliveryStats = (webhook) => {
                             class="rounded border-gray-300 dark:border-dark-border text-primary-400 focus:ring-primary-400 bg-gray-50 dark:bg-dark-bg"
                         />
                         <label for="edit-active" class="ml-2 text-sm text-gray-900 dark:text-gray-100">
-                            Active
+                            {{ t('common.active') }}
                         </label>
                         <span class="ml-2 text-xs text-gray-500 dark:text-gray-400">
                             (Inactive webhooks will not receive any deliveries)
@@ -524,7 +527,7 @@ const getDeliveryStats = (webhook) => {
                             @click="closeEditModal"
                             class="px-4 py-2 bg-gray-100 dark:bg-dark-bg text-gray-700 dark:text-gray-300 rounded-md hover:bg-gray-200 dark:hover:bg-dark-bg/50 font-medium text-sm"
                         >
-                            Cancel
+                            {{ t('common.cancel') }}
                         </button>
                         <button
                             type="submit"

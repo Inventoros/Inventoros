@@ -2,6 +2,7 @@
 import { ref, computed } from 'vue';
 import axios from 'axios';
 
+import { useI18n } from 'vue-i18n';
 const props = defineProps({
     variant: {
         type: Object,
@@ -13,6 +14,8 @@ const props = defineProps({
     }
 });
 
+
+const { t } = useI18n();
 const emit = defineEmits(['updated']);
 
 const showPopover = ref(false);
@@ -186,7 +189,7 @@ const adjustStock = async () => {
                             @click="closePopover"
                             class="flex-1 px-3 py-1.5 text-sm bg-gray-100 dark:bg-dark-bg text-gray-700 dark:text-gray-300 rounded-md hover:bg-gray-200 dark:hover:bg-dark-border"
                         >
-                            Cancel
+                            {{ t('common.cancel') }}
                         </button>
                         <button
                             type="button"

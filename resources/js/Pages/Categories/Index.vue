@@ -3,6 +3,9 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import PluginSlot from '@/Components/PluginSlot.vue';
 import { Head, Link, router } from '@inertiajs/vue3';
 import { ref } from 'vue';
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
 
 const props = defineProps({
     categories: Object,
@@ -71,13 +74,13 @@ const deleteCategory = (category) => {
 </script>
 
 <template>
-    <Head title="Categories" />
+    <Head :title="t('nav.categories')" />
 
     <AuthenticatedLayout>
         <template #header>
             <div class="flex items-center justify-between">
                 <h2 class="font-semibold text-xl text-gray-900 dark:text-gray-100 leading-tight">
-                    Product Categories
+                    {{ t('categories.title') }}
                 </h2>
                 <button
                     @click="openCreateModal"
@@ -86,7 +89,7 @@ const deleteCategory = (category) => {
                     <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                     </svg>
-                    Add Category
+                    {{ t('categories.addCategory') }}
                 </button>
             </div>
         </template>
@@ -104,7 +107,7 @@ const deleteCategory = (category) => {
                                 <input
                                     v-model="search"
                                     type="text"
-                                    placeholder="Search categories..."
+                                    :placeholder="t('categories.searchPlaceholder')"
                                     class="block w-full rounded-md bg-gray-50 dark:bg-dark-bg border-gray-200 dark:border-dark-border text-gray-900 dark:text-gray-100 placeholder-gray-500 shadow-sm focus:border-primary-400 focus:ring-primary-400"
                                 />
                             </div>
@@ -115,14 +118,14 @@ const deleteCategory = (category) => {
                                 <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                                 </svg>
-                                Search
+                                {{ t('common.search') }}
                             </button>
                             <button
                                 type="button"
                                 @click="clearFilters"
                                 class="inline-flex items-center px-4 py-2 bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-border rounded-md font-semibold text-xs text-gray-600 dark:text-gray-300 uppercase tracking-widest hover:bg-gray-100 dark:hover:bg-dark-bg/50"
                             >
-                                Clear
+                                {{ t('common.clear') }}
                             </button>
                         </form>
                     </div>
@@ -158,7 +161,7 @@ const deleteCategory = (category) => {
                                     <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                                     </svg>
-                                    Edit
+                                    {{ t('common.edit') }}
                                 </button>
                                 <button
                                     @click="deleteCategory(category)"
@@ -169,7 +172,7 @@ const deleteCategory = (category) => {
                                     <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                                     </svg>
-                                    Delete
+                                    {{ t('common.delete') }}
                                 </button>
                             </div>
                         </div>
@@ -182,7 +185,7 @@ const deleteCategory = (category) => {
                                 <svg class="w-16 h-16 text-gray-500 dark:text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
                                 </svg>
-                                <p class="text-gray-500 dark:text-gray-400 mb-4">No categories found</p>
+                                <p class="text-gray-500 dark:text-gray-400 mb-4">{{ t('categories.noCategoriesFound') }}</p>
                                 <button
                                     @click="openCreateModal"
                                     class="inline-flex items-center px-4 py-2 bg-primary-400 hover:bg-primary-500 text-white text-sm font-semibold rounded-lg transition"
@@ -190,7 +193,7 @@ const deleteCategory = (category) => {
                                     <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                                     </svg>
-                                    Create Your First Category
+                                    {{ t('categories.createFirst') }}
                                 </button>
                             </div>
                         </div>
@@ -202,13 +205,13 @@ const deleteCategory = (category) => {
                     <div class="flex items-center justify-between">
                         <div>
                             <p class="text-sm text-gray-600 dark:text-gray-300">
-                                Showing
+                                {{ t('common.showing') }}
                                 <span class="font-medium">{{ categories.from }}</span>
-                                to
+                                {{ t('common.to') }}
                                 <span class="font-medium">{{ categories.to }}</span>
-                                of
+                                {{ t('common.of') }}
                                 <span class="font-medium">{{ categories.total }}</span>
-                                results
+                                {{ t('common.results') }}
                             </p>
                         </div>
                         <div>
@@ -252,7 +255,7 @@ const deleteCategory = (category) => {
                 <div class="relative bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border rounded-lg shadow-xl max-w-md w-full p-6" @click.stop>
                     <div class="flex items-center justify-between mb-4">
                         <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">
-                            Create Category
+                            {{ t('categories.createCategory') }}
                         </h3>
                         <button
                             @click="showCreateModal = false"
@@ -267,26 +270,26 @@ const deleteCategory = (category) => {
                     <form @submit.prevent="createCategory" class="space-y-4">
                         <div>
                             <label class="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-1">
-                                Category Name <span class="text-red-500">*</span>
+                                {{ t('categories.categoryName') }} <span class="text-red-500">*</span>
                             </label>
                             <input
                                 v-model="categoryForm.name"
                                 type="text"
                                 class="block w-full rounded-md bg-gray-50 dark:bg-dark-bg border-gray-200 dark:border-dark-border text-gray-900 dark:text-gray-100 placeholder-gray-500 shadow-sm focus:border-primary-400 focus:ring-primary-400"
-                                placeholder="e.g., Electronics"
+                                :placeholder="t('categories.namePlaceholder')"
                                 required
                             />
                         </div>
 
                         <div>
                             <label class="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-1">
-                                Description
+                                {{ t('common.description') }}
                             </label>
                             <textarea
                                 v-model="categoryForm.description"
                                 rows="3"
                                 class="block w-full rounded-md bg-gray-50 dark:bg-dark-bg border-gray-200 dark:border-dark-border text-gray-900 dark:text-gray-100 placeholder-gray-500 shadow-sm focus:border-primary-400 focus:ring-primary-400"
-                                placeholder="Optional description..."
+                                :placeholder="t('categories.descPlaceholder')"
                             ></textarea>
                         </div>
 
@@ -296,13 +299,13 @@ const deleteCategory = (category) => {
                                 @click="showCreateModal = false"
                                 class="px-4 py-2 bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-border text-gray-600 dark:text-gray-300 rounded-md hover:bg-gray-100 dark:hover:bg-dark-bg/50"
                             >
-                                Cancel
+                                {{ t('common.cancel') }}
                             </button>
                             <button
                                 type="submit"
                                 class="px-4 py-2 bg-primary-400 hover:bg-primary-500 text-white rounded-md"
                             >
-                                Create Category
+                                {{ t('categories.createCategory') }}
                             </button>
                         </div>
                     </form>
@@ -318,7 +321,7 @@ const deleteCategory = (category) => {
                 <div class="relative bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border rounded-lg shadow-xl max-w-md w-full p-6" @click.stop>
                     <div class="flex items-center justify-between mb-4">
                         <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">
-                            Edit Category
+                            {{ t('categories.editCategory') }}
                         </h3>
                         <button
                             @click="showEditModal = false"
@@ -333,7 +336,7 @@ const deleteCategory = (category) => {
                     <form @submit.prevent="updateCategory" class="space-y-4">
                         <div>
                             <label class="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-1">
-                                Category Name <span class="text-red-500">*</span>
+                                {{ t('categories.categoryName') }} <span class="text-red-500">*</span>
                             </label>
                             <input
                                 v-model="categoryForm.name"
@@ -345,7 +348,7 @@ const deleteCategory = (category) => {
 
                         <div>
                             <label class="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-1">
-                                Description
+                                {{ t('common.description') }}
                             </label>
                             <textarea
                                 v-model="categoryForm.description"
@@ -360,13 +363,13 @@ const deleteCategory = (category) => {
                                 @click="showEditModal = false"
                                 class="px-4 py-2 bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-border text-gray-600 dark:text-gray-300 rounded-md hover:bg-gray-100 dark:hover:bg-dark-bg/50"
                             >
-                                Cancel
+                                {{ t('common.cancel') }}
                             </button>
                             <button
                                 type="submit"
                                 class="px-4 py-2 bg-primary-400 hover:bg-primary-500 text-white rounded-md"
                             >
-                                Update Category
+                                {{ t('common.update') }} {{ t('nav.categories') }}
                             </button>
                         </div>
                     </form>

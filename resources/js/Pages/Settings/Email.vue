@@ -4,6 +4,9 @@ import EmailConfiguration from './Partials/EmailConfiguration.vue';
 import NotificationPreferences from './Partials/NotificationPreferences.vue';
 import { Head } from '@inertiajs/vue3';
 import { ref } from 'vue';
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
 
 const props = defineProps({
     emailConfig: Object,
@@ -14,12 +17,12 @@ const activeTab = ref('configuration');
 </script>
 
 <template>
-    <Head title="Email Settings" />
+    <Head :title="t('settings.email.title')" />
 
     <AuthenticatedLayout>
         <template #header>
             <h2 class="font-semibold text-2xl text-gray-900 dark:text-gray-100">
-                Email Settings
+                {{ t('settings.email.title') }}
             </h2>
         </template>
 
@@ -37,7 +40,7 @@ const activeTab = ref('configuration');
                                 'whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition'
                             ]"
                         >
-                            Email Configuration
+                            {{ t('settings.email.configuration') }}
                         </button>
 
                         <button
@@ -49,7 +52,7 @@ const activeTab = ref('configuration');
                                 'whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition'
                             ]"
                         >
-                            Email Preferences
+                            {{ t('settings.notificationPreferences.title') }}
                         </button>
                     </nav>
                 </div>

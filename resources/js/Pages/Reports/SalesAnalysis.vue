@@ -2,6 +2,9 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head, Link, router } from '@inertiajs/vue3';
 import { ref } from 'vue';
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
 
 const props = defineProps({
     summary: Object,
@@ -44,20 +47,20 @@ const getStatusBadgeClass = (status) => {
 </script>
 
 <template>
-    <Head title="Sales Analysis Report" />
+    <Head :title="t('reports.salesAnalysis.title')" />
 
     <AuthenticatedLayout>
         <template #header>
             <div class="flex items-center justify-between">
                 <div>
-                    <h2 class="font-semibold text-2xl text-gray-900 dark:text-gray-100">Sales Analysis Report</h2>
-                    <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Revenue and sales performance</p>
+                    <h2 class="font-semibold text-2xl text-gray-900 dark:text-gray-100">{{ t('reports.salesAnalysis.title') }}</h2>
+                    <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">{{ t('reports.salesAnalysis.description') }}</p>
                 </div>
                 <Link
                     :href="route('reports.index')"
                     class="px-4 py-2 bg-gray-200 dark:bg-dark-bg hover:bg-gray-300 dark:hover:bg-dark-bg/70 text-gray-700 dark:text-gray-300 font-medium rounded-lg transition"
                 >
-                    Back to Reports
+                    {{ t('reports.backToReports') }}
                 </Link>
             </div>
         </template>
@@ -68,7 +71,7 @@ const getStatusBadgeClass = (status) => {
                 <div class="bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border rounded-lg shadow-sm p-6 mb-6">
                     <form @submit.prevent="applyFilters" class="grid grid-cols-1 md:grid-cols-3 gap-4">
                         <div>
-                            <label class="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-1">Date From</label>
+                            <label class="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-1">{{ t('reports.salesAnalysis.dateFrom') }}</label>
                             <input
                                 v-model="dateFrom"
                                 type="date"
@@ -77,7 +80,7 @@ const getStatusBadgeClass = (status) => {
                         </div>
 
                         <div>
-                            <label class="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-1">Date To</label>
+                            <label class="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-1">{{ t('reports.salesAnalysis.dateTo') }}</label>
                             <input
                                 v-model="dateTo"
                                 type="date"
@@ -90,7 +93,7 @@ const getStatusBadgeClass = (status) => {
                                 type="submit"
                                 class="px-4 py-2 bg-primary-500 hover:bg-primary-600 text-white font-medium rounded-lg transition"
                             >
-                                Apply
+                                {{ t('reports.salesAnalysis.apply') }}
                             </button>
                         </div>
                     </form>
@@ -99,22 +102,22 @@ const getStatusBadgeClass = (status) => {
                 <!-- Summary Cards -->
                 <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
                     <div class="bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border rounded-lg shadow-sm p-6">
-                        <p class="text-sm text-gray-500 dark:text-gray-400 mb-2">Total Orders</p>
+                        <p class="text-sm text-gray-500 dark:text-gray-400 mb-2">{{ t('reports.salesAnalysis.totalOrders') }}</p>
                         <p class="text-3xl font-bold text-gray-900 dark:text-gray-100">{{ summary.total_orders }}</p>
                     </div>
 
                     <div class="bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border rounded-lg shadow-sm p-6">
-                        <p class="text-sm text-gray-500 dark:text-gray-400 mb-2">Total Revenue</p>
+                        <p class="text-sm text-gray-500 dark:text-gray-400 mb-2">{{ t('reports.salesAnalysis.totalRevenue') }}</p>
                         <p class="text-3xl font-bold text-green-600 dark:text-green-400">{{ formatCurrency(summary.total_revenue) }}</p>
                     </div>
 
                     <div class="bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border rounded-lg shadow-sm p-6">
-                        <p class="text-sm text-gray-500 dark:text-gray-400 mb-2">Items Sold</p>
+                        <p class="text-sm text-gray-500 dark:text-gray-400 mb-2">{{ t('reports.salesAnalysis.itemsSold') }}</p>
                         <p class="text-3xl font-bold text-gray-900 dark:text-gray-100">{{ summary.total_items_sold }}</p>
                     </div>
 
                     <div class="bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border rounded-lg shadow-sm p-6">
-                        <p class="text-sm text-gray-500 dark:text-gray-400 mb-2">Avg Order Value</p>
+                        <p class="text-sm text-gray-500 dark:text-gray-400 mb-2">{{ t('reports.salesAnalysis.avgOrderValue') }}</p>
                         <p class="text-3xl font-bold text-primary-400">{{ formatCurrency(summary.average_order_value) }}</p>
                     </div>
                 </div>
@@ -122,7 +125,7 @@ const getStatusBadgeClass = (status) => {
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
                     <!-- Sales by Status -->
                     <div class="bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border rounded-lg shadow-sm p-6">
-                        <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Sales by Status</h3>
+                        <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">{{ t('reports.salesAnalysis.salesByStatus') }}</h3>
                         <div class="space-y-3">
                             <div v-for="item in byStatus" :key="item.status" class="flex items-center justify-between p-3 bg-gray-50 dark:bg-dark-bg rounded-lg">
                                 <div class="flex items-center gap-3">
@@ -138,12 +141,12 @@ const getStatusBadgeClass = (status) => {
 
                     <!-- Top Products -->
                     <div class="bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border rounded-lg shadow-sm p-6">
-                        <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Top Selling Products</h3>
+                        <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">{{ t('reports.salesAnalysis.topSelling') }}</h3>
                         <div class="space-y-3">
                             <div v-for="(product, index) in topProducts" :key="index" class="flex items-center justify-between p-3 bg-gray-50 dark:bg-dark-bg rounded-lg">
                                 <div class="flex-1">
                                     <p class="font-medium text-gray-900 dark:text-gray-100">{{ product.product_name }}</p>
-                                    <p class="text-xs text-gray-500 dark:text-gray-400">{{ product.quantity_sold }} units sold</p>
+                                    <p class="text-xs text-gray-500 dark:text-gray-400">{{ product.quantity_sold }} {{ t('reports.salesAnalysis.unitsSold') }}</p>
                                 </div>
                                 <span class="font-semibold text-green-600 dark:text-green-400">{{ formatCurrency(product.revenue) }}</span>
                             </div>
@@ -153,14 +156,14 @@ const getStatusBadgeClass = (status) => {
 
                 <!-- Daily Sales Trend -->
                 <div class="bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border rounded-lg shadow-sm p-6">
-                    <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Daily Sales Trend</h3>
+                    <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">{{ t('reports.salesAnalysis.dailySalesTrend') }}</h3>
                     <div class="overflow-x-auto">
                         <table class="min-w-full">
                             <thead>
                                 <tr class="border-b border-gray-200 dark:border-dark-border">
-                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Date</th>
-                                    <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Orders</th>
-                                    <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Revenue</th>
+                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">{{ t('common.date') }}</th>
+                                    <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">{{ t('nav.orders') }}</th>
+                                    <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">{{ t('reports.salesAnalysis.revenue') }}</th>
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-gray-200 dark:divide-dark-border">

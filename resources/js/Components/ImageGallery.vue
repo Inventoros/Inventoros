@@ -1,6 +1,7 @@
 <script setup>
 import { ref, computed } from 'vue';
 
+import { useI18n } from 'vue-i18n';
 const props = defineProps({
     images: {
         type: Array,
@@ -12,6 +13,8 @@ const props = defineProps({
     }
 });
 
+
+const { t } = useI18n();
 const currentIndex = ref(0);
 const showLightbox = ref(false);
 

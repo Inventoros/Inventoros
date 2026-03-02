@@ -1,6 +1,9 @@
 <script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head, Link } from '@inertiajs/vue3';
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
 
 const props = defineProps({
     categories: Array,
@@ -16,20 +19,20 @@ const formatCurrency = (value) => {
 </script>
 
 <template>
-    <Head title="Category Performance Report" />
+    <Head :title="t('reports.categoryPerformance.title')" />
 
     <AuthenticatedLayout>
         <template #header>
             <div class="flex items-center justify-between">
                 <div>
-                    <h2 class="font-semibold text-2xl text-gray-900 dark:text-gray-100">Category Performance Report</h2>
-                    <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Analysis by product category</p>
+                    <h2 class="font-semibold text-2xl text-gray-900 dark:text-gray-100">{{ t('reports.categoryPerformance.title') }}</h2>
+                    <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">{{ t('reports.categoryPerformance.description') }}</p>
                 </div>
                 <Link
                     :href="route('reports.index')"
                     class="px-4 py-2 bg-gray-200 dark:bg-dark-bg hover:bg-gray-300 dark:hover:bg-dark-bg/70 text-gray-700 dark:text-gray-300 font-medium rounded-lg transition"
                 >
-                    Back to Reports
+                    {{ t('reports.backToReports') }}
                 </Link>
             </div>
         </template>
@@ -39,17 +42,17 @@ const formatCurrency = (value) => {
                 <!-- Summary Cards -->
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
                     <div class="bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border rounded-lg shadow-sm p-6">
-                        <p class="text-sm text-gray-500 dark:text-gray-400 mb-2">Total Categories</p>
+                        <p class="text-sm text-gray-500 dark:text-gray-400 mb-2">{{ t('reports.categoryPerformance.totalCategories') }}</p>
                         <p class="text-3xl font-bold text-gray-900 dark:text-gray-100">{{ summary.total_categories }}</p>
                     </div>
 
                     <div class="bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border rounded-lg shadow-sm p-6">
-                        <p class="text-sm text-gray-500 dark:text-gray-400 mb-2">Total Products</p>
+                        <p class="text-sm text-gray-500 dark:text-gray-400 mb-2">{{ t('reports.categoryPerformance.totalProducts') }}</p>
                         <p class="text-3xl font-bold text-gray-900 dark:text-gray-100">{{ summary.total_products }}</p>
                     </div>
 
                     <div class="bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border rounded-lg shadow-sm p-6">
-                        <p class="text-sm text-gray-500 dark:text-gray-400 mb-2">Total Value</p>
+                        <p class="text-sm text-gray-500 dark:text-gray-400 mb-2">{{ t('reports.categoryPerformance.totalValue') }}</p>
                         <p class="text-3xl font-bold text-green-600 dark:text-green-400">{{ formatCurrency(summary.total_value) }}</p>
                     </div>
                 </div>
@@ -62,30 +65,30 @@ const formatCurrency = (value) => {
                                 {{ category.category_name }}
                             </h3>
                             <div v-if="category.low_stock_items > 0" class="px-2 py-1 bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300 text-xs font-semibold rounded-full">
-                                {{ category.low_stock_items }} low
+                                {{ category.low_stock_items }} {{ t('reports.categoryPerformance.low') }}
                             </div>
                         </div>
 
                         <div class="space-y-3">
                             <div class="flex justify-between items-center p-3 bg-gray-50 dark:bg-dark-bg rounded-lg">
-                                <span class="text-sm text-gray-600 dark:text-gray-400">Products</span>
+                                <span class="text-sm text-gray-600 dark:text-gray-400">{{ t('common.products') }}</span>
                                 <span class="text-lg font-semibold text-gray-900 dark:text-gray-100">{{ category.product_count }}</span>
                             </div>
 
                             <div class="flex justify-between items-center p-3 bg-gray-50 dark:bg-dark-bg rounded-lg">
-                                <span class="text-sm text-gray-600 dark:text-gray-400">Total Stock</span>
+                                <span class="text-sm text-gray-600 dark:text-gray-400">{{ t('reports.categoryPerformance.totalStock') }}</span>
                                 <span class="text-lg font-semibold text-gray-900 dark:text-gray-100">{{ category.total_stock }}</span>
                             </div>
 
                             <div class="flex justify-between items-center p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
-                                <span class="text-sm text-gray-600 dark:text-gray-400">Total Value</span>
+                                <span class="text-sm text-gray-600 dark:text-gray-400">{{ t('reports.categoryPerformance.totalValue') }}</span>
                                 <span class="text-lg font-semibold text-green-600 dark:text-green-400">{{ formatCurrency(category.total_value) }}</span>
                             </div>
                         </div>
 
                         <div class="mt-4 pt-4 border-t border-gray-200 dark:border-dark-border">
                             <div class="flex items-center justify-between text-xs">
-                                <span class="text-gray-500 dark:text-gray-400">Avg per product</span>
+                                <span class="text-gray-500 dark:text-gray-400">{{ t('reports.categoryPerformance.avgPerProduct') }}</span>
                                 <span class="font-medium text-gray-900 dark:text-gray-100">
                                     {{ formatCurrency(category.total_value / category.product_count) }}
                                 </span>
@@ -99,8 +102,8 @@ const formatCurrency = (value) => {
                     <svg class="w-16 h-16 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
                     </svg>
-                    <p class="text-gray-500 dark:text-gray-400 text-lg font-medium">No categories found</p>
-                    <p class="text-gray-400 dark:text-gray-500 text-sm mt-1">Add products to categories to see performance data</p>
+                    <p class="text-gray-500 dark:text-gray-400 text-lg font-medium">{{ t('reports.categoryPerformance.noCategoriesFound') }}</p>
+                    <p class="text-gray-400 dark:text-gray-500 text-sm mt-1">{{ t('reports.categoryPerformance.addProductsHint') }}</p>
                 </div>
             </div>
         </div>

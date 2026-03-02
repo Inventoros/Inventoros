@@ -1,6 +1,9 @@
 <script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head, Link } from '@inertiajs/vue3';
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
 
 const props = defineProps({
     products: Array,
@@ -22,20 +25,20 @@ const getStatusBadgeClass = (status) => {
 </script>
 
 <template>
-    <Head title="Low Stock Report" />
+    <Head :title="t('reports.lowStock.title')" />
 
     <AuthenticatedLayout>
         <template #header>
             <div class="flex items-center justify-between">
                 <div>
-                    <h2 class="font-semibold text-2xl text-gray-900 dark:text-gray-100">Low Stock Report</h2>
-                    <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Products that need restocking</p>
+                    <h2 class="font-semibold text-2xl text-gray-900 dark:text-gray-100">{{ t('reports.lowStock.title') }}</h2>
+                    <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">{{ t('reports.lowStock.description') }}</p>
                 </div>
                 <Link
                     :href="route('reports.index')"
                     class="px-4 py-2 bg-gray-200 dark:bg-dark-bg hover:bg-gray-300 dark:hover:bg-dark-bg/70 text-gray-700 dark:text-gray-300 font-medium rounded-lg transition"
                 >
-                    Back to Reports
+                    {{ t('reports.backToReports') }}
                 </Link>
             </div>
         </template>
@@ -45,48 +48,48 @@ const getStatusBadgeClass = (status) => {
                 <!-- Summary Cards -->
                 <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
                     <div class="bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border rounded-lg shadow-sm p-6">
-                        <p class="text-sm text-gray-500 dark:text-gray-400 mb-2">Total Low Stock</p>
+                        <p class="text-sm text-gray-500 dark:text-gray-400 mb-2">{{ t('reports.lowStock.totalLowStock') }}</p>
                         <p class="text-3xl font-bold text-yellow-600 dark:text-yellow-400">{{ summary.total_low_stock }}</p>
-                        <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">Products</p>
+                        <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">{{ t('common.products') }}</p>
                     </div>
 
                     <div class="bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border rounded-lg shadow-sm p-6">
-                        <p class="text-sm text-gray-500 dark:text-gray-400 mb-2">Out of Stock</p>
+                        <p class="text-sm text-gray-500 dark:text-gray-400 mb-2">{{ t('reports.lowStock.outOfStock') }}</p>
                         <p class="text-3xl font-bold text-red-600 dark:text-red-400">{{ summary.out_of_stock }}</p>
-                        <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">Critical</p>
+                        <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">{{ t('reports.lowStock.critical') }}</p>
                     </div>
 
                     <div class="bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border rounded-lg shadow-sm p-6">
-                        <p class="text-sm text-gray-500 dark:text-gray-400 mb-2">Low Stock</p>
+                        <p class="text-sm text-gray-500 dark:text-gray-400 mb-2">{{ t('reports.lowStock.lowStockWarning') }}</p>
                         <p class="text-3xl font-bold text-yellow-600 dark:text-yellow-400">{{ summary.low_stock }}</p>
-                        <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">Warning</p>
+                        <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">{{ t('reports.lowStock.warning') }}</p>
                     </div>
 
                     <div class="bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border rounded-lg shadow-sm p-6">
-                        <p class="text-sm text-gray-500 dark:text-gray-400 mb-2">Reorder Cost</p>
+                        <p class="text-sm text-gray-500 dark:text-gray-400 mb-2">{{ t('reports.lowStock.reorderCost') }}</p>
                         <p class="text-3xl font-bold text-primary-400">{{ formatCurrency(summary.total_reorder_cost) }}</p>
-                        <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">Estimated</p>
+                        <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">{{ t('reports.lowStock.estimated') }}</p>
                     </div>
                 </div>
 
                 <!-- Low Stock Products Table -->
                 <div class="bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border rounded-lg shadow-sm overflow-hidden">
                     <div class="p-6 border-b border-gray-200 dark:border-dark-border">
-                        <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">Products Requiring Attention</h3>
+                        <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">{{ t('reports.lowStock.productsRequiringAttention') }}</h3>
                     </div>
 
                     <div v-if="products.length > 0" class="overflow-x-auto">
                         <table class="min-w-full divide-y divide-gray-200 dark:divide-dark-border">
                             <thead class="bg-gray-50 dark:bg-dark-bg/50">
                                 <tr>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Status</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Product</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Category</th>
-                                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Current</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">{{ t('common.status') }}</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">{{ t('common.product') }}</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">{{ t('products.category') }}</th>
+                                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">{{ t('reports.lowStock.current') }}</th>
                                     <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Min</th>
                                     <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Max</th>
-                                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Deficit</th>
-                                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Reorder Cost</th>
+                                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">{{ t('reports.lowStock.deficit') }}</th>
+                                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">{{ t('reports.lowStock.reorderCost') }}</th>
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-gray-200 dark:divide-dark-border">
@@ -101,7 +104,7 @@ const getStatusBadgeClass = (status) => {
                                         <div class="text-xs text-gray-500 dark:text-gray-400">SKU: {{ product.sku }}</div>
                                     </td>
                                     <td class="px-6 py-4 text-sm text-gray-600 dark:text-gray-300">
-                                        {{ product.category || 'Uncategorized' }}
+                                        {{ product.category || t('reports.inventoryValuation.uncategorized') }}
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-semibold" :class="product.current_stock === 0 ? 'text-red-600 dark:text-red-400' : 'text-yellow-600 dark:text-yellow-400'">
                                         {{ product.current_stock }}
@@ -127,8 +130,8 @@ const getStatusBadgeClass = (status) => {
                         <svg class="w-16 h-16 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                         </svg>
-                        <p class="text-gray-500 dark:text-gray-400 text-lg font-medium">All products are well stocked!</p>
-                        <p class="text-gray-400 dark:text-gray-500 text-sm mt-1">No products are below minimum stock levels</p>
+                        <p class="text-gray-500 dark:text-gray-400 text-lg font-medium">{{ t('reports.lowStock.allWellStocked') }}</p>
+                        <p class="text-gray-400 dark:text-gray-500 text-sm mt-1">{{ t('reports.lowStock.noProductsBelowMin') }}</p>
                     </div>
                 </div>
             </div>

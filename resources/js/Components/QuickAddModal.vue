@@ -18,6 +18,8 @@ defineProps({
     }
 });
 
+
+const { t } = useI18n();
 const emit = defineEmits(['close']);
 
 const close = () => {
@@ -75,7 +77,7 @@ const maxWidthClass = {
                                 @click="close"
                                 class="px-4 py-2 bg-dark-bg text-gray-600 dark:text-gray-300 rounded-md hover:bg-gray-100 dark:hover:bg-dark-bg/50"
                             >
-                                Cancel
+                                {{ t('common.cancel') }}
                             </button>
                         </slot>
                     </div>

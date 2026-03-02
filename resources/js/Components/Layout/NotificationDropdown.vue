@@ -3,6 +3,9 @@ import { ref, onMounted } from 'vue';
 import { Link, router } from '@inertiajs/vue3';
 import axios from 'axios';
 
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
 const unreadCount = ref(0);
 const notificationsOpen = ref(false);
 const notifications = ref([]);
@@ -138,7 +141,7 @@ defineExpose({ closeDropdown });
         >
             <!-- Header -->
             <div class="flex items-center justify-between px-4 py-3 border-b border-gray-200 dark:border-dark-border">
-                <h3 class="text-sm font-semibold text-gray-900 dark:text-gray-100">Notifications</h3>
+                <h3 class="text-sm font-semibold text-gray-900 dark:text-gray-100">{{ t('nav.notifications') }}</h3>
                 <div class="flex items-center gap-2">
                     <button
                         v-if="unreadCount > 0"

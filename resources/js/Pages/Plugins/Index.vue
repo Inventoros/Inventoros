@@ -3,10 +3,13 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head, useForm, router } from '@inertiajs/vue3';
 import { ref } from 'vue';
 
+import { useI18n } from 'vue-i18n';
 const props = defineProps({
     plugins: Array,
 });
 
+
+const { t } = useI18n();
 const uploadForm = useForm({
     plugin: null,
 });
@@ -65,12 +68,12 @@ const deletePlugin = (slug, name) => {
 </script>
 
 <template>
-    <Head title="Plugins" />
+    <Head :title="t('nav.plugins')" />
 
     <AuthenticatedLayout>
         <template #header>
             <h2 class="font-semibold text-xl text-gray-900 dark:text-gray-100 leading-tight">
-                Plugins
+                {{ t('plugins.title') }}
             </h2>
         </template>
 
@@ -204,7 +207,7 @@ const deletePlugin = (slug, name) => {
                                                 : 'bg-red-600 hover:bg-red-700'
                                         ]"
                                     >
-                                        Delete
+                                        {{ t('common.delete') }}
                                     </button>
                                 </div>
                             </div>

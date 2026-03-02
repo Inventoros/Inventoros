@@ -1,5 +1,6 @@
 <script setup>
 import { ref, onMounted } from 'vue';
+import { useI18n } from 'vue-i18n';
 import ApplicationLogo from '@/Components/ApplicationLogo.vue';
 import { Link } from '@inertiajs/vue3';
 import { usePermissions } from '@/composables/usePermissions';
@@ -8,6 +9,7 @@ import ThemeToggle from '@/Components/Layout/ThemeToggle.vue';
 import SidebarNavItem from '@/Components/Layout/SidebarNavItem.vue';
 import SidebarUserProfile from '@/Components/Layout/SidebarUserProfile.vue';
 
+const { t } = useI18n();
 const sidebarOpen = ref(false);
 const settingsSubmenuOpen = ref(false);
 const notificationDropdownRef = ref(null);
