@@ -3,6 +3,7 @@ import { ref, watch } from 'vue';
 import BarcodeScanner from '@/Components/BarcodeScanner.vue';
 import axios from 'axios';
 
+import { useI18n } from 'vue-i18n';
 const props = defineProps({
     show: {
         type: Boolean,
@@ -10,6 +11,8 @@ const props = defineProps({
     },
 });
 
+
+const { t } = useI18n();
 const emit = defineEmits(['close', 'product-found', 'error']);
 
 const manualCode = ref('');
@@ -111,7 +114,7 @@ const selectProduct = () => {
                     <!-- Header -->
                     <div class="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-dark-border">
                         <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100">
-                            Scan Barcode
+                            {{ t('stockAdjustments.create.scanBarcode') }}
                         </h3>
                         <button @click="close" class="text-gray-400 hover:text-gray-500">
                             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">

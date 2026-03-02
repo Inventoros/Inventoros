@@ -1,6 +1,9 @@
 <script setup>
 import { Head, Link, useForm } from '@inertiajs/vue3';
 import { ref } from 'vue';
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
 
 const form = useForm({
     organization_name: '',
@@ -46,14 +49,14 @@ const createAdmin = async () => {
 </script>
 
 <template>
-    <Head title="Create Admin Account" />
+    <Head :title="t('install.admin.title')" />
 
     <div class="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center p-4">
         <div class="max-w-2xl w-full">
             <!-- Header -->
             <div class="text-center mb-8">
-                <h1 class="text-3xl font-bold text-gray-900 mb-2">Create Admin Account</h1>
-                <p class="text-gray-600">Set up your organization and admin user</p>
+                <h1 class="text-3xl font-bold text-gray-900 mb-2">{{ t('install.admin.title') }}</h1>
+                <p class="text-gray-600">{{ t('install.admin.subtitle') }}</p>
             </div>
 
             <!-- Admin Form Card -->
@@ -74,7 +77,7 @@ const createAdmin = async () => {
                     <!-- Organization Name -->
                     <div>
                         <label for="organization_name" class="block text-sm font-medium text-gray-700 mb-2">
-                            Organization Name
+                            {{ t('install.admin.orgName') }}
                         </label>
                         <input
                             id="organization_name"
@@ -84,16 +87,16 @@ const createAdmin = async () => {
                             class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-900 focus:border-transparent"
                             placeholder="Acme Corporation"
                         />
-                        <p class="mt-1 text-sm text-gray-500">The name of your company or organization</p>
+                        <p class="mt-1 text-sm text-gray-500">{{ t('install.admin.orgNameHint') }}</p>
                     </div>
 
                     <div class="pt-4 border-t">
-                        <h3 class="text-lg font-semibold text-gray-900 mb-4">Admin User Details</h3>
+                        <h3 class="text-lg font-semibold text-gray-900 mb-4">{{ t('install.admin.adminDetails') }}</h3>
 
                         <!-- Admin Name -->
                         <div class="mb-6">
                             <label for="admin_name" class="block text-sm font-medium text-gray-700 mb-2">
-                                Full Name
+                                {{ t('install.admin.fullName') }}
                             </label>
                             <input
                                 id="admin_name"
@@ -108,7 +111,7 @@ const createAdmin = async () => {
                         <!-- Admin Email -->
                         <div class="mb-6">
                             <label for="admin_email" class="block text-sm font-medium text-gray-700 mb-2">
-                                Email Address
+                                {{ t('install.admin.email') }}
                             </label>
                             <input
                                 id="admin_email"
@@ -123,7 +126,7 @@ const createAdmin = async () => {
                         <!-- Admin Password -->
                         <div class="mb-6">
                             <label for="admin_password" class="block text-sm font-medium text-gray-700 mb-2">
-                                Password
+                                {{ t('install.admin.password') }}
                             </label>
                             <input
                                 id="admin_password"
@@ -132,14 +135,14 @@ const createAdmin = async () => {
                                 required
                                 minlength="8"
                                 class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-900 focus:border-transparent"
-                                placeholder="At least 8 characters"
+                                :placeholder="t('install.admin.passwordHint')"
                             />
                         </div>
 
                         <!-- Confirm Password -->
                         <div>
                             <label for="admin_password_confirmation" class="block text-sm font-medium text-gray-700 mb-2">
-                                Confirm Password
+                                {{ t('install.admin.confirmPassword') }}
                             </label>
                             <input
                                 id="admin_password_confirmation"
@@ -148,7 +151,7 @@ const createAdmin = async () => {
                                 required
                                 minlength="8"
                                 class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-900 focus:border-transparent"
-                                placeholder="Confirm your password"
+                                :placeholder="t('install.admin.confirmPasswordHint')"
                             />
                         </div>
                     </div>
@@ -161,7 +164,7 @@ const createAdmin = async () => {
                             </svg>
                             <div class="ml-3">
                                 <p class="text-sm text-blue-800">
-                                    This admin account will have full access to your Inventoros installation.
+                                    {{ t('install.admin.accessNote') }}
                                 </p>
                             </div>
                         </div>
@@ -176,7 +179,7 @@ const createAdmin = async () => {
                             <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
                             </svg>
-                            Back
+                            {{ t('common.back') }}
                         </Link>
 
                         <button
@@ -184,8 +187,8 @@ const createAdmin = async () => {
                             :disabled="creating"
                             class="inline-flex items-center px-6 py-2 bg-gray-900 text-white font-semibold rounded-lg hover:bg-gray-800 transition disabled:bg-gray-300 disabled:cursor-not-allowed"
                         >
-                            <span v-if="creating">Creating Account...</span>
-                            <span v-else>Complete Installation</span>
+                            <span v-if="creating">{{ t('install.admin.creatingAccount') }}</span>
+                            <span v-else>{{ t('install.admin.completeInstallation') }}</span>
                             <svg class="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
                             </svg>

@@ -3,10 +3,13 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head, Link, router } from '@inertiajs/vue3';
 import { ref } from 'vue';
 
+import { useI18n } from 'vue-i18n';
 const props = defineProps({
     user: Object,
 });
 
+
+const { t } = useI18n();
 const showDeleteModal = ref(false);
 const deleting = ref(false);
 
@@ -37,7 +40,7 @@ const getRoleBadgeClass = (role) => {
             <div class="flex justify-between items-center">
                 <div>
                     <h2 class="font-semibold text-2xl text-gray-900 dark:text-gray-100">{{ user.name }}</h2>
-                    <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">User Details</p>
+                    <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">{{ t('admin.userDetails') }}</p>
                 </div>
                 <div class="flex gap-3">
                     <Link
@@ -111,7 +114,7 @@ const getRoleBadgeClass = (role) => {
                         <!-- Organization Card -->
                         <div v-if="user.organization" class="bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border shadow-sm sm:rounded-lg p-6">
                             <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-6">
-                                Organization
+                                {{ t('settings.organization.title') }}
                             </h3>
 
                             <div class="space-y-4">
@@ -124,7 +127,7 @@ const getRoleBadgeClass = (role) => {
 
                                 <div v-if="user.organization.address">
                                     <label class="block text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">
-                                        Address
+                                        {{ t('common.address') }}
                                     </label>
                                     <p class="text-gray-900 dark:text-gray-100 whitespace-pre-line">{{ user.organization.address }}</p>
                                 </div>
@@ -187,7 +190,7 @@ const getRoleBadgeClass = (role) => {
                         <!-- Actions Card -->
                         <div class="bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border shadow-sm sm:rounded-lg p-6">
                             <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
-                                Actions
+                                {{ t('common.actions') }}
                             </h3>
 
                             <div class="space-y-3">
@@ -241,7 +244,7 @@ const getRoleBadgeClass = (role) => {
                                     @click="showDeleteModal = false"
                                     class="px-4 py-2 bg-gray-200 dark:bg-dark-bg text-gray-700 dark:text-gray-300 font-medium rounded-lg hover:bg-gray-300 dark:hover:bg-dark-bg/70 transition"
                                 >
-                                    Cancel
+                                    {{ t('common.cancel') }}
                                 </button>
                                 <button
                                     @click="deleteUser"

@@ -7,6 +7,9 @@ import TextInput from '@/Components/TextInput.vue';
 import BarcodeScannerModal from '@/Components/BarcodeScannerModal.vue';
 import { Head, Link, useForm } from '@inertiajs/vue3';
 import { ref, computed, watch } from 'vue';
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
 
 const props = defineProps({
     suppliers: Array,
@@ -120,19 +123,19 @@ const formatCurrency = (value) => {
 </script>
 
 <template>
-    <Head title="Create Purchase Order" />
+    <Head :title="t('purchaseOrders.create.title')" />
 
     <AuthenticatedLayout>
         <template #header>
             <div class="flex items-center justify-between">
                 <h2 class="font-semibold text-xl text-gray-900 dark:text-gray-100 leading-tight">
-                    Create Purchase Order
+                    {{ t('purchaseOrders.create.title') }}
                 </h2>
                 <Link
                     :href="route('purchase-orders.index')"
                     class="inline-flex items-center px-4 py-2 bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-border rounded-md font-semibold text-xs text-gray-600 dark:text-gray-300 uppercase tracking-widest hover:bg-gray-100 dark:hover:bg-dark-bg/50"
                 >
-                    Back to Purchase Orders
+                    {{ t('purchaseOrders.create.backToPo') }}
                 </Link>
             </div>
         </template>
@@ -146,19 +149,19 @@ const formatCurrency = (value) => {
                     <!-- Order Details -->
                     <div class="bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border overflow-hidden shadow-lg sm:rounded-lg">
                         <div class="px-6 py-4 border-b border-gray-200 dark:border-dark-border">
-                            <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100">Order Details</h3>
+                            <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100">{{ t('purchaseOrders.create.orderDetails') }}</h3>
                         </div>
                         <div class="p-6 space-y-6">
                             <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
                                 <div>
-                                    <InputLabel for="supplier_id" value="Supplier *" />
+                                    <InputLabel for="supplier_id" :value="t('purchaseOrders.supplier') + ' *'" />
                                     <select
                                         id="supplier_id"
                                         v-model="form.supplier_id"
                                         required
                                         class="mt-1 block w-full rounded-md bg-gray-50 dark:bg-dark-bg border-gray-200 dark:border-dark-border text-gray-900 dark:text-gray-100 shadow-sm focus:border-primary-400 focus:ring-primary-400"
                                     >
-                                        <option value="">Select a supplier</option>
+                                        <option value="">{{ t('purchaseOrders.create.selectSupplier') }}</option>
                                         <option v-for="supplier in suppliers" :key="supplier.id" :value="supplier.id">
                                             {{ supplier.name }}
                                         </option>
@@ -167,23 +170,23 @@ const formatCurrency = (value) => {
                                 </div>
 
                                 <div>
-                                    <InputLabel for="currency" value="Currency" />
+                                    <InputLabel for="currency" :value="t('common.currency')" />
                                     <select
                                         id="currency"
                                         v-model="form.currency"
                                         class="mt-1 block w-full rounded-md bg-gray-50 dark:bg-dark-bg border-gray-200 dark:border-dark-border text-gray-900 dark:text-gray-100 shadow-sm focus:border-primary-400 focus:ring-primary-400"
                                     >
-                                        <option value="USD">USD - US Dollar</option>
-                                        <option value="EUR">EUR - Euro</option>
-                                        <option value="GBP">GBP - British Pound</option>
-                                        <option value="CAD">CAD - Canadian Dollar</option>
-                                        <option value="AUD">AUD - Australian Dollar</option>
+                                        <option value="USD">{{ t('purchaseOrders.currencies.usd') }}</option>
+                                        <option value="EUR">{{ t('purchaseOrders.currencies.eur') }}</option>
+                                        <option value="GBP">{{ t('purchaseOrders.currencies.gbp') }}</option>
+                                        <option value="CAD">{{ t('purchaseOrders.currencies.cad') }}</option>
+                                        <option value="AUD">{{ t('purchaseOrders.currencies.aud') }}</option>
                                     </select>
                                     <InputError :message="form.errors.currency" class="mt-2" />
                                 </div>
 
                                 <div>
-                                    <InputLabel for="order_date" value="Order Date *" />
+                                    <InputLabel for="order_date" :value="t('purchaseOrders.create.orderDate')" />
                                     <TextInput
                                         id="order_date"
                                         v-model="form.order_date"
@@ -195,7 +198,7 @@ const formatCurrency = (value) => {
                                 </div>
 
                                 <div>
-                                    <InputLabel for="expected_date" value="Expected Delivery Date" />
+                                    <InputLabel for="expected_date" :value="t('purchaseOrders.create.expectedDelivery')" />
                                     <TextInput
                                         id="expected_date"
                                         v-model="form.expected_date"
@@ -207,7 +210,7 @@ const formatCurrency = (value) => {
                             </div>
 
                             <div>
-                                <InputLabel for="notes" value="Notes" />
+                                <InputLabel for="notes" :value="t('common.notes')" />
                                 <textarea
                                     id="notes"
                                     v-model="form.notes"
@@ -222,7 +225,7 @@ const formatCurrency = (value) => {
                     <!-- Add Items -->
                     <div class="bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border overflow-hidden shadow-lg sm:rounded-lg">
                         <div class="px-6 py-4 border-b border-gray-200 dark:border-dark-border flex items-center justify-between">
-                            <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100">Add Items</h3>
+                            <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100">{{ t('purchaseOrders.create.addItems') }}</h3>
                             <button
                                 type="button"
                                 @click="showScanner = true"
@@ -231,20 +234,20 @@ const formatCurrency = (value) => {
                                 <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" />
                                 </svg>
-                                Scan Barcode
+                                {{ t('components.barcodeScanner.title') }}
                             </button>
                         </div>
                         <div class="p-6 space-y-4">
                             <div class="grid grid-cols-1 gap-4 md:grid-cols-6">
                                 <div class="md:col-span-2">
-                                    <InputLabel for="product" value="Product" />
+                                    <InputLabel for="product" :value="t('common.product')" />
                                     <select
                                         id="product"
                                         v-model="selectedProductId"
                                         @change="onProductSelected"
                                         class="mt-1 block w-full rounded-md bg-gray-50 dark:bg-dark-bg border-gray-200 dark:border-dark-border text-gray-900 dark:text-gray-100 shadow-sm focus:border-primary-400 focus:ring-primary-400"
                                     >
-                                        <option value="">Select a product</option>
+                                        <option value="">{{ t('purchaseOrders.create.selectProduct') }}</option>
                                         <option v-for="product in products" :key="product.id" :value="product.id">
                                             {{ product.name }} ({{ product.sku || 'No SKU' }})
                                         </option>
@@ -252,7 +255,7 @@ const formatCurrency = (value) => {
                                 </div>
 
                                 <div>
-                                    <InputLabel for="quantity" value="Quantity" />
+                                    <InputLabel for="quantity" :value="t('common.quantity')" />
                                     <TextInput
                                         id="quantity"
                                         v-model.number="quantity"
@@ -263,7 +266,7 @@ const formatCurrency = (value) => {
                                 </div>
 
                                 <div>
-                                    <InputLabel for="unit_cost" value="Unit Cost" />
+                                    <InputLabel for="unit_cost" :value="t('purchaseOrders.create.unitCost')" />
                                     <TextInput
                                         id="unit_cost"
                                         v-model.number="unitCost"
@@ -275,13 +278,13 @@ const formatCurrency = (value) => {
                                 </div>
 
                                 <div>
-                                    <InputLabel for="supplier_sku" value="Supplier SKU" />
+                                    <InputLabel for="supplier_sku" :value="t('purchaseOrders.create.supplierSku')" />
                                     <TextInput
                                         id="supplier_sku"
                                         v-model="supplierSku"
                                         type="text"
                                         class="mt-1 block w-full"
-                                        placeholder="Optional"
+                                        :placeholder="t('common.optional')"
                                     />
                                 </div>
 
@@ -292,7 +295,7 @@ const formatCurrency = (value) => {
                                         :disabled="!selectedProductId"
                                         class="w-full inline-flex justify-center items-center px-4 py-2 bg-primary-400 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-primary-500 disabled:opacity-50"
                                     >
-                                        Add
+                                        {{ t('orders.create.add') }}
                                     </button>
                                 </div>
                             </div>
@@ -304,19 +307,19 @@ const formatCurrency = (value) => {
                     <!-- Items Table -->
                     <div v-if="form.items.length > 0" class="bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border overflow-hidden shadow-lg sm:rounded-lg">
                         <div class="px-6 py-4 border-b border-gray-200 dark:border-dark-border">
-                            <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100">Order Items ({{ form.items.length }})</h3>
+                            <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100">{{ t('purchaseOrders.create.orderItems', { count: form.items.length }) }}</h3>
                         </div>
                         <div class="overflow-x-auto">
                             <table class="min-w-full divide-y divide-gray-200 dark:divide-dark-border">
                                 <thead class="bg-gray-50 dark:bg-dark-bg">
                                     <tr>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Product</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">{{ t('common.product') }}</th>
                                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">SKU</th>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Supplier SKU</th>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Quantity</th>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Unit Cost</th>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Subtotal</th>
-                                        <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Actions</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">{{ t('purchaseOrders.create.supplierSku') }}</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">{{ t('common.quantity') }}</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">{{ t('purchaseOrders.create.unitCost') }}</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">{{ t('common.subtotal') }}</th>
+                                        <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">{{ t('common.actions') }}</th>
                                     </tr>
                                 </thead>
                                 <tbody class="bg-white dark:bg-dark-card divide-y divide-gray-200 dark:divide-dark-border">
@@ -373,11 +376,11 @@ const formatCurrency = (value) => {
                             <div class="flex justify-end space-y-2">
                                 <div class="w-64 space-y-2">
                                     <div class="flex justify-between text-sm">
-                                        <span class="text-gray-600 dark:text-gray-400">Subtotal:</span>
+                                        <span class="text-gray-600 dark:text-gray-400">{{ t('common.subtotal') }}:</span>
                                         <span class="text-gray-900 dark:text-gray-100 font-medium">{{ formatCurrency(subtotal) }}</span>
                                     </div>
                                     <div class="flex justify-between items-center text-sm">
-                                        <span class="text-gray-600 dark:text-gray-400">Tax:</span>
+                                        <span class="text-gray-600 dark:text-gray-400">{{ t('common.tax') }}:</span>
                                         <input
                                             type="number"
                                             v-model.number="form.tax"
@@ -387,7 +390,7 @@ const formatCurrency = (value) => {
                                         />
                                     </div>
                                     <div class="flex justify-between items-center text-sm">
-                                        <span class="text-gray-600 dark:text-gray-400">Shipping:</span>
+                                        <span class="text-gray-600 dark:text-gray-400">{{ t('common.shipping') }}:</span>
                                         <input
                                             type="number"
                                             v-model.number="form.shipping"
@@ -397,7 +400,7 @@ const formatCurrency = (value) => {
                                         />
                                     </div>
                                     <div class="flex justify-between text-base font-medium border-t border-gray-200 dark:border-dark-border pt-2">
-                                        <span class="text-gray-900 dark:text-gray-100">Total:</span>
+                                        <span class="text-gray-900 dark:text-gray-100">{{ t('common.total') }}:</span>
                                         <span class="text-gray-900 dark:text-gray-100">{{ formatCurrency(total) }}</span>
                                     </div>
                                 </div>
@@ -411,14 +414,14 @@ const formatCurrency = (value) => {
                             :href="route('purchase-orders.index')"
                             class="inline-flex items-center px-4 py-2 bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-border rounded-md font-semibold text-xs text-gray-600 dark:text-gray-300 uppercase tracking-widest hover:bg-gray-100 dark:hover:bg-dark-bg/50"
                         >
-                            Cancel
+                            {{ t('common.cancel') }}
                         </Link>
                         <button
                             type="submit"
                             :disabled="form.processing || form.items.length === 0"
                             class="inline-flex items-center px-4 py-2 bg-primary-400 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-primary-500 focus:bg-primary-500 active:bg-primary-600 focus:outline-none focus:ring-2 focus:ring-primary-400 focus:ring-offset-2 transition ease-in-out duration-150 disabled:opacity-50"
                         >
-                            Create Purchase Order
+                            {{ t('purchaseOrders.create.createPo') }}
                         </button>
                     </div>
                 </form>

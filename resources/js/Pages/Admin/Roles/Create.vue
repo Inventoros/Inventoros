@@ -6,11 +6,14 @@ import PrimaryButton from '@/Components/PrimaryButton.vue';
 import TextInput from '@/Components/TextInput.vue';
 import { Head, Link, useForm } from '@inertiajs/vue3';
 
+import { useI18n } from 'vue-i18n';
 const props = defineProps({
     permissions: Object,
     permissionSets: Array,
 });
 
+
+const { t } = useI18n();
 const form = useForm({
     name: '',
     description: '',
@@ -83,12 +86,12 @@ const isCategorySelected = (category) => {
 </script>
 
 <template>
-    <Head title="Create Role" />
+    <Head :title="t('admin.roles.createRole')" />
 
     <AuthenticatedLayout>
         <template #header>
             <div class="flex items-center justify-between">
-                <h2 class="font-semibold text-2xl text-gray-900 dark:text-gray-100">Create Role</h2>
+                <h2 class="font-semibold text-2xl text-gray-900 dark:text-gray-100">{{ t('admin.createRole') }}</h2>
                 <Link
                     :href="route('roles.index')"
                     class="px-4 py-2 bg-dark-bg hover:bg-gray-100 dark:hover:bg-dark-bg/80 text-gray-600 dark:text-gray-300 font-medium rounded-lg transition border border-gray-200 dark:border-dark-border"
@@ -243,14 +246,14 @@ const isCategorySelected = (category) => {
                         <!-- Actions -->
                         <div class="flex items-center gap-4 pt-4 border-t border-gray-200 dark:border-dark-border">
                             <PrimaryButton :disabled="form.processing">
-                                Create Role
+                                {{ t('admin.createRole') }}
                             </PrimaryButton>
 
                             <Link
                                 :href="route('roles.index')"
                                 class="text-sm text-gray-500 dark:text-gray-400 hover:text-gray-600 dark:text-gray-300 transition"
                             >
-                                Cancel
+                                {{ t('common.cancel') }}
                             </Link>
 
                             <Transition

@@ -6,6 +6,9 @@ import InputLabel from '@/Components/InputLabel.vue';
 import TextInput from '@/Components/TextInput.vue';
 import { Head, Link, useForm } from '@inertiajs/vue3';
 import { ref, computed } from 'vue';
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
 
 const props = defineProps({
     purchaseOrder: Object,
@@ -108,19 +111,19 @@ const formatCurrency = (value) => {
 </script>
 
 <template>
-    <Head :title="`Edit ${purchaseOrder.po_number}`" />
+    <Head :title="t('purchaseOrders.edit.title')" />
 
     <AuthenticatedLayout>
         <template #header>
             <div class="flex items-center justify-between">
                 <h2 class="font-semibold text-xl text-gray-900 dark:text-gray-100 leading-tight">
-                    Edit Purchase Order
+                    {{ t('purchaseOrders.edit.title') }}
                 </h2>
                 <Link
                     :href="route('purchase-orders.index')"
                     class="inline-flex items-center px-4 py-2 bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-border rounded-md font-semibold text-xs text-gray-600 dark:text-gray-300 uppercase tracking-widest hover:bg-gray-100 dark:hover:bg-dark-bg/50"
                 >
-                    Back to Purchase Orders
+                    {{ t('purchaseOrders.edit.backToPo') }}
                 </Link>
             </div>
         </template>
@@ -133,19 +136,19 @@ const formatCurrency = (value) => {
                     <!-- Order Details -->
                     <div class="bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border overflow-hidden shadow-lg sm:rounded-lg">
                         <div class="px-6 py-4 border-b border-gray-200 dark:border-dark-border">
-                            <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100">Order Details - {{ purchaseOrder.po_number }}</h3>
+                            <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100">{{ t('purchaseOrders.create.orderDetails') }} - {{ purchaseOrder.po_number }}</h3>
                         </div>
                         <div class="p-6 space-y-6">
                             <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
                                 <div>
-                                    <InputLabel for="supplier_id" value="Supplier *" />
+                                    <InputLabel for="supplier_id" :value="t('purchaseOrders.supplier') + ' *'" />
                                     <select
                                         id="supplier_id"
                                         v-model="form.supplier_id"
                                         required
                                         class="mt-1 block w-full rounded-md bg-gray-50 dark:bg-dark-bg border-gray-200 dark:border-dark-border text-gray-900 dark:text-gray-100 shadow-sm focus:border-primary-400 focus:ring-primary-400"
                                     >
-                                        <option value="">Select a supplier</option>
+                                        <option value="">{{ t('purchaseOrders.create.selectSupplier') }}</option>
                                         <option v-for="supplier in suppliers" :key="supplier.id" :value="supplier.id">
                                             {{ supplier.name }}
                                         </option>
@@ -154,23 +157,23 @@ const formatCurrency = (value) => {
                                 </div>
 
                                 <div>
-                                    <InputLabel for="currency" value="Currency" />
+                                    <InputLabel for="currency" :value="t('common.currency')" />
                                     <select
                                         id="currency"
                                         v-model="form.currency"
                                         class="mt-1 block w-full rounded-md bg-gray-50 dark:bg-dark-bg border-gray-200 dark:border-dark-border text-gray-900 dark:text-gray-100 shadow-sm focus:border-primary-400 focus:ring-primary-400"
                                     >
-                                        <option value="USD">USD - US Dollar</option>
-                                        <option value="EUR">EUR - Euro</option>
-                                        <option value="GBP">GBP - British Pound</option>
-                                        <option value="CAD">CAD - Canadian Dollar</option>
-                                        <option value="AUD">AUD - Australian Dollar</option>
+                                        <option value="USD">{{ t('purchaseOrders.currencies.usd') }}</option>
+                                        <option value="EUR">{{ t('purchaseOrders.currencies.eur') }}</option>
+                                        <option value="GBP">{{ t('purchaseOrders.currencies.gbp') }}</option>
+                                        <option value="CAD">{{ t('purchaseOrders.currencies.cad') }}</option>
+                                        <option value="AUD">{{ t('purchaseOrders.currencies.aud') }}</option>
                                     </select>
                                     <InputError :message="form.errors.currency" class="mt-2" />
                                 </div>
 
                                 <div>
-                                    <InputLabel for="order_date" value="Order Date *" />
+                                    <InputLabel for="order_date" :value="t('purchaseOrders.create.orderDate')" />
                                     <TextInput
                                         id="order_date"
                                         v-model="form.order_date"

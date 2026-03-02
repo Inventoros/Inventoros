@@ -53,6 +53,7 @@ class HandleInertiaRequests extends Middleware
                 'permissions' => $user ? $user->getAllPermissions() : [],
             ],
             'pluginMenuItems' => $pluginMenuItems,
+            'locale' => app()->getLocale(),
         ];
     }
 }

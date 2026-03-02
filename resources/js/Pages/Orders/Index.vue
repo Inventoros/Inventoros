@@ -3,6 +3,9 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import PluginSlot from '@/Components/PluginSlot.vue';
 import { Head, Link, router } from '@inertiajs/vue3';
 import { ref, computed } from 'vue';
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
 
 const props = defineProps({
     orders: Object,
@@ -42,7 +45,7 @@ const clearFilters = () => {
 };
 
 const deleteOrder = (order) => {
-    if (confirm(`Are you sure you want to delete order ${order.order_number}?`)) {
+    if (confirm(t('orders.show.confirmDelete', { number: order.order_number }))) {
         router.delete(route('orders.destroy', order.id));
     }
 };
@@ -70,13 +73,13 @@ const getSourceBadgeClass = (orderSource) => {
 </script>
 
 <template>
-    <Head title="Orders" />
+    <Head :title="t('orders.title')" />
 
     <AuthenticatedLayout>
         <template #header>
             <div class="flex items-center justify-between">
                 <h2 class="font-semibold text-xl text-gray-900 dark:text-gray-100 leading-tight">
-                    Orders
+                    {{ t('orders.title') }}
                 </h2>
                 <Link
                     :href="route('orders.create')"
@@ -85,7 +88,7 @@ const getSourceBadgeClass = (orderSource) => {
                     <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                     </svg>
-                    Create Order
+                    {{ t('orders.createOrder') }}
                 </Link>
             </div>
         </template>
@@ -103,13 +106,13 @@ const getSourceBadgeClass = (orderSource) => {
                                 <!-- Search -->
                                 <div class="md:col-span-2">
                                     <label for="search" class="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-1">
-                                        Search Orders
+                                        {{ t('orders.searchOrders') }}
                                     </label>
                                     <input
                                         id="search"
                                         v-model="search"
                                         type="text"
-                                        placeholder="Search by order number, customer name or email..."
+                                        :placeholder="t('orders.searchPlaceholder')"
                                         class="block w-full rounded-md bg-gray-50 dark:bg-dark-bg border-gray-200 dark:border-dark-border text-gray-900 dark:text-gray-100 placeholder-gray-500 shadow-sm focus:border-primary-400 focus:ring-primary-400"
                                     />
                                 </div>
@@ -117,14 +120,14 @@ const getSourceBadgeClass = (orderSource) => {
                                 <!-- Status Filter -->
                                 <div>
                                     <label for="status" class="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-1">
-                                        Status
+                                        {{ t('common.status') }}
                                     </label>
                                     <select
                                         id="status"
                                         v-model="status"
                                         class="block w-full rounded-md bg-gray-50 dark:bg-dark-bg border-gray-200 dark:border-dark-border text-gray-900 dark:text-gray-100 placeholder-gray-500 shadow-sm focus:border-primary-400 focus:ring-primary-400"
                                     >
-                                        <option value="">All Statuses</option>
+                                        <option value="">{{ t('common.allStatuses') }}</option>
                                         <option v-for="stat in statuses" :key="stat" :value="stat">
                                             {{ stat.charAt(0).toUpperCase() + stat.slice(1) }}
                                         </option>
@@ -134,14 +137,14 @@ const getSourceBadgeClass = (orderSource) => {
                                 <!-- Source Filter -->
                                 <div>
                                     <label for="source" class="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-1">
-                                        Source
+                                        {{ t('orders.source') }}
                                     </label>
                                     <select
                                         id="source"
                                         v-model="source"
                                         class="block w-full rounded-md bg-gray-50 dark:bg-dark-bg border-gray-200 dark:border-dark-border text-gray-900 dark:text-gray-100 placeholder-gray-500 shadow-sm focus:border-primary-400 focus:ring-primary-400"
                                     >
-                                        <option value="">All Sources</option>
+                                        <option value="">{{ t('orders.allSources') }}</option>
                                         <option v-for="src in sources" :key="src" :value="src">
                                             {{ src.charAt(0).toUpperCase() + src.slice(1) }}
                                         </option>
@@ -158,14 +161,14 @@ const getSourceBadgeClass = (orderSource) => {
                                     <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                                     </svg>
-                                    Search
+                                    {{ t('common.search') }}
                                 </button>
                                 <button
                                     type="button"
                                     @click="clearFilters"
                                     class="inline-flex items-center px-4 py-2 bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-border rounded-md font-semibold text-xs text-gray-600 dark:text-gray-300 uppercase tracking-widest hover:bg-gray-100 dark:hover:bg-dark-bg/50"
                                 >
-                                    Clear Filters
+                                    {{ t('common.clearFilters') }}
                                 </button>
                             </div>
                         </form>
@@ -182,28 +185,28 @@ const getSourceBadgeClass = (orderSource) => {
                             <thead class="bg-gray-50 dark:bg-dark-bg/50">
                                 <tr>
                                     <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                                        Order
+                                        {{ t('orders.orderCol') }}
                                     </th>
                                     <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                                        Customer
+                                        {{ t('orders.customer') }}
                                     </th>
                                     <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                                        Items
+                                        {{ t('common.items') }}
                                     </th>
                                     <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                                        Total
+                                        {{ t('common.total') }}
                                     </th>
                                     <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                                        Status
+                                        {{ t('common.status') }}
                                     </th>
                                     <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                                        Source
+                                        {{ t('orders.source') }}
                                     </th>
                                     <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                                        Date
+                                        {{ t('common.date') }}
                                     </th>
                                     <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                                        Actions
+                                        {{ t('common.actions') }}
                                     </th>
                                 </tr>
                             </thead>
@@ -213,7 +216,7 @@ const getSourceBadgeClass = (orderSource) => {
                                         <svg class="w-12 h-12 text-gray-500 dark:text-gray-400 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
                                         </svg>
-                                        <p class="text-gray-500 dark:text-gray-400 mb-3">No orders found</p>
+                                        <p class="text-gray-500 dark:text-gray-400 mb-3">{{ t('orders.noOrdersFound') }}</p>
                                         <Link
                                             :href="route('orders.create')"
                                             class="inline-flex items-center px-4 py-2 bg-primary-400 hover:bg-primary-500 text-white text-sm font-semibold rounded-lg transition"
@@ -221,7 +224,7 @@ const getSourceBadgeClass = (orderSource) => {
                                             <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                                             </svg>
-                                            Create Your First Order
+                                            {{ t('orders.createFirstOrder') }}
                                         </Link>
                                     </td>
                                 </tr>
@@ -236,7 +239,7 @@ const getSourceBadgeClass = (orderSource) => {
                                         <div v-if="order.customer_email" class="text-sm text-gray-500 dark:text-gray-400">{{ order.customer_email }}</div>
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
-                                        {{ order.items.length }} items
+                                        {{ order.items.length }} {{ t('common.items') }}
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
                                         {{ formatCurrency(order.total) }}
@@ -297,26 +300,26 @@ const getSourceBadgeClass = (orderSource) => {
                                     :href="orders.prev_page_url"
                                     class="relative inline-flex items-center px-4 py-2 border border-primary-300 dark:border-dark-border text-sm font-semibold rounded-md text-primary-600 dark:text-gray-300 bg-white dark:bg-dark-card hover:bg-primary-50 dark:hover:bg-dark-bg/50 transition"
                                 >
-                                    Previous
+                                    {{ t('common.previous') }}
                                 </Link>
                                 <Link
                                     v-if="orders.next_page_url"
                                     :href="orders.next_page_url"
                                     class="ml-3 relative inline-flex items-center px-4 py-2 border border-primary-300 dark:border-dark-border text-sm font-semibold rounded-md text-primary-600 dark:text-gray-300 bg-white dark:bg-dark-card hover:bg-primary-50 dark:hover:bg-dark-bg/50 transition"
                                 >
-                                    Next
+                                    {{ t('common.next') }}
                                 </Link>
                             </div>
                             <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
                                 <div>
                                     <p class="text-sm text-gray-600 dark:text-gray-300">
-                                        Showing
+                                        {{ t('common.showing') }}
                                         <span class="font-medium">{{ orders.from }}</span>
-                                        to
+                                        {{ t('common.to') }}
                                         <span class="font-medium">{{ orders.to }}</span>
-                                        of
+                                        {{ t('common.of') }}
                                         <span class="font-medium">{{ orders.total }}</span>
-                                        results
+                                        {{ t('common.results') }}
                                     </p>
                                 </div>
                                 <div>

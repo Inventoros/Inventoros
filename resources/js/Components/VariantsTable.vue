@@ -2,6 +2,7 @@
 import { computed } from 'vue';
 import VariantStockAdjuster from './VariantStockAdjuster.vue';
 
+import { useI18n } from 'vue-i18n';
 const props = defineProps({
     variants: {
         type: Array,
@@ -21,6 +22,8 @@ const props = defineProps({
     }
 });
 
+
+const { t } = useI18n();
 const emit = defineEmits(['variant-updated']);
 
 const formatPrice = (price) => {
@@ -58,7 +61,7 @@ const onVariantUpdated = (updatedVariant) => {
                         Stock
                     </th>
                     <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                        Status
+                        {{ t('common.status') }}
                     </th>
                 </tr>
             </thead>

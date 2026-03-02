@@ -2,14 +2,17 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head, Link } from '@inertiajs/vue3';
 
+import { useI18n } from 'vue-i18n';
 defineProps({
     roles: Object,
     filters: Object,
 });
+
+const { t } = useI18n();
 </script>
 
 <template>
-    <Head title="Roles" />
+    <Head :title="t('nav.roles')" />
 
     <AuthenticatedLayout>
         <template #header>
@@ -19,7 +22,7 @@ defineProps({
                     :href="route('roles.create')"
                     class="px-4 py-2 bg-primary-500 hover:bg-primary-600 text-white font-medium rounded-lg transition"
                 >
-                    Create Role
+                    {{ t('admin.createRole') }}
                 </Link>
             </div>
         </template>
@@ -74,14 +77,14 @@ defineProps({
                                         :href="route('roles.show', role.id)"
                                         class="flex-1 px-3 py-2 text-center text-sm font-medium text-gray-600 dark:text-gray-300 bg-gray-100 dark:bg-dark-bg/50 hover:bg-gray-200 dark:hover:bg-dark-bg rounded-md transition"
                                     >
-                                        View
+                                        {{ t('common.view') }}
                                     </Link>
                                     <Link
                                         v-if="role.slug !== 'system-administrator'"
                                         :href="route('roles.edit', role.id)"
                                         class="flex-1 px-3 py-2 text-center text-sm font-medium text-primary-400 bg-primary-400/10 hover:bg-primary-400/20 rounded-md transition"
                                     >
-                                        Edit
+                                        {{ t('common.edit') }}
                                     </Link>
                                     <div
                                         v-else

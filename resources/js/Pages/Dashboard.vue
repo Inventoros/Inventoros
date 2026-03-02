@@ -2,6 +2,9 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import PluginSlot from '@/Components/PluginSlot.vue';
 import { Head, Link } from '@inertiajs/vue3';
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
 
 const props = defineProps({
     stats: Object,
@@ -40,12 +43,12 @@ const formatCompactCurrency = (value) => {
 </script>
 
 <template>
-    <Head title="Dashboard" />
+    <Head :title="t('dashboard.title')" />
 
     <AuthenticatedLayout>
         <template #header>
             <h2 class="text-xl font-semibold leading-tight text-gray-900 dark:text-gray-100">
-                Dashboard
+                {{ t('dashboard.title') }}
             </h2>
         </template>
 
@@ -69,7 +72,7 @@ const formatCompactCurrency = (value) => {
                                     </svg>
                                 </div>
                                 <div class="ml-4">
-                                    <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Total Products</p>
+                                    <p class="text-sm font-medium text-gray-600 dark:text-gray-400">{{ t('dashboard.totalProducts') }}</p>
                                     <p class="text-2xl font-semibold text-gray-900 dark:text-gray-100">
                                         {{ formatNumber(stats.totalProducts) }}
                                     </p>
@@ -88,7 +91,7 @@ const formatCompactCurrency = (value) => {
                                     </svg>
                                 </div>
                                 <div class="ml-4">
-                                    <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Total Value</p>
+                                    <p class="text-sm font-medium text-gray-600 dark:text-gray-400">{{ t('dashboard.totalValue') }}</p>
                                     <p class="text-2xl font-semibold text-gray-900 dark:text-gray-100">
                                         {{ formatCompactCurrency(stats.totalValue) }}
                                     </p>
@@ -107,7 +110,7 @@ const formatCompactCurrency = (value) => {
                                     </svg>
                                 </div>
                                 <div class="ml-4">
-                                    <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Low Stock</p>
+                                    <p class="text-sm font-medium text-gray-600 dark:text-gray-400">{{ t('dashboard.lowStock') }}</p>
                                     <p class="text-2xl font-semibold text-gray-900 dark:text-gray-100">
                                         {{ formatNumber(stats.lowStockProducts) }}
                                     </p>
@@ -126,7 +129,7 @@ const formatCompactCurrency = (value) => {
                                     </svg>
                                 </div>
                                 <div class="ml-4">
-                                    <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Categories</p>
+                                    <p class="text-sm font-medium text-gray-600 dark:text-gray-400">{{ t('dashboard.categories') }}</p>
                                     <p class="text-2xl font-semibold text-gray-900 dark:text-gray-100">
                                         {{ stats.categories }}
                                     </p>
@@ -145,7 +148,7 @@ const formatCompactCurrency = (value) => {
                                     </svg>
                                 </div>
                                 <div class="ml-4">
-                                    <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Total Orders</p>
+                                    <p class="text-sm font-medium text-gray-600 dark:text-gray-400">{{ t('dashboard.totalOrders') }}</p>
                                     <p class="text-2xl font-semibold text-gray-900 dark:text-gray-100">
                                         {{ formatNumber(stats.totalOrders) }}
                                     </p>
@@ -154,7 +157,7 @@ const formatCompactCurrency = (value) => {
                         </div>
                     </div>
 
-                    <!-- Revenue This Month -->
+                    <!-- Revenue This Month stat -->
                     <div class="bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border overflow-hidden shadow-sm dark:shadow-lg sm:rounded-lg hover:border-primary-400/30 transition">
                         <div class="p-6">
                             <div class="flex items-center">
@@ -164,7 +167,7 @@ const formatCompactCurrency = (value) => {
                                     </svg>
                                 </div>
                                 <div class="ml-4">
-                                    <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Revenue This Month</p>
+                                    <p class="text-sm font-medium text-gray-600 dark:text-gray-400">{{ t('dashboard.revenueThisMonth') }}</p>
                                     <p class="text-2xl font-semibold text-gray-900 dark:text-gray-100">
                                         {{ formatCompactCurrency(stats.revenueThisMonth) }}
                                     </p>
@@ -182,7 +185,7 @@ const formatCompactCurrency = (value) => {
                     <!-- Pending Orders -->
                     <div class="bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border overflow-hidden shadow-sm dark:shadow-lg sm:rounded-lg hover:border-amber-400/30 transition">
                         <Link :href="route('orders.index', { status: 'pending' })" class="block p-4">
-                            <p class="text-xs font-medium text-gray-600 dark:text-gray-400 uppercase tracking-wider">Pending Orders</p>
+                            <p class="text-xs font-medium text-gray-600 dark:text-gray-400 uppercase tracking-wider">{{ t('dashboard.pendingOrders') }}</p>
                             <p class="text-xl font-semibold text-amber-400 mt-1">
                                 {{ formatNumber(stats.pendingOrders) }}
                             </p>
@@ -192,7 +195,7 @@ const formatCompactCurrency = (value) => {
                     <!-- Categories -->
                     <div class="bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border overflow-hidden shadow-sm dark:shadow-lg sm:rounded-lg hover:shadow-md dark:hover:border-accent-purple/50 transition">
                         <Link :href="route('categories.index')" class="block p-4">
-                            <p class="text-xs font-medium text-gray-600 dark:text-gray-400 uppercase tracking-wider">Categories</p>
+                            <p class="text-xs font-medium text-gray-600 dark:text-gray-400 uppercase tracking-wider">{{ t('dashboard.categories') }}</p>
                             <p class="text-xl font-semibold text-accent-purple mt-1">
                                 {{ stats.categories }}
                             </p>
@@ -202,7 +205,7 @@ const formatCompactCurrency = (value) => {
                     <!-- Locations -->
                     <div class="bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border overflow-hidden shadow-sm dark:shadow-lg sm:rounded-lg hover:border-orange-400/30 transition">
                         <Link :href="route('locations.index')" class="block p-4">
-                            <p class="text-xs font-medium text-gray-600 dark:text-gray-400 uppercase tracking-wider">Locations</p>
+                            <p class="text-xs font-medium text-gray-600 dark:text-gray-400 uppercase tracking-wider">{{ t('dashboard.locations') }}</p>
                             <p class="text-xl font-semibold text-orange-400 mt-1">
                                 {{ stats.locations }}
                             </p>
@@ -212,7 +215,7 @@ const formatCompactCurrency = (value) => {
                     <!-- Inventory Value -->
                     <div class="bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border overflow-hidden shadow-sm dark:shadow-lg sm:rounded-lg hover:border-green-400/30 transition">
                         <div class="p-4">
-                            <p class="text-xs font-medium text-gray-600 dark:text-gray-400 uppercase tracking-wider">Inventory Value</p>
+                            <p class="text-xs font-medium text-gray-600 dark:text-gray-400 uppercase tracking-wider">{{ t('dashboard.inventoryValue') }}</p>
                             <p class="text-xl font-semibold text-green-400 mt-1">
                                 {{ formatCompactCurrency(stats.totalValue) }}
                             </p>
@@ -222,7 +225,7 @@ const formatCompactCurrency = (value) => {
                     <!-- Low Stock Alert -->
                     <div class="bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border overflow-hidden shadow-sm dark:shadow-lg sm:rounded-lg hover:border-red-400/30 transition">
                         <Link :href="route('products.index', { low_stock: '1' })" class="block p-4">
-                            <p class="text-xs font-medium text-gray-600 dark:text-gray-400 uppercase tracking-wider">Low Stock Items</p>
+                            <p class="text-xs font-medium text-gray-600 dark:text-gray-400 uppercase tracking-wider">{{ t('dashboard.lowStockItems') }}</p>
                             <p class="text-xl font-semibold text-red-400 mt-1">
                                 {{ formatNumber(stats.lowStockProducts) }}
                             </p>
@@ -240,13 +243,13 @@ const formatCompactCurrency = (value) => {
                         <div class="p-6">
                             <div class="flex items-center justify-between mb-4">
                                 <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">
-                                    Recent Orders
+                                    {{ t('dashboard.recentOrders') }}
                                 </h3>
                                 <Link
                                     :href="route('orders.index')"
                                     class="text-sm text-primary-400 hover:text-primary-300"
                                 >
-                                    View All
+                                    {{ t('dashboard.viewAll') }}
                                 </Link>
                             </div>
 
@@ -254,12 +257,12 @@ const formatCompactCurrency = (value) => {
                                 <svg class="w-12 h-12 text-gray-600 dark:text-gray-400 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
                                 </svg>
-                                <p class="text-gray-600 dark:text-gray-400 mb-3">No orders yet</p>
+                                <p class="text-gray-600 dark:text-gray-400 mb-3">{{ t('dashboard.noOrdersYet') }}</p>
                                 <Link
                                     :href="route('orders.create')"
                                     class="inline-flex items-center px-4 py-2 bg-primary-400 hover:bg-primary-500 text-white text-sm font-semibold rounded-lg transition"
                                 >
-                                    Create First Order
+                                    {{ t('dashboard.createFirstOrder') }}
                                 </Link>
                             </div>
 
@@ -310,13 +313,13 @@ const formatCompactCurrency = (value) => {
                         <div class="p-6">
                             <div class="flex items-center justify-between mb-4">
                                 <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">
-                                    Low Stock Alert
+                                    {{ t('dashboard.lowStockAlert') }}
                                 </h3>
                                 <Link
                                     :href="route('products.index')"
                                     class="text-sm text-primary-400 hover:text-primary-300"
                                 >
-                                    View All
+                                    {{ t('dashboard.viewAll') }}
                                 </Link>
                             </div>
 
@@ -324,7 +327,7 @@ const formatCompactCurrency = (value) => {
                                 <svg class="w-12 h-12 text-gray-600 dark:text-gray-400 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                                 </svg>
-                                <p class="text-gray-600 dark:text-gray-400">All products are well stocked!</p>
+                                <p class="text-gray-600 dark:text-gray-400">{{ t('dashboard.allWellStocked') }}</p>
                             </div>
 
                             <div v-else class="space-y-3">
@@ -343,10 +346,10 @@ const formatCompactCurrency = (value) => {
                                     </div>
                                     <div class="text-right ml-4">
                                         <p class="text-sm font-semibold text-red-400">
-                                            {{ product.stock }} in stock
+                                            {{ t('dashboard.inStock', { count: product.stock }) }}
                                         </p>
                                         <p class="text-xs text-gray-600 dark:text-gray-400">
-                                            Reorder at {{ product.min_stock }}
+                                            {{ t('dashboard.reorderAt', { count: product.min_stock }) }}
                                         </p>
                                     </div>
                                 </div>
@@ -359,13 +362,13 @@ const formatCompactCurrency = (value) => {
                         <div class="p-6">
                             <div class="flex items-center justify-between mb-4">
                                 <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">
-                                    Recent Products
+                                    {{ t('dashboard.recentProducts') }}
                                 </h3>
                                 <Link
                                     :href="route('products.index')"
                                     class="text-sm text-primary-400 hover:text-primary-300"
                                 >
-                                    View All
+                                    {{ t('dashboard.viewAll') }}
                                 </Link>
                             </div>
 
@@ -373,12 +376,12 @@ const formatCompactCurrency = (value) => {
                                 <svg class="w-12 h-12 text-gray-600 dark:text-gray-400 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
                                 </svg>
-                                <p class="text-gray-600 dark:text-gray-400 mb-3">No products yet</p>
+                                <p class="text-gray-600 dark:text-gray-400 mb-3">{{ t('dashboard.noProductsYet') }}</p>
                                 <Link
                                     :href="route('products.create')"
                                     class="inline-flex items-center px-4 py-2 bg-primary-400 hover:bg-primary-500 text-white text-sm font-semibold rounded-lg transition"
                                 >
-                                    Add Your First Product
+                                    {{ t('dashboard.addFirstProduct') }}
                                 </Link>
                             </div>
 
@@ -401,7 +404,7 @@ const formatCompactCurrency = (value) => {
                                             {{ formatCurrency(product.price) }}
                                         </p>
                                         <p class="text-sm text-gray-600 dark:text-gray-400">
-                                            Qty: {{ product.stock }}
+                                            {{ t('dashboard.qty', { count: product.stock }) }}
                                         </p>
                                     </div>
                                 </div>
@@ -417,7 +420,7 @@ const formatCompactCurrency = (value) => {
                 <div v-if="stockByCategory.length > 0" class="mt-6 bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border overflow-hidden shadow-sm dark:shadow-lg sm:rounded-lg hover:border-accent-purple/30 transition">
                     <div class="p-6">
                         <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
-                            Stock Value by Category
+                            {{ t('dashboard.stockValueByCategory') }}
                         </h3>
                         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                             <div
@@ -432,7 +435,7 @@ const formatCompactCurrency = (value) => {
                                     {{ formatCompactCurrency(category.value) }}
                                 </p>
                                 <p class="text-sm text-gray-600 dark:text-gray-400">
-                                    {{ formatNumber(category.count) }} products
+                                    {{ formatNumber(category.count) }} {{ t('common.products') }}
                                 </p>
                             </div>
                         </div>
@@ -443,7 +446,7 @@ const formatCompactCurrency = (value) => {
                 <div class="mt-6 bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border overflow-hidden shadow-sm dark:shadow-lg sm:rounded-lg">
                     <div class="p-6">
                         <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
-                            Quick Actions
+                            {{ t('dashboard.quickActions') }}
                         </h3>
                         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                             <Link
@@ -454,8 +457,8 @@ const formatCompactCurrency = (value) => {
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                                 </svg>
                                 <div class="ml-3">
-                                    <p class="font-semibold text-gray-900 dark:text-gray-100">Create Order</p>
-                                    <p class="text-sm text-gray-600 dark:text-gray-400">New order</p>
+                                    <p class="font-semibold text-gray-900 dark:text-gray-100">{{ t('dashboard.createOrder') }}</p>
+                                    <p class="text-sm text-gray-600 dark:text-gray-400">{{ t('dashboard.newOrder') }}</p>
                                 </div>
                             </Link>
 
@@ -467,8 +470,8 @@ const formatCompactCurrency = (value) => {
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                                 </svg>
                                 <div class="ml-3">
-                                    <p class="font-semibold text-gray-900 dark:text-gray-100">Add Product</p>
-                                    <p class="text-sm text-gray-600 dark:text-gray-400">Create new item</p>
+                                    <p class="font-semibold text-gray-900 dark:text-gray-100">{{ t('dashboard.addProduct') }}</p>
+                                    <p class="text-sm text-gray-600 dark:text-gray-400">{{ t('dashboard.createNewItem') }}</p>
                                 </div>
                             </Link>
 
@@ -480,8 +483,8 @@ const formatCompactCurrency = (value) => {
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
                                 </svg>
                                 <div class="ml-3">
-                                    <p class="font-semibold text-gray-900 dark:text-gray-100">View Inventory</p>
-                                    <p class="text-sm text-gray-600 dark:text-gray-400">Browse all items</p>
+                                    <p class="font-semibold text-gray-900 dark:text-gray-100">{{ t('dashboard.viewInventory') }}</p>
+                                    <p class="text-sm text-gray-600 dark:text-gray-400">{{ t('dashboard.browseAllItems') }}</p>
                                 </div>
                             </Link>
 
@@ -493,8 +496,8 @@ const formatCompactCurrency = (value) => {
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
                                 </svg>
                                 <div class="ml-3">
-                                    <p class="font-semibold text-gray-900 dark:text-gray-100">View Orders</p>
-                                    <p class="text-sm text-gray-600 dark:text-gray-400">All orders</p>
+                                    <p class="font-semibold text-gray-900 dark:text-gray-100">{{ t('dashboard.viewOrders') }}</p>
+                                    <p class="text-sm text-gray-600 dark:text-gray-400">{{ t('dashboard.allOrders') }}</p>
                                 </div>
                             </Link>
                         </div>

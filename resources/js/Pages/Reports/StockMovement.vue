@@ -2,6 +2,9 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head, Link, router } from '@inertiajs/vue3';
 import { ref } from 'vue';
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
 
 const props = defineProps({
     adjustments: Object,
@@ -49,20 +52,20 @@ const getTypeBadgeClass = (adjustmentType) => {
 </script>
 
 <template>
-    <Head title="Stock Movement Report" />
+    <Head :title="t('reports.stockMovement.title')" />
 
     <AuthenticatedLayout>
         <template #header>
             <div class="flex items-center justify-between">
                 <div>
-                    <h2 class="font-semibold text-2xl text-gray-900 dark:text-gray-100">Stock Movement Report</h2>
-                    <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Track all stock adjustments</p>
+                    <h2 class="font-semibold text-2xl text-gray-900 dark:text-gray-100">{{ t('reports.stockMovement.title') }}</h2>
+                    <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">{{ t('reports.stockMovement.description') }}</p>
                 </div>
                 <Link
                     :href="route('reports.index')"
                     class="px-4 py-2 bg-gray-200 dark:bg-dark-bg hover:bg-gray-300 dark:hover:bg-dark-bg/70 text-gray-700 dark:text-gray-300 font-medium rounded-lg transition"
                 >
-                    Back to Reports
+                    {{ t('reports.backToReports') }}
                 </Link>
             </div>
         </template>
@@ -72,22 +75,22 @@ const getTypeBadgeClass = (adjustmentType) => {
                 <!-- Summary Cards -->
                 <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
                     <div class="bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border rounded-lg shadow-sm p-6">
-                        <p class="text-sm text-gray-500 dark:text-gray-400 mb-2">Total Adjustments</p>
+                        <p class="text-sm text-gray-500 dark:text-gray-400 mb-2">{{ t('reports.stockMovement.totalAdjustments') }}</p>
                         <p class="text-3xl font-bold text-gray-900 dark:text-gray-100">{{ summary.total_adjustments }}</p>
                     </div>
 
                     <div class="bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border rounded-lg shadow-sm p-6">
-                        <p class="text-sm text-gray-500 dark:text-gray-400 mb-2">Stock Increases</p>
+                        <p class="text-sm text-gray-500 dark:text-gray-400 mb-2">{{ t('reports.stockMovement.stockIncreases') }}</p>
                         <p class="text-3xl font-bold text-green-600 dark:text-green-400">+{{ summary.total_increases }}</p>
                     </div>
 
                     <div class="bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border rounded-lg shadow-sm p-6">
-                        <p class="text-sm text-gray-500 dark:text-gray-400 mb-2">Stock Decreases</p>
+                        <p class="text-sm text-gray-500 dark:text-gray-400 mb-2">{{ t('reports.stockMovement.stockDecreases') }}</p>
                         <p class="text-3xl font-bold text-red-600 dark:text-red-400">-{{ summary.total_decreases }}</p>
                     </div>
 
                     <div class="bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border rounded-lg shadow-sm p-6">
-                        <p class="text-sm text-gray-500 dark:text-gray-400 mb-2">Net Change</p>
+                        <p class="text-sm text-gray-500 dark:text-gray-400 mb-2">{{ t('reports.stockMovement.netChange') }}</p>
                         <p class="text-3xl font-bold" :class="summary.net_change >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'">
                             {{ summary.net_change >= 0 ? '+' : '' }}{{ summary.net_change }}
                         </p>
@@ -96,10 +99,10 @@ const getTypeBadgeClass = (adjustmentType) => {
 
                 <!-- Filters -->
                 <div class="bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border rounded-lg shadow-sm p-6 mb-6">
-                    <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Filters</h3>
+                    <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">{{ t('reports.stockMovement.filters') }}</h3>
                     <form @submit.prevent="applyFilters" class="grid grid-cols-1 md:grid-cols-4 gap-4">
                         <div>
-                            <label class="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-1">Date From</label>
+                            <label class="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-1">{{ t('reports.stockMovement.dateFrom') }}</label>
                             <input
                                 v-model="dateFrom"
                                 type="date"
@@ -108,7 +111,7 @@ const getTypeBadgeClass = (adjustmentType) => {
                         </div>
 
                         <div>
-                            <label class="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-1">Date To</label>
+                            <label class="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-1">{{ t('reports.stockMovement.dateTo') }}</label>
                             <input
                                 v-model="dateTo"
                                 type="date"
@@ -117,12 +120,12 @@ const getTypeBadgeClass = (adjustmentType) => {
                         </div>
 
                         <div>
-                            <label class="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-1">Product</label>
+                            <label class="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-1">{{ t('common.product') }}</label>
                             <select
                                 v-model="productId"
                                 class="block w-full rounded-md bg-gray-50 dark:bg-dark-bg border-gray-200 dark:border-dark-border text-gray-900 dark:text-gray-100 shadow-sm focus:border-primary-400 focus:ring-primary-400"
                             >
-                                <option value="">All Products</option>
+                                <option value="">{{ t('reports.stockMovement.allProducts') }}</option>
                                 <option v-for="product in products" :key="product.id" :value="product.id">
                                     {{ product.name }} ({{ product.sku }})
                                 </option>
@@ -130,18 +133,18 @@ const getTypeBadgeClass = (adjustmentType) => {
                         </div>
 
                         <div>
-                            <label class="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-1">Type</label>
+                            <label class="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-1">{{ t('common.type') }}</label>
                             <select
                                 v-model="type"
                                 class="block w-full rounded-md bg-gray-50 dark:bg-dark-bg border-gray-200 dark:border-dark-border text-gray-900 dark:text-gray-100 shadow-sm focus:border-primary-400 focus:ring-primary-400"
                             >
-                                <option value="">All Types</option>
-                                <option value="manual">Manual</option>
-                                <option value="recount">Recount</option>
-                                <option value="damage">Damage</option>
-                                <option value="loss">Loss</option>
-                                <option value="return">Return</option>
-                                <option value="correction">Correction</option>
+                                <option value="">{{ t('common.allTypes') }}</option>
+                                <option value="manual">{{ t('reports.adjustmentTypes.manual') }}</option>
+                                <option value="recount">{{ t('reports.adjustmentTypes.recount') }}</option>
+                                <option value="damage">{{ t('reports.adjustmentTypes.damage') }}</option>
+                                <option value="loss">{{ t('reports.adjustmentTypes.loss') }}</option>
+                                <option value="return">{{ t('reports.adjustmentTypes.return') }}</option>
+                                <option value="correction">{{ t('reports.adjustmentTypes.correction') }}</option>
                             </select>
                         </div>
 
@@ -150,14 +153,14 @@ const getTypeBadgeClass = (adjustmentType) => {
                                 type="submit"
                                 class="px-4 py-2 bg-primary-500 hover:bg-primary-600 text-white font-medium rounded-lg transition"
                             >
-                                Apply Filters
+                                {{ t('common.applyFilters') }}
                             </button>
                             <button
                                 type="button"
                                 @click="clearFilters"
                                 class="px-4 py-2 bg-gray-200 dark:bg-dark-bg hover:bg-gray-300 dark:hover:bg-dark-bg/70 text-gray-700 dark:text-gray-300 font-medium rounded-lg transition"
                             >
-                                Clear
+                                {{ t('common.clear') }}
                             </button>
                         </div>
                     </form>
@@ -169,13 +172,13 @@ const getTypeBadgeClass = (adjustmentType) => {
                         <table class="min-w-full divide-y divide-gray-200 dark:divide-dark-border">
                             <thead class="bg-gray-50 dark:bg-dark-bg/50">
                                 <tr>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Date</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Product</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Type</th>
-                                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Before</th>
-                                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Change</th>
-                                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">After</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">User</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">{{ t('common.date') }}</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">{{ t('common.product') }}</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">{{ t('common.type') }}</th>
+                                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">{{ t('reports.stockMovement.before') }}</th>
+                                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">{{ t('reports.stockMovement.change') }}</th>
+                                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">{{ t('reports.stockMovement.after') }}</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">{{ t('common.user') }}</th>
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-gray-200 dark:divide-dark-border">
@@ -202,7 +205,7 @@ const getTypeBadgeClass = (adjustmentType) => {
                                         {{ adj.quantity_after }}
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-300">
-                                        {{ adj.user?.name || 'System' }}
+                                        {{ adj.user?.name || t('common.system') }}
                                     </td>
                                 </tr>
                             </tbody>

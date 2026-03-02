@@ -3,6 +3,7 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head, Link, router } from '@inertiajs/vue3';
 import { ref, watch } from 'vue';
 
+import { useI18n } from 'vue-i18n';
 const props = defineProps({
     activities: Object,
     filters: Object,
@@ -11,6 +12,8 @@ const props = defineProps({
     subjectTypes: Array,
 });
 
+
+const { t } = useI18n();
 const search = ref(props.filters.search || '');
 const user_id = ref(props.filters.user_id || '');
 const action = ref(props.filters.action || '');
@@ -112,12 +115,12 @@ const getChangedFields = (properties) => {
 </script>
 
 <template>
-    <Head title="Activity Log" />
+    <Head :title="t('admin.activityLog.title')" />
 
     <AuthenticatedLayout>
         <template #header>
             <h2 class="font-semibold text-xl text-gray-900 dark:text-gray-100 leading-tight">
-                Activity Log
+                {{ t('admin.activityLog.title') }}
             </h2>
         </template>
 
@@ -142,7 +145,7 @@ const getChangedFields = (properties) => {
                         <!-- User Filter -->
                         <div>
                             <label class="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-2">
-                                User
+                                {{ t('common.user') }}
                             </label>
                             <select
                                 v-model="user_id"
@@ -180,7 +183,7 @@ const getChangedFields = (properties) => {
                                 v-model="subject_type"
                                 class="w-full rounded-md bg-gray-50 dark:bg-dark-bg border-gray-200 dark:border-dark-border text-gray-900 dark:text-gray-100 shadow-sm focus:border-primary-400 focus:ring-primary-400"
                             >
-                                <option value="">All Types</option>
+                                <option value="">{{ t('common.allTypes') }}</option>
                                 <option v-for="type in subjectTypes" :key="type.value" :value="type.value">
                                     {{ type.label }}
                                 </option>
@@ -218,13 +221,13 @@ const getChangedFields = (properties) => {
                             @click="applyFilters"
                             class="px-4 py-2 bg-primary-400 text-white rounded-md hover:bg-primary-500 transition font-medium text-sm"
                         >
-                            Apply Filters
+                            {{ t('common.applyFilters') }}
                         </button>
                         <button
                             @click="clearFilters"
                             class="px-4 py-2 bg-gray-200 dark:bg-dark-bg text-gray-700 dark:text-gray-300 rounded-md hover:bg-gray-300 dark:hover:bg-dark-bg/80 transition font-medium text-sm border border-gray-200 dark:border-dark-border"
                         >
-                            Clear Filters
+                            {{ t('common.clearFilters') }}
                         </button>
                     </div>
                 </div>
@@ -283,8 +286,8 @@ const getChangedFields = (properties) => {
                                                             <thead>
                                                                 <tr class="border-b border-gray-200 dark:border-dark-border">
                                                                     <th class="text-left py-2 px-3 font-semibold text-gray-600 dark:text-gray-300">Field</th>
-                                                                    <th class="text-left py-2 px-3 font-semibold text-red-400">Before</th>
-                                                                    <th class="text-left py-2 px-3 font-semibold text-green-400">After</th>
+                                                                    <th class="text-left py-2 px-3 font-semibold text-red-400">{{ t('stockAdjustments.show.stockBefore') }}</th>
+                                                                    <th class="text-left py-2 px-3 font-semibold text-green-400">{{ t('stockAdjustments.show.stockAfter') }}</th>
                                                                 </tr>
                                                             </thead>
                                                             <tbody class="divide-y divide-gray-100 dark:divide-dark-border">

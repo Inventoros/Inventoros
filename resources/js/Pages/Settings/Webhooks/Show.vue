@@ -6,6 +6,7 @@ import Modal from '@/Components/Modal.vue';
 import InputLabel from '@/Components/InputLabel.vue';
 import InputError from '@/Components/InputError.vue';
 
+import { useI18n } from 'vue-i18n';
 const props = defineProps({
     webhook: Object,
     deliveries: Object,
@@ -13,6 +14,8 @@ const props = defineProps({
     eventGroups: Object,
 });
 
+
+const { t } = useI18n();
 // State
 const showSecret = ref(false);
 const copiedSecret = ref(false);
@@ -236,13 +239,13 @@ const isGroupPartiallySelected = (form, group) => {
                         @click="openEditModal"
                         class="inline-flex items-center px-3 py-2 bg-primary-400 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-primary-500 transition"
                     >
-                        Edit
+                        {{ t('common.edit') }}
                     </button>
                     <Link
                         :href="route('webhooks.index')"
                         class="inline-flex items-center px-3 py-2 bg-gray-100 dark:bg-dark-bg border border-gray-200 dark:border-dark-border rounded-md font-semibold text-xs text-gray-700 dark:text-gray-300 uppercase tracking-widest hover:bg-gray-200 dark:hover:bg-dark-bg/50 transition"
                     >
-                        Back
+                        {{ t('common.back') }}
                     </Link>
                 </div>
             </div>
@@ -289,7 +292,7 @@ const isGroupPartiallySelected = (form, group) => {
                                         </dd>
                                     </div>
                                     <div>
-                                        <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Created By</dt>
+                                        <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">{{ t('purchaseOrders.show.createdBy') }}</dt>
                                         <dd class="mt-1 text-sm text-gray-900 dark:text-gray-100">
                                             {{ webhook.creator?.name || 'Unknown' }}
                                         </dd>
@@ -343,7 +346,7 @@ const isGroupPartiallySelected = (form, group) => {
                                                 Event
                                             </th>
                                             <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                                                Status
+                                                {{ t('common.status') }}
                                             </th>
                                             <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                                                 Attempts
@@ -355,7 +358,7 @@ const isGroupPartiallySelected = (form, group) => {
                                                 Created
                                             </th>
                                             <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                                                Actions
+                                                {{ t('common.actions') }}
                                             </th>
                                         </tr>
                                     </thead>
@@ -513,7 +516,7 @@ const isGroupPartiallySelected = (form, group) => {
                         <!-- Quick Actions Card -->
                         <div class="bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border overflow-hidden shadow-lg sm:rounded-lg">
                             <div class="px-6 py-4 border-b border-gray-200 dark:border-dark-border">
-                                <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100">Actions</h3>
+                                <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100">{{ t('common.actions') }}</h3>
                             </div>
                             <div class="p-6 space-y-3">
                                 <button
@@ -678,7 +681,7 @@ const isGroupPartiallySelected = (form, group) => {
                             class="rounded border-gray-300 dark:border-dark-border text-primary-400 focus:ring-primary-400 bg-gray-50 dark:bg-dark-bg"
                         />
                         <label for="show-edit-active" class="ml-2 text-sm text-gray-900 dark:text-gray-100">
-                            Active
+                            {{ t('common.active') }}
                         </label>
                         <span class="ml-2 text-xs text-gray-500 dark:text-gray-400">
                             (Inactive webhooks will not receive any deliveries)
@@ -692,7 +695,7 @@ const isGroupPartiallySelected = (form, group) => {
                             @click="closeEditModal"
                             class="px-4 py-2 bg-gray-100 dark:bg-dark-bg text-gray-700 dark:text-gray-300 rounded-md hover:bg-gray-200 dark:hover:bg-dark-bg/50 font-medium text-sm"
                         >
-                            Cancel
+                            {{ t('common.cancel') }}
                         </button>
                         <button
                             type="submit"
