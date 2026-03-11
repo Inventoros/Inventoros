@@ -3,6 +3,9 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import PluginSlot from '@/Components/PluginSlot.vue';
 import { Head, Link, router } from '@inertiajs/vue3';
 import { ref } from 'vue';
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
 
 const props = defineProps({
     purchaseOrders: Object,
@@ -74,13 +77,13 @@ const statusLabels = {
 </script>
 
 <template>
-    <Head title="Purchase Orders" />
+    <Head :title="t('purchaseOrders.title')" />
 
     <AuthenticatedLayout>
         <template #header>
             <div class="flex items-center justify-between">
                 <h2 class="font-semibold text-xl text-gray-900 dark:text-gray-100 leading-tight">
-                    Purchase Orders
+                    {{ t('purchaseOrders.title') }}
                 </h2>
                 <Link
                     :href="route('purchase-orders.create')"
@@ -89,7 +92,7 @@ const statusLabels = {
                     <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                     </svg>
-                    Create Purchase Order
+                    {{ t('purchaseOrders.createPo') }}
                 </Link>
             </div>
         </template>
@@ -106,27 +109,27 @@ const statusLabels = {
                             <div class="grid grid-cols-1 gap-4 md:grid-cols-4">
                                 <div>
                                     <label for="search" class="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-1">
-                                        Search
+                                        {{ t('common.search') }}
                                     </label>
                                     <input
                                         id="search"
                                         v-model="search"
                                         type="text"
-                                        placeholder="PO number or supplier..."
+                                        :placeholder="t('purchaseOrders.searchPlaceholder')"
                                         class="block w-full rounded-md bg-gray-50 dark:bg-dark-bg border-gray-200 dark:border-dark-border text-gray-900 dark:text-gray-100 placeholder-gray-500 shadow-sm focus:border-primary-400 focus:ring-primary-400"
                                     />
                                 </div>
 
                                 <div>
                                     <label for="status" class="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-1">
-                                        Status
+                                        {{ t('common.status') }}
                                     </label>
                                     <select
                                         id="status"
                                         v-model="selectedStatus"
                                         class="block w-full rounded-md bg-gray-50 dark:bg-dark-bg border-gray-200 dark:border-dark-border text-gray-900 dark:text-gray-100 shadow-sm focus:border-primary-400 focus:ring-primary-400"
                                     >
-                                        <option value="">All Statuses</option>
+                                        <option value="">{{ t('common.allStatuses') }}</option>
                                         <option v-for="status in statuses" :key="status" :value="status">
                                             {{ statusLabels[status] || status }}
                                         </option>
@@ -135,14 +138,14 @@ const statusLabels = {
 
                                 <div>
                                     <label for="supplier" class="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-1">
-                                        Supplier
+                                        {{ t('purchaseOrders.supplier') }}
                                     </label>
                                     <select
                                         id="supplier"
                                         v-model="selectedSupplierId"
                                         class="block w-full rounded-md bg-gray-50 dark:bg-dark-bg border-gray-200 dark:border-dark-border text-gray-900 dark:text-gray-100 shadow-sm focus:border-primary-400 focus:ring-primary-400"
                                     >
-                                        <option value="">All Suppliers</option>
+                                        <option value="">{{ t('purchaseOrders.allSuppliers') }}</option>
                                         <option v-for="supplier in suppliers" :key="supplier.id" :value="supplier.id">
                                             {{ supplier.name }}
                                         </option>
@@ -157,14 +160,14 @@ const statusLabels = {
                                         <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                                         </svg>
-                                        Search
+                                        {{ t('common.search') }}
                                     </button>
                                     <button
                                         type="button"
                                         @click="clearFilters"
                                         class="inline-flex items-center px-4 py-2 bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-border rounded-md font-semibold text-xs text-gray-600 dark:text-gray-300 uppercase tracking-widest hover:bg-gray-100 dark:hover:bg-dark-bg/50"
                                     >
-                                        Clear
+                                        {{ t('common.clear') }}
                                     </button>
                                 </div>
                             </div>
@@ -181,14 +184,14 @@ const statusLabels = {
                         <table class="min-w-full divide-y divide-gray-200 dark:divide-dark-border">
                             <thead class="bg-gray-50 dark:bg-dark-bg">
                                 <tr>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">PO Number</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Supplier</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Order Date</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Expected</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Items</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Total</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Status</th>
-                                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Actions</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">{{ t('purchaseOrders.poNumber') }}</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">{{ t('purchaseOrders.supplier') }}</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">{{ t('purchaseOrders.orderDate') }}</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">{{ t('purchaseOrders.expected') }}</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">{{ t('common.quantity') }}</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">{{ t('common.total') }}</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">{{ t('common.status') }}</th>
+                                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">{{ t('common.actions') }}</th>
                                 </tr>
                             </thead>
                             <tbody class="bg-white dark:bg-dark-card divide-y divide-gray-200 dark:divide-dark-border">
@@ -273,13 +276,13 @@ const statusLabels = {
                                         <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
                                         </svg>
-                                        <p class="mt-4 text-lg font-medium">No purchase orders found</p>
-                                        <p class="mt-1">Get started by creating a new purchase order.</p>
+                                        <p class="mt-4 text-lg font-medium">{{ t('purchaseOrders.noPoFound') }}</p>
+                                        <p class="mt-1">{{ t('purchaseOrders.getStarted') }}</p>
                                         <Link
                                             :href="route('purchase-orders.create')"
                                             class="mt-4 inline-flex items-center px-4 py-2 bg-primary-400 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-primary-500"
                                         >
-                                            Create Purchase Order
+                                            {{ t('purchaseOrders.createPo') }}
                                         </Link>
                                     </td>
                                 </tr>
@@ -291,7 +294,7 @@ const statusLabels = {
                     <div v-if="purchaseOrders.data.length > 0" class="bg-white dark:bg-dark-card px-4 py-3 border-t border-gray-200 dark:border-dark-border sm:px-6">
                         <div class="flex items-center justify-between">
                             <div class="text-sm text-gray-500 dark:text-gray-400">
-                                Showing {{ purchaseOrders.from }} to {{ purchaseOrders.to }} of {{ purchaseOrders.total }} results
+                                {{ t('common.showing') }} {{ purchaseOrders.from }} {{ t('common.to') }} {{ purchaseOrders.to }} {{ t('common.of') }} {{ purchaseOrders.total }} {{ t('common.results') }}
                             </div>
                             <div class="flex gap-2">
                                 <Link

@@ -1,5 +1,8 @@
 <script setup>
 import { useForm } from '@inertiajs/vue3';
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
 
 const props = defineProps({
     preferences: Object,
@@ -23,10 +26,10 @@ const submit = () => {
     <div class="bg-white dark:bg-dark-card shadow sm:rounded-lg">
         <div class="px-6 py-5 border-b border-gray-200 dark:border-dark-border">
             <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100">
-                Email Notification Preferences
+                {{ t('settings.notificationPreferences.title') }}
             </h3>
             <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                Control which email notifications you receive. You'll still receive in-app notifications even if emails are disabled.
+                {{ t('settings.notificationPreferences.description') }}
             </p>
         </div>
 
@@ -44,10 +47,10 @@ const submit = () => {
                     </div>
                     <div class="ml-3">
                         <label for="email_enabled" class="font-medium text-gray-900 dark:text-gray-100">
-                            Enable Email Notifications
+                            {{ t('settings.notificationPreferences.enableEmail') }}
                         </label>
                         <p class="text-sm text-gray-500 dark:text-gray-400">
-                            Master switch for all email notifications. Disable this to stop receiving any emails.
+                            {{ t('settings.notificationPreferences.masterSwitch') }}
                         </p>
                     </div>
                 </div>
@@ -58,7 +61,7 @@ const submit = () => {
                 <!-- Individual Preferences -->
                 <div class="space-y-4">
                     <h4 class="text-sm font-medium text-gray-900 dark:text-gray-100">
-                        Notification Types
+                        {{ t('settings.notificationPreferences.types') }}
                     </h4>
 
                     <!-- Low Stock Alerts -->
@@ -74,10 +77,10 @@ const submit = () => {
                         </div>
                         <div class="ml-3">
                             <label for="email_low_stock" class="text-sm font-medium text-gray-900 dark:text-gray-100">
-                                Low Stock Alerts
+                                {{ t('settings.notificationPreferences.lowStock') }}
                             </label>
                             <p class="text-sm text-gray-500 dark:text-gray-400">
-                                Receive emails when products reach low stock or out of stock levels.
+                                {{ t('settings.notificationPreferences.lowStockDesc') }}
                             </p>
                         </div>
                     </div>
@@ -95,10 +98,10 @@ const submit = () => {
                         </div>
                         <div class="ml-3">
                             <label for="email_orders" class="text-sm font-medium text-gray-900 dark:text-gray-100">
-                                Order Notifications
+                                {{ t('settings.notificationPreferences.orders') }}
                             </label>
                             <p class="text-sm text-gray-500 dark:text-gray-400">
-                                Receive emails about order status changes and updates.
+                                {{ t('settings.notificationPreferences.ordersDesc') }}
                             </p>
                         </div>
                     </div>
@@ -116,10 +119,10 @@ const submit = () => {
                         </div>
                         <div class="ml-3">
                             <label for="email_approvals" class="text-sm font-medium text-gray-900 dark:text-gray-100">
-                                Order Approvals
+                                {{ t('settings.notificationPreferences.approvals') }}
                             </label>
                             <p class="text-sm text-gray-500 dark:text-gray-400">
-                                Receive emails when orders are approved or rejected.
+                                {{ t('settings.notificationPreferences.approvalsDesc') }}
                             </p>
                         </div>
                     </div>
@@ -133,7 +136,7 @@ const submit = () => {
                     :disabled="form.processing"
                     class="px-4 py-2 bg-primary-400 text-white rounded-md hover:bg-primary-500 disabled:opacity-50 disabled:cursor-not-allowed transition"
                 >
-                    {{ form.processing ? 'Saving...' : 'Save Preferences' }}
+                    {{ form.processing ? t('common.saving') : t('settings.account.savePreferences') }}
                 </button>
             </div>
         </form>

@@ -6,11 +6,14 @@ import PrimaryButton from '@/Components/PrimaryButton.vue';
 import TextInput from '@/Components/TextInput.vue';
 import { Head, Link, useForm } from '@inertiajs/vue3';
 
+import { useI18n } from 'vue-i18n';
 const props = defineProps({
     role: Object,
     permissions: Object,
 });
 
+
+const { t } = useI18n();
 const form = useForm({
     name: props.role.name,
     description: props.role.description || '',
@@ -170,7 +173,7 @@ const isCategorySelected = (category) => {
                                 :href="route('roles.index')"
                                 class="text-sm text-gray-500 dark:text-gray-400 hover:text-gray-600 dark:text-gray-300 transition"
                             >
-                                Cancel
+                                {{ t('common.cancel') }}
                             </Link>
 
                             <Transition

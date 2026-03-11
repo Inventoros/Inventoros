@@ -1,6 +1,9 @@
 <script setup>
 import { useForm } from '@inertiajs/vue3';
 import { ref } from 'vue';
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
 
 const props = defineProps({
     emailConfig: Object,
@@ -56,11 +59,11 @@ const sendTestEmail = () => {
     <div class="bg-white dark:bg-dark-card shadow sm:rounded-lg">
         <div class="px-6 py-5 border-b border-gray-200 dark:border-dark-border">
             <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100">
-                Email Configuration
+                {{ t('settings.email.configuration') }}
             </h3>
             <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                Configure how your organization sends email notifications.
-                Only organization admins can change these settings.
+                {{ t('settings.email.configDescription') }}
+                {{ t('settings.email.adminOnly') }}
             </p>
         </div>
 
@@ -68,23 +71,23 @@ const sendTestEmail = () => {
             <!-- Email Provider -->
             <div>
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Email Provider
+                    {{ t('settings.email.provider') }}
                 </label>
                 <select
                     v-model="form.provider"
                     class="block w-full rounded-md bg-gray-50 dark:bg-dark-bg border-gray-300 dark:border-dark-border text-gray-900 dark:text-gray-100 focus:border-primary-400 focus:ring-primary-400"
                 >
-                    <option value="smtp">SMTP</option>
-                    <option value="phpmail">PHP Mail</option>
-                    <option value="mailgun">Mailgun</option>
-                    <option value="sendgrid">SendGrid</option>
+                    <option value="smtp">{{ t('settings.email.smtp') }}</option>
+                    <option value="phpmail">{{ t('settings.email.phpMail') }}</option>
+                    <option value="mailgun">{{ t('settings.email.mailgun') }}</option>
+                    <option value="sendgrid">{{ t('settings.email.sendgrid') }}</option>
                 </select>
             </div>
 
             <!-- From Address -->
             <div>
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    From Email Address
+                    {{ t('settings.email.fromEmail') }}
                 </label>
                 <input
                     v-model="form.from_address"
@@ -98,7 +101,7 @@ const sendTestEmail = () => {
             <!-- From Name -->
             <div>
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    From Name
+                    {{ t('settings.email.fromName') }}
                 </label>
                 <input
                     v-model="form.from_name"
@@ -111,12 +114,12 @@ const sendTestEmail = () => {
 
             <!-- SMTP Settings -->
             <div v-if="form.provider === 'smtp'" class="space-y-4 p-4 bg-gray-50 dark:bg-dark-bg rounded-lg border border-gray-200 dark:border-dark-border">
-                <h4 class="font-medium text-gray-900 dark:text-gray-100">SMTP Configuration</h4>
+                <h4 class="font-medium text-gray-900 dark:text-gray-100">{{ t('settings.email.smtpConfig') }}</h4>
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                            Host
+                            {{ t('settings.email.host') }}
                         </label>
                         <input
                             v-model="form.smtp.host"
@@ -128,7 +131,7 @@ const sendTestEmail = () => {
 
                     <div>
                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                            Port
+                            {{ t('settings.email.port') }}
                         </label>
                         <input
                             v-model.number="form.smtp.port"
@@ -141,7 +144,7 @@ const sendTestEmail = () => {
 
                 <div>
                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                        Username
+                        {{ t('settings.email.username') }}
                     </label>
                     <input
                         v-model="form.smtp.username"
@@ -152,38 +155,38 @@ const sendTestEmail = () => {
 
                 <div>
                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                        Password
+                        {{ t('settings.email.password') }}
                     </label>
                     <input
                         v-model="form.smtp.password"
                         type="password"
                         class="block w-full rounded-md bg-white dark:bg-dark-card border-gray-300 dark:border-dark-border text-gray-900 dark:text-gray-100 focus:border-primary-400 focus:ring-primary-400"
-                        placeholder="Leave blank to keep current password"
+                        :placeholder="t('settings.email.passwordHint')"
                     />
                 </div>
 
                 <div>
                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                        Encryption
+                        {{ t('settings.email.encryption') }}
                     </label>
                     <select
                         v-model="form.smtp.encryption"
                         class="block w-full rounded-md bg-white dark:bg-dark-card border-gray-300 dark:border-dark-border text-gray-900 dark:text-gray-100 focus:border-primary-400 focus:ring-primary-400"
                     >
-                        <option value="tls">TLS</option>
-                        <option value="ssl">SSL</option>
-                        <option value="none">None</option>
+                        <option value="tls">{{ t('settings.email.tls') }}</option>
+                        <option value="ssl">{{ t('settings.email.ssl') }}</option>
+                        <option value="none">{{ t('settings.email.none') }}</option>
                     </select>
                 </div>
             </div>
 
             <!-- Mailgun Settings -->
             <div v-if="form.provider === 'mailgun'" class="space-y-4 p-4 bg-gray-50 dark:bg-dark-bg rounded-lg border border-gray-200 dark:border-dark-border">
-                <h4 class="font-medium text-gray-900 dark:text-gray-100">Mailgun Configuration</h4>
+                <h4 class="font-medium text-gray-900 dark:text-gray-100">{{ t('settings.email.mailgunConfig') }}</h4>
 
                 <div>
                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                        Domain
+                        {{ t('settings.email.domain') }}
                     </label>
                     <input
                         v-model="form.mailgun.domain"
@@ -195,7 +198,7 @@ const sendTestEmail = () => {
 
                 <div>
                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                        API Secret
+                        {{ t('settings.email.apiSecret') }}
                     </label>
                     <input
                         v-model="form.mailgun.secret"
@@ -208,11 +211,11 @@ const sendTestEmail = () => {
 
             <!-- SendGrid Settings -->
             <div v-if="form.provider === 'sendgrid'" class="space-y-4 p-4 bg-gray-50 dark:bg-dark-bg rounded-lg border border-gray-200 dark:border-dark-border">
-                <h4 class="font-medium text-gray-900 dark:text-gray-100">SendGrid Configuration</h4>
+                <h4 class="font-medium text-gray-900 dark:text-gray-100">{{ t('settings.email.sendgridConfig') }}</h4>
 
                 <div>
                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                        API Key
+                        {{ t('settings.email.apiKey') }}
                     </label>
                     <input
                         v-model="form.sendgrid.api_key"
@@ -225,7 +228,7 @@ const sendTestEmail = () => {
 
             <!-- Test Email -->
             <div class="border-t border-gray-200 dark:border-dark-border pt-6">
-                <h4 class="font-medium text-gray-900 dark:text-gray-100 mb-3">Test Email Configuration</h4>
+                <h4 class="font-medium text-gray-900 dark:text-gray-100 mb-3">{{ t('settings.email.testEmail') }}</h4>
                 <div class="flex gap-2">
                     <input
                         v-model="testEmailAddress"
@@ -239,7 +242,7 @@ const sendTestEmail = () => {
                         :disabled="!testEmailAddress || sendingTest"
                         class="px-4 py-2 bg-gray-200 dark:bg-dark-bg text-gray-700 dark:text-gray-300 rounded-md hover:bg-gray-300 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition"
                     >
-                        {{ sendingTest ? 'Sending...' : 'Send Test Email' }}
+                        {{ sendingTest ? t('settings.email.sending') : t('settings.email.sendTest') }}
                     </button>
                 </div>
             </div>
@@ -251,7 +254,7 @@ const sendTestEmail = () => {
                     :disabled="form.processing"
                     class="px-4 py-2 bg-primary-400 text-white rounded-md hover:bg-primary-500 disabled:opacity-50 disabled:cursor-not-allowed transition"
                 >
-                    {{ form.processing ? 'Saving...' : 'Save Email Settings' }}
+                    {{ form.processing ? t('common.saving') : t('settings.email.saveSettings') }}
                 </button>
             </div>
         </form>

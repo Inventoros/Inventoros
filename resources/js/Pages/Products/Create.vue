@@ -6,8 +6,11 @@ import QuickAddModal from '@/Components/QuickAddModal.vue';
 import SKUGeneratorModal from '@/Components/SKUGeneratorModal.vue';
 import { Head, Link, useForm, router } from '@inertiajs/vue3';
 import { ref, computed } from 'vue';
+import { useI18n } from 'vue-i18n';
 import axios from 'axios';
 import ImageUploader from '@/Components/ImageUploader.vue';
+
+const { t } = useI18n();
 
 const props = defineProps({
     categories: Array,
@@ -153,13 +156,13 @@ const submit = () => {
 </script>
 
 <template>
-    <Head title="Add Product" />
+    <Head :title="t('products.addProduct')" />
 
     <AuthenticatedLayout>
         <template #header>
             <div class="flex items-center justify-between">
                 <h2 class="font-semibold text-xl text-gray-900 dark:text-gray-100 leading-tight">
-                    Add Product
+                    {{ t('products.addProduct') }}
                 </h2>
                 <Link
                     :href="route('products.index')"
@@ -168,7 +171,7 @@ const submit = () => {
                     <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
                     </svg>
-                    Back to Inventory
+                    {{ t('products.edit.backToInventory') }}
                 </Link>
             </div>
         </template>
@@ -189,14 +192,14 @@ const submit = () => {
                                 <div class="space-y-6">
                                     <div>
                                         <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
-                                            Basic Information
+                                            {{ t('products.create.basicInfo') }}
                                         </h3>
                                     </div>
 
                                     <!-- Product Name -->
                                     <div>
                                         <label for="name" class="block text-sm font-medium text-gray-600 dark:text-gray-300">
-                                            Product Name <span class="text-red-500">*</span>
+                                            {{ t('products.create.productName') }} <span class="text-red-500">*</span>
                                         </label>
                                         <input
                                             id="name"
@@ -214,7 +217,7 @@ const submit = () => {
                                     <div>
                                         <div class="flex items-center justify-between mb-1">
                                             <label for="sku" class="block text-sm font-medium text-gray-600 dark:text-gray-300">
-                                                SKU <span class="text-red-500">*</span>
+                                                {{ t('products.create.sku') }} <span class="text-red-500">*</span>
                                             </label>
                                             <button
                                                 type="button"
@@ -224,7 +227,7 @@ const submit = () => {
                                                 <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
                                                 </svg>
-                                                Generate SKU
+                                                {{ t('products.create.generateSku') }}
                                             </button>
                                         </div>
                                         <input
@@ -242,7 +245,7 @@ const submit = () => {
                                     <!-- Barcode -->
                                     <div>
                                         <label for="barcode" class="block text-sm font-medium text-gray-600 dark:text-gray-300">
-                                            Barcode
+                                            {{ t('products.create.barcode') }}
                                         </label>
                                         <input
                                             id="barcode"
@@ -258,7 +261,7 @@ const submit = () => {
                                     <!-- Description -->
                                     <div>
                                         <label for="description" class="block text-sm font-medium text-gray-600 dark:text-gray-300">
-                                            Description
+                                            {{ t('products.create.description') }}
                                         </label>
                                         <textarea
                                             id="description"
@@ -276,14 +279,14 @@ const submit = () => {
                                 <div class="space-y-6">
                                     <div>
                                         <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
-                                            Pricing & Inventory
+                                            {{ t('products.create.pricingInventory') }}
                                         </h3>
                                     </div>
 
                                     <!-- Currency Selection -->
                                     <div>
                                         <label class="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-2">
-                                            Currency <span class="text-red-500">*</span>
+                                            {{ t('common.currency') }} <span class="text-red-500">*</span>
                                         </label>
                                         <select
                                             v-model="form.currency"
@@ -299,7 +302,7 @@ const submit = () => {
                                     <!-- Purchase Price (Cost) -->
                                     <div>
                                         <label for="purchase_price" class="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-2">
-                                            Purchase Price (Cost)
+                                            {{ t('products.create.purchasePrice') }}
                                         </label>
                                         <div class="relative rounded-md shadow-sm">
                                             <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -315,7 +318,7 @@ const submit = () => {
                                             />
                                         </div>
                                         <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                                            What you paid for this item
+                                            {{ t('products.create.purchasePriceHint') }}
                                         </p>
                                         <p v-if="form.errors.purchase_price" class="mt-1 text-sm text-red-400">
                                             {{ form.errors.purchase_price }}
@@ -325,7 +328,7 @@ const submit = () => {
                                     <!-- Selling Price -->
                                     <div>
                                         <label for="price" class="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-2">
-                                            Selling Price <span class="text-red-500">*</span>
+                                            {{ t('products.create.sellingPrice') }} <span class="text-red-500">*</span>
                                         </label>
                                         <div class="relative rounded-md shadow-sm">
                                             <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -342,7 +345,7 @@ const submit = () => {
                                             />
                                         </div>
                                         <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                                            What you sell this item for
+                                            {{ t('products.create.sellingPriceHint') }}
                                         </p>
                                         <p v-if="form.errors.price" class="mt-1 text-sm text-red-400">
                                             {{ form.errors.price }}
@@ -352,13 +355,13 @@ const submit = () => {
                                     <!-- Profit Indicator -->
                                     <div v-if="form.price && form.purchase_price" class="p-4 bg-green-900/20 rounded-lg border border-green-800">
                                         <div class="flex items-center justify-between">
-                                            <span class="text-sm font-medium text-green-300">Profit per unit:</span>
+                                            <span class="text-sm font-medium text-green-300">{{ t('products.create.profitPerUnit') }}:</span>
                                             <span class="text-lg font-bold text-green-400">
                                                 {{ getCurrencySymbol(form.currency) }}{{ (parseFloat(form.price) - parseFloat(form.purchase_price)).toFixed(2) }}
                                             </span>
                                         </div>
                                         <div class="flex items-center justify-between mt-1">
-                                            <span class="text-xs text-green-400">Margin:</span>
+                                            <span class="text-xs text-green-400">{{ t('products.create.margin') }}:</span>
                                             <span class="text-sm font-semibold text-green-400">
                                                 {{ ((parseFloat(form.price) - parseFloat(form.purchase_price)) / parseFloat(form.price) * 100).toFixed(1) }}%
                                             </span>
@@ -444,7 +447,7 @@ const submit = () => {
                                     <!-- Stock Quantity -->
                                     <div>
                                         <label for="stock" class="block text-sm font-medium text-gray-600 dark:text-gray-300">
-                                            Current Stock <span class="text-red-500">*</span>
+                                            {{ t('products.create.currentStock') }} <span class="text-red-500">*</span>
                                         </label>
                                         <input
                                             id="stock"
@@ -462,7 +465,7 @@ const submit = () => {
                                     <!-- Minimum Stock -->
                                     <div>
                                         <label for="min_stock" class="block text-sm font-medium text-gray-600 dark:text-gray-300">
-                                            Minimum Stock Level <span class="text-red-500">*</span>
+                                            {{ t('products.create.minStockLevel') }} <span class="text-red-500">*</span>
                                         </label>
                                         <input
                                             id="min_stock"
@@ -473,7 +476,7 @@ const submit = () => {
                                             required
                                         />
                                         <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                                            Alert when stock falls below this level
+                                            {{ t('products.create.minStockHint') }}
                                         </p>
                                         <p v-if="form.errors.min_stock" class="mt-1 text-sm text-red-400">
                                             {{ form.errors.min_stock }}
@@ -484,14 +487,14 @@ const submit = () => {
                                     <div>
                                         <div class="flex items-center justify-between mb-1">
                                             <label for="category" class="block text-sm font-medium text-gray-600 dark:text-gray-300">
-                                                Category <span class="text-red-500">*</span>
+                                                {{ t('products.category') }} <span class="text-red-500">*</span>
                                             </label>
                                             <button
                                                 type="button"
                                                 @click="showCategoryModal = true"
                                                 class="text-xs text-primary-400 hover:text-primary-300 font-medium"
                                             >
-                                                + Quick Add
+                                                {{ t('products.create.quickAdd') }}
                                             </button>
                                         </div>
                                         <select
@@ -500,7 +503,7 @@ const submit = () => {
                                             class="mt-1 block w-full rounded-md bg-gray-50 dark:bg-dark-bg border-gray-200 dark:border-dark-border text-gray-900 dark:text-gray-100 placeholder-gray-500 shadow-sm focus:border-primary-400 focus:ring-primary-400"
                                             required
                                         >
-                                            <option value="">Select a category</option>
+                                            <option value="">{{ t('products.create.selectCategory') }}</option>
                                             <option v-for="category in categories" :key="category.id" :value="category.id">
                                                 {{ category.name }}
                                             </option>
@@ -514,14 +517,14 @@ const submit = () => {
                                     <div>
                                         <div class="flex items-center justify-between mb-1">
                                             <label for="location" class="block text-sm font-medium text-gray-600 dark:text-gray-300">
-                                                Location <span class="text-red-500">*</span>
+                                                {{ t('products.location') }} <span class="text-red-500">*</span>
                                             </label>
                                             <button
                                                 type="button"
                                                 @click="showLocationModal = true"
                                                 class="text-xs text-primary-400 hover:text-primary-300 font-medium"
                                             >
-                                                + Quick Add
+                                                {{ t('products.create.quickAdd') }}
                                             </button>
                                         </div>
                                         <select
@@ -530,7 +533,7 @@ const submit = () => {
                                             class="mt-1 block w-full rounded-md bg-gray-50 dark:bg-dark-bg border-gray-200 dark:border-dark-border text-gray-900 dark:text-gray-100 placeholder-gray-500 shadow-sm focus:border-primary-400 focus:ring-primary-400"
                                             required
                                         >
-                                            <option value="">Select a location</option>
+                                            <option value="">{{ t('products.create.selectLocation') }}</option>
                                             <option v-for="location in locations" :key="location.id" :value="location.id">
                                                 {{ location.name }}
                                             </option>
@@ -544,7 +547,7 @@ const submit = () => {
                                 <!-- Product Images (Full Width) -->
                                 <div class="lg:col-span-2">
                                     <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
-                                        Product Images
+                                        {{ t('products.create.productImages') }}
                                     </h3>
                                     <ImageUploader
                                         v-model="form.images"
@@ -569,7 +572,7 @@ const submit = () => {
                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
                                                 </svg>
                                                 <span class="text-lg font-semibold text-gray-900 dark:text-gray-100">
-                                                    Product Variants
+                                                    {{ t('products.create.productVariants') }}
                                                 </span>
                                                 <span v-if="form.variants.length > 0" class="px-2 py-1 text-xs bg-primary-400/20 text-primary-400 rounded-full">
                                                     {{ form.variants.length }} variants
@@ -587,8 +590,7 @@ const submit = () => {
 
                                         <div v-if="showVariantSection" class="p-4 border-t border-gray-200 dark:border-dark-border">
                                             <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">
-                                                Add options like Size or Color to sell different versions of this product.
-                                                Each combination creates a variant with its own price and stock.
+                                                {{ t('products.create.variantHint') }}
                                             </p>
                                             <ProductVariantManager
                                                 :model-value="variantData"
@@ -604,14 +606,14 @@ const submit = () => {
                                 <!-- Notes (Full Width) -->
                                 <div class="lg:col-span-2">
                                     <label for="notes" class="block text-sm font-medium text-gray-600 dark:text-gray-300">
-                                        Notes
+                                        {{ t('common.notes') }}
                                     </label>
                                     <textarea
                                         id="notes"
                                         v-model="form.notes"
                                         rows="3"
                                         class="mt-1 block w-full rounded-md bg-gray-50 dark:bg-dark-bg border-gray-200 dark:border-dark-border text-gray-900 dark:text-gray-100 placeholder-gray-500 shadow-sm focus:border-primary-400 focus:ring-primary-400"
-                                        placeholder="Additional notes about this product..."
+                                        :placeholder="t('products.create.notesPlaceholder')"
                                     ></textarea>
                                     <p v-if="form.errors.notes" class="mt-1 text-sm text-red-400">
                                         {{ form.errors.notes }}
@@ -625,7 +627,7 @@ const submit = () => {
                                     :href="route('products.index')"
                                     class="inline-flex items-center px-4 py-2 bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border rounded-md font-semibold text-xs text-gray-600 dark:text-gray-300 uppercase tracking-widest shadow-sm hover:bg-gray-100 dark:hover:bg-dark-bg/50"
                                 >
-                                    Cancel
+                                    {{ t('common.cancel') }}
                                 </Link>
                                 <button
                                     type="submit"
@@ -637,7 +639,7 @@ const submit = () => {
                                         <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                                         <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                                     </svg>
-                                    Create Product
+                                    {{ t('products.create.createProduct') }}
                                 </button>
                             </div>
                         </form>
@@ -652,31 +654,31 @@ const submit = () => {
         <!-- Category Quick-Add Modal -->
         <QuickAddModal
             :show="showCategoryModal"
-            title="Quick Add Category"
+            :title="t('products.quickAddCategory.title')"
             :loading="categoryLoading"
             @close="showCategoryModal = false"
         >
             <div>
                 <label class="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-1">
-                    Category Name <span class="text-red-500">*</span>
+                    {{ t('products.quickAddCategory.categoryName') }} <span class="text-red-500">*</span>
                 </label>
                 <input
                     v-model="categoryForm.name"
                     type="text"
                     class="block w-full rounded-md bg-gray-50 dark:bg-dark-bg border-gray-200 dark:border-dark-border text-gray-900 dark:text-gray-100 placeholder-gray-500 shadow-sm focus:border-primary-400 focus:ring-primary-400"
-                    placeholder="e.g., Electronics"
+                    :placeholder="t('products.quickAddCategory.placeholder')"
                     required
                 />
             </div>
             <div>
                 <label class="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-1">
-                    Description
+                    {{ t('common.description') }}
                 </label>
                 <textarea
                     v-model="categoryForm.description"
                     rows="3"
                     class="block w-full rounded-md bg-gray-50 dark:bg-dark-bg border-gray-200 dark:border-dark-border text-gray-900 dark:text-gray-100 placeholder-gray-500 shadow-sm focus:border-primary-400 focus:ring-primary-400"
-                    placeholder="Optional description..."
+                    :placeholder="t('products.quickAddCategory.descPlaceholder')"
                 ></textarea>
             </div>
             <template #actions>
@@ -685,7 +687,7 @@ const submit = () => {
                     @click="showCategoryModal = false"
                     class="px-4 py-2 bg-dark-bg text-gray-600 dark:text-gray-300 rounded-md hover:bg-gray-100 dark:hover:bg-dark-bg/50"
                 >
-                    Cancel
+                    {{ t('common.cancel') }}
                 </button>
                 <button
                     type="button"
@@ -693,8 +695,8 @@ const submit = () => {
                     :disabled="categoryLoading || !categoryForm.name"
                     class="px-4 py-2 bg-primary-400 text-white rounded-md hover:bg-primary-500 disabled:opacity-50"
                 >
-                    <span v-if="categoryLoading">Creating...</span>
-                    <span v-else>Create Category</span>
+                    <span v-if="categoryLoading">{{ t('common.creating') }}</span>
+                    <span v-else>{{ t('categories.createCategory') }}</span>
                 </button>
             </template>
         </QuickAddModal>
@@ -702,43 +704,43 @@ const submit = () => {
         <!-- Location Quick-Add Modal -->
         <QuickAddModal
             :show="showLocationModal"
-            title="Quick Add Location"
+            :title="t('products.quickAddLocation.title')"
             :loading="locationLoading"
             @close="showLocationModal = false"
         >
             <div>
                 <label class="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-1">
-                    Location Name <span class="text-red-500">*</span>
+                    {{ t('products.quickAddLocation.locationName') }} <span class="text-red-500">*</span>
                 </label>
                 <input
                     v-model="locationForm.name"
                     type="text"
                     class="block w-full rounded-md bg-gray-50 dark:bg-dark-bg border-gray-200 dark:border-dark-border text-gray-900 dark:text-gray-100 placeholder-gray-500 shadow-sm focus:border-primary-400 focus:ring-primary-400"
-                    placeholder="e.g., Warehouse A"
+                    :placeholder="t('products.quickAddLocation.namePlaceholder')"
                     required
                 />
             </div>
             <div>
                 <label class="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-1">
-                    Location Code <span class="text-red-500">*</span>
+                    {{ t('products.quickAddLocation.locationCode') }} <span class="text-red-500">*</span>
                 </label>
                 <input
                     v-model="locationForm.code"
                     type="text"
                     class="block w-full rounded-md bg-gray-50 dark:bg-dark-bg border-gray-200 dark:border-dark-border text-gray-900 dark:text-gray-100 placeholder-gray-500 shadow-sm focus:border-primary-400 focus:ring-primary-400"
-                    placeholder="e.g., WH-A"
+                    :placeholder="t('products.quickAddLocation.codePlaceholder')"
                     required
                 />
             </div>
             <div>
                 <label class="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-1">
-                    Description
+                    {{ t('common.description') }}
                 </label>
                 <textarea
                     v-model="locationForm.description"
                     rows="3"
                     class="block w-full rounded-md bg-gray-50 dark:bg-dark-bg border-gray-200 dark:border-dark-border text-gray-900 dark:text-gray-100 placeholder-gray-500 shadow-sm focus:border-primary-400 focus:ring-primary-400"
-                    placeholder="Optional description..."
+                    :placeholder="t('products.quickAddLocation.descPlaceholder')"
                 ></textarea>
             </div>
             <template #actions>
@@ -747,7 +749,7 @@ const submit = () => {
                     @click="showLocationModal = false"
                     class="px-4 py-2 bg-dark-bg text-gray-600 dark:text-gray-300 rounded-md hover:bg-gray-100 dark:hover:bg-dark-bg/50"
                 >
-                    Cancel
+                    {{ t('common.cancel') }}
                 </button>
                 <button
                     type="button"
@@ -755,8 +757,8 @@ const submit = () => {
                     :disabled="locationLoading || !locationForm.name || !locationForm.code"
                     class="px-4 py-2 bg-primary-400 text-white rounded-md hover:bg-primary-500 disabled:opacity-50"
                 >
-                    <span v-if="locationLoading">Creating...</span>
-                    <span v-else>Create Location</span>
+                    <span v-if="locationLoading">{{ t('common.creating') }}</span>
+                    <span v-else>{{ t('locations.createLocation') }}</span>
                 </button>
             </template>
         </QuickAddModal>

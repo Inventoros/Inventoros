@@ -2,20 +2,23 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head, Link } from '@inertiajs/vue3';
 
+import { useI18n } from 'vue-i18n';
 defineProps({
     users: Object,
     roles: Array,
     filters: Object,
 });
+
+const { t } = useI18n();
 </script>
 
 <template>
-    <Head title="Users" />
+    <Head :title="t('nav.users')" />
 
     <AuthenticatedLayout>
         <template #header>
             <div class="flex justify-between items-center">
-                <h2 class="font-semibold text-2xl text-gray-900 dark:text-gray-100">Users</h2>
+                <h2 class="font-semibold text-2xl text-gray-900 dark:text-gray-100">{{ t('admin.users') }}</h2>
                 <Link
                     :href="route('users.create')"
                     class="px-4 py-2 bg-primary-500 hover:bg-primary-600 text-white font-medium rounded-lg transition"
@@ -39,10 +42,10 @@ defineProps({
                             <table class="min-w-full divide-y divide-gray-200 dark:divide-dark-border">
                                 <thead class="bg-gray-50 dark:bg-dark-bg/50">
                                     <tr>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Name</th>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Email</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">{{ t('common.name') }}</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">{{ t('common.email') }}</th>
                                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Role</th>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Actions</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">{{ t('common.actions') }}</th>
                                     </tr>
                                 </thead>
                                 <tbody class="divide-y divide-gray-200 dark:divide-dark-border">
@@ -60,8 +63,8 @@ defineProps({
                                             </span>
                                         </td>
                                         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                            <Link :href="route('users.edit', user.id)" class="text-primary-400 hover:text-primary-300 mr-4">Edit</Link>
-                                            <Link :href="route('users.show', user.id)" class="text-blue-400 hover:text-blue-300">View</Link>
+                                            <Link :href="route('users.edit', user.id)" class="text-primary-400 hover:text-primary-300 mr-4">{{ t('common.edit') }}</Link>
+                                            <Link :href="route('users.show', user.id)" class="text-blue-400 hover:text-blue-300">{{ t('common.view') }}</Link>
                                         </td>
                                     </tr>
                                     <tr v-else>

@@ -3,11 +3,14 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head, useForm, usePage, router } from '@inertiajs/vue3';
 import { ref, computed } from 'vue';
 
+import { useI18n } from 'vue-i18n';
 const props = defineProps({
     categories: Array,
     locations: Array,
 });
 
+
+const { t } = useI18n();
 const page = usePage();
 
 const importForm = useForm({
@@ -115,7 +118,7 @@ const hasActiveFilters = computed(() => {
 </script>
 
 <template>
-    <Head title="Import / Export" />
+    <Head :title="t('nav.importExport')" />
 
     <AuthenticatedLayout>
         <template #header>
@@ -190,7 +193,7 @@ const hasActiveFilters = computed(() => {
                                 </svg>
                             </div>
                             <div>
-                                <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">Export Products</h3>
+                                <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">{{ t('importExport.exportProducts') }}</h3>
                                 <p class="text-sm text-gray-500 dark:text-gray-400">Download your inventory data</p>
                             </div>
                         </div>
@@ -232,11 +235,11 @@ const hasActiveFilters = computed(() => {
                                 </div>
 
                                 <div>
-                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Status</label>
+                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{{ t('common.status') }}</label>
                                     <select v-model="exportFilters.status" class="w-full px-3 py-2 bg-white dark:bg-dark-card border border-gray-300 dark:border-dark-border rounded-lg text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-green-500">
-                                        <option value="">All Statuses</option>
-                                        <option value="active">Active</option>
-                                        <option value="inactive">Inactive</option>
+                                        <option value="">{{ t('common.allStatuses') }}</option>
+                                        <option value="active">{{ t('common.active') }}</option>
+                                        <option value="inactive">{{ t('common.inactive') }}</option>
                                         <option value="discontinued">Discontinued</option>
                                     </select>
                                 </div>
@@ -314,7 +317,7 @@ const hasActiveFilters = computed(() => {
                                 </svg>
                             </div>
                             <div>
-                                <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">Import Products</h3>
+                                <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">{{ t('importExport.importProducts') }}</h3>
                                 <p class="text-sm text-gray-500 dark:text-gray-400">Upload inventory data in bulk</p>
                             </div>
                         </div>
@@ -392,7 +395,7 @@ const hasActiveFilters = computed(() => {
                                 class="w-full px-4 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold disabled:opacity-50 disabled:cursor-not-allowed transition"
                             >
                                 <span v-if="importForm.processing">Importing...</span>
-                                <span v-else>Import Products</span>
+                                <span v-else>{{ t('importExport.importProducts') }}</span>
                             </button>
 
                             <!-- Download Template -->

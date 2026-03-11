@@ -6,10 +6,13 @@ import PrimaryButton from '@/Components/PrimaryButton.vue';
 import TextInput from '@/Components/TextInput.vue';
 import { Head, Link, useForm } from '@inertiajs/vue3';
 
+import { useI18n } from 'vue-i18n';
 const props = defineProps({
     roles: Array,
 });
 
+
+const { t } = useI18n();
 const form = useForm({
     name: '',
     email: '',
@@ -27,12 +30,12 @@ const submit = () => {
 </script>
 
 <template>
-    <Head title="Create User" />
+    <Head :title="t('admin.users.create.title')" />
 
     <AuthenticatedLayout>
         <template #header>
             <div class="flex items-center justify-between">
-                <h2 class="font-semibold text-2xl text-gray-900 dark:text-gray-100">Create User</h2>
+                <h2 class="font-semibold text-2xl text-gray-900 dark:text-gray-100">{{ t('admin.createUser') }}</h2>
                 <Link
                     :href="route('users.index')"
                     class="px-4 py-2 bg-dark-bg hover:bg-gray-100 dark:hover:bg-dark-bg/80 text-gray-600 dark:text-gray-300 font-medium rounded-lg transition border border-gray-200 dark:border-dark-border"
@@ -155,14 +158,14 @@ const submit = () => {
                         <!-- Actions -->
                         <div class="flex items-center gap-4 pt-4 border-t border-gray-200 dark:border-dark-border">
                             <PrimaryButton :disabled="form.processing">
-                                Create User
+                                {{ t('admin.createUser') }}
                             </PrimaryButton>
 
                             <Link
                                 :href="route('users.index')"
                                 class="text-sm text-gray-500 dark:text-gray-400 hover:text-gray-600 dark:text-gray-300 transition"
                             >
-                                Cancel
+                                {{ t('common.cancel') }}
                             </Link>
 
                             <Transition

@@ -4,6 +4,9 @@ import PluginSlot from '@/Components/PluginSlot.vue';
 import { Head, Link, router, useForm } from '@inertiajs/vue3';
 import { ref } from 'vue';
 import { usePermissions } from '@/composables/usePermissions';
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
 
 const { hasPermission } = usePermissions();
 
@@ -94,7 +97,7 @@ const formatDateShort = (date) => {
 </script>
 
 <template>
-    <Head :title="`Order ${order.order_number}`" />
+    <Head :title="t('orders.show.orderNumber', { number: order.order_number })" />
 
     <AuthenticatedLayout>
         <template #header>
@@ -124,7 +127,7 @@ const formatDateShort = (date) => {
                         <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                         </svg>
-                        Edit Order
+                        {{ t('orders.show.editOrder') }}
                     </Link>
                     <Link
                         :href="route('orders.index')"
@@ -133,7 +136,7 @@ const formatDateShort = (date) => {
                         <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
                         </svg>
-                        Back to Orders
+                        {{ t('orders.show.backToOrders') }}
                     </Link>
                 </div>
             </div>
@@ -150,7 +153,7 @@ const formatDateShort = (date) => {
                         <!-- Order Items -->
                         <div class="bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border shadow-sm sm:rounded-lg p-6">
                             <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
-                                Order Items
+                                {{ t('orders.show.orderItems') }}
                             </h3>
 
                             <div v-if="order.items && order.items.length > 0" class="space-y-3">
@@ -167,22 +170,22 @@ const formatDateShort = (date) => {
                                             :href="route('products.show', item.product_id)"
                                             class="text-xs text-primary-400 hover:text-primary-300 mt-1 inline-block"
                                         >
-                                            View Product →
+                                            {{ t('orders.show.viewProduct') }}
                                         </Link>
                                     </div>
 
                                     <div class="text-right">
-                                        <p class="text-sm text-gray-500 dark:text-gray-400">Quantity</p>
+                                        <p class="text-sm text-gray-500 dark:text-gray-400">{{ t('common.quantity') }}</p>
                                         <p class="font-medium text-gray-900 dark:text-gray-100">{{ item.quantity }}</p>
                                     </div>
 
                                     <div class="text-right">
-                                        <p class="text-sm text-gray-500 dark:text-gray-400">Unit Price</p>
+                                        <p class="text-sm text-gray-500 dark:text-gray-400">{{ t('orders.show.unitPrice') }}</p>
                                         <p class="font-medium text-gray-900 dark:text-gray-100">${{ parseFloat(item.unit_price).toFixed(2) }}</p>
                                     </div>
 
                                     <div class="text-right min-w-[100px]">
-                                        <p class="text-sm text-gray-500 dark:text-gray-400">Total</p>
+                                        <p class="text-sm text-gray-500 dark:text-gray-400">{{ t('common.total') }}</p>
                                         <p class="font-semibold text-gray-900 dark:text-gray-100">
                                             ${{ parseFloat(item.total || item.subtotal || (item.quantity * item.unit_price)).toFixed(2) }}
                                         </p>
@@ -191,24 +194,24 @@ const formatDateShort = (date) => {
                             </div>
 
                             <div v-else class="text-center py-8 text-gray-500 dark:text-gray-400">
-                                No items in this order.
+                                {{ t('orders.show.noItems') }}
                             </div>
                         </div>
 
                         <!-- Customer Information -->
                         <div class="bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border shadow-sm sm:rounded-lg p-6">
                             <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
-                                Customer Information
+                                {{ t('orders.show.customerInfo') }}
                             </h3>
 
                             <dl class="space-y-3">
                                 <div>
-                                    <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Customer Name</dt>
+                                    <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">{{ t('orders.show.customerName') }}</dt>
                                     <dd class="mt-1 text-sm text-gray-900 dark:text-gray-100">{{ order.customer_name }}</dd>
                                 </div>
 
                                 <div v-if="order.customer_email">
-                                    <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Email</dt>
+                                    <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">{{ t('common.email') }}</dt>
                                     <dd class="mt-1 text-sm text-gray-900 dark:text-gray-100">
                                         <a :href="`mailto:${order.customer_email}`" class="text-primary-400 hover:text-primary-300">
                                             {{ order.customer_email }}
@@ -217,7 +220,7 @@ const formatDateShort = (date) => {
                                 </div>
 
                                 <div v-if="order.customer_address">
-                                    <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Shipping Address</dt>
+                                    <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">{{ t('orders.show.shippingAddress') }}</dt>
                                     <dd class="mt-1 text-sm text-gray-900 dark:text-gray-100 whitespace-pre-line">{{ order.customer_address }}</dd>
                                 </div>
                             </dl>
@@ -226,14 +229,14 @@ const formatDateShort = (date) => {
                         <!-- Order Timeline -->
                         <div class="bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border shadow-sm sm:rounded-lg p-6">
                             <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
-                                Order Timeline
+                                {{ t('orders.show.orderTimeline') }}
                             </h3>
 
                             <div class="space-y-4">
                                 <div class="flex items-start gap-3">
                                     <div class="flex-shrink-0 w-2 h-2 mt-2 rounded-full bg-green-400"></div>
                                     <div class="flex-1">
-                                        <p class="text-sm font-medium text-gray-900 dark:text-gray-100">Order Created</p>
+                                        <p class="text-sm font-medium text-gray-900 dark:text-gray-100">{{ t('orders.show.orderCreated') }}</p>
                                         <p class="text-xs text-gray-500 dark:text-gray-400">{{ formatDate(order.order_date) }}</p>
                                     </div>
                                 </div>
@@ -241,7 +244,7 @@ const formatDateShort = (date) => {
                                 <div v-if="order.shipped_at" class="flex items-start gap-3">
                                     <div class="flex-shrink-0 w-2 h-2 mt-2 rounded-full bg-purple-400"></div>
                                     <div class="flex-1">
-                                        <p class="text-sm font-medium text-gray-900 dark:text-gray-100">Order Shipped</p>
+                                        <p class="text-sm font-medium text-gray-900 dark:text-gray-100">{{ t('orders.show.orderShipped') }}</p>
                                         <p class="text-xs text-gray-500 dark:text-gray-400">{{ formatDate(order.shipped_at) }}</p>
                                     </div>
                                 </div>
@@ -249,7 +252,7 @@ const formatDateShort = (date) => {
                                 <div v-if="order.delivered_at" class="flex items-start gap-3">
                                     <div class="flex-shrink-0 w-2 h-2 mt-2 rounded-full bg-green-400"></div>
                                     <div class="flex-1">
-                                        <p class="text-sm font-medium text-gray-900 dark:text-gray-100">Order Delivered</p>
+                                        <p class="text-sm font-medium text-gray-900 dark:text-gray-100">{{ t('orders.show.orderDelivered') }}</p>
                                         <p class="text-xs text-gray-500 dark:text-gray-400">{{ formatDate(order.delivered_at) }}</p>
                                     </div>
                                 </div>
@@ -259,7 +262,7 @@ const formatDateShort = (date) => {
                         <!-- Notes -->
                         <div v-if="order.notes" class="bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border shadow-sm sm:rounded-lg p-6">
                             <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
-                                Internal Notes
+                                {{ t('orders.show.internalNotes') }}
                             </h3>
                             <p class="text-sm text-gray-600 dark:text-gray-300 whitespace-pre-line">{{ order.notes }}</p>
                         </div>
@@ -273,28 +276,28 @@ const formatDateShort = (date) => {
                         <!-- Order Summary -->
                         <div class="bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border shadow-sm sm:rounded-lg p-6">
                             <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
-                                Order Summary
+                                {{ t('orders.show.orderSummary') }}
                             </h3>
 
                             <dl class="space-y-3">
                                 <div class="flex justify-between text-sm">
-                                    <dt class="text-gray-600 dark:text-gray-300">Subtotal</dt>
+                                    <dt class="text-gray-600 dark:text-gray-300">{{ t('common.subtotal') }}</dt>
                                     <dd class="font-medium text-gray-900 dark:text-gray-100">${{ parseFloat(order.subtotal).toFixed(2) }}</dd>
                                 </div>
 
                                 <div class="flex justify-between text-sm">
-                                    <dt class="text-gray-600 dark:text-gray-300">Tax</dt>
+                                    <dt class="text-gray-600 dark:text-gray-300">{{ t('common.tax') }}</dt>
                                     <dd class="font-medium text-gray-900 dark:text-gray-100">${{ parseFloat(order.tax || 0).toFixed(2) }}</dd>
                                 </div>
 
                                 <div class="flex justify-between text-sm">
-                                    <dt class="text-gray-600 dark:text-gray-300">Shipping</dt>
+                                    <dt class="text-gray-600 dark:text-gray-300">{{ t('common.shipping') }}</dt>
                                     <dd class="font-medium text-gray-900 dark:text-gray-100">${{ parseFloat(order.shipping || 0).toFixed(2) }}</dd>
                                 </div>
 
                                 <div class="pt-3 border-t border-gray-200 dark:border-dark-border">
                                     <div class="flex justify-between items-center">
-                                        <dt class="text-lg font-semibold text-gray-900 dark:text-gray-100">Total</dt>
+                                        <dt class="text-lg font-semibold text-gray-900 dark:text-gray-100">{{ t('common.total') }}</dt>
                                         <dd class="text-xl font-bold text-primary-400">${{ parseFloat(order.total).toFixed(2) }}</dd>
                                     </div>
                                 </div>
@@ -304,17 +307,17 @@ const formatDateShort = (date) => {
                         <!-- Order Details -->
                         <div class="bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border shadow-sm sm:rounded-lg p-6">
                             <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
-                                Order Details
+                                {{ t('orders.show.orderDetails') }}
                             </h3>
 
                             <dl class="space-y-3">
                                 <div>
-                                    <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Order Number</dt>
+                                    <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">{{ t('orders.show.orderNumber2') }}</dt>
                                     <dd class="mt-1 text-sm text-gray-900 dark:text-gray-100">{{ order.order_number }}</dd>
                                 </div>
 
                                 <div>
-                                    <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Source</dt>
+                                    <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">{{ t('orders.source') }}</dt>
                                     <dd class="mt-1">
                                         <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary-400/10 text-primary-400 capitalize">
                                             {{ order.source }}
@@ -323,7 +326,7 @@ const formatDateShort = (date) => {
                                 </div>
 
                                 <div>
-                                    <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Status</dt>
+                                    <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">{{ t('common.status') }}</dt>
                                     <dd class="mt-1">
                                         <span :class="getStatusClass(order.status)" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium capitalize">
                                             {{ order.status }}
@@ -332,12 +335,12 @@ const formatDateShort = (date) => {
                                 </div>
 
                                 <div>
-                                    <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Order Date</dt>
+                                    <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">{{ t('purchaseOrders.orderDate') }}</dt>
                                     <dd class="mt-1 text-sm text-gray-900 dark:text-gray-100">{{ formatDateShort(order.order_date) }}</dd>
                                 </div>
 
                                 <div v-if="order.currency">
-                                    <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Currency</dt>
+                                    <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">{{ t('common.currency') }}</dt>
                                     <dd class="mt-1 text-sm text-gray-900 dark:text-gray-100">{{ order.currency }}</dd>
                                 </div>
                             </dl>
@@ -346,12 +349,12 @@ const formatDateShort = (date) => {
                         <!-- Approval Status -->
                         <div v-if="order.approval_status" class="bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border shadow-sm sm:rounded-lg p-6">
                             <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
-                                Approval Status
+                                {{ t('orders.show.approvalStatus') }}
                             </h3>
 
                             <dl class="space-y-3">
                                 <div>
-                                    <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Status</dt>
+                                    <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">{{ t('common.status') }}</dt>
                                     <dd class="mt-1">
                                         <span :class="getApprovalStatusClass(order.approval_status)" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium capitalize">
                                             {{ order.approval_status }}
@@ -360,22 +363,22 @@ const formatDateShort = (date) => {
                                 </div>
 
                                 <div v-if="order.creator">
-                                    <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Created By</dt>
+                                    <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">{{ t('orders.show.createdBy') }}</dt>
                                     <dd class="mt-1 text-sm text-gray-900 dark:text-gray-100">{{ order.creator.name }}</dd>
                                 </div>
 
                                 <div v-if="order.approver">
-                                    <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">{{ order.approval_status === 'approved' ? 'Approved' : 'Rejected' }} By</dt>
+                                    <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">{{ order.approval_status === 'approved' ? t('orders.show.approved') : t('orders.show.rejected') }} {{ t('orders.show.by') }}</dt>
                                     <dd class="mt-1 text-sm text-gray-900 dark:text-gray-100">{{ order.approver.name }}</dd>
                                 </div>
 
                                 <div v-if="order.approved_at">
-                                    <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Decision Date</dt>
+                                    <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">{{ t('orders.show.decisionDate') }}</dt>
                                     <dd class="mt-1 text-sm text-gray-900 dark:text-gray-100">{{ formatDate(order.approved_at) }}</dd>
                                 </div>
 
                                 <div v-if="order.approval_notes">
-                                    <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Notes</dt>
+                                    <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">{{ t('common.notes') }}</dt>
                                     <dd class="mt-1 text-sm text-gray-600 dark:text-gray-300">{{ order.approval_notes }}</dd>
                                 </div>
                             </dl>
@@ -386,13 +389,13 @@ const formatDateShort = (date) => {
                                     @click="openApprovalModal('approve')"
                                     class="w-full px-4 py-2 bg-green-600 text-white rounded-md font-semibold text-sm hover:bg-green-700 transition"
                                 >
-                                    Approve Order
+                                    {{ t('orders.show.approveOrder') }}
                                 </button>
                                 <button
                                     @click="openApprovalModal('reject')"
                                     class="w-full px-4 py-2 bg-red-600 text-white rounded-md font-semibold text-sm hover:bg-red-700 transition"
                                 >
-                                    Reject Order
+                                    {{ t('orders.show.rejectOrder') }}
                                 </button>
                             </div>
                         </div>
@@ -400,17 +403,17 @@ const formatDateShort = (date) => {
                         <!-- Actions -->
                         <div v-if="hasPermission('delete_orders')" class="bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border shadow-sm sm:rounded-lg p-6">
                             <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
-                                Danger Zone
+                                {{ t('orders.show.dangerZone') }}
                             </h3>
 
                             <button
                                 @click="showDeleteModal = true"
                                 class="w-full px-4 py-2 bg-red-900/30 text-red-400 border border-red-800 rounded-md font-semibold text-sm hover:bg-red-900/50 transition"
                             >
-                                Delete Order
+                                {{ t('orders.show.deleteOrder') }}
                             </button>
                             <p class="mt-2 text-xs text-gray-500 dark:text-gray-400">
-                                Deleting this order will restore the inventory stock for all items.
+                                {{ t('orders.show.deleteWarning') }}
                             </p>
                         </div>
                     </div>
@@ -429,7 +432,7 @@ const formatDateShort = (date) => {
                 <div class="relative bg-white dark:bg-dark-card rounded-lg shadow-xl max-w-md w-full p-6" @click.stop>
                     <div class="flex items-center justify-between mb-4">
                         <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">
-                            Delete Order
+                            {{ t('orders.show.deleteOrder') }}
                         </h3>
                         <button
                             @click="showDeleteModal = false"
@@ -451,8 +454,8 @@ const formatDateShort = (date) => {
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                                 </svg>
                                 <div class="text-sm text-yellow-300">
-                                    <p class="font-semibold mb-1">This action cannot be undone</p>
-                                    <p>The inventory stock for all items in this order will be restored.</p>
+                                    <p class="font-semibold mb-1">{{ t('orders.show.cannotUndo') }}</p>
+                                    <p>{{ t('orders.show.stockRestored') }}</p>
                                 </div>
                             </div>
                         </div>
@@ -465,7 +468,7 @@ const formatDateShort = (date) => {
                             class="px-4 py-2 bg-gray-100 dark:bg-dark-bg text-gray-600 dark:text-gray-300 rounded-md hover:bg-gray-200 dark:hover:bg-dark-bg/50"
                             :disabled="deleting"
                         >
-                            Cancel
+                            {{ t('common.cancel') }}
                         </button>
                         <button
                             type="button"
@@ -473,8 +476,8 @@ const formatDateShort = (date) => {
                             :disabled="deleting"
                             class="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 disabled:opacity-50"
                         >
-                            <span v-if="deleting">Deleting...</span>
-                            <span v-else>Delete Order</span>
+                            <span v-if="deleting">{{ t('common.deleting') }}</span>
+                            <span v-else>{{ t('orders.show.deleteOrder') }}</span>
                         </button>
                     </div>
                 </div>
@@ -489,7 +492,7 @@ const formatDateShort = (date) => {
                 <div class="relative bg-white dark:bg-dark-card rounded-lg shadow-xl max-w-md w-full p-6" @click.stop>
                     <div class="flex items-center justify-between mb-4">
                         <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">
-                            {{ approvalAction === 'approve' ? 'Approve Order' : 'Reject Order' }}
+                            {{ approvalAction === 'approve' ? t('orders.show.approveOrder') : t('orders.show.rejectOrder') }}
                         </h3>
                         <button
                             @click="showApprovalModal = false"
@@ -504,20 +507,20 @@ const formatDateShort = (date) => {
                     <div class="mb-6">
                         <p class="text-gray-600 dark:text-gray-300 mb-4">
                             {{ approvalAction === 'approve'
-                                ? `Are you sure you want to approve order #${order.order_number}?`
-                                : `Are you sure you want to reject order #${order.order_number}?`
+                                ? t('orders.show.confirmApprove', { number: order.order_number })
+                                : t('orders.show.confirmReject', { number: order.order_number })
                             }}
                         </p>
 
                         <div>
                             <label class="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-1">
-                                Notes {{ approvalAction === 'reject' ? '(Required)' : '(Optional)' }}
+                                {{ t('common.notes') }} {{ approvalAction === 'reject' ? t('orders.show.notesRequired') : t('orders.show.notesOptional') }}
                             </label>
                             <textarea
                                 v-model="approvalNotes"
                                 rows="3"
                                 class="block w-full rounded-md bg-gray-50 dark:bg-dark-bg border-gray-200 dark:border-dark-border text-gray-900 dark:text-gray-100 placeholder-gray-500 shadow-sm focus:border-primary-400 focus:ring-primary-400"
-                                :placeholder="approvalAction === 'approve' ? 'Optional notes about this approval...' : 'Reason for rejection...'"
+                                :placeholder="approvalAction === 'approve' ? t('orders.show.approvalNotesPlaceholder') : t('orders.show.rejectionNotesPlaceholder')"
                                 :required="approvalAction === 'reject'"
                             ></textarea>
                         </div>
@@ -530,7 +533,7 @@ const formatDateShort = (date) => {
                             class="px-4 py-2 bg-gray-100 dark:bg-dark-bg text-gray-600 dark:text-gray-300 rounded-md hover:bg-gray-200 dark:hover:bg-dark-bg/50"
                             :disabled="processing"
                         >
-                            Cancel
+                            {{ t('common.cancel') }}
                         </button>
                         <button
                             type="button"
@@ -543,8 +546,8 @@ const formatDateShort = (date) => {
                                     : 'bg-red-600 hover:bg-red-700'
                             ]"
                         >
-                            <span v-if="processing">Processing...</span>
-                            <span v-else>{{ approvalAction === 'approve' ? 'Approve' : 'Reject' }}</span>
+                            <span v-if="processing">{{ t('common.loading') }}</span>
+                            <span v-else>{{ approvalAction === 'approve' ? t('orders.show.approve') : t('orders.show.reject') }}</span>
                         </button>
                     </div>
                 </div>

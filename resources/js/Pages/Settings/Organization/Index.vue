@@ -7,11 +7,14 @@ import TextInput from '@/Components/TextInput.vue';
 import InputLabel from '@/Components/InputLabel.vue';
 import InputError from '@/Components/InputError.vue';
 
+import { useI18n } from 'vue-i18n';
 const props = defineProps({
     organization: Object,
     user: Object,
 });
 
+
+const { t } = useI18n();
 const activeTab = ref('general');
 
 // General settings form
@@ -50,12 +53,12 @@ const isAdmin = props.user.is_admin;
 </script>
 
 <template>
-    <Head title="Organization Settings" />
+    <Head :title="t('settings.organization.title')" />
 
     <AuthenticatedLayout>
         <template #header>
             <h2 class="font-semibold text-xl text-gray-900 dark:text-gray-100 leading-tight">
-                Organization Settings
+                {{ t('settings.organization.title') }}
             </h2>
         </template>
 
