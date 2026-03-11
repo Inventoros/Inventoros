@@ -15,7 +15,24 @@ const settingsSubmenuOpen = ref(false);
 const notificationDropdownRef = ref(null);
 const { hasPermission } = usePermissions();
 
+// Sidebar collapsed state with localStorage persistence
+const sidebarCollapsed = ref(localStorage.getItem('sidebar-collapsed') === 'true');
+
+const toggleSidebarCollapse = () => {
+    sidebarCollapsed.value = !sidebarCollapsed.value;
+    localStorage.setItem('sidebar-collapsed', sidebarCollapsed.value);
+    if (sidebarCollapsed.value) {
+        settingsSubmenuOpen.value = false;
+    }
+};
+
 const toggleSettingsSubmenu = () => {
+    if (sidebarCollapsed.value) {
+        sidebarCollapsed.value = false;
+        localStorage.setItem('sidebar-collapsed', 'false');
+        settingsSubmenuOpen.value = true;
+        return;
+    }
     settingsSubmenuOpen.value = !settingsSubmenuOpen.value;
 };
 
@@ -90,27 +107,31 @@ const navItems = {
 <template>
     <div class="min-h-screen bg-gray-50 dark:bg-dark-bg">
         <!-- Sidebar -->
-        <aside class="fixed inset-y-0 left-0 z-50 w-64 bg-sidebar-bg border-r border-slate-800 transform transition-transform duration-200 lg:translate-x-0 flex flex-col"
-               :class="{ '-translate-x-full': !sidebarOpen, 'translate-x-0': sidebarOpen }">
+        <aside class="fixed inset-y-0 left-0 z-50 bg-sidebar-bg border-r border-slate-800 transform transition-all duration-200 lg:translate-x-0 flex flex-col"
+               :class="[
+                   sidebarCollapsed ? 'w-[68px]' : 'w-64',
+                   { '-translate-x-full': !sidebarOpen, 'translate-x-0': sidebarOpen }
+               ]">
 
             <!-- Logo -->
-            <div class="flex items-center h-16 px-5 border-b border-slate-800">
+            <div class="flex items-center h-16 border-b border-slate-800" :class="sidebarCollapsed ? 'px-3 justify-center' : 'px-5'">
                 <Link :href="route('dashboard')" class="flex items-center gap-3">
-                    <div class="w-8 h-8 bg-primary-600 rounded-lg flex items-center justify-center">
+                    <div class="w-8 h-8 bg-primary-600 rounded-lg flex items-center justify-center flex-shrink-0">
                         <ApplicationLogo class="h-5 w-auto fill-current text-white" />
                     </div>
-                    <span class="text-lg font-bold text-white tracking-tight">InventorOS</span>
+                    <span v-show="!sidebarCollapsed" class="text-lg font-bold text-white tracking-tight">InventorOS</span>
                 </Link>
             </div>
 
             <!-- Navigation Links -->
-            <nav class="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto sidebar-scroll">
+            <nav class="flex-1 py-4 space-y-0.5 overflow-y-auto sidebar-scroll" :class="sidebarCollapsed ? 'px-2' : 'px-3'">
                 <!-- Dashboard -->
                 <SidebarNavItem
                     :href="route('dashboard')"
                     :icon="navItems.dashboard.icon"
                     label="Dashboard"
                     :active-routes="navItems.dashboard.activeRoutes"
+                    :collapsed="sidebarCollapsed"
                 />
 
                 <!-- Inventory -->
@@ -120,6 +141,7 @@ const navItems = {
                     :icon="navItems.products.icon"
                     label="Inventory"
                     :active-routes="navItems.products.activeRoutes"
+                    :collapsed="sidebarCollapsed"
                 />
 
                 <!-- Plugin Menu Items -->
@@ -130,6 +152,7 @@ const navItems = {
                         :icon="item.icon"
                         :label="item.label"
                         :active-routes="item.active_routes || [item.route]"
+                        :collapsed="sidebarCollapsed"
                     />
                 </template>
 
@@ -140,6 +163,7 @@ const navItems = {
                     :icon="navItems.orders.icon"
                     label="Orders"
                     :active-routes="navItems.orders.activeRoutes"
+                    :collapsed="sidebarCollapsed"
                 />
 
                 <!-- Purchase Orders -->
@@ -149,6 +173,7 @@ const navItems = {
                     :icon="navItems.purchaseOrders.icon"
                     label="Purchase Orders"
                     :active-routes="navItems.purchaseOrders.activeRoutes"
+                    :collapsed="sidebarCollapsed"
                 />
 
                 <!-- Suppliers -->
@@ -158,6 +183,7 @@ const navItems = {
                     :icon="navItems.suppliers.icon"
                     label="Suppliers"
                     :active-routes="navItems.suppliers.activeRoutes"
+                    :collapsed="sidebarCollapsed"
                 />
 
                 <!-- Categories -->
@@ -167,6 +193,7 @@ const navItems = {
                     :icon="navItems.categories.icon"
                     label="Categories"
                     :active-routes="navItems.categories.activeRoutes"
+                    :collapsed="sidebarCollapsed"
                 />
 
                 <!-- Locations -->
@@ -176,6 +203,7 @@ const navItems = {
                     :icon="navItems.locations.icon"
                     label="Locations"
                     :active-routes="navItems.locations.activeRoutes"
+                    :collapsed="sidebarCollapsed"
                 />
 
                 <!-- Import / Export -->
@@ -185,6 +213,7 @@ const navItems = {
                     :icon="navItems.importExport.icon"
                     label="Import / Export"
                     :active-routes="navItems.importExport.activeRoutes"
+                    :collapsed="sidebarCollapsed"
                 />
 
                 <!-- Reports -->
@@ -194,6 +223,7 @@ const navItems = {
                     :icon="navItems.reports.icon"
                     label="Reports"
                     :active-routes="navItems.reports.activeRoutes"
+                    :collapsed="sidebarCollapsed"
                 />
 
                 <!-- Divider -->
@@ -202,7 +232,7 @@ const navItems = {
                 </div>
 
                 <!-- Admin Section Label -->
-                <div class="px-3 pb-1 pt-1" v-if="hasPermission('view_users') || hasPermission('view_roles')">
+                <div v-if="(hasPermission('view_users') || hasPermission('view_roles')) && !sidebarCollapsed" class="px-3 pb-1 pt-1">
                     <p class="text-[11px] font-semibold text-slate-500 uppercase tracking-widest">Administration</p>
                 </div>
 
@@ -213,6 +243,7 @@ const navItems = {
                     :icon="navItems.users.icon"
                     label="Users"
                     :active-routes="navItems.users.activeRoutes"
+                    :collapsed="sidebarCollapsed"
                 />
 
                 <!-- Roles -->
@@ -222,6 +253,7 @@ const navItems = {
                     :icon="navItems.roles.icon"
                     label="Roles"
                     :active-routes="navItems.roles.activeRoutes"
+                    :collapsed="sidebarCollapsed"
                 />
 
                 <!-- Plugins -->
@@ -231,6 +263,7 @@ const navItems = {
                     :icon="navItems.plugins.icon"
                     label="Plugins"
                     :active-routes="navItems.plugins.activeRoutes"
+                    :collapsed="sidebarCollapsed"
                 />
 
                 <!-- Admin Tools -->
@@ -240,6 +273,7 @@ const navItems = {
                     :icon="navItems.adminTools.icon"
                     label="Admin Tools"
                     :active-routes="navItems.adminTools.activeRoutes"
+                    :collapsed="sidebarCollapsed"
                 />
 
                 <!-- Settings with Submenu -->
@@ -247,18 +281,21 @@ const navItems = {
                     <button
                         @click="toggleSettingsSubmenu"
                         :class="[
-                            'w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-150 text-sm',
+                            'w-full flex items-center px-3 py-2.5 rounded-lg transition-all duration-150 text-sm',
+                            sidebarCollapsed ? 'justify-center' : 'gap-3',
                             route().current('settings.*') || route().current('account.*')
                                 ? 'bg-primary-600/20 text-primary-400'
                                 : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800'
                         ]"
+                        :title="sidebarCollapsed ? 'Settings' : ''"
                     >
                         <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                         </svg>
-                        <span class="font-medium flex-1 text-left">Settings</span>
+                        <span v-show="!sidebarCollapsed" class="font-medium flex-1 text-left">Settings</span>
                         <svg
+                            v-show="!sidebarCollapsed"
                             :class="['w-4 h-4 flex-shrink-0 transition-transform duration-200', settingsSubmenuOpen ? 'rotate-180' : '']"
                             fill="none"
                             stroke="currentColor"
@@ -269,7 +306,7 @@ const navItems = {
                     </button>
 
                     <!-- Settings Submenu -->
-                    <div v-show="settingsSubmenuOpen" class="ml-8 space-y-0.5">
+                    <div v-show="settingsSubmenuOpen && !sidebarCollapsed" class="ml-8 space-y-0.5">
                         <Link
                             :href="route('settings.organization.index')"
                             :class="[
@@ -335,8 +372,21 @@ const navItems = {
                 </div>
             </nav>
 
+            <!-- Collapse Toggle -->
+            <div class="hidden lg:block border-t border-slate-800 px-3 py-2">
+                <button
+                    @click="toggleSidebarCollapse"
+                    class="w-full flex items-center justify-center p-2 text-slate-500 hover:text-slate-300 hover:bg-slate-800 rounded-lg transition"
+                    :title="sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'"
+                >
+                    <svg class="w-5 h-5 transition-transform duration-200" :class="sidebarCollapsed ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 19l-7-7 7-7m8 14l-7-7 7-7" />
+                    </svg>
+                </button>
+            </div>
+
             <!-- User Profile at Bottom -->
-            <SidebarUserProfile />
+            <SidebarUserProfile :collapsed="sidebarCollapsed" />
         </aside>
 
         <!-- Mobile sidebar overlay -->
@@ -347,7 +397,7 @@ const navItems = {
         ></div>
 
         <!-- Main content area -->
-        <div class="lg:pl-64">
+        <div :class="sidebarCollapsed ? 'lg:pl-[68px]' : 'lg:pl-64'" class="transition-all duration-200">
             <!-- Page Heading -->
             <header
                 class="sticky top-0 z-40 bg-white/80 dark:bg-dark-bg/80 backdrop-blur-md border-b border-gray-200 dark:border-dark-border"

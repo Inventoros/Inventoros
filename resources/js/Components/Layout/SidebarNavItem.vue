@@ -23,6 +23,10 @@ const props = defineProps({
         type: String,
         default: 'primary',
     },
+    collapsed: {
+        type: Boolean,
+        default: false,
+    },
 });
 
 const isActive = computed(() => {
@@ -37,15 +41,17 @@ const isActive = computed(() => {
     <Link
         :href="href"
         :class="[
-            'flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-150 text-sm',
+            'flex items-center py-2.5 rounded-lg transition-all duration-150 text-sm',
+            collapsed ? 'justify-center px-2' : 'gap-3 px-3',
             isActive
                 ? 'bg-primary-600/20 text-primary-400 font-semibold'
                 : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800'
         ]"
+        :title="collapsed ? label : ''"
     >
         <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" :d="icon" />
         </svg>
-        <span class="font-medium">{{ label }}</span>
+        <span v-show="!collapsed" class="font-medium">{{ label }}</span>
     </Link>
 </template>
