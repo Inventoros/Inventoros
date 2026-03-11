@@ -47,259 +47,213 @@ const formatCompactCurrency = (value) => {
 
     <AuthenticatedLayout>
         <template #header>
-            <h2 class="text-xl font-semibold leading-tight text-gray-900 dark:text-gray-100">
+            <h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100">
                 {{ t('dashboard.title') }}
             </h2>
         </template>
 
-        <div class="py-12 bg-gray-50 dark:bg-dark-bg min-h-screen">
-            <div class="mx-auto max-w-7xl sm:px-6 lg:px-8">
-                <!-- Plugin Slot: Header (top of dashboard) -->
+        <div class="py-8 bg-gray-50 dark:bg-dark-bg min-h-screen">
+            <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+                <!-- Plugin Slot: Header -->
                 <PluginSlot slot="header" :components="pluginComponents?.header" />
 
                 <!-- Plugin Slot: Before Stats -->
                 <PluginSlot slot="before-stats" :components="pluginComponents?.beforeStats" />
 
-                <!-- Stats Grid -->
-                <div class="grid grid-cols-1 gap-6 mb-6 sm:grid-cols-2 lg:grid-cols-4">
+                <!-- Primary Stats Grid -->
+                <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4 mb-6">
                     <!-- Total Products -->
-                    <div class="bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border overflow-hidden shadow-sm dark:shadow-lg sm:rounded-lg hover:shadow-md dark:hover:border-primary-400/50 transition">
-                        <div class="p-6">
-                            <div class="flex items-center">
-                                <div class="flex-shrink-0">
-                                    <svg class="w-8 h-8 text-cyan-500 dark:text-primary-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
-                                    </svg>
-                                </div>
-                                <div class="ml-4">
-                                    <p class="text-sm font-medium text-gray-600 dark:text-gray-400">{{ t('dashboard.totalProducts') }}</p>
-                                    <p class="text-2xl font-semibold text-gray-900 dark:text-gray-100">
+                    <div class="bg-white dark:bg-dark-card rounded-xl border border-gray-100 dark:border-dark-border shadow-card hover:shadow-card-hover transition-shadow">
+                        <div class="p-5">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-sm font-medium text-gray-500 dark:text-gray-400">{{ t('dashboard.totalProducts') }}</p>
+                                    <p class="text-2xl font-bold text-gray-900 dark:text-white mt-1">
                                         {{ formatNumber(stats.totalProducts) }}
                                     </p>
+                                </div>
+                                <div class="w-11 h-11 bg-primary-50 dark:bg-primary-500/10 rounded-xl flex items-center justify-center">
+                                    <svg class="w-6 h-6 text-primary-600 dark:text-primary-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                                    </svg>
                                 </div>
                             </div>
                         </div>
                     </div>
 
                     <!-- Total Value -->
-                    <div class="bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border overflow-hidden shadow-sm dark:shadow-lg sm:rounded-lg hover:border-primary-400/50 transition">
-                        <div class="p-6">
-                            <div class="flex items-center">
-                                <div class="flex-shrink-0">
-                                    <svg class="w-8 h-8 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                    </svg>
-                                </div>
-                                <div class="ml-4">
-                                    <p class="text-sm font-medium text-gray-600 dark:text-gray-400">{{ t('dashboard.totalValue') }}</p>
-                                    <p class="text-2xl font-semibold text-gray-900 dark:text-gray-100">
+                    <div class="bg-white dark:bg-dark-card rounded-xl border border-gray-100 dark:border-dark-border shadow-card hover:shadow-card-hover transition-shadow">
+                        <div class="p-5">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-sm font-medium text-gray-500 dark:text-gray-400">{{ t('dashboard.totalValue') }}</p>
+                                    <p class="text-2xl font-bold text-gray-900 dark:text-white mt-1">
                                         {{ formatCompactCurrency(stats.totalValue) }}
                                     </p>
+                                </div>
+                                <div class="w-11 h-11 bg-emerald-50 dark:bg-emerald-500/10 rounded-xl flex items-center justify-center">
+                                    <svg class="w-6 h-6 text-emerald-600 dark:text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
                                 </div>
                             </div>
                         </div>
                     </div>
 
                     <!-- Low Stock -->
-                    <div class="bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border overflow-hidden shadow-sm dark:shadow-lg sm:rounded-lg hover:border-red-400/50 transition">
-                        <div class="p-6">
-                            <div class="flex items-center">
-                                <div class="flex-shrink-0">
-                                    <svg class="w-8 h-8 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                                    </svg>
-                                </div>
-                                <div class="ml-4">
-                                    <p class="text-sm font-medium text-gray-600 dark:text-gray-400">{{ t('dashboard.lowStock') }}</p>
-                                    <p class="text-2xl font-semibold text-gray-900 dark:text-gray-100">
+                    <div class="bg-white dark:bg-dark-card rounded-xl border border-gray-100 dark:border-dark-border shadow-card hover:shadow-card-hover transition-shadow">
+                        <div class="p-5">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-sm font-medium text-gray-500 dark:text-gray-400">{{ t('dashboard.lowStock') }}</p>
+                                    <p class="text-2xl font-bold text-gray-900 dark:text-white mt-1">
                                         {{ formatNumber(stats.lowStockProducts) }}
                                     </p>
                                 </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Categories -->
-                    <div class="bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border overflow-hidden shadow-sm dark:shadow-lg sm:rounded-lg hover:shadow-md dark:hover:border-accent-purple/50 transition">
-                        <div class="p-6">
-                            <div class="flex items-center">
-                                <div class="flex-shrink-0">
-                                    <svg class="w-8 h-8 text-accent-purple" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+                                <div class="w-11 h-11 bg-amber-50 dark:bg-amber-500/10 rounded-xl flex items-center justify-center">
+                                    <svg class="w-6 h-6 text-amber-600 dark:text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                                     </svg>
-                                </div>
-                                <div class="ml-4">
-                                    <p class="text-sm font-medium text-gray-600 dark:text-gray-400">{{ t('dashboard.categories') }}</p>
-                                    <p class="text-2xl font-semibold text-gray-900 dark:text-gray-100">
-                                        {{ stats.categories }}
-                                    </p>
                                 </div>
                             </div>
                         </div>
                     </div>
 
                     <!-- Total Orders -->
-                    <div class="bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border overflow-hidden shadow-sm dark:shadow-lg sm:rounded-lg hover:border-primary-400/30 transition">
-                        <div class="p-6">
-                            <div class="flex items-center">
-                                <div class="flex-shrink-0">
-                                    <svg class="w-8 h-8 text-pink-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
-                                    </svg>
-                                </div>
-                                <div class="ml-4">
-                                    <p class="text-sm font-medium text-gray-600 dark:text-gray-400">{{ t('dashboard.totalOrders') }}</p>
-                                    <p class="text-2xl font-semibold text-gray-900 dark:text-gray-100">
+                    <div class="bg-white dark:bg-dark-card rounded-xl border border-gray-100 dark:border-dark-border shadow-card hover:shadow-card-hover transition-shadow">
+                        <div class="p-5">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-sm font-medium text-gray-500 dark:text-gray-400">{{ t('dashboard.totalOrders') }}</p>
+                                    <p class="text-2xl font-bold text-gray-900 dark:text-white mt-1">
                                         {{ formatNumber(stats.totalOrders) }}
                                     </p>
+                                </div>
+                                <div class="w-11 h-11 bg-violet-50 dark:bg-violet-500/10 rounded-xl flex items-center justify-center">
+                                    <svg class="w-6 h-6 text-violet-600 dark:text-violet-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+                                    </svg>
                                 </div>
                             </div>
                         </div>
                     </div>
+                </div>
 
-                    <!-- Revenue This Month stat -->
-                    <div class="bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border overflow-hidden shadow-sm dark:shadow-lg sm:rounded-lg hover:border-primary-400/30 transition">
-                        <div class="p-6">
-                            <div class="flex items-center">
-                                <div class="flex-shrink-0">
-                                    <svg class="w-8 h-8 text-primary-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
-                                    </svg>
-                                </div>
-                                <div class="ml-4">
-                                    <p class="text-sm font-medium text-gray-600 dark:text-gray-400">{{ t('dashboard.revenueThisMonth') }}</p>
-                                    <p class="text-2xl font-semibold text-gray-900 dark:text-gray-100">
-                                        {{ formatCompactCurrency(stats.revenueThisMonth) }}
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
+                <!-- Secondary Stats Row -->
+                <div class="grid grid-cols-2 gap-4 mb-6 sm:grid-cols-3 lg:grid-cols-5">
+                    <!-- Pending Orders -->
+                    <Link :href="route('orders.index', { status: 'pending' })" class="bg-white dark:bg-dark-card rounded-xl border border-gray-100 dark:border-dark-border shadow-card hover:shadow-card-hover hover:border-primary-200 dark:hover:border-primary-800 transition-all p-4 block">
+                        <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">{{ t('dashboard.pendingOrders') }}</p>
+                        <p class="text-xl font-bold text-amber-600 dark:text-amber-400 mt-1">
+                            {{ formatNumber(stats.pendingOrders) }}
+                        </p>
+                    </Link>
+
+                    <!-- Categories -->
+                    <Link :href="route('categories.index')" class="bg-white dark:bg-dark-card rounded-xl border border-gray-100 dark:border-dark-border shadow-card hover:shadow-card-hover hover:border-primary-200 dark:hover:border-primary-800 transition-all p-4 block">
+                        <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">{{ t('dashboard.categories') }}</p>
+                        <p class="text-xl font-bold text-primary-600 dark:text-primary-400 mt-1">
+                            {{ stats.categories }}
+                        </p>
+                    </Link>
+
+                    <!-- Locations -->
+                    <Link :href="route('locations.index')" class="bg-white dark:bg-dark-card rounded-xl border border-gray-100 dark:border-dark-border shadow-card hover:shadow-card-hover hover:border-primary-200 dark:hover:border-primary-800 transition-all p-4 block">
+                        <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">{{ t('dashboard.locations') }}</p>
+                        <p class="text-xl font-bold text-primary-600 dark:text-primary-400 mt-1">
+                            {{ stats.locations }}
+                        </p>
+                    </Link>
+
+                    <!-- Inventory Value -->
+                    <div class="bg-white dark:bg-dark-card rounded-xl border border-gray-100 dark:border-dark-border shadow-card p-4">
+                        <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">{{ t('dashboard.inventoryValue') }}</p>
+                        <p class="text-xl font-bold text-emerald-600 dark:text-emerald-400 mt-1">
+                            {{ formatCompactCurrency(stats.totalValue) }}
+                        </p>
+                    </div>
+
+                    <!-- Revenue This Month -->
+                    <div class="bg-white dark:bg-dark-card rounded-xl border border-gray-100 dark:border-dark-border shadow-card p-4">
+                        <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">{{ t('dashboard.revenueThisMonth') }}</p>
+                        <p class="text-xl font-bold text-primary-600 dark:text-primary-400 mt-1">
+                            {{ formatCompactCurrency(stats.revenueThisMonth) }}
+                        </p>
                     </div>
                 </div>
 
                 <!-- Plugin Slot: After Stats -->
                 <PluginSlot slot="after-stats" :components="pluginComponents?.afterStats" />
 
-                <!-- Secondary Stats -->
-                <div class="grid grid-cols-1 gap-6 mb-6 sm:grid-cols-2 lg:grid-cols-5">
-                    <!-- Pending Orders -->
-                    <div class="bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border overflow-hidden shadow-sm dark:shadow-lg sm:rounded-lg hover:border-amber-400/30 transition">
-                        <Link :href="route('orders.index', { status: 'pending' })" class="block p-4">
-                            <p class="text-xs font-medium text-gray-600 dark:text-gray-400 uppercase tracking-wider">{{ t('dashboard.pendingOrders') }}</p>
-                            <p class="text-xl font-semibold text-amber-400 mt-1">
-                                {{ formatNumber(stats.pendingOrders) }}
-                            </p>
-                        </Link>
-                    </div>
-
-                    <!-- Categories -->
-                    <div class="bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border overflow-hidden shadow-sm dark:shadow-lg sm:rounded-lg hover:shadow-md dark:hover:border-accent-purple/50 transition">
-                        <Link :href="route('categories.index')" class="block p-4">
-                            <p class="text-xs font-medium text-gray-600 dark:text-gray-400 uppercase tracking-wider">{{ t('dashboard.categories') }}</p>
-                            <p class="text-xl font-semibold text-accent-purple mt-1">
-                                {{ stats.categories }}
-                            </p>
-                        </Link>
-                    </div>
-
-                    <!-- Locations -->
-                    <div class="bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border overflow-hidden shadow-sm dark:shadow-lg sm:rounded-lg hover:border-orange-400/30 transition">
-                        <Link :href="route('locations.index')" class="block p-4">
-                            <p class="text-xs font-medium text-gray-600 dark:text-gray-400 uppercase tracking-wider">{{ t('dashboard.locations') }}</p>
-                            <p class="text-xl font-semibold text-orange-400 mt-1">
-                                {{ stats.locations }}
-                            </p>
-                        </Link>
-                    </div>
-
-                    <!-- Inventory Value -->
-                    <div class="bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border overflow-hidden shadow-sm dark:shadow-lg sm:rounded-lg hover:border-green-400/30 transition">
-                        <div class="p-4">
-                            <p class="text-xs font-medium text-gray-600 dark:text-gray-400 uppercase tracking-wider">{{ t('dashboard.inventoryValue') }}</p>
-                            <p class="text-xl font-semibold text-green-400 mt-1">
-                                {{ formatCompactCurrency(stats.totalValue) }}
-                            </p>
-                        </div>
-                    </div>
-
-                    <!-- Low Stock Alert -->
-                    <div class="bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border overflow-hidden shadow-sm dark:shadow-lg sm:rounded-lg hover:border-red-400/30 transition">
-                        <Link :href="route('products.index', { low_stock: '1' })" class="block p-4">
-                            <p class="text-xs font-medium text-gray-600 dark:text-gray-400 uppercase tracking-wider">{{ t('dashboard.lowStockItems') }}</p>
-                            <p class="text-xl font-semibold text-red-400 mt-1">
-                                {{ formatNumber(stats.lowStockProducts) }}
-                            </p>
-                        </Link>
-                    </div>
-                </div>
-
                 <!-- Plugin Slot: Before Content Grid -->
                 <PluginSlot slot="before-content" :components="pluginComponents?.beforeContent" />
 
                 <!-- Three Column Layout -->
-                <div class="grid grid-cols-1 gap-6 lg:grid-cols-3">
+                <div class="grid grid-cols-1 gap-6 lg:grid-cols-3 mb-6">
                     <!-- Recent Orders -->
-                    <div class="bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border overflow-hidden shadow-sm dark:shadow-lg sm:rounded-lg hover:border-primary-400/30 transition">
-                        <div class="p-6">
-                            <div class="flex items-center justify-between mb-4">
-                                <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">
-                                    {{ t('dashboard.recentOrders') }}
-                                </h3>
-                                <Link
-                                    :href="route('orders.index')"
-                                    class="text-sm text-primary-400 hover:text-primary-300"
-                                >
-                                    {{ t('dashboard.viewAll') }}
-                                </Link>
-                            </div>
+                    <div class="bg-white dark:bg-dark-card rounded-xl border border-gray-100 dark:border-dark-border shadow-card">
+                        <div class="px-5 py-4 border-b border-gray-100 dark:border-dark-border flex items-center justify-between">
+                            <h3 class="text-sm font-semibold text-gray-900 dark:text-gray-100">
+                                {{ t('dashboard.recentOrders') }}
+                            </h3>
+                            <Link
+                                :href="route('orders.index')"
+                                class="text-xs font-medium text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300"
+                            >
+                                {{ t('dashboard.viewAll') }}
+                            </Link>
+                        </div>
 
-                            <div v-if="recentOrders.length === 0" class="text-center py-8">
-                                <svg class="w-12 h-12 text-gray-600 dark:text-gray-400 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
-                                </svg>
-                                <p class="text-gray-600 dark:text-gray-400 mb-3">{{ t('dashboard.noOrdersYet') }}</p>
+                        <div class="p-5">
+                            <div v-if="recentOrders.length === 0" class="text-center py-6">
+                                <div class="w-12 h-12 bg-gray-100 dark:bg-dark-border rounded-xl flex items-center justify-center mx-auto mb-3">
+                                    <svg class="w-6 h-6 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+                                    </svg>
+                                </div>
+                                <p class="text-sm text-gray-500 dark:text-gray-400 mb-3">{{ t('dashboard.noOrdersYet') }}</p>
                                 <Link
                                     :href="route('orders.create')"
-                                    class="inline-flex items-center px-4 py-2 bg-primary-400 hover:bg-primary-500 text-white text-sm font-semibold rounded-lg transition"
+                                    class="inline-flex items-center px-3.5 py-2 bg-primary-600 hover:bg-primary-700 text-white text-sm font-medium rounded-lg transition"
                                 >
                                     {{ t('dashboard.createFirstOrder') }}
                                 </Link>
                             </div>
 
-                            <div v-else class="space-y-3">
+                            <div v-else class="space-y-2.5">
                                 <div
                                     v-for="order in recentOrders"
                                     :key="order.id"
-                                    class="flex items-center justify-between p-3 bg-gray-100 dark:bg-dark-bg/50 rounded-lg border border-gray-200 dark:border-dark-border hover:border-primary-400/30 transition cursor-pointer"
+                                    class="flex items-center justify-between p-3 bg-gray-50 dark:bg-slate-800/50 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-800 transition cursor-pointer"
                                     @click="$inertia.visit(route('orders.show', order.id))"
                                 >
-                                    <div class="flex-1">
+                                    <div class="flex-1 min-w-0">
                                         <div class="flex items-center gap-2">
-                                            <p class="font-medium text-gray-900 dark:text-gray-100">
+                                            <p class="text-sm font-semibold text-gray-900 dark:text-gray-100">
                                                 {{ order.order_number }}
                                             </p>
                                             <span
                                                 :class="[
-                                                    'px-2 py-0.5 text-xs font-semibold rounded-full',
-                                                    order.status === 'pending' ? 'bg-amber-100 dark:bg-amber-900/30 text-amber-800 dark:text-amber-300' :
-                                                    order.status === 'processing' ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300' :
-                                                    order.status === 'shipped' ? 'bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-300' :
-                                                    order.status === 'delivered' ? 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300' :
-                                                    'bg-gray-100 dark:bg-gray-900/30 text-gray-800 dark:text-gray-300'
+                                                    'px-2 py-0.5 text-[11px] font-semibold rounded-full',
+                                                    order.status === 'pending' ? 'bg-amber-100 dark:bg-amber-500/15 text-amber-700 dark:text-amber-400' :
+                                                    order.status === 'processing' ? 'bg-blue-100 dark:bg-blue-500/15 text-blue-700 dark:text-blue-400' :
+                                                    order.status === 'shipped' ? 'bg-purple-100 dark:bg-purple-500/15 text-purple-700 dark:text-purple-400' :
+                                                    order.status === 'delivered' ? 'bg-emerald-100 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-400' :
+                                                    'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300'
                                                 ]"
                                             >
                                                 {{ order.status }}
                                             </span>
                                         </div>
-                                        <p class="text-sm text-gray-600 dark:text-gray-400">
-                                            {{ order.customer_name }} • {{ order.items.length }} items
+                                        <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                                            {{ order.customer_name }} · {{ order.items.length }} items
                                         </p>
                                     </div>
-                                    <div class="text-right ml-4">
-                                        <p class="font-semibold text-gray-900 dark:text-gray-100">
+                                    <div class="text-right ml-3">
+                                        <p class="text-sm font-semibold text-gray-900 dark:text-gray-100">
                                             {{ formatCurrency(order.total) }}
                                         </p>
-                                        <p class="text-xs text-gray-600 dark:text-gray-400">
+                                        <p class="text-[11px] text-gray-400 dark:text-gray-500">
                                             {{ new Date(order.order_date).toLocaleDateString() }}
                                         </p>
                                     </div>
@@ -309,46 +263,48 @@ const formatCompactCurrency = (value) => {
                     </div>
 
                     <!-- Low Stock Alert -->
-                    <div class="bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border overflow-hidden shadow-sm dark:shadow-lg sm:rounded-lg hover:border-red-400/30 transition">
-                        <div class="p-6">
-                            <div class="flex items-center justify-between mb-4">
-                                <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">
-                                    {{ t('dashboard.lowStockAlert') }}
-                                </h3>
-                                <Link
-                                    :href="route('products.index')"
-                                    class="text-sm text-primary-400 hover:text-primary-300"
-                                >
-                                    {{ t('dashboard.viewAll') }}
-                                </Link>
+                    <div class="bg-white dark:bg-dark-card rounded-xl border border-gray-100 dark:border-dark-border shadow-card">
+                        <div class="px-5 py-4 border-b border-gray-100 dark:border-dark-border flex items-center justify-between">
+                            <h3 class="text-sm font-semibold text-gray-900 dark:text-gray-100">
+                                {{ t('dashboard.lowStockAlert') }}
+                            </h3>
+                            <Link
+                                :href="route('products.index')"
+                                class="text-xs font-medium text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300"
+                            >
+                                {{ t('dashboard.viewAll') }}
+                            </Link>
+                        </div>
+
+                        <div class="p-5">
+                            <div v-if="lowStockProducts.length === 0" class="text-center py-6">
+                                <div class="w-12 h-12 bg-emerald-50 dark:bg-emerald-500/10 rounded-xl flex items-center justify-center mx-auto mb-3">
+                                    <svg class="w-6 h-6 text-emerald-500 dark:text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                </div>
+                                <p class="text-sm text-gray-500 dark:text-gray-400">{{ t('dashboard.allWellStocked') }}</p>
                             </div>
 
-                            <div v-if="lowStockProducts.length === 0" class="text-center py-8">
-                                <svg class="w-12 h-12 text-gray-600 dark:text-gray-400 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                </svg>
-                                <p class="text-gray-600 dark:text-gray-400">{{ t('dashboard.allWellStocked') }}</p>
-                            </div>
-
-                            <div v-else class="space-y-3">
+                            <div v-else class="space-y-2.5">
                                 <div
                                     v-for="product in lowStockProducts"
                                     :key="product.id"
-                                    class="flex items-center justify-between p-3 bg-red-50 dark:bg-red-900/20 rounded-lg border border-red-200 dark:border-red-800"
+                                    class="flex items-center justify-between p-3 bg-red-50 dark:bg-red-500/5 rounded-lg border border-red-100 dark:border-red-500/10"
                                 >
-                                    <div class="flex-1">
-                                        <p class="font-medium text-gray-900 dark:text-gray-100">
+                                    <div class="flex-1 min-w-0">
+                                        <p class="text-sm font-semibold text-gray-900 dark:text-gray-100">
                                             {{ product.name }}
                                         </p>
-                                        <p class="text-sm text-gray-600 dark:text-gray-400">
-                                            {{ product.category?.name }} • {{ product.location?.name }}
+                                        <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                                            {{ product.category?.name }} · {{ product.location?.name }}
                                         </p>
                                     </div>
-                                    <div class="text-right ml-4">
-                                        <p class="text-sm font-semibold text-red-400">
+                                    <div class="text-right ml-3">
+                                        <p class="text-sm font-semibold text-red-600 dark:text-red-400">
                                             {{ t('dashboard.inStock', { count: product.stock }) }}
                                         </p>
-                                        <p class="text-xs text-gray-600 dark:text-gray-400">
+                                        <p class="text-[11px] text-gray-400 dark:text-gray-500">
                                             {{ t('dashboard.reorderAt', { count: product.min_stock }) }}
                                         </p>
                                     </div>
@@ -358,52 +314,54 @@ const formatCompactCurrency = (value) => {
                     </div>
 
                     <!-- Recent Products -->
-                    <div class="bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border overflow-hidden shadow-sm dark:shadow-lg sm:rounded-lg hover:border-primary-400/30 transition">
-                        <div class="p-6">
-                            <div class="flex items-center justify-between mb-4">
-                                <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">
-                                    {{ t('dashboard.recentProducts') }}
-                                </h3>
-                                <Link
-                                    :href="route('products.index')"
-                                    class="text-sm text-primary-400 hover:text-primary-300"
-                                >
-                                    {{ t('dashboard.viewAll') }}
-                                </Link>
-                            </div>
+                    <div class="bg-white dark:bg-dark-card rounded-xl border border-gray-100 dark:border-dark-border shadow-card">
+                        <div class="px-5 py-4 border-b border-gray-100 dark:border-dark-border flex items-center justify-between">
+                            <h3 class="text-sm font-semibold text-gray-900 dark:text-gray-100">
+                                {{ t('dashboard.recentProducts') }}
+                            </h3>
+                            <Link
+                                :href="route('products.index')"
+                                class="text-xs font-medium text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300"
+                            >
+                                {{ t('dashboard.viewAll') }}
+                            </Link>
+                        </div>
 
-                            <div v-if="recentProducts.length === 0" class="text-center py-8">
-                                <svg class="w-12 h-12 text-gray-600 dark:text-gray-400 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
-                                </svg>
-                                <p class="text-gray-600 dark:text-gray-400 mb-3">{{ t('dashboard.noProductsYet') }}</p>
+                        <div class="p-5">
+                            <div v-if="recentProducts.length === 0" class="text-center py-6">
+                                <div class="w-12 h-12 bg-gray-100 dark:bg-dark-border rounded-xl flex items-center justify-center mx-auto mb-3">
+                                    <svg class="w-6 h-6 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                                    </svg>
+                                </div>
+                                <p class="text-sm text-gray-500 dark:text-gray-400 mb-3">{{ t('dashboard.noProductsYet') }}</p>
                                 <Link
                                     :href="route('products.create')"
-                                    class="inline-flex items-center px-4 py-2 bg-primary-400 hover:bg-primary-500 text-white text-sm font-semibold rounded-lg transition"
+                                    class="inline-flex items-center px-3.5 py-2 bg-primary-600 hover:bg-primary-700 text-white text-sm font-medium rounded-lg transition"
                                 >
                                     {{ t('dashboard.addFirstProduct') }}
                                 </Link>
                             </div>
 
-                            <div v-else class="space-y-3">
+                            <div v-else class="space-y-2.5">
                                 <div
                                     v-for="product in recentProducts"
                                     :key="product.id"
-                                    class="flex items-center justify-between p-3 bg-gray-100 dark:bg-dark-bg/50 rounded-lg border border-gray-200 dark:border-dark-border hover:border-primary-400/30 transition"
+                                    class="flex items-center justify-between p-3 bg-gray-50 dark:bg-slate-800/50 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-800 transition"
                                 >
-                                    <div class="flex-1">
-                                        <p class="font-medium text-gray-900 dark:text-gray-100">
+                                    <div class="flex-1 min-w-0">
+                                        <p class="text-sm font-semibold text-gray-900 dark:text-gray-100">
                                             {{ product.name }}
                                         </p>
-                                        <p class="text-sm text-gray-600 dark:text-gray-400">
-                                            {{ product.category?.name }} • {{ product.location?.name }}
+                                        <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                                            {{ product.category?.name }} · {{ product.location?.name }}
                                         </p>
                                     </div>
-                                    <div class="text-right ml-4">
-                                        <p class="font-semibold text-gray-900 dark:text-gray-100">
+                                    <div class="text-right ml-3">
+                                        <p class="text-sm font-semibold text-gray-900 dark:text-gray-100">
                                             {{ formatCurrency(product.price) }}
                                         </p>
-                                        <p class="text-sm text-gray-600 dark:text-gray-400">
+                                        <p class="text-[11px] text-gray-500 dark:text-gray-400">
                                             {{ t('dashboard.qty', { count: product.stock }) }}
                                         </p>
                                     </div>
@@ -417,24 +375,26 @@ const formatCompactCurrency = (value) => {
                 <PluginSlot slot="after-content" :components="pluginComponents?.afterContent" />
 
                 <!-- Stock by Category -->
-                <div v-if="stockByCategory.length > 0" class="mt-6 bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border overflow-hidden shadow-sm dark:shadow-lg sm:rounded-lg hover:border-accent-purple/30 transition">
-                    <div class="p-6">
-                        <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
+                <div v-if="stockByCategory.length > 0" class="mb-6 bg-white dark:bg-dark-card rounded-xl border border-gray-100 dark:border-dark-border shadow-card">
+                    <div class="px-5 py-4 border-b border-gray-100 dark:border-dark-border">
+                        <h3 class="text-sm font-semibold text-gray-900 dark:text-gray-100">
                             {{ t('dashboard.stockValueByCategory') }}
                         </h3>
-                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                    </div>
+                    <div class="p-5">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                             <div
                                 v-for="category in stockByCategory"
                                 :key="category.name"
-                                class="p-4 bg-gray-100 dark:bg-dark-bg/50 rounded-lg border border-gray-200 dark:border-dark-border hover:border-accent-purple/30 transition"
+                                class="p-4 bg-gray-50 dark:bg-slate-800/50 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-800 transition"
                             >
-                                <p class="font-medium text-gray-900 dark:text-gray-100 mb-1">
+                                <p class="text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">
                                     {{ category.name }}
                                 </p>
-                                <p class="text-2xl font-semibold text-gray-900 dark:text-gray-100">
+                                <p class="text-xl font-bold text-gray-900 dark:text-white">
                                     {{ formatCompactCurrency(category.value) }}
                                 </p>
-                                <p class="text-sm text-gray-600 dark:text-gray-400">
+                                <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
                                     {{ formatNumber(category.count) }} {{ t('common.products') }}
                                 </p>
                             </div>
@@ -443,68 +403,78 @@ const formatCompactCurrency = (value) => {
                 </div>
 
                 <!-- Quick Actions -->
-                <div class="mt-6 bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border overflow-hidden shadow-sm dark:shadow-lg sm:rounded-lg">
-                    <div class="p-6">
-                        <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
+                <div class="bg-white dark:bg-dark-card rounded-xl border border-gray-100 dark:border-dark-border shadow-card">
+                    <div class="px-5 py-4 border-b border-gray-100 dark:border-dark-border">
+                        <h3 class="text-sm font-semibold text-gray-900 dark:text-gray-100">
                             {{ t('dashboard.quickActions') }}
                         </h3>
-                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    </div>
+                    <div class="p-5">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
                             <Link
                                 :href="route('orders.create')"
-                                class="flex items-center p-4 bg-pink-50 dark:bg-pink-900/20 rounded-lg border border-pink-200 dark:border-pink-800 hover:border-pink-400/30 transition"
+                                class="flex items-center gap-3 p-4 bg-primary-50 dark:bg-primary-500/5 rounded-xl border border-primary-100 dark:border-primary-500/10 hover:border-primary-300 dark:hover:border-primary-500/30 transition group"
                             >
-                                <svg class="w-8 h-8 text-pink-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                                </svg>
-                                <div class="ml-3">
-                                    <p class="font-semibold text-gray-900 dark:text-gray-100">{{ t('dashboard.createOrder') }}</p>
-                                    <p class="text-sm text-gray-600 dark:text-gray-400">{{ t('dashboard.newOrder') }}</p>
+                                <div class="w-10 h-10 bg-primary-100 dark:bg-primary-500/15 rounded-lg flex items-center justify-center group-hover:bg-primary-200 dark:group-hover:bg-primary-500/25 transition">
+                                    <svg class="w-5 h-5 text-primary-600 dark:text-primary-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                                    </svg>
+                                </div>
+                                <div>
+                                    <p class="text-sm font-semibold text-gray-900 dark:text-gray-100">{{ t('dashboard.createOrder') }}</p>
+                                    <p class="text-xs text-gray-500 dark:text-gray-400">{{ t('dashboard.newOrder') }}</p>
                                 </div>
                             </Link>
 
                             <Link
                                 :href="route('products.create')"
-                                class="flex items-center p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800 hover:border-primary-400/30 transition"
+                                class="flex items-center gap-3 p-4 bg-primary-50 dark:bg-primary-500/5 rounded-xl border border-primary-100 dark:border-primary-500/10 hover:border-primary-300 dark:hover:border-primary-500/30 transition group"
                             >
-                                <svg class="w-8 h-8 text-primary-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                                </svg>
-                                <div class="ml-3">
-                                    <p class="font-semibold text-gray-900 dark:text-gray-100">{{ t('dashboard.addProduct') }}</p>
-                                    <p class="text-sm text-gray-600 dark:text-gray-400">{{ t('dashboard.createNewItem') }}</p>
+                                <div class="w-10 h-10 bg-primary-100 dark:bg-primary-500/15 rounded-lg flex items-center justify-center group-hover:bg-primary-200 dark:group-hover:bg-primary-500/25 transition">
+                                    <svg class="w-5 h-5 text-primary-600 dark:text-primary-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                                    </svg>
+                                </div>
+                                <div>
+                                    <p class="text-sm font-semibold text-gray-900 dark:text-gray-100">{{ t('dashboard.addProduct') }}</p>
+                                    <p class="text-xs text-gray-500 dark:text-gray-400">{{ t('dashboard.createNewItem') }}</p>
                                 </div>
                             </Link>
 
                             <Link
                                 :href="route('products.index')"
-                                class="flex items-center p-4 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800 hover:border-green-400/30 transition"
+                                class="flex items-center gap-3 p-4 bg-gray-50 dark:bg-slate-800/30 rounded-xl border border-gray-100 dark:border-dark-border hover:border-gray-300 dark:hover:border-slate-600 transition group"
                             >
-                                <svg class="w-8 h-8 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                                </svg>
-                                <div class="ml-3">
-                                    <p class="font-semibold text-gray-900 dark:text-gray-100">{{ t('dashboard.viewInventory') }}</p>
-                                    <p class="text-sm text-gray-600 dark:text-gray-400">{{ t('dashboard.browseAllItems') }}</p>
+                                <div class="w-10 h-10 bg-gray-100 dark:bg-slate-700/50 rounded-lg flex items-center justify-center group-hover:bg-gray-200 dark:group-hover:bg-slate-700 transition">
+                                    <svg class="w-5 h-5 text-gray-600 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                                    </svg>
+                                </div>
+                                <div>
+                                    <p class="text-sm font-semibold text-gray-900 dark:text-gray-100">{{ t('dashboard.viewInventory') }}</p>
+                                    <p class="text-xs text-gray-500 dark:text-gray-400">{{ t('dashboard.browseAllItems') }}</p>
                                 </div>
                             </Link>
 
                             <Link
                                 :href="route('orders.index')"
-                                class="flex items-center p-4 bg-purple-50 dark:bg-purple-900/20 rounded-lg border border-purple-200 dark:border-purple-800 hover:border-accent-purple/30 transition"
+                                class="flex items-center gap-3 p-4 bg-gray-50 dark:bg-slate-800/30 rounded-xl border border-gray-100 dark:border-dark-border hover:border-gray-300 dark:hover:border-slate-600 transition group"
                             >
-                                <svg class="w-8 h-8 text-accent-purple" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
-                                </svg>
-                                <div class="ml-3">
-                                    <p class="font-semibold text-gray-900 dark:text-gray-100">{{ t('dashboard.viewOrders') }}</p>
-                                    <p class="text-sm text-gray-600 dark:text-gray-400">{{ t('dashboard.allOrders') }}</p>
+                                <div class="w-10 h-10 bg-gray-100 dark:bg-slate-700/50 rounded-lg flex items-center justify-center group-hover:bg-gray-200 dark:group-hover:bg-slate-700 transition">
+                                    <svg class="w-5 h-5 text-gray-600 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+                                    </svg>
+                                </div>
+                                <div>
+                                    <p class="text-sm font-semibold text-gray-900 dark:text-gray-100">{{ t('dashboard.viewOrders') }}</p>
+                                    <p class="text-xs text-gray-500 dark:text-gray-400">{{ t('dashboard.allOrders') }}</p>
                                 </div>
                             </Link>
                         </div>
                     </div>
                 </div>
 
-                <!-- Plugin Slot: Footer (bottom of dashboard) -->
+                <!-- Plugin Slot: Footer -->
                 <PluginSlot slot="footer" :components="pluginComponents?.footer" />
             </div>
         </div>

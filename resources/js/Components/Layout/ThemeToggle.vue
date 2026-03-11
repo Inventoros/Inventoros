@@ -32,7 +32,7 @@ onMounted(() => {
 <template>
     <button
         @click="toggleTheme"
-        class="p-2 text-gray-400 hover:text-primary-400 hover:bg-gray-100 dark:hover:bg-dark-bg/50 rounded-lg transition"
+        class="p-2 text-gray-500 hover:text-primary-600 dark:text-slate-400 dark:hover:text-primary-400 hover:bg-gray-100 dark:hover:bg-dark-card rounded-lg transition"
         :title="isDark ? 'Switch to light mode' : 'Switch to dark mode'"
     >
         <!-- Sun icon (shown when IN dark mode) -->
