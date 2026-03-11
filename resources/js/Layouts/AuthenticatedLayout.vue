@@ -114,13 +114,22 @@ const navItems = {
                ]">
 
             <!-- Logo -->
-            <div class="flex items-center h-16 border-b border-slate-800" :class="sidebarCollapsed ? 'px-3 justify-center' : 'px-5'">
+            <div class="flex items-center justify-between h-16 border-b border-slate-800" :class="sidebarCollapsed ? 'px-3' : 'px-5'">
                 <Link :href="route('dashboard')" class="flex items-center gap-3">
                     <div class="w-8 h-8 bg-primary-600 rounded-lg flex items-center justify-center flex-shrink-0">
                         <ApplicationLogo class="h-5 w-auto fill-current text-white" />
                     </div>
                     <span v-show="!sidebarCollapsed" class="text-lg font-bold text-white tracking-tight">InventorOS</span>
                 </Link>
+                <button
+                    @click="toggleSidebarCollapse"
+                    class="hidden lg:flex items-center justify-center p-1.5 text-slate-500 hover:text-slate-300 hover:bg-slate-800 rounded-lg transition"
+                    :title="sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'"
+                >
+                    <svg class="w-4 h-4 transition-transform duration-200" :class="sidebarCollapsed ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 19l-7-7 7-7m8 14l-7-7 7-7" />
+                    </svg>
+                </button>
             </div>
 
             <!-- Navigation Links -->
@@ -371,19 +380,6 @@ const navItems = {
                     </div>
                 </div>
             </nav>
-
-            <!-- Collapse Toggle -->
-            <div class="hidden lg:block border-t border-slate-800 px-3 py-2">
-                <button
-                    @click="toggleSidebarCollapse"
-                    class="w-full flex items-center justify-center p-2 text-slate-500 hover:text-slate-300 hover:bg-slate-800 rounded-lg transition"
-                    :title="sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'"
-                >
-                    <svg class="w-5 h-5 transition-transform duration-200" :class="sidebarCollapsed ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 19l-7-7 7-7m8 14l-7-7 7-7" />
-                    </svg>
-                </button>
-            </div>
 
             <!-- User Profile at Bottom -->
             <SidebarUserProfile :collapsed="sidebarCollapsed" />
