@@ -4,6 +4,13 @@ import { computed } from 'vue';
 
 import { useI18n } from 'vue-i18n';
 
+const props = defineProps({
+    collapsed: {
+        type: Boolean,
+        default: false,
+    },
+});
+
 const { t } = useI18n();
 const page = usePage();
 
@@ -13,7 +20,20 @@ const userInitial = computed(() => user.value.name.charAt(0).toUpperCase());
 
 <template>
     <div class="border-t border-slate-800 px-3 py-3">
-        <div class="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-slate-800/50">
+        <!-- Collapsed: just avatar -->
+        <div v-if="collapsed" class="flex justify-center">
+            <Link
+                :href="route('logout')"
+                method="post"
+                as="button"
+                class="w-9 h-9 rounded-lg bg-primary-600 flex items-center justify-center hover:bg-red-500 transition"
+                title="Logout"
+            >
+                <span class="text-sm font-bold text-white">{{ userInitial }}</span>
+            </Link>
+        </div>
+        <!-- Expanded: full profile -->
+        <div v-else class="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-slate-800/50">
             <div class="flex-shrink-0">
                 <div class="w-9 h-9 rounded-lg bg-primary-600 flex items-center justify-center">
                     <span class="text-sm font-bold text-white">{{ userInitial }}</span>
