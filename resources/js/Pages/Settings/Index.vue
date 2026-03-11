@@ -2,6 +2,9 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head, useForm } from '@inertiajs/vue3';
 import { ref } from 'vue';
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
 
 const props = defineProps({
     organization: Object,
@@ -88,12 +91,12 @@ const deleteUser = (user) => {
 </script>
 
 <template>
-    <Head title="Settings" />
+    <Head :title="t('settings.title')" />
 
     <AuthenticatedLayout>
         <template #header>
             <h2 class="font-semibold text-xl text-gray-900 dark:text-gray-100 leading-tight">
-                Settings
+                {{ t('settings.title') }}
             </h2>
         </template>
 
@@ -111,7 +114,7 @@ const deleteUser = (user) => {
                                     : 'border-transparent text-gray-400 hover:text-gray-300 hover:border-gray-600'
                             ]"
                         >
-                            Organization
+                            {{ t('nav.organization') }}
                         </button>
                         <button
                             v-if="user.is_admin"
@@ -123,7 +126,7 @@ const deleteUser = (user) => {
                                     : 'border-transparent text-gray-400 hover:text-gray-300 hover:border-gray-600'
                             ]"
                         >
-                            Users
+                            {{ t('nav.users') }}
                         </button>
                     </nav>
                 </div>
@@ -132,10 +135,10 @@ const deleteUser = (user) => {
                 <div v-show="activeTab === 'organization'" class="bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border overflow-hidden shadow-lg sm:rounded-lg">
                     <form @submit.prevent="submitOrganization" class="p-6 space-y-6">
                         <div>
-                            <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Organization Information</h3>
+                            <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">{{ t('settings.organization.orgInfo') }}</h3>
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div>
-                                    <label class="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-2">Organization Name</label>
+                                    <label class="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-2">{{ t('settings.organization.orgName') }}</label>
                                     <input
                                         v-model="orgForm.name"
                                         type="text"
@@ -144,7 +147,7 @@ const deleteUser = (user) => {
                                     />
                                 </div>
                                 <div>
-                                    <label class="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-2">Email</label>
+                                    <label class="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-2">{{ t('common.email') }}</label>
                                     <input
                                         v-model="orgForm.email"
                                         type="email"
@@ -153,7 +156,7 @@ const deleteUser = (user) => {
                                     />
                                 </div>
                                 <div>
-                                    <label class="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-2">Phone</label>
+                                    <label class="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-2">{{ t('common.phone') }}</label>
                                     <input
                                         v-model="orgForm.phone"
                                         type="text"
@@ -162,7 +165,7 @@ const deleteUser = (user) => {
                                     />
                                 </div>
                                 <div>
-                                    <label class="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-2">Address</label>
+                                    <label class="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-2">{{ t('common.address') }}</label>
                                     <input
                                         v-model="orgForm.address"
                                         type="text"
@@ -171,7 +174,7 @@ const deleteUser = (user) => {
                                     />
                                 </div>
                                 <div>
-                                    <label class="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-2">City</label>
+                                    <label class="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-2">{{ t('common.city') }}</label>
                                     <input
                                         v-model="orgForm.city"
                                         type="text"
@@ -180,7 +183,7 @@ const deleteUser = (user) => {
                                     />
                                 </div>
                                 <div>
-                                    <label class="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-2">State/Province</label>
+                                    <label class="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-2">{{ t('common.stateProvince') }}</label>
                                     <input
                                         v-model="orgForm.state"
                                         type="text"
@@ -189,7 +192,7 @@ const deleteUser = (user) => {
                                     />
                                 </div>
                                 <div>
-                                    <label class="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-2">ZIP/Postal Code</label>
+                                    <label class="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-2">{{ t('common.zipPostalCode') }}</label>
                                     <input
                                         v-model="orgForm.zip"
                                         type="text"
@@ -198,7 +201,7 @@ const deleteUser = (user) => {
                                     />
                                 </div>
                                 <div>
-                                    <label class="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-2">Country</label>
+                                    <label class="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-2">{{ t('common.country') }}</label>
                                     <input
                                         v-model="orgForm.country"
                                         type="text"

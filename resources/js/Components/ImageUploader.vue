@@ -1,6 +1,7 @@
 <script setup>
 import { ref, computed } from 'vue';
 
+import { useI18n } from 'vue-i18n';
 const props = defineProps({
     modelValue: {
         type: Array,
@@ -16,6 +17,8 @@ const props = defineProps({
     }
 });
 
+
+const { t } = useI18n();
 const emit = defineEmits(['update:modelValue']);
 
 const images = ref([...props.modelValue]);

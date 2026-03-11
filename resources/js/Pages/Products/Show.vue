@@ -5,8 +5,11 @@ import ActivityTimeline from '@/Components/ActivityTimeline.vue';
 import VariantsTable from '@/Components/VariantsTable.vue';
 import { Head, Link, router } from '@inertiajs/vue3';
 import { ref, onMounted, computed } from 'vue';
+import { useI18n } from 'vue-i18n';
 import axios from 'axios';
 import ImageGallery from '@/Components/ImageGallery.vue';
+
+const { t } = useI18n();
 
 const props = defineProps({
     product: Object,
@@ -26,12 +29,12 @@ const formatCurrency = (value) => {
 
 const getStockStatus = () => {
     if (props.product.stock <= 0) {
-        return { text: 'Out of Stock', class: 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300' };
+        return { text: t('products.show.outOfStock'), class: 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300' };
     }
     if (props.product.stock <= props.product.min_stock) {
-        return { text: 'Low Stock', class: 'bg-amber-100 dark:bg-amber-900/30 text-amber-800 dark:text-amber-300' };
+        return { text: t('products.show.lowStock'), class: 'bg-amber-100 dark:bg-amber-900/30 text-amber-800 dark:text-amber-300' };
     }
-    return { text: 'In Stock', class: 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300' };
+    return { text: t('products.show.inStock'), class: 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300' };
 };
 
 const stockStatus = getStockStatus();
@@ -120,7 +123,7 @@ const totalVariantStock = computed(() => {
         <template #header>
             <div class="flex items-center justify-between">
                 <h2 class="font-semibold text-xl text-gray-900 dark:text-gray-100 leading-tight">
-                    Product Details
+                    {{ t('products.show.title') }}
                 </h2>
                 <div class="flex gap-3">
                     <Link
@@ -130,7 +133,7 @@ const totalVariantStock = computed(() => {
                         <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                         </svg>
-                        Edit
+                        {{ t('common.edit') }}
                     </Link>
                     <Link
                         :href="route('products.index')"
@@ -139,7 +142,7 @@ const totalVariantStock = computed(() => {
                         <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
                         </svg>
-                        Back to Inventory
+                        {{ t('products.show.backToInventory') }}
                     </Link>
                 </div>
             </div>
@@ -174,26 +177,26 @@ const totalVariantStock = computed(() => {
                                 </div>
 
                                 <div v-if="product.description" class="mb-6">
-                                    <h4 class="text-sm font-medium text-gray-500 dark:text-gray-400 mb-2">Description</h4>
+                                    <h4 class="text-sm font-medium text-gray-500 dark:text-gray-400 mb-2">{{ t('common.description') }}</h4>
                                     <p class="text-gray-900 dark:text-gray-100">{{ product.description }}</p>
                                 </div>
 
                                 <div v-if="product.notes" class="mb-6 p-4 bg-yellow-900/20 rounded-lg border border-yellow-800">
-                                    <h4 class="text-sm font-medium text-yellow-300 mb-2">Notes</h4>
+                                    <h4 class="text-sm font-medium text-yellow-300 mb-2">{{ t('common.notes') }}</h4>
                                     <p class="text-sm text-yellow-400">{{ product.notes }}</p>
                                 </div>
 
                                 <div class="grid grid-cols-2 gap-4">
                                     <div>
-                                        <h4 class="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Category</h4>
+                                        <h4 class="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">{{ t('products.category') }}</h4>
                                         <p class="text-gray-900 dark:text-gray-100">
-                                            {{ product.category?.name || 'Uncategorized' }}
+                                            {{ product.category?.name || t('products.show.uncategorized') }}
                                         </p>
                                     </div>
                                     <div>
-                                        <h4 class="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Location</h4>
+                                        <h4 class="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">{{ t('products.location') }}</h4>
                                         <p class="text-gray-900 dark:text-gray-100">
-                                            {{ product.location?.name || 'No location' }}
+                                            {{ product.location?.name || t('products.show.noLocation') }}
                                         </p>
                                     </div>
                                 </div>
@@ -204,11 +207,11 @@ const totalVariantStock = computed(() => {
                         <div class="bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border overflow-hidden shadow-lg sm:rounded-lg">
                             <div class="p-6">
                                 <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
-                                    Pricing Information
+                                    {{ t('products.show.pricingInfo') }}
                                 </h3>
                                 <div class="grid grid-cols-2 gap-4 mb-6">
                                     <div>
-                                        <h4 class="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Selling Price</h4>
+                                        <h4 class="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">{{ t('products.show.sellingPrice') }}</h4>
                                         <p class="text-2xl font-bold text-gray-900 dark:text-gray-100">
                                             {{ formatCurrency(product.price) }}
                                         </p>
@@ -217,12 +220,12 @@ const totalVariantStock = computed(() => {
                                         </p>
                                     </div>
                                     <div v-if="product.purchase_price">
-                                        <h4 class="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Purchase Price</h4>
+                                        <h4 class="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">{{ t('products.show.purchasePrice') }}</h4>
                                         <p class="text-2xl font-bold text-gray-900 dark:text-gray-100">
                                             {{ formatCurrency(product.purchase_price) }}
                                         </p>
                                         <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                                            What you paid
+                                            {{ t('products.show.whatYouPaid') }}
                                         </p>
                                     </div>
                                 </div>
@@ -230,19 +233,19 @@ const totalVariantStock = computed(() => {
                                 <!-- Profit Information -->
                                 <div v-if="product.purchase_price && product.price" class="grid grid-cols-3 gap-4 p-4 bg-green-900/20 rounded-lg border border-green-800">
                                     <div>
-                                        <h4 class="text-xs font-medium text-green-400 mb-1">Profit per Unit</h4>
+                                        <h4 class="text-xs font-medium text-green-400 mb-1">{{ t('products.show.profitPerUnit') }}</h4>
                                         <p class="text-lg font-bold text-green-400">
                                             {{ formatCurrency(product.price - product.purchase_price) }}
                                         </p>
                                     </div>
                                     <div>
-                                        <h4 class="text-xs font-medium text-green-400 mb-1">Profit Margin</h4>
+                                        <h4 class="text-xs font-medium text-green-400 mb-1">{{ t('products.show.profitMargin') }}</h4>
                                         <p class="text-lg font-bold text-green-400">
                                             {{ ((product.price - product.purchase_price) / product.price * 100).toFixed(1) }}%
                                         </p>
                                     </div>
                                     <div>
-                                        <h4 class="text-xs font-medium text-green-400 mb-1">Total Profit in Stock</h4>
+                                        <h4 class="text-xs font-medium text-green-400 mb-1">{{ t('products.show.totalProfitInStock') }}</h4>
                                         <p class="text-lg font-bold text-green-400">
                                             {{ formatCurrency((product.price - product.purchase_price) * product.stock) }}
                                         </p>
@@ -251,7 +254,7 @@ const totalVariantStock = computed(() => {
 
                                 <!-- Additional Currencies -->
                                 <div v-if="product.price_in_currencies && Object.keys(product.price_in_currencies).length > 0" class="mt-6">
-                                    <h4 class="text-sm font-medium text-gray-500 dark:text-gray-400 mb-3">Alternative Currencies</h4>
+                                    <h4 class="text-sm font-medium text-gray-500 dark:text-gray-400 mb-3">{{ t('products.show.altCurrencies') }}</h4>
                                     <div class="grid grid-cols-3 gap-3">
                                         <div
                                             v-for="(price, currency) in product.price_in_currencies"
@@ -273,7 +276,7 @@ const totalVariantStock = computed(() => {
                             <div class="p-6">
                                 <div class="flex items-center justify-between mb-4">
                                     <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">
-                                        Product Variants
+                                        {{ t('products.show.variants') }}
                                     </h3>
                                     <span class="px-2 py-1 text-xs bg-primary-400/20 text-primary-400 rounded-full">
                                         {{ variants.length }} variants
@@ -310,7 +313,7 @@ const totalVariantStock = computed(() => {
                         <div class="bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border overflow-hidden shadow-lg sm:rounded-lg">
                             <div class="p-6">
                                 <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
-                                    Product Images
+                                    {{ t('products.create.productImages') }}
                                 </h3>
                                 <ImageGallery
                                     :images="productImages"
@@ -323,7 +326,7 @@ const totalVariantStock = computed(() => {
                         <div v-if="product.barcode || product.sku" class="bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border overflow-hidden shadow-lg sm:rounded-lg">
                             <div class="p-6">
                                 <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
-                                    Barcode
+                                    {{ t('products.show.barcode') }}
                                 </h3>
 
                                 <div v-if="barcodeLoading" class="flex items-center justify-center py-8">
@@ -349,7 +352,7 @@ const totalVariantStock = computed(() => {
                                             <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
                                             </svg>
-                                            Print
+                                            {{ t('products.printBarcodes') }}
                                         </button>
                                     </div>
 
@@ -358,24 +361,24 @@ const totalVariantStock = computed(() => {
                                             @click="generateRandomBarcode"
                                             class="w-full px-3 py-2 bg-gray-100 dark:bg-dark-bg hover:bg-gray-200 dark:hover:bg-dark-bg/80 text-gray-700 dark:text-gray-300 text-sm rounded-lg font-medium border border-gray-200 dark:border-dark-border transition"
                                         >
-                                            Generate New Random
+                                            {{ t('products.show.generateNewRandom') }}
                                         </button>
                                         <button
                                             @click="generateFromSKU"
                                             class="w-full px-3 py-2 bg-gray-100 dark:bg-dark-bg hover:bg-gray-200 dark:hover:bg-dark-bg/80 text-gray-700 dark:text-gray-300 text-sm rounded-lg font-medium border border-gray-200 dark:border-dark-border transition"
                                         >
-                                            Generate from SKU
+                                            {{ t('products.show.generateFromSku') }}
                                         </button>
                                     </div>
                                 </div>
 
                                 <div v-else class="text-center py-4">
-                                    <p class="text-gray-500 dark:text-gray-400 text-sm mb-3">No barcode available</p>
+                                    <p class="text-gray-500 dark:text-gray-400 text-sm mb-3">{{ t('products.show.noBarcodeAvailable') }}</p>
                                     <button
                                         @click="generateRandomBarcode"
                                         class="px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white text-sm rounded-lg font-medium transition"
                                     >
-                                        Generate Barcode
+                                        {{ t('products.show.generateBarcode') }}
                                     </button>
                                 </div>
                             </div>
@@ -385,31 +388,31 @@ const totalVariantStock = computed(() => {
                         <div class="bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border overflow-hidden shadow-lg sm:rounded-lg">
                             <div class="p-6">
                                 <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
-                                    Stock Information
+                                    {{ t('products.show.stockInfo') }}
                                 </h3>
                                 <div class="space-y-4">
                                     <div class="p-4 bg-primary-900/20 rounded-lg border border-primary-800">
-                                        <p class="text-sm text-gray-500 dark:text-gray-400 mb-1">Current Stock</p>
+                                        <p class="text-sm text-gray-500 dark:text-gray-400 mb-1">{{ t('products.show.currentStock') }}</p>
                                         <p class="text-3xl font-bold text-primary-400">
                                             {{ product.stock }}
                                         </p>
                                     </div>
                                     <div class="grid grid-cols-2 gap-3">
                                         <div class="p-3 bg-gray-50 dark:bg-dark-bg/50 rounded-lg border border-gray-200 dark:border-dark-border">
-                                            <p class="text-xs text-gray-500 dark:text-gray-400 mb-1">Min Stock</p>
+                                            <p class="text-xs text-gray-500 dark:text-gray-400 mb-1">{{ t('products.show.minStock') }}</p>
                                             <p class="text-lg font-semibold text-gray-900 dark:text-gray-100">
                                                 {{ product.min_stock }}
                                             </p>
                                         </div>
                                         <div v-if="product.max_stock" class="p-3 bg-gray-50 dark:bg-dark-bg/50 rounded-lg border border-gray-200 dark:border-dark-border">
-                                            <p class="text-xs text-gray-500 dark:text-gray-400 mb-1">Max Stock</p>
+                                            <p class="text-xs text-gray-500 dark:text-gray-400 mb-1">{{ t('products.show.maxStock') }}</p>
                                             <p class="text-lg font-semibold text-gray-900 dark:text-gray-100">
                                                 {{ product.max_stock }}
                                             </p>
                                         </div>
                                     </div>
                                     <div class="p-3 bg-green-900/20 rounded-lg border border-green-800">
-                                        <p class="text-xs text-gray-500 dark:text-gray-400 mb-1">Total Value</p>
+                                        <p class="text-xs text-gray-500 dark:text-gray-400 mb-1">{{ t('products.show.totalValue') }}</p>
                                         <p class="text-xl font-bold text-green-400">
                                             {{ formatCurrency(product.price * product.stock) }}
                                         </p>
@@ -422,28 +425,28 @@ const totalVariantStock = computed(() => {
                         <div class="bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border overflow-hidden shadow-lg sm:rounded-lg">
                             <div class="p-6">
                                 <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
-                                    Status
+                                    {{ t('common.status') }}
                                 </h3>
                                 <div class="space-y-3">
                                     <div class="flex items-center justify-between">
-                                        <span class="text-sm text-gray-500 dark:text-gray-400">Active</span>
+                                        <span class="text-sm text-gray-500 dark:text-gray-400">{{ t('common.active') }}</span>
                                         <span :class="[
                                             'px-2 py-1 text-xs font-semibold rounded-full',
                                             product.is_active
                                                 ? 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300'
                                                 : 'bg-gray-100 dark:bg-gray-900/30 text-gray-800 dark:text-gray-300'
                                         ]">
-                                            {{ product.is_active ? 'Yes' : 'No' }}
+                                            {{ product.is_active ? t('common.yes') : t('common.no') }}
                                         </span>
                                     </div>
                                     <div class="pt-3 border-t border-gray-200 dark:border-dark-border">
-                                        <p class="text-xs text-gray-500 dark:text-gray-400 mb-1">Created</p>
+                                        <p class="text-xs text-gray-500 dark:text-gray-400 mb-1">{{ t('common.createdAt') }}</p>
                                         <p class="text-sm text-gray-900 dark:text-gray-100">
                                             {{ new Date(product.created_at).toLocaleString() }}
                                         </p>
                                     </div>
                                     <div>
-                                        <p class="text-xs text-gray-500 dark:text-gray-400 mb-1">Last Updated</p>
+                                        <p class="text-xs text-gray-500 dark:text-gray-400 mb-1">{{ t('common.updatedAt') }}</p>
                                         <p class="text-sm text-gray-900 dark:text-gray-100">
                                             {{ new Date(product.updated_at).toLocaleString() }}
                                         </p>
@@ -458,7 +461,7 @@ const totalVariantStock = computed(() => {
                 <div class="mt-6 bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border overflow-hidden shadow-lg sm:rounded-lg">
                     <div class="p-6">
                         <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
-                            Activity History
+                            {{ t('products.show.activityHistory') }}
                         </h3>
                         <ActivityTimeline :activities="activities || []" />
                     </div>

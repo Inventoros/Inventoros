@@ -2,6 +2,9 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import PluginSlot from '@/Components/PluginSlot.vue';
 import { Head, Link, router } from '@inertiajs/vue3';
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
 
 const props = defineProps({
     supplier: Object,
@@ -9,7 +12,7 @@ const props = defineProps({
 });
 
 const deleteSupplier = () => {
-    if (confirm(`Are you sure you want to delete "${props.supplier.name}"?`)) {
+    if (confirm(t('products.confirmDelete', { name: props.supplier.name }))) {
         router.delete(route('suppliers.destroy', props.supplier.id));
     }
 };

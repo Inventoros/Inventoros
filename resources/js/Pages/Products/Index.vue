@@ -4,6 +4,9 @@ import PluginSlot from '@/Components/PluginSlot.vue';
 import BarcodeScannerModal from '@/Components/BarcodeScannerModal.vue';
 import { Head, Link, router } from '@inertiajs/vue3';
 import { ref, computed, onMounted, onUnmounted } from 'vue';
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
 
 const props = defineProps({
     products: Object,
@@ -129,13 +132,13 @@ const isLowStock = (product) => {
 </script>
 
 <template>
-    <Head title="Inventory" />
+    <Head :title="t('products.title')" />
 
     <AuthenticatedLayout>
         <template #header>
             <div class="flex items-center justify-between">
                 <h2 class="font-semibold text-xl text-gray-900 dark:text-gray-100 leading-tight">
-                    Inventory
+                    {{ t('products.title') }}
                 </h2>
                 <Link
                     :href="route('products.create')"
@@ -144,7 +147,7 @@ const isLowStock = (product) => {
                     <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                     </svg>
-                    Add Product
+                    {{ t('products.addProduct') }}
                 </Link>
             </div>
         </template>
@@ -162,13 +165,13 @@ const isLowStock = (product) => {
                                 <!-- Search -->
                                 <div class="md:col-span-2">
                                     <label for="search" class="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-1">
-                                        Search Products
+                                        {{ t('products.searchProducts') }}
                                     </label>
                                     <input
                                         id="search"
                                         v-model="search"
                                         type="text"
-                                        placeholder="Search by name, SKU, or barcode..."
+                                        :placeholder="t('products.searchPlaceholder')"
                                         class="block w-full rounded-md bg-gray-50 dark:bg-dark-bg border-gray-200 dark:border-dark-border text-gray-900 dark:text-gray-100 placeholder-gray-500 shadow-sm focus:border-primary-400 focus:ring-primary-400"
                                     />
                                 </div>
@@ -176,14 +179,14 @@ const isLowStock = (product) => {
                                 <!-- Category Filter -->
                                 <div>
                                     <label for="category" class="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-1">
-                                        Category
+                                        {{ t('products.category') }}
                                     </label>
                                     <select
                                         id="category"
                                         v-model="category"
                                         class="block w-full rounded-md bg-gray-50 dark:bg-dark-bg border-gray-200 dark:border-dark-border text-gray-900 dark:text-gray-100 placeholder-gray-500 shadow-sm focus:border-primary-400 focus:ring-primary-400"
                                     >
-                                        <option value="">All Categories</option>
+                                        <option value="">{{ t('products.allCategories') }}</option>
                                         <option v-for="cat in categories" :key="cat.id" :value="cat.id">
                                             {{ cat.name }}
                                         </option>
@@ -193,14 +196,14 @@ const isLowStock = (product) => {
                                 <!-- Location Filter -->
                                 <div>
                                     <label for="location" class="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-1">
-                                        Location
+                                        {{ t('products.location') }}
                                     </label>
                                     <select
                                         id="location"
                                         v-model="location"
                                         class="block w-full rounded-md bg-gray-50 dark:bg-dark-bg border-gray-200 dark:border-dark-border text-gray-900 dark:text-gray-100 placeholder-gray-500 shadow-sm focus:border-primary-400 focus:ring-primary-400"
                                     >
-                                        <option value="">All Locations</option>
+                                        <option value="">{{ t('products.allLocations') }}</option>
                                         <option v-for="loc in locations" :key="loc.id" :value="loc.id">
                                             {{ loc.name }}
                                         </option>
@@ -217,14 +220,14 @@ const isLowStock = (product) => {
                                     <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                                     </svg>
-                                    Search
+                                    {{ t('common.search') }}
                                 </button>
                                 <button
                                     type="button"
                                     @click="clearFilters"
                                     class="inline-flex items-center px-4 py-2 bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-border rounded-md font-semibold text-xs text-gray-600 dark:text-gray-300 uppercase tracking-widest hover:bg-gray-100 dark:hover:bg-dark-bg/50"
                                 >
-                                    Clear Filters
+                                    {{ t('common.clearFilters') }}
                                 </button>
                             </div>
                         </form>
@@ -244,7 +247,7 @@ const isLowStock = (product) => {
                             @click="selectedProducts = []; selectAll = false"
                             class="text-xs text-gray-400 hover:text-gray-200"
                         >
-                            Clear selection
+                            {{ t('common.clearSelection') }}
                         </button>
                     </div>
                     <button
@@ -254,7 +257,7 @@ const isLowStock = (product) => {
                         <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
                         </svg>
-                        Print Barcodes
+                        {{ t('products.printBarcodes') }}
                     </button>
                 </div>
 
@@ -273,25 +276,25 @@ const isLowStock = (product) => {
                                         />
                                     </th>
                                     <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                                        Product
+                                        {{ t('products.productCol') }}
                                     </th>
                                     <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                                        SKU / Barcode
+                                        {{ t('products.skuBarcode') }}
                                     </th>
                                     <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                                        Category
+                                        {{ t('products.category') }}
                                     </th>
                                     <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                                        Location
+                                        {{ t('products.location') }}
                                     </th>
                                     <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                                        Stock
+                                        {{ t('products.stock') }}
                                     </th>
                                     <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                                        Price
+                                        {{ t('common.price') }}
                                     </th>
                                     <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                                        Actions
+                                        {{ t('common.actions') }}
                                     </th>
                                 </tr>
                             </thead>
@@ -301,7 +304,7 @@ const isLowStock = (product) => {
                                         <svg class="w-12 h-12 text-gray-500 dark:text-gray-400 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
                                         </svg>
-                                        <p class="text-gray-500 dark:text-gray-400 mb-3">No products found</p>
+                                        <p class="text-gray-500 dark:text-gray-400 mb-3">{{ t('products.noProductsFound') }}</p>
                                         <Link
                                             :href="route('products.create')"
                                             class="inline-flex items-center px-4 py-2 bg-primary-400 text-white text-sm font-semibold rounded-lg hover:bg-primary-500 transition"
@@ -309,7 +312,7 @@ const isLowStock = (product) => {
                                             <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                                             </svg>
-                                            Add Your First Product
+                                            {{ t('products.addFirstProduct') }}
                                         </Link>
                                     </td>
                                 </tr>
@@ -341,12 +344,12 @@ const isLowStock = (product) => {
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap">
                                         <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-300">
-                                            {{ product.category?.name || 'N/A' }}
+                                            {{ product.category?.name || t('common.na') }}
                                         </span>
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap">
                                         <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-orange-100 dark:bg-orange-900/30 text-orange-800 dark:text-orange-300">
-                                            {{ product.location?.name || 'N/A' }}
+                                            {{ product.location?.name || t('common.na') }}
                                         </span>
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap">
@@ -433,26 +436,26 @@ const isLowStock = (product) => {
                                     :href="products.prev_page_url"
                                     class="relative inline-flex items-center px-4 py-2 border border-primary-300 dark:border-dark-border text-sm font-semibold rounded-md text-primary-600 dark:text-gray-300 bg-white dark:bg-dark-card hover:bg-primary-50 dark:hover:bg-dark-bg/50 transition"
                                 >
-                                    Previous
+                                    {{ t('common.previous') }}
                                 </Link>
                                 <Link
                                     v-if="products.next_page_url"
                                     :href="products.next_page_url"
                                     class="ml-3 relative inline-flex items-center px-4 py-2 border border-primary-300 dark:border-dark-border text-sm font-semibold rounded-md text-primary-600 dark:text-gray-300 bg-white dark:bg-dark-card hover:bg-primary-50 dark:hover:bg-dark-bg/50 transition"
                                 >
-                                    Next
+                                    {{ t('common.next') }}
                                 </Link>
                             </div>
                             <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
                                 <div>
                                     <p class="text-sm text-gray-600 dark:text-gray-300">
-                                        Showing
+                                        {{ t('common.showing') }}
                                         <span class="font-medium">{{ products.from }}</span>
-                                        to
+                                        {{ t('common.to') }}
                                         <span class="font-medium">{{ products.to }}</span>
-                                        of
+                                        {{ t('common.of') }}
                                         <span class="font-medium">{{ products.total }}</span>
-                                        results
+                                        {{ t('common.results') }}
                                     </p>
                                 </div>
                                 <div>
@@ -495,7 +498,7 @@ const isLowStock = (product) => {
             v-if="$page.props.auth.permissions.includes('products.view')"
             @click="openScanner"
             class="fixed bottom-6 right-6 w-14 h-14 bg-primary-400 hover:bg-primary-500 text-white rounded-full shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-110 flex items-center justify-center z-40"
-            title="Scan Barcode (Ctrl+B)"
+            :title="t('products.scanBarcode')"
         >
             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" />

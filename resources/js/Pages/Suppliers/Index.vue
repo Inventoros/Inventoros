@@ -3,6 +3,9 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import PluginSlot from '@/Components/PluginSlot.vue';
 import { Head, Link, router } from '@inertiajs/vue3';
 import { ref } from 'vue';
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
 
 const props = defineProps({
     suppliers: Object,
@@ -27,20 +30,20 @@ const clearFilters = () => {
 };
 
 const deleteSupplier = (supplier) => {
-    if (confirm(`Are you sure you want to delete "${supplier.name}"?`)) {
+    if (confirm(t('products.confirmDelete', { name: supplier.name }))) {
         router.delete(route('suppliers.destroy', supplier.id));
     }
 };
 </script>
 
 <template>
-    <Head title="Suppliers" />
+    <Head :title="t('suppliers.title')" />
 
     <AuthenticatedLayout>
         <template #header>
             <div class="flex items-center justify-between">
                 <h2 class="font-semibold text-xl text-gray-900 dark:text-gray-100 leading-tight">
-                    Suppliers
+                    {{ t('suppliers.title') }}
                 </h2>
                 <Link
                     :href="route('suppliers.create')"
@@ -49,7 +52,7 @@ const deleteSupplier = (supplier) => {
                     <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                     </svg>
-                    Add Supplier
+                    {{ t('suppliers.addSupplier') }}
                 </Link>
             </div>
         </template>
@@ -66,13 +69,13 @@ const deleteSupplier = (supplier) => {
                             <div class="flex gap-4">
                                 <div class="flex-1">
                                     <label for="search" class="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-1">
-                                        Search Suppliers
+                                        {{ t('common.search') }} {{ t('suppliers.title') }}
                                     </label>
                                     <input
                                         id="search"
                                         v-model="search"
                                         type="text"
-                                        placeholder="Search by name, code, email, or contact..."
+                                        :placeholder="t('suppliers.searchPlaceholder')"
                                         class="block w-full rounded-md bg-gray-50 dark:bg-dark-bg border-gray-200 dark:border-dark-border text-gray-900 dark:text-gray-100 placeholder-gray-500 shadow-sm focus:border-primary-400 focus:ring-primary-400"
                                     />
                                 </div>
@@ -86,14 +89,14 @@ const deleteSupplier = (supplier) => {
                                     <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                                     </svg>
-                                    Search
+                                    {{ t('common.search') }}
                                 </button>
                                 <button
                                     type="button"
                                     @click="clearFilters"
                                     class="inline-flex items-center px-4 py-2 bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-border rounded-md font-semibold text-xs text-gray-600 dark:text-gray-300 uppercase tracking-widest hover:bg-gray-100 dark:hover:bg-dark-bg/50"
                                 >
-                                    Clear
+                                    {{ t('common.clear') }}
                                 </button>
                             </div>
                         </form>
@@ -109,13 +112,13 @@ const deleteSupplier = (supplier) => {
                         <table class="min-w-full divide-y divide-gray-200 dark:divide-dark-border">
                             <thead class="bg-gray-50 dark:bg-dark-bg">
                                 <tr>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Name</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Contact</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Email</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Phone</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Products</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Status</th>
-                                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Actions</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">{{ t('common.name') }}</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">{{ t('suppliers.contact') }}</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">{{ t('common.email') }}</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">{{ t('common.phone') }}</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">{{ t('common.products') }}</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">{{ t('common.status') }}</th>
+                                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">{{ t('common.actions') }}</th>
                                 </tr>
                             </thead>
                             <tbody class="bg-white dark:bg-dark-card divide-y divide-gray-200 dark:divide-dark-border">
@@ -156,7 +159,7 @@ const deleteSupplier = (supplier) => {
                                                     : 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400'
                                             ]"
                                         >
-                                            {{ supplier.is_active ? 'Active' : 'Inactive' }}
+                                            {{ supplier.is_active ? t('common.active') : t('common.inactive') }}
                                         </span>
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
@@ -164,7 +167,7 @@ const deleteSupplier = (supplier) => {
                                             <Link
                                                 :href="route('suppliers.show', supplier.id)"
                                                 class="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
-                                                title="View"
+                                                :title="t('common.view')"
                                             >
                                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -174,7 +177,7 @@ const deleteSupplier = (supplier) => {
                                             <Link
                                                 :href="route('suppliers.edit', supplier.id)"
                                                 class="text-primary-400 hover:text-primary-500"
-                                                title="Edit"
+                                                :title="t('common.edit')"
                                             >
                                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
@@ -183,7 +186,7 @@ const deleteSupplier = (supplier) => {
                                             <button
                                                 @click="deleteSupplier(supplier)"
                                                 class="text-red-400 hover:text-red-500"
-                                                title="Delete"
+                                                :title="t('common.delete')"
                                             >
                                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -197,13 +200,13 @@ const deleteSupplier = (supplier) => {
                                         <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
                                         </svg>
-                                        <p class="mt-4 text-lg font-medium">No suppliers found</p>
-                                        <p class="mt-1">Get started by adding a new supplier.</p>
+                                        <p class="mt-4 text-lg font-medium">{{ t('suppliers.noSuppliersFound') }}</p>
+                                        <p class="mt-1">{{ t('suppliers.getStarted') }}</p>
                                         <Link
                                             :href="route('suppliers.create')"
                                             class="mt-4 inline-flex items-center px-4 py-2 bg-primary-400 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-primary-500"
                                         >
-                                            Add Supplier
+                                            {{ t('suppliers.addSupplier') }}
                                         </Link>
                                     </td>
                                 </tr>
@@ -215,7 +218,7 @@ const deleteSupplier = (supplier) => {
                     <div v-if="suppliers.data.length > 0" class="bg-white dark:bg-dark-card px-4 py-3 border-t border-gray-200 dark:border-dark-border sm:px-6">
                         <div class="flex items-center justify-between">
                             <div class="text-sm text-gray-500 dark:text-gray-400">
-                                Showing {{ suppliers.from }} to {{ suppliers.to }} of {{ suppliers.total }} results
+                                {{ t('common.showingResults', { from: suppliers.from, to: suppliers.to, total: suppliers.total }) }}
                             </div>
                             <div class="flex gap-2">
                                 <Link

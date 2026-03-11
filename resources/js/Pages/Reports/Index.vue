@@ -1,16 +1,19 @@
 <script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head, Link } from '@inertiajs/vue3';
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
 </script>
 
 <template>
-    <Head title="Reports & Analytics" />
+    <Head :title="t('reports.title')" />
 
     <AuthenticatedLayout>
         <template #header>
             <div>
-                <h2 class="font-semibold text-2xl text-gray-900 dark:text-gray-100">Reports & Analytics</h2>
-                <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Business intelligence and insights</p>
+                <h2 class="font-semibold text-2xl text-gray-900 dark:text-gray-100">{{ t('reports.title') }}</h2>
+                <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">{{ t('reports.subtitle') }}</p>
             </div>
         </template>
 
@@ -30,10 +33,10 @@ import { Head, Link } from '@inertiajs/vue3';
                             </div>
                             <div class="flex-1 min-w-0">
                                 <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 group-hover:text-primary-400 transition">
-                                    Inventory Valuation
+                                    {{ t('reports.inventoryValuation.title') }}
                                 </h3>
                                 <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                                    Total stock value, costs, and profit potential
+                                    {{ t('reports.inventoryValuation.description') }}
                                 </p>
                             </div>
                             <svg class="w-5 h-5 text-gray-400 group-hover:text-primary-400 transition" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -55,10 +58,10 @@ import { Head, Link } from '@inertiajs/vue3';
                             </div>
                             <div class="flex-1 min-w-0">
                                 <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 group-hover:text-primary-400 transition">
-                                    Stock Movement
+                                    {{ t('reports.stockMovement.title') }}
                                 </h3>
                                 <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                                    Track all stock adjustments and changes
+                                    {{ t('reports.stockMovement.description') }}
                                 </p>
                             </div>
                             <svg class="w-5 h-5 text-gray-400 group-hover:text-primary-400 transition" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -80,10 +83,10 @@ import { Head, Link } from '@inertiajs/vue3';
                             </div>
                             <div class="flex-1 min-w-0">
                                 <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 group-hover:text-primary-400 transition">
-                                    Sales Analysis
+                                    {{ t('reports.salesAnalysis.title') }}
                                 </h3>
                                 <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                                    Revenue, trends, and top selling products
+                                    {{ t('reports.salesAnalysis.description') }}
                                 </p>
                             </div>
                             <svg class="w-5 h-5 text-gray-400 group-hover:text-primary-400 transition" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -105,10 +108,10 @@ import { Head, Link } from '@inertiajs/vue3';
                             </div>
                             <div class="flex-1 min-w-0">
                                 <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 group-hover:text-primary-400 transition">
-                                    Low Stock Alert
+                                    {{ t('reports.lowStock.title') }}
                                 </h3>
                                 <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                                    Products running low or out of stock
+                                    {{ t('reports.lowStock.description') }}
                                 </p>
                             </div>
                             <svg class="w-5 h-5 text-gray-400 group-hover:text-primary-400 transition" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -130,10 +133,10 @@ import { Head, Link } from '@inertiajs/vue3';
                             </div>
                             <div class="flex-1 min-w-0">
                                 <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 group-hover:text-primary-400 transition">
-                                    Category Performance
+                                    {{ t('reports.categoryPerformance.title') }}
                                 </h3>
                                 <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                                    Analysis by product category
+                                    {{ t('reports.categoryPerformance.description') }}
                                 </p>
                             </div>
                             <svg class="w-5 h-5 text-gray-400 group-hover:text-primary-400 transition" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -152,10 +155,10 @@ import { Head, Link } from '@inertiajs/vue3';
                             </div>
                             <div class="flex-1 min-w-0">
                                 <h3 class="text-lg font-semibold text-gray-500 dark:text-gray-400">
-                                    More Reports
+                                    {{ t('reports.moreReports') }}
                                 </h3>
                                 <p class="text-sm text-gray-400 dark:text-gray-500 mt-1">
-                                    Additional reports coming soon
+                                    {{ t('reports.moreReportsDesc') }}
                                 </p>
                             </div>
                         </div>

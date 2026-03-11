@@ -7,6 +7,9 @@ import TextInput from '@/Components/TextInput.vue';
 import InputLabel from '@/Components/InputLabel.vue';
 import InputError from '@/Components/InputError.vue';
 import Checkbox from '@/Components/Checkbox.vue';
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
 
 const props = defineProps({
     user: Object,
@@ -73,12 +76,12 @@ const submitPreferences = () => {
 </script>
 
 <template>
-    <Head title="Account Settings" />
+    <Head :title="t('settings.account.title')" />
 
     <AuthenticatedLayout>
         <template #header>
             <h2 class="font-semibold text-xl text-gray-900 dark:text-gray-100 leading-tight">
-                Account Settings
+                {{ t('settings.account.title') }}
             </h2>
         </template>
 
@@ -96,7 +99,7 @@ const submitPreferences = () => {
                                     : 'border-transparent text-gray-400 hover:text-gray-300 hover:border-gray-600'
                             ]"
                         >
-                            Profile
+                            {{ t('settings.account.profile') }}
                         </button>
                         <button
                             @click="activeTab = 'password'"
@@ -107,7 +110,7 @@ const submitPreferences = () => {
                                     : 'border-transparent text-gray-400 hover:text-gray-300 hover:border-gray-600'
                             ]"
                         >
-                            Password
+                            {{ t('settings.account.password') }}
                         </button>
                         <button
                             @click="activeTab = 'notifications'"
@@ -118,7 +121,7 @@ const submitPreferences = () => {
                                     : 'border-transparent text-gray-400 hover:text-gray-300 hover:border-gray-600'
                             ]"
                         >
-                            Notifications
+                            {{ t('settings.account.notifications') }}
                         </button>
                         <button
                             @click="activeTab = 'preferences'"
@@ -129,7 +132,7 @@ const submitPreferences = () => {
                                     : 'border-transparent text-gray-400 hover:text-gray-300 hover:border-gray-600'
                             ]"
                         >
-                            Preferences
+                            {{ t('settings.account.preferences') }}
                         </button>
                     </nav>
                 </div>
@@ -138,10 +141,10 @@ const submitPreferences = () => {
                 <div v-show="activeTab === 'profile'" class="bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border overflow-hidden shadow-lg sm:rounded-lg">
                     <form @submit.prevent="submitProfile" class="p-6 space-y-6">
                         <div>
-                            <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Profile Information</h3>
+                            <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">{{ t('settings.account.profileInfo') }}</h3>
                             <div class="grid grid-cols-1 gap-6">
                                 <div>
-                                    <InputLabel for="name" value="Name" />
+                                    <InputLabel for="name" :value="t('common.name')" />
                                     <TextInput
                                         id="name"
                                         v-model="profileForm.name"
@@ -152,7 +155,7 @@ const submitPreferences = () => {
                                     <InputError class="mt-2" :message="profileForm.errors.name" />
                                 </div>
                                 <div>
-                                    <InputLabel for="email" value="Email" />
+                                    <InputLabel for="email" :value="t('common.email')" />
                                     <TextInput
                                         id="email"
                                         v-model="profileForm.email"
@@ -167,7 +170,7 @@ const submitPreferences = () => {
 
                         <div class="flex justify-end">
                             <PrimaryButton :disabled="profileForm.processing">
-                                Save Changes
+                                {{ t('common.saveChanges') }}
                             </PrimaryButton>
                         </div>
                     </form>
@@ -177,10 +180,10 @@ const submitPreferences = () => {
                 <div v-show="activeTab === 'password'" class="bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border overflow-hidden shadow-lg sm:rounded-lg">
                     <form @submit.prevent="submitPassword" class="p-6 space-y-6">
                         <div>
-                            <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Change Password</h3>
+                            <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">{{ t('settings.account.changePassword') }}</h3>
                             <div class="grid grid-cols-1 gap-6">
                                 <div>
-                                    <InputLabel for="current_password" value="Current Password" />
+                                    <InputLabel for="current_password" :value="t('settings.account.currentPassword')" />
                                     <TextInput
                                         id="current_password"
                                         v-model="passwordForm.current_password"
@@ -192,7 +195,7 @@ const submitPreferences = () => {
                                     <InputError class="mt-2" :message="passwordForm.errors.current_password" />
                                 </div>
                                 <div>
-                                    <InputLabel for="password" value="New Password" />
+                                    <InputLabel for="password" :value="t('settings.account.newPassword')" />
                                     <TextInput
                                         id="password"
                                         v-model="passwordForm.password"
@@ -204,7 +207,7 @@ const submitPreferences = () => {
                                     <InputError class="mt-2" :message="passwordForm.errors.password" />
                                 </div>
                                 <div>
-                                    <InputLabel for="password_confirmation" value="Confirm Password" />
+                                    <InputLabel for="password_confirmation" :value="t('settings.account.confirmPassword')" />
                                     <TextInput
                                         id="password_confirmation"
                                         v-model="passwordForm.password_confirmation"
@@ -220,7 +223,7 @@ const submitPreferences = () => {
 
                         <div class="flex justify-end">
                             <PrimaryButton :disabled="passwordForm.processing">
-                                Update Password
+                                {{ t('settings.account.updatePassword') }}
                             </PrimaryButton>
                         </div>
                     </form>
@@ -230,7 +233,7 @@ const submitPreferences = () => {
                 <div v-show="activeTab === 'notifications'" class="bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border overflow-hidden shadow-lg sm:rounded-lg">
                     <form @submit.prevent="submitNotifications" class="p-6 space-y-6">
                         <div>
-                            <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Notification Preferences</h3>
+                            <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">{{ t('settings.account.notificationPreferences') }}</h3>
                             <div class="space-y-4">
                                 <div class="flex items-start">
                                     <div class="flex items-center h-5">
@@ -241,9 +244,9 @@ const submitPreferences = () => {
                                     </div>
                                     <div class="ml-3 text-sm">
                                         <label for="email_notifications" class="font-medium text-gray-700 dark:text-gray-300">
-                                            Email Notifications
+                                            {{ t('settings.account.emailNotifications') }}
                                         </label>
-                                        <p class="text-gray-500 dark:text-gray-400">Receive email notifications for important updates</p>
+                                        <p class="text-gray-500 dark:text-gray-400">{{ t('settings.account.emailNotificationsDesc') }}</p>
                                     </div>
                                 </div>
 
@@ -256,9 +259,9 @@ const submitPreferences = () => {
                                     </div>
                                     <div class="ml-3 text-sm">
                                         <label for="low_stock_alerts" class="font-medium text-gray-700 dark:text-gray-300">
-                                            Low Stock Alerts
+                                            {{ t('settings.account.lowStockAlerts') }}
                                         </label>
-                                        <p class="text-gray-500 dark:text-gray-400">Get notified when products are low in stock</p>
+                                        <p class="text-gray-500 dark:text-gray-400">{{ t('settings.account.lowStockAlertsDesc') }}</p>
                                     </div>
                                 </div>
 
@@ -271,9 +274,9 @@ const submitPreferences = () => {
                                     </div>
                                     <div class="ml-3 text-sm">
                                         <label for="order_notifications" class="font-medium text-gray-700 dark:text-gray-300">
-                                            Order Notifications
+                                            {{ t('settings.account.orderNotifications') }}
                                         </label>
-                                        <p class="text-gray-500 dark:text-gray-400">Receive notifications for new and updated orders</p>
+                                        <p class="text-gray-500 dark:text-gray-400">{{ t('settings.account.orderNotificationsDesc') }}</p>
                                     </div>
                                 </div>
 
@@ -286,9 +289,9 @@ const submitPreferences = () => {
                                     </div>
                                     <div class="ml-3 text-sm">
                                         <label for="system_notifications" class="font-medium text-gray-700 dark:text-gray-300">
-                                            System Notifications
+                                            {{ t('settings.account.systemNotifications') }}
                                         </label>
-                                        <p class="text-gray-500 dark:text-gray-400">Get notified about system updates and maintenance</p>
+                                        <p class="text-gray-500 dark:text-gray-400">{{ t('settings.account.systemNotificationsDesc') }}</p>
                                     </div>
                                 </div>
                             </div>
@@ -296,7 +299,7 @@ const submitPreferences = () => {
 
                         <div class="flex justify-end">
                             <PrimaryButton :disabled="notificationForm.processing">
-                                Save Preferences
+                                {{ t('settings.account.savePreferences') }}
                             </PrimaryButton>
                         </div>
                     </form>
@@ -306,23 +309,23 @@ const submitPreferences = () => {
                 <div v-show="activeTab === 'preferences'" class="bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border overflow-hidden shadow-lg sm:rounded-lg">
                     <form @submit.prevent="submitPreferences" class="p-6 space-y-6">
                         <div>
-                            <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">User Preferences</h3>
+                            <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">{{ t('settings.account.userPreferences') }}</h3>
                             <div class="grid grid-cols-1 gap-6">
                                 <div>
-                                    <InputLabel for="theme" value="Theme" />
+                                    <InputLabel for="theme" :value="t('settings.account.theme')" />
                                     <select
                                         id="theme"
                                         v-model="preferencesForm.theme"
                                         class="mt-1 block w-full bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-border text-gray-900 dark:text-gray-100 rounded-md px-4 py-2 focus:outline-none focus:border-primary-400"
                                     >
-                                        <option value="light">Light</option>
-                                        <option value="dark">Dark</option>
-                                        <option value="auto">Auto</option>
+                                        <option value="light">{{ t('settings.account.light') }}</option>
+                                        <option value="dark">{{ t('settings.account.dark') }}</option>
+                                        <option value="auto">{{ t('settings.account.auto') }}</option>
                                     </select>
                                     <InputError class="mt-2" :message="preferencesForm.errors.theme" />
                                 </div>
                                 <div>
-                                    <InputLabel for="language" value="Language" />
+                                    <InputLabel for="language" :value="t('settings.account.language')" />
                                     <select
                                         id="language"
                                         v-model="preferencesForm.language"
@@ -335,7 +338,7 @@ const submitPreferences = () => {
                                     <InputError class="mt-2" :message="preferencesForm.errors.language" />
                                 </div>
                                 <div>
-                                    <InputLabel for="items_per_page" value="Items Per Page" />
+                                    <InputLabel for="items_per_page" :value="t('settings.account.itemsPerPage')" />
                                     <TextInput
                                         id="items_per_page"
                                         v-model="preferencesForm.items_per_page"
@@ -351,7 +354,7 @@ const submitPreferences = () => {
 
                         <div class="flex justify-end">
                             <PrimaryButton :disabled="preferencesForm.processing">
-                                Save Preferences
+                                {{ t('settings.account.savePreferences') }}
                             </PrimaryButton>
                         </div>
                     </form>

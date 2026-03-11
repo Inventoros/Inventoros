@@ -1,6 +1,7 @@
 <script setup>
 import { computed } from 'vue';
 
+import { useI18n } from 'vue-i18n';
 const props = defineProps({
     activities: {
         type: Array,
@@ -8,6 +9,8 @@ const props = defineProps({
     }
 });
 
+
+const { t } = useI18n();
 const getActionColor = (action) => {
     const colors = {
         'created': 'bg-green-500',

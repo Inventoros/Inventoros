@@ -3,6 +3,9 @@ import { ref, onMounted } from 'vue';
 import { Link, router } from '@inertiajs/vue3';
 import axios from 'axios';
 
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
 const unreadCount = ref(0);
 const notificationsOpen = ref(false);
 const notifications = ref([]);
@@ -82,12 +85,12 @@ const getTypeIcon = (type) => {
 
 const getTypeColor = (type) => {
     const colors = {
-        'low_stock': 'text-yellow-600 dark:text-yellow-400',
-        'out_of_stock': 'text-red-600 dark:text-red-400',
-        'order_created': 'text-blue-600 dark:text-blue-400',
-        'order_status_updated': 'text-purple-600 dark:text-purple-400',
-        'order_shipped': 'text-indigo-600 dark:text-indigo-400',
-        'order_delivered': 'text-green-600 dark:text-green-400',
+        'low_stock': 'text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-500/10',
+        'out_of_stock': 'text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-500/10',
+        'order_created': 'text-primary-600 dark:text-primary-400 bg-primary-50 dark:bg-primary-500/10',
+        'order_status_updated': 'text-purple-600 dark:text-purple-400 bg-purple-50 dark:bg-purple-500/10',
+        'order_shipped': 'text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-500/10',
+        'order_delivered': 'text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-500/10',
     };
     return colors[type] || colors.order_created;
 };
@@ -116,7 +119,7 @@ defineExpose({ closeDropdown });
     <div class="relative">
         <button
             @click="toggleNotifications"
-            class="relative p-2 text-gray-400 hover:text-primary-400 hover:bg-gray-100 dark:hover:bg-dark-bg rounded-lg transition"
+            class="relative p-2 text-gray-500 hover:text-primary-600 dark:text-slate-400 dark:hover:text-primary-400 hover:bg-gray-100 dark:hover:bg-dark-card rounded-lg transition"
             title="Notifications"
         >
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -124,7 +127,7 @@ defineExpose({ closeDropdown });
             </svg>
             <span
                 v-if="unreadCount > 0"
-                class="absolute top-0 right-0 flex items-center justify-center w-5 h-5 text-[10px] font-bold text-white bg-red-500 rounded-full"
+                class="absolute -top-0.5 -right-0.5 flex items-center justify-center w-5 h-5 text-[10px] font-bold text-white bg-red-500 rounded-full ring-2 ring-white dark:ring-dark-bg"
             >
                 {{ unreadCount > 9 ? '9+' : unreadCount }}
             </span>
@@ -134,12 +137,12 @@ defineExpose({ closeDropdown });
         <div
             v-show="notificationsOpen"
             @click.stop
-            class="absolute right-0 mt-2 w-96 bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border rounded-lg shadow-2xl overflow-hidden z-50"
+            class="absolute right-0 mt-2 w-96 bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border rounded-xl shadow-xl overflow-hidden z-50"
         >
             <!-- Header -->
-            <div class="flex items-center justify-between px-4 py-3 border-b border-gray-200 dark:border-dark-border">
-                <h3 class="text-sm font-semibold text-gray-900 dark:text-gray-100">Notifications</h3>
-                <div class="flex items-center gap-2">
+            <div class="flex items-center justify-between px-4 py-3 border-b border-gray-100 dark:border-dark-border">
+                <h3 class="text-sm font-semibold text-gray-900 dark:text-gray-100">{{ t('nav.notifications') }}</h3>
+                <div class="flex items-center gap-3">
                     <button
                         v-if="unreadCount > 0"
                         @click="markAllAsRead"
@@ -149,7 +152,7 @@ defineExpose({ closeDropdown });
                     </button>
                     <Link
                         :href="route('notifications.index')"
-                        class="text-xs text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 font-medium"
+                        class="text-xs text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 font-medium"
                         @click="notificationsOpen = false"
                     >
                         View all
@@ -160,14 +163,14 @@ defineExpose({ closeDropdown });
             <!-- Notifications List -->
             <div class="max-h-96 overflow-y-auto">
                 <div v-if="loadingNotifications" class="p-8 text-center">
-                    <svg class="animate-spin h-8 w-8 text-primary-500 mx-auto" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <svg class="animate-spin h-6 w-6 text-primary-500 mx-auto" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                         <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                         <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                     </svg>
                 </div>
 
                 <div v-else-if="notifications.length === 0" class="p-8 text-center">
-                    <svg class="w-12 h-12 text-gray-400 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg class="w-10 h-10 text-gray-300 dark:text-gray-600 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
                     <p class="text-sm text-gray-500 dark:text-gray-400">No new notifications</p>
@@ -178,19 +181,19 @@ defineExpose({ closeDropdown });
                     v-for="notification in notifications"
                     :key="notification.id"
                     @click="markAsRead(notification)"
-                    class="w-full flex items-start gap-3 px-4 py-3 hover:bg-gray-50 dark:hover:bg-dark-bg/50 transition border-b border-gray-100 dark:border-dark-border last:border-b-0 text-left"
+                    class="w-full flex items-start gap-3 px-4 py-3 hover:bg-gray-50 dark:hover:bg-slate-800/50 transition border-b border-gray-50 dark:border-dark-border last:border-b-0 text-left"
                 >
-                    <div :class="['flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center', getTypeColor(notification.type)]">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div :class="['flex-shrink-0 w-9 h-9 rounded-lg flex items-center justify-center', getTypeColor(notification.type)]">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" :d="getTypeIcon(notification.type)" />
                         </svg>
                     </div>
                     <div class="flex-1 min-w-0">
                         <p class="text-sm font-medium text-gray-900 dark:text-gray-100">{{ notification.title }}</p>
-                        <p class="text-xs text-gray-600 dark:text-gray-300 mt-0.5 line-clamp-2">{{ notification.message }}</p>
+                        <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5 line-clamp-2">{{ notification.message }}</p>
                         <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">{{ formatDate(notification.created_at) }}</p>
                     </div>
-                    <div class="flex-shrink-0">
+                    <div class="flex-shrink-0 mt-1.5">
                         <div class="w-2 h-2 bg-primary-500 rounded-full"></div>
                     </div>
                 </button>

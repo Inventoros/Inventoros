@@ -3,11 +3,14 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head, Link, router } from '@inertiajs/vue3';
 import { ref, computed } from 'vue';
 
+import { useI18n } from 'vue-i18n';
 const props = defineProps({
     role: Object,
     rolePermissions: Array,
 });
 
+
+const { t } = useI18n();
 const showDeleteModal = ref(false);
 const deleting = ref(false);
 
@@ -88,7 +91,7 @@ const deleteRole = () => {
 
                                 <div v-if="role.description">
                                     <label class="block text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">
-                                        Description
+                                        {{ t('common.description') }}
                                     </label>
                                     <p class="text-gray-900 dark:text-gray-100">{{ role.description }}</p>
                                 </div>
@@ -221,7 +224,7 @@ const deleteRole = () => {
                         <!-- Actions Card -->
                         <div v-if="!role.is_system && role.slug !== 'system-administrator'" class="bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border shadow-sm sm:rounded-lg p-6">
                             <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
-                                Actions
+                                {{ t('common.actions') }}
                             </h3>
 
                             <div class="space-y-3">
@@ -296,7 +299,7 @@ const deleteRole = () => {
                                     @click="showDeleteModal = false"
                                     class="px-4 py-2 bg-gray-200 dark:bg-dark-bg text-gray-700 dark:text-gray-300 font-medium rounded-lg hover:bg-gray-300 dark:hover:bg-dark-bg/70 transition"
                                 >
-                                    Cancel
+                                    {{ t('common.cancel') }}
                                 </button>
                                 <button
                                     @click="deleteRole"

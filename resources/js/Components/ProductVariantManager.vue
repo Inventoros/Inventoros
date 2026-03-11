@@ -1,6 +1,7 @@
 <script setup>
 import { ref, computed, watch } from 'vue';
 
+import { useI18n } from 'vue-i18n';
 const props = defineProps({
     modelValue: {
         type: Object,
@@ -23,6 +24,8 @@ const props = defineProps({
         default: false
     }
 });
+
+const { t } = useI18n();
 
 const emit = defineEmits(['update:modelValue']);
 
@@ -302,7 +305,7 @@ const getEffectivePurchasePrice = (variant) => {
                             @click="showAddOption = false; newOptionName = ''; newOptionValues = ''"
                             class="px-4 py-2 bg-gray-200 dark:bg-dark-card text-gray-700 dark:text-gray-300 rounded-md hover:bg-gray-300 dark:hover:bg-dark-border"
                         >
-                            Cancel
+                            {{ t('common.cancel') }}
                         </button>
                     </div>
                 </div>
@@ -357,7 +360,7 @@ const getEffectivePurchasePrice = (variant) => {
                                 Stock
                             </th>
                             <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
-                                Active
+                                {{ t('common.active') }}
                             </th>
                         </tr>
                     </thead>

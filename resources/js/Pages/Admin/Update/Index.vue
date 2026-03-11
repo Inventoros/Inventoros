@@ -4,6 +4,7 @@ import { Head, router } from '@inertiajs/vue3';
 import { ref, computed } from 'vue';
 import axios from 'axios';
 
+import { useI18n } from 'vue-i18n';
 const props = defineProps({
     currentVersion: String,
     latestRelease: Object,
@@ -12,6 +13,8 @@ const props = defineProps({
     githubRepo: String,
 });
 
+
+const { t } = useI18n();
 const isUpdating = ref(false);
 const isCheckingUpdate = ref(false);
 const isCreatingBackup = ref(false);
@@ -153,12 +156,12 @@ const deleteBackup = async (backupFile) => {
 </script>
 
 <template>
-    <Head title="System Update" />
+    <Head :title="t('admin.update.title')" />
 
     <AuthenticatedLayout>
         <template #header>
             <div class="flex justify-between items-center">
-                <h2 class="font-semibold text-2xl text-gray-900 dark:text-gray-100">System Update</h2>
+                <h2 class="font-semibold text-2xl text-gray-900 dark:text-gray-100">{{ t('admin.systemUpdate.title') }}</h2>
                 <button
                     @click="checkForUpdates"
                     :disabled="isCheckingUpdate"
@@ -304,7 +307,7 @@ const deleteBackup = async (backupFile) => {
                                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Filename</th>
                                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Size</th>
                                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Created</th>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Actions</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">{{ t('common.actions') }}</th>
                                     </tr>
                                 </thead>
                                 <tbody class="divide-y divide-gray-200 dark:divide-dark-border">
@@ -330,7 +333,7 @@ const deleteBackup = async (backupFile) => {
                                                 @click="deleteBackup(backup.filename)"
                                                 class="text-red-500 hover:text-red-600"
                                             >
-                                                Delete
+                                                {{ t('common.delete') }}
                                             </button>
                                         </td>
                                     </tr>

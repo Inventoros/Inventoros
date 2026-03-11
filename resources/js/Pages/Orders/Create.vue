@@ -2,6 +2,9 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head, Link, useForm } from '@inertiajs/vue3';
 import { ref, computed, watch } from 'vue';
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
 
 const props = defineProps({
     products: Array,
@@ -97,13 +100,13 @@ const availableProducts = computed(() => {
 </script>
 
 <template>
-    <Head title="Create Order" />
+    <Head :title="t('orders.create.title')" />
 
     <AuthenticatedLayout>
         <template #header>
             <div class="flex items-center justify-between">
                 <h2 class="font-semibold text-xl text-gray-900 dark:text-gray-100 leading-tight">
-                    Create Order
+                    {{ t('orders.create.title') }}
                 </h2>
                 <Link
                     :href="route('orders.index')"
@@ -112,7 +115,7 @@ const availableProducts = computed(() => {
                     <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
                     </svg>
-                    Back to Orders
+                    {{ t('orders.create.backToOrders') }}
                 </Link>
             </div>
         </template>
@@ -126,13 +129,13 @@ const availableProducts = computed(() => {
                             <!-- Customer Information -->
                             <div class="bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border shadow-sm sm:rounded-lg p-6">
                                 <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
-                                    Customer Information
+                                    {{ t('orders.create.customerInfo') }}
                                 </h3>
 
                                 <div class="space-y-4">
                                     <div>
                                         <label for="customer_name" class="block text-sm font-medium text-gray-600 dark:text-gray-300">
-                                            Customer Name <span class="text-red-500">*</span>
+                                            {{ t('orders.create.customerName') }}
                                         </label>
                                         <input
                                             id="customer_name"
@@ -148,7 +151,7 @@ const availableProducts = computed(() => {
 
                                     <div>
                                         <label for="customer_email" class="block text-sm font-medium text-gray-600 dark:text-gray-300">
-                                            Customer Email
+                                            {{ t('orders.create.customerEmail') }}
                                         </label>
                                         <input
                                             id="customer_email"
@@ -163,7 +166,7 @@ const availableProducts = computed(() => {
 
                                     <div>
                                         <label for="customer_address" class="block text-sm font-medium text-gray-600 dark:text-gray-300">
-                                            Shipping Address
+                                            {{ t('orders.create.shippingAddress') }}
                                         </label>
                                         <textarea
                                             id="customer_address"
@@ -181,7 +184,7 @@ const availableProducts = computed(() => {
                             <!-- Order Items -->
                             <div class="bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border shadow-sm sm:rounded-lg p-6">
                                 <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
-                                    Order Items
+                                    {{ t('orders.create.orderItems') }}
                                 </h3>
 
                                 <!-- Add Item Form -->
@@ -189,13 +192,13 @@ const availableProducts = computed(() => {
                                     <div class="grid grid-cols-1 md:grid-cols-12 gap-3">
                                         <div class="md:col-span-7">
                                             <label class="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-1">
-                                                Select Product
+                                                {{ t('orders.create.selectProduct') }}
                                             </label>
                                             <select
                                                 v-model="selectedProduct"
                                                 class="block w-full rounded-md bg-white dark:bg-dark-card border-gray-200 dark:border-dark-border text-gray-900 dark:text-gray-100 shadow-sm focus:border-primary-400 focus:ring-primary-400"
                                             >
-                                                <option :value="null">Choose a product...</option>
+                                                <option :value="null">{{ t('orders.create.chooseProduct') }}</option>
                                                 <option v-for="product in availableProducts" :key="product.id" :value="product.id">
                                                     {{ product.name }} ({{ product.sku }}) - Stock: {{ product.stock }} - ${{ product.price }}
                                                 </option>
@@ -204,7 +207,7 @@ const availableProducts = computed(() => {
 
                                         <div class="md:col-span-3">
                                             <label class="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-1">
-                                                Quantity
+                                                {{ t('common.quantity') }}
                                             </label>
                                             <input
                                                 v-model.number="quantity"
@@ -220,7 +223,7 @@ const availableProducts = computed(() => {
                                                 @click="addItem"
                                                 class="w-full px-4 py-2 bg-primary-400 text-white rounded-md hover:bg-primary-500 transition"
                                             >
-                                                Add
+                                                {{ t('orders.create.add') }}
                                             </button>
                                         </div>
                                     </div>
@@ -239,7 +242,7 @@ const availableProducts = computed(() => {
                                         </div>
 
                                         <div class="w-24">
-                                            <label class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Qty</label>
+                                            <label class="block text-xs text-gray-500 dark:text-gray-400 mb-1">{{ t('orders.edit.qty') }}</label>
                                             <input
                                                 :value="item.quantity"
                                                 @input="updateItemQuantity(index, parseInt($event.target.value))"
@@ -250,7 +253,7 @@ const availableProducts = computed(() => {
                                         </div>
 
                                         <div class="w-32">
-                                            <label class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Unit Price</label>
+                                            <label class="block text-xs text-gray-500 dark:text-gray-400 mb-1">{{ t('orders.show.unitPrice') }}</label>
                                             <input
                                                 :value="item.unit_price"
                                                 @input="updateItemPrice(index, $event.target.value)"
@@ -262,7 +265,7 @@ const availableProducts = computed(() => {
                                         </div>
 
                                         <div class="w-32 text-right">
-                                            <label class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Total</label>
+                                            <label class="block text-xs text-gray-500 dark:text-gray-400 mb-1">{{ t('common.total') }}</label>
                                             <p class="font-semibold text-gray-900 dark:text-gray-100">
                                                 ${{ (item.quantity * item.unit_price).toFixed(2) }}
                                             </p>
@@ -284,7 +287,7 @@ const availableProducts = computed(() => {
                                     <svg class="w-12 h-12 mx-auto mb-3 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
                                     </svg>
-                                    <p>No items added yet. Select a product above to add it to the order.</p>
+                                    <p>{{ t('orders.create.noItemsAdded') }}</p>
                                 </div>
 
                                 <p v-if="form.errors.items" class="mt-2 text-sm text-red-400">
@@ -298,13 +301,13 @@ const availableProducts = computed(() => {
                             <!-- Order Details -->
                             <div class="bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border shadow-sm sm:rounded-lg p-6">
                                 <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
-                                    Order Details
+                                    {{ t('orders.create.orderDetails') }}
                                 </h3>
 
                                 <div class="space-y-4">
                                     <div>
                                         <label for="order_date" class="block text-sm font-medium text-gray-600 dark:text-gray-300">
-                                            Order Date <span class="text-red-500">*</span>
+                                            {{ t('orders.create.orderDate') }}
                                         </label>
                                         <input
                                             id="order_date"
@@ -320,7 +323,7 @@ const availableProducts = computed(() => {
 
                                     <div>
                                         <label for="status" class="block text-sm font-medium text-gray-600 dark:text-gray-300">
-                                            Status <span class="text-red-500">*</span>
+                                            {{ t('orders.create.statusLabel') }}
                                         </label>
                                         <select
                                             id="status"
@@ -328,11 +331,11 @@ const availableProducts = computed(() => {
                                             class="mt-1 block w-full rounded-md bg-gray-50 dark:bg-dark-bg border-gray-200 dark:border-dark-border text-gray-900 dark:text-gray-100 shadow-sm focus:border-primary-400 focus:ring-primary-400"
                                             required
                                         >
-                                            <option value="pending">Pending</option>
-                                            <option value="processing">Processing</option>
-                                            <option value="shipped">Shipped</option>
-                                            <option value="delivered">Delivered</option>
-                                            <option value="cancelled">Cancelled</option>
+                                            <option value="pending">{{ t('orders.status.pending') }}</option>
+                                            <option value="processing">{{ t('orders.status.processing') }}</option>
+                                            <option value="shipped">{{ t('orders.status.shipped') }}</option>
+                                            <option value="delivered">{{ t('orders.status.delivered') }}</option>
+                                            <option value="cancelled">{{ t('orders.status.cancelled') }}</option>
                                         </select>
                                         <p v-if="form.errors.status" class="mt-1 text-sm text-red-400">
                                             {{ form.errors.status }}
@@ -341,14 +344,14 @@ const availableProducts = computed(() => {
 
                                     <div>
                                         <label for="notes" class="block text-sm font-medium text-gray-600 dark:text-gray-300">
-                                            Notes
+                                            {{ t('common.notes') }}
                                         </label>
                                         <textarea
                                             id="notes"
                                             v-model="form.notes"
                                             rows="3"
                                             class="mt-1 block w-full rounded-md bg-gray-50 dark:bg-dark-bg border-gray-200 dark:border-dark-border text-gray-900 dark:text-gray-100 placeholder-gray-500 shadow-sm focus:border-primary-400 focus:ring-primary-400"
-                                            placeholder="Internal notes..."
+                                            :placeholder="t('orders.create.notesPlaceholder')"
                                         ></textarea>
                                         <p v-if="form.errors.notes" class="mt-1 text-sm text-red-400">
                                             {{ form.errors.notes }}
@@ -360,18 +363,18 @@ const availableProducts = computed(() => {
                             <!-- Order Summary -->
                             <div class="bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border shadow-sm sm:rounded-lg p-6">
                                 <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
-                                    Order Summary
+                                    {{ t('orders.create.orderSummary') }}
                                 </h3>
 
                                 <div class="space-y-3">
                                     <div class="flex justify-between text-sm">
-                                        <span class="text-gray-600 dark:text-gray-300">Subtotal</span>
+                                        <span class="text-gray-600 dark:text-gray-300">{{ t('common.subtotal') }}</span>
                                         <span class="font-medium text-gray-900 dark:text-gray-100">${{ subtotal.toFixed(2) }}</span>
                                     </div>
 
                                     <div>
                                         <div class="flex justify-between items-center text-sm mb-1">
-                                            <label for="tax" class="text-gray-600 dark:text-gray-300">Tax</label>
+                                            <label for="tax" class="text-gray-600 dark:text-gray-300">{{ t('common.tax') }}</label>
                                         </div>
                                         <input
                                             id="tax"
@@ -388,7 +391,7 @@ const availableProducts = computed(() => {
 
                                     <div>
                                         <div class="flex justify-between items-center text-sm mb-1">
-                                            <label for="shipping" class="text-gray-600 dark:text-gray-300">Shipping</label>
+                                            <label for="shipping" class="text-gray-600 dark:text-gray-300">{{ t('common.shipping') }}</label>
                                         </div>
                                         <input
                                             id="shipping"
@@ -405,7 +408,7 @@ const availableProducts = computed(() => {
 
                                     <div class="pt-3 border-t border-gray-200 dark:border-dark-border">
                                         <div class="flex justify-between items-center">
-                                            <span class="text-lg font-semibold text-gray-900 dark:text-gray-100">Total</span>
+                                            <span class="text-lg font-semibold text-gray-900 dark:text-gray-100">{{ t('common.total') }}</span>
                                             <span class="text-xl font-bold text-primary-400">${{ total.toFixed(2) }}</span>
                                         </div>
                                     </div>
@@ -421,15 +424,15 @@ const availableProducts = computed(() => {
                                         :class="{ 'opacity-25': form.processing }"
                                         :disabled="form.processing || form.items.length === 0"
                                     >
-                                        <span v-if="form.processing">Creating Order...</span>
-                                        <span v-else>Create Order</span>
+                                        <span v-if="form.processing">{{ t('orders.create.creatingOrder') }}</span>
+                                        <span v-else>{{ t('orders.create.title') }}</span>
                                     </button>
 
                                     <Link
                                         :href="route('orders.index')"
                                         class="w-full px-4 py-3 bg-gray-100 dark:bg-dark-bg text-gray-700 dark:text-gray-300 rounded-lg font-semibold text-center hover:bg-gray-200 dark:hover:bg-dark-bg/80 border border-gray-200 dark:border-dark-border transition"
                                     >
-                                        Cancel
+                                        {{ t('common.cancel') }}
                                     </Link>
                                 </div>
                             </div>
