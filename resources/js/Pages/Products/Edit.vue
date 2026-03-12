@@ -55,6 +55,8 @@ const form = useForm({
     purchase_price: props.product.purchase_price || '',
     stock: props.product.stock,
     min_stock: props.product.min_stock,
+    reorder_point: props.product.reorder_point || '',
+    reorder_quantity: props.product.reorder_quantity || '',
     category_id: props.product.category_id,
     location_id: props.product.location_id,
     barcode: props.product.barcode || '',
@@ -406,6 +408,48 @@ const submit = () => {
                                         </p>
                                         <p v-if="form.errors.min_stock" class="mt-1 text-sm text-red-400">
                                             {{ form.errors.min_stock }}
+                                        </p>
+                                    </div>
+
+                                    <!-- Reorder Point -->
+                                    <div>
+                                        <label for="reorder_point" class="block text-sm font-medium text-gray-600 dark:text-gray-300">
+                                            Reorder Point
+                                        </label>
+                                        <input
+                                            id="reorder_point"
+                                            v-model="form.reorder_point"
+                                            type="number"
+                                            min="0"
+                                            class="mt-1 block w-full rounded-md bg-gray-50 dark:bg-dark-bg border-gray-200 dark:border-dark-border text-gray-900 dark:text-gray-100 placeholder-gray-500 shadow-sm focus:border-primary-400 focus:ring-primary-400"
+                                            placeholder="Leave empty to disable"
+                                        />
+                                        <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                                            Stock level that triggers automatic reorder
+                                        </p>
+                                        <p v-if="form.errors.reorder_point" class="mt-1 text-sm text-red-400">
+                                            {{ form.errors.reorder_point }}
+                                        </p>
+                                    </div>
+
+                                    <!-- Reorder Quantity -->
+                                    <div>
+                                        <label for="reorder_quantity" class="block text-sm font-medium text-gray-600 dark:text-gray-300">
+                                            Reorder Quantity
+                                        </label>
+                                        <input
+                                            id="reorder_quantity"
+                                            v-model="form.reorder_quantity"
+                                            type="number"
+                                            min="0"
+                                            class="mt-1 block w-full rounded-md bg-gray-50 dark:bg-dark-bg border-gray-200 dark:border-dark-border text-gray-900 dark:text-gray-100 placeholder-gray-500 shadow-sm focus:border-primary-400 focus:ring-primary-400"
+                                            placeholder="Leave empty to disable"
+                                        />
+                                        <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                                            Quantity to order when stock reaches reorder point
+                                        </p>
+                                        <p v-if="form.errors.reorder_quantity" class="mt-1 text-sm text-red-400">
+                                            {{ form.errors.reorder_quantity }}
                                         </p>
                                     </div>
 
