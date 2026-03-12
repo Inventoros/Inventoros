@@ -77,6 +77,15 @@ Route::middleware('auth')->group(function () {
     Route::put('/products/{product}', [ProductController::class, 'update'])->name('products.update')->middleware('permission:edit_products');
     Route::patch('/products/{product}', [ProductController::class, 'update'])->middleware('permission:edit_products');
     Route::delete('/products/{product}', [ProductController::class, 'destroy'])->name('products.destroy')->middleware('permission:delete_products');
+    Route::post('/products/{product}/duplicate', [ProductController::class, 'duplicate'])->name('products.duplicate')->middleware('permission:create_products');
+
+    // Bulk Product Operations
+    Route::prefix('products/bulk')->name('products.bulk.')->middleware('permission:edit_products')->group(function () {
+        Route::post('/delete', [\App\Http\Controllers\Inventory\BulkProductController::class, 'bulkDelete'])->middleware('permission:delete_products')->name('delete');
+        Route::post('/update-category', [\App\Http\Controllers\Inventory\BulkProductController::class, 'bulkUpdateCategory'])->name('update-category');
+        Route::post('/update-price', [\App\Http\Controllers\Inventory\BulkProductController::class, 'bulkUpdatePrice'])->name('update-price');
+        Route::post('/export', [\App\Http\Controllers\Inventory\BulkProductController::class, 'bulkExport'])->middleware('permission:export_data')->name('export');
+    });
 
     // Barcode Management
     Route::prefix('products/{product}/barcode')->name('products.barcode.')->middleware('permission:view_products')->group(function () {
