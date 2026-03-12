@@ -659,6 +659,43 @@ class ProductController extends Controller
     }
 
     /**
+     * Duplicate the specified product.
+     *
+     * Creates a copy of the product with "(Copy)" appended to the name,
+     * a new unique SKU, and stock reset to 0.
+     *
+     * @param Request $request The incoming HTTP request
+     * @param Product $product The product to duplicate
+     * @return \Illuminate\Http\RedirectResponse
+     */
+    public function duplicate(Request $request, Product $product)
+    {
+        // Ensure user can only duplicate products from their organization
+        if ($product->organization_id !== $request->user()->organization_id) {
+            abort(403, 'Unauthorized action.');
+        }
+
+        $newProduct = $product->replicate(['id', 'created_at', 'updated_at', 'deleted_at']);
+        $newProduct->name = $product->name . ' (Copy)';
+        $newProduct->stock = 0;
+
+        // Generate a unique SKU
+        $baseSku = $product->sku . '-COPY';
+        $sku = $baseSku;
+        $counter = 1;
+        while (Product::where('sku', $sku)->exists()) {
+            $sku = $baseSku . '-' . $counter;
+            $counter++;
+        }
+        $newProduct->sku = $sku;
+
+        $newProduct->save();
+
+        return redirect()->route('products.show', $newProduct)
+            ->with('success', 'Product duplicated successfully.');
+    }
+
+    /**
      * Remove the specified product.
      *
      * @param Request $request The incoming HTTP request
