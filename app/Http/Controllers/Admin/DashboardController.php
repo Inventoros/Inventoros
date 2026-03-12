@@ -132,6 +132,29 @@ class DashboardController extends Controller
                 ];
             });
 
+        // Get reorder suggestions (products below reorder point)
+        $reorderSuggestions = Product::where('organization_id', $user->organization_id)
+            ->needsReorder()
+            ->with(['category', 'suppliers' => function ($query) {
+                $query->wherePivot('is_primary', true);
+            }])
+            ->orderBy('stock', 'asc')
+            ->limit(10)
+            ->get()
+            ->map(function ($product) {
+                $primarySupplier = $product->suppliers->first();
+                return [
+                    'id' => $product->id,
+                    'name' => $product->name,
+                    'sku' => $product->sku,
+                    'stock' => $product->stock,
+                    'reorder_point' => $product->reorder_point,
+                    'reorder_quantity' => $product->reorder_quantity,
+                    'category' => $product->category?->name,
+                    'supplier' => $primarySupplier?->name,
+                ];
+            });
+
         // Get stock movements (last 7 days)
         $stockMovements = StockAdjustment::where('organization_id', $user->organization_id)
             ->where('created_at', '>=', now()->subDays(7))
@@ -182,6 +205,7 @@ class DashboardController extends Controller
             'stats' => $stats,
             'recentProducts' => $recentProducts,
             'lowStockProducts' => $lowStockProducts,
+            'reorderSuggestions' => $reorderSuggestions,
             'recentOrders' => $recentOrders,
             'stockByCategory' => $stockByCategory,
             'recentActivity' => $recentActivity,
