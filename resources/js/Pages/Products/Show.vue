@@ -3,6 +3,8 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import PluginSlot from '@/Components/PluginSlot.vue';
 import ActivityTimeline from '@/Components/ActivityTimeline.vue';
 import VariantsTable from '@/Components/VariantsTable.vue';
+import BatchList from '@/Components/BatchList.vue';
+import SerialList from '@/Components/SerialList.vue';
 import { Head, Link, router } from '@inertiajs/vue3';
 import { ref, onMounted, computed } from 'vue';
 import { useI18n } from 'vue-i18n';
@@ -300,6 +302,26 @@ const totalVariantStock = computed(() => {
                                         Stock is tracked per variant. Total variant stock: <span class="font-semibold">{{ totalVariantStock }}</span>
                                     </p>
                                 </div>
+                            </div>
+                        </div>
+
+                        <!-- Batch Tracking -->
+                        <div v-if="product.tracking_type === 'batch'" class="bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border overflow-hidden shadow-lg sm:rounded-lg">
+                            <div class="p-6">
+                                <BatchList
+                                    :product-id="product.id"
+                                    :batches="product.batches || []"
+                                />
+                            </div>
+                        </div>
+
+                        <!-- Serial Tracking -->
+                        <div v-if="product.tracking_type === 'serial'" class="bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border overflow-hidden shadow-lg sm:rounded-lg">
+                            <div class="p-6">
+                                <SerialList
+                                    :product-id="product.id"
+                                    :serials="product.serials || []"
+                                />
                             </div>
                         </div>
                     </div>
