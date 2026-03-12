@@ -20,6 +20,7 @@ use App\Http\Controllers\Order\InvoiceController;
 use App\Http\Controllers\Order\OrderController;
 use App\Http\Controllers\Purchasing\PurchaseOrderController;
 use App\Http\Controllers\Purchasing\PurchaseOrderInvoiceController;
+use App\Http\Controllers\Auth\TwoFactorController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
@@ -51,6 +52,16 @@ Route::get('/dashboard', [DashboardController::class, 'index'])
 Route::middleware('auth')->group(function () {
     // Global Search
     Route::get('/search', [SearchController::class, 'search'])->name('search');
+
+    // Two-Factor Authentication
+    Route::get('/two-factor-challenge', [TwoFactorController::class, 'challenge'])->name('two-factor.challenge');
+    Route::post('/two-factor-challenge', [TwoFactorController::class, 'verifyChallenge'])->name('two-factor.challenge.verify');
+
+    Route::prefix('settings/two-factor')->name('two-factor.')->group(function () {
+        Route::get('/setup', [TwoFactorController::class, 'setup'])->name('setup');
+        Route::post('/enable', [TwoFactorController::class, 'enable'])->name('enable');
+        Route::post('/disable', [TwoFactorController::class, 'disable'])->name('disable');
+    });
 
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
