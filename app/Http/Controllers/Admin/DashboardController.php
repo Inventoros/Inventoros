@@ -13,6 +13,7 @@ use App\Models\Inventory\StockAdjustment;
 use App\Models\Order\Order;
 use App\Models\User;
 use App\Services\PluginUIService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
@@ -161,6 +162,22 @@ class DashboardController extends Controller
             })
             ->values();
 
+        // Get widget preferences (default: all visible)
+        $defaultWidgets = [
+            'stats_overview' => true,
+            'revenue_chart' => true,
+            'stock_movements' => true,
+            'low_stock_alerts' => true,
+            'recent_orders' => true,
+            'recent_products' => true,
+            'top_products' => true,
+            'stock_by_category' => true,
+            'reorder_suggestions' => true,
+        ];
+        $widgetPreferences = $user->dashboard_widgets ?? $defaultWidgets;
+        // Merge with defaults to ensure any new widgets are visible by default
+        $widgetPreferences = array_merge($defaultWidgets, $widgetPreferences);
+
         $data = [
             'stats' => $stats,
             'recentProducts' => $recentProducts,
@@ -170,6 +187,7 @@ class DashboardController extends Controller
             'recentActivity' => $recentActivity,
             'stockMovements' => $stockMovements,
             'topProducts' => $topProducts,
+            'widgetPreferences' => $widgetPreferences,
             'pluginComponents' => [
                 'header' => get_page_components('dashboard', 'header'),
                 'beforeStats' => get_page_components('dashboard', 'before-stats'),
@@ -188,5 +206,49 @@ class DashboardController extends Controller
         do_action('dashboard_viewed', $user);
 
         return Inertia::render('Dashboard', $data);
+    }
+
+    /**
+     * Update the user's dashboard widget preferences.
+     *
+     * @param Request $request The incoming HTTP request
+     * @return JsonResponse
+     */
+    public function updateWidgets(Request $request): JsonResponse
+    {
+        $validWidgetKeys = [
+            'stats_overview',
+            'revenue_chart',
+            'stock_movements',
+            'low_stock_alerts',
+            'recent_orders',
+            'recent_products',
+            'top_products',
+            'stock_by_category',
+            'reorder_suggestions',
+        ];
+
+        $request->validate([
+            'widgets' => ['required', 'array'],
+            'widgets.*' => ['boolean'],
+        ]);
+
+        // Ensure only valid widget keys are present
+        $submittedKeys = array_keys($request->input('widgets'));
+        $invalidKeys = array_diff($submittedKeys, $validWidgetKeys);
+
+        if (!empty($invalidKeys)) {
+            return response()->json([
+                'message' => 'Invalid widget keys: ' . implode(', ', $invalidKeys),
+                'errors' => ['widgets' => ['Contains invalid widget keys.']],
+            ], 422);
+        }
+
+        $user = $request->user();
+        $user->update([
+            'dashboard_widgets' => $request->input('widgets'),
+        ]);
+
+        return response()->json(['success' => true]);
     }
 }
