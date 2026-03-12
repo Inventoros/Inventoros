@@ -25,6 +25,9 @@ use Laravel\Sanctum\HasApiTokens;
  * @property string|null $role
  * @property array|null $notification_preferences
  * @property \Illuminate\Support\Carbon|null $email_verified_at
+ * @property string|null $two_factor_secret
+ * @property bool $two_factor_enabled
+ * @property string|null $two_factor_recovery_codes
  * @property string|null $remember_token
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
@@ -50,6 +53,9 @@ class User extends Authenticatable
         'organization_id',
         'role',
         'notification_preferences',
+        'two_factor_secret',
+        'two_factor_enabled',
+        'two_factor_recovery_codes',
     ];
 
     /**
@@ -60,6 +66,8 @@ class User extends Authenticatable
     protected $hidden = [
         'password',
         'remember_token',
+        'two_factor_secret',
+        'two_factor_recovery_codes',
     ];
 
     /**
@@ -73,6 +81,7 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'notification_preferences' => 'array',
+            'two_factor_enabled' => 'boolean',
         ];
     }
 
