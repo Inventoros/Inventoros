@@ -10,6 +10,7 @@ const props = defineProps({
     stats: Object,
     recentProducts: Array,
     lowStockProducts: Array,
+    reorderSuggestions: Array,
     recentOrders: Array,
     stockByCategory: Array,
     pluginComponents: Object,
@@ -367,6 +368,70 @@ const formatCompactCurrency = (value) => {
                                     </div>
                                 </div>
                             </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Reorder Suggestions -->
+                <div v-if="reorderSuggestions && reorderSuggestions.length > 0" class="mb-6 bg-white dark:bg-dark-card rounded-xl border border-gray-100 dark:border-dark-border shadow-card">
+                    <div class="px-5 py-4 border-b border-gray-100 dark:border-dark-border flex items-center justify-between">
+                        <div class="flex items-center gap-2">
+                            <div class="w-2 h-2 bg-orange-500 rounded-full animate-pulse"></div>
+                            <h3 class="text-sm font-semibold text-gray-900 dark:text-gray-100">
+                                Reorder Suggestions
+                            </h3>
+                            <span class="px-2 py-0.5 text-[11px] font-semibold rounded-full bg-orange-100 dark:bg-orange-500/15 text-orange-700 dark:text-orange-400">
+                                {{ reorderSuggestions.length }}
+                            </span>
+                        </div>
+                        <Link
+                            :href="route('products.index', { low_stock: true })"
+                            class="text-xs font-medium text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300"
+                        >
+                            {{ t('dashboard.viewAll') }}
+                        </Link>
+                    </div>
+                    <div class="p-5">
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-sm">
+                                <thead>
+                                    <tr class="border-b border-gray-100 dark:border-dark-border">
+                                        <th class="text-left py-2 px-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Product</th>
+                                        <th class="text-right py-2 px-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Stock</th>
+                                        <th class="text-right py-2 px-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Reorder At</th>
+                                        <th class="text-right py-2 px-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Order Qty</th>
+                                        <th class="text-left py-2 px-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Supplier</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-gray-50 dark:divide-dark-border">
+                                    <tr
+                                        v-for="product in reorderSuggestions"
+                                        :key="product.id"
+                                        class="hover:bg-gray-50 dark:hover:bg-slate-800/50 transition cursor-pointer"
+                                        @click="$inertia.visit(route('products.edit', product.id))"
+                                    >
+                                        <td class="py-2.5 px-3">
+                                            <p class="font-medium text-gray-900 dark:text-gray-100">{{ product.name }}</p>
+                                            <p class="text-xs text-gray-500 dark:text-gray-400">{{ product.sku }} <span v-if="product.category">· {{ product.category }}</span></p>
+                                        </td>
+                                        <td class="py-2.5 px-3 text-right">
+                                            <span class="font-semibold" :class="product.stock === 0 ? 'text-red-600 dark:text-red-400' : 'text-orange-600 dark:text-orange-400'">
+                                                {{ product.stock }}
+                                            </span>
+                                        </td>
+                                        <td class="py-2.5 px-3 text-right text-gray-600 dark:text-gray-300">
+                                            {{ product.reorder_point }}
+                                        </td>
+                                        <td class="py-2.5 px-3 text-right text-gray-600 dark:text-gray-300">
+                                            {{ product.reorder_quantity }}
+                                        </td>
+                                        <td class="py-2.5 px-3">
+                                            <span v-if="product.supplier" class="text-gray-600 dark:text-gray-300">{{ product.supplier }}</span>
+                                            <span v-else class="text-xs text-red-500 dark:text-red-400 italic">No supplier</span>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
                         </div>
                     </div>
                 </div>
