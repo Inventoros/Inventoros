@@ -100,7 +100,7 @@ class OrderController extends Controller
             // Create the order
             $order = Order::create([
                 'organization_id' => $organizationId,
-                'order_number' => Order::generateOrderNumber(),
+                'order_number' => Order::generateOrderNumber($organizationId),
                 'source' => $validated['source'] ?? 'api',
                 'external_id' => $validated['external_id'] ?? null,
                 'customer_name' => $validated['customer_name'],
