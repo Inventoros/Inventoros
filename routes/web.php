@@ -218,6 +218,10 @@ Route::middleware('auth')->group(function () {
             });
         });
 
+        // Dashboard Widget Preferences (accessible by all authenticated users)
+        Route::patch('/dashboard-widgets', [DashboardController::class, 'updateWidgets'])
+            ->name('dashboard-widgets.update');
+
         // Account Settings (accessible by all authenticated users)
         Route::prefix('account')->name('account.')->group(function () {
             Route::get('/', [\App\Http\Controllers\Admin\AccountSettingsController::class, 'index'])->name('index');
@@ -247,6 +251,9 @@ Route::middleware('auth')->group(function () {
     Route::get('/activity-log', [\App\Http\Controllers\Admin\ActivityLogController::class, 'index'])
         ->middleware('permission:view_activity_log')
         ->name('activity-log.index');
+    Route::get('/activity-log/export', [\App\Http\Controllers\Admin\ActivityLogController::class, 'export'])
+        ->middleware('permission:view_activity_log')
+        ->name('activity-log.export');
 
     // System Update - Admin only
     Route::prefix('admin/update')->name('admin.update.')->middleware('permission:manage_organization')->group(function () {

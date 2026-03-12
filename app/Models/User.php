@@ -56,6 +56,7 @@ class User extends Authenticatable
         'two_factor_secret',
         'two_factor_enabled',
         'two_factor_recovery_codes',
+        'dashboard_widgets',
     ];
 
     /**
@@ -82,6 +83,7 @@ class User extends Authenticatable
             'password' => 'hashed',
             'notification_preferences' => 'array',
             'two_factor_enabled' => 'boolean',
+            'dashboard_widgets' => 'array',
         ];
     }
 
