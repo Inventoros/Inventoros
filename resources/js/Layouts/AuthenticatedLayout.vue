@@ -61,6 +61,10 @@ const navItems = {
         icon: 'M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z',
         activeRoutes: ['orders.*'],
     },
+    returns: {
+        icon: 'M3 10h10a1 1 0 011 1v1a1 1 0 01-1 1H3m0 0l4-4m-4 4l4 4M21 14H11a1 1 0 01-1-1v-1a1 1 0 011-1h10m0 0l-4 4m4-4l-4-4',
+        activeRoutes: ['returns.*'],
+    },
     purchaseOrders: {
         icon: 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01',
         activeRoutes: ['purchase-orders.*'],
@@ -172,6 +176,16 @@ const navItems = {
                     :icon="navItems.orders.icon"
                     label="Orders"
                     :active-routes="navItems.orders.activeRoutes"
+                    :collapsed="sidebarCollapsed"
+                />
+
+                <!-- Returns -->
+                <SidebarNavItem
+                    v-if="hasPermission('manage_returns')"
+                    :href="route('returns.index')"
+                    :icon="navItems.returns.icon"
+                    label="Returns"
+                    :active-routes="navItems.returns.activeRoutes"
                     :collapsed="sidebarCollapsed"
                 />
 
