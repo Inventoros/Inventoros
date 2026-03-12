@@ -41,6 +41,7 @@ class ProductResource extends JsonResource
             'thumbnail' => $this->thumbnail,
             'is_active' => $this->is_active,
             'has_variants' => $this->has_variants,
+            'tracking_type' => $this->tracking_type,
             'metadata' => $this->metadata,
             'is_low_stock' => $this->isLowStock(),
             'is_out_of_stock' => $this->isOutOfStock(),
