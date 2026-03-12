@@ -4,6 +4,7 @@ import { useI18n } from 'vue-i18n';
 import ApplicationLogo from '@/Components/ApplicationLogo.vue';
 import { Link } from '@inertiajs/vue3';
 import { usePermissions } from '@/composables/usePermissions';
+import GlobalSearch from '@/Components/Layout/GlobalSearch.vue';
 import NotificationDropdown from '@/Components/Layout/NotificationDropdown.vue';
 import ThemeToggle from '@/Components/Layout/ThemeToggle.vue';
 import SidebarNavItem from '@/Components/Layout/SidebarNavItem.vue';
@@ -13,6 +14,7 @@ const { t } = useI18n();
 const sidebarOpen = ref(false);
 const settingsSubmenuOpen = ref(false);
 const notificationDropdownRef = ref(null);
+const globalSearchRef = ref(null);
 const { hasPermission } = usePermissions();
 
 // Sidebar collapsed state with localStorage persistence
@@ -417,6 +419,16 @@ const navItems = {
 
                     <!-- Header Actions -->
                     <div class="flex items-center gap-1 ml-4">
+                        <!-- Search Button -->
+                        <button
+                            @click="globalSearchRef?.open()"
+                            class="p-2 text-gray-500 hover:text-primary-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:text-primary-400 dark:hover:bg-dark-card rounded-lg transition"
+                            title="Search (Ctrl+K)"
+                        >
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                            </svg>
+                        </button>
                         <ThemeToggle />
                         <NotificationDropdown ref="notificationDropdownRef" />
                     </div>
@@ -435,5 +447,8 @@ const navItems = {
             @click="closeNotifications"
             class="fixed inset-0 z-30"
         ></div>
+
+        <!-- Global Search -->
+        <GlobalSearch ref="globalSearchRef" />
     </div>
 </template>
