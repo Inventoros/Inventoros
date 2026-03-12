@@ -16,6 +16,7 @@ use App\Http\Controllers\Inventory\ProductLocationController;
 use App\Http\Controllers\Inventory\StockAdjustmentController;
 use App\Http\Controllers\Inventory\SupplierController;
 use App\Http\Controllers\Order\OrderController;
+use App\Http\Controllers\Order\ReturnOrderController;
 use App\Http\Controllers\Purchasing\PurchaseOrderController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Foundation\Application;
@@ -141,6 +142,16 @@ Route::middleware('auth')->group(function () {
     Route::delete('/orders/{order}', [OrderController::class, 'destroy'])->name('orders.destroy')->middleware('permission:delete_orders');
     Route::post('/orders/{order}/approve', [OrderController::class, 'approve'])->name('orders.approve')->middleware('permission:approve_orders');
     Route::post('/orders/{order}/reject', [OrderController::class, 'reject'])->name('orders.reject')->middleware('permission:approve_orders');
+
+    // Return Orders (RMA) - Permission based
+    Route::get('/returns', [ReturnOrderController::class, 'index'])->name('returns.index')->middleware('permission:manage_returns');
+    Route::get('/returns/create', [ReturnOrderController::class, 'create'])->name('returns.create')->middleware('permission:manage_returns');
+    Route::post('/returns', [ReturnOrderController::class, 'store'])->name('returns.store')->middleware('permission:manage_returns');
+    Route::get('/returns/{returnOrder}', [ReturnOrderController::class, 'show'])->name('returns.show')->middleware('permission:manage_returns');
+    Route::post('/returns/{returnOrder}/approve', [ReturnOrderController::class, 'approve'])->name('returns.approve')->middleware('permission:manage_returns');
+    Route::post('/returns/{returnOrder}/receive', [ReturnOrderController::class, 'receive'])->name('returns.receive')->middleware('permission:manage_returns');
+    Route::post('/returns/{returnOrder}/complete', [ReturnOrderController::class, 'complete'])->name('returns.complete')->middleware('permission:manage_returns');
+    Route::post('/returns/{returnOrder}/reject', [ReturnOrderController::class, 'reject'])->name('returns.reject')->middleware('permission:manage_returns');
 
     // User Management - Permission based
     Route::get('/users', [UserController::class, 'index'])->name('users.index')->middleware('permission:view_users');
