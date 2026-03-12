@@ -15,6 +15,7 @@ use App\Http\Controllers\Inventory\ProductController;
 use App\Http\Controllers\Inventory\ProductCategoryController;
 use App\Http\Controllers\Inventory\ProductLocationController;
 use App\Http\Controllers\Inventory\StockAdjustmentController;
+use App\Http\Controllers\Inventory\StockTransferController;
 use App\Http\Controllers\Inventory\SupplierController;
 use App\Http\Controllers\Order\InvoiceController;
 use App\Http\Controllers\Order\OrderController;
@@ -106,6 +107,14 @@ Route::middleware('auth')->group(function () {
     Route::resource('locations', ProductLocationController::class)
         ->except(['create', 'show', 'edit'])
         ->middleware('permission:manage_locations');
+
+    // Stock Transfers - Permission based
+    Route::get('/stock-transfers', [StockTransferController::class, 'index'])->name('stock-transfers.index')->middleware('permission:transfer_stock');
+    Route::get('/stock-transfers/create', [StockTransferController::class, 'create'])->name('stock-transfers.create')->middleware('permission:transfer_stock');
+    Route::post('/stock-transfers', [StockTransferController::class, 'store'])->name('stock-transfers.store')->middleware('permission:transfer_stock');
+    Route::get('/stock-transfers/{stockTransfer}', [StockTransferController::class, 'show'])->name('stock-transfers.show')->middleware('permission:transfer_stock');
+    Route::post('/stock-transfers/{stockTransfer}/complete', [StockTransferController::class, 'complete'])->name('stock-transfers.complete')->middleware('permission:transfer_stock');
+    Route::post('/stock-transfers/{stockTransfer}/cancel', [StockTransferController::class, 'cancel'])->name('stock-transfers.cancel')->middleware('permission:transfer_stock');
 
     // Stock Adjustments - Permission based
     Route::get('/stock-adjustments', [StockAdjustmentController::class, 'index'])->name('stock-adjustments.index')->middleware('permission:manage_stock');
