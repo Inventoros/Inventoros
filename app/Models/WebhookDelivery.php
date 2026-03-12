@@ -12,6 +12,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  *
  * @property int $id
  * @property int $webhook_id
+ * @property int|null $organization_id
  * @property string $event
  * @property array $payload
  * @property int|null $response_status
@@ -43,6 +44,7 @@ class WebhookDelivery extends Model
      */
     protected $fillable = [
         'webhook_id',
+        'organization_id',
         'event',
         'payload',
         'response_status',
@@ -79,6 +81,11 @@ class WebhookDelivery extends Model
 
         static::creating(function (WebhookDelivery $delivery) {
             $delivery->created_at = $delivery->created_at ?? now();
+
+            // Auto-set organization_id from parent webhook if not provided
+            if (empty($delivery->organization_id) && $delivery->webhook_id) {
+                $delivery->organization_id = $delivery->webhook?->organization_id;
+            }
         });
     }
 
@@ -123,6 +130,18 @@ class WebhookDelivery extends Model
     public function scopeSuccessful($query)
     {
         return $query->where('status', 'success');
+    }
+
+    /**
+     * Scope a query to only include deliveries for a given organization.
+     *
+     * @param \Illuminate\Database\Eloquent\Builder<static> $query
+     * @param int $organizationId
+     * @return \Illuminate\Database\Eloquent\Builder<static>
+     */
+    public function scopeForOrganization($query, int $organizationId)
+    {
+        return $query->where('organization_id', $organizationId);
     }
 
     /**

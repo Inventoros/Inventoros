@@ -241,23 +241,27 @@ class Order extends Model
     }
 
     /**
-     * Generate a unique order number.
+     * Generate a unique order number scoped by organization.
      *
+     * @param int|null $organizationId
      * @return string
      */
-    public static function generateOrderNumber(): string
+    public static function generateOrderNumber(?int $organizationId = null): string
     {
         $prefix = 'ORD-';
         $date = now()->format('Ymd');
 
-        // Get the last order number for today
-        $lastOrder = static::where('order_number', 'like', $prefix . $date . '%')
-            ->orderBy('order_number', 'desc')
+        // Get the last order number for today, scoped by organization
+        $query = static::where('order_number', 'like', $prefix . $date . '%');
+        if ($organizationId !== null) {
+            $query->where('organization_id', $organizationId);
+        }
+        $lastOrder = $query->orderBy('order_number', 'desc')
             ->first();
 
         if ($lastOrder) {
             $lastNumber = (int) substr($lastOrder->order_number, -4);
-            $newNumber = str_pad($lastNumber + 1, 4, '0', STR_PAD_LEFT);
+            $newNumber = str_pad((string) ($lastNumber + 1), 4, '0', STR_PAD_LEFT);
         } else {
             $newNumber = '0001';
         }

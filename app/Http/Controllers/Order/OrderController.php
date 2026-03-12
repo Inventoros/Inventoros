@@ -108,7 +108,7 @@ class OrderController extends Controller
 
         $validated['organization_id'] = $request->user()->organization_id;
         $validated['created_by'] = $request->user()->id;
-        $validated['order_number'] = Order::generateOrderNumber();
+        $validated['order_number'] = Order::generateOrderNumber($request->user()->organization_id);
         $validated['source'] = 'manual';
         $validated['approval_status'] = 'pending';
 
