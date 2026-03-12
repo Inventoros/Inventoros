@@ -4,8 +4,10 @@ use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\BarcodeLookupController;
 use App\Http\Controllers\Api\OrderController;
 use App\Http\Controllers\Api\ProductCategoryController;
+use App\Http\Controllers\Api\BatchTrackingController;
 use App\Http\Controllers\Api\ProductController;
 use App\Http\Controllers\Api\ProductLocationController;
+use App\Http\Controllers\Api\SerialTrackingController;
 use App\Http\Controllers\Api\ProductOptionController;
 use App\Http\Controllers\Api\ProductVariantController;
 use App\Http\Controllers\Api\PurchaseOrderController;
@@ -53,6 +55,21 @@ Route::prefix('v1')->as('api.')->middleware('throttle:api')->group(function () {
             Route::apiResource('variants', ProductVariantController::class);
             Route::post('variants/{variant}/adjust-stock', [ProductVariantController::class, 'adjustStock']);
             Route::post('variants/bulk', [ProductVariantController::class, 'bulkCreate']);
+        });
+
+        // Batch Tracking (nested under products)
+        Route::prefix('products/{product}')->middleware('api.permission:view_products|manage_products')->group(function () {
+            Route::get('batches', [BatchTrackingController::class, 'index']);
+            Route::post('batches', [BatchTrackingController::class, 'store']);
+            Route::get('batches/{batch}', [BatchTrackingController::class, 'show']);
+        });
+
+        // Serial Tracking (nested under products)
+        Route::prefix('products/{product}')->middleware('api.permission:view_products|manage_products')->group(function () {
+            Route::get('serials', [SerialTrackingController::class, 'index']);
+            Route::post('serials', [SerialTrackingController::class, 'store']);
+            Route::get('serials/{serial}', [SerialTrackingController::class, 'show']);
+            Route::put('serials/{serial}', [SerialTrackingController::class, 'update']);
         });
 
         // Product Categories
