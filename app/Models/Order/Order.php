@@ -152,6 +152,16 @@ class Order extends Model
     }
 
     /**
+     * Get the return orders for this order.
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany<\App\Models\Order\ReturnOrder, $this>
+     */
+    public function returnOrders(): HasMany
+    {
+        return $this->hasMany(ReturnOrder::class);
+    }
+
+    /**
      * Scope a query to only include orders from a specific organization.
      *
      * @param \Illuminate\Database\Eloquent\Builder<static> $query
