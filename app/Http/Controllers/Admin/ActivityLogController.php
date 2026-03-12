@@ -4,11 +4,13 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Admin;
 
+use App\Exports\ActivityLogExport;
 use App\Http\Controllers\Controller;
 use App\Models\ActivityLog;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
+use Maatwebsite\Excel\Facades\Excel;
 
 /**
  * Controller for managing activity logs.
@@ -92,5 +94,27 @@ class ActivityLogController extends Controller
             'actions' => $actions,
             'subjectTypes' => $subjectTypes,
         ]);
+    }
+
+    /**
+     * Export activity logs to CSV or XLSX.
+     *
+     * @param Request $request The incoming HTTP request with optional filters
+     * @return \Symfony\Component\HttpFoundation\BinaryFileResponse
+     */
+    public function export(Request $request)
+    {
+        $organizationId = $request->user()->organization_id;
+
+        $filters = $request->only(['date_from', 'date_to', 'user_id', 'action']);
+
+        $format = $request->input('format', 'xlsx');
+        $extension = $format === 'csv' ? 'csv' : 'xlsx';
+        $filename = 'activity_log_' . now()->format('Y-m-d_His') . '.' . $extension;
+
+        return Excel::download(
+            new ActivityLogExport($organizationId, $filters),
+            $filename
+        );
     }
 }
