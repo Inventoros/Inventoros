@@ -19,6 +19,7 @@ use App\Http\Controllers\Inventory\StockTransferController;
 use App\Http\Controllers\Inventory\SupplierController;
 use App\Http\Controllers\Order\InvoiceController;
 use App\Http\Controllers\Order\OrderController;
+use App\Http\Controllers\Order\ReturnOrderController;
 use App\Http\Controllers\Purchasing\PurchaseOrderController;
 use App\Http\Controllers\Purchasing\PurchaseOrderInvoiceController;
 use App\Http\Controllers\Auth\TwoFactorController;
@@ -184,6 +185,16 @@ Route::middleware('auth')->group(function () {
     // Order Invoice PDF
     Route::get('/orders/{order}/invoice/download', [InvoiceController::class, 'download'])->name('orders.invoice.download')->middleware('permission:view_orders');
     Route::get('/orders/{order}/invoice/preview', [InvoiceController::class, 'preview'])->name('orders.invoice.preview')->middleware('permission:view_orders');
+
+    // Return Orders (RMA) - Permission based
+    Route::get('/returns', [ReturnOrderController::class, 'index'])->name('returns.index')->middleware('permission:manage_returns');
+    Route::get('/returns/create', [ReturnOrderController::class, 'create'])->name('returns.create')->middleware('permission:manage_returns');
+    Route::post('/returns', [ReturnOrderController::class, 'store'])->name('returns.store')->middleware('permission:manage_returns');
+    Route::get('/returns/{returnOrder}', [ReturnOrderController::class, 'show'])->name('returns.show')->middleware('permission:manage_returns');
+    Route::post('/returns/{returnOrder}/approve', [ReturnOrderController::class, 'approve'])->name('returns.approve')->middleware('permission:manage_returns');
+    Route::post('/returns/{returnOrder}/receive', [ReturnOrderController::class, 'receive'])->name('returns.receive')->middleware('permission:manage_returns');
+    Route::post('/returns/{returnOrder}/complete', [ReturnOrderController::class, 'complete'])->name('returns.complete')->middleware('permission:manage_returns');
+    Route::post('/returns/{returnOrder}/reject', [ReturnOrderController::class, 'reject'])->name('returns.reject')->middleware('permission:manage_returns');
 
     // User Management - Permission based
     Route::get('/users', [UserController::class, 'index'])->name('users.index')->middleware('permission:view_users');

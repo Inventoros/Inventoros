@@ -142,6 +142,16 @@ const formatDateShort = (date) => {
                         Preview Invoice
                     </a>
                     <Link
+                        v-if="hasPermission('manage_returns')"
+                        :href="route('returns.create', { order_id: order.id })"
+                        class="inline-flex items-center px-4 py-2 bg-orange-500 text-white rounded-md font-semibold text-xs uppercase tracking-widest hover:bg-orange-600 transition"
+                    >
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a1 1 0 011 1v1a1 1 0 01-1 1H3m0 0l4-4m-4 4l4 4" />
+                        </svg>
+                        Create Return
+                    </Link>
+                    <Link
                         v-if="hasPermission('edit_orders')"
                         :href="route('orders.edit', order.id)"
                         class="inline-flex items-center px-4 py-2 bg-primary-400 text-white rounded-md font-semibold text-xs uppercase tracking-widest hover:bg-primary-500 transition"
