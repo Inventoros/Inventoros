@@ -15,8 +15,10 @@ use App\Http\Controllers\Inventory\ProductCategoryController;
 use App\Http\Controllers\Inventory\ProductLocationController;
 use App\Http\Controllers\Inventory\StockAdjustmentController;
 use App\Http\Controllers\Inventory\SupplierController;
+use App\Http\Controllers\Order\InvoiceController;
 use App\Http\Controllers\Order\OrderController;
 use App\Http\Controllers\Purchasing\PurchaseOrderController;
+use App\Http\Controllers\Purchasing\PurchaseOrderInvoiceController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
@@ -130,6 +132,10 @@ Route::middleware('auth')->group(function () {
     Route::post('/purchase-orders/{purchaseOrder}/send', [PurchaseOrderController::class, 'sendToSupplier'])->name('purchase-orders.send')->middleware('permission:edit_purchase_orders');
     Route::post('/purchase-orders/{purchaseOrder}/cancel', [PurchaseOrderController::class, 'cancel'])->name('purchase-orders.cancel')->middleware('permission:edit_purchase_orders');
 
+    // Purchase Order Invoice PDF
+    Route::get('/purchase-orders/{purchaseOrder}/invoice/download', [PurchaseOrderInvoiceController::class, 'download'])->name('purchase-orders.invoice.download')->middleware('permission:view_purchase_orders');
+    Route::get('/purchase-orders/{purchaseOrder}/invoice/preview', [PurchaseOrderInvoiceController::class, 'preview'])->name('purchase-orders.invoice.preview')->middleware('permission:view_purchase_orders');
+
     // Order Management - Permission based
     Route::get('/orders', [OrderController::class, 'index'])->name('orders.index')->middleware('permission:view_orders');
     Route::get('/orders/create', [OrderController::class, 'create'])->name('orders.create')->middleware('permission:create_orders');
@@ -141,6 +147,10 @@ Route::middleware('auth')->group(function () {
     Route::delete('/orders/{order}', [OrderController::class, 'destroy'])->name('orders.destroy')->middleware('permission:delete_orders');
     Route::post('/orders/{order}/approve', [OrderController::class, 'approve'])->name('orders.approve')->middleware('permission:approve_orders');
     Route::post('/orders/{order}/reject', [OrderController::class, 'reject'])->name('orders.reject')->middleware('permission:approve_orders');
+
+    // Order Invoice PDF
+    Route::get('/orders/{order}/invoice/download', [InvoiceController::class, 'download'])->name('orders.invoice.download')->middleware('permission:view_orders');
+    Route::get('/orders/{order}/invoice/preview', [InvoiceController::class, 'preview'])->name('orders.invoice.preview')->middleware('permission:view_orders');
 
     // User Management - Permission based
     Route::get('/users', [UserController::class, 'index'])->name('users.index')->middleware('permission:view_users');
