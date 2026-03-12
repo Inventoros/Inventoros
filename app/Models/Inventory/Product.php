@@ -87,6 +87,7 @@ class Product extends Model
         'location_id',
         'is_active',
         'has_variants',
+        'tracking_type',
         'metadata',
     ];
 
@@ -192,6 +193,26 @@ class Product extends Model
     public function variants(): HasMany
     {
         return $this->hasMany(ProductVariant::class)->ordered();
+    }
+
+    /**
+     * Get the batches for this product.
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany<\App\Models\Inventory\ProductBatch, $this>
+     */
+    public function batches(): HasMany
+    {
+        return $this->hasMany(ProductBatch::class)->latest();
+    }
+
+    /**
+     * Get the serial numbers for this product.
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany<\App\Models\Inventory\ProductSerial, $this>
+     */
+    public function serials(): HasMany
+    {
+        return $this->hasMany(ProductSerial::class)->latest();
     }
 
     /**

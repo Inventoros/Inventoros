@@ -36,6 +36,7 @@ const form = useForm({
     notes: '',
     images: [],
     has_variants: false,
+    tracking_type: 'none',
     options: [],
     variants: [],
 });
@@ -540,6 +541,28 @@ const submit = () => {
                                         </select>
                                         <p v-if="form.errors.location_id" class="mt-1 text-sm text-red-400">
                                             {{ form.errors.location_id }}
+                                        </p>
+                                    </div>
+
+                                    <!-- Tracking Type -->
+                                    <div>
+                                        <label for="tracking_type" class="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-1">
+                                            Inventory Tracking
+                                        </label>
+                                        <select
+                                            id="tracking_type"
+                                            v-model="form.tracking_type"
+                                            class="mt-1 block w-full rounded-md bg-gray-50 dark:bg-dark-bg border-gray-200 dark:border-dark-border text-gray-900 dark:text-gray-100 placeholder-gray-500 shadow-sm focus:border-primary-400 focus:ring-primary-400"
+                                        >
+                                            <option value="none">No Tracking</option>
+                                            <option value="batch">Batch Tracking</option>
+                                            <option value="serial">Serial Number Tracking</option>
+                                        </select>
+                                        <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                                            Choose how to track individual units of this product.
+                                        </p>
+                                        <p v-if="form.errors.tracking_type" class="mt-1 text-sm text-red-400">
+                                            {{ form.errors.tracking_type }}
                                         </p>
                                     </div>
                                 </div>

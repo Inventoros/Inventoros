@@ -159,6 +159,7 @@ class ProductController extends Controller
             'images.*.preview' => 'nullable|string',
             'images.*.name' => 'nullable|string',
             'has_variants' => 'boolean',
+            'tracking_type' => 'nullable|string|in:none,batch,serial',
             'options' => 'nullable|array|max:3',
             'options.*.name' => 'required_with:options|string|max:255',
             'options.*.values' => 'required_with:options|array|min:1',
@@ -177,6 +178,7 @@ class ProductController extends Controller
         $validated = $request->validate($rules);
 
         $validated['organization_id'] = $request->user()->organization_id;
+        $validated['tracking_type'] = $validated['tracking_type'] ?? 'none';
 
         // Hook: Allow plugins to modify validated data before saving
         $validated = apply_filters('product_store_data', $validated, $request);
@@ -354,7 +356,7 @@ class ProductController extends Controller
      */
     public function show(Product $product): Response
     {
-        $product->load(['category', 'location', 'organization', 'options', 'variants']);
+        $product->load(['category', 'location', 'organization', 'options', 'variants', 'batches', 'serials']);
 
         // Ensure user can only view products from their organization
         if ($product->organization_id !== auth()->user()->organization_id) {
@@ -471,6 +473,7 @@ class ProductController extends Controller
             'images.*.url' => 'nullable|string',
             'images.*.name' => 'nullable|string',
             'has_variants' => 'boolean',
+            'tracking_type' => 'nullable|string|in:none,batch,serial',
             'options' => 'nullable|array|max:3',
             'options.*.id' => 'nullable|integer',
             'options.*.name' => 'required_with:options|string|max:255',
