@@ -50,6 +50,7 @@ class User extends Authenticatable
         'organization_id',
         'role',
         'notification_preferences',
+        'dashboard_widgets',
     ];
 
     /**
@@ -73,6 +74,7 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'notification_preferences' => 'array',
+            'dashboard_widgets' => 'array',
         ];
     }
 
