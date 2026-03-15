@@ -57,7 +57,7 @@ class PluginController extends Controller
     public function upload(Request $request): RedirectResponse
     {
         $request->validate([
-            'plugin' => 'required|file|mimes:zip|max:' . config('limits.uploads.plugin_max_kb'),
+            'plugin' => 'required|file|mimes:zip|mimetypes:application/zip,application/x-zip-compressed|max:' . config('limits.uploads.plugin_max_kb'),
         ]);
 
         try {

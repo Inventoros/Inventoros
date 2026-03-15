@@ -55,6 +55,8 @@ const form = useForm({
     purchase_price: props.product.purchase_price || '',
     stock: props.product.stock,
     min_stock: props.product.min_stock,
+    reorder_point: props.product.reorder_point || '',
+    reorder_quantity: props.product.reorder_quantity || '',
     category_id: props.product.category_id,
     location_id: props.product.location_id,
     barcode: props.product.barcode || '',
@@ -66,6 +68,7 @@ const form = useForm({
         size: 0
     })),
     has_variants: props.product.has_variants || false,
+    tracking_type: props.product.tracking_type || 'none',
     options: prepareExistingOptions(),
     variants: prepareExistingVariants(),
 });
@@ -409,6 +412,48 @@ const submit = () => {
                                         </p>
                                     </div>
 
+                                    <!-- Reorder Point -->
+                                    <div>
+                                        <label for="reorder_point" class="block text-sm font-medium text-gray-600 dark:text-gray-300">
+                                            Reorder Point
+                                        </label>
+                                        <input
+                                            id="reorder_point"
+                                            v-model="form.reorder_point"
+                                            type="number"
+                                            min="0"
+                                            class="mt-1 block w-full rounded-md bg-gray-50 dark:bg-dark-bg border-gray-200 dark:border-dark-border text-gray-900 dark:text-gray-100 placeholder-gray-500 shadow-sm focus:border-primary-400 focus:ring-primary-400"
+                                            placeholder="Leave empty to disable"
+                                        />
+                                        <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                                            Stock level that triggers automatic reorder
+                                        </p>
+                                        <p v-if="form.errors.reorder_point" class="mt-1 text-sm text-red-400">
+                                            {{ form.errors.reorder_point }}
+                                        </p>
+                                    </div>
+
+                                    <!-- Reorder Quantity -->
+                                    <div>
+                                        <label for="reorder_quantity" class="block text-sm font-medium text-gray-600 dark:text-gray-300">
+                                            Reorder Quantity
+                                        </label>
+                                        <input
+                                            id="reorder_quantity"
+                                            v-model="form.reorder_quantity"
+                                            type="number"
+                                            min="0"
+                                            class="mt-1 block w-full rounded-md bg-gray-50 dark:bg-dark-bg border-gray-200 dark:border-dark-border text-gray-900 dark:text-gray-100 placeholder-gray-500 shadow-sm focus:border-primary-400 focus:ring-primary-400"
+                                            placeholder="Leave empty to disable"
+                                        />
+                                        <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                                            Quantity to order when stock reaches reorder point
+                                        </p>
+                                        <p v-if="form.errors.reorder_quantity" class="mt-1 text-sm text-red-400">
+                                            {{ form.errors.reorder_quantity }}
+                                        </p>
+                                    </div>
+
                                     <!-- Category -->
                                     <div>
                                         <div class="flex items-center justify-between mb-1">
@@ -466,6 +511,28 @@ const submit = () => {
                                         </select>
                                         <p v-if="form.errors.location_id" class="mt-1 text-sm text-red-400">
                                             {{ form.errors.location_id }}
+                                        </p>
+                                    </div>
+
+                                    <!-- Tracking Type -->
+                                    <div>
+                                        <label for="tracking_type" class="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-1">
+                                            Inventory Tracking
+                                        </label>
+                                        <select
+                                            id="tracking_type"
+                                            v-model="form.tracking_type"
+                                            class="mt-1 block w-full rounded-md bg-gray-50 dark:bg-dark-bg border-gray-200 dark:border-dark-border text-gray-900 dark:text-gray-100 placeholder-gray-500 shadow-sm focus:border-primary-400 focus:ring-primary-400"
+                                        >
+                                            <option value="none">No Tracking</option>
+                                            <option value="batch">Batch Tracking</option>
+                                            <option value="serial">Serial Number Tracking</option>
+                                        </select>
+                                        <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                                            Choose how to track individual units of this product.
+                                        </p>
+                                        <p v-if="form.errors.tracking_type" class="mt-1 text-sm text-red-400">
+                                            {{ form.errors.tracking_type }}
                                         </p>
                                     </div>
                                 </div>

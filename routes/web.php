@@ -6,6 +6,7 @@ use App\Http\Controllers\Admin\PluginController;
 use App\Http\Controllers\Admin\UpdateController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\CustomerController;
+use App\Http\Controllers\SearchController;
 use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\WebhookController;
 use App\Http\Controllers\Import\ImportExportController;
@@ -14,9 +15,14 @@ use App\Http\Controllers\Inventory\ProductController;
 use App\Http\Controllers\Inventory\ProductCategoryController;
 use App\Http\Controllers\Inventory\ProductLocationController;
 use App\Http\Controllers\Inventory\StockAdjustmentController;
+use App\Http\Controllers\Inventory\StockTransferController;
 use App\Http\Controllers\Inventory\SupplierController;
+use App\Http\Controllers\Order\InvoiceController;
 use App\Http\Controllers\Order\OrderController;
+use App\Http\Controllers\Order\ReturnOrderController;
 use App\Http\Controllers\Purchasing\PurchaseOrderController;
+use App\Http\Controllers\Purchasing\PurchaseOrderInvoiceController;
+use App\Http\Controllers\Auth\TwoFactorController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
@@ -46,6 +52,19 @@ Route::get('/dashboard', [DashboardController::class, 'index'])
     ->name('dashboard');
 
 Route::middleware('auth')->group(function () {
+    // Global Search
+    Route::get('/search', [SearchController::class, 'search'])->name('search');
+
+    // Two-Factor Authentication
+    Route::get('/two-factor-challenge', [TwoFactorController::class, 'challenge'])->name('two-factor.challenge');
+    Route::post('/two-factor-challenge', [TwoFactorController::class, 'verifyChallenge'])->name('two-factor.challenge.verify');
+
+    Route::prefix('settings/two-factor')->name('two-factor.')->group(function () {
+        Route::get('/setup', [TwoFactorController::class, 'setup'])->name('setup');
+        Route::post('/enable', [TwoFactorController::class, 'enable'])->name('enable');
+        Route::post('/disable', [TwoFactorController::class, 'disable'])->name('disable');
+    });
+
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
@@ -59,6 +78,15 @@ Route::middleware('auth')->group(function () {
     Route::put('/products/{product}', [ProductController::class, 'update'])->name('products.update')->middleware('permission:edit_products');
     Route::patch('/products/{product}', [ProductController::class, 'update'])->middleware('permission:edit_products');
     Route::delete('/products/{product}', [ProductController::class, 'destroy'])->name('products.destroy')->middleware('permission:delete_products');
+    Route::post('/products/{product}/duplicate', [ProductController::class, 'duplicate'])->name('products.duplicate')->middleware('permission:create_products');
+
+    // Bulk Product Operations
+    Route::prefix('products/bulk')->name('products.bulk.')->middleware('permission:edit_products')->group(function () {
+        Route::post('/delete', [\App\Http\Controllers\Inventory\BulkProductController::class, 'bulkDelete'])->middleware('permission:delete_products')->name('delete');
+        Route::post('/update-category', [\App\Http\Controllers\Inventory\BulkProductController::class, 'bulkUpdateCategory'])->name('update-category');
+        Route::post('/update-price', [\App\Http\Controllers\Inventory\BulkProductController::class, 'bulkUpdatePrice'])->name('update-price');
+        Route::post('/export', [\App\Http\Controllers\Inventory\BulkProductController::class, 'bulkExport'])->middleware('permission:export_data')->name('export');
+    });
 
     // Barcode Management
     Route::prefix('products/{product}/barcode')->name('products.barcode.')->middleware('permission:view_products')->group(function () {
@@ -89,6 +117,14 @@ Route::middleware('auth')->group(function () {
     Route::resource('locations', ProductLocationController::class)
         ->except(['create', 'show', 'edit'])
         ->middleware('permission:manage_locations');
+
+    // Stock Transfers - Permission based
+    Route::get('/stock-transfers', [StockTransferController::class, 'index'])->name('stock-transfers.index')->middleware('permission:transfer_stock');
+    Route::get('/stock-transfers/create', [StockTransferController::class, 'create'])->name('stock-transfers.create')->middleware('permission:transfer_stock');
+    Route::post('/stock-transfers', [StockTransferController::class, 'store'])->name('stock-transfers.store')->middleware('permission:transfer_stock');
+    Route::get('/stock-transfers/{stockTransfer}', [StockTransferController::class, 'show'])->name('stock-transfers.show')->middleware('permission:transfer_stock');
+    Route::post('/stock-transfers/{stockTransfer}/complete', [StockTransferController::class, 'complete'])->name('stock-transfers.complete')->middleware('permission:transfer_stock');
+    Route::post('/stock-transfers/{stockTransfer}/cancel', [StockTransferController::class, 'cancel'])->name('stock-transfers.cancel')->middleware('permission:transfer_stock');
 
     // Stock Adjustments - Permission based
     Route::get('/stock-adjustments', [StockAdjustmentController::class, 'index'])->name('stock-adjustments.index')->middleware('permission:manage_stock');
@@ -130,6 +166,10 @@ Route::middleware('auth')->group(function () {
     Route::post('/purchase-orders/{purchaseOrder}/send', [PurchaseOrderController::class, 'sendToSupplier'])->name('purchase-orders.send')->middleware('permission:edit_purchase_orders');
     Route::post('/purchase-orders/{purchaseOrder}/cancel', [PurchaseOrderController::class, 'cancel'])->name('purchase-orders.cancel')->middleware('permission:edit_purchase_orders');
 
+    // Purchase Order Invoice PDF
+    Route::get('/purchase-orders/{purchaseOrder}/invoice/download', [PurchaseOrderInvoiceController::class, 'download'])->name('purchase-orders.invoice.download')->middleware('permission:view_purchase_orders');
+    Route::get('/purchase-orders/{purchaseOrder}/invoice/preview', [PurchaseOrderInvoiceController::class, 'preview'])->name('purchase-orders.invoice.preview')->middleware('permission:view_purchase_orders');
+
     // Order Management - Permission based
     Route::get('/orders', [OrderController::class, 'index'])->name('orders.index')->middleware('permission:view_orders');
     Route::get('/orders/create', [OrderController::class, 'create'])->name('orders.create')->middleware('permission:create_orders');
@@ -141,6 +181,20 @@ Route::middleware('auth')->group(function () {
     Route::delete('/orders/{order}', [OrderController::class, 'destroy'])->name('orders.destroy')->middleware('permission:delete_orders');
     Route::post('/orders/{order}/approve', [OrderController::class, 'approve'])->name('orders.approve')->middleware('permission:approve_orders');
     Route::post('/orders/{order}/reject', [OrderController::class, 'reject'])->name('orders.reject')->middleware('permission:approve_orders');
+
+    // Order Invoice PDF
+    Route::get('/orders/{order}/invoice/download', [InvoiceController::class, 'download'])->name('orders.invoice.download')->middleware('permission:view_orders');
+    Route::get('/orders/{order}/invoice/preview', [InvoiceController::class, 'preview'])->name('orders.invoice.preview')->middleware('permission:view_orders');
+
+    // Return Orders (RMA) - Permission based
+    Route::get('/returns', [ReturnOrderController::class, 'index'])->name('returns.index')->middleware('permission:manage_returns');
+    Route::get('/returns/create', [ReturnOrderController::class, 'create'])->name('returns.create')->middleware('permission:manage_returns');
+    Route::post('/returns', [ReturnOrderController::class, 'store'])->name('returns.store')->middleware('permission:manage_returns');
+    Route::get('/returns/{returnOrder}', [ReturnOrderController::class, 'show'])->name('returns.show')->middleware('permission:manage_returns');
+    Route::post('/returns/{returnOrder}/approve', [ReturnOrderController::class, 'approve'])->name('returns.approve')->middleware('permission:manage_returns');
+    Route::post('/returns/{returnOrder}/receive', [ReturnOrderController::class, 'receive'])->name('returns.receive')->middleware('permission:manage_returns');
+    Route::post('/returns/{returnOrder}/complete', [ReturnOrderController::class, 'complete'])->name('returns.complete')->middleware('permission:manage_returns');
+    Route::post('/returns/{returnOrder}/reject', [ReturnOrderController::class, 'reject'])->name('returns.reject')->middleware('permission:manage_returns');
 
     // User Management - Permission based
     Route::get('/users', [UserController::class, 'index'])->name('users.index')->middleware('permission:view_users');
@@ -193,6 +247,10 @@ Route::middleware('auth')->group(function () {
             });
         });
 
+        // Dashboard Widget Preferences (accessible by all authenticated users)
+        Route::patch('/dashboard-widgets', [DashboardController::class, 'updateWidgets'])
+            ->name('dashboard-widgets.update');
+
         // Account Settings (accessible by all authenticated users)
         Route::prefix('account')->name('account.')->group(function () {
             Route::get('/', [\App\Http\Controllers\Admin\AccountSettingsController::class, 'index'])->name('index');
@@ -222,6 +280,9 @@ Route::middleware('auth')->group(function () {
     Route::get('/activity-log', [\App\Http\Controllers\Admin\ActivityLogController::class, 'index'])
         ->middleware('permission:view_activity_log')
         ->name('activity-log.index');
+    Route::get('/activity-log/export', [\App\Http\Controllers\Admin\ActivityLogController::class, 'export'])
+        ->middleware('permission:view_activity_log')
+        ->name('activity-log.export');
 
     // System Update - Admin only
     Route::prefix('admin/update')->name('admin.update.')->middleware('permission:manage_organization')->group(function () {

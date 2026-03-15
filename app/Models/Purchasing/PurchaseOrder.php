@@ -204,9 +204,9 @@ class PurchaseOrder extends Model
         $date = now()->format('Ymd');
         $prefix = "PO-{$date}-";
 
-        // Get the highest number for today
-        $lastPO = self::where('organization_id', $organizationId)
-            ->where('po_number', 'like', "{$prefix}%")
+        // Get the highest number for today across all organizations
+        // to avoid unique constraint violations
+        $lastPO = self::where('po_number', 'like', "{$prefix}%")
             ->orderBy('po_number', 'desc')
             ->first();
 
@@ -217,7 +217,7 @@ class PurchaseOrder extends Model
             $newNumber = 1;
         }
 
-        return $prefix . str_pad($newNumber, 4, '0', STR_PAD_LEFT);
+        return $prefix . str_pad((string) $newNumber, 4, '0', STR_PAD_LEFT);
     }
 
     /**

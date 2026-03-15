@@ -4,6 +4,7 @@ import { useI18n } from 'vue-i18n';
 import ApplicationLogo from '@/Components/ApplicationLogo.vue';
 import { Link } from '@inertiajs/vue3';
 import { usePermissions } from '@/composables/usePermissions';
+import GlobalSearch from '@/Components/Layout/GlobalSearch.vue';
 import NotificationDropdown from '@/Components/Layout/NotificationDropdown.vue';
 import ThemeToggle from '@/Components/Layout/ThemeToggle.vue';
 import SidebarNavItem from '@/Components/Layout/SidebarNavItem.vue';
@@ -13,6 +14,7 @@ const { t } = useI18n();
 const sidebarOpen = ref(false);
 const settingsSubmenuOpen = ref(false);
 const notificationDropdownRef = ref(null);
+const globalSearchRef = ref(null);
 const { hasPermission } = usePermissions();
 
 // Sidebar collapsed state with localStorage persistence
@@ -61,6 +63,10 @@ const navItems = {
         icon: 'M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z',
         activeRoutes: ['orders.*'],
     },
+    returns: {
+        icon: 'M3 10h10a1 1 0 011 1v1a1 1 0 01-1 1H3m0 0l4-4m-4 4l4 4M21 14H11a1 1 0 01-1-1v-1a1 1 0 011-1h10m0 0l-4 4m4-4l-4-4',
+        activeRoutes: ['returns.*'],
+    },
     purchaseOrders: {
         icon: 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01',
         activeRoutes: ['purchase-orders.*'],
@@ -76,6 +82,10 @@ const navItems = {
     locations: {
         icon: 'M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z',
         activeRoutes: ['locations.*'],
+    },
+    stockTransfers: {
+        icon: 'M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4',
+        activeRoutes: ['stock-transfers.*'],
     },
     importExport: {
         icon: 'M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4',
@@ -175,6 +185,16 @@ const navItems = {
                     :collapsed="sidebarCollapsed"
                 />
 
+                <!-- Returns -->
+                <SidebarNavItem
+                    v-if="hasPermission('manage_returns')"
+                    :href="route('returns.index')"
+                    :icon="navItems.returns.icon"
+                    label="Returns"
+                    :active-routes="navItems.returns.activeRoutes"
+                    :collapsed="sidebarCollapsed"
+                />
+
                 <!-- Purchase Orders -->
                 <SidebarNavItem
                     v-if="hasPermission('view_purchase_orders')"
@@ -212,6 +232,16 @@ const navItems = {
                     :icon="navItems.locations.icon"
                     label="Locations"
                     :active-routes="navItems.locations.activeRoutes"
+                    :collapsed="sidebarCollapsed"
+                />
+
+                <!-- Stock Transfers -->
+                <SidebarNavItem
+                    v-if="hasPermission('transfer_stock')"
+                    :href="route('stock-transfers.index')"
+                    :icon="navItems.stockTransfers.icon"
+                    label="Stock Transfers"
+                    :active-routes="navItems.stockTransfers.activeRoutes"
                     :collapsed="sidebarCollapsed"
                 />
 
@@ -417,6 +447,16 @@ const navItems = {
 
                     <!-- Header Actions -->
                     <div class="flex items-center gap-1 ml-4">
+                        <!-- Search Button -->
+                        <button
+                            @click="globalSearchRef?.open()"
+                            class="p-2 text-gray-500 hover:text-primary-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:text-primary-400 dark:hover:bg-dark-card rounded-lg transition"
+                            title="Search (Ctrl+K)"
+                        >
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                            </svg>
+                        </button>
                         <ThemeToggle />
                         <NotificationDropdown ref="notificationDropdownRef" />
                     </div>
@@ -435,5 +475,8 @@ const navItems = {
             @click="closeNotifications"
             class="fixed inset-0 z-30"
         ></div>
+
+        <!-- Global Search -->
+        <GlobalSearch ref="globalSearchRef" />
     </div>
 </template>

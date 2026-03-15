@@ -24,6 +24,7 @@ class SecurityHeaders
         $response->headers->set('Permissions-Policy', 'camera=(), microphone=(), geolocation=(), payment=()');
         $response->headers->set('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
         $response->headers->remove('X-Powered-By');
+        $response->headers->remove('Server');
 
         return $response;
     }
