@@ -3,6 +3,8 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import PluginSlot from '@/Components/PluginSlot.vue';
 import ActivityTimeline from '@/Components/ActivityTimeline.vue';
 import VariantsTable from '@/Components/VariantsTable.vue';
+import BatchList from '@/Components/BatchList.vue';
+import SerialList from '@/Components/SerialList.vue';
 import { Head, Link, router } from '@inertiajs/vue3';
 import { ref, onMounted, computed } from 'vue';
 import { useI18n } from 'vue-i18n';
@@ -114,6 +116,10 @@ const onVariantUpdated = (updatedVariant) => {
 const totalVariantStock = computed(() => {
     return variants.value.reduce((sum, v) => sum + (v.stock || 0), 0);
 });
+
+const duplicateProduct = () => {
+    router.post(route('products.duplicate', props.product.id));
+};
 </script>
 
 <template>
@@ -126,6 +132,15 @@ const totalVariantStock = computed(() => {
                     {{ t('products.show.title') }}
                 </h2>
                 <div class="flex gap-3">
+                    <button
+                        @click="duplicateProduct"
+                        class="inline-flex items-center px-4 py-2 bg-amber-500 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-amber-600 transition"
+                    >
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                        </svg>
+                        Duplicate
+                    </button>
                     <Link
                         :href="route('products.edit', product.id)"
                         class="inline-flex items-center px-4 py-2 bg-primary-400 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-primary-500 transition"
@@ -300,6 +315,26 @@ const totalVariantStock = computed(() => {
                                         Stock is tracked per variant. Total variant stock: <span class="font-semibold">{{ totalVariantStock }}</span>
                                     </p>
                                 </div>
+                            </div>
+                        </div>
+
+                        <!-- Batch Tracking -->
+                        <div v-if="product.tracking_type === 'batch'" class="bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border overflow-hidden shadow-lg sm:rounded-lg">
+                            <div class="p-6">
+                                <BatchList
+                                    :product-id="product.id"
+                                    :batches="product.batches || []"
+                                />
+                            </div>
+                        </div>
+
+                        <!-- Serial Tracking -->
+                        <div v-if="product.tracking_type === 'serial'" class="bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border overflow-hidden shadow-lg sm:rounded-lg">
+                            <div class="p-6">
+                                <SerialList
+                                    :product-id="product.id"
+                                    :serials="product.serials || []"
+                                />
                             </div>
                         </div>
                     </div>

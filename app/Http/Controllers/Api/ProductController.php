@@ -89,12 +89,14 @@ class ProductController extends Controller
             'category_id' => ['nullable', 'integer', 'exists:product_categories,id'],
             'location_id' => ['nullable', 'integer', 'exists:product_locations,id'],
             'is_active' => ['nullable', 'boolean'],
+            'tracking_type' => ['nullable', 'string', 'in:none,batch,serial'],
             'metadata' => ['nullable', 'array'],
         ]);
 
         $validated['organization_id'] = $request->user()->organization_id;
         $validated['is_active'] = $validated['is_active'] ?? true;
         $validated['stock'] = $validated['stock'] ?? 0;
+        $validated['tracking_type'] = $validated['tracking_type'] ?? 'none';
 
         $product = Product::create($validated);
         $product->load(['category', 'location']);
@@ -162,6 +164,7 @@ class ProductController extends Controller
             'category_id' => ['nullable', 'integer', 'exists:product_categories,id'],
             'location_id' => ['nullable', 'integer', 'exists:product_locations,id'],
             'is_active' => ['nullable', 'boolean'],
+            'tracking_type' => ['nullable', 'string', 'in:none,batch,serial'],
             'metadata' => ['nullable', 'array'],
         ]);
 

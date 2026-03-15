@@ -2,7 +2,9 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import PluginSlot from '@/Components/PluginSlot.vue';
 import { Head, Link } from '@inertiajs/vue3';
+import { ref, reactive } from 'vue';
 import { useI18n } from 'vue-i18n';
+import axios from 'axios';
 
 const { t } = useI18n();
 
@@ -10,10 +12,44 @@ const props = defineProps({
     stats: Object,
     recentProducts: Array,
     lowStockProducts: Array,
+    reorderSuggestions: Array,
     recentOrders: Array,
     stockByCategory: Array,
+    widgetPreferences: Object,
     pluginComponents: Object,
 });
+
+const showCustomizeModal = ref(false);
+const saving = ref(false);
+
+const widgetLabels = {
+    stats_overview: 'Stats Overview',
+    revenue_chart: 'Revenue & Secondary Stats',
+    stock_movements: 'Stock Movements',
+    low_stock_alerts: 'Low Stock Alerts',
+    recent_orders: 'Recent Orders',
+    recent_products: 'Recent Products',
+    top_products: 'Top Products',
+    stock_by_category: 'Stock by Category',
+    reorder_suggestions: 'Reorder Suggestions',
+};
+
+const widgets = reactive({ ...(props.widgetPreferences || {}) });
+
+const saveWidgetPreferences = async () => {
+    saving.value = true;
+    try {
+        await axios.patch(route('settings.dashboard-widgets.update'), {
+            widgets: { ...widgets },
+        });
+    } catch (e) {
+        // Store in localStorage as fallback
+        localStorage.setItem('dashboard_widgets', JSON.stringify({ ...widgets }));
+    } finally {
+        saving.value = false;
+        showCustomizeModal.value = false;
+    }
+};
 
 const formatCurrency = (value) => {
     return new Intl.NumberFormat('en-US', {
@@ -47,9 +83,22 @@ const formatCompactCurrency = (value) => {
 
     <AuthenticatedLayout>
         <template #header>
-            <h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100">
-                {{ t('dashboard.title') }}
-            </h2>
+            <div class="flex items-center justify-between">
+                <h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                    {{ t('dashboard.title') }}
+                </h2>
+                <button
+                    @click="showCustomizeModal = true"
+                    class="inline-flex items-center px-3 py-2 text-sm font-medium text-gray-600 dark:text-gray-300 bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border rounded-lg hover:bg-gray-50 dark:hover:bg-dark-bg transition"
+                    title="Customize Dashboard"
+                >
+                    <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                    Customize
+                </button>
+            </div>
         </template>
 
         <div class="py-8 bg-gray-50 dark:bg-dark-bg min-h-screen">
@@ -61,7 +110,7 @@ const formatCompactCurrency = (value) => {
                 <PluginSlot slot="before-stats" :components="pluginComponents?.beforeStats" />
 
                 <!-- Primary Stats Grid -->
-                <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4 mb-6">
+                <div v-if="widgets.stats_overview" class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4 mb-6">
                     <!-- Total Products -->
                     <div class="bg-white dark:bg-dark-card rounded-xl border border-gray-100 dark:border-dark-border shadow-card hover:shadow-card-hover transition-shadow">
                         <div class="p-5">
@@ -140,7 +189,7 @@ const formatCompactCurrency = (value) => {
                 </div>
 
                 <!-- Secondary Stats Row -->
-                <div class="grid grid-cols-2 gap-4 mb-6 sm:grid-cols-3 lg:grid-cols-5">
+                <div v-if="widgets.revenue_chart" class="grid grid-cols-2 gap-4 mb-6 sm:grid-cols-3 lg:grid-cols-5">
                     <!-- Pending Orders -->
                     <Link :href="route('orders.index', { status: 'pending' })" class="bg-white dark:bg-dark-card rounded-xl border border-gray-100 dark:border-dark-border shadow-card hover:shadow-card-hover hover:border-primary-200 dark:hover:border-primary-800 transition-all p-4 block">
                         <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">{{ t('dashboard.pendingOrders') }}</p>
@@ -189,9 +238,9 @@ const formatCompactCurrency = (value) => {
                 <PluginSlot slot="before-content" :components="pluginComponents?.beforeContent" />
 
                 <!-- Three Column Layout -->
-                <div class="grid grid-cols-1 gap-6 lg:grid-cols-3 mb-6">
+                <div v-if="widgets.recent_orders || widgets.low_stock_alerts || widgets.recent_products" class="grid grid-cols-1 gap-6 lg:grid-cols-3 mb-6">
                     <!-- Recent Orders -->
-                    <div class="bg-white dark:bg-dark-card rounded-xl border border-gray-100 dark:border-dark-border shadow-card">
+                    <div v-if="widgets.recent_orders" class="bg-white dark:bg-dark-card rounded-xl border border-gray-100 dark:border-dark-border shadow-card">
                         <div class="px-5 py-4 border-b border-gray-100 dark:border-dark-border flex items-center justify-between">
                             <h3 class="text-sm font-semibold text-gray-900 dark:text-gray-100">
                                 {{ t('dashboard.recentOrders') }}
@@ -263,7 +312,7 @@ const formatCompactCurrency = (value) => {
                     </div>
 
                     <!-- Low Stock Alert -->
-                    <div class="bg-white dark:bg-dark-card rounded-xl border border-gray-100 dark:border-dark-border shadow-card">
+                    <div v-if="widgets.low_stock_alerts" class="bg-white dark:bg-dark-card rounded-xl border border-gray-100 dark:border-dark-border shadow-card">
                         <div class="px-5 py-4 border-b border-gray-100 dark:border-dark-border flex items-center justify-between">
                             <h3 class="text-sm font-semibold text-gray-900 dark:text-gray-100">
                                 {{ t('dashboard.lowStockAlert') }}
@@ -314,7 +363,7 @@ const formatCompactCurrency = (value) => {
                     </div>
 
                     <!-- Recent Products -->
-                    <div class="bg-white dark:bg-dark-card rounded-xl border border-gray-100 dark:border-dark-border shadow-card">
+                    <div v-if="widgets.recent_products" class="bg-white dark:bg-dark-card rounded-xl border border-gray-100 dark:border-dark-border shadow-card">
                         <div class="px-5 py-4 border-b border-gray-100 dark:border-dark-border flex items-center justify-between">
                             <h3 class="text-sm font-semibold text-gray-900 dark:text-gray-100">
                                 {{ t('dashboard.recentProducts') }}
@@ -371,11 +420,75 @@ const formatCompactCurrency = (value) => {
                     </div>
                 </div>
 
+                <!-- Reorder Suggestions -->
+                <div v-if="reorderSuggestions && reorderSuggestions.length > 0" class="mb-6 bg-white dark:bg-dark-card rounded-xl border border-gray-100 dark:border-dark-border shadow-card">
+                    <div class="px-5 py-4 border-b border-gray-100 dark:border-dark-border flex items-center justify-between">
+                        <div class="flex items-center gap-2">
+                            <div class="w-2 h-2 bg-orange-500 rounded-full animate-pulse"></div>
+                            <h3 class="text-sm font-semibold text-gray-900 dark:text-gray-100">
+                                Reorder Suggestions
+                            </h3>
+                            <span class="px-2 py-0.5 text-[11px] font-semibold rounded-full bg-orange-100 dark:bg-orange-500/15 text-orange-700 dark:text-orange-400">
+                                {{ reorderSuggestions.length }}
+                            </span>
+                        </div>
+                        <Link
+                            :href="route('products.index', { low_stock: true })"
+                            class="text-xs font-medium text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300"
+                        >
+                            {{ t('dashboard.viewAll') }}
+                        </Link>
+                    </div>
+                    <div class="p-5">
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-sm">
+                                <thead>
+                                    <tr class="border-b border-gray-100 dark:border-dark-border">
+                                        <th class="text-left py-2 px-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Product</th>
+                                        <th class="text-right py-2 px-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Stock</th>
+                                        <th class="text-right py-2 px-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Reorder At</th>
+                                        <th class="text-right py-2 px-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Order Qty</th>
+                                        <th class="text-left py-2 px-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Supplier</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-gray-50 dark:divide-dark-border">
+                                    <tr
+                                        v-for="product in reorderSuggestions"
+                                        :key="product.id"
+                                        class="hover:bg-gray-50 dark:hover:bg-slate-800/50 transition cursor-pointer"
+                                        @click="$inertia.visit(route('products.edit', product.id))"
+                                    >
+                                        <td class="py-2.5 px-3">
+                                            <p class="font-medium text-gray-900 dark:text-gray-100">{{ product.name }}</p>
+                                            <p class="text-xs text-gray-500 dark:text-gray-400">{{ product.sku }} <span v-if="product.category">· {{ product.category }}</span></p>
+                                        </td>
+                                        <td class="py-2.5 px-3 text-right">
+                                            <span class="font-semibold" :class="product.stock === 0 ? 'text-red-600 dark:text-red-400' : 'text-orange-600 dark:text-orange-400'">
+                                                {{ product.stock }}
+                                            </span>
+                                        </td>
+                                        <td class="py-2.5 px-3 text-right text-gray-600 dark:text-gray-300">
+                                            {{ product.reorder_point }}
+                                        </td>
+                                        <td class="py-2.5 px-3 text-right text-gray-600 dark:text-gray-300">
+                                            {{ product.reorder_quantity }}
+                                        </td>
+                                        <td class="py-2.5 px-3">
+                                            <span v-if="product.supplier" class="text-gray-600 dark:text-gray-300">{{ product.supplier }}</span>
+                                            <span v-else class="text-xs text-red-500 dark:text-red-400 italic">No supplier</span>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Plugin Slot: After Content Grid -->
                 <PluginSlot slot="after-content" :components="pluginComponents?.afterContent" />
 
                 <!-- Stock by Category -->
-                <div v-if="stockByCategory.length > 0" class="mb-6 bg-white dark:bg-dark-card rounded-xl border border-gray-100 dark:border-dark-border shadow-card">
+                <div v-if="widgets.stock_by_category && stockByCategory.length > 0" class="mb-6 bg-white dark:bg-dark-card rounded-xl border border-gray-100 dark:border-dark-border shadow-card">
                     <div class="px-5 py-4 border-b border-gray-100 dark:border-dark-border">
                         <h3 class="text-sm font-semibold text-gray-900 dark:text-gray-100">
                             {{ t('dashboard.stockValueByCategory') }}
@@ -478,5 +591,68 @@ const formatCompactCurrency = (value) => {
                 <PluginSlot slot="footer" :components="pluginComponents?.footer" />
             </div>
         </div>
+
+        <!-- Customize Dashboard Modal -->
+        <Teleport to="body">
+            <div v-if="showCustomizeModal" class="fixed inset-0 z-50 flex items-center justify-center">
+                <div class="fixed inset-0 bg-black/50" @click="showCustomizeModal = false"></div>
+                <div class="relative bg-white dark:bg-dark-card rounded-xl border border-gray-200 dark:border-dark-border shadow-xl w-full max-w-md mx-4 p-6">
+                    <div class="flex items-center justify-between mb-6">
+                        <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                            Customize Dashboard
+                        </h3>
+                        <button
+                            @click="showCustomizeModal = false"
+                            class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition"
+                        >
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </button>
+                    </div>
+
+                    <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">
+                        Toggle widgets to show or hide them on your dashboard.
+                    </p>
+
+                    <div class="space-y-3 max-h-80 overflow-y-auto">
+                        <label
+                            v-for="(label, key) in widgetLabels"
+                            :key="key"
+                            class="flex items-center justify-between p-3 bg-gray-50 dark:bg-dark-bg rounded-lg cursor-pointer hover:bg-gray-100 dark:hover:bg-dark-bg/80 transition"
+                        >
+                            <span class="text-sm font-medium text-gray-700 dark:text-gray-300">
+                                {{ label }}
+                            </span>
+                            <div class="relative">
+                                <input
+                                    type="checkbox"
+                                    v-model="widgets[key]"
+                                    class="sr-only peer"
+                                />
+                                <div class="w-10 h-6 bg-gray-300 dark:bg-gray-600 rounded-full peer peer-checked:bg-primary-500 transition-colors"></div>
+                                <div class="absolute left-0.5 top-0.5 w-5 h-5 bg-white rounded-full shadow transform peer-checked:translate-x-4 transition-transform"></div>
+                            </div>
+                        </label>
+                    </div>
+
+                    <div class="mt-6 flex gap-3">
+                        <button
+                            @click="saveWidgetPreferences"
+                            :disabled="saving"
+                            class="flex-1 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition font-medium text-sm disabled:opacity-50"
+                        >
+                            {{ saving ? 'Saving...' : 'Save Preferences' }}
+                        </button>
+                        <button
+                            @click="showCustomizeModal = false"
+                            class="px-4 py-2 bg-gray-200 dark:bg-dark-bg text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-300 dark:hover:bg-dark-bg/80 transition font-medium text-sm border border-gray-200 dark:border-dark-border"
+                        >
+                            Cancel
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </Teleport>
     </AuthenticatedLayout>
 </template>

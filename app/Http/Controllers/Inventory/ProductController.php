@@ -149,6 +149,8 @@ class ProductController extends Controller
             'stock' => 'required|integer|min:0',
             'min_stock' => 'required|integer|min:0',
             'max_stock' => 'nullable|integer|min:0',
+            'reorder_point' => 'nullable|integer|min:0',
+            'reorder_quantity' => 'nullable|integer|min:0',
             'barcode' => 'nullable|string|max:255',
             'notes' => 'nullable|string',
             'category_id' => 'nullable|exists:product_categories,id',
@@ -159,6 +161,7 @@ class ProductController extends Controller
             'images.*.preview' => 'nullable|string',
             'images.*.name' => 'nullable|string',
             'has_variants' => 'boolean',
+            'tracking_type' => 'nullable|string|in:none,batch,serial',
             'options' => 'nullable|array|max:3',
             'options.*.name' => 'required_with:options|string|max:255',
             'options.*.values' => 'required_with:options|array|min:1',
@@ -177,6 +180,7 @@ class ProductController extends Controller
         $validated = $request->validate($rules);
 
         $validated['organization_id'] = $request->user()->organization_id;
+        $validated['tracking_type'] = $validated['tracking_type'] ?? 'none';
 
         // Hook: Allow plugins to modify validated data before saving
         $validated = apply_filters('product_store_data', $validated, $request);
@@ -354,7 +358,7 @@ class ProductController extends Controller
      */
     public function show(Product $product): Response
     {
-        $product->load(['category', 'location', 'organization', 'options', 'variants']);
+        $product->load(['category', 'location', 'organization', 'options', 'variants', 'batches', 'serials']);
 
         // Ensure user can only view products from their organization
         if ($product->organization_id !== auth()->user()->organization_id) {
@@ -460,6 +464,8 @@ class ProductController extends Controller
             'stock' => 'required|integer|min:0',
             'min_stock' => 'required|integer|min:0',
             'max_stock' => 'nullable|integer|min:0',
+            'reorder_point' => 'nullable|integer|min:0',
+            'reorder_quantity' => 'nullable|integer|min:0',
             'barcode' => 'nullable|string|max:255',
             'notes' => 'nullable|string',
             'category_id' => 'nullable|exists:product_categories,id',
@@ -471,6 +477,7 @@ class ProductController extends Controller
             'images.*.url' => 'nullable|string',
             'images.*.name' => 'nullable|string',
             'has_variants' => 'boolean',
+            'tracking_type' => 'nullable|string|in:none,batch,serial',
             'options' => 'nullable|array|max:3',
             'options.*.id' => 'nullable|integer',
             'options.*.name' => 'required_with:options|string|max:255',
@@ -656,6 +663,43 @@ class ProductController extends Controller
         if (!empty($variantsToDelete)) {
             ProductVariant::whereIn('id', $variantsToDelete)->delete();
         }
+    }
+
+    /**
+     * Duplicate the specified product.
+     *
+     * Creates a copy of the product with "(Copy)" appended to the name,
+     * a new unique SKU, and stock reset to 0.
+     *
+     * @param Request $request The incoming HTTP request
+     * @param Product $product The product to duplicate
+     * @return \Illuminate\Http\RedirectResponse
+     */
+    public function duplicate(Request $request, Product $product)
+    {
+        // Ensure user can only duplicate products from their organization
+        if ($product->organization_id !== $request->user()->organization_id) {
+            abort(403, 'Unauthorized action.');
+        }
+
+        $newProduct = $product->replicate(['id', 'created_at', 'updated_at', 'deleted_at']);
+        $newProduct->name = $product->name . ' (Copy)';
+        $newProduct->stock = 0;
+
+        // Generate a unique SKU
+        $baseSku = $product->sku . '-COPY';
+        $sku = $baseSku;
+        $counter = 1;
+        while (Product::where('sku', $sku)->exists()) {
+            $sku = $baseSku . '-' . $counter;
+            $counter++;
+        }
+        $newProduct->sku = $sku;
+
+        $newProduct->save();
+
+        return redirect()->route('products.show', $newProduct)
+            ->with('success', 'Product duplicated successfully.');
     }
 
     /**

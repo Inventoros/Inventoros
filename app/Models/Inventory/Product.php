@@ -29,6 +29,8 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property int $stock
  * @property int|null $min_stock
  * @property int|null $max_stock
+ * @property int|null $reorder_point
+ * @property int|null $reorder_quantity
  * @property string|null $barcode
  * @property string|null $notes
  * @property string|null $image
@@ -78,6 +80,8 @@ class Product extends Model
         'stock',
         'min_stock',
         'max_stock',
+        'reorder_point',
+        'reorder_quantity',
         'barcode',
         'notes',
         'image',
@@ -87,6 +91,7 @@ class Product extends Model
         'location_id',
         'is_active',
         'has_variants',
+        'tracking_type',
         'metadata',
     ];
 
@@ -104,6 +109,8 @@ class Product extends Model
             'stock' => 'integer',
             'min_stock' => 'integer',
             'max_stock' => 'integer',
+            'reorder_point' => 'integer',
+            'reorder_quantity' => 'integer',
             'is_active' => 'boolean',
             'has_variants' => 'boolean',
             'metadata' => 'array',
@@ -192,6 +199,26 @@ class Product extends Model
     public function variants(): HasMany
     {
         return $this->hasMany(ProductVariant::class)->ordered();
+    }
+
+    /**
+     * Get the batches for this product.
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany<\App\Models\Inventory\ProductBatch, $this>
+     */
+    public function batches(): HasMany
+    {
+        return $this->hasMany(ProductBatch::class)->latest();
+    }
+
+    /**
+     * Get the serial numbers for this product.
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany<\App\Models\Inventory\ProductSerial, $this>
+     */
+    public function serials(): HasMany
+    {
+        return $this->hasMany(ProductSerial::class)->latest();
     }
 
     /**
@@ -310,6 +337,33 @@ class Product extends Model
     public function scopeLowStock($query)
     {
         return $query->whereColumn('stock', '<=', 'min_stock');
+    }
+
+    /**
+     * Scope a query to only include products that need reorder.
+     *
+     * @param \Illuminate\Database\Eloquent\Builder<static> $query
+     * @return \Illuminate\Database\Eloquent\Builder<static>
+     */
+    public function scopeNeedsReorder($query)
+    {
+        return $query->whereNotNull('reorder_point')
+            ->whereNotNull('reorder_quantity')
+            ->where('reorder_quantity', '>', 0)
+            ->whereColumn('stock', '<=', 'reorder_point');
+    }
+
+    /**
+     * Check if the product needs to be reordered.
+     *
+     * @return bool
+     */
+    public function isReorderNeeded(): bool
+    {
+        return $this->reorder_point !== null
+            && $this->reorder_quantity !== null
+            && $this->reorder_quantity > 0
+            && $this->stock <= $this->reorder_point;
     }
 
     /**

@@ -20,9 +20,17 @@ const search = ref(props.filters?.search || '');
 const category = ref(props.filters?.category || '');
 const location = ref(props.filters?.location || '');
 
-// Bulk selection for barcode printing
+// Bulk selection
 const selectedProducts = ref([]);
 const selectAll = ref(false);
+
+// Bulk operations state
+const showBulkCategoryModal = ref(false);
+const showBulkPriceModal = ref(false);
+const bulkCategoryId = ref('');
+const bulkPriceType = ref('percentage');
+const bulkPriceValue = ref(0);
+const bulkProcessing = ref(false);
 
 // Barcode scanner state
 const showScannerModal = ref(false);
@@ -61,9 +69,7 @@ onUnmounted(() => {
 
 const toggleSelectAll = () => {
     if (selectAll.value) {
-        selectedProducts.value = props.products.data
-            .filter(p => p.barcode || p.sku)
-            .map(p => p.id);
+        selectedProducts.value = props.products.data.map(p => p.id);
     } else {
         selectedProducts.value = [];
     }
@@ -81,8 +87,7 @@ const toggleSelect = (productId) => {
         selectedProducts.value.push(productId);
     }
     // Update selectAll state
-    const selectableProducts = props.products.data.filter(p => p.barcode || p.sku);
-    selectAll.value = selectableProducts.length > 0 && selectedProducts.value.length === selectableProducts.length;
+    selectAll.value = props.products.data.length > 0 && selectedProducts.value.length === props.products.data.length;
 };
 
 const printSelectedBarcodes = () => {
@@ -128,6 +133,97 @@ const deleteProduct = (product) => {
 
 const isLowStock = (product) => {
     return product.stock <= product.min_stock;
+};
+
+// Bulk operations
+const bulkDelete = () => {
+    if (!confirm(`Are you sure you want to delete ${selectedProducts.value.length} product(s)? This action cannot be undone.`)) return;
+    bulkProcessing.value = true;
+    router.post(route('products.bulk.delete'), {
+        ids: selectedProducts.value,
+    }, {
+        onSuccess: () => {
+            selectedProducts.value = [];
+            selectAll.value = false;
+            bulkProcessing.value = false;
+        },
+        onError: () => {
+            bulkProcessing.value = false;
+        },
+    });
+};
+
+const bulkUpdateCategory = () => {
+    if (!bulkCategoryId.value) return;
+    bulkProcessing.value = true;
+    router.post(route('products.bulk.update-category'), {
+        ids: selectedProducts.value,
+        category_id: bulkCategoryId.value,
+    }, {
+        onSuccess: () => {
+            selectedProducts.value = [];
+            selectAll.value = false;
+            showBulkCategoryModal.value = false;
+            bulkCategoryId.value = '';
+            bulkProcessing.value = false;
+        },
+        onError: () => {
+            bulkProcessing.value = false;
+        },
+    });
+};
+
+const bulkUpdatePrice = () => {
+    if (!bulkPriceValue.value) return;
+    bulkProcessing.value = true;
+    router.post(route('products.bulk.update-price'), {
+        ids: selectedProducts.value,
+        type: bulkPriceType.value,
+        value: parseFloat(bulkPriceValue.value),
+    }, {
+        onSuccess: () => {
+            selectedProducts.value = [];
+            selectAll.value = false;
+            showBulkPriceModal.value = false;
+            bulkPriceValue.value = 0;
+            bulkProcessing.value = false;
+        },
+        onError: () => {
+            bulkProcessing.value = false;
+        },
+    });
+};
+
+const bulkExport = () => {
+    // For export, use a form submission to trigger a file download
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.action = route('products.bulk.export');
+    form.style.display = 'none';
+
+    // CSRF token
+    const csrfInput = document.createElement('input');
+    csrfInput.type = 'hidden';
+    csrfInput.name = '_token';
+    csrfInput.value = document.querySelector('meta[name="csrf-token"]')?.content;
+    form.appendChild(csrfInput);
+
+    // Product IDs
+    selectedProducts.value.forEach(id => {
+        const input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = 'ids[]';
+        input.value = id;
+        form.appendChild(input);
+    });
+
+    document.body.appendChild(form);
+    form.submit();
+    document.body.removeChild(form);
+};
+
+const duplicateProduct = (product) => {
+    router.post(route('products.duplicate', product.id));
 };
 </script>
 
@@ -238,27 +334,161 @@ const isLowStock = (product) => {
                 <PluginSlot slot="before-table" :components="pluginComponents?.beforeTable" />
 
                 <!-- Bulk Actions Bar -->
-                <div v-if="selectedProducts.length > 0" class="mb-4 p-4 bg-primary-900/20 border border-primary-800 rounded-lg flex items-center justify-between">
-                    <div class="flex items-center gap-3">
-                        <span class="text-sm font-medium text-gray-100">
-                            {{ selectedProducts.length }} product{{ selectedProducts.length > 1 ? 's' : '' }} selected
-                        </span>
-                        <button
-                            @click="selectedProducts = []; selectAll = false"
-                            class="text-xs text-gray-400 hover:text-gray-200"
-                        >
-                            {{ t('common.clearSelection') }}
-                        </button>
+                <div v-if="selectedProducts.length > 0" class="mb-4 p-4 bg-primary-900/20 border border-primary-800 rounded-lg sticky top-0 z-30">
+                    <div class="flex items-center justify-between flex-wrap gap-3">
+                        <div class="flex items-center gap-3">
+                            <span class="text-sm font-medium text-gray-100">
+                                {{ selectedProducts.length }} product{{ selectedProducts.length > 1 ? 's' : '' }} selected
+                            </span>
+                            <button
+                                @click="selectedProducts = []; selectAll = false"
+                                class="text-xs text-gray-400 hover:text-gray-200"
+                            >
+                                {{ t('common.clearSelection') }}
+                            </button>
+                        </div>
+                        <div class="flex items-center gap-2 flex-wrap">
+                            <!-- Print Barcodes -->
+                            <button
+                                @click="printSelectedBarcodes"
+                                class="inline-flex items-center px-3 py-1.5 bg-primary-400 text-white rounded-lg text-sm font-medium hover:bg-primary-500 transition"
+                            >
+                                <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+                                </svg>
+                                {{ t('products.printBarcodes') }}
+                            </button>
+                            <!-- Change Category -->
+                            <button
+                                @click="showBulkCategoryModal = true"
+                                :disabled="bulkProcessing"
+                                class="inline-flex items-center px-3 py-1.5 bg-purple-600 text-white rounded-lg text-sm font-medium hover:bg-purple-700 transition disabled:opacity-50"
+                            >
+                                <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+                                </svg>
+                                Change Category
+                            </button>
+                            <!-- Adjust Price -->
+                            <button
+                                @click="showBulkPriceModal = true"
+                                :disabled="bulkProcessing"
+                                class="inline-flex items-center px-3 py-1.5 bg-amber-600 text-white rounded-lg text-sm font-medium hover:bg-amber-700 transition disabled:opacity-50"
+                            >
+                                <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                                Adjust Price
+                            </button>
+                            <!-- Export Selected -->
+                            <button
+                                @click="bulkExport"
+                                :disabled="bulkProcessing"
+                                class="inline-flex items-center px-3 py-1.5 bg-green-600 text-white rounded-lg text-sm font-medium hover:bg-green-700 transition disabled:opacity-50"
+                            >
+                                <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                </svg>
+                                Export Selected
+                            </button>
+                            <!-- Delete Selected -->
+                            <button
+                                @click="bulkDelete"
+                                :disabled="bulkProcessing"
+                                class="inline-flex items-center px-3 py-1.5 bg-red-600 text-white rounded-lg text-sm font-medium hover:bg-red-700 transition disabled:opacity-50"
+                            >
+                                <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                </svg>
+                                Delete Selected
+                            </button>
+                        </div>
                     </div>
-                    <button
-                        @click="printSelectedBarcodes"
-                        class="inline-flex items-center px-4 py-2 bg-primary-400 text-white rounded-lg text-sm font-medium hover:bg-primary-500 transition"
-                    >
-                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
-                        </svg>
-                        {{ t('products.printBarcodes') }}
-                    </button>
+                </div>
+
+                <!-- Bulk Category Modal -->
+                <div v-if="showBulkCategoryModal" class="fixed inset-0 z-50 flex items-center justify-center">
+                    <div class="fixed inset-0 bg-black/50" @click="showBulkCategoryModal = false"></div>
+                    <div class="relative bg-white dark:bg-dark-card rounded-lg shadow-xl p-6 w-full max-w-md border border-gray-200 dark:border-dark-border">
+                        <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Change Category</h3>
+                        <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">
+                            Update category for {{ selectedProducts.length }} selected product(s).
+                        </p>
+                        <select
+                            v-model="bulkCategoryId"
+                            class="block w-full rounded-md bg-gray-50 dark:bg-dark-bg border-gray-200 dark:border-dark-border text-gray-900 dark:text-gray-100 shadow-sm focus:border-primary-400 focus:ring-primary-400 mb-4"
+                        >
+                            <option value="">Select a category...</option>
+                            <option v-for="cat in categories" :key="cat.id" :value="cat.id">
+                                {{ cat.name }}
+                            </option>
+                        </select>
+                        <div class="flex justify-end gap-3">
+                            <button
+                                @click="showBulkCategoryModal = false"
+                                class="px-4 py-2 text-sm font-medium text-gray-600 dark:text-gray-300 bg-gray-100 dark:bg-dark-bg rounded-lg hover:bg-gray-200 dark:hover:bg-dark-bg/80 transition"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                @click="bulkUpdateCategory"
+                                :disabled="!bulkCategoryId || bulkProcessing"
+                                class="px-4 py-2 text-sm font-medium text-white bg-purple-600 rounded-lg hover:bg-purple-700 transition disabled:opacity-50"
+                            >
+                                Update Category
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Bulk Price Modal -->
+                <div v-if="showBulkPriceModal" class="fixed inset-0 z-50 flex items-center justify-center">
+                    <div class="fixed inset-0 bg-black/50" @click="showBulkPriceModal = false"></div>
+                    <div class="relative bg-white dark:bg-dark-card rounded-lg shadow-xl p-6 w-full max-w-md border border-gray-200 dark:border-dark-border">
+                        <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Adjust Price</h3>
+                        <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">
+                            Adjust price for {{ selectedProducts.length }} selected product(s).
+                        </p>
+                        <div class="space-y-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-1">Adjustment Type</label>
+                                <select
+                                    v-model="bulkPriceType"
+                                    class="block w-full rounded-md bg-gray-50 dark:bg-dark-bg border-gray-200 dark:border-dark-border text-gray-900 dark:text-gray-100 shadow-sm focus:border-primary-400 focus:ring-primary-400"
+                                >
+                                    <option value="percentage">Percentage (%)</option>
+                                    <option value="fixed">Fixed Amount ($)</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-1">
+                                    Value <span class="text-gray-400">(use negative to decrease)</span>
+                                </label>
+                                <input
+                                    v-model.number="bulkPriceValue"
+                                    type="number"
+                                    step="0.01"
+                                    class="block w-full rounded-md bg-gray-50 dark:bg-dark-bg border-gray-200 dark:border-dark-border text-gray-900 dark:text-gray-100 shadow-sm focus:border-primary-400 focus:ring-primary-400"
+                                    :placeholder="bulkPriceType === 'percentage' ? 'e.g. 10 for +10%, -20 for -20%' : 'e.g. 5.00 or -3.50'"
+                                />
+                            </div>
+                        </div>
+                        <div class="flex justify-end gap-3 mt-6">
+                            <button
+                                @click="showBulkPriceModal = false"
+                                class="px-4 py-2 text-sm font-medium text-gray-600 dark:text-gray-300 bg-gray-100 dark:bg-dark-bg rounded-lg hover:bg-gray-200 dark:hover:bg-dark-bg/80 transition"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                @click="bulkUpdatePrice"
+                                :disabled="!bulkPriceValue || bulkProcessing"
+                                class="px-4 py-2 text-sm font-medium text-white bg-amber-600 rounded-lg hover:bg-amber-700 transition disabled:opacity-50"
+                            >
+                                Apply Price Change
+                            </button>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- Products Table -->
@@ -319,7 +549,6 @@ const isLowStock = (product) => {
                                 <tr v-for="product in products.data" :key="product.id" class="hover:bg-gray-100 dark:hover:bg-dark-bg/50">
                                     <td class="px-3 py-4">
                                         <input
-                                            v-if="product.barcode || product.sku"
                                             type="checkbox"
                                             :checked="isSelected(product.id)"
                                             @change="toggleSelect(product.id)"
@@ -400,6 +629,15 @@ const isLowStock = (product) => {
                                             >
                                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" />
+                                                </svg>
+                                            </button>
+                                            <button
+                                                @click="duplicateProduct(product)"
+                                                class="text-amber-400 hover:text-amber-300"
+                                                title="Duplicate"
+                                            >
+                                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
                                                 </svg>
                                             </button>
                                             <Link
