@@ -50,6 +50,9 @@ class RoleSeeder extends Seeder
                     Permission::DELETE_ORDERS->value,
                     Permission::APPROVE_ORDERS->value,
 
+                    Permission::VIEW_STOCK_AUDITS->value,
+                    Permission::CREATE_STOCK_AUDITS->value,
+
                     Permission::VIEW_REPORTS->value,
                     Permission::EXPORT_DATA->value,
                     Permission::IMPORT_DATA->value,

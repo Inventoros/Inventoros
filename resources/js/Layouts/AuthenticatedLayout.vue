@@ -87,6 +87,10 @@ const navItems = {
         icon: 'M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4',
         activeRoutes: ['stock-transfers.*'],
     },
+    stockAudits: {
+        icon: 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01',
+        activeRoutes: ['stock-audits.*'],
+    },
     importExport: {
         icon: 'M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4',
         activeRoutes: ['import-export.*'],
@@ -242,6 +246,16 @@ const navItems = {
                     :icon="navItems.stockTransfers.icon"
                     label="Stock Transfers"
                     :active-routes="navItems.stockTransfers.activeRoutes"
+                    :collapsed="sidebarCollapsed"
+                />
+
+                <!-- Stock Audits -->
+                <SidebarNavItem
+                    v-if="hasPermission('view_stock_audits')"
+                    :href="route('stock-audits.index')"
+                    :icon="navItems.stockAudits.icon"
+                    label="Stock Audits"
+                    :active-routes="navItems.stockAudits.activeRoutes"
                     :collapsed="sidebarCollapsed"
                 />
 

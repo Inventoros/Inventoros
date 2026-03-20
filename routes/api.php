@@ -12,6 +12,7 @@ use App\Http\Controllers\Api\ProductOptionController;
 use App\Http\Controllers\Api\ProductVariantController;
 use App\Http\Controllers\Api\PurchaseOrderController;
 use App\Http\Controllers\Api\StockAdjustmentController;
+use App\Http\Controllers\Api\StockAuditController as ApiStockAuditController;
 use App\Http\Controllers\Api\SupplierController;
 use App\Http\Controllers\Api\PermissionSetController;
 use Illuminate\Support\Facades\Route;
@@ -83,6 +84,11 @@ Route::prefix('v1')->as('api.')->middleware('throttle:api')->group(function () {
         // Orders
         Route::apiResource('orders', OrderController::class)
             ->middleware('api.permission:view_orders|manage_orders');
+
+        // Stock Audits
+        Route::apiResource('stock-audits', ApiStockAuditController::class)
+            ->only(['index', 'show'])
+            ->middleware('api.permission:view_stock_audits|manage_stock_audits');
 
         // Stock Adjustments
         Route::apiResource('stock-adjustments', StockAdjustmentController::class)
