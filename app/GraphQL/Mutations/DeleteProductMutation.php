@@ -37,6 +37,10 @@ class DeleteProductMutation extends Mutation
     public function resolve($root, array $args, $context, ResolveInfo $resolveInfo, Closure $getSelectFields)
     {
         $user = auth()->user();
+        if (!$user->hasPermission('delete_products')) {
+            throw new \Illuminate\Auth\Access\AuthorizationException('Unauthorized');
+        }
+
         $organizationId = $user->organization_id;
 
         $product = Product::forOrganization($organizationId)->find($args['id']);

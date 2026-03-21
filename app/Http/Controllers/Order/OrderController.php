@@ -10,6 +10,7 @@ use App\Models\Order\Order;
 use App\Services\NotificationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -91,6 +92,8 @@ class OrderController extends Controller
      */
     public function store(Request $request)
     {
+        $organizationId = $request->user()->organization_id;
+
         $validated = $request->validate([
             'customer_name' => 'required|string|max:255',
             'customer_email' => 'nullable|email|max:255',
@@ -101,7 +104,7 @@ class OrderController extends Controller
             'tax' => 'nullable|numeric|min:0',
             'notes' => 'nullable|string',
             'items' => 'required|array|min:1',
-            'items.*.product_id' => 'required|exists:products,id',
+            'items.*.product_id' => ['required', Rule::exists('products', 'id')->where('organization_id', $organizationId)],
             'items.*.quantity' => 'required|integer|min:1',
             'items.*.unit_price' => 'required|numeric|min:0',
         ]);
@@ -244,6 +247,8 @@ class OrderController extends Controller
             abort(403, 'Unauthorized action.');
         }
 
+        $organizationId = $request->user()->organization_id;
+
         $validated = $request->validate([
             'customer_name' => 'required|string|max:255',
             'customer_email' => 'nullable|email|max:255',
@@ -255,7 +260,7 @@ class OrderController extends Controller
             'notes' => 'nullable|string',
             'items' => 'required|array|min:1',
             'items.*.id' => 'nullable|exists:order_items,id',
-            'items.*.product_id' => 'required|exists:products,id',
+            'items.*.product_id' => ['required', Rule::exists('products', 'id')->where('organization_id', $organizationId)],
             'items.*.quantity' => 'required|integer|min:1',
             'items.*.unit_price' => 'required|numeric|min:0',
         ]);
@@ -338,6 +343,17 @@ class OrderController extends Controller
             // Create new items
             if (!empty($updatedItems)) {
                 $order->items()->createMany($updatedItems);
+            }
+
+            // Restore stock when order is cancelled
+            if ($validated['status'] === 'cancelled' && $order->status !== 'cancelled') {
+                // Reload items to include any newly created items
+                $order->load('items');
+                foreach ($order->items as $item) {
+                    if ($item->product) {
+                        Product::where('id', $item->product_id)->lockForUpdate()->increment('stock', $item->quantity);
+                    }
+                }
             }
 
             // Update order totals and metadata

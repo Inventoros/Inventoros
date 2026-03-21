@@ -13,6 +13,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rule;
 use Dedoc\Scramble\Attributes\QueryParameter;
 
 /**
@@ -77,6 +78,8 @@ class OrderController extends Controller
      */
     public function store(Request $request): JsonResponse
     {
+        $organizationId = $request->user()->organization_id;
+
         $validated = $request->validate([
             'source' => ['nullable', 'string', 'max:255'],
             'external_id' => ['nullable', 'string', 'max:255'],
@@ -89,13 +92,11 @@ class OrderController extends Controller
             'notes' => ['nullable', 'string'],
             'metadata' => ['nullable', 'array'],
             'items' => ['required', 'array', 'min:1'],
-            'items.*.product_id' => ['required', 'integer', 'exists:products,id'],
+            'items.*.product_id' => ['required', 'integer', Rule::exists('products', 'id')->where('organization_id', $organizationId)],
             'items.*.quantity' => ['required', 'integer', 'min:1'],
             'items.*.unit_price' => ['nullable', 'numeric', 'min:0'],
             'items.*.tax' => ['nullable', 'numeric', 'min:0'],
         ]);
-
-        $organizationId = $request->user()->organization_id;
 
         return DB::transaction(function () use ($validated, $organizationId) {
             // Create the order
@@ -123,7 +124,19 @@ class OrderController extends Controller
 
             // Create order items
             foreach ($validated['items'] as $itemData) {
-                $product = Product::find($itemData['product_id']);
+                $product = Product::where('id', $itemData['product_id'])
+                    ->where('organization_id', $organizationId)
+                    ->lockForUpdate()
+                    ->first();
+
+                if (!$product || $product->stock < $itemData['quantity']) {
+                    $productName = $product ? $product->name : "ID {$itemData['product_id']}";
+                    $available = $product ? $product->stock : 0;
+                    return response()->json([
+                        'message' => "Insufficient stock for {$productName}. Available: {$available}, Requested: {$itemData['quantity']}",
+                        'error' => 'insufficient_stock',
+                    ], 422);
+                }
 
                 $unitPrice = $itemData['unit_price'] ?? $product->selling_price ?? $product->price ?? 0;
                 $itemSubtotal = $unitPrice * $itemData['quantity'];
