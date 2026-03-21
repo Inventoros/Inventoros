@@ -63,6 +63,10 @@ class UpdateOrderMutation extends Mutation
     public function resolve($root, array $args, $context, ResolveInfo $resolveInfo, Closure $getSelectFields)
     {
         $user = auth()->user();
+        if (!$user->hasPermission('edit_orders')) {
+            throw new \Illuminate\Auth\Access\AuthorizationException('Unauthorized');
+        }
+
         $organizationId = $user->organization_id;
 
         $order = Order::forOrganization($organizationId)->find($args['id']);

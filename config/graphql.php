@@ -176,9 +176,9 @@ return [
      * for details. Defaults to 0 (disabled).
      */
     'security' => [
-        'query_max_complexity' => 0,
-        'query_max_depth' => 0,
-        'disable_introspection' => false,
+        'query_max_complexity' => 200,
+        'query_max_depth' => 10,
+        'disable_introspection' => env('APP_ENV') === 'production',
     ],
 
     /*

@@ -12,6 +12,7 @@ use App\Models\Order\ReturnOrder;
 use App\Models\Order\ReturnOrderItem;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Validator;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -109,36 +110,40 @@ class ReturnOrderController extends Controller
         $order = Order::forOrganization($organizationId)->findOrFail($validated['order_id']);
         $order->load('items');
 
-        // Validate quantities don't exceed ordered amounts (minus already returned)
-        $returnedQuantities = ReturnOrderItem::whereHas('returnOrder', function ($q) use ($order) {
-            $q->where('order_id', $order->id)
-              ->whereNotIn('status', ['rejected']);
-        })->selectRaw('order_item_id, SUM(quantity) as total_returned')
-          ->groupBy('order_item_id')
-          ->pluck('total_returned', 'order_item_id');
-
-        $errors = [];
-        foreach ($validated['items'] as $index => $item) {
-            $orderItem = $order->items->firstWhere('id', $item['order_item_id']);
-            if (!$orderItem) {
-                $errors["items.{$index}.order_item_id"] = 'Order item not found.';
-                continue;
-            }
-
-            $alreadyReturned = $returnedQuantities->get($item['order_item_id'], 0);
-            $maxReturnable = $orderItem->quantity - $alreadyReturned;
-
-            if ($item['quantity'] > $maxReturnable) {
-                $errors["items.{$index}.quantity"] = "Cannot return more than {$maxReturnable} units (ordered: {$orderItem->quantity}, already returned: {$alreadyReturned}).";
-            }
-        }
-
-        if (!empty($errors)) {
-            return redirect()->back()->withErrors($errors)->withInput();
-        }
-
         try {
             $returnOrder = DB::transaction(function () use ($validated, $organizationId, $order) {
+                // Lock existing return order items to prevent double-returns
+                $returnedQuantities = ReturnOrderItem::whereHas('returnOrder', function ($q) use ($order) {
+                    $q->where('order_id', $order->id)
+                      ->whereNotIn('status', ['rejected']);
+                })->lockForUpdate()
+                  ->selectRaw('order_item_id, SUM(quantity) as total_returned')
+                  ->groupBy('order_item_id')
+                  ->pluck('total_returned', 'order_item_id');
+
+                $errors = [];
+                foreach ($validated['items'] as $index => $item) {
+                    $orderItem = $order->items->firstWhere('id', $item['order_item_id']);
+                    if (!$orderItem) {
+                        $errors["items.{$index}.order_item_id"] = 'Order item not found.';
+                        continue;
+                    }
+
+                    $alreadyReturned = $returnedQuantities->get($item['order_item_id'], 0);
+                    $maxReturnable = $orderItem->quantity - $alreadyReturned;
+
+                    if ($item['quantity'] > $maxReturnable) {
+                        $errors["items.{$index}.quantity"] = "Cannot return more than {$maxReturnable} units (ordered: {$orderItem->quantity}, already returned: {$alreadyReturned}).";
+                    }
+                }
+
+                if (!empty($errors)) {
+                    throw new \Illuminate\Validation\ValidationException(
+                        \Illuminate\Support\Facades\Validator::make([], []),
+                        redirect()->back()->withErrors($errors)->withInput()
+                    );
+                }
+
                 // Calculate refund amount
                 $refundAmount = 0;
                 foreach ($validated['items'] as $item) {
@@ -173,6 +178,8 @@ class ReturnOrderController extends Controller
 
             return redirect()->route('returns.show', $returnOrder)
                 ->with('success', 'Return request created successfully.');
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            throw $e;
         } catch (\Exception $e) {
             return redirect()->back()
                 ->withInput()

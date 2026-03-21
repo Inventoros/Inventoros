@@ -112,6 +112,9 @@ class CreateProductMutation extends Mutation
     public function resolve($root, array $args, $context, ResolveInfo $resolveInfo, Closure $getSelectFields)
     {
         $user = auth()->user();
+        if (!$user->hasPermission('create_products')) {
+            throw new \Illuminate\Auth\Access\AuthorizationException('Unauthorized');
+        }
 
         $args['organization_id'] = $user->organization_id;
         $args['is_active'] = $args['is_active'] ?? true;

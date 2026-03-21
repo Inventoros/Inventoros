@@ -84,9 +84,14 @@ class CreateOrderMutation extends Mutation
     public function resolve($root, array $args, $context, ResolveInfo $resolveInfo, Closure $getSelectFields)
     {
         $user = auth()->user();
+
+        if (!$user->hasPermission('create_orders')) {
+            throw new \Illuminate\Auth\Access\AuthorizationException('Unauthorized');
+        }
+
         $organizationId = $user->organization_id;
 
-        return DB::transaction(function () use ($args, $organizationId) {
+        return DB::transaction(function () use ($args, $organizationId, $user) {
             $order = Order::create([
                 'organization_id' => $organizationId,
                 'order_number' => Order::generateOrderNumber($organizationId),
@@ -99,6 +104,7 @@ class CreateOrderMutation extends Mutation
                 'currency' => $args['currency'] ?? 'USD',
                 'order_date' => $args['order_date'] ?? now(),
                 'notes' => $args['notes'] ?? null,
+                'created_by' => $user->id,
                 'subtotal' => 0,
                 'tax' => 0,
                 'shipping' => 0,
@@ -109,9 +115,18 @@ class CreateOrderMutation extends Mutation
             $totalTax = 0;
 
             foreach ($args['items'] as $itemData) {
+                // Scope to user's organization and lock for update
                 $product = Product::where('id', $itemData['product_id'])
                     ->where('organization_id', $organizationId)
+                    ->lockForUpdate()
                     ->firstOrFail();
+
+                // Check stock sufficiency
+                if ($product->stock < $itemData['quantity']) {
+                    throw new \GraphQL\Error\Error(
+                        "Insufficient stock for {$product->name}. Available: {$product->stock}, Requested: {$itemData['quantity']}"
+                    );
+                }
 
                 $unitPrice = $itemData['unit_price'] ?? $product->selling_price ?? $product->price ?? 0;
                 $itemSubtotal = $unitPrice * $itemData['quantity'];
