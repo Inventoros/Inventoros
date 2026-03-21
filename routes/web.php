@@ -58,7 +58,7 @@ Route::middleware('auth')->group(function () {
 
     // Two-Factor Authentication
     Route::get('/two-factor-challenge', [TwoFactorController::class, 'challenge'])->name('two-factor.challenge');
-    Route::post('/two-factor-challenge', [TwoFactorController::class, 'verifyChallenge'])->name('two-factor.challenge.verify');
+    Route::post('/two-factor-challenge', [TwoFactorController::class, 'verifyChallenge'])->name('two-factor.challenge.verify')->middleware('throttle:5,1');
 
     Route::prefix('settings/two-factor')->name('two-factor.')->group(function () {
         Route::get('/setup', [TwoFactorController::class, 'setup'])->name('setup');

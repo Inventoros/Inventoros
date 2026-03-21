@@ -85,6 +85,10 @@ class InstallerController extends Controller
      */
     public function testDatabase(Request $request)
     {
+        if ($this->isInstalled()) {
+            return response()->json(['success' => false, 'message' => 'Application is already installed.'], 403);
+        }
+
         $request->validate([
             'host' => 'required|string',
             'port' => 'required|integer',
@@ -125,6 +129,10 @@ class InstallerController extends Controller
      */
     public function installDatabase(Request $request)
     {
+        if ($this->isInstalled()) {
+            return response()->json(['success' => false, 'message' => 'Application is already installed.'], 403);
+        }
+
         $request->validate([
             'host' => 'required|string',
             'port' => 'required|integer',
