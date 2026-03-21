@@ -260,92 +260,101 @@ class OrderController extends Controller
             'items.*.unit_price' => 'required|numeric|min:0',
         ]);
 
-        // Load existing items with product relationship
-        $order->load('items.product');
-        $existingItems = $order->items->keyBy('id');
+        DB::transaction(function () use ($validated, $order) {
+            // Load existing items with product relationship
+            $order->load('items.product');
+            $existingItems = $order->items->keyBy('id');
 
-        // Track which items to keep
-        $itemIdsToKeep = [];
+            // Track which items to keep
+            $itemIdsToKeep = [];
 
-        // Calculate new totals
-        $subtotal = 0;
-        $updatedItems = [];
+            // Calculate new totals
+            $subtotal = 0;
+            $updatedItems = [];
 
-        foreach ($validated['items'] as $itemData) {
-            $product = Product::find($itemData['product_id']);
-            $itemSubtotal = $itemData['quantity'] * $itemData['unit_price'];
-            $subtotal += $itemSubtotal;
+            foreach ($validated['items'] as $itemData) {
+                $product = Product::where('id', $itemData['product_id'])->lockForUpdate()->first();
+                $itemSubtotal = $itemData['quantity'] * $itemData['unit_price'];
+                $subtotal += $itemSubtotal;
 
-            if (!empty($itemData['id']) && $existingItems->has($itemData['id'])) {
-                // Update existing item
-                $existingItem = $existingItems->get($itemData['id']);
-                $quantityDiff = $itemData['quantity'] - $existingItem->quantity;
+                if (!empty($itemData['id']) && $existingItems->has($itemData['id'])) {
+                    // Update existing item
+                    $existingItem = $existingItems->get($itemData['id']);
+                    $quantityDiff = $itemData['quantity'] - $existingItem->quantity;
 
-                // Adjust stock based on quantity change
-                if ($quantityDiff != 0) {
-                    $product->decrement('stock', $quantityDiff);
+                    // Adjust stock based on quantity change
+                    if ($quantityDiff > 0 && $product->stock < $quantityDiff) {
+                        throw new \RuntimeException("Insufficient stock for {$product->name}. Available: {$product->stock}, requested increase: {$quantityDiff}");
+                    }
+                    if ($quantityDiff != 0) {
+                        $product->decrement('stock', $quantityDiff);
+                    }
+
+                    $existingItem->update([
+                        'product_id' => $itemData['product_id'],
+                        'product_name' => $product->name,
+                        'sku' => $product->sku,
+                        'quantity' => $itemData['quantity'],
+                        'unit_price' => $itemData['unit_price'],
+                        'subtotal' => $itemSubtotal,
+                        'total' => $itemSubtotal,
+                    ]);
+
+                    $itemIdsToKeep[] = $itemData['id'];
+                } else {
+                    if ($product->stock < $itemData['quantity']) {
+                        throw new \RuntimeException("Insufficient stock for {$product->name}. Available: {$product->stock}, requested: {$itemData['quantity']}");
+                    }
+
+                    // New item
+                    $updatedItems[] = [
+                        'product_id' => $itemData['product_id'],
+                        'product_name' => $product->name,
+                        'sku' => $product->sku,
+                        'quantity' => $itemData['quantity'],
+                        'unit_price' => $itemData['unit_price'],
+                        'subtotal' => $itemSubtotal,
+                        'tax' => 0,
+                        'total' => $itemSubtotal,
+                    ];
+
+                    // Reduce stock for new items
+                    $product->decrement('stock', $itemData['quantity']);
                 }
-
-                $existingItem->update([
-                    'product_id' => $itemData['product_id'],
-                    'product_name' => $product->name,
-                    'sku' => $product->sku,
-                    'quantity' => $itemData['quantity'],
-                    'unit_price' => $itemData['unit_price'],
-                    'subtotal' => $itemSubtotal,
-                    'total' => $itemSubtotal,
-                ]);
-
-                $itemIdsToKeep[] = $itemData['id'];
-            } else {
-                // New item
-                $updatedItems[] = [
-                    'product_id' => $itemData['product_id'],
-                    'product_name' => $product->name,
-                    'sku' => $product->sku,
-                    'quantity' => $itemData['quantity'],
-                    'unit_price' => $itemData['unit_price'],
-                    'subtotal' => $itemSubtotal,
-                    'tax' => 0,
-                    'total' => $itemSubtotal,
-                ];
-
-                // Reduce stock for new items
-                $product->decrement('stock', $itemData['quantity']);
             }
-        }
 
-        // Delete removed items and restore their stock
-        $itemsToDelete = $existingItems->filter(function ($item) use ($itemIdsToKeep) {
-            return !in_array($item->id, $itemIdsToKeep);
+            // Delete removed items and restore their stock
+            $itemsToDelete = $existingItems->filter(function ($item) use ($itemIdsToKeep) {
+                return !in_array($item->id, $itemIdsToKeep);
+            });
+
+            foreach ($itemsToDelete as $item) {
+                if ($item->product) {
+                    $item->product->increment('stock', $item->quantity);
+                }
+                $item->delete();
+            }
+
+            // Create new items
+            if (!empty($updatedItems)) {
+                $order->items()->createMany($updatedItems);
+            }
+
+            // Update order totals and metadata
+            $validated['subtotal'] = $subtotal;
+            $validated['tax'] = $validated['tax'] ?? 0;
+            $validated['shipping'] = $validated['shipping'] ?? 0;
+            $validated['total'] = $subtotal + $validated['tax'] + $validated['shipping'];
+
+            // Update order timestamps based on status
+            if ($validated['status'] === 'shipped' && !$order->shipped_at) {
+                $validated['shipped_at'] = now();
+            } elseif ($validated['status'] === 'delivered' && !$order->delivered_at) {
+                $validated['delivered_at'] = now();
+            }
+
+            $order->update($validated);
         });
-
-        foreach ($itemsToDelete as $item) {
-            if ($item->product) {
-                $item->product->increment('stock', $item->quantity);
-            }
-            $item->delete();
-        }
-
-        // Create new items
-        if (!empty($updatedItems)) {
-            $order->items()->createMany($updatedItems);
-        }
-
-        // Update order totals and metadata
-        $validated['subtotal'] = $subtotal;
-        $validated['tax'] = $validated['tax'] ?? 0;
-        $validated['shipping'] = $validated['shipping'] ?? 0;
-        $validated['total'] = $subtotal + $validated['tax'] + $validated['shipping'];
-
-        // Update order timestamps based on status
-        if ($validated['status'] === 'shipped' && !$order->shipped_at) {
-            $validated['shipped_at'] = now();
-        } elseif ($validated['status'] === 'delivered' && !$order->delivered_at) {
-            $validated['delivered_at'] = now();
-        }
-
-        $order->update($validated);
 
         return redirect()->route('orders.index')
             ->with('success', 'Order updated successfully.');
@@ -365,17 +374,19 @@ class OrderController extends Controller
             abort(403, 'Unauthorized action.');
         }
 
-        // Load items with product relationship for stock restoration
-        $order->load('items.product');
+        DB::transaction(function () use ($order) {
+            // Load items with product relationship for stock restoration
+            $order->load('items.product');
 
-        // Restore stock for all items
-        foreach ($order->items as $item) {
-            if ($item->product) {
-                $item->product->increment('stock', $item->quantity);
+            // Restore stock for all items
+            foreach ($order->items as $item) {
+                if ($item->product) {
+                    Product::where('id', $item->product_id)->lockForUpdate()->increment('stock', $item->quantity);
+                }
             }
-        }
 
-        $order->delete();
+            $order->delete();
+        });
 
         return redirect()->route('orders.index')
             ->with('success', 'Order deleted successfully.');

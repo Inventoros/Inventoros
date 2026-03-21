@@ -44,8 +44,10 @@ use Illuminate\Support\Facades\Route;
 
 // API Version 1
 Route::prefix('v1')->as('api.')->middleware('throttle:api')->group(function () {
-    // Public routes
-    Route::post('/login', [AuthController::class, 'login']);
+    // Public routes (rate limited)
+    Route::middleware('throttle:5,1')->group(function () {
+        Route::post('/login', [AuthController::class, 'login']);
+    });
 
     // Protected routes
     Route::middleware(['auth:sanctum'])->group(function () {

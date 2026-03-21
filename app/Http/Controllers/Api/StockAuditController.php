@@ -39,9 +39,10 @@ class StockAuditController extends Controller
                 $query->byType($type);
             });
 
-        // Sorting
-        $sortBy = $request->input('sort_by', 'created_at');
-        $sortDir = $request->input('sort_dir', 'desc');
+        // Sorting (allowlist to prevent SQL injection)
+        $allowedSortColumns = ['created_at', 'updated_at', 'audit_number', 'status', 'started_at', 'completed_at'];
+        $sortBy = in_array($request->input('sort_by'), $allowedSortColumns) ? $request->input('sort_by') : 'created_at';
+        $sortDir = ($request->input('sort_dir') === 'asc') ? 'asc' : 'desc';
         $query->orderBy($sortBy, $sortDir);
 
         $perPage = min($request->input('per_page', 15), 100);

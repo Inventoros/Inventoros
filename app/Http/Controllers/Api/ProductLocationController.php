@@ -41,9 +41,10 @@ class ProductLocationController extends Controller
                 $query->where('is_active', filter_var($request->input('is_active'), FILTER_VALIDATE_BOOLEAN));
             });
 
-        // Sorting
-        $sortBy = $request->input('sort_by', 'name');
-        $sortDir = $request->input('sort_dir', 'asc');
+        // Sorting (allowlist to prevent SQL injection)
+        $allowedSortColumns = ['created_at', 'updated_at', 'name'];
+        $sortBy = in_array($request->input('sort_by'), $allowedSortColumns) ? $request->input('sort_by') : 'name';
+        $sortDir = ($request->input('sort_dir') === 'desc') ? 'desc' : 'asc';
         $query->orderBy($sortBy, $sortDir);
 
         $perPage = min($request->input('per_page', 15), 100);

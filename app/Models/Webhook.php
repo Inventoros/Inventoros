@@ -54,6 +54,7 @@ class Webhook extends Model
         return [
             'events' => 'array',
             'is_active' => 'boolean',
+            'secret' => 'encrypted',
         ];
     }
 
