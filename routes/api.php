@@ -28,6 +28,20 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
+/*
+|--------------------------------------------------------------------------
+| GraphQL API
+|--------------------------------------------------------------------------
+|
+| The GraphQL endpoint is available at /graphql and is handled by the
+| rebing/graphql-laravel package. Authentication is enforced via Sanctum
+| middleware configured in config/graphql.php on the default schema.
+|
+| Endpoint: POST /graphql
+| Auth: Bearer token (Sanctum)
+|
+*/
+
 // API Version 1
 Route::prefix('v1')->as('api.')->middleware('throttle:api')->group(function () {
     // Public routes
