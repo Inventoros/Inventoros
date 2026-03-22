@@ -38,10 +38,9 @@ class DashboardController extends Controller
         // Get statistics
         // Calculate total value as sum of (price * stock) for each product
         $totalValue = Product::where('organization_id', $user->organization_id)
-            ->get()
-            ->sum(function ($product) {
-                return $product->price * $product->stock;
-            });
+            ->where('is_active', true)
+            ->selectRaw('COALESCE(SUM(price * stock), 0) as total')
+            ->value('total');
 
         // Get order statistics
         $totalOrders = Order::where('organization_id', $user->organization_id)->count();
@@ -95,26 +94,14 @@ class DashboardController extends Controller
             ->get();
 
         // Get stock value by category
-        $stockByCategory = ProductCategory::where('organization_id', $user->organization_id)
-            ->with(['products' => function ($query) use ($user) {
-                $query->where('organization_id', $user->organization_id);
-            }])
-            ->get()
-            ->map(function ($category) {
-                $totalValue = $category->products->sum(function ($product) {
-                    return $product->price * $product->stock;
-                });
-
-                return [
-                    'name' => $category->name,
-                    'value' => $totalValue,
-                    'count' => $category->products->count(),
-                ];
+        $stockByCategory = ProductCategory::where('product_categories.organization_id', $user->organization_id)
+            ->leftJoin('products', function($join) {
+                $join->on('products.category_id', '=', 'product_categories.id')
+                     ->where('products.is_active', true);
             })
-            ->filter(function ($category) {
-                return $category['count'] > 0;
-            })
-            ->values();
+            ->selectRaw('product_categories.name, product_categories.id, COALESCE(SUM(products.price * products.stock), 0) as value, COUNT(products.id) as count')
+            ->groupBy('product_categories.id', 'product_categories.name')
+            ->get();
 
         // Get recent activity logs
         $recentActivity = ActivityLog::where('organization_id', $user->organization_id)
@@ -171,19 +158,12 @@ class DashboardController extends Controller
 
         // Get top products by value
         $topProducts = Product::where('organization_id', $user->organization_id)
-            ->get()
-            ->sortByDesc(function ($product) {
-                return $product->price * $product->stock;
-            })
-            ->take(5)
-            ->map(function ($product) {
-                return [
-                    'name' => $product->name,
-                    'value' => $product->price * $product->stock,
-                    'stock' => $product->stock,
-                ];
-            })
-            ->values();
+            ->where('is_active', true)
+            ->where('stock', '>', 0)
+            ->selectRaw('id, name, sku, price, stock, (price * stock) as total_value')
+            ->orderByRaw('price * stock DESC')
+            ->limit(5)
+            ->get();
 
         // Get widget preferences (default: all visible)
         $defaultWidgets = [

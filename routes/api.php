@@ -12,6 +12,7 @@ use App\Http\Controllers\Api\ProductOptionController;
 use App\Http\Controllers\Api\ProductVariantController;
 use App\Http\Controllers\Api\PurchaseOrderController;
 use App\Http\Controllers\Api\StockAdjustmentController;
+use App\Http\Controllers\Api\StockAuditController as ApiStockAuditController;
 use App\Http\Controllers\Api\SupplierController;
 use App\Http\Controllers\Api\PermissionSetController;
 use Illuminate\Support\Facades\Route;
@@ -27,10 +28,26 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
+/*
+|--------------------------------------------------------------------------
+| GraphQL API
+|--------------------------------------------------------------------------
+|
+| The GraphQL endpoint is available at /graphql and is handled by the
+| rebing/graphql-laravel package. Authentication is enforced via Sanctum
+| middleware configured in config/graphql.php on the default schema.
+|
+| Endpoint: POST /graphql
+| Auth: Bearer token (Sanctum)
+|
+*/
+
 // API Version 1
 Route::prefix('v1')->as('api.')->middleware('throttle:api')->group(function () {
-    // Public routes
-    Route::post('/login', [AuthController::class, 'login']);
+    // Public routes (rate limited)
+    Route::middleware('throttle:5,1')->group(function () {
+        Route::post('/login', [AuthController::class, 'login']);
+    });
 
     // Protected routes
     Route::middleware(['auth:sanctum'])->group(function () {
@@ -83,6 +100,11 @@ Route::prefix('v1')->as('api.')->middleware('throttle:api')->group(function () {
         // Orders
         Route::apiResource('orders', OrderController::class)
             ->middleware('api.permission:view_orders|manage_orders');
+
+        // Stock Audits
+        Route::apiResource('stock-audits', ApiStockAuditController::class)
+            ->only(['index', 'show'])
+            ->middleware('api.permission:view_stock_audits|manage_stock_audits');
 
         // Stock Adjustments
         Route::apiResource('stock-adjustments', StockAdjustmentController::class)
