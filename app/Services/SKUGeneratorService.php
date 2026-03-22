@@ -62,7 +62,7 @@ final class SKUGeneratorService
 
         // Replace category ID placeholder
         if (str_contains($sku, '{category_id}')) {
-            $catId = $categoryId ? str_pad($categoryId, 2, '0', STR_PAD_LEFT) : '00';
+            $catId = $categoryId ? str_pad((string) $categoryId, 2, '0', STR_PAD_LEFT) : '00';
             $sku = str_replace('{category_id}', $catId, $sku);
         }
 
@@ -86,7 +86,7 @@ final class SKUGeneratorService
                 ->orderBy('id', 'desc')
                 ->first();
             $nextNumber = $lastProduct ? ($lastProduct->id + 1) : 1;
-            $number = str_pad($nextNumber, 6, '0', STR_PAD_LEFT);
+            $number = str_pad((string) $nextNumber, 6, '0', STR_PAD_LEFT);
             $sku = str_replace('{number}', $number, $sku);
         }
 
