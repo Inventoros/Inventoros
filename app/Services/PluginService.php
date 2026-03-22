@@ -292,8 +292,13 @@ final class PluginService
         }
 
         $manifest = json_decode(File::get($manifestPath), true);
-        $mainFile = $manifest['main_file'] ?? 'Plugin.php';
-        $pluginFile = $pluginPath . '/' . $mainFile;
+        $mainFile = basename($manifest['main_file'] ?? 'Plugin.php');
+        $pluginFile = realpath($pluginPath . '/' . $mainFile);
+
+        if (!$pluginFile || !str_starts_with($pluginFile, realpath($pluginPath))) {
+            Log::warning('Plugin main_file path traversal attempt blocked', ['slug' => $slug, 'main_file' => $manifest['main_file'] ?? null]);
+            return;
+        }
 
         if (File::exists($pluginFile)) {
             // Load the plugin file - it will have access to all helper functions

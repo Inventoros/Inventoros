@@ -13,6 +13,7 @@ use App\Models\Inventory\ProductOption;
 use App\Models\Inventory\ProductVariant;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -135,9 +136,11 @@ class ProductController extends Controller
      */
     public function store(Request $request)
     {
+        $organizationId = $request->user()->organization_id;
+
         // Hook: Modify validation rules before validation
         $rules = apply_filters('product_store_validation_rules', [
-            'sku' => 'required|string|max:255|unique:products,sku',
+            'sku' => ['required', 'string', 'max:255', Rule::unique('products', 'sku')->where('organization_id', $organizationId)],
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
             'price' => 'required|numeric|min:0',
@@ -153,8 +156,8 @@ class ProductController extends Controller
             'reorder_quantity' => 'nullable|integer|min:0',
             'barcode' => 'nullable|string|max:255',
             'notes' => 'nullable|string',
-            'category_id' => 'nullable|exists:product_categories,id',
-            'location_id' => 'nullable|exists:product_locations,id',
+            'category_id' => ['nullable', Rule::exists('product_categories', 'id')->where('organization_id', $organizationId)],
+            'location_id' => ['nullable', Rule::exists('product_locations', 'id')->where('organization_id', $organizationId)],
             'is_active' => 'boolean',
             'images' => 'nullable|array|max:5',
             'images.*.file' => 'nullable',
@@ -454,9 +457,11 @@ class ProductController extends Controller
             abort(403, 'Unauthorized action.');
         }
 
+        $organizationId = $request->user()->organization_id;
+
         // Hook: Modify validation rules
         $rules = apply_filters('product_update_validation_rules', [
-            'sku' => 'required|string|max:255|unique:products,sku,' . $product->id,
+            'sku' => ['required', 'string', 'max:255', Rule::unique('products', 'sku')->where('organization_id', $organizationId)->ignore($product->id)],
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
             'price' => 'required|numeric|min:0',
@@ -468,8 +473,8 @@ class ProductController extends Controller
             'reorder_quantity' => 'nullable|integer|min:0',
             'barcode' => 'nullable|string|max:255',
             'notes' => 'nullable|string',
-            'category_id' => 'nullable|exists:product_categories,id',
-            'location_id' => 'nullable|exists:product_locations,id',
+            'category_id' => ['nullable', Rule::exists('product_categories', 'id')->where('organization_id', $organizationId)],
+            'location_id' => ['nullable', Rule::exists('product_locations', 'id')->where('organization_id', $organizationId)],
             'is_active' => 'boolean',
             'images' => 'nullable|array|max:5',
             'images.*.file' => 'nullable',

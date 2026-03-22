@@ -70,6 +70,11 @@ enum Permission: string
     case VIEW_PLUGINS = 'view_plugins';
     case MANAGE_PLUGINS = 'manage_plugins';
 
+    // Stock Audits
+    case VIEW_STOCK_AUDITS = 'view_stock_audits';
+    case CREATE_STOCK_AUDITS = 'create_stock_audits';
+    case MANAGE_STOCK_AUDITS = 'manage_stock_audits';
+
     // Reports & Data
     case VIEW_REPORTS = 'view_reports';
     case EXPORT_DATA = 'export_data';
@@ -124,6 +129,10 @@ enum Permission: string
             self::EDIT_ORDERS => 'Edit Orders',
             self::DELETE_ORDERS => 'Delete Orders',
             self::APPROVE_ORDERS => 'Approve Orders',
+
+            self::VIEW_STOCK_AUDITS => 'View Stock Audits',
+            self::CREATE_STOCK_AUDITS => 'Create Stock Audits',
+            self::MANAGE_STOCK_AUDITS => 'Manage Stock Audits',
 
             self::VIEW_SETTINGS => 'View Settings',
             self::EDIT_SETTINGS => 'Edit Settings',
@@ -188,6 +197,10 @@ enum Permission: string
             self::DELETE_ORDERS => 'Can delete orders',
             self::APPROVE_ORDERS => 'Can approve or reject orders',
 
+            self::VIEW_STOCK_AUDITS => 'Can view stock audits and cycle counts',
+            self::CREATE_STOCK_AUDITS => 'Can create new stock audits',
+            self::MANAGE_STOCK_AUDITS => 'Can manage stock audits, start, complete, and adjust counts',
+
             self::VIEW_SETTINGS => 'Can view system settings',
             self::EDIT_SETTINGS => 'Can modify system settings',
             self::MANAGE_ORGANIZATION => 'Can manage organization details',
@@ -213,7 +226,8 @@ enum Permission: string
             self::VIEW_USERS, self::CREATE_USERS, self::EDIT_USERS, self::DELETE_USERS => 'User Management',
             self::VIEW_ROLES, self::CREATE_ROLES, self::EDIT_ROLES, self::DELETE_ROLES => 'Role Management',
             self::VIEW_PRODUCTS, self::CREATE_PRODUCTS, self::EDIT_PRODUCTS, self::DELETE_PRODUCTS,
-            self::MANAGE_STOCK, self::TRANSFER_STOCK, self::MANAGE_CATEGORIES, self::MANAGE_LOCATIONS => 'Inventory Management',
+            self::MANAGE_STOCK, self::TRANSFER_STOCK, self::MANAGE_CATEGORIES, self::MANAGE_LOCATIONS,
+            self::VIEW_STOCK_AUDITS, self::CREATE_STOCK_AUDITS, self::MANAGE_STOCK_AUDITS => 'Inventory Management',
             self::VIEW_CUSTOMERS, self::CREATE_CUSTOMERS, self::EDIT_CUSTOMERS, self::DELETE_CUSTOMERS => 'Customer Management',
             self::VIEW_SUPPLIERS, self::CREATE_SUPPLIERS, self::EDIT_SUPPLIERS, self::DELETE_SUPPLIERS => 'Supplier Management',
             self::VIEW_PURCHASE_ORDERS, self::CREATE_PURCHASE_ORDERS, self::EDIT_PURCHASE_ORDERS,
