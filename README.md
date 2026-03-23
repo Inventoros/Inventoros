@@ -5,7 +5,7 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Laravel 12](https://img.shields.io/badge/Laravel-12-FF2D20?logo=laravel)](https://laravel.com)
-[![PHP 8.2+](https://img.shields.io/badge/PHP-8.2+-777BB4?logo=php)](https://php.net)
+[![PHP 8.4+](https://img.shields.io/badge/PHP-8.4+-777BB4?logo=php)](https://php.net)
 [![Code of Conduct](https://img.shields.io/badge/Contributor%20Covenant-2.1-4baaaa.svg)](CODE_OF_CONDUCT.md)
 
 **Inventory Management for the Rest of Us**
@@ -69,7 +69,7 @@ Inventoros aims to democratize warehouse and inventory management by providing s
 
 ## Technology Stack
 
-- **Backend**: Laravel 12 (PHP 8.2+)
+- **Backend**: Laravel 12 (PHP 8.4+)
 - **Frontend**: Inertia.js + Vue 3 + Vite
 - **Database**: MySQL / PostgreSQL (abstraction-ready)
 - **Queueing & Events**: Redis + Laravel Horizon (planned)
@@ -78,7 +78,7 @@ Inventoros aims to democratize warehouse and inventory management by providing s
 
 ## Requirements
 
-- PHP 8.2 or higher
+- PHP 8.4 or higher
 - Composer
 - Node.js 18+ and npm
 - MySQL 8.0+ or PostgreSQL 13+
@@ -165,20 +165,32 @@ php artisan queue:work # Queue worker (if needed)
 - [x] Plugin slot system with multiple hooks
 - [x] Sample plugin with documentation
 - [x] REST API endpoints (Products, Categories, Locations, Orders, Stock Adjustments, Suppliers, Purchase Orders, Barcode Lookup)
-- [ ] GraphQL API layer
+- [x] GraphQL API layer (queries + mutations for Products, Orders, Suppliers, Stock Adjustments, Purchase Orders, Categories, Locations)
 - [x] API documentation (OpenAPI/Scramble)
 
 ### Phase 4 - Advanced Features ✅ (v1.0 Beta)
 - [x] Barcode/QR code generation
 - [x] Barcode scanning integration (Products, Stock Adjustments, Purchase Orders)
 - [x] Reporting and analytics dashboard (Inventory Valuation, Stock Movement, Sales Analysis, Low Stock, Category Performance)
-- [x] Audit logging (Activity Log with filtering)
+- [x] Audit logging (Activity Log with filtering and export)
 - [x] Email notification system (multi-provider, templates, user preferences)
 - [x] Webhook system (event subscriptions, HMAC signing, retry logic, delivery logs)
 - [x] Advanced permissions (custom permission sets with templates)
 - [ ] Multi-warehouse support
 
-## Current Features (v1.0 Beta)
+### Phase 5 - Advanced Inventory & Security ✅ (v1.1)
+- [x] Stock transfers between locations (create, approve, complete with audit trail)
+- [x] Batch and serial number tracking (per-product tracking type configuration)
+- [x] Returns and exchanges (RMA) system (full return lifecycle with stock restoration)
+- [x] Stock audits and cycle counting (create, start, count, reconcile with variance tracking)
+- [x] Automated reorder points (configurable thresholds with supplier-grouped PO generation)
+- [x] Product cloning and bulk operations (duplicate products, bulk price/stock updates)
+- [x] Two-factor authentication (TOTP with setup wizard and challenge flow)
+- [x] Global search command palette (Ctrl+K / Cmd+K)
+- [x] Dashboard widget customization (drag-and-drop widget preferences)
+- [x] Security hardening (SQL injection prevention, cross-tenant validation scoping, rate limiting, webhook encryption, mass assignment protection, plugin path traversal protection)
+
+## Current Features (v1.1)
 
 ### ✅ Completed
 
@@ -194,19 +206,24 @@ php artisan queue:work # Queue worker (if needed)
 - **CSV Import/Export**: Bulk import and export of product data
 
 **Order & Warehouse Management**
-- **Order Management**: Full order lifecycle (create, view, edit, delete) with automatic inventory adjustments
+- **Order Management**: Full order lifecycle (create, view, edit, delete) with automatic inventory adjustments and transaction safety (row locking)
 - **Order Approval Workflow**: Approve or reject orders with status tracking
 - **Stock Movement Tracking**: Automatic tracking of inventory changes through orders
+- **Stock Transfers**: Transfer stock between locations with approval workflow and audit trail
+- **Stock Audits & Cycle Counting**: Create audits, count items, reconcile variances with automatic stock adjustments
+- **Returns & Exchanges (RMA)**: Full return lifecycle — create, approve, receive, complete with automatic stock restoration
 - **Warehouse Locations**: Location-based inventory tracking
 - **Supplier Management**: Complete supplier CRUD with product associations
-- **Purchase Orders**: Full purchase order lifecycle with item receiving workflow
+- **Purchase Orders**: Full purchase order lifecycle with item receiving workflow and invoice generation
 - **Purchase Order Workflow**: Send to supplier, receive items, cancel orders with status tracking
 - **Customer Management**: Complete customer CRM with order history and contact details
+- **Automated Reorder Points**: Configurable min stock and reorder quantity per product, automatic PO generation grouped by supplier
 
 **User & Access Management**
 - **User Management**: Full CRUD with role assignment and permission-based access control
 - **Role Management**: Custom roles with granular permissions, system roles (Administrator, Manager, Member)
 - **Permission System**: Granular permission checks at route and UI levels
+- **Two-Factor Authentication**: TOTP-based 2FA with setup wizard, QR code, recovery codes, and challenge flow
 - **Custom Error Pages**: Beautiful 403 access denied pages with light/dark mode
 - **API Token Management**: Create, list, and revoke API tokens via REST API
 - **Custom Permission Sets**: Reusable permission templates (Inventory Manager, Order Processor, Warehouse Staff, etc.) with full CRUD API
@@ -215,7 +232,8 @@ php artisan queue:work # Queue worker (if needed)
 - **Plugin System**: WordPress-style hooks and filters with database activation
 - **Plugin Slots**: Extensible UI component system with multiple hook points
 - **Sample Plugin**: Comprehensive example plugin with documentation
-- **REST API**: Complete API for Products, Categories, Locations, Orders, Stock Adjustments, Suppliers, Purchase Orders, Barcode Lookup, and Permission Sets
+- **REST API**: Complete API for Products, Categories, Locations, Orders, Stock Adjustments, Suppliers, Purchase Orders, Barcode Lookup, Batch/Serial Tracking, Stock Audits, and Permission Sets
+- **GraphQL API**: Full query and mutation support for Products, Orders, Suppliers, Stock Adjustments, Purchase Orders, Categories, and Locations with permission checks and query depth/complexity limits
 - **API Documentation**: Auto-generated OpenAPI 3.1 docs via Scramble with interactive "Try It" UI at `/docs/api`
 - **Installer Wizard**: Guided setup with database validation and admin account creation
 - **Update Manager**: Version-controlled updates with automatic backup system (UI + CLI)
@@ -238,10 +256,18 @@ php artisan queue:work # Queue worker (if needed)
 - **Low Stock Report**: Identify products below minimum stock levels
 - **Category Performance Report**: Analyze stock and value by category
 
+**Inventory Tracking**
+- **Batch Tracking**: Track products by batch/lot number with expiry dates, manufacturing dates, and quantity per batch
+- **Serial Number Tracking**: Individual serial number assignment and tracking with status management (available, sold, returned, defective)
+- **Product Cloning**: Duplicate products with all options, variants, and configurations
+- **Bulk Operations**: Bulk price updates (fixed or percentage), bulk stock adjustments
+
 **User Experience**
 - **Dark Mode**: Full application support with persistent theme preferences
 - **Responsive Design**: Mobile-friendly UI throughout the application
 - **Modern UI**: Built with Vue 3, Inertia.js, and Tailwind CSS
+- **Global Search**: Command palette (Ctrl+K / Cmd+K) with instant search across products, orders, customers, suppliers, and purchase orders
+- **Dashboard Customization**: Configurable widget layout with drag-and-drop preferences
 - **Proper Sidebar Navigation**: Intuitive navigation structure
 
 **Testing & Quality**
@@ -258,11 +284,11 @@ php artisan queue:work # Queue worker (if needed)
 - **E2E Testing Framework**: Playwright configured with multi-browser support (Chromium, Firefox, WebKit, Mobile)
 
 ### 🔜 Coming Next
-- GraphQL API layer
-- Stock transfers between locations
-- Advanced inventory workflows
-- Multi-warehouse support
+- Multi-warehouse support (per-location stock tracking)
 - Custom report builder
+- Advanced inventory workflows (kitting, bundling)
+- Integrations marketplace (Shopify, WooCommerce, QuickBooks)
+- Mobile app companion
 
 ## Contributing
 
@@ -354,8 +380,34 @@ DELETE /api/v1/tokens/{id}
 | Purchase Orders | `GET`, `POST`, `GET/{id}`, `PUT/{id}`, `DELETE/{id}`, `POST/receive`, `POST/send`, `POST/cancel` |
 | Barcode Lookup | `GET/{code}` |
 | Permission Sets | `GET`, `POST`, `GET/{id}`, `PUT/{id}`, `DELETE/{id}`, `GET/categories` |
+| Batch Tracking | `GET`, `POST`, `GET/{id}`, `PUT/{id}` (nested under products) |
+| Serial Tracking | `GET`, `POST`, `GET/{id}`, `PUT/{id}`, `POST/verify` (nested under products) |
+| Stock Audits | `GET`, `POST`, `GET/{id}`, `PUT/{id}`, `POST/start`, `POST/complete` |
 
-All endpoints are protected by permission-based middleware.
+All endpoints are protected by permission-based middleware. Sort parameters are validated against allowlists to prevent SQL injection.
+
+### GraphQL API
+
+The GraphQL API is available at `/graphql` and uses Sanctum bearer token authentication.
+
+```graphql
+# Example: Query products with filtering
+query {
+  products(search: "widget", sort_by: "name", per_page: 20) {
+    data { id, name, sku, price, stock }
+    paginatorInfo { currentPage, lastPage, total }
+  }
+}
+
+# Example: Create an order
+mutation {
+  createOrder(customer_name: "John", items: [{ product_id: 1, quantity: 5, unit_price: 29.99 }]) {
+    id, order_number, total, status
+  }
+}
+```
+
+All mutations enforce permission checks and query depth/complexity limits are configured for production security.
 
 ## Documentation
 
