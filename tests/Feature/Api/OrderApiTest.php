@@ -3,7 +3,7 @@
 namespace Tests\Feature\Api;
 
 use App\Models\Auth\Organization;
-use App\Models\Inventory\Order;
+use App\Models\Order\Order;
 use App\Models\Inventory\Product;
 use App\Models\Inventory\ProductCategory;
 use App\Models\Inventory\ProductLocation;
@@ -71,6 +71,9 @@ class OrderApiTest extends TestCase
             'password' => bcrypt('password'),
             'organization_id' => $this->organization->id,
             'role' => 'admin',
+            'notification_preferences' => [
+                'email_enabled' => false,
+            ],
         ]);
 
         $this->viewOnlyUser = User::create([
@@ -207,10 +210,8 @@ class OrderApiTest extends TestCase
         Sanctum::actingAs($this->admin);
 
         $orderData = [
-            'order_number' => 'ORD-NEW-001',
             'customer_name' => 'New Customer',
             'customer_email' => 'new@customer.com',
-            'customer_phone' => '123-456-7890',
             'status' => 'pending',
             'items' => [
                 [
@@ -226,11 +227,13 @@ class OrderApiTest extends TestCase
 
         $response->assertStatus(201)
             ->assertJsonPath('message', 'Order created successfully')
-            ->assertJsonPath('data.order_number', 'ORD-NEW-001')
             ->assertJsonPath('data.customer_name', 'New Customer');
 
+        $orderNumber = $response->json('data.order_number');
+        $this->assertStringStartsWith('ORD-', $orderNumber);
+
         $this->assertDatabaseHas('orders', [
-            'order_number' => 'ORD-NEW-001',
+            'order_number' => $orderNumber,
             'organization_id' => $this->organization->id,
         ]);
     }
@@ -252,7 +255,6 @@ class OrderApiTest extends TestCase
         $initialStock = $this->product->stock;
 
         $orderData = [
-            'order_number' => 'ORD-STOCK-001',
             'customer_name' => 'Stock Test Customer',
             'items' => [
                 [

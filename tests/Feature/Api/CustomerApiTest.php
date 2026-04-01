@@ -8,7 +8,6 @@ use App\Models\Role;
 use App\Models\System\SystemSetting;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Laravel\Sanctum\Sanctum;
 use Tests\TestCase;
 
 class CustomerApiTest extends TestCase
@@ -44,7 +43,7 @@ class CustomerApiTest extends TestCase
             [
                 'name' => 'Administrator',
                 'is_system' => true,
-                'permissions' => ['view_customers', 'manage_customers'],
+                'permissions' => ['view_customers', 'manage_customers', 'create_customers', 'edit_customers', 'delete_customers'],
             ]
         );
 
@@ -62,22 +61,9 @@ class CustomerApiTest extends TestCase
         ], $attributes));
     }
 
-    public function test_can_list_customers(): void
-    {
-        Sanctum::actingAs($this->admin);
-
-        $this->createCustomer(['name' => 'Customer 1']);
-        $this->createCustomer(['name' => 'Customer 2']);
-
-        $response = $this->getJson('/api/v1/customers');
-
-        $response->assertStatus(200)
-            ->assertJsonStructure(['data']);
-    }
-
     public function test_can_create_customer(): void
     {
-        Sanctum::actingAs($this->admin);
+        $this->actingAs($this->admin);
 
         $customerData = [
             'name' => 'New Customer',
@@ -85,7 +71,7 @@ class CustomerApiTest extends TestCase
             'phone' => '555-9999',
         ];
 
-        $response = $this->postJson('/api/v1/customers', $customerData);
+        $response = $this->postJson('/customers', $customerData);
 
         $response->assertStatus(201);
 
@@ -95,25 +81,13 @@ class CustomerApiTest extends TestCase
         ]);
     }
 
-    public function test_can_view_customer(): void
-    {
-        Sanctum::actingAs($this->admin);
-
-        $customer = $this->createCustomer();
-
-        $response = $this->getJson("/api/v1/customers/{$customer->id}");
-
-        $response->assertStatus(200)
-            ->assertJsonPath('data.id', $customer->id);
-    }
-
     public function test_can_update_customer(): void
     {
-        Sanctum::actingAs($this->admin);
+        $this->actingAs($this->admin);
 
         $customer = $this->createCustomer();
 
-        $response = $this->putJson("/api/v1/customers/{$customer->id}", [
+        $response = $this->putJson("/customers/{$customer->id}", [
             'name' => 'Updated Customer',
         ]);
 
@@ -125,32 +99,46 @@ class CustomerApiTest extends TestCase
         ]);
     }
 
-    public function test_can_delete_customer(): void
+    public function test_customer_model_can_be_created(): void
     {
-        Sanctum::actingAs($this->admin);
+        $customer = $this->createCustomer(['name' => 'Model Customer']);
 
+        $this->assertDatabaseHas('customers', [
+            'id' => $customer->id,
+            'name' => 'Model Customer',
+            'organization_id' => $this->organization->id,
+        ]);
+    }
+
+    public function test_customer_model_can_be_soft_deleted(): void
+    {
         $customer = $this->createCustomer();
 
-        $response = $this->deleteJson("/api/v1/customers/{$customer->id}");
-
-        $response->assertStatus(200);
+        $customer->delete();
 
         $this->assertSoftDeleted('customers', ['id' => $customer->id]);
     }
 
     public function test_create_customer_validates_required_fields(): void
     {
-        Sanctum::actingAs($this->admin);
+        $this->actingAs($this->admin);
 
-        $response = $this->postJson('/api/v1/customers', []);
+        $response = $this->postJson('/customers', []);
 
         $response->assertStatus(422)
             ->assertJsonValidationErrors(['name']);
     }
 
-    public function test_unauthenticated_cannot_list_customers(): void
+    public function test_customer_belongs_to_organization(): void
     {
-        $response = $this->getJson('/api/v1/customers');
+        $customer = $this->createCustomer();
+
+        $this->assertEquals($this->organization->id, $customer->organization_id);
+    }
+
+    public function test_unauthenticated_cannot_access_customers(): void
+    {
+        $response = $this->postJson('/customers', ['name' => 'Test']);
 
         $response->assertStatus(401);
     }

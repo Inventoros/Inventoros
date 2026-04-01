@@ -120,7 +120,7 @@ class StockAdjustmentApiTest extends TestCase
             'user_id' => $this->admin->id,
             'type' => 'manual',
             'quantity_before' => 100,
-            'quantity_change' => 10,
+            'adjustment_quantity' => 10,
             'quantity_after' => 110,
             'reason' => 'Test adjustment',
         ], $attributes));
@@ -140,7 +140,7 @@ class StockAdjustmentApiTest extends TestCase
         $response->assertStatus(200)
             ->assertJsonStructure([
                 'data' => [
-                    '*' => ['id', 'product_id', 'type', 'quantity_change', 'reason'],
+                    '*' => ['id', 'product_id', 'type', 'adjustment_quantity', 'reason'],
                 ],
                 'links',
                 'meta',
@@ -215,7 +215,7 @@ class StockAdjustmentApiTest extends TestCase
         $adjustmentData = [
             'product_id' => $this->product->id,
             'type' => 'manual',
-            'quantity_change' => 25,
+            'quantity' => 25,
             'reason' => 'Inventory recount',
         ];
 
@@ -223,7 +223,7 @@ class StockAdjustmentApiTest extends TestCase
 
         $response->assertStatus(201)
             ->assertJsonPath('message', 'Stock adjustment created successfully')
-            ->assertJsonPath('data.quantity_change', 25);
+            ->assertJsonPath('data.adjustment_quantity', 25);
 
         $this->product->refresh();
         $this->assertEquals(125, $this->product->stock);
@@ -238,7 +238,7 @@ class StockAdjustmentApiTest extends TestCase
         $adjustmentData = [
             'product_id' => $this->product->id,
             'type' => 'damage',
-            'quantity_change' => -10,
+            'quantity' => -10,
             'reason' => 'Damaged items removed',
         ];
 
@@ -257,7 +257,7 @@ class StockAdjustmentApiTest extends TestCase
         $response = $this->postJson('/api/v1/stock-adjustments', []);
 
         $response->assertStatus(422)
-            ->assertJsonValidationErrors(['product_id', 'type', 'quantity_change']);
+            ->assertJsonValidationErrors(['product_id', 'type', 'quantity']);
     }
 
     public function test_create_adjustment_validates_type(): void
@@ -267,7 +267,7 @@ class StockAdjustmentApiTest extends TestCase
         $response = $this->postJson('/api/v1/stock-adjustments', [
             'product_id' => $this->product->id,
             'type' => 'invalid_type',
-            'quantity_change' => 10,
+            'quantity' => 10,
         ]);
 
         $response->assertStatus(422)
@@ -281,7 +281,7 @@ class StockAdjustmentApiTest extends TestCase
         $this->postJson('/api/v1/stock-adjustments', [
             'product_id' => $this->product->id,
             'type' => 'manual',
-            'quantity_change' => 5,
+            'quantity' => 5,
             'reason' => 'Test',
         ]);
 
@@ -300,7 +300,7 @@ class StockAdjustmentApiTest extends TestCase
         $response = $this->postJson('/api/v1/stock-adjustments', [
             'product_id' => $this->product->id,
             'type' => 'manual',
-            'quantity_change' => 15,
+            'quantity' => 15,
             'reason' => 'Test',
         ]);
 
@@ -349,7 +349,7 @@ class StockAdjustmentApiTest extends TestCase
             'user_id' => $this->admin->id,
             'type' => 'manual',
             'quantity_before' => 50,
-            'quantity_change' => 10,
+            'adjustment_quantity' => 10,
             'quantity_after' => 60,
             'reason' => 'Other adjustment',
         ]);
@@ -388,7 +388,7 @@ class StockAdjustmentApiTest extends TestCase
             'user_id' => $this->admin->id,
             'type' => 'manual',
             'quantity_before' => 50,
-            'quantity_change' => 10,
+            'adjustment_quantity' => 10,
             'quantity_after' => 60,
             'reason' => 'Their Adjustment',
         ]);
@@ -402,19 +402,19 @@ class StockAdjustmentApiTest extends TestCase
 
     // ==================== ADJUSTMENT TYPE TESTS ====================
 
-    public function test_can_create_recount_adjustment(): void
+    public function test_can_create_count_adjustment(): void
     {
         Sanctum::actingAs($this->admin);
 
         $response = $this->postJson('/api/v1/stock-adjustments', [
             'product_id' => $this->product->id,
-            'type' => 'recount',
-            'quantity_change' => -5,
+            'type' => 'count',
+            'quantity' => -5,
             'reason' => 'Physical inventory count',
         ]);
 
         $response->assertStatus(201)
-            ->assertJsonPath('data.type', 'recount');
+            ->assertJsonPath('data.type', 'count');
     }
 
     public function test_can_create_damage_adjustment(): void
@@ -424,7 +424,7 @@ class StockAdjustmentApiTest extends TestCase
         $response = $this->postJson('/api/v1/stock-adjustments', [
             'product_id' => $this->product->id,
             'type' => 'damage',
-            'quantity_change' => -3,
+            'quantity' => -3,
             'reason' => 'Items damaged in transit',
         ]);
 
@@ -432,19 +432,19 @@ class StockAdjustmentApiTest extends TestCase
             ->assertJsonPath('data.type', 'damage');
     }
 
-    public function test_can_create_loss_adjustment(): void
+    public function test_can_create_transfer_adjustment(): void
     {
         Sanctum::actingAs($this->admin);
 
         $response = $this->postJson('/api/v1/stock-adjustments', [
             'product_id' => $this->product->id,
-            'type' => 'loss',
-            'quantity_change' => -2,
-            'reason' => 'Items lost or stolen',
+            'type' => 'transfer',
+            'quantity' => -2,
+            'reason' => 'Items transferred to other location',
         ]);
 
         $response->assertStatus(201)
-            ->assertJsonPath('data.type', 'loss');
+            ->assertJsonPath('data.type', 'transfer');
     }
 
     public function test_can_create_return_adjustment(): void
@@ -454,7 +454,7 @@ class StockAdjustmentApiTest extends TestCase
         $response = $this->postJson('/api/v1/stock-adjustments', [
             'product_id' => $this->product->id,
             'type' => 'return',
-            'quantity_change' => 5,
+            'quantity' => 5,
             'reason' => 'Customer return',
         ]);
 

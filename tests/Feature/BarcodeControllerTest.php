@@ -92,13 +92,14 @@ class BarcodeControllerTest extends TestCase
         $response = $this->actingAs($this->admin)
             ->post(route('products.barcode.generate-random', $this->product));
 
-        $response->assertRedirect();
+        $response->assertStatus(200)
+            ->assertJson(['message' => 'Barcode generated successfully']);
     }
 
     public function test_admin_can_bulk_print_barcodes(): void
     {
         $response = $this->actingAs($this->admin)
-            ->get(route('products.barcode.bulk-print', ['products' => [$this->product->id]]));
+            ->get(route('products.barcode.bulk-print', ['ids' => $this->product->id]));
 
         $response->assertStatus(200);
     }

@@ -63,10 +63,8 @@ class AuthApiTest extends TestCase
         $response->assertStatus(200)
             ->assertJsonStructure([
                 'message',
-                'data' => [
-                    'user' => ['id', 'name', 'email'],
-                    'token',
-                ],
+                'user' => ['id', 'name', 'email'],
+                'token',
             ])
             ->assertJsonPath('message', 'Login successful');
     }
@@ -78,8 +76,8 @@ class AuthApiTest extends TestCase
             'password' => 'password123',
         ]);
 
-        $response->assertStatus(401)
-            ->assertJsonPath('message', 'Invalid credentials');
+        $response->assertStatus(422)
+            ->assertJsonValidationErrors(['email']);
     }
 
     public function test_cannot_login_with_invalid_password(): void
@@ -89,8 +87,8 @@ class AuthApiTest extends TestCase
             'password' => 'wrongpassword',
         ]);
 
-        $response->assertStatus(401)
-            ->assertJsonPath('message', 'Invalid credentials');
+        $response->assertStatus(422)
+            ->assertJsonValidationErrors(['email']);
     }
 
     public function test_login_validates_required_fields(): void
@@ -140,9 +138,9 @@ class AuthApiTest extends TestCase
         $response = $this->getJson('/api/v1/user');
 
         $response->assertStatus(200)
-            ->assertJsonPath('data.id', $this->user->id)
-            ->assertJsonPath('data.email', 'user@test.com')
-            ->assertJsonPath('data.name', 'Test User');
+            ->assertJsonPath('id', $this->user->id)
+            ->assertJsonPath('email', 'user@test.com')
+            ->assertJsonPath('name', 'Test User');
     }
 
     public function test_unauthenticated_cannot_get_user(): void
@@ -160,12 +158,10 @@ class AuthApiTest extends TestCase
 
         $response->assertStatus(200)
             ->assertJsonStructure([
-                'data' => [
-                    'id',
-                    'name',
-                    'email',
-                    'organization',
-                ],
+                'id',
+                'name',
+                'email',
+                'organization',
             ]);
     }
 
@@ -182,10 +178,8 @@ class AuthApiTest extends TestCase
         $response->assertStatus(201)
             ->assertJsonStructure([
                 'message',
-                'data' => [
-                    'token',
-                    'name',
-                ],
+                'token',
+                'name',
             ]);
     }
 

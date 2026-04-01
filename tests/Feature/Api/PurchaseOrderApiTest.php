@@ -125,6 +125,7 @@ class PurchaseOrderApiTest extends TestCase
             'supplier_id' => $this->supplier->id,
             'po_number' => 'PO-' . uniqid(),
             'status' => 'draft',
+            'order_date' => now()->toDateString(),
             'subtotal' => 500.00,
             'tax' => 50.00,
             'total' => 550.00,
@@ -147,7 +148,7 @@ class PurchaseOrderApiTest extends TestCase
         $response->assertStatus(200)
             ->assertJsonStructure([
                 'data' => [
-                    '*' => ['id', 'po_number', 'supplier_id', 'status', 'total'],
+                    '*' => ['id', 'po_number', 'supplier', 'status', 'total'],
                 ],
                 'links',
                 'meta',
@@ -215,15 +216,16 @@ class PurchaseOrderApiTest extends TestCase
         Sanctum::actingAs($this->admin);
 
         $poData = [
-            'po_number' => 'PO-NEW-001',
             'supplier_id' => $this->supplier->id,
+            'order_date' => now()->toDateString(),
             'expected_date' => now()->addDays(7)->format('Y-m-d'),
+            'currency' => 'USD',
             'notes' => 'Test purchase order',
             'items' => [
                 [
                     'product_id' => $this->product->id,
                     'quantity' => 10,
-                    'unit_price' => 50.00,
+                    'unit_cost' => 50.00,
                 ],
             ],
         ];
@@ -231,12 +233,11 @@ class PurchaseOrderApiTest extends TestCase
         $response = $this->postJson('/api/v1/purchase-orders', $poData);
 
         $response->assertStatus(201)
-            ->assertJsonPath('message', 'Purchase order created successfully')
-            ->assertJsonPath('data.po_number', 'PO-NEW-001');
+            ->assertJsonPath('message', 'Purchase order created successfully');
 
         $this->assertDatabaseHas('purchase_orders', [
-            'po_number' => 'PO-NEW-001',
             'organization_id' => $this->organization->id,
+            'supplier_id' => $this->supplier->id,
         ]);
     }
 
@@ -284,6 +285,7 @@ class PurchaseOrderApiTest extends TestCase
             'supplier_id' => $otherSupplier->id,
             'po_number' => 'OTHER-001',
             'status' => 'draft',
+            'order_date' => now()->toDateString(),
             'total' => 100.00,
         ]);
 
@@ -333,6 +335,7 @@ class PurchaseOrderApiTest extends TestCase
             'supplier_id' => $otherSupplier->id,
             'po_number' => 'OTHER-001',
             'status' => 'draft',
+            'order_date' => now()->toDateString(),
             'total' => 100.00,
         ]);
 
@@ -378,6 +381,7 @@ class PurchaseOrderApiTest extends TestCase
             'supplier_id' => $otherSupplier->id,
             'po_number' => 'OTHER-001',
             'status' => 'draft',
+            'order_date' => now()->toDateString(),
             'total' => 100.00,
         ]);
 
@@ -394,10 +398,22 @@ class PurchaseOrderApiTest extends TestCase
 
         $po = $this->createPurchaseOrder(['status' => 'draft']);
 
+        // canBeSent() requires at least one item
+        $po->items()->create([
+            'product_id' => $this->product->id,
+            'product_name' => $this->product->name,
+            'quantity_ordered' => 10,
+            'quantity_received' => 0,
+            'unit_cost' => 50.00,
+            'subtotal' => 500.00,
+            'tax' => 0,
+            'total' => 500.00,
+        ]);
+
         $response = $this->postJson("/api/v1/purchase-orders/{$po->id}/send");
 
         $response->assertStatus(200)
-            ->assertJsonPath('message', 'Purchase order sent successfully');
+            ->assertJsonPath('message', 'Purchase order marked as sent');
 
         $this->assertDatabaseHas('purchase_orders', [
             'id' => $po->id,
@@ -414,7 +430,7 @@ class PurchaseOrderApiTest extends TestCase
         $response = $this->postJson("/api/v1/purchase-orders/{$po->id}/cancel");
 
         $response->assertStatus(200)
-            ->assertJsonPath('message', 'Purchase order cancelled successfully');
+            ->assertJsonPath('message', 'Purchase order cancelled');
 
         $this->assertDatabaseHas('purchase_orders', [
             'id' => $po->id,
@@ -428,11 +444,15 @@ class PurchaseOrderApiTest extends TestCase
 
         $po = $this->createPurchaseOrder(['status' => 'sent']);
 
-        // Attach items to the PO
-        $po->items()->create([
+        // Attach items to the PO with correct field names
+        $item = $po->items()->create([
             'product_id' => $this->product->id,
-            'quantity' => 10,
-            'unit_price' => 50.00,
+            'product_name' => $this->product->name,
+            'quantity_ordered' => 10,
+            'quantity_received' => 0,
+            'unit_cost' => 50.00,
+            'subtotal' => 500.00,
+            'tax' => 0,
             'total' => 500.00,
         ]);
 
@@ -441,14 +461,14 @@ class PurchaseOrderApiTest extends TestCase
         $response = $this->postJson("/api/v1/purchase-orders/{$po->id}/receive", [
             'items' => [
                 [
-                    'product_id' => $this->product->id,
-                    'quantity_received' => 10,
+                    'id' => $item->id,
+                    'quantity_to_receive' => 10,
                 ],
             ],
         ]);
 
         $response->assertStatus(200)
-            ->assertJsonPath('message', 'Purchase order received successfully');
+            ->assertJsonPath('message', 'Items received successfully');
 
         $this->product->refresh();
         $this->assertEquals($initialStock + 10, $this->product->stock);
@@ -460,10 +480,14 @@ class PurchaseOrderApiTest extends TestCase
 
         $po = $this->createPurchaseOrder(['status' => 'sent']);
 
-        $po->items()->create([
+        $item = $po->items()->create([
             'product_id' => $this->product->id,
-            'quantity' => 10,
-            'unit_price' => 50.00,
+            'product_name' => $this->product->name,
+            'quantity_ordered' => 10,
+            'quantity_received' => 0,
+            'unit_cost' => 50.00,
+            'subtotal' => 500.00,
+            'tax' => 0,
             'total' => 500.00,
         ]);
 
@@ -472,8 +496,8 @@ class PurchaseOrderApiTest extends TestCase
         $response = $this->postJson("/api/v1/purchase-orders/{$po->id}/receive", [
             'items' => [
                 [
-                    'product_id' => $this->product->id,
-                    'quantity_received' => 5,
+                    'id' => $item->id,
+                    'quantity_to_receive' => 5,
                 ],
             ],
         ]);
@@ -512,6 +536,7 @@ class PurchaseOrderApiTest extends TestCase
             'supplier_id' => $otherSupplier->id,
             'po_number' => 'THEIR-001',
             'status' => 'draft',
+            'order_date' => now()->toDateString(),
             'total' => 100.00,
         ]);
 

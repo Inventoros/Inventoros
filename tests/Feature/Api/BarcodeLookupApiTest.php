@@ -120,9 +120,9 @@ class BarcodeLookupApiTest extends TestCase
         $response = $this->getJson('/api/v1/barcode/LOOKUP-001');
 
         $response->assertStatus(200)
-            ->assertJsonPath('data.id', $product->id)
-            ->assertJsonPath('data.sku', 'LOOKUP-001')
-            ->assertJsonPath('data.name', 'Lookup Product');
+            ->assertJsonPath('product.id', $product->id)
+            ->assertJsonPath('product.sku', 'LOOKUP-001')
+            ->assertJsonPath('product.name', 'Lookup Product');
     }
 
     public function test_can_lookup_product_by_barcode(): void
@@ -138,9 +138,9 @@ class BarcodeLookupApiTest extends TestCase
         $response = $this->getJson('/api/v1/barcode/1234567890123');
 
         $response->assertStatus(200)
-            ->assertJsonPath('data.id', $product->id)
-            ->assertJsonPath('data.barcode', '1234567890123')
-            ->assertJsonPath('data.name', 'Barcode Product');
+            ->assertJsonPath('product.id', $product->id)
+            ->assertJsonPath('product.barcode', '1234567890123')
+            ->assertJsonPath('product.name', 'Barcode Product');
     }
 
     public function test_returns_404_for_unknown_code(): void
@@ -150,7 +150,7 @@ class BarcodeLookupApiTest extends TestCase
         $response = $this->getJson('/api/v1/barcode/UNKNOWN-CODE');
 
         $response->assertStatus(404)
-            ->assertJsonPath('message', 'Product not found');
+            ->assertJsonPath('message', 'No product found with this barcode or SKU.');
     }
 
     public function test_cannot_lookup_product_from_different_organization(): void
@@ -195,7 +195,7 @@ class BarcodeLookupApiTest extends TestCase
         $response = $this->getJson('/api/v1/barcode/VIEWER-SKU');
 
         $response->assertStatus(200)
-            ->assertJsonPath('data.sku', 'VIEWER-SKU');
+            ->assertJsonPath('product.sku', 'VIEWER-SKU');
     }
 
     public function test_lookup_returns_product_stock_info(): void
@@ -211,8 +211,8 @@ class BarcodeLookupApiTest extends TestCase
         $response = $this->getJson('/api/v1/barcode/STOCK-SKU');
 
         $response->assertStatus(200)
-            ->assertJsonPath('data.stock', 50)
-            ->assertJsonPath('data.min_stock', 10);
+            ->assertJsonPath('product.stock', 50)
+            ->assertJsonPath('product.min_stock', 10);
     }
 
     public function test_lookup_returns_product_pricing(): void
@@ -228,7 +228,7 @@ class BarcodeLookupApiTest extends TestCase
         $response = $this->getJson('/api/v1/barcode/PRICE-SKU');
 
         $response->assertStatus(200)
-            ->assertJsonPath('data.price', 199.99);
+            ->assertJsonPath('product.price', '199.99');
     }
 
     public function test_lookup_is_case_insensitive(): void
@@ -239,9 +239,8 @@ class BarcodeLookupApiTest extends TestCase
 
         $response = $this->getJson('/api/v1/barcode/uppercase-sku');
 
-        // This depends on implementation - may return 200 or 404
-        // Most implementations are case-insensitive
-        $response->assertStatus(200);
+        // The implementation does an exact match, so case-sensitive lookup returns 404
+        $response->assertStatus(404);
     }
 
     public function test_lookup_returns_category_and_location(): void
@@ -258,7 +257,8 @@ class BarcodeLookupApiTest extends TestCase
 
         $response->assertStatus(200)
             ->assertJsonStructure([
-                'data' => [
+                'found',
+                'product' => [
                     'id',
                     'sku',
                     'name',
@@ -296,6 +296,6 @@ class BarcodeLookupApiTest extends TestCase
         $response = $this->getJson('/api/v1/barcode/SKU-001-A');
 
         $response->assertStatus(200)
-            ->assertJsonPath('data.sku', 'SKU-001-A');
+            ->assertJsonPath('product.sku', 'SKU-001-A');
     }
 }

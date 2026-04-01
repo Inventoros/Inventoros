@@ -51,8 +51,12 @@ class User extends Authenticatable
         'email',
         'password',
         'organization_id',
+        'role',
         'notification_preferences',
         'dashboard_widgets',
+        'two_factor_secret',
+        'two_factor_enabled',
+        'two_factor_recovery_codes',
     ];
 
     /**

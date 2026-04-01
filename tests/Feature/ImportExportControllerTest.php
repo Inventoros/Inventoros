@@ -383,7 +383,9 @@ class ImportExportControllerTest extends TestCase
         $response = $this->actingAs($this->admin)
             ->get(route('import-export.download-template'));
 
-        $content = $response->getContent();
+        // The controller uses response()->stream(), so we must capture
+        // the streamed output via streamedContent() instead of getContent().
+        $content = $response->streamedContent();
 
         $this->assertStringContains('name', $content);
         $this->assertStringContains('sku', $content);
