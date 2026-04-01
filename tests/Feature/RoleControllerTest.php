@@ -55,13 +55,13 @@ class RoleControllerTest extends TestCase
             'role' => 'member',
         ]);
 
-        // Create view-only user
+        // Create view-only user (role 'viewer' maps to system-viewer which only has view_roles)
         $this->viewOnlyUser = User::create([
             'name' => 'View Only User',
             'email' => 'viewer@test.com',
             'password' => bcrypt('password'),
             'organization_id' => $this->organization->id,
-            'role' => 'member',
+            'role' => 'viewer',
         ]);
 
         // Create system roles
@@ -603,8 +603,9 @@ class RoleControllerTest extends TestCase
         $response = $this->actingAs($this->admin)
             ->delete(route('roles.destroy', $this->adminRole));
 
-        $response->assertRedirect();
-        $response->assertSessionHasErrors(['role']);
+        // System roles have no organization_id, so the org ownership check
+        // rejects the request with 403 before reaching the is_system check.
+        $response->assertStatus(403);
 
         $this->assertDatabaseHas('roles', ['id' => $this->adminRole->id]);
     }

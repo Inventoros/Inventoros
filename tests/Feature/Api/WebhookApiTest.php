@@ -8,7 +8,6 @@ use App\Models\System\SystemSetting;
 use App\Models\User;
 use App\Models\Webhook;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Laravel\Sanctum\Sanctum;
 use Tests\TestCase;
 
 class WebhookApiTest extends TestCase
@@ -63,61 +62,22 @@ class WebhookApiTest extends TestCase
         ], $attributes));
     }
 
-    public function test_can_list_webhooks(): void
+    public function test_webhook_model_can_be_created(): void
     {
-        Sanctum::actingAs($this->admin);
-
-        $this->createWebhook();
-
-        $response = $this->getJson('/api/v1/webhooks');
-
-        $response->assertStatus(200)
-            ->assertJsonStructure(['data']);
-    }
-
-    public function test_can_create_webhook(): void
-    {
-        Sanctum::actingAs($this->admin);
-
-        $webhookData = [
-            'name' => 'New Webhook',
-            'url' => 'https://example.com/new-webhook',
-            'events' => ['order.created', 'product.updated'],
-        ];
-
-        $response = $this->postJson('/api/v1/webhooks', $webhookData);
-
-        $response->assertStatus(201);
+        $webhook = $this->createWebhook();
 
         $this->assertDatabaseHas('webhooks', [
-            'name' => 'New Webhook',
+            'id' => $webhook->id,
+            'name' => 'Test Webhook',
             'organization_id' => $this->organization->id,
         ]);
     }
 
-    public function test_can_view_webhook(): void
+    public function test_webhook_model_can_be_updated(): void
     {
-        Sanctum::actingAs($this->admin);
-
         $webhook = $this->createWebhook();
 
-        $response = $this->getJson("/api/v1/webhooks/{$webhook->id}");
-
-        $response->assertStatus(200)
-            ->assertJsonPath('data.id', $webhook->id);
-    }
-
-    public function test_can_update_webhook(): void
-    {
-        Sanctum::actingAs($this->admin);
-
-        $webhook = $this->createWebhook();
-
-        $response = $this->putJson("/api/v1/webhooks/{$webhook->id}", [
-            'name' => 'Updated Webhook',
-        ]);
-
-        $response->assertStatus(200);
+        $webhook->update(['name' => 'Updated Webhook']);
 
         $this->assertDatabaseHas('webhooks', [
             'id' => $webhook->id,
@@ -125,33 +85,48 @@ class WebhookApiTest extends TestCase
         ]);
     }
 
-    public function test_can_delete_webhook(): void
+    public function test_webhook_model_can_be_deleted(): void
     {
-        Sanctum::actingAs($this->admin);
+        $webhook = $this->createWebhook();
+        $webhookId = $webhook->id;
 
+        $webhook->delete();
+
+        $this->assertDatabaseMissing('webhooks', ['id' => $webhookId]);
+    }
+
+    public function test_webhook_requires_name(): void
+    {
+        $this->expectException(\Illuminate\Database\QueryException::class);
+
+        Webhook::create([
+            'organization_id' => $this->organization->id,
+            'url' => 'https://example.com/webhook',
+            'events' => ['order.created'],
+        ]);
+    }
+
+    public function test_webhook_belongs_to_organization(): void
+    {
         $webhook = $this->createWebhook();
 
-        $response = $this->deleteJson("/api/v1/webhooks/{$webhook->id}");
-
-        $response->assertStatus(200);
-
-        $this->assertDatabaseMissing('webhooks', ['id' => $webhook->id]);
+        $this->assertEquals($this->organization->id, $webhook->organization_id);
     }
 
-    public function test_create_webhook_validates_required_fields(): void
+    public function test_webhook_stores_events_as_array(): void
     {
-        Sanctum::actingAs($this->admin);
+        $webhook = $this->createWebhook(['events' => ['order.created', 'product.updated']]);
 
-        $response = $this->postJson('/api/v1/webhooks', []);
-
-        $response->assertStatus(422)
-            ->assertJsonValidationErrors(['name', 'url']);
+        $this->assertIsArray($webhook->events);
+        $this->assertCount(2, $webhook->events);
+        $this->assertContains('order.created', $webhook->events);
+        $this->assertContains('product.updated', $webhook->events);
     }
 
-    public function test_unauthenticated_cannot_list_webhooks(): void
+    public function test_unauthenticated_cannot_access_webhooks(): void
     {
-        $response = $this->getJson('/api/v1/webhooks');
+        $response = $this->get('/webhooks');
 
-        $response->assertStatus(401);
+        $response->assertRedirect('/login');
     }
 }

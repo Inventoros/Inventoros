@@ -35,8 +35,8 @@ class NotificationControllerTest extends TestCase
             'email' => 'admin@test.com',
             'password' => bcrypt('password'),
             'organization_id' => $this->organization->id,
-            'role' => 'admin',
         ]);
+        $this->admin->forceFill(['role' => 'admin'])->save();
 
         $adminRole = Role::firstOrCreate(
             ['slug' => 'system-administrator'],
@@ -91,7 +91,7 @@ class NotificationControllerTest extends TestCase
         $response = $this->actingAs($this->admin)
             ->post(route('notifications.mark-as-read', $notification));
 
-        $response->assertStatus(200);
+        $response->assertRedirect();
 
         $notification->refresh();
         $this->assertNotNull($notification->read_at);
@@ -105,7 +105,7 @@ class NotificationControllerTest extends TestCase
         $response = $this->actingAs($this->admin)
             ->post(route('notifications.mark-all-read'));
 
-        $response->assertStatus(200);
+        $response->assertRedirect();
 
         $this->assertEquals(0, Notification::where('user_id', $this->admin->id)->whereNull('read_at')->count());
     }
@@ -117,7 +117,7 @@ class NotificationControllerTest extends TestCase
         $response = $this->actingAs($this->admin)
             ->delete(route('notifications.destroy', $notification));
 
-        $response->assertStatus(200);
+        $response->assertRedirect();
 
         $this->assertDatabaseMissing('notifications', ['id' => $notification->id]);
     }
@@ -130,7 +130,7 @@ class NotificationControllerTest extends TestCase
         $response = $this->actingAs($this->admin)
             ->delete(route('notifications.clear-read'));
 
-        $response->assertStatus(200);
+        $response->assertRedirect();
 
         $this->assertEquals(1, Notification::where('user_id', $this->admin->id)->count());
     }

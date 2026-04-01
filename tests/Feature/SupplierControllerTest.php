@@ -43,8 +43,8 @@ class SupplierControllerTest extends TestCase
             'email' => 'admin@test.com',
             'password' => bcrypt('password'),
             'organization_id' => $this->organization->id,
-            'role' => 'admin',
         ]);
+        $this->admin->forceFill(['role' => 'admin'])->save();
 
         // Create member with limited permissions
         $this->member = User::create([
@@ -52,17 +52,17 @@ class SupplierControllerTest extends TestCase
             'email' => 'member@test.com',
             'password' => bcrypt('password'),
             'organization_id' => $this->organization->id,
-            'role' => 'member',
         ]);
+        $this->member->forceFill(['role' => 'member'])->save();
 
-        // Create view-only user
+        // Create view-only user (role 'viewer' to avoid inheriting system-member permissions)
         $this->viewOnlyUser = User::create([
             'name' => 'View Only User',
             'email' => 'viewer@test.com',
             'password' => bcrypt('password'),
             'organization_id' => $this->organization->id,
-            'role' => 'member',
         ]);
+        $this->viewOnlyUser->forceFill(['role' => 'viewer'])->save();
 
         // Create system roles
         $this->createSystemRoles();
@@ -123,7 +123,7 @@ class SupplierControllerTest extends TestCase
         return Supplier::create(array_merge([
             'organization_id' => $this->organization->id,
             'name' => 'Test Supplier',
-            'code' => 'SUP-001',
+            'code' => 'SUP-' . strtoupper(substr(uniqid(), -6)),
             'contact_name' => 'John Smith',
             'email' => 'supplier@test.com',
             'phone' => '555-1234',
@@ -709,7 +709,7 @@ class SupplierControllerTest extends TestCase
         $this->assertCount(1, $supplier->products);
         $this->assertEquals($product->id, $supplier->products->first()->id);
         $this->assertEquals(50.00, $supplier->products->first()->pivot->cost_price);
-        $this->assertTrue($supplier->products->first()->pivot->is_primary);
+        $this->assertTrue((bool) $supplier->products->first()->pivot->is_primary);
     }
 
     // ==================== SCOPE TESTS ====================

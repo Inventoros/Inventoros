@@ -10,6 +10,12 @@ class LoginRequestValidationTest extends TestCase
 {
     use RefreshDatabase;
 
+    protected function setUp(): void
+    {
+        parent::setUp();
+        \App\Models\System\SystemSetting::set('installed', true, 'boolean');
+    }
+
     public function test_login_requires_email(): void
     {
         $response = $this->post('/login', [

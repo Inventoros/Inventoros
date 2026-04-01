@@ -79,7 +79,7 @@ class ProductControllerTest extends TestCase
             'email' => 'viewer@test.com',
             'password' => bcrypt('password'),
             'organization_id' => $this->organization->id,
-            'role' => 'member',
+            'role' => 'viewer',
         ]);
 
         // Create system roles

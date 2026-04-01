@@ -321,7 +321,7 @@ class ProductApiTest extends TestCase
         $response->assertStatus(200)
             ->assertJsonPath('message', 'Product updated successfully')
             ->assertJsonPath('data.name', 'Updated Name')
-            ->assertJsonPath('data.price', 199.99);
+            ->assertJsonPath('data.price', '199.99');
 
         $this->assertDatabaseHas('products', [
             'id' => $product->id,

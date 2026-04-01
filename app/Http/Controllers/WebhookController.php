@@ -33,7 +33,7 @@ class WebhookController extends Controller
      */
     public function index(): Response
     {
-        if (!auth()->user()->can('manage_organization')) {
+        if (!auth()->user()->hasPermission('manage_organization')) {
             abort(403);
         }
 
@@ -58,7 +58,7 @@ class WebhookController extends Controller
      */
     public function store(Request $request): RedirectResponse
     {
-        if (!auth()->user()->can('manage_organization')) {
+        if (!auth()->user()->hasPermission('manage_organization')) {
             abort(403);
         }
 
@@ -96,7 +96,7 @@ class WebhookController extends Controller
      */
     public function show(Webhook $webhook): Response
     {
-        if (!auth()->user()->can('manage_organization') ||
+        if (!auth()->user()->hasPermission('manage_organization') ||
             $webhook->organization_id !== auth()->user()->organization_id) {
             abort(403);
         }
@@ -123,7 +123,7 @@ class WebhookController extends Controller
      */
     public function update(Request $request, Webhook $webhook): RedirectResponse
     {
-        if (!auth()->user()->can('manage_organization') ||
+        if (!auth()->user()->hasPermission('manage_organization') ||
             $webhook->organization_id !== auth()->user()->organization_id) {
             abort(403);
         }
@@ -159,7 +159,7 @@ class WebhookController extends Controller
      */
     public function destroy(Webhook $webhook): RedirectResponse
     {
-        if (!auth()->user()->can('manage_organization') ||
+        if (!auth()->user()->hasPermission('manage_organization') ||
             $webhook->organization_id !== auth()->user()->organization_id) {
             abort(403);
         }
@@ -177,7 +177,7 @@ class WebhookController extends Controller
      */
     public function regenerateSecret(Webhook $webhook): RedirectResponse
     {
-        if (!auth()->user()->can('manage_organization') ||
+        if (!auth()->user()->hasPermission('manage_organization') ||
             $webhook->organization_id !== auth()->user()->organization_id) {
             abort(403);
         }
@@ -195,7 +195,7 @@ class WebhookController extends Controller
      */
     public function test(Webhook $webhook): RedirectResponse
     {
-        if (!auth()->user()->can('manage_organization') ||
+        if (!auth()->user()->hasPermission('manage_organization') ||
             $webhook->organization_id !== auth()->user()->organization_id) {
             abort(403);
         }
@@ -221,7 +221,7 @@ class WebhookController extends Controller
     {
         $webhook = $delivery->webhook;
 
-        if (!auth()->user()->can('manage_organization') ||
+        if (!auth()->user()->hasPermission('manage_organization') ||
             $webhook->organization_id !== auth()->user()->organization_id) {
             abort(403);
         }

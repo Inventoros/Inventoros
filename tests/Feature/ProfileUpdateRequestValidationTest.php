@@ -15,6 +15,7 @@ class ProfileUpdateRequestValidationTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
+        \App\Models\System\SystemSetting::set('installed', true, 'boolean');
 
         $this->user = User::factory()->create();
     }
