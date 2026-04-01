@@ -224,7 +224,22 @@ class OrganizationSettingsControllerTest extends TestCase
 
     public function test_admin_can_create_admin_user(): void
     {
-        $this->markTestSkipped('User role field is not in $fillable - storeUser controller cannot set role via mass assignment.');
+        $response = $this->actingAs($this->admin)
+            ->post(route('settings.organization.users.store'), [
+                'name' => 'New Admin',
+                'email' => 'newadmin@test.com',
+                'password' => 'password123',
+                'password_confirmation' => 'password123',
+                'is_admin' => true,
+            ]);
+
+        $response->assertRedirect();
+        $response->assertSessionHas('success', 'User created successfully.');
+
+        $this->assertDatabaseHas('users', [
+            'email' => 'newadmin@test.com',
+            'role' => 'admin',
+        ]);
     }
 
     public function test_member_cannot_create_user(): void
@@ -266,7 +281,20 @@ class OrganizationSettingsControllerTest extends TestCase
 
     public function test_admin_can_promote_user_to_admin(): void
     {
-        $this->markTestSkipped('User role field is not in $fillable - updateUser controller cannot set role via mass assignment.');
+        $response = $this->actingAs($this->admin)
+            ->patch(route('settings.organization.users.update', $this->member->id), [
+                'name' => $this->member->name,
+                'email' => $this->member->email,
+                'is_admin' => true,
+            ]);
+
+        $response->assertRedirect();
+        $response->assertSessionHas('success', 'User updated successfully.');
+
+        $this->assertDatabaseHas('users', [
+            'id' => $this->member->id,
+            'role' => 'admin',
+        ]);
     }
 
     public function test_cannot_remove_admin_role_from_last_admin(): void
