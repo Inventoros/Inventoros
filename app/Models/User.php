@@ -142,11 +142,15 @@ class User extends Authenticatable
      */
     public function accessibleWarehouses()
     {
+        if (!$this->organization_id) {
+            return Warehouse::where('id', 0); // empty query
+        }
+
         if ($this->isAdmin()) {
             return Warehouse::forOrganization($this->organization_id)->active();
         }
 
-        return $this->warehouses()->where('organization_id', $this->organization_id)->active();
+        return $this->warehouses()->where('warehouses.organization_id', $this->organization_id)->active();
     }
 
     /**
