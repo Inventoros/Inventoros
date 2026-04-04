@@ -341,6 +341,19 @@ Route::middleware('auth')->group(function () {
         Route::get('/sales-analysis', [\App\Http\Controllers\Reports\ReportController::class, 'salesAnalysis'])->name('sales-analysis');
         Route::get('/low-stock', [\App\Http\Controllers\Reports\ReportController::class, 'lowStock'])->name('low-stock');
         Route::get('/category-performance', [\App\Http\Controllers\Reports\ReportController::class, 'categoryPerformance'])->name('category-performance');
+
+        // Custom Report Builder
+        Route::prefix('builder')->name('builder.')->group(function () {
+            Route::get('/', [\App\Http\Controllers\Reports\ReportBuilderController::class, 'index'])->name('index');
+            Route::get('/create', [\App\Http\Controllers\Reports\ReportBuilderController::class, 'create'])->name('create');
+            Route::post('/', [\App\Http\Controllers\Reports\ReportBuilderController::class, 'store'])->name('store');
+            Route::post('/preview', [\App\Http\Controllers\Reports\ReportBuilderController::class, 'preview'])->name('preview');
+            Route::get('/{saved_report}', [\App\Http\Controllers\Reports\ReportBuilderController::class, 'show'])->name('show');
+            Route::get('/{saved_report}/edit', [\App\Http\Controllers\Reports\ReportBuilderController::class, 'edit'])->name('edit');
+            Route::put('/{saved_report}', [\App\Http\Controllers\Reports\ReportBuilderController::class, 'update'])->name('update');
+            Route::delete('/{saved_report}', [\App\Http\Controllers\Reports\ReportBuilderController::class, 'destroy'])->name('destroy');
+            Route::get('/{saved_report}/export', [\App\Http\Controllers\Reports\ReportBuilderController::class, 'export'])->name('export');
+        });
     });
 
     // Notifications

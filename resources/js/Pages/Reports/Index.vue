@@ -4,6 +4,13 @@ import { Head, Link } from '@inertiajs/vue3';
 import { useI18n } from 'vue-i18n';
 
 const { t } = useI18n();
+
+const props = defineProps({
+    savedReports: {
+        type: Array,
+        default: () => [],
+    },
+});
 </script>
 
 <template>
@@ -145,23 +152,80 @@ const { t } = useI18n();
                         </div>
                     </Link>
 
-                    <!-- Coming Soon Placeholder -->
-                    <div class="bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border border-dashed rounded-lg shadow-sm p-6 opacity-60">
+                    <!-- Report Builder Card -->
+                    <Link
+                        :href="route('reports.builder.index')"
+                        class="group bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border hover:border-primary-400 dark:hover:border-primary-400 rounded-lg shadow-sm hover:shadow-md transition p-6"
+                    >
                         <div class="flex items-start gap-4">
-                            <div class="flex-shrink-0 w-12 h-12 bg-gray-100 dark:bg-gray-900/30 rounded-lg flex items-center justify-center">
-                                <svg class="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                            <div class="flex-shrink-0 w-12 h-12 bg-indigo-100 dark:bg-indigo-900/30 rounded-lg flex items-center justify-center group-hover:bg-indigo-200 dark:group-hover:bg-indigo-900/50 transition">
+                                <svg class="w-6 h-6 text-indigo-600 dark:text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z" />
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z" />
                                 </svg>
                             </div>
                             <div class="flex-1 min-w-0">
-                                <h3 class="text-lg font-semibold text-gray-500 dark:text-gray-400">
-                                    {{ t('reports.moreReports') }}
+                                <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 group-hover:text-primary-400 transition">
+                                    {{ t('reports.customReports.title') }}
                                 </h3>
-                                <p class="text-sm text-gray-400 dark:text-gray-500 mt-1">
-                                    {{ t('reports.moreReportsDesc') }}
+                                <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                                    {{ t('reports.customReports.description') }}
                                 </p>
                             </div>
+                            <svg class="w-5 h-5 text-gray-400 group-hover:text-primary-400 transition" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                            </svg>
                         </div>
+                    </Link>
+                </div>
+
+                <!-- Custom Reports Section -->
+                <div v-if="savedReports.length > 0" class="mt-10">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">{{ t('reports.customReports.saved') }}</h3>
+                        <Link
+                            :href="route('reports.builder.create')"
+                            class="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm bg-primary-600 hover:bg-primary-700 text-white font-medium rounded-lg transition"
+                        >
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                            </svg>
+                            {{ t('reports.customReports.create') }}
+                        </Link>
+                    </div>
+                    <div class="bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border rounded-lg shadow-sm overflow-hidden">
+                        <table class="min-w-full divide-y divide-gray-200 dark:divide-dark-border">
+                            <thead class="bg-gray-50 dark:bg-dark-bg">
+                                <tr>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">{{ t('reportBuilder.columns.name') }}</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">{{ t('reportBuilder.columns.dataSource') }}</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">{{ t('reportBuilder.columns.createdBy') }}</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">{{ t('reportBuilder.columns.created') }}</th>
+                                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider"></th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-200 dark:divide-dark-border">
+                                <tr v-for="report in savedReports" :key="report.id" class="hover:bg-gray-50 dark:hover:bg-dark-bg/50 transition">
+                                    <td class="px-6 py-4">
+                                        <Link :href="route('reports.builder.show', report.id)" class="text-sm font-medium text-gray-900 dark:text-gray-100 hover:text-primary-400 transition">
+                                            {{ report.name }}
+                                        </Link>
+                                    </td>
+                                    <td class="px-6 py-4">
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300">
+                                            {{ report.data_source }}
+                                        </span>
+                                    </td>
+                                    <td class="px-6 py-4 text-sm text-gray-500 dark:text-gray-400">{{ report.creator?.name || '-' }}</td>
+                                    <td class="px-6 py-4 text-sm text-gray-500 dark:text-gray-400">{{ new Date(report.created_at).toLocaleDateString() }}</td>
+                                    <td class="px-6 py-4 text-right">
+                                        <Link :href="route('reports.builder.show', report.id)" class="text-sm text-primary-400 hover:text-primary-300 transition">
+                                            {{ t('reportBuilder.actions.view') }}
+                                        </Link>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             </div>
