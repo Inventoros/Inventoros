@@ -54,6 +54,14 @@ class HandleInertiaRequests extends Middleware
             ],
             'pluginMenuItems' => $pluginMenuItems,
             'locale' => app()->getLocale(),
+            'warehouses' => function () {
+                $user = auth()->user();
+                if (!$user) return [];
+                return $user->accessibleWarehouses()->get(['id', 'name', 'code', 'is_default'])->toArray();
+            },
+            'activeWarehouseId' => function () {
+                return session('active_warehouse_id');
+            },
         ];
     }
 }

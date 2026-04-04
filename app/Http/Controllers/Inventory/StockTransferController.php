@@ -32,9 +32,22 @@ class StockTransferController extends Controller
     public function index(Request $request): Response
     {
         $organizationId = $request->user()->organization_id;
+        $activeWarehouseId = session('active_warehouse_id');
 
-        $query = StockTransfer::with(['fromLocation', 'toLocation', 'transferredBy', 'items'])
+        $query = StockTransfer::with(['fromLocation', 'toLocation', 'fromWarehouse', 'toWarehouse', 'transferredBy', 'items'])
             ->forOrganization($organizationId)
+            ->when($activeWarehouseId, function ($query, $warehouseId) {
+                $query->where(function ($q) use ($warehouseId) {
+                    $q->where('from_warehouse_id', $warehouseId)
+                      ->orWhere('to_warehouse_id', $warehouseId)
+                      ->orWhereHas('fromLocation', function ($q2) use ($warehouseId) {
+                          $q2->where('warehouse_id', $warehouseId);
+                      })
+                      ->orWhereHas('toLocation', function ($q2) use ($warehouseId) {
+                          $q2->where('warehouse_id', $warehouseId);
+                      });
+                });
+            })
             ->when($request->input('search'), function ($query, $search) {
                 $query->where('transfer_number', 'like', "%{$search}%");
             })
@@ -93,6 +106,9 @@ class StockTransferController extends Controller
                 'different:from_location_id',
             ],
             'notes' => 'nullable|string|max:1000',
+            'shipping_method' => 'nullable|string|max:255',
+            'tracking_number' => 'nullable|string|max:255',
+            'estimated_arrival' => 'nullable|date',
             'items' => 'required|array|min:1',
             'items.*.product_id' => 'required|exists:products,id',
             'items.*.quantity' => 'required|integer|min:1',
@@ -110,8 +126,17 @@ class StockTransferController extends Controller
             ->forOrganization($organizationId)
             ->firstOrFail();
 
-        $transfer = DB::transaction(function () use ($validated, $organizationId, $request) {
-            $transfer = StockTransfer::create([
+        // Determine if this is an inter-warehouse transfer
+        $isInterWarehouse = false;
+        $fromWarehouseId = $fromLocation->warehouse_id;
+        $toWarehouseId = $toLocation->warehouse_id;
+
+        if ($fromWarehouseId && $toWarehouseId && $fromWarehouseId !== $toWarehouseId) {
+            $isInterWarehouse = true;
+        }
+
+        $transfer = DB::transaction(function () use ($validated, $organizationId, $request, $isInterWarehouse, $fromWarehouseId, $toWarehouseId) {
+            $transferData = [
                 'organization_id' => $organizationId,
                 'transfer_number' => StockTransfer::generateTransferNumber($organizationId),
                 'from_location_id' => $validated['from_location_id'],
@@ -119,7 +144,18 @@ class StockTransferController extends Controller
                 'transferred_by' => $request->user()->id,
                 'status' => 'pending',
                 'notes' => $validated['notes'] ?? null,
-            ]);
+                'is_inter_warehouse' => $isInterWarehouse,
+            ];
+
+            if ($isInterWarehouse) {
+                $transferData['from_warehouse_id'] = $fromWarehouseId;
+                $transferData['to_warehouse_id'] = $toWarehouseId;
+                $transferData['shipping_method'] = $validated['shipping_method'] ?? null;
+                $transferData['tracking_number'] = $validated['tracking_number'] ?? null;
+                $transferData['estimated_arrival'] = $validated['estimated_arrival'] ?? null;
+            }
+
+            $transfer = StockTransfer::create($transferData);
 
             foreach ($validated['items'] as $item) {
                 // Verify product belongs to organization
@@ -160,6 +196,57 @@ class StockTransferController extends Controller
         return Inertia::render('StockTransfers/Show', [
             'transfer' => $stockTransfer,
         ]);
+    }
+
+    /**
+     * Update a stock transfer (e.g., status change to in_transit for inter-warehouse).
+     *
+     * @param Request $request The incoming HTTP request
+     * @param StockTransfer $stockTransfer The stock transfer to update
+     * @return \Illuminate\Http\RedirectResponse
+     */
+    public function update(Request $request, StockTransfer $stockTransfer)
+    {
+        if ($stockTransfer->organization_id !== $request->user()->organization_id) {
+            abort(403, 'Unauthorized action.');
+        }
+
+        $validated = $request->validate([
+            'status' => 'sometimes|string|in:in_transit',
+            'shipping_method' => 'nullable|string|max:255',
+            'tracking_number' => 'nullable|string|max:255',
+            'estimated_arrival' => 'nullable|date',
+        ]);
+
+        // Handle status change to in_transit
+        if (isset($validated['status']) && $validated['status'] === 'in_transit') {
+            if ($stockTransfer->status !== 'pending') {
+                return redirect()->route('stock-transfers.show', $stockTransfer)
+                    ->with('error', 'Only pending transfers can be marked as in transit.');
+            }
+
+            $updateData = [
+                'status' => 'in_transit',
+                'shipped_at' => now(),
+            ];
+
+            if (isset($validated['shipping_method'])) {
+                $updateData['shipping_method'] = $validated['shipping_method'];
+            }
+            if (isset($validated['tracking_number'])) {
+                $updateData['tracking_number'] = $validated['tracking_number'];
+            }
+            if (isset($validated['estimated_arrival'])) {
+                $updateData['estimated_arrival'] = $validated['estimated_arrival'];
+            }
+
+            $stockTransfer->update($updateData);
+
+            return redirect()->route('stock-transfers.show', $stockTransfer)
+                ->with('success', 'Stock transfer marked as in transit.');
+        }
+
+        return redirect()->route('stock-transfers.show', $stockTransfer);
     }
 
     /**
