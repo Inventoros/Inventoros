@@ -75,6 +75,16 @@ enum Permission: string
     case CREATE_STOCK_AUDITS = 'create_stock_audits';
     case MANAGE_STOCK_AUDITS = 'manage_stock_audits';
 
+    // Warehouse Management
+    case VIEW_WAREHOUSES = 'view_warehouses';
+    case CREATE_WAREHOUSES = 'create_warehouses';
+    case EDIT_WAREHOUSES = 'edit_warehouses';
+    case DELETE_WAREHOUSES = 'delete_warehouses';
+    case MANAGE_WAREHOUSE_USERS = 'manage_warehouse_users';
+
+    // Returns Management
+    case MANAGE_RETURNS = 'manage_returns';
+
     // Reports & Data
     case VIEW_REPORTS = 'view_reports';
     case EXPORT_DATA = 'export_data';
@@ -140,6 +150,14 @@ enum Permission: string
 
             self::VIEW_PLUGINS => 'View Plugins',
             self::MANAGE_PLUGINS => 'Manage Plugins',
+
+            self::VIEW_WAREHOUSES => 'View Warehouses',
+            self::CREATE_WAREHOUSES => 'Create Warehouses',
+            self::EDIT_WAREHOUSES => 'Edit Warehouses',
+            self::DELETE_WAREHOUSES => 'Delete Warehouses',
+            self::MANAGE_WAREHOUSE_USERS => 'Manage Warehouse Users',
+
+            self::MANAGE_RETURNS => 'Manage Returns',
 
             self::VIEW_REPORTS => 'View Reports',
             self::EXPORT_DATA => 'Export Data',
@@ -208,6 +226,14 @@ enum Permission: string
             self::VIEW_PLUGINS => 'Can view installed plugins',
             self::MANAGE_PLUGINS => 'Can install, activate, and delete plugins',
 
+            self::VIEW_WAREHOUSES => 'Can view warehouse list and details',
+            self::CREATE_WAREHOUSES => 'Can create new warehouses',
+            self::EDIT_WAREHOUSES => 'Can edit warehouse settings',
+            self::DELETE_WAREHOUSES => 'Can delete warehouses',
+            self::MANAGE_WAREHOUSE_USERS => 'Can assign and remove users from warehouses',
+
+            self::MANAGE_RETURNS => 'Can create and manage returns and exchanges',
+
             self::VIEW_REPORTS => 'Can view system reports',
             self::EXPORT_DATA => 'Can export data from the system',
             self::IMPORT_DATA => 'Can import data into the system',
@@ -234,6 +260,9 @@ enum Permission: string
             self::DELETE_PURCHASE_ORDERS, self::RECEIVE_PURCHASE_ORDERS => 'Purchase Order Management',
             self::VIEW_ORDERS, self::CREATE_ORDERS, self::EDIT_ORDERS, self::DELETE_ORDERS,
             self::APPROVE_ORDERS => 'Order Management',
+            self::VIEW_WAREHOUSES, self::CREATE_WAREHOUSES, self::EDIT_WAREHOUSES,
+            self::DELETE_WAREHOUSES, self::MANAGE_WAREHOUSE_USERS => 'Warehouse Management',
+            self::MANAGE_RETURNS => 'Returns Management',
             self::VIEW_SETTINGS, self::EDIT_SETTINGS, self::MANAGE_ORGANIZATION => 'Settings',
             self::VIEW_PLUGINS, self::MANAGE_PLUGINS => 'Plugins',
             self::VIEW_REPORTS, self::EXPORT_DATA, self::IMPORT_DATA, self::VIEW_ACTIVITY_LOG => 'Reports & Data',
