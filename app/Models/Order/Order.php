@@ -7,6 +7,7 @@ namespace App\Models\Order;
 use App\Models\Auth\Organization;
 use App\Models\Customer;
 use App\Models\User;
+use App\Models\Warehouse;
 use App\Traits\LogsActivity;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -67,6 +68,7 @@ class Order extends Model
      */
     protected $fillable = [
         'organization_id',
+        'warehouse_id',
         'customer_id',
         'created_by',
         'order_number',
@@ -125,6 +127,11 @@ class Order extends Model
     public function customer(): BelongsTo
     {
         return $this->belongsTo(Customer::class);
+    }
+
+    public function warehouse(): BelongsTo
+    {
+        return $this->belongsTo(Warehouse::class);
     }
 
     /**

@@ -7,6 +7,7 @@ namespace App\Http\Controllers\Order;
 use App\Http\Controllers\Controller;
 use App\Models\Inventory\Product;
 use App\Models\Order\Order;
+use App\Models\Warehouse;
 use App\Services\NotificationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -32,8 +33,13 @@ class OrderController extends Controller
     {
         $organizationId = $request->user()->organization_id;
 
-        $orders = Order::with(['items'])
+        $activeWarehouseId = session('active_warehouse_id');
+
+        $orders = Order::with(['items', 'warehouse'])
             ->forOrganization($organizationId)
+            ->when($activeWarehouseId, function ($query, $warehouseId) {
+                $query->where('warehouse_id', $warehouseId);
+            })
             ->when($request->input('search'), function ($query, $search) {
                 $query->where(function ($q) use ($search) {
                     $q->where('order_number', 'like', "%{$search}%")
@@ -51,11 +57,16 @@ class OrderController extends Controller
             ->paginate(config('limits.pagination.default'))
             ->withQueryString();
 
+        $activeWarehouse = $activeWarehouseId
+            ? Warehouse::find($activeWarehouseId)
+            : null;
+
         return Inertia::render('Orders/Index', [
             'orders' => $orders,
             'filters' => $request->only(['search', 'status', 'source']),
             'statuses' => ['pending', 'processing', 'shipped', 'delivered', 'cancelled'],
             'sources' => ['manual', 'ebay', 'shopify', 'amazon'],
+            'activeWarehouse' => $activeWarehouse,
             'pluginComponents' => [
                 'header' => get_page_components('orders.index', 'header'),
                 'beforeTable' => get_page_components('orders.index', 'before-table'),
@@ -79,8 +90,17 @@ class OrderController extends Controller
             ->with(['category', 'location'])
             ->get(['id', 'name', 'sku', 'price', 'stock', 'category_id', 'location_id']);
 
+        $warehouses = Warehouse::forOrganization($organizationId)
+            ->active()
+            ->get(['id', 'name', 'code', 'is_default']);
+
+        $defaultWarehouseId = session('active_warehouse_id')
+            ?? $warehouses->firstWhere('is_default', true)?->id;
+
         return Inertia::render('Orders/Create', [
             'products' => $products,
+            'warehouses' => $warehouses,
+            'defaultWarehouseId' => $defaultWarehouseId,
         ]);
     }
 
@@ -103,11 +123,18 @@ class OrderController extends Controller
             'shipping' => 'nullable|numeric|min:0',
             'tax' => 'nullable|numeric|min:0',
             'notes' => 'nullable|string',
+            'warehouse_id' => ['nullable', Rule::exists('warehouses', 'id')->where('organization_id', $organizationId)],
             'items' => 'required|array|min:1',
             'items.*.product_id' => ['required', Rule::exists('products', 'id')->where('organization_id', $organizationId)],
             'items.*.quantity' => 'required|integer|min:1',
             'items.*.unit_price' => 'required|numeric|min:0',
         ]);
+
+        // Resolve warehouse: explicit > session > org default
+        if (empty($validated['warehouse_id'])) {
+            $validated['warehouse_id'] = session('active_warehouse_id')
+                ?? Warehouse::forOrganization($organizationId)->where('is_default', true)->value('id');
+        }
 
         $validated['organization_id'] = $request->user()->organization_id;
         $validated['created_by'] = $request->user()->id;

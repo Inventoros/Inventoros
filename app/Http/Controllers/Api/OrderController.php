@@ -27,6 +27,7 @@ class OrderController extends Controller
     #[QueryParameter('search', description: 'Search by order number, customer name, or email', type: 'string')]
     #[QueryParameter('status', description: 'Filter by status', type: 'string', enum: ['pending', 'processing', 'shipped', 'delivered', 'cancelled'])]
     #[QueryParameter('source', description: 'Filter by order source', type: 'string')]
+    #[QueryParameter('warehouse_id', description: 'Filter by warehouse ID', type: 'integer')]
     #[QueryParameter('date_from', description: 'Filter orders from this date (YYYY-MM-DD)', type: 'string', example: '2025-01-01')]
     #[QueryParameter('date_to', description: 'Filter orders until this date (YYYY-MM-DD)', type: 'string', example: '2025-12-31')]
     #[QueryParameter('sort_by', description: 'Sort field (default: created_at)', type: 'string')]
@@ -38,6 +39,9 @@ class OrderController extends Controller
 
         $query = Order::withCount('items')
             ->forOrganization($organizationId)
+            ->when($request->input('warehouse_id'), function ($query, $warehouseId) {
+                $query->where('warehouse_id', $warehouseId);
+            })
             ->when($request->input('search'), function ($query, $search) {
                 $query->where(function ($q) use ($search) {
                     $q->where('order_number', 'like', "%{$search}%")

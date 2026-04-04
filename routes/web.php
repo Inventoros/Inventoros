@@ -14,6 +14,7 @@ use App\Http\Controllers\Install\InstallerController;
 use App\Http\Controllers\Inventory\ProductController;
 use App\Http\Controllers\Inventory\ProductCategoryController;
 use App\Http\Controllers\Inventory\ProductLocationController;
+use App\Http\Controllers\WarehouseController;
 use App\Http\Controllers\Inventory\StockAdjustmentController;
 use App\Http\Controllers\Inventory\StockAuditController;
 use App\Http\Controllers\Inventory\StockTransferController;
@@ -119,11 +120,18 @@ Route::middleware('auth')->group(function () {
         ->except(['create', 'show', 'edit'])
         ->middleware('permission:manage_locations');
 
+    // Warehouses - Permission based
+    Route::resource('warehouses', WarehouseController::class)->middleware('permission:view_warehouses');
+    Route::post('warehouses/{warehouse}/users', [WarehouseController::class, 'updateUsers'])->name('warehouses.users.update')->middleware('permission:manage_warehouse_users');
+    Route::post('warehouses/{warehouse}/set-default', [WarehouseController::class, 'setDefault'])->name('warehouses.set-default')->middleware('permission:edit_warehouses');
+    Route::post('/set-warehouse', [WarehouseController::class, 'setActiveWarehouse'])->name('warehouses.set-active');
+
     // Stock Transfers - Permission based
     Route::get('/stock-transfers', [StockTransferController::class, 'index'])->name('stock-transfers.index')->middleware('permission:transfer_stock');
     Route::get('/stock-transfers/create', [StockTransferController::class, 'create'])->name('stock-transfers.create')->middleware('permission:transfer_stock');
     Route::post('/stock-transfers', [StockTransferController::class, 'store'])->name('stock-transfers.store')->middleware('permission:transfer_stock');
     Route::get('/stock-transfers/{stockTransfer}', [StockTransferController::class, 'show'])->name('stock-transfers.show')->middleware('permission:transfer_stock');
+    Route::put('/stock-transfers/{stockTransfer}', [StockTransferController::class, 'update'])->name('stock-transfers.update')->middleware('permission:transfer_stock');
     Route::post('/stock-transfers/{stockTransfer}/complete', [StockTransferController::class, 'complete'])->name('stock-transfers.complete')->middleware('permission:transfer_stock');
     Route::post('/stock-transfers/{stockTransfer}/cancel', [StockTransferController::class, 'cancel'])->name('stock-transfers.cancel')->middleware('permission:transfer_stock');
 
