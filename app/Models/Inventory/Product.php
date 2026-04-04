@@ -69,6 +69,7 @@ class Product extends Model
      */
     protected $fillable = [
         'organization_id',
+        'type',
         'sku',
         'name',
         'description',
@@ -420,5 +421,115 @@ class Product extends Model
     public function getTotalProfitAttribute(): float
     {
         return $this->profit * $this->stock;
+    }
+
+    /**
+     * Get the components of this kit or assembly (BOM).
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany<\App\Models\Inventory\ProductComponent, $this>
+     */
+    public function components(): HasMany
+    {
+        return $this->hasMany(ProductComponent::class, 'parent_product_id');
+    }
+
+    /**
+     * Get the kits/assemblies that use this product as a component.
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany<\App\Models\Inventory\ProductComponent, $this>
+     */
+    public function usedInKits(): HasMany
+    {
+        return $this->hasMany(ProductComponent::class, 'component_product_id');
+    }
+
+    /**
+     * Get the work orders for this assembly product.
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany<\App\Models\Inventory\WorkOrder, $this>
+     */
+    public function workOrders(): HasMany
+    {
+        return $this->hasMany(WorkOrder::class);
+    }
+
+    /**
+     * Check if this product is a kit.
+     *
+     * @return bool
+     */
+    public function isKit(): bool
+    {
+        return $this->type === 'kit';
+    }
+
+    /**
+     * Check if this product is an assembly.
+     *
+     * @return bool
+     */
+    public function isAssembly(): bool
+    {
+        return $this->type === 'assembly';
+    }
+
+    /**
+     * Check if this product is a standard product.
+     *
+     * @return bool
+     */
+    public function isStandard(): bool
+    {
+        return $this->type === 'standard';
+    }
+
+    /**
+     * Calculate available kit stock based on component availability.
+     *
+     * For kits, stock is not stored directly — it is derived from
+     * the minimum number of complete kits that can be assembled
+     * from available component stock.
+     *
+     * @return int
+     */
+    public function getAvailableKitStock(): int
+    {
+        if (!$this->isKit()) {
+            return $this->stock;
+        }
+
+        $components = $this->components()->with('componentProduct')->get();
+
+        if ($components->isEmpty()) {
+            return 0;
+        }
+
+        $minKits = PHP_INT_MAX;
+
+        foreach ($components as $component) {
+            $componentStock = $component->componentProduct->stock;
+            $requiredQty = (float) $component->quantity;
+
+            if ($requiredQty <= 0) {
+                continue;
+            }
+
+            $possibleKits = (int) floor($componentStock / $requiredQty);
+            $minKits = min($minKits, $possibleKits);
+        }
+
+        return $minKits === PHP_INT_MAX ? 0 : $minKits;
+    }
+
+    /**
+     * Scope a query to filter products by type.
+     *
+     * @param \Illuminate\Database\Eloquent\Builder<static> $query
+     * @param string $type
+     * @return \Illuminate\Database\Eloquent\Builder<static>
+     */
+    public function scopeOfType($query, string $type)
+    {
+        return $query->where('type', $type);
     }
 }
