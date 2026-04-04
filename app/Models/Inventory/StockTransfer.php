@@ -6,6 +6,7 @@ namespace App\Models\Inventory;
 
 use App\Models\Auth\Organization;
 use App\Models\User;
+use App\Models\Warehouse;
 use App\Traits\LogsActivity;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -37,11 +38,18 @@ class StockTransfer extends Model
 
     protected $fillable = [
         'organization_id',
+        'from_warehouse_id',
+        'to_warehouse_id',
         'transfer_number',
         'from_location_id',
         'to_location_id',
         'transferred_by',
         'status',
+        'is_inter_warehouse',
+        'shipping_method',
+        'tracking_number',
+        'shipped_at',
+        'estimated_arrival',
         'notes',
         'completed_at',
     ];
@@ -49,6 +57,9 @@ class StockTransfer extends Model
     protected function casts(): array
     {
         return [
+            'is_inter_warehouse' => 'boolean',
+            'shipped_at' => 'datetime',
+            'estimated_arrival' => 'datetime',
             'completed_at' => 'datetime',
         ];
     }
@@ -61,6 +72,16 @@ class StockTransfer extends Model
     public function organization(): BelongsTo
     {
         return $this->belongsTo(Organization::class);
+    }
+
+    public function fromWarehouse(): BelongsTo
+    {
+        return $this->belongsTo(Warehouse::class, 'from_warehouse_id');
+    }
+
+    public function toWarehouse(): BelongsTo
+    {
+        return $this->belongsTo(Warehouse::class, 'to_warehouse_id');
     }
 
     /**

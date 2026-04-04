@@ -6,6 +6,7 @@ namespace App\Http\Controllers\Inventory;
 
 use App\Http\Controllers\Controller;
 use App\Models\Inventory\ProductLocation;
+use App\Models\Warehouse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -27,9 +28,14 @@ class ProductLocationController extends Controller
     public function index(Request $request): Response
     {
         $organizationId = $request->user()->organization_id;
+        $activeWarehouseId = session('active_warehouse_id');
 
         $locations = ProductLocation::forOrganization($organizationId)
+            ->with('warehouse:id,name,code')
             ->withCount('products')
+            ->when($activeWarehouseId, function ($query, $warehouseId) {
+                $query->where('warehouse_id', $warehouseId);
+            })
             ->when($request->input('search'), function ($query, $search) {
                 $query->where(function ($q) use ($search) {
                     $q->where('name', 'like', "%{$search}%")
@@ -41,8 +47,15 @@ class ProductLocationController extends Controller
             ->withQueryString()
             ->through(fn($location) => $location);
 
+        $warehouses = Warehouse::forOrganization($organizationId)
+            ->active()
+            ->orderBy('name')
+            ->get(['id', 'name', 'code']);
+
         return Inertia::render('Locations/Index', [
             'locations' => $locations,
+            'warehouses' => $warehouses,
+            'activeWarehouseId' => $activeWarehouseId,
             'filters' => [
                 'search' => $request->input('search', ''),
             ],
@@ -61,14 +74,25 @@ class ProductLocationController extends Controller
      */
     public function store(Request $request)
     {
+        $organizationId = $request->user()->organization_id;
+
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'code' => 'required|string|max:50',
             'description' => 'nullable|string',
             'is_active' => 'boolean',
+            'warehouse_id' => [
+                'nullable',
+                'exists:warehouses,id',
+                function ($attribute, $value, $fail) use ($organizationId) {
+                    if ($value && !Warehouse::where('id', $value)->where('organization_id', $organizationId)->exists()) {
+                        $fail('The selected warehouse does not belong to your organization.');
+                    }
+                },
+            ],
         ]);
 
-        $validated['organization_id'] = $request->user()->organization_id;
+        $validated['organization_id'] = $organizationId;
         $validated['is_active'] = $validated['is_active'] ?? true;
 
         $location = ProductLocation::create($validated);
@@ -100,11 +124,22 @@ class ProductLocationController extends Controller
             abort(403, 'Unauthorized action.');
         }
 
+        $organizationId = $request->user()->organization_id;
+
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'code' => 'required|string|max:50',
             'description' => 'nullable|string',
             'is_active' => 'boolean',
+            'warehouse_id' => [
+                'nullable',
+                'exists:warehouses,id',
+                function ($attribute, $value, $fail) use ($organizationId) {
+                    if ($value && !Warehouse::where('id', $value)->where('organization_id', $organizationId)->exists()) {
+                        $fail('The selected warehouse does not belong to your organization.');
+                    }
+                },
+            ],
         ]);
 
         $location->update($validated);

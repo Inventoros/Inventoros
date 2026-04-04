@@ -6,6 +6,7 @@ namespace App\Models;
 
 use App\Enums\Permission;
 use App\Models\Auth\Organization;
+use App\Models\Warehouse;
 use App\Traits\LogsActivity;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -115,6 +116,41 @@ class User extends Authenticatable
     public function organization(): BelongsTo
     {
         return $this->belongsTo(Organization::class);
+    }
+
+    public function warehouses(): BelongsToMany
+    {
+        return $this->belongsToMany(Warehouse::class, 'warehouse_user')->withTimestamps();
+    }
+
+    /**
+     * Check if user has access to a specific warehouse.
+     * Admins have access to all warehouses.
+     */
+    public function hasWarehouseAccess(int $warehouseId): bool
+    {
+        if ($this->isAdmin()) {
+            return true;
+        }
+
+        return $this->warehouses()->where('warehouses.id', $warehouseId)->exists();
+    }
+
+    /**
+     * Get warehouses the user can access.
+     * Admins see all org warehouses.
+     */
+    public function accessibleWarehouses()
+    {
+        if (!$this->organization_id) {
+            return Warehouse::where('id', 0); // empty query
+        }
+
+        if ($this->isAdmin()) {
+            return Warehouse::forOrganization($this->organization_id)->active();
+        }
+
+        return $this->warehouses()->where('warehouses.organization_id', $this->organization_id)->active();
     }
 
     /**
