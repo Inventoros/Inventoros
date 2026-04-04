@@ -9,6 +9,7 @@ use App\Models\Inventory\Product;
 use App\Models\Inventory\StockAdjustment;
 use App\Models\Order\Order;
 use App\Models\Order\OrderItem;
+use App\Models\SavedReport;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
@@ -28,9 +29,18 @@ class ReportController extends Controller
      *
      * @return Response
      */
-    public function index(): Response
+    public function index(Request $request): Response
     {
-        return Inertia::render('Reports/Index');
+        $user = $request->user();
+        $savedReports = SavedReport::accessibleBy($user)
+            ->with('creator:id,name')
+            ->orderBy('updated_at', 'desc')
+            ->limit(5)
+            ->get();
+
+        return Inertia::render('Reports/Index', [
+            'savedReports' => $savedReports,
+        ]);
     }
 
     /**
