@@ -122,11 +122,18 @@ class ProductController extends Controller
         $currencies = config('currencies.supported');
         $defaultCurrency = config('currencies.default');
 
+        $productTypes = [
+            ['value' => 'standard', 'label' => 'Standard Product'],
+            ['value' => 'kit', 'label' => 'Kit (Bundle)'],
+            ['value' => 'assembly', 'label' => 'Assembly'],
+        ];
+
         return Inertia::render('Products/Create', [
             'categories' => $categories,
             'locations' => $locations,
             'currencies' => $currencies,
             'defaultCurrency' => $defaultCurrency,
+            'productTypes' => $productTypes,
             'pluginComponents' => [
                 'header' => get_page_components('products.create', 'header'),
                 'beforeForm' => get_page_components('products.create', 'before-form'),
@@ -147,6 +154,7 @@ class ProductController extends Controller
 
         // Hook: Modify validation rules before validation
         $rules = apply_filters('product_store_validation_rules', [
+            'type' => 'sometimes|string|in:standard,kit,assembly',
             'sku' => ['required', 'string', 'max:255', Rule::unique('products', 'sku')->where('organization_id', $organizationId)],
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
@@ -190,6 +198,7 @@ class ProductController extends Controller
         $validated = $request->validate($rules);
 
         $validated['organization_id'] = $request->user()->organization_id;
+        $validated['type'] = $validated['type'] ?? 'standard';
         $validated['tracking_type'] = $validated['tracking_type'] ?? 'none';
 
         // Hook: Allow plugins to modify validated data before saving
@@ -368,7 +377,14 @@ class ProductController extends Controller
      */
     public function show(Product $product): Response
     {
-        $product->load(['category', 'location', 'organization', 'options', 'variants', 'batches', 'serials']);
+        $eagerLoad = ['category', 'location', 'organization', 'options', 'variants', 'batches', 'serials'];
+
+        // Eager-load components for kits and assemblies
+        if (in_array($product->type, ['kit', 'assembly'])) {
+            $eagerLoad[] = 'components.componentProduct';
+        }
+
+        $product->load($eagerLoad);
 
         // Ensure user can only view products from their organization
         if ($product->organization_id !== auth()->user()->organization_id) {
@@ -436,12 +452,19 @@ class ProductController extends Controller
         $currencies = config('currencies.supported');
         $defaultCurrency = config('currencies.default');
 
+        $productTypes = [
+            ['value' => 'standard', 'label' => 'Standard Product'],
+            ['value' => 'kit', 'label' => 'Kit (Bundle)'],
+            ['value' => 'assembly', 'label' => 'Assembly'],
+        ];
+
         return Inertia::render('Products/Edit', [
             'product' => $product,
             'categories' => $categories,
             'locations' => $locations,
             'currencies' => $currencies,
             'defaultCurrency' => $defaultCurrency,
+            'productTypes' => $productTypes,
             'pluginComponents' => [
                 'header' => get_page_components('products.edit', 'header'),
                 'beforeForm' => get_page_components('products.edit', 'before-form'),
@@ -468,6 +491,7 @@ class ProductController extends Controller
 
         // Hook: Modify validation rules
         $rules = apply_filters('product_update_validation_rules', [
+            'type' => 'sometimes|string|in:standard,kit,assembly',
             'sku' => ['required', 'string', 'max:255', Rule::unique('products', 'sku')->where('organization_id', $organizationId)->ignore($product->id)],
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',

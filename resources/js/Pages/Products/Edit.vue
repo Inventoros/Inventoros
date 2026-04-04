@@ -69,6 +69,7 @@ const form = useForm({
     })),
     has_variants: props.product.has_variants || false,
     tracking_type: props.product.tracking_type || 'none',
+    type: props.product.type || 'standard',
     options: prepareExistingOptions(),
     variants: prepareExistingVariants(),
 });
@@ -276,6 +277,28 @@ const submit = () => {
                                         />
                                         <p v-if="form.errors.barcode" class="mt-1 text-sm text-red-400">
                                             {{ form.errors.barcode }}
+                                        </p>
+                                    </div>
+
+                                    <!-- Product Type -->
+                                    <div>
+                                        <label for="type" class="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-1">
+                                            Product Type
+                                        </label>
+                                        <select
+                                            id="type"
+                                            v-model="form.type"
+                                            class="mt-1 block w-full rounded-md bg-gray-50 dark:bg-dark-bg border-gray-200 dark:border-dark-border text-gray-900 dark:text-gray-100 placeholder-gray-500 shadow-sm focus:border-primary-400 focus:ring-primary-400"
+                                        >
+                                            <option value="standard">Standard</option>
+                                            <option value="kit">Kit</option>
+                                            <option value="assembly">Assembly</option>
+                                        </select>
+                                        <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                                            Kits bundle components for sale. Assemblies require work orders to produce.
+                                        </p>
+                                        <p v-if="form.errors.type" class="mt-1 text-sm text-red-400">
+                                            {{ form.errors.type }}
                                         </p>
                                     </div>
 

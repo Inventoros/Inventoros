@@ -17,8 +17,10 @@ use App\Http\Controllers\Inventory\ProductLocationController;
 use App\Http\Controllers\WarehouseController;
 use App\Http\Controllers\Inventory\StockAdjustmentController;
 use App\Http\Controllers\Inventory\StockAuditController;
+use App\Http\Controllers\Inventory\ProductComponentController;
 use App\Http\Controllers\Inventory\StockTransferController;
 use App\Http\Controllers\Inventory\SupplierController;
+use App\Http\Controllers\Inventory\WorkOrderController;
 use App\Http\Controllers\Order\InvoiceController;
 use App\Http\Controllers\Order\OrderController;
 use App\Http\Controllers\Order\ReturnOrderController;
@@ -109,6 +111,21 @@ Route::middleware('auth')->group(function () {
         Route::post('/generate', [\App\Http\Controllers\Inventory\SKUController::class, 'generate'])->name('generate');
         Route::post('/check-unique', [\App\Http\Controllers\Inventory\SKUController::class, 'checkUnique'])->name('check-unique');
     });
+
+    // Product Components (BOM) for Kits & Assemblies
+    Route::prefix('products/{product}/components')->middleware('permission:edit_products')->group(function () {
+        Route::get('/', [ProductComponentController::class, 'index'])->name('products.components.index');
+        Route::post('/', [ProductComponentController::class, 'store'])->name('products.components.store');
+        Route::put('/{component}', [ProductComponentController::class, 'update'])->name('products.components.update');
+        Route::delete('/{component}', [ProductComponentController::class, 'destroy'])->name('products.components.destroy');
+        Route::post('/reorder', [ProductComponentController::class, 'reorder'])->name('products.components.reorder');
+    });
+
+    // Work Orders
+    Route::resource('work-orders', WorkOrderController::class)->except(['edit', 'update'])->middleware('permission:manage_stock');
+    Route::post('work-orders/{workOrder}/start', [WorkOrderController::class, 'start'])->name('work-orders.start')->middleware('permission:manage_stock');
+    Route::post('work-orders/{workOrder}/complete', [WorkOrderController::class, 'complete'])->name('work-orders.complete')->middleware('permission:manage_stock');
+    Route::post('work-orders/{workOrder}/cancel', [WorkOrderController::class, 'cancel'])->name('work-orders.cancel')->middleware('permission:manage_stock');
 
     // Categories - Permission based
     Route::resource('categories', ProductCategoryController::class)
