@@ -36,9 +36,16 @@ class ProductController extends Controller
     {
         $organizationId = $request->user()->organization_id;
 
+        $activeWarehouseId = session('active_warehouse_id');
+
         // Hook: Allow plugins to modify the product query
         $query = Product::with(['category', 'location'])
             ->forOrganization($organizationId)
+            ->when($activeWarehouseId, function ($query, $warehouseId) {
+                $query->whereHas('location', function ($q) use ($warehouseId) {
+                    $q->where('warehouse_id', $warehouseId);
+                });
+            })
             ->when($request->input('search'), function ($query, $search) {
                 $query->where(function ($q) use ($search) {
                     $q->where('name', 'like', "%{$search}%")

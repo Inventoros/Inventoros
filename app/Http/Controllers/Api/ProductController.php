@@ -23,6 +23,7 @@ class ProductController extends Controller
     #[QueryParameter('search', description: 'Search by name, SKU, or barcode', type: 'string')]
     #[QueryParameter('category_id', description: 'Filter by category ID', type: 'integer')]
     #[QueryParameter('location_id', description: 'Filter by location ID', type: 'integer')]
+    #[QueryParameter('warehouse_id', description: 'Filter by warehouse ID (products in locations belonging to this warehouse)', type: 'integer')]
     #[QueryParameter('is_active', description: 'Filter by active status', type: 'boolean')]
     #[QueryParameter('low_stock', description: 'Show only products below minimum stock', type: 'boolean')]
     #[QueryParameter('sort_by', description: 'Sort field (default: created_at)', type: 'string', example: 'name')]
@@ -34,6 +35,11 @@ class ProductController extends Controller
 
         $query = Product::with(['category', 'location'])
             ->forOrganization($organizationId)
+            ->when($request->input('warehouse_id'), function ($query, $warehouseId) {
+                $query->whereHas('location', function ($q) use ($warehouseId) {
+                    $q->where('warehouse_id', $warehouseId);
+                });
+            })
             ->when($request->input('search'), function ($query, $search) {
                 $query->where(function ($q) use ($search) {
                     $q->where('name', 'like', "%{$search}%")
