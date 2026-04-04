@@ -9,6 +9,7 @@ import NotificationDropdown from '@/Components/Layout/NotificationDropdown.vue';
 import ThemeToggle from '@/Components/Layout/ThemeToggle.vue';
 import SidebarNavItem from '@/Components/Layout/SidebarNavItem.vue';
 import SidebarUserProfile from '@/Components/Layout/SidebarUserProfile.vue';
+import WarehouseSwitcher from '@/Components/WarehouseSwitcher.vue';
 
 const { t } = useI18n();
 const sidebarOpen = ref(false);
@@ -82,6 +83,10 @@ const navItems = {
     locations: {
         icon: 'M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z',
         activeRoutes: ['locations.*'],
+    },
+    warehouses: {
+        icon: 'M8 14v3m4-3v3m4-3v3M3 21h18M3 10h18M3 7l9-4 9 4M4 10h16v11H4V10z',
+        activeRoutes: ['warehouses.*'],
     },
     stockTransfers: {
         icon: 'M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4',
@@ -236,6 +241,16 @@ const navItems = {
                     :icon="navItems.locations.icon"
                     label="Locations"
                     :active-routes="navItems.locations.activeRoutes"
+                    :collapsed="sidebarCollapsed"
+                />
+
+                <!-- Warehouses -->
+                <SidebarNavItem
+                    v-if="hasPermission('view_warehouses')"
+                    :href="route('warehouses.index')"
+                    :icon="navItems.warehouses.icon"
+                    label="Warehouses"
+                    :active-routes="navItems.warehouses.activeRoutes"
                     :collapsed="sidebarCollapsed"
                 />
 
@@ -461,6 +476,7 @@ const navItems = {
 
                     <!-- Header Actions -->
                     <div class="flex items-center gap-1 ml-4">
+                        <WarehouseSwitcher />
                         <!-- Search Button -->
                         <button
                             @click="globalSearchRef?.open()"

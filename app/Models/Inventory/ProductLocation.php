@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Models\Inventory;
 
 use App\Models\Auth\Organization;
+use App\Models\Warehouse;
 use App\Traits\LogsActivity;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -42,6 +43,7 @@ class ProductLocation extends Model
      */
     protected $fillable = [
         'organization_id',
+        'warehouse_id',
         'name',
         'code',
         'description',
@@ -71,6 +73,11 @@ class ProductLocation extends Model
     public function organization(): BelongsTo
     {
         return $this->belongsTo(Organization::class);
+    }
+
+    public function warehouse(): BelongsTo
+    {
+        return $this->belongsTo(Warehouse::class);
     }
 
     /**

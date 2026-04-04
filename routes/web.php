@@ -14,6 +14,7 @@ use App\Http\Controllers\Install\InstallerController;
 use App\Http\Controllers\Inventory\ProductController;
 use App\Http\Controllers\Inventory\ProductCategoryController;
 use App\Http\Controllers\Inventory\ProductLocationController;
+use App\Http\Controllers\WarehouseController;
 use App\Http\Controllers\Inventory\StockAdjustmentController;
 use App\Http\Controllers\Inventory\StockAuditController;
 use App\Http\Controllers\Inventory\StockTransferController;
@@ -118,6 +119,12 @@ Route::middleware('auth')->group(function () {
     Route::resource('locations', ProductLocationController::class)
         ->except(['create', 'show', 'edit'])
         ->middleware('permission:manage_locations');
+
+    // Warehouses - Permission based
+    Route::resource('warehouses', WarehouseController::class)->middleware('permission:view_warehouses');
+    Route::post('warehouses/{warehouse}/users', [WarehouseController::class, 'updateUsers'])->name('warehouses.users.update')->middleware('permission:manage_warehouse_users');
+    Route::post('warehouses/{warehouse}/set-default', [WarehouseController::class, 'setDefault'])->name('warehouses.set-default')->middleware('permission:edit_warehouses');
+    Route::post('/set-warehouse', [WarehouseController::class, 'setActiveWarehouse'])->name('warehouses.set-active');
 
     // Stock Transfers - Permission based
     Route::get('/stock-transfers', [StockTransferController::class, 'index'])->name('stock-transfers.index')->middleware('permission:transfer_stock');
