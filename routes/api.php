@@ -134,5 +134,34 @@ Route::prefix('v1')->as('api.')->middleware('throttle:api')->group(function () {
             ->middleware('api.permission:view_roles');
         Route::apiResource('permission-sets', PermissionSetController::class)
             ->middleware('api.permission:view_roles|manage_roles');
+
+        // Warehouses
+        Route::apiResource('warehouses', \App\Http\Controllers\Api\WarehouseController::class)
+            ->middleware('api.permission:view_warehouses|manage_warehouses');
+
+        // Work Orders
+        Route::apiResource('work-orders', \App\Http\Controllers\Api\WorkOrderController::class)
+            ->only(['index', 'store', 'show'])
+            ->middleware('api.permission:manage_stock');
+        Route::post('work-orders/{workOrder}/start', [\App\Http\Controllers\Api\WorkOrderController::class, 'start'])
+            ->middleware('api.permission:manage_stock');
+        Route::post('work-orders/{workOrder}/complete', [\App\Http\Controllers\Api\WorkOrderController::class, 'complete'])
+            ->middleware('api.permission:manage_stock');
+        Route::post('work-orders/{workOrder}/cancel', [\App\Http\Controllers\Api\WorkOrderController::class, 'cancel'])
+            ->middleware('api.permission:manage_stock');
+
+        // Product Components (nested under products)
+        Route::prefix('products/{product}')->middleware('api.permission:view_products|manage_products')->group(function () {
+            Route::get('components', [\App\Http\Controllers\Api\ProductComponentController::class, 'index']);
+            Route::post('components', [\App\Http\Controllers\Api\ProductComponentController::class, 'store']);
+            Route::put('components/{component}', [\App\Http\Controllers\Api\ProductComponentController::class, 'update']);
+            Route::delete('components/{component}', [\App\Http\Controllers\Api\ProductComponentController::class, 'destroy']);
+        });
+
+        // Saved Reports
+        Route::apiResource('reports', \App\Http\Controllers\Api\SavedReportController::class)
+            ->middleware('api.permission:view_reports');
+        Route::get('reports/{report}/export', [\App\Http\Controllers\Api\SavedReportController::class, 'export'])
+            ->middleware('api.permission:view_reports');
     });
 });
