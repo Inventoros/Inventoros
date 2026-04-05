@@ -14,15 +14,15 @@
     },
     "devDependencies": {
         "@inertiajs/vue3": "^2.0.0",
-        "@playwright/test": "^1.40.0",
-        "@tailwindcss/forms": "^0.5.3",
-        "@tailwindcss/vite": "^4.0.0",
-        "@vitejs/plugin-vue": "^6.0.1",
-        "autoprefixer": "^10.4.12",
-        "axios": "^1.11.0",
+        "@playwright/test": "^1.59.1",
+        "@tailwindcss/forms": "^0.5.11",
+        "@tailwindcss/vite": "^4.2.2",
+        "@vitejs/plugin-vue": "^6.0.5",
+        "autoprefixer": "^10.4.27",
+        "axios": "^1.14.0",
         "concurrently": "^9.0.1",
         "laravel-vite-plugin": "^2.0.0",
-        "postcss": "^8.4.31",
+        "postcss": "^8.5.8",
         "tailwindcss": "^3.2.1",
         "vite": "^7.0.7",
         "vue": "^3.4.0"
@@ -30,6 +30,6 @@
     "dependencies": {
         "html5-qrcode": "^2.3.8",
         "vue-i18n": "^9.14.5",
-        "ziggy-js": "^2.6.0"
+        "ziggy-js": "^2.6.2"
     }
 }
