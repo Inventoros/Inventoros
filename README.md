@@ -1,16 +1,16 @@
 # Inventoros
 
-> **⚠️ PROJECT IN ACTIVE DEVELOPMENT / BETA**
-> Inventoros is currently in early development. Contributions and feedback are welcome!
-
+[![Tests](https://github.com/Inventoros/Inventoros/actions/workflows/tests.yml/badge.svg)](https://github.com/Inventoros/Inventoros/actions/workflows/tests.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Laravel 12](https://img.shields.io/badge/Laravel-12-FF2D20?logo=laravel)](https://laravel.com)
-[![PHP 8.4+](https://img.shields.io/badge/PHP-8.4+-777BB4?logo=php)](https://php.net)
+[![Laravel 13](https://img.shields.io/badge/Laravel-13-FF2D20?logo=laravel)](https://laravel.com)
+[![PHP 8.3+](https://img.shields.io/badge/PHP-8.3+-777BB4?logo=php)](https://php.net)
+[![Vue 3](https://img.shields.io/badge/Vue-3-4FC08D?logo=vuedotjs)](https://vuejs.org)
+[![Inertia.js](https://img.shields.io/badge/Inertia.js-v3-6B46C1)](https://inertiajs.com)
 [![Code of Conduct](https://img.shields.io/badge/Contributor%20Covenant-2.1-4baaaa.svg)](CODE_OF_CONDUCT.md)
 
 **Inventory Management for the Rest of Us**
 
-Inventoros is an open-source Inventory and Warehouse Management System (WMS) built with Laravel, Inertia.js, and Vue 3. Designed to bridge the gap between complex enterprise-grade WMS tools and user-friendly systems, Inventoros provides powerful inventory management capabilities with a developer-focused, extensible architecture.
+Inventoros is an open-source Inventory and Warehouse Management System (WMS) built with Laravel 13, Inertia.js, and Vue 3. Designed to bridge the gap between complex enterprise-grade WMS tools and user-friendly systems, Inventoros provides powerful inventory management capabilities with a developer-focused, extensible architecture.
 
 ## Screenshots
 
@@ -52,256 +52,136 @@ Inventoros is an open-source Inventory and Warehouse Management System (WMS) bui
 
 </details>
 
-## Vision
+## Features
 
-Inventoros aims to democratize warehouse and inventory management by providing small and medium businesses with tools typically found only in expensive enterprise software, while offering developers a flexible, plugin-ready foundation for customization.
+### Inventory & Product Management
+- Full product CRUD with SKU, pricing, stock levels, categories, locations, and barcodes
+- **Product variants** with options (size, color, material) and variant-specific SKUs, pricing, and stock
+- **Kitting & bundling** -- create virtual kit products with auto-calculated stock from components
+- **Assembly & work orders** -- production workflow that consumes components and produces finished goods
+- **Batch tracking** with lot numbers, expiry dates, and manufacturing dates
+- **Serial number tracking** with individual status management
+- Barcode generation (UPC/EAN/Code128), bulk printing, and camera-based scanning
+- Configurable SKU patterns with auto-generation
+- CSV import/export for bulk operations
 
-## Core Features (Planned)
+### Multi-Warehouse Management
+- **Multiple warehouses** with addresses, contacts, and per-warehouse settings
+- **Warehouse-level user access control** -- restrict staff to specific warehouses
+- **Global warehouse switcher** in the header to filter all views
+- **Inter-warehouse stock transfers** with shipping method, tracking number, and transit status
+- Default warehouse per organization with manual override on orders
+- Locations nested within warehouses (Warehouse > Aisle > Shelf > Bin)
 
-- **Inventory Management**: Complete CRUD operations, stock tracking, SKU management, product categories, suppliers, and locations
-- **Warehouse Management**: Order management, fulfillment queues, and location-based tracking
-- **CSV Import/Export**: Bootstrap your inventory with bulk data operations
-- **Plugin System**: Modular extension layer for third-party add-ons and custom functionality
-- **REST + GraphQL API**: Secure, tokenized API endpoints for integration with e-commerce, ERP, and custom systems
-- **Multi-User Support**: Role-based permissions, teams, and organization-level data isolation
-- **Installer Wizard**: Guided setup flow with database validation and admin creation
-- **Update Management**: Version-controlled migrations and UI-driven update flow
+### Order & Supply Chain
+- Full order lifecycle with automatic inventory adjustments and row locking
+- Order approval workflow (pending, approved, rejected)
+- **Returns & exchanges (RMA)** -- full return lifecycle with automatic stock restoration
+- Purchase orders with item receiving workflow and invoice generation
+- Customer management with order history
+- Automated reorder points with supplier-grouped PO generation
+
+### Custom Report Builder
+- **Build custom reports** from 6 data sources (products, orders, stock adjustments, customers, suppliers, purchase orders)
+- Select columns, add filters (10+ operators), configure sorting
+- Save reports as reusable templates, share with team
+- Export reports as CSV
+- Live preview while building
+
+### User & Access Management
+- Role-based access control with 30+ granular permissions
+- Custom roles with reusable permission set templates
+- Two-factor authentication (TOTP with setup wizard, QR code, and recovery codes)
+- API token management (create, list, revoke)
+
+### REST & GraphQL APIs
+- **REST API v1** with full CRUD for all resources (products, orders, warehouses, work orders, reports, and more)
+- **GraphQL API** with queries and mutations, permission checks, and query depth/complexity limits
+- Auto-generated **OpenAPI 3.1 docs** via Scramble at `/docs/api`
+- Sanctum token authentication
+
+### Plugin System
+- WordPress-style hooks and filters
+- Extensible UI with plugin slots
+- Database-driven plugin activation
+- Sample plugin with documentation
+
+### Notifications & Integrations
+- Email notifications with multi-provider support (SMTP, Mailgun, SendGrid)
+- Customizable templates with per-user preferences
+- Webhook system with HMAC-SHA256 signing, exponential backoff retry, and delivery logs
+
+### System & DevOps
+- Multi-tenant architecture with organization-based data isolation
+- Installer wizard with database validation and admin creation
+- Update manager with automatic backups (UI + CLI)
+- Activity logging with filtering and export
+- Dark mode with persistent preferences
+- Global search command palette (Ctrl+K / Cmd+K)
+- Automated screenshot generation via GitHub Actions
+- 1000+ tests with comprehensive coverage
 
 ## Technology Stack
 
-- **Backend**: Laravel 12 (PHP 8.4+)
-- **Frontend**: Inertia.js + Vue 3 + Vite
-- **Database**: MySQL / PostgreSQL (abstraction-ready)
-- **Queueing & Events**: Redis + Laravel Horizon (planned)
-- **Extensions**: Composer-based + JSON manifest layer for plugin registration
-- **Architecture**: Multi-tenant with organization-based data isolation
+| Layer | Technology |
+|-------|-----------|
+| Backend | Laravel 13 (PHP 8.3+) |
+| Frontend | Inertia.js v3 + Vue 3 + Tailwind CSS |
+| Build | Vite 7 |
+| Database | SQLite (dev) / MySQL 8+ / PostgreSQL 13+ |
+| API | REST + GraphQL (Sanctum auth) |
+| Testing | PHPUnit + Playwright |
+| Architecture | Multi-tenant, plugin-ready |
 
 ## Requirements
 
-- PHP 8.4 or higher
-- Composer
+- PHP 8.3 or higher
+- Composer 2.x
 - Node.js 18+ and npm
-- MySQL 8.0+ or PostgreSQL 13+
-- Redis (optional, recommended for production)
+- MySQL 8.0+ or PostgreSQL 13+ (SQLite for development)
+- Redis (optional, recommended for production queues)
 
 ## Installation
 
 ### Quick Start
 
 ```bash
-# Clone the repository
-git clone https://github.com/inventoros/inventoros.git
-cd inventoros
+git clone https://github.com/Inventoros/Inventoros.git
+cd Inventoros
 
-# Install dependencies and set up
 composer install
 cp .env.example .env
 php artisan key:generate
 
-# Configure your database in .env, then migrate
 php artisan migrate
+npm install && npm run build
 
-# Install frontend dependencies and build
-npm install
-npm run build
-
-# Serve the application
 php artisan serve
 ```
 
 ### Development Setup
 
-For active development with hot-reloading:
-
 ```bash
-# Run all development services (server, queue, logs, vite)
+# Run all dev services (server, queue, logs, vite) concurrently
 composer dev
 
-# Or run individually:
+# Or run individually
 php artisan serve       # Application server
-npm run dev            # Vite dev server with HMR
-php artisan queue:work # Queue worker (if needed)
+npm run dev             # Vite dev server with HMR
+php artisan queue:work  # Queue worker
 ```
 
 ## Configuration
 
-1. **Environment Setup**: Copy `.env.example` to `.env` and configure:
+1. Copy `.env.example` to `.env` and configure:
    - Database credentials (`DB_*`)
    - Application URL (`APP_URL`)
    - Mail settings (for notifications)
    - Queue driver (recommend `redis` for production)
 
-2. **Database Migration**: Run `php artisan migrate` to create the database schema
+2. Run `php artisan migrate` to create the database schema
 
-3. **Asset Compilation**: Run `npm run build` for production or `npm run dev` for development
-
-## Development Roadmap
-
-### Phase 1 - MVP Foundation ✅ (v1.0 Beta)
-- [x] Base Laravel + Inertia scaffolding
-- [x] Multi-tenant architecture foundation
-- [x] Installer & Update Manager (CLI + UI)
-- [x] Basic Inventory module (CRUD operations)
-- [x] Role-Based Access Control (Permission-based system)
-- [x] Product categorization and locations
-- [x] Multi-currency support
-- [x] CSV Import/Export foundation
-- [x] Backup system
-- [x] Unit and feature tests
-
-### Phase 2 - Core WMS Features ✅ (v1.0 Beta)
-- [x] Warehouse location management
-- [x] Order management (CRUD with inventory tracking)
-- [x] Stock movement tracking (automatic on orders)
-- [x] Product categorization system
-- [x] Supplier management
-- [x] Purchase order management
-- [x] Product variants with options (size, color, material)
-- [ ] Advanced stock movement workflows
-
-### Phase 3 - Extensions & API ✅ (v1.0 Beta)
-- [x] Plugin system architecture (WordPress-style hooks)
-- [x] Database plugin activation system
-- [x] Plugin slot system with multiple hooks
-- [x] Sample plugin with documentation
-- [x] REST API endpoints (Products, Categories, Locations, Orders, Stock Adjustments, Suppliers, Purchase Orders, Barcode Lookup)
-- [x] GraphQL API layer (queries + mutations for Products, Orders, Suppliers, Stock Adjustments, Purchase Orders, Categories, Locations)
-- [x] API documentation (OpenAPI/Scramble)
-
-### Phase 4 - Advanced Features ✅ (v1.0 Beta)
-- [x] Barcode/QR code generation
-- [x] Barcode scanning integration (Products, Stock Adjustments, Purchase Orders)
-- [x] Reporting and analytics dashboard (Inventory Valuation, Stock Movement, Sales Analysis, Low Stock, Category Performance)
-- [x] Audit logging (Activity Log with filtering and export)
-- [x] Email notification system (multi-provider, templates, user preferences)
-- [x] Webhook system (event subscriptions, HMAC signing, retry logic, delivery logs)
-- [x] Advanced permissions (custom permission sets with templates)
-- [ ] Multi-warehouse support
-
-### Phase 5 - Advanced Inventory & Security ✅ (v1.1)
-- [x] Stock transfers between locations (create, approve, complete with audit trail)
-- [x] Batch and serial number tracking (per-product tracking type configuration)
-- [x] Returns and exchanges (RMA) system (full return lifecycle with stock restoration)
-- [x] Stock audits and cycle counting (create, start, count, reconcile with variance tracking)
-- [x] Automated reorder points (configurable thresholds with supplier-grouped PO generation)
-- [x] Product cloning and bulk operations (duplicate products, bulk price/stock updates)
-- [x] Two-factor authentication (TOTP with setup wizard and challenge flow)
-- [x] Global search command palette (Ctrl+K / Cmd+K)
-- [x] Dashboard widget customization (drag-and-drop widget preferences)
-- [x] Security hardening (SQL injection prevention, cross-tenant validation scoping, rate limiting, webhook encryption, mass assignment protection, plugin path traversal protection)
-
-## Current Features (v1.1)
-
-### ✅ Completed
-
-**Inventory & Product Management**
-- **Product Management**: Complete inventory CRUD with SKU, pricing, stock levels, categories, locations, and barcodes
-- **Product Variants**: Support for product variants with options (size, color, material) and variant-specific SKUs, pricing, and stock
-- **Multi-Currency Support**: Product pricing in multiple currencies with conversion support
-- **Categories & Locations**: Organize products by category and track warehouse locations
-- **Barcode Generation**: Automatic barcode generation (UPC/EAN/Code128) with bulk printing
-- **Bulk Barcode Printing**: Print barcodes for multiple products at once
-- **Barcode Scanning**: Camera-based barcode scanning in Products, Stock Adjustments, and Purchase Orders
-- **SKU Management**: Configurable SKU patterns, auto-generation, and uniqueness validation
-- **CSV Import/Export**: Bulk import and export of product data
-
-**Order & Warehouse Management**
-- **Order Management**: Full order lifecycle (create, view, edit, delete) with automatic inventory adjustments and transaction safety (row locking)
-- **Order Approval Workflow**: Approve or reject orders with status tracking
-- **Stock Movement Tracking**: Automatic tracking of inventory changes through orders
-- **Stock Transfers**: Transfer stock between locations with approval workflow and audit trail
-- **Stock Audits & Cycle Counting**: Create audits, count items, reconcile variances with automatic stock adjustments
-- **Returns & Exchanges (RMA)**: Full return lifecycle — create, approve, receive, complete with automatic stock restoration
-- **Warehouse Locations**: Location-based inventory tracking
-- **Supplier Management**: Complete supplier CRUD with product associations
-- **Purchase Orders**: Full purchase order lifecycle with item receiving workflow and invoice generation
-- **Purchase Order Workflow**: Send to supplier, receive items, cancel orders with status tracking
-- **Customer Management**: Complete customer CRM with order history and contact details
-- **Automated Reorder Points**: Configurable min stock and reorder quantity per product, automatic PO generation grouped by supplier
-
-**User & Access Management**
-- **User Management**: Full CRUD with role assignment and permission-based access control
-- **Role Management**: Custom roles with granular permissions, system roles (Administrator, Manager, Member)
-- **Permission System**: Granular permission checks at route and UI levels
-- **Two-Factor Authentication**: TOTP-based 2FA with setup wizard, QR code, recovery codes, and challenge flow
-- **Custom Error Pages**: Beautiful 403 access denied pages with light/dark mode
-- **API Token Management**: Create, list, and revoke API tokens via REST API
-- **Custom Permission Sets**: Reusable permission templates (Inventory Manager, Order Processor, Warehouse Staff, etc.) with full CRUD API
-
-**System & Extensions**
-- **Plugin System**: WordPress-style hooks and filters with database activation
-- **Plugin Slots**: Extensible UI component system with multiple hook points
-- **Sample Plugin**: Comprehensive example plugin with documentation
-- **REST API**: Complete API for Products, Categories, Locations, Orders, Stock Adjustments, Suppliers, Purchase Orders, Barcode Lookup, Batch/Serial Tracking, Stock Audits, and Permission Sets
-- **GraphQL API**: Full query and mutation support for Products, Orders, Suppliers, Stock Adjustments, Purchase Orders, Categories, and Locations with permission checks and query depth/complexity limits
-- **API Documentation**: Auto-generated OpenAPI 3.1 docs via Scramble with interactive "Try It" UI at `/docs/api`
-- **Installer Wizard**: Guided setup with database validation and admin account creation
-- **Update Manager**: Version-controlled updates with automatic backup system (UI + CLI)
-- **CLI Update Command**: `php artisan app:update` with check, backup, restore, and list-backups options
-- **Backup System**: Automatic backups before system updates
-- **Notification System**: Header dropdown with notification management
-- **Activity Logging**: Complete audit log with filtering by user, action, date, and subject type
-- **Organization Settings**: General settings, regional configuration, and user management
-- **Account Settings**: Profile, password, notification preferences, and user preferences per account
-
-**Notifications & Integrations**
-- **Email Notifications**: Multi-provider support (SMTP, Mailgun, SendGrid), customizable templates, per-user preferences
-- **Webhook System**: Event subscriptions, HMAC-SHA256 signing, exponential backoff retry, delivery logs with response tracking
-
-**Reporting & Analytics**
-- **Dashboard Analytics**: Overview with stats, recent activity, stock movements, and top products
-- **Inventory Valuation Report**: Stock value by product and category
-- **Stock Movement Report**: Track all inventory adjustments with filtering
-- **Sales Analysis Report**: Revenue, top products, and daily sales trends
-- **Low Stock Report**: Identify products below minimum stock levels
-- **Category Performance Report**: Analyze stock and value by category
-
-**Inventory Tracking**
-- **Batch Tracking**: Track products by batch/lot number with expiry dates, manufacturing dates, and quantity per batch
-- **Serial Number Tracking**: Individual serial number assignment and tracking with status management (available, sold, returned, defective)
-- **Product Cloning**: Duplicate products with all options, variants, and configurations
-- **Bulk Operations**: Bulk price updates (fixed or percentage), bulk stock adjustments
-
-**User Experience**
-- **Dark Mode**: Full application support with persistent theme preferences
-- **Responsive Design**: Mobile-friendly UI throughout the application
-- **Modern UI**: Built with Vue 3, Inertia.js, and Tailwind CSS
-- **Global Search**: Command palette (Ctrl+K / Cmd+K) with instant search across products, orders, customers, suppliers, and purchase orders
-- **Dashboard Customization**: Configurable widget layout with drag-and-drop preferences
-- **Proper Sidebar Navigation**: Intuitive navigation structure
-
-**Testing & Quality**
-- **Unit Tests**: Comprehensive unit test coverage for services, traits, and utilities
-- **Feature Tests**: Integration tests for critical workflows and controllers
-- **E2E Tests**: Playwright-based end-to-end testing across multiple browsers
-- **Validation Tests**: Request validation failure test cases
-- **Model Factories**: Test factories for all major models
-- **Code Quality**: PSR-12 compliant with Laravel Pint formatting
-- **Type Safety**: Strict types enabled, comprehensive PHPDoc, and return type declarations
-
-**DevOps & CI**
-- **Automated Screenshots**: GitHub Actions pipeline generates dark and light mode screenshots on every push
-- **E2E Testing Framework**: Playwright configured with multi-browser support (Chromium, Firefox, WebKit, Mobile)
-
-### 🔜 Coming Next
-- Multi-warehouse support (per-location stock tracking)
-- Custom report builder
-- Advanced inventory workflows (kitting, bundling)
-- Integrations marketplace (Shopify, WooCommerce, QuickBooks)
-- Mobile app companion
-
-## Contributing
-
-We welcome contributions! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines on how to get started.
-
-### Development Guidelines
-
-- Follow [PSR-12](https://www.php-fig.org/psr/psr-12/) coding standards
-- Use `declare(strict_types=1)` in all PHP files
-- Write tests for new features
-- Use conventional commit messages
-- Update documentation for significant changes
-- Add PHPDoc blocks to all classes and public methods
+3. Run `npm run build` for production assets
 
 ## Testing
 
@@ -309,121 +189,79 @@ We welcome contributions! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for guid
 # Run all tests
 composer test
 
-# Run specific test suites
+# Run specific suites
 php artisan test --testsuite=Feature
 php artisan test --testsuite=Unit
-```
 
-## Code Quality
-
-```bash
-# Format code with Laravel Pint
-./vendor/bin/pint
-
-# Run static analysis (when configured)
-./vendor/bin/phpstan analyse
+# Run E2E tests
+npm run test:e2e
 ```
 
 ## CLI Commands
 
-Inventoros provides several Artisan commands for system management:
-
 ```bash
-# Check for available updates
-php artisan app:update --check
-
-# Perform update with automatic backup
-php artisan app:update
-
-# Create a manual backup
-php artisan app:update --backup
-
-# List all available backups
-php artisan app:update --list-backups
-
-# Restore from a specific backup
-php artisan app:update --restore=backup_filename.zip
+php artisan app:update --check        # Check for updates
+php artisan app:update                # Perform update with backup
+php artisan app:update --backup       # Create manual backup
+php artisan app:update --list-backups # List backups
+php artisan app:update --restore=file # Restore from backup
 ```
 
-## REST API
+## API
 
-The REST API is available at `/api/v1/` and uses Laravel Sanctum for authentication.
+The REST API is available at `/api/v1/` with Sanctum token authentication.
 
-### Authentication
-
-```bash
-# Login and get token
-POST /api/v1/login
-
-# Get current user
-GET /api/v1/user
-
-# Create API token
-POST /api/v1/tokens
-
-# Revoke token
-DELETE /api/v1/tokens/{id}
-```
-
-### Available Endpoints
+<details>
+<summary>View all API endpoints</summary>
 
 | Resource | Endpoints |
 |----------|-----------|
 | Products | `GET`, `POST`, `GET/{id}`, `PUT/{id}`, `DELETE/{id}` |
-| Product Options | `GET`, `POST`, `PUT/{id}`, `DELETE/{id}` (nested under products) |
-| Product Variants | `GET`, `POST`, `PUT/{id}`, `DELETE/{id}`, `POST/adjust-stock` |
+| Product Options | Nested under products: `GET`, `POST`, `PUT/{id}`, `DELETE/{id}` |
+| Product Variants | Nested under products: `GET`, `POST`, `PUT/{id}`, `DELETE/{id}`, `POST/adjust-stock` |
+| Product Components | Nested under products: `GET`, `POST`, `PUT/{id}`, `DELETE/{id}` |
+| Batch Tracking | Nested under products: `GET`, `POST`, `GET/{id}` |
+| Serial Tracking | Nested under products: `GET`, `POST`, `GET/{id}`, `PUT/{id}` |
 | Categories | `GET`, `POST`, `GET/{id}`, `PUT/{id}`, `DELETE/{id}` |
 | Locations | `GET`, `POST`, `GET/{id}`, `PUT/{id}`, `DELETE/{id}` |
+| Warehouses | `GET`, `POST`, `GET/{id}`, `PUT/{id}`, `DELETE/{id}` |
 | Orders | `GET`, `POST`, `GET/{id}`, `PUT/{id}`, `DELETE/{id}` |
 | Stock Adjustments | `GET`, `POST`, `GET/{id}` |
+| Stock Audits | `GET`, `GET/{id}` |
 | Suppliers | `GET`, `POST`, `GET/{id}`, `PUT/{id}`, `DELETE/{id}` |
 | Purchase Orders | `GET`, `POST`, `GET/{id}`, `PUT/{id}`, `DELETE/{id}`, `POST/receive`, `POST/send`, `POST/cancel` |
-| Barcode Lookup | `GET/{code}` |
+| Work Orders | `GET`, `POST`, `GET/{id}`, `POST/start`, `POST/complete`, `POST/cancel` |
+| Saved Reports | `GET`, `POST`, `GET/{id}`, `PUT/{id}`, `DELETE/{id}`, `GET/{id}/export` |
 | Permission Sets | `GET`, `POST`, `GET/{id}`, `PUT/{id}`, `DELETE/{id}`, `GET/categories` |
-| Batch Tracking | `GET`, `POST`, `GET/{id}`, `PUT/{id}` (nested under products) |
-| Serial Tracking | `GET`, `POST`, `GET/{id}`, `PUT/{id}`, `POST/verify` (nested under products) |
-| Stock Audits | `GET`, `POST`, `GET/{id}`, `PUT/{id}`, `POST/start`, `POST/complete` |
+| Barcode Lookup | `GET/{code}` |
 
-All endpoints are protected by permission-based middleware. Sort parameters are validated against allowlists to prevent SQL injection.
+</details>
 
-### GraphQL API
-
-The GraphQL API is available at `/graphql` and uses Sanctum bearer token authentication.
-
-```graphql
-# Example: Query products with filtering
-query {
-  products(search: "widget", sort_by: "name", per_page: 20) {
-    data { id, name, sku, price, stock }
-    paginatorInfo { currentPage, lastPage, total }
-  }
-}
-
-# Example: Create an order
-mutation {
-  createOrder(customer_name: "John", items: [{ product_id: 1, quantity: 5, unit_price: 29.99 }]) {
-    id, order_number, total, status
-  }
-}
-```
-
-All mutations enforce permission checks and query depth/complexity limits are configured for production security.
+The **GraphQL API** is available at `/graphql` with Sanctum bearer token authentication. Interactive API documentation is auto-generated at `/docs/api`.
 
 ## Documentation
 
-- [cPanel Deployment Guide](CPANEL.md) - Deploy Inventoros on shared hosting with cPanel
-- [Email Notifications](docs/features/email-notifications.md) - Configuration and usage guide
-- [Barcode Scanning](docs/features/barcode-scanning.md) - Camera-based barcode scanning integration
-- [Plugin Development](docs/PLUGIN_DEVELOPMENT.md) - Complete guide to creating plugins with hooks and filters
-- [Installation Guide](docs/installation.md) (Coming Soon)
-- [API Documentation](/docs/api) - Interactive OpenAPI docs (available when running the app)
-- [Architecture Overview](docs/architecture.md) (Coming Soon)
+- [Upgrade Guide](UPGRADE.md) -- Upgrading from v1.1 to v2.0
+- [cPanel Deployment](CPANEL.md) -- Deploy on shared hosting
+- [Plugin Development](docs/PLUGIN_DEVELOPMENT.md) -- Creating plugins with hooks and filters
+- [Email Notifications](docs/features/email-notifications.md) -- Configuration and usage
+- [Barcode Scanning](docs/features/barcode-scanning.md) -- Camera-based scanning integration
+- [API Documentation](/docs/api) -- Interactive OpenAPI docs (available when running)
+
+## Contributing
+
+We welcome contributions! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
+
+- Follow [PSR-12](https://www.php-fig.org/psr/psr-12/) coding standards
+- Use `declare(strict_types=1)` in all PHP files
+- Write tests for new features
+- Use conventional commit messages
 
 ## Community & Support
 
-- **Issues**: [GitHub Issues](https://github.com/inventoros/inventoros/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/inventoros/inventoros/discussions)
-- **Security**: See [SECURITY.md](SECURITY.md) for reporting vulnerabilities
+- [GitHub Issues](https://github.com/Inventoros/Inventoros/issues) -- Bug reports and feature requests
+- [GitHub Discussions](https://github.com/Inventoros/Inventoros/discussions) -- Questions and ideas
+- [Security Policy](SECURITY.md) -- Reporting vulnerabilities
 
 ## License
 
@@ -431,12 +269,4 @@ Inventoros is open-source software licensed under the [MIT license](LICENSE).
 
 ## Acknowledgments
 
-Built with:
-- [Laravel](https://laravel.com) - The PHP Framework for Web Artisans
-- [Inertia.js](https://inertiajs.com) - The Modern Monolith
-- [Vue.js](https://vuejs.org) - The Progressive JavaScript Framework
-- [Tailwind CSS](https://tailwindcss.com) - A utility-first CSS framework
-
----
-
-**Note**: This is the open-source core of Inventoros. The hosted SaaS platform and marketplace (Inventoros Live) are maintained separately and are not part of this repository.
+Built with [Laravel](https://laravel.com), [Inertia.js](https://inertiajs.com), [Vue.js](https://vuejs.org), and [Tailwind CSS](https://tailwindcss.com).
