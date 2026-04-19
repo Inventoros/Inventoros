@@ -73,14 +73,8 @@ jobs:
           path: screenshots/
           retention-days: 30
 
-      - name: Publish to rolling `screenshots-latest` release
-        uses: softprops/action-gh-release@v2
+      - name: Commit screenshots to repo
+        uses: stefanzweifel/git-auto-commit-action@v5
         with:
-          tag_name: screenshots-latest
-          name: Screenshots (latest)
-          body: |
-            Automated capture from `${{ github.sha }}`. Rolling release —
-            overwritten on every run. Linked from README.
-          files: screenshots/*.png
-          prerelease: true
-          make_latest: false
+          commit_message: 'chore(screenshots): update from CI [skip ci]'
+          file_pattern: 'screenshots/*.png'
