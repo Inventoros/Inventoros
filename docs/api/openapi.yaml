@@ -1,0 +1,1639 @@
+openapi: 3.0.3
+info:
+  title: Inventoros REST API
+  version: 1.0.0
+  description: |
+    Inventoros provides a RESTful API for managing inventory, products, orders,
+    suppliers, purchase orders, warehouses and related operations.
+
+    ## Authentication
+
+    All endpoints (except `POST /api/v1/login`) require a Bearer token.
+    Authentication is implemented with Laravel Sanctum (personal access tokens).
+
+    Obtain a token by calling `POST /api/v1/login` and then include it in the
+    `Authorization` header:
+
+    ```
+    Authorization: Bearer {your-token}
+    ```
+
+    ## Multi-Tenancy
+
+    Every resource is scoped to the authenticated user's organization via the
+    `organization_id` foreign key. Cross-organization access returns `404`.
+
+    ## Rate Limiting
+
+    - All `/api/v1/*` routes: `60` requests per minute, keyed by user id (or
+      IP for guests). Header: `throttle:api`.
+    - `POST /api/v1/login`: `5` requests per minute, keyed by IP. Header:
+      `throttle:5,1`.
+
+    Exceeded throttling returns `429 Too Many Requests`.
+
+    ## Pagination
+
+    List endpoints (those returning `AnonymousResourceCollection`) are
+    paginated and follow Laravel's standard JSON envelope:
+
+    ```json
+    {
+      "data": [ ... ],
+      "links": { "first": "...", "last": "...", "prev": null, "next": "..." },
+      "meta": { "current_page": 1, "last_page": 3, "per_page": 15, "total": 42 }
+    }
+    ```
+
+    Use `?per_page=` (max `100`) and `?page=` query params.
+
+    ## Permissions
+
+    Most routes are guarded by the `api.permission:` middleware which expects
+    one of the listed permissions on the authenticated user (e.g.
+    `view_products|manage_products` means the user needs at least one of
+    those two). Lacking permission returns `403`.
+
+servers:
+  - url: '{baseUrl}/api/v1'
+    description: API v1
+    variables:
+      baseUrl:
+        default: http://localhost
+        description: Base application URL
+
+security:
+  - bearerAuth: []
+
+tags:
+  - name: Authentication
+  - name: Products
+  - name: Product Options
+  - name: Product Variants
+  - name: Product Components
+  - name: Batch Tracking
+  - name: Serial Tracking
+  - name: Categories
+  - name: Locations
+  - name: Warehouses
+  - name: Orders
+  - name: Stock Adjustments
+  - name: Stock Audits
+  - name: Suppliers
+  - name: Purchase Orders
+  - name: Work Orders
+  - name: Barcode Lookup
+  - name: Permission Sets
+  - name: Saved Reports
+
+paths:
+  /login:
+    post:
+      tags: [Authentication]
+      summary: Issue an API token
+      security: []
+      description: |
+        Validate credentials and return a Sanctum personal access token.
+        Rate-limited to 5 requests/minute per IP.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password]
+              properties:
+                email: { type: string, format: email }
+                password: { type: string, format: password }
+                device_name: { type: string, maxLength: 255, description: "Optional label stored on the token (default: 'api-token')." }
+      responses:
+        '200':
+          description: Token issued
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message: { type: string }
+                  user:
+                    type: object
+                    properties:
+                      id: { type: integer }
+                      name: { type: string }
+                      email: { type: string, format: email }
+                      role: { type: string, nullable: true }
+                      organization_id: { type: integer, nullable: true }
+                  token: { type: string, description: "Plain-text Sanctum token. Store this; it cannot be retrieved later." }
+                  token_type: { type: string, example: Bearer }
+        '422': { $ref: '#/components/responses/ValidationError' }
+        '429': { $ref: '#/components/responses/TooManyRequests' }
+
+  /logout:
+    post:
+      tags: [Authentication]
+      summary: Revoke the current token
+      responses:
+        '200':
+          description: Logged out
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/MessageResponse' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+
+  /user:
+    get:
+      tags: [Authentication]
+      summary: Get the authenticated user
+      responses:
+        '200':
+          description: Current user payload (includes organization and effective permissions).
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id: { type: integer }
+                  name: { type: string }
+                  email: { type: string, format: email }
+                  role: { type: string, nullable: true }
+                  organization_id: { type: integer, nullable: true }
+                  organization:
+                    type: object
+                    nullable: true
+                    properties:
+                      id: { type: integer }
+                      name: { type: string }
+                  permissions:
+                    type: array
+                    items: { type: string }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+
+  /tokens:
+    post:
+      tags: [Authentication]
+      summary: Create a new personal access token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name]
+              properties:
+                name: { type: string, maxLength: 255 }
+                abilities:
+                  type: array
+                  description: "Optional list of token ability strings (defaults to ['*'])."
+                  items: { type: string }
+      responses:
+        '201':
+          description: Token created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message: { type: string }
+                  token: { type: string }
+                  name: { type: string }
+                  abilities:
+                    type: array
+                    items: { type: string }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+
+  /tokens/{tokenId}:
+    delete:
+      tags: [Authentication]
+      summary: Revoke a specific token
+      parameters:
+        - { name: tokenId, in: path, required: true, schema: { type: integer } }
+      responses:
+        '200': { description: Token revoked, content: { application/json: { schema: { $ref: '#/components/schemas/MessageResponse' } } } }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+
+  /products:
+    get:
+      tags: [Products]
+      summary: List products
+      parameters:
+        - { name: search, in: query, schema: { type: string }, description: "Search by name, SKU, or barcode." }
+        - { name: category_id, in: query, schema: { type: integer } }
+        - { name: location_id, in: query, schema: { type: integer } }
+        - { name: warehouse_id, in: query, schema: { type: integer } }
+        - { name: is_active, in: query, schema: { type: boolean } }
+        - { name: low_stock, in: query, schema: { type: boolean } }
+        - { name: sort_by, in: query, schema: { type: string, enum: [created_at, updated_at, name, sku, price, stock, status, is_active] } }
+        - { name: sort_dir, in: query, schema: { type: string, enum: [asc, desc] } }
+        - $ref: '#/components/parameters/PerPage'
+        - $ref: '#/components/parameters/Page'
+      responses:
+        '200':
+          description: Paginated product list
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/PaginationEnvelope'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items: { $ref: '#/components/schemas/Product' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+    post:
+      tags: [Products]
+      summary: Create a product
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ProductInput' }
+      responses:
+        '201':
+          description: Product created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message: { type: string }
+                  data: { $ref: '#/components/schemas/Product' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+
+  /products/{product}:
+    parameters:
+      - { name: product, in: path, required: true, schema: { type: integer } }
+    get:
+      tags: [Products]
+      summary: Show a product
+      responses:
+        '200':
+          description: Product
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/Product' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    put:
+      tags: [Products]
+      summary: Update a product
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ProductInput' }
+      responses:
+        '200':
+          description: Updated
+          content: { application/json: { schema: { type: object, properties: { message: { type: string }, data: { $ref: '#/components/schemas/Product' } } } } }
+        '422': { $ref: '#/components/responses/ValidationError' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    delete:
+      tags: [Products]
+      summary: Delete a product
+      responses:
+        '200': { description: Deleted, content: { application/json: { schema: { $ref: '#/components/schemas/MessageResponse' } } } }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /products/{product}/options:
+    parameters:
+      - { name: product, in: path, required: true, schema: { type: integer } }
+    get:
+      tags: [Product Options]
+      summary: List options for a product
+      responses:
+        '200':
+          description: Options
+          content: { application/json: { schema: { type: object, properties: { data: { type: array, items: { $ref: '#/components/schemas/ProductOption' } } } } } }
+    post:
+      tags: [Product Options]
+      summary: Create a product option (max 3 per product)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, values]
+              properties:
+                name: { type: string, maxLength: 255 }
+                values:
+                  type: array
+                  minItems: 1
+                  items: { type: string, maxLength: 255 }
+                position: { type: integer, minimum: 0 }
+      responses:
+        '201': { description: Created }
+        '422': { $ref: '#/components/responses/ValidationError' }
+
+  /products/{product}/options/reorder:
+    parameters:
+      - { name: product, in: path, required: true, schema: { type: integer } }
+    post:
+      tags: [Product Options]
+      summary: Reorder a product's options
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [order]
+              properties:
+                order:
+                  type: array
+                  description: "Array of option IDs in the desired order."
+                  items: { type: integer }
+      responses:
+        '200': { description: Reordered }
+
+  /products/{product}/options/{option}:
+    parameters:
+      - { name: product, in: path, required: true, schema: { type: integer } }
+      - { name: option, in: path, required: true, schema: { type: integer } }
+    get:
+      tags: [Product Options]
+      summary: Show an option
+      responses:
+        '200': { description: Option }
+        '404': { $ref: '#/components/responses/NotFound' }
+    put:
+      tags: [Product Options]
+      summary: Update an option
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name: { type: string, maxLength: 255 }
+                values: { type: array, items: { type: string, maxLength: 255 } }
+                position: { type: integer, minimum: 0 }
+      responses:
+        '200': { description: Updated }
+    delete:
+      tags: [Product Options]
+      summary: Delete an option (fails if any variants reference it)
+      responses:
+        '200': { description: Deleted }
+        '422': { $ref: '#/components/responses/ValidationError' }
+
+  /products/{product}/variants:
+    parameters:
+      - { name: product, in: path, required: true, schema: { type: integer } }
+    get:
+      tags: [Product Variants]
+      summary: List variants for a product
+      parameters:
+        - { name: is_active, in: query, schema: { type: boolean } }
+        - { name: low_stock, in: query, schema: { type: boolean } }
+      responses:
+        '200':
+          description: Variants
+          content: { application/json: { schema: { type: object, properties: { data: { type: array, items: { $ref: '#/components/schemas/ProductVariant' } } } } } }
+    post:
+      tags: [Product Variants]
+      summary: Create a variant
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ProductVariantInput' }
+      responses:
+        '201': { description: Created }
+        '422': { $ref: '#/components/responses/ValidationError' }
+
+  /products/{product}/variants/bulk:
+    parameters:
+      - { name: product, in: path, required: true, schema: { type: integer } }
+    post:
+      tags: [Product Variants]
+      summary: Bulk-create variants from option combinations
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [variants]
+              properties:
+                variants:
+                  type: array
+                  minItems: 1
+                  items: { $ref: '#/components/schemas/ProductVariantInput' }
+      responses:
+        '201': { description: Created }
+
+  /products/{product}/variants/{variant}:
+    parameters:
+      - { name: product, in: path, required: true, schema: { type: integer } }
+      - { name: variant, in: path, required: true, schema: { type: integer } }
+    get:
+      tags: [Product Variants]
+      summary: Show a variant
+      responses:
+        '200': { description: Variant }
+        '404': { $ref: '#/components/responses/NotFound' }
+    put:
+      tags: [Product Variants]
+      summary: Update a variant
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: '#/components/schemas/ProductVariantInput' } } }
+      responses:
+        '200': { description: Updated }
+    delete:
+      tags: [Product Variants]
+      summary: Delete a variant
+      responses:
+        '200': { description: Deleted }
+
+  /products/{product}/variants/{variant}/adjust-stock:
+    parameters:
+      - { name: product, in: path, required: true, schema: { type: integer } }
+      - { name: variant, in: path, required: true, schema: { type: integer } }
+    post:
+      tags: [Product Variants]
+      summary: Adjust stock for a variant
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [quantity, type]
+              properties:
+                quantity: { type: integer, description: "Signed delta (positive or negative)." }
+                type: { type: string, enum: [increase, decrease, recount, damage, return, received] }
+                reason: { type: string, maxLength: 255 }
+                notes: { type: string }
+      responses:
+        '200': { description: Adjusted }
+
+  /products/{product}/batches:
+    parameters:
+      - { name: product, in: path, required: true, schema: { type: integer } }
+    get:
+      tags: [Batch Tracking]
+      summary: List batches for a product
+      parameters:
+        - $ref: '#/components/parameters/PerPage'
+      responses:
+        '200': { description: Batches }
+    post:
+      tags: [Batch Tracking]
+      summary: Create a batch (product must use batch tracking)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [quantity]
+              properties:
+                batch_number: { type: string, maxLength: 255, description: "Auto-generated if omitted." }
+                quantity: { type: integer, minimum: 0 }
+                manufactured_date: { type: string, format: date }
+                expiry_date: { type: string, format: date }
+                notes: { type: string }
+      responses:
+        '201': { description: Created }
+        '422': { $ref: '#/components/responses/ValidationError' }
+
+  /products/{product}/batches/{batch}:
+    parameters:
+      - { name: product, in: path, required: true, schema: { type: integer } }
+      - { name: batch, in: path, required: true, schema: { type: integer } }
+    get:
+      tags: [Batch Tracking]
+      summary: Show a batch
+      responses:
+        '200': { description: Batch }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /products/{product}/serials:
+    parameters:
+      - { name: product, in: path, required: true, schema: { type: integer } }
+    get:
+      tags: [Serial Tracking]
+      summary: List serial numbers for a product
+      parameters:
+        - { name: status, in: query, schema: { type: string } }
+        - $ref: '#/components/parameters/PerPage'
+      responses:
+        '200': { description: Serials }
+    post:
+      tags: [Serial Tracking]
+      summary: Create a serial number (product must use serial tracking)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [serial_number]
+              properties:
+                serial_number: { type: string, maxLength: 255 }
+                status: { type: string, description: "One of ProductSerial::VALID_STATUSES." }
+                notes: { type: string }
+      responses:
+        '201': { description: Created }
+
+  /products/{product}/serials/{serial}:
+    parameters:
+      - { name: product, in: path, required: true, schema: { type: integer } }
+      - { name: serial, in: path, required: true, schema: { type: integer } }
+    get:
+      tags: [Serial Tracking]
+      summary: Show a serial number
+      responses:
+        '200': { description: Serial }
+        '404': { $ref: '#/components/responses/NotFound' }
+    put:
+      tags: [Serial Tracking]
+      summary: Update a serial number's status
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [status]
+              properties:
+                status: { type: string }
+                notes: { type: string }
+      responses:
+        '200': { description: Updated }
+
+  /products/{product}/components:
+    parameters:
+      - { name: product, in: path, required: true, schema: { type: integer } }
+    get:
+      tags: [Product Components]
+      summary: List components for a kit/assembly product
+      responses:
+        '200': { description: Components }
+        '422':
+          description: Product is not a kit or assembly
+    post:
+      tags: [Product Components]
+      summary: Add a component to a kit/assembly product
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [component_product_id, quantity]
+              properties:
+                component_product_id: { type: integer }
+                quantity: { type: number, minimum: 0.01, maximum: 999999.99 }
+                notes: { type: string, maxLength: 1000 }
+      responses:
+        '201': { description: Created }
+        '422':
+          description: Validation, circular reference, or invalid product type
+
+  /products/{product}/components/{component}:
+    parameters:
+      - { name: product, in: path, required: true, schema: { type: integer } }
+      - { name: component, in: path, required: true, schema: { type: integer } }
+    put:
+      tags: [Product Components]
+      summary: Update a component
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [quantity]
+              properties:
+                quantity: { type: number, minimum: 0.01 }
+                notes: { type: string, maxLength: 1000 }
+      responses:
+        '200': { description: Updated }
+    delete:
+      tags: [Product Components]
+      summary: Remove a component
+      responses:
+        '200': { description: Removed }
+
+  /categories:
+    get:
+      tags: [Categories]
+      summary: List categories
+      parameters:
+        - { name: search, in: query, schema: { type: string } }
+        - { name: is_active, in: query, schema: { type: boolean } }
+        - { name: root_only, in: query, schema: { type: boolean } }
+        - { name: sort_by, in: query, schema: { type: string, enum: [created_at, updated_at, name] } }
+        - { name: sort_dir, in: query, schema: { type: string, enum: [asc, desc] } }
+        - $ref: '#/components/parameters/PerPage'
+        - $ref: '#/components/parameters/Page'
+      responses:
+        '200': { description: Paginated categories }
+    post:
+      tags: [Categories]
+      summary: Create a category
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name]
+              properties:
+                name: { type: string, maxLength: 255 }
+                slug: { type: string, maxLength: 255 }
+                description: { type: string }
+                parent_id: { type: integer }
+                is_active: { type: boolean }
+      responses:
+        '201': { description: Created }
+
+  /categories/{category}:
+    parameters:
+      - { name: category, in: path, required: true, schema: { type: integer } }
+    get:
+      tags: [Categories]
+      summary: Show a category
+      responses:
+        '200': { description: Category }
+        '404': { $ref: '#/components/responses/NotFound' }
+    put:
+      tags: [Categories]
+      summary: Update a category
+      responses:
+        '200': { description: Updated }
+    delete:
+      tags: [Categories]
+      summary: Delete a category (fails if it has products)
+      responses:
+        '200': { description: Deleted }
+        '422': { $ref: '#/components/responses/ValidationError' }
+
+  /locations:
+    get:
+      tags: [Locations]
+      summary: List locations
+      parameters:
+        - { name: search, in: query, schema: { type: string } }
+        - { name: is_active, in: query, schema: { type: boolean } }
+        - { name: sort_by, in: query, schema: { type: string, enum: [created_at, updated_at, name] } }
+        - { name: sort_dir, in: query, schema: { type: string, enum: [asc, desc] } }
+        - $ref: '#/components/parameters/PerPage'
+        - $ref: '#/components/parameters/Page'
+      responses: { '200': { description: Paginated locations } }
+    post:
+      tags: [Locations]
+      summary: Create a location
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name]
+              properties:
+                name: { type: string, maxLength: 255 }
+                code: { type: string, maxLength: 255 }
+                description: { type: string }
+                aisle: { type: string, maxLength: 255 }
+                shelf: { type: string, maxLength: 255 }
+                bin: { type: string, maxLength: 255 }
+                is_active: { type: boolean }
+      responses: { '201': { description: Created } }
+
+  /locations/{location}:
+    parameters:
+      - { name: location, in: path, required: true, schema: { type: integer } }
+    get: { tags: [Locations], summary: Show a location, responses: { '200': { description: Location }, '404': { $ref: '#/components/responses/NotFound' } } }
+    put: { tags: [Locations], summary: Update a location, responses: { '200': { description: Updated } } }
+    delete: { tags: [Locations], summary: Delete a location (fails if it has products), responses: { '200': { description: Deleted }, '422': { $ref: '#/components/responses/ValidationError' } } }
+
+  /warehouses:
+    get:
+      tags: [Warehouses]
+      summary: List warehouses
+      parameters:
+        - { name: search, in: query, schema: { type: string } }
+        - { name: is_active, in: query, schema: { type: boolean } }
+        - { name: sort_by, in: query, schema: { type: string, enum: [created_at, updated_at, name, code, city, is_active, priority] } }
+        - { name: sort_dir, in: query, schema: { type: string, enum: [asc, desc] } }
+        - $ref: '#/components/parameters/PerPage'
+        - $ref: '#/components/parameters/Page'
+      responses: { '200': { description: Paginated warehouses } }
+    post:
+      tags: [Warehouses]
+      summary: Create a warehouse
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/WarehouseInput' }
+      responses: { '201': { description: Created } }
+
+  /warehouses/{warehouse}:
+    parameters:
+      - { name: warehouse, in: path, required: true, schema: { type: integer } }
+    get: { tags: [Warehouses], summary: Show a warehouse, responses: { '200': { description: Warehouse }, '404': { $ref: '#/components/responses/NotFound' } } }
+    put:
+      tags: [Warehouses]
+      summary: Update a warehouse
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: '#/components/schemas/WarehouseInput' } } }
+      responses: { '200': { description: Updated } }
+    delete:
+      tags: [Warehouses]
+      summary: Delete a warehouse (default warehouse and warehouses with stock cannot be deleted)
+      responses:
+        '200': { description: Deleted }
+        '422': { description: Cannot delete (default or has products) }
+
+  /orders:
+    get:
+      tags: [Orders]
+      summary: List orders
+      parameters:
+        - { name: search, in: query, schema: { type: string } }
+        - { name: status, in: query, schema: { type: string, enum: [pending, processing, shipped, delivered, cancelled] } }
+        - { name: source, in: query, schema: { type: string } }
+        - { name: warehouse_id, in: query, schema: { type: integer } }
+        - { name: date_from, in: query, schema: { type: string, format: date } }
+        - { name: date_to, in: query, schema: { type: string, format: date } }
+        - { name: sort_by, in: query, schema: { type: string, enum: [created_at, updated_at, order_number, customer_name, total, status, order_date] } }
+        - { name: sort_dir, in: query, schema: { type: string, enum: [asc, desc] } }
+        - $ref: '#/components/parameters/PerPage'
+        - $ref: '#/components/parameters/Page'
+      responses:
+        '200':
+          description: Paginated orders
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/PaginationEnvelope'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items: { $ref: '#/components/schemas/Order' }
+    post:
+      tags: [Orders]
+      summary: Create an order (decrements product stock)
+      description: |
+        Creates an order with line items. The endpoint locks each referenced
+        product row and validates that available stock >= requested quantity;
+        on shortage it returns `422 insufficient_stock`. Stock is decremented
+        atomically inside a database transaction.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/OrderInput' }
+      responses:
+        '201': { description: Created, content: { application/json: { schema: { type: object, properties: { message: { type: string }, data: { $ref: '#/components/schemas/Order' } } } } } }
+        '422': { $ref: '#/components/responses/ValidationError' }
+
+  /orders/{order}:
+    parameters:
+      - { name: order, in: path, required: true, schema: { type: integer } }
+    get:
+      tags: [Orders]
+      summary: Show an order
+      responses:
+        '200': { description: Order, content: { application/json: { schema: { type: object, properties: { data: { $ref: '#/components/schemas/Order' } } } } } }
+        '404': { $ref: '#/components/responses/NotFound' }
+    put:
+      tags: [Orders]
+      summary: Update an order's metadata or status
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                customer_name: { type: string, maxLength: 255 }
+                customer_email: { type: string, format: email, maxLength: 255 }
+                customer_address: { type: string }
+                status: { type: string, enum: [pending, processing, shipped, delivered, cancelled] }
+                notes: { type: string }
+                metadata: { type: object, additionalProperties: true }
+      responses:
+        '200': { description: Updated }
+    delete:
+      tags: [Orders]
+      summary: Delete an order (restores product stock)
+      responses:
+        '200': { description: Deleted }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /stock-adjustments:
+    get:
+      tags: [Stock Adjustments]
+      summary: List stock adjustments
+      parameters:
+        - { name: product_id, in: query, schema: { type: integer } }
+        - { name: type, in: query, schema: { type: string, enum: [manual, count, damage, return, transfer] } }
+        - { name: date_from, in: query, schema: { type: string, format: date } }
+        - { name: date_to, in: query, schema: { type: string, format: date } }
+        - { name: sort_by, in: query, schema: { type: string, enum: [created_at, updated_at, type, adjustment_quantity] } }
+        - { name: sort_dir, in: query, schema: { type: string, enum: [asc, desc] } }
+        - $ref: '#/components/parameters/PerPage'
+        - $ref: '#/components/parameters/Page'
+      responses: { '200': { description: Paginated stock adjustments } }
+    post:
+      tags: [Stock Adjustments]
+      summary: Create a stock adjustment
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [product_id, quantity, type]
+              properties:
+                product_id: { type: integer }
+                quantity: { type: integer, description: "Signed delta." }
+                type: { type: string, enum: [manual, count, damage, return, transfer] }
+                reason: { type: string, maxLength: 255 }
+                notes: { type: string }
+      responses:
+        '201': { description: Created }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /stock-adjustments/{stockAdjustment}:
+    parameters:
+      - { name: stockAdjustment, in: path, required: true, schema: { type: integer } }
+    get:
+      tags: [Stock Adjustments]
+      summary: Show a stock adjustment
+      responses:
+        '200': { description: Stock adjustment }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /stock-audits:
+    get:
+      tags: [Stock Audits]
+      summary: List stock audits
+      parameters:
+        - { name: status, in: query, schema: { type: string, enum: [draft, in_progress, completed, cancelled] } }
+        - { name: audit_type, in: query, schema: { type: string, enum: [full, cycle, spot] } }
+        - { name: sort_by, in: query, schema: { type: string, enum: [created_at, updated_at, audit_number, status, started_at, completed_at] } }
+        - { name: sort_dir, in: query, schema: { type: string, enum: [asc, desc] } }
+        - $ref: '#/components/parameters/PerPage'
+        - $ref: '#/components/parameters/Page'
+      responses: { '200': { description: Paginated stock audits } }
+
+  /stock-audits/{stockAudit}:
+    parameters:
+      - { name: stockAudit, in: path, required: true, schema: { type: integer } }
+    get:
+      tags: [Stock Audits]
+      summary: Show a stock audit
+      responses:
+        '200': { description: Stock audit }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /suppliers:
+    get:
+      tags: [Suppliers]
+      summary: List suppliers
+      parameters:
+        - { name: search, in: query, schema: { type: string } }
+        - { name: is_active, in: query, schema: { type: boolean } }
+        - { name: sort_by, in: query, schema: { type: string, enum: [created_at, updated_at, name, email, phone] } }
+        - { name: sort_dir, in: query, schema: { type: string, enum: [asc, desc] } }
+        - $ref: '#/components/parameters/PerPage'
+        - $ref: '#/components/parameters/Page'
+      responses: { '200': { description: Paginated suppliers } }
+    post:
+      tags: [Suppliers]
+      summary: Create a supplier
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: '#/components/schemas/SupplierInput' } } }
+      responses: { '201': { description: Created } }
+
+  /suppliers/{supplier}:
+    parameters:
+      - { name: supplier, in: path, required: true, schema: { type: integer } }
+    get: { tags: [Suppliers], summary: Show a supplier, responses: { '200': { description: Supplier }, '404': { $ref: '#/components/responses/NotFound' } } }
+    put:
+      tags: [Suppliers]
+      summary: Update a supplier
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: '#/components/schemas/SupplierInput' } } }
+      responses: { '200': { description: Updated } }
+    delete:
+      tags: [Suppliers]
+      summary: Delete a supplier (fails if it has products)
+      responses:
+        '200': { description: Deleted }
+        '422': { $ref: '#/components/responses/ValidationError' }
+
+  /purchase-orders:
+    get:
+      tags: [Purchase Orders]
+      summary: List purchase orders
+      parameters:
+        - { name: search, in: query, schema: { type: string } }
+        - { name: status, in: query, schema: { type: string, enum: [draft, sent, partial, received, cancelled] } }
+        - { name: supplier_id, in: query, schema: { type: integer } }
+        - { name: sort_by, in: query, schema: { type: string, enum: [created_at, updated_at, order_date, po_number, status, total] } }
+        - { name: sort_dir, in: query, schema: { type: string, enum: [asc, desc] } }
+        - $ref: '#/components/parameters/PerPage'
+        - $ref: '#/components/parameters/Page'
+      responses: { '200': { description: Paginated purchase orders } }
+    post:
+      tags: [Purchase Orders]
+      summary: Create a purchase order
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: '#/components/schemas/PurchaseOrderInput' } } }
+      responses: { '201': { description: Created } }
+
+  /purchase-orders/{purchaseOrder}:
+    parameters:
+      - { name: purchaseOrder, in: path, required: true, schema: { type: integer } }
+    get: { tags: [Purchase Orders], summary: Show a purchase order, responses: { '200': { description: Purchase order }, '404': { $ref: '#/components/responses/NotFound' } } }
+    put:
+      tags: [Purchase Orders]
+      summary: Update a purchase order (only when editable)
+      responses: { '200': { description: Updated }, '422': { description: Cannot edit in current status } }
+    delete:
+      tags: [Purchase Orders]
+      summary: Delete a draft purchase order
+      responses: { '200': { description: Deleted }, '422': { description: Only draft POs can be deleted } }
+
+  /purchase-orders/{purchaseOrder}/receive:
+    parameters:
+      - { name: purchaseOrder, in: path, required: true, schema: { type: integer } }
+    post:
+      tags: [Purchase Orders]
+      summary: Receive items against a PO (increments stock)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [items]
+              properties:
+                items:
+                  type: array
+                  items:
+                    type: object
+                    required: [id, quantity_to_receive]
+                    properties:
+                      id: { type: integer, description: "purchase_order_items.id" }
+                      quantity_to_receive: { type: integer, minimum: 0 }
+      responses:
+        '200': { description: Items received }
+        '422': { description: PO cannot receive items, or no items received }
+
+  /purchase-orders/{purchaseOrder}/send:
+    parameters:
+      - { name: purchaseOrder, in: path, required: true, schema: { type: integer } }
+    post:
+      tags: [Purchase Orders]
+      summary: Mark a PO as sent
+      responses:
+        '200': { description: Marked sent }
+        '422': { description: Cannot send in current status }
+
+  /purchase-orders/{purchaseOrder}/cancel:
+    parameters:
+      - { name: purchaseOrder, in: path, required: true, schema: { type: integer } }
+    post:
+      tags: [Purchase Orders]
+      summary: Cancel a PO
+      responses:
+        '200': { description: Cancelled }
+        '422': { description: Cannot cancel in current status }
+
+  /work-orders:
+    get:
+      tags: [Work Orders]
+      summary: List work orders
+      parameters:
+        - { name: search, in: query, schema: { type: string } }
+        - { name: status, in: query, schema: { type: string, enum: [draft, pending, in_progress, completed, cancelled] } }
+        - { name: sort_by, in: query, schema: { type: string, enum: [created_at, updated_at, work_order_number, status, quantity] } }
+        - { name: sort_dir, in: query, schema: { type: string, enum: [asc, desc] } }
+        - $ref: '#/components/parameters/PerPage'
+        - $ref: '#/components/parameters/Page'
+      responses: { '200': { description: Paginated work orders } }
+    post:
+      tags: [Work Orders]
+      summary: Create a work order for an assembly product
+      description: |
+        Auto-populates the work order's items from the assembly product's
+        bill of materials. Requires `product.type === 'assembly'` and at
+        least one component.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [product_id, quantity]
+              properties:
+                product_id: { type: integer }
+                quantity: { type: integer, minimum: 1, maximum: 999999 }
+                warehouse_id: { type: integer }
+                notes: { type: string, maxLength: 2000 }
+      responses:
+        '201': { description: Created }
+        '422': { description: "Not assembly, no components, or validation error" }
+
+  /work-orders/{workOrder}:
+    parameters:
+      - { name: workOrder, in: path, required: true, schema: { type: integer } }
+    get:
+      tags: [Work Orders]
+      summary: Show a work order
+      responses: { '200': { description: Work order }, '404': { $ref: '#/components/responses/NotFound' } }
+
+  /work-orders/{workOrder}/start:
+    parameters:
+      - { name: workOrder, in: path, required: true, schema: { type: integer } }
+    post:
+      tags: [Work Orders]
+      summary: Start a work order (verifies component stock)
+      responses:
+        '200': { description: Started }
+        '422': { description: Invalid status or insufficient component stock }
+
+  /work-orders/{workOrder}/complete:
+    parameters:
+      - { name: workOrder, in: path, required: true, schema: { type: integer } }
+    post:
+      tags: [Work Orders]
+      summary: Complete a work order (consumes components, produces assembly)
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                quantity_produced: { type: integer, minimum: 1, description: "Defaults to the work order quantity." }
+      responses:
+        '200': { description: Completed }
+        '422': { description: Only in-progress work orders can be completed }
+
+  /work-orders/{workOrder}/cancel:
+    parameters:
+      - { name: workOrder, in: path, required: true, schema: { type: integer } }
+    post:
+      tags: [Work Orders]
+      summary: Cancel a work order (restores consumed stock if in-progress)
+      responses:
+        '200': { description: Cancelled }
+        '422': { description: Invalid status }
+
+  /barcode/{code}:
+    parameters:
+      - { name: code, in: path, required: true, schema: { type: string }, description: "Barcode value or SKU." }
+    get:
+      tags: [Barcode Lookup]
+      summary: Look up a product by barcode or SKU
+      responses:
+        '200':
+          description: Product found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  found: { type: boolean }
+                  product: { $ref: '#/components/schemas/Product' }
+        '404':
+          description: No product found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  found: { type: boolean, example: false }
+                  product: { type: 'null' }
+                  message: { type: string }
+
+  /permission-sets:
+    get:
+      tags: [Permission Sets]
+      summary: List permission sets
+      parameters:
+        - { name: category, in: query, schema: { type: string, enum: [inventory, orders, purchasing, admin, reports] } }
+        - { name: templates_only, in: query, schema: { type: boolean } }
+      responses: { '200': { description: Permission sets } }
+    post:
+      tags: [Permission Sets]
+      summary: Create a permission set
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, permissions]
+              properties:
+                name: { type: string, maxLength: 255 }
+                description: { type: string }
+                category: { type: string, maxLength: 50 }
+                icon: { type: string, maxLength: 50 }
+                permissions:
+                  type: array
+                  minItems: 1
+                  items: { type: string }
+      responses: { '201': { description: Created } }
+
+  /permission-sets/categories:
+    get:
+      tags: [Permission Sets]
+      summary: List available permission-set categories
+      responses: { '200': { description: Category list } }
+
+  /permission-sets/{permissionSet}:
+    parameters:
+      - { name: permissionSet, in: path, required: true, schema: { type: integer } }
+    get: { tags: [Permission Sets], summary: Show a permission set, responses: { '200': { description: Permission set }, '404': { $ref: '#/components/responses/NotFound' } } }
+    put:
+      tags: [Permission Sets]
+      summary: Update a permission set (templates and other-org sets are read-only)
+      responses:
+        '200': { description: Updated }
+        '403': { $ref: '#/components/responses/Forbidden' }
+    delete:
+      tags: [Permission Sets]
+      summary: Delete a permission set (fails if assigned to roles)
+      responses:
+        '200': { description: Deleted }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+
+  /reports:
+    get:
+      tags: [Saved Reports]
+      summary: List accessible saved reports (own + shared)
+      parameters:
+        - $ref: '#/components/parameters/PerPage'
+      responses: { '200': { description: Reports } }
+    post:
+      tags: [Saved Reports]
+      summary: Create a saved report
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, data_source, columns]
+              properties:
+                name: { type: string, maxLength: 255 }
+                description: { type: string, maxLength: 1000 }
+                data_source: { type: string, maxLength: 50 }
+                columns:
+                  type: array
+                  minItems: 1
+                  items: { type: string, maxLength: 100 }
+                filters:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      field: { type: string }
+                      operator: { type: string }
+                      value: { type: string }
+                sort:
+                  type: object
+                  properties:
+                    field: { type: string }
+                    direction: { type: string, enum: [asc, desc] }
+                chart_type: { type: string, enum: [bar, line, pie] }
+                chart_field: { type: string, maxLength: 100 }
+                is_shared: { type: boolean }
+      responses:
+        '201': { description: Created }
+        '422': { $ref: '#/components/responses/ValidationError' }
+
+  /reports/{report}:
+    parameters:
+      - { name: report, in: path, required: true, schema: { type: integer } }
+    get:
+      tags: [Saved Reports]
+      summary: Execute and display a saved report
+      responses:
+        '200': { description: Report results (rows, total, column labels) }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '500': { description: Failed to execute report query }
+    put:
+      tags: [Saved Reports]
+      summary: Update a saved report (owner only)
+      responses:
+        '200': { description: Updated }
+        '404': { $ref: '#/components/responses/NotFound' }
+    delete:
+      tags: [Saved Reports]
+      summary: Delete a saved report (owner only)
+      responses:
+        '200': { description: Deleted }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /reports/{report}/export:
+    parameters:
+      - { name: report, in: path, required: true, schema: { type: integer } }
+    get:
+      tags: [Saved Reports]
+      summary: Export a saved report as CSV
+      responses:
+        '200':
+          description: CSV stream
+          content:
+            text/csv:
+              schema: { type: string, format: binary }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '500': { description: Failed to execute report query }
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: PlainText
+      description: |
+        Laravel Sanctum personal access token, in the format
+        `<id>|<random>` returned by `POST /api/v1/login`.
+
+  parameters:
+    PerPage:
+      name: per_page
+      in: query
+      description: "Items per page (default 15, max 100)."
+      schema: { type: integer, minimum: 1, maximum: 100, default: 15 }
+    Page:
+      name: page
+      in: query
+      schema: { type: integer, minimum: 1, default: 1 }
+
+  responses:
+    Unauthenticated:
+      description: Missing or invalid token
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              message: { type: string, example: Unauthenticated. }
+              error: { type: string, example: unauthenticated }
+    Forbidden:
+      description: Authenticated but lacking the required permission
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              message: { type: string }
+              error: { type: string, example: forbidden }
+    NotFound:
+      description: Resource not found in the user's organization
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              message: { type: string }
+              error: { type: string, example: not_found }
+    ValidationError:
+      description: Validation failed
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              message: { type: string }
+              errors:
+                type: object
+                additionalProperties:
+                  type: array
+                  items: { type: string }
+    TooManyRequests:
+      description: Rate limit exceeded (60/min on /api/v1/*; 5/min on /login)
+      headers:
+        Retry-After: { schema: { type: integer }, description: Seconds until next attempt allowed }
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              message: { type: string }
+
+  schemas:
+    MessageResponse:
+      type: object
+      properties:
+        message: { type: string }
+
+    PaginationEnvelope:
+      type: object
+      properties:
+        data: { type: array, items: { type: object } }
+        links:
+          type: object
+          properties:
+            first: { type: string, nullable: true }
+            last: { type: string, nullable: true }
+            prev: { type: string, nullable: true }
+            next: { type: string, nullable: true }
+        meta:
+          type: object
+          properties:
+            current_page: { type: integer }
+            from: { type: integer, nullable: true }
+            last_page: { type: integer }
+            path: { type: string }
+            per_page: { type: integer }
+            to: { type: integer, nullable: true }
+            total: { type: integer }
+
+    Product:
+      type: object
+      properties:
+        id: { type: integer }
+        sku: { type: string }
+        name: { type: string }
+        description: { type: string, nullable: true }
+        price: { type: number, nullable: true }
+        selling_price: { type: number, nullable: true }
+        purchase_price: { type: number, nullable: true }
+        currency: { type: string, nullable: true }
+        price_in_currencies:
+          type: object
+          additionalProperties: { type: number }
+          description: "Cached conversions of `price` into other supported currencies."
+        stock: { type: integer }
+        total_stock: { type: integer, description: "Includes variant stock when has_variants." }
+        min_stock: { type: integer, nullable: true }
+        max_stock: { type: integer, nullable: true }
+        barcode: { type: string, nullable: true }
+        notes: { type: string, nullable: true }
+        image: { type: string, nullable: true }
+        images: { type: array, items: { type: string } }
+        thumbnail: { type: string, nullable: true }
+        is_active: { type: boolean }
+        has_variants: { type: boolean }
+        tracking_type: { type: string, enum: [none, batch, serial] }
+        metadata: { type: object, additionalProperties: true, nullable: true }
+        is_low_stock: { type: boolean }
+        is_out_of_stock: { type: boolean }
+        profit: { type: number, nullable: true }
+        profit_margin: { type: number, nullable: true }
+        category: { type: object, nullable: true }
+        location: { type: object, nullable: true }
+        created_at: { type: string, format: date-time }
+        updated_at: { type: string, format: date-time }
+
+    ProductInput:
+      type: object
+      required: [sku, name]
+      properties:
+        sku: { type: string, maxLength: 255 }
+        name: { type: string, maxLength: 255 }
+        description: { type: string, nullable: true }
+        price: { type: number, minimum: 0 }
+        selling_price: { type: number, minimum: 0 }
+        purchase_price: { type: number, minimum: 0 }
+        currency: { type: string, maxLength: 3 }
+        stock: { type: integer, minimum: 0 }
+        min_stock: { type: integer, minimum: 0 }
+        max_stock: { type: integer, minimum: 0 }
+        barcode: { type: string, maxLength: 255 }
+        notes: { type: string }
+        category_id: { type: integer }
+        location_id: { type: integer }
+        is_active: { type: boolean }
+        tracking_type: { type: string, enum: [none, batch, serial] }
+        metadata: { type: object, additionalProperties: true }
+
+    ProductOption:
+      type: object
+      properties:
+        id: { type: integer }
+        product_id: { type: integer }
+        name: { type: string }
+        values:
+          type: array
+          items: { type: string }
+        position: { type: integer }
+
+    ProductVariant:
+      type: object
+      properties:
+        id: { type: integer }
+        product_id: { type: integer }
+        sku: { type: string, nullable: true }
+        barcode: { type: string, nullable: true }
+        title: { type: string, nullable: true }
+        option_values: { type: object, additionalProperties: { type: string } }
+        price: { type: number, nullable: true }
+        purchase_price: { type: number, nullable: true }
+        compare_at_price: { type: number, nullable: true }
+        stock: { type: integer }
+        min_stock: { type: integer, nullable: true }
+        image: { type: string, nullable: true }
+        weight: { type: number, nullable: true }
+        weight_unit: { type: string, enum: [kg, lb, oz, g], nullable: true }
+        is_active: { type: boolean }
+        requires_shipping: { type: boolean }
+        position: { type: integer }
+        metadata: { type: object, additionalProperties: true, nullable: true }
+
+    ProductVariantInput:
+      type: object
+      required: [option_values]
+      properties:
+        sku: { type: string, maxLength: 255 }
+        barcode: { type: string, maxLength: 255 }
+        title: { type: string, maxLength: 255 }
+        option_values: { type: object, additionalProperties: { type: string } }
+        price: { type: number, minimum: 0 }
+        purchase_price: { type: number, minimum: 0 }
+        compare_at_price: { type: number, minimum: 0 }
+        stock: { type: integer, minimum: 0 }
+        min_stock: { type: integer, minimum: 0 }
+        image: { type: string, maxLength: 255 }
+        weight: { type: number, minimum: 0 }
+        weight_unit: { type: string, enum: [kg, lb, oz, g] }
+        is_active: { type: boolean }
+        requires_shipping: { type: boolean }
+        position: { type: integer, minimum: 0 }
+        metadata: { type: object, additionalProperties: true }
+
+    Order:
+      type: object
+      properties:
+        id: { type: integer }
+        order_number: { type: string }
+        source: { type: string, nullable: true }
+        external_id: { type: string, nullable: true }
+        customer_name: { type: string }
+        customer_email: { type: string, format: email, nullable: true }
+        customer_address: { type: string, nullable: true }
+        status: { type: string, enum: [pending, processing, shipped, delivered, cancelled] }
+        subtotal: { type: number }
+        tax: { type: number }
+        shipping: { type: number }
+        total: { type: number }
+        currency: { type: string }
+        order_date: { type: string, format: date-time, nullable: true }
+        shipped_at: { type: string, format: date-time, nullable: true }
+        delivered_at: { type: string, format: date-time, nullable: true }
+        notes: { type: string, nullable: true }
+        metadata: { type: object, additionalProperties: true, nullable: true }
+        items:
+          type: array
+          items: { $ref: '#/components/schemas/OrderItem' }
+        items_count: { type: integer }
+        created_at: { type: string, format: date-time }
+        updated_at: { type: string, format: date-time }
+
+    OrderItem:
+      type: object
+      properties:
+        id: { type: integer }
+        order_id: { type: integer }
+        product_id: { type: integer }
+        product_name: { type: string }
+        sku: { type: string, nullable: true }
+        quantity: { type: integer }
+        unit_price: { type: number }
+        subtotal: { type: number }
+        tax: { type: number }
+        total: { type: number }
+        metadata: { type: object, additionalProperties: true, nullable: true }
+
+    OrderInput:
+      type: object
+      required: [customer_name, items]
+      properties:
+        source: { type: string, maxLength: 255 }
+        external_id: { type: string, maxLength: 255 }
+        customer_name: { type: string, maxLength: 255 }
+        customer_email: { type: string, format: email, maxLength: 255 }
+        customer_address: { type: string }
+        status: { type: string, enum: [pending, processing, shipped, delivered, cancelled] }
+        currency: { type: string, maxLength: 3, description: "Defaults to USD." }
+        order_date: { type: string, format: date-time }
+        notes: { type: string }
+        metadata: { type: object, additionalProperties: true }
+        items:
+          type: array
+          minItems: 1
+          items:
+            type: object
+            required: [product_id, quantity]
+            properties:
+              product_id: { type: integer }
+              quantity: { type: integer, minimum: 1 }
+              unit_price: { type: number, minimum: 0, description: "Defaults to product.selling_price (or price)." }
+              tax: { type: number, minimum: 0 }
+
+    Supplier:
+      type: object
+      properties:
+        id: { type: integer }
+        name: { type: string }
+        code: { type: string, nullable: true }
+        contact_name: { type: string, nullable: true }
+        email: { type: string, format: email, nullable: true }
+        phone: { type: string, nullable: true }
+        address: { type: string, nullable: true }
+        city: { type: string, nullable: true }
+        state: { type: string, nullable: true }
+        zip_code: { type: string, nullable: true }
+        country: { type: string, nullable: true }
+        full_address: { type: string, nullable: true }
+        website: { type: string, format: uri, nullable: true }
+        payment_terms: { type: string, nullable: true }
+        currency: { type: string, nullable: true }
+        notes: { type: string, nullable: true }
+        is_active: { type: boolean }
+        products_count: { type: integer }
+
+    SupplierInput:
+      type: object
+      required: [name]
+      properties:
+        name: { type: string, maxLength: 255 }
+        code: { type: string, maxLength: 255 }
+        contact_name: { type: string, maxLength: 255 }
+        email: { type: string, format: email, maxLength: 255 }
+        phone: { type: string, maxLength: 255 }
+        address: { type: string }
+        city: { type: string, maxLength: 255 }
+        state: { type: string, maxLength: 255 }
+        zip_code: { type: string, maxLength: 255 }
+        country: { type: string, maxLength: 255 }
+        website: { type: string, format: uri, maxLength: 255 }
+        payment_terms: { type: string, maxLength: 255 }
+        currency: { type: string, maxLength: 3 }
+        notes: { type: string }
+        metadata: { type: object, additionalProperties: true }
+        is_active: { type: boolean }
+
+    PurchaseOrderInput:
+      type: object
+      required: [supplier_id, order_date, currency, items]
+      properties:
+        supplier_id: { type: integer }
+        order_date: { type: string, format: date }
+        expected_date: { type: string, format: date }
+        currency: { type: string, maxLength: 3 }
+        shipping: { type: number, minimum: 0 }
+        tax: { type: number, minimum: 0 }
+        notes: { type: string }
+        items:
+          type: array
+          minItems: 1
+          items:
+            type: object
+            required: [product_id, quantity, unit_cost]
+            properties:
+              product_id: { type: integer }
+              quantity: { type: integer, minimum: 1 }
+              unit_cost: { type: number, minimum: 0 }
+              supplier_sku: { type: string, maxLength: 255 }
+
+    WarehouseInput:
+      type: object
+      required: [name]
+      properties:
+        name: { type: string, maxLength: 255 }
+        code:
+          type: string
+          maxLength: 50
+          description: "Unique within the organization."
+        description: { type: string, maxLength: 1000 }
+        address_line_1: { type: string, maxLength: 255 }
+        address_line_2: { type: string, maxLength: 255 }
+        city: { type: string, maxLength: 255 }
+        province: { type: string, maxLength: 255 }
+        postal_code: { type: string, maxLength: 255 }
+        country: { type: string, maxLength: 255 }
+        phone: { type: string, maxLength: 30 }
+        email: { type: string, format: email, maxLength: 255 }
+        manager_name: { type: string, maxLength: 255 }
+        timezone: { type: string, maxLength: 50 }
+        currency: { type: string, maxLength: 3 }
+        is_active: { type: boolean }
+        priority: { type: integer, minimum: 0 }
