@@ -131,14 +131,19 @@ SYSTEM:
        - Plugin hooks for extensibility
      Implementation: Full stack - migrations, models, services, Mailables, templates, UI
 
-  3. API Documentation - NOT CREATED
-     Status: REST API fully functional but undocumented
-     Missing:
-       - OpenAPI/Swagger specification
-       - Postman collection
-       - Authentication guide
-       - Rate limiting documentation
-       - Code examples
+  3. API Documentation - COMPLETE ✓
+     Status: OpenAPI 3.0 spec + narrative API guide added
+     Location:
+       - docs/api/openapi.yaml (full v1 surface, ~50+ endpoints across 19 tags)
+       - docs/api/README.md (auth, rate limits, error envelope, curl/PHP/JS examples)
+     Coverage:
+       - Authentication (Sanctum bearer tokens) and token management
+       - Rate limiting (60/min global, 5/min on /login)
+       - Pagination + sorting conventions
+       - Error envelope and the canonical error codes
+       - Permission middleware (api.permission:) reference
+     Outstanding:
+       - Postman collection (can be generated from openapi.yaml on demand)
 
 ═══════════════════════════════════════════════════════════════
 
