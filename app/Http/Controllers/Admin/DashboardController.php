@@ -209,7 +209,13 @@ class DashboardController extends Controller
         // Action: Dashboard viewed
         do_action('dashboard_viewed', $user);
 
-        return Inertia::render('Dashboard', $data);
+        // UI redesign preview: rendered against the same data via the new
+        // Linear-inspired layout. Triggered by route default `preview=true`.
+        $component = $request->route()?->defaults['preview'] ?? false
+            ? 'Preview/DashboardLinear'
+            : 'Dashboard';
+
+        return Inertia::render($component, $data);
     }
 
     /**

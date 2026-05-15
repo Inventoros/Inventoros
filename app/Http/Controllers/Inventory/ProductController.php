@@ -98,7 +98,13 @@ class ProductController extends Controller
         // Action: Products list viewed
         do_action('product_list_viewed', $products, $request->user());
 
-        return Inertia::render('Products/Index', $data);
+        // UI redesign preview: rendered against the same data via the new
+        // Linear-inspired layout. Triggered by route default `preview=true`.
+        $component = $request->route()?->defaults['preview'] ?? false
+            ? 'Preview/ProductsLinear'
+            : 'Products/Index';
+
+        return Inertia::render($component, $data);
     }
 
     /**

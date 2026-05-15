@@ -55,6 +55,19 @@ Route::get('/dashboard', [DashboardController::class, 'index'])
     ->middleware(['auth', 'verified'])
     ->name('dashboard');
 
+// UI Redesign preview — renders the new Linear-inspired layout against real
+// dashboard data so the redesign can be reviewed side-by-side with /dashboard.
+// Remove these routes once the redesign is rolled out.
+Route::middleware(['auth', 'verified'])->prefix('preview')->name('preview.')->group(function () {
+    Route::get('/dashboard', [DashboardController::class, 'index'])
+        ->name('dashboard')
+        ->defaults('preview', true);
+    Route::get('/products', [ProductController::class, 'index'])
+        ->middleware('permission:view_products')
+        ->name('products')
+        ->defaults('preview', true);
+});
+
 Route::middleware('auth')->group(function () {
     // Global Search
     Route::get('/search', [SearchController::class, 'search'])->name('search');
