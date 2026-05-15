@@ -1,0 +1,143 @@
+/*
+ * Inventoros design tokens — Linear-inspired.
+ *
+ * Two layers of CSS variables:
+ *   1. Semantic tokens (--surface, --text, --border, --accent) used by every
+ *      component. Swap between :root and .dark for theme.
+ *   2. Spacing/typography scale — tight by default, density of a power-tools UI.
+ *
+ * Components MUST use semantic tokens (e.g. text-text-primary, border-border)
+ * instead of raw colors so the dark/light swap stays a single source of truth.
+ */
+
+@layer base {
+    :root {
+        /* Backgrounds — neutral, almost monochromatic */
+        --surface-canvas: 0 0% 100%;        /* page background */
+        --surface-base: 220 14% 99%;        /* sidebar, header */
+        --surface-raised: 220 14% 97%;      /* cards, popovers */
+        --surface-overlay: 220 14% 95%;     /* hover, active row */
+        --surface-sunken: 220 13% 91%;      /* inset wells */
+
+        /* Borders — 1px subtle */
+        --border-subtle: 220 13% 91%;       /* default 1px line */
+        --border-strong: 220 10% 80%;       /* focused inputs, separators */
+
+        /* Text — high contrast scale */
+        --text-primary: 222 47% 11%;        /* headings, body */
+        --text-secondary: 215 16% 47%;      /* secondary copy */
+        --text-tertiary: 220 9% 64%;        /* hint text */
+        --text-disabled: 220 9% 75%;
+
+        /* Accent — single Linear-style indigo. Used sparingly. */
+        --accent: 234 89% 60%;              /* primary action, focus ring */
+        --accent-hover: 234 79% 55%;
+        --accent-foreground: 0 0% 100%;
+        --accent-soft: 234 100% 97%;        /* selected row, badge bg */
+
+        /* Status — semantic, also muted */
+        --status-success: 142 71% 36%;
+        --status-success-soft: 142 76% 96%;
+        --status-warning: 38 92% 42%;
+        --status-warning-soft: 48 100% 96%;
+        --status-danger: 0 72% 45%;
+        --status-danger-soft: 0 86% 97%;
+        --status-info: 217 91% 50%;
+        --status-info-soft: 214 95% 97%;
+
+        /* Focus ring */
+        --ring: 234 89% 60%;
+
+        /* Radii */
+        --radius-sm: 4px;
+        --radius-md: 6px;
+        --radius-lg: 8px;
+        --radius-xl: 12px;
+
+        /* Shadows — Linear uses almost none. Subtle, never blurry. */
+        --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.04);
+        --shadow-md: 0 1px 3px 0 rgb(0 0 0 / 0.06), 0 1px 2px -1px rgb(0 0 0 / 0.04);
+        --shadow-lg: 0 4px 12px -2px rgb(0 0 0 / 0.08), 0 2px 6px -2px rgb(0 0 0 / 0.04);
+    }
+
+    .dark {
+        --surface-canvas: 222 24% 7%;       /* near-black, slight blue */
+        --surface-base: 222 22% 9%;
+        --surface-raised: 222 20% 12%;
+        --surface-overlay: 222 18% 16%;
+        --surface-sunken: 222 22% 6%;
+
+        --border-subtle: 222 16% 18%;
+        --border-strong: 222 12% 28%;
+
+        --text-primary: 220 14% 96%;
+        --text-secondary: 220 10% 70%;
+        --text-tertiary: 220 9% 55%;
+        --text-disabled: 220 9% 40%;
+
+        --accent: 234 89% 70%;
+        --accent-hover: 234 79% 75%;
+        --accent-foreground: 222 47% 11%;
+        --accent-soft: 234 30% 18%;
+
+        --status-success: 142 64% 52%;
+        --status-success-soft: 142 30% 16%;
+        --status-warning: 38 92% 60%;
+        --status-warning-soft: 38 30% 16%;
+        --status-danger: 0 84% 65%;
+        --status-danger-soft: 0 30% 18%;
+        --status-info: 217 91% 65%;
+        --status-info-soft: 217 30% 18%;
+
+        --ring: 234 89% 70%;
+
+        --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.4);
+        --shadow-md: 0 1px 3px 0 rgb(0 0 0 / 0.5), 0 1px 2px -1px rgb(0 0 0 / 0.3);
+        --shadow-lg: 0 4px 12px -2px rgb(0 0 0 / 0.6), 0 2px 6px -2px rgb(0 0 0 / 0.4);
+    }
+
+    /* Body baseline — Inter-like system stack, antialiased, tight tracking */
+    html {
+        font-feature-settings: 'cv11', 'ss01', 'ss03', 'cv02';
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+        text-rendering: optimizeLegibility;
+    }
+
+    body {
+        background-color: hsl(var(--surface-canvas));
+        color: hsl(var(--text-primary));
+        font-family: 'Inter', 'Figtree', ui-sans-serif, system-ui, -apple-system,
+            BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial,
+            sans-serif;
+        letter-spacing: -0.01em;
+    }
+
+    /* Linear-style scrollbar — thin, fades in on hover */
+    .ds-scroll {
+        scrollbar-width: thin;
+        scrollbar-color: hsl(var(--border-strong)) transparent;
+    }
+    .ds-scroll::-webkit-scrollbar {
+        width: 6px;
+        height: 6px;
+    }
+    .ds-scroll::-webkit-scrollbar-track {
+        background: transparent;
+    }
+    .ds-scroll::-webkit-scrollbar-thumb {
+        background: transparent;
+        border-radius: 3px;
+        transition: background 0.2s;
+    }
+    .ds-scroll:hover::-webkit-scrollbar-thumb {
+        background: hsl(var(--border-strong));
+    }
+
+    /* Focus ring — used by every interactive primitive */
+    .ds-focus-ring {
+        @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2;
+        --tw-ring-color: hsl(var(--ring));
+        --tw-ring-offset-color: hsl(var(--surface-canvas));
+    }
+}
