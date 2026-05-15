@@ -1,0 +1,16 @@
+# FrankenPHP serves both PHP and static assets from /app/public.
+# Single-server config covers HTTP locally; in prod swap :80 for your domain to get auto-HTTPS.
+
+{
+    frankenphp
+    order php_server before file_server
+    auto_https off
+}
+
+:80 {
+    root * /app/public
+    encode zstd br gzip
+
+    # Pass everything to Laravel's front controller via FrankenPHP's php_server.
+    php_server
+}

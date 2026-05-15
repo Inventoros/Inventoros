@@ -1,0 +1,55 @@
+# VCS
+.git
+.gitignore
+.gitattributes
+
+# Local Claude state (never goes into images)
+.claude
+.cursor
+docs/superpowers
+.codex
+
+# Composer / Node build artefacts (rebuilt inside the image)
+vendor
+node_modules
+
+# Generated assets — Vite rebuilds these in the image
+public/build
+public/hot
+public/storage
+
+# Local storage / cache
+storage/framework/cache/data/*
+storage/framework/sessions/*
+storage/framework/views/*
+storage/logs/*
+bootstrap/cache/*.php
+
+# DB files (we use named volumes for these)
+database/database.sqlite
+database/database.sqlite-journal
+
+# Tests / dev tooling
+.phpunit.result.cache
+.phpunit.cache
+phpunit.xml
+.editorconfig
+.styleci.yml
+.idea
+.vscode
+
+# Local env
+.env
+.env.*
+!.env.example
+
+# CI / docs
+.github
+docs/screenshots
+*.md
+!docker/README.md
+
+# Backups / archives
+*.zip
+*.tar
+*.tar.gz
