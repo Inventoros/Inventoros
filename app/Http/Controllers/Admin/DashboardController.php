@@ -29,9 +29,11 @@ class DashboardController extends Controller
     /**
      * Display the admin dashboard.
      *
+     * @param Request $request The incoming request — used to detect the
+     *                         /preview/dashboard route default.
      * @return \Inertia\Response
      */
-    public function index()
+    public function index(Request $request)
     {
         $user = auth()->user();
 
