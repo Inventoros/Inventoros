@@ -99,6 +99,15 @@ Inventoros is an open-source Inventory and Warehouse Management System (WMS) bui
 - **GraphQL API** with queries and mutations, permission checks, and query depth/complexity limits
 - Auto-generated **OpenAPI 3.1 docs** via Scramble at `/docs/api`
 - Sanctum token authentication
+- Public reference: [`docs/api/README.md`](docs/api/README.md) · [inventoros.com/docs/api](https://inventoros.com/docs/api)
+
+### MCP Server (AI agents)
+- Built-in **[Model Context Protocol](https://modelcontextprotocol.io/)** server at `POST /mcp`
+- 22 tools, 2 resources, 1 prompt — covering catalog, stock, sales, purchasing, manufacturing
+- Same Sanctum bearer token as the REST API; inherits the user's organization scope and permissions
+- Destructive tools carry the standard `IsDestructive` annotation so compliant clients prompt before invoking
+- Connect Claude Desktop, Claude Code, Cursor, or any MCP-compatible client
+- Public reference: [`docs/mcp/README.md`](docs/mcp/README.md) · [inventoros.com/docs/mcp](https://inventoros.com/docs/mcp)
 
 ### Plugin System
 - WordPress-style hooks and filters
