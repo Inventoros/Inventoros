@@ -6,20 +6,52 @@ Single-image dev stack: FrankenPHP (Caddy + PHP-FPM in one binary) serves the La
 
 ```bash
 # From the repo root
-docker compose up --build
+APP_PORT=8484 docker compose up --build
 ```
 
-When the container is ready (~60s on first build):
+When the container is ready (~60s on first build), watch the logs for the ready banner. You'll see:
+
+```
+================================================================
+  Inventoros is ready.
+
+  App         http://localhost:8484
+  REST API    http://localhost:8484/api/v1
+  MCP server  http://localhost:8484/mcp
+  Mailpit     http://localhost:8025
+
+  Demo login  e2e-test@inventoros.test / E2ETestPassword123!
+
+  UI redesign preview:
+    http://localhost:8484/preview/dashboard
+    http://localhost:8484/preview/products
+================================================================
+```
 
 | URL | What |
 |---|---|
-| http://localhost:8080 | Inventoros app |
-| http://localhost:8080/api/v1 | REST API |
-| http://localhost:8080/mcp | MCP server (POST + Bearer token) |
-| http://localhost:8080/docs/api | Stoplight Elements API browser |
+| http://localhost:8484 | Inventoros app |
+| http://localhost:8484/api/v1 | REST API |
+| http://localhost:8484/mcp | MCP server (POST + Bearer token) |
+| http://localhost:8484/docs/api | Stoplight Elements API browser |
+| http://localhost:8484/preview/dashboard | UI redesign — dashboard |
+| http://localhost:8484/preview/products | UI redesign — products list |
 | http://localhost:8025 | Mailpit web UI |
 
+The first boot:
+
+1. Creates `.env` from `.env.example` and generates `APP_KEY`.
+2. Sets `SESSION_SECURE_COOKIE=false` because `APP_URL` is plain HTTP localhost (so login actually works).
+3. Sets `APP_URL` to match the host port you used.
+4. Runs migrations.
+5. Seeds `E2ETestSeeder` (creates the demo login above) and `DemoDataSeeder` (gives you visible products, orders, suppliers, etc.).
+6. Drops a marker at `storage/.seeded` so subsequent restarts don't re-seed.
+
 Default install uses SQLite — no external DB needed. The DB file persists across restarts in the `app-data` named volume.
+
+To start fresh (wipe DB + reseed): `docker compose down -v && APP_PORT=8484 docker compose up`.
+
+To boot without auto-seeding (e.g. you want to start from an empty DB): `DEV_AUTOSEED=false APP_PORT=8484 docker compose up`.
 
 ## With Postgres
 

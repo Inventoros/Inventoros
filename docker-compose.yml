@@ -20,6 +20,9 @@ services:
       - "${APP_PORT:-8080}:80"
     environment:
       APP_URL: http://localhost:${APP_PORT:-8080}
+      # First-boot auto-seed: creates the e2e-test login + demo data so the
+      # app has visible content immediately. Set to false to skip.
+      DEV_AUTOSEED: ${DEV_AUTOSEED:-true}
       MAIL_MAILER: smtp
       MAIL_HOST: mailpit
       MAIL_PORT: 1025
