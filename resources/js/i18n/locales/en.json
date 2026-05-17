@@ -1168,6 +1168,11 @@
     "database": {
       "title": "Database Configuration",
       "subtitle": "Configure your database connection",
+      "driver": "Database Driver",
+      "drivers": {
+        "mysql": "MySQL / MariaDB",
+        "pgsql": "PostgreSQL"
+      },
       "host": "Database Host",
       "port": "Database Port",
       "name": "Database Name",
