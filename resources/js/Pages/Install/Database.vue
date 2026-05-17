@@ -1,6 +1,6 @@
 <script setup>
 import { Head, Link, useForm } from '@inertiajs/vue3';
-import { ref } from 'vue';
+import { ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 
 const { t } = useI18n();
@@ -9,9 +9,16 @@ const props = defineProps({
     currentConfig: Object,
 });
 
+// Default port per driver — used when switching drivers and when the
+// current value matches the other driver's default (issue #50).
+const DEFAULT_PORTS = { mysql: 3306, pgsql: 5432 };
+
+const initialDriver = props.currentConfig.driver === 'pgsql' ? 'pgsql' : 'mysql';
+
 const form = useForm({
+    driver: initialDriver,
     host: props.currentConfig.host || 'localhost',
-    port: props.currentConfig.port || 3306,
+    port: Number(props.currentConfig.port) || DEFAULT_PORTS[initialDriver],
     database: props.currentConfig.database || '',
     username: props.currentConfig.username || '',
     password: '',
@@ -20,6 +27,15 @@ const form = useForm({
 const testing = ref(false);
 const testResult = ref(null);
 const installing = ref(false);
+
+// When the user switches driver, invalidate any prior test result and
+// nudge the port to the new driver's default if it was the old default.
+watch(() => form.driver, (next, prev) => {
+    testResult.value = null;
+    if (form.port === DEFAULT_PORTS[prev]) {
+        form.port = DEFAULT_PORTS[next];
+    }
+});
 
 const testConnection = async () => {
     testing.value = true;
@@ -129,6 +145,22 @@ const install = async () => {
                 </div>
 
                 <form @submit.prevent="install" class="space-y-6">
+                    <!-- Database Driver (issue #50) -->
+                    <div>
+                        <label for="driver" class="block text-sm font-medium text-gray-700 mb-2">
+                            {{ t('install.database.driver') }}
+                        </label>
+                        <select
+                            id="driver"
+                            v-model="form.driver"
+                            required
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-900 focus:border-transparent bg-white"
+                        >
+                            <option value="mysql">{{ t('install.database.drivers.mysql') }}</option>
+                            <option value="pgsql">{{ t('install.database.drivers.pgsql') }}</option>
+                        </select>
+                    </div>
+
                     <!-- Database Host -->
                     <div>
                         <label for="host" class="block text-sm font-medium text-gray-700 mb-2">
@@ -155,7 +187,7 @@ const install = async () => {
                             type="number"
                             required
                             class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-900 focus:border-transparent"
-                            placeholder="3306"
+                            :placeholder="String(DEFAULT_PORTS[form.driver])"
                         />
                     </div>
 

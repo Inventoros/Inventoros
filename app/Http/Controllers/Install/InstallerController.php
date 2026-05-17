@@ -67,10 +67,19 @@ class InstallerController extends Controller
             return redirect('/login');
         }
 
+        // Adding PostgreSQL support alongside MySQL (issue #50). The welcome
+        // page advertises both, the docker-compose ships a `postgres` profile,
+        // but the wizard previously hardcoded MySQL everywhere.
+        $driver = env('DB_CONNECTION', 'mysql');
+        if (!in_array($driver, ['mysql', 'pgsql'], true)) {
+            $driver = 'mysql';
+        }
+
         return Inertia::render('Install/Database', [
             'currentConfig' => [
+                'driver' => $driver,
                 'host' => env('DB_HOST', 'localhost'),
-                'port' => env('DB_PORT', '3306'),
+                'port' => env('DB_PORT', $driver === 'pgsql' ? '5432' : '3306'),
                 'database' => env('DB_DATABASE', ''),
                 'username' => env('DB_USERNAME', ''),
             ],
@@ -90,6 +99,7 @@ class InstallerController extends Controller
         }
 
         $request->validate([
+            'driver' => 'required|string|in:mysql,pgsql',
             'host' => 'required|string',
             'port' => 'required|integer',
             'database' => 'required|string',
@@ -98,8 +108,10 @@ class InstallerController extends Controller
         ]);
 
         try {
+            $dsn = $this->buildDsn($request->driver, $request->host, (int) $request->port, $request->database);
+
             $connection = @new \PDO(
-                "mysql:host={$request->host};port={$request->port};dbname={$request->database}",
+                $dsn,
                 $request->username,
                 $request->password
             );
@@ -110,6 +122,7 @@ class InstallerController extends Controller
             ]);
         } catch (\Exception $e) {
             Log::warning('Database connection test failed', [
+                'driver' => $request->driver,
                 'host' => $request->host,
                 'database' => $request->database,
                 'error' => $e->getMessage(),
@@ -119,6 +132,21 @@ class InstallerController extends Controller
                 'message' => 'Database connection failed: ' . $e->getMessage(),
             ], 422);
         }
+    }
+
+    /**
+     * Build a PDO DSN string for the requested driver.
+     *
+     * Added for issue #50 — wizard previously hardcoded a MySQL DSN, which
+     * made PostgreSQL setup impossible despite the docker-compose `postgres`
+     * profile being available.
+     */
+    protected function buildDsn(string $driver, string $host, int $port, string $database): string
+    {
+        return match ($driver) {
+            'pgsql' => "pgsql:host={$host};port={$port};dbname={$database}",
+            default => "mysql:host={$host};port={$port};dbname={$database}",
+        };
     }
 
     /**
@@ -134,6 +162,7 @@ class InstallerController extends Controller
         }
 
         $request->validate([
+            'driver' => 'required|string|in:mysql,pgsql',
             'host' => 'required|string',
             'port' => 'required|integer',
             'database' => 'required|string',
@@ -142,8 +171,10 @@ class InstallerController extends Controller
         ]);
 
         try {
-            // Update .env file with database config
+            // Update .env file with database config. The driver is written to
+            // DB_CONNECTION inside updateEnvFile() (issue #50).
             $this->updateEnvFile([
+                'DB_CONNECTION' => $request->driver,
                 'DB_HOST' => $request->host,
                 'DB_PORT' => $request->port,
                 'DB_DATABASE' => $request->database,
@@ -155,9 +186,10 @@ class InstallerController extends Controller
             Artisan::call('config:clear');
             Artisan::call('cache:clear');
 
-            // Reconnect to database with new config
-            DB::purge('mysql');
-            DB::reconnect('mysql');
+            // Reconnect to database with new config — purge whichever
+            // connection the user picked, not just MySQL.
+            DB::purge($request->driver);
+            DB::reconnect($request->driver);
 
             // Run migrations
             Artisan::call('migrate', ['--force' => true]);
@@ -309,10 +341,12 @@ class InstallerController extends Controller
                 'met' => extension_loaded('pdo'),
             ],
             [
-                'name' => 'MySQL Extension',
-                'required' => 'Enabled',
-                'current' => extension_loaded('pdo_mysql') ? 'Enabled' : 'Disabled',
-                'met' => extension_loaded('pdo_mysql'),
+                // At least one database driver must be available. The wizard
+                // supports MySQL and PostgreSQL (issue #50).
+                'name' => 'Database Driver (MySQL or PostgreSQL)',
+                'required' => 'pdo_mysql or pdo_pgsql',
+                'current' => $this->describeAvailableDbDrivers(),
+                'met' => extension_loaded('pdo_mysql') || extension_loaded('pdo_pgsql'),
             ],
             [
                 'name' => 'OpenSSL Extension',
@@ -354,6 +388,19 @@ class InstallerController extends Controller
     }
 
     /**
+     * Human-readable list of available PDO database drivers (issue #50).
+     */
+    protected function describeAvailableDbDrivers(): string
+    {
+        $available = array_filter([
+            extension_loaded('pdo_mysql') ? 'pdo_mysql' : null,
+            extension_loaded('pdo_pgsql') ? 'pdo_pgsql' : null,
+        ]);
+
+        return $available === [] ? 'None' : implode(', ', $available);
+    }
+
+    /**
      * Update .env file with new values.
      *
      * @param array<string, string> $data The key-value pairs to update
@@ -363,9 +410,6 @@ class InstallerController extends Controller
     {
         $envFile = base_path('.env');
         $envContent = file_get_contents($envFile);
-
-        // Also update DB_CONNECTION to mysql
-        $data['DB_CONNECTION'] = 'mysql';
 
         foreach ($data as $key => $value) {
             // Escape special regex characters in the value
