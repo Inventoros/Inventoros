@@ -112,12 +112,22 @@ class ReturnOrderController extends Controller
 
         try {
             $returnOrder = DB::transaction(function () use ($validated, $organizationId, $order) {
-                // Lock existing return order items to prevent double-returns
+                // Lock the parent Order row, not the aggregate. The previous
+                // implementation applied lockForUpdate() to a SELECT with
+                // GROUP BY — Postgres rejects locking aggregated rows
+                // outright, SQLite silently ignores FOR UPDATE entirely,
+                // and MySQL locks the visible aggregated rows rather than
+                // the underlying return_order_items, so concurrent submissions
+                // could still slip past the "already returned" check on
+                // some engines. Locking the parent Order forces sequential
+                // return submissions against the same order on every
+                // supported driver.
+                Order::where('id', $order->id)->lockForUpdate()->first();
+
                 $returnedQuantities = ReturnOrderItem::whereHas('returnOrder', function ($q) use ($order) {
                     $q->where('order_id', $order->id)
                       ->whereNotIn('status', ['rejected']);
-                })->lockForUpdate()
-                  ->selectRaw('order_item_id, SUM(quantity) as total_returned')
+                })->selectRaw('order_item_id, SUM(quantity) as total_returned')
                   ->groupBy('order_item_id')
                   ->pluck('total_returned', 'order_item_id');
 
