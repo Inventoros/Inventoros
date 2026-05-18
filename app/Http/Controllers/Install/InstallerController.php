@@ -233,6 +233,13 @@ class InstallerController extends Controller
      */
     public function createAdmin(Request $request)
     {
+        if ($this->isInstalled()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Application is already installed.',
+            ], 403);
+        }
+
         $validated = $request->validate([
             'organization_name' => 'required|string|max:255',
             'admin_name' => 'required|string|max:255',
