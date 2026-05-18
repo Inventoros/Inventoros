@@ -12,6 +12,8 @@ use App\Models\Order\OrderItem;
 use App\Models\Warehouse;
 use App\Services\NotificationService;
 use App\Support\SequenceNumberRetry;
+use Illuminate\Database\QueryException;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
@@ -266,7 +268,26 @@ class OrderController extends Controller
 
             return redirect()->route('orders.index')
                 ->with('success', 'Order created successfully.');
+        } catch (QueryException $e) {
+            // Database errors carry SQL/table/column details in the
+            // message that we don't want to render in an end-user flash
+            // banner ("violates unique constraint
+            // orders_organization_id_order_number_unique"). Log the full
+            // detail for operators, surface a generic message to the user.
+            Log::error('Order create failed with database error', [
+                'organization_id' => $request->user()->organization_id,
+                'user_id' => $request->user()->id,
+                'sql_state' => $e->errorInfo[0] ?? null,
+                'error' => $e->getMessage(),
+            ]);
+
+            return redirect()->back()
+                ->withInput()
+                ->with('error', 'Could not save the order due to a database error. Please try again, or contact support if the problem persists.');
         } catch (\Exception $e) {
+            // Business-rule exceptions thrown inside the transaction
+            // (insufficient stock, unknown product, etc.) carry safe
+            // messages we intentionally surface to the user.
             return redirect()->back()
                 ->withInput()
                 ->with('error', $e->getMessage());
