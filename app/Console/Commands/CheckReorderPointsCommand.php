@@ -9,6 +9,7 @@ use App\Models\Inventory\Product;
 use App\Models\Purchasing\PurchaseOrder;
 use App\Models\Purchasing\PurchaseOrderItem;
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
@@ -40,6 +41,30 @@ class CheckReorderPointsCommand extends Command
      * @return int
      */
     public function handle(): int
+    {
+        // Acquire an exclusive lock so concurrent runs (scheduler firing on
+        // two nodes, manual invocation overlapping the cron, container
+        // restart re-running the schedule) cannot both pass the "no
+        // existing PO" check and end up creating duplicate POs against the
+        // same supplier. The TTL must outlive a normal run.
+        $lock = Cache::lock('inventory:check-reorder-points', 600);
+
+        if (!$lock->get()) {
+            $this->warn('Another reorder check is already running — skipping this invocation.');
+            return Command::SUCCESS;
+        }
+
+        try {
+            return $this->runChecks();
+        } finally {
+            $lock->release();
+        }
+    }
+
+    /**
+     * The actual reorder logic, run only when this process holds the lock.
+     */
+    protected function runChecks(): int
     {
         $this->info('Checking reorder points...');
 
