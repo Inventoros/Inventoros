@@ -428,7 +428,7 @@ class StockTransferControllerTest extends TestCase
 
     // ==================== COMPLETE TRANSFER TESTS ====================
 
-    public function test_completing_transfer_updates_stock(): void
+    public function test_completing_transfer_records_single_audit_adjustment_per_item(): void
     {
         $initialStock = $this->product->stock; // 100
 
@@ -440,43 +440,59 @@ class StockTransferControllerTest extends TestCase
         $response->assertRedirect(route('stock-transfers.show', $transfer));
         $response->assertSessionHas('success');
 
-        // Reload transfer
         $transfer->refresh();
         $this->assertEquals('completed', $transfer->status);
         $this->assertNotNull($transfer->completed_at);
 
-        // Global product stock should remain unchanged (deduct + add = net zero)
-        // because the product model has a single stock field (not per-location)
+        // Inventoros tracks stock globally on products.stock — there is no
+        // per-location stock column. The transfer is paperwork; products.stock
+        // must NOT change.
         $this->product->refresh();
         $this->assertEquals($initialStock, $this->product->stock);
 
-        // Check StockAdjustment records were created for audit trail
+        // Previously this wrote two cancelling adjustments (-qty and +qty) on
+        // the same product row, which left the ledger reconciling to zero
+        // while pretending stock had moved. The fix records one audit row per
+        // item with adjustment_quantity = 0.
         $adjustments = StockAdjustment::where('reference_type', StockTransfer::class)
             ->where('reference_id', $transfer->id)
             ->get();
 
-        // Should have 2 adjustments: one deduction (-10) and one addition (+10)
-        $this->assertCount(2, $adjustments);
-
-        $deduction = $adjustments->firstWhere('adjustment_quantity', -10);
-        $this->assertNotNull($deduction);
-        $this->assertEquals('transfer', $deduction->type);
-        $this->assertStringContains('Transfer out', $deduction->reason);
-
-        $addition = $adjustments->firstWhere('adjustment_quantity', 10);
-        $this->assertNotNull($addition);
-        $this->assertEquals('transfer', $addition->type);
-        $this->assertStringContains('Transfer in', $addition->reason);
+        $this->assertCount(1, $adjustments);
+        $entry = $adjustments->first();
+        $this->assertEquals('transfer', $entry->type);
+        $this->assertEquals(0, $entry->adjustment_quantity);
+        $this->assertEquals($initialStock, $entry->quantity_before);
+        $this->assertEquals($initialStock, $entry->quantity_after);
+        $this->assertStringContainsString('Warehouse A', $entry->reason);
+        $this->assertStringContainsString('Warehouse B', $entry->reason);
     }
 
-    /**
-     * Assert that a string contains a substring.
-     */
-    protected function assertStringContains(string $needle, string $haystack): void
+    public function test_completing_transfer_fails_when_source_stock_insufficient(): void
     {
-        $this->assertTrue(
-            str_contains($haystack, $needle),
-            "Failed asserting that '{$haystack}' contains '{$needle}'."
+        // Bypass ProductObserver — it fires NotificationService which loads
+        // organization email settings via auth(), and the test acting-as
+        // user hasn't been set yet at this point.
+        Product::withoutEvents(fn () => $this->product->update(['stock' => 3]));
+
+        $transfer = $this->createTransfer(); // wants to transfer 10
+
+        $response = $this->actingAs($this->admin)
+            ->post(route('stock-transfers.complete', $transfer));
+
+        $response->assertRedirect(route('stock-transfers.show', $transfer));
+        $response->assertSessionHas('error');
+
+        $transfer->refresh();
+        $this->assertEquals('pending', $transfer->status);
+        $this->assertNull($transfer->completed_at);
+
+        // No partial audit rows from the rolled-back transaction.
+        $this->assertSame(
+            0,
+            StockAdjustment::where('reference_type', StockTransfer::class)
+                ->where('reference_id', $transfer->id)
+                ->count()
         );
     }
 
