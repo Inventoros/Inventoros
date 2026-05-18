@@ -45,6 +45,14 @@ trait LogsActivity
                     // Remove timestamps from changes
                     unset($changes['updated_at'], $original['updated_at']);
 
+                    // Strip sensitive fields (password hashes, encrypted 2FA
+                    // material, remember tokens) so they never land in the
+                    // admin-readable activity log. Anything explicitly opted-
+                    // in via $dontLogAttributes on the model is also stripped.
+                    foreach ($model->getDontLogAttributes() as $sensitive) {
+                        unset($changes[$sensitive], $original[$sensitive]);
+                    }
+
                     if (!empty($changes)) {
                         $model->logActivity('updated', 'Updated ' . class_basename($model), [
                             'old' => $original,
@@ -97,5 +105,31 @@ trait LogsActivity
         return $this->morphMany(ActivityLog::class, 'subject')
             ->with('user')
             ->latest();
+    }
+
+    /**
+     * Attributes that must never appear in activity-log properties.
+     *
+     * Combines an always-redacted default (anything that looks like a
+     * secret on a User) with a per-model $dontLogAttributes property if
+     * the model declares one.
+     *
+     * @return array<int, string>
+     */
+    public function getDontLogAttributes(): array
+    {
+        $defaults = [
+            'password',
+            'remember_token',
+            'two_factor_secret',
+            'two_factor_recovery_codes',
+            'api_token',
+        ];
+
+        $override = property_exists($this, 'dontLogAttributes')
+            ? (array) $this->dontLogAttributes
+            : [];
+
+        return array_values(array_unique(array_merge($defaults, $override)));
     }
 }
