@@ -15,6 +15,7 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 use Dedoc\Scramble\Attributes\QueryParameter;
 
 /**
@@ -135,12 +136,17 @@ class OrderController extends Controller
                     ->first();
 
                 if (!$product || $product->stock < $itemData['quantity']) {
+                    // Returning a JsonResponse from inside DB::transaction does
+                    // NOT roll back — Laravel commits the transaction because
+                    // no exception was thrown, leaving the order row created
+                    // above with subtotal=0, total=0 (P0-9). Throw instead so
+                    // the transaction rolls back and the global exception
+                    // handler renders the validation error.
                     $productName = $product ? $product->name : "ID {$itemData['product_id']}";
                     $available = $product ? $product->stock : 0;
-                    return response()->json([
-                        'message' => "Insufficient stock for {$productName}. Available: {$available}, Requested: {$itemData['quantity']}",
-                        'error' => 'insufficient_stock',
-                    ], 422);
+                    throw ValidationException::withMessages([
+                        'items' => ["Insufficient stock for {$productName}. Available: {$available}, Requested: {$itemData['quantity']}"],
+                    ]);
                 }
 
                 $unitPrice = $itemData['unit_price'] ?? $product->selling_price ?? $product->price ?? 0;

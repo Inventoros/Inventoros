@@ -303,6 +303,38 @@ class OrderApiTest extends TestCase
         ]);
     }
 
+    public function test_api_order_create_rolls_back_on_insufficient_stock(): void
+    {
+        Sanctum::actingAs($this->admin);
+
+        $initialStock = $this->product->fresh()->stock;
+        $ordersBefore = \App\Models\Order\Order::count();
+
+        $response = $this->postJson('/api/v1/orders', [
+            'customer_name' => 'Stock Short Customer',
+            'items' => [
+                [
+                    'product_id' => $this->product->id,
+                    'quantity' => $initialStock + 10,
+                    'unit_price' => 50.00,
+                ],
+            ],
+        ]);
+
+        $response->assertStatus(422)->assertJsonValidationErrors(['items']);
+
+        // No half-created order, no items, no stock movement.
+        $this->assertSame($ordersBefore, \App\Models\Order\Order::count());
+        $this->assertDatabaseMissing('orders', ['customer_name' => 'Stock Short Customer']);
+        $this->assertSame($initialStock, $this->product->fresh()->stock);
+        $this->assertSame(
+            0,
+            \App\Models\Inventory\StockAdjustment::where('product_id', $this->product->id)
+                ->where('type', 'order_fulfillment')
+                ->count()
+        );
+    }
+
     public function test_api_order_destroy_writes_cancellation_ledger_entry(): void
     {
         Sanctum::actingAs($this->admin);
