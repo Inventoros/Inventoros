@@ -76,4 +76,39 @@ class PasswordResetTest extends TestCase
             return true;
         });
     }
+
+    public function test_forgot_password_is_rate_limited(): void
+    {
+        Notification::fake();
+        $user = User::factory()->create();
+
+        // The route is throttled at 5 attempts per minute; the 6th must 429.
+        for ($i = 0; $i < 5; $i++) {
+            $this->post('/forgot-password', ['email' => $user->email])
+                ->assertStatus(302); // valid email returns a redirect
+        }
+
+        $this->post('/forgot-password', ['email' => $user->email])
+            ->assertStatus(429);
+    }
+
+    public function test_reset_password_is_rate_limited(): void
+    {
+        // Send 5 invalid reset attempts; the 6th must 429.
+        for ($i = 0; $i < 5; $i++) {
+            $this->post('/reset-password', [
+                'token' => 'invalid-token',
+                'email' => 'someone@example.com',
+                'password' => 'password',
+                'password_confirmation' => 'password',
+            ]);
+        }
+
+        $this->post('/reset-password', [
+            'token' => 'invalid-token',
+            'email' => 'someone@example.com',
+            'password' => 'password',
+            'password_confirmation' => 'password',
+        ])->assertStatus(429);
+    }
 }
