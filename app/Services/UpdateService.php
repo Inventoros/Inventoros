@@ -7,6 +7,7 @@ namespace App\Services;
 use App\Services\Update\BackupService;
 use App\Services\Update\FileUpdateService;
 use App\Services\Update\GitHubReleaseService;
+use App\Support\SafeZipExtractor;
 use Exception;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\File;
@@ -212,14 +213,22 @@ final class UpdateService
             Artisan::call('down');
 
             $extractPath = $this->fileService->getTempPath() . '/restore_' . time();
+            File::makeDirectory($extractPath, 0755, true, true);
 
             $zip = new \ZipArchive();
             if ($zip->open($backupPath) !== true) {
                 throw new Exception('Could not open backup file');
             }
 
-            $zip->extractTo($extractPath);
-            $zip->close();
+            try {
+                SafeZipExtractor::validate($zip, $extractPath, [
+                    'max_entries' => (int) config('update.max_entry_count', 50000),
+                    'max_bytes' => (int) config('update.max_extracted_bytes', 300 * 1024 * 1024),
+                ]);
+                $zip->extractTo($extractPath);
+            } finally {
+                $zip->close();
+            }
 
             // Restore files
             $this->fileService->replaceFiles($extractPath);

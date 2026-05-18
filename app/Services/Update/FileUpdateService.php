@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services\Update;
 
+use App\Support\SafeZipExtractor;
 use Exception;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Http;
@@ -39,11 +40,17 @@ final class FileUpdateService
      */
     public function downloadRelease(string $url): string
     {
+        $this->assertAllowedDownloadUrl($url);
+
         $this->ensureTempDirectoryExists();
 
         $zipPath = "{$this->tempPath}/update_" . time() . ".zip";
 
-        $response = Http::timeout(config('limits.timeouts.file_download'))->get($url);
+        // Disable redirect following so a 302 from an allowlisted host
+        // cannot smuggle us off to an arbitrary URL.
+        $response = Http::withOptions(['allow_redirects' => false])
+            ->timeout(config('limits.timeouts.file_download'))
+            ->get($url);
 
         if (!$response->successful()) {
             throw new Exception('Failed to download release');
@@ -52,6 +59,30 @@ final class FileUpdateService
         File::put($zipPath, $response->body());
 
         return $zipPath;
+    }
+
+    /**
+     * Reject any download URL that doesn't start with an allowlisted prefix.
+     *
+     * The default allowlist points at this project's GitHub release endpoint.
+     * Operators using a mirror or fork can override via the
+     * INVENTOROS_UPDATE_PREFIXES env var (see config/update.php).
+     *
+     * @throws Exception If the URL does not match any allowed prefix.
+     */
+    protected function assertAllowedDownloadUrl(string $url): void
+    {
+        $prefixes = (array) config('update.download_url_prefixes', []);
+        foreach ($prefixes as $prefix) {
+            if ($prefix !== '' && str_starts_with($url, $prefix)) {
+                return;
+            }
+        }
+
+        throw new Exception(
+            'Update download URL is not in the allowed list. Add the prefix '
+            . 'to INVENTOROS_UPDATE_PREFIXES if you trust the source.'
+        );
     }
 
     /**
@@ -66,15 +97,24 @@ final class FileUpdateService
     public function extractZip(string $zipPath): string
     {
         $extractPath = "{$this->tempPath}/extracted_" . time();
+        File::makeDirectory($extractPath, 0755, true, true);
 
         $zip = new ZipArchive();
         if ($zip->open($zipPath) !== true) {
             throw new Exception('Could not open downloaded ZIP file');
         }
 
-        // GitHub releases often have a root folder, we need to handle that
-        $zip->extractTo($extractPath);
-        $zip->close();
+        try {
+            SafeZipExtractor::validate($zip, $extractPath, [
+                'max_entries' => (int) config('update.max_entry_count', 50000),
+                'max_bytes' => (int) config('update.max_extracted_bytes', 300 * 1024 * 1024),
+            ]);
+
+            // GitHub releases often have a root folder, we need to handle that
+            $zip->extractTo($extractPath);
+        } finally {
+            $zip->close();
+        }
 
         // Check if there's a single root directory
         $contents = File::directories($extractPath);
