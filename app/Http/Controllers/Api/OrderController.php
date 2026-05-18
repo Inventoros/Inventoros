@@ -251,6 +251,19 @@ class OrderController extends Controller
             'metadata' => ['nullable', 'array'],
         ]);
 
+        $cancelTransition = isset($validated['status'])
+            && $validated['status'] === 'cancelled'
+            && $order->status !== 'cancelled';
+
+        // Reject cancellation of orders that already left the warehouse;
+        // restocking would lie about inventory that physically isn't here.
+        if ($cancelTransition && in_array($order->status, ['shipped', 'delivered'], true)) {
+            return response()->json([
+                'message' => "Cannot cancel an order that has already been {$order->status}.",
+                'error' => 'invalid_state_transition',
+            ], 422);
+        }
+
         // Handle status change timestamps
         if (isset($validated['status'])) {
             if ($validated['status'] === 'shipped' && !$order->shipped_at) {
@@ -261,7 +274,29 @@ class OrderController extends Controller
             }
         }
 
-        $order->update($validated);
+        DB::transaction(function () use ($order, $validated, $cancelTransition) {
+            if ($cancelTransition) {
+                // Mirror Order\OrderController::update — restock through
+                // StockAdjustment so the cancellation is auditable and the
+                // product row is locked while we increment.
+                $order->load('items.product');
+                foreach ($order->items as $item) {
+                    if ($item->product) {
+                        StockAdjustment::adjust(
+                            $item->product,
+                            $item->quantity,
+                            'order_cancellation',
+                            "Order {$order->order_number} cancelled via API",
+                            null,
+                            $order
+                        );
+                    }
+                }
+            }
+
+            $order->update($validated);
+        });
+
         $order->load('items');
 
         return response()->json([

@@ -335,6 +335,57 @@ class OrderApiTest extends TestCase
         );
     }
 
+    public function test_api_order_update_to_cancelled_restocks_and_writes_ledger(): void
+    {
+        Sanctum::actingAs($this->admin);
+
+        $initialStock = $this->product->fresh()->stock;
+
+        $this->postJson('/api/v1/orders', [
+            'customer_name' => 'Cancel Me',
+            'items' => [['product_id' => $this->product->id, 'quantity' => 4, 'unit_price' => 10.00]],
+        ])->assertStatus(201);
+
+        $order = \App\Models\Order\Order::where('customer_name', 'Cancel Me')->first();
+        $this->assertSame($initialStock - 4, $this->product->fresh()->stock);
+
+        $response = $this->patchJson("/api/v1/orders/{$order->id}", ['status' => 'cancelled']);
+        $response->assertStatus(200);
+
+        $this->assertSame('cancelled', $order->fresh()->status);
+        $this->assertSame($initialStock, $this->product->fresh()->stock);
+
+        $this->assertDatabaseHas('stock_adjustments', [
+            'product_id' => $this->product->id,
+            'reference_type' => \App\Models\Order\Order::class,
+            'reference_id' => $order->id,
+            'type' => 'order_cancellation',
+            'adjustment_quantity' => 4,
+        ]);
+    }
+
+    public function test_api_order_update_rejects_cancelling_a_shipped_order(): void
+    {
+        Sanctum::actingAs($this->admin);
+
+        $this->postJson('/api/v1/orders', [
+            'customer_name' => 'Already Shipped',
+            'items' => [['product_id' => $this->product->id, 'quantity' => 2, 'unit_price' => 10.00]],
+        ])->assertStatus(201);
+
+        $order = \App\Models\Order\Order::where('customer_name', 'Already Shipped')->first();
+        $order->update(['status' => 'shipped', 'shipped_at' => now()]);
+
+        $stockBefore = $this->product->fresh()->stock;
+
+        $this->patchJson("/api/v1/orders/{$order->id}", ['status' => 'cancelled'])
+            ->assertStatus(422)
+            ->assertJsonPath('error', 'invalid_state_transition');
+
+        $this->assertSame('shipped', $order->fresh()->status);
+        $this->assertSame($stockBefore, $this->product->fresh()->stock);
+    }
+
     public function test_api_order_destroy_writes_cancellation_ledger_entry(): void
     {
         Sanctum::actingAs($this->admin);
