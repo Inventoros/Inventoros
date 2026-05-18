@@ -76,7 +76,15 @@ final class WebhookDeliveryJob implements ShouldQueue
             return;
         }
 
-        $payloadJson = json_encode($this->delivery->payload);
+        // Encode the payload ONCE; sign those exact bytes; transmit the same
+        // exact bytes via withBody so the receiver's HMAC verification over
+        // the raw request body lines up with what we signed. Previously the
+        // job signed json_encode($payload) but then passed the array to
+        // Http::post, which let Guzzle re-serialise with different escaping
+        // — signatures sporadically mismatched for receivers that hashed
+        // the raw body (the standard pattern, and the one our own
+        // WebhookService::verifySignature documents).
+        $payloadJson = json_encode($this->delivery->payload, JSON_UNESCAPED_SLASHES);
         $signature = WebhookService::sign($payloadJson, $webhook->secret);
 
         $this->delivery->increment('attempts');
@@ -84,12 +92,12 @@ final class WebhookDeliveryJob implements ShouldQueue
         try {
             $response = Http::timeout(30)
                 ->withHeaders([
-                    'Content-Type' => 'application/json',
                     'X-Webhook-Signature' => $signature,
                     'X-Webhook-Event' => $this->delivery->event,
                     'X-Webhook-Delivery' => (string) $this->delivery->id,
                 ])
-                ->post($webhook->url, $this->delivery->payload);
+                ->withBody($payloadJson, 'application/json')
+                ->post($webhook->url);
 
             $this->delivery->update([
                 'response_status' => $response->status(),
