@@ -6,6 +6,7 @@ use App\Models\Auth\Organization;
 use App\Models\Inventory\Product;
 use App\Models\Inventory\ProductCategory;
 use App\Models\Inventory\ProductLocation;
+use App\Models\Inventory\StockAdjustment;
 use App\Models\Order\Order;
 use App\Models\Order\OrderItem;
 use App\Models\Role;
@@ -361,6 +362,71 @@ class OrderControllerTest extends TestCase
             'quantity_before' => $initialStock,
             'quantity_after' => $initialStock - 2,
         ]);
+    }
+
+    public function test_order_create_batches_locks_and_inserts_items_in_bulk(): void
+    {
+        // Two products, three line items (one product appears twice).
+        $productA = $this->product;
+        $productB = Product::create([
+            'organization_id' => $this->organization->id,
+            'sku' => 'BATCH-B',
+            'name' => 'Product B',
+            'price' => 5, 'currency' => 'USD',
+            'stock' => 50, 'min_stock' => 0,
+            'is_active' => true,
+            'category_id' => $this->category->id,
+            'location_id' => $this->location->id,
+        ]);
+
+        $initialA = $productA->stock;
+        $initialB = $productB->stock;
+
+        $response = $this->actingAs($this->admin)->post(route('orders.store'), [
+            'customer_name' => 'Batch Customer',
+            'customer_email' => 'bc@test.com',
+            'status' => 'pending',
+            'order_date' => now()->format('Y-m-d'),
+            'items' => [
+                ['product_id' => $productA->id, 'quantity' => 3, 'unit_price' => 10.00],
+                ['product_id' => $productB->id, 'quantity' => 4, 'unit_price' => 5.00],
+                // Same product as item 0 — second line item.
+                ['product_id' => $productA->id, 'quantity' => 2, 'unit_price' => 10.00],
+            ],
+        ]);
+
+        $response->assertRedirect(route('orders.index'));
+        $response->assertSessionHas('success');
+
+        // Final stock: A loses 3+2=5, B loses 4.
+        $productA->refresh();
+        $productB->refresh();
+        $this->assertSame($initialA - 5, $productA->stock);
+        $this->assertSame($initialB - 4, $productB->stock);
+
+        // Three line items in the order_items table.
+        $order = Order::where('customer_name', 'Batch Customer')->first();
+        $this->assertNotNull($order);
+        $this->assertSame(3, $order->items()->count());
+
+        // Three StockAdjustment ledger rows, with quantity_before/after
+        // threaded correctly for the duplicated product.
+        $adjustments = StockAdjustment::where('reference_type', Order::class)
+            ->where('reference_id', $order->id)
+            ->orderBy('id')
+            ->get();
+
+        $this->assertSame(3, $adjustments->count());
+
+        $aRows = $adjustments->where('product_id', $productA->id)->values();
+        $this->assertSame($initialA, $aRows[0]->quantity_before);
+        $this->assertSame($initialA - 3, $aRows[0]->quantity_after);
+        $this->assertSame($initialA - 3, $aRows[1]->quantity_before);
+        $this->assertSame($initialA - 5, $aRows[1]->quantity_after);
+
+        $bRow = $adjustments->firstWhere('product_id', $productB->id);
+        $this->assertSame($initialB, $bRow->quantity_before);
+        $this->assertSame($initialB - 4, $bRow->quantity_after);
     }
 
     public function test_rejecting_order_restores_stock_and_cancels(): void
