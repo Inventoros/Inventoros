@@ -14,6 +14,7 @@ use App\Models\Role;
 use App\Models\System\SystemSetting;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Cache;
 use Tests\TestCase;
 
 class CheckReorderPointsCommandTest extends TestCase
@@ -524,5 +525,40 @@ class CheckReorderPointsCommandTest extends TestCase
 
         $this->assertNotNull($log);
         $this->assertStringContainsString('Auto-generated', $log->description);
+    }
+
+    /** @test */
+    public function it_skips_run_when_lock_is_already_held(): void
+    {
+        $product = Product::create([
+            'organization_id' => $this->organization->id,
+            'name' => 'Low Stock Product',
+            'sku' => 'LOCK-001',
+            'price' => 10.00,
+            'stock' => 5,
+            'min_stock' => 10,
+            'reorder_point' => 10,
+            'reorder_quantity' => 50,
+            'is_active' => true,
+        ]);
+        $product->suppliers()->attach($this->supplier->id, [
+            'cost_price' => 5.00,
+            'is_primary' => true,
+        ]);
+
+        // Simulate a concurrent run holding the cache lock.
+        $blocker = Cache::lock('inventory:check-reorder-points', 600);
+        $this->assertTrue($blocker->get(), 'Expected to acquire the blocker lock');
+
+        try {
+            $this->artisan('inventory:check-reorder-points')
+                ->expectsOutputToContain('Another reorder check is already running')
+                ->assertExitCode(0);
+
+            // No PO should have been created because the command short-circuited.
+            $this->assertSame(0, PurchaseOrder::count());
+        } finally {
+            $blocker->release();
+        }
     }
 }
