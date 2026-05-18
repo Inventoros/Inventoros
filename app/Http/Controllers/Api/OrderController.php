@@ -10,6 +10,7 @@ use App\Models\Inventory\Product;
 use App\Models\Inventory\StockAdjustment;
 use App\Models\Order\Order;
 use App\Models\Order\OrderItem;
+use App\Support\SequenceNumberRetry;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
@@ -104,8 +105,12 @@ class OrderController extends Controller
             'items.*.tax' => ['nullable', 'numeric', 'min:0'],
         ]);
 
-        return DB::transaction(function () use ($validated, $organizationId) {
-            // Create the order
+        return SequenceNumberRetry::create(fn () => DB::transaction(function () use ($validated, $organizationId) {
+            // Create the order. order_number is regenerated on each retry
+            // attempt because generateOrderNumber reads MAX()+1 and races
+            // under concurrent creates within the same tenant on the same
+            // day; SequenceNumberRetry catches the resulting unique-
+            // constraint violation and re-runs the transaction.
             $order = Order::create([
                 'organization_id' => $organizationId,
                 'order_number' => Order::generateOrderNumber($organizationId),
@@ -195,7 +200,7 @@ class OrderController extends Controller
                 'message' => 'Order created successfully',
                 'data' => new OrderResource($order),
             ], 201);
-        });
+        }));
     }
 
     /**
