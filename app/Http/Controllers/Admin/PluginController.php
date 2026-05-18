@@ -45,6 +45,7 @@ class PluginController extends Controller
 
         return Inertia::render('Plugins/Index', [
             'plugins' => $plugins,
+            'uploadsEnabled' => $this->pluginService->uploadsEnabled(),
         ]);
     }
 
@@ -56,6 +57,11 @@ class PluginController extends Controller
      */
     public function upload(Request $request): RedirectResponse
     {
+        if (!$this->pluginService->uploadsEnabled()) {
+            return redirect()->route('plugins.index')
+                ->with('error', 'Plugin uploads are disabled on this instance. Set INVENTOROS_ALLOW_PLUGIN_UPLOADS=true in your environment to enable. Note: this grants any admin user remote code execution on this server — see SECURITY.md.');
+        }
+
         $request->validate([
             'plugin' => 'required|file|mimes:zip|mimetypes:application/zip,application/x-zip-compressed|max:' . config('limits.uploads.plugin_max_kb'),
         ]);
