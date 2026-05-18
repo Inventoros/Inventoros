@@ -165,65 +165,90 @@ class ReportController extends Controller
     {
         $organizationId = $request->user()->organization_id;
 
-        $query = Order::forOrganization($organizationId);
-
-        // Date filters
+        // Date filters — pass through as boundary timestamps rather than
+        // using whereDate so the order_date index can serve the predicate.
         $dateFrom = $request->date_from ?? now()->subDays(30)->format('Y-m-d');
         $dateTo = $request->date_to ?? now()->format('Y-m-d');
+        $fromTimestamp = $dateFrom . ' 00:00:00';
+        $toTimestamp = $dateTo . ' 23:59:59';
 
-        $query->whereDate('order_date', '>=', $dateFrom)
-            ->whereDate('order_date', '<=', $dateTo);
+        // Each aggregate is its own SQL round-trip — previously the
+        // controller hydrated every Order + nested items.product for the
+        // window into memory and aggregated in PHP, which OOMs on large
+        // tenants and large windows.
 
-        $orders = $query->with('items.product')->get();
+        // Summary
+        $summary = Order::forOrganization($organizationId)
+            ->whereBetween('order_date', [$fromTimestamp, $toTimestamp])
+            ->selectRaw('COUNT(*) as total_orders, COALESCE(SUM(total), 0) as total_revenue')
+            ->first();
 
-        // Overall summary
+        $totalOrders = (int) $summary->total_orders;
+        $totalRevenue = (float) $summary->total_revenue;
+
+        $totalItemsSold = (int) OrderItem::query()
+            ->join('orders', 'orders.id', '=', 'order_items.order_id')
+            ->where('orders.organization_id', $organizationId)
+            ->whereBetween('orders.order_date', [$fromTimestamp, $toTimestamp])
+            ->sum('order_items.quantity');
+
         $summary = [
-            'total_orders' => $orders->count(),
-            'total_revenue' => $orders->sum('total'),
-            'total_items_sold' => $orders->sum(function ($order) {
-                return $order->items->sum('quantity');
-            }),
-            'average_order_value' => $orders->count() > 0 ? $orders->sum('total') / $orders->count() : 0,
+            'total_orders' => $totalOrders,
+            'total_revenue' => $totalRevenue,
+            'total_items_sold' => $totalItemsSold,
+            'average_order_value' => $totalOrders > 0 ? $totalRevenue / $totalOrders : 0,
         ];
 
         // Sales by status
-        $byStatus = $orders->groupBy('status')->map(function ($items, $status) {
-            return [
-                'status' => $status,
-                'count' => $items->count(),
-                'revenue' => $items->sum('total'),
-            ];
-        })->values();
+        $byStatus = Order::forOrganization($organizationId)
+            ->whereBetween('order_date', [$fromTimestamp, $toTimestamp])
+            ->selectRaw('status, COUNT(*) as count, COALESCE(SUM(total), 0) as revenue')
+            ->groupBy('status')
+            ->get()
+            ->map(fn ($row) => [
+                'status' => $row->status,
+                'count' => (int) $row->count,
+                'revenue' => (float) $row->revenue,
+            ])
+            ->values();
 
-        // Top selling products
-        $productSales = [];
-        foreach ($orders as $order) {
-            foreach ($order->items as $item) {
-                $productId = $item->product_id;
-                if (!isset($productSales[$productId])) {
-                    $productSales[$productId] = [
-                        'product_name' => $item->product_name,
-                        'sku' => $item->sku,
-                        'quantity_sold' => 0,
-                        'revenue' => 0,
-                    ];
-                }
-                $productSales[$productId]['quantity_sold'] += $item->quantity;
-                $productSales[$productId]['revenue'] += $item->total;
-            }
-        }
-        $topProducts = collect($productSales)->sortByDesc('revenue')->take(10)->values();
+        // Top selling products (by revenue, top 10).
+        $topProducts = OrderItem::query()
+            ->join('orders', 'orders.id', '=', 'order_items.order_id')
+            ->where('orders.organization_id', $organizationId)
+            ->whereBetween('orders.order_date', [$fromTimestamp, $toTimestamp])
+            ->selectRaw('
+                order_items.product_id,
+                order_items.product_name,
+                order_items.sku,
+                SUM(order_items.quantity) as quantity_sold,
+                SUM(order_items.total) as revenue
+            ')
+            ->groupBy('order_items.product_id', 'order_items.product_name', 'order_items.sku')
+            ->orderByDesc('revenue')
+            ->limit(10)
+            ->get()
+            ->map(fn ($row) => [
+                'product_name' => $row->product_name,
+                'sku' => $row->sku,
+                'quantity_sold' => (int) $row->quantity_sold,
+                'revenue' => (float) $row->revenue,
+            ])
+            ->values();
 
         // Daily sales trend
-        $dailySales = $orders->groupBy(function ($order) {
-            return date('Y-m-d', strtotime($order->order_date));
-        })->map(function ($items, $date) {
-            return [
-                'date' => $date,
-                'orders' => $items->count(),
-                'revenue' => $items->sum('total'),
-            ];
-        })->sortBy('date')->values();
+        $dailySales = Order::forOrganization($organizationId)
+            ->whereBetween('order_date', [$fromTimestamp, $toTimestamp])
+            ->selectRaw('DATE(order_date) as date, COUNT(*) as orders, COALESCE(SUM(total), 0) as revenue')
+            ->groupBy('date')
+            ->orderBy('date')
+            ->get()
+            ->map(fn ($row) => [
+                'date' => $row->date,
+                'orders' => (int) $row->orders,
+                'revenue' => (float) $row->revenue,
+            ])
+            ->values();
 
         return Inertia::render('Reports/SalesAnalysis', [
             'summary' => $summary,
