@@ -116,6 +116,12 @@ final class WebhookDeliveryJob implements ShouldQueue
                 'response_body' => Str::limit($response->body(), 5000),
                 'status' => $response->successful() ? 'success' : 'pending',
                 'completed_at' => $response->successful() ? now() : null,
+                // Clear next_retry_at on success; populate on HTTP failure
+                // so WebhookDelivery::scopeReadyForRetry can answer "what
+                // can a retry worker pick up right now?" for ops dashboards
+                // and any future polling worker. Without this the scope
+                // was dead code — every row's next_retry_at was NULL.
+                'next_retry_at' => $response->successful() ? null : $this->nextRetryAt(),
             ]);
 
             if ($response->successful()) {
@@ -138,6 +144,7 @@ final class WebhookDeliveryJob implements ShouldQueue
         } catch (\Exception $e) {
             $this->delivery->update([
                 'response_body' => Str::limit($e->getMessage(), 5000),
+                'next_retry_at' => $this->nextRetryAt(),
             ]);
 
             Log::warning('Webhook delivery exception', [
@@ -159,9 +166,12 @@ final class WebhookDeliveryJob implements ShouldQueue
      */
     public function failed(Throwable $e): void
     {
+        // Permanent failure: clear next_retry_at so the row no longer
+        // appears in WebhookDelivery::scopeReadyForRetry.
         $this->delivery->update([
             'status' => 'failed',
             'response_body' => Str::limit($e->getMessage(), 5000),
+            'next_retry_at' => null,
         ]);
 
         Log::error('Webhook delivery permanently failed', [
@@ -171,6 +181,24 @@ final class WebhookDeliveryJob implements ShouldQueue
             'error' => $e->getMessage(),
             'attempts' => $this->delivery->attempts,
         ]);
+    }
+
+    /**
+     * Compute the time at which this delivery should next be retried,
+     * based on the BACKOFF_DELAYS schedule and the current attempt count.
+     * Returns null when no further retry is scheduled (max attempts hit).
+     */
+    protected function nextRetryAt(): ?\Illuminate\Support\Carbon
+    {
+        // $this->delivery->attempts has just been incremented for the
+        // current run. attempts=1 means we just made the first try and
+        // the next retry uses BACKOFF_DELAYS[0]=60s. Index = attempts - 1.
+        $idx = max(0, $this->delivery->attempts - 1);
+        if ($idx >= count(self::BACKOFF_DELAYS)) {
+            return null;
+        }
+
+        return now()->addSeconds(self::BACKOFF_DELAYS[$idx]);
     }
 
     /**
