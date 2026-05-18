@@ -4,9 +4,10 @@ import PluginSlot from '@/Components/PluginSlot.vue';
 import InputError from '@/Components/InputError.vue';
 import InputLabel from '@/Components/InputLabel.vue';
 import TextInput from '@/Components/TextInput.vue';
-import BarcodeScannerModal from '@/Components/BarcodeScannerModal.vue';
 import { Head, Link, useForm } from '@inertiajs/vue3';
-import { ref, computed, watch } from 'vue';
+import { defineAsyncComponent, ref, computed, watch } from 'vue';
+
+const BarcodeScannerModal = defineAsyncComponent(() => import('@/Components/BarcodeScannerModal.vue'));
 import { useI18n } from 'vue-i18n';
 
 const { t } = useI18n();
