@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Services;
 
 use App\Models\Plugin;
+use App\Support\SafeZipExtractor;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
@@ -284,70 +285,32 @@ final class PluginService
     }
 
     /**
-     * Walk every entry in the archive, reject path traversal / oversized /
-     * over-counted archives, and return the single root folder name.
+     * Validate the archive (delegates to SafeZipExtractor) and additionally
+     * enforce that the plugin lives under a single top-level directory.
+     * Returns that root folder name.
      *
      * @throws \RuntimeException When the archive is invalid or unsafe.
      */
     protected function validateZipArchive(ZipArchive $zip): string
     {
-        $maxEntries = (int) config('plugins.max_entry_count', 2000);
-        $maxBytes = (int) config('plugins.max_extracted_bytes', 50 * 1024 * 1024);
+        // Generic zip-slip / zip-bomb checks: path traversal, entry-count
+        // cap, uncompressed-size cap. Shared with the in-app updater.
+        SafeZipExtractor::validate($zip, $this->pluginsPath, [
+            'max_entries' => (int) config('plugins.max_entry_count', 2000),
+            'max_bytes' => (int) config('plugins.max_extracted_bytes', 50 * 1024 * 1024),
+        ]);
 
-        if ($zip->numFiles > $maxEntries) {
-            throw new \RuntimeException("Plugin ZIP exceeds entry count limit ({$zip->numFiles} > {$maxEntries})");
-        }
-
-        $pluginsRoot = realpath($this->pluginsPath);
-        if (!$pluginsRoot) {
-            throw new \RuntimeException('Plugins directory does not exist');
-        }
-
+        // Plugin-specific: archive must have exactly one top-level directory
+        // because the loader treats that directory name as the plugin slug.
         $rootFolders = [];
-        $totalBytes = 0;
-
         for ($i = 0; $i < $zip->numFiles; $i++) {
             $stat = $zip->statIndex($i);
             if ($stat === false) {
-                throw new \RuntimeException("Could not stat entry #{$i}");
+                continue;
             }
-
-            $name = $stat['name'];
-
-            // Reject absolute paths, parent-directory segments, and backslashes
-            // (Windows path separators sometimes injected by malicious ZIP
-            // generators that target cross-platform zip-slip).
-            if ($name === '' || $name[0] === '/' || $name[0] === '\\') {
-                throw new \RuntimeException("Plugin ZIP contains absolute path entry: {$name}");
-            }
-            if (str_contains($name, '..') || str_contains($name, '\\')) {
-                throw new \RuntimeException("Plugin ZIP contains unsafe path entry: {$name}");
-            }
-
-            // Bound the uncompressed size so a tiny ZIP cannot expand into a
-            // multi-gigabyte payload that fills the disk.
-            $totalBytes += (int) ($stat['size'] ?? 0);
-            if ($totalBytes > $maxBytes) {
-                throw new \RuntimeException("Plugin ZIP exceeds uncompressed-size limit");
-            }
-
-            // Canonicalize the target and ensure it lands inside the plugins
-            // directory. realpath() returns false for paths that don't exist
-            // yet (which they don't — we haven't extracted), so we work on
-            // the resolved parent + the leaf name.
-            $target = $this->pluginsPath . '/' . $name;
-            $parent = dirname($target);
-            $parentReal = realpath($parent) ?: $this->pluginsPath;
-            if (!str_starts_with($parentReal . DIRECTORY_SEPARATOR, $pluginsRoot . DIRECTORY_SEPARATOR)
-                && $parentReal !== $pluginsRoot) {
-                throw new \RuntimeException("Plugin ZIP entry would escape plugins directory: {$name}");
-            }
-
-            $rootSegment = strstr($name, '/', true);
+            $rootSegment = strstr($stat['name'], '/', true);
             if ($rootSegment === false) {
-                // Entry is at the archive root with no folder prefix — reject
-                // because plugins must live under a single named directory.
-                throw new \RuntimeException("Plugin ZIP must have a single root folder; found loose file: {$name}");
+                throw new \RuntimeException("Plugin ZIP must have a single root folder; found loose file: {$stat['name']}");
             }
             $rootFolders[$rootSegment] = true;
         }

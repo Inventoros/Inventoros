@@ -212,6 +212,25 @@ The upload path itself validates ZIP archives against:
 
 These guard against zip-slip / zip-bomb attacks but **do not** sandbox plugin code at runtime. Once enabled and uploaded, a plugin runs with the full privileges of the Inventoros PHP process.
 
+## In-app updates and backup restore
+
+`UpdateService` downloads a release archive from a configurable URL, extracts it over the running application, and runs migrations. `restoreFromBackup` does the analogous extract-over-app for a backup ZIP. Both are RCE-class surfaces if an attacker can influence the source.
+
+The hardening posture is the same WordPress-style "trust the source, validate the archive" approach used for plugins:
+
+- **Download URL allowlist.** Only URLs starting with one of `update.download_url_prefixes` (config/`update.php`) are accepted. The default allows this project's GitHub release endpoints. Override via `INVENTOROS_UPDATE_PREFIXES`.
+- **No redirect following.** The HTTP client refuses 3xx redirects on the download — a 302 from an allowlisted host can't smuggle you off to an arbitrary URL.
+- **ZIP archive validation** before extraction via `App\Support\SafeZipExtractor`:
+  - Path traversal (`..`, absolute paths, backslash separators).
+  - Entries that escape the destination directory after `realpath` canonicalisation.
+  - Entry-count cap (`INVENTOROS_UPDATE_MAX_ENTRIES`, default 50000).
+  - Uncompressed-size cap (`INVENTOROS_UPDATE_MAX_BYTES`, default 300 MB).
+
+What is explicitly **not** included:
+
+- **Cryptographic signature verification.** Releases are not signed yet. Trust the GitHub release pipeline; rotate the allowlist if you suspect compromise.
+- **Tarball / tar.gz** support. The updater only consumes ZIPs.
+
 ## Bug Bounty Program
 
 Inventoros does not currently offer a bug bounty program. However, we deeply appreciate security researchers' efforts and will publicly acknowledge contributors who report valid vulnerabilities (with their permission).
