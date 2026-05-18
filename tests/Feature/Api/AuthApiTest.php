@@ -331,10 +331,71 @@ class AuthApiTest extends TestCase
 
         $response = $this->postJson('/api/v1/tokens', [
             'name' => 'Limited Token',
-            'abilities' => ['read', 'write'],
+            'abilities' => ['view_products', 'manage_stock'],
         ]);
 
-        $response->assertStatus(201);
+        $response->assertStatus(201)
+            ->assertJsonPath('abilities', ['view_products', 'manage_stock']);
+    }
+
+    public function test_create_token_rejects_unknown_abilities(): void
+    {
+        Sanctum::actingAs($this->user);
+
+        $response = $this->postJson('/api/v1/tokens', [
+            'name' => 'Bogus Token',
+            'abilities' => ['view_products', 'not_a_real_permission'],
+        ]);
+
+        $response->assertStatus(422)
+            ->assertJsonValidationErrors(['abilities.1']);
+    }
+
+    public function test_admin_can_create_wildcard_token_by_default(): void
+    {
+        Sanctum::actingAs($this->user); // setUp() created this user with role='admin'.
+
+        $response = $this->postJson('/api/v1/tokens', [
+            'name' => 'Admin Default Token',
+        ]);
+
+        $response->assertStatus(201)
+            ->assertJsonPath('abilities', ['*']);
+    }
+
+    public function test_non_admin_default_token_has_no_abilities(): void
+    {
+        $member = User::create([
+            'name' => 'Member', 'email' => 'mb@test.com', 'password' => bcrypt('x'),
+            'organization_id' => $this->organization->id, 'role' => 'member',
+        ]);
+
+        Sanctum::actingAs($member);
+
+        $response = $this->postJson('/api/v1/tokens', [
+            'name' => 'Member Default Token',
+        ]);
+
+        $response->assertStatus(201)
+            ->assertJsonPath('abilities', []);
+    }
+
+    public function test_non_admin_cannot_request_wildcard_token(): void
+    {
+        $member = User::create([
+            'name' => 'Member2', 'email' => 'mb2@test.com', 'password' => bcrypt('x'),
+            'organization_id' => $this->organization->id, 'role' => 'member',
+        ]);
+
+        Sanctum::actingAs($member);
+
+        $response = $this->postJson('/api/v1/tokens', [
+            'name' => 'Member Wildcard',
+            'abilities' => ['*'],
+        ]);
+
+        $response->assertStatus(422)
+            ->assertJsonValidationErrors(['abilities']);
     }
 
     public function test_can_revoke_token(): void

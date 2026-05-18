@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Api;
 
+use App\Enums\Permission;
 use App\Http\Controllers\Auth\TwoFactorController;
 use App\Http\Controllers\Controller;
 use App\Models\User;
@@ -11,6 +12,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 use PragmaRX\Google2FA\Google2FA;
 
@@ -174,14 +176,36 @@ class AuthController extends Controller
      */
     public function createToken(Request $request): JsonResponse
     {
+        $user = $request->user();
+        $isAdmin = $user->isAdmin();
+
+        // Allowlist of valid token abilities: every Permission enum case
+        // plus the wildcard '*' which only admins may request.
+        $allowedAbilities = array_column(Permission::cases(), 'value');
+        $allowedAbilities[] = '*';
+
         $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'abilities' => ['nullable', 'array'],
-            'abilities.*' => ['string'],
+            'abilities.*' => ['string', Rule::in($allowedAbilities)],
         ]);
 
-        $abilities = $request->abilities ?? ['*'];
-        $token = $request->user()->createToken($request->name, $abilities);
+        // Default token ability resolution:
+        //   - admin and no abilities requested  → ['*'] (full god-mode token, current behaviour preserved for admin)
+        //   - non-admin and no abilities          → empty list (a useless token rather than a god-mode token)
+        //   - any caller and abilities requested → use those, except '*' is admin-only
+        if ($request->filled('abilities')) {
+            $abilities = $request->input('abilities');
+            if (in_array('*', $abilities, true) && !$isAdmin) {
+                throw ValidationException::withMessages([
+                    'abilities' => ['Only admin users may issue wildcard (*) tokens.'],
+                ]);
+            }
+        } else {
+            $abilities = $isAdmin ? ['*'] : [];
+        }
+
+        $token = $user->createToken($request->name, $abilities);
 
         return response()->json([
             'message' => 'Token created successfully',
