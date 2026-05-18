@@ -188,6 +188,30 @@ The following are explicitly out of scope:
 - Issues requiring unlikely user interaction
 - Vulnerabilities requiring physical access to the server
 
+## Plugin uploads
+
+Inventoros has a WordPress-style plugin system: a `.zip` archive uploaded by an admin user is extracted into `/plugins/` and the manifest's `main_file` is `require_once`'d into the running application process. This grants arbitrary PHP execution. Anyone who can authenticate as an admin user (compromised password, stolen session, phishing) can use the plugin upload endpoint to obtain remote code execution on the server.
+
+**This is a documented, opt-in feature.** Plugin uploads are **disabled by default** and gated behind an environment flag:
+
+```env
+INVENTOROS_ALLOW_PLUGIN_UPLOADS=true
+```
+
+When the flag is unset or `false`, `POST /admin/plugins/upload` returns an error without writing anything. The admin UI displays the disabled state.
+
+When you enable the flag, you accept the residual risk: secure your admin accounts (strong passwords, 2FA, IP allowlist if practical), audit `manage_plugins` permission grants, and consider whether you really need the upload UI versus simply placing trusted plugins into `/plugins/` via deploy automation.
+
+The upload path itself validates ZIP archives against:
+
+- Path traversal (`..`, absolute paths, backslash path separators).
+- Entry count limit (`INVENTOROS_PLUGIN_MAX_ENTRIES`, default 2000).
+- Total uncompressed size limit (`INVENTOROS_PLUGIN_MAX_BYTES`, default 50 MB).
+- A single top-level directory in the archive.
+- Post-extraction containment inside `/plugins/`.
+
+These guard against zip-slip / zip-bomb attacks but **do not** sandbox plugin code at runtime. Once enabled and uploaded, a plugin runs with the full privileges of the Inventoros PHP process.
+
 ## Bug Bounty Program
 
 Inventoros does not currently offer a bug bounty program. However, we deeply appreciate security researchers' efforts and will publicly acknowledge contributors who report valid vulnerabilities (with their permission).
