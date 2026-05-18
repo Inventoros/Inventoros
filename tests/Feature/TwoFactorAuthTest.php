@@ -275,9 +275,11 @@ class TwoFactorAuthTest extends TestCase
             true
         );
 
+        // Post-P0-12: recovery codes are persisted as sha256 hashes, not
+        // the 10-char plaintext that's shown to the user once at setup.
         $this->assertCount(8, $recoveryCodes);
         foreach ($recoveryCodes as $code) {
-            $this->assertMatchesRegularExpression('/^[a-zA-Z0-9]{10}$/', $code);
+            $this->assertMatchesRegularExpression('/^[0-9a-f]{64}$/', $code);
         }
     }
 

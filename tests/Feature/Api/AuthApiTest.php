@@ -181,9 +181,46 @@ class AuthApiTest extends TestCase
 
         $response->assertStatus(200);
 
+        // After consume: the matched code is gone AND, per P0-12, the
+        // remaining legacy plaintext codes have been migrated to their
+        // sha256-hashed form so the next DB read can't leak plaintext.
         $stored = json_decode(decrypt($this->user->fresh()->two_factor_recovery_codes), true);
         $this->assertNotContains($recoveryCodes[0], $stored);
-        $this->assertContains($recoveryCodes[1], $stored);
+        $this->assertNotContains($recoveryCodes[1], $stored, 'legacy plaintext must not remain after a recovery-code consume');
+        $this->assertContains(hash('sha256', $recoveryCodes[1]), $stored);
+    }
+
+    public function test_recovery_codes_stored_as_hashes_still_verify(): void
+    {
+        // Simulate a user who enrolled in 2FA after the P0-12 fix landed:
+        // their stored codes are sha256 hashes, not plaintext.
+        $google2fa = new Google2FA();
+        $secret = $google2fa->generateSecretKey();
+        $plain = ['post-fix-aaa', 'post-fix-bbb'];
+
+        $this->user->forceFill([
+            'two_factor_enabled' => true,
+            'two_factor_secret' => encrypt($secret),
+            'two_factor_recovery_codes' => encrypt(json_encode(
+                \App\Http\Controllers\Auth\TwoFactorController::hashRecoveryCodes($plain)
+            )),
+        ])->save();
+
+        // Verify the at-rest representation does not contain plaintext.
+        $raw = json_decode(decrypt($this->user->fresh()->two_factor_recovery_codes), true);
+        $this->assertNotContains($plain[0], $raw);
+        $this->assertContains(hash('sha256', $plain[0]), $raw);
+
+        // Login with the plaintext recovery code should still succeed.
+        $this->postJson('/api/v1/login', [
+            'email' => 'user@test.com',
+            'password' => 'password123',
+            'recovery_code' => $plain[0],
+        ])->assertStatus(200);
+
+        $remaining = json_decode(decrypt($this->user->fresh()->two_factor_recovery_codes), true);
+        $this->assertNotContains(hash('sha256', $plain[0]), $remaining);
+        $this->assertContains(hash('sha256', $plain[1]), $remaining);
     }
 
     public function test_recovery_code_cannot_be_used_twice(): void

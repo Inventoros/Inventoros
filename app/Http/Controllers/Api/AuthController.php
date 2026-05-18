@@ -4,10 +4,12 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Api;
 
+use App\Http\Controllers\Auth\TwoFactorController;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
 use PragmaRX\Google2FA\Google2FA;
@@ -74,23 +76,36 @@ class AuthController extends Controller
     protected function verifyTwoFactor(Request $request, User $user): void
     {
         if ($request->filled('recovery_code')) {
-            $storedJson = $user->two_factor_recovery_codes
-                ? decrypt($user->two_factor_recovery_codes)
-                : '[]';
-            $storedCodes = json_decode($storedJson, true) ?: [];
+            $matched = false;
 
-            $key = array_search($request->input('recovery_code'), $storedCodes, true);
+            DB::transaction(function () use ($user, $request, &$matched) {
+                $locked = $user->newQuery()->lockForUpdate()->findOrFail($user->getKey());
 
-            if ($key === false) {
+                $storedJson = $locked->two_factor_recovery_codes
+                    ? decrypt($locked->two_factor_recovery_codes)
+                    : '[]';
+                $storedCodes = json_decode($storedJson, true) ?: [];
+
+                $key = TwoFactorController::findAndConsumeRecoveryCode(
+                    (string) $request->input('recovery_code'),
+                    $storedCodes
+                );
+
+                if ($key === null) {
+                    return; // $matched stays false
+                }
+
+                $locked->forceFill([
+                    'two_factor_recovery_codes' => encrypt(json_encode(array_values($storedCodes))),
+                ])->save();
+                $matched = true;
+            });
+
+            if (!$matched) {
                 throw ValidationException::withMessages([
                     'recovery_code' => ['The provided recovery code is invalid.'],
                 ]);
             }
-
-            unset($storedCodes[$key]);
-            $user->forceFill([
-                'two_factor_recovery_codes' => encrypt(json_encode(array_values($storedCodes))),
-            ])->save();
 
             return;
         }
