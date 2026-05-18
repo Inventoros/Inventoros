@@ -9,6 +9,7 @@ use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
+use Illuminate\Support\Facades\DB;
 
 /**
  * Represents a stock adjustment record for a product or variant.
@@ -176,28 +177,41 @@ class StockAdjustment extends Model
         ?string $notes = null,
         ?Model $reference = null
     ): self {
-        $quantityBefore = $product->stock;
-        $quantityAfter = $quantityBefore + $quantity;
+        return DB::transaction(function () use ($product, $quantity, $type, $reason, $notes, $reference) {
+            // Re-fetch the product with a row lock so concurrent adjustments
+            // serialize on this row; otherwise two callers can both read
+            // the same pre-image, compute different "after" values, and
+            // one update overwrites the other (lost write).
+            $locked = Product::where('id', $product->id)->lockForUpdate()->firstOrFail();
 
-        // Create the adjustment record
-        $adjustment = self::create([
-            'organization_id' => $product->organization_id,
-            'product_id' => $product->id,
-            'user_id' => auth()->id(),
-            'type' => $type,
-            'quantity_before' => $quantityBefore,
-            'quantity_after' => $quantityAfter,
-            'adjustment_quantity' => $quantity,
-            'reason' => $reason,
-            'notes' => $notes,
-            'reference_type' => $reference ? get_class($reference) : null,
-            'reference_id' => $reference?->id,
-        ]);
+            $quantityBefore = $locked->stock;
+            $quantityAfter = $quantityBefore + $quantity;
 
-        // Update the product stock
-        $product->update(['stock' => $quantityAfter]);
+            $adjustment = self::create([
+                'organization_id' => $locked->organization_id,
+                'product_id' => $locked->id,
+                'user_id' => auth()->id(),
+                'type' => $type,
+                'quantity_before' => $quantityBefore,
+                'quantity_after' => $quantityAfter,
+                'adjustment_quantity' => $quantity,
+                'reason' => $reason,
+                'notes' => $notes,
+                'reference_type' => $reference ? get_class($reference) : null,
+                'reference_id' => $reference?->id,
+            ]);
 
-        return $adjustment;
+            $locked->update(['stock' => $quantityAfter]);
+
+            // Sync the caller's in-memory instance so $product->stock reflects
+            // the new value without an extra query.
+            $product->setRawAttributes(
+                array_merge($product->getAttributes(), ['stock' => $quantityAfter])
+            );
+            $product->syncOriginal();
+
+            return $adjustment;
+        });
     }
 
     /**
@@ -219,28 +233,37 @@ class StockAdjustment extends Model
         ?string $notes = null,
         ?Model $reference = null
     ): self {
-        $quantityBefore = $variant->stock;
-        $quantityAfter = $quantityBefore + $quantity;
+        return DB::transaction(function () use ($variant, $quantity, $type, $reason, $notes, $reference) {
+            // Re-fetch the variant with a row lock — same race protection as
+            // adjust() above.
+            $locked = ProductVariant::where('id', $variant->id)->lockForUpdate()->firstOrFail();
 
-        // Create the adjustment record
-        $adjustment = self::create([
-            'organization_id' => $variant->organization_id,
-            'product_id' => $variant->product_id,
-            'product_variant_id' => $variant->id,
-            'user_id' => auth()->id(),
-            'type' => $type,
-            'quantity_before' => $quantityBefore,
-            'quantity_after' => $quantityAfter,
-            'adjustment_quantity' => $quantity,
-            'reason' => $reason,
-            'notes' => $notes,
-            'reference_type' => $reference ? get_class($reference) : null,
-            'reference_id' => $reference?->id,
-        ]);
+            $quantityBefore = $locked->stock;
+            $quantityAfter = $quantityBefore + $quantity;
 
-        // Update the variant stock
-        $variant->update(['stock' => $quantityAfter]);
+            $adjustment = self::create([
+                'organization_id' => $locked->organization_id,
+                'product_id' => $locked->product_id,
+                'product_variant_id' => $locked->id,
+                'user_id' => auth()->id(),
+                'type' => $type,
+                'quantity_before' => $quantityBefore,
+                'quantity_after' => $quantityAfter,
+                'adjustment_quantity' => $quantity,
+                'reason' => $reason,
+                'notes' => $notes,
+                'reference_type' => $reference ? get_class($reference) : null,
+                'reference_id' => $reference?->id,
+            ]);
 
-        return $adjustment;
+            $locked->update(['stock' => $quantityAfter]);
+
+            $variant->setRawAttributes(
+                array_merge($variant->getAttributes(), ['stock' => $quantityAfter])
+            );
+            $variant->syncOriginal();
+
+            return $adjustment;
+        });
     }
 }
