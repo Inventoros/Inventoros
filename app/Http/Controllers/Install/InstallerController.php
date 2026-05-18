@@ -419,14 +419,17 @@ class InstallerController extends Controller
         $envContent = file_get_contents($envFile);
 
         foreach ($data as $key => $value) {
-            // Escape special regex characters in the value
-            $escapedValue = preg_quote($value, '/');
+            // Always quote + escape the value so passwords containing $, ",
+            // backslash, #, or newlines write a valid env-file line that
+            // phpdotenv will parse back to the original string. Previously
+            // the raw $value was concatenated unquoted — a password like
+            // p@ss$1word became a shell-style variable lookup at parse time,
+            // pa"ss broke the line, and # truncated the value at a comment.
+            $replacement = "{$key}=" . static::quoteEnvValue($value);
 
             // Match the key at the start of a line (handles commented and uncommented)
             $pattern = "/^#?\s*{$key}=.*/m";
-            $replacement = "{$key}={$value}";
 
-            // Count how many times this key appears
             $count = preg_match_all($pattern, $envContent);
 
             if ($count > 0) {
@@ -449,5 +452,26 @@ class InstallerController extends Controller
         }
 
         file_put_contents($envFile, $envContent);
+    }
+
+    /**
+     * Quote and escape a value for safe inclusion in a .env line.
+     *
+     * Wraps the value in double quotes and escapes the four characters
+     * that change meaning inside a double-quoted phpdotenv string:
+     * backslash, double-quote, dollar, plus literal newlines/carriage
+     * returns which can't appear unescaped on a single .env line.
+     */
+    public static function quoteEnvValue(string $value): string
+    {
+        $escaped = strtr($value, [
+            '\\' => '\\\\',
+            '"' => '\\"',
+            '$' => '\\$',
+            "\n" => '\\n',
+            "\r" => '\\r',
+        ]);
+
+        return '"' . $escaped . '"';
     }
 }
