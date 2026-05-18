@@ -6,7 +6,6 @@ namespace App\Models;
 
 use App\Models\Auth\Organization;
 use App\Traits\LogsActivity;
-use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -59,19 +58,6 @@ class Setting extends Model
     public function organization(): BelongsTo
     {
         return $this->belongsTo(Organization::class);
-    }
-
-    /**
-     * Get/set the value attribute with automatic encryption/decryption.
-     *
-     * @return \Illuminate\Database\Eloquent\Casts\Attribute<string, string>
-     */
-    protected function value(): Attribute
-    {
-        return Attribute::make(
-            get: fn ($value) => $this->encrypted ? decrypt($value) : $value,
-            set: fn ($value) => $this->encrypted ? encrypt($value) : $value,
-        );
     }
 
     /**

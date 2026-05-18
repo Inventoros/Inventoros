@@ -5,8 +5,10 @@ declare(strict_types=1);
 namespace App\Services;
 
 use App\Models\Setting;
+use Illuminate\Contracts\Encryption\DecryptException;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Config;
+use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\Log;
 use RuntimeException;
 
@@ -47,7 +49,18 @@ final class SettingsService
 
         // Don't cache encrypted settings for security
         if ($setting->encrypted) {
-            return $setting->value;
+            try {
+                return Crypt::decryptString($setting->value);
+            } catch (DecryptException $e) {
+                // Settings written before the encryption-order bug fix were
+                // persisted as plaintext while still flagged encrypted=true.
+                // Surface the issue rather than silently returning a half-truth.
+                Log::warning('Failed to decrypt setting; treating as default', [
+                    'organization_id' => $organizationId,
+                    'key' => $key,
+                ]);
+                return $default;
+            }
         }
 
         // For non-encrypted settings, use cache
@@ -75,11 +88,11 @@ final class SettingsService
         Setting::updateOrCreate(
             [
                 'organization_id' => $organizationId,
-                'key' => $key
+                'key' => $key,
             ],
             [
-                'value' => $value,
-                'encrypted' => $encrypted
+                'encrypted' => $encrypted,
+                'value' => $encrypted ? Crypt::encryptString((string) $value) : $value,
             ]
         );
 
