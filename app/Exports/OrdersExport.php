@@ -101,7 +101,7 @@ final class OrdersExport implements FromQuery, WithHeadings, WithMapping, WithSt
      */
     public function map($order): array
     {
-        return [
+        return \App\Support\SpreadsheetSafety::neutraliseRow([
             $order->id,
             $order->order_number,
             $order->customer ? $order->customer->name : ($order->customer_name ?? 'N/A'),
@@ -116,7 +116,7 @@ final class OrdersExport implements FromQuery, WithHeadings, WithMapping, WithSt
             $order->notes,
             $order->created_at->format('Y-m-d H:i:s'),
             $order->updated_at->format('Y-m-d H:i:s'),
-        ];
+        ]);
     }
 
     /**

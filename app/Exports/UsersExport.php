@@ -89,7 +89,7 @@ final class UsersExport implements FromQuery, WithHeadings, WithMapping, WithSty
      */
     public function map($user): array
     {
-        return [
+        return \App\Support\SpreadsheetSafety::neutraliseRow([
             $user->id,
             $user->name,
             $user->email,
@@ -98,7 +98,7 @@ final class UsersExport implements FromQuery, WithHeadings, WithMapping, WithSty
             $user->email_verified_at ? 'Yes' : 'No',
             $user->created_at->format('Y-m-d H:i:s'),
             $user->last_login_at ? $user->last_login_at->format('Y-m-d H:i:s') : 'Never',
-        ];
+        ]);
     }
 
     /**

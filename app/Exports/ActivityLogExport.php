@@ -114,7 +114,7 @@ final class ActivityLogExport implements FromQuery, WithHeadings, WithMapping, W
             ? class_basename($activityLog->subject_type)
             : '';
 
-        return [
+        return \App\Support\SpreadsheetSafety::neutraliseRow([
             $activityLog->created_at->format('Y-m-d H:i:s'),
             $activityLog->user ? $activityLog->user->name : 'System',
             $activityLog->action,
@@ -122,7 +122,7 @@ final class ActivityLogExport implements FromQuery, WithHeadings, WithMapping, W
             $subjectType,
             $activityLog->subject_id,
             $changes,
-        ];
+        ]);
     }
 
     /**
