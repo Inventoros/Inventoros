@@ -6,6 +6,7 @@ namespace App\Http\Controllers\Order;
 
 use App\Http\Controllers\Controller;
 use App\Models\Inventory\Product;
+use App\Models\Inventory\StockAdjustment;
 use App\Models\Order\Order;
 use App\Models\Warehouse;
 use App\Services\NotificationService;
@@ -147,6 +148,7 @@ class OrderController extends Controller
             $order = DB::transaction(function () use ($validated) {
                 $subtotal = 0;
                 $orderItems = [];
+                $stockMoves = [];
 
                 foreach ($validated['items'] as $item) {
                     // Lock the product row for update to prevent concurrent modifications
@@ -177,8 +179,9 @@ class OrderController extends Controller
                         'total' => $itemSubtotal,
                     ];
 
-                    // Reduce product stock (within transaction with lock)
-                    $product->decrement('stock', $item['quantity']);
+                    // Defer stock mutation until after the order row exists
+                    // so the StockAdjustment ledger entry can reference it.
+                    $stockMoves[] = [$product, $item['quantity']];
                 }
 
                 $validated['subtotal'] = $subtotal;
@@ -188,6 +191,21 @@ class OrderController extends Controller
 
                 $order = Order::create($validated);
                 $order->items()->createMany($orderItems);
+
+                // Write the stock decrement through StockAdjustment so the
+                // ledger reflects sales fulfillment alongside manual
+                // adjustments, transfers, and returns. The product row is
+                // already locked above; adjust() re-locks safely.
+                foreach ($stockMoves as [$product, $quantity]) {
+                    StockAdjustment::adjust(
+                        $product,
+                        -$quantity,
+                        'order_fulfillment',
+                        "Order {$order->order_number} fulfilled",
+                        null,
+                        $order
+                    );
+                }
 
                 return $order;
             });
@@ -319,7 +337,14 @@ class OrderController extends Controller
                         throw new \RuntimeException("Insufficient stock for {$product->name}. Available: {$product->stock}, requested increase: {$quantityDiff}");
                     }
                     if ($quantityDiff != 0) {
-                        $product->decrement('stock', $quantityDiff);
+                        StockAdjustment::adjust(
+                            $product,
+                            -$quantityDiff,
+                            $quantityDiff > 0 ? 'order_fulfillment' : 'order_cancellation',
+                            "Order {$order->order_number} line updated",
+                            null,
+                            $order
+                        );
                     }
 
                     $existingItem->update([
@@ -350,8 +375,15 @@ class OrderController extends Controller
                         'total' => $itemSubtotal,
                     ];
 
-                    // Reduce stock for new items
-                    $product->decrement('stock', $itemData['quantity']);
+                    // Reduce stock for new items via the ledger.
+                    StockAdjustment::adjust(
+                        $product,
+                        -$itemData['quantity'],
+                        'order_fulfillment',
+                        "Order {$order->order_number} item added",
+                        null,
+                        $order
+                    );
                 }
             }
 
@@ -362,7 +394,14 @@ class OrderController extends Controller
 
             foreach ($itemsToDelete as $item) {
                 if ($item->product) {
-                    $item->product->increment('stock', $item->quantity);
+                    StockAdjustment::adjust(
+                        $item->product,
+                        $item->quantity,
+                        'order_cancellation',
+                        "Order {$order->order_number} item removed",
+                        null,
+                        $order
+                    );
                 }
                 $item->delete();
             }
@@ -372,13 +411,21 @@ class OrderController extends Controller
                 $order->items()->createMany($updatedItems);
             }
 
-            // Restore stock when order is cancelled
+            // Restore stock when order is cancelled — route through
+            // StockAdjustment so the cancellation appears in the ledger and
+            // the row is locked correctly by adjust() itself.
             if ($validated['status'] === 'cancelled' && $order->status !== 'cancelled') {
-                // Reload items to include any newly created items
-                $order->load('items');
+                $order->load('items.product');
                 foreach ($order->items as $item) {
                     if ($item->product) {
-                        Product::where('id', $item->product_id)->lockForUpdate()->increment('stock', $item->quantity);
+                        StockAdjustment::adjust(
+                            $item->product,
+                            $item->quantity,
+                            'order_cancellation',
+                            "Order {$order->order_number} cancelled",
+                            null,
+                            $order
+                        );
                     }
                 }
             }
@@ -421,10 +468,18 @@ class OrderController extends Controller
             // Load items with product relationship for stock restoration
             $order->load('items.product');
 
-            // Restore stock for all items
+            // Restore stock for all items via StockAdjustment so the
+            // deletion is reflected in the ledger.
             foreach ($order->items as $item) {
                 if ($item->product) {
-                    Product::where('id', $item->product_id)->lockForUpdate()->increment('stock', $item->quantity);
+                    StockAdjustment::adjust(
+                        $item->product,
+                        $item->quantity,
+                        'order_cancellation',
+                        "Order {$order->order_number} deleted",
+                        null,
+                        $order
+                    );
                 }
             }
 
