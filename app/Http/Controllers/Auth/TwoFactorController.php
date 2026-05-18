@@ -11,6 +11,7 @@ use BaconQrCode\Renderer\RendererStyle\RendererStyle;
 use BaconQrCode\Writer;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
@@ -91,7 +92,7 @@ class TwoFactorController extends Controller
         $request->user()->update([
             'two_factor_secret' => encrypt($secret),
             'two_factor_enabled' => true,
-            'two_factor_recovery_codes' => encrypt(json_encode($recoveryCodes)),
+            'two_factor_recovery_codes' => encrypt(json_encode(static::hashRecoveryCodes($recoveryCodes))),
         ]);
 
         // Mark session as verified so middleware doesn't redirect
@@ -173,23 +174,26 @@ class TwoFactorController extends Controller
      */
     protected function verifyRecoveryCode(Request $request, $user): RedirectResponse
     {
-        $recoveryCode = $request->input('recovery_code');
-        $storedCodes = json_decode(decrypt($user->two_factor_recovery_codes), true);
+        $recoveryCode = (string) $request->input('recovery_code');
 
-        $key = array_search($recoveryCode, $storedCodes);
+        try {
+            DB::transaction(function () use ($user, $recoveryCode) {
+                $locked = $user->newQuery()->lockForUpdate()->findOrFail($user->getKey());
+                $storedCodes = json_decode(decrypt($locked->two_factor_recovery_codes), true) ?: [];
 
-        if ($key === false) {
+                $key = static::findAndConsumeRecoveryCode($recoveryCode, $storedCodes);
+                if ($key === null) {
+                    throw new \RuntimeException('invalid');
+                }
+
+                $locked->forceFill([
+                    'two_factor_recovery_codes' => encrypt(json_encode(array_values($storedCodes))),
+                ])->save();
+            });
+        } catch (\RuntimeException $e) {
             return redirect()->back()
                 ->withErrors(['code' => 'The provided recovery code is invalid.']);
         }
-
-        // Remove the used recovery code
-        unset($storedCodes[$key]);
-        $storedCodes = array_values($storedCodes);
-
-        $user->update([
-            'two_factor_recovery_codes' => encrypt(json_encode($storedCodes)),
-        ]);
 
         $request->session()->put('two_factor_verified', true);
 
@@ -224,5 +228,60 @@ class TwoFactorController extends Controller
         }
 
         return $codes;
+    }
+
+    /**
+     * Hash plaintext recovery codes for at-rest storage.
+     *
+     * Recovery codes are stored as sha256 hashes so an APP_KEY leak does
+     * not directly yield usable codes. The plaintext is shown to the user
+     * once at setup; the DB never holds it again.
+     *
+     * @param array<string> $codes
+     * @return array<string>
+     */
+    public static function hashRecoveryCodes(array $codes): array
+    {
+        return array_map(fn (string $code) => hash('sha256', $code), $codes);
+    }
+
+    /**
+     * Find $input within $storedCodes (handling both legacy plaintext
+     * entries and post-fix sha256 entries), consume it, and return the
+     * matched index. If $input doesn't match any entry, returns null.
+     *
+     * When the match is against a legacy plaintext entry, the remaining
+     * entries in $storedCodes are migrated in-place to their hashed form
+     * so the next consume cannot leak plaintext via DB read.
+     *
+     * @param array<string> $storedCodes Passed by reference so callers see the consumption + migration.
+     */
+    public static function findAndConsumeRecoveryCode(string $input, array &$storedCodes): ?int
+    {
+        $inputHash = hash('sha256', $input);
+
+        foreach ($storedCodes as $i => $stored) {
+            // sha256 hex hashes are 64 chars and only [0-9a-f]; legacy
+            // recovery codes are 10 chars of Str::random alphanumeric. Use
+            // the hash comparison first to avoid leaking timing info via
+            // strcmp shortcuts.
+            $looksHashed = strlen($stored) === 64 && ctype_xdigit($stored);
+
+            $matched = $looksHashed
+                ? hash_equals($stored, $inputHash)
+                : hash_equals($stored, $input);
+
+            if ($matched) {
+                unset($storedCodes[$i]);
+                if (!$looksHashed) {
+                    // Migrate the remaining legacy plaintext entries to
+                    // hashed form so the next consume has nothing to leak.
+                    $storedCodes = static::hashRecoveryCodes(array_values($storedCodes));
+                }
+                return $i;
+            }
+        }
+
+        return null;
     }
 }
