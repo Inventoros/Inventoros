@@ -552,12 +552,34 @@ class OrderController extends Controller
             'notes' => 'required|string|max:500',
         ]);
 
-        $order->update([
-            'approval_status' => 'rejected',
-            'approved_by' => $request->user()->id,
-            'approved_at' => now(),
-            'approval_notes' => $validated['notes'],
-        ]);
+        DB::transaction(function () use ($order, $request, $validated) {
+            // Stock was decremented when the order was created. Rejection has
+            // to restore it through the ledger so the inventory count and
+            // audit trail line up with what's physically available — without
+            // this the rejected order holds phantom reserved stock forever
+            // and the reorder logic over-purchases.
+            $order->load('items.product');
+            foreach ($order->items as $item) {
+                if ($item->product) {
+                    StockAdjustment::adjust(
+                        $item->product,
+                        $item->quantity,
+                        'order_cancellation',
+                        "Order {$order->order_number} rejected",
+                        null,
+                        $order
+                    );
+                }
+            }
+
+            $order->update([
+                'approval_status' => 'rejected',
+                'status' => 'cancelled',
+                'approved_by' => $request->user()->id,
+                'approved_at' => now(),
+                'approval_notes' => $validated['notes'],
+            ]);
+        });
 
         // Load the approver relationship for notification
         $order->load('approver');

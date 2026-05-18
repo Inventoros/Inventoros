@@ -12,6 +12,8 @@ use App\Models\Role;
 use App\Models\System\SystemSetting;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Notification;
 use Tests\TestCase;
 
 class OrderControllerTest extends TestCase
@@ -358,6 +360,63 @@ class OrderControllerTest extends TestCase
             'adjustment_quantity' => -2,
             'quantity_before' => $initialStock,
             'quantity_after' => $initialStock - 2,
+        ]);
+    }
+
+    public function test_rejecting_order_restores_stock_and_cancels(): void
+    {
+        // reject() triggers a notification email; the test env has no
+        // mail.from.address configured, which would make Symfony Mailer
+        // throw on real send. Fake mail+notifications so the controller
+        // path under test is what's exercised, not the mailer config.
+        Mail::fake();
+        Notification::fake();
+
+        // The reject route is gated by the approve_orders permission, which
+        // the test admin doesn't carry by default. Grant it for this test.
+        $adminRole = Role::where('slug', 'system-administrator')->first();
+        $adminRole->update(['permissions' => array_merge($adminRole->permissions, ['approve_orders'])]);
+
+        $initialStock = $this->product->stock;
+
+        // Create the order through the controller so stock is decremented
+        // and a StockAdjustment ledger entry is written.
+        $this->actingAs($this->admin)->post(route('orders.store'), [
+            'customer_name' => 'Reject Me',
+            'customer_email' => 'rej@test.com',
+            'status' => 'pending',
+            'order_date' => now()->format('Y-m-d'),
+            'items' => [[
+                'product_id' => $this->product->id,
+                'quantity' => 5,
+                'unit_price' => 10.00,
+            ]],
+        ])->assertRedirect(route('orders.index'));
+
+        $order = \App\Models\Order\Order::where('customer_name', 'Reject Me')->first();
+        $this->assertNotNull($order);
+        $this->assertSame($initialStock - 5, $this->product->fresh()->stock);
+
+        // Reject the order.
+        $this->actingAs($this->admin)
+            ->post(route('orders.reject', $order), ['notes' => 'Wrong customer'])
+            ->assertRedirect();
+
+        $order->refresh();
+        $this->assertSame('rejected', $order->approval_status);
+        $this->assertSame('cancelled', $order->status);
+
+        // Stock fully restored.
+        $this->assertSame($initialStock, $this->product->fresh()->stock);
+
+        // A reverse adjustment lives in the ledger.
+        $this->assertDatabaseHas('stock_adjustments', [
+            'product_id' => $this->product->id,
+            'reference_type' => \App\Models\Order\Order::class,
+            'reference_id' => $order->id,
+            'type' => 'order_cancellation',
+            'adjustment_quantity' => 5,
+            'quantity_after' => $initialStock,
         ]);
     }
 
