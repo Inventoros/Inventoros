@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace App\Support;
 
+use Illuminate\Support\Facades\Log;
+use Throwable;
+
 /**
  * Manager for WordPress-style action and filter hooks.
  *
@@ -59,7 +62,19 @@ final class HookManager
 
         foreach ($this->actions[$tag] as $priority => $callbacks) {
             foreach ($callbacks as $callback) {
-                call_user_func_array($callback, $args);
+                // Isolate plugin callbacks: one throwing handler must not
+                // crash the request. Log the failure and continue with the
+                // remaining callbacks at this and subsequent priorities.
+                try {
+                    call_user_func_array($callback, $args);
+                } catch (Throwable $e) {
+                    Log::error('Plugin action hook threw an exception', [
+                        'tag' => $tag,
+                        'priority' => $priority,
+                        'error' => $e->getMessage(),
+                        'exception' => $e::class,
+                    ]);
+                }
             }
         }
     }
@@ -134,7 +149,20 @@ final class HookManager
 
         foreach ($this->filters[$tag] as $priority => $callbacks) {
             foreach ($callbacks as $callback) {
-                $value = call_user_func_array($callback, array_merge([$value], $args));
+                // If a filter callback throws, log it and pass the current
+                // $value through unchanged to the next callback — never
+                // crash the request just because one plugin's filter is
+                // buggy.
+                try {
+                    $value = call_user_func_array($callback, array_merge([$value], $args));
+                } catch (Throwable $e) {
+                    Log::error('Plugin filter hook threw an exception', [
+                        'tag' => $tag,
+                        'priority' => $priority,
+                        'error' => $e->getMessage(),
+                        'exception' => $e::class,
+                    ]);
+                }
             }
         }
 
