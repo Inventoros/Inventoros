@@ -10,6 +10,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
+use PragmaRX\Google2FA\Google2FA;
 
 /**
  * @tags Authentication
@@ -31,6 +32,8 @@ class AuthController extends Controller
             'email' => ['required', 'string', 'email'],
             'password' => ['required', 'string'],
             'device_name' => ['nullable', 'string', 'max:255'],
+            'code' => ['nullable', 'string'],
+            'recovery_code' => ['nullable', 'string'],
         ]);
 
         $user = User::where('email', $request->email)->first();
@@ -39,6 +42,10 @@ class AuthController extends Controller
             throw ValidationException::withMessages([
                 'email' => ['The provided credentials are incorrect.'],
             ]);
+        }
+
+        if ($user->two_factor_enabled) {
+            $this->verifyTwoFactor($request, $user);
         }
 
         $deviceName = $request->device_name ?? 'api-token';
@@ -56,6 +63,52 @@ class AuthController extends Controller
             'token' => $token->plainTextToken,
             'token_type' => 'Bearer',
         ]);
+    }
+
+    /**
+     * Verify the second factor for an API login attempt.
+     *
+     * Throws ValidationException so the request rolls up to the standard
+     * 422 response without ever issuing a Sanctum token.
+     */
+    protected function verifyTwoFactor(Request $request, User $user): void
+    {
+        if ($request->filled('recovery_code')) {
+            $storedJson = $user->two_factor_recovery_codes
+                ? decrypt($user->two_factor_recovery_codes)
+                : '[]';
+            $storedCodes = json_decode($storedJson, true) ?: [];
+
+            $key = array_search($request->input('recovery_code'), $storedCodes, true);
+
+            if ($key === false) {
+                throw ValidationException::withMessages([
+                    'recovery_code' => ['The provided recovery code is invalid.'],
+                ]);
+            }
+
+            unset($storedCodes[$key]);
+            $user->forceFill([
+                'two_factor_recovery_codes' => encrypt(json_encode(array_values($storedCodes))),
+            ])->save();
+
+            return;
+        }
+
+        $code = $request->input('code');
+        if (!$code) {
+            throw ValidationException::withMessages([
+                'code' => ['Two-factor authentication code is required.'],
+            ]);
+        }
+
+        $secret = decrypt($user->two_factor_secret);
+
+        if (!(new Google2FA())->verifyKey($secret, (string) $code)) {
+            throw ValidationException::withMessages([
+                'code' => ['The provided two-factor code is invalid.'],
+            ]);
+        }
     }
 
     /**

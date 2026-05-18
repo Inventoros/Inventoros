@@ -9,6 +9,7 @@ use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Laravel\Sanctum\PersonalAccessToken;
 use Laravel\Sanctum\Sanctum;
+use PragmaRX\Google2FA\Google2FA;
 use Tests\TestCase;
 
 class AuthApiTest extends TestCase
@@ -108,6 +109,100 @@ class AuthApiTest extends TestCase
 
         $response->assertStatus(422)
             ->assertJsonValidationErrors(['email']);
+    }
+
+    // ==================== 2FA LOGIN TESTS ====================
+
+    protected function enableTwoFactorFor(User $user): array
+    {
+        $google2fa = new Google2FA();
+        $secret = $google2fa->generateSecretKey();
+        $recoveryCodes = ['recovery-aaaa-1111', 'recovery-bbbb-2222'];
+
+        $user->forceFill([
+            'two_factor_enabled' => true,
+            'two_factor_secret' => encrypt($secret),
+            'two_factor_recovery_codes' => encrypt(json_encode($recoveryCodes)),
+        ])->save();
+
+        return [$secret, $recoveryCodes];
+    }
+
+    public function test_login_fails_when_2fa_enabled_and_code_missing(): void
+    {
+        $this->enableTwoFactorFor($this->user);
+
+        $response = $this->postJson('/api/v1/login', [
+            'email' => 'user@test.com',
+            'password' => 'password123',
+        ]);
+
+        $response->assertStatus(422)->assertJsonValidationErrors(['code']);
+        $this->assertSame(0, PersonalAccessToken::query()->where('tokenable_id', $this->user->id)->count());
+    }
+
+    public function test_login_succeeds_with_valid_totp_when_2fa_enabled(): void
+    {
+        [$secret] = $this->enableTwoFactorFor($this->user);
+        $otp = (new Google2FA())->getCurrentOtp($secret);
+
+        $response = $this->postJson('/api/v1/login', [
+            'email' => 'user@test.com',
+            'password' => 'password123',
+            'code' => $otp,
+        ]);
+
+        $response->assertStatus(200)->assertJsonStructure(['token']);
+    }
+
+    public function test_login_fails_with_invalid_totp(): void
+    {
+        $this->enableTwoFactorFor($this->user);
+
+        $response = $this->postJson('/api/v1/login', [
+            'email' => 'user@test.com',
+            'password' => 'password123',
+            'code' => '000000',
+        ]);
+
+        $response->assertStatus(422)->assertJsonValidationErrors(['code']);
+        $this->assertSame(0, PersonalAccessToken::query()->where('tokenable_id', $this->user->id)->count());
+    }
+
+    public function test_login_succeeds_with_valid_recovery_code_and_consumes_it(): void
+    {
+        [, $recoveryCodes] = $this->enableTwoFactorFor($this->user);
+
+        $response = $this->postJson('/api/v1/login', [
+            'email' => 'user@test.com',
+            'password' => 'password123',
+            'recovery_code' => $recoveryCodes[0],
+        ]);
+
+        $response->assertStatus(200);
+
+        $stored = json_decode(decrypt($this->user->fresh()->two_factor_recovery_codes), true);
+        $this->assertNotContains($recoveryCodes[0], $stored);
+        $this->assertContains($recoveryCodes[1], $stored);
+    }
+
+    public function test_recovery_code_cannot_be_used_twice(): void
+    {
+        [, $recoveryCodes] = $this->enableTwoFactorFor($this->user);
+
+        $this->postJson('/api/v1/login', [
+            'email' => 'user@test.com',
+            'password' => 'password123',
+            'recovery_code' => $recoveryCodes[0],
+        ])->assertStatus(200);
+
+        $second = $this->postJson('/api/v1/login', [
+            'email' => 'user@test.com',
+            'password' => 'password123',
+            'recovery_code' => $recoveryCodes[0],
+        ]);
+
+        $second->assertStatus(422)->assertJsonValidationErrors(['recovery_code']);
     }
 
     // ==================== LOGOUT TESTS ====================
