@@ -10,6 +10,7 @@ use App\Models\Inventory\Product;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Illuminate\Validation\Rule;
 use Dedoc\Scramble\Attributes\QueryParameter;
 
 /**
@@ -80,6 +81,8 @@ class ProductController extends Controller
      */
     public function store(Request $request): JsonResponse
     {
+        $organizationId = $request->user()->organization_id;
+
         $validated = $request->validate([
             'sku' => ['required', 'string', 'max:255'],
             'name' => ['required', 'string', 'max:255'],
@@ -93,14 +96,14 @@ class ProductController extends Controller
             'max_stock' => ['nullable', 'integer', 'min:0'],
             'barcode' => ['nullable', 'string', 'max:255'],
             'notes' => ['nullable', 'string'],
-            'category_id' => ['nullable', 'integer', 'exists:product_categories,id'],
-            'location_id' => ['nullable', 'integer', 'exists:product_locations,id'],
+            'category_id' => ['nullable', 'integer', Rule::exists('product_categories', 'id')->where('organization_id', $organizationId)],
+            'location_id' => ['nullable', 'integer', Rule::exists('product_locations', 'id')->where('organization_id', $organizationId)],
             'is_active' => ['nullable', 'boolean'],
             'tracking_type' => ['nullable', 'string', 'in:none,batch,serial'],
             'metadata' => ['nullable', 'array'],
         ]);
 
-        $validated['organization_id'] = $request->user()->organization_id;
+        $validated['organization_id'] = $organizationId;
         $validated['is_active'] = $validated['is_active'] ?? true;
         $validated['stock'] = $validated['stock'] ?? 0;
         $validated['tracking_type'] = $validated['tracking_type'] ?? 'none';
@@ -155,6 +158,8 @@ class ProductController extends Controller
             ], 404);
         }
 
+        $organizationId = $request->user()->organization_id;
+
         $validated = $request->validate([
             'sku' => ['sometimes', 'string', 'max:255'],
             'name' => ['sometimes', 'string', 'max:255'],
@@ -168,8 +173,8 @@ class ProductController extends Controller
             'max_stock' => ['nullable', 'integer', 'min:0'],
             'barcode' => ['nullable', 'string', 'max:255'],
             'notes' => ['nullable', 'string'],
-            'category_id' => ['nullable', 'integer', 'exists:product_categories,id'],
-            'location_id' => ['nullable', 'integer', 'exists:product_locations,id'],
+            'category_id' => ['nullable', 'integer', Rule::exists('product_categories', 'id')->where('organization_id', $organizationId)],
+            'location_id' => ['nullable', 'integer', Rule::exists('product_locations', 'id')->where('organization_id', $organizationId)],
             'is_active' => ['nullable', 'boolean'],
             'tracking_type' => ['nullable', 'string', 'in:none,batch,serial'],
             'metadata' => ['nullable', 'array'],

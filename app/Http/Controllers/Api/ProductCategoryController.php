@@ -10,6 +10,7 @@ use App\Models\Inventory\ProductCategory;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Illuminate\Validation\Rule;
 use Dedoc\Scramble\Attributes\QueryParameter;
 
 /**
@@ -62,15 +63,17 @@ class ProductCategoryController extends Controller
      */
     public function store(Request $request): JsonResponse
     {
+        $organizationId = $request->user()->organization_id;
+
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'slug' => ['nullable', 'string', 'max:255'],
             'description' => ['nullable', 'string'],
-            'parent_id' => ['nullable', 'integer', 'exists:product_categories,id'],
+            'parent_id' => ['nullable', 'integer', Rule::exists('product_categories', 'id')->where('organization_id', $organizationId)],
             'is_active' => ['nullable', 'boolean'],
         ]);
 
-        $validated['organization_id'] = $request->user()->organization_id;
+        $validated['organization_id'] = $organizationId;
         $validated['is_active'] = $validated['is_active'] ?? true;
 
         $category = ProductCategory::create($validated);
@@ -121,11 +124,13 @@ class ProductCategoryController extends Controller
             ], 404);
         }
 
+        $organizationId = $request->user()->organization_id;
+
         $validated = $request->validate([
             'name' => ['sometimes', 'string', 'max:255'],
             'slug' => ['nullable', 'string', 'max:255'],
             'description' => ['nullable', 'string'],
-            'parent_id' => ['nullable', 'integer', 'exists:product_categories,id'],
+            'parent_id' => ['nullable', 'integer', Rule::exists('product_categories', 'id')->where('organization_id', $organizationId)],
             'is_active' => ['nullable', 'boolean'],
         ]);
 

@@ -12,6 +12,7 @@ use App\Models\Purchasing\PurchaseOrderItem;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Illuminate\Validation\Rule;
 use Dedoc\Scramble\Attributes\QueryParameter;
 
 /**
@@ -65,8 +66,10 @@ class PurchaseOrderController extends Controller
      */
     public function store(Request $request): JsonResponse
     {
+        $organizationId = $request->user()->organization_id;
+
         $validated = $request->validate([
-            'supplier_id' => ['required', 'exists:suppliers,id'],
+            'supplier_id' => ['required', Rule::exists('suppliers', 'id')->where('organization_id', $organizationId)],
             'order_date' => ['required', 'date'],
             'expected_date' => ['nullable', 'date', 'after_or_equal:order_date'],
             'currency' => ['required', 'string', 'max:3'],
@@ -74,13 +77,11 @@ class PurchaseOrderController extends Controller
             'tax' => ['nullable', 'numeric', 'min:0'],
             'notes' => ['nullable', 'string'],
             'items' => ['required', 'array', 'min:1'],
-            'items.*.product_id' => ['required', 'exists:products,id'],
+            'items.*.product_id' => ['required', Rule::exists('products', 'id')->where('organization_id', $organizationId)],
             'items.*.quantity' => ['required', 'integer', 'min:1'],
             'items.*.unit_cost' => ['required', 'numeric', 'min:0'],
             'items.*.supplier_sku' => ['nullable', 'string', 'max:255'],
         ]);
-
-        $organizationId = $request->user()->organization_id;
 
         // Calculate order totals
         $subtotal = 0;
@@ -175,8 +176,10 @@ class PurchaseOrderController extends Controller
             ], 422);
         }
 
+        $organizationId = $request->user()->organization_id;
+
         $validated = $request->validate([
-            'supplier_id' => ['sometimes', 'exists:suppliers,id'],
+            'supplier_id' => ['sometimes', Rule::exists('suppliers', 'id')->where('organization_id', $organizationId)],
             'order_date' => ['sometimes', 'date'],
             'expected_date' => ['nullable', 'date', 'after_or_equal:order_date'],
             'currency' => ['sometimes', 'string', 'max:3'],
@@ -184,8 +187,9 @@ class PurchaseOrderController extends Controller
             'tax' => ['nullable', 'numeric', 'min:0'],
             'notes' => ['nullable', 'string'],
             'items' => ['sometimes', 'array', 'min:1'],
-            'items.*.id' => ['nullable', 'exists:purchase_order_items,id'],
-            'items.*.product_id' => ['required_with:items', 'exists:products,id'],
+            'items.*.id' => ['nullable', 'exists:purchase_order_items,id'], // parent purchase_order is already org-scoped via route-model binding
+
+            'items.*.product_id' => ['required_with:items', Rule::exists('products', 'id')->where('organization_id', $organizationId)],
             'items.*.quantity' => ['required_with:items', 'integer', 'min:1'],
             'items.*.unit_cost' => ['required_with:items', 'numeric', 'min:0'],
             'items.*.supplier_sku' => ['nullable', 'string', 'max:255'],

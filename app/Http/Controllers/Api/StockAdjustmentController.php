@@ -11,6 +11,7 @@ use App\Models\Inventory\StockAdjustment;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Illuminate\Validation\Rule;
 use Dedoc\Scramble\Attributes\QueryParameter;
 
 /**
@@ -67,15 +68,15 @@ class StockAdjustmentController extends Controller
      */
     public function store(Request $request): JsonResponse
     {
+        $organizationId = $request->user()->organization_id;
+
         $validated = $request->validate([
-            'product_id' => ['required', 'integer', 'exists:products,id'],
+            'product_id' => ['required', 'integer', Rule::exists('products', 'id')->where('organization_id', $organizationId)],
             'quantity' => ['required', 'integer'],
             'type' => ['required', 'string', 'in:manual,count,damage,return,transfer'],
             'reason' => ['nullable', 'string', 'max:255'],
             'notes' => ['nullable', 'string'],
         ]);
-
-        $organizationId = $request->user()->organization_id;
 
         // Verify the product belongs to the organization
         $product = Product::where('id', $validated['product_id'])
