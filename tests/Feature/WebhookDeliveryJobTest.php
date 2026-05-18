@@ -81,5 +81,54 @@ class WebhookDeliveryJobTest extends TestCase
 
         $delivery->refresh();
         $this->assertSame('success', $delivery->status);
+        $this->assertNull($delivery->next_retry_at, 'successful delivery must clear next_retry_at');
+    }
+
+    public function test_failed_delivery_populates_next_retry_at_from_backoff(): void
+    {
+        SystemSetting::set('installed', true, 'boolean');
+        $org = Organization::create(['name' => 'NR', 'email' => 'nr@test.com']);
+        $user = User::create([
+            'name' => 'A', 'email' => 'a@test.com', 'password' => bcrypt('x'),
+            'organization_id' => $org->id, 'role' => 'admin',
+        ]);
+
+        $webhook = Webhook::create([
+            'organization_id' => $org->id,
+            'name' => 'Receiver', 'url' => 'https://example.com/hook',
+            'secret' => 's', 'events' => ['x'], 'is_active' => true,
+            'created_by' => $user->id,
+        ]);
+
+        $delivery = WebhookDelivery::create([
+            'webhook_id' => $webhook->id,
+            'organization_id' => $org->id,
+            'event' => 'x', 'payload' => [],
+            'status' => 'pending', 'attempts' => 0,
+        ]);
+
+        Http::fake([
+            'example.com/*' => Http::response('boom', 500),
+        ]);
+
+        try {
+            (new WebhookDeliveryJob($delivery))->handle();
+        } catch (\Exception) {
+            // expected — job re-throws so Laravel's queue retries
+        }
+
+        $delivery->refresh();
+        $this->assertNotNull($delivery->next_retry_at, 'failed delivery must populate next_retry_at');
+
+        // First retry is BACKOFF_DELAYS[0] = 60s out.
+        $this->assertEqualsWithDelta(60, now()->diffInSeconds($delivery->next_retry_at, false), 5);
+
+        // scopeReadyForRetry should NOT yet return the row (next_retry_at is
+        // in the future).
+        $this->assertSame(0, WebhookDelivery::readyForRetry()->count());
+
+        // Travel past the backoff window — the row becomes retry-ready.
+        $this->travel(120)->seconds();
+        $this->assertSame(1, WebhookDelivery::readyForRetry()->count());
     }
 }
