@@ -10,6 +10,8 @@ use App\Services\SettingsService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Config;
+use Illuminate\Support\Facades\Crypt;
+use Illuminate\Support\Facades\DB;
 use RuntimeException;
 use Tests\TestCase;
 
@@ -121,6 +123,49 @@ class SettingsServiceTest extends TestCase
 
         $this->assertNotNull($setting);
         $this->assertTrue($setting->encrypted);
+    }
+
+    public function test_set_with_encrypted_flag_stores_ciphertext_at_rest(): void
+    {
+        $this->actingAs($this->user);
+
+        SettingsService::set('email.smtp.password', 'plaintext-secret', true);
+
+        $rawValue = DB::table('settings')
+            ->where('organization_id', $this->organization->id)
+            ->where('key', 'email.smtp.password')
+            ->value('value');
+
+        $this->assertNotNull($rawValue);
+        $this->assertNotSame('plaintext-secret', $rawValue, 'Encrypted setting must not be stored as plaintext.');
+        $this->assertSame('plaintext-secret', Crypt::decryptString($rawValue));
+    }
+
+    public function test_get_returns_decrypted_value_for_encrypted_setting(): void
+    {
+        $this->actingAs($this->user);
+
+        SettingsService::set('email.mailgun.secret', 'mg-secret-abc', true);
+        Cache::flush();
+
+        $this->assertSame('mg-secret-abc', SettingsService::get('email.mailgun.secret'));
+    }
+
+    public function test_get_returns_default_when_encrypted_value_is_corrupt(): void
+    {
+        $this->actingAs($this->user);
+
+        // Simulate a row written by the pre-fix bug: encrypted=true but value is plaintext.
+        DB::table('settings')->insert([
+            'organization_id' => $this->organization->id,
+            'key' => 'email.sendgrid.api_key',
+            'value' => 'plaintext-leaked-by-bug',
+            'encrypted' => true,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $this->assertSame('fallback', SettingsService::get('email.sendgrid.api_key', 'fallback'));
     }
 
     public function test_non_encrypted_setting_is_cached(): void
