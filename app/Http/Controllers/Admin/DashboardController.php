@@ -34,35 +34,41 @@ class DashboardController extends Controller
     public function index()
     {
         $user = auth()->user();
+        $orgId = $user->organization_id;
 
-        // Get statistics
-        // Calculate total value as sum of (price * stock) for each product
-        $totalValue = Product::where('organization_id', $user->organization_id)
-            ->where('is_active', true)
-            ->selectRaw('COALESCE(SUM(price * stock), 0) as total')
-            ->value('total');
+        // Consolidate the five product-level aggregates (count, active stock
+        // value, low-stock count) into one selectRaw round-trip and the three
+        // order-level aggregates (count, pending count, month revenue) into
+        // another. Categories and locations stay as separate counts because
+        // they live in different tables.
+        $monthStart = now()->startOfMonth();
+        $monthEnd = now()->endOfMonth();
 
-        // Get order statistics
-        $totalOrders = Order::where('organization_id', $user->organization_id)->count();
-        $pendingOrders = Order::where('organization_id', $user->organization_id)
-            ->where('status', 'pending')
-            ->count();
-        $revenueThisMonth = Order::where('organization_id', $user->organization_id)
-            ->whereMonth('order_date', now()->month)
-            ->whereYear('order_date', now()->year)
-            ->sum('total');
+        $productAgg = Product::where('organization_id', $orgId)
+            ->selectRaw('
+                COUNT(*) as total_count,
+                COALESCE(SUM(CASE WHEN is_active THEN price * stock ELSE 0 END), 0) as total_value,
+                SUM(CASE WHEN stock <= min_stock THEN 1 ELSE 0 END) as low_stock_count
+            ')
+            ->first();
+
+        $orderAgg = Order::where('organization_id', $orgId)
+            ->selectRaw('
+                COUNT(*) as total_count,
+                SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) as pending_count,
+                COALESCE(SUM(CASE WHEN order_date >= ? AND order_date <= ? THEN total ELSE 0 END), 0) as month_revenue
+            ', ['pending', $monthStart, $monthEnd])
+            ->first();
 
         $stats = [
-            'totalProducts' => Product::where('organization_id', $user->organization_id)->count(),
-            'totalValue' => $totalValue,
-            'lowStockProducts' => Product::where('organization_id', $user->organization_id)
-                ->whereColumn('stock', '<=', 'min_stock')
-                ->count(),
-            'categories' => ProductCategory::where('organization_id', $user->organization_id)->count(),
-            'locations' => ProductLocation::where('organization_id', $user->organization_id)->count(),
-            'totalOrders' => $totalOrders,
-            'pendingOrders' => $pendingOrders,
-            'revenueThisMonth' => $revenueThisMonth,
+            'totalProducts' => (int) ($productAgg->total_count ?? 0),
+            'totalValue' => (float) ($productAgg->total_value ?? 0),
+            'lowStockProducts' => (int) ($productAgg->low_stock_count ?? 0),
+            'categories' => ProductCategory::where('organization_id', $orgId)->count(),
+            'locations' => ProductLocation::where('organization_id', $orgId)->count(),
+            'totalOrders' => (int) ($orderAgg->total_count ?? 0),
+            'pendingOrders' => (int) ($orderAgg->pending_count ?? 0),
+            'revenueThisMonth' => (float) ($orderAgg->month_revenue ?? 0),
         ];
 
         // Hook: Allow plugins to modify stats

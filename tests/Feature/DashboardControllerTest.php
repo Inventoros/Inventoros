@@ -3,6 +3,8 @@
 namespace Tests\Feature;
 
 use App\Models\Auth\Organization;
+use App\Models\Inventory\Product;
+use App\Models\Order\Order;
 use App\Models\Role;
 use App\Models\System\SystemSetting;
 use App\Models\User;
@@ -62,5 +64,69 @@ class DashboardControllerTest extends TestCase
         $response = $this->get(route('dashboard'));
 
         $response->assertRedirect(route('login'));
+    }
+
+    public function test_dashboard_stats_match_aggregate_truth(): void
+    {
+        // Three products: one fully stocked active, one low-stock active,
+        // one inactive (should be counted in totalProducts but not totalValue).
+        Product::create([
+            'organization_id' => $this->organization->id,
+            'sku' => 'AGG-1', 'name' => 'A',
+            'price' => 10, 'currency' => 'USD',
+            'stock' => 100, 'min_stock' => 10,
+            'is_active' => true,
+        ]);
+        Product::create([
+            'organization_id' => $this->organization->id,
+            'sku' => 'AGG-2', 'name' => 'B',
+            'price' => 5, 'currency' => 'USD',
+            'stock' => 3, 'min_stock' => 10,
+            'is_active' => true,
+        ]);
+        Product::create([
+            'organization_id' => $this->organization->id,
+            'sku' => 'AGG-3', 'name' => 'C',
+            'price' => 50, 'currency' => 'USD',
+            'stock' => 20, 'min_stock' => 0,
+            'is_active' => false,
+        ]);
+
+        // Two orders: one this month (revenue), one last month (ignored).
+        Order::create([
+            'organization_id' => $this->organization->id,
+            'order_number' => 'ORD-T-1',
+            'source' => 'manual',
+            'customer_name' => 'X',
+            'status' => 'pending',
+            'subtotal' => 100, 'tax' => 0, 'shipping' => 0, 'total' => 100,
+            'currency' => 'USD',
+            'order_date' => now(),
+        ]);
+        Order::create([
+            'organization_id' => $this->organization->id,
+            'order_number' => 'ORD-T-2',
+            'source' => 'manual',
+            'customer_name' => 'Y',
+            'status' => 'shipped',
+            'subtotal' => 200, 'tax' => 0, 'shipping' => 0, 'total' => 200,
+            'currency' => 'USD',
+            'order_date' => now()->subMonths(2)->startOfMonth()->addDay(),
+        ]);
+
+        $response = $this->actingAs($this->admin)->get(route('dashboard'));
+        $response->assertStatus(200);
+
+        $response->assertInertia(fn ($page) => $page
+            ->where('stats.totalProducts', 3)
+            ->where('stats.lowStockProducts', 1)
+            // Active stock value: 10*100 + 5*3 = 1015. Inactive C excluded.
+            // Active stock value: 10*100 + 5*3 = 1015. JSON-encoded as int.
+            ->where('stats.totalValue', 1015)
+            ->where('stats.totalOrders', 2)
+            ->where('stats.pendingOrders', 1)
+            // Only this-month order counts: 100. JSON-encoded as int.
+            ->where('stats.revenueThisMonth', 100)
+        );
     }
 }
