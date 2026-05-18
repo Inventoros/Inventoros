@@ -10,6 +10,7 @@ use App\Models\Inventory\StockAdjustment;
 use App\Models\Order\Order;
 use App\Models\Warehouse;
 use App\Services\NotificationService;
+use App\Support\SequenceNumberRetry;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
@@ -139,13 +140,17 @@ class OrderController extends Controller
 
         $validated['organization_id'] = $request->user()->organization_id;
         $validated['created_by'] = $request->user()->id;
-        $validated['order_number'] = Order::generateOrderNumber($request->user()->organization_id);
         $validated['source'] = 'manual';
         $validated['approval_status'] = 'pending';
 
-        // Use transaction with locking to prevent race conditions on stock updates
+        // Use transaction with locking to prevent race conditions on stock
+        // updates. order_number is generated INSIDE the transaction (rather
+        // than computed once above and reused on retry) so a unique-
+        // constraint collision can be retried by SequenceNumberRetry —
+        // generateOrderNumber reads MAX() + 1 which races without a lock.
         try {
-            $order = DB::transaction(function () use ($validated) {
+            $order = SequenceNumberRetry::create(fn () => DB::transaction(function () use ($validated) {
+                $validated['order_number'] = Order::generateOrderNumber($validated['organization_id']);
                 $subtotal = 0;
                 $orderItems = [];
                 $stockMoves = [];
@@ -208,7 +213,7 @@ class OrderController extends Controller
                 }
 
                 return $order;
-            });
+            }));
 
             return redirect()->route('orders.index')
                 ->with('success', 'Order created successfully.');
