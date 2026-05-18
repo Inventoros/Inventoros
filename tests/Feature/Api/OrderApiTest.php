@@ -271,6 +271,67 @@ class OrderApiTest extends TestCase
         $this->assertEquals($initialStock - 5, $this->product->stock);
     }
 
+    public function test_api_order_create_writes_stock_adjustment_ledger_entry(): void
+    {
+        Sanctum::actingAs($this->admin);
+
+        $initialStock = $this->product->stock;
+
+        $orderData = [
+            'customer_name' => 'Ledger Customer',
+            'items' => [
+                [
+                    'product_id' => $this->product->id,
+                    'quantity' => 3,
+                    'unit_price' => 50.00,
+                ],
+            ],
+        ];
+
+        $this->postJson('/api/v1/orders', $orderData)->assertStatus(201);
+
+        $order = \App\Models\Order\Order::where('customer_name', 'Ledger Customer')->first();
+        $this->assertNotNull($order);
+        $this->assertDatabaseHas('stock_adjustments', [
+            'product_id' => $this->product->id,
+            'reference_type' => \App\Models\Order\Order::class,
+            'reference_id' => $order->id,
+            'type' => 'order_fulfillment',
+            'adjustment_quantity' => -3,
+            'quantity_before' => $initialStock,
+            'quantity_after' => $initialStock - 3,
+        ]);
+    }
+
+    public function test_api_order_destroy_writes_cancellation_ledger_entry(): void
+    {
+        Sanctum::actingAs($this->admin);
+
+        $this->postJson('/api/v1/orders', [
+            'customer_name' => 'Destroy Ledger',
+            'items' => [
+                ['product_id' => $this->product->id, 'quantity' => 4, 'unit_price' => 10.00],
+            ],
+        ])->assertStatus(201);
+
+        $order = \App\Models\Order\Order::where('customer_name', 'Destroy Ledger')->first();
+        $stockBeforeDelete = $this->product->fresh()->stock;
+
+        $this->deleteJson("/api/v1/orders/{$order->id}")->assertStatus(200);
+
+        // The order is hard-deleted by the API destroy, so reference_id will
+        // not resolve via the relation, but the audit row stays.
+        $this->assertDatabaseHas('stock_adjustments', [
+            'product_id' => $this->product->id,
+            'reference_type' => \App\Models\Order\Order::class,
+            'reference_id' => $order->id,
+            'type' => 'order_cancellation',
+            'adjustment_quantity' => 4,
+            'quantity_before' => $stockBeforeDelete,
+            'quantity_after' => $stockBeforeDelete + 4,
+        ]);
+    }
+
     // ==================== SHOW TESTS ====================
 
     public function test_can_view_order(): void
