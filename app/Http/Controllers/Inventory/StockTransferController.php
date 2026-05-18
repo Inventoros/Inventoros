@@ -267,58 +267,62 @@ class StockTransferController extends Controller
                 ->with('error', 'Only pending or in-transit transfers can be completed.');
         }
 
-        DB::transaction(function () use ($stockTransfer) {
-            $stockTransfer->load('items.product');
+        try {
+            DB::transaction(function () use ($stockTransfer) {
+                $stockTransfer->load('items', 'fromLocation', 'toLocation');
 
-            foreach ($stockTransfer->items as $item) {
-                $product = $item->product;
+                foreach ($stockTransfer->items as $item) {
+                    // Lock the product row for the duration of this transaction so two
+                    // concurrent transfers cannot pass the stock check based on the
+                    // same pre-image.
+                    $product = Product::where('id', $item->product_id)
+                        ->where('organization_id', $stockTransfer->organization_id)
+                        ->lockForUpdate()
+                        ->firstOrFail();
 
-                // Deduct from source (stock adjustment for audit)
-                StockAdjustment::create([
-                    'organization_id' => $stockTransfer->organization_id,
-                    'product_id' => $product->id,
-                    'user_id' => auth()->id(),
-                    'type' => 'transfer',
-                    'quantity_before' => $product->stock,
-                    'quantity_after' => $product->stock - $item->quantity,
-                    'adjustment_quantity' => -$item->quantity,
-                    'reason' => "Transfer out to {$stockTransfer->toLocation->name}",
-                    'notes' => "Transfer #{$stockTransfer->transfer_number}",
-                    'reference_type' => StockTransfer::class,
-                    'reference_id' => $stockTransfer->id,
+                    if ($product->stock < $item->quantity) {
+                        throw new \RuntimeException(
+                            "Insufficient stock for {$product->name}: have {$product->stock}, transfer requires {$item->quantity}."
+                        );
+                    }
+
+                    // Inventoros stores stock globally on products.stock with no
+                    // per-location/per-warehouse breakdown. A "transfer" between
+                    // ProductLocations is therefore paperwork only — there is no
+                    // physical column to decrement at the source and increment at
+                    // the destination. The previous implementation wrote two
+                    // cancelling stock adjustments (-qty then +qty on the same
+                    // row), which left the audit ledger reconciling to zero and
+                    // masked the fact that nothing moved. Record one audit row
+                    // per item with adjustment_quantity = 0 instead, until per-
+                    // location stock tracking lands as a separate change.
+                    StockAdjustment::create([
+                        'organization_id' => $stockTransfer->organization_id,
+                        'product_id' => $product->id,
+                        'user_id' => auth()->id(),
+                        'type' => 'transfer',
+                        'quantity_before' => $product->stock,
+                        'quantity_after' => $product->stock,
+                        'adjustment_quantity' => 0,
+                        'reason' => "Transfer {$item->quantity} from {$stockTransfer->fromLocation->name} to {$stockTransfer->toLocation->name}",
+                        'notes' => "Transfer #{$stockTransfer->transfer_number}",
+                        'reference_type' => StockTransfer::class,
+                        'reference_id' => $stockTransfer->id,
+                    ]);
+                }
+
+                $stockTransfer->update([
+                    'status' => 'completed',
+                    'completed_at' => now(),
                 ]);
-
-                $product->update(['stock' => $product->stock - $item->quantity]);
-
-                // Reload product to get updated stock
-                $product->refresh();
-
-                // Add to destination (stock adjustment for audit)
-                StockAdjustment::create([
-                    'organization_id' => $stockTransfer->organization_id,
-                    'product_id' => $product->id,
-                    'user_id' => auth()->id(),
-                    'type' => 'transfer',
-                    'quantity_before' => $product->stock,
-                    'quantity_after' => $product->stock + $item->quantity,
-                    'adjustment_quantity' => $item->quantity,
-                    'reason' => "Transfer in from {$stockTransfer->fromLocation->name}",
-                    'notes' => "Transfer #{$stockTransfer->transfer_number}",
-                    'reference_type' => StockTransfer::class,
-                    'reference_id' => $stockTransfer->id,
-                ]);
-
-                $product->update(['stock' => $product->stock + $item->quantity]);
-            }
-
-            $stockTransfer->update([
-                'status' => 'completed',
-                'completed_at' => now(),
-            ]);
-        });
+            });
+        } catch (\RuntimeException $e) {
+            return redirect()->route('stock-transfers.show', $stockTransfer)
+                ->with('error', $e->getMessage());
+        }
 
         return redirect()->route('stock-transfers.show', $stockTransfer)
-            ->with('success', 'Stock transfer completed successfully. Stock levels have been updated.');
+            ->with('success', 'Stock transfer completed.');
     }
 
     /**
