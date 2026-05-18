@@ -1,8 +1,9 @@
 <script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head, Link, useForm } from '@inertiajs/vue3';
-import BarcodeScannerModal from '@/Components/BarcodeScannerModal.vue';
-import { computed, watch, ref, nextTick } from 'vue';
+import { defineAsyncComponent, computed, watch, ref, nextTick } from 'vue';
+
+const BarcodeScannerModal = defineAsyncComponent(() => import('@/Components/BarcodeScannerModal.vue'));
 import { useI18n } from 'vue-i18n';
 
 const { t } = useI18n();

@@ -1,9 +1,12 @@
 <script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import PluginSlot from '@/Components/PluginSlot.vue';
-import BarcodeScannerModal from '@/Components/BarcodeScannerModal.vue';
 import { Head, Link, router } from '@inertiajs/vue3';
-import { ref, computed, onMounted, onUnmounted } from 'vue';
+import { defineAsyncComponent, ref, computed, onMounted, onUnmounted } from 'vue';
+
+// Defer the modal (which transitively imports html5-qrcode, ~200 KB)
+// until the user actually opens the scanner.
+const BarcodeScannerModal = defineAsyncComponent(() => import('@/Components/BarcodeScannerModal.vue'));
 import { useI18n } from 'vue-i18n';
 
 const { t } = useI18n();

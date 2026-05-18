@@ -1,6 +1,12 @@
 <script setup>
 import { ref, onMounted, onUnmounted, watch } from 'vue';
-import { Html5Qrcode } from 'html5-qrcode';
+
+// html5-qrcode is ~200 KB minified. It only runs when the user
+// actually opens the scanner modal, so the import is deferred to
+// startScanner() — keeps it out of the initial page bundle on every
+// page that mounts this component (Products/Index,
+// PurchaseOrders/Create, PurchaseOrders/Receive,
+// StockAdjustments/Create).
 
 const props = defineProps({
     enabled: {
@@ -29,6 +35,10 @@ const startScanner = async () => {
     if (isScanning.value || !props.enabled) return;
 
     try {
+        // Lazy-load html5-qrcode on first scanner start. Vite emits a
+        // separate chunk that only downloads when the user opens the
+        // camera, not when any page that mounts this component renders.
+        const { Html5Qrcode } = await import('html5-qrcode');
         html5QrCode.value = new Html5Qrcode(scannerElementId);
 
         const config = {
