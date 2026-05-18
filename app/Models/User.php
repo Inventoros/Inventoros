@@ -89,6 +89,33 @@ class User extends Authenticatable
     }
 
     /**
+     * Block authenticated users from changing their own role or
+     * organization_id via mass assignment.
+     *
+     * Today no controller intentionally does that, but if a future PR
+     * wires $request->user()->update($request->validated()) on the
+     * profile-update endpoint and the validator allows either field,
+     * any authenticated user could elevate themselves to admin or
+     * relocate into another tenant. This guard makes that future
+     * mistake fail loudly at save time instead of silently succeeding.
+     */
+    protected static function booted(): void
+    {
+        static::saving(function (self $user): void {
+            if (!$user->exists || !auth()->check() || (int) $user->id !== (int) auth()->id()) {
+                return;
+            }
+
+            if ($user->isDirty('role')) {
+                throw new \RuntimeException('Users cannot change their own role.');
+            }
+            if ($user->isDirty('organization_id')) {
+                throw new \RuntimeException('Users cannot change their own organization.');
+            }
+        });
+    }
+
+    /**
      * Get is_admin attribute for backward compatibility.
      *
      * @return bool
