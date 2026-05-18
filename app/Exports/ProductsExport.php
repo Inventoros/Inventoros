@@ -104,7 +104,7 @@ final class ProductsExport implements FromQuery, WithHeadings, WithMapping, With
      */
     public function map($product): array
     {
-        return [
+        return \App\Support\SpreadsheetSafety::neutraliseRow([
             $product->id,
             $product->name,
             $product->sku,
@@ -120,7 +120,7 @@ final class ProductsExport implements FromQuery, WithHeadings, WithMapping, With
             $product->is_active ? 'active' : 'inactive',
             $product->notes,
             $product->created_at->format('Y-m-d H:i:s'),
-        ];
+        ]);
     }
 
     /**
