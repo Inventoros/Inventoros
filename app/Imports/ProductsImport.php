@@ -99,7 +99,9 @@ final class ProductsImport implements ToCollection, WithHeadingRow, SkipsOnFailu
                     $categoryId = $category->id;
                 }
 
-                // Find or create location
+                // Find or create location. Generate a unique 3-char-derived
+                // code so importing "Toronto Main" and later "Toronto Backup"
+                // doesn't produce two locations sharing code='TOR'.
                 $locationId = null;
                 if (!empty($row['location'])) {
                     $location = ProductLocation::firstOrCreate(
@@ -108,7 +110,7 @@ final class ProductsImport implements ToCollection, WithHeadingRow, SkipsOnFailu
                             'organization_id' => $this->organizationId,
                         ],
                         [
-                            'code' => strtoupper(substr($row['location'], 0, 3)),
+                            'code' => $this->uniqueLocationCode($row['location']),
                         ]
                     );
                     $locationId = $location->id;
@@ -175,5 +177,31 @@ final class ProductsImport implements ToCollection, WithHeadingRow, SkipsOnFailu
             'updated' => $this->updated,
             'errors' => $this->errors,
         ];
+    }
+
+    /**
+     * Generate a 3-character-derived location code that does not collide
+     * with any existing location code in the same organisation. On
+     * collision, append a numeric suffix until a free code is found.
+     */
+    protected function uniqueLocationCode(string $name): string
+    {
+        $base = strtoupper(substr($name, 0, 3));
+        if ($base === '') {
+            $base = 'LOC';
+        }
+
+        $code = $base;
+        $suffix = 1;
+        while (
+            ProductLocation::where('organization_id', $this->organizationId)
+                ->where('code', $code)
+                ->exists()
+        ) {
+            $suffix++;
+            $code = $base . '-' . $suffix;
+        }
+
+        return $code;
     }
 }
