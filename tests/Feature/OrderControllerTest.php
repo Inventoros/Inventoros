@@ -345,6 +345,20 @@ class OrderControllerTest extends TestCase
         // Check stock was decremented
         $this->product->refresh();
         $this->assertEquals($initialStock - 2, $this->product->stock);
+
+        // P0-8: order creation must write a StockAdjustment ledger entry,
+        // not silently decrement product.stock outside the ledger.
+        $order = \App\Models\Order\Order::where('customer_name', 'New Customer')->first();
+        $this->assertNotNull($order);
+        $this->assertDatabaseHas('stock_adjustments', [
+            'product_id' => $this->product->id,
+            'reference_type' => \App\Models\Order\Order::class,
+            'reference_id' => $order->id,
+            'type' => 'order_fulfillment',
+            'adjustment_quantity' => -2,
+            'quantity_before' => $initialStock,
+            'quantity_after' => $initialStock - 2,
+        ]);
     }
 
     public function test_member_can_create_order(): void

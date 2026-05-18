@@ -7,6 +7,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\OrderResource;
 use App\Models\Inventory\Product;
+use App\Models\Inventory\StockAdjustment;
 use App\Models\Order\Order;
 use App\Models\Order\OrderItem;
 use Illuminate\Http\JsonResponse;
@@ -159,8 +160,17 @@ class OrderController extends Controller
                     'total' => $itemTotal,
                 ]);
 
-                // Decrement product stock
-                $product->decrement('stock', $itemData['quantity']);
+                // Write the stock decrement through StockAdjustment so the
+                // ledger reflects sales fulfillment alongside manual
+                // adjustments, transfers, and returns.
+                StockAdjustment::adjust(
+                    $product,
+                    -$itemData['quantity'],
+                    'order_fulfillment',
+                    "Order {$order->order_number} fulfilled",
+                    null,
+                    $order
+                );
 
                 $subtotal += $itemSubtotal;
                 $totalTax += $itemTax;
@@ -268,10 +278,20 @@ class OrderController extends Controller
         $order->load('items.product');
 
         return DB::transaction(function () use ($order) {
-            // Restore stock for each item
+            // Restore stock for each item through StockAdjustment so the
+            // cancellation is reflected in the ledger. adjust() takes
+            // lockForUpdate internally so concurrent deletes do not
+            // lose increments.
             foreach ($order->items as $item) {
                 if ($item->product) {
-                    $item->product->increment('stock', $item->quantity);
+                    StockAdjustment::adjust(
+                        $item->product,
+                        $item->quantity,
+                        'order_cancellation',
+                        "Order {$order->order_number} deleted",
+                        null,
+                        $order
+                    );
                 }
             }
 
