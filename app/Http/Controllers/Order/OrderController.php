@@ -8,6 +8,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Inventory\Product;
 use App\Models\Inventory\StockAdjustment;
 use App\Models\Order\Order;
+use App\Models\Order\OrderItem;
 use App\Models\Warehouse;
 use App\Services\NotificationService;
 use App\Support\SequenceNumberRetry;
@@ -151,42 +152,83 @@ class OrderController extends Controller
         try {
             $order = SequenceNumberRetry::create(fn () => DB::transaction(function () use ($validated) {
                 $validated['order_number'] = Order::generateOrderNumber($validated['organization_id']);
-                $subtotal = 0;
-                $orderItems = [];
-                $stockMoves = [];
 
+                // Batch-lock every product referenced by this order in a
+                // single SELECT ... FOR UPDATE — previously the loop did
+                // one lock query per item, holding the lock through the
+                // transaction either way but spending N round-trips.
+                $productIds = array_unique(array_column($validated['items'], 'product_id'));
+                $products = Product::whereIn('id', $productIds)
+                    ->where('organization_id', $validated['organization_id'])
+                    ->lockForUpdate()
+                    ->get()
+                    ->keyBy('id');
+
+                // Validate availability across ALL items first. Multiple
+                // line items of the same product accumulate against the
+                // same running stock.
+                $running = [];
                 foreach ($validated['items'] as $item) {
-                    // Lock the product row for update to prevent concurrent modifications
-                    $product = Product::where('id', $item['product_id'])
-                        ->lockForUpdate()
-                        ->first();
-
-                    if (!$product) {
-                        throw new \Exception("Product not found: {$item['product_id']}");
+                    $pid = $item['product_id'];
+                    if (!$products->has($pid)) {
+                        throw new \Exception("Product not found: {$pid}");
                     }
-
-                    // Check if sufficient stock is available
-                    if ($product->stock < $item['quantity']) {
+                    $running[$pid] = ($running[$pid] ?? (int) $products[$pid]->stock) - (int) $item['quantity'];
+                    if ($running[$pid] < 0) {
+                        $product = $products[$pid];
                         throw new \Exception("Insufficient stock for {$product->name}. Available: {$product->stock}, Requested: {$item['quantity']}");
                     }
+                }
 
-                    $itemSubtotal = $item['quantity'] * $item['unit_price'];
+                // Build order-item rows + stock-adjustment rows. quantity_before
+                // and quantity_after thread the running stock so the ledger
+                // is faithful when the order touches the same product twice.
+                $subtotal = 0;
+                $orderItemRows = [];
+                $now = now();
+                $adjustmentRows = [];
+                $perProductQty = [];
+                $threadStock = []; // tracks each entry's quantity_before/after
+
+                foreach ($validated['items'] as $item) {
+                    $pid = $item['product_id'];
+                    $product = $products[$pid];
+                    $qty = (int) $item['quantity'];
+
+                    $itemSubtotal = $qty * $item['unit_price'];
                     $subtotal += $itemSubtotal;
 
-                    $orderItems[] = [
-                        'product_id' => $item['product_id'],
+                    $orderItemRows[] = [
+                        'product_id' => $pid,
                         'product_name' => $product->name,
                         'sku' => $product->sku,
-                        'quantity' => $item['quantity'],
+                        'quantity' => $qty,
                         'unit_price' => $item['unit_price'],
                         'subtotal' => $itemSubtotal,
                         'tax' => 0,
                         'total' => $itemSubtotal,
                     ];
 
-                    // Defer stock mutation until after the order row exists
-                    // so the StockAdjustment ledger entry can reference it.
-                    $stockMoves[] = [$product, $item['quantity']];
+                    $perProductQty[$pid] = ($perProductQty[$pid] ?? 0) + $qty;
+                    $beforeForEntry = $threadStock[$pid] ?? (int) $product->stock;
+                    $afterForEntry = $beforeForEntry - $qty;
+                    $threadStock[$pid] = $afterForEntry;
+
+                    $adjustmentRows[] = [
+                        'organization_id' => $validated['organization_id'],
+                        'product_id' => $pid,
+                        'user_id' => auth()->id(),
+                        'type' => 'order_fulfillment',
+                        'quantity_before' => $beforeForEntry,
+                        'quantity_after' => $afterForEntry,
+                        'adjustment_quantity' => -$qty,
+                        'reason' => null,  // set after order_number known
+                        'notes' => null,
+                        'reference_type' => Order::class,
+                        'reference_id' => null,  // set after $order is created
+                        'created_at' => $now,
+                        'updated_at' => $now,
+                    ];
                 }
 
                 $validated['subtotal'] = $subtotal;
@@ -195,21 +237,28 @@ class OrderController extends Controller
                 $validated['total'] = $subtotal + $validated['tax'] + $validated['shipping'];
 
                 $order = Order::create($validated);
-                $order->items()->createMany($orderItems);
 
-                // Write the stock decrement through StockAdjustment so the
-                // ledger reflects sales fulfillment alongside manual
-                // adjustments, transfers, and returns. The product row is
-                // already locked above; adjust() re-locks safely.
-                foreach ($stockMoves as [$product, $quantity]) {
-                    StockAdjustment::adjust(
-                        $product,
-                        -$quantity,
-                        'order_fulfillment',
-                        "Order {$order->order_number} fulfilled",
-                        null,
-                        $order
-                    );
+                // Fill in the order_id-dependent fields and bulk-insert.
+                foreach ($orderItemRows as &$row) {
+                    $row['order_id'] = $order->id;
+                    $row['created_at'] = $now;
+                    $row['updated_at'] = $now;
+                }
+                unset($row);
+                OrderItem::insert($orderItemRows);
+
+                foreach ($adjustmentRows as &$adj) {
+                    $adj['reason'] = "Order {$order->order_number} fulfilled";
+                    $adj['reference_id'] = $order->id;
+                }
+                unset($adj);
+                StockAdjustment::insert($adjustmentRows);
+
+                // Decrement stock once per unique product instead of once
+                // per line item. Using update + raw expression so we keep
+                // the lockForUpdate-on-the-same-connection semantics.
+                foreach ($perProductQty as $pid => $totalQty) {
+                    $products[$pid]->decrement('stock', $totalQty);
                 }
 
                 return $order;
