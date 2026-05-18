@@ -116,6 +116,11 @@ class SecurityEnhancementsTest extends TestCase
 
     public function test_plugin_upload_rejects_non_zip_mime_type(): void
     {
+        // Plugin uploads are gated behind a feature flag (P0-4); enable it so
+        // this test exercises mime-type validation rather than the
+        // disabled-feature short-circuit.
+        config(['plugins.upload_enabled' => true]);
+
         // Create a PHP file on disk, then wrap it as an UploadedFile with test=true.
         // With test=true, isValid() returns true, but getMimeType() uses finfo
         // to detect the real content type (text/x-php), not the client-provided one.
@@ -139,11 +144,15 @@ class SecurityEnhancementsTest extends TestCase
 
     public function test_plugin_upload_accepts_valid_zip_file(): void
     {
-        // Create a real ZIP file
+        config(['plugins.upload_enabled' => true]);
+
+        // Create a real ZIP file with the well-formed plugin layout the
+        // new uploader requires: single top-level directory containing
+        // plugin.json.
         $tempFile = $this->createTempFile('');
         $zip = new \ZipArchive();
         $zip->open($tempFile, \ZipArchive::CREATE | \ZipArchive::OVERWRITE);
-        $zip->addFromString('plugin.json', json_encode(['name' => 'test']));
+        $zip->addFromString('sec-enh-valid-zip/plugin.json', json_encode(['name' => 'test']));
         $zip->close();
 
         $uploadedFile = new UploadedFile(
@@ -158,6 +167,12 @@ class SecurityEnhancementsTest extends TestCase
             ->post(route('plugins.upload'), [
                 'plugin' => $uploadedFile,
             ]);
+
+        // Clean up the directory created by the upload.
+        $pluginDir = base_path('plugins/sec-enh-valid-zip');
+        if (\Illuminate\Support\Facades\File::isDirectory($pluginDir)) {
+            \Illuminate\Support\Facades\File::deleteDirectory($pluginDir);
+        }
 
         // Should not have validation errors for the plugin field
         $response->assertSessionDoesntHaveErrors('plugin');

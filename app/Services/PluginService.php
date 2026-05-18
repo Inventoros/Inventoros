@@ -198,66 +198,168 @@ final class PluginService
     }
 
     /**
+     * Whether plugin uploads are currently enabled on this instance.
+     *
+     * Uploading a plugin grants arbitrary PHP execution inside the running
+     * application process (the ZIP is extracted to /plugins and the
+     * manifest's main_file is require_once'd at activation), so admin
+     * compromise becomes server RCE. The feature is gated behind an
+     * explicit env flag (INVENTOROS_ALLOW_PLUGIN_UPLOADS) and is off by
+     * default.
+     */
+    public function uploadsEnabled(): bool
+    {
+        return (bool) config('plugins.upload_enabled', false);
+    }
+
+    /**
      * Upload and extract a plugin ZIP file.
      *
      * @param mixed $file The uploaded file instance
      * @return array{slug: string, path: string} The extracted plugin slug and path
-     * @throws \Exception If ZIP cannot be opened, structure is invalid, plugin exists, or plugin.json missing
+     * @throws \Exception If uploads disabled, ZIP cannot be opened, contains
+     *                    path-traversal entries, exceeds limits, structure
+     *                    is invalid, plugin exists, or plugin.json missing
      */
     public function uploadPlugin($file): array
     {
+        if (!$this->uploadsEnabled()) {
+            throw new \RuntimeException(
+                'Plugin uploads are disabled on this instance. Set '
+                . 'INVENTOROS_ALLOW_PLUGIN_UPLOADS=true to enable. Note: '
+                . 'enabling allows admin users to run arbitrary code on this server.'
+            );
+        }
+
+        $tempName = 'upload-' . bin2hex(random_bytes(8)) . '.zip';
+        $file->storeAs('temp', $tempName);
+        $tempPath = storage_path('app/private/temp/' . $tempName);
+        if (!file_exists($tempPath)) {
+            // Older Laravel storage layouts use app/temp/ without the
+            // private/ prefix; fall back so the resolution works on both.
+            $tempPath = storage_path('app/temp/' . $tempName);
+        }
+
         $zip = new ZipArchive();
-        $tempPath = storage_path('app/temp/' . $file->getClientOriginalName());
-
-        // Save uploaded file temporarily
-        $file->storeAs('temp', $file->getClientOriginalName());
-
         if ($zip->open($tempPath) !== true) {
-            throw new \Exception('Failed to open ZIP file');
+            @unlink($tempPath);
+            throw new \RuntimeException('Failed to open ZIP file');
         }
 
-        // Get the root folder name from ZIP
-        $rootFolder = '';
-        for ($i = 0; $i < $zip->numFiles; $i++) {
-            $stat = $zip->statIndex($i);
-            $name = $stat['name'];
+        try {
+            // Validate every entry BEFORE writing anything to disk.
+            $rootFolder = $this->validateZipArchive($zip);
 
-            if (strpos($name, '/') !== false) {
-                $rootFolder = substr($name, 0, strpos($name, '/'));
-                break;
+            $extractPath = $this->pluginsPath . '/' . $rootFolder;
+            if (File::exists($extractPath)) {
+                throw new \RuntimeException('Plugin already exists');
             }
-        }
 
-        if (empty($rootFolder)) {
+            $zip->extractTo($this->pluginsPath);
+        } finally {
             $zip->close();
-            throw new \Exception('Invalid plugin structure');
+            @unlink($tempPath);
         }
 
-        // Extract to plugins directory
-        $extractPath = $this->pluginsPath . '/' . $rootFolder;
-
-        if (File::exists($extractPath)) {
-            $zip->close();
-            throw new \Exception('Plugin already exists');
+        // Verify the extracted root is still inside our plugins directory.
+        $pluginsRoot = realpath($this->pluginsPath);
+        $extractedRoot = realpath($extractPath);
+        if (!$pluginsRoot || !$extractedRoot || !str_starts_with($extractedRoot . DIRECTORY_SEPARATOR, $pluginsRoot . DIRECTORY_SEPARATOR)) {
+            if ($extractedRoot && is_dir($extractedRoot)) {
+                File::deleteDirectory($extractedRoot);
+            }
+            throw new \RuntimeException('Plugin extracted outside the plugins directory');
         }
 
-        $zip->extractTo($this->pluginsPath);
-        $zip->close();
-
-        // Clean up temp file
-        Storage::delete('temp/' . $file->getClientOriginalName());
-
-        // Validate plugin.json exists
-        $manifestPath = $extractPath . '/plugin.json';
+        $manifestPath = $extractedRoot . '/plugin.json';
         if (!File::exists($manifestPath)) {
-            File::deleteDirectory($extractPath);
-            throw new \Exception('Invalid plugin: missing plugin.json');
+            File::deleteDirectory($extractedRoot);
+            throw new \RuntimeException('Invalid plugin: missing plugin.json');
         }
 
         return [
             'slug' => $rootFolder,
-            'path' => $extractPath,
+            'path' => $extractedRoot,
         ];
+    }
+
+    /**
+     * Walk every entry in the archive, reject path traversal / oversized /
+     * over-counted archives, and return the single root folder name.
+     *
+     * @throws \RuntimeException When the archive is invalid or unsafe.
+     */
+    protected function validateZipArchive(ZipArchive $zip): string
+    {
+        $maxEntries = (int) config('plugins.max_entry_count', 2000);
+        $maxBytes = (int) config('plugins.max_extracted_bytes', 50 * 1024 * 1024);
+
+        if ($zip->numFiles > $maxEntries) {
+            throw new \RuntimeException("Plugin ZIP exceeds entry count limit ({$zip->numFiles} > {$maxEntries})");
+        }
+
+        $pluginsRoot = realpath($this->pluginsPath);
+        if (!$pluginsRoot) {
+            throw new \RuntimeException('Plugins directory does not exist');
+        }
+
+        $rootFolders = [];
+        $totalBytes = 0;
+
+        for ($i = 0; $i < $zip->numFiles; $i++) {
+            $stat = $zip->statIndex($i);
+            if ($stat === false) {
+                throw new \RuntimeException("Could not stat entry #{$i}");
+            }
+
+            $name = $stat['name'];
+
+            // Reject absolute paths, parent-directory segments, and backslashes
+            // (Windows path separators sometimes injected by malicious ZIP
+            // generators that target cross-platform zip-slip).
+            if ($name === '' || $name[0] === '/' || $name[0] === '\\') {
+                throw new \RuntimeException("Plugin ZIP contains absolute path entry: {$name}");
+            }
+            if (str_contains($name, '..') || str_contains($name, '\\')) {
+                throw new \RuntimeException("Plugin ZIP contains unsafe path entry: {$name}");
+            }
+
+            // Bound the uncompressed size so a tiny ZIP cannot expand into a
+            // multi-gigabyte payload that fills the disk.
+            $totalBytes += (int) ($stat['size'] ?? 0);
+            if ($totalBytes > $maxBytes) {
+                throw new \RuntimeException("Plugin ZIP exceeds uncompressed-size limit");
+            }
+
+            // Canonicalize the target and ensure it lands inside the plugins
+            // directory. realpath() returns false for paths that don't exist
+            // yet (which they don't — we haven't extracted), so we work on
+            // the resolved parent + the leaf name.
+            $target = $this->pluginsPath . '/' . $name;
+            $parent = dirname($target);
+            $parentReal = realpath($parent) ?: $this->pluginsPath;
+            if (!str_starts_with($parentReal . DIRECTORY_SEPARATOR, $pluginsRoot . DIRECTORY_SEPARATOR)
+                && $parentReal !== $pluginsRoot) {
+                throw new \RuntimeException("Plugin ZIP entry would escape plugins directory: {$name}");
+            }
+
+            $rootSegment = strstr($name, '/', true);
+            if ($rootSegment === false) {
+                // Entry is at the archive root with no folder prefix — reject
+                // because plugins must live under a single named directory.
+                throw new \RuntimeException("Plugin ZIP must have a single root folder; found loose file: {$name}");
+            }
+            $rootFolders[$rootSegment] = true;
+        }
+
+        if (count($rootFolders) === 0) {
+            throw new \RuntimeException('Invalid plugin structure: archive is empty');
+        }
+        if (count($rootFolders) > 1) {
+            throw new \RuntimeException('Invalid plugin structure: ZIP must contain exactly one top-level directory');
+        }
+
+        return array_key_first($rootFolders);
     }
 
     /**
