@@ -114,4 +114,140 @@ class UpdateSafetyTest extends TestCase
         $this->assertFalse($result['success']);
         $this->assertStringContainsString('unsafe path entry', $result['error'] ?? $result['message']);
     }
+
+    /**
+     * Sign $contents with a freshly minted keypair and configure the public
+     * key so verifyArchiveSignature() can be exercised end to end.
+     *
+     * @return array{public: string, sign: callable(string): string}
+     */
+    private function configureSigningKeypair(): array
+    {
+        $keypair = sodium_crypto_sign_keypair();
+        $public = base64_encode(sodium_crypto_sign_publickey($keypair));
+        $secret = sodium_crypto_sign_secretkey($keypair);
+
+        config([
+            'update.signature.required' => true,
+            'update.signature.public_key' => $public,
+            'update.signature.asset_suffix' => '.sig',
+            'update.download_url_prefixes' => [
+                'https://github.com/Inventoros/Inventoros/releases/download/',
+            ],
+        ]);
+
+        return [
+            'public' => $public,
+            'sign' => fn (string $contents): string => base64_encode(
+                sodium_crypto_sign_detached($contents, $secret)
+            ),
+        ];
+    }
+
+    public function test_verify_archive_signature_accepts_valid_signature(): void
+    {
+        $keys = $this->configureSigningKeypair();
+
+        $zipPath = $this->makeZip(['app/x.txt' => 'release']);
+        $signature = ($keys['sign'])(file_get_contents($zipPath));
+
+        \Illuminate\Support\Facades\Http::fake([
+            '*release.zip.sig' => \Illuminate\Support\Facades\Http::response($signature, 200),
+        ]);
+
+        $service = new FileUpdateService();
+        $service->verifyArchiveSignature(
+            $zipPath,
+            'https://github.com/Inventoros/Inventoros/releases/download/v1.0.0/release.zip'
+        );
+
+        // No exception == verified.
+        $this->assertTrue(true);
+    }
+
+    public function test_verify_archive_signature_rejects_tampered_archive(): void
+    {
+        $keys = $this->configureSigningKeypair();
+
+        $zipPath = $this->makeZip(['app/x.txt' => 'release']);
+        $signatureForOriginal = ($keys['sign'])(file_get_contents($zipPath));
+
+        // Attacker swaps the archive bytes but keeps the original signature.
+        File::put($zipPath, 'tampered-bytes');
+
+        \Illuminate\Support\Facades\Http::fake([
+            '*release.zip.sig' => \Illuminate\Support\Facades\Http::response($signatureForOriginal, 200),
+        ]);
+
+        $service = new FileUpdateService();
+
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage('failed signature verification');
+
+        $service->verifyArchiveSignature(
+            $zipPath,
+            'https://github.com/Inventoros/Inventoros/releases/download/v1.0.0/release.zip'
+        );
+    }
+
+    public function test_verify_archive_signature_fails_closed_without_public_key(): void
+    {
+        config([
+            'update.signature.required' => true,
+            'update.signature.public_key' => '',
+        ]);
+
+        $zipPath = $this->makeZip(['app/x.txt' => 'release']);
+
+        $service = new FileUpdateService();
+
+        $this->expectException(Exception::class);
+        $this->expectExceptionMessage('no signing public key is configured');
+
+        $service->verifyArchiveSignature(
+            $zipPath,
+            'https://github.com/Inventoros/Inventoros/releases/download/v1.0.0/release.zip'
+        );
+    }
+
+    public function test_verify_archive_signature_skipped_when_not_required(): void
+    {
+        config([
+            'update.signature.required' => false,
+            'update.signature.public_key' => '',
+        ]);
+
+        $zipPath = $this->makeZip(['app/x.txt' => 'release']);
+
+        $service = new FileUpdateService();
+        $service->verifyArchiveSignature(
+            $zipPath,
+            'https://github.com/Inventoros/Inventoros/releases/download/v1.0.0/release.zip'
+        );
+
+        // Opt-out path returns without throwing.
+        $this->assertTrue(true);
+    }
+
+    public function test_sign_command_produces_signature_verifiable_by_verifier(): void
+    {
+        $keypair = sodium_crypto_sign_keypair();
+        $public = base64_encode(sodium_crypto_sign_publickey($keypair));
+        $secret = base64_encode(sodium_crypto_sign_secretkey($keypair));
+
+        $file = tempnam(sys_get_temp_dir(), 'inv-sign-') . '.zip';
+        File::put($file, 'archive-bytes');
+        $this->tempPaths[] = $file;
+        $this->tempPaths[] = $file . '.sig';
+
+        putenv('INVENTOROS_UPDATE_SECRET_KEY=' . $secret);
+        $this->artisan('update:sign', ['file' => $file])->assertSuccessful();
+        putenv('INVENTOROS_UPDATE_SECRET_KEY');
+
+        $this->assertFileExists($file . '.sig');
+
+        // The verifier accepts the produced signature under the public key.
+        \App\Support\ReleaseSignatureVerifier::verify($file, File::get($file . '.sig'), $public);
+        $this->assertTrue(true);
+    }
 }
