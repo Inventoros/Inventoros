@@ -5,7 +5,11 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Inventory;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\ProductCategory\StoreProductCategoryRequest;
+use App\Http\Requests\ProductCategory\UpdateProductCategoryRequest;
 use App\Models\Inventory\ProductCategory;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -21,8 +25,7 @@ class ProductCategoryController extends Controller
     /**
      * Display a listing of categories.
      *
-     * @param Request $request The incoming HTTP request
-     * @return Response
+     * @param  Request  $request  The incoming HTTP request
      */
     public function index(Request $request): Response
     {
@@ -36,7 +39,7 @@ class ProductCategoryController extends Controller
             ->latest()
             ->paginate(15)
             ->withQueryString()
-            ->through(fn($category) => $category);
+            ->through(fn ($category) => $category);
 
         return Inertia::render('Categories/Index', [
             'categories' => $categories,
@@ -53,16 +56,12 @@ class ProductCategoryController extends Controller
     /**
      * Store a newly created category.
      *
-     * @param Request $request The incoming HTTP request containing category data
-     * @return \Illuminate\Http\RedirectResponse|\Illuminate\Http\JsonResponse
+     * @param  Request  $request  The incoming HTTP request containing category data
+     * @return RedirectResponse|JsonResponse
      */
-    public function store(Request $request)
+    public function store(StoreProductCategoryRequest $request)
     {
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'description' => 'nullable|string',
-            'is_active' => 'boolean',
-        ]);
+        $validated = $request->validated();
 
         $validated['organization_id'] = $request->user()->organization_id;
         $validated['is_active'] = $validated['is_active'] ?? true;
@@ -85,22 +84,18 @@ class ProductCategoryController extends Controller
     /**
      * Update the specified category.
      *
-     * @param Request $request The incoming HTTP request containing updated category data
-     * @param ProductCategory $category The category to update
-     * @return \Illuminate\Http\RedirectResponse
+     * @param  Request  $request  The incoming HTTP request containing updated category data
+     * @param  ProductCategory  $category  The category to update
+     * @return RedirectResponse
      */
-    public function update(Request $request, ProductCategory $category)
+    public function update(UpdateProductCategoryRequest $request, ProductCategory $category)
     {
         // Ensure user can only update categories from their organization
         if ($category->organization_id !== $request->user()->organization_id) {
             abort(403, 'Unauthorized action.');
         }
 
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'description' => 'nullable|string',
-            'is_active' => 'boolean',
-        ]);
+        $validated = $request->validated();
 
         $category->update($validated);
 
@@ -111,9 +106,9 @@ class ProductCategoryController extends Controller
     /**
      * Remove the specified category.
      *
-     * @param Request $request The incoming HTTP request
-     * @param ProductCategory $category The category to delete
-     * @return \Illuminate\Http\RedirectResponse
+     * @param  Request  $request  The incoming HTTP request
+     * @param  ProductCategory  $category  The category to delete
+     * @return RedirectResponse
      */
     public function destroy(Request $request, ProductCategory $category)
     {
