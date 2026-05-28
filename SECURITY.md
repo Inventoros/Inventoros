@@ -226,9 +226,25 @@ The hardening posture is the same WordPress-style "trust the source, validate th
   - Entry-count cap (`INVENTOROS_UPDATE_MAX_ENTRIES`, default 50000).
   - Uncompressed-size cap (`INVENTOROS_UPDATE_MAX_BYTES`, default 300 MB).
 
+- **Cryptographic signature verification** of the archive before extraction. Each release ships a detached Ed25519 signature (`<asset>.zip.sig`, base64 of the raw 64-byte signature) next to the asset. `UpdateService` downloads the signature from the same allowlisted host and verifies the archive bytes against the public key in `update.signature.public_key` (`INVENTOROS_UPDATE_PUBLIC_KEY`) before any file is touched.
+  - **Fail-closed.** `update.signature.required` is `true` by default: if it is on but no public key is configured, updates are *refused* rather than installing an unverified download. Operators deliberately running unsigned builds set `INVENTOROS_UPDATE_SIGNATURE_REQUIRED=false`.
+
+### Signing releases
+
+Maintainers mint a keypair once and publish a signature with every release:
+
+```bash
+# Once: generate a keypair. Commit/ship the PUBLIC key; keep the SECRET key
+# in the release-signing environment (e.g. a CI secret) — never in the repo.
+php artisan update:signing-keypair
+
+# Per release: sign the built archive. Reads INVENTOROS_UPDATE_SECRET_KEY and
+# writes release.zip.sig alongside it. Upload BOTH to the GitHub release.
+INVENTOROS_UPDATE_SECRET_KEY=... php artisan update:sign dist/release.zip
+```
+
 What is explicitly **not** included:
 
-- **Cryptographic signature verification.** Releases are not signed yet. Trust the GitHub release pipeline; rotate the allowlist if you suspect compromise.
 - **Tarball / tar.gz** support. The updater only consumes ZIPs.
 
 ## Bug Bounty Program

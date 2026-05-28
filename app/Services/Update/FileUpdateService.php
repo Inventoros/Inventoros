@@ -4,10 +4,12 @@ declare(strict_types=1);
 
 namespace App\Services\Update;
 
+use App\Support\ReleaseSignatureVerifier;
 use App\Support\SafeZipExtractor;
 use Exception;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 use ZipArchive;
 
 /**
@@ -34,8 +36,9 @@ final class FileUpdateService
     /**
      * Download release from URL.
      *
-     * @param string $url The URL to download the release from
+     * @param  string  $url  The URL to download the release from
      * @return string Path to the downloaded ZIP file
+     *
      * @throws Exception If download fails
      */
     public function downloadRelease(string $url): string
@@ -44,7 +47,7 @@ final class FileUpdateService
 
         $this->ensureTempDirectoryExists();
 
-        $zipPath = "{$this->tempPath}/update_" . time() . ".zip";
+        $zipPath = "{$this->tempPath}/update_".time().'.zip';
 
         // Disable redirect following so a 302 from an allowlisted host
         // cannot smuggle us off to an arbitrary URL.
@@ -52,7 +55,7 @@ final class FileUpdateService
             ->timeout(config('limits.timeouts.file_download'))
             ->get($url);
 
-        if (!$response->successful()) {
+        if (! $response->successful()) {
             throw new Exception('Failed to download release');
         }
 
@@ -81,8 +84,82 @@ final class FileUpdateService
 
         throw new Exception(
             'Update download URL is not in the allowed list. Add the prefix '
-            . 'to INVENTOROS_UPDATE_PREFIXES if you trust the source.'
+            .'to INVENTOROS_UPDATE_PREFIXES if you trust the source.'
         );
+    }
+
+    /**
+     * Verify the downloaded archive against its detached Ed25519 signature
+     * before it is extracted over the live application.
+     *
+     * Fails closed: with signature verification required (the default) but no
+     * public key configured, this refuses the update rather than trusting an
+     * unverified download. Operators who knowingly run unsigned builds set
+     * INVENTOROS_UPDATE_SIGNATURE_REQUIRED=false.
+     *
+     * @param  string  $zipPath  Path to the downloaded archive on disk.
+     * @param  string  $downloadUrl  The URL the archive came from; the detached
+     *                               signature is fetched from this URL plus the
+     *                               configured asset suffix (default `.sig`).
+     *
+     * @throws Exception When verification is required and fails for any reason.
+     */
+    public function verifyArchiveSignature(string $zipPath, string $downloadUrl): void
+    {
+        $required = (bool) config('update.signature.required', true);
+        $publicKey = (string) config('update.signature.public_key', '');
+
+        if (! $required) {
+            if ($publicKey === '') {
+                Log::warning('Update signature verification is disabled; installing an unverified archive.', [
+                    'component' => 'update_service',
+                ]);
+            }
+
+            return;
+        }
+
+        if ($publicKey === '') {
+            throw new Exception(
+                'Update signature verification is required but no signing public key is configured. '
+                .'Set INVENTOROS_UPDATE_PUBLIC_KEY, or set INVENTOROS_UPDATE_SIGNATURE_REQUIRED=false '
+                .'to install unsigned updates (not recommended).'
+            );
+        }
+
+        $signatureB64 = $this->downloadSignature($downloadUrl);
+
+        ReleaseSignatureVerifier::verify($zipPath, $signatureB64, $publicKey);
+    }
+
+    /**
+     * Download the detached signature that sits next to the release asset.
+     *
+     * The signature URL is the download URL plus the configured suffix, so it
+     * is served from the same allowlisted host and re-checked against the
+     * allowlist before any bytes are fetched.
+     *
+     * @throws Exception When the signature cannot be retrieved.
+     */
+    protected function downloadSignature(string $downloadUrl): string
+    {
+        $suffix = (string) config('update.signature.asset_suffix', '.sig');
+        $signatureUrl = $downloadUrl.$suffix;
+
+        $this->assertAllowedDownloadUrl($signatureUrl);
+
+        $response = Http::withOptions(['allow_redirects' => false])
+            ->timeout(config('limits.timeouts.file_download'))
+            ->get($signatureUrl);
+
+        if (! $response->successful()) {
+            throw new Exception(
+                'Update signature could not be downloaded. The release must ship a detached '
+                ."signature at {$suffix} alongside the archive."
+            );
+        }
+
+        return trim($response->body());
     }
 
     /**
@@ -90,16 +167,17 @@ final class FileUpdateService
      *
      * Handles GitHub's root folder structure by flattening if necessary.
      *
-     * @param string $zipPath Path to the ZIP file
+     * @param  string  $zipPath  Path to the ZIP file
      * @return string Path to the extracted directory
+     *
      * @throws Exception If extraction fails
      */
     public function extractZip(string $zipPath): string
     {
-        $extractPath = "{$this->tempPath}/extracted_" . time();
+        $extractPath = "{$this->tempPath}/extracted_".time();
         File::makeDirectory($extractPath, 0755, true, true);
 
-        $zip = new ZipArchive();
+        $zip = new ZipArchive;
         if ($zip->open($zipPath) !== true) {
             throw new Exception('Could not open downloaded ZIP file');
         }
@@ -121,7 +199,7 @@ final class FileUpdateService
         if (count($contents) === 1 && count(File::files($extractPath)) === 0) {
             // Move contents up one level
             $rootDir = $contents[0];
-            $tempExtractPath = $extractPath . '_final';
+            $tempExtractPath = $extractPath.'_final';
             File::moveDirectory($rootDir, $tempExtractPath);
             File::deleteDirectory($extractPath);
             File::moveDirectory($tempExtractPath, $extractPath);
@@ -135,8 +213,7 @@ final class FileUpdateService
      *
      * Copies directories and key files from source to base path.
      *
-     * @param string $sourcePath Path to the extracted update files
-     * @return void
+     * @param  string  $sourcePath  Path to the extracted update files
      */
     public function replaceFiles(string $sourcePath): void
     {
@@ -185,9 +262,8 @@ final class FileUpdateService
     /**
      * Cleanup temporary files after update.
      *
-     * @param string $zipPath Path to the downloaded ZIP file
-     * @param string $extractPath Path to the extracted directory
-     * @return void
+     * @param  string  $zipPath  Path to the downloaded ZIP file
+     * @param  string  $extractPath  Path to the extracted directory
      */
     public function cleanup(string $zipPath, string $extractPath): void
     {
@@ -212,12 +288,10 @@ final class FileUpdateService
 
     /**
      * Ensure temp directory exists.
-     *
-     * @return void
      */
     protected function ensureTempDirectoryExists(): void
     {
-        if (!File::exists($this->tempPath)) {
+        if (! File::exists($this->tempPath)) {
             File::makeDirectory($this->tempPath, config('limits.permissions.directory'), true);
         }
     }
