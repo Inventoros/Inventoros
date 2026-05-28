@@ -5,15 +5,17 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Inventory;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Product\StoreProductRequest;
+use App\Http\Requests\Product\UpdateProductRequest;
 use App\Models\ActivityLog;
 use App\Models\Inventory\Product;
 use App\Models\Inventory\ProductCategory;
 use App\Models\Inventory\ProductLocation;
 use App\Models\Inventory\ProductOption;
 use App\Models\Inventory\ProductVariant;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -29,8 +31,7 @@ class ProductController extends Controller
     /**
      * Display a listing of products.
      *
-     * @param Request $request The incoming HTTP request
-     * @return Response
+     * @param  Request  $request  The incoming HTTP request
      */
     public function index(Request $request): Response
     {
@@ -49,8 +50,8 @@ class ProductController extends Controller
             ->when($request->input('search'), function ($query, $search) {
                 $query->where(function ($q) use ($search) {
                     $q->where('name', 'like', "%{$search}%")
-                      ->orWhere('sku', 'like', "%{$search}%")
-                      ->orWhere('barcode', 'like', "%{$search}%");
+                        ->orWhere('sku', 'like', "%{$search}%")
+                        ->orWhere('barcode', 'like', "%{$search}%");
                 });
             })
             ->when($request->input('category'), function ($query, $category) {
@@ -104,8 +105,7 @@ class ProductController extends Controller
     /**
      * Show the form for creating a new product.
      *
-     * @param Request $request The incoming HTTP request
-     * @return Response
+     * @param  Request  $request  The incoming HTTP request
      */
     public function create(Request $request): Response
     {
@@ -145,57 +145,12 @@ class ProductController extends Controller
     /**
      * Store a newly created product.
      *
-     * @param Request $request The incoming HTTP request containing product data
-     * @return \Illuminate\Http\RedirectResponse
+     * @param  Request  $request  The incoming HTTP request containing product data
+     * @return RedirectResponse
      */
-    public function store(Request $request)
+    public function store(StoreProductRequest $request)
     {
-        $organizationId = $request->user()->organization_id;
-
-        // Hook: Modify validation rules before validation
-        $rules = apply_filters('product_store_validation_rules', [
-            'type' => 'sometimes|string|in:standard,kit,assembly',
-            'sku' => ['required', 'string', 'max:255', Rule::unique('products', 'sku')->where('organization_id', $organizationId)],
-            'name' => 'required|string|max:255',
-            'description' => 'nullable|string',
-            'price' => 'required|numeric|min:0',
-            'purchase_price' => 'nullable|numeric|min:0',
-            'currency' => 'required|string|max:3',
-            'price_in_currencies' => 'nullable|array',
-            'price_in_currencies.*.currency' => 'required|string|max:3',
-            'price_in_currencies.*.price' => 'required|numeric|min:0',
-            'stock' => 'required|integer|min:0',
-            'min_stock' => 'required|integer|min:0',
-            'max_stock' => 'nullable|integer|min:0',
-            'reorder_point' => 'nullable|integer|min:0',
-            'reorder_quantity' => 'nullable|integer|min:0',
-            'barcode' => 'nullable|string|max:255',
-            'notes' => 'nullable|string',
-            'category_id' => ['nullable', Rule::exists('product_categories', 'id')->where('organization_id', $organizationId)],
-            'location_id' => ['nullable', Rule::exists('product_locations', 'id')->where('organization_id', $organizationId)],
-            'is_active' => 'boolean',
-            'images' => 'nullable|array|max:5',
-            'images.*.file' => 'nullable',
-            'images.*.preview' => 'nullable|string',
-            'images.*.name' => 'nullable|string',
-            'has_variants' => 'boolean',
-            'tracking_type' => 'nullable|string|in:none,batch,serial',
-            'options' => 'nullable|array|max:3',
-            'options.*.name' => 'required_with:options|string|max:255',
-            'options.*.values' => 'required_with:options|array|min:1',
-            'options.*.values.*' => 'string|max:255',
-            'variants' => 'nullable|array',
-            'variants.*.option_values' => 'required_with:variants|array',
-            'variants.*.sku' => 'nullable|string|max:255',
-            'variants.*.barcode' => 'nullable|string|max:255',
-            'variants.*.price' => 'nullable|numeric|min:0',
-            'variants.*.purchase_price' => 'nullable|numeric|min:0',
-            'variants.*.stock' => 'nullable|integer|min:0',
-            'variants.*.min_stock' => 'nullable|integer|min:0',
-            'variants.*.is_active' => 'boolean',
-        ], $request);
-
-        $validated = $request->validate($rules);
+        $validated = $request->validated();
 
         $validated['organization_id'] = $request->user()->organization_id;
         $validated['type'] = $validated['type'] ?? 'standard';
@@ -208,7 +163,7 @@ class ProductController extends Controller
         do_action('product_before_create', $validated, $request);
 
         // Convert price_in_currencies array to proper format
-        if (!empty($validated['price_in_currencies'])) {
+        if (! empty($validated['price_in_currencies'])) {
             $currencies = [];
             foreach ($validated['price_in_currencies'] as $currencyPrice) {
                 $currencies[$currencyPrice['currency']] = $currencyPrice['price'];
@@ -217,7 +172,7 @@ class ProductController extends Controller
         }
 
         // Handle image uploads
-        if (!empty($validated['images'])) {
+        if (! empty($validated['images'])) {
             $imagePaths = [];
             foreach ($validated['images'] as $index => $imageData) {
                 if (isset($imageData['preview']) && str_starts_with($imageData['preview'], 'data:image/')) {
@@ -230,7 +185,7 @@ class ProductController extends Controller
 
                     // Generate unique filename
                     $extension = $this->getImageExtensionFromBase64($imageData['preview']);
-                    $filename = 'products/' . uniqid() . '_' . time() . '.' . $extension;
+                    $filename = 'products/'.uniqid().'_'.time().'.'.$extension;
 
                     // Store image
                     \Storage::disk('public')->put($filename, $imageContent);
@@ -250,11 +205,11 @@ class ProductController extends Controller
         $variants = $validated['variants'] ?? [];
         unset($validated['options'], $validated['variants']);
 
-        $product = DB::transaction(function () use ($validated, $options, $variants, $request) {
+        $product = DB::transaction(function () use ($validated, $options, $variants) {
             $product = Product::create($validated);
 
             // Create options if has_variants is true
-            if ($product->has_variants && !empty($options)) {
+            if ($product->has_variants && ! empty($options)) {
                 foreach ($options as $index => $optionData) {
                     ProductOption::create([
                         'product_id' => $product->id,
@@ -303,13 +258,14 @@ class ProductController extends Controller
     /**
      * Get image extension from base64 string.
      *
-     * @param string $base64 The base64 encoded image string
+     * @param  string  $base64  The base64 encoded image string
      * @return string The image file extension
      */
     private function getImageExtensionFromBase64(string $base64): string
     {
         $mimeType = substr($base64, 5, strpos($base64, ';') - 5);
-        return match($mimeType) {
+
+        return match ($mimeType) {
             'image/jpeg' => 'jpg',
             'image/png' => 'png',
             'image/gif' => 'gif',
@@ -323,14 +279,14 @@ class ProductController extends Controller
      *
      * Returns true if valid, throws exception if invalid.
      *
-     * @param string $base64Data The base64 encoded image data
-     * @return bool
+     * @param  string  $base64Data  The base64 encoded image data
+     *
      * @throws \InvalidArgumentException If the image is invalid
      */
     private function validateBase64Image(string $base64Data): bool
     {
         // Check data URL format
-        if (!preg_match('/^data:image\/(jpeg|jpg|png|gif|webp);base64,/', $base64Data)) {
+        if (! preg_match('/^data:image\/(jpeg|jpg|png|gif|webp);base64,/', $base64Data)) {
             throw new \InvalidArgumentException('Invalid image format. Only JPEG, PNG, GIF, and WebP are allowed.');
         }
 
@@ -356,7 +312,7 @@ class ProductController extends Controller
 
         // Verify MIME type matches allowed types
         $allowedMimes = [IMAGETYPE_JPEG, IMAGETYPE_PNG, IMAGETYPE_GIF, IMAGETYPE_WEBP];
-        if (!in_array($imageInfo[2], $allowedMimes)) {
+        if (! in_array($imageInfo[2], $allowedMimes)) {
             throw new \InvalidArgumentException('Invalid image type. Only JPEG, PNG, GIF, and WebP are allowed.');
         }
 
@@ -372,8 +328,7 @@ class ProductController extends Controller
     /**
      * Display the specified product.
      *
-     * @param Product $product The product to display
-     * @return Response
+     * @param  Product  $product  The product to display
      */
     public function show(Product $product): Response
     {
@@ -425,9 +380,8 @@ class ProductController extends Controller
     /**
      * Show the form for editing the specified product.
      *
-     * @param Request $request The incoming HTTP request
-     * @param Product $product The product to edit
-     * @return Response
+     * @param  Request  $request  The incoming HTTP request
+     * @param  Product  $product  The product to edit
      */
     public function edit(Request $request, Product $product): Response
     {
@@ -476,62 +430,18 @@ class ProductController extends Controller
     /**
      * Update the specified product.
      *
-     * @param Request $request The incoming HTTP request containing updated product data
-     * @param Product $product The product to update
-     * @return \Illuminate\Http\RedirectResponse
+     * @param  Request  $request  The incoming HTTP request containing updated product data
+     * @param  Product  $product  The product to update
+     * @return RedirectResponse
      */
-    public function update(Request $request, Product $product)
+    public function update(UpdateProductRequest $request, Product $product)
     {
         // Ensure user can only update products from their organization
         if ($product->organization_id !== $request->user()->organization_id) {
             abort(403, 'Unauthorized action.');
         }
 
-        $organizationId = $request->user()->organization_id;
-
-        // Hook: Modify validation rules
-        $rules = apply_filters('product_update_validation_rules', [
-            'type' => 'sometimes|string|in:standard,kit,assembly',
-            'sku' => ['required', 'string', 'max:255', Rule::unique('products', 'sku')->where('organization_id', $organizationId)->ignore($product->id)],
-            'name' => 'required|string|max:255',
-            'description' => 'nullable|string',
-            'price' => 'required|numeric|min:0',
-            'purchase_price' => 'nullable|numeric|min:0',
-            'stock' => 'required|integer|min:0',
-            'min_stock' => 'required|integer|min:0',
-            'max_stock' => 'nullable|integer|min:0',
-            'reorder_point' => 'nullable|integer|min:0',
-            'reorder_quantity' => 'nullable|integer|min:0',
-            'barcode' => 'nullable|string|max:255',
-            'notes' => 'nullable|string',
-            'category_id' => ['nullable', Rule::exists('product_categories', 'id')->where('organization_id', $organizationId)],
-            'location_id' => ['nullable', Rule::exists('product_locations', 'id')->where('organization_id', $organizationId)],
-            'is_active' => 'boolean',
-            'images' => 'nullable|array|max:5',
-            'images.*.file' => 'nullable',
-            'images.*.preview' => 'nullable|string',
-            'images.*.url' => 'nullable|string',
-            'images.*.name' => 'nullable|string',
-            'has_variants' => 'boolean',
-            'tracking_type' => 'nullable|string|in:none,batch,serial',
-            'options' => 'nullable|array|max:3',
-            'options.*.id' => 'nullable|integer',
-            'options.*.name' => 'required_with:options|string|max:255',
-            'options.*.values' => 'required_with:options|array|min:1',
-            'options.*.values.*' => 'string|max:255',
-            'variants' => 'nullable|array',
-            'variants.*.id' => 'nullable|integer',
-            'variants.*.option_values' => 'required_with:variants|array',
-            'variants.*.sku' => 'nullable|string|max:255',
-            'variants.*.barcode' => 'nullable|string|max:255',
-            'variants.*.price' => 'nullable|numeric|min:0',
-            'variants.*.purchase_price' => 'nullable|numeric|min:0',
-            'variants.*.stock' => 'nullable|integer|min:0',
-            'variants.*.min_stock' => 'nullable|integer|min:0',
-            'variants.*.is_active' => 'boolean',
-        ], $product, $request);
-
-        $validated = $request->validate($rules);
+        $validated = $request->validated();
 
         // Hook: Modify validated data
         $validated = apply_filters('product_update_data', $validated, $product, $request);
@@ -546,7 +456,7 @@ class ProductController extends Controller
 
             foreach ($validated['images'] as $index => $imageData) {
                 // If image has a URL (existing image), keep it
-                if (isset($imageData['url']) && !str_starts_with($imageData['preview'], 'data:image/')) {
+                if (isset($imageData['url']) && ! str_starts_with($imageData['preview'], 'data:image/')) {
                     // Extract path from URL (/storage/products/...)
                     $path = str_replace('/storage/', '', $imageData['url']);
                     $imagePaths[] = $path;
@@ -560,21 +470,21 @@ class ProductController extends Controller
                     $imageContent = base64_decode($base64);
 
                     $extension = $this->getImageExtensionFromBase64($imageData['preview']);
-                    $filename = 'products/' . uniqid() . '_' . time() . '.' . $extension;
+                    $filename = 'products/'.uniqid().'_'.time().'.'.$extension;
 
                     \Storage::disk('public')->put($filename, $imageContent);
                     $imagePaths[] = $filename;
                 }
 
                 // Set thumbnail (first image)
-                if ($index === 0 && !empty($imagePaths)) {
+                if ($index === 0 && ! empty($imagePaths)) {
                     $validated['thumbnail'] = end($imagePaths);
                 }
             }
 
             // Delete removed images
             foreach ($oldImages as $oldImage) {
-                if (!in_array($oldImage, $imagePaths)) {
+                if (! in_array($oldImage, $imagePaths)) {
                     \Storage::disk('public')->delete($oldImage);
                 }
             }
@@ -612,9 +522,8 @@ class ProductController extends Controller
     /**
      * Sync product options.
      *
-     * @param Product $product The product to sync options for
-     * @param array $options The options data to sync
-     * @return void
+     * @param  Product  $product  The product to sync options for
+     * @param  array  $options  The options data to sync
      */
     private function syncOptions(Product $product, array $options): void
     {
@@ -622,7 +531,7 @@ class ProductController extends Controller
         $incomingOptionIds = [];
 
         foreach ($options as $index => $optionData) {
-            if (!empty($optionData['id'])) {
+            if (! empty($optionData['id'])) {
                 // Update existing option
                 $option = ProductOption::find($optionData['id']);
                 if ($option && $option->product_id === $product->id) {
@@ -647,7 +556,7 @@ class ProductController extends Controller
 
         // Delete removed options
         $optionsToDelete = array_diff($existingOptionIds, $incomingOptionIds);
-        if (!empty($optionsToDelete)) {
+        if (! empty($optionsToDelete)) {
             ProductOption::whereIn('id', $optionsToDelete)->delete();
         }
     }
@@ -655,9 +564,8 @@ class ProductController extends Controller
     /**
      * Sync product variants.
      *
-     * @param Product $product The product to sync variants for
-     * @param array $variants The variants data to sync
-     * @return void
+     * @param  Product  $product  The product to sync variants for
+     * @param  array  $variants  The variants data to sync
      */
     private function syncVariants(Product $product, array $variants): void
     {
@@ -680,7 +588,7 @@ class ProductController extends Controller
                 'position' => $index,
             ];
 
-            if (!empty($variantData['id'])) {
+            if (! empty($variantData['id'])) {
                 // Update existing variant
                 $variant = ProductVariant::find($variantData['id']);
                 if ($variant && $variant->product_id === $product->id) {
@@ -696,7 +604,7 @@ class ProductController extends Controller
 
         // Delete removed variants
         $variantsToDelete = array_diff($existingVariantIds, $incomingVariantIds);
-        if (!empty($variantsToDelete)) {
+        if (! empty($variantsToDelete)) {
             ProductVariant::whereIn('id', $variantsToDelete)->delete();
         }
     }
@@ -707,9 +615,9 @@ class ProductController extends Controller
      * Creates a copy of the product with "(Copy)" appended to the name,
      * a new unique SKU, and stock reset to 0.
      *
-     * @param Request $request The incoming HTTP request
-     * @param Product $product The product to duplicate
-     * @return \Illuminate\Http\RedirectResponse
+     * @param  Request  $request  The incoming HTTP request
+     * @param  Product  $product  The product to duplicate
+     * @return RedirectResponse
      */
     public function duplicate(Request $request, Product $product)
     {
@@ -719,15 +627,15 @@ class ProductController extends Controller
         }
 
         $newProduct = $product->replicate(['id', 'created_at', 'updated_at', 'deleted_at']);
-        $newProduct->name = $product->name . ' (Copy)';
+        $newProduct->name = $product->name.' (Copy)';
         $newProduct->stock = 0;
 
         // Generate a unique SKU
-        $baseSku = $product->sku . '-COPY';
+        $baseSku = $product->sku.'-COPY';
         $sku = $baseSku;
         $counter = 1;
         while (Product::where('sku', $sku)->exists()) {
-            $sku = $baseSku . '-' . $counter;
+            $sku = $baseSku.'-'.$counter;
             $counter++;
         }
         $newProduct->sku = $sku;
@@ -741,9 +649,9 @@ class ProductController extends Controller
     /**
      * Remove the specified product.
      *
-     * @param Request $request The incoming HTTP request
-     * @param Product $product The product to delete
-     * @return \Illuminate\Http\RedirectResponse
+     * @param  Request  $request  The incoming HTTP request
+     * @param  Product  $product  The product to delete
+     * @return RedirectResponse
      */
     public function destroy(Request $request, Product $product)
     {

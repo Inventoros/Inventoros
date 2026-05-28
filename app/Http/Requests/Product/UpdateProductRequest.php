@@ -1,0 +1,72 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\Http\Requests\Product;
+
+use App\Models\Inventory\Product;
+use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
+
+/**
+ * Validates a product edit through the web (Inertia) surface.
+ *
+ * Rules are unchanged from the previous inline validation in
+ * Inventory\ProductController::update, including the
+ * `product_update_validation_rules` plugin filter. The bound product is read
+ * from the route so the SKU uniqueness rule can ignore it.
+ */
+final class UpdateProductRequest extends FormRequest
+{
+    /**
+     * @return array<string, mixed>
+     */
+    public function rules(): array
+    {
+        $organizationId = $this->user()->organization_id;
+        /** @var Product $product */
+        $product = $this->route('product');
+
+        // Hook: Modify validation rules
+        return apply_filters('product_update_validation_rules', [
+            'type' => 'sometimes|string|in:standard,kit,assembly',
+            'sku' => ['required', 'string', 'max:255', Rule::unique('products', 'sku')->where('organization_id', $organizationId)->ignore($product->id)],
+            'name' => 'required|string|max:255',
+            'description' => 'nullable|string',
+            'price' => 'required|numeric|min:0',
+            'purchase_price' => 'nullable|numeric|min:0',
+            'stock' => 'required|integer|min:0',
+            'min_stock' => 'required|integer|min:0',
+            'max_stock' => 'nullable|integer|min:0',
+            'reorder_point' => 'nullable|integer|min:0',
+            'reorder_quantity' => 'nullable|integer|min:0',
+            'barcode' => 'nullable|string|max:255',
+            'notes' => 'nullable|string',
+            'category_id' => ['nullable', Rule::exists('product_categories', 'id')->where('organization_id', $organizationId)],
+            'location_id' => ['nullable', Rule::exists('product_locations', 'id')->where('organization_id', $organizationId)],
+            'is_active' => 'boolean',
+            'images' => 'nullable|array|max:5',
+            'images.*.file' => 'nullable',
+            'images.*.preview' => 'nullable|string',
+            'images.*.url' => 'nullable|string',
+            'images.*.name' => 'nullable|string',
+            'has_variants' => 'boolean',
+            'tracking_type' => 'nullable|string|in:none,batch,serial',
+            'options' => 'nullable|array|max:3',
+            'options.*.id' => 'nullable|integer',
+            'options.*.name' => 'required_with:options|string|max:255',
+            'options.*.values' => 'required_with:options|array|min:1',
+            'options.*.values.*' => 'string|max:255',
+            'variants' => 'nullable|array',
+            'variants.*.id' => 'nullable|integer',
+            'variants.*.option_values' => 'required_with:variants|array',
+            'variants.*.sku' => 'nullable|string|max:255',
+            'variants.*.barcode' => 'nullable|string|max:255',
+            'variants.*.price' => 'nullable|numeric|min:0',
+            'variants.*.purchase_price' => 'nullable|numeric|min:0',
+            'variants.*.stock' => 'nullable|integer|min:0',
+            'variants.*.min_stock' => 'nullable|integer|min:0',
+            'variants.*.is_active' => 'boolean',
+        ], $product, $this);
+    }
+}
