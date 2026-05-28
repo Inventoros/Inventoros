@@ -5,12 +5,15 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Inventory;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\StockAudit\StoreStockAuditRequest;
+use App\Http\Requests\StockAudit\UpdateStockAuditRequest;
 use App\Models\Inventory\Product;
 use App\Models\Inventory\ProductLocation;
 use App\Models\Inventory\StockAdjustment;
 use App\Models\Inventory\StockAudit;
 use App\Models\Inventory\StockAuditItem;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
@@ -27,8 +30,7 @@ class StockAuditController extends Controller
     /**
      * Display a listing of stock audits.
      *
-     * @param Request $request The incoming HTTP request
-     * @return Response
+     * @param  Request  $request  The incoming HTTP request
      */
     public function index(Request $request): Response
     {
@@ -40,7 +42,7 @@ class StockAuditController extends Controller
             ->when($request->input('search'), function ($query, $search) {
                 $query->where(function ($q) use ($search) {
                     $q->where('audit_number', 'like', "%{$search}%")
-                      ->orWhere('name', 'like', "%{$search}%");
+                        ->orWhere('name', 'like', "%{$search}%");
                 });
             })
             ->when($request->input('status'), function ($query, $status) {
@@ -73,8 +75,7 @@ class StockAuditController extends Controller
     /**
      * Show the form for creating a new stock audit.
      *
-     * @param Request $request The incoming HTTP request
-     * @return Response
+     * @param  Request  $request  The incoming HTTP request
      */
     public function create(Request $request): Response
     {
@@ -104,25 +105,17 @@ class StockAuditController extends Controller
     /**
      * Store a newly created stock audit.
      *
-     * @param Request $request The incoming HTTP request
-     * @return \Illuminate\Http\RedirectResponse
+     * @param  Request  $request  The incoming HTTP request
+     * @return RedirectResponse
      */
-    public function store(Request $request)
+    public function store(StoreStockAuditRequest $request)
     {
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'description' => 'nullable|string|max:1000',
-            'audit_type' => 'required|in:full,cycle,spot',
-            'warehouse_location_id' => 'nullable|exists:product_locations,id',
-            'notes' => 'nullable|string|max:2000',
-            'product_ids' => 'nullable|array',
-            'product_ids.*' => 'exists:products,id',
-        ]);
+        $validated = $request->validated();
 
         $organizationId = $request->user()->organization_id;
 
         // Verify location belongs to organization if provided
-        if (!empty($validated['warehouse_location_id'])) {
+        if (! empty($validated['warehouse_location_id'])) {
             ProductLocation::where('id', $validated['warehouse_location_id'])
                 ->forOrganization($organizationId)
                 ->firstOrFail();
@@ -144,10 +137,10 @@ class StockAuditController extends Controller
             // Get products to include in the audit
             $productQuery = Product::forOrganization($organizationId)->active();
 
-            if (!empty($validated['product_ids'])) {
+            if (! empty($validated['product_ids'])) {
                 // Specific products selected
                 $productQuery->whereIn('id', $validated['product_ids']);
-            } elseif (!empty($validated['warehouse_location_id'])) {
+            } elseif (! empty($validated['warehouse_location_id'])) {
                 // Filter by location
                 $productQuery->where('location_id', $validated['warehouse_location_id']);
             }
@@ -168,15 +161,14 @@ class StockAuditController extends Controller
         });
 
         return redirect()->route('stock-audits.show', $audit)
-            ->with('success', 'Stock audit created successfully with ' . $audit->items()->count() . ' items.');
+            ->with('success', 'Stock audit created successfully with '.$audit->items()->count().' items.');
     }
 
     /**
      * Display the specified stock audit.
      *
-     * @param Request $request The incoming HTTP request
-     * @param StockAudit $stockAudit The stock audit to display
-     * @return Response
+     * @param  Request  $request  The incoming HTTP request
+     * @param  StockAudit  $stockAudit  The stock audit to display
      */
     public function show(Request $request, StockAudit $stockAudit): Response
     {
@@ -197,7 +189,7 @@ class StockAuditController extends Controller
         $totalItems = $stockAudit->items->count();
         $countedItems = $stockAudit->items->where('status', '!=', 'pending')->count();
         $discrepancies = $stockAudit->items->where('counted_quantity', '!=', null)
-            ->filter(fn($item) => $item->counted_quantity !== $item->system_quantity)
+            ->filter(fn ($item) => $item->counted_quantity !== $item->system_quantity)
             ->count();
 
         return Inertia::render('StockAudits/Show', [
@@ -214,11 +206,11 @@ class StockAuditController extends Controller
     /**
      * Show the form for editing a stock audit.
      *
-     * @param Request $request The incoming HTTP request
-     * @param StockAudit $stockAudit The stock audit to edit
+     * @param  Request  $request  The incoming HTTP request
+     * @param  StockAudit  $stockAudit  The stock audit to edit
      * @return Response
      */
-    public function edit(Request $request, StockAudit $stockAudit): Response|\Illuminate\Http\RedirectResponse
+    public function edit(Request $request, StockAudit $stockAudit): Response|RedirectResponse
     {
         if ($stockAudit->organization_id !== $request->user()->organization_id) {
             abort(403, 'Unauthorized action.');
@@ -250,11 +242,11 @@ class StockAuditController extends Controller
     /**
      * Update the specified stock audit.
      *
-     * @param Request $request The incoming HTTP request
-     * @param StockAudit $stockAudit The stock audit to update
-     * @return \Illuminate\Http\RedirectResponse
+     * @param  Request  $request  The incoming HTTP request
+     * @param  StockAudit  $stockAudit  The stock audit to update
+     * @return RedirectResponse
      */
-    public function update(Request $request, StockAudit $stockAudit)
+    public function update(UpdateStockAuditRequest $request, StockAudit $stockAudit)
     {
         if ($stockAudit->organization_id !== $request->user()->organization_id) {
             abort(403, 'Unauthorized action.');
@@ -265,18 +257,12 @@ class StockAuditController extends Controller
                 ->with('error', 'Only draft audits can be edited.');
         }
 
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'description' => 'nullable|string|max:1000',
-            'audit_type' => 'required|in:full,cycle,spot',
-            'warehouse_location_id' => 'nullable|exists:product_locations,id',
-            'notes' => 'nullable|string|max:2000',
-        ]);
+        $validated = $request->validated();
 
         $organizationId = $request->user()->organization_id;
 
         // Verify location belongs to organization if provided
-        if (!empty($validated['warehouse_location_id'])) {
+        if (! empty($validated['warehouse_location_id'])) {
             ProductLocation::where('id', $validated['warehouse_location_id'])
                 ->forOrganization($organizationId)
                 ->firstOrFail();
@@ -297,9 +283,9 @@ class StockAuditController extends Controller
     /**
      * Delete a stock audit (only if draft).
      *
-     * @param Request $request The incoming HTTP request
-     * @param StockAudit $stockAudit The stock audit to delete
-     * @return \Illuminate\Http\RedirectResponse
+     * @param  Request  $request  The incoming HTTP request
+     * @param  StockAudit  $stockAudit  The stock audit to delete
+     * @return RedirectResponse
      */
     public function destroy(Request $request, StockAudit $stockAudit)
     {
@@ -321,9 +307,9 @@ class StockAuditController extends Controller
     /**
      * Start a stock audit (transition from draft to in_progress).
      *
-     * @param Request $request The incoming HTTP request
-     * @param StockAudit $stockAudit The stock audit to start
-     * @return \Illuminate\Http\RedirectResponse
+     * @param  Request  $request  The incoming HTTP request
+     * @param  StockAudit  $stockAudit  The stock audit to start
+     * @return RedirectResponse
      */
     public function start(Request $request, StockAudit $stockAudit)
     {
@@ -361,9 +347,9 @@ class StockAuditController extends Controller
     /**
      * Complete a stock audit and create stock adjustments for discrepancies.
      *
-     * @param Request $request The incoming HTTP request
-     * @param StockAudit $stockAudit The stock audit to complete
-     * @return \Illuminate\Http\RedirectResponse
+     * @param  Request  $request  The incoming HTTP request
+     * @param  StockAudit  $stockAudit  The stock audit to complete
+     * @return RedirectResponse
      */
     public function complete(Request $request, StockAudit $stockAudit)
     {
@@ -430,10 +416,9 @@ class StockAuditController extends Controller
     /**
      * Update the count for an individual audit item (AJAX endpoint).
      *
-     * @param Request $request The incoming HTTP request
-     * @param StockAudit $stockAudit The stock audit
-     * @param StockAuditItem $item The audit item to update
-     * @return JsonResponse
+     * @param  Request  $request  The incoming HTTP request
+     * @param  StockAudit  $stockAudit  The stock audit
+     * @param  StockAuditItem  $item  The audit item to update
      */
     public function updateCount(Request $request, StockAudit $stockAudit, StockAuditItem $item): JsonResponse
     {

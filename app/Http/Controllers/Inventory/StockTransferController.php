@@ -5,11 +5,14 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Inventory;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\StockTransfer\StoreStockTransferRequest;
+use App\Http\Requests\StockTransfer\UpdateStockTransferRequest;
 use App\Models\Inventory\Product;
 use App\Models\Inventory\ProductLocation;
 use App\Models\Inventory\StockAdjustment;
 use App\Models\Inventory\StockTransfer;
 use App\Models\Inventory\StockTransferItem;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
@@ -26,8 +29,7 @@ class StockTransferController extends Controller
     /**
      * Display a listing of stock transfers.
      *
-     * @param Request $request The incoming HTTP request
-     * @return Response
+     * @param  Request  $request  The incoming HTTP request
      */
     public function index(Request $request): Response
     {
@@ -39,13 +41,13 @@ class StockTransferController extends Controller
             ->when($activeWarehouseId, function ($query, $warehouseId) {
                 $query->where(function ($q) use ($warehouseId) {
                     $q->where('from_warehouse_id', $warehouseId)
-                      ->orWhere('to_warehouse_id', $warehouseId)
-                      ->orWhereHas('fromLocation', function ($q2) use ($warehouseId) {
-                          $q2->where('warehouse_id', $warehouseId);
-                      })
-                      ->orWhereHas('toLocation', function ($q2) use ($warehouseId) {
-                          $q2->where('warehouse_id', $warehouseId);
-                      });
+                        ->orWhere('to_warehouse_id', $warehouseId)
+                        ->orWhereHas('fromLocation', function ($q2) use ($warehouseId) {
+                            $q2->where('warehouse_id', $warehouseId);
+                        })
+                        ->orWhereHas('toLocation', function ($q2) use ($warehouseId) {
+                            $q2->where('warehouse_id', $warehouseId);
+                        });
                 });
             })
             ->when($request->input('search'), function ($query, $search) {
@@ -67,8 +69,7 @@ class StockTransferController extends Controller
     /**
      * Show the form for creating a new stock transfer.
      *
-     * @param Request $request The incoming HTTP request
-     * @return Response
+     * @param  Request  $request  The incoming HTTP request
      */
     public function create(Request $request): Response
     {
@@ -93,27 +94,12 @@ class StockTransferController extends Controller
     /**
      * Store a newly created stock transfer.
      *
-     * @param Request $request The incoming HTTP request
-     * @return \Illuminate\Http\RedirectResponse
+     * @param  Request  $request  The incoming HTTP request
+     * @return RedirectResponse
      */
-    public function store(Request $request)
+    public function store(StoreStockTransferRequest $request)
     {
-        $validated = $request->validate([
-            'from_location_id' => 'required|exists:product_locations,id',
-            'to_location_id' => [
-                'required',
-                'exists:product_locations,id',
-                'different:from_location_id',
-            ],
-            'notes' => 'nullable|string|max:1000',
-            'shipping_method' => 'nullable|string|max:255',
-            'tracking_number' => 'nullable|string|max:255',
-            'estimated_arrival' => 'nullable|date',
-            'items' => 'required|array|min:1',
-            'items.*.product_id' => 'required|exists:products,id',
-            'items.*.quantity' => 'required|integer|min:1',
-            'items.*.notes' => 'nullable|string|max:500',
-        ]);
+        $validated = $request->validated();
 
         $organizationId = $request->user()->organization_id;
 
@@ -181,9 +167,8 @@ class StockTransferController extends Controller
     /**
      * Display the specified stock transfer.
      *
-     * @param Request $request The incoming HTTP request
-     * @param StockTransfer $stockTransfer The stock transfer to display
-     * @return Response
+     * @param  Request  $request  The incoming HTTP request
+     * @param  StockTransfer  $stockTransfer  The stock transfer to display
      */
     public function show(Request $request, StockTransfer $stockTransfer): Response
     {
@@ -201,22 +186,17 @@ class StockTransferController extends Controller
     /**
      * Update a stock transfer (e.g., status change to in_transit for inter-warehouse).
      *
-     * @param Request $request The incoming HTTP request
-     * @param StockTransfer $stockTransfer The stock transfer to update
-     * @return \Illuminate\Http\RedirectResponse
+     * @param  Request  $request  The incoming HTTP request
+     * @param  StockTransfer  $stockTransfer  The stock transfer to update
+     * @return RedirectResponse
      */
-    public function update(Request $request, StockTransfer $stockTransfer)
+    public function update(UpdateStockTransferRequest $request, StockTransfer $stockTransfer)
     {
         if ($stockTransfer->organization_id !== $request->user()->organization_id) {
             abort(403, 'Unauthorized action.');
         }
 
-        $validated = $request->validate([
-            'status' => 'sometimes|string|in:in_transit',
-            'shipping_method' => 'nullable|string|max:255',
-            'tracking_number' => 'nullable|string|max:255',
-            'estimated_arrival' => 'nullable|date',
-        ]);
+        $validated = $request->validated();
 
         // Handle status change to in_transit
         if (isset($validated['status']) && $validated['status'] === 'in_transit') {
@@ -252,9 +232,9 @@ class StockTransferController extends Controller
     /**
      * Complete a stock transfer, adjusting stock levels.
      *
-     * @param Request $request The incoming HTTP request
-     * @param StockTransfer $stockTransfer The stock transfer to complete
-     * @return \Illuminate\Http\RedirectResponse
+     * @param  Request  $request  The incoming HTTP request
+     * @param  StockTransfer  $stockTransfer  The stock transfer to complete
+     * @return RedirectResponse
      */
     public function complete(Request $request, StockTransfer $stockTransfer)
     {
@@ -262,7 +242,7 @@ class StockTransferController extends Controller
             abort(403, 'Unauthorized action.');
         }
 
-        if (!in_array($stockTransfer->status, ['pending', 'in_transit'])) {
+        if (! in_array($stockTransfer->status, ['pending', 'in_transit'])) {
             return redirect()->route('stock-transfers.show', $stockTransfer)
                 ->with('error', 'Only pending or in-transit transfers can be completed.');
         }
@@ -328,9 +308,9 @@ class StockTransferController extends Controller
     /**
      * Cancel a stock transfer.
      *
-     * @param Request $request The incoming HTTP request
-     * @param StockTransfer $stockTransfer The stock transfer to cancel
-     * @return \Illuminate\Http\RedirectResponse
+     * @param  Request  $request  The incoming HTTP request
+     * @param  StockTransfer  $stockTransfer  The stock transfer to cancel
+     * @return RedirectResponse
      */
     public function cancel(Request $request, StockTransfer $stockTransfer)
     {
@@ -338,7 +318,7 @@ class StockTransferController extends Controller
             abort(403, 'Unauthorized action.');
         }
 
-        if (!in_array($stockTransfer->status, ['pending', 'in_transit'])) {
+        if (! in_array($stockTransfer->status, ['pending', 'in_transit'])) {
             return redirect()->route('stock-transfers.show', $stockTransfer)
                 ->with('error', 'Only pending or in-transit transfers can be cancelled.');
         }
