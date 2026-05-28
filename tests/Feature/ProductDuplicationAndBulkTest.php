@@ -240,7 +240,8 @@ class ProductDuplicationAndBulkTest extends TestCase
         $response = $this->actingAs($this->admin)
             ->post(route('products.duplicate', $otherProduct));
 
-        $response->assertStatus(403);
+        // Org scope makes other-tenant records invisible: 404, not 403.
+        $response->assertStatus(404);
     }
 
     // ==================== BULK DELETE TESTS ====================

@@ -5,15 +5,19 @@ declare(strict_types=1);
 namespace App\Models\Purchasing;
 
 use App\Models\Auth\Organization;
+use App\Models\Concerns\BelongsToOrganization;
 use App\Models\Inventory\StockAdjustment;
 use App\Models\Inventory\Supplier;
 use App\Models\User;
 use App\Traits\LogsActivity;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Carbon;
 
 /**
  * Represents a purchase order in the system.
@@ -24,9 +28,9 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property int|null $created_by
  * @property string $po_number
  * @property string $status
- * @property \Illuminate\Support\Carbon|null $order_date
- * @property \Illuminate\Support\Carbon|null $expected_date
- * @property \Illuminate\Support\Carbon|null $received_date
+ * @property Carbon|null $order_date
+ * @property Carbon|null $expected_date
+ * @property Carbon|null $received_date
  * @property string $subtotal
  * @property string $tax
  * @property string $shipping
@@ -34,20 +38,20 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property string|null $currency
  * @property string|null $notes
  * @property array|null $metadata
- * @property \Illuminate\Support\Carbon|null $created_at
- * @property \Illuminate\Support\Carbon|null $updated_at
- * @property \Illuminate\Support\Carbon|null $deleted_at
+ * @property Carbon|null $created_at
+ * @property Carbon|null $updated_at
+ * @property Carbon|null $deleted_at
  * @property-read string $status_color
  * @property-read string $status_label
- * @property-read \App\Models\Auth\Organization $organization
- * @property-read \App\Models\Inventory\Supplier $supplier
- * @property-read \App\Models\User|null $creator
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Purchasing\PurchaseOrderItem[] $items
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Inventory\StockAdjustment[] $stockAdjustments
+ * @property-read Organization $organization
+ * @property-read Supplier $supplier
+ * @property-read User|null $creator
+ * @property-read Collection|PurchaseOrderItem[] $items
+ * @property-read Collection|StockAdjustment[] $stockAdjustments
  */
 class PurchaseOrder extends Model
 {
-    use LogsActivity, SoftDeletes;
+    use BelongsToOrganization, LogsActivity, SoftDeletes;
 
     protected $fillable = [
         'organization_id',
@@ -85,15 +89,19 @@ class PurchaseOrder extends Model
      * Status constants
      */
     public const STATUS_DRAFT = 'draft';
+
     public const STATUS_SENT = 'sent';
+
     public const STATUS_PARTIAL = 'partial';
+
     public const STATUS_RECEIVED = 'received';
+
     public const STATUS_CANCELLED = 'cancelled';
 
     /**
      * Get the organization that owns the purchase order.
      *
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo<\App\Models\Auth\Organization, $this>
+     * @return BelongsTo<Organization, $this>
      */
     public function organization(): BelongsTo
     {
@@ -103,7 +111,7 @@ class PurchaseOrder extends Model
     /**
      * Get the supplier for this purchase order.
      *
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo<\App\Models\Inventory\Supplier, $this>
+     * @return BelongsTo<Supplier, $this>
      */
     public function supplier(): BelongsTo
     {
@@ -113,7 +121,7 @@ class PurchaseOrder extends Model
     /**
      * Get the user who created this purchase order.
      *
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo<\App\Models\User, $this>
+     * @return BelongsTo<User, $this>
      */
     public function creator(): BelongsTo
     {
@@ -123,7 +131,7 @@ class PurchaseOrder extends Model
     /**
      * Get the items for this purchase order.
      *
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany<\App\Models\Purchasing\PurchaseOrderItem, $this>
+     * @return HasMany<PurchaseOrderItem, $this>
      */
     public function items(): HasMany
     {
@@ -133,7 +141,7 @@ class PurchaseOrder extends Model
     /**
      * Get the stock adjustments for this purchase order.
      *
-     * @return \Illuminate\Database\Eloquent\Relations\MorphMany<\App\Models\Inventory\StockAdjustment, $this>
+     * @return MorphMany<StockAdjustment, $this>
      */
     public function stockAdjustments(): MorphMany
     {
@@ -143,9 +151,9 @@ class PurchaseOrder extends Model
     /**
      * Scope to filter by organization.
      *
-     * @param \Illuminate\Database\Eloquent\Builder<static> $query
-     * @param int $organizationId
-     * @return \Illuminate\Database\Eloquent\Builder<static>
+     * @param  Builder<static>  $query
+     * @param  int  $organizationId
+     * @return Builder<static>
      */
     public function scopeForOrganization($query, $organizationId)
     {
@@ -155,9 +163,9 @@ class PurchaseOrder extends Model
     /**
      * Scope to filter by status.
      *
-     * @param \Illuminate\Database\Eloquent\Builder<static> $query
-     * @param string $status
-     * @return \Illuminate\Database\Eloquent\Builder<static>
+     * @param  Builder<static>  $query
+     * @param  string  $status
+     * @return Builder<static>
      */
     public function scopeByStatus($query, $status)
     {
@@ -167,9 +175,9 @@ class PurchaseOrder extends Model
     /**
      * Scope to filter by supplier.
      *
-     * @param \Illuminate\Database\Eloquent\Builder<static> $query
-     * @param int $supplierId
-     * @return \Illuminate\Database\Eloquent\Builder<static>
+     * @param  Builder<static>  $query
+     * @param  int  $supplierId
+     * @return Builder<static>
      */
     public function scopeBySupplier($query, $supplierId)
     {
@@ -179,9 +187,9 @@ class PurchaseOrder extends Model
     /**
      * Scope for search.
      *
-     * @param \Illuminate\Database\Eloquent\Builder<static> $query
-     * @param string $search
-     * @return \Illuminate\Database\Eloquent\Builder<static>
+     * @param  Builder<static>  $query
+     * @param  string  $search
+     * @return Builder<static>
      */
     public function scopeSearch($query, $search)
     {
@@ -195,9 +203,6 @@ class PurchaseOrder extends Model
 
     /**
      * Generate a unique PO number.
-     *
-     * @param int $organizationId
-     * @return string
      */
     public static function generatePONumber(int $organizationId): string
     {
@@ -217,13 +222,11 @@ class PurchaseOrder extends Model
             $newNumber = 1;
         }
 
-        return $prefix . str_pad((string) $newNumber, 4, '0', STR_PAD_LEFT);
+        return $prefix.str_pad((string) $newNumber, 4, '0', STR_PAD_LEFT);
     }
 
     /**
      * Calculate and update totals from items.
-     *
-     * @return void
      */
     public function calculateTotals(): void
     {
@@ -235,8 +238,6 @@ class PurchaseOrder extends Model
 
     /**
      * Check if the PO can be edited.
-     *
-     * @return bool
      */
     public function canBeEdited(): bool
     {
@@ -245,8 +246,6 @@ class PurchaseOrder extends Model
 
     /**
      * Check if the PO can be sent.
-     *
-     * @return bool
      */
     public function canBeSent(): bool
     {
@@ -255,8 +254,6 @@ class PurchaseOrder extends Model
 
     /**
      * Check if the PO can receive items.
-     *
-     * @return bool
      */
     public function canReceiveItems(): bool
     {
@@ -265,8 +262,6 @@ class PurchaseOrder extends Model
 
     /**
      * Check if the PO can be cancelled.
-     *
-     * @return bool
      */
     public function canBeCancelled(): bool
     {
@@ -275,8 +270,6 @@ class PurchaseOrder extends Model
 
     /**
      * Check if all items have been fully received.
-     *
-     * @return bool
      */
     public function isFullyReceived(): bool
     {
@@ -285,19 +278,15 @@ class PurchaseOrder extends Model
 
     /**
      * Check if any items have been partially received.
-     *
-     * @return bool
      */
     public function isPartiallyReceived(): bool
     {
         return $this->items->some(fn ($item) => $item->quantity_received > 0)
-            && !$this->isFullyReceived();
+            && ! $this->isFullyReceived();
     }
 
     /**
      * Update status based on receiving state.
-     *
-     * @return void
      */
     public function updateReceivingStatus(): void
     {
@@ -312,8 +301,6 @@ class PurchaseOrder extends Model
 
     /**
      * Mark as sent.
-     *
-     * @return void
      */
     public function markAsSent(): void
     {
@@ -323,8 +310,6 @@ class PurchaseOrder extends Model
 
     /**
      * Cancel the purchase order.
-     *
-     * @return void
      */
     public function cancel(): void
     {
@@ -334,8 +319,6 @@ class PurchaseOrder extends Model
 
     /**
      * Get status badge color.
-     *
-     * @return string
      */
     public function getStatusColorAttribute(): string
     {
@@ -351,8 +334,6 @@ class PurchaseOrder extends Model
 
     /**
      * Get status label.
-     *
-     * @return string
      */
     public function getStatusLabelAttribute(): string
     {

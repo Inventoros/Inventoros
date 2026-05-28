@@ -539,6 +539,7 @@ class WarehouseControllerTest extends TestCase
         $response = $this->actingAs($this->admin)
             ->get(route('warehouses.show', $otherWarehouse));
 
-        $response->assertStatus(403);
+        // Org scope makes other-tenant records invisible: 404, not 403.
+        $response->assertStatus(404);
     }
 }
