@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\GraphQL\Mutations;
 
 use App\Exceptions\InsufficientStockException;
+use App\Exceptions\InvalidOrderItemException;
 use App\Services\OrderService;
 use Closure;
 use GraphQL\Error\Error;
@@ -98,7 +99,7 @@ class CreateOrderMutation extends Mutation
             // + decrement, wrapped in SequenceNumberRetry) shared with the
             // web/REST/MCP surfaces.
             $order = app(OrderService::class)->create($args, $user, $args['source'] ?? 'graphql');
-        } catch (InsufficientStockException $e) {
+        } catch (InsufficientStockException|InvalidOrderItemException $e) {
             throw new Error($e->getMessage());
         }
 
