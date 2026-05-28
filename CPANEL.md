@@ -121,18 +121,64 @@ In cPanel File Manager:
 4. Check "Recurse into subdirectories"
 5. Repeat for `bootstrap/cache`
 
-### 9. Configure Cron Jobs (Optional)
+### 9. Configure the Scheduler and Queue Worker (Required)
 
-If you need Laravel's task scheduler:
+Inventoros relies on background processing for two things:
+
+- **The scheduler** runs `inventory:check-reorder-points` (low-stock alerts) and
+  the nightly retention prune commands.
+- **The queue worker** drains the database queue: webhook deliveries
+  (`WebhookDeliveryJob`) and queued mail. Without it, these rows pile up in the
+  `jobs` and `webhook_deliveries` tables and **never fire**.
+
+#### Scheduler cron (always add this)
 
 1. In cPanel, go to **Cron Jobs**
-2. Add a new cron job with the following command:
+2. Add a cron job that runs every minute:
 
 ```
-* * * * * cd /home/username/public_html/inventoros && php artisan schedule:run >> /dev/null 2>&1
+* * * * * cd /home/username/inventoros && php artisan schedule:run >> /dev/null 2>&1
 ```
 
-Replace `/home/username/public_html/inventoros` with your actual path.
+Replace `/home/username/inventoros` with your actual project path (the folder
+containing `artisan`, not the `public` document root).
+
+#### Queue worker — pick ONE of the two options below
+
+cPanel hosts vary in whether they allow long-running daemons. Choose based on
+what your host permits:
+
+**Option A — `database` queue + a worker cron (recommended if your host allows it).**
+Keep `QUEUE_CONNECTION=database` in `.env` and add a second cron entry that keeps
+a short-lived worker alive. `--stop-when-empty` lets the process exit cleanly so
+overlapping cron runs don't stack up:
+
+```
+* * * * * cd /home/username/inventoros && php artisan queue:work --stop-when-empty --tries=3 --max-time=55 >> /dev/null 2>&1
+```
+
+If your host supports a persistent "daemon" process (some offer this via
+**Application Manager** or `cpsupervisor`), run a long-lived worker instead:
+
+```
+php artisan queue:work --tries=3 --max-time=3600
+```
+
+**Option B — `sync` queue (simplest, no worker).**
+If your host forbids extra cron/daemon processes, set the queue to run inline:
+
+```env
+QUEUE_CONNECTION=sync
+```
+
+Jobs then execute immediately inside the web request that dispatches them. This
+needs no worker, but webhook deliveries and emails run synchronously, so a slow
+or failing endpoint will slow down the request that triggered it. Acceptable for
+low-volume single-tenant installs; prefer Option A otherwise.
+
+> **Docker / VPS deploys** ship a dedicated `worker` and `scheduler` container
+> (`docker-compose.yml`) and example systemd units (`deploy/systemd/`), so the
+> cron setup above is only needed on cPanel-style shared hosting.
 
 ### 10. Enable SSL
 

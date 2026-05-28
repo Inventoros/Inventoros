@@ -1,0 +1,16 @@
+# Fires inventoros-scheduler.service every minute — the systemd replacement for
+# the classic `* * * * * php artisan schedule:run` cron entry.
+#
+# See inventoros-scheduler.service for install steps. Enable the TIMER (not the
+# service): sudo systemctl enable --now inventoros-scheduler.timer
+
+[Unit]
+Description=Run Inventoros scheduler every minute
+
+[Timer]
+OnCalendar=*-*-* *:*:00
+AccuracySec=1s
+Persistent=true
+
+[Install]
+WantedBy=timers.target

@@ -1,0 +1,26 @@
+# Inventoros scheduler (systemd timer companion).
+#
+# Runs `php artisan schedule:run` once. Pair it with inventoros-scheduler.timer
+# so it fires every minute (this is the systemd equivalent of the one-line cron
+# `* * * * * php artisan schedule:run`). schedule:run itself decides which due
+# commands to execute (reorder-point checks, retention pruning, etc.).
+#
+# Install:
+#   1. Copy inventoros-scheduler.service AND inventoros-scheduler.timer to
+#      /etc/systemd/system/
+#   2. Edit User, Group, and WorkingDirectory to match your deploy.
+#   3. sudo systemctl daemon-reload
+#   4. sudo systemctl enable --now inventoros-scheduler.timer
+#
+# Logs:  journalctl -u inventoros-scheduler -f
+
+[Unit]
+Description=Inventoros scheduler tick
+After=network.target
+
+[Service]
+Type=oneshot
+User=www-data
+Group=www-data
+WorkingDirectory=/var/www/inventoros
+ExecStart=/usr/bin/php artisan schedule:run --no-interaction

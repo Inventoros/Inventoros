@@ -38,9 +38,15 @@ if grep -qE '^DB_CONNECTION=pgsql' .env; then
     done
 fi
 
-# Run migrations (idempotent) and create the storage symlink
-php artisan migrate --force --no-interaction || true
-php artisan storage:link --force --no-interaction || true
+# Run migrations (idempotent) and create the storage symlink.
+# Worker / scheduler containers set RUN_MIGRATIONS=false so only the app
+# container owns schema changes — avoids concurrent migrate races on SQLite.
+if [ "${RUN_MIGRATIONS:-true}" = "true" ]; then
+    php artisan migrate --force --no-interaction || true
+    php artisan storage:link --force --no-interaction || true
+else
+    echo "[entrypoint] RUN_MIGRATIONS=false — skipping migrate/storage:link (app container owns schema)"
+fi
 
 # Recompile config in dev (cleared so .env edits take effect on container restart)
 php artisan config:clear --no-interaction || true
