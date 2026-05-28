@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Feature;
 
+use App\Exceptions\InsufficientStockException;
 use App\Models\Auth\Organization;
 use App\Models\Inventory\Product;
 use App\Models\Inventory\StockAdjustment;
@@ -126,6 +127,45 @@ class OrderServiceTest extends TestCase
             ->map(fn ($v) => (int) $v)
             ->all();
         $this->assertSame([98, 93], $afters);
+    }
+
+    public function test_unit_price_falls_back_to_product_price_when_omitted(): void
+    {
+        // API callers may omit unit_price; the service uses the product price.
+        $order = $this->service()->create($this->payload([
+            'items' => [
+                ['product_id' => $this->product->id, 'quantity' => 2],
+            ],
+        ]), $this->creator, 'api');
+
+        $item = $order->items()->first();
+        $this->assertSame('10.00', (string) $item->unit_price);
+        $this->assertSame('20.00', (string) $order->subtotal);
+    }
+
+    public function test_per_line_tax_sums_into_order_tax(): void
+    {
+        $order = $this->service()->create($this->payload([
+            'items' => [
+                ['product_id' => $this->product->id, 'quantity' => 1, 'unit_price' => 10.00, 'tax' => 1.50],
+                ['product_id' => $this->product->id, 'quantity' => 1, 'unit_price' => 10.00, 'tax' => 2.50],
+            ],
+        ]), $this->creator, 'api');
+
+        $this->assertSame('4.00', (string) $order->tax);
+        $this->assertSame('20.00', (string) $order->subtotal);
+        $this->assertSame('24.00', (string) $order->total);
+    }
+
+    public function test_throws_typed_exception_on_insufficient_stock(): void
+    {
+        $this->expectException(InsufficientStockException::class);
+
+        $this->service()->create($this->payload([
+            'items' => [
+                ['product_id' => $this->product->id, 'quantity' => 5000, 'unit_price' => 10.00],
+            ],
+        ]), $this->creator);
     }
 
     public function test_create_rejects_insufficient_stock_and_rolls_back(): void

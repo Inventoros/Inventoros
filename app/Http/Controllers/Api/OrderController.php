@@ -4,26 +4,29 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Api;
 
+use App\Exceptions\InsufficientStockException;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\OrderResource;
-use App\Models\Inventory\Product;
 use App\Models\Inventory\StockAdjustment;
 use App\Models\Order\Order;
-use App\Models\Order\OrderItem;
-use App\Support\SequenceNumberRetry;
+use App\Services\OrderService;
+use Dedoc\Scramble\Attributes\QueryParameter;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
-use Dedoc\Scramble\Attributes\QueryParameter;
 
 /**
  * @tags Orders
  */
 class OrderController extends Controller
 {
+    public function __construct(
+        protected OrderService $orderService,
+    ) {}
+
     /**
      * List orders.
      */
@@ -80,8 +83,7 @@ class OrderController extends Controller
     /**
      * Store a newly created order.
      *
-     * @param Request $request The incoming HTTP request containing order data
-     * @return JsonResponse
+     * @param  Request  $request  The incoming HTTP request containing order data
      */
     public function store(Request $request): JsonResponse
     {
@@ -105,110 +107,38 @@ class OrderController extends Controller
             'items.*.tax' => ['nullable', 'numeric', 'min:0'],
         ]);
 
-        return SequenceNumberRetry::create(fn () => DB::transaction(function () use ($validated, $organizationId) {
-            // Create the order. order_number is regenerated on each retry
-            // attempt because generateOrderNumber reads MAX()+1 and races
-            // under concurrent creates within the same tenant on the same
-            // day; SequenceNumberRetry catches the resulting unique-
-            // constraint violation and re-runs the transaction.
-            $order = Order::create([
-                'organization_id' => $organizationId,
-                'order_number' => Order::generateOrderNumber($organizationId),
-                'source' => $validated['source'] ?? 'api',
-                'external_id' => $validated['external_id'] ?? null,
-                'customer_name' => $validated['customer_name'],
-                'customer_email' => $validated['customer_email'] ?? null,
-                'customer_address' => $validated['customer_address'] ?? null,
-                'status' => $validated['status'] ?? 'pending',
-                'currency' => $validated['currency'] ?? 'USD',
-                'order_date' => $validated['order_date'] ?? now(),
-                'notes' => $validated['notes'] ?? null,
-                'metadata' => $validated['metadata'] ?? null,
-                'subtotal' => 0,
-                'tax' => 0,
-                'shipping' => 0,
-                'total' => 0,
-            ]);
+        // API-specific defaults; the OrderService owns the create invariant
+        // (lock → validate → ledger + decrement, wrapped in SequenceNumberRetry)
+        // shared with the web/GraphQL/MCP surfaces.
+        $validated['status'] ??= 'pending';
+        $validated['order_date'] ??= now();
+        $validated['currency'] ??= 'USD';
 
-            $subtotal = 0;
-            $totalTax = 0;
+        try {
+            $order = $this->orderService->create(
+                $validated,
+                $request->user(),
+                $validated['source'] ?? 'api'
+            );
+        } catch (InsufficientStockException $e) {
+            // Preserve the API's 422 contract: insufficient stock surfaces as
+            // an `items` validation error rather than a generic 500.
+            throw ValidationException::withMessages(['items' => [$e->getMessage()]]);
+        }
 
-            // Create order items
-            foreach ($validated['items'] as $itemData) {
-                $product = Product::where('id', $itemData['product_id'])
-                    ->where('organization_id', $organizationId)
-                    ->lockForUpdate()
-                    ->first();
+        $order->load('items');
 
-                if (!$product || $product->stock < $itemData['quantity']) {
-                    // Returning a JsonResponse from inside DB::transaction does
-                    // NOT roll back — Laravel commits the transaction because
-                    // no exception was thrown, leaving the order row created
-                    // above with subtotal=0, total=0 (P0-9). Throw instead so
-                    // the transaction rolls back and the global exception
-                    // handler renders the validation error.
-                    $productName = $product ? $product->name : "ID {$itemData['product_id']}";
-                    $available = $product ? $product->stock : 0;
-                    throw ValidationException::withMessages([
-                        'items' => ["Insufficient stock for {$productName}. Available: {$available}, Requested: {$itemData['quantity']}"],
-                    ]);
-                }
-
-                $unitPrice = $itemData['unit_price'] ?? $product->selling_price ?? $product->price ?? 0;
-                $itemSubtotal = $unitPrice * $itemData['quantity'];
-                $itemTax = $itemData['tax'] ?? 0;
-                $itemTotal = $itemSubtotal + $itemTax;
-
-                OrderItem::create([
-                    'order_id' => $order->id,
-                    'product_id' => $product->id,
-                    'product_name' => $product->name,
-                    'sku' => $product->sku,
-                    'quantity' => $itemData['quantity'],
-                    'unit_price' => $unitPrice,
-                    'subtotal' => $itemSubtotal,
-                    'tax' => $itemTax,
-                    'total' => $itemTotal,
-                ]);
-
-                // Write the stock decrement through StockAdjustment so the
-                // ledger reflects sales fulfillment alongside manual
-                // adjustments, transfers, and returns.
-                StockAdjustment::adjust(
-                    $product,
-                    -$itemData['quantity'],
-                    'order_fulfillment',
-                    "Order {$order->order_number} fulfilled",
-                    null,
-                    $order
-                );
-
-                $subtotal += $itemSubtotal;
-                $totalTax += $itemTax;
-            }
-
-            // Update order totals
-            $order->update([
-                'subtotal' => $subtotal,
-                'tax' => $totalTax,
-                'total' => $subtotal + $totalTax,
-            ]);
-
-            $order->load('items');
-
-            return response()->json([
-                'message' => 'Order created successfully',
-                'data' => new OrderResource($order),
-            ], 201);
-        }));
+        return response()->json([
+            'message' => 'Order created successfully',
+            'data' => new OrderResource($order),
+        ], 201);
     }
 
     /**
      * Display the specified order.
      *
-     * @param Request $request The incoming HTTP request
-     * @param Order $order The order to display
-     * @return JsonResponse
+     * @param  Request  $request  The incoming HTTP request
+     * @param  Order  $order  The order to display
      */
     public function show(Request $request, Order $order): JsonResponse
     {
@@ -229,9 +159,8 @@ class OrderController extends Controller
     /**
      * Update the specified order.
      *
-     * @param Request $request The incoming HTTP request containing updated order data
-     * @param Order $order The order to update
-     * @return JsonResponse
+     * @param  Request  $request  The incoming HTTP request containing updated order data
+     * @param  Order  $order  The order to update
      */
     public function update(Request $request, Order $order): JsonResponse
     {
@@ -266,10 +195,10 @@ class OrderController extends Controller
 
         // Handle status change timestamps
         if (isset($validated['status'])) {
-            if ($validated['status'] === 'shipped' && !$order->shipped_at) {
+            if ($validated['status'] === 'shipped' && ! $order->shipped_at) {
                 $validated['shipped_at'] = now();
             }
-            if ($validated['status'] === 'delivered' && !$order->delivered_at) {
+            if ($validated['status'] === 'delivered' && ! $order->delivered_at) {
                 $validated['delivered_at'] = now();
             }
         }
@@ -308,9 +237,8 @@ class OrderController extends Controller
     /**
      * Remove the specified order.
      *
-     * @param Request $request The incoming HTTP request
-     * @param Order $order The order to delete
-     * @return JsonResponse
+     * @param  Request  $request  The incoming HTTP request
+     * @param  Order  $order  The order to delete
      */
     public function destroy(Request $request, Order $order): JsonResponse
     {
