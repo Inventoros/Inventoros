@@ -5,9 +5,11 @@ declare(strict_types=1);
 namespace App\Models\Order;
 
 use App\Models\Inventory\Product;
+use App\Models\Inventory\ProductVariant;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Carbon;
 
 /**
  * Represents an item within an order.
@@ -23,10 +25,10 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property string $tax
  * @property string $total
  * @property array|null $metadata
- * @property \Illuminate\Support\Carbon|null $created_at
- * @property \Illuminate\Support\Carbon|null $updated_at
- * @property-read \App\Models\Order\Order $order
- * @property-read \App\Models\Inventory\Product|null $product
+ * @property Carbon|null $created_at
+ * @property Carbon|null $updated_at
+ * @property-read Order $order
+ * @property-read Product|null $product
  */
 class OrderItem extends Model
 {
@@ -40,6 +42,7 @@ class OrderItem extends Model
     protected $fillable = [
         'order_id',
         'product_id',
+        'product_variant_id',
         'product_name',
         'sku',
         'quantity',
@@ -58,6 +61,7 @@ class OrderItem extends Model
     protected function casts(): array
     {
         return [
+            'product_variant_id' => 'integer',
             'quantity' => 'integer',
             'unit_price' => 'decimal:2',
             'subtotal' => 'decimal:2',
@@ -70,7 +74,7 @@ class OrderItem extends Model
     /**
      * Get the order that owns the item.
      *
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo<\App\Models\Order\Order, $this>
+     * @return BelongsTo<Order, $this>
      */
     public function order(): BelongsTo
     {
@@ -80,10 +84,20 @@ class OrderItem extends Model
     /**
      * Get the product associated with the order item.
      *
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo<\App\Models\Inventory\Product, $this>
+     * @return BelongsTo<Product, $this>
      */
     public function product(): BelongsTo
     {
         return $this->belongsTo(Product::class);
+    }
+
+    /**
+     * Get the specific variant this line was sold as, if any.
+     *
+     * @return BelongsTo<ProductVariant, $this>
+     */
+    public function variant(): BelongsTo
+    {
+        return $this->belongsTo(ProductVariant::class, 'product_variant_id');
     }
 }

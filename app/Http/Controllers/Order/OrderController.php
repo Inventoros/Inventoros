@@ -133,6 +133,7 @@ class OrderController extends Controller
             'warehouse_id' => ['nullable', Rule::exists('warehouses', 'id')->where('organization_id', $organizationId)],
             'items' => 'required|array|min:1',
             'items.*.product_id' => ['required', Rule::exists('products', 'id')->where('organization_id', $organizationId)],
+            'items.*.product_variant_id' => ['nullable', Rule::exists('product_variants', 'id')->where('organization_id', $organizationId)],
             'items.*.quantity' => 'required|integer|min:1',
             'items.*.unit_price' => 'required|numeric|min:0',
         ]);

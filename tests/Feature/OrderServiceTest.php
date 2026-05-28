@@ -5,8 +5,10 @@ declare(strict_types=1);
 namespace Tests\Feature;
 
 use App\Exceptions\InsufficientStockException;
+use App\Exceptions\InvalidOrderItemException;
 use App\Models\Auth\Organization;
 use App\Models\Inventory\Product;
+use App\Models\Inventory\ProductVariant;
 use App\Models\Inventory\StockAdjustment;
 use App\Models\Order\Order;
 use App\Models\User;
@@ -155,6 +157,107 @@ class OrderServiceTest extends TestCase
         $this->assertSame('4.00', (string) $order->tax);
         $this->assertSame('20.00', (string) $order->subtotal);
         $this->assertSame('24.00', (string) $order->total);
+    }
+
+    private function variantProduct(int $variantStock = 20): array
+    {
+        $product = Product::create([
+            'organization_id' => $this->organization->id,
+            'sku' => 'VAR-PROD',
+            'name' => 'Variant Product',
+            'price' => 50.00,
+            'currency' => 'USD',
+            'stock' => 999,
+            'min_stock' => 0,
+            'is_active' => true,
+            'has_variants' => true,
+        ]);
+
+        $variant = ProductVariant::create([
+            'organization_id' => $this->organization->id,
+            'product_id' => $product->id,
+            'sku' => 'VAR-PROD-RED',
+            'title' => 'Red',
+            'option_values' => ['color' => 'red'],
+            'price' => 60.00,
+            'stock' => $variantStock,
+            'is_active' => true,
+        ]);
+
+        return [$product, $variant];
+    }
+
+    public function test_variant_line_decrements_variant_stock_not_parent(): void
+    {
+        [$product, $variant] = $this->variantProduct(20);
+
+        $order = $this->service()->create($this->payload([
+            'items' => [
+                ['product_id' => $product->id, 'product_variant_id' => $variant->id, 'quantity' => 3],
+            ],
+        ]), $this->creator, 'api');
+
+        // Variant stock drops; parent product stock is untouched.
+        $this->assertSame(17, (int) $variant->fresh()->stock);
+        $this->assertSame(999, (int) $product->fresh()->stock);
+
+        // Line + price snapshot come from the variant.
+        $item = $order->items()->first();
+        $this->assertSame($variant->id, $item->product_variant_id);
+        $this->assertSame('60.00', (string) $item->unit_price);
+
+        // Ledger row is attributed to the variant.
+        $adj = StockAdjustment::where('reference_id', $order->id)->first();
+        $this->assertSame($variant->id, (int) $adj->product_variant_id);
+        $this->assertSame(20, (int) $adj->quantity_before);
+        $this->assertSame(17, (int) $adj->quantity_after);
+    }
+
+    public function test_variant_tracked_product_requires_a_variant_id(): void
+    {
+        [$product] = $this->variantProduct();
+
+        $this->expectException(InvalidOrderItemException::class);
+        $this->expectExceptionMessage('sold by variant');
+
+        $this->service()->create($this->payload([
+            'items' => [
+                ['product_id' => $product->id, 'quantity' => 1, 'unit_price' => 10.00],
+            ],
+        ]), $this->creator);
+    }
+
+    public function test_variant_must_belong_to_the_line_product(): void
+    {
+        [, $variant] = $this->variantProduct();
+
+        // $this->product is a different, non-variant product.
+        $this->expectException(InvalidOrderItemException::class);
+        $this->expectExceptionMessage('does not belong');
+
+        $this->service()->create($this->payload([
+            'items' => [
+                ['product_id' => $this->product->id, 'product_variant_id' => $variant->id, 'quantity' => 1, 'unit_price' => 10.00],
+            ],
+        ]), $this->creator);
+    }
+
+    public function test_variant_insufficient_stock_is_checked_against_variant(): void
+    {
+        [$product, $variant] = $this->variantProduct(5);
+
+        $this->expectException(InsufficientStockException::class);
+
+        try {
+            $this->service()->create($this->payload([
+                'items' => [
+                    ['product_id' => $product->id, 'product_variant_id' => $variant->id, 'quantity' => 10],
+                ],
+            ]), $this->creator);
+        } finally {
+            $this->assertSame(5, (int) $variant->fresh()->stock);
+            $this->assertSame(0, Order::where('source', 'manual')->count());
+        }
     }
 
     public function test_throws_typed_exception_on_insufficient_stock(): void

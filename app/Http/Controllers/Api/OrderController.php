@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Api;
 
 use App\Exceptions\InsufficientStockException;
+use App\Exceptions\InvalidOrderItemException;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\OrderResource;
 use App\Models\Inventory\StockAdjustment;
@@ -102,6 +103,7 @@ class OrderController extends Controller
             'metadata' => ['nullable', 'array'],
             'items' => ['required', 'array', 'min:1'],
             'items.*.product_id' => ['required', 'integer', Rule::exists('products', 'id')->where('organization_id', $organizationId)],
+            'items.*.product_variant_id' => ['nullable', 'integer', Rule::exists('product_variants', 'id')->where('organization_id', $organizationId)],
             'items.*.quantity' => ['required', 'integer', 'min:1'],
             'items.*.unit_price' => ['nullable', 'numeric', 'min:0'],
             'items.*.tax' => ['nullable', 'numeric', 'min:0'],
@@ -120,8 +122,8 @@ class OrderController extends Controller
                 $request->user(),
                 $validated['source'] ?? 'api'
             );
-        } catch (InsufficientStockException $e) {
-            // Preserve the API's 422 contract: insufficient stock surfaces as
+        } catch (InsufficientStockException|InvalidOrderItemException $e) {
+            // Preserve the API's 422 contract: stock/variant problems surface as
             // an `items` validation error rather than a generic 500.
             throw ValidationException::withMessages(['items' => [$e->getMessage()]]);
         }
