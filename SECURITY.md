@@ -125,6 +125,18 @@ When deploying Inventoros, follow these security best practices:
 - **Enable CSRF protection** (enabled by default in Laravel)
 - **Use Content Security Policy (CSP) headers**
 
+### Error monitoring (Sentry)
+
+Inventoros integrates [Sentry](https://sentry.io) for structured error and performance reporting, which is important for catching exceptions you would otherwise never see in production (failed jobs, 500s, integration errors). It is **disabled by default** and only activates once you provide a DSN:
+
+```env
+SENTRY_LARAVEL_DSN=https://<key>@<org>.ingest.sentry.io/<project>
+# Optional — defaults shown. Errors are captured at 100%, traces sampled at 10%.
+SENTRY_TRACES_SAMPLE_RATE=0.1
+```
+
+Create a project at sentry.io (or self-host GlitchTip, which is DSN-compatible) to get the DSN. `send_default_pii` is off by default so request bodies / user data are not shipped; turn it on only if your privacy policy allows. With no DSN set, the integration is inert and adds no overhead.
+
 ## Known Security Considerations
 
 ### Development Phase Warnings

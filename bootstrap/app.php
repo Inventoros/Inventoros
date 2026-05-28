@@ -1,8 +1,19 @@
 <?php
 
+use App\Http\Middleware\CheckApiPermission;
+use App\Http\Middleware\CheckInstallation;
+use App\Http\Middleware\CheckPermission;
+use App\Http\Middleware\EnsureTwoFactorVerified;
+use App\Http\Middleware\EnsureUserIsAdmin;
+use App\Http\Middleware\EnsureUserIsManager;
+use App\Http\Middleware\HandleInertiaRequests;
+use App\Http\Middleware\SecurityHeaders;
+use App\Http\Middleware\SetLocale;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
+use Illuminate\Http\Middleware\AddLinkHeadersForPreloadedAssets;
+use Sentry\Laravel\Integration;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -13,25 +24,28 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->web(append: [
-            \Illuminate\Http\Middleware\AddLinkHeadersForPreloadedAssets::class,
-            \App\Http\Middleware\CheckInstallation::class,
-            \App\Http\Middleware\SetLocale::class,
-            \App\Http\Middleware\HandleInertiaRequests::class,
-            \App\Http\Middleware\SecurityHeaders::class,
-            \App\Http\Middleware\EnsureTwoFactorVerified::class,
+            AddLinkHeadersForPreloadedAssets::class,
+            CheckInstallation::class,
+            SetLocale::class,
+            HandleInertiaRequests::class,
+            SecurityHeaders::class,
+            EnsureTwoFactorVerified::class,
         ]);
 
         $middleware->api(append: [
-            \App\Http\Middleware\SecurityHeaders::class,
+            SecurityHeaders::class,
         ]);
 
         $middleware->alias([
-            'admin' => \App\Http\Middleware\EnsureUserIsAdmin::class,
-            'manager' => \App\Http\Middleware\EnsureUserIsManager::class,
-            'permission' => \App\Http\Middleware\CheckPermission::class,
-            'api.permission' => \App\Http\Middleware\CheckApiPermission::class,
+            'admin' => EnsureUserIsAdmin::class,
+            'manager' => EnsureUserIsManager::class,
+            'permission' => CheckPermission::class,
+            'api.permission' => CheckApiPermission::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
-        //
+        // Report unhandled exceptions to Sentry when a DSN is configured.
+        // No-op when SENTRY_LARAVEL_DSN is empty (the default), so this is
+        // inert until an operator opts in.
+        Integration::handles($exceptions);
     })->create();
