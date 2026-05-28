@@ -5,8 +5,12 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Inventory;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\ProductLocation\StoreProductLocationRequest;
+use App\Http\Requests\ProductLocation\UpdateProductLocationRequest;
 use App\Models\Inventory\ProductLocation;
 use App\Models\Warehouse;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -22,8 +26,7 @@ class ProductLocationController extends Controller
     /**
      * Display a listing of locations.
      *
-     * @param Request $request The incoming HTTP request
-     * @return Response
+     * @param  Request  $request  The incoming HTTP request
      */
     public function index(Request $request): Response
     {
@@ -39,13 +42,13 @@ class ProductLocationController extends Controller
             ->when($request->input('search'), function ($query, $search) {
                 $query->where(function ($q) use ($search) {
                     $q->where('name', 'like', "%{$search}%")
-                      ->orWhere('code', 'like', "%{$search}%");
+                        ->orWhere('code', 'like', "%{$search}%");
                 });
             })
             ->latest()
             ->paginate(15)
             ->withQueryString()
-            ->through(fn($location) => $location);
+            ->through(fn ($location) => $location);
 
         $warehouses = Warehouse::forOrganization($organizationId)
             ->active()
@@ -69,30 +72,14 @@ class ProductLocationController extends Controller
     /**
      * Store a newly created location.
      *
-     * @param Request $request The incoming HTTP request containing location data
-     * @return \Illuminate\Http\RedirectResponse|\Illuminate\Http\JsonResponse
+     * @param  Request  $request  The incoming HTTP request containing location data
+     * @return RedirectResponse|JsonResponse
      */
-    public function store(Request $request)
+    public function store(StoreProductLocationRequest $request)
     {
-        $organizationId = $request->user()->organization_id;
+        $validated = $request->validated();
 
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'code' => 'required|string|max:50',
-            'description' => 'nullable|string',
-            'is_active' => 'boolean',
-            'warehouse_id' => [
-                'nullable',
-                'exists:warehouses,id',
-                function ($attribute, $value, $fail) use ($organizationId) {
-                    if ($value && !Warehouse::where('id', $value)->where('organization_id', $organizationId)->exists()) {
-                        $fail('The selected warehouse does not belong to your organization.');
-                    }
-                },
-            ],
-        ]);
-
-        $validated['organization_id'] = $organizationId;
+        $validated['organization_id'] = $request->user()->organization_id;
         $validated['is_active'] = $validated['is_active'] ?? true;
 
         $location = ProductLocation::create($validated);
@@ -113,34 +100,18 @@ class ProductLocationController extends Controller
     /**
      * Update the specified location.
      *
-     * @param Request $request The incoming HTTP request containing updated location data
-     * @param ProductLocation $location The location to update
-     * @return \Illuminate\Http\RedirectResponse
+     * @param  Request  $request  The incoming HTTP request containing updated location data
+     * @param  ProductLocation  $location  The location to update
+     * @return RedirectResponse
      */
-    public function update(Request $request, ProductLocation $location)
+    public function update(UpdateProductLocationRequest $request, ProductLocation $location)
     {
         // Ensure user can only update locations from their organization
         if ($location->organization_id !== $request->user()->organization_id) {
             abort(403, 'Unauthorized action.');
         }
 
-        $organizationId = $request->user()->organization_id;
-
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'code' => 'required|string|max:50',
-            'description' => 'nullable|string',
-            'is_active' => 'boolean',
-            'warehouse_id' => [
-                'nullable',
-                'exists:warehouses,id',
-                function ($attribute, $value, $fail) use ($organizationId) {
-                    if ($value && !Warehouse::where('id', $value)->where('organization_id', $organizationId)->exists()) {
-                        $fail('The selected warehouse does not belong to your organization.');
-                    }
-                },
-            ],
-        ]);
+        $validated = $request->validated();
 
         $location->update($validated);
 
@@ -151,9 +122,9 @@ class ProductLocationController extends Controller
     /**
      * Remove the specified location.
      *
-     * @param Request $request The incoming HTTP request
-     * @param ProductLocation $location The location to delete
-     * @return \Illuminate\Http\RedirectResponse
+     * @param  Request  $request  The incoming HTTP request
+     * @param  ProductLocation  $location  The location to delete
+     * @return RedirectResponse
      */
     public function destroy(Request $request, ProductLocation $location)
     {
