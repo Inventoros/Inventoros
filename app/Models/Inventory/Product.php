@@ -5,13 +5,17 @@ declare(strict_types=1);
 namespace App\Models\Inventory;
 
 use App\Models\Auth\Organization;
+use App\Models\Concerns\BelongsToOrganization;
 use App\Traits\LogsActivity;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Carbon;
 
 /**
  * Represents a product in the inventory.
@@ -41,26 +45,26 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property bool $is_active
  * @property bool $has_variants
  * @property array|null $metadata
- * @property \Illuminate\Support\Carbon|null $created_at
- * @property \Illuminate\Support\Carbon|null $updated_at
- * @property \Illuminate\Support\Carbon|null $deleted_at
+ * @property Carbon|null $created_at
+ * @property Carbon|null $updated_at
+ * @property Carbon|null $deleted_at
  * @property-read int $total_stock
  * @property-read array{min: string, max: string} $price_range
  * @property-read float $profit
  * @property-read float $profit_margin
  * @property-read float $total_profit
- * @property-read \App\Models\Auth\Organization $organization
- * @property-read \App\Models\Inventory\ProductCategory|null $category
- * @property-read \App\Models\Inventory\ProductLocation|null $location
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Inventory\StockAdjustment[] $stockAdjustments
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Inventory\Supplier[] $suppliers
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Inventory\ProductOption[] $options
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Inventory\ProductVariant[] $variants
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Inventory\ProductVariant[] $activeVariants
+ * @property-read Organization $organization
+ * @property-read ProductCategory|null $category
+ * @property-read ProductLocation|null $location
+ * @property-read Collection|StockAdjustment[] $stockAdjustments
+ * @property-read Collection|Supplier[] $suppliers
+ * @property-read Collection|ProductOption[] $options
+ * @property-read Collection|ProductVariant[] $variants
+ * @property-read Collection|ProductVariant[] $activeVariants
  */
 class Product extends Model
 {
-    use HasFactory, SoftDeletes, LogsActivity;
+    use BelongsToOrganization, HasFactory, LogsActivity, SoftDeletes;
 
     /**
      * The attributes that are mass assignable.
@@ -123,7 +127,7 @@ class Product extends Model
     /**
      * Get the organization that owns the product.
      *
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo<\App\Models\Auth\Organization, $this>
+     * @return BelongsTo<Organization, $this>
      */
     public function organization(): BelongsTo
     {
@@ -133,7 +137,7 @@ class Product extends Model
     /**
      * Get the category of the product.
      *
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo<\App\Models\Inventory\ProductCategory, $this>
+     * @return BelongsTo<ProductCategory, $this>
      */
     public function category(): BelongsTo
     {
@@ -143,7 +147,7 @@ class Product extends Model
     /**
      * Get the location of the product.
      *
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo<\App\Models\Inventory\ProductLocation, $this>
+     * @return BelongsTo<ProductLocation, $this>
      */
     public function location(): BelongsTo
     {
@@ -153,7 +157,7 @@ class Product extends Model
     /**
      * Get all stock adjustments for this product.
      *
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany<\App\Models\Inventory\StockAdjustment, $this>
+     * @return HasMany<StockAdjustment, $this>
      */
     public function stockAdjustments()
     {
@@ -163,7 +167,7 @@ class Product extends Model
     /**
      * Get the suppliers for this product.
      *
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany<\App\Models\Inventory\Supplier, $this>
+     * @return BelongsToMany<Supplier, $this>
      */
     public function suppliers(): BelongsToMany
     {
@@ -175,7 +179,7 @@ class Product extends Model
     /**
      * Get the primary supplier for this product.
      *
-     * @return \App\Models\Inventory\Supplier|null
+     * @return Supplier|null
      */
     public function primarySupplier()
     {
@@ -185,7 +189,7 @@ class Product extends Model
     /**
      * Get the options for this product.
      *
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany<\App\Models\Inventory\ProductOption, $this>
+     * @return HasMany<ProductOption, $this>
      */
     public function options(): HasMany
     {
@@ -195,7 +199,7 @@ class Product extends Model
     /**
      * Get the variants for this product.
      *
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany<\App\Models\Inventory\ProductVariant, $this>
+     * @return HasMany<ProductVariant, $this>
      */
     public function variants(): HasMany
     {
@@ -205,7 +209,7 @@ class Product extends Model
     /**
      * Get the batches for this product.
      *
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany<\App\Models\Inventory\ProductBatch, $this>
+     * @return HasMany<ProductBatch, $this>
      */
     public function batches(): HasMany
     {
@@ -215,7 +219,7 @@ class Product extends Model
     /**
      * Get the serial numbers for this product.
      *
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany<\App\Models\Inventory\ProductSerial, $this>
+     * @return HasMany<ProductSerial, $this>
      */
     public function serials(): HasMany
     {
@@ -225,7 +229,7 @@ class Product extends Model
     /**
      * Get active variants for this product.
      *
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany<\App\Models\Inventory\ProductVariant, $this>
+     * @return HasMany<ProductVariant, $this>
      */
     public function activeVariants(): HasMany
     {
@@ -234,14 +238,13 @@ class Product extends Model
 
     /**
      * Get the total stock across all variants (or product stock if no variants).
-     *
-     * @return int
      */
     public function getTotalStockAttribute(): int
     {
         if ($this->has_variants && $this->variants()->exists()) {
             return $this->variants()->sum('stock');
         }
+
         return $this->stock;
     }
 
@@ -252,7 +255,7 @@ class Product extends Model
      */
     public function getPriceRangeAttribute(): array
     {
-        if (!$this->has_variants || !$this->variants()->exists()) {
+        if (! $this->has_variants || ! $this->variants()->exists()) {
             return ['min' => $this->price, 'max' => $this->price];
         }
 
@@ -270,12 +273,11 @@ class Product extends Model
     /**
      * Find a variant by its option values.
      *
-     * @param array<string, string> $optionValues
-     * @return \App\Models\Inventory\ProductVariant|null
+     * @param  array<string, string>  $optionValues
      */
     public function findVariant(array $optionValues): ?ProductVariant
     {
-        return $this->variants()->get()->first(fn($v) => $v->matchesOptions($optionValues));
+        return $this->variants()->get()->first(fn ($v) => $v->matchesOptions($optionValues));
     }
 
     /**
@@ -309,9 +311,9 @@ class Product extends Model
     /**
      * Scope a query to only include products from a specific organization.
      *
-     * @param \Illuminate\Database\Eloquent\Builder<static> $query
-     * @param int $organizationId
-     * @return \Illuminate\Database\Eloquent\Builder<static>
+     * @param  Builder<static>  $query
+     * @param  int  $organizationId
+     * @return Builder<static>
      */
     public function scopeForOrganization($query, $organizationId)
     {
@@ -321,8 +323,8 @@ class Product extends Model
     /**
      * Scope a query to only include active products.
      *
-     * @param \Illuminate\Database\Eloquent\Builder<static> $query
-     * @return \Illuminate\Database\Eloquent\Builder<static>
+     * @param  Builder<static>  $query
+     * @return Builder<static>
      */
     public function scopeActive($query)
     {
@@ -332,8 +334,8 @@ class Product extends Model
     /**
      * Scope a query to only include products with low stock.
      *
-     * @param \Illuminate\Database\Eloquent\Builder<static> $query
-     * @return \Illuminate\Database\Eloquent\Builder<static>
+     * @param  Builder<static>  $query
+     * @return Builder<static>
      */
     public function scopeLowStock($query)
     {
@@ -343,8 +345,8 @@ class Product extends Model
     /**
      * Scope a query to only include products that need reorder.
      *
-     * @param \Illuminate\Database\Eloquent\Builder<static> $query
-     * @return \Illuminate\Database\Eloquent\Builder<static>
+     * @param  Builder<static>  $query
+     * @return Builder<static>
      */
     public function scopeNeedsReorder($query)
     {
@@ -356,8 +358,6 @@ class Product extends Model
 
     /**
      * Check if the product needs to be reordered.
-     *
-     * @return bool
      */
     public function isReorderNeeded(): bool
     {
@@ -369,8 +369,6 @@ class Product extends Model
 
     /**
      * Check if the product is low on stock.
-     *
-     * @return bool
      */
     public function isLowStock(): bool
     {
@@ -379,8 +377,6 @@ class Product extends Model
 
     /**
      * Check if the product is out of stock.
-     *
-     * @return bool
      */
     public function isOutOfStock(): bool
     {
@@ -389,34 +385,30 @@ class Product extends Model
 
     /**
      * Get the profit per unit.
-     *
-     * @return float
      */
     public function getProfitAttribute(): float
     {
-        if (!$this->purchase_price || !$this->price) {
+        if (! $this->purchase_price || ! $this->price) {
             return 0;
         }
+
         return $this->price - $this->purchase_price;
     }
 
     /**
      * Get the profit margin percentage.
-     *
-     * @return float
      */
     public function getProfitMarginAttribute(): float
     {
-        if (!$this->purchase_price || !$this->price || $this->price == 0) {
+        if (! $this->purchase_price || ! $this->price || $this->price == 0) {
             return 0;
         }
+
         return (($this->price - $this->purchase_price) / $this->price) * 100;
     }
 
     /**
      * Get the total profit for all stock.
-     *
-     * @return float
      */
     public function getTotalProfitAttribute(): float
     {
@@ -426,7 +418,7 @@ class Product extends Model
     /**
      * Get the components of this kit or assembly (BOM).
      *
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany<\App\Models\Inventory\ProductComponent, $this>
+     * @return HasMany<ProductComponent, $this>
      */
     public function components(): HasMany
     {
@@ -436,7 +428,7 @@ class Product extends Model
     /**
      * Get the kits/assemblies that use this product as a component.
      *
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany<\App\Models\Inventory\ProductComponent, $this>
+     * @return HasMany<ProductComponent, $this>
      */
     public function usedInKits(): HasMany
     {
@@ -446,7 +438,7 @@ class Product extends Model
     /**
      * Get the work orders for this assembly product.
      *
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany<\App\Models\Inventory\WorkOrder, $this>
+     * @return HasMany<WorkOrder, $this>
      */
     public function workOrders(): HasMany
     {
@@ -455,8 +447,6 @@ class Product extends Model
 
     /**
      * Check if this product is a kit.
-     *
-     * @return bool
      */
     public function isKit(): bool
     {
@@ -465,8 +455,6 @@ class Product extends Model
 
     /**
      * Check if this product is an assembly.
-     *
-     * @return bool
      */
     public function isAssembly(): bool
     {
@@ -475,8 +463,6 @@ class Product extends Model
 
     /**
      * Check if this product is a standard product.
-     *
-     * @return bool
      */
     public function isStandard(): bool
     {
@@ -489,12 +475,10 @@ class Product extends Model
      * For kits, stock is not stored directly — it is derived from
      * the minimum number of complete kits that can be assembled
      * from available component stock.
-     *
-     * @return int
      */
     public function getAvailableKitStock(): int
     {
-        if (!$this->isKit()) {
+        if (! $this->isKit()) {
             return $this->stock;
         }
 
@@ -524,9 +508,8 @@ class Product extends Model
     /**
      * Scope a query to filter products by type.
      *
-     * @param \Illuminate\Database\Eloquent\Builder<static> $query
-     * @param string $type
-     * @return \Illuminate\Database\Eloquent\Builder<static>
+     * @param  Builder<static>  $query
+     * @return Builder<static>
      */
     public function scopeOfType($query, string $type)
     {

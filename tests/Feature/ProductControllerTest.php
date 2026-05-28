@@ -467,7 +467,8 @@ class ProductControllerTest extends TestCase
         $response = $this->actingAs($this->admin)
             ->get(route('products.show', $otherProduct));
 
-        $response->assertStatus(403);
+        // Org scope makes other-tenant records invisible: 404, not 403.
+        $response->assertStatus(404);
     }
 
     // ==================== EDIT TESTS ====================
@@ -528,7 +529,8 @@ class ProductControllerTest extends TestCase
         $response = $this->actingAs($this->admin)
             ->get(route('products.edit', $otherProduct));
 
-        $response->assertStatus(403);
+        // Org scope makes other-tenant records invisible: 404, not 403.
+        $response->assertStatus(404);
     }
 
     // ==================== UPDATE TESTS ====================
@@ -624,7 +626,8 @@ class ProductControllerTest extends TestCase
                 'min_stock' => 1,
             ]);
 
-        $response->assertStatus(403);
+        // Org scope makes other-tenant records invisible: 404, not 403.
+        $response->assertStatus(404);
         $this->assertDatabaseHas('products', [
             'id' => $otherProduct->id,
             'name' => 'Other Product',
@@ -730,7 +733,8 @@ class ProductControllerTest extends TestCase
         $response = $this->actingAs($this->admin)
             ->delete(route('products.destroy', $otherProduct));
 
-        $response->assertStatus(403);
+        // Org scope makes other-tenant records invisible: 404, not 403.
+        $response->assertStatus(404);
         $this->assertDatabaseHas('products', [
             'id' => $otherProduct->id,
             'deleted_at' => null,
