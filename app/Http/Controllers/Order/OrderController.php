@@ -8,14 +8,14 @@ use App\Http\Controllers\Controller;
 use App\Models\Inventory\Product;
 use App\Models\Inventory\StockAdjustment;
 use App\Models\Order\Order;
-use App\Models\Order\OrderItem;
 use App\Models\Warehouse;
 use App\Services\NotificationService;
-use App\Support\SequenceNumberRetry;
+use App\Services\OrderService;
 use Illuminate\Database\QueryException;
-use Illuminate\Support\Facades\Log;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -28,11 +28,14 @@ use Inertia\Response;
  */
 class OrderController extends Controller
 {
+    public function __construct(
+        protected OrderService $orderService,
+    ) {}
+
     /**
      * Display a listing of orders.
      *
-     * @param Request $request The incoming HTTP request
-     * @return Response
+     * @param  Request  $request  The incoming HTTP request
      */
     public function index(Request $request): Response
     {
@@ -48,8 +51,8 @@ class OrderController extends Controller
             ->when($request->input('search'), function ($query, $search) {
                 $query->where(function ($q) use ($search) {
                     $q->where('order_number', 'like', "%{$search}%")
-                      ->orWhere('customer_name', 'like', "%{$search}%")
-                      ->orWhere('customer_email', 'like', "%{$search}%");
+                        ->orWhere('customer_name', 'like', "%{$search}%")
+                        ->orWhere('customer_email', 'like', "%{$search}%");
                 });
             })
             ->when($request->input('status'), function ($query, $status) {
@@ -83,8 +86,7 @@ class OrderController extends Controller
     /**
      * Show the form for creating a new order.
      *
-     * @param Request $request The incoming HTTP request
-     * @return Response
+     * @param  Request  $request  The incoming HTTP request
      */
     public function create(Request $request): Response
     {
@@ -112,8 +114,8 @@ class OrderController extends Controller
     /**
      * Store a newly created order.
      *
-     * @param Request $request The incoming HTTP request containing order data
-     * @return \Illuminate\Http\RedirectResponse
+     * @param  Request  $request  The incoming HTTP request containing order data
+     * @return RedirectResponse
      */
     public function store(Request $request)
     {
@@ -141,130 +143,11 @@ class OrderController extends Controller
                 ?? Warehouse::forOrganization($organizationId)->where('is_default', true)->value('id');
         }
 
-        $validated['organization_id'] = $request->user()->organization_id;
-        $validated['created_by'] = $request->user()->id;
-        $validated['source'] = 'manual';
-        $validated['approval_status'] = 'pending';
-
-        // Use transaction with locking to prevent race conditions on stock
-        // updates. order_number is generated INSIDE the transaction (rather
-        // than computed once above and reused on retry) so a unique-
-        // constraint collision can be retried by SequenceNumberRetry —
-        // generateOrderNumber reads MAX() + 1 which races without a lock.
+        // Order creation (lock → validate → decrement, wrapped in
+        // SequenceNumberRetry) lives in OrderService so every surface — web,
+        // REST, GraphQL, MCP — creates orders with identical invariants.
         try {
-            $order = SequenceNumberRetry::create(fn () => DB::transaction(function () use ($validated) {
-                $validated['order_number'] = Order::generateOrderNumber($validated['organization_id']);
-
-                // Batch-lock every product referenced by this order in a
-                // single SELECT ... FOR UPDATE — previously the loop did
-                // one lock query per item, holding the lock through the
-                // transaction either way but spending N round-trips.
-                $productIds = array_unique(array_column($validated['items'], 'product_id'));
-                $products = Product::whereIn('id', $productIds)
-                    ->where('organization_id', $validated['organization_id'])
-                    ->lockForUpdate()
-                    ->get()
-                    ->keyBy('id');
-
-                // Validate availability across ALL items first. Multiple
-                // line items of the same product accumulate against the
-                // same running stock.
-                $running = [];
-                foreach ($validated['items'] as $item) {
-                    $pid = $item['product_id'];
-                    if (!$products->has($pid)) {
-                        throw new \Exception("Product not found: {$pid}");
-                    }
-                    $running[$pid] = ($running[$pid] ?? (int) $products[$pid]->stock) - (int) $item['quantity'];
-                    if ($running[$pid] < 0) {
-                        $product = $products[$pid];
-                        throw new \Exception("Insufficient stock for {$product->name}. Available: {$product->stock}, Requested: {$item['quantity']}");
-                    }
-                }
-
-                // Build order-item rows + stock-adjustment rows. quantity_before
-                // and quantity_after thread the running stock so the ledger
-                // is faithful when the order touches the same product twice.
-                $subtotal = 0;
-                $orderItemRows = [];
-                $now = now();
-                $adjustmentRows = [];
-                $perProductQty = [];
-                $threadStock = []; // tracks each entry's quantity_before/after
-
-                foreach ($validated['items'] as $item) {
-                    $pid = $item['product_id'];
-                    $product = $products[$pid];
-                    $qty = (int) $item['quantity'];
-
-                    $itemSubtotal = $qty * $item['unit_price'];
-                    $subtotal += $itemSubtotal;
-
-                    $orderItemRows[] = [
-                        'product_id' => $pid,
-                        'product_name' => $product->name,
-                        'sku' => $product->sku,
-                        'quantity' => $qty,
-                        'unit_price' => $item['unit_price'],
-                        'subtotal' => $itemSubtotal,
-                        'tax' => 0,
-                        'total' => $itemSubtotal,
-                    ];
-
-                    $perProductQty[$pid] = ($perProductQty[$pid] ?? 0) + $qty;
-                    $beforeForEntry = $threadStock[$pid] ?? (int) $product->stock;
-                    $afterForEntry = $beforeForEntry - $qty;
-                    $threadStock[$pid] = $afterForEntry;
-
-                    $adjustmentRows[] = [
-                        'organization_id' => $validated['organization_id'],
-                        'product_id' => $pid,
-                        'user_id' => auth()->id(),
-                        'type' => 'order_fulfillment',
-                        'quantity_before' => $beforeForEntry,
-                        'quantity_after' => $afterForEntry,
-                        'adjustment_quantity' => -$qty,
-                        'reason' => null,  // set after order_number known
-                        'notes' => null,
-                        'reference_type' => Order::class,
-                        'reference_id' => null,  // set after $order is created
-                        'created_at' => $now,
-                        'updated_at' => $now,
-                    ];
-                }
-
-                $validated['subtotal'] = $subtotal;
-                $validated['tax'] = $validated['tax'] ?? 0;
-                $validated['shipping'] = $validated['shipping'] ?? 0;
-                $validated['total'] = $subtotal + $validated['tax'] + $validated['shipping'];
-
-                $order = Order::create($validated);
-
-                // Fill in the order_id-dependent fields and bulk-insert.
-                foreach ($orderItemRows as &$row) {
-                    $row['order_id'] = $order->id;
-                    $row['created_at'] = $now;
-                    $row['updated_at'] = $now;
-                }
-                unset($row);
-                OrderItem::insert($orderItemRows);
-
-                foreach ($adjustmentRows as &$adj) {
-                    $adj['reason'] = "Order {$order->order_number} fulfilled";
-                    $adj['reference_id'] = $order->id;
-                }
-                unset($adj);
-                StockAdjustment::insert($adjustmentRows);
-
-                // Decrement stock once per unique product instead of once
-                // per line item. Using update + raw expression so we keep
-                // the lockForUpdate-on-the-same-connection semantics.
-                foreach ($perProductQty as $pid => $totalQty) {
-                    $products[$pid]->decrement('stock', $totalQty);
-                }
-
-                return $order;
-            }));
+            $this->orderService->create($validated, $request->user());
 
             return redirect()->route('orders.index')
                 ->with('success', 'Order created successfully.');
@@ -297,8 +180,7 @@ class OrderController extends Controller
     /**
      * Display the specified order.
      *
-     * @param Order $order The order to display
-     * @return Response
+     * @param  Order  $order  The order to display
      */
     public function show(Order $order): Response
     {
@@ -327,9 +209,8 @@ class OrderController extends Controller
     /**
      * Show the form for editing the specified order.
      *
-     * @param Request $request The incoming HTTP request
-     * @param Order $order The order to edit
-     * @return Response
+     * @param  Request  $request  The incoming HTTP request
+     * @param  Order  $order  The order to edit
      */
     public function edit(Request $request, Order $order): Response
     {
@@ -356,9 +237,9 @@ class OrderController extends Controller
     /**
      * Update the specified order.
      *
-     * @param Request $request The incoming HTTP request containing updated order data
-     * @param Order $order The order to update
-     * @return \Illuminate\Http\RedirectResponse
+     * @param  Request  $request  The incoming HTTP request containing updated order data
+     * @param  Order  $order  The order to update
+     * @return RedirectResponse
      */
     public function update(Request $request, Order $order)
     {
@@ -402,7 +283,7 @@ class OrderController extends Controller
                 $itemSubtotal = $itemData['quantity'] * $itemData['unit_price'];
                 $subtotal += $itemSubtotal;
 
-                if (!empty($itemData['id']) && $existingItems->has($itemData['id'])) {
+                if (! empty($itemData['id']) && $existingItems->has($itemData['id'])) {
                     // Update existing item
                     $existingItem = $existingItems->get($itemData['id']);
                     $quantityDiff = $itemData['quantity'] - $existingItem->quantity;
@@ -464,7 +345,7 @@ class OrderController extends Controller
 
             // Delete removed items and restore their stock
             $itemsToDelete = $existingItems->filter(function ($item) use ($itemIdsToKeep) {
-                return !in_array($item->id, $itemIdsToKeep);
+                return ! in_array($item->id, $itemIdsToKeep);
             });
 
             foreach ($itemsToDelete as $item) {
@@ -482,7 +363,7 @@ class OrderController extends Controller
             }
 
             // Create new items
-            if (!empty($updatedItems)) {
+            if (! empty($updatedItems)) {
                 $order->items()->createMany($updatedItems);
             }
 
@@ -512,9 +393,9 @@ class OrderController extends Controller
             $validated['total'] = $subtotal + $validated['tax'] + $validated['shipping'];
 
             // Update order timestamps based on status
-            if ($validated['status'] === 'shipped' && !$order->shipped_at) {
+            if ($validated['status'] === 'shipped' && ! $order->shipped_at) {
                 $validated['shipped_at'] = now();
-            } elseif ($validated['status'] === 'delivered' && !$order->delivered_at) {
+            } elseif ($validated['status'] === 'delivered' && ! $order->delivered_at) {
                 $validated['delivered_at'] = now();
             }
 
@@ -528,9 +409,9 @@ class OrderController extends Controller
     /**
      * Remove the specified order.
      *
-     * @param Request $request The incoming HTTP request
-     * @param Order $order The order to delete
-     * @return \Illuminate\Http\RedirectResponse
+     * @param  Request  $request  The incoming HTTP request
+     * @param  Order  $order  The order to delete
+     * @return RedirectResponse
      */
     public function destroy(Request $request, Order $order)
     {
@@ -568,9 +449,9 @@ class OrderController extends Controller
     /**
      * Approve an order.
      *
-     * @param Request $request The incoming HTTP request
-     * @param Order $order The order to approve
-     * @return \Illuminate\Http\RedirectResponse
+     * @param  Request  $request  The incoming HTTP request
+     * @param  Order  $order  The order to approve
+     * @return RedirectResponse
      */
     public function approve(Request $request, Order $order)
     {
@@ -580,7 +461,7 @@ class OrderController extends Controller
         }
 
         // Check if order is pending approval
-        if (!$order->isPendingApproval()) {
+        if (! $order->isPendingApproval()) {
             return redirect()->back()->with('error', 'Order has already been processed.');
         }
 
@@ -607,9 +488,9 @@ class OrderController extends Controller
     /**
      * Reject an order.
      *
-     * @param Request $request The incoming HTTP request
-     * @param Order $order The order to reject
-     * @return \Illuminate\Http\RedirectResponse
+     * @param  Request  $request  The incoming HTTP request
+     * @param  Order  $order  The order to reject
+     * @return RedirectResponse
      */
     public function reject(Request $request, Order $order)
     {
@@ -619,7 +500,7 @@ class OrderController extends Controller
         }
 
         // Check if order is pending approval
-        if (!$order->isPendingApproval()) {
+        if (! $order->isPendingApproval()) {
             return redirect()->back()->with('error', 'Order has already been processed.');
         }
 
