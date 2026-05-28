@@ -29,9 +29,9 @@ return [
             (string) env(
                 'INVENTOROS_UPDATE_PREFIXES',
                 'https://github.com/Inventoros/Inventoros/releases/download/,'
-                . 'https://github.com/Inventoros/Inventoros/archive/,'
-                . 'https://api.github.com/repos/Inventoros/Inventoros/zipball/,'
-                . 'https://api.github.com/repos/Inventoros/Inventoros/tarball/'
+                .'https://github.com/Inventoros/Inventoros/archive/,'
+                .'https://api.github.com/repos/Inventoros/Inventoros/zipball/,'
+                .'https://api.github.com/repos/Inventoros/Inventoros/tarball/'
             )
         )
     ))),
@@ -50,5 +50,42 @@ return [
     'max_entry_count' => (int) env('INVENTOROS_UPDATE_MAX_ENTRIES', 50000),
 
     'max_extracted_bytes' => (int) env('INVENTOROS_UPDATE_MAX_BYTES', 300 * 1024 * 1024),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Release signature verification
+    |--------------------------------------------------------------------------
+    |
+    | The updater downloads a release ZIP and replaces the running app's files
+    | with its contents — so a tampered archive is RCE. TLS + the allowlist
+    | above protect the transport and origin; this verifies the archive itself
+    | against a detached Ed25519 signature.
+    |
+    | Each release ships `<asset>.sig` next to `<asset>.zip` containing the
+    | base64 raw 64-byte signature of the archive bytes. The matching base64
+    | 32-byte public key goes in INVENTOROS_UPDATE_PUBLIC_KEY; the secret key
+    | lives only in the release-signing environment, never in the repo.
+    |
+    | `required` is true by default and FAILS CLOSED: if it is on but no public
+    | key is configured, updates are refused rather than silently trusting an
+    | unverified download. Operators who deliberately accept unsigned updates
+    | (e.g. installing a private fork) set INVENTOROS_UPDATE_SIGNATURE_REQUIRED
+    | to false.
+    |
+    | Tooling: `php artisan update:signing-keypair` mints a key;
+    | `php artisan update:sign <file>` produces the `.sig`.
+    |
+    */
+
+    'signature' => [
+        'required' => filter_var(
+            env('INVENTOROS_UPDATE_SIGNATURE_REQUIRED', true),
+            FILTER_VALIDATE_BOOL
+        ),
+
+        'public_key' => (string) env('INVENTOROS_UPDATE_PUBLIC_KEY', ''),
+
+        'asset_suffix' => (string) env('INVENTOROS_UPDATE_SIGNATURE_SUFFIX', '.sig'),
+    ],
 
 ];

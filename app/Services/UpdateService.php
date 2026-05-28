@@ -29,9 +29,9 @@ final class UpdateService
     protected string $currentVersion;
 
     /**
-     * @param GitHubReleaseService $githubService Service for interacting with GitHub API
-     * @param BackupService $backupService Service for creating and managing backups
-     * @param FileUpdateService $fileService Service for downloading and extracting update files
+     * @param  GitHubReleaseService  $githubService  Service for interacting with GitHub API
+     * @param  BackupService  $backupService  Service for creating and managing backups
+     * @param  FileUpdateService  $fileService  Service for downloading and extracting update files
      */
     public function __construct(
         protected GitHubReleaseService $githubService,
@@ -75,6 +75,7 @@ final class UpdateService
      * Create a backup of the current installation.
      *
      * @return string Path to the created backup file
+     *
      * @throws Exception If backup creation fails
      */
     public function createBackup(): string
@@ -95,22 +96,23 @@ final class UpdateService
     /**
      * Perform the update process.
      *
-     * @param string|null $downloadUrl Optional direct download URL, otherwise fetches from GitHub
-     * @param callable|null $progressCallback Optional callback for progress updates
+     * @param  string|null  $downloadUrl  Optional direct download URL, otherwise fetches from GitHub
+     * @param  callable|null  $progressCallback  Optional callback for progress updates
      * @return array{success: bool, message: string, backup_path?: string, new_version?: string, error?: string} Update result
+     *
      * @throws Exception If critical update steps fail
      */
-    public function update(?string $downloadUrl = null, callable $progressCallback = null): array
+    public function update(?string $downloadUrl = null, ?callable $progressCallback = null): array
     {
         try {
             $this->log($progressCallback, 'Starting update process...');
 
             // Step 1: Get latest release info
-            if (!$downloadUrl) {
+            if (! $downloadUrl) {
                 $this->log($progressCallback, 'Fetching latest release information...');
                 $latest = $this->githubService->getLatestRelease();
 
-                if (!$latest || !$latest['download_url']) {
+                if (! $latest || ! $latest['download_url']) {
                     throw new Exception('Could not fetch latest release information');
                 }
 
@@ -127,6 +129,10 @@ final class UpdateService
             // Step 3: Download release
             $this->log($progressCallback, 'Downloading update...');
             $zipPath = $this->fileService->downloadRelease($downloadUrl);
+
+            // Step 3b: Verify the archive signature before it touches the app.
+            $this->log($progressCallback, 'Verifying update signature...');
+            $this->fileService->verifyArchiveSignature($zipPath, $downloadUrl);
 
             // Step 4: Extract to temp
             $this->log($progressCallback, 'Extracting files...');
@@ -179,7 +185,7 @@ final class UpdateService
         } catch (Exception $e) {
             Log::error('Update failed', ['error' => $e->getMessage(), 'trace' => $e->getTraceAsString()]);
 
-            $this->log($progressCallback, 'Update failed: ' . $e->getMessage());
+            $this->log($progressCallback, 'Update failed: '.$e->getMessage());
 
             // Attempt to bring the application back up if it's down
             try {
@@ -190,7 +196,7 @@ final class UpdateService
 
             return [
                 'success' => false,
-                'message' => 'Update failed: ' . $e->getMessage(),
+                'message' => 'Update failed: '.$e->getMessage(),
                 'error' => $e->getMessage(),
             ];
         }
@@ -199,23 +205,23 @@ final class UpdateService
     /**
      * Restore from backup.
      *
-     * @param string $backupPath Path to the backup file
+     * @param  string  $backupPath  Path to the backup file
      * @return array{success: bool, message: string, error?: string} Restore result
      */
     public function restoreFromBackup(string $backupPath): array
     {
         try {
-            if (!File::exists($backupPath)) {
+            if (! File::exists($backupPath)) {
                 throw new Exception('Backup file not found');
             }
 
             // Put application in maintenance mode
             Artisan::call('down');
 
-            $extractPath = $this->fileService->getTempPath() . '/restore_' . time();
+            $extractPath = $this->fileService->getTempPath().'/restore_'.time();
             File::makeDirectory($extractPath, 0755, true, true);
 
-            $zip = new \ZipArchive();
+            $zip = new \ZipArchive;
             if ($zip->open($backupPath) !== true) {
                 throw new Exception('Could not open backup file');
             }
@@ -261,7 +267,7 @@ final class UpdateService
 
             return [
                 'success' => false,
-                'message' => 'Restore failed: ' . $e->getMessage(),
+                'message' => 'Restore failed: '.$e->getMessage(),
                 'error' => $e->getMessage(),
             ];
         }
@@ -286,8 +292,7 @@ final class UpdateService
     /**
      * Write version to VERSION file.
      *
-     * @param string $version The version string to write
-     * @return void
+     * @param  string  $version  The version string to write
      */
     protected function writeVersionFile(string $version): void
     {
@@ -298,9 +303,8 @@ final class UpdateService
     /**
      * Log message and call progress callback.
      *
-     * @param callable|null $callback Optional callback to receive progress messages
-     * @param string $message The message to log
-     * @return void
+     * @param  callable|null  $callback  Optional callback to receive progress messages
+     * @param  string  $message  The message to log
      */
     protected function log(?callable $callback, string $message): void
     {
