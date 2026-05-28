@@ -4,7 +4,11 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\Customer\StoreCustomerRequest;
+use App\Http\Requests\Customer\UpdateCustomerRequest;
 use App\Models\Customer;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -20,8 +24,7 @@ class CustomerController extends Controller
     /**
      * Display a listing of customers.
      *
-     * @param Request $request The incoming HTTP request
-     * @return Response
+     * @param  Request  $request  The incoming HTTP request
      */
     public function index(Request $request): Response
     {
@@ -47,8 +50,6 @@ class CustomerController extends Controller
 
     /**
      * Show the form for creating a new customer.
-     *
-     * @return Response
      */
     public function create(): Response
     {
@@ -58,35 +59,12 @@ class CustomerController extends Controller
     /**
      * Store a newly created customer.
      *
-     * @param Request $request The incoming HTTP request containing customer data
-     * @return \Illuminate\Http\RedirectResponse|\Illuminate\Http\JsonResponse
+     * @param  Request  $request  The incoming HTTP request containing customer data
+     * @return RedirectResponse|JsonResponse
      */
-    public function store(Request $request)
+    public function store(StoreCustomerRequest $request)
     {
-        $validated = $request->validate([
-            'name' => ['required', 'string', 'max:255'],
-            'code' => ['nullable', 'string', 'max:255'],
-            'company_name' => ['nullable', 'string', 'max:255'],
-            'contact_name' => ['nullable', 'string', 'max:255'],
-            'email' => ['nullable', 'email', 'max:255'],
-            'phone' => ['nullable', 'string', 'max:255'],
-            'billing_address' => ['nullable', 'string'],
-            'billing_city' => ['nullable', 'string', 'max:255'],
-            'billing_state' => ['nullable', 'string', 'max:255'],
-            'billing_zip_code' => ['nullable', 'string', 'max:255'],
-            'billing_country' => ['nullable', 'string', 'max:255'],
-            'shipping_address' => ['nullable', 'string'],
-            'shipping_city' => ['nullable', 'string', 'max:255'],
-            'shipping_state' => ['nullable', 'string', 'max:255'],
-            'shipping_zip_code' => ['nullable', 'string', 'max:255'],
-            'shipping_country' => ['nullable', 'string', 'max:255'],
-            'tax_id' => ['nullable', 'string', 'max:255'],
-            'payment_terms' => ['nullable', 'string', 'max:255'],
-            'credit_limit' => ['nullable', 'numeric', 'min:0'],
-            'currency' => ['nullable', 'string', 'max:3'],
-            'notes' => ['nullable', 'string'],
-            'is_active' => ['nullable', 'boolean'],
-        ]);
+        $validated = $request->validated();
 
         $validated['organization_id'] = $request->user()->organization_id;
         $validated['is_active'] = $validated['is_active'] ?? true;
@@ -107,9 +85,8 @@ class CustomerController extends Controller
     /**
      * Display the specified customer.
      *
-     * @param Request $request The incoming HTTP request
-     * @param Customer $customer The customer to display
-     * @return Response
+     * @param  Request  $request  The incoming HTTP request
+     * @param  Customer  $customer  The customer to display
      */
     public function show(Request $request, Customer $customer): Response
     {
@@ -127,9 +104,8 @@ class CustomerController extends Controller
     /**
      * Show the form for editing the specified customer.
      *
-     * @param Request $request The incoming HTTP request
-     * @param Customer $customer The customer to edit
-     * @return Response
+     * @param  Request  $request  The incoming HTTP request
+     * @param  Customer  $customer  The customer to edit
      */
     public function edit(Request $request, Customer $customer): Response
     {
@@ -145,40 +121,17 @@ class CustomerController extends Controller
     /**
      * Update the specified customer.
      *
-     * @param Request $request The incoming HTTP request containing updated customer data
-     * @param Customer $customer The customer to update
-     * @return \Illuminate\Http\RedirectResponse|\Illuminate\Http\JsonResponse
+     * @param  Request  $request  The incoming HTTP request containing updated customer data
+     * @param  Customer  $customer  The customer to update
+     * @return RedirectResponse|JsonResponse
      */
-    public function update(Request $request, Customer $customer)
+    public function update(UpdateCustomerRequest $request, Customer $customer)
     {
         if ($customer->organization_id !== $request->user()->organization_id) {
             abort(404);
         }
 
-        $validated = $request->validate([
-            'name' => ['sometimes', 'string', 'max:255'],
-            'code' => ['nullable', 'string', 'max:255'],
-            'company_name' => ['nullable', 'string', 'max:255'],
-            'contact_name' => ['nullable', 'string', 'max:255'],
-            'email' => ['nullable', 'email', 'max:255'],
-            'phone' => ['nullable', 'string', 'max:255'],
-            'billing_address' => ['nullable', 'string'],
-            'billing_city' => ['nullable', 'string', 'max:255'],
-            'billing_state' => ['nullable', 'string', 'max:255'],
-            'billing_zip_code' => ['nullable', 'string', 'max:255'],
-            'billing_country' => ['nullable', 'string', 'max:255'],
-            'shipping_address' => ['nullable', 'string'],
-            'shipping_city' => ['nullable', 'string', 'max:255'],
-            'shipping_state' => ['nullable', 'string', 'max:255'],
-            'shipping_zip_code' => ['nullable', 'string', 'max:255'],
-            'shipping_country' => ['nullable', 'string', 'max:255'],
-            'tax_id' => ['nullable', 'string', 'max:255'],
-            'payment_terms' => ['nullable', 'string', 'max:255'],
-            'credit_limit' => ['nullable', 'numeric', 'min:0'],
-            'currency' => ['nullable', 'string', 'max:3'],
-            'notes' => ['nullable', 'string'],
-            'is_active' => ['nullable', 'boolean'],
-        ]);
+        $validated = $request->validated();
 
         $customer->update($validated);
 
@@ -196,9 +149,9 @@ class CustomerController extends Controller
     /**
      * Remove the specified customer.
      *
-     * @param Request $request The incoming HTTP request
-     * @param Customer $customer The customer to delete
-     * @return \Illuminate\Http\RedirectResponse|\Illuminate\Http\JsonResponse
+     * @param  Request  $request  The incoming HTTP request
+     * @param  Customer  $customer  The customer to delete
+     * @return RedirectResponse|JsonResponse
      */
     public function destroy(Request $request, Customer $customer)
     {

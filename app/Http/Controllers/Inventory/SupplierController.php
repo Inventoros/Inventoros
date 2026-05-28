@@ -5,7 +5,11 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Inventory;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Supplier\StoreSupplierRequest;
+use App\Http\Requests\Supplier\UpdateSupplierRequest;
 use App\Models\Inventory\Supplier;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -22,8 +26,7 @@ class SupplierController extends Controller
     /**
      * Display a listing of suppliers.
      *
-     * @param Request $request The incoming HTTP request
-     * @return Response
+     * @param  Request  $request  The incoming HTTP request
      */
     public function index(Request $request): Response
     {
@@ -69,8 +72,7 @@ class SupplierController extends Controller
     /**
      * Show the form for creating a new supplier.
      *
-     * @param Request $request The incoming HTTP request
-     * @return Response
+     * @param  Request  $request  The incoming HTTP request
      */
     public function create(Request $request): Response
     {
@@ -85,28 +87,12 @@ class SupplierController extends Controller
     /**
      * Store a newly created supplier.
      *
-     * @param Request $request The incoming HTTP request containing supplier data
-     * @return \Illuminate\Http\RedirectResponse|\Illuminate\Http\JsonResponse
+     * @param  Request  $request  The incoming HTTP request containing supplier data
+     * @return RedirectResponse|JsonResponse
      */
-    public function store(Request $request)
+    public function store(StoreSupplierRequest $request)
     {
-        $validated = $request->validate([
-            'name' => ['required', 'string', 'max:255'],
-            'code' => ['nullable', 'string', 'max:255'],
-            'contact_name' => ['nullable', 'string', 'max:255'],
-            'email' => ['nullable', 'email', 'max:255'],
-            'phone' => ['nullable', 'string', 'max:255'],
-            'address' => ['nullable', 'string'],
-            'city' => ['nullable', 'string', 'max:255'],
-            'state' => ['nullable', 'string', 'max:255'],
-            'zip_code' => ['nullable', 'string', 'max:255'],
-            'country' => ['nullable', 'string', 'max:255'],
-            'website' => ['nullable', 'url', 'max:255'],
-            'payment_terms' => ['nullable', 'string', 'max:255'],
-            'currency' => ['nullable', 'string', 'max:3'],
-            'notes' => ['nullable', 'string'],
-            'is_active' => ['nullable', 'boolean'],
-        ]);
+        $validated = $request->validated();
 
         $validated['organization_id'] = $request->user()->organization_id;
         $validated['is_active'] = $validated['is_active'] ?? true;
@@ -133,9 +119,8 @@ class SupplierController extends Controller
     /**
      * Display the specified supplier.
      *
-     * @param Request $request The incoming HTTP request
-     * @param Supplier $supplier The supplier to display
-     * @return Response
+     * @param  Request  $request  The incoming HTTP request
+     * @param  Supplier  $supplier  The supplier to display
      */
     public function show(Request $request, Supplier $supplier): Response
     {
@@ -164,9 +149,8 @@ class SupplierController extends Controller
     /**
      * Show the form for editing the specified supplier.
      *
-     * @param Request $request The incoming HTTP request
-     * @param Supplier $supplier The supplier to edit
-     * @return Response
+     * @param  Request  $request  The incoming HTTP request
+     * @param  Supplier  $supplier  The supplier to edit
      */
     public function edit(Request $request, Supplier $supplier): Response
     {
@@ -187,34 +171,18 @@ class SupplierController extends Controller
     /**
      * Update the specified supplier.
      *
-     * @param Request $request The incoming HTTP request containing updated supplier data
-     * @param Supplier $supplier The supplier to update
-     * @return \Illuminate\Http\RedirectResponse|\Illuminate\Http\JsonResponse
+     * @param  Request  $request  The incoming HTTP request containing updated supplier data
+     * @param  Supplier  $supplier  The supplier to update
+     * @return RedirectResponse|JsonResponse
      */
-    public function update(Request $request, Supplier $supplier)
+    public function update(UpdateSupplierRequest $request, Supplier $supplier)
     {
         // Ensure the supplier belongs to the user's organization
         if ($supplier->organization_id !== $request->user()->organization_id) {
             abort(404);
         }
 
-        $validated = $request->validate([
-            'name' => ['sometimes', 'string', 'max:255'],
-            'code' => ['nullable', 'string', 'max:255'],
-            'contact_name' => ['nullable', 'string', 'max:255'],
-            'email' => ['nullable', 'email', 'max:255'],
-            'phone' => ['nullable', 'string', 'max:255'],
-            'address' => ['nullable', 'string'],
-            'city' => ['nullable', 'string', 'max:255'],
-            'state' => ['nullable', 'string', 'max:255'],
-            'zip_code' => ['nullable', 'string', 'max:255'],
-            'country' => ['nullable', 'string', 'max:255'],
-            'website' => ['nullable', 'url', 'max:255'],
-            'payment_terms' => ['nullable', 'string', 'max:255'],
-            'currency' => ['nullable', 'string', 'max:3'],
-            'notes' => ['nullable', 'string'],
-            'is_active' => ['nullable', 'boolean'],
-        ]);
+        $validated = $request->validated();
 
         // Hook: Before supplier update
         $validated = apply_filters('supplier_before_update', $validated, $supplier, $request);
@@ -238,9 +206,9 @@ class SupplierController extends Controller
     /**
      * Remove the specified supplier.
      *
-     * @param Request $request The incoming HTTP request
-     * @param Supplier $supplier The supplier to delete
-     * @return \Illuminate\Http\RedirectResponse|\Illuminate\Http\JsonResponse
+     * @param  Request  $request  The incoming HTTP request
+     * @param  Supplier  $supplier  The supplier to delete
+     * @return RedirectResponse|JsonResponse
      */
     public function destroy(Request $request, Supplier $supplier)
     {
