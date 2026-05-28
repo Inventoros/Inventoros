@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Services;
 
 use App\Models\Plugin;
+use App\Support\ReleaseSignatureVerifier;
 use App\Support\SafeZipExtractor;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Log;
@@ -32,7 +33,7 @@ final class PluginService
         $this->pluginsPath = base_path('plugins');
 
         // Ensure plugins directory exists
-        if (!File::exists($this->pluginsPath)) {
+        if (! File::exists($this->pluginsPath)) {
             File::makeDirectory($this->pluginsPath, config('limits.permissions.directory'), true);
         }
     }
@@ -49,7 +50,7 @@ final class PluginService
 
         foreach ($directories as $directory) {
             $pluginSlug = basename($directory);
-            $manifestPath = $directory . '/plugin.json';
+            $manifestPath = $directory.'/plugin.json';
 
             if (File::exists($manifestPath)) {
                 $manifest = json_decode(File::get($manifestPath), true);
@@ -89,6 +90,7 @@ final class PluginService
             Log::debug('Could not retrieve activated plugins - table may not exist yet', [
                 'error' => $e->getMessage(),
             ]);
+
             return [];
         }
     }
@@ -98,14 +100,14 @@ final class PluginService
      *
      * Fires plugin activation hooks and loads the plugin.
      *
-     * @param string $slug The plugin slug to activate
+     * @param  string  $slug  The plugin slug to activate
      * @return bool True on successful activation
      */
     public function activatePlugin(string $slug): bool
     {
         $plugin = Plugin::where('slug', $slug)->first();
 
-        if (!$plugin) {
+        if (! $plugin) {
             // Create new plugin record if it doesn't exist
             $plugin = Plugin::create([
                 'slug' => $slug,
@@ -113,7 +115,7 @@ final class PluginService
             ]);
         }
 
-        if (!$plugin->is_active) {
+        if (! $plugin->is_active) {
             $plugin->update([
                 'is_active' => true,
                 'activated_at' => now(),
@@ -136,7 +138,7 @@ final class PluginService
      *
      * Fires plugin deactivation hooks before deactivating.
      *
-     * @param string $slug The plugin slug to deactivate
+     * @param  string  $slug  The plugin slug to deactivate
      * @return bool True on successful deactivation
      */
     public function deactivatePlugin(string $slug): bool
@@ -162,14 +164,14 @@ final class PluginService
      *
      * Runs uninstall hooks, deactivates, removes database record, and deletes files.
      *
-     * @param string $slug The plugin slug to delete
+     * @param  string  $slug  The plugin slug to delete
      * @return bool True if plugin existed and was deleted, false if not found
      */
     public function deletePlugin(string $slug): bool
     {
-        $pluginPath = $this->pluginsPath . '/' . $slug;
+        $pluginPath = $this->pluginsPath.'/'.$slug;
 
-        if (!File::exists($pluginPath)) {
+        if (! File::exists($pluginPath)) {
             return false;
         }
 
@@ -214,34 +216,88 @@ final class PluginService
     }
 
     /**
-     * Upload and extract a plugin ZIP file.
+     * Enforce plugin signature verification when configured.
      *
-     * @param mixed $file The uploaded file instance
-     * @return array{slug: string, path: string} The extracted plugin slug and path
-     * @throws \Exception If uploads disabled, ZIP cannot be opened, contains
-     *                    path-traversal entries, exceeds limits, structure
-     *                    is invalid, plugin exists, or plugin.json missing
+     * Off by default. When plugins.signature.required is on this fails closed:
+     * a missing public key, missing signature, or mismatch all reject the
+     * upload (and delete the staged temp file) before extraction. The detached
+     * Ed25519 signature covers the exact bytes of the uploaded ZIP.
+     *
+     * @param  string  $zipPath  Path to the staged upload on disk.
+     * @param  string|null  $signature  Base64 detached signature, or null.
+     *
+     * @throws \RuntimeException When verification is required and fails.
      */
-    public function uploadPlugin($file): array
+    protected function verifyPluginSignature(string $zipPath, ?string $signature): void
     {
-        if (!$this->uploadsEnabled()) {
+        if (! (bool) config('plugins.signature.required', false)) {
+            return;
+        }
+
+        $publicKey = (string) config('plugins.signature.public_key', '');
+
+        if ($publicKey === '') {
+            @unlink($zipPath);
             throw new \RuntimeException(
-                'Plugin uploads are disabled on this instance. Set '
-                . 'INVENTOROS_ALLOW_PLUGIN_UPLOADS=true to enable. Note: '
-                . 'enabling allows admin users to run arbitrary code on this server.'
+                'Plugin signature verification is required but no public key is configured. '
+                .'Set INVENTOROS_PLUGIN_PUBLIC_KEY, or set INVENTOROS_PLUGIN_SIGNATURE_REQUIRED=false.'
             );
         }
 
-        $tempName = 'upload-' . bin2hex(random_bytes(8)) . '.zip';
-        $file->storeAs('temp', $tempName);
-        $tempPath = storage_path('app/private/temp/' . $tempName);
-        if (!file_exists($tempPath)) {
-            // Older Laravel storage layouts use app/temp/ without the
-            // private/ prefix; fall back so the resolution works on both.
-            $tempPath = storage_path('app/temp/' . $tempName);
+        if ($signature === null || trim($signature) === '') {
+            @unlink($zipPath);
+            throw new \RuntimeException(
+                'A plugin signature is required on this instance. Provide the detached '
+                .'signature for this plugin ZIP in the signature field.'
+            );
         }
 
-        $zip = new ZipArchive();
+        try {
+            ReleaseSignatureVerifier::verify($zipPath, $signature, $publicKey);
+        } catch (\Throwable $e) {
+            @unlink($zipPath);
+            throw new \RuntimeException('Plugin failed signature verification: '.$e->getMessage(), 0, $e);
+        }
+    }
+
+    /**
+     * Upload and extract a plugin ZIP file.
+     *
+     * @param  mixed  $file  The uploaded file instance
+     * @param  string|null  $signature  Optional base64 detached Ed25519 signature
+     *                                  over the ZIP bytes. Required when
+     *                                  plugins.signature.required is enabled.
+     * @return array{slug: string, path: string} The extracted plugin slug and path
+     *
+     * @throws \Exception If uploads disabled, signature required/invalid, ZIP
+     *                    cannot be opened, contains path-traversal entries,
+     *                    exceeds limits, structure is invalid, plugin exists,
+     *                    or plugin.json missing
+     */
+    public function uploadPlugin($file, ?string $signature = null): array
+    {
+        if (! $this->uploadsEnabled()) {
+            throw new \RuntimeException(
+                'Plugin uploads are disabled on this instance. Set '
+                .'INVENTOROS_ALLOW_PLUGIN_UPLOADS=true to enable. Note: '
+                .'enabling allows admin users to run arbitrary code on this server.'
+            );
+        }
+
+        $tempName = 'upload-'.bin2hex(random_bytes(8)).'.zip';
+        $file->storeAs('temp', $tempName);
+        $tempPath = storage_path('app/private/temp/'.$tempName);
+        if (! file_exists($tempPath)) {
+            // Older Laravel storage layouts use app/temp/ without the
+            // private/ prefix; fall back so the resolution works on both.
+            $tempPath = storage_path('app/temp/'.$tempName);
+        }
+
+        // Verify the archive signature before opening it — a rejected upload
+        // must not leave the temp file behind or touch the plugins directory.
+        $this->verifyPluginSignature($tempPath, $signature);
+
+        $zip = new ZipArchive;
         if ($zip->open($tempPath) !== true) {
             @unlink($tempPath);
             throw new \RuntimeException('Failed to open ZIP file');
@@ -251,7 +307,7 @@ final class PluginService
             // Validate every entry BEFORE writing anything to disk.
             $rootFolder = $this->validateZipArchive($zip);
 
-            $extractPath = $this->pluginsPath . '/' . $rootFolder;
+            $extractPath = $this->pluginsPath.'/'.$rootFolder;
             if (File::exists($extractPath)) {
                 throw new \RuntimeException('Plugin already exists');
             }
@@ -265,15 +321,15 @@ final class PluginService
         // Verify the extracted root is still inside our plugins directory.
         $pluginsRoot = realpath($this->pluginsPath);
         $extractedRoot = realpath($extractPath);
-        if (!$pluginsRoot || !$extractedRoot || !str_starts_with($extractedRoot . DIRECTORY_SEPARATOR, $pluginsRoot . DIRECTORY_SEPARATOR)) {
+        if (! $pluginsRoot || ! $extractedRoot || ! str_starts_with($extractedRoot.DIRECTORY_SEPARATOR, $pluginsRoot.DIRECTORY_SEPARATOR)) {
             if ($extractedRoot && is_dir($extractedRoot)) {
                 File::deleteDirectory($extractedRoot);
             }
             throw new \RuntimeException('Plugin extracted outside the plugins directory');
         }
 
-        $manifestPath = $extractedRoot . '/plugin.json';
-        if (!File::exists($manifestPath)) {
+        $manifestPath = $extractedRoot.'/plugin.json';
+        if (! File::exists($manifestPath)) {
             File::deleteDirectory($extractedRoot);
             throw new \RuntimeException('Invalid plugin: missing plugin.json');
         }
@@ -327,8 +383,6 @@ final class PluginService
 
     /**
      * Load all active plugins.
-     *
-     * @return void
      */
     public function loadActivePlugins(): void
     {
@@ -344,24 +398,24 @@ final class PluginService
      *
      * Requires the main plugin file and fires plugin_loaded action.
      *
-     * @param string $slug The plugin slug to load
-     * @return void
+     * @param  string  $slug  The plugin slug to load
      */
     protected function loadPlugin(string $slug): void
     {
-        $pluginPath = $this->pluginsPath . '/' . $slug;
-        $manifestPath = $pluginPath . '/plugin.json';
+        $pluginPath = $this->pluginsPath.'/'.$slug;
+        $manifestPath = $pluginPath.'/plugin.json';
 
-        if (!File::exists($manifestPath)) {
+        if (! File::exists($manifestPath)) {
             return;
         }
 
         $manifest = json_decode(File::get($manifestPath), true);
         $mainFile = basename($manifest['main_file'] ?? 'Plugin.php');
-        $pluginFile = realpath($pluginPath . '/' . $mainFile);
+        $pluginFile = realpath($pluginPath.'/'.$mainFile);
 
-        if (!$pluginFile || !str_starts_with($pluginFile, realpath($pluginPath))) {
+        if (! $pluginFile || ! str_starts_with($pluginFile, realpath($pluginPath))) {
             Log::warning('Plugin main_file path traversal attempt blocked', ['slug' => $slug, 'main_file' => $manifest['main_file'] ?? null]);
+
             return;
         }
 
@@ -373,5 +427,4 @@ final class PluginService
             do_action('plugin_loaded', $slug, $manifest);
         }
     }
-
 }
