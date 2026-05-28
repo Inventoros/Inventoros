@@ -681,7 +681,8 @@ class OrderControllerTest extends TestCase
         $response = $this->actingAs($this->admin)
             ->get(route('orders.show', $otherOrder));
 
-        $response->assertStatus(403);
+        // Org scope makes other-tenant records invisible: 404, not 403.
+        $response->assertStatus(404);
     }
 
     // ==================== EDIT TESTS ====================
@@ -742,7 +743,8 @@ class OrderControllerTest extends TestCase
         $response = $this->actingAs($this->admin)
             ->get(route('orders.edit', $otherOrder));
 
-        $response->assertStatus(403);
+        // Org scope makes other-tenant records invisible: 404, not 403.
+        $response->assertStatus(404);
     }
 
     // ==================== UPDATE TESTS ====================
@@ -860,7 +862,8 @@ class OrderControllerTest extends TestCase
                 ],
             ]);
 
-        $response->assertStatus(403);
+        // Org scope makes other-tenant records invisible: 404, not 403.
+        $response->assertStatus(404);
         $this->assertDatabaseHas('orders', [
             'id' => $otherOrder->id,
             'customer_name' => 'Other Customer',
@@ -1012,7 +1015,8 @@ class OrderControllerTest extends TestCase
         $response = $this->actingAs($this->admin)
             ->delete(route('orders.destroy', $otherOrder));
 
-        $response->assertStatus(403);
+        // Org scope makes other-tenant records invisible: 404, not 403.
+        $response->assertStatus(404);
         $this->assertDatabaseHas('orders', [
             'id' => $otherOrder->id,
             'deleted_at' => null,

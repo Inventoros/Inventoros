@@ -5,13 +5,17 @@ declare(strict_types=1);
 namespace App\Models;
 
 use App\Models\Auth\Organization;
+use App\Models\Concerns\BelongsToOrganization;
 use App\Models\Order\Order;
 use App\Traits\LogsActivity;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Carbon;
 
 /**
  * Represents a customer in the system.
@@ -41,17 +45,17 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property string|null $notes
  * @property array|null $metadata
  * @property bool $is_active
- * @property \Illuminate\Support\Carbon|null $created_at
- * @property \Illuminate\Support\Carbon|null $updated_at
- * @property \Illuminate\Support\Carbon|null $deleted_at
+ * @property Carbon|null $created_at
+ * @property Carbon|null $updated_at
+ * @property Carbon|null $deleted_at
  * @property-read string $full_billing_address
  * @property-read string $full_shipping_address
- * @property-read \App\Models\Auth\Organization $organization
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Order\Order[] $orders
+ * @property-read Organization $organization
+ * @property-read Collection|Order[] $orders
  */
 class Customer extends Model
 {
-    use HasFactory, SoftDeletes, LogsActivity;
+    use BelongsToOrganization, HasFactory, LogsActivity, SoftDeletes;
 
     /**
      * The attributes that are mass assignable.
@@ -102,7 +106,7 @@ class Customer extends Model
     /**
      * Get the organization that owns the customer.
      *
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo<\App\Models\Auth\Organization, $this>
+     * @return BelongsTo<Organization, $this>
      */
     public function organization(): BelongsTo
     {
@@ -112,7 +116,7 @@ class Customer extends Model
     /**
      * Get the orders for this customer.
      *
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany<\App\Models\Order\Order, $this>
+     * @return HasMany<Order, $this>
      */
     public function orders(): HasMany
     {
@@ -122,9 +126,9 @@ class Customer extends Model
     /**
      * Scope a query to only include customers from a specific organization.
      *
-     * @param \Illuminate\Database\Eloquent\Builder<static> $query
-     * @param int $organizationId
-     * @return \Illuminate\Database\Eloquent\Builder<static>
+     * @param  Builder<static>  $query
+     * @param  int  $organizationId
+     * @return Builder<static>
      */
     public function scopeForOrganization($query, $organizationId)
     {
@@ -134,8 +138,8 @@ class Customer extends Model
     /**
      * Scope a query to only include active customers.
      *
-     * @param \Illuminate\Database\Eloquent\Builder<static> $query
-     * @return \Illuminate\Database\Eloquent\Builder<static>
+     * @param  Builder<static>  $query
+     * @return Builder<static>
      */
     public function scopeActive($query)
     {
@@ -145,9 +149,9 @@ class Customer extends Model
     /**
      * Scope a query to search customers.
      *
-     * @param \Illuminate\Database\Eloquent\Builder<static> $query
-     * @param string $term
-     * @return \Illuminate\Database\Eloquent\Builder<static>
+     * @param  Builder<static>  $query
+     * @param  string  $term
+     * @return Builder<static>
      */
     public function scopeSearch($query, $term)
     {
@@ -162,8 +166,6 @@ class Customer extends Model
 
     /**
      * Get the full billing address as a single string.
-     *
-     * @return string
      */
     public function getFullBillingAddressAttribute(): string
     {
@@ -180,8 +182,6 @@ class Customer extends Model
 
     /**
      * Get the full shipping address as a single string.
-     *
-     * @return string
      */
     public function getFullShippingAddressAttribute(): string
     {
@@ -198,8 +198,6 @@ class Customer extends Model
 
     /**
      * Check if billing and shipping addresses are the same.
-     *
-     * @return bool
      */
     public function hasSameAddresses(): bool
     {

@@ -348,7 +348,8 @@ class InvoiceControllerTest extends TestCase
         $response = $this->actingAs($this->admin)
             ->get(route('orders.invoice.download', $otherOrder));
 
-        $response->assertStatus(403);
+        // Org scope makes other-tenant records invisible: 404, not 403.
+        $response->assertStatus(404);
     }
 
     // ==================== PURCHASE ORDER INVOICE TESTS ====================
@@ -417,7 +418,8 @@ class InvoiceControllerTest extends TestCase
         $response = $this->actingAs($this->admin)
             ->get(route('purchase-orders.invoice.download', $otherPo));
 
-        $response->assertStatus(403);
+        // Org scope makes other-tenant records invisible: 404, not 403.
+        $response->assertStatus(404);
     }
 
     public function test_purchase_order_invoice_is_valid_pdf(): void
