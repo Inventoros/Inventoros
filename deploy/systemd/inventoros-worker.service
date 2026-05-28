@@ -1,0 +1,30 @@
+# Inventoros queue worker (systemd).
+#
+# Drains the database queue: WebhookDeliveryJob, queued mail, and any other
+# dispatched jobs. Without a running worker these pile up unprocessed.
+#
+# Install:
+#   1. Copy this file to /etc/systemd/system/inventoros-worker.service
+#   2. Edit User, Group, and WorkingDirectory to match your deploy.
+#   3. sudo systemctl daemon-reload
+#   4. sudo systemctl enable --now inventoros-worker
+#
+# Logs:  journalctl -u inventoros-worker -f
+
+[Unit]
+Description=Inventoros queue worker
+After=network.target
+
+[Service]
+User=www-data
+Group=www-data
+WorkingDirectory=/var/www/inventoros
+Restart=always
+RestartSec=5
+# --max-time recycles the worker hourly so long-lived leaks/stale code clear.
+ExecStart=/usr/bin/php artisan queue:work --tries=3 --max-time=3600 --sleep=3
+# Stop accepting new jobs and finish the current one on shutdown/redeploy.
+ExecStop=/usr/bin/php artisan queue:restart
+
+[Install]
+WantedBy=multi-user.target
