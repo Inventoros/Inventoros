@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\Warehouse\StoreWarehouseRequest;
+use App\Http\Requests\Warehouse\UpdateWarehouseRequest;
 use App\Models\User;
 use App\Models\Warehouse;
 use Illuminate\Http\Request;
@@ -31,8 +33,8 @@ class WarehouseController extends Controller
             ->when($request->input('search'), function ($query, $search) {
                 $query->where(function ($q) use ($search) {
                     $q->where('name', 'like', "%{$search}%")
-                      ->orWhere('code', 'like', "%{$search}%")
-                      ->orWhere('city', 'like', "%{$search}%");
+                        ->orWhere('code', 'like', "%{$search}%")
+                        ->orWhere('city', 'like', "%{$search}%");
                 });
             })
             ->orderByDesc('is_default')
@@ -60,11 +62,11 @@ class WarehouseController extends Controller
     /**
      * Store a newly created warehouse.
      */
-    public function store(Request $request)
+    public function store(StoreWarehouseRequest $request)
     {
         $organizationId = $request->user()->organization_id;
 
-        $validated = $request->validate($this->validationRules($organizationId));
+        $validated = $request->validated();
 
         $validated['organization_id'] = $organizationId;
         $validated['is_active'] = $validated['is_active'] ?? true;
@@ -132,15 +134,13 @@ class WarehouseController extends Controller
     /**
      * Update the specified warehouse.
      */
-    public function update(Request $request, Warehouse $warehouse)
+    public function update(UpdateWarehouseRequest $request, Warehouse $warehouse)
     {
         if ($warehouse->organization_id !== $request->user()->organization_id) {
             abort(403, 'Unauthorized action.');
         }
 
-        $organizationId = $request->user()->organization_id;
-
-        $validated = $request->validate($this->validationRules($organizationId, $warehouse->id));
+        $validated = $request->validated();
 
         $warehouse->update($validated);
 
@@ -229,7 +229,7 @@ class WarehouseController extends Controller
 
         if ($warehouseId !== null) {
             // Verify user has access to this warehouse
-            if (!$request->user()->hasWarehouseAccess($warehouseId)) {
+            if (! $request->user()->hasWarehouseAccess($warehouseId)) {
                 abort(403, 'You do not have access to this warehouse.');
             }
 
@@ -239,7 +239,7 @@ class WarehouseController extends Controller
                 ->active()
                 ->exists();
 
-            if (!$exists) {
+            if (! $exists) {
                 abort(404, 'Warehouse not found.');
             }
         }
@@ -248,37 +248,5 @@ class WarehouseController extends Controller
 
         return redirect()->back()
             ->with('success', $warehouseId ? 'Active warehouse changed.' : 'Viewing all warehouses.');
-    }
-
-    /**
-     * Get validation rules for store/update.
-     */
-    private function validationRules(int $organizationId, ?int $excludeId = null): array
-    {
-        return [
-            'name' => ['required', 'string', 'max:255'],
-            'code' => [
-                'nullable',
-                'string',
-                'max:50',
-                Rule::unique('warehouses', 'code')
-                    ->where('organization_id', $organizationId)
-                    ->ignore($excludeId),
-            ],
-            'description' => ['nullable', 'string', 'max:1000'],
-            'address_line_1' => ['nullable', 'string', 'max:255'],
-            'address_line_2' => ['nullable', 'string', 'max:255'],
-            'city' => ['nullable', 'string', 'max:255'],
-            'province' => ['nullable', 'string', 'max:255'],
-            'postal_code' => ['nullable', 'string', 'max:255'],
-            'country' => ['nullable', 'string', 'max:255'],
-            'phone' => ['nullable', 'string', 'max:30'],
-            'email' => ['nullable', 'email', 'max:255'],
-            'manager_name' => ['nullable', 'string', 'max:255'],
-            'timezone' => ['nullable', 'string', 'max:50'],
-            'currency' => ['nullable', 'string', 'max:3'],
-            'is_active' => ['boolean'],
-            'priority' => ['nullable', 'integer', 'min:0'],
-        ];
     }
 }
