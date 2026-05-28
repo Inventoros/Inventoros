@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Order;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Order\StoreOrderRequest;
+use App\Http\Requests\Order\UpdateOrderRequest;
 use App\Models\Inventory\Product;
 use App\Models\Inventory\StockAdjustment;
 use App\Models\Order\Order;
@@ -117,26 +119,11 @@ class OrderController extends Controller
      * @param  Request  $request  The incoming HTTP request containing order data
      * @return RedirectResponse
      */
-    public function store(Request $request)
+    public function store(StoreOrderRequest $request)
     {
         $organizationId = $request->user()->organization_id;
 
-        $validated = $request->validate([
-            'customer_name' => 'required|string|max:255',
-            'customer_email' => 'nullable|email|max:255',
-            'customer_address' => 'nullable|string',
-            'status' => 'required|in:pending,processing,shipped,delivered,cancelled',
-            'order_date' => 'required|date',
-            'shipping' => 'nullable|numeric|min:0',
-            'tax' => 'nullable|numeric|min:0',
-            'notes' => 'nullable|string',
-            'warehouse_id' => ['nullable', Rule::exists('warehouses', 'id')->where('organization_id', $organizationId)],
-            'items' => 'required|array|min:1',
-            'items.*.product_id' => ['required', Rule::exists('products', 'id')->where('organization_id', $organizationId)],
-            'items.*.product_variant_id' => ['nullable', Rule::exists('product_variants', 'id')->where('organization_id', $organizationId)],
-            'items.*.quantity' => 'required|integer|min:1',
-            'items.*.unit_price' => 'required|numeric|min:0',
-        ]);
+        $validated = $request->validated();
 
         // Resolve warehouse: explicit > session > org default
         if (empty($validated['warehouse_id'])) {
@@ -242,30 +229,14 @@ class OrderController extends Controller
      * @param  Order  $order  The order to update
      * @return RedirectResponse
      */
-    public function update(Request $request, Order $order)
+    public function update(UpdateOrderRequest $request, Order $order)
     {
         // Ensure user can only update orders from their organization
         if ($order->organization_id !== $request->user()->organization_id) {
             abort(403, 'Unauthorized action.');
         }
 
-        $organizationId = $request->user()->organization_id;
-
-        $validated = $request->validate([
-            'customer_name' => 'required|string|max:255',
-            'customer_email' => 'nullable|email|max:255',
-            'customer_address' => 'nullable|string',
-            'status' => 'required|in:pending,processing,shipped,delivered,cancelled',
-            'order_date' => 'required|date',
-            'shipping' => 'nullable|numeric|min:0',
-            'tax' => 'nullable|numeric|min:0',
-            'notes' => 'nullable|string',
-            'items' => 'required|array|min:1',
-            'items.*.id' => 'nullable|exists:order_items,id',
-            'items.*.product_id' => ['required', Rule::exists('products', 'id')->where('organization_id', $organizationId)],
-            'items.*.quantity' => 'required|integer|min:1',
-            'items.*.unit_price' => 'required|numeric|min:0',
-        ]);
+        $validated = $request->validated();
 
         DB::transaction(function () use ($validated, $order) {
             // Load existing items with product relationship
