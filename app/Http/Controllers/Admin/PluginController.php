@@ -27,7 +27,7 @@ class PluginController extends Controller
     /**
      * Create a new controller instance.
      *
-     * @param PluginService $pluginService The plugin service instance
+     * @param  PluginService  $pluginService  The plugin service instance
      */
     public function __construct(PluginService $pluginService)
     {
@@ -36,8 +36,6 @@ class PluginController extends Controller
 
     /**
      * Display a listing of plugins.
-     *
-     * @return Response
      */
     public function index(): Response
     {
@@ -52,22 +50,22 @@ class PluginController extends Controller
     /**
      * Upload a new plugin.
      *
-     * @param Request $request The incoming HTTP request containing the plugin file
-     * @return RedirectResponse
+     * @param  Request  $request  The incoming HTTP request containing the plugin file
      */
     public function upload(Request $request): RedirectResponse
     {
-        if (!$this->pluginService->uploadsEnabled()) {
+        if (! $this->pluginService->uploadsEnabled()) {
             return redirect()->route('plugins.index')
                 ->with('error', 'Plugin uploads are disabled on this instance. Set INVENTOROS_ALLOW_PLUGIN_UPLOADS=true in your environment to enable. Note: this grants any admin user remote code execution on this server — see SECURITY.md.');
         }
 
         $request->validate([
-            'plugin' => 'required|file|mimes:zip|mimetypes:application/zip,application/x-zip-compressed|max:' . config('limits.uploads.plugin_max_kb'),
+            'plugin' => 'required|file|mimes:zip|mimetypes:application/zip,application/x-zip-compressed|max:'.config('limits.uploads.plugin_max_kb'),
+            'signature' => 'nullable|string|max:1024',
         ]);
 
         try {
-            $result = $this->pluginService->uploadPlugin($request->file('plugin'));
+            $result = $this->pluginService->uploadPlugin($request->file('plugin'), $request->input('signature'));
 
             return redirect()->route('plugins.index')
                 ->with('success', 'Plugin uploaded successfully. You can now activate it.');
@@ -76,16 +74,16 @@ class PluginController extends Controller
                 'error' => $e->getMessage(),
                 'file' => $request->file('plugin')?->getClientOriginalName(),
             ]);
+
             return redirect()->back()
-                ->with('error', 'Failed to upload plugin: ' . $e->getMessage());
+                ->with('error', 'Failed to upload plugin: '.$e->getMessage());
         }
     }
 
     /**
      * Activate a plugin.
      *
-     * @param string $slug The plugin slug to activate
-     * @return RedirectResponse
+     * @param  string  $slug  The plugin slug to activate
      */
     public function activate(string $slug): RedirectResponse
     {
@@ -99,16 +97,16 @@ class PluginController extends Controller
                 'slug' => $slug,
                 'error' => $e->getMessage(),
             ]);
+
             return redirect()->back()
-                ->with('error', 'Failed to activate plugin: ' . $e->getMessage());
+                ->with('error', 'Failed to activate plugin: '.$e->getMessage());
         }
     }
 
     /**
      * Deactivate a plugin.
      *
-     * @param string $slug The plugin slug to deactivate
-     * @return RedirectResponse
+     * @param  string  $slug  The plugin slug to deactivate
      */
     public function deactivate(string $slug): RedirectResponse
     {
@@ -122,16 +120,16 @@ class PluginController extends Controller
                 'slug' => $slug,
                 'error' => $e->getMessage(),
             ]);
+
             return redirect()->back()
-                ->with('error', 'Failed to deactivate plugin: ' . $e->getMessage());
+                ->with('error', 'Failed to deactivate plugin: '.$e->getMessage());
         }
     }
 
     /**
      * Delete a plugin.
      *
-     * @param string $slug The plugin slug to delete
-     * @return RedirectResponse
+     * @param  string  $slug  The plugin slug to delete
      */
     public function destroy(string $slug): RedirectResponse
     {
@@ -145,8 +143,9 @@ class PluginController extends Controller
                 'slug' => $slug,
                 'error' => $e->getMessage(),
             ]);
+
             return redirect()->back()
-                ->with('error', 'Failed to delete plugin: ' . $e->getMessage());
+                ->with('error', 'Failed to delete plugin: '.$e->getMessage());
         }
     }
 }

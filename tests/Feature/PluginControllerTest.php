@@ -17,7 +17,9 @@ class PluginControllerTest extends TestCase
     use RefreshDatabase;
 
     protected User $admin;
+
     protected User $member;
+
     protected Organization $organization;
 
     protected function setUp(): void
@@ -124,8 +126,8 @@ class PluginControllerTest extends TestCase
 
     protected function makePluginZip(array $entries): UploadedFile
     {
-        $zipPath = tempnam(sys_get_temp_dir(), 'inv-plugin-') . '.zip';
-        $zip = new ZipArchive();
+        $zipPath = tempnam(sys_get_temp_dir(), 'inv-plugin-').'.zip';
+        $zip = new ZipArchive;
         $zip->open($zipPath, ZipArchive::CREATE);
         foreach ($entries as $name => $contents) {
             $zip->addFromString($name, $contents);
@@ -232,5 +234,107 @@ class PluginControllerTest extends TestCase
         $response->assertSessionHas('error');
         $this->assertStringContainsString('entry count limit', session('error'));
         $this->assertFalse(File::isDirectory(base_path('plugins/too-big')));
+    }
+
+    /**
+     * Configure required plugin signing with a fresh keypair.
+     *
+     * @return callable(UploadedFile): string Signs a ZIP's bytes -> base64 sig.
+     */
+    private function requirePluginSignatures(): callable
+    {
+        $keypair = sodium_crypto_sign_keypair();
+        $secret = sodium_crypto_sign_secretkey($keypair);
+
+        config([
+            'plugins.upload_enabled' => true,
+            'plugins.signature.required' => true,
+            'plugins.signature.public_key' => base64_encode(sodium_crypto_sign_publickey($keypair)),
+        ]);
+
+        return fn (UploadedFile $file): string => base64_encode(
+            sodium_crypto_sign_detached(file_get_contents($file->getRealPath()), $secret)
+        );
+    }
+
+    public function test_upload_requires_signature_when_signing_enforced(): void
+    {
+        $this->requirePluginSignatures();
+
+        $file = $this->makePluginZip([
+            'p4-sig-missing/plugin.json' => json_encode(['name' => 'S', 'version' => '1', 'main_file' => 'P.php']),
+            'p4-sig-missing/P.php' => "<?php\n",
+        ]);
+
+        $response = $this->actingAs($this->admin)
+            ->post(route('plugins.upload'), ['plugin' => $file]);
+
+        $response->assertSessionHas('error');
+        $this->assertStringContainsString('signature is required', session('error'));
+        $this->assertFalse(File::isDirectory(base_path('plugins/p4-sig-missing')));
+    }
+
+    public function test_upload_rejects_invalid_plugin_signature(): void
+    {
+        $this->requirePluginSignatures();
+
+        $file = $this->makePluginZip([
+            'p4-sig-bad/plugin.json' => json_encode(['name' => 'S', 'version' => '1', 'main_file' => 'P.php']),
+            'p4-sig-bad/P.php' => "<?php\n",
+        ]);
+
+        // A syntactically valid but wrong signature (signed by a different key).
+        $otherKeypair = sodium_crypto_sign_keypair();
+        $wrongSig = base64_encode(sodium_crypto_sign_detached(
+            file_get_contents($file->getRealPath()),
+            sodium_crypto_sign_secretkey($otherKeypair)
+        ));
+
+        $response = $this->actingAs($this->admin)
+            ->post(route('plugins.upload'), ['plugin' => $file, 'signature' => $wrongSig]);
+
+        $response->assertSessionHas('error');
+        $this->assertStringContainsString('failed signature verification', session('error'));
+        $this->assertFalse(File::isDirectory(base_path('plugins/p4-sig-bad')));
+    }
+
+    public function test_upload_accepts_valid_plugin_signature(): void
+    {
+        $sign = $this->requirePluginSignatures();
+
+        $this->createdPluginDirs[] = base_path('plugins/p4-sig-ok');
+
+        $file = $this->makePluginZip([
+            'p4-sig-ok/plugin.json' => json_encode(['name' => 'S', 'version' => '1', 'main_file' => 'P.php']),
+            'p4-sig-ok/P.php' => "<?php\n// noop\n",
+        ]);
+
+        $response = $this->actingAs($this->admin)
+            ->post(route('plugins.upload'), ['plugin' => $file, 'signature' => $sign($file)]);
+
+        $response->assertRedirect(route('plugins.index'));
+        $response->assertSessionHas('success');
+        $this->assertTrue(File::isFile(base_path('plugins/p4-sig-ok/plugin.json')));
+    }
+
+    public function test_upload_fails_closed_when_required_but_no_public_key(): void
+    {
+        config([
+            'plugins.upload_enabled' => true,
+            'plugins.signature.required' => true,
+            'plugins.signature.public_key' => '',
+        ]);
+
+        $file = $this->makePluginZip([
+            'p4-no-key/plugin.json' => json_encode(['name' => 'S', 'version' => '1', 'main_file' => 'P.php']),
+            'p4-no-key/P.php' => "<?php\n",
+        ]);
+
+        $response = $this->actingAs($this->admin)
+            ->post(route('plugins.upload'), ['plugin' => $file, 'signature' => 'irrelevant']);
+
+        $response->assertSessionHas('error');
+        $this->assertStringContainsString('no public key is configured', session('error'));
+        $this->assertFalse(File::isDirectory(base_path('plugins/p4-no-key')));
     }
 }
