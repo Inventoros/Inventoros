@@ -22,6 +22,11 @@ class OrderItemInputType extends InputType
                 'description' => 'The product ID',
                 'rules' => ['required', 'integer', 'exists:products,id'],
             ],
+            'product_variant_id' => [
+                'type' => Type::int(),
+                'description' => 'The specific variant ID (required for variant-tracked products)',
+                'rules' => ['nullable', 'integer', 'exists:product_variants,id'],
+            ],
             'quantity' => [
                 'type' => Type::nonNull(Type::int()),
                 'description' => 'Quantity to order',

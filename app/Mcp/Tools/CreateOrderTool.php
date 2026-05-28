@@ -31,7 +31,7 @@ class CreateOrderTool extends Tool
             'status' => $schema->string()->enum(['pending', 'processing', 'shipped', 'delivered', 'cancelled'])->description('Initial status, default pending.'),
             'order_date' => $schema->string()->description('ISO date, default today.'),
             'notes' => $schema->string()->description('Internal notes.'),
-            'items' => $schema->array()->required()->description('Line items: [{product_id, quantity, unit_price?, tax?}]. Must be non-empty.'),
+            'items' => $schema->array()->required()->description('Line items: [{product_id, product_variant_id?, quantity, unit_price?, tax?}]. product_variant_id is required for variant-tracked products. Must be non-empty.'),
         ];
     }
 
@@ -52,6 +52,7 @@ class CreateOrderTool extends Tool
             'notes' => ['nullable', 'string', 'max:5000'],
             'items' => ['required', 'array', 'min:1', 'max:200'],
             'items.*.product_id' => ['required', 'integer', Rule::exists('products', 'id')->where('organization_id', $orgId)],
+            'items.*.product_variant_id' => ['nullable', 'integer', Rule::exists('product_variants', 'id')->where('organization_id', $orgId)],
             'items.*.quantity' => ['required', 'integer', 'min:1'],
             'items.*.unit_price' => ['nullable', 'numeric', 'min:0'],
             'items.*.tax' => ['nullable', 'numeric', 'min:0'],

@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace App\Services;
 
 use App\Exceptions\InsufficientStockException;
+use App\Exceptions\InvalidOrderItemException;
 use App\Models\Inventory\Product;
+use App\Models\Inventory\ProductVariant;
 use App\Models\Inventory\StockAdjustment;
 use App\Models\Order\Order;
 use App\Models\Order\OrderItem;
@@ -63,52 +65,109 @@ final class OrderService
         $data['approval_status'] ??= 'pending';
 
         return SequenceNumberRetry::create(fn () => DB::transaction(function () use ($data, $creator) {
-            $data['order_number'] = Order::generateOrderNumber($data['organization_id']);
+            $orgId = $data['organization_id'];
+            $data['order_number'] = Order::generateOrderNumber($orgId);
 
-            // Batch-lock every referenced product in a single SELECT ... FOR
-            // UPDATE so concurrent orders can't race the read-modify-write.
+            // Batch-lock every referenced product (and variant) in single
+            // SELECT ... FOR UPDATE queries so concurrent orders can't race the
+            // read-modify-write on stock.
             $productIds = array_unique(array_column($data['items'], 'product_id'));
             $products = Product::whereIn('id', $productIds)
-                ->where('organization_id', $data['organization_id'])
+                ->where('organization_id', $orgId)
                 ->lockForUpdate()
                 ->get()
                 ->keyBy('id');
 
-            // Validate availability across ALL items first. Multiple line items
-            // of the same product accumulate against the same running stock.
-            $running = [];
+            $variantIds = array_values(array_unique(array_filter(
+                array_map(fn ($item) => $item['product_variant_id'] ?? null, $data['items'])
+            )));
+            $variants = $variantIds === []
+                ? collect()
+                : ProductVariant::whereIn('id', $variantIds)
+                    ->where('organization_id', $orgId)
+                    ->lockForUpdate()
+                    ->get()
+                    ->keyBy('id');
+
+            // Resolve each line's stock target once: a specific variant when one
+            // is chosen (validating ownership), otherwise the product itself.
+            // A variant-tracked product requires a variant on every new line.
+            $lines = [];
             foreach ($data['items'] as $item) {
                 $pid = $item['product_id'];
                 if (! $products->has($pid)) {
                     throw new \Exception("Product not found: {$pid}");
                 }
-                $running[$pid] = ($running[$pid] ?? (int) $products[$pid]->stock) - (int) $item['quantity'];
-                if ($running[$pid] < 0) {
-                    $product = $products[$pid];
-                    throw new InsufficientStockException("Insufficient stock for {$product->name}. Available: {$product->stock}, Requested: {$item['quantity']}");
+                $product = $products[$pid];
+                $variantId = $item['product_variant_id'] ?? null;
+
+                if ($variantId !== null) {
+                    $variant = $variants->get($variantId);
+                    if (! $variant || $variant->product_id !== $product->id) {
+                        throw new InvalidOrderItemException(
+                            "Variant {$variantId} does not belong to product {$product->name}."
+                        );
+                    }
+                    $target = $variant;
+                    $key = "v{$variantId}";
+                } else {
+                    if ($product->has_variants) {
+                        throw new InvalidOrderItemException(
+                            "{$product->name} is sold by variant; each line item needs a product_variant_id."
+                        );
+                    }
+                    $variant = null;
+                    $target = $product;
+                    $key = "p{$pid}";
+                }
+
+                $lines[] = compact('item', 'product', 'variant', 'target', 'key')
+                    + ['qty' => (int) $item['quantity']];
+            }
+
+            // Validate availability across ALL lines first. Lines sharing a
+            // target (same product, or same variant) accumulate against one
+            // running balance.
+            $running = [];
+            foreach ($lines as $line) {
+                $key = $line['key'];
+                $running[$key] = ($running[$key] ?? (int) $line['target']->stock) - $line['qty'];
+                if ($running[$key] < 0) {
+                    throw new InsufficientStockException(
+                        'Insufficient stock for '.$this->lineLabel($line)
+                        .". Available: {$line['target']->stock}, Requested: {$line['qty']}"
+                    );
                 }
             }
 
             // Build order-item rows + stock-adjustment rows. quantity_before and
             // quantity_after thread the running stock so the ledger is faithful
-            // when the order touches the same product twice.
+            // when the order touches the same target twice.
             $subtotal = 0;
             $itemTaxTotal = 0;
             $orderItemRows = [];
             $now = now();
             $adjustmentRows = [];
-            $perProductQty = [];
+            $perTargetQty = [];
+            $targets = [];
             $threadStock = [];
 
-            foreach ($data['items'] as $item) {
-                $pid = $item['product_id'];
-                $product = $products[$pid];
-                $qty = (int) $item['quantity'];
+            foreach ($lines as $line) {
+                $item = $line['item'];
+                $product = $line['product'];
+                $variant = $line['variant'];
+                $qty = $line['qty'];
+                $key = $line['key'];
+                $targets[$key] = $line['target'];
 
-                // unit_price is optional: API callers may omit it and fall back
-                // to the product's selling/list price. Web callers always send
-                // it, so the fallback is inert there.
-                $unitPrice = $item['unit_price'] ?? $product->selling_price ?? $product->price ?? 0;
+                // unit_price is optional: callers may omit it and fall back to
+                // the variant's own price (when a variant is chosen) or the
+                // product's selling/list price.
+                $unitPrice = $item['unit_price']
+                    ?? $variant?->price
+                    ?? $product->selling_price
+                    ?? $product->price
+                    ?? 0;
                 $itemTax = $item['tax'] ?? 0;
 
                 $itemSubtotal = $qty * $unitPrice;
@@ -116,9 +175,10 @@ final class OrderService
                 $itemTaxTotal += $itemTax;
 
                 $orderItemRows[] = [
-                    'product_id' => $pid,
+                    'product_id' => $product->id,
+                    'product_variant_id' => $variant?->id,
                     'product_name' => $product->name,
-                    'sku' => $product->sku,
+                    'sku' => $variant?->sku ?? $product->sku,
                     'quantity' => $qty,
                     'unit_price' => $unitPrice,
                     'subtotal' => $itemSubtotal,
@@ -126,14 +186,15 @@ final class OrderService
                     'total' => $itemSubtotal + $itemTax,
                 ];
 
-                $perProductQty[$pid] = ($perProductQty[$pid] ?? 0) + $qty;
-                $beforeForEntry = $threadStock[$pid] ?? (int) $product->stock;
+                $perTargetQty[$key] = ($perTargetQty[$key] ?? 0) + $qty;
+                $beforeForEntry = $threadStock[$key] ?? (int) $line['target']->stock;
                 $afterForEntry = $beforeForEntry - $qty;
-                $threadStock[$pid] = $afterForEntry;
+                $threadStock[$key] = $afterForEntry;
 
                 $adjustmentRows[] = [
-                    'organization_id' => $data['organization_id'],
-                    'product_id' => $pid,
+                    'organization_id' => $orgId,
+                    'product_id' => $product->id,
+                    'product_variant_id' => $variant?->id,
                     'user_id' => $creator->id,
                     'type' => 'order_fulfillment',
                     'quantity_before' => $beforeForEntry,
@@ -175,12 +236,31 @@ final class OrderService
             unset($adj);
             StockAdjustment::insert($adjustmentRows);
 
-            // Decrement stock once per unique product instead of once per line.
-            foreach ($perProductQty as $pid => $totalQty) {
-                $products[$pid]->decrement('stock', $totalQty);
+            // Decrement stock once per unique target — the variant when one was
+            // chosen, otherwise the product. This is the fix for variant counts
+            // drifting: a line sold as a variant no longer decrements the parent.
+            foreach ($perTargetQty as $key => $totalQty) {
+                $targets[$key]->decrement('stock', $totalQty);
             }
 
             return $order;
         }));
+    }
+
+    /**
+     * Human-readable label for an insufficient-stock message.
+     *
+     * @param  array{product: Product, variant: ?ProductVariant}  $line
+     */
+    private function lineLabel(array $line): string
+    {
+        if ($line['variant'] !== null) {
+            $variant = $line['variant'];
+            $descriptor = $variant->title ?? $variant->sku ?? "variant {$variant->id}";
+
+            return "{$line['product']->name} ({$descriptor})";
+        }
+
+        return $line['product']->name;
     }
 }
