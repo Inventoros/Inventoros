@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services;
 
+use App\Exceptions\InsufficientStockException;
 use App\Models\Inventory\Product;
 use App\Models\Inventory\StockAdjustment;
 use App\Models\Order\Order;
@@ -84,7 +85,7 @@ final class OrderService
                 $running[$pid] = ($running[$pid] ?? (int) $products[$pid]->stock) - (int) $item['quantity'];
                 if ($running[$pid] < 0) {
                     $product = $products[$pid];
-                    throw new \Exception("Insufficient stock for {$product->name}. Available: {$product->stock}, Requested: {$item['quantity']}");
+                    throw new InsufficientStockException("Insufficient stock for {$product->name}. Available: {$product->stock}, Requested: {$item['quantity']}");
                 }
             }
 
@@ -92,6 +93,7 @@ final class OrderService
             // quantity_after thread the running stock so the ledger is faithful
             // when the order touches the same product twice.
             $subtotal = 0;
+            $itemTaxTotal = 0;
             $orderItemRows = [];
             $now = now();
             $adjustmentRows = [];
@@ -103,18 +105,25 @@ final class OrderService
                 $product = $products[$pid];
                 $qty = (int) $item['quantity'];
 
-                $itemSubtotal = $qty * $item['unit_price'];
+                // unit_price is optional: API callers may omit it and fall back
+                // to the product's selling/list price. Web callers always send
+                // it, so the fallback is inert there.
+                $unitPrice = $item['unit_price'] ?? $product->selling_price ?? $product->price ?? 0;
+                $itemTax = $item['tax'] ?? 0;
+
+                $itemSubtotal = $qty * $unitPrice;
                 $subtotal += $itemSubtotal;
+                $itemTaxTotal += $itemTax;
 
                 $orderItemRows[] = [
                     'product_id' => $pid,
                     'product_name' => $product->name,
                     'sku' => $product->sku,
                     'quantity' => $qty,
-                    'unit_price' => $item['unit_price'],
+                    'unit_price' => $unitPrice,
                     'subtotal' => $itemSubtotal,
-                    'tax' => 0,
-                    'total' => $itemSubtotal,
+                    'tax' => $itemTax,
+                    'total' => $itemSubtotal + $itemTax,
                 ];
 
                 $perProductQty[$pid] = ($perProductQty[$pid] ?? 0) + $qty;
@@ -139,8 +148,12 @@ final class OrderService
                 ];
             }
 
+            // Order tax = any order-level tax (web) plus the sum of per-line
+            // taxes (API). Exactly one side is non-zero per surface today, so
+            // this preserves both: web keeps its order-level tax with zero line
+            // tax; API keeps its summed line tax with no order-level tax.
             $data['subtotal'] = $subtotal;
-            $data['tax'] = $data['tax'] ?? 0;
+            $data['tax'] = ($data['tax'] ?? 0) + $itemTaxTotal;
             $data['shipping'] = $data['shipping'] ?? 0;
             $data['total'] = $subtotal + $data['tax'] + $data['shipping'];
 
