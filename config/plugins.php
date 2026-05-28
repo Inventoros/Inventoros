@@ -39,4 +39,34 @@ return [
 
     'max_extracted_bytes' => (int) env('INVENTOROS_PLUGIN_MAX_BYTES', 50 * 1024 * 1024),
 
+    /*
+    |--------------------------------------------------------------------------
+    | Plugin signature verification
+    |--------------------------------------------------------------------------
+    |
+    | Uploading a plugin is RCE-by-design (see above). Beyond the off-by-default
+    | flag, an operator can require uploaded plugins to carry a detached Ed25519
+    | signature verified against a trusted public key — so only plugins signed
+    | by a key the operator controls (or an Inventoros-published registry key)
+    | can be installed, even by a compromised admin session.
+    |
+    | This is OFF by default: there is no public Inventoros plugin registry yet,
+    | and requiring signatures unconditionally would make the (already opt-in)
+    | upload feature unusable for local plugin development. When `required` is
+    | on it FAILS CLOSED — uploads without a valid signature are rejected. The
+    | detached signature is produced with `php artisan update:sign <plugin.zip>`
+    | (same Ed25519 scheme as release signing) and supplied in the `signature`
+    | upload field.
+    |
+    */
+
+    'signature' => [
+        'required' => filter_var(
+            env('INVENTOROS_PLUGIN_SIGNATURE_REQUIRED', false),
+            FILTER_VALIDATE_BOOL
+        ),
+
+        'public_key' => (string) env('INVENTOROS_PLUGIN_PUBLIC_KEY', ''),
+    ],
+
 ];

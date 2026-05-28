@@ -212,6 +212,22 @@ The upload path itself validates ZIP archives against:
 
 These guard against zip-slip / zip-bomb attacks but **do not** sandbox plugin code at runtime. Once enabled and uploaded, a plugin runs with the full privileges of the Inventoros PHP process.
 
+### Requiring signed plugins (defense in depth)
+
+On top of the upload flag, an operator can require every uploaded plugin to carry a detached Ed25519 signature, so that only plugins signed by a trusted key can be installed even by a compromised admin session:
+
+```env
+INVENTOROS_PLUGIN_SIGNATURE_REQUIRED=true
+INVENTOROS_PLUGIN_PUBLIC_KEY=<base64 Ed25519 public key>
+```
+
+This is **off by default** (there is no public Inventoros plugin registry yet, and requiring signatures unconditionally would block local plugin development). When on, it **fails closed**: an upload with a missing/invalid signature — or a missing public key — is rejected before extraction. Sign a plugin archive with the same tooling used for release signing:
+
+```bash
+INVENTOROS_UPDATE_SECRET_KEY=... php artisan update:sign my-plugin.zip
+# upload my-plugin.zip and paste the contents of my-plugin.zip.sig into the signature field
+```
+
 ## In-app updates and backup restore
 
 `UpdateService` downloads a release archive from a configurable URL, extracts it over the running application, and runs migrations. `restoreFromBackup` does the analogous extract-over-app for a backup ZIP. Both are RCE-class surfaces if an attacker can influence the source.
