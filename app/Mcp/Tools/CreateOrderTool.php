@@ -5,11 +5,8 @@ declare(strict_types=1);
 namespace App\Mcp\Tools;
 
 use App\Mcp\Concerns\AuthenticatesMcpRequest;
-use App\Models\Inventory\Product;
-use App\Models\Order\Order;
-use App\Models\Order\OrderItem;
+use App\Services\OrderService;
 use Illuminate\Contracts\JsonSchema\JsonSchema;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Laravel\Mcp\Request;
 use Laravel\Mcp\Response;
@@ -60,67 +57,22 @@ class CreateOrderTool extends Tool
             'items.*.tax' => ['nullable', 'numeric', 'min:0'],
         ]);
 
-        $result = DB::transaction(function () use ($validated, $orgId) {
-            $order = Order::create([
-                'organization_id' => $orgId,
-                'order_number' => Order::generateOrderNumber($orgId),
-                'source' => $validated['source'] ?? 'mcp',
-                'customer_name' => $validated['customer_name'],
-                'customer_email' => $validated['customer_email'] ?? null,
-                'customer_address' => $validated['customer_address'] ?? null,
-                'status' => $validated['status'] ?? 'pending',
-                'currency' => $validated['currency'] ?? 'USD',
-                'order_date' => $validated['order_date'] ?? now(),
-                'notes' => $validated['notes'] ?? null,
-                'subtotal' => 0, 'tax' => 0, 'shipping' => 0, 'total' => 0,
-            ]);
+        $validated['status'] ??= 'pending';
+        $validated['order_date'] ??= now();
+        $validated['currency'] ??= 'USD';
 
-            $subtotal = 0.0;
-            $totalTax = 0.0;
+        // OrderService owns the create invariant (lock → validate → ledger +
+        // decrement, wrapped in SequenceNumberRetry) shared with the
+        // web/REST/GraphQL surfaces. It throws InsufficientStockException
+        // (a RuntimeException) which the MCP framework surfaces as a tool
+        // error — same as the previous inline RuntimeException.
+        $order = app(OrderService::class)->create(
+            $validated,
+            $this->user(),
+            $validated['source'] ?? 'mcp'
+        );
 
-            foreach ($validated['items'] as $itemData) {
-                $product = Product::query()
-                    ->forOrganization($orgId)
-                    ->lockForUpdate()
-                    ->find($itemData['product_id']);
-
-                if (! $product || $product->stock < $itemData['quantity']) {
-                    $available = $product?->stock ?? 0;
-                    $name = $product?->name ?? "ID {$itemData['product_id']}";
-                    throw new \RuntimeException(
-                        "Insufficient stock for {$name}. Available: {$available}, requested: {$itemData['quantity']}"
-                    );
-                }
-
-                $unitPrice = (float) ($itemData['unit_price'] ?? $product->selling_price ?? $product->price ?? 0);
-                $itemSubtotal = $unitPrice * $itemData['quantity'];
-                $itemTax = (float) ($itemData['tax'] ?? 0);
-
-                OrderItem::create([
-                    'order_id' => $order->id,
-                    'product_id' => $product->id,
-                    'product_name' => $product->name,
-                    'sku' => $product->sku,
-                    'quantity' => $itemData['quantity'],
-                    'unit_price' => $unitPrice,
-                    'subtotal' => $itemSubtotal,
-                    'tax' => $itemTax,
-                    'total' => $itemSubtotal + $itemTax,
-                ]);
-
-                $product->decrement('stock', $itemData['quantity']);
-                $subtotal += $itemSubtotal;
-                $totalTax += $itemTax;
-            }
-
-            $order->update([
-                'subtotal' => $subtotal,
-                'tax' => $totalTax,
-                'total' => $subtotal + $totalTax,
-            ]);
-
-            return $order->fresh('items');
-        });
+        $result = $order->fresh('items');
 
         return Response::json([
             'message' => 'Order created.',
