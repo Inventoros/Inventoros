@@ -16,6 +16,19 @@ use App\Services\NotificationService;
 final class ProductObserver
 {
     /**
+     * Handle the Product "created" event.
+     *
+     * Fires the `product_created` action hook here, on the model lifecycle,
+     * rather than in the Inertia controller — so plugins observe product
+     * creation regardless of the surface that created it (web, REST, GraphQL,
+     * or MCP), not just the web path.
+     */
+    public function created(Product $product): void
+    {
+        do_action('product_created', $product, auth()->user());
+    }
+
+    /**
      * Handle the Product "updated" event.
      * Check for low stock and out of stock conditions.
      */
