@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Models\Order;
 
+use App\Enums\OrderApprovalStatus;
+use App\Enums\OrderStatus;
 use App\Models\Auth\Organization;
 use App\Models\Concerns\BelongsToOrganization;
 use App\Models\Customer;
@@ -109,6 +111,8 @@ class Order extends Model
     protected function casts(): array
     {
         return [
+            'status' => OrderStatus::class,
+            'approval_status' => OrderApprovalStatus::class,
             'subtotal' => 'decimal:2',
             'tax' => 'decimal:2',
             'shipping' => 'decimal:2',
@@ -245,7 +249,7 @@ class Order extends Model
      */
     public function isPendingApproval(): bool
     {
-        return $this->approval_status === 'pending';
+        return $this->approval_status === OrderApprovalStatus::PENDING;
     }
 
     /**
@@ -253,7 +257,7 @@ class Order extends Model
      */
     public function isApproved(): bool
     {
-        return $this->approval_status === 'approved';
+        return $this->approval_status === OrderApprovalStatus::APPROVED;
     }
 
     /**
@@ -261,7 +265,7 @@ class Order extends Model
      */
     public function isRejected(): bool
     {
-        return $this->approval_status === 'rejected';
+        return $this->approval_status === OrderApprovalStatus::REJECTED;
     }
 
     /**

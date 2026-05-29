@@ -4,7 +4,6 @@ namespace Tests\Unit;
 
 use App\Models\Auth\Organization;
 use App\Models\Inventory\Product;
-use App\Models\Notification;
 use App\Models\Order\Order;
 use App\Models\Role;
 use App\Models\System\SystemSetting;
@@ -19,7 +18,9 @@ class NotificationServiceTest extends TestCase
     use RefreshDatabase;
 
     protected Organization $organization;
+
     protected User $user;
+
     protected Role $stockRole;
 
     protected function setUp(): void
@@ -348,7 +349,7 @@ class NotificationServiceTest extends TestCase
             'created_by' => $this->user->id,
             'order_number' => 'ORD-007',
             'customer_name' => 'Test Customer',
-            'status' => 'approved',
+            'status' => 'pending',
             'approval_status' => 'approved',
             'approved_by' => $approver->id,
             'total' => 100.00,
@@ -374,7 +375,7 @@ class NotificationServiceTest extends TestCase
             'created_by' => $this->user->id,
             'order_number' => 'ORD-008',
             'customer_name' => 'Test Customer',
-            'status' => 'rejected',
+            'status' => 'pending',
             'approval_status' => 'rejected',
             'approved_by' => $approver->id,
             'approval_notes' => 'Budget exceeded',

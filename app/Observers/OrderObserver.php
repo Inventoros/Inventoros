@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Observers;
 
+use App\Enums\OrderStatus;
 use App\Models\Order\Order;
 use App\Services\NotificationService;
 
@@ -35,9 +36,9 @@ final class OrderObserver
             $newStatus = $order->status;
 
             // Create appropriate notification based on new status
-            if ($newStatus === 'shipped') {
+            if ($newStatus === OrderStatus::SHIPPED) {
                 NotificationService::createOrderShippedNotification($order);
-            } elseif ($newStatus === 'delivered') {
+            } elseif ($newStatus === OrderStatus::DELIVERED) {
                 NotificationService::createOrderDeliveredNotification($order);
             } else {
                 NotificationService::createOrderStatusNotification($order, $oldStatus);

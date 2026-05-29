@@ -4,18 +4,18 @@ declare(strict_types=1);
 
 namespace App\Http\Resources;
 
+use App\Models\Product;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
 /**
- * @mixin \App\Models\Product
+ * @mixin Product
  */
 class ProductResource extends JsonResource
 {
     /**
      * Transform the product resource into an array.
      *
-     * @param  Request  $request
      * @return array<string, mixed>
      */
     public function toArray(Request $request): array
@@ -41,7 +41,7 @@ class ProductResource extends JsonResource
             'thumbnail' => $this->thumbnail,
             'is_active' => $this->is_active,
             'has_variants' => $this->has_variants,
-            'tracking_type' => $this->tracking_type,
+            'tracking_type' => $this->tracking_type?->value,
             'metadata' => $this->metadata,
             'is_low_stock' => $this->isLowStock(),
             'is_out_of_stock' => $this->isOutOfStock(),

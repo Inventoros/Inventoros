@@ -4,12 +4,15 @@ declare(strict_types=1);
 
 namespace App\Services;
 
+use App\Enums\OrderApprovalStatus;
+use App\Enums\OrderStatus;
+use App\Mail\LowStockEmail;
+use App\Mail\OrderApprovalEmail;
+use App\Mail\OrderStatusEmail;
 use App\Models\Inventory\Product;
 use App\Models\Notification;
 use App\Models\Order\Order;
 use App\Models\User;
-use App\Services\EmailLogger;
-use App\Services\SettingsService;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 
@@ -24,8 +27,8 @@ final class NotificationService
     /**
      * Check if user wants to receive a specific notification type.
      *
-     * @param User $user The user to check
-     * @param string $notificationType The notification type to check
+     * @param  User  $user  The user to check
+     * @param  string  $notificationType  The notification type to check
      * @return bool True if user should receive this notification type
      */
     private static function shouldNotifyUser(User $user, string $notificationType): bool
@@ -54,16 +57,15 @@ final class NotificationService
      * Applies organization email config and respects user preferences.
      * Triggers hooks for customization.
      *
-     * @param User $user The user to notify
-     * @param string $type The notification type
-     * @param array $data Data to pass to the mailable
-     * @return void
+     * @param  User  $user  The user to notify
+     * @param  string  $type  The notification type
+     * @param  array  $data  Data to pass to the mailable
      */
     private static function sendEmailNotification(User $user, string $type, array $data): void
     {
         // Check if user has email enabled
         $preferences = $user->notification_preferences ?? [];
-        if (!($preferences['email_enabled'] ?? true)) {
+        if (! ($preferences['email_enabled'] ?? true)) {
             return;
         }
 
@@ -78,7 +80,7 @@ final class NotificationService
         ];
 
         $prefKey = $emailPreferenceMap[$type] ?? null;
-        if ($prefKey && !($preferences[$prefKey] ?? true)) {
+        if ($prefKey && ! ($preferences[$prefKey] ?? true)) {
             return;
         }
 
@@ -89,12 +91,12 @@ final class NotificationService
         $data = apply_filters('email_notification_data', $data, $type, $user);
 
         // HOOK: Allow plugins to prevent sending
-        if (!apply_filters('should_send_email', true, $type, $user, $data)) {
+        if (! apply_filters('should_send_email', true, $type, $user, $data)) {
             return;
         }
 
         // Validate email address before sending
-        if (empty($user->email) || !filter_var($user->email, FILTER_VALIDATE_EMAIL)) {
+        if (empty($user->email) || ! filter_var($user->email, FILTER_VALIDATE_EMAIL)) {
             return;
         }
 
@@ -109,20 +111,21 @@ final class NotificationService
                 switch ($type) {
                     case 'low_stock':
                     case 'out_of_stock':
-                        Mail::to($user->email)->send(new \App\Mail\LowStockEmail($data));
+                        Mail::to($user->email)->send(new LowStockEmail($data));
                         break;
                     case 'order_status_updated':
-                        Mail::to($user->email)->send(new \App\Mail\OrderStatusEmail($data));
+                        Mail::to($user->email)->send(new OrderStatusEmail($data));
                         break;
                     case 'order_approved':
                     case 'order_rejected':
-                        Mail::to($user->email)->send(new \App\Mail\OrderApprovalEmail($data));
+                        Mail::to($user->email)->send(new OrderApprovalEmail($data));
                         break;
                     default:
                         Log::warning('No email mailable configured for notification type', [
                             'type' => $type,
-                            'user_id' => $user->id
+                            'user_id' => $user->id,
                         ]);
+
                         return;
                 }
             }
@@ -143,7 +146,7 @@ final class NotificationService
             Log::error('Failed to send email notification', [
                 'user_id' => $user->id,
                 'type' => $type,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
         }
     }
@@ -151,8 +154,7 @@ final class NotificationService
     /**
      * Create a low stock notification for all users with appropriate permissions.
      *
-     * @param Product $product The product with low stock
-     * @return void
+     * @param  Product  $product  The product with low stock
      */
     public static function createLowStockNotification(Product $product): void
     {
@@ -165,7 +167,7 @@ final class NotificationService
 
         foreach ($users as $user) {
             // Check if user wants low stock alerts
-            if (!self::shouldNotifyUser($user, 'low_stock')) {
+            if (! self::shouldNotifyUser($user, 'low_stock')) {
                 continue;
             }
 
@@ -197,8 +199,7 @@ final class NotificationService
     /**
      * Create an out of stock notification.
      *
-     * @param Product $product The product that is out of stock
-     * @return void
+     * @param  Product  $product  The product that is out of stock
      */
     public static function createOutOfStockNotification(Product $product): void
     {
@@ -211,7 +212,7 @@ final class NotificationService
 
         foreach ($users as $user) {
             // Check if user wants low stock alerts
-            if (!self::shouldNotifyUser($user, 'out_of_stock')) {
+            if (! self::shouldNotifyUser($user, 'out_of_stock')) {
                 continue;
             }
 
@@ -243,8 +244,7 @@ final class NotificationService
      *
      * Notifies all users with view_orders permission except the creator.
      *
-     * @param Order $order The newly created order
-     * @return void
+     * @param  Order  $order  The newly created order
      */
     public static function createOrderCreatedNotification(Order $order): void
     {
@@ -260,7 +260,7 @@ final class NotificationService
 
         foreach ($users as $user) {
             // Check if user wants order notifications
-            if (!self::shouldNotifyUser($user, 'order_created')) {
+            if (! self::shouldNotifyUser($user, 'order_created')) {
                 continue;
             }
 
@@ -287,17 +287,19 @@ final class NotificationService
      *
      * Notifies the order creator of status changes.
      *
-     * @param Order $order The order with updated status
-     * @param string $oldStatus The previous status
-     * @return void
+     * @param  Order  $order  The order with updated status
+     * @param  string  $oldStatus  The previous status
      */
-    public static function createOrderStatusNotification(Order $order, string $oldStatus): void
+    public static function createOrderStatusNotification(Order $order, OrderStatus|string $oldStatus): void
     {
         // Get the user to check preferences
         $user = User::find($order->created_by);
-        if (!$user || !self::shouldNotifyUser($user, 'order_status_updated')) {
+        if (! $user || ! self::shouldNotifyUser($user, 'order_status_updated')) {
             return;
         }
+
+        $oldStatusValue = $oldStatus instanceof OrderStatus ? $oldStatus->value : $oldStatus;
+        $newStatusValue = $order->status->value;
 
         // Notify the order creator
         Notification::create([
@@ -305,15 +307,15 @@ final class NotificationService
             'user_id' => $order->created_by,
             'type' => 'order_status_updated',
             'title' => 'Order Status Updated',
-            'message' => "Order #{$order->order_number} status changed from {$oldStatus} to {$order->status}",
+            'message' => "Order #{$order->order_number} status changed from {$oldStatusValue} to {$newStatusValue}",
             'data' => [
                 'order_id' => $order->id,
                 'order_number' => $order->order_number,
-                'old_status' => $oldStatus,
-                'new_status' => $order->status,
+                'old_status' => $oldStatusValue,
+                'new_status' => $newStatusValue,
             ],
             'action_url' => route('orders.show', $order->id),
-            'priority' => $order->status === 'cancelled' ? 'high' : 'normal',
+            'priority' => $order->status === OrderStatus::CANCELLED ? 'high' : 'normal',
         ]);
 
         // Send email notification
@@ -327,14 +329,13 @@ final class NotificationService
     /**
      * Create an order shipped notification.
      *
-     * @param Order $order The shipped order
-     * @return void
+     * @param  Order  $order  The shipped order
      */
     public static function createOrderShippedNotification(Order $order): void
     {
         // Get the user to check preferences
         $user = User::find($order->created_by);
-        if (!$user || !self::shouldNotifyUser($user, 'order_shipped')) {
+        if (! $user || ! self::shouldNotifyUser($user, 'order_shipped')) {
             return;
         }
 
@@ -358,14 +359,13 @@ final class NotificationService
     /**
      * Create an order delivered notification.
      *
-     * @param Order $order The delivered order
-     * @return void
+     * @param  Order  $order  The delivered order
      */
     public static function createOrderDeliveredNotification(Order $order): void
     {
         // Get the user to check preferences
         $user = User::find($order->created_by);
-        if (!$user || !self::shouldNotifyUser($user, 'order_delivered')) {
+        if (! $user || ! self::shouldNotifyUser($user, 'order_delivered')) {
             return;
         }
 
@@ -390,26 +390,27 @@ final class NotificationService
      *
      * Notifies the order creator when order is approved or rejected.
      *
-     * @param Order $order The order with updated approval status
-     * @return void
+     * @param  Order  $order  The order with updated approval status
      */
     public static function createOrderApprovalNotification(Order $order): void
     {
         // Get the user to check preferences
         $user = User::find($order->created_by);
-        if (!$user) {
+        if (! $user) {
             return;
         }
 
-        $status = $order->approval_status;
+        $status = $order->approval_status instanceof OrderApprovalStatus
+            ? $order->approval_status->value
+            : $order->approval_status;
         $approverName = $order->approver ? $order->approver->name : 'Unknown';
 
         // Notify the order creator
         Notification::create([
             'organization_id' => $order->organization_id,
             'user_id' => $order->created_by,
-            'type' => 'order_' . $status,
-            'title' => 'Order ' . ucfirst($status),
+            'type' => 'order_'.$status,
+            'title' => 'Order '.ucfirst($status),
             'message' => "Order #{$order->order_number} has been {$status} by {$approverName}",
             'data' => [
                 'order_id' => $order->id,
@@ -423,7 +424,7 @@ final class NotificationService
         ]);
 
         // Send email notification
-        self::sendEmailNotification($user, 'order_' . $status, [
+        self::sendEmailNotification($user, 'order_'.$status, [
             'order' => $order,
             'notification_url' => route('orders.show', $order->id),
         ]);
