@@ -12,6 +12,7 @@ use App\Models\Inventory\StockAdjustment;
 use App\Models\Order\Order;
 use App\Models\Order\OrderItem;
 use App\Models\User;
+use App\Support\Money;
 use App\Support\SequenceNumberRetry;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\DB;
@@ -143,8 +144,8 @@ final class OrderService
             // Build order-item rows + stock-adjustment rows. quantity_before and
             // quantity_after thread the running stock so the ledger is faithful
             // when the order touches the same target twice.
-            $subtotal = 0;
-            $itemTaxTotal = 0;
+            $subtotal = '0';
+            $itemTaxTotal = '0';
             $orderItemRows = [];
             $now = now();
             $adjustmentRows = [];
@@ -170,9 +171,9 @@ final class OrderService
                     ?? 0;
                 $itemTax = $item['tax'] ?? 0;
 
-                $itemSubtotal = $qty * $unitPrice;
-                $subtotal += $itemSubtotal;
-                $itemTaxTotal += $itemTax;
+                $itemSubtotal = Money::multiply($unitPrice, $qty);
+                $subtotal = Money::add($subtotal, $itemSubtotal);
+                $itemTaxTotal = Money::add($itemTaxTotal, $itemTax);
 
                 $orderItemRows[] = [
                     'product_id' => $product->id,
@@ -183,7 +184,7 @@ final class OrderService
                     'unit_price' => $unitPrice,
                     'subtotal' => $itemSubtotal,
                     'tax' => $itemTax,
-                    'total' => $itemSubtotal + $itemTax,
+                    'total' => Money::add($itemSubtotal, $itemTax),
                 ];
 
                 $perTargetQty[$key] = ($perTargetQty[$key] ?? 0) + $qty;
@@ -214,9 +215,9 @@ final class OrderService
             // this preserves both: web keeps its order-level tax with zero line
             // tax; API keeps its summed line tax with no order-level tax.
             $data['subtotal'] = $subtotal;
-            $data['tax'] = ($data['tax'] ?? 0) + $itemTaxTotal;
-            $data['shipping'] = $data['shipping'] ?? 0;
-            $data['total'] = $subtotal + $data['tax'] + $data['shipping'];
+            $data['tax'] = Money::add($data['tax'] ?? 0, $itemTaxTotal);
+            $data['shipping'] = Money::of($data['shipping'] ?? 0);
+            $data['total'] = Money::add($subtotal, $data['tax'], $data['shipping']);
 
             $order = Order::create($data);
 
