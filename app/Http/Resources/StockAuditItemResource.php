@@ -4,18 +4,18 @@ declare(strict_types=1);
 
 namespace App\Http\Resources;
 
+use App\Models\Inventory\StockAuditItem;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
 /**
- * @mixin \App\Models\Inventory\StockAuditItem
+ * @mixin StockAuditItem
  */
 class StockAuditItemResource extends JsonResource
 {
     /**
      * Transform the stock audit item resource into an array.
      *
-     * @param  Request  $request
      * @return array<string, mixed>
      */
     public function toArray(Request $request): array

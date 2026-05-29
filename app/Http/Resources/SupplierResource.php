@@ -4,18 +4,18 @@ declare(strict_types=1);
 
 namespace App\Http\Resources;
 
+use App\Models\Inventory\Supplier;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
 /**
- * @mixin \App\Models\Supplier
+ * @mixin Supplier
  */
 class SupplierResource extends JsonResource
 {
     /**
      * Transform the supplier resource into an array.
      *
-     * @param  Request  $request
      * @return array<string, mixed>
      */
     public function toArray(Request $request): array
