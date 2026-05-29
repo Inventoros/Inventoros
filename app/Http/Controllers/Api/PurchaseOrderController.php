@@ -5,15 +5,17 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Api\PurchaseOrder\ReceivePurchaseOrderRequest;
+use App\Http\Requests\Api\PurchaseOrder\StorePurchaseOrderRequest;
+use App\Http\Requests\Api\PurchaseOrder\UpdatePurchaseOrderRequest;
 use App\Http\Resources\PurchaseOrderResource;
 use App\Models\Inventory\Product;
 use App\Models\Purchasing\PurchaseOrder;
 use App\Models\Purchasing\PurchaseOrderItem;
+use Dedoc\Scramble\Attributes\QueryParameter;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
-use Illuminate\Validation\Rule;
-use Dedoc\Scramble\Attributes\QueryParameter;
 
 /**
  * @tags Purchase Orders
@@ -61,27 +63,13 @@ class PurchaseOrderController extends Controller
     /**
      * Store a newly created purchase order.
      *
-     * @param Request $request The incoming HTTP request containing purchase order data
-     * @return JsonResponse
+     * @param  Request  $request  The incoming HTTP request containing purchase order data
      */
-    public function store(Request $request): JsonResponse
+    public function store(StorePurchaseOrderRequest $request): JsonResponse
     {
         $organizationId = $request->user()->organization_id;
 
-        $validated = $request->validate([
-            'supplier_id' => ['required', Rule::exists('suppliers', 'id')->where('organization_id', $organizationId)],
-            'order_date' => ['required', 'date'],
-            'expected_date' => ['nullable', 'date', 'after_or_equal:order_date'],
-            'currency' => ['required', 'string', 'max:3'],
-            'shipping' => ['nullable', 'numeric', 'min:0'],
-            'tax' => ['nullable', 'numeric', 'min:0'],
-            'notes' => ['nullable', 'string'],
-            'items' => ['required', 'array', 'min:1'],
-            'items.*.product_id' => ['required', Rule::exists('products', 'id')->where('organization_id', $organizationId)],
-            'items.*.quantity' => ['required', 'integer', 'min:1'],
-            'items.*.unit_cost' => ['required', 'numeric', 'min:0'],
-            'items.*.supplier_sku' => ['nullable', 'string', 'max:255'],
-        ]);
+        $validated = $request->validated();
 
         // Calculate order totals
         $subtotal = 0;
@@ -133,9 +121,8 @@ class PurchaseOrderController extends Controller
     /**
      * Display the specified purchase order.
      *
-     * @param Request $request The incoming HTTP request
-     * @param PurchaseOrder $purchaseOrder The purchase order to display
-     * @return JsonResponse
+     * @param  Request  $request  The incoming HTTP request
+     * @param  PurchaseOrder  $purchaseOrder  The purchase order to display
      */
     public function show(Request $request, PurchaseOrder $purchaseOrder): JsonResponse
     {
@@ -156,11 +143,10 @@ class PurchaseOrderController extends Controller
     /**
      * Update the specified purchase order.
      *
-     * @param Request $request The incoming HTTP request containing updated purchase order data
-     * @param PurchaseOrder $purchaseOrder The purchase order to update
-     * @return JsonResponse
+     * @param  Request  $request  The incoming HTTP request containing updated purchase order data
+     * @param  PurchaseOrder  $purchaseOrder  The purchase order to update
      */
-    public function update(Request $request, PurchaseOrder $purchaseOrder): JsonResponse
+    public function update(UpdatePurchaseOrderRequest $request, PurchaseOrder $purchaseOrder): JsonResponse
     {
         if ($purchaseOrder->organization_id !== $request->user()->organization_id) {
             return response()->json([
@@ -169,31 +155,14 @@ class PurchaseOrderController extends Controller
             ], 404);
         }
 
-        if (!$purchaseOrder->canBeEdited()) {
+        if (! $purchaseOrder->canBeEdited()) {
             return response()->json([
                 'message' => 'This purchase order cannot be edited',
                 'error' => 'cannot_edit',
             ], 422);
         }
 
-        $organizationId = $request->user()->organization_id;
-
-        $validated = $request->validate([
-            'supplier_id' => ['sometimes', Rule::exists('suppliers', 'id')->where('organization_id', $organizationId)],
-            'order_date' => ['sometimes', 'date'],
-            'expected_date' => ['nullable', 'date', 'after_or_equal:order_date'],
-            'currency' => ['sometimes', 'string', 'max:3'],
-            'shipping' => ['nullable', 'numeric', 'min:0'],
-            'tax' => ['nullable', 'numeric', 'min:0'],
-            'notes' => ['nullable', 'string'],
-            'items' => ['sometimes', 'array', 'min:1'],
-            'items.*.id' => ['nullable', 'exists:purchase_order_items,id'], // parent purchase_order is already org-scoped via route-model binding
-
-            'items.*.product_id' => ['required_with:items', Rule::exists('products', 'id')->where('organization_id', $organizationId)],
-            'items.*.quantity' => ['required_with:items', 'integer', 'min:1'],
-            'items.*.unit_cost' => ['required_with:items', 'numeric', 'min:0'],
-            'items.*.supplier_sku' => ['nullable', 'string', 'max:255'],
-        ]);
+        $validated = $request->validated();
 
         $organizationId = $request->user()->organization_id;
 
@@ -210,7 +179,7 @@ class PurchaseOrderController extends Controller
                 $itemSubtotal = $itemData['quantity'] * $itemData['unit_cost'];
                 $subtotal += $itemSubtotal;
 
-                if (!empty($itemData['id']) && $existingItems->has($itemData['id'])) {
+                if (! empty($itemData['id']) && $existingItems->has($itemData['id'])) {
                     $existingItem = $existingItems->get($itemData['id']);
                     $existingItem->update([
                         'product_id' => $itemData['product_id'],
@@ -239,9 +208,9 @@ class PurchaseOrderController extends Controller
                 }
             }
 
-            $existingItems->filter(fn ($item) => !in_array($item->id, $itemIdsToKeep))->each->delete();
+            $existingItems->filter(fn ($item) => ! in_array($item->id, $itemIdsToKeep))->each->delete();
 
-            if (!empty($newItems)) {
+            if (! empty($newItems)) {
                 $purchaseOrder->items()->createMany($newItems);
             }
 
@@ -261,9 +230,8 @@ class PurchaseOrderController extends Controller
     /**
      * Remove the specified purchase order.
      *
-     * @param Request $request The incoming HTTP request
-     * @param PurchaseOrder $purchaseOrder The purchase order to delete
-     * @return JsonResponse
+     * @param  Request  $request  The incoming HTTP request
+     * @param  PurchaseOrder  $purchaseOrder  The purchase order to delete
      */
     public function destroy(Request $request, PurchaseOrder $purchaseOrder): JsonResponse
     {
@@ -291,11 +259,10 @@ class PurchaseOrderController extends Controller
     /**
      * Receive items for a purchase order.
      *
-     * @param Request $request The incoming HTTP request containing received quantities
-     * @param PurchaseOrder $purchaseOrder The purchase order to receive items for
-     * @return JsonResponse
+     * @param  Request  $request  The incoming HTTP request containing received quantities
+     * @param  PurchaseOrder  $purchaseOrder  The purchase order to receive items for
      */
-    public function receive(Request $request, PurchaseOrder $purchaseOrder): JsonResponse
+    public function receive(ReceivePurchaseOrderRequest $request, PurchaseOrder $purchaseOrder): JsonResponse
     {
         if ($purchaseOrder->organization_id !== $request->user()->organization_id) {
             return response()->json([
@@ -304,18 +271,14 @@ class PurchaseOrderController extends Controller
             ], 404);
         }
 
-        if (!$purchaseOrder->canReceiveItems()) {
+        if (! $purchaseOrder->canReceiveItems()) {
             return response()->json([
                 'message' => 'This purchase order cannot receive items',
                 'error' => 'cannot_receive',
             ], 422);
         }
 
-        $validated = $request->validate([
-            'items' => ['required', 'array'],
-            'items.*.id' => ['required', 'exists:purchase_order_items,id'],
-            'items.*.quantity_to_receive' => ['required', 'integer', 'min:0'],
-        ]);
+        $validated = $request->validated();
 
         $receivedCount = 0;
 
@@ -348,9 +311,8 @@ class PurchaseOrderController extends Controller
     /**
      * Mark a purchase order as sent.
      *
-     * @param Request $request The incoming HTTP request
-     * @param PurchaseOrder $purchaseOrder The purchase order to mark as sent
-     * @return JsonResponse
+     * @param  Request  $request  The incoming HTTP request
+     * @param  PurchaseOrder  $purchaseOrder  The purchase order to mark as sent
      */
     public function send(Request $request, PurchaseOrder $purchaseOrder): JsonResponse
     {
@@ -361,7 +323,7 @@ class PurchaseOrderController extends Controller
             ], 404);
         }
 
-        if (!$purchaseOrder->canBeSent()) {
+        if (! $purchaseOrder->canBeSent()) {
             return response()->json([
                 'message' => 'This purchase order cannot be sent',
                 'error' => 'cannot_send',
@@ -379,9 +341,8 @@ class PurchaseOrderController extends Controller
     /**
      * Cancel a purchase order.
      *
-     * @param Request $request The incoming HTTP request
-     * @param PurchaseOrder $purchaseOrder The purchase order to cancel
-     * @return JsonResponse
+     * @param  Request  $request  The incoming HTTP request
+     * @param  PurchaseOrder  $purchaseOrder  The purchase order to cancel
      */
     public function cancel(Request $request, PurchaseOrder $purchaseOrder): JsonResponse
     {
@@ -392,7 +353,7 @@ class PurchaseOrderController extends Controller
             ], 404);
         }
 
-        if (!$purchaseOrder->canBeCancelled()) {
+        if (! $purchaseOrder->canBeCancelled()) {
             return response()->json([
                 'message' => 'This purchase order cannot be cancelled',
                 'error' => 'cannot_cancel',
