@@ -5,7 +5,8 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Order;
 
 use App\Http\Controllers\Controller;
-use App\Models\Inventory\Product;
+use App\Http\Requests\ReturnOrder\RejectReturnOrderRequest;
+use App\Http\Requests\ReturnOrder\StoreReturnOrderRequest;
 use App\Models\Inventory\StockAdjustment;
 use App\Models\Order\Order;
 use App\Models\Order\ReturnOrder;
@@ -13,6 +14,7 @@ use App\Models\Order\ReturnOrderItem;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -37,10 +39,10 @@ class ReturnOrderController extends Controller
             ->when($request->input('search'), function ($query, $search) {
                 $query->where(function ($q) use ($search) {
                     $q->where('return_number', 'like', "%{$search}%")
-                      ->orWhereHas('order', function ($oq) use ($search) {
-                          $oq->where('order_number', 'like', "%{$search}%")
-                            ->orWhere('customer_name', 'like', "%{$search}%");
-                      });
+                        ->orWhereHas('order', function ($oq) use ($search) {
+                            $oq->where('order_number', 'like', "%{$search}%")
+                                ->orWhere('customer_name', 'like', "%{$search}%");
+                        });
                 });
             })
             ->when($request->input('status'), function ($query, $status) {
@@ -75,10 +77,10 @@ class ReturnOrderController extends Controller
         // Calculate already returned quantities for each order item
         $returnedQuantities = ReturnOrderItem::whereHas('returnOrder', function ($q) use ($order) {
             $q->where('order_id', $order->id)
-              ->whereNotIn('status', ['rejected']);
+                ->whereNotIn('status', ['rejected']);
         })->selectRaw('order_item_id, SUM(quantity) as total_returned')
-          ->groupBy('order_item_id')
-          ->pluck('total_returned', 'order_item_id');
+            ->groupBy('order_item_id')
+            ->pluck('total_returned', 'order_item_id');
 
         return Inertia::render('Returns/Create', [
             'order' => $order,
@@ -89,22 +91,11 @@ class ReturnOrderController extends Controller
     /**
      * Store a newly created return order.
      */
-    public function store(Request $request)
+    public function store(StoreReturnOrderRequest $request)
     {
         $organizationId = $request->user()->organization_id;
 
-        $validated = $request->validate([
-            'order_id' => 'required|exists:orders,id',
-            'type' => 'required|in:return,exchange',
-            'reason' => 'required|string|max:1000',
-            'notes' => 'nullable|string|max:2000',
-            'items' => 'required|array|min:1',
-            'items.*.order_item_id' => 'required|exists:order_items,id',
-            'items.*.product_id' => 'required|exists:products,id',
-            'items.*.quantity' => 'required|integer|min:1',
-            'items.*.condition' => 'required|in:new,used,damaged',
-            'items.*.restock' => 'required|boolean',
-        ]);
+        $validated = $request->validated();
 
         // Verify the order belongs to this organization
         $order = Order::forOrganization($organizationId)->findOrFail($validated['order_id']);
@@ -126,16 +117,17 @@ class ReturnOrderController extends Controller
 
                 $returnedQuantities = ReturnOrderItem::whereHas('returnOrder', function ($q) use ($order) {
                     $q->where('order_id', $order->id)
-                      ->whereNotIn('status', ['rejected']);
+                        ->whereNotIn('status', ['rejected']);
                 })->selectRaw('order_item_id, SUM(quantity) as total_returned')
-                  ->groupBy('order_item_id')
-                  ->pluck('total_returned', 'order_item_id');
+                    ->groupBy('order_item_id')
+                    ->pluck('total_returned', 'order_item_id');
 
                 $errors = [];
                 foreach ($validated['items'] as $index => $item) {
                     $orderItem = $order->items->firstWhere('id', $item['order_item_id']);
-                    if (!$orderItem) {
+                    if (! $orderItem) {
                         $errors["items.{$index}.order_item_id"] = 'Order item not found.';
+
                         continue;
                     }
 
@@ -147,9 +139,9 @@ class ReturnOrderController extends Controller
                     }
                 }
 
-                if (!empty($errors)) {
-                    throw new \Illuminate\Validation\ValidationException(
-                        \Illuminate\Support\Facades\Validator::make([], []),
+                if (! empty($errors)) {
+                    throw new ValidationException(
+                        Validator::make([], []),
                         redirect()->back()->withErrors($errors)->withInput()
                     );
                 }
@@ -188,7 +180,7 @@ class ReturnOrderController extends Controller
 
             return redirect()->route('returns.show', $returnOrder)
                 ->with('success', 'Return request created successfully.');
-        } catch (\Illuminate\Validation\ValidationException $e) {
+        } catch (ValidationException $e) {
             throw $e;
         } catch (\Exception $e) {
             return redirect()->back()
@@ -298,7 +290,7 @@ class ReturnOrderController extends Controller
     /**
      * Reject a pending return order.
      */
-    public function reject(Request $request, ReturnOrder $returnOrder)
+    public function reject(RejectReturnOrderRequest $request, ReturnOrder $returnOrder)
     {
         if ($returnOrder->organization_id !== auth()->user()->organization_id) {
             abort(403, 'Unauthorized action.');
@@ -308,16 +300,14 @@ class ReturnOrderController extends Controller
             return redirect()->back()->with('error', 'Only pending returns can be rejected.');
         }
 
-        $validated = $request->validate([
-            'notes' => 'nullable|string|max:2000',
-        ]);
+        $validated = $request->validated();
 
         $returnOrder->update([
             'status' => 'rejected',
             'processed_by' => auth()->id(),
             'notes' => $returnOrder->notes
-                ? $returnOrder->notes . "\n\nRejection reason: " . ($validated['notes'] ?? 'No reason provided')
-                : 'Rejection reason: ' . ($validated['notes'] ?? 'No reason provided'),
+                ? $returnOrder->notes."\n\nRejection reason: ".($validated['notes'] ?? 'No reason provided')
+                : 'Rejection reason: '.($validated['notes'] ?? 'No reason provided'),
         ]);
 
         return redirect()->back()->with('success', 'Return rejected.');

@@ -5,10 +5,14 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Purchasing;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\PurchaseOrder\ProcessReceivingRequest;
+use App\Http\Requests\PurchaseOrder\StorePurchaseOrderRequest;
+use App\Http\Requests\PurchaseOrder\UpdatePurchaseOrderRequest;
 use App\Models\Inventory\Product;
 use App\Models\Inventory\Supplier;
 use App\Models\Purchasing\PurchaseOrder;
 use App\Models\Purchasing\PurchaseOrderItem;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -24,8 +28,7 @@ class PurchaseOrderController extends Controller
     /**
      * Display a listing of purchase orders.
      *
-     * @param Request $request The incoming HTTP request
-     * @return Response
+     * @param  Request  $request  The incoming HTTP request
      */
     public function index(Request $request): Response
     {
@@ -73,8 +76,7 @@ class PurchaseOrderController extends Controller
     /**
      * Show the form for creating a new purchase order.
      *
-     * @param Request $request The incoming HTTP request
-     * @return Response
+     * @param  Request  $request  The incoming HTTP request
      */
     public function create(Request $request): Response
     {
@@ -102,25 +104,12 @@ class PurchaseOrderController extends Controller
     /**
      * Store a newly created purchase order.
      *
-     * @param Request $request The incoming HTTP request containing purchase order data
-     * @return \Illuminate\Http\RedirectResponse
+     * @param  Request  $request  The incoming HTTP request containing purchase order data
+     * @return RedirectResponse
      */
-    public function store(Request $request)
+    public function store(StorePurchaseOrderRequest $request)
     {
-        $validated = $request->validate([
-            'supplier_id' => 'required|exists:suppliers,id',
-            'order_date' => 'required|date',
-            'expected_date' => 'nullable|date|after_or_equal:order_date',
-            'currency' => 'required|string|max:3',
-            'shipping' => 'nullable|numeric|min:0',
-            'tax' => 'nullable|numeric|min:0',
-            'notes' => 'nullable|string',
-            'items' => 'required|array|min:1',
-            'items.*.product_id' => 'required|exists:products,id',
-            'items.*.quantity' => 'required|integer|min:1',
-            'items.*.unit_cost' => 'required|numeric|min:0',
-            'items.*.supplier_sku' => 'nullable|string|max:255',
-        ]);
+        $validated = $request->validated();
 
         $organizationId = $request->user()->organization_id;
 
@@ -175,9 +164,8 @@ class PurchaseOrderController extends Controller
     /**
      * Display the specified purchase order.
      *
-     * @param Request $request The incoming HTTP request
-     * @param PurchaseOrder $purchaseOrder The purchase order to display
-     * @return Response
+     * @param  Request  $request  The incoming HTTP request
+     * @param  PurchaseOrder  $purchaseOrder  The purchase order to display
      */
     public function show(Request $request, PurchaseOrder $purchaseOrder): Response
     {
@@ -201,9 +189,9 @@ class PurchaseOrderController extends Controller
     /**
      * Show the form for editing the specified purchase order.
      *
-     * @param Request $request The incoming HTTP request
-     * @param PurchaseOrder $purchaseOrder The purchase order to edit
-     * @return Response|\Illuminate\Http\RedirectResponse
+     * @param  Request  $request  The incoming HTTP request
+     * @param  PurchaseOrder  $purchaseOrder  The purchase order to edit
+     * @return Response|RedirectResponse
      */
     public function edit(Request $request, PurchaseOrder $purchaseOrder): Response
     {
@@ -213,7 +201,7 @@ class PurchaseOrderController extends Controller
         }
 
         // Only allow editing draft POs
-        if (!$purchaseOrder->canBeEdited()) {
+        if (! $purchaseOrder->canBeEdited()) {
             return redirect()->route('purchase-orders.show', $purchaseOrder)
                 ->with('error', 'This purchase order cannot be edited.');
         }
@@ -245,11 +233,11 @@ class PurchaseOrderController extends Controller
     /**
      * Update the specified purchase order.
      *
-     * @param Request $request The incoming HTTP request containing updated purchase order data
-     * @param PurchaseOrder $purchaseOrder The purchase order to update
-     * @return \Illuminate\Http\RedirectResponse
+     * @param  Request  $request  The incoming HTTP request containing updated purchase order data
+     * @param  PurchaseOrder  $purchaseOrder  The purchase order to update
+     * @return RedirectResponse
      */
-    public function update(Request $request, PurchaseOrder $purchaseOrder)
+    public function update(UpdatePurchaseOrderRequest $request, PurchaseOrder $purchaseOrder)
     {
         // Ensure user can only update POs from their organization
         if ($purchaseOrder->organization_id !== $request->user()->organization_id) {
@@ -257,26 +245,12 @@ class PurchaseOrderController extends Controller
         }
 
         // Only allow updating draft POs
-        if (!$purchaseOrder->canBeEdited()) {
+        if (! $purchaseOrder->canBeEdited()) {
             return redirect()->route('purchase-orders.show', $purchaseOrder)
                 ->with('error', 'This purchase order cannot be edited.');
         }
 
-        $validated = $request->validate([
-            'supplier_id' => 'required|exists:suppliers,id',
-            'order_date' => 'required|date',
-            'expected_date' => 'nullable|date|after_or_equal:order_date',
-            'currency' => 'required|string|max:3',
-            'shipping' => 'nullable|numeric|min:0',
-            'tax' => 'nullable|numeric|min:0',
-            'notes' => 'nullable|string',
-            'items' => 'required|array|min:1',
-            'items.*.id' => 'nullable|exists:purchase_order_items,id',
-            'items.*.product_id' => 'required|exists:products,id',
-            'items.*.quantity' => 'required|integer|min:1',
-            'items.*.unit_cost' => 'required|numeric|min:0',
-            'items.*.supplier_sku' => 'nullable|string|max:255',
-        ]);
+        $validated = $request->validated();
 
         $organizationId = $request->user()->organization_id;
 
@@ -296,7 +270,7 @@ class PurchaseOrderController extends Controller
             $itemSubtotal = $itemData['quantity'] * $itemData['unit_cost'];
             $subtotal += $itemSubtotal;
 
-            if (!empty($itemData['id']) && $existingItems->has($itemData['id'])) {
+            if (! empty($itemData['id']) && $existingItems->has($itemData['id'])) {
                 // Update existing item
                 $existingItem = $existingItems->get($itemData['id']);
                 $existingItem->update([
@@ -329,11 +303,11 @@ class PurchaseOrderController extends Controller
 
         // Delete removed items
         $existingItems->filter(function ($item) use ($itemIdsToKeep) {
-            return !in_array($item->id, $itemIdsToKeep);
+            return ! in_array($item->id, $itemIdsToKeep);
         })->each->delete();
 
         // Create new items
-        if (!empty($newItems)) {
+        if (! empty($newItems)) {
             $purchaseOrder->items()->createMany($newItems);
         }
 
@@ -357,9 +331,9 @@ class PurchaseOrderController extends Controller
     /**
      * Remove the specified purchase order.
      *
-     * @param Request $request The incoming HTTP request
-     * @param PurchaseOrder $purchaseOrder The purchase order to delete
-     * @return \Illuminate\Http\RedirectResponse
+     * @param  Request  $request  The incoming HTTP request
+     * @param  PurchaseOrder  $purchaseOrder  The purchase order to delete
+     * @return RedirectResponse
      */
     public function destroy(Request $request, PurchaseOrder $purchaseOrder)
     {
@@ -383,9 +357,9 @@ class PurchaseOrderController extends Controller
     /**
      * Show the receiving form for a purchase order.
      *
-     * @param Request $request The incoming HTTP request
-     * @param PurchaseOrder $purchaseOrder The purchase order to receive items for
-     * @return Response|\Illuminate\Http\RedirectResponse
+     * @param  Request  $request  The incoming HTTP request
+     * @param  PurchaseOrder  $purchaseOrder  The purchase order to receive items for
+     * @return Response|RedirectResponse
      */
     public function receive(Request $request, PurchaseOrder $purchaseOrder): Response
     {
@@ -395,7 +369,7 @@ class PurchaseOrderController extends Controller
         }
 
         // Only allow receiving for sent/partial POs
-        if (!$purchaseOrder->canReceiveItems()) {
+        if (! $purchaseOrder->canReceiveItems()) {
             return redirect()->route('purchase-orders.show', $purchaseOrder)
                 ->with('error', 'This purchase order cannot receive items.');
         }
@@ -414,11 +388,11 @@ class PurchaseOrderController extends Controller
     /**
      * Process receiving items for a purchase order.
      *
-     * @param Request $request The incoming HTTP request containing received quantities
-     * @param PurchaseOrder $purchaseOrder The purchase order to process receiving for
-     * @return \Illuminate\Http\RedirectResponse
+     * @param  Request  $request  The incoming HTTP request containing received quantities
+     * @param  PurchaseOrder  $purchaseOrder  The purchase order to process receiving for
+     * @return RedirectResponse
      */
-    public function processReceiving(Request $request, PurchaseOrder $purchaseOrder)
+    public function processReceiving(ProcessReceivingRequest $request, PurchaseOrder $purchaseOrder)
     {
         // Ensure user can only receive POs from their organization
         if ($purchaseOrder->organization_id !== $request->user()->organization_id) {
@@ -426,16 +400,12 @@ class PurchaseOrderController extends Controller
         }
 
         // Only allow receiving for sent/partial POs
-        if (!$purchaseOrder->canReceiveItems()) {
+        if (! $purchaseOrder->canReceiveItems()) {
             return redirect()->route('purchase-orders.show', $purchaseOrder)
                 ->with('error', 'This purchase order cannot receive items.');
         }
 
-        $validated = $request->validate([
-            'items' => 'required|array',
-            'items.*.id' => 'required|exists:purchase_order_items,id',
-            'items.*.quantity_to_receive' => 'required|integer|min:0',
-        ]);
+        $validated = $request->validated();
 
         $receivedCount = 0;
 
@@ -464,9 +434,9 @@ class PurchaseOrderController extends Controller
     /**
      * Mark a purchase order as sent to supplier.
      *
-     * @param Request $request The incoming HTTP request
-     * @param PurchaseOrder $purchaseOrder The purchase order to mark as sent
-     * @return \Illuminate\Http\RedirectResponse
+     * @param  Request  $request  The incoming HTTP request
+     * @param  PurchaseOrder  $purchaseOrder  The purchase order to mark as sent
+     * @return RedirectResponse
      */
     public function sendToSupplier(Request $request, PurchaseOrder $purchaseOrder)
     {
@@ -475,7 +445,7 @@ class PurchaseOrderController extends Controller
             abort(403, 'Unauthorized action.');
         }
 
-        if (!$purchaseOrder->canBeSent()) {
+        if (! $purchaseOrder->canBeSent()) {
             return redirect()->route('purchase-orders.show', $purchaseOrder)
                 ->with('error', 'This purchase order cannot be sent.');
         }
@@ -489,9 +459,9 @@ class PurchaseOrderController extends Controller
     /**
      * Cancel a purchase order.
      *
-     * @param Request $request The incoming HTTP request
-     * @param PurchaseOrder $purchaseOrder The purchase order to cancel
-     * @return \Illuminate\Http\RedirectResponse
+     * @param  Request  $request  The incoming HTTP request
+     * @param  PurchaseOrder  $purchaseOrder  The purchase order to cancel
+     * @return RedirectResponse
      */
     public function cancel(Request $request, PurchaseOrder $purchaseOrder)
     {
@@ -500,7 +470,7 @@ class PurchaseOrderController extends Controller
             abort(403, 'Unauthorized action.');
         }
 
-        if (!$purchaseOrder->canBeCancelled()) {
+        if (! $purchaseOrder->canBeCancelled()) {
             return redirect()->route('purchase-orders.show', $purchaseOrder)
                 ->with('error', 'This purchase order cannot be cancelled.');
         }
