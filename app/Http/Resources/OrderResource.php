@@ -29,6 +29,17 @@ class OrderResource extends JsonResource
             'customer_email' => $this->customer_email,
             'customer_address' => $this->customer_address,
             'status' => $this->status,
+            'approval_status' => $this->approval_status,
+            'approval_notes' => $this->approval_notes,
+            'approved_at' => $this->approved_at?->toIso8601String(),
+            'approver' => $this->whenLoaded('approver', fn () => $this->approver ? [
+                'id' => $this->approver->id,
+                'name' => $this->approver->name,
+            ] : null),
+            'creator' => $this->whenLoaded('creator', fn () => $this->creator ? [
+                'id' => $this->creator->id,
+                'name' => $this->creator->name,
+            ] : null),
             'subtotal' => $this->subtotal,
             'tax' => $this->tax,
             'shipping' => $this->shipping,
