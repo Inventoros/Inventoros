@@ -65,7 +65,7 @@ final class OrderService
         $data['source'] = $source;
         $data['approval_status'] ??= 'pending';
 
-        return SequenceNumberRetry::create(fn () => DB::transaction(function () use ($data, $creator) {
+        $order = SequenceNumberRetry::create(fn () => DB::transaction(function () use ($data, $creator) {
             $orgId = $data['organization_id'];
             $data['order_number'] = Order::generateOrderNumber($orgId);
 
@@ -246,6 +246,15 @@ final class OrderService
 
             return $order;
         }));
+
+        // Fire the action hook once the order and its line items are committed,
+        // from the single service every surface (web, REST, GraphQL, MCP) uses —
+        // so plugins and webhooks observe order creation consistently, with the
+        // full aggregate present (firing on the model `created` event would see
+        // an itemless order, since items are inserted after Order::create).
+        do_action('order_created', $order, $creator);
+
+        return $order;
     }
 
     /**

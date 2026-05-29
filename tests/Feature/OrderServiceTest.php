@@ -271,6 +271,21 @@ class OrderServiceTest extends TestCase
         ]), $this->creator);
     }
 
+    public function test_order_created_hook_fires_with_line_items_present(): void
+    {
+        // The hook fires from the service after the aggregate is committed, so
+        // a listener sees the order with its line items (not the itemless state
+        // a model `created` event would expose).
+        $capturedItemCount = null;
+        add_action('order_created', function (Order $order) use (&$capturedItemCount): void {
+            $capturedItemCount = $order->items()->count();
+        });
+
+        $this->service()->create($this->payload(), $this->creator, 'api');
+
+        $this->assertSame(1, $capturedItemCount);
+    }
+
     public function test_create_rejects_insufficient_stock_and_rolls_back(): void
     {
         $this->expectException(\Exception::class);
