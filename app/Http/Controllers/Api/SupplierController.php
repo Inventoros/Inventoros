@@ -5,12 +5,14 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Api\Supplier\StoreSupplierRequest;
+use App\Http\Requests\Api\Supplier\UpdateSupplierRequest;
 use App\Http\Resources\SupplierResource;
 use App\Models\Inventory\Supplier;
+use Dedoc\Scramble\Attributes\QueryParameter;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
-use Dedoc\Scramble\Attributes\QueryParameter;
 
 /**
  * @tags Suppliers
@@ -53,29 +55,11 @@ class SupplierController extends Controller
     /**
      * Store a newly created supplier.
      *
-     * @param Request $request The incoming HTTP request containing supplier data
-     * @return JsonResponse
+     * @param  Request  $request  The incoming HTTP request containing supplier data
      */
-    public function store(Request $request): JsonResponse
+    public function store(StoreSupplierRequest $request): JsonResponse
     {
-        $validated = $request->validate([
-            'name' => ['required', 'string', 'max:255'],
-            'code' => ['nullable', 'string', 'max:255'],
-            'contact_name' => ['nullable', 'string', 'max:255'],
-            'email' => ['nullable', 'email', 'max:255'],
-            'phone' => ['nullable', 'string', 'max:255'],
-            'address' => ['nullable', 'string'],
-            'city' => ['nullable', 'string', 'max:255'],
-            'state' => ['nullable', 'string', 'max:255'],
-            'zip_code' => ['nullable', 'string', 'max:255'],
-            'country' => ['nullable', 'string', 'max:255'],
-            'website' => ['nullable', 'url', 'max:255'],
-            'payment_terms' => ['nullable', 'string', 'max:255'],
-            'currency' => ['nullable', 'string', 'max:3'],
-            'notes' => ['nullable', 'string'],
-            'metadata' => ['nullable', 'array'],
-            'is_active' => ['nullable', 'boolean'],
-        ]);
+        $validated = $request->validated();
 
         $validated['organization_id'] = $request->user()->organization_id;
         $validated['is_active'] = $validated['is_active'] ?? true;
@@ -91,9 +75,8 @@ class SupplierController extends Controller
     /**
      * Display the specified supplier.
      *
-     * @param Request $request The incoming HTTP request
-     * @param Supplier $supplier The supplier to display
-     * @return JsonResponse
+     * @param  Request  $request  The incoming HTTP request
+     * @param  Supplier  $supplier  The supplier to display
      */
     public function show(Request $request, Supplier $supplier): JsonResponse
     {
@@ -115,11 +98,10 @@ class SupplierController extends Controller
     /**
      * Update the specified supplier.
      *
-     * @param Request $request The incoming HTTP request containing updated supplier data
-     * @param Supplier $supplier The supplier to update
-     * @return JsonResponse
+     * @param  Request  $request  The incoming HTTP request containing updated supplier data
+     * @param  Supplier  $supplier  The supplier to update
      */
-    public function update(Request $request, Supplier $supplier): JsonResponse
+    public function update(UpdateSupplierRequest $request, Supplier $supplier): JsonResponse
     {
         if ($supplier->organization_id !== $request->user()->organization_id) {
             return response()->json([
@@ -128,24 +110,7 @@ class SupplierController extends Controller
             ], 404);
         }
 
-        $validated = $request->validate([
-            'name' => ['sometimes', 'string', 'max:255'],
-            'code' => ['nullable', 'string', 'max:255'],
-            'contact_name' => ['nullable', 'string', 'max:255'],
-            'email' => ['nullable', 'email', 'max:255'],
-            'phone' => ['nullable', 'string', 'max:255'],
-            'address' => ['nullable', 'string'],
-            'city' => ['nullable', 'string', 'max:255'],
-            'state' => ['nullable', 'string', 'max:255'],
-            'zip_code' => ['nullable', 'string', 'max:255'],
-            'country' => ['nullable', 'string', 'max:255'],
-            'website' => ['nullable', 'url', 'max:255'],
-            'payment_terms' => ['nullable', 'string', 'max:255'],
-            'currency' => ['nullable', 'string', 'max:3'],
-            'notes' => ['nullable', 'string'],
-            'metadata' => ['nullable', 'array'],
-            'is_active' => ['nullable', 'boolean'],
-        ]);
+        $validated = $request->validated();
 
         $supplier->update($validated);
 
@@ -158,9 +123,8 @@ class SupplierController extends Controller
     /**
      * Remove the specified supplier.
      *
-     * @param Request $request The incoming HTTP request
-     * @param Supplier $supplier The supplier to delete
-     * @return JsonResponse
+     * @param  Request  $request  The incoming HTTP request
+     * @param  Supplier  $supplier  The supplier to delete
      */
     public function destroy(Request $request, Supplier $supplier): JsonResponse
     {

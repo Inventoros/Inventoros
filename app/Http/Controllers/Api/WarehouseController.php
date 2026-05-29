@@ -5,11 +5,12 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Api\Warehouse\StoreWarehouseRequest;
+use App\Http\Requests\Api\Warehouse\UpdateWarehouseRequest;
 use App\Models\Warehouse;
+use Dedoc\Scramble\Attributes\QueryParameter;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Validation\Rule;
-use Dedoc\Scramble\Attributes\QueryParameter;
 
 /**
  * @tags Warehouses
@@ -33,8 +34,8 @@ class WarehouseController extends Controller
             ->when($request->input('search'), function ($query, $search) {
                 $query->where(function ($q) use ($search) {
                     $q->where('name', 'like', "%{$search}%")
-                      ->orWhere('code', 'like', "%{$search}%")
-                      ->orWhere('city', 'like', "%{$search}%");
+                        ->orWhere('code', 'like', "%{$search}%")
+                        ->orWhere('city', 'like', "%{$search}%");
                 });
             })
             ->when($request->input('is_active') !== null, function ($query) use ($request) {
@@ -56,37 +57,13 @@ class WarehouseController extends Controller
     /**
      * Store a newly created warehouse.
      *
-     * @param Request $request The incoming HTTP request containing warehouse data
-     * @return JsonResponse
+     * @param  Request  $request  The incoming HTTP request containing warehouse data
      */
-    public function store(Request $request): JsonResponse
+    public function store(StoreWarehouseRequest $request): JsonResponse
     {
         $organizationId = $request->user()->organization_id;
 
-        $validated = $request->validate([
-            'name' => ['required', 'string', 'max:255'],
-            'code' => [
-                'nullable',
-                'string',
-                'max:50',
-                Rule::unique('warehouses', 'code')
-                    ->where('organization_id', $organizationId),
-            ],
-            'description' => ['nullable', 'string', 'max:1000'],
-            'address_line_1' => ['nullable', 'string', 'max:255'],
-            'address_line_2' => ['nullable', 'string', 'max:255'],
-            'city' => ['nullable', 'string', 'max:255'],
-            'province' => ['nullable', 'string', 'max:255'],
-            'postal_code' => ['nullable', 'string', 'max:255'],
-            'country' => ['nullable', 'string', 'max:255'],
-            'phone' => ['nullable', 'string', 'max:30'],
-            'email' => ['nullable', 'email', 'max:255'],
-            'manager_name' => ['nullable', 'string', 'max:255'],
-            'timezone' => ['nullable', 'string', 'max:50'],
-            'currency' => ['nullable', 'string', 'max:3'],
-            'is_active' => ['nullable', 'boolean'],
-            'priority' => ['nullable', 'integer', 'min:0'],
-        ]);
+        $validated = $request->validated();
 
         $validated['organization_id'] = $organizationId;
         $validated['is_active'] = $validated['is_active'] ?? true;
@@ -109,9 +86,8 @@ class WarehouseController extends Controller
     /**
      * Display the specified warehouse.
      *
-     * @param Request $request The incoming HTTP request
-     * @param Warehouse $warehouse The warehouse to display
-     * @return JsonResponse
+     * @param  Request  $request  The incoming HTTP request
+     * @param  Warehouse  $warehouse  The warehouse to display
      */
     public function show(Request $request, Warehouse $warehouse): JsonResponse
     {
@@ -133,11 +109,10 @@ class WarehouseController extends Controller
     /**
      * Update the specified warehouse.
      *
-     * @param Request $request The incoming HTTP request containing updated warehouse data
-     * @param Warehouse $warehouse The warehouse to update
-     * @return JsonResponse
+     * @param  Request  $request  The incoming HTTP request containing updated warehouse data
+     * @param  Warehouse  $warehouse  The warehouse to update
      */
-    public function update(Request $request, Warehouse $warehouse): JsonResponse
+    public function update(UpdateWarehouseRequest $request, Warehouse $warehouse): JsonResponse
     {
         if ($warehouse->organization_id !== $request->user()->organization_id) {
             return response()->json([
@@ -146,33 +121,7 @@ class WarehouseController extends Controller
             ], 404);
         }
 
-        $organizationId = $request->user()->organization_id;
-
-        $validated = $request->validate([
-            'name' => ['sometimes', 'string', 'max:255'],
-            'code' => [
-                'nullable',
-                'string',
-                'max:50',
-                Rule::unique('warehouses', 'code')
-                    ->where('organization_id', $organizationId)
-                    ->ignore($warehouse->id),
-            ],
-            'description' => ['nullable', 'string', 'max:1000'],
-            'address_line_1' => ['nullable', 'string', 'max:255'],
-            'address_line_2' => ['nullable', 'string', 'max:255'],
-            'city' => ['nullable', 'string', 'max:255'],
-            'province' => ['nullable', 'string', 'max:255'],
-            'postal_code' => ['nullable', 'string', 'max:255'],
-            'country' => ['nullable', 'string', 'max:255'],
-            'phone' => ['nullable', 'string', 'max:30'],
-            'email' => ['nullable', 'email', 'max:255'],
-            'manager_name' => ['nullable', 'string', 'max:255'],
-            'timezone' => ['nullable', 'string', 'max:50'],
-            'currency' => ['nullable', 'string', 'max:3'],
-            'is_active' => ['nullable', 'boolean'],
-            'priority' => ['nullable', 'integer', 'min:0'],
-        ]);
+        $validated = $request->validated();
 
         $warehouse->update($validated);
         $warehouse->loadCount(['locations', 'users']);
@@ -186,9 +135,8 @@ class WarehouseController extends Controller
     /**
      * Remove the specified warehouse.
      *
-     * @param Request $request The incoming HTTP request
-     * @param Warehouse $warehouse The warehouse to delete
-     * @return JsonResponse
+     * @param  Request  $request  The incoming HTTP request
+     * @param  Warehouse  $warehouse  The warehouse to delete
      */
     public function destroy(Request $request, Warehouse $warehouse): JsonResponse
     {

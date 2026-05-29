@@ -5,12 +5,14 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Api\SavedReport\StoreSavedReportRequest;
+use App\Http\Requests\Api\SavedReport\UpdateSavedReportRequest;
 use App\Models\SavedReport;
 use App\Services\ReportDataService;
+use Dedoc\Scramble\Attributes\QueryParameter;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\StreamedResponse;
-use Dedoc\Scramble\Attributes\QueryParameter;
 
 /**
  * @tags Saved Reports
@@ -58,33 +60,16 @@ class SavedReportController extends Controller
     /**
      * Save a new report configuration.
      *
-     * @param Request $request The incoming HTTP request containing report config
-     * @return JsonResponse
+     * @param  Request  $request  The incoming HTTP request containing report config
      */
-    public function store(Request $request): JsonResponse
+    public function store(StoreSavedReportRequest $request): JsonResponse
     {
         $user = $request->user();
 
-        $validated = $request->validate([
-            'name' => ['required', 'string', 'max:255'],
-            'description' => ['nullable', 'string', 'max:1000'],
-            'data_source' => ['required', 'string', 'max:50'],
-            'columns' => ['required', 'array', 'min:1'],
-            'columns.*' => ['string', 'max:100'],
-            'filters' => ['nullable', 'array'],
-            'filters.*.field' => ['required_with:filters', 'string', 'max:100'],
-            'filters.*.operator' => ['required_with:filters', 'string', 'max:20'],
-            'filters.*.value' => ['nullable', 'string', 'max:500'],
-            'sort' => ['nullable', 'array'],
-            'sort.field' => ['required_with:sort', 'string', 'max:100'],
-            'sort.direction' => ['required_with:sort', 'string', 'in:asc,desc'],
-            'chart_type' => ['nullable', 'string', 'in:bar,line,pie'],
-            'chart_field' => ['nullable', 'string', 'max:100'],
-            'is_shared' => ['nullable', 'boolean'],
-        ]);
+        $validated = $request->validated();
 
         // Validate the data source
-        if (!$this->reportDataService->isValidDataSource($validated['data_source'])) {
+        if (! $this->reportDataService->isValidDataSource($validated['data_source'])) {
             return response()->json([
                 'message' => 'Invalid data source.',
                 'error' => 'invalid_data_source',
@@ -94,9 +79,9 @@ class SavedReportController extends Controller
         // Validate columns belong to the data source
         $validColumns = $this->reportDataService->getValidColumns($validated['data_source']);
         $invalidColumns = array_diff($validated['columns'], $validColumns);
-        if (!empty($invalidColumns)) {
+        if (! empty($invalidColumns)) {
             return response()->json([
-                'message' => 'Invalid columns: ' . implode(', ', $invalidColumns),
+                'message' => 'Invalid columns: '.implode(', ', $invalidColumns),
                 'error' => 'invalid_columns',
             ], 422);
         }
@@ -124,9 +109,8 @@ class SavedReportController extends Controller
     /**
      * Execute and display a saved report.
      *
-     * @param Request $request The incoming HTTP request
-     * @param SavedReport $report The saved report to execute
-     * @return JsonResponse
+     * @param  Request  $request  The incoming HTTP request
+     * @param  SavedReport  $report  The saved report to execute
      */
     public function show(Request $request, SavedReport $report): JsonResponse
     {
@@ -139,7 +123,7 @@ class SavedReportController extends Controller
             ], 404);
         }
 
-        if ($report->created_by !== $user->id && !$report->is_shared) {
+        if ($report->created_by !== $user->id && ! $report->is_shared) {
             return response()->json([
                 'message' => 'Report not found',
                 'error' => 'not_found',
@@ -197,11 +181,10 @@ class SavedReportController extends Controller
     /**
      * Update a saved report configuration.
      *
-     * @param Request $request The incoming HTTP request
-     * @param SavedReport $report The saved report to update
-     * @return JsonResponse
+     * @param  Request  $request  The incoming HTTP request
+     * @param  SavedReport  $report  The saved report to update
      */
-    public function update(Request $request, SavedReport $report): JsonResponse
+    public function update(UpdateSavedReportRequest $request, SavedReport $report): JsonResponse
     {
         $user = $request->user();
 
@@ -212,27 +195,11 @@ class SavedReportController extends Controller
             ], 404);
         }
 
-        $validated = $request->validate([
-            'name' => ['sometimes', 'string', 'max:255'],
-            'description' => ['nullable', 'string', 'max:1000'],
-            'data_source' => ['sometimes', 'string', 'max:50'],
-            'columns' => ['sometimes', 'array', 'min:1'],
-            'columns.*' => ['string', 'max:100'],
-            'filters' => ['nullable', 'array'],
-            'filters.*.field' => ['required_with:filters', 'string', 'max:100'],
-            'filters.*.operator' => ['required_with:filters', 'string', 'max:20'],
-            'filters.*.value' => ['nullable', 'string', 'max:500'],
-            'sort' => ['nullable', 'array'],
-            'sort.field' => ['required_with:sort', 'string', 'max:100'],
-            'sort.direction' => ['required_with:sort', 'string', 'in:asc,desc'],
-            'chart_type' => ['nullable', 'string', 'in:bar,line,pie'],
-            'chart_field' => ['nullable', 'string', 'max:100'],
-            'is_shared' => ['nullable', 'boolean'],
-        ]);
+        $validated = $request->validated();
 
         $dataSource = $validated['data_source'] ?? $report->data_source;
 
-        if (isset($validated['data_source']) && !$this->reportDataService->isValidDataSource($dataSource)) {
+        if (isset($validated['data_source']) && ! $this->reportDataService->isValidDataSource($dataSource)) {
             return response()->json([
                 'message' => 'Invalid data source.',
                 'error' => 'invalid_data_source',
@@ -242,9 +209,9 @@ class SavedReportController extends Controller
         if (isset($validated['columns'])) {
             $validColumns = $this->reportDataService->getValidColumns($dataSource);
             $invalidColumns = array_diff($validated['columns'], $validColumns);
-            if (!empty($invalidColumns)) {
+            if (! empty($invalidColumns)) {
                 return response()->json([
-                    'message' => 'Invalid columns: ' . implode(', ', $invalidColumns),
+                    'message' => 'Invalid columns: '.implode(', ', $invalidColumns),
                     'error' => 'invalid_columns',
                 ], 422);
             }
@@ -271,9 +238,8 @@ class SavedReportController extends Controller
     /**
      * Delete a saved report.
      *
-     * @param Request $request The incoming HTTP request
-     * @param SavedReport $report The saved report to delete
-     * @return JsonResponse
+     * @param  Request  $request  The incoming HTTP request
+     * @param  SavedReport  $report  The saved report to delete
      */
     public function destroy(Request $request, SavedReport $report): JsonResponse
     {
@@ -296,9 +262,8 @@ class SavedReportController extends Controller
     /**
      * Export a saved report as CSV.
      *
-     * @param Request $request The incoming HTTP request
-     * @param SavedReport $report The saved report to export
-     * @return StreamedResponse|JsonResponse
+     * @param  Request  $request  The incoming HTTP request
+     * @param  SavedReport  $report  The saved report to export
      */
     public function export(Request $request, SavedReport $report): StreamedResponse|JsonResponse
     {
@@ -311,7 +276,7 @@ class SavedReportController extends Controller
             ], 404);
         }
 
-        if ($report->created_by !== $user->id && !$report->is_shared) {
+        if ($report->created_by !== $user->id && ! $report->is_shared) {
             return response()->json([
                 'message' => 'Report not found',
                 'error' => 'not_found',
@@ -342,7 +307,7 @@ class SavedReportController extends Controller
             $headers[] = $sourceConfig['columns'][$col]['label'] ?? $col;
         }
 
-        $filename = str_replace(' ', '_', strtolower($report->name)) . '_' . now()->format('Y-m-d') . '.csv';
+        $filename = str_replace(' ', '_', strtolower($report->name)).'_'.now()->format('Y-m-d').'.csv';
 
         return response()->streamDownload(function () use ($data, $report, $headers) {
             $handle = fopen('php://output', 'w');
