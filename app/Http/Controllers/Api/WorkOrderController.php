@@ -5,15 +5,15 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Api\WorkOrder\StoreWorkOrderRequest;
 use App\Models\Inventory\Product;
 use App\Models\Inventory\StockAdjustment;
 use App\Models\Inventory\WorkOrder;
 use App\Models\Inventory\WorkOrderItem;
+use Dedoc\Scramble\Attributes\QueryParameter;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Validation\Rule;
-use Dedoc\Scramble\Attributes\QueryParameter;
 
 /**
  * @tags Work Orders
@@ -37,10 +37,10 @@ class WorkOrderController extends Controller
             ->when($request->input('search'), function ($query, $search) {
                 $query->where(function ($q) use ($search) {
                     $q->where('work_order_number', 'like', "%{$search}%")
-                      ->orWhereHas('product', function ($q2) use ($search) {
-                          $q2->where('name', 'like', "%{$search}%")
-                             ->orWhere('sku', 'like', "%{$search}%");
-                      });
+                        ->orWhereHas('product', function ($q2) use ($search) {
+                            $q2->where('name', 'like', "%{$search}%")
+                                ->orWhere('sku', 'like', "%{$search}%");
+                        });
                 });
             })
             ->when($request->input('status'), function ($query, $status) {
@@ -65,27 +65,13 @@ class WorkOrderController extends Controller
      * Creates a work order for an assembly product and auto-populates
      * items from the product's bill of materials.
      *
-     * @param Request $request The incoming HTTP request containing work order data
-     * @return JsonResponse
+     * @param  Request  $request  The incoming HTTP request containing work order data
      */
-    public function store(Request $request): JsonResponse
+    public function store(StoreWorkOrderRequest $request): JsonResponse
     {
         $organizationId = $request->user()->organization_id;
 
-        $validated = $request->validate([
-            'product_id' => [
-                'required',
-                'integer',
-                Rule::exists('products', 'id')->where('organization_id', $organizationId),
-            ],
-            'quantity' => ['required', 'integer', 'min:1', 'max:999999'],
-            'warehouse_id' => [
-                'nullable',
-                'integer',
-                Rule::exists('warehouses', 'id')->where('organization_id', $organizationId),
-            ],
-            'notes' => ['nullable', 'string', 'max:2000'],
-        ]);
+        $validated = $request->validated();
 
         // Verify the product is an assembly type
         $product = Product::where('id', $validated['product_id'])
@@ -145,9 +131,8 @@ class WorkOrderController extends Controller
     /**
      * Display the specified work order.
      *
-     * @param Request $request The incoming HTTP request
-     * @param WorkOrder $workOrder The work order to display
-     * @return JsonResponse
+     * @param  Request  $request  The incoming HTTP request
+     * @param  WorkOrder  $workOrder  The work order to display
      */
     public function show(Request $request, WorkOrder $workOrder): JsonResponse
     {
@@ -175,9 +160,8 @@ class WorkOrderController extends Controller
      * Changes status from draft/pending to in_progress after verifying
      * all components have sufficient stock.
      *
-     * @param Request $request The incoming HTTP request
-     * @param WorkOrder $workOrder The work order to start
-     * @return JsonResponse
+     * @param  Request  $request  The incoming HTTP request
+     * @param  WorkOrder  $workOrder  The work order to start
      */
     public function start(Request $request, WorkOrder $workOrder): JsonResponse
     {
@@ -188,7 +172,7 @@ class WorkOrderController extends Controller
             ], 404);
         }
 
-        if (!in_array($workOrder->status, ['draft', 'pending'])) {
+        if (! in_array($workOrder->status, ['draft', 'pending'])) {
             return response()->json([
                 'message' => 'Only draft or pending work orders can be started.',
                 'error' => 'invalid_status',
@@ -226,9 +210,8 @@ class WorkOrderController extends Controller
      *
      * Decrements component stock and increments assembly product stock.
      *
-     * @param Request $request The incoming HTTP request
-     * @param WorkOrder $workOrder The work order to complete
-     * @return JsonResponse
+     * @param  Request  $request  The incoming HTTP request
+     * @param  WorkOrder  $workOrder  The work order to complete
      */
     public function complete(Request $request, WorkOrder $workOrder): JsonResponse
     {
@@ -247,7 +230,7 @@ class WorkOrderController extends Controller
         }
 
         $validated = $request->validate([
-            'quantity_produced' => ['nullable', 'integer', 'min:1', 'max:' . $workOrder->quantity],
+            'quantity_produced' => ['nullable', 'integer', 'min:1', 'max:'.$workOrder->quantity],
         ]);
 
         $quantityProduced = $validated['quantity_produced'] ?? $workOrder->quantity;
@@ -305,9 +288,8 @@ class WorkOrderController extends Controller
      *
      * If the work order was in progress, restores any consumed component stock.
      *
-     * @param Request $request The incoming HTTP request
-     * @param WorkOrder $workOrder The work order to cancel
-     * @return JsonResponse
+     * @param  Request  $request  The incoming HTTP request
+     * @param  WorkOrder  $workOrder  The work order to cancel
      */
     public function cancel(Request $request, WorkOrder $workOrder): JsonResponse
     {
@@ -318,7 +300,7 @@ class WorkOrderController extends Controller
             ], 404);
         }
 
-        if (!in_array($workOrder->status, ['draft', 'pending', 'in_progress'])) {
+        if (! in_array($workOrder->status, ['draft', 'pending', 'in_progress'])) {
             return response()->json([
                 'message' => 'Only draft, pending, or in-progress work orders can be cancelled.',
                 'error' => 'invalid_status',
@@ -339,7 +321,7 @@ class WorkOrderController extends Controller
                             $consumedQty,
                             'assembly_reversal',
                             "Reversed for cancelled work order {$workOrder->work_order_number}",
-                            "Work order cancelled - restoring consumed stock",
+                            'Work order cancelled - restoring consumed stock',
                             $workOrder
                         );
 

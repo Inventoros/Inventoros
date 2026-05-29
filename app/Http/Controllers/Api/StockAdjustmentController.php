@@ -5,14 +5,14 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Api\StockAdjustment\StoreStockAdjustmentRequest;
 use App\Http\Resources\StockAdjustmentResource;
 use App\Models\Inventory\Product;
 use App\Models\Inventory\StockAdjustment;
+use Dedoc\Scramble\Attributes\QueryParameter;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
-use Illuminate\Validation\Rule;
-use Dedoc\Scramble\Attributes\QueryParameter;
 
 /**
  * @tags Stock Adjustments
@@ -63,27 +63,20 @@ class StockAdjustmentController extends Controller
     /**
      * Store a newly created stock adjustment.
      *
-     * @param Request $request The incoming HTTP request containing adjustment data
-     * @return JsonResponse
+     * @param  Request  $request  The incoming HTTP request containing adjustment data
      */
-    public function store(Request $request): JsonResponse
+    public function store(StoreStockAdjustmentRequest $request): JsonResponse
     {
         $organizationId = $request->user()->organization_id;
 
-        $validated = $request->validate([
-            'product_id' => ['required', 'integer', Rule::exists('products', 'id')->where('organization_id', $organizationId)],
-            'quantity' => ['required', 'integer'],
-            'type' => ['required', 'string', 'in:manual,count,damage,return,transfer'],
-            'reason' => ['nullable', 'string', 'max:255'],
-            'notes' => ['nullable', 'string'],
-        ]);
+        $validated = $request->validated();
 
         // Verify the product belongs to the organization
         $product = Product::where('id', $validated['product_id'])
             ->where('organization_id', $organizationId)
             ->first();
 
-        if (!$product) {
+        if (! $product) {
             return response()->json([
                 'message' => 'Product not found',
                 'error' => 'not_found',
@@ -110,9 +103,8 @@ class StockAdjustmentController extends Controller
     /**
      * Display the specified stock adjustment.
      *
-     * @param Request $request The incoming HTTP request
-     * @param StockAdjustment $stockAdjustment The stock adjustment to display
-     * @return JsonResponse
+     * @param  Request  $request  The incoming HTTP request
+     * @param  StockAdjustment  $stockAdjustment  The stock adjustment to display
      */
     public function show(Request $request, StockAdjustment $stockAdjustment): JsonResponse
     {
