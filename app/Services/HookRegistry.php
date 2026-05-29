@@ -367,11 +367,11 @@ final class HookRegistry
                 'parameters' => ['$menu_items', '$user'],
                 'example' => "add_filter('sidebar_menu', function(\$items, \$user) { return \$items; });",
             ],
-            'user_permissions' => [
-                'description' => 'Modify user permissions',
-                'parameters' => ['$permissions', '$user'],
-                'example' => "add_filter('user_permissions', function(\$permissions, \$user) { \$permissions[] = 'custom_permission'; return \$permissions; });",
-            ],
+            // NOTE: a `user_permissions` filter is deliberately NOT offered.
+            // Letting a plugin rewrite the authenticated user's effective
+            // permissions is a privilege-escalation vector, so permission
+            // resolution (User::getAllPermissions) does not pass through any
+            // filter and this hook is not advertised.
 
             // ========================================
             // EXPORT/IMPORT FILTERS
