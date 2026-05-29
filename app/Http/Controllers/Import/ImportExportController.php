@@ -8,6 +8,7 @@ use App\Exports\ExportFactory;
 use App\Http\Controllers\Controller;
 use App\Imports\ProductsImport;
 use App\Jobs\GenerateDataExportJob;
+use App\Jobs\ProcessProductImportJob;
 use App\Models\DataExport;
 use App\Models\Inventory\ProductCategory;
 use App\Models\Inventory\ProductLocation;
@@ -144,9 +145,22 @@ class ImportExportController extends Controller
 
         try {
             $organizationId = $request->user()->organization_id;
+            $file = $request->file('file');
+
+            // Large uploads are processed off-request: store the file, queue the
+            // import, and notify the user with stats when it finishes.
+            if ($file->getSize() > config('imports.sync_max_kb') * 1024) {
+                $disk = config('imports.disk');
+                $path = $file->store('imports/'.$organizationId, $disk);
+
+                ProcessProductImportJob::dispatch($organizationId, $request->user()->id, $disk, $path);
+
+                return redirect()->route('import-export.index')
+                    ->with('success', "Your import is being processed. You'll be notified when it's complete.");
+            }
 
             $import = new ProductsImport($organizationId);
-            Excel::import($import, $request->file('file'));
+            Excel::import($import, $file);
 
             $stats = $import->getStats();
 

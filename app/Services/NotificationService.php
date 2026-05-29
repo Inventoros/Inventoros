@@ -489,4 +489,59 @@ final class NotificationService
             'priority' => 'high',
         ]);
     }
+
+    /**
+     * Notify the requesting user that a queued import has finished.
+     *
+     * @param  array{imported?: int, updated?: int, errors?: array<int, mixed>}  $stats
+     */
+    public static function createImportCompleteNotification(int $organizationId, int $userId, array $stats): void
+    {
+        $user = User::find($userId);
+        if (! $user || ! self::shouldNotifyUser($user, 'import_complete')) {
+            return;
+        }
+
+        $imported = $stats['imported'] ?? 0;
+        $updated = $stats['updated'] ?? 0;
+        $errorCount = count($stats['errors'] ?? []);
+        $errorNote = $errorCount > 0 ? ", {$errorCount} error(s)" : '';
+
+        Notification::create([
+            'organization_id' => $organizationId,
+            'user_id' => $userId,
+            'type' => 'import_complete',
+            'title' => 'Import Complete',
+            'message' => "Your product import finished: {$imported} created, {$updated} updated{$errorNote}.",
+            'data' => [
+                'imported' => $imported,
+                'updated' => $updated,
+                'error_count' => $errorCount,
+            ],
+            'action_url' => route('import-export.index'),
+            'priority' => $errorCount > 0 ? 'high' : 'normal',
+        ]);
+    }
+
+    /**
+     * Notify the requesting user that a queued import failed.
+     */
+    public static function createImportFailedNotification(int $organizationId, int $userId): void
+    {
+        $user = User::find($userId);
+        if (! $user || ! self::shouldNotifyUser($user, 'import_failed')) {
+            return;
+        }
+
+        Notification::create([
+            'organization_id' => $organizationId,
+            'user_id' => $userId,
+            'type' => 'import_failed',
+            'title' => 'Import Failed',
+            'message' => 'Your product import could not be processed. Please check the file and try again.',
+            'data' => [],
+            'action_url' => route('import-export.index'),
+            'priority' => 'high',
+        ]);
+    }
 }
