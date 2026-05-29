@@ -19,7 +19,9 @@ class SearchControllerTest extends TestCase
     use RefreshDatabase;
 
     protected User $admin;
+
     protected Organization $organization;
+
     protected Organization $otherOrganization;
 
     protected function setUp(): void
@@ -344,5 +346,26 @@ class SearchControllerTest extends TestCase
 
         $response->assertStatus(200)
             ->assertJsonCount(1, 'purchase_orders');
+    }
+
+    public function test_search_is_case_insensitive(): void
+    {
+        // The driver-aware Search helper must match regardless of case: LIKE on
+        // sqlite/mysql, ILIKE on pgsql. A lower-case query must find a
+        // mixed-case product name.
+        Product::create([
+            'organization_id' => $this->organization->id,
+            'name' => 'CaseSensitive Widget',
+            'sku' => 'CASE-001',
+            'price' => 10.00,
+            'stock' => 100,
+            'is_active' => true,
+        ]);
+
+        $response = $this->actingAs($this->admin)
+            ->getJson('/search?q=casesensitive');
+
+        $response->assertStatus(200)
+            ->assertJsonCount(1, 'products');
     }
 }

@@ -9,6 +9,7 @@ use App\Models\Inventory\Product;
 use App\Models\Inventory\Supplier;
 use App\Models\Order\Order;
 use App\Models\Purchasing\PurchaseOrder;
+use App\Support\Search;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -33,14 +34,11 @@ class SearchController extends Controller
             ]);
         }
 
-        $term = '%' . $query . '%';
-
-        $products = Product::where('organization_id', $organizationId)
-            ->where(function ($q) use ($term) {
-                $q->where('name', 'like', $term)
-                    ->orWhere('sku', 'like', $term)
-                    ->orWhere('barcode', 'like', $term);
-            })
+        $products = Search::apply(
+            Product::where('organization_id', $organizationId),
+            ['name', 'sku', 'barcode'],
+            $query,
+        )
             ->limit($limit)
             ->get()
             ->map(fn (Product $product) => [
@@ -52,11 +50,11 @@ class SearchController extends Controller
                 'icon' => 'product',
             ]);
 
-        $orders = Order::where('organization_id', $organizationId)
-            ->where(function ($q) use ($term) {
-                $q->where('order_number', 'like', $term)
-                    ->orWhere('customer_name', 'like', $term);
-            })
+        $orders = Search::apply(
+            Order::where('organization_id', $organizationId),
+            ['order_number', 'customer_name'],
+            $query,
+        )
             ->limit($limit)
             ->get()
             ->map(fn (Order $order) => [
@@ -68,11 +66,11 @@ class SearchController extends Controller
                 'icon' => 'order',
             ]);
 
-        $customers = Customer::where('organization_id', $organizationId)
-            ->where(function ($q) use ($term) {
-                $q->where('name', 'like', $term)
-                    ->orWhere('email', 'like', $term);
-            })
+        $customers = Search::apply(
+            Customer::where('organization_id', $organizationId),
+            ['name', 'email'],
+            $query,
+        )
             ->limit($limit)
             ->get()
             ->map(fn (Customer $customer) => [
@@ -84,11 +82,11 @@ class SearchController extends Controller
                 'icon' => 'customer',
             ]);
 
-        $suppliers = Supplier::where('organization_id', $organizationId)
-            ->where(function ($q) use ($term) {
-                $q->where('name', 'like', $term)
-                    ->orWhere('email', 'like', $term);
-            })
+        $suppliers = Search::apply(
+            Supplier::where('organization_id', $organizationId),
+            ['name', 'email'],
+            $query,
+        )
             ->limit($limit)
             ->get()
             ->map(fn (Supplier $supplier) => [
@@ -100,10 +98,11 @@ class SearchController extends Controller
                 'icon' => 'supplier',
             ]);
 
-        $purchaseOrders = PurchaseOrder::where('organization_id', $organizationId)
-            ->where(function ($q) use ($term) {
-                $q->where('po_number', 'like', $term);
-            })
+        $purchaseOrders = Search::apply(
+            PurchaseOrder::where('organization_id', $organizationId),
+            ['po_number'],
+            $query,
+        )
             ->limit($limit)
             ->get()
             ->map(fn (PurchaseOrder $po) => [
