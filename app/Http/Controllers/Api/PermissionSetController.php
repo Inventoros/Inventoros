@@ -5,10 +5,12 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Api\PermissionSet\StorePermissionSetRequest;
+use App\Http\Requests\Api\PermissionSet\UpdatePermissionSetRequest;
 use App\Models\PermissionSet;
+use Dedoc\Scramble\Attributes\QueryParameter;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Dedoc\Scramble\Attributes\QueryParameter;
 
 /**
  * @tags Permission Sets
@@ -56,19 +58,11 @@ class PermissionSetController extends Controller
     /**
      * Store a newly created permission set.
      *
-     * @param Request $request The incoming HTTP request containing permission set data
-     * @return JsonResponse
+     * @param  Request  $request  The incoming HTTP request containing permission set data
      */
-    public function store(Request $request): JsonResponse
+    public function store(StorePermissionSetRequest $request): JsonResponse
     {
-        $validated = $request->validate([
-            'name' => ['required', 'string', 'max:255'],
-            'description' => ['nullable', 'string'],
-            'category' => ['nullable', 'string', 'max:50'],
-            'icon' => ['nullable', 'string', 'max:50'],
-            'permissions' => ['required', 'array', 'min:1'],
-            'permissions.*' => ['string'],
-        ]);
+        $validated = $request->validated();
 
         $validated['organization_id'] = $request->user()->organization_id;
         $validated['is_template'] = false;
@@ -92,14 +86,13 @@ class PermissionSetController extends Controller
     /**
      * Display the specified permission set.
      *
-     * @param Request $request The incoming HTTP request
-     * @param PermissionSet $permissionSet The permission set to display
-     * @return JsonResponse
+     * @param  Request  $request  The incoming HTTP request
+     * @param  PermissionSet  $permissionSet  The permission set to display
      */
     public function show(Request $request, PermissionSet $permissionSet): JsonResponse
     {
         // Ensure user can view this set
-        if (!$permissionSet->is_template &&
+        if (! $permissionSet->is_template &&
             $permissionSet->organization_id !== $request->user()->organization_id) {
             return response()->json(['message' => 'Permission set not found'], 404);
         }
@@ -124,11 +117,10 @@ class PermissionSetController extends Controller
     /**
      * Update the specified permission set.
      *
-     * @param Request $request The incoming HTTP request containing updated permission set data
-     * @param PermissionSet $permissionSet The permission set to update
-     * @return JsonResponse
+     * @param  Request  $request  The incoming HTTP request containing updated permission set data
+     * @param  PermissionSet  $permissionSet  The permission set to update
      */
-    public function update(Request $request, PermissionSet $permissionSet): JsonResponse
+    public function update(UpdatePermissionSetRequest $request, PermissionSet $permissionSet): JsonResponse
     {
         // Cannot edit templates or sets from other organizations
         if ($permissionSet->is_template ||
@@ -136,15 +128,7 @@ class PermissionSetController extends Controller
             return response()->json(['message' => 'Cannot modify this permission set'], 403);
         }
 
-        $validated = $request->validate([
-            'name' => ['sometimes', 'string', 'max:255'],
-            'description' => ['nullable', 'string'],
-            'category' => ['nullable', 'string', 'max:50'],
-            'icon' => ['nullable', 'string', 'max:50'],
-            'permissions' => ['sometimes', 'array', 'min:1'],
-            'permissions.*' => ['string'],
-            'is_active' => ['sometimes', 'boolean'],
-        ]);
+        $validated = $request->validated();
 
         $permissionSet->update($validated);
 
@@ -164,9 +148,8 @@ class PermissionSetController extends Controller
     /**
      * Remove the specified permission set.
      *
-     * @param Request $request The incoming HTTP request
-     * @param PermissionSet $permissionSet The permission set to delete
-     * @return JsonResponse
+     * @param  Request  $request  The incoming HTTP request
+     * @param  PermissionSet  $permissionSet  The permission set to delete
      */
     public function destroy(Request $request, PermissionSet $permissionSet): JsonResponse
     {
@@ -192,8 +175,6 @@ class PermissionSetController extends Controller
 
     /**
      * Get available categories.
-     *
-     * @return JsonResponse
      */
     public function categories(): JsonResponse
     {
