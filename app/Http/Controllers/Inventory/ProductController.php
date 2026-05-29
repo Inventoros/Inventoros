@@ -171,8 +171,9 @@ class ProductController extends Controller
 
         $product = $this->productService->create($validated);
 
-        // Action: After product creation
-        do_action('product_created', $product, $request->user());
+        // Action: After product creation. `product_created` now fires from the
+        // Product model observer (so it covers all surfaces, not just web), so
+        // only the request-lifecycle after-hook remains here.
         do_action('product_after_create', $product, $request);
 
         // Hook: Modify redirect response
