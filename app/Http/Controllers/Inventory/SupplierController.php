@@ -8,6 +8,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Supplier\StoreSupplierRequest;
 use App\Http\Requests\Supplier\UpdateSupplierRequest;
 use App\Models\Inventory\Supplier;
+use App\Support\PluginQueryGuard;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -44,6 +45,10 @@ class SupplierController extends Controller
 
         // Hook: Modify supplier list query
         $query = apply_filters('supplier_list_query', $query, $request);
+
+        // Re-assert tenant isolation: a plugin filter must not be able to widen
+        // the query past the caller's organization (e.g. via withoutGlobalScope).
+        $query = PluginQueryGuard::organizationScoped($query, Supplier::class, $organizationId);
 
         $suppliers = $query->paginate(15)->withQueryString();
 

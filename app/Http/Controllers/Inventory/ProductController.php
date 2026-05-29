@@ -12,6 +12,7 @@ use App\Models\Inventory\Product;
 use App\Models\Inventory\ProductCategory;
 use App\Models\Inventory\ProductLocation;
 use App\Services\ProductService;
+use App\Support\PluginQueryGuard;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -69,6 +70,10 @@ class ProductController extends Controller
 
         // Hook: Modify product list query
         $query = apply_filters('product_list_query', $query, $request);
+
+        // Re-assert tenant isolation: a plugin filter must not be able to widen
+        // the query past the caller's organization (e.g. via withoutGlobalScope).
+        $query = PluginQueryGuard::organizationScoped($query, Product::class, $organizationId);
 
         $products = $query->paginate(config('limits.pagination.default'))->withQueryString();
 
