@@ -22,11 +22,17 @@ class OrderControllerTest extends TestCase
     use RefreshDatabase;
 
     protected User $admin;
+
     protected User $member;
+
     protected User $viewOnlyUser;
+
     protected Organization $organization;
+
     protected Product $product;
+
     protected ProductCategory $category;
+
     protected ProductLocation $location;
 
     protected function setUp(): void
@@ -164,7 +170,7 @@ class OrderControllerTest extends TestCase
     {
         $order = Order::create(array_merge([
             'organization_id' => $this->organization->id,
-            'order_number' => 'ORD-' . now()->format('Ymd') . '-' . str_pad(mt_rand(1, 9999), 4, '0', STR_PAD_LEFT),
+            'order_number' => 'ORD-'.now()->format('Ymd').'-'.str_pad(mt_rand(1, 9999), 4, '0', STR_PAD_LEFT),
             'source' => 'manual',
             'customer_name' => 'Test Customer',
             'customer_email' => 'customer@test.com',
@@ -351,11 +357,11 @@ class OrderControllerTest extends TestCase
 
         // P0-8: order creation must write a StockAdjustment ledger entry,
         // not silently decrement product.stock outside the ledger.
-        $order = \App\Models\Order\Order::where('customer_name', 'New Customer')->first();
+        $order = Order::where('customer_name', 'New Customer')->first();
         $this->assertNotNull($order);
         $this->assertDatabaseHas('stock_adjustments', [
             'product_id' => $this->product->id,
-            'reference_type' => \App\Models\Order\Order::class,
+            'reference_type' => Order::class,
             'reference_id' => $order->id,
             'type' => 'order_fulfillment',
             'adjustment_quantity' => -2,
@@ -459,7 +465,7 @@ class OrderControllerTest extends TestCase
             ]],
         ])->assertRedirect(route('orders.index'));
 
-        $order = \App\Models\Order\Order::where('customer_name', 'Reject Me')->first();
+        $order = Order::where('customer_name', 'Reject Me')->first();
         $this->assertNotNull($order);
         $this->assertSame($initialStock - 5, $this->product->fresh()->stock);
 
@@ -469,8 +475,8 @@ class OrderControllerTest extends TestCase
             ->assertRedirect();
 
         $order->refresh();
-        $this->assertSame('rejected', $order->approval_status);
-        $this->assertSame('cancelled', $order->status);
+        $this->assertSame('rejected', $order->approval_status->value);
+        $this->assertSame('cancelled', $order->status->value);
 
         // Stock fully restored.
         $this->assertSame($initialStock, $this->product->fresh()->stock);
@@ -478,7 +484,7 @@ class OrderControllerTest extends TestCase
         // A reverse adjustment lives in the ledger.
         $this->assertDatabaseHas('stock_adjustments', [
             'product_id' => $this->product->id,
-            'reference_type' => \App\Models\Order\Order::class,
+            'reference_type' => Order::class,
             'reference_id' => $order->id,
             'type' => 'order_cancellation',
             'adjustment_quantity' => 5,

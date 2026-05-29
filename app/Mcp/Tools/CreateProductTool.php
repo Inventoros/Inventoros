@@ -81,7 +81,7 @@ class CreateProductTool extends Tool
                 'stock' => $product->stock,
                 'price' => $product->price,
                 'is_active' => (bool) $product->is_active,
-                'tracking_type' => $product->tracking_type,
+                'tracking_type' => $product->tracking_type?->value,
             ],
         ]);
     }
