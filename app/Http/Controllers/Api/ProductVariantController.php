@@ -5,15 +5,17 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Api\ProductVariant\StoreProductVariantRequest;
+use App\Http\Requests\Api\ProductVariant\UpdateProductVariantRequest;
 use App\Http\Resources\ProductVariantResource;
 use App\Models\Inventory\Product;
 use App\Models\Inventory\ProductVariant;
 use App\Models\Inventory\StockAdjustment;
+use Dedoc\Scramble\Attributes\QueryParameter;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Support\Facades\DB;
-use Dedoc\Scramble\Attributes\QueryParameter;
 
 /**
  * @tags Product Variants
@@ -47,34 +49,16 @@ class ProductVariantController extends Controller
     /**
      * Store a newly created variant.
      *
-     * @param Request $request The incoming HTTP request containing variant data
-     * @param Product $product The product to create variant for
-     * @return JsonResponse
+     * @param  Request  $request  The incoming HTTP request containing variant data
+     * @param  Product  $product  The product to create variant for
      */
-    public function store(Request $request, Product $product): JsonResponse
+    public function store(StoreProductVariantRequest $request, Product $product): JsonResponse
     {
         if ($product->organization_id !== $request->user()->organization_id) {
             return response()->json(['message' => 'Product not found', 'error' => 'not_found'], 404);
         }
 
-        $validated = $request->validate([
-            'sku' => ['nullable', 'string', 'max:255'],
-            'barcode' => ['nullable', 'string', 'max:255'],
-            'title' => ['nullable', 'string', 'max:255'],
-            'option_values' => ['required', 'array'],
-            'price' => ['nullable', 'numeric', 'min:0'],
-            'purchase_price' => ['nullable', 'numeric', 'min:0'],
-            'compare_at_price' => ['nullable', 'numeric', 'min:0'],
-            'stock' => ['nullable', 'integer', 'min:0'],
-            'min_stock' => ['nullable', 'integer', 'min:0'],
-            'image' => ['nullable', 'string', 'max:255'],
-            'weight' => ['nullable', 'numeric', 'min:0'],
-            'weight_unit' => ['nullable', 'string', 'in:kg,lb,oz,g'],
-            'is_active' => ['nullable', 'boolean'],
-            'requires_shipping' => ['nullable', 'boolean'],
-            'position' => ['nullable', 'integer', 'min:0'],
-            'metadata' => ['nullable', 'array'],
-        ]);
+        $validated = $request->validated();
 
         $validated['product_id'] = $product->id;
         $validated['organization_id'] = $product->organization_id;
@@ -86,7 +70,7 @@ class ProductVariantController extends Controller
             $variant = ProductVariant::create($validated);
 
             // Mark product as having variants
-            if (!$product->has_variants) {
+            if (! $product->has_variants) {
                 $product->update(['has_variants' => true]);
             }
 
@@ -102,10 +86,9 @@ class ProductVariantController extends Controller
     /**
      * Display the specified variant.
      *
-     * @param Request $request The incoming HTTP request
-     * @param Product $product The parent product
-     * @param ProductVariant $variant The variant to display
-     * @return JsonResponse
+     * @param  Request  $request  The incoming HTTP request
+     * @param  Product  $product  The parent product
+     * @param  ProductVariant  $variant  The variant to display
      */
     public function show(Request $request, Product $product, ProductVariant $variant): JsonResponse
     {
@@ -125,12 +108,11 @@ class ProductVariantController extends Controller
     /**
      * Update the specified variant.
      *
-     * @param Request $request The incoming HTTP request containing updated variant data
-     * @param Product $product The parent product
-     * @param ProductVariant $variant The variant to update
-     * @return JsonResponse
+     * @param  Request  $request  The incoming HTTP request containing updated variant data
+     * @param  Product  $product  The parent product
+     * @param  ProductVariant  $variant  The variant to update
      */
-    public function update(Request $request, Product $product, ProductVariant $variant): JsonResponse
+    public function update(UpdateProductVariantRequest $request, Product $product, ProductVariant $variant): JsonResponse
     {
         if ($product->organization_id !== $request->user()->organization_id) {
             return response()->json(['message' => 'Product not found', 'error' => 'not_found'], 404);
@@ -140,24 +122,7 @@ class ProductVariantController extends Controller
             return response()->json(['message' => 'Variant not found', 'error' => 'not_found'], 404);
         }
 
-        $validated = $request->validate([
-            'sku' => ['nullable', 'string', 'max:255'],
-            'barcode' => ['nullable', 'string', 'max:255'],
-            'title' => ['nullable', 'string', 'max:255'],
-            'option_values' => ['sometimes', 'array'],
-            'price' => ['nullable', 'numeric', 'min:0'],
-            'purchase_price' => ['nullable', 'numeric', 'min:0'],
-            'compare_at_price' => ['nullable', 'numeric', 'min:0'],
-            'stock' => ['nullable', 'integer', 'min:0'],
-            'min_stock' => ['nullable', 'integer', 'min:0'],
-            'image' => ['nullable', 'string', 'max:255'],
-            'weight' => ['nullable', 'numeric', 'min:0'],
-            'weight_unit' => ['nullable', 'string', 'in:kg,lb,oz,g'],
-            'is_active' => ['nullable', 'boolean'],
-            'requires_shipping' => ['nullable', 'boolean'],
-            'position' => ['nullable', 'integer', 'min:0'],
-            'metadata' => ['nullable', 'array'],
-        ]);
+        $validated = $request->validated();
 
         $variant->update($validated);
 
@@ -170,10 +135,9 @@ class ProductVariantController extends Controller
     /**
      * Remove the specified variant.
      *
-     * @param Request $request The incoming HTTP request
-     * @param Product $product The parent product
-     * @param ProductVariant $variant The variant to delete
-     * @return JsonResponse
+     * @param  Request  $request  The incoming HTTP request
+     * @param  Product  $product  The parent product
+     * @param  ProductVariant  $variant  The variant to delete
      */
     public function destroy(Request $request, Product $product, ProductVariant $variant): JsonResponse
     {
@@ -202,10 +166,9 @@ class ProductVariantController extends Controller
     /**
      * Adjust stock for a variant.
      *
-     * @param Request $request The incoming HTTP request containing adjustment data
-     * @param Product $product The parent product
-     * @param ProductVariant $variant The variant to adjust stock for
-     * @return JsonResponse
+     * @param  Request  $request  The incoming HTTP request containing adjustment data
+     * @param  Product  $product  The parent product
+     * @param  ProductVariant  $variant  The variant to adjust stock for
      */
     public function adjustStock(Request $request, Product $product, ProductVariant $variant): JsonResponse
     {
@@ -249,9 +212,8 @@ class ProductVariantController extends Controller
     /**
      * Bulk create variants from option combinations.
      *
-     * @param Request $request The incoming HTTP request containing multiple variant data
-     * @param Product $product The product to create variants for
-     * @return JsonResponse
+     * @param  Request  $request  The incoming HTTP request containing multiple variant data
+     * @param  Product  $product  The product to create variants for
      */
     public function bulkCreate(Request $request, Product $product): JsonResponse
     {
@@ -284,7 +246,7 @@ class ProductVariantController extends Controller
                 $created[] = ProductVariant::create($variantData);
             }
 
-            if (!$product->has_variants) {
+            if (! $product->has_variants) {
                 $product->update(['has_variants' => true]);
             }
 
@@ -292,7 +254,7 @@ class ProductVariantController extends Controller
         });
 
         return response()->json([
-            'message' => count($variants) . ' variants created successfully',
+            'message' => count($variants).' variants created successfully',
             'data' => ProductVariantResource::collection($variants),
         ], 201);
     }
