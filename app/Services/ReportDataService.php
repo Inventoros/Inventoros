@@ -4,12 +4,8 @@ declare(strict_types=1);
 
 namespace App\Services;
 
-use App\Models\Customer;
-use App\Models\Inventory\Product;
-use App\Models\Inventory\StockAdjustment;
-use App\Models\Inventory\Supplier;
-use App\Models\Order\Order;
-use App\Models\Purchasing\PurchaseOrder;
+use Illuminate\Database\Query\Builder;
+use Illuminate\Database\Query\Expression;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
@@ -21,18 +17,6 @@ use Illuminate\Support\Facades\DB;
  */
 class ReportDataService
 {
-    /**
-     * Valid data sources for reports.
-     */
-    private const VALID_DATA_SOURCES = [
-        'products',
-        'orders',
-        'stock_adjustments',
-        'customers',
-        'suppliers',
-        'purchase_orders',
-    ];
-
     /**
      * Valid filter operators.
      */
@@ -57,7 +41,7 @@ class ReportDataService
      */
     public function getAvailableDataSources(): array
     {
-        return [
+        $sources = [
             'products' => [
                 'label' => 'Products',
                 'columns' => [
@@ -130,17 +114,17 @@ class ReportDataService
                 ],
             ],
         ];
+
+        // Hook: let plugins register additional report data sources. Each entry
+        // is keyed by source slug with {label, columns} matching the built-in
+        // shape; a matching `report_query_{source}` handler (see executeReport)
+        // supplies the rows.
+        return apply_filters('report_data_sources', $sources);
     }
 
     /**
      * Execute a report query based on configuration.
      *
-     * @param int $organizationId
-     * @param string $dataSource
-     * @param array $columns
-     * @param array|null $filters
-     * @param array|null $sort
-     * @return \Illuminate\Support\Collection
      *
      * @throws \InvalidArgumentException
      */
@@ -151,7 +135,7 @@ class ReportDataService
         ?array $filters = null,
         ?array $sort = null
     ): Collection {
-        if (!in_array($dataSource, self::VALID_DATA_SOURCES, true)) {
+        if (! $this->isValidDataSource($dataSource)) {
             throw new \InvalidArgumentException("Invalid data source: {$dataSource}");
         }
 
@@ -162,24 +146,53 @@ class ReportDataService
             'customers' => $this->queryCustomers($organizationId, $columns, $filters, $sort),
             'suppliers' => $this->querySuppliers($organizationId, $columns, $filters, $sort),
             'purchase_orders' => $this->queryPurchaseOrders($organizationId, $columns, $filters, $sort),
+            // Plugin-registered source: a plugin that added it via the
+            // report_data_sources filter resolves the rows here. The filter
+            // returns null when no handler is registered.
+            default => $this->executePluginDataSource($organizationId, $dataSource, $columns, $filters, $sort),
         };
     }
 
     /**
-     * Check if a data source is valid.
+     * Resolve a plugin-registered data source through its query hook.
      *
-     * @param string $dataSource
-     * @return bool
+     * @throws \InvalidArgumentException When no plugin handler is registered.
+     */
+    private function executePluginDataSource(
+        int $organizationId,
+        string $dataSource,
+        array $columns,
+        ?array $filters,
+        ?array $sort
+    ): Collection {
+        $result = apply_filters(
+            "report_query_{$dataSource}",
+            null,
+            $organizationId,
+            $columns,
+            $filters,
+            $sort
+        );
+
+        if (! $result instanceof Collection) {
+            throw new \InvalidArgumentException("No query handler registered for data source: {$dataSource}");
+        }
+
+        return $result;
+    }
+
+    /**
+     * Check if a data source is valid.
      */
     public function isValidDataSource(string $dataSource): bool
     {
-        return in_array($dataSource, self::VALID_DATA_SOURCES, true);
+        // Includes plugin-registered sources via the report_data_sources filter.
+        return array_key_exists($dataSource, $this->getAvailableDataSources());
     }
 
     /**
      * Get valid columns for a data source.
      *
-     * @param string $dataSource
      * @return array<string>
      */
     public function getValidColumns(string $dataSource): array
@@ -329,7 +342,7 @@ class ReportDataService
                 $join->on('customers.id', '=', 'orders.customer_id')
                     ->whereNull('orders.deleted_at');
             })
-            ->groupBy('customers.id');
+                ->groupBy('customers.id');
         }
 
         $columnMap = [
@@ -360,7 +373,7 @@ class ReportDataService
                     $groupByColumns[] = $filterMap[$col];
                 }
             }
-            if (!empty($groupByColumns)) {
+            if (! empty($groupByColumns)) {
                 $query->groupBy(array_merge(['customers.id'], $groupByColumns));
             }
         }
@@ -428,7 +441,7 @@ class ReportDataService
                     $groupByColumns[] = $filterMap[$col];
                 }
             }
-            if (!empty($groupByColumns)) {
+            if (! empty($groupByColumns)) {
                 $query->groupBy(array_merge(['suppliers.id'], $groupByColumns));
             }
         }
@@ -493,10 +506,6 @@ class ReportDataService
 
     /**
      * Build SELECT column expressions from requested columns.
-     *
-     * @param array $columns
-     * @param array $columnMap
-     * @return array
      */
     private function buildSelectColumns(array $columns, array $columnMap): array
     {
@@ -514,10 +523,7 @@ class ReportDataService
     /**
      * Apply WHERE filters to a query.
      *
-     * @param \Illuminate\Database\Query\Builder $query
-     * @param array|null $filters
-     * @param array $filterMap
-     * @return void
+     * @param  Builder  $query
      */
     private function applyFilters($query, ?array $filters, array $filterMap): void
     {
@@ -530,18 +536,18 @@ class ReportDataService
             $operator = $filter['operator'] ?? null;
             $value = $filter['value'] ?? null;
 
-            if (!$field || !$operator || !isset($filterMap[$field])) {
+            if (! $field || ! $operator || ! isset($filterMap[$field])) {
                 continue;
             }
 
-            if (!in_array($operator, self::VALID_OPERATORS, true)) {
+            if (! in_array($operator, self::VALID_OPERATORS, true)) {
                 continue;
             }
 
             $dbColumn = $filterMap[$field];
 
             // Skip DB::raw expressions (aggregate columns) — handled by applyHavingFilters
-            if ($dbColumn instanceof \Illuminate\Database\Query\Expression) {
+            if ($dbColumn instanceof Expression) {
                 continue;
             }
 
@@ -552,10 +558,7 @@ class ReportDataService
     /**
      * Apply HAVING filters for aggregate columns.
      *
-     * @param \Illuminate\Database\Query\Builder $query
-     * @param array $filters
-     * @param array $filterMap
-     * @return void
+     * @param  Builder  $query
      */
     private function applyHavingFilters($query, array $filters, array $filterMap): void
     {
@@ -564,11 +567,11 @@ class ReportDataService
             $operator = $filter['operator'] ?? null;
             $value = $filter['value'] ?? null;
 
-            if (!$field || !$operator || !isset($filterMap[$field])) {
+            if (! $field || ! $operator || ! isset($filterMap[$field])) {
                 continue;
             }
 
-            if (!in_array($operator, self::VALID_OPERATORS, true)) {
+            if (! in_array($operator, self::VALID_OPERATORS, true)) {
                 continue;
             }
 
@@ -581,12 +584,10 @@ class ReportDataService
     /**
      * Apply a single filter condition to a query.
      *
-     * @param \Illuminate\Database\Query\Builder $query
-     * @param mixed $dbColumn
-     * @param string $operator
-     * @param mixed $value
-     * @param string $method 'where' or 'having'
-     * @return void
+     * @param  Builder  $query
+     * @param  mixed  $dbColumn
+     * @param  mixed  $value
+     * @param  string  $method  'where' or 'having'
      */
     private function applyFilterCondition($query, $dbColumn, string $operator, $value, string $method): void
     {
@@ -597,11 +598,11 @@ class ReportDataService
             'lt' => $query->$method($dbColumn, '<', $value),
             'gte' => $query->$method($dbColumn, '>=', $value),
             'lte' => $query->$method($dbColumn, '<=', $value),
-            'contains' => $query->$method($dbColumn, 'like', '%' . $value . '%'),
-            'starts_with' => $query->$method($dbColumn, 'like', $value . '%'),
-            'ends_with' => $query->$method($dbColumn, 'like', '%' . $value),
-            'is_null' => $query->{$method . 'Null'}($dbColumn),
-            'is_not_null' => $query->{$method . 'NotNull'}($dbColumn),
+            'contains' => $query->$method($dbColumn, 'like', '%'.$value.'%'),
+            'starts_with' => $query->$method($dbColumn, 'like', $value.'%'),
+            'ends_with' => $query->$method($dbColumn, 'like', '%'.$value),
+            'is_null' => $query->{$method.'Null'}($dbColumn),
+            'is_not_null' => $query->{$method.'NotNull'}($dbColumn),
             default => null,
         };
     }
@@ -609,14 +610,11 @@ class ReportDataService
     /**
      * Apply sorting to a query.
      *
-     * @param \Illuminate\Database\Query\Builder $query
-     * @param array|null $sort
-     * @param array $filterMap
-     * @return void
+     * @param  Builder  $query
      */
     private function applySorting($query, ?array $sort, array $filterMap): void
     {
-        if (empty($sort) || !isset($sort['field']) || !isset($filterMap[$sort['field']])) {
+        if (empty($sort) || ! isset($sort['field']) || ! isset($filterMap[$sort['field']])) {
             return;
         }
 
