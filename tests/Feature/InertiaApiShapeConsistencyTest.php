@@ -138,6 +138,57 @@ class InertiaApiShapeConsistencyTest extends TestCase
         $this->assertSharedFieldsAgree($api, $inertia);
     }
 
+    public function test_product_index_surfaces_agree_on_shared_fields(): void
+    {
+        Product::create([
+            'organization_id' => $this->organization->id,
+            'category_id' => $this->category->id,
+            'location_id' => $this->location->id,
+            'sku' => 'IDX-1',
+            'name' => 'Index Product',
+            'price' => 12.50,
+            'currency' => 'USD',
+            'stock' => 7,
+            'min_stock' => 1,
+            'is_active' => true,
+            'tracking_type' => 'none',
+        ]);
+
+        $api = $this->apiData('/api/v1/products')[0];
+        $inertia = $this->inertiaProp('/products', 'products')['data'][0];
+
+        $this->assertSharedFieldsAgree($api, $inertia);
+    }
+
+    public function test_order_index_surfaces_agree_on_shared_fields(): void
+    {
+        $product = Product::create([
+            'organization_id' => $this->organization->id,
+            'sku' => 'IDX-ORD',
+            'name' => 'Index Order Product',
+            'price' => 10.00,
+            'currency' => 'USD',
+            'stock' => 50,
+            'min_stock' => 0,
+            'is_active' => true,
+        ]);
+
+        app(OrderService::class)->create([
+            'customer_name' => 'Acme Inc',
+            'customer_email' => 'buyer@acme.test',
+            'status' => 'pending',
+            'order_date' => now()->toDateString(),
+            'items' => [
+                ['product_id' => $product->id, 'quantity' => 1, 'unit_price' => 10.00],
+            ],
+        ], $this->admin, 'manual');
+
+        $api = $this->apiData('/api/v1/orders')[0];
+        $inertia = $this->inertiaProp('/orders', 'orders')['data'][0];
+
+        $this->assertSharedFieldsAgree($api, $inertia);
+    }
+
     /**
      * Fetch the `data` envelope of an API resource response.
      *

@@ -8,6 +8,7 @@ use App\Enums\OrderStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Order\StoreOrderRequest;
 use App\Http\Requests\Order\UpdateOrderRequest;
+use App\Http\Resources\OrderResource;
 use App\Models\Inventory\Product;
 use App\Models\Inventory\StockAdjustment;
 use App\Models\Order\Order;
@@ -67,6 +68,12 @@ class OrderController extends Controller
             ->latest('order_date')
             ->paginate(config('limits.pagination.default'))
             ->withQueryString();
+
+        // Serialize through the canonical API resource so the Inertia list and
+        // the REST list expose an identical item shape (P2-15). through()
+        // transforms each item while preserving the pagination envelope the
+        // frontend pager depends on.
+        $orders->through(fn (Order $order) => (new OrderResource($order))->resolve($request));
 
         $activeWarehouse = $activeWarehouseId
             ? Warehouse::find($activeWarehouseId)
@@ -184,7 +191,9 @@ class OrderController extends Controller
         $canApprove = auth()->user()->hasPermission('approve_orders');
 
         return Inertia::render('Orders/Show', [
-            'order' => $order,
+            // Canonical API resource shape, so the detail page and the REST
+            // endpoint expose the same order shape (P2-15).
+            'order' => (new OrderResource($order))->resolve(request()),
             'canApprove' => $canApprove,
             'pluginComponents' => [
                 'header' => get_page_components('orders.show', 'header'),
