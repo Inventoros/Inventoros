@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\Webhook\StoreWebhookRequest;
+use App\Http\Requests\Webhook\UpdateWebhookRequest;
 use App\Jobs\WebhookDeliveryJob;
 use App\Models\Webhook;
 use App\Models\WebhookDelivery;
@@ -28,12 +30,10 @@ class WebhookController extends Controller
 {
     /**
      * Display a listing of webhooks for the organization.
-     *
-     * @return Response
      */
     public function index(): Response
     {
-        if (!auth()->user()->hasPermission('manage_organization')) {
+        if (! auth()->user()->hasPermission('manage_organization')) {
             abort(403);
         }
 
@@ -53,32 +53,15 @@ class WebhookController extends Controller
     /**
      * Store a newly created webhook.
      *
-     * @param Request $request
-     * @return RedirectResponse
+     * @param  Request  $request
      */
-    public function store(Request $request): RedirectResponse
+    public function store(StoreWebhookRequest $request): RedirectResponse
     {
-        if (!auth()->user()->hasPermission('manage_organization')) {
+        if (! auth()->user()->hasPermission('manage_organization')) {
             abort(403);
         }
 
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'url' => ['required', 'url', 'max:2048', function ($attribute, $value, $fail) {
-                $host = parse_url($value, PHP_URL_HOST);
-                if (in_array($host, ['localhost', '127.0.0.1', '0.0.0.0', '::1', '169.254.169.254'])) {
-                    $fail('Webhook URL must not point to a local or metadata address.');
-                }
-                if ($host && filter_var($host, FILTER_VALIDATE_IP)) {
-                    if (!filter_var($host, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE)) {
-                        $fail('Webhook URL must not point to a private or reserved IP address.');
-                    }
-                }
-            }],
-            'events' => 'required|array|min:1',
-            'events.*' => 'string|in:' . implode(',', WebhookService::availableEvents()),
-            'is_active' => 'boolean',
-        ]);
+        $validated = $request->validated();
 
         $validated['organization_id'] = auth()->user()->organization_id;
         $validated['created_by'] = auth()->id();
@@ -90,13 +73,10 @@ class WebhookController extends Controller
 
     /**
      * Display the specified webhook with delivery logs.
-     *
-     * @param Webhook $webhook
-     * @return Response
      */
     public function show(Webhook $webhook): Response
     {
-        if (!auth()->user()->hasPermission('manage_organization') ||
+        if (! auth()->user()->hasPermission('manage_organization') ||
             $webhook->organization_id !== auth()->user()->organization_id) {
             abort(403);
         }
@@ -117,34 +97,16 @@ class WebhookController extends Controller
     /**
      * Update the specified webhook.
      *
-     * @param Request $request
-     * @param Webhook $webhook
-     * @return RedirectResponse
+     * @param  Request  $request
      */
-    public function update(Request $request, Webhook $webhook): RedirectResponse
+    public function update(UpdateWebhookRequest $request, Webhook $webhook): RedirectResponse
     {
-        if (!auth()->user()->hasPermission('manage_organization') ||
+        if (! auth()->user()->hasPermission('manage_organization') ||
             $webhook->organization_id !== auth()->user()->organization_id) {
             abort(403);
         }
 
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'url' => ['required', 'url', 'max:2048', function ($attribute, $value, $fail) {
-                $host = parse_url($value, PHP_URL_HOST);
-                if (in_array($host, ['localhost', '127.0.0.1', '0.0.0.0', '::1', '169.254.169.254'])) {
-                    $fail('Webhook URL must not point to a local or metadata address.');
-                }
-                if ($host && filter_var($host, FILTER_VALIDATE_IP)) {
-                    if (!filter_var($host, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE)) {
-                        $fail('Webhook URL must not point to a private or reserved IP address.');
-                    }
-                }
-            }],
-            'events' => 'required|array|min:1',
-            'events.*' => 'string|in:' . implode(',', WebhookService::availableEvents()),
-            'is_active' => 'boolean',
-        ]);
+        $validated = $request->validated();
 
         $webhook->update($validated);
 
@@ -153,13 +115,10 @@ class WebhookController extends Controller
 
     /**
      * Remove the specified webhook.
-     *
-     * @param Webhook $webhook
-     * @return RedirectResponse
      */
     public function destroy(Webhook $webhook): RedirectResponse
     {
-        if (!auth()->user()->hasPermission('manage_organization') ||
+        if (! auth()->user()->hasPermission('manage_organization') ||
             $webhook->organization_id !== auth()->user()->organization_id) {
             abort(403);
         }
@@ -171,13 +130,10 @@ class WebhookController extends Controller
 
     /**
      * Regenerate the webhook secret.
-     *
-     * @param Webhook $webhook
-     * @return RedirectResponse
      */
     public function regenerateSecret(Webhook $webhook): RedirectResponse
     {
-        if (!auth()->user()->hasPermission('manage_organization') ||
+        if (! auth()->user()->hasPermission('manage_organization') ||
             $webhook->organization_id !== auth()->user()->organization_id) {
             abort(403);
         }
@@ -189,13 +145,10 @@ class WebhookController extends Controller
 
     /**
      * Send a test webhook delivery.
-     *
-     * @param Webhook $webhook
-     * @return RedirectResponse
      */
     public function test(Webhook $webhook): RedirectResponse
     {
-        if (!auth()->user()->hasPermission('manage_organization') ||
+        if (! auth()->user()->hasPermission('manage_organization') ||
             $webhook->organization_id !== auth()->user()->organization_id) {
             abort(403);
         }
@@ -213,15 +166,12 @@ class WebhookController extends Controller
 
     /**
      * Retry a failed webhook delivery.
-     *
-     * @param WebhookDelivery $delivery
-     * @return RedirectResponse
      */
     public function retryDelivery(WebhookDelivery $delivery): RedirectResponse
     {
         $webhook = $delivery->webhook;
 
-        if (!auth()->user()->hasPermission('manage_organization') ||
+        if (! auth()->user()->hasPermission('manage_organization') ||
             $webhook->organization_id !== auth()->user()->organization_id) {
             abort(403);
         }
