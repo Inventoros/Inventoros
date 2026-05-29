@@ -7,6 +7,10 @@ import { useI18n } from 'vue-i18n';
 const props = defineProps({
     categories: Array,
     locations: Array,
+    exports: {
+        type: Array,
+        default: () => [],
+    },
 });
 
 
@@ -473,6 +477,52 @@ const hasActiveFilters = computed(() => {
                                 </li>
                             </ul>
                         </div>
+                    </div>
+                </div>
+
+                <!-- Recent Exports (queued downloads) -->
+                <div v-if="props.exports.length" class="mt-8 bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border rounded-lg p-6">
+                    <h3 class="font-semibold text-lg text-gray-900 dark:text-gray-100 mb-1">Your exports</h3>
+                    <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">
+                        Large exports are prepared in the background. You'll be notified when each is ready to download.
+                    </p>
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full text-sm">
+                            <thead>
+                                <tr class="text-left text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-dark-border">
+                                    <th class="py-2 pr-4 font-medium">File</th>
+                                    <th class="py-2 pr-4 font-medium">Type</th>
+                                    <th class="py-2 pr-4 font-medium">Rows</th>
+                                    <th class="py-2 pr-4 font-medium">Status</th>
+                                    <th class="py-2 pr-4 font-medium text-right">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr v-for="e in props.exports" :key="e.id" class="border-b border-gray-100 dark:border-dark-border/50">
+                                    <td class="py-2 pr-4 text-gray-900 dark:text-gray-100">{{ e.filename }}</td>
+                                    <td class="py-2 pr-4 capitalize text-gray-700 dark:text-gray-300">{{ e.type }}</td>
+                                    <td class="py-2 pr-4 text-gray-700 dark:text-gray-300">{{ e.row_count ?? '—' }}</td>
+                                    <td class="py-2 pr-4">
+                                        <span
+                                            class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium"
+                                            :class="{
+                                                'bg-green-900/20 text-green-400': e.status === 'completed',
+                                                'bg-yellow-900/20 text-yellow-400': e.status === 'pending' || e.status === 'processing',
+                                                'bg-red-900/20 text-red-400': e.status === 'failed',
+                                            }"
+                                        >{{ e.status }}</span>
+                                    </td>
+                                    <td class="py-2 pr-4 text-right">
+                                        <a
+                                            v-if="e.status === 'completed'"
+                                            :href="route('import-export.download', e.id)"
+                                            class="text-primary-500 hover:text-primary-400 font-medium"
+                                        >Download</a>
+                                        <span v-else class="text-gray-400">—</span>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             </div>
