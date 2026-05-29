@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Api;
 
+use App\Enums\OrderStatus;
 use App\Exceptions\InsufficientStockException;
 use App\Exceptions\InvalidOrderItemException;
 use App\Http\Controllers\Controller;
@@ -184,13 +185,13 @@ class OrderController extends Controller
 
         $cancelTransition = isset($validated['status'])
             && $validated['status'] === 'cancelled'
-            && $order->status !== 'cancelled';
+            && $order->status !== OrderStatus::CANCELLED;
 
         // Reject cancellation of orders that already left the warehouse;
         // restocking would lie about inventory that physically isn't here.
-        if ($cancelTransition && in_array($order->status, ['shipped', 'delivered'], true)) {
+        if ($cancelTransition && in_array($order->status, [OrderStatus::SHIPPED, OrderStatus::DELIVERED], true)) {
             return response()->json([
-                'message' => "Cannot cancel an order that has already been {$order->status}.",
+                'message' => "Cannot cancel an order that has already been {$order->status->value}.",
                 'error' => 'invalid_state_transition',
             ], 422);
         }

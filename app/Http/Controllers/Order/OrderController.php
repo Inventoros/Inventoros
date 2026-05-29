@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Order;
 
+use App\Enums\OrderStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Order\StoreOrderRequest;
 use App\Http\Requests\Order\UpdateOrderRequest;
@@ -342,7 +343,7 @@ class OrderController extends Controller
             // Restore stock when order is cancelled — route through
             // StockAdjustment so the cancellation appears in the ledger and
             // the row is locked correctly by adjust() itself.
-            if ($validated['status'] === 'cancelled' && $order->status !== 'cancelled') {
+            if ($validated['status'] === 'cancelled' && $order->status !== OrderStatus::CANCELLED) {
                 $order->load('items.product');
                 foreach ($order->items as $item) {
                     if ($item->product) {

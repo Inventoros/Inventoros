@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Models\Inventory;
 
+use App\Enums\TrackingType;
 use App\Models\Auth\Organization;
 use App\Models\Concerns\BelongsToOrganization;
 use App\Traits\LogsActivity;
@@ -118,6 +119,7 @@ class Product extends Model
             'reorder_quantity' => 'integer',
             'is_active' => 'boolean',
             'has_variants' => 'boolean',
+            'tracking_type' => TrackingType::class,
             'metadata' => 'array',
             'price_in_currencies' => 'array',
             'images' => 'array',

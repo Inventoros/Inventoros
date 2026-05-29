@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Api;
 
+use App\Enums\TrackingType;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\ProductSerialResource;
 use App\Models\Inventory\Product;
@@ -47,7 +48,7 @@ class SerialTrackingController extends Controller
             return response()->json(['message' => 'Product not found'], 404);
         }
 
-        if ($product->tracking_type !== 'serial') {
+        if ($product->tracking_type !== TrackingType::SERIAL) {
             return response()->json([
                 'message' => 'This product does not use serial tracking.',
                 'errors' => ['tracking_type' => ['This product does not use serial tracking.']],

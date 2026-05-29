@@ -80,7 +80,7 @@ class ListProductsTool extends Tool
                 'is_active' => (bool) $p->is_active,
                 'category' => $p->category?->only(['id', 'name']),
                 'location' => $p->location?->only(['id', 'name']),
-                'tracking_type' => $p->tracking_type ?? 'none',
+                'tracking_type' => $p->tracking_type?->value ?? 'none',
             ])->all(),
             'pagination' => [
                 'page' => $paginator->currentPage(),

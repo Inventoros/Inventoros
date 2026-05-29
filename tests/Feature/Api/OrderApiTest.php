@@ -3,10 +3,11 @@
 namespace Tests\Feature\Api;
 
 use App\Models\Auth\Organization;
-use App\Models\Order\Order;
 use App\Models\Inventory\Product;
 use App\Models\Inventory\ProductCategory;
 use App\Models\Inventory\ProductLocation;
+use App\Models\Inventory\StockAdjustment;
+use App\Models\Order\Order;
 use App\Models\Role;
 use App\Models\System\SystemSetting;
 use App\Models\User;
@@ -19,10 +20,15 @@ class OrderApiTest extends TestCase
     use RefreshDatabase;
 
     protected User $admin;
+
     protected User $viewOnlyUser;
+
     protected Organization $organization;
+
     protected ProductCategory $category;
+
     protected ProductLocation $location;
+
     protected Product $product;
 
     protected function setUp(): void
@@ -120,7 +126,7 @@ class OrderApiTest extends TestCase
     {
         return Order::create(array_merge([
             'organization_id' => $this->organization->id,
-            'order_number' => 'ORD-' . uniqid(),
+            'order_number' => 'ORD-'.uniqid(),
             'customer_name' => 'Test Customer',
             'customer_email' => 'customer@test.com',
             'status' => 'pending',
@@ -173,7 +179,7 @@ class OrderApiTest extends TestCase
         Sanctum::actingAs($this->admin);
 
         $this->createOrder(['status' => 'pending']);
-        $this->createOrder(['status' => 'completed']);
+        $this->createOrder(['status' => 'delivered']);
 
         $response = $this->getJson('/api/v1/orders?status=pending');
 
@@ -290,11 +296,11 @@ class OrderApiTest extends TestCase
 
         $this->postJson('/api/v1/orders', $orderData)->assertStatus(201);
 
-        $order = \App\Models\Order\Order::where('customer_name', 'Ledger Customer')->first();
+        $order = Order::where('customer_name', 'Ledger Customer')->first();
         $this->assertNotNull($order);
         $this->assertDatabaseHas('stock_adjustments', [
             'product_id' => $this->product->id,
-            'reference_type' => \App\Models\Order\Order::class,
+            'reference_type' => Order::class,
             'reference_id' => $order->id,
             'type' => 'order_fulfillment',
             'adjustment_quantity' => -3,
@@ -308,7 +314,7 @@ class OrderApiTest extends TestCase
         Sanctum::actingAs($this->admin);
 
         $initialStock = $this->product->fresh()->stock;
-        $ordersBefore = \App\Models\Order\Order::count();
+        $ordersBefore = Order::count();
 
         $response = $this->postJson('/api/v1/orders', [
             'customer_name' => 'Stock Short Customer',
@@ -324,12 +330,12 @@ class OrderApiTest extends TestCase
         $response->assertStatus(422)->assertJsonValidationErrors(['items']);
 
         // No half-created order, no items, no stock movement.
-        $this->assertSame($ordersBefore, \App\Models\Order\Order::count());
+        $this->assertSame($ordersBefore, Order::count());
         $this->assertDatabaseMissing('orders', ['customer_name' => 'Stock Short Customer']);
         $this->assertSame($initialStock, $this->product->fresh()->stock);
         $this->assertSame(
             0,
-            \App\Models\Inventory\StockAdjustment::where('product_id', $this->product->id)
+            StockAdjustment::where('product_id', $this->product->id)
                 ->where('type', 'order_fulfillment')
                 ->count()
         );
@@ -346,18 +352,18 @@ class OrderApiTest extends TestCase
             'items' => [['product_id' => $this->product->id, 'quantity' => 4, 'unit_price' => 10.00]],
         ])->assertStatus(201);
 
-        $order = \App\Models\Order\Order::where('customer_name', 'Cancel Me')->first();
+        $order = Order::where('customer_name', 'Cancel Me')->first();
         $this->assertSame($initialStock - 4, $this->product->fresh()->stock);
 
         $response = $this->patchJson("/api/v1/orders/{$order->id}", ['status' => 'cancelled']);
         $response->assertStatus(200);
 
-        $this->assertSame('cancelled', $order->fresh()->status);
+        $this->assertSame('cancelled', $order->fresh()->status->value);
         $this->assertSame($initialStock, $this->product->fresh()->stock);
 
         $this->assertDatabaseHas('stock_adjustments', [
             'product_id' => $this->product->id,
-            'reference_type' => \App\Models\Order\Order::class,
+            'reference_type' => Order::class,
             'reference_id' => $order->id,
             'type' => 'order_cancellation',
             'adjustment_quantity' => 4,
@@ -373,7 +379,7 @@ class OrderApiTest extends TestCase
             'items' => [['product_id' => $this->product->id, 'quantity' => 2, 'unit_price' => 10.00]],
         ])->assertStatus(201);
 
-        $order = \App\Models\Order\Order::where('customer_name', 'Already Shipped')->first();
+        $order = Order::where('customer_name', 'Already Shipped')->first();
         $order->update(['status' => 'shipped', 'shipped_at' => now()]);
 
         $stockBefore = $this->product->fresh()->stock;
@@ -382,7 +388,7 @@ class OrderApiTest extends TestCase
             ->assertStatus(422)
             ->assertJsonPath('error', 'invalid_state_transition');
 
-        $this->assertSame('shipped', $order->fresh()->status);
+        $this->assertSame('shipped', $order->fresh()->status->value);
         $this->assertSame($stockBefore, $this->product->fresh()->stock);
     }
 
@@ -397,7 +403,7 @@ class OrderApiTest extends TestCase
             ],
         ])->assertStatus(201);
 
-        $order = \App\Models\Order\Order::where('customer_name', 'Destroy Ledger')->first();
+        $order = Order::where('customer_name', 'Destroy Ledger')->first();
         $stockBeforeDelete = $this->product->fresh()->stock;
 
         $this->deleteJson("/api/v1/orders/{$order->id}")->assertStatus(200);
@@ -406,7 +412,7 @@ class OrderApiTest extends TestCase
         // not resolve via the relation, but the audit row stays.
         $this->assertDatabaseHas('stock_adjustments', [
             'product_id' => $this->product->id,
-            'reference_type' => \App\Models\Order\Order::class,
+            'reference_type' => Order::class,
             'reference_id' => $order->id,
             'type' => 'order_cancellation',
             'adjustment_quantity' => 4,

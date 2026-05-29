@@ -60,7 +60,7 @@ class GetProductTool extends Tool
             'reorder_quantity' => $product->reorder_quantity,
             'is_active' => (bool) $product->is_active,
             'has_variants' => (bool) $product->has_variants,
-            'tracking_type' => $product->tracking_type ?? 'none',
+            'tracking_type' => $product->tracking_type?->value ?? 'none',
             'category' => $product->category?->only(['id', 'name']),
             'location' => $product->location?->only(['id', 'name', 'warehouse_id']),
             'suppliers' => $product->suppliers->map(fn ($s) => $s->only(['id', 'name']))->all(),

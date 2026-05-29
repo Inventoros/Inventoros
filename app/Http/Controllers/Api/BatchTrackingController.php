@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Api;
 
+use App\Enums\TrackingType;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\ProductBatchResource;
 use App\Models\Inventory\Product;
@@ -42,7 +43,7 @@ class BatchTrackingController extends Controller
             return response()->json(['message' => 'Product not found'], 404);
         }
 
-        if ($product->tracking_type !== 'batch') {
+        if ($product->tracking_type !== TrackingType::BATCH) {
             return response()->json([
                 'message' => 'This product does not use batch tracking.',
                 'errors' => ['tracking_type' => ['This product does not use batch tracking.']],

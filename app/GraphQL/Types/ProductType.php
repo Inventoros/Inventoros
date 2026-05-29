@@ -104,6 +104,7 @@ class ProductType extends GraphQLType
             'tracking_type' => [
                 'type' => Type::string(),
                 'description' => 'Tracking type: none, batch, or serial',
+                'resolve' => fn (Product $product) => $product->tracking_type?->value,
             ],
             'is_low_stock' => [
                 'type' => Type::boolean(),
