@@ -11,11 +11,9 @@ use App\Models\ActivityLog;
 use App\Models\Inventory\Product;
 use App\Models\Inventory\ProductCategory;
 use App\Models\Inventory\ProductLocation;
-use App\Models\Inventory\ProductOption;
-use App\Models\Inventory\ProductVariant;
+use App\Services\ProductService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -28,6 +26,10 @@ use Inertia\Response;
  */
 class ProductController extends Controller
 {
+    public function __construct(
+        protected ProductService $productService,
+    ) {}
+
     /**
      * Display a listing of products.
      *
@@ -162,84 +164,7 @@ class ProductController extends Controller
         // Action: Before product creation
         do_action('product_before_create', $validated, $request);
 
-        // Convert price_in_currencies array to proper format
-        if (! empty($validated['price_in_currencies'])) {
-            $currencies = [];
-            foreach ($validated['price_in_currencies'] as $currencyPrice) {
-                $currencies[$currencyPrice['currency']] = $currencyPrice['price'];
-            }
-            $validated['price_in_currencies'] = $currencies;
-        }
-
-        // Handle image uploads
-        if (! empty($validated['images'])) {
-            $imagePaths = [];
-            foreach ($validated['images'] as $index => $imageData) {
-                if (isset($imageData['preview']) && str_starts_with($imageData['preview'], 'data:image/')) {
-                    // Validate image before processing
-                    $this->validateBase64Image($imageData['preview']);
-
-                    // Extract base64 data
-                    $base64 = substr($imageData['preview'], strpos($imageData['preview'], ',') + 1);
-                    $imageContent = base64_decode($base64);
-
-                    // Generate unique filename
-                    $extension = $this->getImageExtensionFromBase64($imageData['preview']);
-                    $filename = 'products/'.uniqid().'_'.time().'.'.$extension;
-
-                    // Store image
-                    \Storage::disk('public')->put($filename, $imageContent);
-                    $imagePaths[] = $filename;
-
-                    // Set thumbnail (first image)
-                    if ($index === 0) {
-                        $validated['thumbnail'] = $filename;
-                    }
-                }
-            }
-            $validated['images'] = $imagePaths;
-        }
-
-        // Extract options and variants before creating product
-        $options = $validated['options'] ?? [];
-        $variants = $validated['variants'] ?? [];
-        unset($validated['options'], $validated['variants']);
-
-        $product = DB::transaction(function () use ($validated, $options, $variants) {
-            $product = Product::create($validated);
-
-            // Create options if has_variants is true
-            if ($product->has_variants && ! empty($options)) {
-                foreach ($options as $index => $optionData) {
-                    ProductOption::create([
-                        'product_id' => $product->id,
-                        'name' => $optionData['name'],
-                        'values' => $optionData['values'],
-                        'position' => $index,
-                    ]);
-                }
-
-                // Create variants
-                foreach ($variants as $index => $variantData) {
-                    ProductVariant::create([
-                        'product_id' => $product->id,
-                        'organization_id' => $product->organization_id,
-                        'sku' => $variantData['sku'] ?? null,
-                        'barcode' => $variantData['barcode'] ?? null,
-                        'title' => $variantData['title'] ?? implode(' / ', array_values($variantData['option_values'])),
-                        'option_values' => $variantData['option_values'],
-                        'price' => $variantData['price'] ?? null,
-                        'purchase_price' => $variantData['purchase_price'] ?? null,
-                        'stock' => $variantData['stock'] ?? 0,
-                        'min_stock' => $variantData['min_stock'] ?? 0,
-                        'is_active' => $variantData['is_active'] ?? true,
-                        'position' => $index,
-                    ]);
-                }
-            }
-
-            return $product;
-        });
+        $product = $this->productService->create($validated);
 
         // Action: After product creation
         do_action('product_created', $product, $request->user());
@@ -253,76 +178,6 @@ class ProductController extends Controller
         );
 
         return $response;
-    }
-
-    /**
-     * Get image extension from base64 string.
-     *
-     * @param  string  $base64  The base64 encoded image string
-     * @return string The image file extension
-     */
-    private function getImageExtensionFromBase64(string $base64): string
-    {
-        $mimeType = substr($base64, 5, strpos($base64, ';') - 5);
-
-        return match ($mimeType) {
-            'image/jpeg' => 'jpg',
-            'image/png' => 'png',
-            'image/gif' => 'gif',
-            'image/webp' => 'webp',
-            default => 'jpg',
-        };
-    }
-
-    /**
-     * Validate base64 image data.
-     *
-     * Returns true if valid, throws exception if invalid.
-     *
-     * @param  string  $base64Data  The base64 encoded image data
-     *
-     * @throws \InvalidArgumentException If the image is invalid
-     */
-    private function validateBase64Image(string $base64Data): bool
-    {
-        // Check data URL format
-        if (! preg_match('/^data:image\/(jpeg|jpg|png|gif|webp);base64,/', $base64Data)) {
-            throw new \InvalidArgumentException('Invalid image format. Only JPEG, PNG, GIF, and WebP are allowed.');
-        }
-
-        // Extract base64 content
-        $base64Content = substr($base64Data, strpos($base64Data, ',') + 1);
-        $imageContent = base64_decode($base64Content, true);
-
-        if ($imageContent === false) {
-            throw new \InvalidArgumentException('Invalid base64 encoding.');
-        }
-
-        // Check file size (max 5MB)
-        $maxSize = 5 * 1024 * 1024;
-        if (strlen($imageContent) > $maxSize) {
-            throw new \InvalidArgumentException('Image size must be less than 5MB.');
-        }
-
-        // Validate actual image content using getimagesizefromstring
-        $imageInfo = @getimagesizefromstring($imageContent);
-        if ($imageInfo === false) {
-            throw new \InvalidArgumentException('Invalid image data. File does not appear to be a valid image.');
-        }
-
-        // Verify MIME type matches allowed types
-        $allowedMimes = [IMAGETYPE_JPEG, IMAGETYPE_PNG, IMAGETYPE_GIF, IMAGETYPE_WEBP];
-        if (! in_array($imageInfo[2], $allowedMimes)) {
-            throw new \InvalidArgumentException('Invalid image type. Only JPEG, PNG, GIF, and WebP are allowed.');
-        }
-
-        // Check image dimensions (max 4096x4096)
-        $maxDimension = 4096;
-        if ($imageInfo[0] > $maxDimension || $imageInfo[1] > $maxDimension) {
-            throw new \InvalidArgumentException("Image dimensions must not exceed {$maxDimension}x{$maxDimension} pixels.");
-        }
-
-        return true;
     }
 
     /**
@@ -449,67 +304,7 @@ class ProductController extends Controller
         // Action: Before update
         do_action('product_before_update', $product, $validated, $request);
 
-        // Handle image uploads
-        if (isset($validated['images'])) {
-            $imagePaths = [];
-            $oldImages = $product->images ?? [];
-
-            foreach ($validated['images'] as $index => $imageData) {
-                // If image has a URL (existing image), keep it
-                if (isset($imageData['url']) && ! str_starts_with($imageData['preview'], 'data:image/')) {
-                    // Extract path from URL (/storage/products/...)
-                    $path = str_replace('/storage/', '', $imageData['url']);
-                    $imagePaths[] = $path;
-                }
-                // If image has preview as base64 (new image), upload it
-                elseif (isset($imageData['preview']) && str_starts_with($imageData['preview'], 'data:image/')) {
-                    // Validate image before processing
-                    $this->validateBase64Image($imageData['preview']);
-
-                    $base64 = substr($imageData['preview'], strpos($imageData['preview'], ',') + 1);
-                    $imageContent = base64_decode($base64);
-
-                    $extension = $this->getImageExtensionFromBase64($imageData['preview']);
-                    $filename = 'products/'.uniqid().'_'.time().'.'.$extension;
-
-                    \Storage::disk('public')->put($filename, $imageContent);
-                    $imagePaths[] = $filename;
-                }
-
-                // Set thumbnail (first image)
-                if ($index === 0 && ! empty($imagePaths)) {
-                    $validated['thumbnail'] = end($imagePaths);
-                }
-            }
-
-            // Delete removed images
-            foreach ($oldImages as $oldImage) {
-                if (! in_array($oldImage, $imagePaths)) {
-                    \Storage::disk('public')->delete($oldImage);
-                }
-            }
-
-            $validated['images'] = $imagePaths;
-        }
-
-        // Extract options and variants before updating product
-        $options = $validated['options'] ?? [];
-        $variants = $validated['variants'] ?? [];
-        unset($validated['options'], $validated['variants']);
-
-        DB::transaction(function () use ($product, $validated, $options, $variants) {
-            $product->update($validated);
-
-            // Sync options and variants if has_variants is true
-            if ($validated['has_variants'] ?? $product->has_variants) {
-                $this->syncOptions($product, $options);
-                $this->syncVariants($product, $variants);
-            } else {
-                // If variants are disabled, delete all options and variants
-                $product->options()->delete();
-                $product->variants()->delete();
-            }
-        });
+        $this->productService->update($product, $validated);
 
         // Action: After update
         do_action('product_updated', $product, $request->user());
@@ -517,96 +312,6 @@ class ProductController extends Controller
 
         return redirect()->route('products.index')
             ->with('success', 'Product updated successfully.');
-    }
-
-    /**
-     * Sync product options.
-     *
-     * @param  Product  $product  The product to sync options for
-     * @param  array  $options  The options data to sync
-     */
-    private function syncOptions(Product $product, array $options): void
-    {
-        $existingOptionIds = $product->options()->pluck('id')->toArray();
-        $incomingOptionIds = [];
-
-        foreach ($options as $index => $optionData) {
-            if (! empty($optionData['id'])) {
-                // Update existing option
-                $option = ProductOption::find($optionData['id']);
-                if ($option && $option->product_id === $product->id) {
-                    $option->update([
-                        'name' => $optionData['name'],
-                        'values' => $optionData['values'],
-                        'position' => $index,
-                    ]);
-                    $incomingOptionIds[] = $optionData['id'];
-                }
-            } else {
-                // Create new option
-                $option = ProductOption::create([
-                    'product_id' => $product->id,
-                    'name' => $optionData['name'],
-                    'values' => $optionData['values'],
-                    'position' => $index,
-                ]);
-                $incomingOptionIds[] = $option->id;
-            }
-        }
-
-        // Delete removed options
-        $optionsToDelete = array_diff($existingOptionIds, $incomingOptionIds);
-        if (! empty($optionsToDelete)) {
-            ProductOption::whereIn('id', $optionsToDelete)->delete();
-        }
-    }
-
-    /**
-     * Sync product variants.
-     *
-     * @param  Product  $product  The product to sync variants for
-     * @param  array  $variants  The variants data to sync
-     */
-    private function syncVariants(Product $product, array $variants): void
-    {
-        $existingVariantIds = $product->variants()->pluck('id')->toArray();
-        $incomingVariantIds = [];
-
-        foreach ($variants as $index => $variantData) {
-            $variantPayload = [
-                'product_id' => $product->id,
-                'organization_id' => $product->organization_id,
-                'sku' => $variantData['sku'] ?? null,
-                'barcode' => $variantData['barcode'] ?? null,
-                'title' => $variantData['title'] ?? implode(' / ', array_values($variantData['option_values'])),
-                'option_values' => $variantData['option_values'],
-                'price' => $variantData['price'] ?? null,
-                'purchase_price' => $variantData['purchase_price'] ?? null,
-                'stock' => $variantData['stock'] ?? 0,
-                'min_stock' => $variantData['min_stock'] ?? 0,
-                'is_active' => $variantData['is_active'] ?? true,
-                'position' => $index,
-            ];
-
-            if (! empty($variantData['id'])) {
-                // Update existing variant
-                $variant = ProductVariant::find($variantData['id']);
-                if ($variant && $variant->product_id === $product->id) {
-                    $variant->update($variantPayload);
-                    $incomingVariantIds[] = $variantData['id'];
-                }
-            } else {
-                // Create new variant
-                $variant = ProductVariant::create($variantPayload);
-                $incomingVariantIds[] = $variant->id;
-            }
-        }
-
-        // Delete removed variants
-        $variantsToDelete = array_diff($existingVariantIds, $incomingVariantIds);
-        if (! empty($variantsToDelete)) {
-            ProductVariant::whereIn('id', $variantsToDelete)->delete();
-        }
     }
 
     /**
