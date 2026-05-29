@@ -47,6 +47,7 @@ Route::prefix('import-export')->name('import-export.')->group(function () {
     Route::get('/export-products', [ImportExportController::class, 'exportProducts'])->middleware('permission:export_data')->name('export-products');
     Route::get('/export-orders', [ImportExportController::class, 'exportOrders'])->middleware('permission:export_data')->name('export-orders');
     Route::get('/export-users', [ImportExportController::class, 'exportUsers'])->middleware('permission:export_data')->name('export-users');
+    Route::get('/downloads/{dataExport}', [ImportExportController::class, 'download'])->middleware('permission:export_data')->name('download');
     Route::get('/download-template', [ImportExportController::class, 'downloadTemplate'])->middleware('permission:import_data')->name('download-template');
     Route::post('/import-products', [ImportExportController::class, 'importProducts'])->middleware('permission:import_data')->name('import-products');
 });

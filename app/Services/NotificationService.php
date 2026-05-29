@@ -9,6 +9,7 @@ use App\Enums\OrderStatus;
 use App\Mail\LowStockEmail;
 use App\Mail\OrderApprovalEmail;
 use App\Mail\OrderStatusEmail;
+use App\Models\DataExport;
 use App\Models\Inventory\Product;
 use App\Models\Notification;
 use App\Models\Order\Order;
@@ -427,6 +428,65 @@ final class NotificationService
         self::sendEmailNotification($user, 'order_'.$status, [
             'order' => $order,
             'notification_url' => route('orders.show', $order->id),
+        ]);
+    }
+
+    /**
+     * Notify the requesting user that a queued export is ready to download.
+     *
+     * @param  DataExport  $export  The completed export record
+     */
+    public static function createExportReadyNotification(DataExport $export): void
+    {
+        $user = User::find($export->user_id);
+        if (! $user || ! self::shouldNotifyUser($user, 'export_ready')) {
+            return;
+        }
+
+        $rows = $export->row_count !== null ? " ({$export->row_count} rows)" : '';
+
+        Notification::create([
+            'organization_id' => $export->organization_id,
+            'user_id' => $export->user_id,
+            'type' => 'export_ready',
+            'title' => 'Export Ready',
+            'message' => "Your {$export->type} export{$rows} is ready to download.",
+            'data' => [
+                'export_id' => $export->id,
+                'type' => $export->type,
+                'filename' => $export->filename,
+                'row_count' => $export->row_count,
+            ],
+            'action_url' => route('import-export.index'),
+            'priority' => 'normal',
+        ]);
+    }
+
+    /**
+     * Notify the requesting user that a queued export failed to generate.
+     *
+     * @param  DataExport  $export  The failed export record
+     */
+    public static function createExportFailedNotification(DataExport $export): void
+    {
+        $user = User::find($export->user_id);
+        if (! $user || ! self::shouldNotifyUser($user, 'export_failed')) {
+            return;
+        }
+
+        Notification::create([
+            'organization_id' => $export->organization_id,
+            'user_id' => $export->user_id,
+            'type' => 'export_failed',
+            'title' => 'Export Failed',
+            'message' => "Your {$export->type} export could not be generated. Please try again.",
+            'data' => [
+                'export_id' => $export->id,
+                'type' => $export->type,
+                'filename' => $export->filename,
+            ],
+            'action_url' => route('import-export.index'),
+            'priority' => 'high',
         ]);
     }
 }
