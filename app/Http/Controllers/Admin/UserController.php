@@ -5,12 +5,13 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Admin\User\StoreUserRequest;
+use App\Http\Requests\Admin\User\UpdateUserRequest;
 use App\Models\Role;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Validation\Rules\Password;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -25,8 +26,7 @@ class UserController extends Controller
     /**
      * Display a listing of users.
      *
-     * @param Request $request The incoming HTTP request
-     * @return Response
+     * @param  Request  $request  The incoming HTTP request
      */
     public function index(Request $request): Response
     {
@@ -37,7 +37,7 @@ class UserController extends Controller
             ->when($request->input('search'), function ($query, $search) {
                 $query->where(function ($q) use ($search) {
                     $q->where('name', 'like', "%{$search}%")
-                      ->orWhere('email', 'like', "%{$search}%");
+                        ->orWhere('email', 'like', "%{$search}%");
                 });
             })
             ->when($request->input('role'), function ($query, $role) {
@@ -50,7 +50,7 @@ class UserController extends Controller
         // Get both organization-specific roles and system roles for filtering
         $roles = Role::where(function ($query) use ($user) {
             $query->where('organization_id', $user->organization_id)
-                  ->orWhereNull('organization_id');
+                ->orWhereNull('organization_id');
         })->orderByRaw('is_system DESC, name ASC')->get();
 
         return Inertia::render('Admin/Users/Index', [
@@ -63,8 +63,7 @@ class UserController extends Controller
     /**
      * Show the form for creating a new user.
      *
-     * @param Request $request The incoming HTTP request
-     * @return Response
+     * @param  Request  $request  The incoming HTTP request
      */
     public function create(Request $request): Response
     {
@@ -84,21 +83,13 @@ class UserController extends Controller
     /**
      * Store a newly created user.
      *
-     * @param Request $request The incoming HTTP request containing user data
-     * @return RedirectResponse
+     * @param  Request  $request  The incoming HTTP request containing user data
      */
-    public function store(Request $request): RedirectResponse
+    public function store(StoreUserRequest $request): RedirectResponse
     {
         $user = $request->user();
 
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|email|max:255|unique:users,email',
-            'password' => ['required', 'confirmed', Password::defaults()],
-            'role' => 'required|in:admin,manager,member',
-            'role_ids' => 'nullable|array',
-            'role_ids.*' => 'exists:roles,id',
-        ]);
+        $validated = $request->validated();
 
         $newUser = User::create([
             'name' => $validated['name'],
@@ -109,7 +100,7 @@ class UserController extends Controller
         ]);
 
         // Assign additional custom roles if provided
-        if (!empty($validated['role_ids'])) {
+        if (! empty($validated['role_ids'])) {
             $newUser->roles()->sync($validated['role_ids']);
         }
 
@@ -120,9 +111,8 @@ class UserController extends Controller
     /**
      * Display the specified user.
      *
-     * @param Request $request The incoming HTTP request
-     * @param User $user The user to display
-     * @return Response
+     * @param  Request  $request  The incoming HTTP request
+     * @param  User  $user  The user to display
      */
     public function show(Request $request, User $user): Response
     {
@@ -143,9 +133,8 @@ class UserController extends Controller
     /**
      * Show the form for editing the specified user.
      *
-     * @param Request $request The incoming HTTP request
-     * @param User $user The user to edit
-     * @return Response
+     * @param  Request  $request  The incoming HTTP request
+     * @param  User  $user  The user to edit
      */
     public function edit(Request $request, User $user): Response
     {
@@ -173,11 +162,10 @@ class UserController extends Controller
     /**
      * Update the specified user.
      *
-     * @param Request $request The incoming HTTP request containing updated user data
-     * @param User $user The user to update
-     * @return RedirectResponse
+     * @param  Request  $request  The incoming HTTP request containing updated user data
+     * @param  User  $user  The user to update
      */
-    public function update(Request $request, User $user): RedirectResponse
+    public function update(UpdateUserRequest $request, User $user): RedirectResponse
     {
         $currentUser = $request->user();
 
@@ -186,14 +174,7 @@ class UserController extends Controller
             abort(403, 'You can only update users in your organization.');
         }
 
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|email|max:255|unique:users,email,' . $user->id,
-            'password' => ['nullable', 'confirmed', Password::defaults()],
-            'role' => 'required|in:admin,manager,member',
-            'role_ids' => 'nullable|array',
-            'role_ids.*' => 'exists:roles,id',
-        ]);
+        $validated = $request->validated();
 
         // Don't allow removing admin from the last admin
         if ($validated['role'] !== 'admin' && $user->role === 'admin') {
@@ -213,7 +194,7 @@ class UserController extends Controller
             'role' => $validated['role'],
         ];
 
-        if (!empty($validated['password'])) {
+        if (! empty($validated['password'])) {
             $updateData['password'] = Hash::make($validated['password']);
         }
 
@@ -231,9 +212,8 @@ class UserController extends Controller
     /**
      * Remove the specified user.
      *
-     * @param Request $request The incoming HTTP request
-     * @param User $user The user to delete
-     * @return RedirectResponse
+     * @param  Request  $request  The incoming HTTP request
+     * @param  User  $user  The user to delete
      */
     public function destroy(Request $request, User $user): RedirectResponse
     {
