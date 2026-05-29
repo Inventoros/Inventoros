@@ -5,13 +5,14 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Api\ProductCategory\StoreProductCategoryRequest;
+use App\Http\Requests\Api\ProductCategory\UpdateProductCategoryRequest;
 use App\Http\Resources\ProductCategoryResource;
 use App\Models\Inventory\ProductCategory;
+use Dedoc\Scramble\Attributes\QueryParameter;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
-use Illuminate\Validation\Rule;
-use Dedoc\Scramble\Attributes\QueryParameter;
 
 /**
  * @tags Categories
@@ -58,20 +59,13 @@ class ProductCategoryController extends Controller
     /**
      * Store a newly created category.
      *
-     * @param Request $request The incoming HTTP request containing category data
-     * @return JsonResponse
+     * @param  Request  $request  The incoming HTTP request containing category data
      */
-    public function store(Request $request): JsonResponse
+    public function store(StoreProductCategoryRequest $request): JsonResponse
     {
         $organizationId = $request->user()->organization_id;
 
-        $validated = $request->validate([
-            'name' => ['required', 'string', 'max:255'],
-            'slug' => ['nullable', 'string', 'max:255'],
-            'description' => ['nullable', 'string'],
-            'parent_id' => ['nullable', 'integer', Rule::exists('product_categories', 'id')->where('organization_id', $organizationId)],
-            'is_active' => ['nullable', 'boolean'],
-        ]);
+        $validated = $request->validated();
 
         $validated['organization_id'] = $organizationId;
         $validated['is_active'] = $validated['is_active'] ?? true;
@@ -87,9 +81,8 @@ class ProductCategoryController extends Controller
     /**
      * Display the specified category.
      *
-     * @param Request $request The incoming HTTP request
-     * @param ProductCategory $category The category to display
-     * @return JsonResponse
+     * @param  Request  $request  The incoming HTTP request
+     * @param  ProductCategory  $category  The category to display
      */
     public function show(Request $request, ProductCategory $category): JsonResponse
     {
@@ -111,11 +104,10 @@ class ProductCategoryController extends Controller
     /**
      * Update the specified category.
      *
-     * @param Request $request The incoming HTTP request containing updated category data
-     * @param ProductCategory $category The category to update
-     * @return JsonResponse
+     * @param  Request  $request  The incoming HTTP request containing updated category data
+     * @param  ProductCategory  $category  The category to update
      */
-    public function update(Request $request, ProductCategory $category): JsonResponse
+    public function update(UpdateProductCategoryRequest $request, ProductCategory $category): JsonResponse
     {
         if ($category->organization_id !== $request->user()->organization_id) {
             return response()->json([
@@ -124,15 +116,7 @@ class ProductCategoryController extends Controller
             ], 404);
         }
 
-        $organizationId = $request->user()->organization_id;
-
-        $validated = $request->validate([
-            'name' => ['sometimes', 'string', 'max:255'],
-            'slug' => ['nullable', 'string', 'max:255'],
-            'description' => ['nullable', 'string'],
-            'parent_id' => ['nullable', 'integer', Rule::exists('product_categories', 'id')->where('organization_id', $organizationId)],
-            'is_active' => ['nullable', 'boolean'],
-        ]);
+        $validated = $request->validated();
 
         $category->update($validated);
 
@@ -145,9 +129,8 @@ class ProductCategoryController extends Controller
     /**
      * Remove the specified category.
      *
-     * @param Request $request The incoming HTTP request
-     * @param ProductCategory $category The category to delete
-     * @return JsonResponse
+     * @param  Request  $request  The incoming HTTP request
+     * @param  ProductCategory  $category  The category to delete
      */
     public function destroy(Request $request, ProductCategory $category): JsonResponse
     {
