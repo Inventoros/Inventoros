@@ -11,6 +11,7 @@ use App\Models\Inventory\StockAdjustment;
 use App\Models\Order\Order;
 use App\Models\Order\ReturnOrder;
 use App\Models\Order\ReturnOrderItem;
+use App\Support\Money;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
@@ -147,10 +148,10 @@ class ReturnOrderController extends Controller
                 }
 
                 // Calculate refund amount
-                $refundAmount = 0;
+                $refundAmount = '0';
                 foreach ($validated['items'] as $item) {
                     $orderItem = $order->items->firstWhere('id', $item['order_item_id']);
-                    $refundAmount += $item['quantity'] * $orderItem->unit_price;
+                    $refundAmount = Money::add($refundAmount, Money::multiply($orderItem->unit_price, $item['quantity']));
                 }
 
                 $returnOrder = ReturnOrder::create([
