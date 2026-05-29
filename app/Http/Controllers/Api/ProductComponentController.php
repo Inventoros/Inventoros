@@ -5,11 +5,12 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Api\ProductComponent\StoreProductComponentRequest;
+use App\Http\Requests\Api\ProductComponent\UpdateProductComponentRequest;
 use App\Models\Inventory\Product;
 use App\Models\Inventory\ProductComponent;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Validation\Rule;
 
 /**
  * @tags Product Components
@@ -19,9 +20,8 @@ class ProductComponentController extends Controller
     /**
      * List components for a product.
      *
-     * @param Request $request The incoming HTTP request
-     * @param Product $product The parent product (kit or assembly)
-     * @return JsonResponse
+     * @param  Request  $request  The incoming HTTP request
+     * @param  Product  $product  The parent product (kit or assembly)
      */
     public function index(Request $request, Product $product): JsonResponse
     {
@@ -32,7 +32,7 @@ class ProductComponentController extends Controller
             ], 404);
         }
 
-        if (!in_array($product->type, ['kit', 'assembly'])) {
+        if (! in_array($product->type, ['kit', 'assembly'])) {
             return response()->json([
                 'message' => 'Only kit and assembly products can have components.',
                 'error' => 'invalid_product_type',
@@ -52,11 +52,10 @@ class ProductComponentController extends Controller
     /**
      * Add a component to a product.
      *
-     * @param Request $request The incoming HTTP request
-     * @param Product $product The parent product (kit or assembly)
-     * @return JsonResponse
+     * @param  Request  $request  The incoming HTTP request
+     * @param  Product  $product  The parent product (kit or assembly)
      */
-    public function store(Request $request, Product $product): JsonResponse
+    public function store(StoreProductComponentRequest $request, Product $product): JsonResponse
     {
         if ($product->organization_id !== $request->user()->organization_id) {
             return response()->json([
@@ -65,31 +64,14 @@ class ProductComponentController extends Controller
             ], 404);
         }
 
-        if (!in_array($product->type, ['kit', 'assembly'])) {
+        if (! in_array($product->type, ['kit', 'assembly'])) {
             return response()->json([
                 'message' => 'Only kit and assembly products can have components.',
                 'error' => 'invalid_product_type',
             ], 422);
         }
 
-        $organizationId = $request->user()->organization_id;
-
-        $validated = $request->validate([
-            'component_product_id' => [
-                'required',
-                'integer',
-                Rule::exists('products', 'id')->where('organization_id', $organizationId),
-                function ($attribute, $value, $fail) use ($product) {
-                    if ((int) $value === $product->id) {
-                        $fail('A product cannot be a component of itself.');
-                    }
-                },
-                Rule::unique('product_components')
-                    ->where('parent_product_id', $product->id),
-            ],
-            'quantity' => ['required', 'numeric', 'min:0.01', 'max:999999.99'],
-            'notes' => ['nullable', 'string', 'max:1000'],
-        ]);
+        $validated = $request->validated();
 
         // Check for circular reference
         if ($this->wouldCreateCircularReference($product->id, (int) $validated['component_product_id'])) {
@@ -120,12 +102,11 @@ class ProductComponentController extends Controller
     /**
      * Update a component's quantity or notes.
      *
-     * @param Request $request The incoming HTTP request
-     * @param Product $product The parent product (kit or assembly)
-     * @param ProductComponent $component The component to update
-     * @return JsonResponse
+     * @param  Request  $request  The incoming HTTP request
+     * @param  Product  $product  The parent product (kit or assembly)
+     * @param  ProductComponent  $component  The component to update
      */
-    public function update(Request $request, Product $product, ProductComponent $component): JsonResponse
+    public function update(UpdateProductComponentRequest $request, Product $product, ProductComponent $component): JsonResponse
     {
         if ($product->organization_id !== $request->user()->organization_id) {
             return response()->json([
@@ -141,10 +122,7 @@ class ProductComponentController extends Controller
             ], 404);
         }
 
-        $validated = $request->validate([
-            'quantity' => ['required', 'numeric', 'min:0.01', 'max:999999.99'],
-            'notes' => ['nullable', 'string', 'max:1000'],
-        ]);
+        $validated = $request->validated();
 
         $component->update($validated);
         $component->load('componentProduct:id,name,sku,stock,price,thumbnail');
@@ -158,10 +136,9 @@ class ProductComponentController extends Controller
     /**
      * Remove a component from a product.
      *
-     * @param Request $request The incoming HTTP request
-     * @param Product $product The parent product (kit or assembly)
-     * @param ProductComponent $component The component to remove
-     * @return JsonResponse
+     * @param  Request  $request  The incoming HTTP request
+     * @param  Product  $product  The parent product (kit or assembly)
+     * @param  ProductComponent  $component  The component to remove
      */
     public function destroy(Request $request, Product $product, ProductComponent $component): JsonResponse
     {
@@ -189,16 +166,15 @@ class ProductComponentController extends Controller
     /**
      * Check if adding a component would create a circular reference.
      *
-     * @param int $parentId The parent product ID
-     * @param int $componentId The component product ID to add
-     * @param array $visited Previously visited product IDs (for recursion)
-     * @return bool
+     * @param  int  $parentId  The parent product ID
+     * @param  int  $componentId  The component product ID to add
+     * @param  array  $visited  Previously visited product IDs (for recursion)
      */
     private function wouldCreateCircularReference(int $parentId, int $componentId, array $visited = []): bool
     {
         $componentProduct = Product::find($componentId);
 
-        if (!$componentProduct || !in_array($componentProduct->type, ['kit', 'assembly'])) {
+        if (! $componentProduct || ! in_array($componentProduct->type, ['kit', 'assembly'])) {
             return false;
         }
 

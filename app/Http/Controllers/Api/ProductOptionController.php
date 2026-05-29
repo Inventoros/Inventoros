@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Api\ProductOption\StoreProductOptionRequest;
+use App\Http\Requests\Api\ProductOption\UpdateProductOptionRequest;
 use App\Http\Resources\ProductOptionResource;
 use App\Models\Inventory\Product;
 use App\Models\Inventory\ProductOption;
@@ -21,9 +23,8 @@ class ProductOptionController extends Controller
     /**
      * Display a listing of options for a product.
      *
-     * @param Request $request The incoming HTTP request
-     * @param Product $product The product to list options for
-     * @return AnonymousResourceCollection|JsonResponse
+     * @param  Request  $request  The incoming HTTP request
+     * @param  Product  $product  The product to list options for
      */
     public function index(Request $request, Product $product): AnonymousResourceCollection|JsonResponse
     {
@@ -39,11 +40,10 @@ class ProductOptionController extends Controller
     /**
      * Store a newly created option.
      *
-     * @param Request $request The incoming HTTP request containing option data
-     * @param Product $product The product to create option for
-     * @return JsonResponse
+     * @param  Request  $request  The incoming HTTP request containing option data
+     * @param  Product  $product  The product to create option for
      */
-    public function store(Request $request, Product $product): JsonResponse
+    public function store(StoreProductOptionRequest $request, Product $product): JsonResponse
     {
         if ($product->organization_id !== $request->user()->organization_id) {
             return response()->json(['message' => 'Product not found', 'error' => 'not_found'], 404);
@@ -57,12 +57,7 @@ class ProductOptionController extends Controller
             ], 422);
         }
 
-        $validated = $request->validate([
-            'name' => ['required', 'string', 'max:255'],
-            'values' => ['required', 'array', 'min:1'],
-            'values.*' => ['required', 'string', 'max:255'],
-            'position' => ['nullable', 'integer', 'min:0'],
-        ]);
+        $validated = $request->validated();
 
         // Check if option name already exists for this product
         if ($product->options()->where('name', $validated['name'])->exists()) {
@@ -86,10 +81,9 @@ class ProductOptionController extends Controller
     /**
      * Display the specified option.
      *
-     * @param Request $request The incoming HTTP request
-     * @param Product $product The parent product
-     * @param ProductOption $option The option to display
-     * @return JsonResponse
+     * @param  Request  $request  The incoming HTTP request
+     * @param  Product  $product  The parent product
+     * @param  ProductOption  $option  The option to display
      */
     public function show(Request $request, Product $product, ProductOption $option): JsonResponse
     {
@@ -109,12 +103,11 @@ class ProductOptionController extends Controller
     /**
      * Update the specified option.
      *
-     * @param Request $request The incoming HTTP request containing updated option data
-     * @param Product $product The parent product
-     * @param ProductOption $option The option to update
-     * @return JsonResponse
+     * @param  Request  $request  The incoming HTTP request containing updated option data
+     * @param  Product  $product  The parent product
+     * @param  ProductOption  $option  The option to update
      */
-    public function update(Request $request, Product $product, ProductOption $option): JsonResponse
+    public function update(UpdateProductOptionRequest $request, Product $product, ProductOption $option): JsonResponse
     {
         if ($product->organization_id !== $request->user()->organization_id) {
             return response()->json(['message' => 'Product not found', 'error' => 'not_found'], 404);
@@ -124,12 +117,7 @@ class ProductOptionController extends Controller
             return response()->json(['message' => 'Option not found', 'error' => 'not_found'], 404);
         }
 
-        $validated = $request->validate([
-            'name' => ['sometimes', 'string', 'max:255'],
-            'values' => ['sometimes', 'array', 'min:1'],
-            'values.*' => ['required', 'string', 'max:255'],
-            'position' => ['nullable', 'integer', 'min:0'],
-        ]);
+        $validated = $request->validated();
 
         // Check if new name conflicts with existing option
         if (isset($validated['name']) && $validated['name'] !== $option->name) {
@@ -152,10 +140,9 @@ class ProductOptionController extends Controller
     /**
      * Remove the specified option.
      *
-     * @param Request $request The incoming HTTP request
-     * @param Product $product The parent product
-     * @param ProductOption $option The option to delete
-     * @return JsonResponse
+     * @param  Request  $request  The incoming HTTP request
+     * @param  Product  $product  The parent product
+     * @param  ProductOption  $option  The option to delete
      */
     public function destroy(Request $request, Product $product, ProductOption $option): JsonResponse
     {
@@ -170,7 +157,7 @@ class ProductOptionController extends Controller
         // Check if variants exist with this option
         $variantsUsingOption = $product->variants()
             ->get()
-            ->filter(fn($v) => isset($v->option_values[$option->name]))
+            ->filter(fn ($v) => isset($v->option_values[$option->name]))
             ->count();
 
         if ($variantsUsingOption > 0) {
@@ -190,9 +177,8 @@ class ProductOptionController extends Controller
     /**
      * Reorder options for a product.
      *
-     * @param Request $request The incoming HTTP request containing new order
-     * @param Product $product The product to reorder options for
-     * @return JsonResponse
+     * @param  Request  $request  The incoming HTTP request containing new order
+     * @param  Product  $product  The product to reorder options for
      */
     public function reorder(Request $request, Product $product): JsonResponse
     {
