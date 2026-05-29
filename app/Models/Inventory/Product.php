@@ -7,6 +7,10 @@ namespace App\Models\Inventory;
 use App\Enums\TrackingType;
 use App\Models\Auth\Organization;
 use App\Models\Concerns\BelongsToOrganization;
+use App\Models\Inventory\Concerns\ActsAsAssembly;
+use App\Models\Inventory\Concerns\CalculatesProductProfit;
+use App\Models\Inventory\Concerns\HasProductVariants;
+use App\Models\Inventory\Concerns\TracksStockLevels;
 use App\Traits\LogsActivity;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
@@ -65,7 +69,7 @@ use Illuminate\Support\Carbon;
  */
 class Product extends Model
 {
-    use BelongsToOrganization, HasFactory, LogsActivity, SoftDeletes;
+    use ActsAsAssembly, BelongsToOrganization, CalculatesProductProfit, HasFactory, HasProductVariants, LogsActivity, SoftDeletes, TracksStockLevels;
 
     /**
      * The attributes that are mass assignable.
@@ -189,26 +193,6 @@ class Product extends Model
     }
 
     /**
-     * Get the options for this product.
-     *
-     * @return HasMany<ProductOption, $this>
-     */
-    public function options(): HasMany
-    {
-        return $this->hasMany(ProductOption::class)->ordered();
-    }
-
-    /**
-     * Get the variants for this product.
-     *
-     * @return HasMany<ProductVariant, $this>
-     */
-    public function variants(): HasMany
-    {
-        return $this->hasMany(ProductVariant::class)->ordered();
-    }
-
-    /**
      * Get the batches for this product.
      *
      * @return HasMany<ProductBatch, $this>
@@ -226,88 +210,6 @@ class Product extends Model
     public function serials(): HasMany
     {
         return $this->hasMany(ProductSerial::class)->latest();
-    }
-
-    /**
-     * Get active variants for this product.
-     *
-     * @return HasMany<ProductVariant, $this>
-     */
-    public function activeVariants(): HasMany
-    {
-        return $this->hasMany(ProductVariant::class)->active()->ordered();
-    }
-
-    /**
-     * Get the total stock across all variants (or product stock if no variants).
-     */
-    public function getTotalStockAttribute(): int
-    {
-        if ($this->has_variants && $this->variants()->exists()) {
-            return $this->variants()->sum('stock');
-        }
-
-        return $this->stock;
-    }
-
-    /**
-     * Get the price range for products with variants.
-     *
-     * @return array{min: string, max: string}
-     */
-    public function getPriceRangeAttribute(): array
-    {
-        if (! $this->has_variants || ! $this->variants()->exists()) {
-            return ['min' => $this->price, 'max' => $this->price];
-        }
-
-        $variants = $this->variants()->whereNotNull('price')->get();
-        if ($variants->isEmpty()) {
-            return ['min' => $this->price, 'max' => $this->price];
-        }
-
-        return [
-            'min' => $variants->min('price') ?? $this->price,
-            'max' => $variants->max('price') ?? $this->price,
-        ];
-    }
-
-    /**
-     * Find a variant by its option values.
-     *
-     * @param  array<string, string>  $optionValues
-     */
-    public function findVariant(array $optionValues): ?ProductVariant
-    {
-        return $this->variants()->get()->first(fn ($v) => $v->matchesOptions($optionValues));
-    }
-
-    /**
-     * Generate all possible variant combinations from options.
-     *
-     * @return array<int, array<string, string>>
-     */
-    public function generateVariantCombinations(): array
-    {
-        $options = $this->options()->ordered()->get();
-
-        if ($options->isEmpty()) {
-            return [];
-        }
-
-        $combinations = [[]];
-
-        foreach ($options as $option) {
-            $newCombinations = [];
-            foreach ($combinations as $combination) {
-                foreach ($option->values as $value) {
-                    $newCombinations[] = array_merge($combination, [$option->name => $value]);
-                }
-            }
-            $combinations = $newCombinations;
-        }
-
-        return $combinations;
     }
 
     /**
@@ -331,190 +233,5 @@ class Product extends Model
     public function scopeActive($query)
     {
         return $query->where('is_active', true);
-    }
-
-    /**
-     * Scope a query to only include products with low stock.
-     *
-     * @param  Builder<static>  $query
-     * @return Builder<static>
-     */
-    public function scopeLowStock($query)
-    {
-        return $query->whereColumn('stock', '<=', 'min_stock');
-    }
-
-    /**
-     * Scope a query to only include products that need reorder.
-     *
-     * @param  Builder<static>  $query
-     * @return Builder<static>
-     */
-    public function scopeNeedsReorder($query)
-    {
-        return $query->whereNotNull('reorder_point')
-            ->whereNotNull('reorder_quantity')
-            ->where('reorder_quantity', '>', 0)
-            ->whereColumn('stock', '<=', 'reorder_point');
-    }
-
-    /**
-     * Check if the product needs to be reordered.
-     */
-    public function isReorderNeeded(): bool
-    {
-        return $this->reorder_point !== null
-            && $this->reorder_quantity !== null
-            && $this->reorder_quantity > 0
-            && $this->stock <= $this->reorder_point;
-    }
-
-    /**
-     * Check if the product is low on stock.
-     */
-    public function isLowStock(): bool
-    {
-        return $this->stock <= $this->min_stock;
-    }
-
-    /**
-     * Check if the product is out of stock.
-     */
-    public function isOutOfStock(): bool
-    {
-        return $this->stock <= 0;
-    }
-
-    /**
-     * Get the profit per unit.
-     */
-    public function getProfitAttribute(): float
-    {
-        if (! $this->purchase_price || ! $this->price) {
-            return 0;
-        }
-
-        return $this->price - $this->purchase_price;
-    }
-
-    /**
-     * Get the profit margin percentage.
-     */
-    public function getProfitMarginAttribute(): float
-    {
-        if (! $this->purchase_price || ! $this->price || $this->price == 0) {
-            return 0;
-        }
-
-        return (($this->price - $this->purchase_price) / $this->price) * 100;
-    }
-
-    /**
-     * Get the total profit for all stock.
-     */
-    public function getTotalProfitAttribute(): float
-    {
-        return $this->profit * $this->stock;
-    }
-
-    /**
-     * Get the components of this kit or assembly (BOM).
-     *
-     * @return HasMany<ProductComponent, $this>
-     */
-    public function components(): HasMany
-    {
-        return $this->hasMany(ProductComponent::class, 'parent_product_id');
-    }
-
-    /**
-     * Get the kits/assemblies that use this product as a component.
-     *
-     * @return HasMany<ProductComponent, $this>
-     */
-    public function usedInKits(): HasMany
-    {
-        return $this->hasMany(ProductComponent::class, 'component_product_id');
-    }
-
-    /**
-     * Get the work orders for this assembly product.
-     *
-     * @return HasMany<WorkOrder, $this>
-     */
-    public function workOrders(): HasMany
-    {
-        return $this->hasMany(WorkOrder::class);
-    }
-
-    /**
-     * Check if this product is a kit.
-     */
-    public function isKit(): bool
-    {
-        return $this->type === 'kit';
-    }
-
-    /**
-     * Check if this product is an assembly.
-     */
-    public function isAssembly(): bool
-    {
-        return $this->type === 'assembly';
-    }
-
-    /**
-     * Check if this product is a standard product.
-     */
-    public function isStandard(): bool
-    {
-        return $this->type === 'standard';
-    }
-
-    /**
-     * Calculate available kit stock based on component availability.
-     *
-     * For kits, stock is not stored directly — it is derived from
-     * the minimum number of complete kits that can be assembled
-     * from available component stock.
-     */
-    public function getAvailableKitStock(): int
-    {
-        if (! $this->isKit()) {
-            return $this->stock;
-        }
-
-        $components = $this->components()->with('componentProduct')->get();
-
-        if ($components->isEmpty()) {
-            return 0;
-        }
-
-        $minKits = PHP_INT_MAX;
-
-        foreach ($components as $component) {
-            $componentStock = $component->componentProduct->stock;
-            $requiredQty = (float) $component->quantity;
-
-            if ($requiredQty <= 0) {
-                continue;
-            }
-
-            $possibleKits = (int) floor($componentStock / $requiredQty);
-            $minKits = min($minKits, $possibleKits);
-        }
-
-        return $minKits === PHP_INT_MAX ? 0 : $minKits;
-    }
-
-    /**
-     * Scope a query to filter products by type.
-     *
-     * @param  Builder<static>  $query
-     * @return Builder<static>
-     */
-    public function scopeOfType($query, string $type)
-    {
-        return $query->where('type', $type);
     }
 }
