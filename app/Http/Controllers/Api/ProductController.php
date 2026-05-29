@@ -5,13 +5,14 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Api\Product\StoreProductRequest;
+use App\Http\Requests\Api\Product\UpdateProductRequest;
 use App\Http\Resources\ProductResource;
 use App\Models\Inventory\Product;
+use Dedoc\Scramble\Attributes\QueryParameter;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
-use Illuminate\Validation\Rule;
-use Dedoc\Scramble\Attributes\QueryParameter;
 
 /**
  * @tags Products
@@ -76,32 +77,13 @@ class ProductController extends Controller
     /**
      * Store a newly created product.
      *
-     * @param Request $request The incoming HTTP request containing product data
-     * @return JsonResponse
+     * @param  Request  $request  The incoming HTTP request containing product data
      */
-    public function store(Request $request): JsonResponse
+    public function store(StoreProductRequest $request): JsonResponse
     {
         $organizationId = $request->user()->organization_id;
 
-        $validated = $request->validate([
-            'sku' => ['required', 'string', 'max:255'],
-            'name' => ['required', 'string', 'max:255'],
-            'description' => ['nullable', 'string'],
-            'price' => ['nullable', 'numeric', 'min:0'],
-            'selling_price' => ['nullable', 'numeric', 'min:0'],
-            'purchase_price' => ['nullable', 'numeric', 'min:0'],
-            'currency' => ['nullable', 'string', 'max:3'],
-            'stock' => ['nullable', 'integer', 'min:0'],
-            'min_stock' => ['nullable', 'integer', 'min:0'],
-            'max_stock' => ['nullable', 'integer', 'min:0'],
-            'barcode' => ['nullable', 'string', 'max:255'],
-            'notes' => ['nullable', 'string'],
-            'category_id' => ['nullable', 'integer', Rule::exists('product_categories', 'id')->where('organization_id', $organizationId)],
-            'location_id' => ['nullable', 'integer', Rule::exists('product_locations', 'id')->where('organization_id', $organizationId)],
-            'is_active' => ['nullable', 'boolean'],
-            'tracking_type' => ['nullable', 'string', 'in:none,batch,serial'],
-            'metadata' => ['nullable', 'array'],
-        ]);
+        $validated = $request->validated();
 
         $validated['organization_id'] = $organizationId;
         $validated['is_active'] = $validated['is_active'] ?? true;
@@ -120,9 +102,8 @@ class ProductController extends Controller
     /**
      * Display the specified product.
      *
-     * @param Request $request The incoming HTTP request
-     * @param Product $product The product to display
-     * @return JsonResponse
+     * @param  Request  $request  The incoming HTTP request
+     * @param  Product  $product  The product to display
      */
     public function show(Request $request, Product $product): JsonResponse
     {
@@ -144,11 +125,10 @@ class ProductController extends Controller
     /**
      * Update the specified product.
      *
-     * @param Request $request The incoming HTTP request containing updated product data
-     * @param Product $product The product to update
-     * @return JsonResponse
+     * @param  Request  $request  The incoming HTTP request containing updated product data
+     * @param  Product  $product  The product to update
      */
-    public function update(Request $request, Product $product): JsonResponse
+    public function update(UpdateProductRequest $request, Product $product): JsonResponse
     {
         // Ensure the product belongs to the user's organization
         if ($product->organization_id !== $request->user()->organization_id) {
@@ -158,27 +138,7 @@ class ProductController extends Controller
             ], 404);
         }
 
-        $organizationId = $request->user()->organization_id;
-
-        $validated = $request->validate([
-            'sku' => ['sometimes', 'string', 'max:255'],
-            'name' => ['sometimes', 'string', 'max:255'],
-            'description' => ['nullable', 'string'],
-            'price' => ['nullable', 'numeric', 'min:0'],
-            'selling_price' => ['nullable', 'numeric', 'min:0'],
-            'purchase_price' => ['nullable', 'numeric', 'min:0'],
-            'currency' => ['nullable', 'string', 'max:3'],
-            'stock' => ['nullable', 'integer', 'min:0'],
-            'min_stock' => ['nullable', 'integer', 'min:0'],
-            'max_stock' => ['nullable', 'integer', 'min:0'],
-            'barcode' => ['nullable', 'string', 'max:255'],
-            'notes' => ['nullable', 'string'],
-            'category_id' => ['nullable', 'integer', Rule::exists('product_categories', 'id')->where('organization_id', $organizationId)],
-            'location_id' => ['nullable', 'integer', Rule::exists('product_locations', 'id')->where('organization_id', $organizationId)],
-            'is_active' => ['nullable', 'boolean'],
-            'tracking_type' => ['nullable', 'string', 'in:none,batch,serial'],
-            'metadata' => ['nullable', 'array'],
-        ]);
+        $validated = $request->validated();
 
         $product->update($validated);
         $product->load(['category', 'location']);
@@ -192,9 +152,8 @@ class ProductController extends Controller
     /**
      * Remove the specified product.
      *
-     * @param Request $request The incoming HTTP request
-     * @param Product $product The product to delete
-     * @return JsonResponse
+     * @param  Request  $request  The incoming HTTP request
+     * @param  Product  $product  The product to delete
      */
     public function destroy(Request $request, Product $product): JsonResponse
     {
