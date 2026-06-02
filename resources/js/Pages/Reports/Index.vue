@@ -1,7 +1,21 @@
 <script setup>
-import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
+import AppLayout from '@/Layouts/AppLayout.vue';
+import PageHeader from '@/Components/ui/PageHeader.vue';
+import Card from '@/Components/ui/Card.vue';
+import Button from '@/Components/ui/Button.vue';
+import Badge from '@/Components/ui/Badge.vue';
 import { Head, Link } from '@inertiajs/vue3';
 import { useI18n } from 'vue-i18n';
+import {
+    DollarSign,
+    ArrowLeftRight,
+    TrendingUp,
+    AlertTriangle,
+    Tag,
+    Wrench,
+    ChevronRight,
+    Plus,
+} from 'lucide-vue-next';
 
 const { t } = useI18n();
 
@@ -11,224 +25,122 @@ const props = defineProps({
         default: () => [],
     },
 });
+
+const reportCards = [
+    {
+        href: route('reports.inventory-valuation'),
+        icon: DollarSign,
+        title: t('reports.inventoryValuation.title'),
+        description: t('reports.inventoryValuation.description'),
+    },
+    {
+        href: route('reports.stock-movement'),
+        icon: ArrowLeftRight,
+        title: t('reports.stockMovement.title'),
+        description: t('reports.stockMovement.description'),
+    },
+    {
+        href: route('reports.sales-analysis'),
+        icon: TrendingUp,
+        title: t('reports.salesAnalysis.title'),
+        description: t('reports.salesAnalysis.description'),
+    },
+    {
+        href: route('reports.low-stock'),
+        icon: AlertTriangle,
+        title: t('reports.lowStock.title'),
+        description: t('reports.lowStock.description'),
+    },
+    {
+        href: route('reports.category-performance'),
+        icon: Tag,
+        title: t('reports.categoryPerformance.title'),
+        description: t('reports.categoryPerformance.description'),
+    },
+    {
+        href: route('reports.builder.index'),
+        icon: Wrench,
+        title: t('reports.customReports.title'),
+        description: t('reports.customReports.description'),
+    },
+];
 </script>
 
 <template>
     <Head :title="t('reports.title')" />
 
-    <AuthenticatedLayout>
+    <AppLayout>
         <template #header>
-            <div>
-                <h2 class="font-semibold text-2xl text-gray-900 dark:text-gray-100">{{ t('reports.title') }}</h2>
-                <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">{{ t('reports.subtitle') }}</p>
+            <div class="flex items-center gap-2 text-xs">
+                <span class="text-text-tertiary">Workspace</span>
+                <span class="text-text-tertiary">/</span>
+                <span class="font-medium text-text-primary">{{ t('reports.title') }}</span>
             </div>
         </template>
 
-        <div class="py-12 bg-gray-50 dark:bg-dark-bg min-h-screen">
-            <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    <!-- Inventory Valuation Report -->
-                    <Link
-                        :href="route('reports.inventory-valuation')"
-                        class="group bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border hover:border-primary-400 dark:hover:border-primary-400 rounded-lg shadow-sm hover:shadow-md transition p-6"
-                    >
-                        <div class="flex items-start gap-4">
-                            <div class="flex-shrink-0 w-12 h-12 bg-green-100 dark:bg-green-900/30 rounded-lg flex items-center justify-center group-hover:bg-green-200 dark:group-hover:bg-green-900/50 transition">
-                                <svg class="w-6 h-6 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                </svg>
-                            </div>
-                            <div class="flex-1 min-w-0">
-                                <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 group-hover:text-primary-400 transition">
-                                    {{ t('reports.inventoryValuation.title') }}
-                                </h3>
-                                <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                                    {{ t('reports.inventoryValuation.description') }}
-                                </p>
-                            </div>
-                            <svg class="w-5 h-5 text-gray-400 group-hover:text-primary-400 transition" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-                            </svg>
-                        </div>
-                    </Link>
+        <PageHeader :title="t('reports.title')" :description="t('reports.subtitle')" />
 
-                    <!-- Stock Movement Report -->
-                    <Link
-                        :href="route('reports.stock-movement')"
-                        class="group bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border hover:border-primary-400 dark:hover:border-primary-400 rounded-lg shadow-sm hover:shadow-md transition p-6"
-                    >
-                        <div class="flex items-start gap-4">
-                            <div class="flex-shrink-0 w-12 h-12 bg-blue-100 dark:bg-blue-900/30 rounded-lg flex items-center justify-center group-hover:bg-blue-200 dark:group-hover:bg-blue-900/50 transition">
-                                <svg class="w-6 h-6 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" />
-                                </svg>
-                            </div>
-                            <div class="flex-1 min-w-0">
-                                <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 group-hover:text-primary-400 transition">
-                                    {{ t('reports.stockMovement.title') }}
-                                </h3>
-                                <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                                    {{ t('reports.stockMovement.description') }}
-                                </p>
-                            </div>
-                            <svg class="w-5 h-5 text-gray-400 group-hover:text-primary-400 transition" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-                            </svg>
+        <!-- Report cards -->
+        <div class="mt-6 grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+            <Link v-for="report in reportCards" :key="report.href" :href="report.href">
+                <Card hoverable>
+                    <div class="flex items-start gap-4">
+                        <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-brand-soft text-brand">
+                            <component :is="report.icon" :size="18" />
+                        </span>
+                        <div class="min-w-0 flex-1">
+                            <h3 class="text-sm font-semibold text-text-primary">{{ report.title }}</h3>
+                            <p class="mt-1 text-sm text-text-secondary">{{ report.description }}</p>
                         </div>
-                    </Link>
-
-                    <!-- Sales Analysis Report -->
-                    <Link
-                        :href="route('reports.sales-analysis')"
-                        class="group bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border hover:border-primary-400 dark:hover:border-primary-400 rounded-lg shadow-sm hover:shadow-md transition p-6"
-                    >
-                        <div class="flex items-start gap-4">
-                            <div class="flex-shrink-0 w-12 h-12 bg-purple-100 dark:bg-purple-900/30 rounded-lg flex items-center justify-center group-hover:bg-purple-200 dark:group-hover:bg-purple-900/50 transition">
-                                <svg class="w-6 h-6 text-purple-600 dark:text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                                </svg>
-                            </div>
-                            <div class="flex-1 min-w-0">
-                                <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 group-hover:text-primary-400 transition">
-                                    {{ t('reports.salesAnalysis.title') }}
-                                </h3>
-                                <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                                    {{ t('reports.salesAnalysis.description') }}
-                                </p>
-                            </div>
-                            <svg class="w-5 h-5 text-gray-400 group-hover:text-primary-400 transition" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-                            </svg>
-                        </div>
-                    </Link>
-
-                    <!-- Low Stock Report -->
-                    <Link
-                        :href="route('reports.low-stock')"
-                        class="group bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border hover:border-primary-400 dark:hover:border-primary-400 rounded-lg shadow-sm hover:shadow-md transition p-6"
-                    >
-                        <div class="flex items-start gap-4">
-                            <div class="flex-shrink-0 w-12 h-12 bg-red-100 dark:bg-red-900/30 rounded-lg flex items-center justify-center group-hover:bg-red-200 dark:group-hover:bg-red-900/50 transition">
-                                <svg class="w-6 h-6 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                                </svg>
-                            </div>
-                            <div class="flex-1 min-w-0">
-                                <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 group-hover:text-primary-400 transition">
-                                    {{ t('reports.lowStock.title') }}
-                                </h3>
-                                <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                                    {{ t('reports.lowStock.description') }}
-                                </p>
-                            </div>
-                            <svg class="w-5 h-5 text-gray-400 group-hover:text-primary-400 transition" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-                            </svg>
-                        </div>
-                    </Link>
-
-                    <!-- Category Performance Report -->
-                    <Link
-                        :href="route('reports.category-performance')"
-                        class="group bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border hover:border-primary-400 dark:hover:border-primary-400 rounded-lg shadow-sm hover:shadow-md transition p-6"
-                    >
-                        <div class="flex items-start gap-4">
-                            <div class="flex-shrink-0 w-12 h-12 bg-yellow-100 dark:bg-yellow-900/30 rounded-lg flex items-center justify-center group-hover:bg-yellow-200 dark:group-hover:bg-yellow-900/50 transition">
-                                <svg class="w-6 h-6 text-yellow-600 dark:text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
-                                </svg>
-                            </div>
-                            <div class="flex-1 min-w-0">
-                                <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 group-hover:text-primary-400 transition">
-                                    {{ t('reports.categoryPerformance.title') }}
-                                </h3>
-                                <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                                    {{ t('reports.categoryPerformance.description') }}
-                                </p>
-                            </div>
-                            <svg class="w-5 h-5 text-gray-400 group-hover:text-primary-400 transition" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-                            </svg>
-                        </div>
-                    </Link>
-
-                    <!-- Report Builder Card -->
-                    <Link
-                        :href="route('reports.builder.index')"
-                        class="group bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border hover:border-primary-400 dark:hover:border-primary-400 rounded-lg shadow-sm hover:shadow-md transition p-6"
-                    >
-                        <div class="flex items-start gap-4">
-                            <div class="flex-shrink-0 w-12 h-12 bg-indigo-100 dark:bg-indigo-900/30 rounded-lg flex items-center justify-center group-hover:bg-indigo-200 dark:group-hover:bg-indigo-900/50 transition">
-                                <svg class="w-6 h-6 text-indigo-600 dark:text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z" />
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z" />
-                                </svg>
-                            </div>
-                            <div class="flex-1 min-w-0">
-                                <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 group-hover:text-primary-400 transition">
-                                    {{ t('reports.customReports.title') }}
-                                </h3>
-                                <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                                    {{ t('reports.customReports.description') }}
-                                </p>
-                            </div>
-                            <svg class="w-5 h-5 text-gray-400 group-hover:text-primary-400 transition" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-                            </svg>
-                        </div>
-                    </Link>
-                </div>
-
-                <!-- Custom Reports Section -->
-                <div v-if="savedReports.length > 0" class="mt-10">
-                    <div class="flex items-center justify-between mb-4">
-                        <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">{{ t('reports.customReports.saved') }}</h3>
-                        <Link
-                            :href="route('reports.builder.create')"
-                            class="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm bg-primary-600 hover:bg-primary-700 text-white font-medium rounded-lg transition"
-                        >
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                            </svg>
-                            {{ t('reports.customReports.create') }}
-                        </Link>
+                        <ChevronRight :size="16" class="mt-0.5 shrink-0 text-text-tertiary" />
                     </div>
-                    <div class="bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border rounded-lg shadow-sm overflow-hidden">
-                        <table class="min-w-full divide-y divide-gray-200 dark:divide-dark-border">
-                            <thead class="bg-gray-50 dark:bg-dark-bg">
-                                <tr>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">{{ t('reportBuilder.columns.name') }}</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">{{ t('reportBuilder.columns.dataSource') }}</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">{{ t('reportBuilder.columns.createdBy') }}</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">{{ t('reportBuilder.columns.created') }}</th>
-                                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider"></th>
-                                </tr>
-                            </thead>
-                            <tbody class="divide-y divide-gray-200 dark:divide-dark-border">
-                                <tr v-for="report in savedReports" :key="report.id" class="hover:bg-gray-50 dark:hover:bg-dark-bg/50 transition">
-                                    <td class="px-6 py-4">
-                                        <Link :href="route('reports.builder.show', report.id)" class="text-sm font-medium text-gray-900 dark:text-gray-100 hover:text-primary-400 transition">
-                                            {{ report.name }}
-                                        </Link>
-                                    </td>
-                                    <td class="px-6 py-4">
-                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300">
-                                            {{ report.data_source }}
-                                        </span>
-                                    </td>
-                                    <td class="px-6 py-4 text-sm text-gray-500 dark:text-gray-400">{{ report.creator?.name || '-' }}</td>
-                                    <td class="px-6 py-4 text-sm text-gray-500 dark:text-gray-400">{{ new Date(report.created_at).toLocaleDateString() }}</td>
-                                    <td class="px-6 py-4 text-right">
-                                        <Link :href="route('reports.builder.show', report.id)" class="text-sm text-primary-400 hover:text-primary-300 transition">
-                                            {{ t('reportBuilder.actions.view') }}
-                                        </Link>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
+                </Card>
+            </Link>
         </div>
-    </AuthenticatedLayout>
+
+        <!-- Saved custom reports -->
+        <section v-if="savedReports.length > 0" class="mt-10">
+            <div class="mb-4 flex items-center justify-between">
+                <h2 class="text-sm font-semibold text-text-primary">{{ t('reports.customReports.saved') }}</h2>
+                <Button variant="default" size="sm" as="Link" :href="route('reports.builder.create')">
+                    <Plus :size="14" />
+                    {{ t('reports.customReports.create') }}
+                </Button>
+            </div>
+            <Card :padded="false">
+                <div class="overflow-hidden rounded-lg">
+                    <table class="min-w-full divide-y divide-border-subtle">
+                        <thead class="bg-surface-overlay">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-[11px] font-medium uppercase tracking-wider text-text-tertiary">{{ t('reportBuilder.columns.name') }}</th>
+                                <th class="px-6 py-3 text-left text-[11px] font-medium uppercase tracking-wider text-text-tertiary">{{ t('reportBuilder.columns.dataSource') }}</th>
+                                <th class="px-6 py-3 text-left text-[11px] font-medium uppercase tracking-wider text-text-tertiary">{{ t('reportBuilder.columns.createdBy') }}</th>
+                                <th class="px-6 py-3 text-left text-[11px] font-medium uppercase tracking-wider text-text-tertiary">{{ t('reportBuilder.columns.created') }}</th>
+                                <th class="px-6 py-3 text-right text-[11px] font-medium uppercase tracking-wider text-text-tertiary"></th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-border-subtle">
+                            <tr v-for="report in savedReports" :key="report.id" class="transition-colors hover:bg-surface-overlay">
+                                <td class="px-6 py-4">
+                                    <Link :href="route('reports.builder.show', report.id)" class="text-sm font-medium text-text-primary transition-colors hover:text-brand">
+                                        {{ report.name }}
+                                    </Link>
+                                </td>
+                                <td class="px-6 py-4">
+                                    <Badge variant="info" size="sm">{{ report.data_source }}</Badge>
+                                </td>
+                                <td class="px-6 py-4 text-sm text-text-secondary">{{ report.creator?.name || '-' }}</td>
+                                <td class="px-6 py-4 text-sm text-text-secondary">{{ new Date(report.created_at).toLocaleDateString() }}</td>
+                                <td class="px-6 py-4 text-right">
+                                    <Link :href="route('reports.builder.show', report.id)" class="text-sm text-brand transition-colors hover:text-brand-hover">
+                                        {{ t('reportBuilder.actions.view') }}
+                                    </Link>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </Card>
+        </section>
+    </AppLayout>
 </template>

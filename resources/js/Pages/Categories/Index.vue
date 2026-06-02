@@ -1,9 +1,14 @@
 <script setup>
-import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
+import AppLayout from '@/Layouts/AppLayout.vue';
 import PluginSlot from '@/Components/PluginSlot.vue';
+import PageHeader from '@/Components/ui/PageHeader.vue';
+import Card from '@/Components/ui/Card.vue';
+import Button from '@/Components/ui/Button.vue';
+import Badge from '@/Components/ui/Badge.vue';
 import { Head, Link, router } from '@inertiajs/vue3';
 import { ref } from 'vue';
 import { useI18n } from 'vue-i18n';
+import { Plus, Search, Pencil, Trash2, Tag, X } from 'lucide-vue-next';
 
 const { t } = useI18n();
 
@@ -71,310 +76,242 @@ const deleteCategory = (category) => {
         router.delete(route('categories.destroy', category.id));
     }
 };
+
+const inputClass =
+    'h-9 w-full rounded-md border border-border-subtle bg-surface-canvas px-3 text-sm text-text-primary placeholder:text-text-tertiary ds-focus-ring';
 </script>
 
 <template>
     <Head :title="t('nav.categories')" />
 
-    <AuthenticatedLayout>
+    <AppLayout>
         <template #header>
-            <div class="flex items-center justify-between">
-                <h2 class="font-semibold text-xl text-gray-900 dark:text-gray-100 leading-tight">
-                    {{ t('categories.title') }}
-                </h2>
-                <button
-                    @click="openCreateModal"
-                    class="inline-flex items-center px-4 py-2 bg-primary-400 hover:bg-primary-500 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest focus:outline-none focus:ring-2 focus:ring-primary-400 focus:ring-offset-2 focus:ring-offset-gray-900 transition ease-in-out duration-150"
-                >
-                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                    </svg>
-                    {{ t('categories.addCategory') }}
-                </button>
+            <div class="flex items-center gap-2 text-xs">
+                <span class="text-text-tertiary">Workspace</span>
+                <span class="text-text-tertiary">/</span>
+                <span class="font-medium text-text-primary">{{ t('categories.title') }}</span>
             </div>
         </template>
 
-        <div class="py-12 bg-gray-50 dark:bg-dark-bg min-h-screen">
-            <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-                <!-- Plugin Slot: Header -->
-                <PluginSlot slot="header" :components="pluginComponents?.header" />
+        <PluginSlot slot="header" :components="pluginComponents?.header" />
 
-                <!-- Search -->
-                <div class="mb-6 bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border overflow-hidden shadow-lg sm:rounded-lg">
-                    <div class="p-6">
-                        <form @submit.prevent="searchCategories" class="flex gap-4">
-                            <div class="flex-1">
-                                <input
-                                    v-model="search"
-                                    type="text"
-                                    :placeholder="t('categories.searchPlaceholder')"
-                                    class="block w-full rounded-md bg-gray-50 dark:bg-dark-bg border-gray-200 dark:border-dark-border text-gray-900 dark:text-gray-100 placeholder-gray-500 shadow-sm focus:border-primary-400 focus:ring-primary-400"
-                                />
-                            </div>
-                            <button
-                                type="submit"
-                                class="inline-flex items-center px-4 py-2 bg-primary-400 hover:bg-primary-500 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest"
-                            >
-                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                                </svg>
-                                {{ t('common.search') }}
-                            </button>
-                            <button
-                                type="button"
-                                @click="clearFilters"
-                                class="inline-flex items-center px-4 py-2 bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-border rounded-md font-semibold text-xs text-gray-600 dark:text-gray-300 uppercase tracking-widest hover:bg-gray-100 dark:hover:bg-dark-bg/50"
-                            >
-                                {{ t('common.clear') }}
-                            </button>
-                        </form>
+        <PageHeader :title="t('categories.title')" description="Organize your catalog into categories.">
+            <template #actions>
+                <Button variant="default" size="sm" @click="openCreateModal">
+                    <Plus :size="14" />
+                    {{ t('categories.addCategory') }}
+                </Button>
+            </template>
+        </PageHeader>
+
+        <!-- Search -->
+        <Card class="mt-6">
+            <form @submit.prevent="searchCategories" class="flex flex-col gap-3 sm:flex-row sm:items-end">
+                <div class="flex-1">
+                    <label for="search" class="mb-1 block text-xs font-medium text-text-secondary">{{ t('common.search') }}</label>
+                    <div class="relative">
+                        <Search :size="15" class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-text-tertiary" />
+                        <input
+                            id="search"
+                            v-model="search"
+                            type="text"
+                            :placeholder="t('categories.searchPlaceholder')"
+                            class="h-9 w-full rounded-md border border-border-subtle bg-surface-canvas pl-9 pr-3 text-sm text-text-primary placeholder:text-text-tertiary ds-focus-ring"
+                        />
                     </div>
                 </div>
+                <div class="flex items-center gap-2">
+                    <Button type="submit" variant="default" size="sm">
+                        <Search :size="14" />
+                        {{ t('common.search') }}
+                    </Button>
+                    <Button type="button" variant="secondary" size="sm" @click="clearFilters">{{ t('common.clear') }}</Button>
+                </div>
+            </form>
+        </Card>
 
-                <!-- Categories Grid -->
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    <div
-                        v-for="category in categories.data"
-                        :key="category.id"
-                        class="bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border overflow-hidden shadow-lg sm:rounded-lg hover:shadow-xl transition-shadow"
+        <!-- Categories Grid -->
+        <div class="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+            <Card v-for="category in categories.data" :key="category.id" hoverable>
+                <div class="mb-3 flex items-start justify-between gap-3">
+                    <div class="min-w-0 flex-1">
+                        <h3 class="mb-1 truncate text-base font-semibold text-text-primary">
+                            {{ category.name }}
+                        </h3>
+                        <p v-if="category.description" class="text-sm text-text-secondary">
+                            {{ category.description }}
+                        </p>
+                    </div>
+                    <Badge variant="brand" size="sm">{{ category.products_count }} products</Badge>
+                </div>
+
+                <div class="mt-4 flex items-center justify-end gap-1 border-t border-border-subtle pt-4">
+                    <button
+                        type="button"
+                        @click="openEditModal(category)"
+                        class="rounded-md p-1.5 text-text-tertiary transition-colors hover:bg-surface-overlay hover:text-status-success"
+                        :aria-label="t('common.edit')"
                     >
-                        <div class="p-6">
-                            <div class="flex items-start justify-between mb-3">
-                                <div class="flex-1">
-                                    <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-1">
-                                        {{ category.name }}
-                                    </h3>
-                                    <p v-if="category.description" class="text-sm text-gray-500 dark:text-gray-400">
-                                        {{ category.description }}
-                                    </p>
-                                </div>
-                                <span class="px-2 py-1 text-xs font-semibold rounded-full bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-300">
-                                    {{ category.products_count }} products
-                                </span>
-                            </div>
-
-                            <div class="flex items-center gap-2 mt-4 pt-4 border-t border-gray-200 dark:border-dark-border">
-                                <button
-                                    @click="openEditModal(category)"
-                                    class="flex-1 inline-flex items-center justify-center px-3 py-2 bg-primary-400/20 text-primary-400 rounded-md hover:bg-primary-400/30 text-sm font-medium"
-                                >
-                                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                                    </svg>
-                                    {{ t('common.edit') }}
-                                </button>
-                                <button
-                                    @click="deleteCategory(category)"
-                                    class="flex-1 inline-flex items-center justify-center px-3 py-2 bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400 rounded-md hover:bg-red-100 dark:hover:bg-red-900/30 text-sm font-medium"
-                                    :disabled="category.products_count > 0"
-                                    :class="{ 'opacity-50 cursor-not-allowed': category.products_count > 0 }"
-                                >
-                                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                    </svg>
-                                    {{ t('common.delete') }}
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Empty State -->
-                    <div v-if="categories.data.length === 0" class="col-span-full">
-                        <div class="bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border overflow-hidden shadow-lg sm:rounded-lg">
-                            <div class="p-12 text-center">
-                                <svg class="w-16 h-16 text-gray-500 dark:text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
-                                </svg>
-                                <p class="text-gray-500 dark:text-gray-400 mb-4">{{ t('categories.noCategoriesFound') }}</p>
-                                <button
-                                    @click="openCreateModal"
-                                    class="inline-flex items-center px-4 py-2 bg-primary-400 hover:bg-primary-500 text-white text-sm font-semibold rounded-lg transition"
-                                >
-                                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                                    </svg>
-                                    {{ t('categories.createFirst') }}
-                                </button>
-                            </div>
-                        </div>
-                    </div>
+                        <Pencil :size="16" />
+                    </button>
+                    <button
+                        type="button"
+                        @click="deleteCategory(category)"
+                        :disabled="category.products_count > 0"
+                        class="rounded-md p-1.5 text-text-tertiary transition-colors hover:bg-surface-overlay hover:text-status-danger disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-transparent disabled:hover:text-text-tertiary"
+                        :aria-label="t('common.delete')"
+                    >
+                        <Trash2 :size="16" />
+                    </button>
                 </div>
+            </Card>
 
-                <!-- Pagination -->
-                <div v-if="categories.data.length > 0" class="mt-6 bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border px-4 py-3 rounded-lg shadow-lg">
-                    <div class="flex items-center justify-between">
-                        <div>
-                            <p class="text-sm text-gray-600 dark:text-gray-300">
-                                {{ t('common.showing') }}
-                                <span class="font-medium">{{ categories.from }}</span>
-                                {{ t('common.to') }}
-                                <span class="font-medium">{{ categories.to }}</span>
-                                {{ t('common.of') }}
-                                <span class="font-medium">{{ categories.total }}</span>
-                                {{ t('common.results') }}
-                            </p>
-                        </div>
-                        <div>
-                            <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px">
-                                <template v-for="link in categories.links" :key="link.label">
-                                    <Link
-                                        v-if="link.url"
-                                        :href="link.url"
-                                        :class="[
-                                            'relative inline-flex items-center px-4 py-2 border text-sm font-medium',
-                                            link.active
-                                                ? 'z-10 bg-primary-400/20 border-primary-400 text-primary-400'
-                                                : 'bg-white dark:bg-dark-card border-gray-200 dark:border-dark-border text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-dark-bg/50'
-                                        ]"
-                                        v-html="link.label"
-                                    />
-                                    <span
-                                        v-else
-                                        :class="[
-                                            'relative inline-flex items-center px-4 py-2 border text-sm font-medium',
-                                            'bg-gray-100 dark:bg-dark-card border-gray-200 dark:border-dark-border text-gray-400 dark:text-gray-500 opacity-50 cursor-not-allowed'
-                                        ]"
-                                        v-html="link.label"
-                                    />
-                                </template>
-                            </nav>
-                        </div>
+            <!-- Empty State -->
+            <div v-if="categories.data.length === 0" class="col-span-full">
+                <Card>
+                    <div class="flex flex-col items-center gap-3 py-12 text-center">
+                        <Tag :size="22" class="text-text-tertiary" />
+                        <p class="text-sm text-text-tertiary">{{ t('categories.noCategoriesFound') }}</p>
+                        <Button variant="default" size="sm" @click="openCreateModal">
+                            <Plus :size="14" />
+                            {{ t('categories.createFirst') }}
+                        </Button>
                     </div>
-                </div>
-
-                <!-- Plugin Slot: Footer -->
-                <PluginSlot slot="footer" :components="pluginComponents?.footer" />
+                </Card>
             </div>
         </div>
 
-        <!-- Create Category Modal -->
-        <div v-if="showCreateModal" class="fixed inset-0 z-50 overflow-y-auto" @click="showCreateModal = false">
-            <div class="flex items-center justify-center min-h-screen px-4">
-                <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"></div>
+        <!-- Pagination -->
+        <div v-if="categories.data.length > 0" class="mt-4 flex flex-col items-center justify-between gap-3 sm:flex-row">
+            <p class="text-xs text-text-tertiary">
+                {{ t('common.showing') }} <span class="font-medium text-text-secondary">{{ categories.from }}</span>
+                {{ t('common.to') }} <span class="font-medium text-text-secondary">{{ categories.to }}</span>
+                {{ t('common.of') }} <span class="font-medium text-text-secondary">{{ categories.total }}</span> {{ t('common.results') }}
+            </p>
+            <nav class="inline-flex items-center gap-1">
+                <template v-for="link in categories.links" :key="link.label">
+                    <Link
+                        v-if="link.url"
+                        :href="link.url"
+                        :class="[
+                            'inline-flex h-8 min-w-8 items-center justify-center rounded-md border px-2.5 text-xs font-medium transition-colors',
+                            link.active
+                                ? 'border-brand bg-brand text-brand-foreground'
+                                : 'border-border-subtle bg-surface-canvas text-text-secondary hover:bg-surface-overlay',
+                        ]"
+                        v-html="link.label"
+                    />
+                    <span v-else class="inline-flex h-8 min-w-8 cursor-not-allowed items-center justify-center rounded-md border border-border-subtle px-2.5 text-xs text-text-tertiary opacity-50" v-html="link.label" />
+                </template>
+            </nav>
+        </div>
 
-                <div class="relative bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border rounded-lg shadow-xl max-w-md w-full p-6" @click.stop>
-                    <div class="flex items-center justify-between mb-4">
-                        <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">
+        <PluginSlot slot="footer" :components="pluginComponents?.footer" />
+
+        <!-- Create Category Modal -->
+        <Teleport to="body">
+            <div v-if="showCreateModal" class="fixed inset-0 z-50 flex items-center justify-center">
+                <div class="fixed inset-0 bg-black/50" @click="showCreateModal = false"></div>
+                <div class="relative mx-4 w-full max-w-md rounded-xl border border-border-subtle bg-surface-raised p-6 shadow-lg">
+                    <div class="mb-4 flex items-center justify-between">
+                        <h3 class="text-base font-semibold text-text-primary">
                             {{ t('categories.createCategory') }}
                         </h3>
                         <button
+                            type="button"
                             @click="showCreateModal = false"
-                            class="text-gray-500 dark:text-gray-400 hover:text-gray-200"
+                            class="rounded-md p-1.5 text-text-tertiary transition-colors hover:bg-surface-overlay hover:text-text-primary"
+                            :aria-label="t('common.cancel')"
                         >
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                            </svg>
+                            <X :size="18" />
                         </button>
                     </div>
 
                     <form @submit.prevent="createCategory" class="space-y-4">
                         <div>
-                            <label class="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-1">
-                                {{ t('categories.categoryName') }} <span class="text-red-500">*</span>
+                            <label class="mb-1 block text-xs font-medium text-text-secondary">
+                                {{ t('categories.categoryName') }} <span class="text-status-danger">*</span>
                             </label>
                             <input
                                 v-model="categoryForm.name"
                                 type="text"
-                                class="block w-full rounded-md bg-gray-50 dark:bg-dark-bg border-gray-200 dark:border-dark-border text-gray-900 dark:text-gray-100 placeholder-gray-500 shadow-sm focus:border-primary-400 focus:ring-primary-400"
+                                :class="inputClass"
                                 :placeholder="t('categories.namePlaceholder')"
                                 required
                             />
                         </div>
 
                         <div>
-                            <label class="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-1">
+                            <label class="mb-1 block text-xs font-medium text-text-secondary">
                                 {{ t('common.description') }}
                             </label>
                             <textarea
                                 v-model="categoryForm.description"
                                 rows="3"
-                                class="block w-full rounded-md bg-gray-50 dark:bg-dark-bg border-gray-200 dark:border-dark-border text-gray-900 dark:text-gray-100 placeholder-gray-500 shadow-sm focus:border-primary-400 focus:ring-primary-400"
+                                class="w-full rounded-md border border-border-subtle bg-surface-canvas px-3 py-2 text-sm text-text-primary placeholder:text-text-tertiary ds-focus-ring"
                                 :placeholder="t('categories.descPlaceholder')"
                             ></textarea>
                         </div>
 
-                        <div class="flex gap-3 justify-end mt-6">
-                            <button
-                                type="button"
-                                @click="showCreateModal = false"
-                                class="px-4 py-2 bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-border text-gray-600 dark:text-gray-300 rounded-md hover:bg-gray-100 dark:hover:bg-dark-bg/50"
-                            >
-                                {{ t('common.cancel') }}
-                            </button>
-                            <button
-                                type="submit"
-                                class="px-4 py-2 bg-primary-400 hover:bg-primary-500 text-white rounded-md"
-                            >
-                                {{ t('categories.createCategory') }}
-                            </button>
+                        <div class="mt-6 flex justify-end gap-2">
+                            <Button type="button" variant="secondary" size="sm" @click="showCreateModal = false">{{ t('common.cancel') }}</Button>
+                            <Button type="submit" variant="default" size="sm">{{ t('categories.createCategory') }}</Button>
                         </div>
                     </form>
                 </div>
             </div>
-        </div>
+        </Teleport>
 
         <!-- Edit Category Modal -->
-        <div v-if="showEditModal" class="fixed inset-0 z-50 overflow-y-auto" @click="showEditModal = false">
-            <div class="flex items-center justify-center min-h-screen px-4">
-                <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"></div>
-
-                <div class="relative bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border rounded-lg shadow-xl max-w-md w-full p-6" @click.stop>
-                    <div class="flex items-center justify-between mb-4">
-                        <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">
+        <Teleport to="body">
+            <div v-if="showEditModal" class="fixed inset-0 z-50 flex items-center justify-center">
+                <div class="fixed inset-0 bg-black/50" @click="showEditModal = false"></div>
+                <div class="relative mx-4 w-full max-w-md rounded-xl border border-border-subtle bg-surface-raised p-6 shadow-lg">
+                    <div class="mb-4 flex items-center justify-between">
+                        <h3 class="text-base font-semibold text-text-primary">
                             {{ t('categories.editCategory') }}
                         </h3>
                         <button
+                            type="button"
                             @click="showEditModal = false"
-                            class="text-gray-500 dark:text-gray-400 hover:text-gray-200"
+                            class="rounded-md p-1.5 text-text-tertiary transition-colors hover:bg-surface-overlay hover:text-text-primary"
+                            :aria-label="t('common.cancel')"
                         >
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                            </svg>
+                            <X :size="18" />
                         </button>
                     </div>
 
                     <form @submit.prevent="updateCategory" class="space-y-4">
                         <div>
-                            <label class="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-1">
-                                {{ t('categories.categoryName') }} <span class="text-red-500">*</span>
+                            <label class="mb-1 block text-xs font-medium text-text-secondary">
+                                {{ t('categories.categoryName') }} <span class="text-status-danger">*</span>
                             </label>
                             <input
                                 v-model="categoryForm.name"
                                 type="text"
-                                class="block w-full rounded-md bg-gray-50 dark:bg-dark-bg border-gray-200 dark:border-dark-border text-gray-900 dark:text-gray-100 placeholder-gray-500 shadow-sm focus:border-primary-400 focus:ring-primary-400"
+                                :class="inputClass"
                                 required
                             />
                         </div>
 
                         <div>
-                            <label class="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-1">
+                            <label class="mb-1 block text-xs font-medium text-text-secondary">
                                 {{ t('common.description') }}
                             </label>
                             <textarea
                                 v-model="categoryForm.description"
                                 rows="3"
-                                class="block w-full rounded-md bg-gray-50 dark:bg-dark-bg border-gray-200 dark:border-dark-border text-gray-900 dark:text-gray-100 placeholder-gray-500 shadow-sm focus:border-primary-400 focus:ring-primary-400"
+                                class="w-full rounded-md border border-border-subtle bg-surface-canvas px-3 py-2 text-sm text-text-primary placeholder:text-text-tertiary ds-focus-ring"
                             ></textarea>
                         </div>
 
-                        <div class="flex gap-3 justify-end mt-6">
-                            <button
-                                type="button"
-                                @click="showEditModal = false"
-                                class="px-4 py-2 bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-border text-gray-600 dark:text-gray-300 rounded-md hover:bg-gray-100 dark:hover:bg-dark-bg/50"
-                            >
-                                {{ t('common.cancel') }}
-                            </button>
-                            <button
-                                type="submit"
-                                class="px-4 py-2 bg-primary-400 hover:bg-primary-500 text-white rounded-md"
-                            >
-                                {{ t('common.update') }} {{ t('nav.categories') }}
-                            </button>
+                        <div class="mt-6 flex justify-end gap-2">
+                            <Button type="button" variant="secondary" size="sm" @click="showEditModal = false">{{ t('common.cancel') }}</Button>
+                            <Button type="submit" variant="default" size="sm">{{ t('common.update') }} {{ t('nav.categories') }}</Button>
                         </div>
                     </form>
                 </div>
             </div>
-        </div>
-    </AuthenticatedLayout>
+        </Teleport>
+    </AppLayout>
 </template>
