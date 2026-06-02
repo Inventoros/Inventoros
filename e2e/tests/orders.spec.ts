@@ -94,12 +94,13 @@ test.describe('Order Approval', () => {
         // Navigate to an order detail page
         await page.goto('/orders');
 
-        const viewButton = page.locator('a[href*="/orders/"]').first();
+        // Scope to a real order row link, not the "Create Order" (/orders/create) action
+        const viewButton = page.locator('tbody a[href*="/orders/"]:not([href*="create"])').first();
         if (await viewButton.isVisible()) {
             await viewButton.click();
 
             // Look for approval status section
-            await expect(page.locator('text=/approval status/i')).toBeVisible();
+            await expect(page.locator('text=/approval status/i').first()).toBeVisible();
         }
     });
 

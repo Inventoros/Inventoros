@@ -242,6 +242,7 @@ const isActive = (item) => item.active.some((pattern) => route().current(pattern
             <div class="px-3 py-3 border-t border-border-subtle shrink-0">
                 <Link
                     :href="route('settings.account.index')"
+                    data-testid="user-menu"
                     class="flex items-center gap-2.5 w-full px-2 py-1.5 rounded-md hover:bg-surface-overlay transition-colors ds-focus-ring"
                 >
                     <span class="h-7 w-7 rounded-full bg-surface-overlay grid place-items-center text-[11px] font-semibold text-text-primary shrink-0">

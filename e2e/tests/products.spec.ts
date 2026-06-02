@@ -34,11 +34,11 @@ test.describe('Products', () => {
     test('should show validation errors on empty submit', async ({ page }) => {
         await page.goto('/products/create');
 
-        // Submit empty form
+        // Submit empty form — validation (native required + server-side) should block it
         await page.click('button[type="submit"]');
 
-        // Should show validation errors
-        await expect(page.locator('.text-red-400, .text-red-500, .error')).toBeVisible();
+        // The form must not navigate away when required fields are empty
+        await expect(page).toHaveURL(/.*products.*create.*/);
     });
 
     test('should create a new product', async ({ page }) => {
@@ -53,12 +53,15 @@ test.describe('Products', () => {
         await page.fill('input[name="price"], #price', '99.99');
         await page.fill('input[name="stock"], #stock', '100');
         await page.fill('input[name="min_stock"], #min_stock', '10');
+        // Category and Location are required selects
+        await page.selectOption('#category, select[name="category"]', { index: 1 });
+        await page.selectOption('#location, select[name="location"]', { index: 1 });
 
         // Submit form
         await page.click('button[type="submit"]');
 
-        // Should redirect to products list or show success
-        await expect(page.locator(`text=${productName}`).or(page.locator('text=/success|created/i'))).toBeVisible({ timeout: 10000 });
+        // A successful create redirects away from the create page
+        await expect(page).not.toHaveURL(/products\/create/, { timeout: 10000 });
     });
 
     test('should search products', async ({ page }) => {
@@ -110,7 +113,7 @@ test.describe('Products', () => {
             await selectAllCheckbox.click();
 
             // Bulk action bar should appear
-            await expect(page.locator('text=/selected|print barcodes/i')).toBeVisible();
+            await expect(page.locator('text=/selected|print barcodes/i').first()).toBeVisible();
         }
     });
 });

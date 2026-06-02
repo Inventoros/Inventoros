@@ -11,23 +11,24 @@ test.describe('Dashboard', () => {
         await page.goto('/dashboard');
 
         // Check for common dashboard metrics
-        await expect(page.locator('text=/total products|products/i')).toBeVisible();
-        await expect(page.locator('text=/orders|sales/i')).toBeVisible();
+        await expect(page.locator('text=/total products|products/i').first()).toBeVisible();
+        await expect(page.locator('text=/orders|sales/i').first()).toBeVisible();
     });
 
     test('should have navigation sidebar', async ({ page }) => {
         await page.goto('/dashboard');
 
-        // Check sidebar navigation links
-        await expect(page.locator('nav >> text=Dashboard')).toBeVisible();
-        await expect(page.locator('nav >> text=Products')).toBeVisible();
-        await expect(page.locator('nav >> text=Orders')).toBeVisible();
+        // Check sidebar navigation links (exact to avoid "Purchase Orders" / "Work Orders" clashes)
+        const nav = page.locator('nav');
+        await expect(nav.getByRole('link', { name: 'Dashboard', exact: true })).toBeVisible();
+        await expect(nav.getByRole('link', { name: 'Inventory', exact: true })).toBeVisible();
+        await expect(nav.getByRole('link', { name: 'Orders', exact: true })).toBeVisible();
     });
 
     test('should navigate to products from sidebar', async ({ page }) => {
         await page.goto('/dashboard');
 
-        await page.click('nav >> text=Products');
+        await page.click('nav >> text=Inventory');
 
         await expect(page).toHaveURL(/.*products.*/);
     });
