@@ -12,7 +12,7 @@ const props = defineProps({
         validator: (t) => ['neutral', 'up', 'down'].includes(t),
     },
     hint: { type: String, default: null },
-    // When set, the #icon slot renders inside a filled gradient chip.
+    // When set, the #icon slot renders as a flat, tone-colored mark (no chip).
     iconTone: {
         type: String,
         default: null,
@@ -26,13 +26,13 @@ const deltaClass = computed(() => ({
     neutral: 'text-text-tertiary',
 }[props.deltaTone]));
 
-const chipClass = computed(() => ({
-    brand: 'bg-gradient-to-br from-brand to-brand-hover text-brand-foreground',
-    success: 'bg-gradient-to-br from-status-success to-status-success text-white',
-    warning: 'bg-gradient-to-br from-status-warning to-status-warning text-white',
-    violet: 'bg-gradient-to-br from-violet-500 to-violet-600 text-white',
-    info: 'bg-gradient-to-br from-status-info to-status-info text-white',
-}[props.iconTone]));
+const iconColorClass = computed(() => ({
+    brand: 'text-brand',
+    success: 'text-status-success',
+    warning: 'text-status-warning',
+    violet: 'text-violet-500',
+    info: 'text-status-info',
+}[props.iconTone] || 'text-text-tertiary'));
 </script>
 
 <template>
@@ -43,7 +43,7 @@ const chipClass = computed(() => ({
             </p>
             <span
                 v-if="iconTone"
-                :class="cn('flex h-9 w-9 shrink-0 items-center justify-center rounded-lg shadow-sm', chipClass)"
+                :class="cn('shrink-0', iconColorClass)"
             >
                 <slot name="icon" />
             </span>
