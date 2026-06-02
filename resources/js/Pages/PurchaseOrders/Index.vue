@@ -1,9 +1,15 @@
 <script setup>
-import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
+import AppLayout from '@/Layouts/AppLayout.vue';
 import PluginSlot from '@/Components/PluginSlot.vue';
+import PageHeader from '@/Components/ui/PageHeader.vue';
+import Card from '@/Components/ui/Card.vue';
+import Button from '@/Components/ui/Button.vue';
+import Badge from '@/Components/ui/Badge.vue';
+import DataTable from '@/Components/ui/DataTable.vue';
 import { Head, Link, router } from '@inertiajs/vue3';
 import { ref } from 'vue';
 import { useI18n } from 'vue-i18n';
+import { Plus, Search, Eye, Pencil, Trash2, PackageCheck, ClipboardList } from 'lucide-vue-next';
 
 const { t } = useI18n();
 
@@ -59,13 +65,8 @@ const formatDate = (dateString) => {
     });
 };
 
-const statusColors = {
-    draft: 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400',
-    sent: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400',
-    partial: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400',
-    received: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400',
-    cancelled: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400',
-};
+const statusVariant = (s) =>
+    ({ draft: 'neutral', sent: 'info', partial: 'warning', received: 'success', cancelled: 'danger' }[s] || 'neutral');
 
 const statusLabels = {
     draft: 'Draft',
@@ -74,251 +75,164 @@ const statusLabels = {
     received: 'Received',
     cancelled: 'Cancelled',
 };
+
+const columns = [
+    { key: 'po_number', label: t('purchaseOrders.poNumber') },
+    { key: 'supplier', label: t('purchaseOrders.supplier') },
+    { key: 'order_date', label: t('purchaseOrders.orderDate') },
+    { key: 'expected_date', label: t('purchaseOrders.expected') },
+    { key: 'quantity', label: t('common.quantity'), align: 'right' },
+    { key: 'total', label: t('common.total'), align: 'right' },
+    { key: 'status', label: t('common.status') },
+    { key: 'actions', label: t('common.actions'), align: 'right' },
+];
+
+const selectClass =
+    'h-9 w-full rounded-md border border-border-subtle bg-surface-canvas px-3 text-sm text-text-primary ds-focus-ring';
 </script>
 
 <template>
     <Head :title="t('purchaseOrders.title')" />
 
-    <AuthenticatedLayout>
+    <AppLayout>
         <template #header>
-            <div class="flex items-center justify-between">
-                <h2 class="font-semibold text-xl text-gray-900 dark:text-gray-100 leading-tight">
-                    {{ t('purchaseOrders.title') }}
-                </h2>
-                <Link
-                    :href="route('purchase-orders.create')"
-                    class="inline-flex items-center px-4 py-2 bg-primary-400 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-primary-500 focus:bg-primary-500 active:bg-primary-600 focus:outline-none focus:ring-2 focus:ring-primary-400 focus:ring-offset-2 focus:ring-offset-dark-bg transition ease-in-out duration-150"
-                >
-                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                    </svg>
-                    {{ t('purchaseOrders.createPo') }}
-                </Link>
+            <div class="flex items-center gap-2 text-xs">
+                <span class="text-text-tertiary">Workspace</span>
+                <span class="text-text-tertiary">/</span>
+                <span class="font-medium text-text-primary">{{ t('purchaseOrders.title') }}</span>
             </div>
         </template>
 
-        <div class="py-12 bg-gray-50 dark:bg-dark-bg min-h-screen">
-            <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-                <!-- Plugin Slot: Header -->
-                <PluginSlot slot="header" :components="pluginComponents?.header" />
+        <PluginSlot slot="header" :components="pluginComponents?.header" />
 
-                <!-- Filters -->
-                <div class="mb-6 bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border overflow-hidden shadow-lg sm:rounded-lg">
-                    <div class="p-6">
-                        <form @submit.prevent="searchPOs" class="space-y-4">
-                            <div class="grid grid-cols-1 gap-4 md:grid-cols-4">
-                                <div>
-                                    <label for="search" class="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-1">
-                                        {{ t('common.search') }}
-                                    </label>
-                                    <input
-                                        id="search"
-                                        v-model="search"
-                                        type="text"
-                                        :placeholder="t('purchaseOrders.searchPlaceholder')"
-                                        class="block w-full rounded-md bg-gray-50 dark:bg-dark-bg border-gray-200 dark:border-dark-border text-gray-900 dark:text-gray-100 placeholder-gray-500 shadow-sm focus:border-primary-400 focus:ring-primary-400"
-                                    />
-                                </div>
+        <PageHeader :title="t('purchaseOrders.title')" description="Restock orders to your suppliers.">
+            <template #actions>
+                <Button variant="default" size="sm" as="Link" :href="route('purchase-orders.create')">
+                    <Plus :size="14" />
+                    {{ t('purchaseOrders.createPo') }}
+                </Button>
+            </template>
+        </PageHeader>
 
-                                <div>
-                                    <label for="status" class="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-1">
-                                        {{ t('common.status') }}
-                                    </label>
-                                    <select
-                                        id="status"
-                                        v-model="selectedStatus"
-                                        class="block w-full rounded-md bg-gray-50 dark:bg-dark-bg border-gray-200 dark:border-dark-border text-gray-900 dark:text-gray-100 shadow-sm focus:border-primary-400 focus:ring-primary-400"
-                                    >
-                                        <option value="">{{ t('common.allStatuses') }}</option>
-                                        <option v-for="status in statuses" :key="status" :value="status">
-                                            {{ statusLabels[status] || status }}
-                                        </option>
-                                    </select>
-                                </div>
-
-                                <div>
-                                    <label for="supplier" class="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-1">
-                                        {{ t('purchaseOrders.supplier') }}
-                                    </label>
-                                    <select
-                                        id="supplier"
-                                        v-model="selectedSupplierId"
-                                        class="block w-full rounded-md bg-gray-50 dark:bg-dark-bg border-gray-200 dark:border-dark-border text-gray-900 dark:text-gray-100 shadow-sm focus:border-primary-400 focus:ring-primary-400"
-                                    >
-                                        <option value="">{{ t('purchaseOrders.allSuppliers') }}</option>
-                                        <option v-for="supplier in suppliers" :key="supplier.id" :value="supplier.id">
-                                            {{ supplier.name }}
-                                        </option>
-                                    </select>
-                                </div>
-
-                                <div class="flex items-end gap-2">
-                                    <button
-                                        type="submit"
-                                        class="inline-flex items-center px-4 py-2 bg-primary-400 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-primary-500"
-                                    >
-                                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                                        </svg>
-                                        {{ t('common.search') }}
-                                    </button>
-                                    <button
-                                        type="button"
-                                        @click="clearFilters"
-                                        class="inline-flex items-center px-4 py-2 bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-border rounded-md font-semibold text-xs text-gray-600 dark:text-gray-300 uppercase tracking-widest hover:bg-gray-100 dark:hover:bg-dark-bg/50"
-                                    >
-                                        {{ t('common.clear') }}
-                                    </button>
-                                </div>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-
-                <!-- Plugin Slot: Before Table -->
-                <PluginSlot slot="beforeTable" :components="pluginComponents?.beforeTable" />
-
-                <!-- Purchase Orders Table -->
-                <div class="bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border overflow-hidden shadow-lg sm:rounded-lg">
-                    <div class="overflow-x-auto">
-                        <table class="min-w-full divide-y divide-gray-200 dark:divide-dark-border">
-                            <thead class="bg-gray-50 dark:bg-dark-bg">
-                                <tr>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">{{ t('purchaseOrders.poNumber') }}</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">{{ t('purchaseOrders.supplier') }}</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">{{ t('purchaseOrders.orderDate') }}</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">{{ t('purchaseOrders.expected') }}</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">{{ t('common.quantity') }}</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">{{ t('common.total') }}</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">{{ t('common.status') }}</th>
-                                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">{{ t('common.actions') }}</th>
-                                </tr>
-                            </thead>
-                            <tbody class="bg-white dark:bg-dark-card divide-y divide-gray-200 dark:divide-dark-border">
-                                <tr v-for="po in purchaseOrders.data" :key="po.id" class="hover:bg-gray-50 dark:hover:bg-dark-bg/50">
-                                    <td class="px-6 py-4 whitespace-nowrap">
-                                        <Link :href="route('purchase-orders.show', po.id)" class="text-primary-400 hover:underline font-medium">
-                                            {{ po.po_number }}
-                                        </Link>
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
-                                        {{ po.supplier?.name || '-' }}
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                                        {{ formatDate(po.order_date) }}
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                                        {{ formatDate(po.expected_date) }}
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                                        {{ po.items_count || 0 }}
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100 font-medium">
-                                        {{ formatCurrency(po.total, po.currency) }}
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap">
-                                        <span
-                                            :class="[
-                                                'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium',
-                                                statusColors[po.status]
-                                            ]"
-                                        >
-                                            {{ statusLabels[po.status] || po.status }}
-                                        </span>
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                        <div class="flex items-center justify-end gap-2">
-                                            <Link
-                                                :href="route('purchase-orders.show', po.id)"
-                                                class="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
-                                                title="View"
-                                            >
-                                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                                                </svg>
-                                            </Link>
-                                            <Link
-                                                v-if="po.status === 'draft'"
-                                                :href="route('purchase-orders.edit', po.id)"
-                                                class="text-primary-400 hover:text-primary-500"
-                                                title="Edit"
-                                            >
-                                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                                                </svg>
-                                            </Link>
-                                            <Link
-                                                v-if="po.status === 'sent' || po.status === 'partial'"
-                                                :href="route('purchase-orders.receive', po.id)"
-                                                class="text-green-500 hover:text-green-600"
-                                                title="Receive"
-                                            >
-                                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
-                                                </svg>
-                                            </Link>
-                                            <button
-                                                v-if="po.status === 'draft'"
-                                                @click="deletePO(po)"
-                                                class="text-red-400 hover:text-red-500"
-                                                title="Delete"
-                                            >
-                                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                                </svg>
-                                            </button>
-                                        </div>
-                                    </td>
-                                </tr>
-                                <tr v-if="purchaseOrders.data.length === 0">
-                                    <td colspan="8" class="px-6 py-12 text-center text-gray-500 dark:text-gray-400">
-                                        <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                                        </svg>
-                                        <p class="mt-4 text-lg font-medium">{{ t('purchaseOrders.noPoFound') }}</p>
-                                        <p class="mt-1">{{ t('purchaseOrders.getStarted') }}</p>
-                                        <Link
-                                            :href="route('purchase-orders.create')"
-                                            class="mt-4 inline-flex items-center px-4 py-2 bg-primary-400 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-primary-500"
-                                        >
-                                            {{ t('purchaseOrders.createPo') }}
-                                        </Link>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-
-                    <!-- Pagination -->
-                    <div v-if="purchaseOrders.data.length > 0" class="bg-white dark:bg-dark-card px-4 py-3 border-t border-gray-200 dark:border-dark-border sm:px-6">
-                        <div class="flex items-center justify-between">
-                            <div class="text-sm text-gray-500 dark:text-gray-400">
-                                {{ t('common.showing') }} {{ purchaseOrders.from }} {{ t('common.to') }} {{ purchaseOrders.to }} {{ t('common.of') }} {{ purchaseOrders.total }} {{ t('common.results') }}
-                            </div>
-                            <div class="flex gap-2">
-                                <Link
-                                    v-for="link in purchaseOrders.links"
-                                    :key="link.label"
-                                    :href="link.url"
-                                    :class="[
-                                        'px-3 py-1 text-sm rounded-md',
-                                        link.active
-                                            ? 'bg-primary-400 text-white'
-                                            : 'bg-gray-100 dark:bg-dark-bg text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-dark-border',
-                                        !link.url && 'opacity-50 cursor-not-allowed'
-                                    ]"
-                                    v-html="link.label"
-                                    :disabled="!link.url"
-                                />
-                            </div>
+        <!-- Filters -->
+        <Card class="mt-6">
+            <form @submit.prevent="searchPOs" class="space-y-4">
+                <div class="grid grid-cols-1 gap-4 md:grid-cols-4">
+                    <div>
+                        <label for="search" class="mb-1 block text-xs font-medium text-text-secondary">{{ t('common.search') }}</label>
+                        <div class="relative">
+                            <Search :size="15" class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-text-tertiary" />
+                            <input
+                                id="search"
+                                v-model="search"
+                                type="text"
+                                :placeholder="t('purchaseOrders.searchPlaceholder')"
+                                class="h-9 w-full rounded-md border border-border-subtle bg-surface-canvas pl-9 pr-3 text-sm text-text-primary placeholder:text-text-tertiary ds-focus-ring"
+                            />
                         </div>
                     </div>
+                    <div>
+                        <label for="status" class="mb-1 block text-xs font-medium text-text-secondary">{{ t('common.status') }}</label>
+                        <select id="status" v-model="selectedStatus" :class="selectClass">
+                            <option value="">{{ t('common.allStatuses') }}</option>
+                            <option v-for="status in statuses" :key="status" :value="status">
+                                {{ statusLabels[status] || status }}
+                            </option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="supplier" class="mb-1 block text-xs font-medium text-text-secondary">{{ t('purchaseOrders.supplier') }}</label>
+                        <select id="supplier" v-model="selectedSupplierId" :class="selectClass">
+                            <option value="">{{ t('purchaseOrders.allSuppliers') }}</option>
+                            <option v-for="supplier in suppliers" :key="supplier.id" :value="supplier.id">
+                                {{ supplier.name }}
+                            </option>
+                        </select>
+                    </div>
+                    <div class="flex items-end gap-2">
+                        <Button type="submit" variant="default" size="sm">
+                            <Search :size="14" />
+                            {{ t('common.search') }}
+                        </Button>
+                        <Button type="button" variant="secondary" size="sm" @click="clearFilters">{{ t('common.clear') }}</Button>
+                    </div>
                 </div>
+            </form>
+        </Card>
 
-                <!-- Plugin Slot: Footer -->
-                <PluginSlot slot="footer" :components="pluginComponents?.footer" />
+        <PluginSlot slot="before-table" :components="pluginComponents?.beforeTable" />
+
+        <!-- Purchase orders table -->
+        <div class="mt-4">
+            <DataTable :columns="columns" :rows="purchaseOrders.data" dense>
+                <template #cell-po_number="{ row }">
+                    <Link :href="route('purchase-orders.show', row.id)" class="font-mono text-xs font-medium text-text-primary hover:text-brand">{{ row.po_number }}</Link>
+                </template>
+                <template #cell-supplier="{ row }">
+                    <span class="text-text-primary">{{ row.supplier?.name || '-' }}</span>
+                </template>
+                <template #cell-order_date="{ row }">
+                    <span class="text-text-secondary">{{ formatDate(row.order_date) }}</span>
+                </template>
+                <template #cell-expected_date="{ row }">
+                    <span class="text-text-secondary">{{ formatDate(row.expected_date) }}</span>
+                </template>
+                <template #cell-quantity="{ row }">
+                    <span class="tabular-nums text-text-secondary">{{ row.items_count || 0 }}</span>
+                </template>
+                <template #cell-total="{ row }">
+                    <span class="font-medium tabular-nums text-text-primary">{{ formatCurrency(row.total, row.currency) }}</span>
+                </template>
+                <template #cell-status="{ row }">
+                    <Badge :variant="statusVariant(row.status)" size="sm" dot>{{ statusLabels[row.status] || row.status }}</Badge>
+                </template>
+                <template #cell-actions="{ row }">
+                    <div class="flex items-center justify-end gap-1">
+                        <Link :href="route('purchase-orders.show', row.id)" class="rounded-md p-1.5 text-text-tertiary transition-colors hover:bg-surface-overlay hover:text-brand" :aria-label="t('common.view')" title="View"><Eye :size="16" /></Link>
+                        <Link v-if="row.status === 'draft'" :href="route('purchase-orders.edit', row.id)" class="rounded-md p-1.5 text-text-tertiary transition-colors hover:bg-surface-overlay hover:text-status-success" :aria-label="t('common.edit')" title="Edit"><Pencil :size="16" /></Link>
+                        <Link v-if="row.status === 'sent' || row.status === 'partial'" :href="route('purchase-orders.receive', row.id)" class="rounded-md p-1.5 text-text-tertiary transition-colors hover:bg-surface-overlay hover:text-status-success" title="Receive"><PackageCheck :size="16" /></Link>
+                        <button v-if="row.status === 'draft'" type="button" @click="deletePO(row)" class="rounded-md p-1.5 text-text-tertiary transition-colors hover:bg-surface-overlay hover:text-status-danger" :aria-label="t('common.delete')" title="Delete"><Trash2 :size="16" /></button>
+                    </div>
+                </template>
+                <template #empty>
+                    <div class="flex flex-col items-center gap-3 py-10">
+                        <ClipboardList :size="22" class="text-text-tertiary" />
+                        <p class="text-sm font-medium text-text-secondary">{{ t('purchaseOrders.noPoFound') }}</p>
+                        <p class="text-sm text-text-tertiary">{{ t('purchaseOrders.getStarted') }}</p>
+                        <Button variant="default" size="sm" as="Link" :href="route('purchase-orders.create')">
+                            <Plus :size="14" />
+                            {{ t('purchaseOrders.createPo') }}
+                        </Button>
+                    </div>
+                </template>
+            </DataTable>
+
+            <!-- Pagination -->
+            <div v-if="purchaseOrders.data.length > 0" class="mt-4 flex flex-col items-center justify-between gap-3 sm:flex-row">
+                <p class="text-xs text-text-tertiary">
+                    {{ t('common.showing') }} <span class="font-medium text-text-secondary">{{ purchaseOrders.from }}</span>
+                    {{ t('common.to') }} <span class="font-medium text-text-secondary">{{ purchaseOrders.to }}</span>
+                    {{ t('common.of') }} <span class="font-medium text-text-secondary">{{ purchaseOrders.total }}</span> {{ t('common.results') }}
+                </p>
+                <nav class="inline-flex items-center gap-1">
+                    <template v-for="link in purchaseOrders.links" :key="link.label">
+                        <Link
+                            v-if="link.url"
+                            :href="link.url"
+                            :class="[
+                                'inline-flex h-8 min-w-8 items-center justify-center rounded-md border px-2.5 text-xs font-medium transition-colors',
+                                link.active
+                                    ? 'border-brand bg-brand text-brand-foreground'
+                                    : 'border-border-subtle bg-surface-canvas text-text-secondary hover:bg-surface-overlay',
+                            ]"
+                            v-html="link.label"
+                        />
+                        <span v-else class="inline-flex h-8 min-w-8 cursor-not-allowed items-center justify-center rounded-md border border-border-subtle px-2.5 text-xs text-text-tertiary opacity-50" v-html="link.label" />
+                    </template>
+                </nav>
             </div>
         </div>
-    </AuthenticatedLayout>
+
+        <PluginSlot slot="footer" :components="pluginComponents?.footer" />
+    </AppLayout>
 </template>
