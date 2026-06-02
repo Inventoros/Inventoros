@@ -1,7 +1,12 @@
 <script setup>
-import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
+import AppLayout from '@/Layouts/AppLayout.vue';
+import PageHeader from '@/Components/ui/PageHeader.vue';
+import Card from '@/Components/ui/Card.vue';
+import Button from '@/Components/ui/Button.vue';
+import Badge from '@/Components/ui/Badge.vue';
 import { Head, Link, router } from '@inertiajs/vue3';
-import { ref, watch } from 'vue';
+import { ref } from 'vue';
+import { Search, Download, User, ChevronRight, FileText, Plus, Pencil, Trash2, Eye } from 'lucide-vue-next';
 
 import { useI18n } from 'vue-i18n';
 const props = defineProps({
@@ -55,25 +60,11 @@ const exportUrl = (format) => {
     return route('activity-log.export') + '?' + params.toString();
 };
 
-const getActionColor = (actionType) => {
-    const colors = {
-        'created': 'bg-green-900/30 text-green-300 border-green-800',
-        'updated': 'bg-blue-900/30 text-blue-300 border-blue-800',
-        'deleted': 'bg-red-900/30 text-red-300 border-red-800',
-        'viewed': 'bg-gray-900/30 text-gray-300 border-gray-800',
-    };
-    return colors[actionType] || 'bg-gray-900/30 text-gray-300 border-gray-800';
-};
+const actionVariant = (actionType) =>
+    ({ created: 'success', updated: 'info', deleted: 'danger', viewed: 'neutral' }[actionType] || 'neutral');
 
-const getActionIcon = (actionType) => {
-    const icons = {
-        'created': 'M12 4v16m8-8H4',
-        'updated': 'M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z',
-        'deleted': 'M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16',
-        'viewed': 'M15 12a3 3 0 11-6 0 3 3 0 016 0z M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z',
-    };
-    return icons[actionType] || 'M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z';
-};
+const actionIcon = (actionType) =>
+    ({ created: Plus, updated: Pencil, deleted: Trash2, viewed: Eye }[actionType] || FileText);
 
 const formatDate = (dateString) => {
     return new Date(dateString).toLocaleString();
@@ -122,278 +113,219 @@ const getChangedFields = (properties) => {
     }
     return changes;
 };
+
+const selectClass =
+    'h-9 w-full rounded-md border border-border-subtle bg-surface-canvas px-3 text-sm text-text-primary ds-focus-ring';
 </script>
 
 <template>
     <Head :title="t('admin.activityLog.title')" />
 
-    <AuthenticatedLayout>
+    <AppLayout>
         <template #header>
-            <h2 class="font-semibold text-xl text-gray-900 dark:text-gray-100 leading-tight">
-                {{ t('admin.activityLog.title') }}
-            </h2>
+            <div class="flex items-center gap-2 text-xs">
+                <span class="text-text-tertiary">Workspace</span>
+                <span class="text-text-tertiary">/</span>
+                <span class="font-medium text-text-primary">{{ t('admin.activityLog.title') }}</span>
+            </div>
         </template>
 
-        <div class="py-12 bg-gray-50 dark:bg-dark-bg min-h-screen">
-            <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-                <!-- Filters -->
-                <div class="mb-6 bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border rounded-lg shadow-sm p-6">
-                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                        <!-- Search -->
-                        <div class="lg:col-span-3">
-                            <label class="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-2">
-                                Search Description
-                            </label>
+        <PageHeader :title="t('admin.activityLog.title')" description="Audit trail of every change across your workspace.">
+            <template #actions>
+                <Button variant="secondary" size="sm" as="a" :href="exportUrl('csv')">
+                    <Download :size="14" />
+                    Export CSV
+                </Button>
+                <Button variant="secondary" size="sm" as="a" :href="exportUrl('xlsx')">
+                    <Download :size="14" />
+                    Export XLSX
+                </Button>
+            </template>
+        </PageHeader>
+
+        <!-- Filters -->
+        <Card class="mt-6">
+            <form @submit.prevent="applyFilters" class="space-y-4">
+                <div class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+                    <!-- Search -->
+                    <div class="lg:col-span-3">
+                        <label for="search" class="mb-1 block text-xs font-medium text-text-secondary">Search Description</label>
+                        <div class="relative">
+                            <Search :size="15" class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-text-tertiary" />
                             <input
+                                id="search"
                                 v-model="search"
                                 type="text"
                                 placeholder="Search activity descriptions..."
-                                class="w-full rounded-md bg-gray-50 dark:bg-dark-bg border-gray-200 dark:border-dark-border text-gray-900 dark:text-gray-100 placeholder-gray-500 shadow-sm focus:border-primary-400 focus:ring-primary-400"
-                            />
-                        </div>
-
-                        <!-- User Filter -->
-                        <div>
-                            <label class="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-2">
-                                {{ t('common.user') }}
-                            </label>
-                            <select
-                                v-model="user_id"
-                                class="w-full rounded-md bg-gray-50 dark:bg-dark-bg border-gray-200 dark:border-dark-border text-gray-900 dark:text-gray-100 shadow-sm focus:border-primary-400 focus:ring-primary-400"
-                            >
-                                <option value="">All Users</option>
-                                <option v-for="user in users" :key="user.id" :value="user.id">
-                                    {{ user.name }}
-                                </option>
-                            </select>
-                        </div>
-
-                        <!-- Action Filter -->
-                        <div>
-                            <label class="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-2">
-                                Action
-                            </label>
-                            <select
-                                v-model="action"
-                                class="w-full rounded-md bg-gray-50 dark:bg-dark-bg border-gray-200 dark:border-dark-border text-gray-900 dark:text-gray-100 shadow-sm focus:border-primary-400 focus:ring-primary-400"
-                            >
-                                <option value="">All Actions</option>
-                                <option v-for="act in actions" :key="act" :value="act">
-                                    {{ act.charAt(0).toUpperCase() + act.slice(1) }}
-                                </option>
-                            </select>
-                        </div>
-
-                        <!-- Subject Type Filter -->
-                        <div>
-                            <label class="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-2">
-                                Subject Type
-                            </label>
-                            <select
-                                v-model="subject_type"
-                                class="w-full rounded-md bg-gray-50 dark:bg-dark-bg border-gray-200 dark:border-dark-border text-gray-900 dark:text-gray-100 shadow-sm focus:border-primary-400 focus:ring-primary-400"
-                            >
-                                <option value="">{{ t('common.allTypes') }}</option>
-                                <option v-for="type in subjectTypes" :key="type.value" :value="type.value">
-                                    {{ type.label }}
-                                </option>
-                            </select>
-                        </div>
-
-                        <!-- Date From -->
-                        <div>
-                            <label class="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-2">
-                                From Date
-                            </label>
-                            <input
-                                v-model="date_from"
-                                type="date"
-                                class="w-full rounded-md bg-gray-50 dark:bg-dark-bg border-gray-200 dark:border-dark-border text-gray-900 dark:text-gray-100 shadow-sm focus:border-primary-400 focus:ring-primary-400"
-                            />
-                        </div>
-
-                        <!-- Date To -->
-                        <div>
-                            <label class="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-2">
-                                To Date
-                            </label>
-                            <input
-                                v-model="date_to"
-                                type="date"
-                                class="w-full rounded-md bg-gray-50 dark:bg-dark-bg border-gray-200 dark:border-dark-border text-gray-900 dark:text-gray-100 shadow-sm focus:border-primary-400 focus:ring-primary-400"
+                                class="h-9 w-full rounded-md border border-border-subtle bg-surface-canvas pl-9 pr-3 text-sm text-text-primary placeholder:text-text-tertiary ds-focus-ring"
                             />
                         </div>
                     </div>
 
-                    <!-- Filter Actions -->
-                    <div class="mt-4 flex gap-3">
-                        <button
-                            @click="applyFilters"
-                            class="px-4 py-2 bg-primary-400 text-white rounded-md hover:bg-primary-500 transition font-medium text-sm"
-                        >
-                            {{ t('common.applyFilters') }}
-                        </button>
-                        <button
-                            @click="clearFilters"
-                            class="px-4 py-2 bg-gray-200 dark:bg-dark-bg text-gray-700 dark:text-gray-300 rounded-md hover:bg-gray-300 dark:hover:bg-dark-bg/80 transition font-medium text-sm border border-gray-200 dark:border-dark-border"
-                        >
-                            {{ t('common.clearFilters') }}
-                        </button>
-                        <div class="ml-auto flex gap-2">
-                            <a
-                                :href="exportUrl('csv')"
-                                class="inline-flex items-center px-4 py-2 bg-emerald-600 text-white rounded-md hover:bg-emerald-700 transition font-medium text-sm"
-                            >
-                                <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                                </svg>
-                                Export CSV
-                            </a>
-                            <a
-                                :href="exportUrl('xlsx')"
-                                class="inline-flex items-center px-4 py-2 bg-emerald-600 text-white rounded-md hover:bg-emerald-700 transition font-medium text-sm"
-                            >
-                                <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                                </svg>
-                                Export XLSX
-                            </a>
-                        </div>
+                    <!-- User Filter -->
+                    <div>
+                        <label for="user_id" class="mb-1 block text-xs font-medium text-text-secondary">{{ t('common.user') }}</label>
+                        <select id="user_id" v-model="user_id" :class="selectClass">
+                            <option value="">All Users</option>
+                            <option v-for="user in users" :key="user.id" :value="user.id">{{ user.name }}</option>
+                        </select>
+                    </div>
+
+                    <!-- Action Filter -->
+                    <div>
+                        <label for="action" class="mb-1 block text-xs font-medium text-text-secondary">Action</label>
+                        <select id="action" v-model="action" :class="selectClass">
+                            <option value="">All Actions</option>
+                            <option v-for="act in actions" :key="act" :value="act">{{ act.charAt(0).toUpperCase() + act.slice(1) }}</option>
+                        </select>
+                    </div>
+
+                    <!-- Subject Type Filter -->
+                    <div>
+                        <label for="subject_type" class="mb-1 block text-xs font-medium text-text-secondary">Subject Type</label>
+                        <select id="subject_type" v-model="subject_type" :class="selectClass">
+                            <option value="">{{ t('common.allTypes') }}</option>
+                            <option v-for="type in subjectTypes" :key="type.value" :value="type.value">{{ type.label }}</option>
+                        </select>
+                    </div>
+
+                    <!-- Date From -->
+                    <div>
+                        <label for="date_from" class="mb-1 block text-xs font-medium text-text-secondary">From Date</label>
+                        <input id="date_from" v-model="date_from" type="date" :class="selectClass" />
+                    </div>
+
+                    <!-- Date To -->
+                    <div>
+                        <label for="date_to" class="mb-1 block text-xs font-medium text-text-secondary">To Date</label>
+                        <input id="date_to" v-model="date_to" type="date" :class="selectClass" />
                     </div>
                 </div>
 
-                <!-- Activity List -->
-                <div class="bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border rounded-lg shadow-sm overflow-hidden">
-                    <div v-if="activities.data.length > 0" class="divide-y divide-gray-200 dark:divide-dark-border">
-                        <div
-                            v-for="activity in activities.data"
-                            :key="activity.id"
-                            class="p-6 hover:bg-gray-50 dark:hover:bg-dark-bg/50 transition"
-                        >
-                            <div class="flex items-start gap-4">
-                                <!-- Icon -->
-                                <div :class="['flex-shrink-0 w-10 h-10 rounded-full border flex items-center justify-center', getActionColor(activity.action)]">
-                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" :d="getActionIcon(activity.action)" />
-                                    </svg>
+                <div class="flex items-center gap-2">
+                    <Button type="submit" variant="default" size="sm">
+                        <Search :size="14" />
+                        {{ t('common.applyFilters') }}
+                    </Button>
+                    <Button type="button" variant="secondary" size="sm" @click="clearFilters">{{ t('common.clearFilters') }}</Button>
+                </div>
+            </form>
+        </Card>
+
+        <!-- Activity List -->
+        <div class="mt-4 w-full overflow-hidden rounded-lg border border-border-subtle bg-surface-raised">
+            <div v-if="activities.data.length > 0" class="divide-y divide-border-subtle">
+                <div
+                    v-for="activity in activities.data"
+                    :key="activity.id"
+                    class="p-4 transition-colors hover:bg-surface-overlay"
+                >
+                    <div class="flex items-start gap-4">
+                        <!-- Icon -->
+                        <span :class="[
+                            'flex h-9 w-9 shrink-0 items-center justify-center rounded-full border',
+                            {
+                                created: 'border-status-success/20 bg-status-success-soft text-status-success',
+                                updated: 'border-status-info/20 bg-status-info-soft text-status-info',
+                                deleted: 'border-status-danger/20 bg-status-danger-soft text-status-danger',
+                            }[activity.action] || 'border-border-subtle bg-surface-overlay text-text-secondary',
+                        ]">
+                            <component :is="actionIcon(activity.action)" :size="16" />
+                        </span>
+
+                        <!-- Content -->
+                        <div class="min-w-0 flex-1">
+                            <div class="flex items-start justify-between gap-4">
+                                <div class="flex-1">
+                                    <p class="text-sm font-medium text-text-primary">{{ activity.description }}</p>
+                                    <div class="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-text-tertiary">
+                                        <span class="flex items-center gap-1">
+                                            <User :size="13" />
+                                            {{ activity.user?.name || 'Unknown User' }}
+                                        </span>
+                                        <span>&middot;</span>
+                                        <Badge :variant="actionVariant(activity.action)" size="sm">{{ activity.action }}</Badge>
+                                        <span>&middot;</span>
+                                        <span>{{ activity.subject_type.split('\\').pop() }}</span>
+                                        <span v-if="activity.ip_address">&middot;</span>
+                                        <span v-if="activity.ip_address" class="font-mono">{{ activity.ip_address }}</span>
+                                    </div>
+
+                                    <!-- Properties (old/new values) -->
+                                    <div v-if="activity.properties && (activity.properties.old || activity.properties.new) && getChangedFields(activity.properties).length > 0" class="mt-3 space-y-2">
+                                        <details class="group">
+                                            <summary class="inline-flex cursor-pointer items-center gap-1 text-xs font-medium text-brand hover:underline">
+                                                <ChevronRight :size="14" class="transition-transform group-open:rotate-90" />
+                                                View {{ getChangedFields(activity.properties).length }} Change{{ getChangedFields(activity.properties).length > 1 ? 's' : '' }}
+                                            </summary>
+                                            <div class="mt-2 overflow-x-auto rounded-lg border border-border-subtle bg-surface-canvas p-3">
+                                                <table class="w-full text-xs">
+                                                    <thead>
+                                                        <tr class="border-b border-border-subtle">
+                                                            <th class="px-3 py-2 text-left font-medium text-text-secondary">Field</th>
+                                                            <th class="px-3 py-2 text-left font-medium text-status-danger">{{ t('stockAdjustments.show.stockBefore') }}</th>
+                                                            <th class="px-3 py-2 text-left font-medium text-status-success">{{ t('stockAdjustments.show.stockAfter') }}</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody class="divide-y divide-border-subtle">
+                                                        <tr v-for="change in getChangedFields(activity.properties)" :key="change.field">
+                                                            <td class="px-3 py-2 font-medium text-text-secondary">{{ formatFieldName(change.field) }}</td>
+                                                            <td class="max-w-xs truncate px-3 py-2 font-mono text-status-danger" :title="formatValue(change.old)">
+                                                                <span class="line-through opacity-75">{{ formatValue(change.old) }}</span>
+                                                            </td>
+                                                            <td class="max-w-xs truncate px-3 py-2 font-mono text-status-success" :title="formatValue(change.new)">
+                                                                {{ formatValue(change.new) }}
+                                                            </td>
+                                                        </tr>
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </details>
+                                    </div>
                                 </div>
 
-                                <!-- Content -->
-                                <div class="flex-1 min-w-0">
-                                    <div class="flex items-start justify-between gap-4">
-                                        <div class="flex-1">
-                                            <p class="text-sm font-medium text-gray-900 dark:text-gray-100">
-                                                {{ activity.description }}
-                                            </p>
-                                            <div class="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-gray-500 dark:text-gray-400">
-                                                <span class="flex items-center gap-1">
-                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                                                    </svg>
-                                                    {{ activity.user?.name || 'Unknown User' }}
-                                                </span>
-                                                <span>•</span>
-                                                <span :class="['px-2 py-0.5 rounded-full border text-xs font-medium', getActionColor(activity.action)]">
-                                                    {{ activity.action }}
-                                                </span>
-                                                <span>•</span>
-                                                <span>{{ activity.subject_type.split('\\').pop() }}</span>
-                                                <span v-if="activity.ip_address">•</span>
-                                                <span v-if="activity.ip_address" class="font-mono">{{ activity.ip_address }}</span>
-                                            </div>
-
-                                            <!-- Properties (old/new values) -->
-                                            <div v-if="activity.properties && (activity.properties.old || activity.properties.new) && getChangedFields(activity.properties).length > 0" class="mt-3 space-y-2">
-                                                <details class="group">
-                                                    <summary class="cursor-pointer text-xs text-primary-400 hover:text-primary-300 font-medium inline-flex items-center gap-1">
-                                                        <svg class="w-4 h-4 transition-transform group-open:rotate-90" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-                                                        </svg>
-                                                        View {{ getChangedFields(activity.properties).length }} Change{{ getChangedFields(activity.properties).length > 1 ? 's' : '' }}
-                                                    </summary>
-                                                    <div class="mt-2 p-3 bg-gray-50 dark:bg-dark-bg rounded-lg border border-gray-200 dark:border-dark-border overflow-x-auto">
-                                                        <table class="w-full text-xs">
-                                                            <thead>
-                                                                <tr class="border-b border-gray-200 dark:border-dark-border">
-                                                                    <th class="text-left py-2 px-3 font-semibold text-gray-600 dark:text-gray-300">Field</th>
-                                                                    <th class="text-left py-2 px-3 font-semibold text-red-400">{{ t('stockAdjustments.show.stockBefore') }}</th>
-                                                                    <th class="text-left py-2 px-3 font-semibold text-green-400">{{ t('stockAdjustments.show.stockAfter') }}</th>
-                                                                </tr>
-                                                            </thead>
-                                                            <tbody class="divide-y divide-gray-100 dark:divide-dark-border">
-                                                                <tr v-for="change in getChangedFields(activity.properties)" :key="change.field">
-                                                                    <td class="py-2 px-3 font-medium text-gray-700 dark:text-gray-300">
-                                                                        {{ formatFieldName(change.field) }}
-                                                                    </td>
-                                                                    <td class="py-2 px-3 text-red-400 font-mono max-w-xs truncate" :title="formatValue(change.old)">
-                                                                        <span class="line-through opacity-75">{{ formatValue(change.old) }}</span>
-                                                                    </td>
-                                                                    <td class="py-2 px-3 text-green-400 font-mono max-w-xs truncate" :title="formatValue(change.new)">
-                                                                        {{ formatValue(change.new) }}
-                                                                    </td>
-                                                                </tr>
-                                                            </tbody>
-                                                        </table>
-                                                    </div>
-                                                </details>
-                                            </div>
-                                        </div>
-
-                                        <!-- Timestamp -->
-                                        <div class="text-right flex-shrink-0">
-                                            <p class="text-xs text-gray-500 dark:text-gray-400">
-                                                {{ formatRelativeTime(activity.created_at) }}
-                                            </p>
-                                            <p class="text-xs text-gray-400 dark:text-gray-500 mt-0.5">
-                                                {{ formatDate(activity.created_at) }}
-                                            </p>
-                                        </div>
-                                    </div>
+                                <!-- Timestamp -->
+                                <div class="shrink-0 text-right">
+                                    <p class="text-xs text-text-secondary">{{ formatRelativeTime(activity.created_at) }}</p>
+                                    <p class="mt-0.5 text-xs text-text-tertiary">{{ formatDate(activity.created_at) }}</p>
                                 </div>
                             </div>
                         </div>
                     </div>
-
-                    <!-- Empty State -->
-                    <div v-else class="p-12 text-center">
-                        <svg class="w-16 h-16 mx-auto mb-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                        </svg>
-                        <p class="text-gray-500 dark:text-gray-400 text-lg font-medium">
-                            No activity found
-                        </p>
-                        <p class="text-gray-400 dark:text-gray-500 text-sm mt-1">
-                            Try adjusting your filters to see more results
-                        </p>
-                    </div>
-                </div>
-
-                <!-- Pagination -->
-                <div v-if="activities.data.length > 0" class="mt-6">
-                    <div class="flex items-center justify-between">
-                        <div class="text-sm text-gray-600 dark:text-gray-400">
-                            Showing {{ activities.from }} to {{ activities.to }} of {{ activities.total }} results
-                        </div>
-
-                        <div class="flex gap-2">
-                            <Link
-                                v-for="link in activities.links"
-                                :key="link.label"
-                                :href="link.url"
-                                :class="[
-                                    'px-3 py-2 text-sm rounded-md border transition',
-                                    link.active
-                                        ? 'bg-primary-400 text-white border-primary-400'
-                                        : 'bg-white dark:bg-dark-card text-gray-600 dark:text-gray-300 border-gray-200 dark:border-dark-border hover:bg-gray-100 dark:hover:bg-dark-bg',
-                                    !link.url && 'opacity-50 cursor-not-allowed'
-                                ]"
-                                :disabled="!link.url"
-                                v-html="link.label"
-                            />
-                        </div>
-                    </div>
                 </div>
             </div>
+
+            <!-- Empty State -->
+            <div v-else class="flex flex-col items-center gap-3 px-4 py-12 text-center">
+                <FileText :size="22" class="text-text-tertiary" />
+                <p class="text-sm font-medium text-text-primary">No activity found</p>
+                <p class="text-sm text-text-tertiary">Try adjusting your filters to see more results</p>
+            </div>
         </div>
-    </AuthenticatedLayout>
+
+        <!-- Pagination -->
+        <div v-if="activities.data.length > 0" class="mt-4 flex flex-col items-center justify-between gap-3 sm:flex-row">
+            <p class="text-xs text-text-tertiary">
+                {{ t('common.showing') }} <span class="font-medium text-text-secondary">{{ activities.from }}</span>
+                {{ t('common.to') }} <span class="font-medium text-text-secondary">{{ activities.to }}</span>
+                {{ t('common.of') }} <span class="font-medium text-text-secondary">{{ activities.total }}</span> {{ t('common.results') }}
+            </p>
+            <nav class="inline-flex items-center gap-1">
+                <template v-for="link in activities.links" :key="link.label">
+                    <Link
+                        v-if="link.url"
+                        :href="link.url"
+                        :class="[
+                            'inline-flex h-8 min-w-8 items-center justify-center rounded-md border px-2.5 text-xs font-medium transition-colors',
+                            link.active
+                                ? 'border-brand bg-brand text-brand-foreground'
+                                : 'border-border-subtle bg-surface-canvas text-text-secondary hover:bg-surface-overlay',
+                        ]"
+                        v-html="link.label"
+                    />
+                    <span v-else class="inline-flex h-8 min-w-8 cursor-not-allowed items-center justify-center rounded-md border border-border-subtle px-2.5 text-xs text-text-tertiary opacity-50" v-html="link.label" />
+                </template>
+            </nav>
+        </div>
+    </AppLayout>
 </template>

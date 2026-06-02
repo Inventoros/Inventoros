@@ -1,8 +1,9 @@
 <script setup>
-import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
+import AppLayout from '@/Layouts/AppLayout.vue';
+import PageHeader from '@/Components/ui/PageHeader.vue';
 import EmailConfiguration from './Partials/EmailConfiguration.vue';
 import NotificationPreferences from './Partials/NotificationPreferences.vue';
-import { Head } from '@inertiajs/vue3';
+import { Head, Link } from '@inertiajs/vue3';
 import { ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 
@@ -19,53 +20,54 @@ const activeTab = ref('configuration');
 <template>
     <Head :title="t('settings.email.title')" />
 
-    <AuthenticatedLayout>
+    <AppLayout>
         <template #header>
-            <h2 class="font-semibold text-2xl text-gray-900 dark:text-gray-100">
-                {{ t('settings.email.title') }}
-            </h2>
+            <div class="flex items-center gap-2 text-xs">
+                <Link :href="route('settings.account.index')" class="text-text-tertiary hover:text-text-primary">Workspace</Link>
+                <span class="text-text-tertiary">/</span>
+                <Link :href="route('settings.account.index')" class="text-text-tertiary hover:text-text-primary">Settings</Link>
+                <span class="text-text-tertiary">/</span>
+                <span class="font-medium text-text-primary">{{ t('settings.email.title') }}</span>
+            </div>
         </template>
 
-        <div class="py-12">
-            <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-                <!-- Tab Navigation -->
-                <div class="mb-6 border-b border-gray-200 dark:border-dark-border">
-                    <nav class="-mb-px flex space-x-8">
-                        <button
-                            @click="activeTab = 'configuration'"
-                            :class="[
-                                activeTab === 'configuration'
-                                    ? 'border-primary-400 text-primary-400'
-                                    : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600',
-                                'whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition'
-                            ]"
-                        >
-                            {{ t('settings.email.configuration') }}
-                        </button>
+        <PageHeader :title="t('settings.email.title')" description="Configure how your workspace sends email and notifications." />
 
-                        <button
-                            @click="activeTab = 'preferences'"
-                            :class="[
-                                activeTab === 'preferences'
-                                    ? 'border-primary-400 text-primary-400'
-                                    : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600',
-                                'whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition'
-                            ]"
-                        >
-                            {{ t('settings.notificationPreferences.title') }}
-                        </button>
-                    </nav>
-                </div>
-
-                <!-- Tab Content -->
-                <div v-if="activeTab === 'configuration'">
-                    <EmailConfiguration :email-config="emailConfig" />
-                </div>
-
-                <div v-if="activeTab === 'preferences'">
-                    <NotificationPreferences :preferences="userPreferences" />
-                </div>
-            </div>
+        <!-- Tabs -->
+        <div class="mt-6 border-b border-border-subtle">
+            <nav class="-mb-px flex gap-8">
+                <button
+                    @click="activeTab = 'configuration'"
+                    :class="[
+                        'border-b-2 px-1 py-3 text-sm font-medium transition-colors',
+                        activeTab === 'configuration'
+                            ? 'border-brand text-brand'
+                            : 'border-transparent text-text-tertiary hover:border-border-strong hover:text-text-secondary'
+                    ]"
+                >
+                    {{ t('settings.email.configuration') }}
+                </button>
+                <button
+                    @click="activeTab = 'preferences'"
+                    :class="[
+                        'border-b-2 px-1 py-3 text-sm font-medium transition-colors',
+                        activeTab === 'preferences'
+                            ? 'border-brand text-brand'
+                            : 'border-transparent text-text-tertiary hover:border-border-strong hover:text-text-secondary'
+                    ]"
+                >
+                    {{ t('settings.notificationPreferences.title') }}
+                </button>
+            </nav>
         </div>
-    </AuthenticatedLayout>
+
+        <!-- Tab Content -->
+        <div v-show="activeTab === 'configuration'" class="mt-6">
+            <EmailConfiguration :email-config="emailConfig" />
+        </div>
+
+        <div v-show="activeTab === 'preferences'" class="mt-6">
+            <NotificationPreferences :preferences="userPreferences" />
+        </div>
+    </AppLayout>
 </template>
