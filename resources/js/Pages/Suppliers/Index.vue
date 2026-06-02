@@ -1,9 +1,14 @@
 <script setup>
-import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
+import AppLayout from '@/Layouts/AppLayout.vue';
 import PluginSlot from '@/Components/PluginSlot.vue';
+import PageHeader from '@/Components/ui/PageHeader.vue';
+import Card from '@/Components/ui/Card.vue';
+import Button from '@/Components/ui/Button.vue';
+import Badge from '@/Components/ui/Badge.vue';
 import { Head, Link, router } from '@inertiajs/vue3';
 import { ref } from 'vue';
 import { useI18n } from 'vue-i18n';
+import { Plus, Search, Eye, Pencil, Trash2, Truck } from 'lucide-vue-next';
 
 const { t } = useI18n();
 
@@ -34,215 +39,145 @@ const deleteSupplier = (supplier) => {
         router.delete(route('suppliers.destroy', supplier.id));
     }
 };
+
+const thClass =
+    'px-4 py-2.5 text-left text-xs font-medium text-text-secondary';
 </script>
 
 <template>
     <Head :title="t('suppliers.title')" />
 
-    <AuthenticatedLayout>
+    <AppLayout>
         <template #header>
-            <div class="flex items-center justify-between">
-                <h2 class="font-semibold text-xl text-gray-900 dark:text-gray-100 leading-tight">
-                    {{ t('suppliers.title') }}
-                </h2>
-                <Link
-                    :href="route('suppliers.create')"
-                    class="inline-flex items-center px-4 py-2 bg-primary-400 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-primary-500 focus:bg-primary-500 active:bg-primary-600 focus:outline-none focus:ring-2 focus:ring-primary-400 focus:ring-offset-2 focus:ring-offset-dark-bg transition ease-in-out duration-150"
-                >
-                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                    </svg>
-                    {{ t('suppliers.addSupplier') }}
-                </Link>
+            <div class="flex items-center gap-2 text-xs">
+                <span class="text-text-tertiary">Workspace</span>
+                <span class="text-text-tertiary">/</span>
+                <span class="font-medium text-text-primary">{{ t('suppliers.title') }}</span>
             </div>
         </template>
 
-        <div class="py-12 bg-gray-50 dark:bg-dark-bg min-h-screen">
-            <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-                <!-- Plugin Slot: Header -->
-                <PluginSlot slot="header" :components="pluginComponents?.header" />
+        <PluginSlot slot="header" :components="pluginComponents?.header" />
 
-                <!-- Search -->
-                <div class="mb-6 bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border overflow-hidden shadow-lg sm:rounded-lg">
-                    <div class="p-6">
-                        <form @submit.prevent="searchSuppliers" class="space-y-4">
-                            <div class="flex gap-4">
-                                <div class="flex-1">
-                                    <label for="search" class="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-1">
-                                        {{ t('common.search') }} {{ t('suppliers.title') }}
-                                    </label>
-                                    <input
-                                        id="search"
-                                        v-model="search"
-                                        type="text"
-                                        :placeholder="t('suppliers.searchPlaceholder')"
-                                        class="block w-full rounded-md bg-gray-50 dark:bg-dark-bg border-gray-200 dark:border-dark-border text-gray-900 dark:text-gray-100 placeholder-gray-500 shadow-sm focus:border-primary-400 focus:ring-primary-400"
-                                    />
-                                </div>
-                            </div>
+        <PageHeader :title="t('suppliers.title')" description="Your vendors and the products they supply.">
+            <template #actions>
+                <Button variant="default" size="sm" as="Link" :href="route('suppliers.create')">
+                    <Plus :size="14" />
+                    {{ t('suppliers.addSupplier') }}
+                </Button>
+            </template>
+        </PageHeader>
 
-                            <div class="flex items-center gap-3">
-                                <button
-                                    type="submit"
-                                    class="inline-flex items-center px-4 py-2 bg-primary-400 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-primary-500"
-                                >
-                                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                                    </svg>
-                                    {{ t('common.search') }}
-                                </button>
-                                <button
-                                    type="button"
-                                    @click="clearFilters"
-                                    class="inline-flex items-center px-4 py-2 bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-border rounded-md font-semibold text-xs text-gray-600 dark:text-gray-300 uppercase tracking-widest hover:bg-gray-100 dark:hover:bg-dark-bg/50"
-                                >
-                                    {{ t('common.clear') }}
-                                </button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-
-                <!-- Plugin Slot: Before Table -->
-                <PluginSlot slot="beforeTable" :components="pluginComponents?.beforeTable" />
-
-                <!-- Suppliers Table -->
-                <div class="bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border overflow-hidden shadow-lg sm:rounded-lg">
-                    <div class="overflow-x-auto">
-                        <table class="min-w-full divide-y divide-gray-200 dark:divide-dark-border">
-                            <thead class="bg-gray-50 dark:bg-dark-bg">
-                                <tr>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">{{ t('common.name') }}</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">{{ t('suppliers.contact') }}</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">{{ t('common.email') }}</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">{{ t('common.phone') }}</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">{{ t('common.products') }}</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">{{ t('common.status') }}</th>
-                                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">{{ t('common.actions') }}</th>
-                                </tr>
-                            </thead>
-                            <tbody class="bg-white dark:bg-dark-card divide-y divide-gray-200 dark:divide-dark-border">
-                                <tr v-for="supplier in suppliers.data" :key="supplier.id" class="hover:bg-gray-50 dark:hover:bg-dark-bg/50">
-                                    <td class="px-6 py-4 whitespace-nowrap">
-                                        <div class="flex items-center">
-                                            <div>
-                                                <div class="text-sm font-medium text-gray-900 dark:text-gray-100">
-                                                    {{ supplier.name }}
-                                                </div>
-                                                <div v-if="supplier.code" class="text-sm text-gray-500 dark:text-gray-400">
-                                                    {{ supplier.code }}
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                                        {{ supplier.contact_name || '-' }}
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                                        <a v-if="supplier.email" :href="`mailto:${supplier.email}`" class="text-primary-400 hover:underline">
-                                            {{ supplier.email }}
-                                        </a>
-                                        <span v-else>-</span>
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                                        {{ supplier.phone || '-' }}
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                                        {{ supplier.products_count || 0 }}
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap">
-                                        <span
-                                            :class="[
-                                                'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium',
-                                                supplier.is_active
-                                                    ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
-                                                    : 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400'
-                                            ]"
-                                        >
-                                            {{ supplier.is_active ? t('common.active') : t('common.inactive') }}
-                                        </span>
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                        <div class="flex items-center justify-end gap-2">
-                                            <Link
-                                                :href="route('suppliers.show', supplier.id)"
-                                                class="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
-                                                :title="t('common.view')"
-                                            >
-                                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                                                </svg>
-                                            </Link>
-                                            <Link
-                                                :href="route('suppliers.edit', supplier.id)"
-                                                class="text-primary-400 hover:text-primary-500"
-                                                :title="t('common.edit')"
-                                            >
-                                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                                                </svg>
-                                            </Link>
-                                            <button
-                                                @click="deleteSupplier(supplier)"
-                                                class="text-red-400 hover:text-red-500"
-                                                :title="t('common.delete')"
-                                            >
-                                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                                </svg>
-                                            </button>
-                                        </div>
-                                    </td>
-                                </tr>
-                                <tr v-if="suppliers.data.length === 0">
-                                    <td colspan="7" class="px-6 py-12 text-center text-gray-500 dark:text-gray-400">
-                                        <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                                        </svg>
-                                        <p class="mt-4 text-lg font-medium">{{ t('suppliers.noSuppliersFound') }}</p>
-                                        <p class="mt-1">{{ t('suppliers.getStarted') }}</p>
-                                        <Link
-                                            :href="route('suppliers.create')"
-                                            class="mt-4 inline-flex items-center px-4 py-2 bg-primary-400 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-primary-500"
-                                        >
-                                            {{ t('suppliers.addSupplier') }}
-                                        </Link>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-
-                    <!-- Pagination -->
-                    <div v-if="suppliers.data.length > 0" class="bg-white dark:bg-dark-card px-4 py-3 border-t border-gray-200 dark:border-dark-border sm:px-6">
-                        <div class="flex items-center justify-between">
-                            <div class="text-sm text-gray-500 dark:text-gray-400">
-                                {{ t('common.showingResults', { from: suppliers.from, to: suppliers.to, total: suppliers.total }) }}
-                            </div>
-                            <div class="flex gap-2">
-                                <Link
-                                    v-for="link in suppliers.links"
-                                    :key="link.label"
-                                    :href="link.url"
-                                    :class="[
-                                        'px-3 py-1 text-sm rounded-md',
-                                        link.active
-                                            ? 'bg-primary-400 text-white'
-                                            : 'bg-gray-100 dark:bg-dark-bg text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-dark-border',
-                                        !link.url && 'opacity-50 cursor-not-allowed'
-                                    ]"
-                                    v-html="link.label"
-                                    :disabled="!link.url"
-                                />
-                            </div>
+        <!-- Filters -->
+        <Card class="mt-6">
+            <form @submit.prevent="searchSuppliers" class="space-y-4">
+                <div class="grid grid-cols-1 gap-4 md:grid-cols-4">
+                    <div class="md:col-span-2">
+                        <label for="search" class="mb-1 block text-xs font-medium text-text-secondary">{{ t('common.search') }} {{ t('suppliers.title') }}</label>
+                        <div class="relative">
+                            <Search :size="15" class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-text-tertiary" />
+                            <input
+                                id="search"
+                                v-model="search"
+                                type="text"
+                                :placeholder="t('suppliers.searchPlaceholder')"
+                                class="h-9 w-full rounded-md border border-border-subtle bg-surface-canvas pl-9 pr-3 text-sm text-text-primary placeholder:text-text-tertiary ds-focus-ring"
+                            />
                         </div>
                     </div>
                 </div>
+                <div class="flex items-center gap-2">
+                    <Button type="submit" variant="default" size="sm">
+                        <Search :size="14" />
+                        {{ t('common.search') }}
+                    </Button>
+                    <Button type="button" variant="secondary" size="sm" @click="clearFilters">{{ t('common.clear') }}</Button>
+                </div>
+            </form>
+        </Card>
 
-                <!-- Plugin Slot: Footer -->
-                <PluginSlot slot="footer" :components="pluginComponents?.footer" />
-            </div>
+        <PluginSlot slot="beforeTable" :components="pluginComponents?.beforeTable" />
+
+        <!-- Suppliers table -->
+        <div class="mt-4 w-full overflow-x-auto rounded-lg border border-border-subtle bg-surface-raised">
+            <table class="w-full text-sm">
+                <thead>
+                    <tr class="border-b border-border-subtle">
+                        <th :class="thClass">{{ t('common.name') }}</th>
+                        <th :class="thClass">{{ t('suppliers.contact') }}</th>
+                        <th :class="thClass">{{ t('common.email') }}</th>
+                        <th :class="thClass">{{ t('common.phone') }}</th>
+                        <th :class="thClass">{{ t('common.products') }}</th>
+                        <th :class="thClass">{{ t('common.status') }}</th>
+                        <th :class="[thClass, 'text-right']">{{ t('common.actions') }}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr v-if="suppliers.data.length === 0">
+                        <td colspan="7" class="px-4 py-12 text-center">
+                            <div class="flex flex-col items-center gap-3">
+                                <Truck :size="22" class="text-text-tertiary" />
+                                <p class="text-sm font-medium text-text-primary">{{ t('suppliers.noSuppliersFound') }}</p>
+                                <p class="text-sm text-text-tertiary">{{ t('suppliers.getStarted') }}</p>
+                                <Button variant="default" size="sm" as="Link" :href="route('suppliers.create')">
+                                    <Plus :size="14" />
+                                    {{ t('suppliers.addSupplier') }}
+                                </Button>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr v-for="supplier in suppliers.data" :key="supplier.id" class="border-b border-border-subtle transition-colors last:border-b-0 hover:bg-surface-overlay">
+                        <td class="px-4 py-3 text-text-primary">
+                            <div class="font-medium text-text-primary">{{ supplier.name }}</div>
+                            <div v-if="supplier.code" class="text-xs text-text-tertiary">{{ supplier.code }}</div>
+                        </td>
+                        <td class="px-4 py-3 text-text-primary">
+                            <span class="text-text-secondary">{{ supplier.contact_name || '-' }}</span>
+                        </td>
+                        <td class="px-4 py-3 text-text-primary">
+                            <a v-if="supplier.email" :href="`mailto:${supplier.email}`" class="text-brand hover:underline">{{ supplier.email }}</a>
+                            <span v-else class="text-text-secondary">-</span>
+                        </td>
+                        <td class="px-4 py-3 text-text-primary">
+                            <span class="text-text-secondary">{{ supplier.phone || '-' }}</span>
+                        </td>
+                        <td class="px-4 py-3 text-text-primary">
+                            <span class="tabular-nums text-text-secondary">{{ supplier.products_count || 0 }}</span>
+                        </td>
+                        <td class="px-4 py-3">
+                            <Badge :variant="supplier.is_active ? 'success' : 'neutral'" size="sm">
+                                {{ supplier.is_active ? t('common.active') : t('common.inactive') }}
+                            </Badge>
+                        </td>
+                        <td class="px-4 py-3">
+                            <div class="flex items-center justify-end gap-1">
+                                <Link :href="route('suppliers.show', supplier.id)" class="rounded-md p-1.5 text-text-tertiary transition-colors hover:bg-surface-overlay hover:text-brand" :title="t('common.view')"><Eye :size="16" /></Link>
+                                <Link :href="route('suppliers.edit', supplier.id)" class="rounded-md p-1.5 text-text-tertiary transition-colors hover:bg-surface-overlay hover:text-status-success" :title="t('common.edit')"><Pencil :size="16" /></Link>
+                                <button @click="deleteSupplier(supplier)" class="rounded-md p-1.5 text-text-tertiary transition-colors hover:bg-surface-overlay hover:text-status-danger" :title="t('common.delete')"><Trash2 :size="16" /></button>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
         </div>
-    </AuthenticatedLayout>
+
+        <!-- Pagination -->
+        <div v-if="suppliers.data.length > 0" class="mt-4 flex flex-col items-center justify-between gap-3 sm:flex-row">
+            <p class="text-xs text-text-tertiary">
+                {{ t('common.showingResults', { from: suppliers.from, to: suppliers.to, total: suppliers.total }) }}
+            </p>
+            <nav class="inline-flex items-center gap-1">
+                <template v-for="link in suppliers.links" :key="link.label">
+                    <Link v-if="link.url" :href="link.url"
+                        :class="[
+                            'inline-flex h-8 min-w-8 items-center justify-center rounded-md border px-2.5 text-xs font-medium transition-colors',
+                            link.active ? 'border-brand bg-brand text-brand-foreground' : 'border-border-subtle bg-surface-canvas text-text-secondary hover:bg-surface-overlay',
+                        ]"
+                        v-html="link.label" />
+                    <span v-else class="inline-flex h-8 min-w-8 cursor-not-allowed items-center justify-center rounded-md border border-border-subtle px-2.5 text-xs text-text-tertiary opacity-50" v-html="link.label" />
+                </template>
+            </nav>
+        </div>
+
+        <PluginSlot slot="footer" :components="pluginComponents?.footer" />
+    </AppLayout>
 </template>
