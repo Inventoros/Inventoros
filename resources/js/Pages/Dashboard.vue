@@ -155,7 +155,7 @@ const secondaryStats = () => [
                 hint="active in catalog"
                 icon-tone="brand"
             >
-                <template #icon><Boxes :size="18" /></template>
+                <template #icon><Boxes :size="20" :stroke-width="1.5" /></template>
             </StatTile>
             <StatTile
                 :label="t('dashboard.totalValue')"
@@ -163,7 +163,7 @@ const secondaryStats = () => [
                 hint="at cost"
                 icon-tone="success"
             >
-                <template #icon><DollarSign :size="18" /></template>
+                <template #icon><DollarSign :size="20" :stroke-width="1.5" /></template>
             </StatTile>
             <StatTile
                 :label="t('dashboard.lowStock')"
@@ -173,7 +173,7 @@ const secondaryStats = () => [
                 hint="below minimum"
                 icon-tone="warning"
             >
-                <template #icon><AlertTriangle :size="18" /></template>
+                <template #icon><AlertTriangle :size="20" :stroke-width="1.5" /></template>
             </StatTile>
             <StatTile
                 :label="t('dashboard.totalOrders')"
@@ -181,7 +181,7 @@ const secondaryStats = () => [
                 hint="all time"
                 icon-tone="violet"
             >
-                <template #icon><ShoppingCart :size="18" /></template>
+                <template #icon><ShoppingCart :size="20" :stroke-width="1.5" /></template>
             </StatTile>
         </section>
 
@@ -407,8 +407,8 @@ const secondaryStats = () => [
                         :href="route('orders.create')"
                         class="group flex items-center gap-3 rounded-lg border border-border-subtle bg-surface-canvas p-4 transition-colors hover:border-brand"
                     >
-                        <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-brand to-brand-hover text-brand-foreground shadow-sm">
-                            <Plus :size="18" />
+                        <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-brand/10 text-brand">
+                            <Plus :size="20" :stroke-width="1.5" />
                         </span>
                         <div class="min-w-0">
                             <p class="text-sm font-semibold text-text-primary">{{ t('dashboard.createOrder') }}</p>
@@ -419,8 +419,8 @@ const secondaryStats = () => [
                         :href="route('products.create')"
                         class="group flex items-center gap-3 rounded-lg border border-border-subtle bg-surface-canvas p-4 transition-colors hover:border-brand"
                     >
-                        <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-brand to-brand-hover text-brand-foreground shadow-sm">
-                            <Plus :size="18" />
+                        <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-brand/10 text-brand">
+                            <Plus :size="20" :stroke-width="1.5" />
                         </span>
                         <div class="min-w-0">
                             <p class="text-sm font-semibold text-text-primary">{{ t('dashboard.addProduct') }}</p>
