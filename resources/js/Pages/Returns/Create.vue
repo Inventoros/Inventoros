@@ -1,8 +1,12 @@
 <script setup>
-import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
+import AppLayout from '@/Layouts/AppLayout.vue';
+import PageHeader from '@/Components/ui/PageHeader.vue';
+import Card from '@/Components/ui/Card.vue';
+import Button from '@/Components/ui/Button.vue';
 import { Head, Link, useForm } from '@inertiajs/vue3';
 import { ref, computed } from 'vue';
 import { useI18n } from 'vue-i18n';
+import { ArrowLeft, Trash2 } from 'lucide-vue-next';
 
 const { t } = useI18n();
 
@@ -84,194 +88,189 @@ const submit = () => {
 
     form.transform(() => payload).post(route('returns.store'));
 };
+
+const fieldLabel = 'mb-1 block text-sm font-medium text-text-secondary';
+const fieldInput = 'h-9 w-full rounded-md border border-border-subtle bg-surface-canvas px-3 text-sm text-text-primary placeholder:text-text-tertiary ds-focus-ring';
+const fieldArea = 'w-full rounded-md border border-border-subtle bg-surface-canvas px-3 py-2 text-sm text-text-primary placeholder:text-text-tertiary ds-focus-ring';
+const fieldError = 'mt-1 text-xs text-status-danger';
 </script>
 
 <template>
     <Head :title="`Create Return - Order #${order.order_number}`" />
 
-    <AuthenticatedLayout>
+    <AppLayout>
         <template #header>
-            <div class="flex items-center justify-between">
-                <div>
-                    <h2 class="font-semibold text-xl text-gray-900 dark:text-gray-100 leading-tight">
-                        Create Return / Exchange
-                    </h2>
-                    <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                        From Order #{{ order.order_number }}
-                    </p>
-                </div>
-                <Link
-                    :href="route('orders.show', order.id)"
-                    class="inline-flex items-center px-4 py-2 bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border rounded-md font-semibold text-xs text-gray-600 dark:text-gray-300 uppercase tracking-widest shadow-sm hover:bg-gray-100 dark:hover:bg-dark-bg/50"
-                >
-                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-                    </svg>
-                    Back to Order
-                </Link>
+            <div class="flex items-center gap-2 text-xs">
+                <Link :href="route('orders.index')" class="text-text-tertiary hover:text-text-primary">Workspace</Link>
+                <span class="text-text-tertiary">/</span>
+                <Link :href="route('returns.index')" class="text-text-tertiary hover:text-text-primary">Returns</Link>
+                <span class="text-text-tertiary">/</span>
+                <span class="font-medium text-text-primary">New</span>
             </div>
         </template>
 
-        <div class="py-12 bg-gray-50 dark:bg-dark-bg min-h-screen">
-            <div class="max-w-4xl mx-auto sm:px-6 lg:px-8">
-                <form @submit.prevent="submit" class="space-y-6">
-                    <!-- Return Type & Reason -->
-                    <div class="bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border shadow-sm sm:rounded-lg p-6">
-                        <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Return Details</h3>
+        <PageHeader title="Create Return / Exchange" :description="`From Order #${order.order_number}`">
+            <template #actions>
+                <Button variant="secondary" size="sm" as="Link" :href="route('orders.show', order.id)">
+                    <ArrowLeft :size="14" />
+                    Back to Order
+                </Button>
+            </template>
+        </PageHeader>
 
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                            <div>
-                                <label class="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-1">Type</label>
-                                <select
-                                    v-model="form.type"
-                                    class="block w-full rounded-md bg-gray-50 dark:bg-dark-bg border-gray-200 dark:border-dark-border text-gray-900 dark:text-gray-100 shadow-sm focus:border-primary-400 focus:ring-primary-400 sm:text-sm"
-                                >
-                                    <option value="return">Return (Refund)</option>
-                                    <option value="exchange">Exchange</option>
-                                </select>
-                                <p v-if="form.errors.type" class="mt-1 text-sm text-red-400">{{ form.errors.type }}</p>
-                            </div>
-                        </div>
-
-                        <div class="mb-4">
-                            <label class="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-1">Reason *</label>
-                            <textarea
-                                v-model="form.reason"
-                                rows="2"
-                                class="block w-full rounded-md bg-gray-50 dark:bg-dark-bg border-gray-200 dark:border-dark-border text-gray-900 dark:text-gray-100 placeholder-gray-500 shadow-sm focus:border-primary-400 focus:ring-primary-400 sm:text-sm"
-                                placeholder="Reason for return or exchange..."
-                            ></textarea>
-                            <p v-if="form.errors.reason" class="mt-1 text-sm text-red-400">{{ form.errors.reason }}</p>
-                        </div>
-
+        <form @submit.prevent="submit" class="mt-6 space-y-4">
+            <!-- Return Type & Reason -->
+            <Card :padded="false">
+                <div class="px-5 pt-5"><h3 class="text-sm font-semibold text-text-primary">Return Details</h3></div>
+                <div class="space-y-4 p-5">
+                    <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
                         <div>
-                            <label class="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-1">Notes (optional)</label>
-                            <textarea
-                                v-model="form.notes"
-                                rows="2"
-                                class="block w-full rounded-md bg-gray-50 dark:bg-dark-bg border-gray-200 dark:border-dark-border text-gray-900 dark:text-gray-100 placeholder-gray-500 shadow-sm focus:border-primary-400 focus:ring-primary-400 sm:text-sm"
-                                placeholder="Additional notes..."
-                            ></textarea>
+                            <label :class="fieldLabel">Type</label>
+                            <select v-model="form.type" :class="fieldInput">
+                                <option value="return">Return (Refund)</option>
+                                <option value="exchange">Exchange</option>
+                            </select>
+                            <p v-if="form.errors.type" :class="fieldError">{{ form.errors.type }}</p>
                         </div>
                     </div>
 
-                    <!-- Select Items -->
-                    <div class="bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border shadow-sm sm:rounded-lg p-6">
-                        <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Select Items to Return</h3>
+                    <div>
+                        <label :class="fieldLabel">Reason *</label>
+                        <textarea
+                            v-model="form.reason"
+                            rows="2"
+                            :class="fieldArea"
+                            placeholder="Reason for return or exchange..."
+                        ></textarea>
+                        <p v-if="form.errors.reason" :class="fieldError">{{ form.errors.reason }}</p>
+                    </div>
 
-                        <div class="space-y-4">
-                            <div
-                                v-for="(item, index) in form.items"
-                                :key="item.order_item_id"
-                                class="border border-gray-200 dark:border-dark-border rounded-lg p-4"
-                                :class="item.selected ? 'bg-primary-400/5 border-primary-400/30' : 'bg-gray-50 dark:bg-dark-bg'"
-                            >
-                                <div class="flex items-start gap-4">
-                                    <!-- Checkbox -->
-                                    <div class="pt-1">
+                    <div>
+                        <label :class="fieldLabel">Notes (optional)</label>
+                        <textarea
+                            v-model="form.notes"
+                            rows="2"
+                            :class="fieldArea"
+                            placeholder="Additional notes..."
+                        ></textarea>
+                    </div>
+                </div>
+            </Card>
+
+            <!-- Select Items -->
+            <Card :padded="false">
+                <div class="px-5 pt-5"><h3 class="text-sm font-semibold text-text-primary">Select Items to Return</h3></div>
+                <div class="p-5">
+                    <div class="space-y-3">
+                        <div
+                            v-for="(item, index) in form.items"
+                            :key="item.order_item_id"
+                            class="rounded-lg border border-border-subtle bg-surface-canvas p-4"
+                        >
+                            <div class="flex items-start gap-4">
+                                <!-- Checkbox -->
+                                <div class="pt-1">
+                                    <input
+                                        type="checkbox"
+                                        v-model="item.selected"
+                                        @change="toggleItem(item)"
+                                        :disabled="maxReturnable(item) <= 0"
+                                        class="rounded border-border-subtle text-brand ds-focus-ring"
+                                    />
+                                </div>
+
+                                <!-- Product Info -->
+                                <div class="flex-1 min-w-0">
+                                    <p class="font-medium text-text-primary">{{ item.product_name }}</p>
+                                    <p class="text-sm text-text-tertiary">SKU: {{ item.sku }}</p>
+                                    <p class="text-xs text-text-tertiary mt-1">
+                                        Ordered: {{ item.ordered_quantity }}
+                                        <span v-if="item.already_returned > 0" class="text-status-warning">
+                                            ({{ item.already_returned }} already returned)
+                                        </span>
+                                        | Max returnable: {{ maxReturnable(item) }}
+                                    </p>
+                                </div>
+
+                                <!-- Return Options (shown when selected) -->
+                                <div v-if="item.selected" class="flex items-center gap-4">
+                                    <!-- Quantity -->
+                                    <div class="w-20">
+                                        <label :class="fieldLabel">Qty</label>
                                         <input
-                                            type="checkbox"
-                                            v-model="item.selected"
-                                            @change="toggleItem(item)"
-                                            :disabled="maxReturnable(item) <= 0"
-                                            class="rounded border-gray-300 dark:border-dark-border text-primary-400 focus:ring-primary-400"
+                                            type="number"
+                                            v-model.number="item.quantity"
+                                            :min="1"
+                                            :max="maxReturnable(item)"
+                                            :class="fieldInput"
                                         />
                                     </div>
 
-                                    <!-- Product Info -->
-                                    <div class="flex-1">
-                                        <p class="font-medium text-gray-900 dark:text-gray-100">{{ item.product_name }}</p>
-                                        <p class="text-sm text-gray-500 dark:text-gray-400">SKU: {{ item.sku }}</p>
-                                        <p class="text-xs text-gray-400 mt-1">
-                                            Ordered: {{ item.ordered_quantity }}
-                                            <span v-if="item.already_returned > 0" class="text-yellow-400">
-                                                ({{ item.already_returned }} already returned)
-                                            </span>
-                                            | Max returnable: {{ maxReturnable(item) }}
-                                        </p>
+                                    <!-- Condition -->
+                                    <div class="w-36">
+                                        <label :class="fieldLabel">Condition</label>
+                                        <select
+                                            v-model="item.condition"
+                                            @change="updateCondition(item)"
+                                            :class="fieldInput"
+                                        >
+                                            <option value="new">New (Unopened)</option>
+                                            <option value="used">Used (Opened)</option>
+                                            <option value="damaged">Damaged</option>
+                                        </select>
                                     </div>
 
-                                    <!-- Return Options (shown when selected) -->
-                                    <div v-if="item.selected" class="flex items-center gap-4">
-                                        <!-- Quantity -->
-                                        <div>
-                                            <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Qty</label>
-                                            <input
-                                                type="number"
-                                                v-model.number="item.quantity"
-                                                :min="1"
-                                                :max="maxReturnable(item)"
-                                                class="block w-20 rounded-md bg-white dark:bg-dark-bg border-gray-200 dark:border-dark-border text-gray-900 dark:text-gray-100 shadow-sm focus:border-primary-400 focus:ring-primary-400 sm:text-sm"
-                                            />
-                                        </div>
-
-                                        <!-- Condition -->
-                                        <div>
-                                            <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Condition</label>
-                                            <select
-                                                v-model="item.condition"
-                                                @change="updateCondition(item)"
-                                                class="block w-32 rounded-md bg-white dark:bg-dark-bg border-gray-200 dark:border-dark-border text-gray-900 dark:text-gray-100 shadow-sm focus:border-primary-400 focus:ring-primary-400 sm:text-sm"
-                                            >
-                                                <option value="new">New (Unopened)</option>
-                                                <option value="used">Used (Opened)</option>
-                                                <option value="damaged">Damaged</option>
-                                            </select>
-                                        </div>
-
-                                        <!-- Restock -->
-                                        <div class="text-center">
-                                            <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Restock</label>
-                                            <input
-                                                type="checkbox"
-                                                v-model="item.restock"
-                                                class="rounded border-gray-300 dark:border-dark-border text-primary-400 focus:ring-primary-400"
-                                            />
-                                        </div>
+                                    <!-- Restock -->
+                                    <div class="text-center">
+                                        <label :class="fieldLabel">Restock</label>
+                                        <input
+                                            type="checkbox"
+                                            v-model="item.restock"
+                                            class="rounded border-border-subtle text-brand ds-focus-ring"
+                                        />
                                     </div>
                                 </div>
-
-                                <!-- Validation errors for this item -->
-                                <p v-if="form.errors[`items.${index}.quantity`]" class="mt-2 text-sm text-red-400">
-                                    {{ form.errors[`items.${index}.quantity`] }}
-                                </p>
                             </div>
-                        </div>
 
-                        <p v-if="form.errors.items" class="mt-2 text-sm text-red-400">{{ form.errors.items }}</p>
-                    </div>
-
-                    <!-- Summary & Submit -->
-                    <div class="bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border shadow-sm sm:rounded-lg p-6">
-                        <div class="flex items-center justify-between">
-                            <div>
-                                <p class="text-sm text-gray-500 dark:text-gray-400">
-                                    {{ selectedItems.length }} item(s) selected for {{ form.type }}
-                                </p>
-                                <p class="text-lg font-semibold text-gray-900 dark:text-gray-100">
-                                    Estimated Refund: <span class="text-primary-400">${{ estimatedRefund.toFixed(2) }}</span>
-                                </p>
-                            </div>
-                            <div class="flex gap-3">
-                                <Link
-                                    :href="route('orders.show', order.id)"
-                                    class="px-4 py-2 bg-white dark:bg-dark-bg border border-gray-200 dark:border-dark-border text-gray-600 dark:text-gray-300 rounded-md font-semibold text-sm hover:bg-gray-100 dark:hover:bg-dark-bg/50"
-                                >
-                                    Cancel
-                                </Link>
-                                <button
-                                    type="submit"
-                                    :disabled="form.processing || selectedItems.length === 0"
-                                    class="px-6 py-2 bg-primary-400 text-white rounded-md font-semibold text-sm uppercase tracking-widest hover:bg-primary-500 disabled:opacity-50 transition"
-                                >
-                                    <span v-if="form.processing">Processing...</span>
-                                    <span v-else>Submit Return Request</span>
-                                </button>
-                            </div>
+                            <!-- Validation errors for this item -->
+                            <p v-if="form.errors[`items.${index}.quantity`]" :class="fieldError">
+                                {{ form.errors[`items.${index}.quantity`] }}
+                            </p>
                         </div>
                     </div>
-                </form>
-            </div>
-        </div>
-    </AuthenticatedLayout>
+
+                    <p v-if="form.errors.items" :class="fieldError">{{ form.errors.items }}</p>
+                </div>
+            </Card>
+
+            <!-- Summary & Submit -->
+            <Card :padded="false">
+                <div class="p-5">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-sm text-text-tertiary">
+                                {{ selectedItems.length }} item(s) selected for {{ form.type }}
+                            </p>
+                            <p class="text-lg font-semibold text-text-primary">
+                                Estimated Refund: <span class="text-brand">${{ estimatedRefund.toFixed(2) }}</span>
+                            </p>
+                        </div>
+                        <div class="flex gap-3">
+                            <Button variant="secondary" as="Link" :href="route('orders.show', order.id)">
+                                Cancel
+                            </Button>
+                            <Button
+                                type="submit"
+                                variant="default"
+                                :loading="form.processing"
+                                :disabled="form.processing || selectedItems.length === 0"
+                            >
+                                {{ form.processing ? 'Processing...' : 'Submit Return Request' }}
+                            </Button>
+                        </div>
+                    </div>
+                </div>
+            </Card>
+        </form>
+    </AppLayout>
 </template>

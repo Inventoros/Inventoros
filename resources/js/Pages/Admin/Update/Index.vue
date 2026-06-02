@@ -1,8 +1,21 @@
 <script setup>
-import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
-import { Head, router } from '@inertiajs/vue3';
+import AppLayout from '@/Layouts/AppLayout.vue';
+import PageHeader from '@/Components/ui/PageHeader.vue';
+import Card from '@/Components/ui/Card.vue';
+import Button from '@/Components/ui/Button.vue';
+import Badge from '@/Components/ui/Badge.vue';
+import { Head, Link, router } from '@inertiajs/vue3';
 import { ref, computed } from 'vue';
 import axios from 'axios';
+import {
+    CircleCheck,
+    TriangleAlert,
+    Info,
+    ExternalLink,
+    Database,
+    Trash2,
+    RotateCcw,
+} from 'lucide-vue-next';
 
 import { useI18n } from 'vue-i18n';
 const props = defineProps({
@@ -153,234 +166,268 @@ const deleteBackup = async (backupFile) => {
         alert('Failed to delete backup. Please try again.');
     }
 };
+
+const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-text-secondary';
 </script>
 
 <template>
     <Head :title="t('admin.update.title')" />
 
-    <AuthenticatedLayout>
+    <AppLayout>
         <template #header>
-            <div class="flex justify-between items-center">
-                <h2 class="font-semibold text-2xl text-gray-900 dark:text-gray-100">{{ t('admin.systemUpdate.title') }}</h2>
-                <button
-                    @click="checkForUpdates"
-                    :disabled="isCheckingUpdate"
-                    class="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white font-medium rounded-lg transition disabled:opacity-50"
-                >
-                    {{ isCheckingUpdate ? 'Checking...' : 'Check for Updates' }}
-                </button>
+            <div class="flex items-center gap-2 text-xs">
+                <Link :href="route('settings.account.index')" class="text-text-tertiary hover:text-text-primary">Workspace</Link>
+                <span class="text-text-tertiary">/</span>
+                <Link :href="route('settings.account.index')" class="text-text-tertiary hover:text-text-primary">Settings</Link>
+                <span class="text-text-tertiary">/</span>
+                <span class="font-medium text-text-primary">Updates</span>
             </div>
         </template>
 
-        <div class="py-12 bg-gray-50 dark:bg-dark-bg min-h-screen">
-            <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-6">
+        <PageHeader
+            title="Update Manager"
+            description="Check for new releases, install updates, and manage installation backups."
+        >
+            <template #actions>
+                <Button
+                    variant="secondary"
+                    size="sm"
+                    :loading="isCheckingUpdate"
+                    :disabled="isCheckingUpdate"
+                    @click="checkForUpdates"
+                >
+                    {{ isCheckingUpdate ? 'Checking…' : 'Check for Updates' }}
+                </Button>
+            </template>
+        </PageHeader>
 
-                <!-- Current Version Card -->
-                <div class="bg-white dark:bg-dark-card shadow-sm sm:rounded-lg border border-gray-200 dark:border-dark-border">
-                    <div class="p-6">
-                        <h3 class="text-lg font-semibold mb-4 text-gray-900 dark:text-gray-100">Current Version</h3>
-                        <div class="flex items-center justify-between">
-                            <div>
-                                <p class="text-3xl font-bold text-primary-500">{{ currentVersion }}</p>
-                                <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Installed version</p>
-                            </div>
-                            <div v-if="updateAvailable" class="text-yellow-500">
-                                <svg class="w-16 h-16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                                </svg>
-                            </div>
-                            <div v-else class="text-green-500">
-                                <svg class="w-16 h-16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                </svg>
-                            </div>
-                        </div>
-                    </div>
+        <div class="mt-6 space-y-4">
+            <!-- Current Version Card -->
+            <Card :padded="false">
+                <div class="px-5 pt-5">
+                    <h3 class="text-sm font-semibold text-text-primary">Current Version</h3>
                 </div>
-
-                <!-- Update Available Card -->
-                <div v-if="updateAvailable && latestRelease" class="bg-gradient-to-r from-yellow-50 to-yellow-100 dark:from-yellow-900/20 dark:to-yellow-800/20 shadow-sm sm:rounded-lg border border-yellow-200 dark:border-yellow-800">
-                    <div class="p-6">
-                        <div class="flex items-start justify-between mb-4">
-                            <div>
-                                <h3 class="text-lg font-semibold text-yellow-900 dark:text-yellow-100">Update Available</h3>
-                                <p class="text-sm text-yellow-700 dark:text-yellow-300 mt-1">A new version is ready to install</p>
-                            </div>
-                            <span class="text-2xl font-bold text-yellow-600 dark:text-yellow-400">{{ latestRelease.version }}</span>
+                <div class="p-5">
+                    <div class="flex items-center justify-between gap-4">
+                        <div class="flex items-center gap-3">
+                            <p class="text-3xl font-bold tabular-nums text-brand">{{ currentVersion }}</p>
+                            <Badge :variant="updateAvailable ? 'warning' : 'success'" size="md" dot>
+                                {{ updateAvailable ? 'Update available' : 'Up to date' }}
+                            </Badge>
                         </div>
+                        <component
+                            :is="updateAvailable ? TriangleAlert : CircleCheck"
+                            :size="40"
+                            :class="updateAvailable ? 'text-status-warning' : 'text-status-success'"
+                        />
+                    </div>
+                    <p class="mt-2 text-xs text-text-tertiary">Installed version</p>
+                </div>
+            </Card>
 
-                        <div v-if="latestRelease.name" class="mb-3">
-                            <h4 class="font-semibold text-yellow-900 dark:text-yellow-100">{{ latestRelease.name }}</h4>
-                        </div>
+            <!-- Update Available Card -->
+            <Card v-if="updateAvailable && latestRelease" :padded="false">
+                <div class="flex items-start justify-between gap-4 px-5 pt-5">
+                    <div>
+                        <h3 class="text-sm font-semibold text-text-primary">Update Available</h3>
+                        <p class="mt-0.5 text-xs text-text-secondary">A new version is ready to install.</p>
+                    </div>
+                    <Badge variant="brand" size="md">{{ latestRelease.version }}</Badge>
+                </div>
+                <div class="p-5">
+                    <div v-if="latestRelease.name" class="mb-3">
+                        <h4 class="text-sm font-semibold text-text-primary">{{ latestRelease.name }}</h4>
+                    </div>
 
-                        <div v-if="latestRelease.body" class="mb-4 p-4 bg-white dark:bg-dark-bg/50 rounded-lg">
-                            <h4 class="font-semibold text-gray-900 dark:text-gray-100 mb-2">Release Notes:</h4>
-                            <div class="text-sm text-gray-700 dark:text-gray-300 whitespace-pre-wrap">{{ latestRelease.body }}</div>
-                        </div>
+                    <div v-if="latestRelease.body" class="mb-4">
+                        <h4 class="mb-2 text-xs font-medium uppercase tracking-wider text-text-tertiary">Release Notes</h4>
+                        <div class="whitespace-pre-wrap rounded-lg border border-border-subtle bg-surface-canvas p-4 text-sm text-text-secondary">{{ latestRelease.body }}</div>
+                    </div>
 
-                        <div v-if="latestRelease.html_url" class="mb-4">
-                            <a :href="latestRelease.html_url" target="_blank" class="text-sm text-yellow-700 dark:text-yellow-300 hover:underline">
-                                View on GitHub →
-                            </a>
-                        </div>
-
-                        <button
-                            @click="performUpdate"
-                            :disabled="isUpdating"
-                            class="w-full px-4 py-3 bg-yellow-500 hover:bg-yellow-600 text-white font-semibold rounded-lg transition disabled:opacity-50"
+                    <div v-if="latestRelease.html_url" class="mb-4">
+                        <a
+                            :href="latestRelease.html_url"
+                            target="_blank"
+                            class="inline-flex items-center gap-1.5 text-sm text-brand hover:underline"
                         >
-                            {{ isUpdating ? 'Updating...' : 'Install Update' }}
-                        </button>
+                            View on GitHub
+                            <ExternalLink :size="14" />
+                        </a>
+                    </div>
 
-                        <p class="text-xs text-yellow-700 dark:text-yellow-300 mt-2 text-center">
-                            A backup will be created automatically before updating
-                        </p>
+                    <Button
+                        variant="default"
+                        class="w-full"
+                        :loading="isUpdating"
+                        :disabled="isUpdating"
+                        @click="performUpdate"
+                    >
+                        {{ isUpdating ? 'Updating…' : 'Install Update' }}
+                    </Button>
+
+                    <p class="mt-2 text-center text-xs text-text-tertiary">
+                        A backup will be created automatically before updating.
+                    </p>
+                </div>
+            </Card>
+
+            <!-- No Update Available -->
+            <Card v-else-if="!updateAvailable">
+                <div class="flex items-center gap-4">
+                    <CircleCheck :size="32" class="shrink-0 text-status-success" />
+                    <div>
+                        <h3 class="text-sm font-semibold text-text-primary">You're up to date</h3>
+                        <p class="mt-0.5 text-sm text-text-secondary">You're running the latest version of the application.</p>
                     </div>
                 </div>
+            </Card>
 
-                <!-- No Update Available -->
-                <div v-else-if="!updateAvailable" class="bg-gradient-to-r from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-800/20 shadow-sm sm:rounded-lg border border-green-200 dark:border-green-800">
-                    <div class="p-6">
-                        <div class="flex items-center">
-                            <svg class="w-12 h-12 text-green-500 mr-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                            </svg>
-                            <div>
-                                <h3 class="text-lg font-semibold text-green-900 dark:text-green-100">You're up to date!</h3>
-                                <p class="text-sm text-green-700 dark:text-green-300 mt-1">You're running the latest version of the application</p>
+            <!-- Update Progress -->
+            <Card v-if="isUpdating || updateResult" :padded="false">
+                <div class="px-5 pt-5">
+                    <h3 class="text-sm font-semibold text-text-primary">Update Progress</h3>
+                </div>
+                <div class="p-5">
+                    <div v-if="isUpdating" class="space-y-3">
+                        <div class="flex items-center gap-3">
+                            <span class="h-4 w-4 animate-spin rounded-full border-2 border-brand border-r-transparent"></span>
+                            <span class="text-sm text-text-secondary">Updating application… This may take several minutes.</span>
+                        </div>
+                        <div class="h-1.5 w-full overflow-hidden rounded-full bg-surface-sunken">
+                            <div class="h-full w-1/3 animate-pulse rounded-full bg-brand"></div>
+                        </div>
+                    </div>
+
+                    <div v-if="updateResult" :class="isUpdating ? 'mt-4' : ''">
+                        <div
+                            v-if="updateResult.success"
+                            class="rounded-lg border border-status-success/20 bg-status-success-soft p-4"
+                        >
+                            <div class="flex items-start gap-3">
+                                <CircleCheck :size="18" class="mt-0.5 shrink-0 text-status-success" />
+                                <div class="text-sm text-status-success">
+                                    <p class="font-semibold">{{ updateResult.message }}</p>
+                                    <p v-if="updateResult.new_version" class="mt-1">
+                                        Updated to version: {{ updateResult.new_version }}
+                                    </p>
+                                    <p class="mt-1">The page will reload automatically…</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div
+                            v-else
+                            class="rounded-lg border border-status-danger/20 bg-status-danger-soft p-4"
+                        >
+                            <div class="flex items-start gap-3">
+                                <TriangleAlert :size="18" class="mt-0.5 shrink-0 text-status-danger" />
+                                <p class="text-sm font-semibold text-status-danger">{{ updateResult.message }}</p>
                             </div>
                         </div>
                     </div>
                 </div>
+            </Card>
 
-                <!-- Update Progress -->
-                <div v-if="isUpdating || updateResult" class="bg-white dark:bg-dark-card shadow-sm sm:rounded-lg border border-gray-200 dark:border-dark-border">
-                    <div class="p-6">
-                        <h3 class="text-lg font-semibold mb-4 text-gray-900 dark:text-gray-100">Update Progress</h3>
-
-                        <div v-if="isUpdating" class="space-y-2">
-                            <div class="flex items-center">
-                                <div class="animate-spin rounded-full h-5 w-5 border-b-2 border-primary-500 mr-3"></div>
-                                <span class="text-gray-600 dark:text-gray-400">Updating application... This may take several minutes.</span>
-                            </div>
-                        </div>
-
-                        <div v-if="updateResult" class="mt-4">
-                            <div v-if="updateResult.success" class="p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
-                                <p class="text-green-800 dark:text-green-200 font-semibold">✓ {{ updateResult.message }}</p>
-                                <p v-if="updateResult.new_version" class="text-sm text-green-700 dark:text-green-300 mt-2">
-                                    Updated to version: {{ updateResult.new_version }}
-                                </p>
-                                <p class="text-sm text-green-700 dark:text-green-300 mt-2">
-                                    The page will reload automatically...
-                                </p>
-                            </div>
-                            <div v-else class="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
-                                <p class="text-red-800 dark:text-red-200 font-semibold">✗ {{ updateResult.message }}</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Backup Management -->
-                <div class="bg-white dark:bg-dark-card shadow-sm sm:rounded-lg border border-gray-200 dark:border-dark-border">
-                    <div class="p-6">
-                        <div class="flex justify-between items-center mb-4">
-                            <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">Backup Management</h3>
-                            <button
-                                @click="createBackup"
-                                :disabled="isCreatingBackup"
-                                class="px-4 py-2 bg-green-500 hover:bg-green-600 text-white font-medium rounded-lg transition disabled:opacity-50"
-                            >
-                                {{ isCreatingBackup ? 'Creating...' : 'Create Backup' }}
-                            </button>
-                        </div>
-
-                        <p class="text-gray-500 dark:text-gray-400 mb-4">
+            <!-- Backup Management -->
+            <Card :padded="false">
+                <div class="flex items-start justify-between gap-4 px-5 pt-5">
+                    <div>
+                        <h3 class="text-sm font-semibold text-text-primary">Backup Management</h3>
+                        <p class="mt-0.5 text-xs text-text-secondary">
                             Backups are created automatically before each update. You can also create manual backups here.
                         </p>
+                    </div>
+                    <Button
+                        variant="secondary"
+                        size="sm"
+                        :loading="isCreatingBackup"
+                        :disabled="isCreatingBackup"
+                        @click="createBackup"
+                    >
+                        <Database :size="14" />
+                        {{ isCreatingBackup ? 'Creating…' : 'Create Backup' }}
+                    </Button>
+                </div>
 
-                        <div v-if="backups && backups.length > 0" class="overflow-x-auto">
-                            <table class="min-w-full divide-y divide-gray-200 dark:divide-dark-border">
-                                <thead class="bg-gray-50 dark:bg-dark-bg/50">
-                                    <tr>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Filename</th>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Size</th>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Created</th>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">{{ t('common.actions') }}</th>
-                                    </tr>
-                                </thead>
-                                <tbody class="divide-y divide-gray-200 dark:divide-dark-border">
-                                    <tr v-for="backup in backups" :key="backup.filename">
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm font-mono text-gray-600 dark:text-gray-300">
-                                            {{ backup.filename }}
-                                        </td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                                            {{ formatBytes(backup.size) }}
-                                        </td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                                            {{ formatDate(backup.created_at) }}
-                                        </td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-3">
+                <div class="p-5">
+                    <div
+                        v-if="backups && backups.length > 0"
+                        class="w-full overflow-x-auto rounded-lg border border-border-subtle bg-surface-raised"
+                    >
+                        <table class="w-full text-sm">
+                            <thead>
+                                <tr class="border-b border-border-subtle">
+                                    <th :class="thClass">Filename</th>
+                                    <th :class="thClass">Size</th>
+                                    <th :class="thClass">Created</th>
+                                    <th :class="[thClass, 'text-right']">{{ t('common.actions') }}</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr
+                                    v-for="backup in backups"
+                                    :key="backup.filename"
+                                    class="border-b border-border-subtle transition-colors last:border-b-0 hover:bg-surface-overlay"
+                                >
+                                    <td class="px-4 py-3 font-mono text-xs text-text-secondary">{{ backup.filename }}</td>
+                                    <td class="px-4 py-3 tabular-nums text-text-secondary">{{ formatBytes(backup.size) }}</td>
+                                    <td class="px-4 py-3 text-text-secondary">{{ formatDate(backup.created_at) }}</td>
+                                    <td class="px-4 py-3">
+                                        <div class="flex items-center justify-end gap-1">
                                             <button
                                                 @click="restoreBackup(backup.filename)"
                                                 :disabled="isRestoring"
-                                                class="text-blue-500 hover:text-blue-600 disabled:opacity-50"
+                                                class="rounded-md p-1.5 text-text-tertiary transition-colors hover:bg-surface-sunken hover:text-brand disabled:opacity-50"
+                                                title="Restore"
                                             >
-                                                Restore
+                                                <RotateCcw :size="16" />
                                             </button>
                                             <button
                                                 @click="deleteBackup(backup.filename)"
-                                                class="text-red-500 hover:text-red-600"
+                                                class="rounded-md p-1.5 text-text-tertiary transition-colors hover:bg-surface-sunken hover:text-status-danger"
+                                                :title="t('common.delete')"
                                             >
-                                                {{ t('common.delete') }}
+                                                <Trash2 :size="16" />
                                             </button>
-                                        </td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
 
-                        <div v-else class="text-center py-8 text-gray-500 dark:text-gray-400">
-                            No backups available. Click "Create Backup" to create your first backup.
-                        </div>
+                    <div v-else class="flex flex-col items-center gap-2 py-8 text-center">
+                        <Database :size="22" class="text-text-tertiary" />
+                        <p class="text-sm text-text-tertiary">No backups available. Click "Create Backup" to create your first backup.</p>
                     </div>
                 </div>
+            </Card>
 
-                <!-- Information Card -->
-                <div class="bg-blue-50 dark:bg-blue-900/20 shadow-sm sm:rounded-lg border border-blue-200 dark:border-blue-800">
-                    <div class="p-6">
-                        <h3 class="text-lg font-semibold text-blue-900 dark:text-blue-100 mb-3">Update Information</h3>
-                        <ul class="space-y-2 text-sm text-blue-800 dark:text-blue-200">
-                            <li class="flex items-start">
-                                <svg class="w-5 h-5 mr-2 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
-                                </svg>
-                                <span>Updates are fetched from <strong>{{ githubRepo }}</strong> on GitHub</span>
-                            </li>
-                            <li class="flex items-start">
-                                <svg class="w-5 h-5 mr-2 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
-                                </svg>
-                                <span>A backup is automatically created before each update</span>
-                            </li>
-                            <li class="flex items-start">
-                                <svg class="w-5 h-5 mr-2 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
-                                </svg>
-                                <span>The application will be in maintenance mode during updates</span>
-                            </li>
-                            <li class="flex items-start">
-                                <svg class="w-5 h-5 mr-2 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
-                                </svg>
-                                <span>Database migrations are run automatically during updates</span>
-                            </li>
-                        </ul>
-                    </div>
+            <!-- Information Card -->
+            <Card :padded="false">
+                <div class="px-5 pt-5">
+                    <h3 class="text-sm font-semibold text-text-primary">Update Information</h3>
                 </div>
-
-            </div>
+                <div class="p-5">
+                    <ul class="space-y-2.5 text-sm text-text-secondary">
+                        <li class="flex items-start gap-2.5">
+                            <Info :size="16" class="mt-0.5 shrink-0 text-brand" />
+                            <span>Updates are fetched from <strong class="text-text-primary">{{ githubRepo }}</strong> on GitHub.</span>
+                        </li>
+                        <li class="flex items-start gap-2.5">
+                            <Info :size="16" class="mt-0.5 shrink-0 text-brand" />
+                            <span>A backup is automatically created before each update.</span>
+                        </li>
+                        <li class="flex items-start gap-2.5">
+                            <Info :size="16" class="mt-0.5 shrink-0 text-brand" />
+                            <span>The application will be in maintenance mode during updates.</span>
+                        </li>
+                        <li class="flex items-start gap-2.5">
+                            <Info :size="16" class="mt-0.5 shrink-0 text-brand" />
+                            <span>Database migrations are run automatically during updates.</span>
+                        </li>
+                    </ul>
+                </div>
+            </Card>
         </div>
-    </AuthenticatedLayout>
+    </AppLayout>
 </template>

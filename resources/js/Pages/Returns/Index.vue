@@ -1,8 +1,13 @@
 <script setup>
-import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
+import AppLayout from '@/Layouts/AppLayout.vue';
+import PageHeader from '@/Components/ui/PageHeader.vue';
+import Card from '@/Components/ui/Card.vue';
+import Button from '@/Components/ui/Button.vue';
+import Badge from '@/Components/ui/Badge.vue';
 import { Head, Link, router } from '@inertiajs/vue3';
 import { ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
+import { Search, Eye, RotateCcw } from 'lucide-vue-next';
 
 const { t } = useI18n();
 
@@ -37,22 +42,10 @@ watch(search, () => {
 
 watch([statusFilter, typeFilter], applyFilters);
 
-const getStatusClass = (status) => {
-    const classes = {
-        pending: 'bg-yellow-900/30 text-yellow-400 border border-yellow-800',
-        approved: 'bg-blue-900/30 text-blue-400 border border-blue-800',
-        received: 'bg-purple-900/30 text-purple-400 border border-purple-800',
-        completed: 'bg-green-900/30 text-green-400 border border-green-800',
-        rejected: 'bg-red-900/30 text-red-400 border border-red-800',
-    };
-    return classes[status] || 'bg-gray-900/30 text-gray-400 border border-gray-800';
-};
+const statusVariant = (status) =>
+    ({ pending: 'warning', approved: 'info', received: 'brand', completed: 'success', rejected: 'danger' }[status] || 'neutral');
 
-const getTypeClass = (type) => {
-    return type === 'exchange'
-        ? 'bg-indigo-900/30 text-indigo-400 border border-indigo-800'
-        : 'bg-orange-900/30 text-orange-400 border border-orange-800';
-};
+const typeVariant = (type) => (type === 'exchange' ? 'info' : 'warning');
 
 const formatDate = (date) => {
     if (!date) return '-';
@@ -67,139 +60,156 @@ const totalItems = (returnOrder) => {
     if (!returnOrder.items) return 0;
     return returnOrder.items.reduce((sum, item) => sum + item.quantity, 0);
 };
+
+const thClass =
+    'px-4 py-2.5 text-left text-xs font-medium text-text-secondary';
+
+const selectClass =
+    'h-9 w-full rounded-md border border-border-subtle bg-surface-canvas px-3 text-sm text-text-primary ds-focus-ring';
 </script>
 
 <template>
     <Head title="Returns & Exchanges" />
 
-    <AuthenticatedLayout>
+    <AppLayout>
         <template #header>
-            <div class="flex items-center justify-between">
-                <h2 class="font-semibold text-xl text-gray-900 dark:text-gray-100 leading-tight">
-                    Returns & Exchanges
-                </h2>
+            <div class="flex items-center gap-2 text-xs">
+                <span class="text-text-tertiary">Workspace</span>
+                <span class="text-text-tertiary">/</span>
+                <span class="font-medium text-text-primary">Returns</span>
             </div>
         </template>
 
-        <div class="py-12 bg-gray-50 dark:bg-dark-bg min-h-screen">
-            <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-                <!-- Filters -->
-                <div class="bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border shadow-sm sm:rounded-lg p-4 mb-6">
-                    <div class="flex flex-col sm:flex-row gap-4">
-                        <div class="flex-1">
+        <PageHeader title="Returns & Exchanges" description="Track returns, exchanges, and refunds across every order.">
+            <template #actions>
+                <Button variant="default" size="sm" as="Link" :href="route('returns.create')">
+                    <RotateCcw :size="14" />
+                    New Return
+                </Button>
+            </template>
+        </PageHeader>
+
+        <!-- Filters -->
+        <Card class="mt-6">
+            <form @submit.prevent="applyFilters" class="space-y-4">
+                <div class="grid grid-cols-1 gap-4 md:grid-cols-4">
+                    <div class="md:col-span-2">
+                        <label for="search" class="mb-1 block text-xs font-medium text-text-secondary">Search</label>
+                        <div class="relative">
+                            <Search :size="15" class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-text-tertiary" />
                             <input
+                                id="search"
                                 v-model="search"
                                 type="text"
                                 placeholder="Search by return number, order number, or customer..."
-                                class="block w-full rounded-md bg-gray-50 dark:bg-dark-bg border-gray-200 dark:border-dark-border text-gray-900 dark:text-gray-100 placeholder-gray-500 shadow-sm focus:border-primary-400 focus:ring-primary-400 sm:text-sm"
+                                class="h-9 w-full rounded-md border border-border-subtle bg-surface-canvas pl-9 pr-3 text-sm text-text-primary placeholder:text-text-tertiary ds-focus-ring"
                             />
                         </div>
-                        <div class="flex gap-4">
-                            <select
-                                v-model="statusFilter"
-                                class="rounded-md bg-gray-50 dark:bg-dark-bg border-gray-200 dark:border-dark-border text-gray-900 dark:text-gray-100 shadow-sm focus:border-primary-400 focus:ring-primary-400 sm:text-sm"
-                            >
-                                <option value="">All Statuses</option>
-                                <option v-for="status in statuses" :key="status" :value="status" class="capitalize">
-                                    {{ status.charAt(0).toUpperCase() + status.slice(1) }}
-                                </option>
-                            </select>
-                            <select
-                                v-model="typeFilter"
-                                class="rounded-md bg-gray-50 dark:bg-dark-bg border-gray-200 dark:border-dark-border text-gray-900 dark:text-gray-100 shadow-sm focus:border-primary-400 focus:ring-primary-400 sm:text-sm"
-                            >
-                                <option value="">All Types</option>
-                                <option v-for="type in types" :key="type" :value="type" class="capitalize">
-                                    {{ type.charAt(0).toUpperCase() + type.slice(1) }}
-                                </option>
-                            </select>
-                        </div>
+                    </div>
+                    <div>
+                        <label for="status" class="mb-1 block text-xs font-medium text-text-secondary">Status</label>
+                        <select id="status" v-model="statusFilter" :class="selectClass">
+                            <option value="">All Statuses</option>
+                            <option v-for="status in statuses" :key="status" :value="status">
+                                {{ status.charAt(0).toUpperCase() + status.slice(1) }}
+                            </option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="type" class="mb-1 block text-xs font-medium text-text-secondary">Type</label>
+                        <select id="type" v-model="typeFilter" :class="selectClass">
+                            <option value="">All Types</option>
+                            <option v-for="type in types" :key="type" :value="type">
+                                {{ type.charAt(0).toUpperCase() + type.slice(1) }}
+                            </option>
+                        </select>
                     </div>
                 </div>
+            </form>
+        </Card>
 
-                <!-- Table -->
-                <div class="bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border shadow-sm sm:rounded-lg overflow-hidden">
-                    <table class="min-w-full divide-y divide-gray-200 dark:divide-dark-border">
-                        <thead class="bg-gray-50 dark:bg-dark-bg">
-                            <tr>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Return #</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Order #</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Type</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Status</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Items</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Refund</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Date</th>
-                                <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-gray-200 dark:divide-dark-border">
-                            <tr v-for="returnOrder in returns.data" :key="returnOrder.id" class="hover:bg-gray-50 dark:hover:bg-dark-bg/50">
-                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-gray-100">
-                                    {{ returnOrder.return_number }}
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                                    <Link v-if="returnOrder.order" :href="route('orders.show', returnOrder.order_id)" class="text-primary-400 hover:text-primary-300">
-                                        {{ returnOrder.order.order_number }}
-                                    </Link>
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    <span :class="getTypeClass(returnOrder.type)" class="px-2.5 py-0.5 rounded-full text-xs font-semibold uppercase">
-                                        {{ returnOrder.type }}
-                                    </span>
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    <span :class="getStatusClass(returnOrder.status)" class="px-2.5 py-0.5 rounded-full text-xs font-semibold uppercase">
-                                        {{ returnOrder.status }}
-                                    </span>
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                                    {{ totalItems(returnOrder) }}
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
-                                    ${{ parseFloat(returnOrder.refund_amount || 0).toFixed(2) }}
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                                    {{ formatDate(returnOrder.created_at) }}
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-right text-sm">
-                                    <Link :href="route('returns.show', returnOrder.id)" class="text-primary-400 hover:text-primary-300 font-medium">
-                                        View
-                                    </Link>
-                                </td>
-                            </tr>
-                            <tr v-if="!returns.data || returns.data.length === 0">
-                                <td colspan="8" class="px-6 py-12 text-center text-gray-500 dark:text-gray-400">
-                                    No returns found.
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-
-                    <!-- Pagination -->
-                    <div v-if="returns.links && returns.links.length > 3" class="px-6 py-3 border-t border-gray-200 dark:border-dark-border flex justify-between items-center">
-                        <p class="text-sm text-gray-500 dark:text-gray-400">
-                            Showing {{ returns.from }} to {{ returns.to }} of {{ returns.total }} results
-                        </p>
-                        <div class="flex gap-1">
-                            <template v-for="link in returns.links" :key="link.label">
-                                <Link
-                                    v-if="link.url"
-                                    :href="link.url"
-                                    class="px-3 py-1 rounded text-sm"
-                                    :class="link.active ? 'bg-primary-400 text-white' : 'text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-dark-bg'"
-                                    v-html="link.label"
-                                    preserve-state
-                                />
-                                <span
-                                    v-else
-                                    class="px-3 py-1 rounded text-sm text-gray-400 dark:text-gray-600"
-                                    v-html="link.label"
-                                />
-                            </template>
-                        </div>
-                    </div>
-                </div>
-            </div>
+        <!-- Returns table -->
+        <div class="mt-4 w-full overflow-x-auto rounded-lg border border-border-subtle bg-surface-raised">
+            <table class="w-full text-sm">
+                <thead>
+                    <tr class="border-b border-border-subtle">
+                        <th :class="thClass">Return #</th>
+                        <th :class="thClass">Order #</th>
+                        <th :class="thClass">Type</th>
+                        <th :class="thClass">Status</th>
+                        <th :class="thClass">Items</th>
+                        <th :class="thClass">Refund</th>
+                        <th :class="thClass">Date</th>
+                        <th :class="[thClass, 'text-right']">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr v-if="!returns.data || returns.data.length === 0">
+                        <td colspan="8" class="px-4 py-12 text-center">
+                            <div class="flex flex-col items-center gap-3">
+                                <RotateCcw :size="22" class="text-text-tertiary" />
+                                <p class="text-sm text-text-tertiary">No returns found.</p>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr v-for="returnOrder in returns.data" :key="returnOrder.id" class="border-b border-border-subtle transition-colors last:border-b-0 hover:bg-surface-overlay">
+                        <td class="px-4 py-3">
+                            <span class="font-medium text-text-primary">{{ returnOrder.return_number }}</span>
+                        </td>
+                        <td class="px-4 py-3">
+                            <Link v-if="returnOrder.order" :href="route('orders.show', returnOrder.order_id)" class="text-brand hover:underline">
+                                {{ returnOrder.order.order_number }}
+                            </Link>
+                            <span v-else class="text-text-secondary">-</span>
+                        </td>
+                        <td class="px-4 py-3">
+                            <Badge :variant="typeVariant(returnOrder.type)" size="sm">{{ returnOrder.type }}</Badge>
+                        </td>
+                        <td class="px-4 py-3">
+                            <Badge :variant="statusVariant(returnOrder.status)" size="sm" dot>{{ returnOrder.status }}</Badge>
+                        </td>
+                        <td class="px-4 py-3">
+                            <span class="tabular-nums text-text-secondary">{{ totalItems(returnOrder) }}</span>
+                        </td>
+                        <td class="px-4 py-3">
+                            <span class="font-medium tabular-nums text-text-primary">${{ parseFloat(returnOrder.refund_amount || 0).toFixed(2) }}</span>
+                        </td>
+                        <td class="px-4 py-3">
+                            <span class="text-text-secondary">{{ formatDate(returnOrder.created_at) }}</span>
+                        </td>
+                        <td class="px-4 py-3">
+                            <div class="flex items-center justify-end gap-1">
+                                <Link :href="route('returns.show', returnOrder.id)" class="rounded-md p-1.5 text-text-tertiary transition-colors hover:bg-surface-overlay hover:text-brand" :title="t('common.view')"><Eye :size="16" /></Link>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
         </div>
-    </AuthenticatedLayout>
+
+        <!-- Pagination -->
+        <div v-if="returns.links && returns.links.length > 3" class="mt-4 flex flex-col items-center justify-between gap-3 sm:flex-row">
+            <p class="text-xs text-text-tertiary">
+                Showing <span class="font-medium text-text-secondary">{{ returns.from }}</span>
+                to <span class="font-medium text-text-secondary">{{ returns.to }}</span>
+                of <span class="font-medium text-text-secondary">{{ returns.total }}</span> results
+            </p>
+            <nav class="inline-flex items-center gap-1">
+                <template v-for="link in returns.links" :key="link.label">
+                    <Link
+                        v-if="link.url"
+                        :href="link.url"
+                        :class="[
+                            'inline-flex h-8 min-w-8 items-center justify-center rounded-md border px-2.5 text-xs font-medium transition-colors',
+                            link.active
+                                ? 'border-brand bg-brand text-brand-foreground'
+                                : 'border-border-subtle bg-surface-canvas text-text-secondary hover:bg-surface-overlay',
+                        ]"
+                        v-html="link.label"
+                    />
+                    <span v-else class="inline-flex h-8 min-w-8 cursor-not-allowed items-center justify-center rounded-md border border-border-subtle px-2.5 text-xs text-text-tertiary opacity-50" v-html="link.label" />
+                </template>
+            </nav>
+        </div>
+    </AppLayout>
 </template>

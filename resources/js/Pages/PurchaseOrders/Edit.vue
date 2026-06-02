@@ -1,12 +1,13 @@
 <script setup>
-import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
+import AppLayout from '@/Layouts/AppLayout.vue';
+import PageHeader from '@/Components/ui/PageHeader.vue';
+import Card from '@/Components/ui/Card.vue';
+import Button from '@/Components/ui/Button.vue';
 import PluginSlot from '@/Components/PluginSlot.vue';
-import InputError from '@/Components/InputError.vue';
-import InputLabel from '@/Components/InputLabel.vue';
-import TextInput from '@/Components/TextInput.vue';
 import { Head, Link, useForm } from '@inertiajs/vue3';
 import { ref, computed } from 'vue';
 import { useI18n } from 'vue-i18n';
+import { ArrowLeft, Plus, Trash2 } from 'lucide-vue-next';
 
 const { t } = useI18n();
 
@@ -108,303 +109,246 @@ const formatCurrency = (value) => {
         currency: form.currency || 'USD',
     }).format(value || 0);
 };
+
+const fieldLabel = 'mb-1 block text-sm font-medium text-text-secondary';
+const fieldInput = 'h-9 w-full rounded-md border border-border-subtle bg-surface-canvas px-3 text-sm text-text-primary placeholder:text-text-tertiary ds-focus-ring';
+const fieldArea = 'w-full rounded-md border border-border-subtle bg-surface-canvas px-3 py-2 text-sm text-text-primary placeholder:text-text-tertiary ds-focus-ring';
+const fieldError = 'mt-1 text-xs text-status-danger';
 </script>
 
 <template>
     <Head :title="t('purchaseOrders.edit.title')" />
 
-    <AuthenticatedLayout>
+    <AppLayout>
         <template #header>
-            <div class="flex items-center justify-between">
-                <h2 class="font-semibold text-xl text-gray-900 dark:text-gray-100 leading-tight">
-                    {{ t('purchaseOrders.edit.title') }}
-                </h2>
-                <Link
-                    :href="route('purchase-orders.index')"
-                    class="inline-flex items-center px-4 py-2 bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-border rounded-md font-semibold text-xs text-gray-600 dark:text-gray-300 uppercase tracking-widest hover:bg-gray-100 dark:hover:bg-dark-bg/50"
-                >
-                    {{ t('purchaseOrders.edit.backToPo') }}
-                </Link>
+            <div class="flex items-center gap-2 text-xs">
+                <Link :href="route('purchase-orders.index')" class="text-text-tertiary hover:text-text-primary">Workspace</Link>
+                <span class="text-text-tertiary">/</span>
+                <Link :href="route('purchase-orders.index')" class="text-text-tertiary hover:text-text-primary">{{ t('purchaseOrders.title') }}</Link>
+                <span class="text-text-tertiary">/</span>
+                <span class="font-medium text-text-primary">{{ t('purchaseOrders.edit.title') }}</span>
+                <span class="text-text-tertiary">/</span>
+                <span class="font-medium text-text-primary">{{ purchaseOrder.po_number }}</span>
             </div>
         </template>
 
-        <div class="py-12 bg-gray-50 dark:bg-dark-bg min-h-screen">
-            <div class="max-w-5xl mx-auto sm:px-6 lg:px-8">
-                <PluginSlot slot="header" :components="pluginComponents?.header" />
+        <PageHeader :title="t('purchaseOrders.edit.title')" :description="`PO #${purchaseOrder.po_number}`">
+            <template #actions>
+                <Button variant="secondary" size="sm" as="Link" :href="route('purchase-orders.show', purchaseOrder.id)">
+                    {{ t('purchaseOrders.edit.viewDetails') }}
+                </Button>
+                <Button variant="secondary" size="sm" as="Link" :href="route('purchase-orders.index')">
+                    <ArrowLeft :size="14" />
+                    {{ t('purchaseOrders.edit.backToPo') }}
+                </Button>
+            </template>
+        </PageHeader>
 
-                <form @submit.prevent="submit" class="space-y-6">
-                    <!-- Order Details -->
-                    <div class="bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border overflow-hidden shadow-lg sm:rounded-lg">
-                        <div class="px-6 py-4 border-b border-gray-200 dark:border-dark-border">
-                            <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100">{{ t('purchaseOrders.create.orderDetails') }} - {{ purchaseOrder.po_number }}</h3>
+        <PluginSlot slot="header" :components="pluginComponents?.header" />
+
+        <form @submit.prevent="submit" class="mt-6 space-y-4">
+            <!-- Order Details -->
+            <Card :padded="false">
+                <div class="px-5 pt-5">
+                    <h3 class="text-sm font-semibold text-text-primary">{{ t('purchaseOrders.create.orderDetails') }} - {{ purchaseOrder.po_number }}</h3>
+                </div>
+                <div class="space-y-4 p-5">
+                    <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+                        <div>
+                            <label for="supplier_id" :class="fieldLabel">{{ t('purchaseOrders.supplier') }} *</label>
+                            <select id="supplier_id" v-model="form.supplier_id" :class="fieldInput" required>
+                                <option value="">{{ t('purchaseOrders.create.selectSupplier') }}</option>
+                                <option v-for="supplier in suppliers" :key="supplier.id" :value="supplier.id">
+                                    {{ supplier.name }}
+                                </option>
+                            </select>
+                            <p v-if="form.errors.supplier_id" :class="fieldError">{{ form.errors.supplier_id }}</p>
                         </div>
-                        <div class="p-6 space-y-6">
-                            <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
-                                <div>
-                                    <InputLabel for="supplier_id" :value="t('purchaseOrders.supplier') + ' *'" />
-                                    <select
-                                        id="supplier_id"
-                                        v-model="form.supplier_id"
-                                        required
-                                        class="mt-1 block w-full rounded-md bg-gray-50 dark:bg-dark-bg border-gray-200 dark:border-dark-border text-gray-900 dark:text-gray-100 shadow-sm focus:border-primary-400 focus:ring-primary-400"
-                                    >
-                                        <option value="">{{ t('purchaseOrders.create.selectSupplier') }}</option>
-                                        <option v-for="supplier in suppliers" :key="supplier.id" :value="supplier.id">
-                                            {{ supplier.name }}
-                                        </option>
-                                    </select>
-                                    <InputError :message="form.errors.supplier_id" class="mt-2" />
-                                </div>
 
-                                <div>
-                                    <InputLabel for="currency" :value="t('common.currency')" />
-                                    <select
-                                        id="currency"
-                                        v-model="form.currency"
-                                        class="mt-1 block w-full rounded-md bg-gray-50 dark:bg-dark-bg border-gray-200 dark:border-dark-border text-gray-900 dark:text-gray-100 shadow-sm focus:border-primary-400 focus:ring-primary-400"
-                                    >
-                                        <option value="USD">{{ t('purchaseOrders.currencies.usd') }}</option>
-                                        <option value="EUR">{{ t('purchaseOrders.currencies.eur') }}</option>
-                                        <option value="GBP">{{ t('purchaseOrders.currencies.gbp') }}</option>
-                                        <option value="CAD">{{ t('purchaseOrders.currencies.cad') }}</option>
-                                        <option value="AUD">{{ t('purchaseOrders.currencies.aud') }}</option>
-                                    </select>
-                                    <InputError :message="form.errors.currency" class="mt-2" />
-                                </div>
+                        <div>
+                            <label for="currency" :class="fieldLabel">{{ t('common.currency') }}</label>
+                            <select id="currency" v-model="form.currency" :class="fieldInput">
+                                <option value="USD">{{ t('purchaseOrders.currencies.usd') }}</option>
+                                <option value="EUR">{{ t('purchaseOrders.currencies.eur') }}</option>
+                                <option value="GBP">{{ t('purchaseOrders.currencies.gbp') }}</option>
+                                <option value="CAD">{{ t('purchaseOrders.currencies.cad') }}</option>
+                                <option value="AUD">{{ t('purchaseOrders.currencies.aud') }}</option>
+                            </select>
+                            <p v-if="form.errors.currency" :class="fieldError">{{ form.errors.currency }}</p>
+                        </div>
 
-                                <div>
-                                    <InputLabel for="order_date" :value="t('purchaseOrders.create.orderDate')" />
-                                    <TextInput
-                                        id="order_date"
-                                        v-model="form.order_date"
-                                        type="date"
-                                        class="mt-1 block w-full"
-                                        required
-                                    />
-                                    <InputError :message="form.errors.order_date" class="mt-2" />
-                                </div>
+                        <div>
+                            <label for="order_date" :class="fieldLabel">{{ t('purchaseOrders.create.orderDate') }}</label>
+                            <input id="order_date" v-model="form.order_date" type="date" :class="fieldInput" required />
+                            <p v-if="form.errors.order_date" :class="fieldError">{{ form.errors.order_date }}</p>
+                        </div>
 
-                                <div>
-                                    <InputLabel for="expected_date" value="Expected Delivery Date" />
-                                    <TextInput
-                                        id="expected_date"
-                                        v-model="form.expected_date"
-                                        type="date"
-                                        class="mt-1 block w-full"
-                                    />
-                                    <InputError :message="form.errors.expected_date" class="mt-2" />
-                                </div>
+                        <div>
+                            <label for="expected_date" :class="fieldLabel">Expected Delivery Date</label>
+                            <input id="expected_date" v-model="form.expected_date" type="date" :class="fieldInput" />
+                            <p v-if="form.errors.expected_date" :class="fieldError">{{ form.errors.expected_date }}</p>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label for="notes" :class="fieldLabel">Notes</label>
+                        <textarea id="notes" v-model="form.notes" rows="3" :class="fieldArea"></textarea>
+                        <p v-if="form.errors.notes" :class="fieldError">{{ form.errors.notes }}</p>
+                    </div>
+                </div>
+            </Card>
+
+            <!-- Add Items -->
+            <Card :padded="false">
+                <div class="px-5 pt-5">
+                    <h3 class="text-sm font-semibold text-text-primary">Add Items</h3>
+                </div>
+                <div class="space-y-4 p-5">
+                    <div class="rounded-lg border border-border-subtle bg-surface-canvas p-4">
+                        <div class="grid grid-cols-1 gap-3 md:grid-cols-6">
+                            <div class="md:col-span-2">
+                                <label for="product" :class="fieldLabel">Product</label>
+                                <select id="product" v-model="selectedProductId" @change="onProductSelected" :class="fieldInput">
+                                    <option value="">Select a product</option>
+                                    <option v-for="product in products" :key="product.id" :value="product.id">
+                                        {{ product.name }} ({{ product.sku || 'No SKU' }})
+                                    </option>
+                                </select>
                             </div>
 
                             <div>
-                                <InputLabel for="notes" value="Notes" />
-                                <textarea
-                                    id="notes"
-                                    v-model="form.notes"
-                                    rows="3"
-                                    class="mt-1 block w-full rounded-md bg-gray-50 dark:bg-dark-bg border-gray-200 dark:border-dark-border text-gray-900 dark:text-gray-100 placeholder-gray-500 shadow-sm focus:border-primary-400 focus:ring-primary-400"
-                                ></textarea>
-                                <InputError :message="form.errors.notes" class="mt-2" />
+                                <label for="quantity" :class="fieldLabel">Quantity</label>
+                                <input id="quantity" v-model.number="quantity" type="number" min="1" :class="fieldInput" />
+                            </div>
+
+                            <div>
+                                <label for="unit_cost" :class="fieldLabel">Unit Cost</label>
+                                <input id="unit_cost" v-model.number="unitCost" type="number" step="0.01" min="0" :class="fieldInput" />
+                            </div>
+
+                            <div>
+                                <label for="supplier_sku" :class="fieldLabel">Supplier SKU</label>
+                                <input id="supplier_sku" v-model="supplierSku" type="text" :class="fieldInput" placeholder="Optional" />
+                            </div>
+
+                            <div class="flex items-end">
+                                <Button type="button" variant="default" class="w-full" :disabled="!selectedProductId" @click="addItem">
+                                    <Plus :size="14" />Add
+                                </Button>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Add Items -->
-                    <div class="bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border overflow-hidden shadow-lg sm:rounded-lg">
-                        <div class="px-6 py-4 border-b border-gray-200 dark:border-dark-border">
-                            <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100">Add Items</h3>
-                        </div>
-                        <div class="p-6 space-y-4">
-                            <div class="grid grid-cols-1 gap-4 md:grid-cols-6">
-                                <div class="md:col-span-2">
-                                    <InputLabel for="product" value="Product" />
-                                    <select
-                                        id="product"
-                                        v-model="selectedProductId"
-                                        @change="onProductSelected"
-                                        class="mt-1 block w-full rounded-md bg-gray-50 dark:bg-dark-bg border-gray-200 dark:border-dark-border text-gray-900 dark:text-gray-100 shadow-sm focus:border-primary-400 focus:ring-primary-400"
-                                    >
-                                        <option value="">Select a product</option>
-                                        <option v-for="product in products" :key="product.id" :value="product.id">
-                                            {{ product.name }} ({{ product.sku || 'No SKU' }})
-                                        </option>
-                                    </select>
-                                </div>
+                    <p v-if="form.errors.items" :class="fieldError">{{ form.errors.items }}</p>
+                </div>
+            </Card>
 
-                                <div>
-                                    <InputLabel for="quantity" value="Quantity" />
-                                    <TextInput
-                                        id="quantity"
-                                        v-model.number="quantity"
-                                        type="number"
-                                        min="1"
-                                        class="mt-1 block w-full"
-                                    />
-                                </div>
+            <!-- Items -->
+            <Card v-if="form.items.length > 0" :padded="false">
+                <div class="px-5 pt-5">
+                    <h3 class="text-sm font-semibold text-text-primary">Order Items ({{ form.items.length }})</h3>
+                </div>
+                <div class="space-y-3 p-5">
+                    <div
+                        v-for="(item, index) in form.items"
+                        :key="index"
+                        class="rounded-lg border border-border-subtle bg-surface-canvas p-4"
+                    >
+                        <div class="grid grid-cols-1 gap-3 md:grid-cols-12">
+                            <div class="md:col-span-4">
+                                <p class="text-sm font-medium text-text-primary">{{ item.product_name }}</p>
+                                <p class="text-xs text-text-tertiary">SKU: {{ item.sku || '-' }}</p>
+                                <p class="text-xs text-text-tertiary">Supplier SKU: {{ item.supplier_sku || '-' }}</p>
+                            </div>
 
-                                <div>
-                                    <InputLabel for="unit_cost" value="Unit Cost" />
-                                    <TextInput
-                                        id="unit_cost"
-                                        v-model.number="unitCost"
-                                        type="number"
-                                        step="0.01"
-                                        min="0"
-                                        class="mt-1 block w-full"
-                                    />
-                                </div>
+                            <div class="md:col-span-2">
+                                <label :for="`quantity-${index}`" :class="fieldLabel">Quantity</label>
+                                <input
+                                    :id="`quantity-${index}`"
+                                    type="number"
+                                    :value="item.quantity"
+                                    @input="updateItemQuantity(index, parseInt($event.target.value))"
+                                    min="1"
+                                    :class="fieldInput"
+                                />
+                            </div>
 
-                                <div>
-                                    <InputLabel for="supplier_sku" value="Supplier SKU" />
-                                    <TextInput
-                                        id="supplier_sku"
-                                        v-model="supplierSku"
-                                        type="text"
-                                        class="mt-1 block w-full"
-                                        placeholder="Optional"
-                                    />
-                                </div>
+                            <div class="md:col-span-2">
+                                <label :for="`cost-${index}`" :class="fieldLabel">Unit Cost</label>
+                                <input
+                                    :id="`cost-${index}`"
+                                    type="number"
+                                    :value="item.unit_cost"
+                                    @input="updateItemCost(index, $event.target.value)"
+                                    step="0.01"
+                                    min="0"
+                                    :class="fieldInput"
+                                />
+                            </div>
 
-                                <div class="flex items-end">
-                                    <button
-                                        type="button"
-                                        @click="addItem"
-                                        :disabled="!selectedProductId"
-                                        class="w-full inline-flex justify-center items-center px-4 py-2 bg-primary-400 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-primary-500 disabled:opacity-50"
-                                    >
-                                        Add
-                                    </button>
+                            <div class="md:col-span-3">
+                                <label :class="fieldLabel">Subtotal</label>
+                                <div class="flex h-9 items-center rounded-md border border-border-subtle bg-surface-sunken px-3">
+                                    <span class="text-sm font-semibold tabular-nums text-text-primary">
+                                        {{ formatCurrency(item.quantity * item.unit_cost) }}
+                                    </span>
                                 </div>
                             </div>
 
-                            <InputError :message="form.errors.items" class="mt-2" />
-                        </div>
-                    </div>
-
-                    <!-- Items Table -->
-                    <div v-if="form.items.length > 0" class="bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border overflow-hidden shadow-lg sm:rounded-lg">
-                        <div class="px-6 py-4 border-b border-gray-200 dark:border-dark-border">
-                            <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100">Order Items ({{ form.items.length }})</h3>
-                        </div>
-                        <div class="overflow-x-auto">
-                            <table class="min-w-full divide-y divide-gray-200 dark:divide-dark-border">
-                                <thead class="bg-gray-50 dark:bg-dark-bg">
-                                    <tr>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Product</th>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">SKU</th>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Supplier SKU</th>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Quantity</th>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Unit Cost</th>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Subtotal</th>
-                                        <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody class="bg-white dark:bg-dark-card divide-y divide-gray-200 dark:divide-dark-border">
-                                    <tr v-for="(item, index) in form.items" :key="index">
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
-                                            {{ item.product_name }}
-                                        </td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                                            {{ item.sku || '-' }}
-                                        </td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                                            {{ item.supplier_sku || '-' }}
-                                        </td>
-                                        <td class="px-6 py-4 whitespace-nowrap">
-                                            <input
-                                                type="number"
-                                                :value="item.quantity"
-                                                @input="updateItemQuantity(index, parseInt($event.target.value))"
-                                                min="1"
-                                                class="w-20 rounded-md bg-gray-50 dark:bg-dark-bg border-gray-200 dark:border-dark-border text-gray-900 dark:text-gray-100 shadow-sm focus:border-primary-400 focus:ring-primary-400 text-sm"
-                                            />
-                                        </td>
-                                        <td class="px-6 py-4 whitespace-nowrap">
-                                            <input
-                                                type="number"
-                                                :value="item.unit_cost"
-                                                @input="updateItemCost(index, $event.target.value)"
-                                                step="0.01"
-                                                min="0"
-                                                class="w-24 rounded-md bg-gray-50 dark:bg-dark-bg border-gray-200 dark:border-dark-border text-gray-900 dark:text-gray-100 shadow-sm focus:border-primary-400 focus:ring-primary-400 text-sm"
-                                            />
-                                        </td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100 font-medium">
-                                            {{ formatCurrency(item.quantity * item.unit_cost) }}
-                                        </td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-right">
-                                            <button
-                                                type="button"
-                                                @click="removeItem(index)"
-                                                class="text-red-400 hover:text-red-500"
-                                            >
-                                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                                </svg>
-                                            </button>
-                                        </td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
-
-                        <!-- Totals -->
-                        <div class="px-6 py-4 bg-gray-50 dark:bg-dark-bg border-t border-gray-200 dark:border-dark-border">
-                            <div class="flex justify-end space-y-2">
-                                <div class="w-64 space-y-2">
-                                    <div class="flex justify-between text-sm">
-                                        <span class="text-gray-600 dark:text-gray-400">Subtotal:</span>
-                                        <span class="text-gray-900 dark:text-gray-100 font-medium">{{ formatCurrency(subtotal) }}</span>
-                                    </div>
-                                    <div class="flex justify-between items-center text-sm">
-                                        <span class="text-gray-600 dark:text-gray-400">Tax:</span>
-                                        <input
-                                            type="number"
-                                            v-model.number="form.tax"
-                                            step="0.01"
-                                            min="0"
-                                            class="w-24 rounded-md bg-white dark:bg-dark-card border-gray-200 dark:border-dark-border text-gray-900 dark:text-gray-100 shadow-sm focus:border-primary-400 focus:ring-primary-400 text-sm"
-                                        />
-                                    </div>
-                                    <div class="flex justify-between items-center text-sm">
-                                        <span class="text-gray-600 dark:text-gray-400">Shipping:</span>
-                                        <input
-                                            type="number"
-                                            v-model.number="form.shipping"
-                                            step="0.01"
-                                            min="0"
-                                            class="w-24 rounded-md bg-white dark:bg-dark-card border-gray-200 dark:border-dark-border text-gray-900 dark:text-gray-100 shadow-sm focus:border-primary-400 focus:ring-primary-400 text-sm"
-                                        />
-                                    </div>
-                                    <div class="flex justify-between text-base font-medium border-t border-gray-200 dark:border-dark-border pt-2">
-                                        <span class="text-gray-900 dark:text-gray-100">Total:</span>
-                                        <span class="text-gray-900 dark:text-gray-100">{{ formatCurrency(total) }}</span>
-                                    </div>
-                                </div>
+                            <div class="flex items-end md:col-span-1">
+                                <button
+                                    type="button"
+                                    @click="removeItem(index)"
+                                    class="rounded-md p-1.5 text-text-tertiary transition-colors hover:bg-surface-sunken hover:text-status-danger"
+                                    title="Remove item"
+                                >
+                                    <Trash2 :size="16" />
+                                </button>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Actions -->
-                    <div class="flex items-center justify-end gap-4">
-                        <Link
-                            :href="route('purchase-orders.show', purchaseOrder.id)"
-                            class="inline-flex items-center px-4 py-2 bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-border rounded-md font-semibold text-xs text-gray-600 dark:text-gray-300 uppercase tracking-widest hover:bg-gray-100 dark:hover:bg-dark-bg/50"
-                        >
-                            Cancel
-                        </Link>
-                        <button
-                            type="submit"
-                            :disabled="form.processing || form.items.length === 0"
-                            class="inline-flex items-center px-4 py-2 bg-primary-400 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-primary-500 focus:bg-primary-500 active:bg-primary-600 focus:outline-none focus:ring-2 focus:ring-primary-400 focus:ring-offset-2 transition ease-in-out duration-150 disabled:opacity-50"
-                        >
-                            Update Purchase Order
-                        </button>
+                    <!-- Totals -->
+                    <div class="flex justify-end pt-2">
+                        <div class="w-full max-w-xs space-y-3 border-t border-border-subtle pt-3">
+                            <div class="flex justify-between text-sm">
+                                <span class="text-text-secondary">Subtotal</span>
+                                <span class="font-medium tabular-nums text-text-primary">{{ formatCurrency(subtotal) }}</span>
+                            </div>
+                            <div>
+                                <label for="tax" class="mb-1 block text-sm text-text-secondary">Tax</label>
+                                <input id="tax" v-model.number="form.tax" type="number" step="0.01" min="0" :class="fieldInput" />
+                            </div>
+                            <div>
+                                <label for="shipping" class="mb-1 block text-sm text-text-secondary">Shipping</label>
+                                <input id="shipping" v-model.number="form.shipping" type="number" step="0.01" min="0" :class="fieldInput" />
+                            </div>
+                            <div class="flex items-center justify-between border-t border-border-subtle pt-3">
+                                <span class="text-sm font-semibold text-text-primary">Total</span>
+                                <span class="text-xl font-bold text-brand">{{ formatCurrency(total) }}</span>
+                            </div>
+                        </div>
                     </div>
-                </form>
+                </div>
+            </Card>
 
-                <PluginSlot slot="footer" :components="pluginComponents?.footer" />
+            <!-- Actions -->
+            <div class="flex items-center justify-end gap-2">
+                <Button variant="secondary" size="lg" as="Link" :href="route('purchase-orders.show', purchaseOrder.id)">
+                    Cancel
+                </Button>
+                <Button
+                    type="submit"
+                    variant="default"
+                    size="lg"
+                    :loading="form.processing"
+                    :disabled="form.processing || form.items.length === 0"
+                >
+                    Update Purchase Order
+                </Button>
             </div>
-        </div>
-    </AuthenticatedLayout>
+        </form>
+
+        <PluginSlot slot="footer" :components="pluginComponents?.footer" />
+    </AppLayout>
 </template>

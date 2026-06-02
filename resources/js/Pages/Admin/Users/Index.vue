@@ -1,8 +1,13 @@
 <script setup>
-import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
+import AppLayout from '@/Layouts/AppLayout.vue';
+import PageHeader from '@/Components/ui/PageHeader.vue';
+import Card from '@/Components/ui/Card.vue';
+import Button from '@/Components/ui/Button.vue';
+import Badge from '@/Components/ui/Badge.vue';
 import { Head, Link } from '@inertiajs/vue3';
-
 import { useI18n } from 'vue-i18n';
+import { Plus, Eye, Pencil, Users } from 'lucide-vue-next';
+
 defineProps({
     users: Object,
     roles: Array,
@@ -10,95 +15,107 @@ defineProps({
 });
 
 const { t } = useI18n();
+
+const roleVariant = (role) =>
+    ({ admin: 'brand', manager: 'info', member: 'neutral' }[role] || 'neutral');
+
+const thClass = 'px-4 py-2.5 text-left text-xs font-medium text-text-secondary';
 </script>
 
 <template>
     <Head :title="t('nav.users')" />
 
-    <AuthenticatedLayout>
+    <AppLayout>
         <template #header>
-            <div class="flex justify-between items-center">
-                <h2 class="font-semibold text-2xl text-gray-900 dark:text-gray-100">{{ t('admin.users') }}</h2>
-                <Link
-                    :href="route('users.create')"
-                    class="px-4 py-2 bg-primary-500 hover:bg-primary-600 text-white font-medium rounded-lg transition"
-                >
-                    Add User
-                </Link>
+            <div class="flex items-center gap-2 text-xs">
+                <span class="text-text-tertiary">Workspace</span>
+                <span class="text-text-tertiary">/</span>
+                <span class="font-medium text-text-primary">{{ t('admin.users') }}</span>
             </div>
         </template>
 
-        <div class="py-12 bg-gray-50 dark:bg-dark-bg min-h-screen">
-            <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-                <div class="bg-white dark:bg-dark-card shadow-sm sm:rounded-lg border border-gray-200 dark:border-dark-border overflow-hidden">
-                    <div class="p-6 text-gray-900 dark:text-gray-100">
-                        <h3 class="text-lg font-semibold mb-4">User Management</h3>
-                        <p class="text-gray-500 dark:text-gray-400 mb-6">
-                            Manage users in your organization. You can add, edit, and remove users, as well as assign roles and permissions.
-                        </p>
+        <PageHeader :title="t('admin.users')" description="Manage users in your organization, assign roles and permissions.">
+            <template #actions>
+                <Button variant="default" size="sm" as="Link" :href="route('users.create')">
+                    <Plus :size="14" />
+                    {{ t('common.add') }} {{ t('nav.users') }}
+                </Button>
+            </template>
+        </PageHeader>
 
-                        <!-- Users Table Placeholder -->
-                        <div class="overflow-x-auto">
-                            <table class="min-w-full divide-y divide-gray-200 dark:divide-dark-border">
-                                <thead class="bg-gray-50 dark:bg-dark-bg/50">
-                                    <tr>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">{{ t('common.name') }}</th>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">{{ t('common.email') }}</th>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Role</th>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">{{ t('common.actions') }}</th>
-                                    </tr>
-                                </thead>
-                                <tbody class="divide-y divide-gray-200 dark:divide-dark-border">
-                                    <tr v-if="users && users.data && users.data.length > 0" v-for="user in users.data" :key="user.id">
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-300">{{ user.name }}</td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">{{ user.email }}</td>
-                                        <td class="px-6 py-4 whitespace-nowrap">
-                                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full"
-                                                  :class="{
-                                                      'bg-primary-400/10 text-primary-400': user.role === 'admin',
-                                                      'bg-blue-400/10 text-blue-400': user.role === 'manager',
-                                                      'bg-gray-400/10 text-gray-400': user.role === 'member'
-                                                  }">
-                                                {{ user.role }}
-                                            </span>
-                                        </td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                            <Link :href="route('users.edit', user.id)" class="text-primary-400 hover:text-primary-300 mr-4">{{ t('common.edit') }}</Link>
-                                            <Link :href="route('users.show', user.id)" class="text-blue-400 hover:text-blue-300">{{ t('common.view') }}</Link>
-                                        </td>
-                                    </tr>
-                                    <tr v-else>
-                                        <td colspan="4" class="px-6 py-8 text-center text-gray-500 dark:text-gray-400">
-                                            No users found. Click "Add User" to create your first user.
-                                        </td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
-
-                        <!-- Pagination would go here -->
-                        <div v-if="users && users.links && users.links.length > 3" class="mt-6 flex justify-center">
-                            <nav class="flex gap-2">
-                                <Link
-                                    v-for="(link, index) in users.links"
-                                    :key="index"
-                                    :href="link.url"
-                                    :class="[
-                                        'px-3 py-2 rounded-md text-sm font-medium transition',
-                                        link.active
-                                            ? 'bg-primary-500 text-white'
-                                            : link.url
-                                            ? 'bg-gray-100 dark:bg-dark-bg text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-dark-bg/80 hover:text-gray-900 dark:hover:text-gray-200'
-                                            : 'bg-gray-100 dark:bg-dark-bg/50 text-gray-400 dark:text-gray-600 cursor-not-allowed opacity-50'
-                                    ]"
-                                    :disabled="!link.url"
-                                    v-html="link.label"
-                                />
-                            </nav>
-                        </div>
-                    </div>
-                </div>
-            </div>
+        <!-- Users table -->
+        <div class="mt-6 w-full overflow-x-auto rounded-lg border border-border-subtle bg-surface-raised">
+            <table class="w-full text-sm">
+                <thead>
+                    <tr class="border-b border-border-subtle">
+                        <th :class="thClass">{{ t('common.name') }}</th>
+                        <th :class="thClass">{{ t('common.email') }}</th>
+                        <th :class="thClass">Role</th>
+                        <th :class="[thClass, 'text-right']">{{ t('common.actions') }}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr v-if="!users || !users.data || users.data.length === 0">
+                        <td colspan="4" class="px-4 py-12 text-center">
+                            <div class="flex flex-col items-center gap-3">
+                                <Users :size="22" class="text-text-tertiary" />
+                                <p class="text-sm font-medium text-text-primary">No users found.</p>
+                                <p class="text-sm text-text-tertiary">Click "Add User" to create your first user.</p>
+                                <Button variant="default" size="sm" as="Link" :href="route('users.create')">
+                                    <Plus :size="14" />
+                                    {{ t('common.add') }} {{ t('nav.users') }}
+                                </Button>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr
+                        v-for="user in users && users.data ? users.data : []"
+                        :key="user.id"
+                        class="border-b border-border-subtle transition-colors last:border-b-0 hover:bg-surface-overlay"
+                    >
+                        <td class="px-4 py-3">
+                            <span class="font-medium text-text-primary">{{ user.name }}</span>
+                        </td>
+                        <td class="px-4 py-3">
+                            <span class="text-text-secondary">{{ user.email }}</span>
+                        </td>
+                        <td class="px-4 py-3">
+                            <Badge :variant="roleVariant(user.role)" size="sm">{{ user.role }}</Badge>
+                        </td>
+                        <td class="px-4 py-3">
+                            <div class="flex items-center justify-end gap-1">
+                                <Link :href="route('users.show', user.id)" class="rounded-md p-1.5 text-text-tertiary transition-colors hover:bg-surface-overlay hover:text-brand" :title="t('common.view')"><Eye :size="16" /></Link>
+                                <Link :href="route('users.edit', user.id)" class="rounded-md p-1.5 text-text-tertiary transition-colors hover:bg-surface-overlay hover:text-status-success" :title="t('common.edit')"><Pencil :size="16" /></Link>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
         </div>
-    </AuthenticatedLayout>
+
+        <!-- Pagination -->
+        <div v-if="users && users.links && users.links.length > 3" class="mt-4 flex flex-col items-center justify-between gap-3 sm:flex-row">
+            <p v-if="users.total !== undefined" class="text-xs text-text-tertiary">
+                {{ t('common.showing') }} <span class="font-medium text-text-secondary">{{ users.from }}</span>
+                {{ t('common.to') }} <span class="font-medium text-text-secondary">{{ users.to }}</span>
+                {{ t('common.of') }} <span class="font-medium text-text-secondary">{{ users.total }}</span> {{ t('common.results') }}
+            </p>
+            <nav class="inline-flex items-center gap-1">
+                <template v-for="link in users.links" :key="link.label">
+                    <Link
+                        v-if="link.url"
+                        :href="link.url"
+                        :class="[
+                            'inline-flex h-8 min-w-8 items-center justify-center rounded-md border px-2.5 text-xs font-medium transition-colors',
+                            link.active
+                                ? 'border-brand bg-brand text-brand-foreground'
+                                : 'border-border-subtle bg-surface-canvas text-text-secondary hover:bg-surface-overlay',
+                        ]"
+                        v-html="link.label"
+                    />
+                    <span v-else class="inline-flex h-8 min-w-8 cursor-not-allowed items-center justify-center rounded-md border border-border-subtle px-2.5 text-xs text-text-tertiary opacity-50" v-html="link.label" />
+                </template>
+            </nav>
+        </div>
+    </AppLayout>
 </template>

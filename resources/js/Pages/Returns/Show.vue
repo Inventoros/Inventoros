@@ -1,9 +1,14 @@
 <script setup>
-import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
+import AppLayout from '@/Layouts/AppLayout.vue';
+import PageHeader from '@/Components/ui/PageHeader.vue';
+import Card from '@/Components/ui/Card.vue';
+import Button from '@/Components/ui/Button.vue';
+import Badge from '@/Components/ui/Badge.vue';
 import { Head, Link, router } from '@inertiajs/vue3';
 import { ref } from 'vue';
 import { usePermissions } from '@/composables/usePermissions';
 import { useI18n } from 'vue-i18n';
+import { ArrowLeft, Check, PackageCheck, CheckCircle2, X, PackageOpen } from 'lucide-vue-next';
 
 const { t } = useI18n();
 const { hasPermission } = usePermissions();
@@ -16,22 +21,23 @@ const processing = ref(false);
 const showRejectModal = ref(false);
 const rejectNotes = ref('');
 
-const getStatusClass = (status) => {
-    const classes = {
-        pending: 'bg-yellow-900/30 text-yellow-400 border border-yellow-800',
-        approved: 'bg-blue-900/30 text-blue-400 border border-blue-800',
-        received: 'bg-purple-900/30 text-purple-400 border border-purple-800',
-        completed: 'bg-green-900/30 text-green-400 border border-green-800',
-        rejected: 'bg-red-900/30 text-red-400 border border-red-800',
-    };
-    return classes[status] || 'bg-gray-900/30 text-gray-400 border border-gray-800';
-};
+const statusVariant = (status) =>
+    ({
+        pending: 'warning',
+        approved: 'info',
+        received: 'brand',
+        completed: 'success',
+        rejected: 'danger',
+    }[status] || 'neutral');
 
-const getTypeClass = (type) => {
-    return type === 'exchange'
-        ? 'bg-indigo-900/30 text-indigo-400 border border-indigo-800'
-        : 'bg-orange-900/30 text-orange-400 border border-orange-800';
-};
+const typeVariant = (type) => (type === 'exchange' ? 'info' : 'warning');
+
+const conditionVariant = (condition) =>
+    ({
+        new: 'success',
+        used: 'warning',
+        damaged: 'danger',
+    }[condition] || 'neutral');
 
 const getConditionLabel = (condition) => {
     const labels = { new: 'New (Unopened)', used: 'Used (Opened)', damaged: 'Damaged' };
@@ -67,267 +73,304 @@ const submitReject = () => {
         },
     });
 };
+
+const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-text-secondary';
 </script>
 
 <template>
     <Head :title="`Return ${returnOrder.return_number}`" />
 
-    <AuthenticatedLayout>
+    <AppLayout>
         <template #header>
-            <div class="flex items-center justify-between">
-                <div>
-                    <div class="flex items-center gap-3">
-                        <h2 class="font-semibold text-xl text-gray-900 dark:text-gray-100 leading-tight">
-                            Return #{{ returnOrder.return_number }}
-                        </h2>
-                        <span :class="getTypeClass(returnOrder.type)" class="px-3 py-1 rounded-full text-xs font-semibold uppercase">
-                            {{ returnOrder.type }}
-                        </span>
-                        <span :class="getStatusClass(returnOrder.status)" class="px-3 py-1 rounded-full text-xs font-semibold uppercase">
-                            {{ returnOrder.status }}
-                        </span>
-                    </div>
-                    <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                        For Order
-                        <Link v-if="returnOrder.order" :href="route('orders.show', returnOrder.order_id)" class="text-primary-400 hover:text-primary-300">
-                            #{{ returnOrder.order.order_number }}
-                        </Link>
-                    </p>
-                </div>
-                <Link
-                    :href="route('returns.index')"
-                    class="inline-flex items-center px-4 py-2 bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border rounded-md font-semibold text-xs text-gray-600 dark:text-gray-300 uppercase tracking-widest shadow-sm hover:bg-gray-100 dark:hover:bg-dark-bg/50"
-                >
-                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-                    </svg>
-                    Back to Returns
-                </Link>
+            <div class="flex items-center gap-2 text-xs">
+                <Link :href="route('returns.index')" class="text-text-tertiary hover:text-text-primary">Workspace</Link>
+                <span class="text-text-tertiary">/</span>
+                <Link :href="route('returns.index')" class="text-text-tertiary hover:text-text-primary">Returns</Link>
+                <span class="text-text-tertiary">/</span>
+                <span class="font-medium text-text-primary">#{{ returnOrder.return_number }}</span>
             </div>
         </template>
 
-        <div class="py-12 bg-gray-50 dark:bg-dark-bg min-h-screen">
-            <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    <!-- Left Column: Items & Details -->
-                    <div class="lg:col-span-2 space-y-6">
-                        <!-- Return Items -->
-                        <div class="bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border shadow-sm sm:rounded-lg p-6">
-                            <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Return Items</h3>
+        <PageHeader
+            :title="`Return #${returnOrder.return_number}`"
+            :description="`Created on ${formatDate(returnOrder.created_at)}`"
+        >
+            <template #actions>
+                <Badge :variant="typeVariant(returnOrder.type)" size="sm" class="capitalize">{{ returnOrder.type }}</Badge>
+                <Badge :variant="statusVariant(returnOrder.status)" size="sm" dot class="capitalize">{{ returnOrder.status }}</Badge>
 
-                            <div class="space-y-3">
-                                <div
-                                    v-for="item in returnOrder.items"
-                                    :key="item.id"
-                                    class="flex items-center gap-4 p-4 bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-border rounded-lg"
-                                >
-                                    <div class="flex-1">
-                                        <p class="font-medium text-gray-900 dark:text-gray-100">
+                <Button
+                    v-if="returnOrder.status === 'pending'"
+                    variant="default"
+                    size="sm"
+                    :disabled="processing"
+                    @click="performAction('approve')"
+                >
+                    <Check :size="14" />
+                    Approve Return
+                </Button>
+                <Button
+                    v-if="returnOrder.status === 'approved'"
+                    variant="default"
+                    size="sm"
+                    :disabled="processing"
+                    @click="performAction('receive')"
+                >
+                    <PackageCheck :size="14" />
+                    Mark as Received
+                </Button>
+                <Button
+                    v-if="returnOrder.status === 'received'"
+                    variant="default"
+                    size="sm"
+                    :disabled="processing"
+                    @click="performAction('complete')"
+                >
+                    <CheckCircle2 :size="14" />
+                    Complete Return
+                </Button>
+                <Button
+                    v-if="returnOrder.status === 'pending'"
+                    variant="danger"
+                    size="sm"
+                    :disabled="processing"
+                    @click="showRejectModal = true"
+                >
+                    <X :size="14" />
+                    Reject Return
+                </Button>
+                <Button variant="secondary" size="sm" as="Link" :href="route('returns.index')">
+                    <ArrowLeft :size="14" />
+                    Back to Returns
+                </Button>
+            </template>
+        </PageHeader>
+
+        <div class="mt-6 grid grid-cols-1 gap-4 lg:grid-cols-3">
+            <!-- Left Column: Items & Details -->
+            <div class="space-y-4 lg:col-span-2">
+                <!-- Return Items -->
+                <Card :padded="false">
+                    <div class="px-5 pt-5"><h3 class="text-sm font-semibold text-text-primary">Return Items</h3></div>
+                    <div class="p-5">
+                        <div v-if="returnOrder.items && returnOrder.items.length > 0" class="w-full overflow-x-auto rounded-lg border border-border-subtle">
+                            <table class="min-w-full">
+                                <thead>
+                                    <tr class="border-b border-border-subtle">
+                                        <th :class="thClass">Product</th>
+                                        <th :class="thClass">SKU</th>
+                                        <th :class="[thClass, 'text-center']">Qty</th>
+                                        <th :class="[thClass, 'text-center']">Condition</th>
+                                        <th :class="[thClass, 'text-center']">Restock</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr
+                                        v-for="item in returnOrder.items"
+                                        :key="item.id"
+                                        class="border-b border-border-subtle transition-colors last:border-b-0 hover:bg-surface-overlay"
+                                    >
+                                        <td class="px-4 py-3 text-sm font-medium text-text-primary">
                                             {{ item.product?.name || item.order_item?.product_name || 'Unknown Product' }}
-                                        </p>
-                                        <p class="text-sm text-gray-500 dark:text-gray-400">
-                                            SKU: {{ item.product?.sku || item.order_item?.sku || '-' }}
-                                        </p>
-                                    </div>
-
-                                    <div class="text-center">
-                                        <p class="text-xs text-gray-500 dark:text-gray-400">Qty</p>
-                                        <p class="font-medium text-gray-900 dark:text-gray-100">{{ item.quantity }}</p>
-                                    </div>
-
-                                    <div class="text-center">
-                                        <p class="text-xs text-gray-500 dark:text-gray-400">Condition</p>
-                                        <span class="text-sm font-medium" :class="{
-                                            'text-green-400': item.condition === 'new',
-                                            'text-yellow-400': item.condition === 'used',
-                                            'text-red-400': item.condition === 'damaged',
-                                        }">
-                                            {{ getConditionLabel(item.condition) }}
-                                        </span>
-                                    </div>
-
-                                    <div class="text-center">
-                                        <p class="text-xs text-gray-500 dark:text-gray-400">Restock</p>
-                                        <span v-if="item.restock" class="text-green-400 text-sm font-medium">Yes</span>
-                                        <span v-else class="text-gray-400 text-sm">No</span>
-                                    </div>
-                                </div>
-                            </div>
+                                        </td>
+                                        <td class="px-4 py-3 text-sm text-text-tertiary">
+                                            {{ item.product?.sku || item.order_item?.sku || '-' }}
+                                        </td>
+                                        <td class="px-4 py-3 text-center text-sm font-medium tabular-nums text-text-primary">
+                                            {{ item.quantity }}
+                                        </td>
+                                        <td class="px-4 py-3 text-center">
+                                            <Badge :variant="conditionVariant(item.condition)" size="sm">
+                                                {{ getConditionLabel(item.condition) }}
+                                            </Badge>
+                                        </td>
+                                        <td class="px-4 py-3 text-center">
+                                            <Badge v-if="item.restock" variant="success" size="sm">Yes</Badge>
+                                            <Badge v-else variant="neutral" size="sm">No</Badge>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
                         </div>
 
-                        <!-- Reason & Notes -->
-                        <div class="bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border shadow-sm sm:rounded-lg p-6">
-                            <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Details</h3>
-
-                            <dl class="space-y-3">
-                                <div>
-                                    <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Reason</dt>
-                                    <dd class="mt-1 text-sm text-gray-900 dark:text-gray-100">{{ returnOrder.reason }}</dd>
-                                </div>
-                                <div v-if="returnOrder.notes">
-                                    <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Notes</dt>
-                                    <dd class="mt-1 text-sm text-gray-600 dark:text-gray-300 whitespace-pre-line">{{ returnOrder.notes }}</dd>
-                                </div>
-                            </dl>
+                        <div v-else class="flex flex-col items-center gap-2 py-8 text-center">
+                            <PackageOpen :size="22" class="text-text-tertiary" />
+                            <p class="text-sm text-text-tertiary">No items on this return.</p>
                         </div>
                     </div>
+                </Card>
 
-                    <!-- Right Column: Summary & Actions -->
-                    <div class="space-y-6">
-                        <!-- Summary -->
-                        <div class="bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border shadow-sm sm:rounded-lg p-6">
-                            <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Summary</h3>
-
-                            <dl class="space-y-3">
-                                <div class="flex justify-between text-sm">
-                                    <dt class="text-gray-600 dark:text-gray-300">Return Number</dt>
-                                    <dd class="font-medium text-gray-900 dark:text-gray-100">{{ returnOrder.return_number }}</dd>
-                                </div>
-                                <div class="flex justify-between text-sm">
-                                    <dt class="text-gray-600 dark:text-gray-300">Type</dt>
-                                    <dd>
-                                        <span :class="getTypeClass(returnOrder.type)" class="px-2 py-0.5 rounded-full text-xs font-semibold uppercase">
-                                            {{ returnOrder.type }}
-                                        </span>
-                                    </dd>
-                                </div>
-                                <div class="flex justify-between text-sm">
-                                    <dt class="text-gray-600 dark:text-gray-300">Status</dt>
-                                    <dd>
-                                        <span :class="getStatusClass(returnOrder.status)" class="px-2 py-0.5 rounded-full text-xs font-semibold uppercase">
-                                            {{ returnOrder.status }}
-                                        </span>
-                                    </dd>
-                                </div>
-                                <div class="flex justify-between text-sm">
-                                    <dt class="text-gray-600 dark:text-gray-300">Created</dt>
-                                    <dd class="font-medium text-gray-900 dark:text-gray-100">{{ formatDate(returnOrder.created_at) }}</dd>
-                                </div>
-                                <div v-if="returnOrder.completed_at" class="flex justify-between text-sm">
-                                    <dt class="text-gray-600 dark:text-gray-300">Completed</dt>
-                                    <dd class="font-medium text-gray-900 dark:text-gray-100">{{ formatDate(returnOrder.completed_at) }}</dd>
-                                </div>
-                                <div v-if="returnOrder.processor" class="flex justify-between text-sm">
-                                    <dt class="text-gray-600 dark:text-gray-300">Processed By</dt>
-                                    <dd class="font-medium text-gray-900 dark:text-gray-100">{{ returnOrder.processor.name }}</dd>
-                                </div>
-                                <div class="pt-3 border-t border-gray-200 dark:border-dark-border">
-                                    <div class="flex justify-between items-center">
-                                        <dt class="text-lg font-semibold text-gray-900 dark:text-gray-100">Refund Amount</dt>
-                                        <dd class="text-xl font-bold text-primary-400">${{ parseFloat(returnOrder.refund_amount || 0).toFixed(2) }}</dd>
-                                    </div>
-                                </div>
-                            </dl>
-                        </div>
-
-                        <!-- Actions -->
-                        <div v-if="returnOrder.status !== 'completed' && returnOrder.status !== 'rejected'" class="bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border shadow-sm sm:rounded-lg p-6">
-                            <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Actions</h3>
-
-                            <div class="space-y-2">
-                                <!-- Approve (when pending) -->
-                                <button
-                                    v-if="returnOrder.status === 'pending'"
-                                    @click="performAction('approve')"
-                                    :disabled="processing"
-                                    class="w-full px-4 py-2 bg-blue-600 text-white rounded-md font-semibold text-sm hover:bg-blue-700 disabled:opacity-50 transition"
-                                >
-                                    Approve Return
-                                </button>
-
-                                <!-- Receive (when approved) -->
-                                <button
-                                    v-if="returnOrder.status === 'approved'"
-                                    @click="performAction('receive')"
-                                    :disabled="processing"
-                                    class="w-full px-4 py-2 bg-purple-600 text-white rounded-md font-semibold text-sm hover:bg-purple-700 disabled:opacity-50 transition"
-                                >
-                                    Mark as Received
-                                </button>
-
-                                <!-- Complete (when received) -->
-                                <button
-                                    v-if="returnOrder.status === 'received'"
-                                    @click="performAction('complete')"
-                                    :disabled="processing"
-                                    class="w-full px-4 py-2 bg-green-600 text-white rounded-md font-semibold text-sm hover:bg-green-700 disabled:opacity-50 transition"
-                                >
-                                    Complete Return
-                                </button>
-
-                                <!-- Reject (when pending) -->
-                                <button
-                                    v-if="returnOrder.status === 'pending'"
-                                    @click="showRejectModal = true"
-                                    :disabled="processing"
-                                    class="w-full px-4 py-2 bg-red-900/30 text-red-400 border border-red-800 rounded-md font-semibold text-sm hover:bg-red-900/50 disabled:opacity-50 transition"
-                                >
-                                    Reject Return
-                                </button>
+                <!-- Reason & Notes -->
+                <Card :padded="false">
+                    <div class="px-5 pt-5"><h3 class="text-sm font-semibold text-text-primary">Details</h3></div>
+                    <div class="p-5">
+                        <dl class="space-y-3">
+                            <div>
+                                <dt class="text-xs text-text-tertiary">Reason</dt>
+                                <dd class="mt-1 text-sm text-text-primary">{{ returnOrder.reason }}</dd>
                             </div>
-
-                            <!-- Status flow hint -->
-                            <p class="mt-3 text-xs text-gray-500 dark:text-gray-400">
-                                <template v-if="returnOrder.status === 'pending'">
-                                    Approve to proceed or reject the return.
-                                </template>
-                                <template v-else-if="returnOrder.status === 'approved'">
-                                    Mark as received when items arrive. Items marked for restock will be added back to inventory.
-                                </template>
-                                <template v-else-if="returnOrder.status === 'received'">
-                                    Complete the return to finalize the process.
-                                </template>
-                            </p>
-                        </div>
+                            <div v-if="returnOrder.notes">
+                                <dt class="text-xs text-text-tertiary">Notes</dt>
+                                <dd class="mt-1 whitespace-pre-line text-sm text-text-secondary">{{ returnOrder.notes }}</dd>
+                            </div>
+                            <div v-if="returnOrder.order">
+                                <dt class="text-xs text-text-tertiary">For Order</dt>
+                                <dd class="mt-1 text-sm">
+                                    <Link :href="route('orders.show', returnOrder.order_id)" class="text-brand hover:underline">
+                                        #{{ returnOrder.order.order_number }}
+                                    </Link>
+                                </dd>
+                            </div>
+                        </dl>
                     </div>
-                </div>
+                </Card>
+            </div>
+
+            <!-- Right Column: Summary & Actions -->
+            <div class="space-y-4">
+                <!-- Summary -->
+                <Card :padded="false">
+                    <div class="px-5 pt-5"><h3 class="text-sm font-semibold text-text-primary">Summary</h3></div>
+                    <div class="p-5">
+                        <dl class="space-y-3">
+                            <div class="flex justify-between text-sm">
+                                <dt class="text-text-secondary">Return Number</dt>
+                                <dd class="font-medium text-text-primary">{{ returnOrder.return_number }}</dd>
+                            </div>
+                            <div class="flex items-center justify-between text-sm">
+                                <dt class="text-text-secondary">Type</dt>
+                                <dd>
+                                    <Badge :variant="typeVariant(returnOrder.type)" size="sm" class="capitalize">{{ returnOrder.type }}</Badge>
+                                </dd>
+                            </div>
+                            <div class="flex items-center justify-between text-sm">
+                                <dt class="text-text-secondary">Status</dt>
+                                <dd>
+                                    <Badge :variant="statusVariant(returnOrder.status)" size="sm" dot class="capitalize">{{ returnOrder.status }}</Badge>
+                                </dd>
+                            </div>
+                            <div class="flex justify-between text-sm">
+                                <dt class="text-text-secondary">Created</dt>
+                                <dd class="font-medium text-text-primary">{{ formatDate(returnOrder.created_at) }}</dd>
+                            </div>
+                            <div v-if="returnOrder.completed_at" class="flex justify-between text-sm">
+                                <dt class="text-text-secondary">Completed</dt>
+                                <dd class="font-medium text-text-primary">{{ formatDate(returnOrder.completed_at) }}</dd>
+                            </div>
+                            <div v-if="returnOrder.processor" class="flex justify-between text-sm">
+                                <dt class="text-text-secondary">Processed By</dt>
+                                <dd class="font-medium text-text-primary">{{ returnOrder.processor.name }}</dd>
+                            </div>
+                            <div class="border-t border-border-subtle pt-3">
+                                <div class="flex items-center justify-between">
+                                    <dt class="text-sm font-semibold text-text-primary">Refund Amount</dt>
+                                    <dd class="text-xl font-bold tabular-nums text-brand">${{ parseFloat(returnOrder.refund_amount || 0).toFixed(2) }}</dd>
+                                </div>
+                            </div>
+                        </dl>
+                    </div>
+                </Card>
+
+                <!-- Actions -->
+                <Card v-if="returnOrder.status !== 'completed' && returnOrder.status !== 'rejected'" :padded="false">
+                    <div class="px-5 pt-5"><h3 class="text-sm font-semibold text-text-primary">Actions</h3></div>
+                    <div class="p-5">
+                        <div class="space-y-2">
+                            <Button
+                                v-if="returnOrder.status === 'pending'"
+                                variant="default"
+                                class="w-full"
+                                :disabled="processing"
+                                @click="performAction('approve')"
+                            >
+                                Approve Return
+                            </Button>
+                            <Button
+                                v-if="returnOrder.status === 'approved'"
+                                variant="default"
+                                class="w-full"
+                                :disabled="processing"
+                                @click="performAction('receive')"
+                            >
+                                Mark as Received
+                            </Button>
+                            <Button
+                                v-if="returnOrder.status === 'received'"
+                                variant="default"
+                                class="w-full"
+                                :disabled="processing"
+                                @click="performAction('complete')"
+                            >
+                                Complete Return
+                            </Button>
+                        </div>
+
+                        <p class="mt-3 text-xs text-text-tertiary">
+                            <template v-if="returnOrder.status === 'pending'">
+                                Approve to proceed or reject the return.
+                            </template>
+                            <template v-else-if="returnOrder.status === 'approved'">
+                                Mark as received when items arrive. Items marked for restock will be added back to inventory.
+                            </template>
+                            <template v-else-if="returnOrder.status === 'received'">
+                                Complete the return to finalize the process.
+                            </template>
+                        </p>
+                    </div>
+                </Card>
+
+                <!-- Danger Zone -->
+                <Card v-if="returnOrder.status === 'pending'" :padded="false">
+                    <div class="px-5 pt-5"><h3 class="text-sm font-semibold text-text-primary">Danger Zone</h3></div>
+                    <div class="p-5">
+                        <Button variant="danger" class="w-full" :disabled="processing" @click="showRejectModal = true">
+                            Reject Return
+                        </Button>
+                        <p class="mt-2 text-xs text-text-tertiary">
+                            Rejecting closes this return. This cannot be undone.
+                        </p>
+                    </div>
+                </Card>
             </div>
         </div>
 
         <!-- Reject Modal -->
-        <div v-if="showRejectModal" class="fixed inset-0 z-50 overflow-y-auto" @click="showRejectModal = false">
-            <div class="flex items-center justify-center min-h-screen px-4">
-                <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"></div>
+        <Teleport to="body">
+            <div v-if="showRejectModal" class="fixed inset-0 z-50 flex items-center justify-center" @click="showRejectModal = false">
+                <div class="fixed inset-0 bg-black/50"></div>
 
-                <div class="relative bg-white dark:bg-dark-card rounded-lg shadow-xl max-w-md w-full p-6" @click.stop>
-                    <div class="flex items-center justify-between mb-4">
-                        <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">Reject Return</h3>
-                        <button @click="showRejectModal = false" class="text-gray-500 dark:text-gray-400 hover:text-gray-200">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                            </svg>
+                <div class="relative mx-4 w-full max-w-md rounded-xl border border-border-subtle bg-surface-raised p-6 shadow-lg" @click.stop>
+                    <div class="mb-4 flex items-center justify-between">
+                        <h3 class="text-base font-semibold text-text-primary">Reject Return</h3>
+                        <button
+                            @click="showRejectModal = false"
+                            class="text-text-tertiary transition-colors hover:text-text-primary"
+                        >
+                            <X :size="18" />
                         </button>
                     </div>
 
                     <div class="mb-6">
-                        <label class="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-1">Reason for rejection</label>
+                        <label class="mb-1 block text-sm font-medium text-text-secondary">Reason for rejection</label>
                         <textarea
                             v-model="rejectNotes"
                             rows="3"
-                            class="block w-full rounded-md bg-gray-50 dark:bg-dark-bg border-gray-200 dark:border-dark-border text-gray-900 dark:text-gray-100 placeholder-gray-500 shadow-sm focus:border-primary-400 focus:ring-primary-400"
+                            class="w-full rounded-md border border-border-subtle bg-surface-canvas px-3 py-2 text-sm text-text-primary placeholder:text-text-tertiary ds-focus-ring"
                             placeholder="Why is this return being rejected?"
                         ></textarea>
                     </div>
 
-                    <div class="flex gap-3 justify-end">
-                        <button
-                            @click="showRejectModal = false"
-                            class="px-4 py-2 bg-gray-100 dark:bg-dark-bg text-gray-600 dark:text-gray-300 rounded-md hover:bg-gray-200 dark:hover:bg-dark-bg/50"
-                            :disabled="processing"
-                        >
+                    <div class="flex justify-end gap-3">
+                        <Button variant="secondary" :disabled="processing" @click="showRejectModal = false">
                             Cancel
-                        </button>
-                        <button
-                            @click="submitReject"
-                            :disabled="processing"
-                            class="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 disabled:opacity-50"
-                        >
+                        </Button>
+                        <Button variant="danger" :loading="processing" :disabled="processing" @click="submitReject">
                             <span v-if="processing">Rejecting...</span>
                             <span v-else>Reject Return</span>
-                        </button>
+                        </Button>
                     </div>
                 </div>
             </div>
-        </div>
-    </AuthenticatedLayout>
+        </Teleport>
+    </AppLayout>
 </template>

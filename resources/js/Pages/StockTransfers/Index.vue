@@ -1,8 +1,13 @@
 <script setup>
-import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
+import AppLayout from '@/Layouts/AppLayout.vue';
+import PageHeader from '@/Components/ui/PageHeader.vue';
+import Card from '@/Components/ui/Card.vue';
+import Button from '@/Components/ui/Button.vue';
+import Badge from '@/Components/ui/Badge.vue';
 import { Head, Link, router } from '@inertiajs/vue3';
 import { ref } from 'vue';
 import { useI18n } from 'vue-i18n';
+import { Plus, Search, Eye, ArrowLeftRight } from 'lucide-vue-next';
 
 const { t } = useI18n();
 
@@ -30,15 +35,8 @@ const clearFilters = () => {
     applyFilters();
 };
 
-const getStatusBadgeClass = (status) => {
-    const classes = {
-        'pending': 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300',
-        'in_transit': 'bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300',
-        'completed': 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300',
-        'cancelled': 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300',
-    };
-    return classes[status] || classes.pending;
-};
+const statusVariant = (status) =>
+    ({ pending: 'warning', in_transit: 'info', completed: 'success', cancelled: 'danger' }[status] || 'neutral');
 
 const getStatusLabel = (status) => {
     const labels = {
@@ -58,166 +56,153 @@ const formatDate = (dateStr) => {
         day: 'numeric',
     });
 };
+
+const selectClass =
+    'h-9 w-full rounded-md border border-border-subtle bg-surface-canvas px-3 text-sm text-text-primary ds-focus-ring';
+const thClass =
+    'px-4 py-2.5 text-left text-xs font-medium text-text-secondary';
 </script>
 
 <template>
     <Head title="Stock Transfers" />
 
-    <AuthenticatedLayout>
+    <AppLayout>
         <template #header>
-            <div class="flex justify-between items-center">
-                <div>
-                    <h2 class="font-semibold text-2xl text-gray-900 dark:text-gray-100">Stock Transfers</h2>
-                    <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Transfer inventory between locations</p>
-                </div>
-                <Link
-                    :href="route('stock-transfers.create')"
-                    class="px-4 py-2 bg-primary-500 hover:bg-primary-600 text-white font-medium rounded-lg transition"
-                >
-                    New Transfer
-                </Link>
+            <div class="flex items-center gap-2 text-xs">
+                <span class="text-text-tertiary">Workspace</span>
+                <span class="text-text-tertiary">/</span>
+                <span class="font-medium text-text-primary">Stock Transfers</span>
             </div>
         </template>
 
-        <div class="py-12 bg-gray-50 dark:bg-dark-bg min-h-screen">
-            <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-                <!-- Filters -->
-                <div class="bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border shadow-sm sm:rounded-lg p-6 mb-6">
-                    <div class="flex flex-wrap gap-4 items-end">
-                        <div class="flex-1 min-w-[200px]">
-                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Search</label>
+        <PageHeader title="Stock Transfers" description="Transfer inventory between locations.">
+            <template #actions>
+                <Button variant="default" size="sm" as="Link" :href="route('stock-transfers.create')">
+                    <Plus :size="14" />
+                    New Transfer
+                </Button>
+            </template>
+        </PageHeader>
+
+        <!-- Filters -->
+        <Card class="mt-6">
+            <form @submit.prevent="applyFilters" class="space-y-4">
+                <div class="grid grid-cols-1 gap-4 md:grid-cols-4">
+                    <div class="md:col-span-2">
+                        <label for="search" class="mb-1 block text-xs font-medium text-text-secondary">Search</label>
+                        <div class="relative">
+                            <Search :size="15" class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-text-tertiary" />
                             <input
+                                id="search"
                                 v-model="search"
                                 type="text"
                                 placeholder="Search by transfer number..."
-                                class="block w-full rounded-md bg-gray-50 dark:bg-dark-bg border-gray-200 dark:border-dark-border text-gray-900 dark:text-gray-100 shadow-sm focus:border-primary-400 focus:ring-primary-400"
-                                @keyup.enter="applyFilters"
+                                class="h-9 w-full rounded-md border border-border-subtle bg-surface-canvas pl-9 pr-3 text-sm text-text-primary placeholder:text-text-tertiary ds-focus-ring"
                             />
                         </div>
-                        <div class="w-48">
-                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Status</label>
-                            <select
-                                v-model="selectedStatus"
-                                class="block w-full rounded-md bg-gray-50 dark:bg-dark-bg border-gray-200 dark:border-dark-border text-gray-900 dark:text-gray-100 shadow-sm focus:border-primary-400 focus:ring-primary-400"
-                                @change="applyFilters"
-                            >
-                                <option value="">All Statuses</option>
-                                <option value="pending">Pending</option>
-                                <option value="in_transit">In Transit</option>
-                                <option value="completed">Completed</option>
-                                <option value="cancelled">Cancelled</option>
-                            </select>
-                        </div>
-                        <div class="flex gap-2">
-                            <button
-                                @click="applyFilters"
-                                class="px-4 py-2 bg-primary-500 hover:bg-primary-600 text-white font-medium rounded-lg transition"
-                            >
-                                Filter
-                            </button>
-                            <button
-                                @click="clearFilters"
-                                class="px-4 py-2 bg-gray-200 dark:bg-dark-bg hover:bg-gray-300 dark:hover:bg-dark-bg/70 text-gray-700 dark:text-gray-300 font-medium rounded-lg transition"
-                            >
-                                Clear
-                            </button>
-                        </div>
+                    </div>
+                    <div>
+                        <label for="status" class="mb-1 block text-xs font-medium text-text-secondary">Status</label>
+                        <select id="status" v-model="selectedStatus" :class="selectClass" @change="applyFilters">
+                            <option value="">All Statuses</option>
+                            <option value="pending">Pending</option>
+                            <option value="in_transit">In Transit</option>
+                            <option value="completed">Completed</option>
+                            <option value="cancelled">Cancelled</option>
+                        </select>
                     </div>
                 </div>
+                <div class="flex items-center gap-2">
+                    <Button type="submit" variant="default" size="sm">
+                        <Search :size="14" />
+                        Filter
+                    </Button>
+                    <Button type="button" variant="secondary" size="sm" @click="clearFilters">Clear</Button>
+                </div>
+            </form>
+        </Card>
 
-                <!-- Table -->
-                <div class="bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border shadow-sm sm:rounded-lg overflow-hidden">
-                    <div class="overflow-x-auto">
-                        <table class="min-w-full divide-y divide-gray-200 dark:divide-dark-border">
-                            <thead class="bg-gray-50 dark:bg-dark-bg">
-                                <tr>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Transfer #</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">From</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">To</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Status</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Items</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Date</th>
-                                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody class="bg-white dark:bg-dark-card divide-y divide-gray-200 dark:divide-dark-border">
-                                <tr v-for="transfer in transfers.data" :key="transfer.id" class="hover:bg-gray-50 dark:hover:bg-dark-bg/50 transition">
-                                    <td class="px-6 py-4 whitespace-nowrap">
-                                        <Link
-                                            :href="route('stock-transfers.show', transfer.id)"
-                                            class="text-primary-600 dark:text-primary-400 hover:text-primary-800 dark:hover:text-primary-300 font-medium"
-                                        >
-                                            {{ transfer.transfer_number }}
-                                        </Link>
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
-                                        {{ transfer.from_location?.name || '-' }}
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
-                                        {{ transfer.to_location?.name || '-' }}
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap">
-                                        <span
-                                            :class="getStatusBadgeClass(transfer.status)"
-                                            class="px-2.5 py-0.5 rounded-full text-xs font-medium"
-                                        >
-                                            {{ getStatusLabel(transfer.status) }}
-                                        </span>
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-400">
-                                        {{ transfer.items?.length || 0 }} item(s)
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-400">
-                                        {{ formatDate(transfer.created_at) }}
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-right">
-                                        <Link
-                                            :href="route('stock-transfers.show', transfer.id)"
-                                            class="text-primary-600 dark:text-primary-400 hover:text-primary-800 dark:hover:text-primary-300 text-sm font-medium"
-                                        >
-                                            View
-                                        </Link>
-                                    </td>
-                                </tr>
-                                <tr v-if="!transfers.data?.length">
-                                    <td colspan="7" class="px-6 py-12 text-center text-gray-500 dark:text-gray-400">
-                                        No stock transfers found. Create your first transfer to move inventory between locations.
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-
-                    <!-- Pagination -->
-                    <div v-if="transfers.links && transfers.links.length > 3" class="px-6 py-4 border-t border-gray-200 dark:border-dark-border">
-                        <div class="flex justify-between items-center">
-                            <p class="text-sm text-gray-600 dark:text-gray-400">
-                                Showing {{ transfers.from }} to {{ transfers.to }} of {{ transfers.total }} transfers
-                            </p>
-                            <div class="flex gap-1">
-                                <template v-for="link in transfers.links" :key="link.label">
-                                    <Link
-                                        v-if="link.url"
-                                        :href="link.url"
-                                        v-html="link.label"
-                                        :class="[
-                                            'px-3 py-1 text-sm rounded border transition',
-                                            link.active
-                                                ? 'bg-primary-500 text-white border-primary-500'
-                                                : 'bg-white dark:bg-dark-card text-gray-700 dark:text-gray-300 border-gray-200 dark:border-dark-border hover:bg-gray-50 dark:hover:bg-dark-bg'
-                                        ]"
-                                    />
-                                    <span
-                                        v-else
-                                        v-html="link.label"
-                                        class="px-3 py-1 text-sm rounded border border-gray-200 dark:border-dark-border text-gray-400 dark:text-gray-500 bg-gray-50 dark:bg-dark-bg"
-                                    />
-                                </template>
+        <!-- Transfers table -->
+        <div class="mt-4 w-full overflow-x-auto rounded-lg border border-border-subtle bg-surface-raised">
+            <table class="w-full text-sm">
+                <thead>
+                    <tr class="border-b border-border-subtle">
+                        <th :class="thClass">Transfer #</th>
+                        <th :class="thClass">From</th>
+                        <th :class="thClass">To</th>
+                        <th :class="thClass">Status</th>
+                        <th :class="thClass">Items</th>
+                        <th :class="thClass">Date</th>
+                        <th :class="[thClass, 'text-right']">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr v-if="!transfers.data?.length">
+                        <td colspan="7" class="px-4 py-12 text-center">
+                            <div class="flex flex-col items-center gap-3">
+                                <ArrowLeftRight :size="22" class="text-text-tertiary" />
+                                <p class="text-sm text-text-tertiary">No stock transfers found. Create your first transfer to move inventory between locations.</p>
+                                <Button variant="default" size="sm" as="Link" :href="route('stock-transfers.create')">
+                                    <Plus :size="14" />
+                                    New Transfer
+                                </Button>
                             </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+                        </td>
+                    </tr>
+                    <tr v-for="transfer in transfers.data" :key="transfer.id" class="border-b border-border-subtle transition-colors last:border-b-0 hover:bg-surface-overlay">
+                        <td class="px-4 py-3">
+                            <Link :href="route('stock-transfers.show', transfer.id)" class="font-medium text-text-primary hover:text-brand">
+                                {{ transfer.transfer_number }}
+                            </Link>
+                        </td>
+                        <td class="px-4 py-3">
+                            <span class="text-text-secondary">{{ transfer.from_location?.name || '-' }}</span>
+                        </td>
+                        <td class="px-4 py-3">
+                            <span class="text-text-secondary">{{ transfer.to_location?.name || '-' }}</span>
+                        </td>
+                        <td class="px-4 py-3">
+                            <Badge :variant="statusVariant(transfer.status)" size="sm" dot>{{ getStatusLabel(transfer.status) }}</Badge>
+                        </td>
+                        <td class="px-4 py-3">
+                            <span class="tabular-nums text-text-secondary">{{ transfer.items?.length || 0 }} item(s)</span>
+                        </td>
+                        <td class="px-4 py-3">
+                            <span class="text-text-secondary">{{ formatDate(transfer.created_at) }}</span>
+                        </td>
+                        <td class="px-4 py-3">
+                            <div class="flex items-center justify-end gap-1">
+                                <Link :href="route('stock-transfers.show', transfer.id)" class="rounded-md p-1.5 text-text-tertiary transition-colors hover:bg-surface-overlay hover:text-brand" title="View"><Eye :size="16" /></Link>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
         </div>
-    </AuthenticatedLayout>
+
+        <!-- Pagination -->
+        <div v-if="transfers.links && transfers.links.length > 3" class="mt-4 flex flex-col items-center justify-between gap-3 sm:flex-row">
+            <p class="text-xs text-text-tertiary">
+                Showing <span class="font-medium text-text-secondary">{{ transfers.from }}</span>
+                to <span class="font-medium text-text-secondary">{{ transfers.to }}</span>
+                of <span class="font-medium text-text-secondary">{{ transfers.total }}</span> transfers
+            </p>
+            <nav class="inline-flex items-center gap-1">
+                <template v-for="link in transfers.links" :key="link.label">
+                    <Link
+                        v-if="link.url"
+                        :href="link.url"
+                        :class="[
+                            'inline-flex h-8 min-w-8 items-center justify-center rounded-md border px-2.5 text-xs font-medium transition-colors',
+                            link.active
+                                ? 'border-brand bg-brand text-brand-foreground'
+                                : 'border-border-subtle bg-surface-canvas text-text-secondary hover:bg-surface-overlay',
+                        ]"
+                        v-html="link.label"
+                    />
+                    <span v-else class="inline-flex h-8 min-w-8 cursor-not-allowed items-center justify-center rounded-md border border-border-subtle px-2.5 text-xs text-text-tertiary opacity-50" v-html="link.label" />
+                </template>
+            </nav>
+        </div>
+    </AppLayout>
 </template>

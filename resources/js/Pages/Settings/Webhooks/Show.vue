@@ -1,10 +1,12 @@
 <script setup>
-import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
+import AppLayout from '@/Layouts/AppLayout.vue';
+import PageHeader from '@/Components/ui/PageHeader.vue';
+import Card from '@/Components/ui/Card.vue';
+import Button from '@/Components/ui/Button.vue';
+import Badge from '@/Components/ui/Badge.vue';
 import { Head, Link, useForm, router } from '@inertiajs/vue3';
 import { ref, computed } from 'vue';
-import Modal from '@/Components/Modal.vue';
-import InputLabel from '@/Components/InputLabel.vue';
-import InputError from '@/Components/InputError.vue';
+import { ArrowLeft, Pencil, Trash2, Send, RefreshCw, RotateCcw, ChevronDown, Inbox, X } from 'lucide-vue-next';
 
 import { useI18n } from 'vue-i18n';
 const props = defineProps({
@@ -107,25 +109,19 @@ const formatJson = (data) => {
     }
 };
 
-const getStatusColor = (status) => {
-    switch (status) {
-        case 'success':
-            return 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-400';
-        case 'pending':
-            return 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-400';
-        case 'failed':
-            return 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-400';
-        default:
-            return 'bg-gray-100 dark:bg-gray-900/30 text-gray-800 dark:text-gray-400';
-    }
-};
+const statusVariant = (status) =>
+    ({
+        success: 'success',
+        pending: 'warning',
+        failed: 'danger',
+    }[status] || 'neutral');
 
-const getResponseCodeColor = (code) => {
-    if (!code) return 'text-gray-500 dark:text-gray-400';
-    if (code >= 200 && code < 300) return 'text-green-600 dark:text-green-400';
-    if (code >= 400 && code < 500) return 'text-yellow-600 dark:text-yellow-400';
-    if (code >= 500) return 'text-red-600 dark:text-red-400';
-    return 'text-gray-600 dark:text-gray-400';
+const responseCodeClass = (code) => {
+    if (!code) return 'text-text-tertiary';
+    if (code >= 200 && code < 300) return 'text-status-success';
+    if (code >= 400 && code < 500) return 'text-status-warning';
+    if (code >= 500) return 'text-status-danger';
+    return 'text-text-secondary';
 };
 
 const maskedSecret = computed(() => {
@@ -194,520 +190,428 @@ const isGroupPartiallySelected = (form, group) => {
     const selectedCount = groupEvents.filter(event => form.events.includes(event)).length;
     return selectedCount > 0 && selectedCount < groupEvents.length;
 };
+
+const thClass = 'px-4 py-2.5 text-left text-xs font-medium text-text-secondary';
+const fieldLabel = 'mb-1 block text-sm font-medium text-text-secondary';
+const fieldInput = 'h-9 w-full rounded-md border border-border-subtle bg-surface-canvas px-3 text-sm text-text-primary placeholder:text-text-tertiary ds-focus-ring';
+const fieldError = 'mt-1 text-xs text-status-danger';
 </script>
 
 <template>
     <Head :title="`Webhook: ${webhook.name}`" />
 
-    <AuthenticatedLayout>
+    <AppLayout>
         <template #header>
-            <div class="flex items-center justify-between">
-                <div class="flex items-center gap-3">
-                    <Link
-                        :href="route('webhooks.index')"
-                        class="text-gray-400 hover:text-gray-300"
-                    >
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-                        </svg>
-                    </Link>
-                    <h2 class="font-semibold text-xl text-gray-900 dark:text-gray-100 leading-tight">
-                        {{ webhook.name }}
-                    </h2>
-                    <span
-                        :class="[
-                            'px-2 py-1 text-xs font-semibold rounded-full',
-                            webhook.is_active
-                                ? 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-400'
-                                : 'bg-gray-100 dark:bg-gray-900/30 text-gray-800 dark:text-gray-400'
-                        ]"
-                    >
-                        {{ webhook.is_active ? 'Active' : 'Inactive' }}
-                    </span>
-                </div>
-                <div class="flex items-center gap-2">
-                    <button
-                        @click="sendTest"
-                        class="inline-flex items-center px-3 py-2 bg-blue-500 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-blue-600 transition"
-                    >
-                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
-                        </svg>
-                        Send Test
-                    </button>
-                    <button
-                        @click="openEditModal"
-                        class="inline-flex items-center px-3 py-2 bg-primary-400 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-primary-500 transition"
-                    >
-                        {{ t('common.edit') }}
-                    </button>
-                    <Link
-                        :href="route('webhooks.index')"
-                        class="inline-flex items-center px-3 py-2 bg-gray-100 dark:bg-dark-bg border border-gray-200 dark:border-dark-border rounded-md font-semibold text-xs text-gray-700 dark:text-gray-300 uppercase tracking-widest hover:bg-gray-200 dark:hover:bg-dark-bg/50 transition"
-                    >
-                        {{ t('common.back') }}
-                    </Link>
-                </div>
+            <div class="flex items-center gap-2 text-xs">
+                <Link :href="route('settings.account.index')" class="text-text-tertiary hover:text-text-primary">Workspace</Link>
+                <span class="text-text-tertiary">/</span>
+                <Link :href="route('settings.account.index')" class="text-text-tertiary hover:text-text-primary">Settings</Link>
+                <span class="text-text-tertiary">/</span>
+                <Link :href="route('webhooks.index')" class="text-text-tertiary hover:text-text-primary">{{ t('settings.webhooks.title') }}</Link>
+                <span class="text-text-tertiary">/</span>
+                <span class="font-medium text-text-primary">{{ webhook.name }}</span>
             </div>
         </template>
 
-        <div class="py-12 bg-gray-50 dark:bg-dark-bg min-h-screen">
-            <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    <!-- Main Content -->
-                    <div class="lg:col-span-2 space-y-6">
-                        <!-- Webhook Details Card -->
-                        <div class="bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border overflow-hidden shadow-lg sm:rounded-lg">
-                            <div class="px-6 py-4 border-b border-gray-200 dark:border-dark-border">
-                                <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100">Webhook Details</h3>
-                            </div>
-                            <div class="p-6">
-                                <dl class="grid grid-cols-1 gap-x-4 gap-y-6 sm:grid-cols-2">
-                                    <div class="sm:col-span-2">
-                                        <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Endpoint URL</dt>
-                                        <dd class="mt-1 text-sm text-gray-900 dark:text-gray-100 font-mono break-all">
-                                            {{ webhook.url }}
-                                        </dd>
-                                    </div>
-                                    <div class="sm:col-span-2">
-                                        <dt class="text-sm font-medium text-gray-500 dark:text-gray-400 flex items-center justify-between">
-                                            <span>Secret</span>
-                                            <div class="flex items-center gap-2">
-                                                <button
-                                                    @click="showSecret = !showSecret"
-                                                    class="text-xs text-primary-400 hover:text-primary-300"
-                                                >
-                                                    {{ showSecret ? 'Hide' : 'Reveal' }}
-                                                </button>
-                                                <button
-                                                    @click="copySecret"
-                                                    class="text-xs text-primary-400 hover:text-primary-300"
-                                                >
-                                                    {{ copiedSecret ? 'Copied!' : 'Copy' }}
-                                                </button>
-                                            </div>
-                                        </dt>
-                                        <dd class="mt-1 text-sm text-gray-900 dark:text-gray-100 font-mono bg-gray-50 dark:bg-dark-bg rounded px-3 py-2 break-all">
-                                            {{ showSecret ? webhook.secret : maskedSecret }}
-                                        </dd>
-                                    </div>
-                                    <div>
-                                        <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">{{ t('purchaseOrders.show.createdBy') }}</dt>
-                                        <dd class="mt-1 text-sm text-gray-900 dark:text-gray-100">
-                                            {{ webhook.creator?.name || 'Unknown' }}
-                                        </dd>
-                                    </div>
-                                    <div>
-                                        <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Created At</dt>
-                                        <dd class="mt-1 text-sm text-gray-900 dark:text-gray-100">
-                                            {{ formatDate(webhook.created_at) }}
-                                        </dd>
-                                    </div>
-                                </dl>
-                            </div>
-                        </div>
+        <PageHeader :title="webhook.name" description="Webhook configuration and delivery activity.">
+            <template #actions>
+                <Badge :variant="webhook.is_active ? 'success' : 'neutral'" size="sm" dot>
+                    {{ webhook.is_active ? 'Active' : 'Inactive' }}
+                </Badge>
+                <Button variant="secondary" size="sm" @click="sendTest">
+                    <Send :size="14" />
+                    Send Test
+                </Button>
+                <Button variant="default" size="sm" @click="openEditModal">
+                    <Pencil :size="14" />
+                    {{ t('common.edit') }}
+                </Button>
+                <Button variant="secondary" size="sm" as="Link" :href="route('webhooks.index')">
+                    <ArrowLeft :size="14" />
+                    {{ t('common.back') }}
+                </Button>
+            </template>
+        </PageHeader>
 
-                        <!-- Events Card -->
-                        <div class="bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border overflow-hidden shadow-lg sm:rounded-lg">
-                            <div class="px-6 py-4 border-b border-gray-200 dark:border-dark-border">
-                                <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100">
-                                    Subscribed Events ({{ webhook.events?.length || 0 }})
-                                </h3>
+        <div class="mt-6 grid grid-cols-1 gap-4 lg:grid-cols-3">
+            <!-- Main Content -->
+            <div class="space-y-4 lg:col-span-2">
+                <!-- Webhook Details Card -->
+                <Card :padded="false">
+                    <div class="px-5 pt-5"><h3 class="text-sm font-semibold text-text-primary">Webhook Details</h3></div>
+                    <div class="p-5">
+                        <dl class="grid grid-cols-1 gap-x-4 gap-y-6 sm:grid-cols-2">
+                            <div class="sm:col-span-2">
+                                <dt class="text-xs text-text-tertiary">Endpoint URL</dt>
+                                <dd class="mt-1 break-all font-mono text-sm text-text-primary">
+                                    {{ webhook.url }}
+                                </dd>
                             </div>
-                            <div class="p-6">
-                                <div v-if="webhook.events?.length > 0" class="flex flex-wrap gap-2">
-                                    <span
-                                        v-for="event in webhook.events"
-                                        :key="event"
-                                        class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-300"
-                                        :title="getEventDescription(event)"
-                                    >
-                                        {{ event }}
-                                    </span>
-                                </div>
-                                <p v-else class="text-sm text-gray-500 dark:text-gray-400">
-                                    No events subscribed
-                                </p>
+                            <div class="sm:col-span-2">
+                                <dt class="flex items-center justify-between text-xs text-text-tertiary">
+                                    <span>Secret</span>
+                                    <div class="flex items-center gap-3">
+                                        <button
+                                            @click="showSecret = !showSecret"
+                                            class="text-xs text-brand hover:underline"
+                                        >
+                                            {{ showSecret ? 'Hide' : 'Reveal' }}
+                                        </button>
+                                        <button
+                                            @click="copySecret"
+                                            class="text-xs text-brand hover:underline"
+                                        >
+                                            {{ copiedSecret ? 'Copied!' : 'Copy' }}
+                                        </button>
+                                    </div>
+                                </dt>
+                                <dd class="mt-1 break-all rounded-lg bg-slate-900 p-4 font-mono text-xs text-slate-300">
+                                    {{ showSecret ? webhook.secret : maskedSecret }}
+                                </dd>
                             </div>
-                        </div>
+                            <div>
+                                <dt class="text-xs text-text-tertiary">{{ t('purchaseOrders.show.createdBy') }}</dt>
+                                <dd class="mt-1 text-sm text-text-primary">
+                                    {{ webhook.creator?.name || 'Unknown' }}
+                                </dd>
+                            </div>
+                            <div>
+                                <dt class="text-xs text-text-tertiary">Created At</dt>
+                                <dd class="mt-1 text-sm text-text-primary">
+                                    {{ formatDate(webhook.created_at) }}
+                                </dd>
+                            </div>
+                        </dl>
+                    </div>
+                </Card>
 
-                        <!-- Delivery Logs -->
-                        <div class="bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border overflow-hidden shadow-lg sm:rounded-lg">
-                            <div class="px-6 py-4 border-b border-gray-200 dark:border-dark-border">
-                                <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100">
-                                    Delivery Logs
-                                </h3>
-                            </div>
-                            <div class="overflow-x-auto">
-                                <table class="min-w-full divide-y divide-gray-200 dark:divide-dark-border">
-                                    <thead class="bg-gray-50 dark:bg-dark-bg/50">
-                                        <tr>
-                                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                                                Event
-                                            </th>
-                                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                                                {{ t('common.status') }}
-                                            </th>
-                                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                                                Attempts
-                                            </th>
-                                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                                                Response
-                                            </th>
-                                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                                                Created
-                                            </th>
-                                            <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                                                {{ t('common.actions') }}
-                                            </th>
-                                        </tr>
-                                    </thead>
-                                    <tbody class="bg-white dark:bg-dark-card divide-y divide-gray-200 dark:divide-dark-border">
-                                        <tr v-if="deliveries.data.length === 0">
-                                            <td colspan="6" class="px-6 py-12 text-center">
-                                                <svg class="w-12 h-12 text-gray-400 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
-                                                </svg>
-                                                <p class="text-gray-500 dark:text-gray-400">No delivery logs yet</p>
-                                                <p class="text-sm text-gray-400 dark:text-gray-500 mt-1">
+                <!-- Events Card -->
+                <Card :padded="false">
+                    <div class="px-5 pt-5">
+                        <h3 class="text-sm font-semibold text-text-primary">
+                            Subscribed Events ({{ webhook.events?.length || 0 }})
+                        </h3>
+                    </div>
+                    <div class="p-5">
+                        <div v-if="webhook.events?.length > 0" class="flex flex-wrap gap-2">
+                            <Badge
+                                v-for="event in webhook.events"
+                                :key="event"
+                                variant="brand"
+                                size="md"
+                                :title="getEventDescription(event)"
+                            >
+                                {{ event }}
+                            </Badge>
+                        </div>
+                        <p v-else class="text-sm text-text-tertiary">
+                            No events subscribed
+                        </p>
+                    </div>
+                </Card>
+
+                <!-- Delivery Logs -->
+                <Card :padded="false">
+                    <div class="px-5 pt-5"><h3 class="text-sm font-semibold text-text-primary">Delivery Logs</h3></div>
+                    <div class="p-5">
+                        <div class="w-full overflow-x-auto rounded-lg border border-border-subtle">
+                            <table class="w-full text-sm">
+                                <thead>
+                                    <tr class="border-b border-border-subtle">
+                                        <th :class="thClass">Event</th>
+                                        <th :class="thClass">{{ t('common.status') }}</th>
+                                        <th :class="thClass">Attempts</th>
+                                        <th :class="thClass">Response</th>
+                                        <th :class="thClass">Created</th>
+                                        <th :class="[thClass, 'text-right']">{{ t('common.actions') }}</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr v-if="deliveries.data.length === 0">
+                                        <td colspan="6" class="px-4 py-12 text-center">
+                                            <div class="flex flex-col items-center gap-3">
+                                                <Inbox :size="22" class="text-text-tertiary" />
+                                                <p class="text-sm text-text-tertiary">No delivery logs yet</p>
+                                                <p class="text-xs text-text-tertiary">
                                                     Logs will appear here when events are triggered
                                                 </p>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    <template v-for="delivery in deliveries.data" :key="delivery.id">
+                                        <tr
+                                            class="cursor-pointer border-b border-border-subtle transition-colors last:border-b-0 hover:bg-surface-overlay"
+                                            @click="toggleDeliveryExpand(delivery.id)"
+                                        >
+                                            <td class="px-4 py-3">
+                                                <span class="font-mono text-sm text-text-primary">{{ delivery.event }}</span>
+                                            </td>
+                                            <td class="px-4 py-3">
+                                                <Badge :variant="statusVariant(delivery.status)" size="sm">
+                                                    {{ delivery.status }}
+                                                </Badge>
+                                            </td>
+                                            <td class="px-4 py-3 text-sm text-text-primary">
+                                                {{ delivery.attempts }}
+                                            </td>
+                                            <td class="px-4 py-3">
+                                                <span :class="['font-mono text-sm', responseCodeClass(delivery.response_status)]">
+                                                    {{ delivery.response_status || '-' }}
+                                                </span>
+                                            </td>
+                                            <td class="px-4 py-3 text-sm text-text-tertiary">
+                                                {{ formatDate(delivery.created_at) }}
+                                            </td>
+                                            <td class="px-4 py-3 text-right">
+                                                <div class="flex items-center justify-end gap-1">
+                                                    <button
+                                                        @click.stop="toggleDeliveryExpand(delivery.id)"
+                                                        class="rounded-md p-1.5 text-text-tertiary transition-colors hover:bg-surface-overlay hover:text-text-primary"
+                                                        :title="expandedDelivery === delivery.id ? 'Collapse' : 'Expand'"
+                                                    >
+                                                        <ChevronDown :size="16" :class="['transition-transform', expandedDelivery === delivery.id ? 'rotate-180' : '']" />
+                                                    </button>
+                                                    <button
+                                                        v-if="delivery.status === 'failed'"
+                                                        @click.stop="retryDelivery(delivery)"
+                                                        class="rounded-md p-1.5 text-text-tertiary transition-colors hover:bg-surface-overlay hover:text-brand"
+                                                        title="Retry"
+                                                    >
+                                                        <RotateCcw :size="16" />
+                                                    </button>
+                                                </div>
                                             </td>
                                         </tr>
-                                        <template v-for="delivery in deliveries.data" :key="delivery.id">
-                                            <tr
-                                                class="hover:bg-gray-50 dark:hover:bg-dark-bg/50 cursor-pointer"
-                                                @click="toggleDeliveryExpand(delivery.id)"
-                                            >
-                                                <td class="px-6 py-4 whitespace-nowrap">
-                                                    <span class="text-sm font-mono text-gray-900 dark:text-gray-100">
-                                                        {{ delivery.event }}
-                                                    </span>
-                                                </td>
-                                                <td class="px-6 py-4 whitespace-nowrap">
-                                                    <span :class="['px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full', getStatusColor(delivery.status)]">
-                                                        {{ delivery.status }}
-                                                    </span>
-                                                </td>
-                                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
-                                                    {{ delivery.attempts }}
-                                                </td>
-                                                <td class="px-6 py-4 whitespace-nowrap">
-                                                    <span :class="['text-sm font-mono', getResponseCodeColor(delivery.response_status)]">
-                                                        {{ delivery.response_status || '-' }}
-                                                    </span>
-                                                </td>
-                                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                                                    {{ formatDate(delivery.created_at) }}
-                                                </td>
-                                                <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                                    <div class="flex items-center justify-end gap-2">
-                                                        <button
-                                                            @click.stop="toggleDeliveryExpand(delivery.id)"
-                                                            class="text-gray-400 hover:text-gray-300"
-                                                            :title="expandedDelivery === delivery.id ? 'Collapse' : 'Expand'"
-                                                        >
-                                                            <svg
-                                                                :class="['w-5 h-5 transition-transform', expandedDelivery === delivery.id ? 'rotate-180' : '']"
-                                                                fill="none"
-                                                                stroke="currentColor"
-                                                                viewBox="0 0 24 24"
-                                                            >
-                                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-                                                            </svg>
-                                                        </button>
-                                                        <button
-                                                            v-if="delivery.status === 'failed'"
-                                                            @click.stop="retryDelivery(delivery)"
-                                                            class="text-primary-400 hover:text-primary-300"
-                                                            title="Retry"
-                                                        >
-                                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                                                            </svg>
-                                                        </button>
+                                        <!-- Expanded Details Row -->
+                                        <tr v-if="expandedDelivery === delivery.id" class="border-b border-border-subtle last:border-b-0">
+                                            <td colspan="6" class="bg-surface-canvas px-4 py-4">
+                                                <div class="grid grid-cols-1 gap-4 lg:grid-cols-2">
+                                                    <div>
+                                                        <h4 class="mb-2 text-sm font-medium text-text-secondary">Payload</h4>
+                                                        <pre class="max-h-64 overflow-x-auto rounded-lg bg-slate-900 p-4 font-mono text-xs text-slate-300">{{ formatJson(delivery.payload) }}</pre>
                                                     </div>
-                                                </td>
-                                            </tr>
-                                            <!-- Expanded Details Row -->
-                                            <tr v-if="expandedDelivery === delivery.id">
-                                                <td colspan="6" class="px-6 py-4 bg-gray-50 dark:bg-dark-bg/50">
-                                                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                                                        <div>
-                                                            <h4 class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Payload</h4>
-                                                            <pre class="text-xs font-mono bg-gray-900 text-green-400 rounded-md p-4 overflow-x-auto max-h-64">{{ formatJson(delivery.payload) }}</pre>
-                                                        </div>
-                                                        <div>
-                                                            <h4 class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Response</h4>
-                                                            <pre class="text-xs font-mono bg-gray-900 text-gray-300 rounded-md p-4 overflow-x-auto max-h-64">{{ delivery.response_body || 'No response body' }}</pre>
-                                                        </div>
+                                                    <div>
+                                                        <h4 class="mb-2 text-sm font-medium text-text-secondary">Response</h4>
+                                                        <pre class="max-h-64 overflow-x-auto rounded-lg bg-slate-900 p-4 font-mono text-xs text-slate-300">{{ delivery.response_body || 'No response body' }}</pre>
                                                     </div>
-                                                </td>
-                                            </tr>
-                                        </template>
-                                    </tbody>
-                                </table>
-                            </div>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    </template>
+                                </tbody>
+                            </table>
+                        </div>
 
-                            <!-- Pagination -->
-                            <div v-if="deliveries.data.length > 0" class="bg-white dark:bg-dark-card px-4 py-3 border-t border-gray-200 dark:border-dark-border sm:px-6">
-                                <div class="flex items-center justify-between">
-                                    <div class="flex-1 flex justify-between sm:hidden">
-                                        <Link
-                                            v-if="deliveries.prev_page_url"
-                                            :href="deliveries.prev_page_url"
-                                            class="relative inline-flex items-center px-4 py-2 border border-gray-200 dark:border-dark-border text-sm font-semibold rounded-md text-gray-600 dark:text-gray-300 bg-white dark:bg-dark-card hover:bg-gray-50 dark:hover:bg-dark-bg/50 transition"
-                                        >
-                                            Previous
-                                        </Link>
-                                        <Link
-                                            v-if="deliveries.next_page_url"
-                                            :href="deliveries.next_page_url"
-                                            class="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-200 dark:border-dark-border text-sm font-semibold rounded-md text-gray-600 dark:text-gray-300 bg-white dark:bg-dark-card hover:bg-gray-50 dark:hover:bg-dark-bg/50 transition"
-                                        >
-                                            Next
-                                        </Link>
-                                    </div>
-                                    <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
-                                        <div>
-                                            <p class="text-sm text-gray-600 dark:text-gray-300">
-                                                Showing
-                                                <span class="font-medium">{{ deliveries.from }}</span>
-                                                to
-                                                <span class="font-medium">{{ deliveries.to }}</span>
-                                                of
-                                                <span class="font-medium">{{ deliveries.total }}</span>
-                                                results
-                                            </p>
-                                        </div>
-                                        <div>
-                                            <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px">
-                                                <template v-for="link in deliveries.links" :key="link.label">
-                                                    <Link
-                                                        v-if="link.url"
-                                                        :href="link.url"
-                                                        :class="[
-                                                            'relative inline-flex items-center px-4 py-2 border text-sm font-medium',
-                                                            link.active
-                                                                ? 'z-10 bg-primary-100 dark:bg-primary-900/30 border-primary-400 text-primary-600 dark:text-primary-400'
-                                                                : 'bg-white dark:bg-dark-card border-gray-200 dark:border-dark-border text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-dark-bg/50'
-                                                        ]"
-                                                        v-html="link.label"
-                                                    />
-                                                    <span
-                                                        v-else
-                                                        :class="[
-                                                            'relative inline-flex items-center px-4 py-2 border text-sm font-medium',
-                                                            'bg-gray-100 dark:bg-dark-card border-gray-200 dark:border-dark-border text-gray-400 dark:text-gray-500 opacity-50 cursor-not-allowed'
-                                                        ]"
-                                                        v-html="link.label"
-                                                    />
-                                                </template>
-                                            </nav>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
+                        <!-- Pagination -->
+                        <div v-if="deliveries.data.length > 0" class="mt-4 flex items-center justify-between">
+                            <p class="text-sm text-text-secondary">
+                                Showing
+                                <span class="font-medium text-text-primary">{{ deliveries.from }}</span>
+                                to
+                                <span class="font-medium text-text-primary">{{ deliveries.to }}</span>
+                                of
+                                <span class="font-medium text-text-primary">{{ deliveries.total }}</span>
+                                results
+                            </p>
+                            <nav class="inline-flex items-center gap-1">
+                                <template v-for="link in deliveries.links" :key="link.label">
+                                    <Link
+                                        v-if="link.url"
+                                        :href="link.url"
+                                        :class="[
+                                            'inline-flex items-center rounded-md border px-3 py-1.5 text-sm font-medium transition-colors',
+                                            link.active
+                                                ? 'border-brand bg-brand-soft text-brand'
+                                                : 'border-border-subtle bg-surface-raised text-text-secondary hover:bg-surface-overlay'
+                                        ]"
+                                        v-html="link.label"
+                                    />
+                                    <span
+                                        v-else
+                                        class="inline-flex cursor-not-allowed items-center rounded-md border border-border-subtle bg-surface-canvas px-3 py-1.5 text-sm font-medium text-text-tertiary opacity-50"
+                                        v-html="link.label"
+                                    />
+                                </template>
+                            </nav>
                         </div>
                     </div>
+                </Card>
+            </div>
 
-                    <!-- Sidebar -->
-                    <div class="space-y-6">
-                        <!-- Quick Actions Card -->
-                        <div class="bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border overflow-hidden shadow-lg sm:rounded-lg">
-                            <div class="px-6 py-4 border-b border-gray-200 dark:border-dark-border">
-                                <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100">{{ t('common.actions') }}</h3>
-                            </div>
-                            <div class="p-6 space-y-3">
-                                <button
-                                    @click="sendTest"
-                                    class="w-full inline-flex justify-center items-center px-4 py-2 bg-blue-500 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-blue-600 transition"
-                                >
-                                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
-                                    </svg>
-                                    Send Test Webhook
-                                </button>
-                                <button
-                                    @click="openEditModal"
-                                    class="w-full inline-flex justify-center items-center px-4 py-2 bg-primary-400 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-primary-500 transition"
-                                >
-                                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                                    </svg>
-                                    Edit Webhook
-                                </button>
-                                <button
-                                    @click="regenerateSecret"
-                                    class="w-full inline-flex justify-center items-center px-4 py-2 bg-yellow-500 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-yellow-600 transition"
-                                >
-                                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                                    </svg>
-                                    Regenerate Secret
-                                </button>
-                                <button
-                                    @click="deleteWebhook"
-                                    class="w-full inline-flex justify-center items-center px-4 py-2 bg-red-500 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-red-600 transition"
-                                >
-                                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                    </svg>
-                                    Delete Webhook
-                                </button>
-                            </div>
+            <!-- Sidebar -->
+            <div class="space-y-4">
+                <!-- Quick Actions Card -->
+                <Card :padded="false">
+                    <div class="px-5 pt-5"><h3 class="text-sm font-semibold text-text-primary">{{ t('common.actions') }}</h3></div>
+                    <div class="space-y-2 p-5">
+                        <Button variant="secondary" class="w-full" @click="sendTest">
+                            <Send :size="16" />
+                            Send Test Webhook
+                        </Button>
+                        <Button variant="default" class="w-full" @click="openEditModal">
+                            <Pencil :size="16" />
+                            Edit Webhook
+                        </Button>
+                        <Button variant="secondary" class="w-full" @click="regenerateSecret">
+                            <RefreshCw :size="16" />
+                            Regenerate Secret
+                        </Button>
+                    </div>
+                </Card>
+
+                <!-- Integration Guide Card -->
+                <Card :padded="false">
+                    <div class="px-5 pt-5"><h3 class="text-sm font-semibold text-text-primary">Integration Guide</h3></div>
+                    <div class="space-y-4 p-5">
+                        <div>
+                            <h4 class="mb-1 text-sm font-medium text-text-secondary">Signature Header</h4>
+                            <p class="text-xs text-text-tertiary">
+                                All webhook payloads include a signature in the <code class="rounded bg-surface-overlay px-1 font-mono text-text-secondary">X-Webhook-Signature</code> header.
+                            </p>
                         </div>
-
-                        <!-- Integration Guide Card -->
-                        <div class="bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border overflow-hidden shadow-lg sm:rounded-lg">
-                            <div class="px-6 py-4 border-b border-gray-200 dark:border-dark-border">
-                                <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100">Integration Guide</h3>
-                            </div>
-                            <div class="p-6 space-y-4">
-                                <div>
-                                    <h4 class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Signature Header</h4>
-                                    <p class="text-xs text-gray-500 dark:text-gray-400 mb-2">
-                                        All webhook payloads include a signature in the <code class="bg-gray-100 dark:bg-dark-bg px-1 rounded">X-Webhook-Signature</code> header.
-                                    </p>
-                                </div>
-                                <div>
-                                    <h4 class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Verification</h4>
-                                    <p class="text-xs text-gray-500 dark:text-gray-400 mb-2">
-                                        Verify the signature by computing HMAC-SHA256 of the raw request body using your secret.
-                                    </p>
-                                    <pre class="text-xs font-mono bg-gray-900 text-green-400 rounded-md p-3 overflow-x-auto">hash_hmac('sha256', $payload, $secret)</pre>
-                                </div>
-                                <div>
-                                    <h4 class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Response</h4>
-                                    <p class="text-xs text-gray-500 dark:text-gray-400">
-                                        Return a 2xx status code to acknowledge receipt. Failed deliveries will be retried up to 5 times.
-                                    </p>
-                                </div>
-                            </div>
+                        <div>
+                            <h4 class="mb-1 text-sm font-medium text-text-secondary">Verification</h4>
+                            <p class="mb-2 text-xs text-text-tertiary">
+                                Verify the signature by computing HMAC-SHA256 of the raw request body using your secret.
+                            </p>
+                            <pre class="overflow-x-auto rounded-lg bg-slate-900 p-4 font-mono text-xs text-slate-300">hash_hmac('sha256', $payload, $secret)</pre>
+                        </div>
+                        <div>
+                            <h4 class="mb-1 text-sm font-medium text-text-secondary">Response</h4>
+                            <p class="text-xs text-text-tertiary">
+                                Return a 2xx status code to acknowledge receipt. Failed deliveries will be retried up to 5 times.
+                            </p>
                         </div>
                     </div>
-                </div>
+                </Card>
+
+                <!-- Danger Zone Card -->
+                <Card :padded="false">
+                    <div class="px-5 pt-5"><h3 class="text-sm font-semibold text-text-primary">Danger Zone</h3></div>
+                    <div class="p-5">
+                        <Button variant="danger" class="w-full" @click="deleteWebhook">
+                            <Trash2 :size="16" />
+                            Delete Webhook
+                        </Button>
+                        <p class="mt-2 text-xs text-text-tertiary">
+                            Permanently delete this webhook and all of its delivery logs. This action cannot be undone.
+                        </p>
+                    </div>
+                </Card>
             </div>
         </div>
 
         <!-- Edit Modal -->
-        <Modal :show="showEditModal" @close="closeEditModal" max-width="2xl">
-            <div class="p-6">
-                <div class="flex items-center justify-between mb-6">
-                    <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">
-                        Edit Webhook
-                    </h3>
-                    <button @click="closeEditModal" class="text-gray-400 hover:text-gray-500 dark:hover:text-gray-300">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                        </svg>
-                    </button>
-                </div>
-
-                <form @submit.prevent="submitEdit" class="space-y-6">
-                    <!-- Name -->
-                    <div>
-                        <InputLabel for="edit-name" value="Name" />
-                        <input
-                            id="edit-name"
-                            v-model="editForm.name"
-                            type="text"
-                            class="mt-1 block w-full rounded-md bg-gray-50 dark:bg-dark-bg border-gray-200 dark:border-dark-border text-gray-900 dark:text-gray-100 shadow-sm focus:border-primary-400 focus:ring-primary-400"
-                            placeholder="My Webhook"
-                        />
-                        <InputError class="mt-2" :message="editForm.errors.name" />
+        <Teleport to="body">
+            <div v-if="showEditModal" class="fixed inset-0 z-50 flex items-center justify-center">
+                <div class="fixed inset-0 bg-black/50" @click="closeEditModal"></div>
+                <div class="relative mx-4 my-8 max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-xl border border-border-subtle bg-surface-raised p-6 shadow-lg">
+                    <div class="mb-6 flex items-center justify-between">
+                        <h3 class="text-base font-semibold text-text-primary">
+                            Edit Webhook
+                        </h3>
+                        <button @click="closeEditModal" class="rounded-md p-1.5 text-text-tertiary transition-colors hover:bg-surface-overlay hover:text-text-primary">
+                            <X :size="18" />
+                        </button>
                     </div>
 
-                    <!-- URL -->
-                    <div>
-                        <InputLabel for="edit-url" value="Endpoint URL" />
-                        <input
-                            id="edit-url"
-                            v-model="editForm.url"
-                            type="url"
-                            class="mt-1 block w-full rounded-md bg-gray-50 dark:bg-dark-bg border-gray-200 dark:border-dark-border text-gray-900 dark:text-gray-100 shadow-sm focus:border-primary-400 focus:ring-primary-400 font-mono text-sm"
-                            placeholder="https://example.com/webhook"
-                        />
-                        <InputError class="mt-2" :message="editForm.errors.url" />
-                    </div>
+                    <form @submit.prevent="submitEdit" class="space-y-6">
+                        <!-- Name -->
+                        <div>
+                            <label for="edit-name" :class="fieldLabel">Name</label>
+                            <input
+                                id="edit-name"
+                                v-model="editForm.name"
+                                type="text"
+                                :class="fieldInput"
+                                placeholder="My Webhook"
+                            />
+                            <p v-if="editForm.errors.name" :class="fieldError">{{ editForm.errors.name }}</p>
+                        </div>
 
-                    <!-- Events -->
-                    <div>
-                        <InputLabel value="Events" />
-                        <p class="mt-1 text-sm text-gray-500 dark:text-gray-400 mb-3">
-                            Select the events you want to receive notifications for.
-                        </p>
-                        <div class="space-y-4 max-h-64 overflow-y-auto border border-gray-200 dark:border-dark-border rounded-md p-4">
-                            <div v-for="(events, group) in eventGroups" :key="group" class="space-y-2">
-                                <div class="flex items-center">
-                                    <input
-                                        :id="`show-edit-group-${group}`"
-                                        type="checkbox"
-                                        :checked="isGroupSelected(editForm, group)"
-                                        :indeterminate="isGroupPartiallySelected(editForm, group)"
-                                        @change="selectAllInGroup(editForm, group)"
-                                        class="rounded border-gray-300 dark:border-dark-border text-primary-400 focus:ring-primary-400 bg-gray-50 dark:bg-dark-bg"
-                                    />
-                                    <label :for="`show-edit-group-${group}`" class="ml-2 text-sm font-medium text-gray-900 dark:text-gray-100">
-                                        {{ group }}
-                                    </label>
-                                </div>
-                                <div class="ml-6 space-y-1">
-                                    <div v-for="(description, event) in events" :key="event" class="flex items-start">
+                        <!-- URL -->
+                        <div>
+                            <label for="edit-url" :class="fieldLabel">Endpoint URL</label>
+                            <input
+                                id="edit-url"
+                                v-model="editForm.url"
+                                type="url"
+                                :class="[fieldInput, 'font-mono']"
+                                placeholder="https://example.com/webhook"
+                            />
+                            <p v-if="editForm.errors.url" :class="fieldError">{{ editForm.errors.url }}</p>
+                        </div>
+
+                        <!-- Events -->
+                        <div>
+                            <label :class="fieldLabel">Events</label>
+                            <p class="mb-3 text-sm text-text-tertiary">
+                                Select the events you want to receive notifications for.
+                            </p>
+                            <div class="max-h-64 space-y-4 overflow-y-auto rounded-md border border-border-subtle p-4">
+                                <div v-for="(events, group) in eventGroups" :key="group" class="space-y-2">
+                                    <div class="flex items-center">
                                         <input
-                                            :id="`show-edit-event-${event}`"
+                                            :id="`show-edit-group-${group}`"
                                             type="checkbox"
-                                            :checked="isEventSelected(editForm, event)"
-                                            @change="toggleEvent(editForm, event)"
-                                            class="mt-1 rounded border-gray-300 dark:border-dark-border text-primary-400 focus:ring-primary-400 bg-gray-50 dark:bg-dark-bg"
+                                            :checked="isGroupSelected(editForm, group)"
+                                            :indeterminate="isGroupPartiallySelected(editForm, group)"
+                                            @change="selectAllInGroup(editForm, group)"
+                                            class="rounded border-border-strong bg-surface-canvas text-brand focus:ring-brand"
                                         />
-                                        <label :for="`show-edit-event-${event}`" class="ml-2">
-                                            <span class="text-sm text-gray-900 dark:text-gray-100 font-mono">{{ event }}</span>
-                                            <p class="text-xs text-gray-500 dark:text-gray-400">{{ description }}</p>
+                                        <label :for="`show-edit-group-${group}`" class="ml-2 text-sm font-medium text-text-primary">
+                                            {{ group }}
                                         </label>
+                                    </div>
+                                    <div class="ml-6 space-y-1">
+                                        <div v-for="(description, event) in events" :key="event" class="flex items-start">
+                                            <input
+                                                :id="`show-edit-event-${event}`"
+                                                type="checkbox"
+                                                :checked="isEventSelected(editForm, event)"
+                                                @change="toggleEvent(editForm, event)"
+                                                class="mt-1 rounded border-border-strong bg-surface-canvas text-brand focus:ring-brand"
+                                            />
+                                            <label :for="`show-edit-event-${event}`" class="ml-2">
+                                                <span class="font-mono text-sm text-text-primary">{{ event }}</span>
+                                                <p class="text-xs text-text-tertiary">{{ description }}</p>
+                                            </label>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
+                            <p v-if="editForm.errors.events" :class="fieldError">{{ editForm.errors.events }}</p>
                         </div>
-                        <InputError class="mt-2" :message="editForm.errors.events" />
-                    </div>
 
-                    <!-- Active Toggle -->
-                    <div class="flex items-center">
-                        <input
-                            id="show-edit-active"
-                            v-model="editForm.is_active"
-                            type="checkbox"
-                            class="rounded border-gray-300 dark:border-dark-border text-primary-400 focus:ring-primary-400 bg-gray-50 dark:bg-dark-bg"
-                        />
-                        <label for="show-edit-active" class="ml-2 text-sm text-gray-900 dark:text-gray-100">
-                            {{ t('common.active') }}
-                        </label>
-                        <span class="ml-2 text-xs text-gray-500 dark:text-gray-400">
-                            (Inactive webhooks will not receive any deliveries)
-                        </span>
-                    </div>
+                        <!-- Active Toggle -->
+                        <div class="flex items-center">
+                            <input
+                                id="show-edit-active"
+                                v-model="editForm.is_active"
+                                type="checkbox"
+                                class="rounded border-border-strong bg-surface-canvas text-brand focus:ring-brand"
+                            />
+                            <label for="show-edit-active" class="ml-2 text-sm text-text-primary">
+                                {{ t('common.active') }}
+                            </label>
+                            <span class="ml-2 text-xs text-text-tertiary">
+                                (Inactive webhooks will not receive any deliveries)
+                            </span>
+                        </div>
 
-                    <!-- Actions -->
-                    <div class="flex justify-end gap-3 pt-4 border-t border-gray-200 dark:border-dark-border">
-                        <button
-                            type="button"
-                            @click="closeEditModal"
-                            class="px-4 py-2 bg-gray-100 dark:bg-dark-bg text-gray-700 dark:text-gray-300 rounded-md hover:bg-gray-200 dark:hover:bg-dark-bg/50 font-medium text-sm"
-                        >
-                            {{ t('common.cancel') }}
-                        </button>
-                        <button
-                            type="submit"
-                            :disabled="editForm.processing"
-                            class="px-4 py-2 bg-primary-400 text-white rounded-md hover:bg-primary-500 font-medium text-sm disabled:opacity-50"
-                        >
-                            <span v-if="editForm.processing">Saving...</span>
-                            <span v-else>Save Changes</span>
-                        </button>
-                    </div>
-                </form>
+                        <!-- Actions -->
+                        <div class="flex justify-end gap-2 border-t border-border-subtle pt-4">
+                            <Button type="button" variant="secondary" size="sm" @click="closeEditModal">
+                                {{ t('common.cancel') }}
+                            </Button>
+                            <Button type="submit" variant="default" size="sm" :loading="editForm.processing" :disabled="editForm.processing">
+                                <span v-if="editForm.processing">Saving...</span>
+                                <span v-else>Save Changes</span>
+                            </Button>
+                        </div>
+                    </form>
+                </div>
             </div>
-        </Modal>
-    </AuthenticatedLayout>
+        </Teleport>
+    </AppLayout>
 </template>
