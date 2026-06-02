@@ -1,10 +1,15 @@
 <script setup>
-import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
+import AppLayout from '@/Layouts/AppLayout.vue';
 import PluginSlot from '@/Components/PluginSlot.vue';
+import PageHeader from '@/Components/ui/PageHeader.vue';
+import Card from '@/Components/ui/Card.vue';
+import Button from '@/Components/ui/Button.vue';
+import Badge from '@/Components/ui/Badge.vue';
 import { Head, Link, router, useForm } from '@inertiajs/vue3';
 import { ref } from 'vue';
 import { usePermissions } from '@/composables/usePermissions';
 import { useI18n } from 'vue-i18n';
+import { ArrowLeft, Pencil, Download, Eye, Undo2, Trash2, X, AlertTriangle, PackageOpen } from 'lucide-vue-next';
 
 const { t } = useI18n();
 
@@ -45,25 +50,21 @@ const submitApproval = () => {
     });
 };
 
-const getApprovalStatusClass = (status) => {
-    const classes = {
-        pending: 'bg-yellow-900/30 text-yellow-400 border border-yellow-800',
-        approved: 'bg-green-900/30 text-green-400 border border-green-800',
-        rejected: 'bg-red-900/30 text-red-400 border border-red-800',
-    };
-    return classes[status] || 'bg-gray-900/30 text-gray-400 border border-gray-800';
-};
+const statusVariant = (status) =>
+    ({
+        pending: 'warning',
+        processing: 'info',
+        shipped: 'brand',
+        delivered: 'success',
+        cancelled: 'danger',
+    }[status] || 'neutral');
 
-const getStatusClass = (status) => {
-    const classes = {
-        pending: 'bg-yellow-900/30 text-yellow-400 border border-yellow-800',
-        processing: 'bg-blue-900/30 text-blue-400 border border-blue-800',
-        shipped: 'bg-purple-900/30 text-purple-400 border border-purple-800',
-        delivered: 'bg-green-900/30 text-green-400 border border-green-800',
-        cancelled: 'bg-red-900/30 text-red-400 border border-red-800',
-    };
-    return classes[status] || 'bg-gray-900/30 text-gray-400 border border-gray-800';
-};
+const approvalStatusVariant = (status) =>
+    ({
+        pending: 'warning',
+        approved: 'success',
+        rejected: 'danger',
+    }[status] || 'neutral');
 
 const deleteOrder = () => {
     deleting.value = true;
@@ -99,445 +100,395 @@ const formatDateShort = (date) => {
 <template>
     <Head :title="t('orders.show.orderNumber', { number: order.order_number })" />
 
-    <AuthenticatedLayout>
+    <AppLayout>
         <template #header>
-            <div class="flex items-center justify-between">
-                <div>
-                    <div class="flex items-center gap-3">
-                        <h2 class="font-semibold text-xl text-gray-900 dark:text-gray-100 leading-tight">
-                            Order #{{ order.order_number }}
-                        </h2>
-                        <span :class="getStatusClass(order.status)" class="px-3 py-1 rounded-full text-xs font-semibold uppercase">
-                            {{ order.status }}
-                        </span>
-                        <span v-if="order.approval_status" :class="getApprovalStatusClass(order.approval_status)" class="px-3 py-1 rounded-full text-xs font-semibold uppercase">
-                            {{ order.approval_status }}
-                        </span>
-                    </div>
-                    <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                        Created on {{ formatDateShort(order.order_date) }}
-                    </p>
-                </div>
-                <div class="flex gap-2">
-                    <a
-                        v-if="hasPermission('view_orders')"
-                        :href="route('orders.invoice.download', order.id)"
-                        class="inline-flex items-center px-4 py-2 bg-green-600 text-white rounded-md font-semibold text-xs uppercase tracking-widest hover:bg-green-700 transition"
-                    >
-                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                        </svg>
-                        Download Invoice
-                    </a>
-                    <a
-                        v-if="hasPermission('view_orders')"
-                        :href="route('orders.invoice.preview', order.id)"
-                        target="_blank"
-                        class="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-md font-semibold text-xs uppercase tracking-widest hover:bg-blue-700 transition"
-                    >
-                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                        </svg>
-                        Preview Invoice
-                    </a>
-                    <Link
-                        v-if="hasPermission('manage_returns')"
-                        :href="route('returns.create', { order_id: order.id })"
-                        class="inline-flex items-center px-4 py-2 bg-orange-500 text-white rounded-md font-semibold text-xs uppercase tracking-widest hover:bg-orange-600 transition"
-                    >
-                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a1 1 0 011 1v1a1 1 0 01-1 1H3m0 0l4-4m-4 4l4 4" />
-                        </svg>
-                        Create Return
-                    </Link>
-                    <Link
-                        v-if="hasPermission('edit_orders')"
-                        :href="route('orders.edit', order.id)"
-                        class="inline-flex items-center px-4 py-2 bg-primary-400 text-white rounded-md font-semibold text-xs uppercase tracking-widest hover:bg-primary-500 transition"
-                    >
-                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                        </svg>
-                        {{ t('orders.show.editOrder') }}
-                    </Link>
-                    <Link
-                        :href="route('orders.index')"
-                        class="inline-flex items-center px-4 py-2 bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border rounded-md font-semibold text-xs text-gray-600 dark:text-gray-300 uppercase tracking-widest shadow-sm hover:bg-gray-100 dark:hover:bg-dark-bg/50"
-                    >
-                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-                        </svg>
-                        {{ t('orders.show.backToOrders') }}
-                    </Link>
-                </div>
+            <div class="flex items-center gap-2 text-xs">
+                <Link :href="route('orders.index')" class="text-text-tertiary hover:text-text-primary">Workspace</Link>
+                <span class="text-text-tertiary">/</span>
+                <Link :href="route('orders.index')" class="text-text-tertiary hover:text-text-primary">{{ t('orders.title') }}</Link>
+                <span class="text-text-tertiary">/</span>
+                <span class="font-medium text-text-primary">#{{ order.order_number }}</span>
             </div>
         </template>
 
-        <div class="py-12 bg-gray-50 dark:bg-dark-bg min-h-screen">
-            <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-                <!-- Plugin Slot: Header -->
-                <PluginSlot slot="header" :components="pluginComponents?.header" />
+        <PageHeader
+            :title="`Order #${order.order_number}`"
+            :description="`Created on ${formatDateShort(order.order_date)}`"
+        >
+            <template #actions>
+                <Badge :variant="statusVariant(order.status)" size="sm" dot>{{ order.status }}</Badge>
+                <Badge v-if="order.approval_status" :variant="approvalStatusVariant(order.approval_status)" size="sm" dot>{{ order.approval_status }}</Badge>
+                <Button
+                    v-if="hasPermission('view_orders')"
+                    variant="secondary"
+                    size="sm"
+                    as="a"
+                    :href="route('orders.invoice.download', order.id)"
+                >
+                    <Download :size="14" />
+                    Download Invoice
+                </Button>
+                <Button
+                    v-if="hasPermission('view_orders')"
+                    variant="secondary"
+                    size="sm"
+                    as="a"
+                    :href="route('orders.invoice.preview', order.id)"
+                    target="_blank"
+                >
+                    <Eye :size="14" />
+                    Preview Invoice
+                </Button>
+                <Button
+                    v-if="hasPermission('manage_returns')"
+                    variant="secondary"
+                    size="sm"
+                    as="Link"
+                    :href="route('returns.create', { order_id: order.id })"
+                >
+                    <Undo2 :size="14" />
+                    Create Return
+                </Button>
+                <Button
+                    v-if="hasPermission('edit_orders')"
+                    variant="default"
+                    size="sm"
+                    as="Link"
+                    :href="route('orders.edit', order.id)"
+                >
+                    <Pencil :size="14" />
+                    {{ t('orders.show.editOrder') }}
+                </Button>
+                <Button variant="secondary" size="sm" as="Link" :href="route('orders.index')">
+                    <ArrowLeft :size="14" />
+                    {{ t('orders.show.backToOrders') }}
+                </Button>
+            </template>
+        </PageHeader>
 
-                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    <!-- Left Column: Order Items & Details -->
-                    <div class="lg:col-span-2 space-y-6">
-                        <!-- Order Items -->
-                        <div class="bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border shadow-sm sm:rounded-lg p-6">
-                            <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
-                                {{ t('orders.show.orderItems') }}
-                            </h3>
+        <!-- Plugin Slot: Header -->
+        <PluginSlot slot="header" :components="pluginComponents?.header" />
 
-                            <div v-if="order.items && order.items.length > 0" class="space-y-3">
-                                <div
-                                    v-for="(item, index) in order.items"
-                                    :key="index"
-                                    class="flex items-center gap-4 p-4 bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-border rounded-lg"
-                                >
-                                    <div class="flex-1">
-                                        <p class="font-medium text-gray-900 dark:text-gray-100">{{ item.product_name }}</p>
-                                        <p class="text-sm text-gray-500 dark:text-gray-400">SKU: {{ item.sku }}</p>
-                                        <Link
-                                            v-if="item.product"
-                                            :href="route('products.show', item.product_id)"
-                                            class="text-xs text-primary-400 hover:text-primary-300 mt-1 inline-block"
-                                        >
-                                            {{ t('orders.show.viewProduct') }}
-                                        </Link>
-                                    </div>
-
-                                    <div class="text-right">
-                                        <p class="text-sm text-gray-500 dark:text-gray-400">{{ t('common.quantity') }}</p>
-                                        <p class="font-medium text-gray-900 dark:text-gray-100">{{ item.quantity }}</p>
-                                    </div>
-
-                                    <div class="text-right">
-                                        <p class="text-sm text-gray-500 dark:text-gray-400">{{ t('orders.show.unitPrice') }}</p>
-                                        <p class="font-medium text-gray-900 dark:text-gray-100">${{ parseFloat(item.unit_price).toFixed(2) }}</p>
-                                    </div>
-
-                                    <div class="text-right min-w-[100px]">
-                                        <p class="text-sm text-gray-500 dark:text-gray-400">{{ t('common.total') }}</p>
-                                        <p class="font-semibold text-gray-900 dark:text-gray-100">
-                                            ${{ parseFloat(item.total || item.subtotal || (item.quantity * item.unit_price)).toFixed(2) }}
-                                        </p>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div v-else class="text-center py-8 text-gray-500 dark:text-gray-400">
-                                {{ t('orders.show.noItems') }}
-                            </div>
-                        </div>
-
-                        <!-- Customer Information -->
-                        <div class="bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border shadow-sm sm:rounded-lg p-6">
-                            <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
-                                {{ t('orders.show.customerInfo') }}
-                            </h3>
-
-                            <dl class="space-y-3">
-                                <div>
-                                    <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">{{ t('orders.show.customerName') }}</dt>
-                                    <dd class="mt-1 text-sm text-gray-900 dark:text-gray-100">{{ order.customer_name }}</dd>
-                                </div>
-
-                                <div v-if="order.customer_email">
-                                    <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">{{ t('common.email') }}</dt>
-                                    <dd class="mt-1 text-sm text-gray-900 dark:text-gray-100">
-                                        <a :href="`mailto:${order.customer_email}`" class="text-primary-400 hover:text-primary-300">
-                                            {{ order.customer_email }}
-                                        </a>
-                                    </dd>
-                                </div>
-
-                                <div v-if="order.customer_address">
-                                    <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">{{ t('orders.show.shippingAddress') }}</dt>
-                                    <dd class="mt-1 text-sm text-gray-900 dark:text-gray-100 whitespace-pre-line">{{ order.customer_address }}</dd>
-                                </div>
-                            </dl>
-                        </div>
-
-                        <!-- Order Timeline -->
-                        <div class="bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border shadow-sm sm:rounded-lg p-6">
-                            <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
-                                {{ t('orders.show.orderTimeline') }}
-                            </h3>
-
-                            <div class="space-y-4">
-                                <div class="flex items-start gap-3">
-                                    <div class="flex-shrink-0 w-2 h-2 mt-2 rounded-full bg-green-400"></div>
-                                    <div class="flex-1">
-                                        <p class="text-sm font-medium text-gray-900 dark:text-gray-100">{{ t('orders.show.orderCreated') }}</p>
-                                        <p class="text-xs text-gray-500 dark:text-gray-400">{{ formatDate(order.order_date) }}</p>
-                                    </div>
-                                </div>
-
-                                <div v-if="order.shipped_at" class="flex items-start gap-3">
-                                    <div class="flex-shrink-0 w-2 h-2 mt-2 rounded-full bg-purple-400"></div>
-                                    <div class="flex-1">
-                                        <p class="text-sm font-medium text-gray-900 dark:text-gray-100">{{ t('orders.show.orderShipped') }}</p>
-                                        <p class="text-xs text-gray-500 dark:text-gray-400">{{ formatDate(order.shipped_at) }}</p>
-                                    </div>
-                                </div>
-
-                                <div v-if="order.delivered_at" class="flex items-start gap-3">
-                                    <div class="flex-shrink-0 w-2 h-2 mt-2 rounded-full bg-green-400"></div>
-                                    <div class="flex-1">
-                                        <p class="text-sm font-medium text-gray-900 dark:text-gray-100">{{ t('orders.show.orderDelivered') }}</p>
-                                        <p class="text-xs text-gray-500 dark:text-gray-400">{{ formatDate(order.delivered_at) }}</p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Notes -->
-                        <div v-if="order.notes" class="bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border shadow-sm sm:rounded-lg p-6">
-                            <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
-                                {{ t('orders.show.internalNotes') }}
-                            </h3>
-                            <p class="text-sm text-gray-600 dark:text-gray-300 whitespace-pre-line">{{ order.notes }}</p>
-                        </div>
-                    </div>
-
-                    <!-- Right Column: Summary & Actions -->
-                    <div class="space-y-6">
-                        <!-- Plugin Slot: Sidebar -->
-                        <PluginSlot slot="sidebar" :components="pluginComponents?.sidebar" />
-
-                        <!-- Order Summary -->
-                        <div class="bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border shadow-sm sm:rounded-lg p-6">
-                            <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
-                                {{ t('orders.show.orderSummary') }}
-                            </h3>
-
-                            <dl class="space-y-3">
-                                <div class="flex justify-between text-sm">
-                                    <dt class="text-gray-600 dark:text-gray-300">{{ t('common.subtotal') }}</dt>
-                                    <dd class="font-medium text-gray-900 dark:text-gray-100">${{ parseFloat(order.subtotal).toFixed(2) }}</dd>
-                                </div>
-
-                                <div class="flex justify-between text-sm">
-                                    <dt class="text-gray-600 dark:text-gray-300">{{ t('common.tax') }}</dt>
-                                    <dd class="font-medium text-gray-900 dark:text-gray-100">${{ parseFloat(order.tax || 0).toFixed(2) }}</dd>
-                                </div>
-
-                                <div class="flex justify-between text-sm">
-                                    <dt class="text-gray-600 dark:text-gray-300">{{ t('common.shipping') }}</dt>
-                                    <dd class="font-medium text-gray-900 dark:text-gray-100">${{ parseFloat(order.shipping || 0).toFixed(2) }}</dd>
-                                </div>
-
-                                <div class="pt-3 border-t border-gray-200 dark:border-dark-border">
-                                    <div class="flex justify-between items-center">
-                                        <dt class="text-lg font-semibold text-gray-900 dark:text-gray-100">{{ t('common.total') }}</dt>
-                                        <dd class="text-xl font-bold text-primary-400">${{ parseFloat(order.total).toFixed(2) }}</dd>
-                                    </div>
-                                </div>
-                            </dl>
-                        </div>
-
-                        <!-- Order Details -->
-                        <div class="bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border shadow-sm sm:rounded-lg p-6">
-                            <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
-                                {{ t('orders.show.orderDetails') }}
-                            </h3>
-
-                            <dl class="space-y-3">
-                                <div>
-                                    <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">{{ t('orders.show.orderNumber2') }}</dt>
-                                    <dd class="mt-1 text-sm text-gray-900 dark:text-gray-100">{{ order.order_number }}</dd>
-                                </div>
-
-                                <div>
-                                    <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">{{ t('orders.source') }}</dt>
-                                    <dd class="mt-1">
-                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary-400/10 text-primary-400 capitalize">
-                                            {{ order.source }}
-                                        </span>
-                                    </dd>
-                                </div>
-
-                                <div>
-                                    <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">{{ t('common.status') }}</dt>
-                                    <dd class="mt-1">
-                                        <span :class="getStatusClass(order.status)" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium capitalize">
-                                            {{ order.status }}
-                                        </span>
-                                    </dd>
-                                </div>
-
-                                <div>
-                                    <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">{{ t('purchaseOrders.orderDate') }}</dt>
-                                    <dd class="mt-1 text-sm text-gray-900 dark:text-gray-100">{{ formatDateShort(order.order_date) }}</dd>
-                                </div>
-
-                                <div v-if="order.currency">
-                                    <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">{{ t('common.currency') }}</dt>
-                                    <dd class="mt-1 text-sm text-gray-900 dark:text-gray-100">{{ order.currency }}</dd>
-                                </div>
-                            </dl>
-                        </div>
-
-                        <!-- Approval Status -->
-                        <div v-if="order.approval_status" class="bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border shadow-sm sm:rounded-lg p-6">
-                            <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
-                                {{ t('orders.show.approvalStatus') }}
-                            </h3>
-
-                            <dl class="space-y-3">
-                                <div>
-                                    <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">{{ t('common.status') }}</dt>
-                                    <dd class="mt-1">
-                                        <span :class="getApprovalStatusClass(order.approval_status)" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium capitalize">
-                                            {{ order.approval_status }}
-                                        </span>
-                                    </dd>
-                                </div>
-
-                                <div v-if="order.creator">
-                                    <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">{{ t('orders.show.createdBy') }}</dt>
-                                    <dd class="mt-1 text-sm text-gray-900 dark:text-gray-100">{{ order.creator.name }}</dd>
-                                </div>
-
-                                <div v-if="order.approver">
-                                    <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">{{ order.approval_status === 'approved' ? t('orders.show.approved') : t('orders.show.rejected') }} {{ t('orders.show.by') }}</dt>
-                                    <dd class="mt-1 text-sm text-gray-900 dark:text-gray-100">{{ order.approver.name }}</dd>
-                                </div>
-
-                                <div v-if="order.approved_at">
-                                    <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">{{ t('orders.show.decisionDate') }}</dt>
-                                    <dd class="mt-1 text-sm text-gray-900 dark:text-gray-100">{{ formatDate(order.approved_at) }}</dd>
-                                </div>
-
-                                <div v-if="order.approval_notes">
-                                    <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">{{ t('common.notes') }}</dt>
-                                    <dd class="mt-1 text-sm text-gray-600 dark:text-gray-300">{{ order.approval_notes }}</dd>
-                                </div>
-                            </dl>
-
-                            <!-- Approval Actions -->
-                            <div v-if="canApprove && order.approval_status === 'pending'" class="mt-4 pt-4 border-t border-gray-200 dark:border-dark-border space-y-2">
-                                <button
-                                    @click="openApprovalModal('approve')"
-                                    class="w-full px-4 py-2 bg-green-600 text-white rounded-md font-semibold text-sm hover:bg-green-700 transition"
-                                >
-                                    {{ t('orders.show.approveOrder') }}
-                                </button>
-                                <button
-                                    @click="openApprovalModal('reject')"
-                                    class="w-full px-4 py-2 bg-red-600 text-white rounded-md font-semibold text-sm hover:bg-red-700 transition"
-                                >
-                                    {{ t('orders.show.rejectOrder') }}
-                                </button>
-                            </div>
-                        </div>
-
-                        <!-- Actions -->
-                        <div v-if="hasPermission('delete_orders')" class="bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border shadow-sm sm:rounded-lg p-6">
-                            <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
-                                {{ t('orders.show.dangerZone') }}
-                            </h3>
-
-                            <button
-                                @click="showDeleteModal = true"
-                                class="w-full px-4 py-2 bg-red-900/30 text-red-400 border border-red-800 rounded-md font-semibold text-sm hover:bg-red-900/50 transition"
+        <div class="mt-6 grid grid-cols-1 gap-4 lg:grid-cols-3">
+            <!-- Left Column: Order Items & Details -->
+            <div class="space-y-4 lg:col-span-2">
+                <!-- Order Items -->
+                <Card :padded="false">
+                    <div class="px-5 pt-5"><h3 class="text-sm font-semibold text-text-primary">{{ t('orders.show.orderItems') }}</h3></div>
+                    <div class="p-5">
+                        <div v-if="order.items && order.items.length > 0" class="space-y-3">
+                            <div
+                                v-for="(item, index) in order.items"
+                                :key="index"
+                                class="flex items-center gap-4 rounded-lg border border-border-subtle bg-surface-canvas p-4"
                             >
-                                {{ t('orders.show.deleteOrder') }}
-                            </button>
-                            <p class="mt-2 text-xs text-gray-500 dark:text-gray-400">
-                                {{ t('orders.show.deleteWarning') }}
-                            </p>
+                                <div class="flex-1 min-w-0">
+                                    <p class="font-medium text-text-primary">{{ item.product_name }}</p>
+                                    <p class="text-xs text-text-tertiary">SKU: {{ item.sku }}</p>
+                                    <Link
+                                        v-if="item.product"
+                                        :href="route('products.show', item.product_id)"
+                                        class="mt-1 inline-block text-xs text-brand hover:underline"
+                                    >
+                                        {{ t('orders.show.viewProduct') }}
+                                    </Link>
+                                </div>
+
+                                <div class="text-right">
+                                    <p class="text-xs text-text-tertiary">{{ t('common.quantity') }}</p>
+                                    <p class="font-medium tabular-nums text-text-primary">{{ item.quantity }}</p>
+                                </div>
+
+                                <div class="text-right">
+                                    <p class="text-xs text-text-tertiary">{{ t('orders.show.unitPrice') }}</p>
+                                    <p class="font-medium tabular-nums text-text-primary">${{ parseFloat(item.unit_price).toFixed(2) }}</p>
+                                </div>
+
+                                <div class="min-w-[100px] text-right">
+                                    <p class="text-xs text-text-tertiary">{{ t('common.total') }}</p>
+                                    <p class="font-semibold tabular-nums text-text-primary">
+                                        ${{ parseFloat(item.total || item.subtotal || (item.quantity * item.unit_price)).toFixed(2) }}
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div v-else class="flex flex-col items-center gap-2 py-8 text-center">
+                            <PackageOpen :size="22" class="text-text-tertiary" />
+                            <p class="text-sm text-text-tertiary">{{ t('orders.show.noItems') }}</p>
                         </div>
                     </div>
-                </div>
+                </Card>
 
-                <!-- Plugin Slot: Footer -->
-                <PluginSlot slot="footer" :components="pluginComponents?.footer" />
+                <!-- Customer Information -->
+                <Card :padded="false">
+                    <div class="px-5 pt-5"><h3 class="text-sm font-semibold text-text-primary">{{ t('orders.show.customerInfo') }}</h3></div>
+                    <div class="p-5">
+                        <dl class="space-y-3">
+                            <div>
+                                <dt class="text-xs text-text-tertiary">{{ t('orders.show.customerName') }}</dt>
+                                <dd class="mt-1 text-sm text-text-primary">{{ order.customer_name }}</dd>
+                            </div>
+
+                            <div v-if="order.customer_email">
+                                <dt class="text-xs text-text-tertiary">{{ t('common.email') }}</dt>
+                                <dd class="mt-1 text-sm text-text-primary">
+                                    <a :href="`mailto:${order.customer_email}`" class="text-brand hover:underline">
+                                        {{ order.customer_email }}
+                                    </a>
+                                </dd>
+                            </div>
+
+                            <div v-if="order.customer_address">
+                                <dt class="text-xs text-text-tertiary">{{ t('orders.show.shippingAddress') }}</dt>
+                                <dd class="mt-1 whitespace-pre-line text-sm text-text-primary">{{ order.customer_address }}</dd>
+                            </div>
+                        </dl>
+                    </div>
+                </Card>
+
+                <!-- Order Timeline -->
+                <Card :padded="false">
+                    <div class="px-5 pt-5"><h3 class="text-sm font-semibold text-text-primary">{{ t('orders.show.orderTimeline') }}</h3></div>
+                    <div class="p-5">
+                        <div class="space-y-4">
+                            <div class="flex items-start gap-3">
+                                <div class="mt-2 h-2 w-2 flex-shrink-0 rounded-full bg-status-success"></div>
+                                <div class="flex-1">
+                                    <p class="text-sm font-medium text-text-primary">{{ t('orders.show.orderCreated') }}</p>
+                                    <p class="text-xs text-text-tertiary">{{ formatDate(order.order_date) }}</p>
+                                </div>
+                            </div>
+
+                            <div v-if="order.shipped_at" class="flex items-start gap-3">
+                                <div class="mt-2 h-2 w-2 flex-shrink-0 rounded-full bg-brand"></div>
+                                <div class="flex-1">
+                                    <p class="text-sm font-medium text-text-primary">{{ t('orders.show.orderShipped') }}</p>
+                                    <p class="text-xs text-text-tertiary">{{ formatDate(order.shipped_at) }}</p>
+                                </div>
+                            </div>
+
+                            <div v-if="order.delivered_at" class="flex items-start gap-3">
+                                <div class="mt-2 h-2 w-2 flex-shrink-0 rounded-full bg-status-success"></div>
+                                <div class="flex-1">
+                                    <p class="text-sm font-medium text-text-primary">{{ t('orders.show.orderDelivered') }}</p>
+                                    <p class="text-xs text-text-tertiary">{{ formatDate(order.delivered_at) }}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </Card>
+
+                <!-- Notes -->
+                <Card v-if="order.notes" :padded="false">
+                    <div class="px-5 pt-5"><h3 class="text-sm font-semibold text-text-primary">{{ t('orders.show.internalNotes') }}</h3></div>
+                    <div class="p-5">
+                        <p class="whitespace-pre-line text-sm text-text-secondary">{{ order.notes }}</p>
+                    </div>
+                </Card>
+            </div>
+
+            <!-- Right Column: Summary & Actions -->
+            <div class="space-y-4">
+                <!-- Plugin Slot: Sidebar -->
+                <PluginSlot slot="sidebar" :components="pluginComponents?.sidebar" />
+
+                <!-- Order Summary -->
+                <Card :padded="false">
+                    <div class="px-5 pt-5"><h3 class="text-sm font-semibold text-text-primary">{{ t('orders.show.orderSummary') }}</h3></div>
+                    <div class="p-5">
+                        <dl class="space-y-3">
+                            <div class="flex justify-between text-sm">
+                                <dt class="text-text-secondary">{{ t('common.subtotal') }}</dt>
+                                <dd class="font-medium tabular-nums text-text-primary">${{ parseFloat(order.subtotal).toFixed(2) }}</dd>
+                            </div>
+
+                            <div class="flex justify-between text-sm">
+                                <dt class="text-text-secondary">{{ t('common.tax') }}</dt>
+                                <dd class="font-medium tabular-nums text-text-primary">${{ parseFloat(order.tax || 0).toFixed(2) }}</dd>
+                            </div>
+
+                            <div class="flex justify-between text-sm">
+                                <dt class="text-text-secondary">{{ t('common.shipping') }}</dt>
+                                <dd class="font-medium tabular-nums text-text-primary">${{ parseFloat(order.shipping || 0).toFixed(2) }}</dd>
+                            </div>
+
+                            <div class="border-t border-border-subtle pt-3">
+                                <div class="flex items-center justify-between">
+                                    <dt class="text-sm font-semibold text-text-primary">{{ t('common.total') }}</dt>
+                                    <dd class="text-xl font-bold tabular-nums text-brand">${{ parseFloat(order.total).toFixed(2) }}</dd>
+                                </div>
+                            </div>
+                        </dl>
+                    </div>
+                </Card>
+
+                <!-- Order Details -->
+                <Card :padded="false">
+                    <div class="px-5 pt-5"><h3 class="text-sm font-semibold text-text-primary">{{ t('orders.show.orderDetails') }}</h3></div>
+                    <div class="p-5">
+                        <dl class="space-y-3">
+                            <div>
+                                <dt class="text-xs text-text-tertiary">{{ t('orders.show.orderNumber2') }}</dt>
+                                <dd class="mt-1 text-sm text-text-primary">{{ order.order_number }}</dd>
+                            </div>
+
+                            <div>
+                                <dt class="text-xs text-text-tertiary">{{ t('orders.source') }}</dt>
+                                <dd class="mt-1">
+                                    <Badge variant="brand" size="sm" class="capitalize">{{ order.source }}</Badge>
+                                </dd>
+                            </div>
+
+                            <div>
+                                <dt class="text-xs text-text-tertiary">{{ t('common.status') }}</dt>
+                                <dd class="mt-1">
+                                    <Badge :variant="statusVariant(order.status)" size="sm" dot class="capitalize">{{ order.status }}</Badge>
+                                </dd>
+                            </div>
+
+                            <div>
+                                <dt class="text-xs text-text-tertiary">{{ t('purchaseOrders.orderDate') }}</dt>
+                                <dd class="mt-1 text-sm text-text-primary">{{ formatDateShort(order.order_date) }}</dd>
+                            </div>
+
+                            <div v-if="order.currency">
+                                <dt class="text-xs text-text-tertiary">{{ t('common.currency') }}</dt>
+                                <dd class="mt-1 text-sm text-text-primary">{{ order.currency }}</dd>
+                            </div>
+                        </dl>
+                    </div>
+                </Card>
+
+                <!-- Approval Status -->
+                <Card v-if="order.approval_status" :padded="false">
+                    <div class="px-5 pt-5"><h3 class="text-sm font-semibold text-text-primary">{{ t('orders.show.approvalStatus') }}</h3></div>
+                    <div class="p-5">
+                        <dl class="space-y-3">
+                            <div>
+                                <dt class="text-xs text-text-tertiary">{{ t('common.status') }}</dt>
+                                <dd class="mt-1">
+                                    <Badge :variant="approvalStatusVariant(order.approval_status)" size="sm" dot class="capitalize">{{ order.approval_status }}</Badge>
+                                </dd>
+                            </div>
+
+                            <div v-if="order.creator">
+                                <dt class="text-xs text-text-tertiary">{{ t('orders.show.createdBy') }}</dt>
+                                <dd class="mt-1 text-sm text-text-primary">{{ order.creator.name }}</dd>
+                            </div>
+
+                            <div v-if="order.approver">
+                                <dt class="text-xs text-text-tertiary">{{ order.approval_status === 'approved' ? t('orders.show.approved') : t('orders.show.rejected') }} {{ t('orders.show.by') }}</dt>
+                                <dd class="mt-1 text-sm text-text-primary">{{ order.approver.name }}</dd>
+                            </div>
+
+                            <div v-if="order.approved_at">
+                                <dt class="text-xs text-text-tertiary">{{ t('orders.show.decisionDate') }}</dt>
+                                <dd class="mt-1 text-sm text-text-primary">{{ formatDate(order.approved_at) }}</dd>
+                            </div>
+
+                            <div v-if="order.approval_notes">
+                                <dt class="text-xs text-text-tertiary">{{ t('common.notes') }}</dt>
+                                <dd class="mt-1 text-sm text-text-secondary">{{ order.approval_notes }}</dd>
+                            </div>
+                        </dl>
+
+                        <!-- Approval Actions -->
+                        <div v-if="canApprove && order.approval_status === 'pending'" class="mt-4 space-y-2 border-t border-border-subtle pt-4">
+                            <Button variant="default" class="w-full" @click="openApprovalModal('approve')">
+                                {{ t('orders.show.approveOrder') }}
+                            </Button>
+                            <Button variant="danger" class="w-full" @click="openApprovalModal('reject')">
+                                {{ t('orders.show.rejectOrder') }}
+                            </Button>
+                        </div>
+                    </div>
+                </Card>
+
+                <!-- Actions -->
+                <Card v-if="hasPermission('delete_orders')" :padded="false">
+                    <div class="px-5 pt-5"><h3 class="text-sm font-semibold text-text-primary">{{ t('orders.show.dangerZone') }}</h3></div>
+                    <div class="p-5">
+                        <Button variant="danger" class="w-full" @click="showDeleteModal = true">
+                            {{ t('orders.show.deleteOrder') }}
+                        </Button>
+                        <p class="mt-2 text-xs text-text-tertiary">
+                            {{ t('orders.show.deleteWarning') }}
+                        </p>
+                    </div>
+                </Card>
             </div>
         </div>
 
-        <!-- Delete Confirmation Modal -->
-        <div v-if="showDeleteModal" class="fixed inset-0 z-50 overflow-y-auto" @click="showDeleteModal = false">
-            <div class="flex items-center justify-center min-h-screen px-4">
-                <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"></div>
+        <!-- Plugin Slot: Footer -->
+        <PluginSlot slot="footer" :components="pluginComponents?.footer" />
 
-                <div class="relative bg-white dark:bg-dark-card rounded-lg shadow-xl max-w-md w-full p-6" @click.stop>
-                    <div class="flex items-center justify-between mb-4">
-                        <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">
+        <!-- Delete Confirmation Modal -->
+        <Teleport to="body">
+            <div v-if="showDeleteModal" class="fixed inset-0 z-50 flex items-center justify-center" @click="showDeleteModal = false">
+                <div class="fixed inset-0 bg-black/50"></div>
+
+                <div class="relative mx-4 w-full max-w-md rounded-xl border border-border-subtle bg-surface-raised p-6 shadow-lg" @click.stop>
+                    <div class="mb-4 flex items-center justify-between">
+                        <h3 class="text-base font-semibold text-text-primary">
                             {{ t('orders.show.deleteOrder') }}
                         </h3>
                         <button
                             @click="showDeleteModal = false"
-                            class="text-gray-500 dark:text-gray-400 hover:text-gray-200"
+                            class="text-text-tertiary transition-colors hover:text-text-primary"
                         >
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                            </svg>
+                            <X :size="18" />
                         </button>
                     </div>
 
                     <div class="mb-6">
-                        <p class="text-gray-600 dark:text-gray-300 mb-4">
-                            Are you sure you want to delete order <strong>#{{ order.order_number }}</strong>?
+                        <p class="mb-4 text-sm text-text-secondary">
+                            Are you sure you want to delete order <strong class="text-text-primary">#{{ order.order_number }}</strong>?
                         </p>
-                        <div class="bg-yellow-900/20 border border-yellow-800 rounded-lg p-4">
+                        <div class="rounded-lg border border-status-warning/20 bg-status-warning-soft p-4">
                             <div class="flex items-start gap-3">
-                                <svg class="w-5 h-5 text-yellow-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                                </svg>
-                                <div class="text-sm text-yellow-300">
-                                    <p class="font-semibold mb-1">{{ t('orders.show.cannotUndo') }}</p>
+                                <AlertTriangle :size="20" class="mt-0.5 flex-shrink-0 text-status-warning" />
+                                <div class="text-sm text-status-warning">
+                                    <p class="mb-1 font-semibold">{{ t('orders.show.cannotUndo') }}</p>
                                     <p>{{ t('orders.show.stockRestored') }}</p>
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    <div class="flex gap-3 justify-end">
-                        <button
-                            type="button"
-                            @click="showDeleteModal = false"
-                            class="px-4 py-2 bg-gray-100 dark:bg-dark-bg text-gray-600 dark:text-gray-300 rounded-md hover:bg-gray-200 dark:hover:bg-dark-bg/50"
-                            :disabled="deleting"
-                        >
+                    <div class="flex justify-end gap-3">
+                        <Button variant="secondary" @click="showDeleteModal = false" :disabled="deleting">
                             {{ t('common.cancel') }}
-                        </button>
-                        <button
-                            type="button"
-                            @click="deleteOrder"
-                            :disabled="deleting"
-                            class="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 disabled:opacity-50"
-                        >
+                        </Button>
+                        <Button variant="danger" :loading="deleting" :disabled="deleting" @click="deleteOrder">
                             <span v-if="deleting">{{ t('common.deleting') }}</span>
                             <span v-else>{{ t('orders.show.deleteOrder') }}</span>
-                        </button>
+                        </Button>
                     </div>
                 </div>
             </div>
-        </div>
+        </Teleport>
 
         <!-- Approval Modal -->
-        <div v-if="showApprovalModal" class="fixed inset-0 z-50 overflow-y-auto" @click="showApprovalModal = false">
-            <div class="flex items-center justify-center min-h-screen px-4">
-                <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"></div>
+        <Teleport to="body">
+            <div v-if="showApprovalModal" class="fixed inset-0 z-50 flex items-center justify-center" @click="showApprovalModal = false">
+                <div class="fixed inset-0 bg-black/50"></div>
 
-                <div class="relative bg-white dark:bg-dark-card rounded-lg shadow-xl max-w-md w-full p-6" @click.stop>
-                    <div class="flex items-center justify-between mb-4">
-                        <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                <div class="relative mx-4 w-full max-w-md rounded-xl border border-border-subtle bg-surface-raised p-6 shadow-lg" @click.stop>
+                    <div class="mb-4 flex items-center justify-between">
+                        <h3 class="text-base font-semibold text-text-primary">
                             {{ approvalAction === 'approve' ? t('orders.show.approveOrder') : t('orders.show.rejectOrder') }}
                         </h3>
                         <button
                             @click="showApprovalModal = false"
-                            class="text-gray-500 dark:text-gray-400 hover:text-gray-200"
+                            class="text-text-tertiary transition-colors hover:text-text-primary"
                         >
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                            </svg>
+                            <X :size="18" />
                         </button>
                     </div>
 
                     <div class="mb-6">
-                        <p class="text-gray-600 dark:text-gray-300 mb-4">
+                        <p class="mb-4 text-sm text-text-secondary">
                             {{ approvalAction === 'approve'
                                 ? t('orders.show.confirmApprove', { number: order.order_number })
                                 : t('orders.show.confirmReject', { number: order.order_number })
@@ -545,45 +496,35 @@ const formatDateShort = (date) => {
                         </p>
 
                         <div>
-                            <label class="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-1">
+                            <label class="mb-1 block text-sm font-medium text-text-secondary">
                                 {{ t('common.notes') }} {{ approvalAction === 'reject' ? t('orders.show.notesRequired') : t('orders.show.notesOptional') }}
                             </label>
                             <textarea
                                 v-model="approvalNotes"
                                 rows="3"
-                                class="block w-full rounded-md bg-gray-50 dark:bg-dark-bg border-gray-200 dark:border-dark-border text-gray-900 dark:text-gray-100 placeholder-gray-500 shadow-sm focus:border-primary-400 focus:ring-primary-400"
+                                class="w-full rounded-md border border-border-subtle bg-surface-canvas px-3 py-2 text-sm text-text-primary placeholder:text-text-tertiary ds-focus-ring"
                                 :placeholder="approvalAction === 'approve' ? t('orders.show.approvalNotesPlaceholder') : t('orders.show.rejectionNotesPlaceholder')"
                                 :required="approvalAction === 'reject'"
                             ></textarea>
                         </div>
                     </div>
 
-                    <div class="flex gap-3 justify-end">
-                        <button
-                            type="button"
-                            @click="showApprovalModal = false"
-                            class="px-4 py-2 bg-gray-100 dark:bg-dark-bg text-gray-600 dark:text-gray-300 rounded-md hover:bg-gray-200 dark:hover:bg-dark-bg/50"
-                            :disabled="processing"
-                        >
+                    <div class="flex justify-end gap-3">
+                        <Button variant="secondary" @click="showApprovalModal = false" :disabled="processing">
                             {{ t('common.cancel') }}
-                        </button>
-                        <button
-                            type="button"
-                            @click="submitApproval"
+                        </Button>
+                        <Button
+                            :variant="approvalAction === 'approve' ? 'default' : 'danger'"
+                            :loading="processing"
                             :disabled="processing || (approvalAction === 'reject' && !approvalNotes)"
-                            :class="[
-                                'px-4 py-2 text-white rounded-md disabled:opacity-50',
-                                approvalAction === 'approve'
-                                    ? 'bg-green-600 hover:bg-green-700'
-                                    : 'bg-red-600 hover:bg-red-700'
-                            ]"
+                            @click="submitApproval"
                         >
                             <span v-if="processing">{{ t('common.loading') }}</span>
                             <span v-else>{{ approvalAction === 'approve' ? t('orders.show.approve') : t('orders.show.reject') }}</span>
-                        </button>
+                        </Button>
                     </div>
                 </div>
             </div>
-        </div>
-    </AuthenticatedLayout>
+        </Teleport>
+    </AppLayout>
 </template>

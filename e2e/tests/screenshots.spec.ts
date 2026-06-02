@@ -6,7 +6,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const screenshotDir = path.join(__dirname, '../../screenshots');
 
 const pages = [
-    { name: 'dashboard', path: '/dashboard', waitFor: 'h2' },
+    { name: 'dashboard', path: '/dashboard', waitFor: 'h1' },
     { name: 'products', path: '/products', waitFor: 'table' },
     { name: 'orders', path: '/orders', waitFor: 'table' },
     { name: 'locations', path: '/locations', waitFor: 'table' },

@@ -50,7 +50,7 @@ onMounted(() => {
                 <div class="w-8 h-8 bg-primary-600 rounded-lg flex items-center justify-center flex-shrink-0">
                     <ApplicationLogo class="h-5 w-auto fill-current text-white" />
                 </div>
-                <span v-show="!sidebarCollapsed" class="text-lg font-bold text-white tracking-tight">InventorOS</span>
+                <span v-show="!sidebarCollapsed" class="text-lg font-bold text-white tracking-tight">Inventoros</span>
             </Link>
             <button
                 @click="toggleSidebarCollapse"
