@@ -1,14 +1,20 @@
-# Inventoros
+<p align="center">
+  <img src="public/images/brand/inventoros_icon_transparent_512.png" alt="Inventoros" width="120" height="120">
+</p>
 
-[![Tests](https://github.com/Inventoros/Inventoros/actions/workflows/tests.yml/badge.svg)](https://github.com/Inventoros/Inventoros/actions/workflows/tests.yml)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Laravel 13](https://img.shields.io/badge/Laravel-13-FF2D20?logo=laravel)](https://laravel.com)
-[![PHP 8.3+](https://img.shields.io/badge/PHP-8.3+-777BB4?logo=php)](https://php.net)
-[![Vue 3](https://img.shields.io/badge/Vue-3-4FC08D?logo=vuedotjs)](https://vuejs.org)
-[![Inertia.js](https://img.shields.io/badge/Inertia.js-v3-6B46C1)](https://inertiajs.com)
-[![Code of Conduct](https://img.shields.io/badge/Contributor%20Covenant-2.1-4baaaa.svg)](CODE_OF_CONDUCT.md)
+<h1 align="center">Inventoros</h1>
 
-**Inventory Management for the Rest of Us**
+<p align="center"><strong>Inventory Management for the Rest of Us</strong></p>
+
+<p align="center">
+  <a href="https://github.com/Inventoros/Inventoros/actions/workflows/tests.yml"><img src="https://github.com/Inventoros/Inventoros/actions/workflows/tests.yml/badge.svg" alt="Tests"></a>
+  <a href="https://opensource.org/licenses/MIT"><img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="License: MIT"></a>
+  <a href="https://laravel.com"><img src="https://img.shields.io/badge/Laravel-13-FF2D20?logo=laravel" alt="Laravel 13"></a>
+  <a href="https://php.net"><img src="https://img.shields.io/badge/PHP-8.3+-777BB4?logo=php" alt="PHP 8.3+"></a>
+  <a href="https://vuejs.org"><img src="https://img.shields.io/badge/Vue-3-4FC08D?logo=vuedotjs" alt="Vue 3"></a>
+  <a href="https://inertiajs.com"><img src="https://img.shields.io/badge/Inertia.js-v3-6B46C1" alt="Inertia.js"></a>
+  <a href="CODE_OF_CONDUCT.md"><img src="https://img.shields.io/badge/Contributor%20Covenant-2.1-4baaaa.svg" alt="Code of Conduct"></a>
+</p>
 
 Inventoros is an open-source Inventory and Warehouse Management System (WMS) built with Laravel 13, Inertia.js, and Vue 3. Designed to bridge the gap between complex enterprise-grade WMS tools and user-friendly systems, Inventoros provides powerful inventory management capabilities with a developer-focused, extensible architecture.
 
