@@ -1,10 +1,30 @@
 <script setup>
-import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
+import AppLayout from '@/Layouts/AppLayout.vue';
 import PluginSlot from '@/Components/PluginSlot.vue';
+import PageHeader from '@/Components/ui/PageHeader.vue';
+import StatTile from '@/Components/ui/StatTile.vue';
+import Card from '@/Components/ui/Card.vue';
+import CardHeader from '@/Components/ui/CardHeader.vue';
+import Badge from '@/Components/ui/Badge.vue';
+import Button from '@/Components/ui/Button.vue';
+import DataTable from '@/Components/ui/DataTable.vue';
 import { Head, Link } from '@inertiajs/vue3';
 import { ref, reactive } from 'vue';
 import { useI18n } from 'vue-i18n';
 import axios from 'axios';
+import {
+    Boxes,
+    DollarSign,
+    AlertTriangle,
+    ShoppingCart,
+    Plus,
+    Settings2,
+    Package,
+    PackageX,
+    Activity,
+    CheckCircle2,
+    X,
+} from 'lucide-vue-next';
 
 const { t } = useI18n();
 
@@ -51,608 +71,430 @@ const saveWidgetPreferences = async () => {
     }
 };
 
-const formatCurrency = (value) => {
-    return new Intl.NumberFormat('en-US', {
-        style: 'currency',
-        currency: 'USD',
-    }).format(value);
-};
+const formatCurrency = (value) =>
+    new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(value ?? 0);
 
 const formatNumber = (value) => {
-    if (value >= 1000000) {
-        return (value / 1000000).toFixed(1).replace(/\.0$/, '') + 'M';
-    }
-    if (value >= 1000) {
-        return (value / 1000).toFixed(1).replace(/\.0$/, '') + 'K';
-    }
-    return value.toString();
+    const v = Number(value ?? 0);
+    if (v >= 1000000) return (v / 1000000).toFixed(1).replace(/\.0$/, '') + 'M';
+    if (v >= 1000) return (v / 1000).toFixed(1).replace(/\.0$/, '') + 'K';
+    return v.toString();
 };
 
 const formatCompactCurrency = (value) => {
-    const formatted = formatNumber(value);
-    // If it ends with K or M, add $ prefix
-    if (formatted.endsWith('K') || formatted.endsWith('M')) {
-        return '$' + formatted;
-    }
-    return formatCurrency(value);
+    const f = formatNumber(value);
+    return f.endsWith('K') || f.endsWith('M') ? '$' + f : formatCurrency(value);
 };
+
+const orderStatusVariant = (status) =>
+    ({
+        pending: 'warning',
+        processing: 'info',
+        shipped: 'brand',
+        delivered: 'success',
+        cancelled: 'danger',
+    }[status] || 'neutral');
+
+const reorderColumns = [
+    { key: 'name', label: 'Product' },
+    { key: 'supplier', label: 'Supplier' },
+    { key: 'stock', label: 'Stock', align: 'right' },
+    { key: 'reorder_point', label: 'Reorder at', align: 'right' },
+    { key: 'reorder_quantity', label: 'Order qty', align: 'right' },
+];
+
+// Secondary stat tiles (revenue_chart widget)
+const secondaryStats = () => [
+    { label: t('dashboard.pendingOrders'), value: formatNumber(props.stats?.pendingOrders), href: route('orders.index', { status: 'pending' }), tone: 'text-status-warning' },
+    { label: t('dashboard.categories'), value: props.stats?.categories, href: route('categories.index'), tone: 'text-brand' },
+    { label: t('dashboard.locations'), value: props.stats?.locations, href: route('locations.index'), tone: 'text-brand' },
+    { label: t('dashboard.inventoryValue'), value: formatCompactCurrency(props.stats?.totalValue), href: null, tone: 'text-status-success' },
+    { label: t('dashboard.revenueThisMonth'), value: formatCompactCurrency(props.stats?.revenueThisMonth), href: null, tone: 'text-brand' },
+];
 </script>
 
 <template>
     <Head :title="t('dashboard.title')" />
 
-    <AuthenticatedLayout>
+    <AppLayout>
         <template #header>
-            <div class="flex items-center justify-between">
-                <h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100">
-                    {{ t('dashboard.title') }}
-                </h2>
-                <button
-                    @click="showCustomizeModal = true"
-                    class="inline-flex items-center px-3 py-2 text-sm font-medium text-gray-600 dark:text-gray-300 bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border rounded-lg hover:bg-gray-50 dark:hover:bg-dark-bg transition"
-                    title="Customize Dashboard"
-                >
-                    <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                    </svg>
-                    Customize
-                </button>
+            <div class="flex items-center gap-2 text-xs">
+                <span class="text-text-tertiary">Workspace</span>
+                <span class="text-text-tertiary">/</span>
+                <span class="font-medium text-text-primary">{{ t('dashboard.title') }}</span>
             </div>
         </template>
 
-        <div class="py-8 bg-gray-50 dark:bg-dark-bg min-h-screen">
-            <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-                <!-- Plugin Slot: Header -->
-                <PluginSlot slot="header" :components="pluginComponents?.header" />
+        <!-- Plugin Slot: Header -->
+        <PluginSlot slot="header" :components="pluginComponents?.header" />
 
-                <!-- Plugin Slot: Before Stats -->
-                <PluginSlot slot="before-stats" :components="pluginComponents?.beforeStats" />
+        <PageHeader
+            :title="t('dashboard.title')"
+            description="Snapshot of inventory, orders, and reorder priorities."
+        >
+            <template #actions>
+                <Button variant="secondary" size="sm" @click="showCustomizeModal = true">
+                    <Settings2 :size="14" />
+                    Customize
+                </Button>
+                <Button variant="default" size="sm" as="Link" :href="route('orders.create')">
+                    <Plus :size="14" />
+                    {{ t('dashboard.newOrder') }}
+                </Button>
+            </template>
+        </PageHeader>
 
-                <!-- Primary Stats Grid -->
-                <div v-if="widgets.stats_overview" class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4 mb-6">
-                    <!-- Total Products -->
-                    <div class="bg-white dark:bg-dark-card rounded-xl border border-gray-100 dark:border-dark-border shadow-card hover:shadow-card-hover transition-shadow">
-                        <div class="p-5">
-                            <div class="flex items-center justify-between">
-                                <div>
-                                    <p class="text-sm font-medium text-gray-500 dark:text-gray-400">{{ t('dashboard.totalProducts') }}</p>
-                                    <p class="text-2xl font-bold text-gray-900 dark:text-white mt-1">
-                                        {{ formatNumber(stats.totalProducts) }}
-                                    </p>
-                                </div>
-                                <div class="w-11 h-11 bg-primary-50 dark:bg-primary-500/10 rounded-xl flex items-center justify-center">
-                                    <svg class="w-6 h-6 text-primary-600 dark:text-primary-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
-                                    </svg>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+        <!-- Plugin Slot: Before Stats -->
+        <PluginSlot slot="before-stats" :components="pluginComponents?.beforeStats" />
 
-                    <!-- Total Value -->
-                    <div class="bg-white dark:bg-dark-card rounded-xl border border-gray-100 dark:border-dark-border shadow-card hover:shadow-card-hover transition-shadow">
-                        <div class="p-5">
-                            <div class="flex items-center justify-between">
-                                <div>
-                                    <p class="text-sm font-medium text-gray-500 dark:text-gray-400">{{ t('dashboard.totalValue') }}</p>
-                                    <p class="text-2xl font-bold text-gray-900 dark:text-white mt-1">
-                                        {{ formatCompactCurrency(stats.totalValue) }}
-                                    </p>
-                                </div>
-                                <div class="w-11 h-11 bg-emerald-50 dark:bg-emerald-500/10 rounded-xl flex items-center justify-center">
-                                    <svg class="w-6 h-6 text-emerald-600 dark:text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                    </svg>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+        <!-- Primary stats -->
+        <section v-if="widgets.stats_overview" class="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
+            <StatTile
+                :label="t('dashboard.totalProducts')"
+                :value="formatNumber(stats.totalProducts)"
+                hint="active in catalog"
+                icon-tone="brand"
+            >
+                <template #icon><Boxes :size="18" /></template>
+            </StatTile>
+            <StatTile
+                :label="t('dashboard.totalValue')"
+                :value="formatCompactCurrency(stats.totalValue)"
+                hint="at cost"
+                icon-tone="success"
+            >
+                <template #icon><DollarSign :size="18" /></template>
+            </StatTile>
+            <StatTile
+                :label="t('dashboard.lowStock')"
+                :value="formatNumber(stats.lowStockProducts)"
+                :delta="stats.lowStockProducts > 0 ? 'attention' : null"
+                :delta-tone="stats.lowStockProducts > 0 ? 'down' : 'neutral'"
+                hint="below minimum"
+                icon-tone="warning"
+            >
+                <template #icon><AlertTriangle :size="18" /></template>
+            </StatTile>
+            <StatTile
+                :label="t('dashboard.totalOrders')"
+                :value="formatNumber(stats.totalOrders)"
+                hint="all time"
+                icon-tone="violet"
+            >
+                <template #icon><ShoppingCart :size="18" /></template>
+            </StatTile>
+        </section>
 
-                    <!-- Low Stock -->
-                    <div class="bg-white dark:bg-dark-card rounded-xl border border-gray-100 dark:border-dark-border shadow-card hover:shadow-card-hover transition-shadow">
-                        <div class="p-5">
-                            <div class="flex items-center justify-between">
-                                <div>
-                                    <p class="text-sm font-medium text-gray-500 dark:text-gray-400">{{ t('dashboard.lowStock') }}</p>
-                                    <p class="text-2xl font-bold text-gray-900 dark:text-white mt-1">
-                                        {{ formatNumber(stats.lowStockProducts) }}
-                                    </p>
-                                </div>
-                                <div class="w-11 h-11 bg-amber-50 dark:bg-amber-500/10 rounded-xl flex items-center justify-center">
-                                    <svg class="w-6 h-6 text-amber-600 dark:text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                                    </svg>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+        <!-- Secondary stats -->
+        <section v-if="widgets.revenue_chart" class="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+            <component
+                :is="stat.href ? Link : 'div'"
+                v-for="stat in secondaryStats()"
+                :key="stat.label"
+                v-bind="stat.href ? { href: stat.href } : {}"
+                :class="[
+                    'rounded-lg border border-border-subtle bg-surface-raised p-4 transition-colors',
+                    stat.href ? 'hover:border-border-strong' : '',
+                ]"
+            >
+                <p class="text-[11px] font-medium uppercase tracking-wider text-text-tertiary">{{ stat.label }}</p>
+                <p :class="['mt-1 text-xl font-semibold tabular-nums', stat.tone]">{{ stat.value }}</p>
+            </component>
+        </section>
 
-                    <!-- Total Orders -->
-                    <div class="bg-white dark:bg-dark-card rounded-xl border border-gray-100 dark:border-dark-border shadow-card hover:shadow-card-hover transition-shadow">
-                        <div class="p-5">
-                            <div class="flex items-center justify-between">
-                                <div>
-                                    <p class="text-sm font-medium text-gray-500 dark:text-gray-400">{{ t('dashboard.totalOrders') }}</p>
-                                    <p class="text-2xl font-bold text-gray-900 dark:text-white mt-1">
-                                        {{ formatNumber(stats.totalOrders) }}
-                                    </p>
-                                </div>
-                                <div class="w-11 h-11 bg-violet-50 dark:bg-violet-500/10 rounded-xl flex items-center justify-center">
-                                    <svg class="w-6 h-6 text-violet-600 dark:text-violet-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
-                                    </svg>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+        <!-- Plugin Slot: After Stats -->
+        <PluginSlot slot="after-stats" :components="pluginComponents?.afterStats" />
+        <!-- Plugin Slot: Before Content Grid -->
+        <PluginSlot slot="before-content" :components="pluginComponents?.beforeContent" />
 
-                <!-- Secondary Stats Row -->
-                <div v-if="widgets.revenue_chart" class="grid grid-cols-2 gap-4 mb-6 sm:grid-cols-3 lg:grid-cols-5">
-                    <!-- Pending Orders -->
-                    <Link :href="route('orders.index', { status: 'pending' })" class="bg-white dark:bg-dark-card rounded-xl border border-gray-100 dark:border-dark-border shadow-card hover:shadow-card-hover hover:border-primary-200 dark:hover:border-primary-800 transition-all p-4 block">
-                        <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">{{ t('dashboard.pendingOrders') }}</p>
-                        <p class="text-xl font-bold text-amber-600 dark:text-amber-400 mt-1">
-                            {{ formatNumber(stats.pendingOrders) }}
-                        </p>
-                    </Link>
-
-                    <!-- Categories -->
-                    <Link :href="route('categories.index')" class="bg-white dark:bg-dark-card rounded-xl border border-gray-100 dark:border-dark-border shadow-card hover:shadow-card-hover hover:border-primary-200 dark:hover:border-primary-800 transition-all p-4 block">
-                        <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">{{ t('dashboard.categories') }}</p>
-                        <p class="text-xl font-bold text-primary-600 dark:text-primary-400 mt-1">
-                            {{ stats.categories }}
-                        </p>
-                    </Link>
-
-                    <!-- Locations -->
-                    <Link :href="route('locations.index')" class="bg-white dark:bg-dark-card rounded-xl border border-gray-100 dark:border-dark-border shadow-card hover:shadow-card-hover hover:border-primary-200 dark:hover:border-primary-800 transition-all p-4 block">
-                        <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">{{ t('dashboard.locations') }}</p>
-                        <p class="text-xl font-bold text-primary-600 dark:text-primary-400 mt-1">
-                            {{ stats.locations }}
-                        </p>
-                    </Link>
-
-                    <!-- Inventory Value -->
-                    <div class="bg-white dark:bg-dark-card rounded-xl border border-gray-100 dark:border-dark-border shadow-card p-4">
-                        <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">{{ t('dashboard.inventoryValue') }}</p>
-                        <p class="text-xl font-bold text-emerald-600 dark:text-emerald-400 mt-1">
-                            {{ formatCompactCurrency(stats.totalValue) }}
-                        </p>
-                    </div>
-
-                    <!-- Revenue This Month -->
-                    <div class="bg-white dark:bg-dark-card rounded-xl border border-gray-100 dark:border-dark-border shadow-card p-4">
-                        <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">{{ t('dashboard.revenueThisMonth') }}</p>
-                        <p class="text-xl font-bold text-primary-600 dark:text-primary-400 mt-1">
-                            {{ formatCompactCurrency(stats.revenueThisMonth) }}
-                        </p>
-                    </div>
-                </div>
-
-                <!-- Plugin Slot: After Stats -->
-                <PluginSlot slot="after-stats" :components="pluginComponents?.afterStats" />
-
-                <!-- Plugin Slot: Before Content Grid -->
-                <PluginSlot slot="before-content" :components="pluginComponents?.beforeContent" />
-
-                <!-- Three Column Layout -->
-                <div v-if="widgets.recent_orders || widgets.low_stock_alerts || widgets.recent_products" class="grid grid-cols-1 gap-6 lg:grid-cols-3 mb-6">
-                    <!-- Recent Orders -->
-                    <div v-if="widgets.recent_orders" class="bg-white dark:bg-dark-card rounded-xl border border-gray-100 dark:border-dark-border shadow-card">
-                        <div class="px-5 py-4 border-b border-gray-100 dark:border-dark-border flex items-center justify-between">
-                            <h3 class="text-sm font-semibold text-gray-900 dark:text-gray-100">
-                                {{ t('dashboard.recentOrders') }}
-                            </h3>
-                            <Link
-                                :href="route('orders.index')"
-                                class="text-xs font-medium text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300"
-                            >
+        <!-- Three column: recent orders / low stock / recent products -->
+        <section
+            v-if="widgets.recent_orders || widgets.low_stock_alerts || widgets.recent_products"
+            class="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-3"
+        >
+            <!-- Recent Orders -->
+            <Card v-if="widgets.recent_orders" :padded="false">
+                <div class="px-5 pt-5">
+                    <CardHeader :title="t('dashboard.recentOrders')">
+                        <template #actions>
+                            <Link :href="route('orders.index')" class="text-xs text-text-tertiary transition-colors hover:text-text-primary">
                                 {{ t('dashboard.viewAll') }}
                             </Link>
-                        </div>
-
-                        <div class="p-5">
-                            <div v-if="recentOrders.length === 0" class="text-center py-6">
-                                <div class="w-12 h-12 bg-gray-100 dark:bg-dark-border rounded-xl flex items-center justify-center mx-auto mb-3">
-                                    <svg class="w-6 h-6 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
-                                    </svg>
-                                </div>
-                                <p class="text-sm text-gray-500 dark:text-gray-400 mb-3">{{ t('dashboard.noOrdersYet') }}</p>
-                                <Link
-                                    :href="route('orders.create')"
-                                    class="inline-flex items-center px-3.5 py-2 bg-primary-600 hover:bg-primary-700 text-white text-sm font-medium rounded-lg transition"
-                                >
-                                    {{ t('dashboard.createFirstOrder') }}
-                                </Link>
-                            </div>
-
-                            <div v-else class="space-y-2.5">
-                                <div
-                                    v-for="order in recentOrders"
-                                    :key="order.id"
-                                    class="flex items-center justify-between p-3 bg-gray-50 dark:bg-slate-800/50 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-800 transition cursor-pointer"
-                                    @click="$inertia.visit(route('orders.show', order.id))"
-                                >
-                                    <div class="flex-1 min-w-0">
-                                        <div class="flex items-center gap-2">
-                                            <p class="text-sm font-semibold text-gray-900 dark:text-gray-100">
-                                                {{ order.order_number }}
-                                            </p>
-                                            <span
-                                                :class="[
-                                                    'px-2 py-0.5 text-[11px] font-semibold rounded-full',
-                                                    order.status === 'pending' ? 'bg-amber-100 dark:bg-amber-500/15 text-amber-700 dark:text-amber-400' :
-                                                    order.status === 'processing' ? 'bg-blue-100 dark:bg-blue-500/15 text-blue-700 dark:text-blue-400' :
-                                                    order.status === 'shipped' ? 'bg-purple-100 dark:bg-purple-500/15 text-purple-700 dark:text-purple-400' :
-                                                    order.status === 'delivered' ? 'bg-emerald-100 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-400' :
-                                                    'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300'
-                                                ]"
-                                            >
-                                                {{ order.status }}
-                                            </span>
-                                        </div>
-                                        <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
-                                            {{ order.customer_name }} · {{ order.items.length }} items
-                                        </p>
-                                    </div>
-                                    <div class="text-right ml-3">
-                                        <p class="text-sm font-semibold text-gray-900 dark:text-gray-100">
-                                            {{ formatCurrency(order.total) }}
-                                        </p>
-                                        <p class="text-[11px] text-gray-400 dark:text-gray-500">
-                                            {{ new Date(order.order_date).toLocaleDateString() }}
-                                        </p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+                        </template>
+                    </CardHeader>
+                </div>
+                <div class="p-3">
+                    <div v-if="recentOrders.length === 0" class="flex flex-col items-center gap-2 py-8 text-center">
+                        <ShoppingCart :size="20" class="text-text-tertiary" />
+                        <p class="text-sm text-text-tertiary">{{ t('dashboard.noOrdersYet') }}</p>
+                        <Button variant="default" size="sm" as="Link" :href="route('orders.create')">
+                            {{ t('dashboard.createFirstOrder') }}
+                        </Button>
                     </div>
-
-                    <!-- Low Stock Alert -->
-                    <div v-if="widgets.low_stock_alerts" class="bg-white dark:bg-dark-card rounded-xl border border-gray-100 dark:border-dark-border shadow-card">
-                        <div class="px-5 py-4 border-b border-gray-100 dark:border-dark-border flex items-center justify-between">
-                            <h3 class="text-sm font-semibold text-gray-900 dark:text-gray-100">
-                                {{ t('dashboard.lowStockAlert') }}
-                            </h3>
+                    <ul v-else class="space-y-0.5">
+                        <li v-for="order in recentOrders" :key="order.id">
                             <Link
-                                :href="route('products.index')"
-                                class="text-xs font-medium text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300"
+                                :href="route('orders.show', order.id)"
+                                class="flex items-center justify-between gap-3 rounded-md px-2 py-2.5 transition-colors hover:bg-surface-overlay"
                             >
+                                <div class="min-w-0">
+                                    <div class="flex items-center gap-2">
+                                        <span class="font-mono text-xs font-medium text-text-primary">{{ order.order_number }}</span>
+                                        <Badge :variant="orderStatusVariant(order.status)" size="sm" dot>{{ order.status }}</Badge>
+                                    </div>
+                                    <p class="mt-0.5 truncate text-xs text-text-tertiary">
+                                        {{ order.customer_name }} · {{ order.items.length }} items
+                                    </p>
+                                </div>
+                                <div class="shrink-0 text-right">
+                                    <p class="text-sm font-semibold tabular-nums text-text-primary">{{ formatCurrency(order.total) }}</p>
+                                    <p class="text-[11px] text-text-tertiary">{{ new Date(order.order_date).toLocaleDateString() }}</p>
+                                </div>
+                            </Link>
+                        </li>
+                    </ul>
+                </div>
+            </Card>
+
+            <!-- Low Stock Alerts -->
+            <Card v-if="widgets.low_stock_alerts" :padded="false">
+                <div class="px-5 pt-5">
+                    <CardHeader :title="t('dashboard.lowStockAlert')">
+                        <template #actions>
+                            <Link :href="route('products.index', { low_stock: 1 })" class="text-xs text-text-tertiary transition-colors hover:text-text-primary">
                                 {{ t('dashboard.viewAll') }}
                             </Link>
-                        </div>
-
-                        <div class="p-5">
-                            <div v-if="lowStockProducts.length === 0" class="text-center py-6">
-                                <div class="w-12 h-12 bg-emerald-50 dark:bg-emerald-500/10 rounded-xl flex items-center justify-center mx-auto mb-3">
-                                    <svg class="w-6 h-6 text-emerald-500 dark:text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                    </svg>
-                                </div>
-                                <p class="text-sm text-gray-500 dark:text-gray-400">{{ t('dashboard.allWellStocked') }}</p>
-                            </div>
-
-                            <div v-else class="space-y-2.5">
-                                <div
-                                    v-for="product in lowStockProducts"
-                                    :key="product.id"
-                                    class="flex items-center justify-between p-3 bg-red-50 dark:bg-red-500/5 rounded-lg border border-red-100 dark:border-red-500/10"
-                                >
-                                    <div class="flex-1 min-w-0">
-                                        <p class="text-sm font-semibold text-gray-900 dark:text-gray-100">
-                                            {{ product.name }}
-                                        </p>
-                                        <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
-                                            {{ product.category?.name }} · {{ product.location?.name }}
-                                        </p>
-                                    </div>
-                                    <div class="text-right ml-3">
-                                        <p class="text-sm font-semibold text-red-600 dark:text-red-400">
-                                            {{ t('dashboard.inStock', { count: product.stock }) }}
-                                        </p>
-                                        <p class="text-[11px] text-gray-400 dark:text-gray-500">
-                                            {{ t('dashboard.reorderAt', { count: product.min_stock }) }}
-                                        </p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+                        </template>
+                    </CardHeader>
+                </div>
+                <div class="p-3">
+                    <div v-if="lowStockProducts.length === 0" class="flex flex-col items-center gap-2 py-8 text-center">
+                        <CheckCircle2 :size="20" class="text-status-success" />
+                        <p class="text-sm text-text-tertiary">{{ t('dashboard.allWellStocked') }}</p>
                     </div>
-
-                    <!-- Recent Products -->
-                    <div v-if="widgets.recent_products" class="bg-white dark:bg-dark-card rounded-xl border border-gray-100 dark:border-dark-border shadow-card">
-                        <div class="px-5 py-4 border-b border-gray-100 dark:border-dark-border flex items-center justify-between">
-                            <h3 class="text-sm font-semibold text-gray-900 dark:text-gray-100">
-                                {{ t('dashboard.recentProducts') }}
-                            </h3>
+                    <ul v-else class="space-y-0.5">
+                        <li v-for="product in lowStockProducts" :key="product.id">
                             <Link
-                                :href="route('products.index')"
-                                class="text-xs font-medium text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300"
+                                :href="route('products.show', product.id)"
+                                class="flex items-center justify-between gap-3 rounded-md px-2 py-2.5 transition-colors hover:bg-surface-overlay"
                             >
+                                <div class="min-w-0">
+                                    <p class="truncate text-sm font-medium text-text-primary">{{ product.name }}</p>
+                                    <p class="truncate text-xs text-text-tertiary">
+                                        {{ product.category?.name }} <span v-if="product.location">· {{ product.location?.name }}</span>
+                                    </p>
+                                </div>
+                                <Badge variant="danger" size="sm" dot>{{ product.stock }} / {{ product.min_stock }}</Badge>
+                            </Link>
+                        </li>
+                    </ul>
+                </div>
+            </Card>
+
+            <!-- Recent Products -->
+            <Card v-if="widgets.recent_products" :padded="false">
+                <div class="px-5 pt-5">
+                    <CardHeader :title="t('dashboard.recentProducts')">
+                        <template #actions>
+                            <Link :href="route('products.index')" class="text-xs text-text-tertiary transition-colors hover:text-text-primary">
                                 {{ t('dashboard.viewAll') }}
                             </Link>
-                        </div>
-
-                        <div class="p-5">
-                            <div v-if="recentProducts.length === 0" class="text-center py-6">
-                                <div class="w-12 h-12 bg-gray-100 dark:bg-dark-border rounded-xl flex items-center justify-center mx-auto mb-3">
-                                    <svg class="w-6 h-6 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
-                                    </svg>
-                                </div>
-                                <p class="text-sm text-gray-500 dark:text-gray-400 mb-3">{{ t('dashboard.noProductsYet') }}</p>
-                                <Link
-                                    :href="route('products.create')"
-                                    class="inline-flex items-center px-3.5 py-2 bg-primary-600 hover:bg-primary-700 text-white text-sm font-medium rounded-lg transition"
-                                >
-                                    {{ t('dashboard.addFirstProduct') }}
-                                </Link>
-                            </div>
-
-                            <div v-else class="space-y-2.5">
-                                <div
-                                    v-for="product in recentProducts"
-                                    :key="product.id"
-                                    class="flex items-center justify-between p-3 bg-gray-50 dark:bg-slate-800/50 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-800 transition"
-                                >
-                                    <div class="flex-1 min-w-0">
-                                        <p class="text-sm font-semibold text-gray-900 dark:text-gray-100">
-                                            {{ product.name }}
-                                        </p>
-                                        <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
-                                            {{ product.category?.name }} · {{ product.location?.name }}
-                                        </p>
-                                    </div>
-                                    <div class="text-right ml-3">
-                                        <p class="text-sm font-semibold text-gray-900 dark:text-gray-100">
-                                            {{ formatCurrency(product.price) }}
-                                        </p>
-                                        <p class="text-[11px] text-gray-500 dark:text-gray-400">
-                                            {{ t('dashboard.qty', { count: product.stock }) }}
-                                        </p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                        </template>
+                    </CardHeader>
                 </div>
-
-                <!-- Reorder Suggestions -->
-                <div v-if="reorderSuggestions && reorderSuggestions.length > 0" class="mb-6 bg-white dark:bg-dark-card rounded-xl border border-gray-100 dark:border-dark-border shadow-card">
-                    <div class="px-5 py-4 border-b border-gray-100 dark:border-dark-border flex items-center justify-between">
-                        <div class="flex items-center gap-2">
-                            <div class="w-2 h-2 bg-orange-500 rounded-full animate-pulse"></div>
-                            <h3 class="text-sm font-semibold text-gray-900 dark:text-gray-100">
-                                Reorder Suggestions
-                            </h3>
-                            <span class="px-2 py-0.5 text-[11px] font-semibold rounded-full bg-orange-100 dark:bg-orange-500/15 text-orange-700 dark:text-orange-400">
-                                {{ reorderSuggestions.length }}
-                            </span>
-                        </div>
-                        <Link
-                            :href="route('products.index', { low_stock: true })"
-                            class="text-xs font-medium text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300"
-                        >
-                            {{ t('dashboard.viewAll') }}
-                        </Link>
+                <div class="p-3">
+                    <div v-if="recentProducts.length === 0" class="flex flex-col items-center gap-2 py-8 text-center">
+                        <Package :size="20" class="text-text-tertiary" />
+                        <p class="text-sm text-text-tertiary">{{ t('dashboard.noProductsYet') }}</p>
+                        <Button variant="default" size="sm" as="Link" :href="route('products.create')">
+                            {{ t('dashboard.addFirstProduct') }}
+                        </Button>
                     </div>
-                    <div class="p-5">
-                        <div class="overflow-x-auto">
-                            <table class="w-full text-sm">
-                                <thead>
-                                    <tr class="border-b border-gray-100 dark:border-dark-border">
-                                        <th class="text-left py-2 px-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Product</th>
-                                        <th class="text-right py-2 px-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Stock</th>
-                                        <th class="text-right py-2 px-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Reorder At</th>
-                                        <th class="text-right py-2 px-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Order Qty</th>
-                                        <th class="text-left py-2 px-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Supplier</th>
-                                    </tr>
-                                </thead>
-                                <tbody class="divide-y divide-gray-50 dark:divide-dark-border">
-                                    <tr
-                                        v-for="product in reorderSuggestions"
-                                        :key="product.id"
-                                        class="hover:bg-gray-50 dark:hover:bg-slate-800/50 transition cursor-pointer"
-                                        @click="$inertia.visit(route('products.edit', product.id))"
-                                    >
-                                        <td class="py-2.5 px-3">
-                                            <p class="font-medium text-gray-900 dark:text-gray-100">{{ product.name }}</p>
-                                            <p class="text-xs text-gray-500 dark:text-gray-400">{{ product.sku }} <span v-if="product.category">· {{ product.category }}</span></p>
-                                        </td>
-                                        <td class="py-2.5 px-3 text-right">
-                                            <span class="font-semibold" :class="product.stock === 0 ? 'text-red-600 dark:text-red-400' : 'text-orange-600 dark:text-orange-400'">
-                                                {{ product.stock }}
-                                            </span>
-                                        </td>
-                                        <td class="py-2.5 px-3 text-right text-gray-600 dark:text-gray-300">
-                                            {{ product.reorder_point }}
-                                        </td>
-                                        <td class="py-2.5 px-3 text-right text-gray-600 dark:text-gray-300">
-                                            {{ product.reorder_quantity }}
-                                        </td>
-                                        <td class="py-2.5 px-3">
-                                            <span v-if="product.supplier" class="text-gray-600 dark:text-gray-300">{{ product.supplier }}</span>
-                                            <span v-else class="text-xs text-red-500 dark:text-red-400 italic">No supplier</span>
-                                        </td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Plugin Slot: After Content Grid -->
-                <PluginSlot slot="after-content" :components="pluginComponents?.afterContent" />
-
-                <!-- Stock by Category -->
-                <div v-if="widgets.stock_by_category && stockByCategory.length > 0" class="mb-6 bg-white dark:bg-dark-card rounded-xl border border-gray-100 dark:border-dark-border shadow-card">
-                    <div class="px-5 py-4 border-b border-gray-100 dark:border-dark-border">
-                        <h3 class="text-sm font-semibold text-gray-900 dark:text-gray-100">
-                            {{ t('dashboard.stockValueByCategory') }}
-                        </h3>
-                    </div>
-                    <div class="p-5">
-                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                            <div
-                                v-for="category in stockByCategory"
-                                :key="category.name"
-                                class="p-4 bg-gray-50 dark:bg-slate-800/50 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-800 transition"
-                            >
-                                <p class="text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">
-                                    {{ category.name }}
-                                </p>
-                                <p class="text-xl font-bold text-gray-900 dark:text-white">
-                                    {{ formatCompactCurrency(category.value) }}
-                                </p>
-                                <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
-                                    {{ formatNumber(category.count) }} {{ t('common.products') }}
+                    <ul v-else class="space-y-0.5">
+                        <li v-for="product in recentProducts" :key="product.id" class="flex items-center justify-between gap-3 rounded-md px-2 py-2.5">
+                            <div class="min-w-0">
+                                <p class="truncate text-sm font-medium text-text-primary">{{ product.name }}</p>
+                                <p class="truncate text-xs text-text-tertiary">
+                                    {{ product.category?.name }} <span v-if="product.location">· {{ product.location?.name }}</span>
                                 </p>
                             </div>
-                        </div>
+                            <div class="shrink-0 text-right">
+                                <p class="text-sm font-semibold tabular-nums text-text-primary">{{ formatCurrency(product.price) }}</p>
+                                <p class="text-[11px] text-text-tertiary">{{ t('dashboard.qty', { count: product.stock }) }}</p>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+            </Card>
+        </section>
+
+        <!-- Reorder Suggestions -->
+        <section v-if="reorderSuggestions && reorderSuggestions.length > 0" class="mt-4">
+            <Card :padded="false">
+                <div class="px-5 pt-5">
+                    <CardHeader title="Reorder suggestions" subtitle="Below reorder point. Suggested quantity comes from product config.">
+                        <template #actions>
+                            <Badge variant="warning" size="sm">{{ reorderSuggestions.length }}</Badge>
+                            <Link :href="route('products.index', { low_stock: true })" class="text-xs text-text-tertiary transition-colors hover:text-text-primary">
+                                {{ t('dashboard.viewAll') }}
+                            </Link>
+                        </template>
+                    </CardHeader>
+                </div>
+                <div class="px-2 pb-2 pt-1">
+                    <DataTable :columns="reorderColumns" :rows="reorderSuggestions" :row-href="(p) => route('products.edit', p.id)" dense class="border-0">
+                        <template #cell-name="{ row }">
+                            <div class="flex flex-col">
+                                <span class="font-medium text-text-primary">{{ row.name }}</span>
+                                <span class="text-xs text-text-tertiary">{{ row.sku }}<span v-if="row.category"> · {{ row.category }}</span></span>
+                            </div>
+                        </template>
+                        <template #cell-supplier="{ row }">
+                            <span v-if="row.supplier" class="text-text-secondary">{{ row.supplier }}</span>
+                            <span v-else class="text-xs italic text-status-danger">No supplier</span>
+                        </template>
+                        <template #cell-stock="{ row }">
+                            <Badge :variant="row.stock === 0 ? 'danger' : 'warning'" size="sm" dot>{{ row.stock }}</Badge>
+                        </template>
+                        <template #cell-reorder_point="{ row }">
+                            <span class="tabular-nums text-text-secondary">{{ row.reorder_point }}</span>
+                        </template>
+                        <template #cell-reorder_quantity="{ row }">
+                            <span class="font-medium tabular-nums text-text-primary">{{ row.reorder_quantity ?? '—' }}</span>
+                        </template>
+                        <template #empty>
+                            <div class="flex flex-col items-center gap-2 py-6">
+                                <PackageX :size="20" class="text-text-tertiary" />
+                                <p class="text-sm text-text-tertiary">No items below reorder point.</p>
+                            </div>
+                        </template>
+                    </DataTable>
+                </div>
+            </Card>
+        </section>
+
+        <!-- Plugin Slot: After Content Grid -->
+        <PluginSlot slot="after-content" :components="pluginComponents?.afterContent" />
+
+        <!-- Stock by Category -->
+        <section v-if="widgets.stock_by_category && stockByCategory.length > 0" class="mt-4">
+            <Card :padded="false">
+                <div class="px-5 pt-5">
+                    <CardHeader :title="t('dashboard.stockValueByCategory')" />
+                </div>
+                <div class="grid grid-cols-1 gap-3 p-5 sm:grid-cols-2 lg:grid-cols-3">
+                    <div
+                        v-for="category in stockByCategory"
+                        :key="category.name"
+                        class="rounded-lg border border-border-subtle bg-surface-canvas p-4 transition-colors hover:border-border-strong"
+                    >
+                        <p class="text-sm font-medium text-text-secondary">{{ category.name }}</p>
+                        <p class="mt-1 text-xl font-semibold tabular-nums text-text-primary">{{ formatCompactCurrency(category.value) }}</p>
+                        <p class="mt-0.5 text-xs text-text-tertiary">{{ formatNumber(category.count) }} {{ t('common.products') }}</p>
                     </div>
                 </div>
+            </Card>
+        </section>
 
-                <!-- Quick Actions -->
-                <div class="bg-white dark:bg-dark-card rounded-xl border border-gray-100 dark:border-dark-border shadow-card">
-                    <div class="px-5 py-4 border-b border-gray-100 dark:border-dark-border">
-                        <h3 class="text-sm font-semibold text-gray-900 dark:text-gray-100">
-                            {{ t('dashboard.quickActions') }}
-                        </h3>
-                    </div>
-                    <div class="p-5">
-                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-                            <Link
-                                :href="route('orders.create')"
-                                class="flex items-center gap-3 p-4 bg-primary-50 dark:bg-primary-500/5 rounded-xl border border-primary-100 dark:border-primary-500/10 hover:border-primary-300 dark:hover:border-primary-500/30 transition group"
-                            >
-                                <div class="w-10 h-10 bg-primary-100 dark:bg-primary-500/15 rounded-lg flex items-center justify-center group-hover:bg-primary-200 dark:group-hover:bg-primary-500/25 transition">
-                                    <svg class="w-5 h-5 text-primary-600 dark:text-primary-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                                    </svg>
-                                </div>
-                                <div>
-                                    <p class="text-sm font-semibold text-gray-900 dark:text-gray-100">{{ t('dashboard.createOrder') }}</p>
-                                    <p class="text-xs text-gray-500 dark:text-gray-400">{{ t('dashboard.newOrder') }}</p>
-                                </div>
-                            </Link>
-
-                            <Link
-                                :href="route('products.create')"
-                                class="flex items-center gap-3 p-4 bg-primary-50 dark:bg-primary-500/5 rounded-xl border border-primary-100 dark:border-primary-500/10 hover:border-primary-300 dark:hover:border-primary-500/30 transition group"
-                            >
-                                <div class="w-10 h-10 bg-primary-100 dark:bg-primary-500/15 rounded-lg flex items-center justify-center group-hover:bg-primary-200 dark:group-hover:bg-primary-500/25 transition">
-                                    <svg class="w-5 h-5 text-primary-600 dark:text-primary-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                                    </svg>
-                                </div>
-                                <div>
-                                    <p class="text-sm font-semibold text-gray-900 dark:text-gray-100">{{ t('dashboard.addProduct') }}</p>
-                                    <p class="text-xs text-gray-500 dark:text-gray-400">{{ t('dashboard.createNewItem') }}</p>
-                                </div>
-                            </Link>
-
-                            <Link
-                                :href="route('products.index')"
-                                class="flex items-center gap-3 p-4 bg-gray-50 dark:bg-slate-800/30 rounded-xl border border-gray-100 dark:border-dark-border hover:border-gray-300 dark:hover:border-slate-600 transition group"
-                            >
-                                <div class="w-10 h-10 bg-gray-100 dark:bg-slate-700/50 rounded-lg flex items-center justify-center group-hover:bg-gray-200 dark:group-hover:bg-slate-700 transition">
-                                    <svg class="w-5 h-5 text-gray-600 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                                    </svg>
-                                </div>
-                                <div>
-                                    <p class="text-sm font-semibold text-gray-900 dark:text-gray-100">{{ t('dashboard.viewInventory') }}</p>
-                                    <p class="text-xs text-gray-500 dark:text-gray-400">{{ t('dashboard.browseAllItems') }}</p>
-                                </div>
-                            </Link>
-
-                            <Link
-                                :href="route('orders.index')"
-                                class="flex items-center gap-3 p-4 bg-gray-50 dark:bg-slate-800/30 rounded-xl border border-gray-100 dark:border-dark-border hover:border-gray-300 dark:hover:border-slate-600 transition group"
-                            >
-                                <div class="w-10 h-10 bg-gray-100 dark:bg-slate-700/50 rounded-lg flex items-center justify-center group-hover:bg-gray-200 dark:group-hover:bg-slate-700 transition">
-                                    <svg class="w-5 h-5 text-gray-600 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
-                                    </svg>
-                                </div>
-                                <div>
-                                    <p class="text-sm font-semibold text-gray-900 dark:text-gray-100">{{ t('dashboard.viewOrders') }}</p>
-                                    <p class="text-xs text-gray-500 dark:text-gray-400">{{ t('dashboard.allOrders') }}</p>
-                                </div>
-                            </Link>
-                        </div>
-                    </div>
+        <!-- Quick Actions -->
+        <section class="mt-4">
+            <Card :padded="false">
+                <div class="px-5 pt-5">
+                    <CardHeader :title="t('dashboard.quickActions')" />
                 </div>
+                <div class="grid grid-cols-1 gap-3 p-5 sm:grid-cols-2 lg:grid-cols-4">
+                    <Link
+                        :href="route('orders.create')"
+                        class="group flex items-center gap-3 rounded-lg border border-border-subtle bg-surface-canvas p-4 transition-colors hover:border-brand"
+                    >
+                        <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-brand to-brand-hover text-brand-foreground shadow-sm">
+                            <Plus :size="18" />
+                        </span>
+                        <div class="min-w-0">
+                            <p class="text-sm font-semibold text-text-primary">{{ t('dashboard.createOrder') }}</p>
+                            <p class="text-xs text-text-tertiary">{{ t('dashboard.newOrder') }}</p>
+                        </div>
+                    </Link>
+                    <Link
+                        :href="route('products.create')"
+                        class="group flex items-center gap-3 rounded-lg border border-border-subtle bg-surface-canvas p-4 transition-colors hover:border-brand"
+                    >
+                        <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-brand to-brand-hover text-brand-foreground shadow-sm">
+                            <Plus :size="18" />
+                        </span>
+                        <div class="min-w-0">
+                            <p class="text-sm font-semibold text-text-primary">{{ t('dashboard.addProduct') }}</p>
+                            <p class="text-xs text-text-tertiary">{{ t('dashboard.createNewItem') }}</p>
+                        </div>
+                    </Link>
+                    <Link
+                        :href="route('products.index')"
+                        class="group flex items-center gap-3 rounded-lg border border-border-subtle bg-surface-canvas p-4 transition-colors hover:border-border-strong"
+                    >
+                        <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-surface-overlay text-text-secondary">
+                            <Boxes :size="18" />
+                        </span>
+                        <div class="min-w-0">
+                            <p class="text-sm font-semibold text-text-primary">{{ t('dashboard.viewInventory') }}</p>
+                            <p class="text-xs text-text-tertiary">{{ t('dashboard.browseAllItems') }}</p>
+                        </div>
+                    </Link>
+                    <Link
+                        :href="route('orders.index')"
+                        class="group flex items-center gap-3 rounded-lg border border-border-subtle bg-surface-canvas p-4 transition-colors hover:border-border-strong"
+                    >
+                        <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-surface-overlay text-text-secondary">
+                            <ShoppingCart :size="18" />
+                        </span>
+                        <div class="min-w-0">
+                            <p class="text-sm font-semibold text-text-primary">{{ t('dashboard.viewOrders') }}</p>
+                            <p class="text-xs text-text-tertiary">{{ t('dashboard.allOrders') }}</p>
+                        </div>
+                    </Link>
+                </div>
+            </Card>
+        </section>
 
-                <!-- Plugin Slot: Footer -->
-                <PluginSlot slot="footer" :components="pluginComponents?.footer" />
-            </div>
-        </div>
+        <!-- Plugin Slot: Footer -->
+        <PluginSlot slot="footer" :components="pluginComponents?.footer" />
 
         <!-- Customize Dashboard Modal -->
         <Teleport to="body">
             <div v-if="showCustomizeModal" class="fixed inset-0 z-50 flex items-center justify-center">
                 <div class="fixed inset-0 bg-black/50" @click="showCustomizeModal = false"></div>
-                <div class="relative bg-white dark:bg-dark-card rounded-xl border border-gray-200 dark:border-dark-border shadow-xl w-full max-w-md mx-4 p-6">
-                    <div class="flex items-center justify-between mb-6">
-                        <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">
-                            Customize Dashboard
-                        </h3>
-                        <button
-                            @click="showCustomizeModal = false"
-                            class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition"
-                        >
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                            </svg>
+                <div class="relative mx-4 w-full max-w-md rounded-xl border border-border-subtle bg-surface-raised p-6 shadow-lg">
+                    <div class="mb-6 flex items-center justify-between">
+                        <h3 class="text-base font-semibold text-text-primary">Customize dashboard</h3>
+                        <button @click="showCustomizeModal = false" class="text-text-tertiary transition-colors hover:text-text-primary">
+                            <X :size="18" />
                         </button>
                     </div>
 
-                    <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">
-                        Toggle widgets to show or hide them on your dashboard.
-                    </p>
+                    <p class="mb-4 text-sm text-text-secondary">Toggle widgets to show or hide them on your dashboard.</p>
 
-                    <div class="space-y-3 max-h-80 overflow-y-auto">
+                    <div class="ds-scroll max-h-80 space-y-2 overflow-y-auto">
                         <label
                             v-for="(label, key) in widgetLabels"
                             :key="key"
-                            class="flex items-center justify-between p-3 bg-gray-50 dark:bg-dark-bg rounded-lg cursor-pointer hover:bg-gray-100 dark:hover:bg-dark-bg/80 transition"
+                            class="flex cursor-pointer items-center justify-between rounded-lg border border-border-subtle bg-surface-canvas p-3 transition-colors hover:bg-surface-overlay"
                         >
-                            <span class="text-sm font-medium text-gray-700 dark:text-gray-300">
-                                {{ label }}
-                            </span>
+                            <span class="text-sm font-medium text-text-primary">{{ label }}</span>
                             <div class="relative">
-                                <input
-                                    type="checkbox"
-                                    v-model="widgets[key]"
-                                    class="sr-only peer"
-                                />
-                                <div class="w-10 h-6 bg-gray-300 dark:bg-gray-600 rounded-full peer peer-checked:bg-primary-500 transition-colors"></div>
-                                <div class="absolute left-0.5 top-0.5 w-5 h-5 bg-white rounded-full shadow transform peer-checked:translate-x-4 transition-transform"></div>
+                                <input type="checkbox" v-model="widgets[key]" class="peer sr-only" />
+                                <div class="h-6 w-10 rounded-full bg-surface-sunken transition-colors peer-checked:bg-brand"></div>
+                                <div class="absolute left-0.5 top-0.5 h-5 w-5 transform rounded-full bg-white shadow transition-transform peer-checked:translate-x-4"></div>
                             </div>
                         </label>
                     </div>
 
                     <div class="mt-6 flex gap-3">
-                        <button
-                            @click="saveWidgetPreferences"
-                            :disabled="saving"
-                            class="flex-1 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition font-medium text-sm disabled:opacity-50"
-                        >
-                            {{ saving ? 'Saving...' : 'Save Preferences' }}
-                        </button>
-                        <button
-                            @click="showCustomizeModal = false"
-                            class="px-4 py-2 bg-gray-200 dark:bg-dark-bg text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-300 dark:hover:bg-dark-bg/80 transition font-medium text-sm border border-gray-200 dark:border-dark-border"
-                        >
-                            Cancel
-                        </button>
+                        <Button variant="default" class="flex-1" :loading="saving" @click="saveWidgetPreferences">
+                            {{ saving ? 'Saving…' : 'Save preferences' }}
+                        </Button>
+                        <Button variant="secondary" @click="showCustomizeModal = false">Cancel</Button>
                     </div>
                 </div>
             </div>
         </Teleport>
-    </AuthenticatedLayout>
+    </AppLayout>
 </template>

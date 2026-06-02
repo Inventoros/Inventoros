@@ -1,8 +1,16 @@
 <script setup>
-import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
+import AppLayout from '@/Layouts/AppLayout.vue';
 import PluginSlot from '@/Components/PluginSlot.vue';
+import PageHeader from '@/Components/ui/PageHeader.vue';
+import Card from '@/Components/ui/Card.vue';
+import Button from '@/Components/ui/Button.vue';
+import Badge from '@/Components/ui/Badge.vue';
 import { Head, Link, router } from '@inertiajs/vue3';
-import { defineAsyncComponent, ref, computed, onMounted, onUnmounted } from 'vue';
+import { defineAsyncComponent, ref, onMounted, onUnmounted } from 'vue';
+import {
+    Plus, Search, Eye, Pencil, Trash2, Copy, Barcode, ScanLine,
+    AlertTriangle, Boxes, X,
+} from 'lucide-vue-next';
 
 // Defer the modal (which transitively imports html5-qrcode, ~200 KB)
 // until the user actually opens the scanner.
@@ -78,9 +86,7 @@ const toggleSelectAll = () => {
     }
 };
 
-const isSelected = (productId) => {
-    return selectedProducts.value.includes(productId);
-};
+const isSelected = (productId) => selectedProducts.value.includes(productId);
 
 const toggleSelect = (productId) => {
     const idx = selectedProducts.value.indexOf(productId);
@@ -89,7 +95,6 @@ const toggleSelect = (productId) => {
     } else {
         selectedProducts.value.push(productId);
     }
-    // Update selectAll state
     selectAll.value = props.products.data.length > 0 && selectedProducts.value.length === props.products.data.length;
 };
 
@@ -103,22 +108,15 @@ const printBarcode = (productId) => {
     window.open(route('products.barcode.print', productId), '_blank');
 };
 
-const formatCurrency = (value) => {
-    return new Intl.NumberFormat('en-US', {
-        style: 'currency',
-        currency: 'USD',
-    }).format(value);
-};
+const formatCurrency = (value) =>
+    new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(value);
 
 const searchProducts = () => {
     router.get(route('products.index'), {
         search: search.value,
         category: category.value,
         location: location.value,
-    }, {
-        preserveState: true,
-        preserveScroll: true,
-    });
+    }, { preserveState: true, preserveScroll: true });
 };
 
 const clearFilters = () => {
@@ -134,84 +132,45 @@ const deleteProduct = (product) => {
     }
 };
 
-const isLowStock = (product) => {
-    return product.stock <= product.min_stock;
-};
+const isLowStock = (product) => product.stock <= product.min_stock;
 
-// Bulk operations
 const bulkDelete = () => {
     if (!confirm(`Are you sure you want to delete ${selectedProducts.value.length} product(s)? This action cannot be undone.`)) return;
     bulkProcessing.value = true;
-    router.post(route('products.bulk.delete'), {
-        ids: selectedProducts.value,
-    }, {
-        onSuccess: () => {
-            selectedProducts.value = [];
-            selectAll.value = false;
-            bulkProcessing.value = false;
-        },
-        onError: () => {
-            bulkProcessing.value = false;
-        },
+    router.post(route('products.bulk.delete'), { ids: selectedProducts.value }, {
+        onSuccess: () => { selectedProducts.value = []; selectAll.value = false; bulkProcessing.value = false; },
+        onError: () => { bulkProcessing.value = false; },
     });
 };
 
 const bulkUpdateCategory = () => {
     if (!bulkCategoryId.value) return;
     bulkProcessing.value = true;
-    router.post(route('products.bulk.update-category'), {
-        ids: selectedProducts.value,
-        category_id: bulkCategoryId.value,
-    }, {
-        onSuccess: () => {
-            selectedProducts.value = [];
-            selectAll.value = false;
-            showBulkCategoryModal.value = false;
-            bulkCategoryId.value = '';
-            bulkProcessing.value = false;
-        },
-        onError: () => {
-            bulkProcessing.value = false;
-        },
+    router.post(route('products.bulk.update-category'), { ids: selectedProducts.value, category_id: bulkCategoryId.value }, {
+        onSuccess: () => { selectedProducts.value = []; selectAll.value = false; showBulkCategoryModal.value = false; bulkCategoryId.value = ''; bulkProcessing.value = false; },
+        onError: () => { bulkProcessing.value = false; },
     });
 };
 
 const bulkUpdatePrice = () => {
     if (!bulkPriceValue.value) return;
     bulkProcessing.value = true;
-    router.post(route('products.bulk.update-price'), {
-        ids: selectedProducts.value,
-        type: bulkPriceType.value,
-        value: parseFloat(bulkPriceValue.value),
-    }, {
-        onSuccess: () => {
-            selectedProducts.value = [];
-            selectAll.value = false;
-            showBulkPriceModal.value = false;
-            bulkPriceValue.value = 0;
-            bulkProcessing.value = false;
-        },
-        onError: () => {
-            bulkProcessing.value = false;
-        },
+    router.post(route('products.bulk.update-price'), { ids: selectedProducts.value, type: bulkPriceType.value, value: parseFloat(bulkPriceValue.value) }, {
+        onSuccess: () => { selectedProducts.value = []; selectAll.value = false; showBulkPriceModal.value = false; bulkPriceValue.value = 0; bulkProcessing.value = false; },
+        onError: () => { bulkProcessing.value = false; },
     });
 };
 
 const bulkExport = () => {
-    // For export, use a form submission to trigger a file download
     const form = document.createElement('form');
     form.method = 'POST';
     form.action = route('products.bulk.export');
     form.style.display = 'none';
-
-    // CSRF token
     const csrfInput = document.createElement('input');
     csrfInput.type = 'hidden';
     csrfInput.name = '_token';
     csrfInput.value = document.querySelector('meta[name="csrf-token"]')?.content;
     form.appendChild(csrfInput);
-
-    // Product IDs
     selectedProducts.value.forEach(id => {
         const input = document.createElement('input');
         input.type = 'hidden';
@@ -219,7 +178,6 @@ const bulkExport = () => {
         input.value = id;
         form.appendChild(input);
     });
-
     document.body.appendChild(form);
     form.submit();
     document.body.removeChild(form);
@@ -228,529 +186,232 @@ const bulkExport = () => {
 const duplicateProduct = (product) => {
     router.post(route('products.duplicate', product.id));
 };
+
+const selectClass =
+    'h-9 w-full rounded-md border border-border-subtle bg-surface-canvas px-3 text-sm text-text-primary ds-focus-ring';
+const thClass =
+    'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-text-secondary';
 </script>
 
 <template>
     <Head :title="t('products.title')" />
 
-    <AuthenticatedLayout>
+    <AppLayout>
         <template #header>
-            <div class="flex items-center justify-between">
-                <h2 class="font-semibold text-xl text-gray-900 dark:text-gray-100 leading-tight">
-                    {{ t('products.title') }}
-                </h2>
-                <Link
-                    :href="route('products.create')"
-                    class="inline-flex items-center px-4 py-2 bg-primary-400 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-primary-500 focus:bg-primary-500 active:bg-primary-600 focus:outline-none focus:ring-2 focus:ring-primary-400 focus:ring-offset-2 focus:ring-offset-dark-bg transition ease-in-out duration-150"
-                >
-                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                    </svg>
-                    {{ t('products.addProduct') }}
-                </Link>
+            <div class="flex items-center gap-2 text-xs">
+                <span class="text-text-tertiary">Workspace</span>
+                <span class="text-text-tertiary">/</span>
+                <span class="font-medium text-text-primary">{{ t('products.title') }}</span>
             </div>
         </template>
 
-        <div class="py-12 bg-gray-50 dark:bg-dark-bg min-h-screen">
-            <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-                <!-- Plugin Slot: Header -->
-                <PluginSlot slot="header" :components="pluginComponents?.header" />
+        <PluginSlot slot="header" :components="pluginComponents?.header" />
 
-                <!-- Search and Filters -->
-                <div class="mb-6 bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border overflow-hidden shadow-lg sm:rounded-lg">
-                    <div class="p-6">
-                        <form @submit.prevent="searchProducts" class="space-y-4">
-                            <div class="grid grid-cols-1 gap-4 md:grid-cols-4">
-                                <!-- Search -->
-                                <div class="md:col-span-2">
-                                    <label for="search" class="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-1">
-                                        {{ t('products.searchProducts') }}
-                                    </label>
-                                    <input
-                                        id="search"
-                                        v-model="search"
-                                        type="text"
-                                        :placeholder="t('products.searchPlaceholder')"
-                                        class="block w-full rounded-md bg-gray-50 dark:bg-dark-bg border-gray-200 dark:border-dark-border text-gray-900 dark:text-gray-100 placeholder-gray-500 shadow-sm focus:border-primary-400 focus:ring-primary-400"
-                                    />
-                                </div>
+        <PageHeader :title="t('products.title')" description="Your catalog, stock levels, and reorder thresholds.">
+            <template #actions>
+                <Button variant="default" size="sm" as="Link" :href="route('products.create')">
+                    <Plus :size="14" />
+                    {{ t('products.addProduct') }}
+                </Button>
+            </template>
+        </PageHeader>
 
-                                <!-- Category Filter -->
-                                <div>
-                                    <label for="category" class="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-1">
-                                        {{ t('products.category') }}
-                                    </label>
-                                    <select
-                                        id="category"
-                                        v-model="category"
-                                        class="block w-full rounded-md bg-gray-50 dark:bg-dark-bg border-gray-200 dark:border-dark-border text-gray-900 dark:text-gray-100 placeholder-gray-500 shadow-sm focus:border-primary-400 focus:ring-primary-400"
-                                    >
-                                        <option value="">{{ t('products.allCategories') }}</option>
-                                        <option v-for="cat in categories" :key="cat.id" :value="cat.id">
-                                            {{ cat.name }}
-                                        </option>
-                                    </select>
-                                </div>
-
-                                <!-- Location Filter -->
-                                <div>
-                                    <label for="location" class="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-1">
-                                        {{ t('products.location') }}
-                                    </label>
-                                    <select
-                                        id="location"
-                                        v-model="location"
-                                        class="block w-full rounded-md bg-gray-50 dark:bg-dark-bg border-gray-200 dark:border-dark-border text-gray-900 dark:text-gray-100 placeholder-gray-500 shadow-sm focus:border-primary-400 focus:ring-primary-400"
-                                    >
-                                        <option value="">{{ t('products.allLocations') }}</option>
-                                        <option v-for="loc in locations" :key="loc.id" :value="loc.id">
-                                            {{ loc.name }}
-                                        </option>
-                                    </select>
-                                </div>
-                            </div>
-
-                            <!-- Filter Actions -->
-                            <div class="flex items-center gap-3">
-                                <button
-                                    type="submit"
-                                    class="inline-flex items-center px-4 py-2 bg-primary-400 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-primary-500"
-                                >
-                                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                                    </svg>
-                                    {{ t('common.search') }}
-                                </button>
-                                <button
-                                    type="button"
-                                    @click="clearFilters"
-                                    class="inline-flex items-center px-4 py-2 bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-border rounded-md font-semibold text-xs text-gray-600 dark:text-gray-300 uppercase tracking-widest hover:bg-gray-100 dark:hover:bg-dark-bg/50"
-                                >
-                                    {{ t('common.clearFilters') }}
-                                </button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-
-                <!-- Plugin Slot: Before Table -->
-                <PluginSlot slot="before-table" :components="pluginComponents?.beforeTable" />
-
-                <!-- Bulk Actions Bar -->
-                <div v-if="selectedProducts.length > 0" class="mb-4 p-4 bg-primary-900/20 border border-primary-800 rounded-lg sticky top-0 z-30">
-                    <div class="flex items-center justify-between flex-wrap gap-3">
-                        <div class="flex items-center gap-3">
-                            <span class="text-sm font-medium text-gray-100">
-                                {{ selectedProducts.length }} product{{ selectedProducts.length > 1 ? 's' : '' }} selected
-                            </span>
-                            <button
-                                @click="selectedProducts = []; selectAll = false"
-                                class="text-xs text-gray-400 hover:text-gray-200"
-                            >
-                                {{ t('common.clearSelection') }}
-                            </button>
-                        </div>
-                        <div class="flex items-center gap-2 flex-wrap">
-                            <!-- Print Barcodes -->
-                            <button
-                                @click="printSelectedBarcodes"
-                                class="inline-flex items-center px-3 py-1.5 bg-primary-400 text-white rounded-lg text-sm font-medium hover:bg-primary-500 transition"
-                            >
-                                <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
-                                </svg>
-                                {{ t('products.printBarcodes') }}
-                            </button>
-                            <!-- Change Category -->
-                            <button
-                                @click="showBulkCategoryModal = true"
-                                :disabled="bulkProcessing"
-                                class="inline-flex items-center px-3 py-1.5 bg-purple-600 text-white rounded-lg text-sm font-medium hover:bg-purple-700 transition disabled:opacity-50"
-                            >
-                                <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
-                                </svg>
-                                Change Category
-                            </button>
-                            <!-- Adjust Price -->
-                            <button
-                                @click="showBulkPriceModal = true"
-                                :disabled="bulkProcessing"
-                                class="inline-flex items-center px-3 py-1.5 bg-amber-600 text-white rounded-lg text-sm font-medium hover:bg-amber-700 transition disabled:opacity-50"
-                            >
-                                <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                </svg>
-                                Adjust Price
-                            </button>
-                            <!-- Export Selected -->
-                            <button
-                                @click="bulkExport"
-                                :disabled="bulkProcessing"
-                                class="inline-flex items-center px-3 py-1.5 bg-green-600 text-white rounded-lg text-sm font-medium hover:bg-green-700 transition disabled:opacity-50"
-                            >
-                                <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                                </svg>
-                                Export Selected
-                            </button>
-                            <!-- Delete Selected -->
-                            <button
-                                @click="bulkDelete"
-                                :disabled="bulkProcessing"
-                                class="inline-flex items-center px-3 py-1.5 bg-red-600 text-white rounded-lg text-sm font-medium hover:bg-red-700 transition disabled:opacity-50"
-                            >
-                                <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                </svg>
-                                Delete Selected
-                            </button>
+        <!-- Filters -->
+        <Card class="mt-6">
+            <form @submit.prevent="searchProducts" class="space-y-4">
+                <div class="grid grid-cols-1 gap-4 md:grid-cols-4">
+                    <div class="md:col-span-2">
+                        <label for="search" class="mb-1 block text-xs font-medium text-text-secondary">{{ t('products.searchProducts') }}</label>
+                        <div class="relative">
+                            <Search :size="15" class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-text-tertiary" />
+                            <input id="search" v-model="search" type="text" :placeholder="t('products.searchPlaceholder')"
+                                class="h-9 w-full rounded-md border border-border-subtle bg-surface-canvas pl-9 pr-3 text-sm text-text-primary placeholder:text-text-tertiary ds-focus-ring" />
                         </div>
                     </div>
-                </div>
-
-                <!-- Bulk Category Modal -->
-                <div v-if="showBulkCategoryModal" class="fixed inset-0 z-50 flex items-center justify-center">
-                    <div class="fixed inset-0 bg-black/50" @click="showBulkCategoryModal = false"></div>
-                    <div class="relative bg-white dark:bg-dark-card rounded-lg shadow-xl p-6 w-full max-w-md border border-gray-200 dark:border-dark-border">
-                        <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Change Category</h3>
-                        <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">
-                            Update category for {{ selectedProducts.length }} selected product(s).
-                        </p>
-                        <select
-                            v-model="bulkCategoryId"
-                            class="block w-full rounded-md bg-gray-50 dark:bg-dark-bg border-gray-200 dark:border-dark-border text-gray-900 dark:text-gray-100 shadow-sm focus:border-primary-400 focus:ring-primary-400 mb-4"
-                        >
-                            <option value="">Select a category...</option>
-                            <option v-for="cat in categories" :key="cat.id" :value="cat.id">
-                                {{ cat.name }}
-                            </option>
+                    <div>
+                        <label for="category" class="mb-1 block text-xs font-medium text-text-secondary">{{ t('products.category') }}</label>
+                        <select id="category" v-model="category" :class="selectClass">
+                            <option value="">{{ t('products.allCategories') }}</option>
+                            <option v-for="cat in categories" :key="cat.id" :value="cat.id">{{ cat.name }}</option>
                         </select>
-                        <div class="flex justify-end gap-3">
-                            <button
-                                @click="showBulkCategoryModal = false"
-                                class="px-4 py-2 text-sm font-medium text-gray-600 dark:text-gray-300 bg-gray-100 dark:bg-dark-bg rounded-lg hover:bg-gray-200 dark:hover:bg-dark-bg/80 transition"
-                            >
-                                Cancel
-                            </button>
-                            <button
-                                @click="bulkUpdateCategory"
-                                :disabled="!bulkCategoryId || bulkProcessing"
-                                class="px-4 py-2 text-sm font-medium text-white bg-purple-600 rounded-lg hover:bg-purple-700 transition disabled:opacity-50"
-                            >
-                                Update Category
-                            </button>
-                        </div>
+                    </div>
+                    <div>
+                        <label for="location" class="mb-1 block text-xs font-medium text-text-secondary">{{ t('products.location') }}</label>
+                        <select id="location" v-model="location" :class="selectClass">
+                            <option value="">{{ t('products.allLocations') }}</option>
+                            <option v-for="loc in locations" :key="loc.id" :value="loc.id">{{ loc.name }}</option>
+                        </select>
                     </div>
                 </div>
-
-                <!-- Bulk Price Modal -->
-                <div v-if="showBulkPriceModal" class="fixed inset-0 z-50 flex items-center justify-center">
-                    <div class="fixed inset-0 bg-black/50" @click="showBulkPriceModal = false"></div>
-                    <div class="relative bg-white dark:bg-dark-card rounded-lg shadow-xl p-6 w-full max-w-md border border-gray-200 dark:border-dark-border">
-                        <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Adjust Price</h3>
-                        <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">
-                            Adjust price for {{ selectedProducts.length }} selected product(s).
-                        </p>
-                        <div class="space-y-4">
-                            <div>
-                                <label class="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-1">Adjustment Type</label>
-                                <select
-                                    v-model="bulkPriceType"
-                                    class="block w-full rounded-md bg-gray-50 dark:bg-dark-bg border-gray-200 dark:border-dark-border text-gray-900 dark:text-gray-100 shadow-sm focus:border-primary-400 focus:ring-primary-400"
-                                >
-                                    <option value="percentage">Percentage (%)</option>
-                                    <option value="fixed">Fixed Amount ($)</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label class="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-1">
-                                    Value <span class="text-gray-400">(use negative to decrease)</span>
-                                </label>
-                                <input
-                                    v-model.number="bulkPriceValue"
-                                    type="number"
-                                    step="0.01"
-                                    class="block w-full rounded-md bg-gray-50 dark:bg-dark-bg border-gray-200 dark:border-dark-border text-gray-900 dark:text-gray-100 shadow-sm focus:border-primary-400 focus:ring-primary-400"
-                                    :placeholder="bulkPriceType === 'percentage' ? 'e.g. 10 for +10%, -20 for -20%' : 'e.g. 5.00 or -3.50'"
-                                />
-                            </div>
-                        </div>
-                        <div class="flex justify-end gap-3 mt-6">
-                            <button
-                                @click="showBulkPriceModal = false"
-                                class="px-4 py-2 text-sm font-medium text-gray-600 dark:text-gray-300 bg-gray-100 dark:bg-dark-bg rounded-lg hover:bg-gray-200 dark:hover:bg-dark-bg/80 transition"
-                            >
-                                Cancel
-                            </button>
-                            <button
-                                @click="bulkUpdatePrice"
-                                :disabled="!bulkPriceValue || bulkProcessing"
-                                class="px-4 py-2 text-sm font-medium text-white bg-amber-600 rounded-lg hover:bg-amber-700 transition disabled:opacity-50"
-                            >
-                                Apply Price Change
-                            </button>
-                        </div>
-                    </div>
+                <div class="flex items-center gap-2">
+                    <Button type="submit" variant="default" size="sm"><Search :size="14" />{{ t('common.search') }}</Button>
+                    <Button type="button" variant="secondary" size="sm" @click="clearFilters">{{ t('common.clearFilters') }}</Button>
                 </div>
+            </form>
+        </Card>
 
-                <!-- Products Table -->
-                <div class="bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border overflow-hidden shadow-lg sm:rounded-lg">
-                    <div class="overflow-x-auto">
-                        <table class="min-w-full divide-y divide-gray-200 dark:divide-dark-border">
-                            <thead class="bg-gray-50 dark:bg-dark-bg/50">
-                                <tr>
-                                    <th scope="col" class="px-3 py-3 w-10">
-                                        <input
-                                            type="checkbox"
-                                            v-model="selectAll"
-                                            @change="toggleSelectAll"
-                                            class="rounded border-gray-300 dark:border-dark-border text-primary-400 focus:ring-primary-400 bg-gray-50 dark:bg-dark-bg"
-                                        />
-                                    </th>
-                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                                        {{ t('products.productCol') }}
-                                    </th>
-                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                                        {{ t('products.skuBarcode') }}
-                                    </th>
-                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                                        {{ t('products.category') }}
-                                    </th>
-                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                                        {{ t('products.location') }}
-                                    </th>
-                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                                        {{ t('products.stock') }}
-                                    </th>
-                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                                        {{ t('common.price') }}
-                                    </th>
-                                    <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                                        {{ t('common.actions') }}
-                                    </th>
-                                </tr>
-                            </thead>
-                            <tbody class="bg-white dark:bg-dark-card divide-y divide-gray-200 dark:divide-dark-border">
-                                <tr v-if="products.data.length === 0">
-                                    <td colspan="8" class="px-6 py-12 text-center">
-                                        <svg class="w-12 h-12 text-gray-500 dark:text-gray-400 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
-                                        </svg>
-                                        <p class="text-gray-500 dark:text-gray-400 mb-3">{{ t('products.noProductsFound') }}</p>
-                                        <Link
-                                            :href="route('products.create')"
-                                            class="inline-flex items-center px-4 py-2 bg-primary-400 text-white text-sm font-semibold rounded-lg hover:bg-primary-500 transition"
-                                        >
-                                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                                            </svg>
-                                            {{ t('products.addFirstProduct') }}
-                                        </Link>
-                                    </td>
-                                </tr>
-                                <tr v-for="product in products.data" :key="product.id" class="hover:bg-gray-100 dark:hover:bg-dark-bg/50">
-                                    <td class="px-3 py-4">
-                                        <input
-                                            type="checkbox"
-                                            :checked="isSelected(product.id)"
-                                            @change="toggleSelect(product.id)"
-                                            class="rounded border-gray-300 dark:border-dark-border text-primary-400 focus:ring-primary-400 bg-gray-50 dark:bg-dark-bg"
-                                        />
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap">
-                                        <div class="flex items-center">
-                                            <div>
-                                                <div class="text-sm font-medium text-gray-900 dark:text-gray-100">
-                                                    {{ product.name }}
-                                                </div>
-                                                <div v-if="product.description" class="text-sm text-gray-500 dark:text-gray-400 truncate max-w-xs">
-                                                    {{ product.description }}
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap">
-                                        <div class="text-sm text-gray-900 dark:text-gray-100">{{ product.sku }}</div>
-                                        <div v-if="product.barcode" class="text-sm text-gray-500 dark:text-gray-400">{{ product.barcode }}</div>
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap">
-                                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-300">
-                                            {{ product.category?.name || t('common.na') }}
-                                        </span>
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap">
-                                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-orange-100 dark:bg-orange-900/30 text-orange-800 dark:text-orange-300">
-                                            {{ product.location?.name || t('common.na') }}
-                                        </span>
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap">
-                                        <div class="flex items-center">
-                                            <span
-                                                :class="[
-                                                    'text-sm font-medium',
-                                                    isLowStock(product)
-                                                        ? 'text-red-400'
-                                                        : 'text-gray-900 dark:text-gray-100'
-                                                ]"
-                                            >
-                                                {{ product.stock }}
-                                            </span>
-                                            <svg
-                                                v-if="isLowStock(product)"
-                                                class="w-4 h-4 text-red-400 ml-1"
-                                                fill="currentColor"
-                                                viewBox="0 0 20 20"
-                                            >
-                                                <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
-                                            </svg>
-                                        </div>
-                                        <div class="text-xs text-gray-500 dark:text-gray-400">
-                                            Min: {{ product.min_stock }}
-                                        </div>
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
-                                        {{ formatCurrency(product.price) }}
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                        <div class="flex items-center justify-end gap-2">
-                                            <Link
-                                                :href="route('products.show', product.id)"
-                                                class="text-primary-400 hover:text-primary-300"
-                                                title="View"
-                                            >
-                                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                                                </svg>
-                                            </Link>
-                                            <button
-                                                v-if="product.barcode || product.sku"
-                                                @click="printBarcode(product.id)"
-                                                class="text-gray-400 hover:text-gray-300"
-                                                title="Print Barcode"
-                                            >
-                                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" />
-                                                </svg>
-                                            </button>
-                                            <button
-                                                @click="duplicateProduct(product)"
-                                                class="text-amber-400 hover:text-amber-300"
-                                                title="Duplicate"
-                                            >
-                                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                                                </svg>
-                                            </button>
-                                            <Link
-                                                :href="route('products.edit', product.id)"
-                                                class="text-green-400 hover:text-green-300"
-                                                title="Edit"
-                                            >
-                                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                                                </svg>
-                                            </Link>
-                                            <button
-                                                @click="deleteProduct(product)"
-                                                class="text-red-400 hover:text-red-300"
-                                                title="Delete"
-                                            >
-                                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                                </svg>
-                                            </button>
-                                        </div>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
+        <PluginSlot slot="before-table" :components="pluginComponents?.beforeTable" />
 
-                    <!-- Pagination -->
-                    <div v-if="products.data.length > 0" class="bg-white dark:bg-dark-card px-4 py-3 border-t border-gray-200 dark:border-dark-border sm:px-6">
-                        <div class="flex items-center justify-between">
-                            <div class="flex-1 flex justify-between sm:hidden">
-                                <Link
-                                    v-if="products.prev_page_url"
-                                    :href="products.prev_page_url"
-                                    class="relative inline-flex items-center px-4 py-2 border border-primary-300 dark:border-dark-border text-sm font-semibold rounded-md text-primary-600 dark:text-gray-300 bg-white dark:bg-dark-card hover:bg-primary-50 dark:hover:bg-dark-bg/50 transition"
-                                >
-                                    {{ t('common.previous') }}
-                                </Link>
-                                <Link
-                                    v-if="products.next_page_url"
-                                    :href="products.next_page_url"
-                                    class="ml-3 relative inline-flex items-center px-4 py-2 border border-primary-300 dark:border-dark-border text-sm font-semibold rounded-md text-primary-600 dark:text-gray-300 bg-white dark:bg-dark-card hover:bg-primary-50 dark:hover:bg-dark-bg/50 transition"
-                                >
-                                    {{ t('common.next') }}
-                                </Link>
-                            </div>
-                            <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
-                                <div>
-                                    <p class="text-sm text-gray-600 dark:text-gray-300">
-                                        {{ t('common.showing') }}
-                                        <span class="font-medium">{{ products.from }}</span>
-                                        {{ t('common.to') }}
-                                        <span class="font-medium">{{ products.to }}</span>
-                                        {{ t('common.of') }}
-                                        <span class="font-medium">{{ products.total }}</span>
-                                        {{ t('common.results') }}
-                                    </p>
-                                </div>
-                                <div>
-                                    <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px">
-                                        <template v-for="link in products.links" :key="link.label">
-                                            <Link
-                                                v-if="link.url"
-                                                :href="link.url"
-                                                :class="[
-                                                    'relative inline-flex items-center px-4 py-2 border text-sm font-medium',
-                                                    link.active
-                                                        ? 'z-10 bg-primary-100 dark:bg-primary-900/30 border-primary-400 text-primary-600 dark:text-primary-400'
-                                                        : 'bg-white dark:bg-dark-card border-gray-200 dark:border-dark-border text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-dark-bg/50'
-                                                ]"
-                                                v-html="link.label"
-                                            />
-                                            <span
-                                                v-else
-                                                :class="[
-                                                    'relative inline-flex items-center px-4 py-2 border text-sm font-medium',
-                                                    'bg-gray-100 dark:bg-dark-card border-gray-200 dark:border-dark-border text-gray-400 dark:text-gray-500 opacity-50 cursor-not-allowed'
-                                                ]"
-                                                v-html="link.label"
-                                            />
-                                        </template>
-                                    </nav>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Plugin Slot: Footer -->
-                <PluginSlot slot="footer" :components="pluginComponents?.footer" />
+        <!-- Bulk actions bar -->
+        <div v-if="selectedProducts.length > 0" class="sticky top-12 z-30 mt-4 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-brand/20 bg-brand-soft p-3">
+            <div class="flex items-center gap-3">
+                <span class="text-sm font-medium text-text-primary">{{ selectedProducts.length }} product{{ selectedProducts.length > 1 ? 's' : '' }} selected</span>
+                <button @click="selectedProducts = []; selectAll = false" class="text-xs text-text-tertiary hover:text-text-primary">{{ t('common.clearSelection') }}</button>
+            </div>
+            <div class="flex flex-wrap items-center gap-2">
+                <Button variant="default" size="sm" @click="printSelectedBarcodes"><Barcode :size="14" />{{ t('products.printBarcodes') }}</Button>
+                <Button variant="secondary" size="sm" :disabled="bulkProcessing" @click="showBulkCategoryModal = true">Change category</Button>
+                <Button variant="secondary" size="sm" :disabled="bulkProcessing" @click="showBulkPriceModal = true">Adjust price</Button>
+                <Button variant="secondary" size="sm" :disabled="bulkProcessing" @click="bulkExport">Export</Button>
+                <Button variant="danger" size="sm" :disabled="bulkProcessing" @click="bulkDelete"><Trash2 :size="14" />Delete</Button>
             </div>
         </div>
 
-        <!-- Floating Barcode Scan Button -->
+        <!-- Products table -->
+        <div class="mt-4 w-full overflow-x-auto rounded-lg border border-border-subtle bg-surface-raised">
+            <table class="w-full text-sm">
+                <thead>
+                    <tr class="border-b border-border-subtle">
+                        <th class="w-10 px-4 py-2.5">
+                            <input type="checkbox" v-model="selectAll" @change="toggleSelectAll" class="rounded border-border-strong bg-surface-canvas text-brand focus:ring-brand" />
+                        </th>
+                        <th :class="thClass">{{ t('products.productCol') }}</th>
+                        <th :class="thClass">{{ t('products.skuBarcode') }}</th>
+                        <th :class="thClass">{{ t('products.category') }}</th>
+                        <th :class="thClass">{{ t('products.location') }}</th>
+                        <th :class="thClass">{{ t('products.stock') }}</th>
+                        <th :class="thClass">{{ t('common.price') }}</th>
+                        <th :class="[thClass, 'text-right']">{{ t('common.actions') }}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr v-if="products.data.length === 0">
+                        <td colspan="8" class="px-4 py-12 text-center">
+                            <div class="flex flex-col items-center gap-3">
+                                <Boxes :size="22" class="text-text-tertiary" />
+                                <p class="text-sm text-text-tertiary">{{ t('products.noProductsFound') }}</p>
+                                <Button variant="default" size="sm" as="Link" :href="route('products.create')"><Plus :size="14" />{{ t('products.addFirstProduct') }}</Button>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr v-for="product in products.data" :key="product.id" class="border-b border-border-subtle transition-colors last:border-b-0 hover:bg-surface-overlay">
+                        <td class="px-4 py-3">
+                            <input type="checkbox" :checked="isSelected(product.id)" @change="toggleSelect(product.id)" class="rounded border-border-strong bg-surface-canvas text-brand focus:ring-brand" />
+                        </td>
+                        <td class="px-4 py-3">
+                            <Link :href="route('products.show', product.id)" class="font-medium text-text-primary hover:text-brand">{{ product.name }}</Link>
+                            <p v-if="product.description" class="max-w-xs truncate text-xs text-text-tertiary">{{ product.description }}</p>
+                        </td>
+                        <td class="px-4 py-3">
+                            <p class="font-mono text-xs text-text-secondary">{{ product.sku }}</p>
+                            <p v-if="product.barcode" class="font-mono text-xs text-text-tertiary">{{ product.barcode }}</p>
+                        </td>
+                        <td class="px-4 py-3"><Badge variant="brand" size="sm">{{ product.category?.name || t('common.na') }}</Badge></td>
+                        <td class="px-4 py-3"><Badge variant="neutral" size="sm">{{ product.location?.name || t('common.na') }}</Badge></td>
+                        <td class="px-4 py-3">
+                            <div class="flex items-center gap-1">
+                                <span :class="['font-medium tabular-nums', isLowStock(product) ? 'text-status-danger' : 'text-text-primary']">{{ product.stock }}</span>
+                                <AlertTriangle v-if="isLowStock(product)" :size="14" class="text-status-danger" />
+                            </div>
+                            <p class="text-[11px] text-text-tertiary">Min: {{ product.min_stock }}</p>
+                        </td>
+                        <td class="px-4 py-3 font-medium tabular-nums text-text-primary">{{ formatCurrency(product.price) }}</td>
+                        <td class="px-4 py-3">
+                            <div class="flex items-center justify-end gap-1">
+                                <Link :href="route('products.show', product.id)" class="rounded-md p-1.5 text-text-tertiary transition-colors hover:bg-surface-sunken hover:text-brand" title="View"><Eye :size="16" /></Link>
+                                <button v-if="product.barcode || product.sku" @click="printBarcode(product.id)" class="rounded-md p-1.5 text-text-tertiary transition-colors hover:bg-surface-sunken hover:text-text-primary" title="Print barcode"><Barcode :size="16" /></button>
+                                <button @click="duplicateProduct(product)" class="rounded-md p-1.5 text-text-tertiary transition-colors hover:bg-surface-sunken hover:text-status-warning" title="Duplicate"><Copy :size="16" /></button>
+                                <Link :href="route('products.edit', product.id)" class="rounded-md p-1.5 text-text-tertiary transition-colors hover:bg-surface-sunken hover:text-status-success" title="Edit"><Pencil :size="16" /></Link>
+                                <button @click="deleteProduct(product)" class="rounded-md p-1.5 text-text-tertiary transition-colors hover:bg-surface-sunken hover:text-status-danger" title="Delete"><Trash2 :size="16" /></button>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Pagination -->
+        <div v-if="products.data.length > 0" class="mt-4 flex flex-col items-center justify-between gap-3 sm:flex-row">
+            <p class="text-xs text-text-tertiary">
+                {{ t('common.showing') }} <span class="font-medium text-text-secondary">{{ products.from }}</span>
+                {{ t('common.to') }} <span class="font-medium text-text-secondary">{{ products.to }}</span>
+                {{ t('common.of') }} <span class="font-medium text-text-secondary">{{ products.total }}</span> {{ t('common.results') }}
+            </p>
+            <nav class="inline-flex items-center gap-1">
+                <template v-for="link in products.links" :key="link.label">
+                    <Link v-if="link.url" :href="link.url"
+                        :class="[
+                            'inline-flex h-8 min-w-8 items-center justify-center rounded-md border px-2.5 text-xs font-medium transition-colors',
+                            link.active ? 'border-brand bg-brand text-brand-foreground' : 'border-border-subtle bg-surface-canvas text-text-secondary hover:bg-surface-overlay',
+                        ]"
+                        v-html="link.label" />
+                    <span v-else class="inline-flex h-8 min-w-8 cursor-not-allowed items-center justify-center rounded-md border border-border-subtle px-2.5 text-xs text-text-tertiary opacity-50" v-html="link.label" />
+                </template>
+            </nav>
+        </div>
+
+        <PluginSlot slot="footer" :components="pluginComponents?.footer" />
+
+        <!-- Bulk Category Modal -->
+        <Teleport to="body">
+            <div v-if="showBulkCategoryModal" class="fixed inset-0 z-50 flex items-center justify-center">
+                <div class="fixed inset-0 bg-black/50" @click="showBulkCategoryModal = false"></div>
+                <div class="relative mx-4 w-full max-w-md rounded-xl border border-border-subtle bg-surface-raised p-6 shadow-lg">
+                    <h3 class="mb-1 text-base font-semibold text-text-primary">Change category</h3>
+                    <p class="mb-4 text-sm text-text-secondary">Update category for {{ selectedProducts.length }} selected product(s).</p>
+                    <select v-model="bulkCategoryId" :class="[selectClass, 'mb-4']">
+                        <option value="">Select a category...</option>
+                        <option v-for="cat in categories" :key="cat.id" :value="cat.id">{{ cat.name }}</option>
+                    </select>
+                    <div class="flex justify-end gap-2">
+                        <Button variant="secondary" size="sm" @click="showBulkCategoryModal = false">Cancel</Button>
+                        <Button variant="default" size="sm" :disabled="!bulkCategoryId || bulkProcessing" @click="bulkUpdateCategory">Update category</Button>
+                    </div>
+                </div>
+            </div>
+        </Teleport>
+
+        <!-- Bulk Price Modal -->
+        <Teleport to="body">
+            <div v-if="showBulkPriceModal" class="fixed inset-0 z-50 flex items-center justify-center">
+                <div class="fixed inset-0 bg-black/50" @click="showBulkPriceModal = false"></div>
+                <div class="relative mx-4 w-full max-w-md rounded-xl border border-border-subtle bg-surface-raised p-6 shadow-lg">
+                    <h3 class="mb-1 text-base font-semibold text-text-primary">Adjust price</h3>
+                    <p class="mb-4 text-sm text-text-secondary">Adjust price for {{ selectedProducts.length }} selected product(s).</p>
+                    <div class="space-y-4">
+                        <div>
+                            <label class="mb-1 block text-xs font-medium text-text-secondary">Adjustment type</label>
+                            <select v-model="bulkPriceType" :class="selectClass">
+                                <option value="percentage">Percentage (%)</option>
+                                <option value="fixed">Fixed Amount ($)</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="mb-1 block text-xs font-medium text-text-secondary">Value <span class="text-text-tertiary">(use negative to decrease)</span></label>
+                            <input v-model.number="bulkPriceValue" type="number" step="0.01"
+                                class="h-9 w-full rounded-md border border-border-subtle bg-surface-canvas px-3 text-sm text-text-primary placeholder:text-text-tertiary ds-focus-ring"
+                                :placeholder="bulkPriceType === 'percentage' ? 'e.g. 10 for +10%, -20 for -20%' : 'e.g. 5.00 or -3.50'" />
+                        </div>
+                    </div>
+                    <div class="mt-6 flex justify-end gap-2">
+                        <Button variant="secondary" size="sm" @click="showBulkPriceModal = false">Cancel</Button>
+                        <Button variant="default" size="sm" :disabled="!bulkPriceValue || bulkProcessing" @click="bulkUpdatePrice">Apply price change</Button>
+                    </div>
+                </div>
+            </div>
+        </Teleport>
+
+        <!-- Floating barcode scan button -->
         <button
             v-if="$page.props.auth.permissions.includes('products.view')"
             @click="openScanner"
-            class="fixed bottom-6 right-6 w-14 h-14 bg-primary-400 hover:bg-primary-500 text-white rounded-full shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-110 flex items-center justify-center z-40"
+            class="fixed bottom-6 right-6 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-brand to-brand-hover text-brand-foreground shadow-lg transition-all duration-200 hover:scale-110 hover:shadow-xl"
             :title="t('products.scanBarcode')"
         >
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" />
-            </svg>
+            <ScanLine :size="24" />
         </button>
 
         <!-- Barcode Scanner Modal -->
-        <BarcodeScannerModal
-            :show="showScannerModal"
-            @close="closeScanner"
-            @product-found="handleProductFound"
-        />
-    </AuthenticatedLayout>
+        <BarcodeScannerModal :show="showScannerModal" @close="closeScanner" @product-found="handleProductFound" />
+    </AppLayout>
 </template>

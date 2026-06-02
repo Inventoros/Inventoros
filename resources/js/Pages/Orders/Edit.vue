@@ -1,8 +1,12 @@
 <script setup>
-import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
+import AppLayout from '@/Layouts/AppLayout.vue';
+import PageHeader from '@/Components/ui/PageHeader.vue';
+import Card from '@/Components/ui/Card.vue';
+import Button from '@/Components/ui/Button.vue';
 import { Head, Link, useForm } from '@inertiajs/vue3';
 import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
+import { ArrowLeft, Plus, Trash2, PackageOpen } from 'lucide-vue-next';
 
 const { t } = useI18n();
 
@@ -82,391 +86,246 @@ const getProductStock = (productId) => {
     const product = props.products.find(p => p.id === productId);
     return product ? product.stock : 0;
 };
+
+const fieldLabel = 'mb-1 block text-sm font-medium text-text-secondary';
+const fieldInput = 'h-9 w-full rounded-md border border-border-subtle bg-surface-canvas px-3 text-sm text-text-primary placeholder:text-text-tertiary ds-focus-ring';
+const fieldArea = 'w-full rounded-md border border-border-subtle bg-surface-canvas px-3 py-2 text-sm text-text-primary placeholder:text-text-tertiary ds-focus-ring';
+const fieldError = 'mt-1 text-xs text-status-danger';
 </script>
 
 <template>
     <Head :title="t('orders.edit.title')" />
 
-    <AuthenticatedLayout>
+    <AppLayout>
         <template #header>
-            <div class="flex items-center justify-between">
-                <div>
-                    <h2 class="font-semibold text-xl text-gray-900 dark:text-gray-100 leading-tight">
-                        {{ t('orders.edit.title') }}
-                    </h2>
-                    <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                        Order #{{ order.order_number }}
-                    </p>
-                </div>
-                <Link
-                    :href="route('orders.index')"
-                    class="inline-flex items-center px-4 py-2 bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border rounded-md font-semibold text-xs text-gray-600 dark:text-gray-300 uppercase tracking-widest shadow-sm hover:bg-gray-100 dark:hover:bg-dark-bg/50"
-                >
-                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-                    </svg>
-                    {{ t('orders.edit.backToOrders') }}
-                </Link>
+            <div class="flex items-center gap-2 text-xs">
+                <Link :href="route('orders.index')" class="text-text-tertiary hover:text-text-primary">Workspace</Link>
+                <span class="text-text-tertiary">/</span>
+                <Link :href="route('orders.index')" class="text-text-tertiary hover:text-text-primary">{{ t('orders.title') }}</Link>
+                <span class="text-text-tertiary">/</span>
+                <span class="font-medium text-text-primary">{{ t('orders.edit.title') }}</span>
             </div>
         </template>
 
-        <div class="py-12 bg-gray-50 dark:bg-dark-bg min-h-screen">
-            <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-                <form @submit.prevent="submit">
-                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                        <!-- Left Column: Customer Info & Items -->
-                        <div class="lg:col-span-2 space-y-6">
-                            <!-- Customer Information -->
-                            <div class="bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border shadow-sm sm:rounded-lg p-6">
-                                <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
-                                    {{ t('orders.create.customerInfo') }}
-                                </h3>
+        <PageHeader :title="t('orders.edit.title')" :description="`Order #${order.order_number}`">
+            <template #actions>
+                <Button variant="secondary" size="sm" as="Link" :href="route('orders.index')">
+                    <ArrowLeft :size="14" />
+                    {{ t('orders.edit.backToOrders') }}
+                </Button>
+            </template>
+        </PageHeader>
 
-                                <div class="space-y-4">
-                                    <div>
-                                        <label for="customer_name" class="block text-sm font-medium text-gray-600 dark:text-gray-300">
-                                            {{ t('orders.create.customerName') }}
-                                        </label>
-                                        <input
-                                            id="customer_name"
-                                            v-model="form.customer_name"
-                                            type="text"
-                                            class="mt-1 block w-full rounded-md bg-gray-50 dark:bg-dark-bg border-gray-200 dark:border-dark-border text-gray-900 dark:text-gray-100 placeholder-gray-500 shadow-sm focus:border-primary-400 focus:ring-primary-400"
-                                            required
-                                        />
-                                        <p v-if="form.errors.customer_name" class="mt-1 text-sm text-red-400">
-                                            {{ form.errors.customer_name }}
-                                        </p>
-                                    </div>
+        <form @submit.prevent="submit" class="mt-6">
+            <div class="grid grid-cols-1 gap-4 lg:grid-cols-3">
+                <!-- Left column -->
+                <div class="space-y-4 lg:col-span-2">
+                    <!-- Customer info -->
+                    <Card :padded="false">
+                        <div class="px-5 pt-5"><h3 class="text-sm font-semibold text-text-primary">{{ t('orders.create.customerInfo') }}</h3></div>
+                        <div class="space-y-4 p-5">
+                            <div>
+                                <label for="customer_name" :class="fieldLabel">{{ t('orders.create.customerName') }}</label>
+                                <input id="customer_name" v-model="form.customer_name" type="text" :class="fieldInput" required />
+                                <p v-if="form.errors.customer_name" :class="fieldError">{{ form.errors.customer_name }}</p>
+                            </div>
+                            <div>
+                                <label for="customer_email" :class="fieldLabel">{{ t('orders.create.customerEmail') }}</label>
+                                <input id="customer_email" v-model="form.customer_email" type="email" :class="fieldInput" />
+                                <p v-if="form.errors.customer_email" :class="fieldError">{{ form.errors.customer_email }}</p>
+                            </div>
+                            <div>
+                                <label for="customer_address" :class="fieldLabel">{{ t('orders.create.shippingAddress') }}</label>
+                                <textarea id="customer_address" v-model="form.customer_address" rows="3" :class="fieldArea"></textarea>
+                                <p v-if="form.errors.customer_address" :class="fieldError">{{ form.errors.customer_address }}</p>
+                            </div>
+                        </div>
+                    </Card>
 
-                                    <div>
-                                        <label for="customer_email" class="block text-sm font-medium text-gray-600 dark:text-gray-300">
-                                            {{ t('orders.create.customerEmail') }}
-                                        </label>
-                                        <input
-                                            id="customer_email"
-                                            v-model="form.customer_email"
-                                            type="email"
-                                            class="mt-1 block w-full rounded-md bg-gray-50 dark:bg-dark-bg border-gray-200 dark:border-dark-border text-gray-900 dark:text-gray-100 placeholder-gray-500 shadow-sm focus:border-primary-400 focus:ring-primary-400"
-                                        />
-                                        <p v-if="form.errors.customer_email" class="mt-1 text-sm text-red-400">
-                                            {{ form.errors.customer_email }}
-                                        </p>
-                                    </div>
+                    <!-- Order items (editable) -->
+                    <Card :padded="false">
+                        <div class="flex items-center justify-between px-5 pt-5">
+                            <h3 class="text-sm font-semibold text-text-primary">{{ t('orders.create.orderItems') }}</h3>
+                            <Button type="button" variant="default" size="sm" @click="addItem">
+                                <Plus :size="14" />{{ t('orders.edit.addItem') }}
+                            </Button>
+                        </div>
+                        <div class="p-5">
+                            <p v-if="form.errors.items" :class="fieldError">{{ form.errors.items }}</p>
 
-                                    <div>
-                                        <label for="customer_address" class="block text-sm font-medium text-gray-600 dark:text-gray-300">
-                                            {{ t('orders.create.shippingAddress') }}
-                                        </label>
-                                        <textarea
-                                            id="customer_address"
-                                            v-model="form.customer_address"
-                                            rows="3"
-                                            class="mt-1 block w-full rounded-md bg-gray-50 dark:bg-dark-bg border-gray-200 dark:border-dark-border text-gray-900 dark:text-gray-100 placeholder-gray-500 shadow-sm focus:border-primary-400 focus:ring-primary-400"
-                                        ></textarea>
-                                        <p v-if="form.errors.customer_address" class="mt-1 text-sm text-red-400">
-                                            {{ form.errors.customer_address }}
-                                        </p>
-                                    </div>
-                                </div>
+                            <div v-if="form.items.length === 0" class="flex flex-col items-center gap-3 py-8 text-center">
+                                <PackageOpen :size="22" class="text-text-tertiary" />
+                                <p class="text-sm text-text-tertiary">{{ t('orders.edit.noItems') }}</p>
+                                <Button type="button" variant="default" size="sm" @click="addItem">
+                                    <Plus :size="14" />{{ t('orders.edit.addFirstItem') }}
+                                </Button>
                             </div>
 
-                            <!-- Order Items (Editable) -->
-                            <div class="bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border shadow-sm sm:rounded-lg p-6">
-                                <div class="flex items-center justify-between mb-4">
-                                    <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">
-                                        {{ t('orders.create.orderItems') }}
-                                    </h3>
-                                    <button
-                                        type="button"
-                                        @click="addItem"
-                                        class="px-4 py-2 bg-primary-500 hover:bg-primary-600 text-white text-sm font-medium rounded-lg transition"
-                                    >
-                                        {{ t('orders.edit.addItem') }}
-                                    </button>
-                                </div>
+                            <div v-else class="space-y-3">
+                                <div
+                                    v-for="(item, index) in form.items"
+                                    :key="index"
+                                    class="rounded-lg border border-border-subtle bg-surface-canvas p-4"
+                                >
+                                    <div class="grid grid-cols-1 gap-3 md:grid-cols-12">
+                                        <!-- Product selection -->
+                                        <div class="md:col-span-5">
+                                            <label :for="`product-${index}`" :class="fieldLabel">{{ t('common.product') }}</label>
+                                            <select
+                                                :id="`product-${index}`"
+                                                v-model="item.product_id"
+                                                @change="updateItemPrice(index)"
+                                                :class="fieldInput"
+                                                required
+                                            >
+                                                <option value="">{{ t('orders.edit.selectProduct') }}</option>
+                                                <option v-for="product in products" :key="product.id" :value="product.id">
+                                                    {{ product.name }} ({{ product.sku }}) - Stock: {{ product.stock }}
+                                                </option>
+                                            </select>
+                                            <p v-if="form.errors[`items.${index}.product_id`]" :class="fieldError">
+                                                {{ form.errors[`items.${index}.product_id`] }}
+                                            </p>
+                                        </div>
 
-                                <div v-if="form.errors.items" class="mb-4 p-4 bg-red-900/20 border border-red-800/30 rounded-lg">
-                                    <p class="text-sm text-red-300">{{ form.errors.items }}</p>
-                                </div>
+                                        <!-- Quantity -->
+                                        <div class="md:col-span-2">
+                                            <label :for="`quantity-${index}`" :class="fieldLabel">{{ t('orders.edit.qty') }}</label>
+                                            <input
+                                                :id="`quantity-${index}`"
+                                                v-model.number="item.quantity"
+                                                type="number"
+                                                min="1"
+                                                step="1"
+                                                :class="fieldInput"
+                                                required
+                                            />
+                                            <p v-if="form.errors[`items.${index}.quantity`]" :class="fieldError">
+                                                {{ form.errors[`items.${index}.quantity`] }}
+                                            </p>
+                                        </div>
 
-                                <div v-if="form.items.length === 0" class="text-center py-12">
-                                    <svg class="w-16 h-16 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
-                                    </svg>
-                                    <p class="text-gray-500 dark:text-gray-400 mb-4">{{ t('orders.edit.noItems') }}</p>
-                                    <button
-                                        type="button"
-                                        @click="addItem"
-                                        class="px-4 py-2 bg-primary-500 hover:bg-primary-600 text-white font-medium rounded-lg transition"
-                                    >
-                                        {{ t('orders.edit.addFirstItem') }}
-                                    </button>
-                                </div>
+                                        <!-- Unit price -->
+                                        <div class="md:col-span-2">
+                                            <label :for="`price-${index}`" :class="fieldLabel">{{ t('orders.edit.unitPrice') }}</label>
+                                            <input
+                                                :id="`price-${index}`"
+                                                v-model.number="item.unit_price"
+                                                type="number"
+                                                min="0"
+                                                step="0.01"
+                                                :class="fieldInput"
+                                                required
+                                            />
+                                            <p v-if="form.errors[`items.${index}.unit_price`]" :class="fieldError">
+                                                {{ form.errors[`items.${index}.unit_price`] }}
+                                            </p>
+                                        </div>
 
-                                <div v-else class="space-y-4">
-                                    <div
-                                        v-for="(item, index) in form.items"
-                                        :key="index"
-                                        class="p-4 bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-border rounded-lg"
-                                    >
-                                        <div class="grid grid-cols-1 md:grid-cols-12 gap-4">
-                                            <!-- Product Selection -->
-                                            <div class="md:col-span-5">
-                                                <label :for="`product-${index}`" class="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-1">
-                                                    {{ t('common.product') }} <span class="text-red-500">*</span>
-                                                </label>
-                                                <select
-                                                    :id="`product-${index}`"
-                                                    v-model="item.product_id"
-                                                    @change="updateItemPrice(index)"
-                                                    class="block w-full rounded-md bg-white dark:bg-dark-card border-gray-200 dark:border-dark-border text-gray-900 dark:text-gray-100 shadow-sm focus:border-primary-400 focus:ring-primary-400 text-sm"
-                                                    required
-                                                >
-                                                    <option value="">{{ t('orders.edit.selectProduct') }}</option>
-                                                    <option v-for="product in products" :key="product.id" :value="product.id">
-                                                        {{ product.name }} ({{ product.sku }}) - Stock: {{ product.stock }}
-                                                    </option>
-                                                </select>
-                                                <p v-if="form.errors[`items.${index}.product_id`]" class="mt-1 text-xs text-red-400">
-                                                    {{ form.errors[`items.${index}.product_id`] }}
-                                                </p>
+                                        <!-- Subtotal -->
+                                        <div class="md:col-span-2">
+                                            <label :class="fieldLabel">{{ t('common.subtotal') }}</label>
+                                            <div class="flex h-9 items-center rounded-md border border-border-subtle bg-surface-sunken px-3">
+                                                <span class="text-sm font-semibold tabular-nums text-text-primary">
+                                                    ${{ ((item.quantity || 0) * (item.unit_price || 0)).toFixed(2) }}
+                                                </span>
                                             </div>
+                                        </div>
 
-                                            <!-- Quantity -->
-                                            <div class="md:col-span-2">
-                                                <label :for="`quantity-${index}`" class="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-1">
-                                                    {{ t('orders.edit.qty') }} <span class="text-red-500">*</span>
-                                                </label>
-                                                <input
-                                                    :id="`quantity-${index}`"
-                                                    v-model.number="item.quantity"
-                                                    type="number"
-                                                    min="1"
-                                                    step="1"
-                                                    class="block w-full rounded-md bg-white dark:bg-dark-card border-gray-200 dark:border-dark-border text-gray-900 dark:text-gray-100 shadow-sm focus:border-primary-400 focus:ring-primary-400 text-sm"
-                                                    required
-                                                />
-                                                <p v-if="form.errors[`items.${index}.quantity`]" class="mt-1 text-xs text-red-400">
-                                                    {{ form.errors[`items.${index}.quantity`] }}
-                                                </p>
-                                            </div>
-
-                                            <!-- Unit Price -->
-                                            <div class="md:col-span-2">
-                                                <label :for="`price-${index}`" class="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-1">
-                                                    {{ t('orders.edit.unitPrice') }} <span class="text-red-500">*</span>
-                                                </label>
-                                                <input
-                                                    :id="`price-${index}`"
-                                                    v-model.number="item.unit_price"
-                                                    type="number"
-                                                    min="0"
-                                                    step="0.01"
-                                                    class="block w-full rounded-md bg-white dark:bg-dark-card border-gray-200 dark:border-dark-border text-gray-900 dark:text-gray-100 shadow-sm focus:border-primary-400 focus:ring-primary-400 text-sm"
-                                                    required
-                                                />
-                                                <p v-if="form.errors[`items.${index}.unit_price`]" class="mt-1 text-xs text-red-400">
-                                                    {{ form.errors[`items.${index}.unit_price`] }}
-                                                </p>
-                                            </div>
-
-                                            <!-- Subtotal -->
-                                            <div class="md:col-span-2">
-                                                <label class="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-1">
-                                                    {{ t('common.subtotal') }}
-                                                </label>
-                                                <div class="flex items-center h-[38px] px-3 bg-gray-100 dark:bg-dark-bg/50 border border-gray-200 dark:border-dark-border rounded-md">
-                                                    <span class="text-sm font-semibold text-gray-900 dark:text-gray-100">
-                                                        ${{ ((item.quantity || 0) * (item.unit_price || 0)).toFixed(2) }}
-                                                    </span>
-                                                </div>
-                                            </div>
-
-                                            <!-- Remove Button -->
-                                            <div class="md:col-span-1 flex items-end">
-                                                <button
-                                                    type="button"
-                                                    @click="removeItem(index)"
-                                                    class="w-full px-3 py-2 bg-red-900/30 hover:bg-red-900/50 text-red-400 border border-red-800/30 rounded-md transition text-sm"
-                                                    title="Remove item"
-                                                >
-                                                    <svg class="w-4 h-4 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                                    </svg>
-                                                </button>
-                                            </div>
+                                        <!-- Remove button -->
+                                        <div class="flex items-end md:col-span-1">
+                                            <button
+                                                type="button"
+                                                @click="removeItem(index)"
+                                                class="rounded-md p-1.5 text-text-tertiary transition-colors hover:bg-surface-sunken hover:text-status-danger"
+                                                title="Remove item"
+                                            >
+                                                <Trash2 :size="16" />
+                                            </button>
                                         </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
+                    </Card>
+                </div>
 
-                        <!-- Right Column: Order Details & Summary -->
-                        <div class="space-y-6">
-                            <!-- Order Details -->
-                            <div class="bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border shadow-sm sm:rounded-lg p-6">
-                                <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
-                                    {{ t('orders.create.orderDetails') }}
-                                </h3>
-
-                                <div class="space-y-4">
-                                    <div>
-                                        <label for="order_date" class="block text-sm font-medium text-gray-600 dark:text-gray-300">
-                                            {{ t('orders.create.orderDate') }}
-                                        </label>
-                                        <input
-                                            id="order_date"
-                                            v-model="form.order_date"
-                                            type="date"
-                                            class="mt-1 block w-full rounded-md bg-gray-50 dark:bg-dark-bg border-gray-200 dark:border-dark-border text-gray-900 dark:text-gray-100 shadow-sm focus:border-primary-400 focus:ring-primary-400"
-                                            required
-                                        />
-                                        <p v-if="form.errors.order_date" class="mt-1 text-sm text-red-400">
-                                            {{ form.errors.order_date }}
-                                        </p>
-                                    </div>
-
-                                    <div>
-                                        <label for="status" class="block text-sm font-medium text-gray-600 dark:text-gray-300">
-                                            {{ t('orders.create.statusLabel') }}
-                                        </label>
-                                        <select
-                                            id="status"
-                                            v-model="form.status"
-                                            class="mt-1 block w-full rounded-md bg-gray-50 dark:bg-dark-bg border-gray-200 dark:border-dark-border text-gray-900 dark:text-gray-100 shadow-sm focus:border-primary-400 focus:ring-primary-400"
-                                            required
-                                        >
-                                            <option value="pending">{{ t('orders.status.pending') }}</option>
-                                            <option value="processing">{{ t('orders.status.processing') }}</option>
-                                            <option value="shipped">{{ t('orders.status.shipped') }}</option>
-                                            <option value="delivered">{{ t('orders.status.delivered') }}</option>
-                                            <option value="cancelled">{{ t('orders.status.cancelled') }}</option>
-                                        </select>
-                                        <p v-if="form.errors.status" class="mt-1 text-sm text-red-400">
-                                            {{ form.errors.status }}
-                                        </p>
-                                    </div>
-
-                                    <div v-if="order.shipped_at" class="text-sm">
-                                        <p class="text-gray-500 dark:text-gray-400">{{ t('orders.edit.shippedAt') }}</p>
-                                        <p class="text-gray-900 dark:text-gray-100 font-medium">
-                                            {{ new Date(order.shipped_at).toLocaleString() }}
-                                        </p>
-                                    </div>
-
-                                    <div v-if="order.delivered_at" class="text-sm">
-                                        <p class="text-gray-500 dark:text-gray-400">{{ t('orders.edit.deliveredAt') }}</p>
-                                        <p class="text-gray-900 dark:text-gray-100 font-medium">
-                                            {{ new Date(order.delivered_at).toLocaleString() }}
-                                        </p>
-                                    </div>
-
-                                    <div>
-                                        <label for="notes" class="block text-sm font-medium text-gray-600 dark:text-gray-300">
-                                            {{ t('common.notes') }}
-                                        </label>
-                                        <textarea
-                                            id="notes"
-                                            v-model="form.notes"
-                                            rows="3"
-                                            class="mt-1 block w-full rounded-md bg-gray-50 dark:bg-dark-bg border-gray-200 dark:border-dark-border text-gray-900 dark:text-gray-100 placeholder-gray-500 shadow-sm focus:border-primary-400 focus:ring-primary-400"
-                                            :placeholder="t('orders.create.notesPlaceholder')"
-                                        ></textarea>
-                                        <p v-if="form.errors.notes" class="mt-1 text-sm text-red-400">
-                                            {{ form.errors.notes }}
-                                        </p>
-                                    </div>
-                                </div>
+                <!-- Right column -->
+                <div class="space-y-4">
+                    <!-- Order details -->
+                    <Card :padded="false">
+                        <div class="px-5 pt-5"><h3 class="text-sm font-semibold text-text-primary">{{ t('orders.create.orderDetails') }}</h3></div>
+                        <div class="space-y-4 p-5">
+                            <div>
+                                <label for="order_date" :class="fieldLabel">{{ t('orders.create.orderDate') }}</label>
+                                <input id="order_date" v-model="form.order_date" type="date" :class="fieldInput" required />
+                                <p v-if="form.errors.order_date" :class="fieldError">{{ form.errors.order_date }}</p>
+                            </div>
+                            <div>
+                                <label for="status" :class="fieldLabel">{{ t('orders.create.statusLabel') }}</label>
+                                <select id="status" v-model="form.status" :class="fieldInput" required>
+                                    <option value="pending">{{ t('orders.status.pending') }}</option>
+                                    <option value="processing">{{ t('orders.status.processing') }}</option>
+                                    <option value="shipped">{{ t('orders.status.shipped') }}</option>
+                                    <option value="delivered">{{ t('orders.status.delivered') }}</option>
+                                    <option value="cancelled">{{ t('orders.status.cancelled') }}</option>
+                                </select>
+                                <p v-if="form.errors.status" :class="fieldError">{{ form.errors.status }}</p>
                             </div>
 
-                            <!-- Order Summary -->
-                            <div class="bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border shadow-sm sm:rounded-lg p-6">
-                                <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
-                                    {{ t('orders.create.orderSummary') }}
-                                </h3>
-
-                                <div class="space-y-3">
-                                    <div class="flex justify-between text-sm">
-                                        <span class="text-gray-600 dark:text-gray-300">{{ t('common.subtotal') }}</span>
-                                        <span class="font-medium text-gray-900 dark:text-gray-100">${{ subtotal.toFixed(2) }}</span>
-                                    </div>
-
-                                    <div>
-                                        <div class="flex justify-between items-center text-sm mb-1">
-                                            <label for="tax" class="text-gray-600 dark:text-gray-300">{{ t('common.tax') }}</label>
-                                        </div>
-                                        <input
-                                            id="tax"
-                                            v-model.number="form.tax"
-                                            type="number"
-                                            step="0.01"
-                                            min="0"
-                                            class="block w-full rounded-md bg-gray-50 dark:bg-dark-bg border-gray-200 dark:border-dark-border text-gray-900 dark:text-gray-100 shadow-sm focus:border-primary-400 focus:ring-primary-400 text-sm"
-                                        />
-                                        <p v-if="form.errors.tax" class="mt-1 text-sm text-red-400">
-                                            {{ form.errors.tax }}
-                                        </p>
-                                    </div>
-
-                                    <div>
-                                        <div class="flex justify-between items-center text-sm mb-1">
-                                            <label for="shipping" class="text-gray-600 dark:text-gray-300">{{ t('common.shipping') }}</label>
-                                        </div>
-                                        <input
-                                            id="shipping"
-                                            v-model.number="form.shipping"
-                                            type="number"
-                                            step="0.01"
-                                            min="0"
-                                            class="block w-full rounded-md bg-gray-50 dark:bg-dark-bg border-gray-200 dark:border-dark-border text-gray-900 dark:text-gray-100 shadow-sm focus:border-primary-400 focus:ring-primary-400 text-sm"
-                                        />
-                                        <p v-if="form.errors.shipping" class="mt-1 text-sm text-red-400">
-                                            {{ form.errors.shipping }}
-                                        </p>
-                                    </div>
-
-                                    <div class="pt-3 border-t border-gray-200 dark:border-dark-border">
-                                        <div class="flex justify-between items-center">
-                                            <span class="text-lg font-semibold text-gray-900 dark:text-gray-100">{{ t('common.total') }}</span>
-                                            <span class="text-xl font-bold text-primary-400">${{ total.toFixed(2) }}</span>
-                                        </div>
-                                    </div>
-                                </div>
+                            <div v-if="order.shipped_at" class="text-sm">
+                                <p class="text-text-tertiary">{{ t('orders.edit.shippedAt') }}</p>
+                                <p class="font-medium text-text-primary">{{ new Date(order.shipped_at).toLocaleString() }}</p>
                             </div>
 
-                            <!-- Form Actions -->
-                            <div class="bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border shadow-sm sm:rounded-lg p-6">
-                                <div class="flex flex-col gap-3">
-                                    <button
-                                        type="submit"
-                                        class="w-full px-4 py-3 bg-primary-400 text-white rounded-lg font-semibold hover:bg-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-400 focus:ring-offset-2 focus:ring-offset-dark-bg transition"
-                                        :class="{ 'opacity-25': form.processing }"
-                                        :disabled="form.processing"
-                                    >
-                                        <span v-if="form.processing">{{ t('orders.edit.updatingOrder') }}</span>
-                                        <span v-else>{{ t('orders.edit.updateOrder') }}</span>
-                                    </button>
+                            <div v-if="order.delivered_at" class="text-sm">
+                                <p class="text-text-tertiary">{{ t('orders.edit.deliveredAt') }}</p>
+                                <p class="font-medium text-text-primary">{{ new Date(order.delivered_at).toLocaleString() }}</p>
+                            </div>
 
-                                    <Link
-                                        :href="route('orders.show', order.id)"
-                                        class="w-full px-4 py-3 bg-gray-100 dark:bg-dark-bg text-gray-700 dark:text-gray-300 rounded-lg font-semibold text-center hover:bg-gray-200 dark:hover:bg-dark-bg/80 border border-gray-200 dark:border-dark-border transition"
-                                    >
-                                        {{ t('orders.edit.viewDetails') }}
-                                    </Link>
-
-                                    <Link
-                                        :href="route('orders.index')"
-                                        class="w-full px-4 py-3 bg-gray-100 dark:bg-dark-bg text-gray-700 dark:text-gray-300 rounded-lg font-semibold text-center hover:bg-gray-200 dark:hover:bg-dark-bg/80 border border-gray-200 dark:border-dark-border transition"
-                                    >
-                                        {{ t('common.cancel') }}
-                                    </Link>
-                                </div>
+                            <div>
+                                <label for="notes" :class="fieldLabel">{{ t('common.notes') }}</label>
+                                <textarea id="notes" v-model="form.notes" rows="3" :class="fieldArea" :placeholder="t('orders.create.notesPlaceholder')"></textarea>
+                                <p v-if="form.errors.notes" :class="fieldError">{{ form.errors.notes }}</p>
                             </div>
                         </div>
+                    </Card>
+
+                    <!-- Order summary -->
+                    <Card :padded="false">
+                        <div class="px-5 pt-5"><h3 class="text-sm font-semibold text-text-primary">{{ t('orders.create.orderSummary') }}</h3></div>
+                        <div class="space-y-3 p-5">
+                            <div class="flex justify-between text-sm">
+                                <span class="text-text-secondary">{{ t('common.subtotal') }}</span>
+                                <span class="font-medium tabular-nums text-text-primary">${{ subtotal.toFixed(2) }}</span>
+                            </div>
+                            <div>
+                                <label for="tax" class="mb-1 block text-sm text-text-secondary">{{ t('common.tax') }}</label>
+                                <input id="tax" v-model.number="form.tax" type="number" step="0.01" min="0" :class="fieldInput" />
+                                <p v-if="form.errors.tax" :class="fieldError">{{ form.errors.tax }}</p>
+                            </div>
+                            <div>
+                                <label for="shipping" class="mb-1 block text-sm text-text-secondary">{{ t('common.shipping') }}</label>
+                                <input id="shipping" v-model.number="form.shipping" type="number" step="0.01" min="0" :class="fieldInput" />
+                                <p v-if="form.errors.shipping" :class="fieldError">{{ form.errors.shipping }}</p>
+                            </div>
+                            <div class="flex items-center justify-between border-t border-border-subtle pt-3">
+                                <span class="text-sm font-semibold text-text-primary">{{ t('common.total') }}</span>
+                                <span class="text-xl font-bold text-brand">${{ total.toFixed(2) }}</span>
+                            </div>
+                        </div>
+                    </Card>
+
+                    <!-- Form actions -->
+                    <div class="flex flex-col gap-2">
+                        <Button type="submit" variant="default" size="lg" class="w-full" :loading="form.processing" :disabled="form.processing">
+                            {{ form.processing ? t('orders.edit.updatingOrder') : t('orders.edit.updateOrder') }}
+                        </Button>
+                        <Button variant="secondary" size="lg" class="w-full" as="Link" :href="route('orders.show', order.id)">{{ t('orders.edit.viewDetails') }}</Button>
+                        <Button variant="secondary" size="lg" class="w-full" as="Link" :href="route('orders.index')">{{ t('common.cancel') }}</Button>
                     </div>
-                </form>
+                </div>
             </div>
-        </div>
-    </AuthenticatedLayout>
+        </form>
+    </AppLayout>
 </template>
