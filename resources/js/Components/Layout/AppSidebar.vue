@@ -47,9 +47,7 @@ onMounted(() => {
         <!-- Logo -->
         <div class="flex items-center justify-between h-16 border-b border-slate-800" :class="sidebarCollapsed ? 'px-3' : 'px-5'">
             <Link :href="route('dashboard')" class="flex items-center gap-3">
-                <div class="w-8 h-8 bg-primary-600 rounded-lg flex items-center justify-center flex-shrink-0">
-                    <ApplicationLogo class="h-5 w-auto fill-current text-white" />
-                </div>
+                <ApplicationLogo class="h-8 w-8 flex-shrink-0" />
                 <span v-show="!sidebarCollapsed" class="text-lg font-bold text-white tracking-tight">Inventoros</span>
             </Link>
             <button
