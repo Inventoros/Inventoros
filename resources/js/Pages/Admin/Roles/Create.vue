@@ -1,12 +1,13 @@
 <script setup>
-import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
-import InputError from '@/Components/InputError.vue';
-import InputLabel from '@/Components/InputLabel.vue';
-import PrimaryButton from '@/Components/PrimaryButton.vue';
-import TextInput from '@/Components/TextInput.vue';
+import AppLayout from '@/Layouts/AppLayout.vue';
+import PageHeader from '@/Components/ui/PageHeader.vue';
+import Card from '@/Components/ui/Card.vue';
+import Button from '@/Components/ui/Button.vue';
+import Badge from '@/Components/ui/Badge.vue';
 import { Head, Link, useForm } from '@inertiajs/vue3';
-
 import { useI18n } from 'vue-i18n';
+import { ArrowLeft, Check } from 'lucide-vue-next';
+
 const props = defineProps({
     permissions: Object,
     permissionSets: Array,
@@ -83,193 +84,198 @@ const isCategorySelected = (category) => {
     const categoryPermissions = props.permissions[category].map(p => p.value);
     return categoryPermissions.every(p => form.permissions.includes(p));
 };
+
+const fieldLabel = 'mb-1 block text-sm font-medium text-text-secondary';
+const fieldInput = 'h-9 w-full rounded-md border border-border-subtle bg-surface-canvas px-3 text-sm text-text-primary placeholder:text-text-tertiary ds-focus-ring';
+const fieldArea = 'w-full rounded-md border border-border-subtle bg-surface-canvas px-3 py-2 text-sm text-text-primary placeholder:text-text-tertiary ds-focus-ring';
+const fieldError = 'mt-1 text-xs text-status-danger';
 </script>
 
 <template>
     <Head :title="t('admin.roles.createRole')" />
 
-    <AuthenticatedLayout>
+    <AppLayout>
         <template #header>
-            <div class="flex items-center justify-between">
-                <h2 class="font-semibold text-2xl text-gray-900 dark:text-gray-100">{{ t('admin.createRole') }}</h2>
-                <Link
-                    :href="route('roles.index')"
-                    class="px-4 py-2 bg-dark-bg hover:bg-gray-100 dark:hover:bg-dark-bg/80 text-gray-600 dark:text-gray-300 font-medium rounded-lg transition border border-gray-200 dark:border-dark-border"
-                >
-                    Back to Roles
-                </Link>
+            <div class="flex items-center gap-2 text-xs">
+                <Link :href="route('roles.index')" class="text-text-tertiary hover:text-text-primary">Workspace</Link>
+                <span class="text-text-tertiary">/</span>
+                <Link :href="route('roles.index')" class="text-text-tertiary hover:text-text-primary">Roles</Link>
+                <span class="text-text-tertiary">/</span>
+                <span class="font-medium text-text-primary">New</span>
             </div>
         </template>
 
-        <div class="py-12 bg-gray-50 dark:bg-dark-bg min-h-screen">
-            <div class="max-w-4xl mx-auto sm:px-6 lg:px-8">
-                <div class="bg-white dark:bg-dark-card shadow-sm sm:rounded-lg border border-gray-200 dark:border-dark-border overflow-hidden">
-                    <form @submit.prevent="submit" class="p-6 space-y-6">
-                        <!-- Name -->
-                        <div>
-                            <InputLabel for="name" value="Role Name" />
-                            <TextInput
-                                id="name"
-                                v-model="form.name"
-                                type="text"
-                                class="mt-1 block w-full"
-                                required
-                                autofocus
-                                placeholder="e.g., Warehouse Manager"
-                            />
-                            <InputError class="mt-2" :message="form.errors.name" />
-                        </div>
+        <PageHeader :title="t('admin.createRole')" description="Define a role and assign its permissions.">
+            <template #actions>
+                <Button variant="secondary" size="sm" as="Link" :href="route('roles.index')">
+                    <ArrowLeft :size="14" />
+                    Back to Roles
+                </Button>
+            </template>
+        </PageHeader>
 
-                        <!-- Description -->
-                        <div>
-                            <InputLabel for="description" value="Description (Optional)" />
-                            <textarea
-                                id="description"
-                                v-model="form.description"
-                                rows="3"
-                                class="mt-1 block w-full border-gray-600 bg-gray-50 dark:bg-dark-bg text-gray-900 dark:text-gray-100 focus:border-primary-500 focus:ring-primary-500 rounded-md shadow-sm"
-                                placeholder="Describe the purpose and responsibilities of this role..."
-                            ></textarea>
-                            <InputError class="mt-2" :message="form.errors.description" />
-                        </div>
+        <form @submit.prevent="submit" class="mt-6 space-y-4">
+            <!-- Name & Description -->
+            <Card :padded="false">
+                <div class="px-5 pt-5"><h3 class="text-sm font-semibold text-text-primary">Role Details</h3></div>
+                <div class="space-y-4 p-5">
+                    <div>
+                        <label for="name" :class="fieldLabel">Role Name</label>
+                        <input
+                            id="name"
+                            v-model="form.name"
+                            type="text"
+                            :class="fieldInput"
+                            required
+                            autofocus
+                            placeholder="e.g., Warehouse Manager"
+                        />
+                        <p v-if="form.errors.name" :class="fieldError">{{ form.errors.name }}</p>
+                    </div>
 
-                        <!-- Permission Sets (Quick Templates) -->
-                        <div v-if="permissionSets && permissionSets.length > 0">
-                            <InputLabel value="Permission Sets (Quick Templates)" />
-                            <p class="mt-1 text-sm text-gray-500 mb-4">
-                                Apply pre-configured permission sets to quickly assign common permission groups.
-                            </p>
+                    <div>
+                        <label for="description" :class="fieldLabel">Description (Optional)</label>
+                        <textarea
+                            id="description"
+                            v-model="form.description"
+                            rows="3"
+                            :class="fieldArea"
+                            placeholder="Describe the purpose and responsibilities of this role..."
+                        ></textarea>
+                        <p v-if="form.errors.description" :class="fieldError">{{ form.errors.description }}</p>
+                    </div>
+                </div>
+            </Card>
 
-                            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                                <button
-                                    v-for="set in permissionSets"
-                                    :key="set.id"
-                                    type="button"
-                                    @click="togglePermissionSet(set.id)"
-                                    :class="[
-                                        'p-4 rounded-lg border-2 text-left transition',
-                                        form.permission_set_ids.includes(set.id)
-                                            ? 'border-primary-400 bg-primary-400/10'
-                                            : 'border-gray-200 dark:border-dark-border hover:border-primary-400/50'
-                                    ]"
-                                >
-                                    <div class="flex items-start gap-3">
-                                        <div class="flex-shrink-0">
-                                            <svg class="w-6 h-6 text-primary-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" :d="getCategoryIcon(set.category)" />
-                                            </svg>
-                                        </div>
-                                        <div class="flex-1 min-w-0">
-                                            <div class="font-medium text-gray-900 dark:text-gray-100">{{ set.name }}</div>
-                                            <div class="text-xs text-gray-500 mt-1">{{ set.description }}</div>
-                                            <div class="flex items-center gap-2 mt-2">
-                                                <span class="text-xs px-2 py-0.5 bg-gray-200 dark:bg-dark-bg rounded-full text-gray-600 dark:text-gray-400">
-                                                    {{ set.permission_count }} permissions
-                                                </span>
-                                                <span v-if="set.is_template" class="text-xs px-2 py-0.5 bg-blue-500/20 text-blue-400 rounded-full">
-                                                    Template
-                                                </span>
-                                            </div>
-                                        </div>
-                                        <div v-if="form.permission_set_ids.includes(set.id)" class="flex-shrink-0">
-                                            <svg class="w-5 h-5 text-primary-400" fill="currentColor" viewBox="0 0 20 20">
-                                                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
-                                            </svg>
-                                        </div>
-                                    </div>
-                                </button>
-                            </div>
-                        </div>
-
-                        <!-- Individual Permissions -->
-                        <div>
-                            <InputLabel value="Individual Permissions" />
-                            <p class="mt-1 text-sm text-gray-500 mb-4">
-                                Select additional permissions. You can click category names to select/deselect all permissions in that category.
-                            </p>
-
-                            <div class="space-y-4">
-                                <div
-                                    v-for="(perms, category) in permissions"
-                                    :key="category"
-                                    class="border border-gray-200 dark:border-dark-border rounded-lg p-4 bg-gray-50 dark:bg-dark-bg/30"
-                                >
-                                    <!-- Category Header -->
-                                    <div class="flex items-center justify-between mb-3 pb-2 border-b border-gray-200 dark:border-dark-border">
-                                        <h4 class="font-semibold text-gray-200">{{ category }}</h4>
-                                        <button
-                                            type="button"
-                                            @click="toggleCategory(category)"
-                                            class="text-xs px-3 py-1 rounded-md transition"
-                                            :class="isCategorySelected(category)
-                                                ? 'bg-primary-500/20 text-primary-400 hover:bg-primary-500/30'
-                                                : 'bg-dark-bg text-gray-400 hover:bg-dark-bg/80'"
-                                        >
-                                            {{ isCategorySelected(category) ? 'Deselect All' : 'Select All' }}
-                                        </button>
-                                    </div>
-
-                                    <!-- Permissions in Category -->
-                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                                        <label
-                                            v-for="permission in perms"
-                                            :key="permission.value"
-                                            class="flex items-start space-x-3 cursor-pointer hover:bg-gray-100 dark:hover:bg-dark-bg/50 p-2 rounded transition"
-                                        >
-                                            <input
-                                                type="checkbox"
-                                                :value="permission.value"
-                                                v-model="form.permissions"
-                                                class="mt-1 rounded border-gray-600 text-primary-600 shadow-sm focus:ring-primary-500 bg-gray-50 dark:bg-dark-bg"
-                                            />
-                                            <div class="flex-1">
-                                                <div class="text-sm font-medium text-gray-600 dark:text-gray-300">{{ permission.label }}</div>
-                                                <div class="text-xs text-gray-500">{{ permission.description }}</div>
-                                            </div>
-                                        </label>
+            <!-- Permission Sets (Quick Templates) -->
+            <Card v-if="permissionSets && permissionSets.length > 0" :padded="false">
+                <div class="px-5 pt-5">
+                    <h3 class="text-sm font-semibold text-text-primary">Permission Sets (Quick Templates)</h3>
+                    <p class="mt-1 text-sm text-text-tertiary">
+                        Apply pre-configured permission sets to quickly assign common permission groups.
+                    </p>
+                </div>
+                <div class="p-5">
+                    <div class="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3">
+                        <button
+                            v-for="set in permissionSets"
+                            :key="set.id"
+                            type="button"
+                            @click="togglePermissionSet(set.id)"
+                            :class="[
+                                'rounded-lg border p-4 text-left transition-colors',
+                                form.permission_set_ids.includes(set.id)
+                                    ? 'border-brand bg-brand-soft'
+                                    : 'border-border-subtle bg-surface-canvas hover:border-border-strong'
+                            ]"
+                        >
+                            <div class="flex items-start gap-3">
+                                <div class="flex-shrink-0">
+                                    <svg class="h-6 w-6 text-brand" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" :d="getCategoryIcon(set.category)" />
+                                    </svg>
+                                </div>
+                                <div class="min-w-0 flex-1">
+                                    <div class="font-medium text-text-primary">{{ set.name }}</div>
+                                    <div class="mt-1 text-xs text-text-tertiary">{{ set.description }}</div>
+                                    <div class="mt-2 flex items-center gap-2">
+                                        <Badge variant="neutral" size="sm">{{ set.permission_count }} permissions</Badge>
+                                        <Badge v-if="set.is_template" variant="info" size="sm">Template</Badge>
                                     </div>
                                 </div>
+                                <div v-if="form.permission_set_ids.includes(set.id)" class="flex-shrink-0">
+                                    <Check :size="18" class="text-brand" />
+                                </div>
                             </div>
-
-                            <InputError class="mt-2" :message="form.errors.permissions" />
-
-                            <div class="mt-4 p-3 bg-primary-500/10 border border-primary-500/30 rounded-md">
-                                <p class="text-sm text-primary-400">
-                                    <strong>{{ getTotalPermissions() }}</strong> total permission(s)
-                                    <span v-if="form.permission_set_ids.length > 0" class="text-gray-500">
-                                        ({{ form.permissions.length }} direct + {{ getSetPermissions().length }} from {{ form.permission_set_ids.length }} set(s))
-                                    </span>
-                                </p>
-                            </div>
-                        </div>
-
-                        <!-- Actions -->
-                        <div class="flex items-center gap-4 pt-4 border-t border-gray-200 dark:border-dark-border">
-                            <PrimaryButton :disabled="form.processing">
-                                {{ t('admin.createRole') }}
-                            </PrimaryButton>
-
-                            <Link
-                                :href="route('roles.index')"
-                                class="text-sm text-gray-500 dark:text-gray-400 hover:text-gray-600 dark:text-gray-300 transition"
-                            >
-                                {{ t('common.cancel') }}
-                            </Link>
-
-                            <Transition
-                                enter-active-class="transition ease-in-out"
-                                enter-from-class="opacity-0"
-                                leave-active-class="transition ease-in-out"
-                                leave-to-class="opacity-0"
-                            >
-                                <p v-if="form.recentlySuccessful" class="text-sm text-green-400">
-                                    Role created successfully.
-                                </p>
-                            </Transition>
-                        </div>
-                    </form>
+                        </button>
+                    </div>
                 </div>
+            </Card>
+
+            <!-- Individual Permissions -->
+            <Card :padded="false">
+                <div class="px-5 pt-5">
+                    <h3 class="text-sm font-semibold text-text-primary">Individual Permissions</h3>
+                    <p class="mt-1 text-sm text-text-tertiary">
+                        Select additional permissions. You can click category names to select/deselect all permissions in that category.
+                    </p>
+                </div>
+                <div class="p-5">
+                    <div class="space-y-6">
+                        <div v-for="(perms, category) in permissions" :key="category">
+                            <!-- Category Header -->
+                            <div class="mb-3 flex items-center justify-between">
+                                <h4 class="text-xs font-medium uppercase tracking-wider text-text-tertiary">{{ category }}</h4>
+                                <button
+                                    type="button"
+                                    @click="toggleCategory(category)"
+                                    :class="[
+                                        'rounded-md px-3 py-1 text-xs transition-colors',
+                                        isCategorySelected(category)
+                                            ? 'bg-brand-soft text-brand'
+                                            : 'bg-surface-overlay text-text-secondary hover:text-text-primary'
+                                    ]"
+                                >
+                                    {{ isCategorySelected(category) ? 'Deselect All' : 'Select All' }}
+                                </button>
+                            </div>
+
+                            <!-- Permissions in Category -->
+                            <div class="grid grid-cols-1 gap-3 md:grid-cols-2">
+                                <label
+                                    v-for="permission in perms"
+                                    :key="permission.value"
+                                    class="flex cursor-pointer items-start gap-3 rounded-lg border border-border-subtle bg-surface-canvas p-3 transition-colors hover:border-border-strong"
+                                >
+                                    <input
+                                        type="checkbox"
+                                        :value="permission.value"
+                                        v-model="form.permissions"
+                                        class="mt-0.5 h-4 w-4 rounded border-border-subtle bg-surface-canvas text-brand ds-focus-ring"
+                                    />
+                                    <div class="min-w-0 flex-1">
+                                        <div class="text-sm font-medium text-text-primary">{{ permission.label }}</div>
+                                        <div class="text-xs text-text-tertiary">{{ permission.description }}</div>
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <p v-if="form.errors.permissions" :class="fieldError">{{ form.errors.permissions }}</p>
+
+                    <div class="mt-4 rounded-lg border border-brand/20 bg-brand-soft p-3">
+                        <p class="text-sm text-brand">
+                            <strong>{{ getTotalPermissions() }}</strong> total permission(s)
+                            <span v-if="form.permission_set_ids.length > 0" class="text-text-tertiary">
+                                ({{ form.permissions.length }} direct + {{ getSetPermissions().length }} from {{ form.permission_set_ids.length }} set(s))
+                            </span>
+                        </p>
+                    </div>
+                </div>
+            </Card>
+
+            <!-- Actions -->
+            <div class="flex items-center gap-3">
+                <Button type="submit" variant="default" :loading="form.processing" :disabled="form.processing">
+                    {{ t('admin.createRole') }}
+                </Button>
+
+                <Button variant="secondary" as="Link" :href="route('roles.index')">
+                    {{ t('common.cancel') }}
+                </Button>
+
+                <Transition
+                    enter-active-class="transition ease-in-out"
+                    enter-from-class="opacity-0"
+                    leave-active-class="transition ease-in-out"
+                    leave-to-class="opacity-0"
+                >
+                    <p v-if="form.recentlySuccessful" class="text-sm text-status-success">
+                        Role created successfully.
+                    </p>
+                </Transition>
             </div>
-        </div>
-    </AuthenticatedLayout>
+        </form>
+    </AppLayout>
 </template>

@@ -1,12 +1,13 @@
 <script setup>
-import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
-import InputError from '@/Components/InputError.vue';
-import InputLabel from '@/Components/InputLabel.vue';
-import PrimaryButton from '@/Components/PrimaryButton.vue';
-import TextInput from '@/Components/TextInput.vue';
+import AppLayout from '@/Layouts/AppLayout.vue';
+import PageHeader from '@/Components/ui/PageHeader.vue';
+import Card from '@/Components/ui/Card.vue';
+import Button from '@/Components/ui/Button.vue';
 import { Head, Link, useForm } from '@inertiajs/vue3';
 
 import { useI18n } from 'vue-i18n';
+import { ArrowLeft } from 'lucide-vue-next';
+
 const props = defineProps({
     user: Object,
     roles: Array,
@@ -26,169 +27,176 @@ const form = useForm({
 const submit = () => {
     form.put(route('users.update', props.user.id));
 };
+
+const fieldLabel = 'mb-1 block text-sm font-medium text-text-secondary';
+const fieldInput = 'h-9 w-full rounded-md border border-border-subtle bg-surface-canvas px-3 text-sm text-text-primary placeholder:text-text-tertiary ds-focus-ring';
+const fieldArea = 'w-full rounded-md border border-border-subtle bg-surface-canvas px-3 py-2 text-sm text-text-primary placeholder:text-text-tertiary ds-focus-ring';
+const fieldError = 'mt-1 text-xs text-status-danger';
 </script>
 
 <template>
     <Head :title="`Edit ${user.name}`" />
 
-    <AuthenticatedLayout>
+    <AppLayout>
         <template #header>
-            <div class="flex items-center justify-between">
-                <h2 class="font-semibold text-2xl text-gray-900 dark:text-gray-100">Edit User: {{ user.name }}</h2>
-                <Link
-                    :href="route('users.index')"
-                    class="px-4 py-2 bg-dark-bg hover:bg-gray-100 dark:hover:bg-dark-bg/80 text-gray-600 dark:text-gray-300 font-medium rounded-lg transition border border-gray-200 dark:border-dark-border"
-                >
-                    Back to Users
-                </Link>
+            <div class="flex items-center gap-2 text-xs">
+                <Link :href="route('users.index')" class="text-text-tertiary hover:text-text-primary">Workspace</Link>
+                <span class="text-text-tertiary">/</span>
+                <Link :href="route('users.index')" class="text-text-tertiary hover:text-text-primary">Users</Link>
+                <span class="text-text-tertiary">/</span>
+                <span class="font-medium text-text-primary">Edit {{ user.name }}</span>
             </div>
         </template>
 
-        <div class="py-12 bg-gray-50 dark:bg-dark-bg min-h-screen">
-            <div class="max-w-4xl mx-auto sm:px-6 lg:px-8">
-                <div class="bg-white dark:bg-dark-card shadow-sm sm:rounded-lg border border-gray-200 dark:border-dark-border overflow-hidden">
-                    <form @submit.prevent="submit" class="p-6 space-y-6">
-                        <!-- Name -->
-                        <div>
-                            <InputLabel for="name" value="Name" />
-                            <TextInput
-                                id="name"
-                                v-model="form.name"
-                                type="text"
-                                class="mt-1 block w-full"
-                                required
-                                autofocus
-                            />
-                            <InputError class="mt-2" :message="form.errors.name" />
-                        </div>
+        <PageHeader :title="`Edit User: ${user.name}`" description="Update account details, base role, and custom role assignments.">
+            <template #actions>
+                <Button variant="secondary" size="sm" as="Link" :href="route('users.index')">
+                    <ArrowLeft :size="14" />
+                    Back to Users
+                </Button>
+            </template>
+        </PageHeader>
 
-                        <!-- Email -->
-                        <div>
-                            <InputLabel for="email" value="Email" />
-                            <TextInput
-                                id="email"
-                                v-model="form.email"
-                                type="email"
-                                class="mt-1 block w-full"
-                                required
-                            />
-                            <InputError class="mt-2" :message="form.errors.email" />
-                        </div>
+        <form @submit.prevent="submit" class="mt-6 max-w-3xl">
+            <Card :padded="false">
+                <div class="space-y-6 p-5">
+                    <!-- Name -->
+                    <div>
+                        <label for="name" :class="fieldLabel">Name</label>
+                        <input
+                            id="name"
+                            v-model="form.name"
+                            type="text"
+                            :class="fieldInput"
+                            required
+                            autofocus
+                        />
+                        <p v-if="form.errors.name" :class="fieldError">{{ form.errors.name }}</p>
+                    </div>
 
-                        <!-- Password -->
-                        <div>
-                            <InputLabel for="password" value="New Password (leave blank to keep current)" />
-                            <TextInput
-                                id="password"
-                                v-model="form.password"
-                                type="password"
-                                class="mt-1 block w-full"
-                                autocomplete="new-password"
-                            />
-                            <InputError class="mt-2" :message="form.errors.password" />
-                            <p class="mt-1 text-xs text-gray-500">
-                                Only fill this in if you want to change the user's password
-                            </p>
-                        </div>
+                    <!-- Email -->
+                    <div>
+                        <label for="email" :class="fieldLabel">Email</label>
+                        <input
+                            id="email"
+                            v-model="form.email"
+                            type="email"
+                            :class="fieldInput"
+                            required
+                        />
+                        <p v-if="form.errors.email" :class="fieldError">{{ form.errors.email }}</p>
+                    </div>
 
-                        <!-- Password Confirmation -->
-                        <div v-if="form.password">
-                            <InputLabel for="password_confirmation" value="Confirm New Password" />
-                            <TextInput
-                                id="password_confirmation"
-                                v-model="form.password_confirmation"
-                                type="password"
-                                class="mt-1 block w-full"
-                                autocomplete="new-password"
-                            />
-                            <InputError class="mt-2" :message="form.errors.password_confirmation" />
-                        </div>
+                    <!-- Password -->
+                    <div>
+                        <label for="password" :class="fieldLabel">New Password (leave blank to keep current)</label>
+                        <input
+                            id="password"
+                            v-model="form.password"
+                            type="password"
+                            :class="fieldInput"
+                            autocomplete="new-password"
+                        />
+                        <p v-if="form.errors.password" :class="fieldError">{{ form.errors.password }}</p>
+                        <p class="mt-1 text-xs text-text-tertiary">
+                            Only fill this in if you want to change the user's password
+                        </p>
+                    </div>
 
-                        <!-- Base Role -->
-                        <div>
-                            <InputLabel for="role" value="Base Role" />
-                            <select
-                                id="role"
-                                v-model="form.role"
-                                class="mt-1 block w-full border-gray-600 bg-gray-50 dark:bg-dark-bg text-gray-900 dark:text-gray-100 focus:border-primary-500 focus:ring-primary-500 rounded-md shadow-sm"
-                                required
+                    <!-- Password Confirmation -->
+                    <div v-if="form.password">
+                        <label for="password_confirmation" :class="fieldLabel">Confirm New Password</label>
+                        <input
+                            id="password_confirmation"
+                            v-model="form.password_confirmation"
+                            type="password"
+                            :class="fieldInput"
+                            autocomplete="new-password"
+                        />
+                        <p v-if="form.errors.password_confirmation" :class="fieldError">{{ form.errors.password_confirmation }}</p>
+                    </div>
+
+                    <!-- Base Role -->
+                    <div>
+                        <label for="role" :class="fieldLabel">Base Role</label>
+                        <select
+                            id="role"
+                            v-model="form.role"
+                            :class="fieldInput"
+                            required
+                        >
+                            <option value="">Select a role</option>
+                            <option value="admin">Admin</option>
+                            <option value="manager">Manager</option>
+                            <option value="member">Member</option>
+                        </select>
+                        <p v-if="form.errors.role" :class="fieldError">{{ form.errors.role }}</p>
+                        <p class="mt-1 text-xs text-text-tertiary">
+                            The base role determines core access level. Admins have full access.
+                        </p>
+                    </div>
+
+                    <!-- Additional Custom Roles -->
+                    <div v-if="roles && roles.length > 0">
+                        <label :class="fieldLabel">Additional Custom Roles (Optional)</label>
+                        <p class="mb-4 mt-1 text-sm text-text-tertiary">
+                            Assign custom roles created for your organization to grant specific permissions.
+                        </p>
+
+                        <div class="max-h-64 space-y-2 overflow-y-auto rounded-lg border border-border-subtle bg-surface-canvas p-4">
+                            <label
+                                v-for="role in roles"
+                                :key="role.id"
+                                class="flex cursor-pointer items-start space-x-3 rounded p-2 transition-colors hover:bg-surface-sunken"
                             >
-                                <option value="">Select a role</option>
-                                <option value="admin">Admin</option>
-                                <option value="manager">Manager</option>
-                                <option value="member">Member</option>
-                            </select>
-                            <InputError class="mt-2" :message="form.errors.role" />
-                            <p class="mt-1 text-xs text-gray-500">
-                                The base role determines core access level. Admins have full access.
-                            </p>
-                        </div>
-
-                        <!-- Additional Custom Roles -->
-                        <div v-if="roles && roles.length > 0">
-                            <InputLabel value="Additional Custom Roles (Optional)" />
-                            <p class="mt-1 text-sm text-gray-500 mb-4">
-                                Assign custom roles created for your organization to grant specific permissions.
-                            </p>
-
-                            <div class="space-y-2 max-h-64 overflow-y-auto border border-gray-200 dark:border-dark-border rounded-lg p-4 bg-gray-50 dark:bg-dark-bg/30">
-                                <label
-                                    v-for="role in roles"
-                                    :key="role.id"
-                                    class="flex items-start space-x-3 cursor-pointer hover:bg-gray-100 dark:hover:bg-dark-bg/50 p-2 rounded transition"
-                                >
-                                    <input
-                                        type="checkbox"
-                                        :value="role.id"
-                                        v-model="form.role_ids"
-                                        class="mt-1 rounded border-gray-600 text-primary-600 shadow-sm focus:ring-primary-500 bg-gray-50 dark:bg-dark-bg"
-                                    />
-                                    <div class="flex-1">
-                                        <div class="text-sm font-medium text-gray-600 dark:text-gray-300">{{ role.name }}</div>
-                                        <div class="text-xs text-gray-500" v-if="role.description">{{ role.description }}</div>
-                                        <div class="text-xs text-gray-600 mt-1">
-                                            {{ role.permissions ? role.permissions.length : 0 }} permissions
-                                        </div>
+                                <input
+                                    type="checkbox"
+                                    :value="role.id"
+                                    v-model="form.role_ids"
+                                    class="mt-1 rounded border-border-subtle bg-surface-canvas text-brand ds-focus-ring"
+                                />
+                                <div class="flex-1">
+                                    <div class="text-sm font-medium text-text-primary">{{ role.name }}</div>
+                                    <div class="text-xs text-text-tertiary" v-if="role.description">{{ role.description }}</div>
+                                    <div class="mt-1 text-xs text-text-tertiary">
+                                        {{ role.permissions ? role.permissions.length : 0 }} permissions
                                     </div>
-                                </label>
-                            </div>
-
-                            <InputError class="mt-2" :message="form.errors.role_ids" />
-
-                            <div class="mt-3 p-3 bg-primary-500/10 border border-primary-500/30 rounded-md">
-                                <p class="text-sm text-primary-400">
-                                    <strong>{{ form.role_ids.length }}</strong> custom role(s) selected
-                                </p>
-                            </div>
+                                </div>
+                            </label>
                         </div>
 
-                        <!-- Actions -->
-                        <div class="flex items-center gap-4 pt-4 border-t border-gray-200 dark:border-dark-border">
-                            <PrimaryButton :disabled="form.processing">
-                                Update User
-                            </PrimaryButton>
+                        <p v-if="form.errors.role_ids" :class="fieldError">{{ form.errors.role_ids }}</p>
 
-                            <Link
-                                :href="route('users.index')"
-                                class="text-sm text-gray-500 dark:text-gray-400 hover:text-gray-600 dark:text-gray-300 transition"
-                            >
-                                {{ t('common.cancel') }}
-                            </Link>
-
-                            <Transition
-                                enter-active-class="transition ease-in-out"
-                                enter-from-class="opacity-0"
-                                leave-active-class="transition ease-in-out"
-                                leave-to-class="opacity-0"
-                            >
-                                <p v-if="form.recentlySuccessful" class="text-sm text-green-400">
-                                    User updated successfully.
-                                </p>
-                            </Transition>
+                        <div class="mt-3 rounded-md border border-brand/20 bg-brand-soft p-3">
+                            <p class="text-sm text-brand">
+                                <strong>{{ form.role_ids.length }}</strong> custom role(s) selected
+                            </p>
                         </div>
-                    </form>
+                    </div>
+
+                    <!-- Actions -->
+                    <div class="flex items-center gap-4 border-t border-border-subtle pt-4">
+                        <Button type="submit" variant="default" :loading="form.processing" :disabled="form.processing">
+                            Update User
+                        </Button>
+
+                        <Button variant="secondary" as="Link" :href="route('users.index')">
+                            {{ t('common.cancel') }}
+                        </Button>
+
+                        <Transition
+                            enter-active-class="transition ease-in-out"
+                            enter-from-class="opacity-0"
+                            leave-active-class="transition ease-in-out"
+                            leave-to-class="opacity-0"
+                        >
+                            <p v-if="form.recentlySuccessful" class="text-sm text-status-success">
+                                User updated successfully.
+                            </p>
+                        </Transition>
+                    </div>
                 </div>
-            </div>
-        </div>
-    </AuthenticatedLayout>
+            </Card>
+        </form>
+    </AppLayout>
 </template>

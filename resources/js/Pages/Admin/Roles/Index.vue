@@ -1,8 +1,13 @@
 <script setup>
-import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
+import AppLayout from '@/Layouts/AppLayout.vue';
+import PageHeader from '@/Components/ui/PageHeader.vue';
+import Card from '@/Components/ui/Card.vue';
+import Button from '@/Components/ui/Button.vue';
+import Badge from '@/Components/ui/Badge.vue';
 import { Head, Link } from '@inertiajs/vue3';
-
 import { useI18n } from 'vue-i18n';
+import { Plus, Users, ShieldCheck } from 'lucide-vue-next';
+
 defineProps({
     roles: Object,
     filters: Object,
@@ -14,119 +19,106 @@ const { t } = useI18n();
 <template>
     <Head :title="t('nav.roles')" />
 
-    <AuthenticatedLayout>
+    <AppLayout>
         <template #header>
-            <div class="flex justify-between items-center">
-                <h2 class="font-semibold text-2xl text-gray-900 dark:text-gray-100">Roles & Permissions</h2>
-                <Link
-                    :href="route('roles.create')"
-                    class="px-4 py-2 bg-primary-500 hover:bg-primary-600 text-white font-medium rounded-lg transition"
-                >
-                    {{ t('admin.createRole') }}
-                </Link>
+            <div class="flex items-center gap-2 text-xs">
+                <span class="text-text-tertiary">Workspace</span>
+                <span class="text-text-tertiary">/</span>
+                <span class="font-medium text-text-primary">{{ t('nav.roles') }}</span>
             </div>
         </template>
 
-        <div class="py-12 bg-gray-50 dark:bg-dark-bg min-h-screen">
-            <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-                <div class="bg-white dark:bg-dark-card shadow-sm sm:rounded-lg border border-gray-200 dark:border-dark-border overflow-hidden">
-                    <div class="p-6 text-gray-900 dark:text-gray-100">
-                        <h3 class="text-lg font-semibold mb-4">Role Management</h3>
-                        <p class="text-gray-500 dark:text-gray-400 mb-6">
-                            Manage roles and permissions for your organization. Create custom roles with specific permission sets to control access across the application.
-                        </p>
+        <PageHeader
+            title="Roles & Permissions"
+            description="Manage roles and permissions for your organization. Create custom roles with specific permission sets to control access across the application."
+        >
+            <template #actions>
+                <Button variant="default" size="sm" as="Link" :href="route('roles.create')">
+                    <Plus :size="14" />
+                    {{ t('admin.createRole') }}
+                </Button>
+            </template>
+        </PageHeader>
 
-                        <!-- Roles Grid -->
-                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                            <div
-                                v-if="roles && roles.data && roles.data.length > 0"
-                                v-for="role in roles.data"
-                                :key="role.id"
-                                class="bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-border rounded-lg p-6 hover:border-primary-400/30 transition"
-                            >
-                                <div class="flex items-start justify-between mb-4">
-                                    <div>
-                                        <h4 class="text-lg font-semibold text-gray-900 dark:text-gray-100">{{ role.name }}</h4>
-                                        <p class="text-sm text-gray-500 dark:text-gray-400 mt-1" v-if="role.description">{{ role.description }}</p>
-                                    </div>
-                                    <span
-                                        v-if="role.is_system"
-                                        class="px-2 py-1 text-xs font-semibold rounded-full bg-primary-400/10 text-primary-400"
-                                    >
-                                        System
-                                    </span>
-                                </div>
+        <!-- Roles grid -->
+        <div class="mt-6 grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+            <Card v-for="role in roles?.data" :key="role.id">
+                <div class="mb-4 flex items-start justify-between">
+                    <div class="min-w-0">
+                        <h3 class="text-sm font-semibold text-text-primary">{{ role.name }}</h3>
+                        <p v-if="role.description" class="mt-1 text-sm text-text-secondary">{{ role.description }}</p>
+                    </div>
+                    <Badge v-if="role.is_system" variant="brand" size="sm">System</Badge>
+                </div>
 
-                                <div class="mb-4">
-                                    <div class="flex items-center text-sm text-gray-500 dark:text-gray-400">
-                                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
-                                        </svg>
-                                        <span>{{ role.users_count || 0 }} users</span>
-                                    </div>
-                                    <div class="flex items-center text-sm text-gray-500 dark:text-gray-400 mt-2">
-                                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-                                        </svg>
-                                        <span>{{ role.permissions ? role.permissions.length : 0 }} permissions</span>
-                                    </div>
-                                </div>
-
-                                <div class="flex gap-2">
-                                    <Link
-                                        :href="route('roles.show', role.id)"
-                                        class="flex-1 px-3 py-2 text-center text-sm font-medium text-gray-600 dark:text-gray-300 bg-gray-100 dark:bg-dark-bg/50 hover:bg-gray-200 dark:hover:bg-dark-bg rounded-md transition"
-                                    >
-                                        {{ t('common.view') }}
-                                    </Link>
-                                    <Link
-                                        v-if="role.slug !== 'system-administrator'"
-                                        :href="route('roles.edit', role.id)"
-                                        class="flex-1 px-3 py-2 text-center text-sm font-medium text-primary-400 bg-primary-400/10 hover:bg-primary-400/20 rounded-md transition"
-                                    >
-                                        {{ t('common.edit') }}
-                                    </Link>
-                                    <div
-                                        v-else
-                                        class="flex-1 px-3 py-2 text-center text-sm font-medium text-gray-600 bg-gray-50 dark:bg-dark-bg/30 rounded-md cursor-not-allowed"
-                                        title="Administrator role cannot be edited"
-                                    >
-                                        Locked
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div v-if="!roles || !roles.data || roles.data.length === 0" class="col-span-full text-center py-12">
-                                <svg class="w-16 h-16 mx-auto text-gray-600 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-                                </svg>
-                                <p class="text-gray-500 dark:text-gray-400 mb-4">No roles found. Click "Create Role" to define your first custom role.</p>
-                            </div>
-                        </div>
-
-                        <!-- Pagination -->
-                        <div v-if="roles && roles.links && roles.links.length > 3" class="mt-6 flex justify-center">
-                            <nav class="flex gap-2">
-                                <Link
-                                    v-for="(link, index) in roles.links"
-                                    :key="index"
-                                    :href="link.url"
-                                    :class="[
-                                        'px-3 py-2 rounded-md text-sm font-medium transition',
-                                        link.active
-                                            ? 'bg-primary-500 text-white'
-                                            : link.url
-                                            ? 'bg-gray-100 dark:bg-dark-bg text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-dark-bg/80 hover:text-gray-900 dark:hover:text-gray-200'
-                                            : 'bg-gray-100 dark:bg-dark-bg/50 text-gray-400 dark:text-gray-600 cursor-not-allowed opacity-50'
-                                    ]"
-                                    :disabled="!link.url"
-                                    v-html="link.label"
-                                />
-                            </nav>
-                        </div>
+                <div class="mb-4 space-y-2">
+                    <div class="flex items-center gap-2 text-sm text-text-secondary">
+                        <Users :size="16" class="text-text-tertiary" />
+                        <span>{{ role.users_count || 0 }} users</span>
+                    </div>
+                    <div class="flex items-center gap-2 text-sm text-text-secondary">
+                        <ShieldCheck :size="16" class="text-text-tertiary" />
+                        <span>{{ role.permissions ? role.permissions.length : 0 }} permissions</span>
                     </div>
                 </div>
+
+                <div class="flex gap-2">
+                    <Button variant="secondary" size="sm" as="Link" :href="route('roles.show', role.id)" class="flex-1">
+                        {{ t('common.view') }}
+                    </Button>
+                    <Button
+                        v-if="role.slug !== 'system-administrator'"
+                        variant="default"
+                        size="sm"
+                        as="Link"
+                        :href="route('roles.edit', role.id)"
+                        class="flex-1"
+                    >
+                        {{ t('common.edit') }}
+                    </Button>
+                    <span
+                        v-else
+                        class="inline-flex h-8 flex-1 cursor-not-allowed items-center justify-center rounded-md border border-border-subtle px-3 text-xs font-medium text-text-tertiary"
+                        title="Administrator role cannot be edited"
+                    >
+                        Locked
+                    </span>
+                </div>
+            </Card>
+
+            <!-- Empty state -->
+            <div v-if="!roles || !roles.data || roles.data.length === 0" class="col-span-full">
+                <Card>
+                    <div class="flex flex-col items-center gap-3 py-10 text-center">
+                        <ShieldCheck :size="22" class="text-text-tertiary" />
+                        <p class="text-sm text-text-tertiary">No roles found. Click "Create Role" to define your first custom role.</p>
+                        <Button variant="default" size="sm" as="Link" :href="route('roles.create')">
+                            <Plus :size="14" />
+                            {{ t('admin.createRole') }}
+                        </Button>
+                    </div>
+                </Card>
             </div>
         </div>
-    </AuthenticatedLayout>
+
+        <!-- Pagination -->
+        <div v-if="roles && roles.links && roles.links.length > 3" class="mt-4 flex justify-center">
+            <nav class="inline-flex items-center gap-1">
+                <template v-for="(link, index) in roles.links" :key="index">
+                    <Link
+                        v-if="link.url"
+                        :href="link.url"
+                        :class="[
+                            'inline-flex h-8 min-w-8 items-center justify-center rounded-md border px-2.5 text-xs font-medium transition-colors',
+                            link.active
+                                ? 'border-brand bg-brand text-brand-foreground'
+                                : 'border-border-subtle bg-surface-canvas text-text-secondary hover:bg-surface-overlay',
+                        ]"
+                        v-html="link.label"
+                    />
+                    <span v-else class="inline-flex h-8 min-w-8 cursor-not-allowed items-center justify-center rounded-md border border-border-subtle px-2.5 text-xs text-text-tertiary opacity-50" v-html="link.label" />
+                </template>
+            </nav>
+        </div>
+    </AppLayout>
 </template>

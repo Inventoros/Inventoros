@@ -1,7 +1,11 @@
 <script setup>
-import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
+import AppLayout from '@/Layouts/AppLayout.vue';
+import PageHeader from '@/Components/ui/PageHeader.vue';
+import Card from '@/Components/ui/Card.vue';
+import Button from '@/Components/ui/Button.vue';
 import { Head, Link, useForm } from '@inertiajs/vue3';
 import { useI18n } from 'vue-i18n';
+import { ArrowLeft, Eye } from 'lucide-vue-next';
 
 const { t } = useI18n();
 
@@ -22,147 +26,128 @@ const form = useForm({
 const submit = () => {
     form.put(route('stock-audits.update', props.audit.id));
 };
+
+const fieldLabel = 'mb-1 block text-sm font-medium text-text-secondary';
+const fieldInput = 'h-9 w-full rounded-md border border-border-subtle bg-surface-canvas px-3 text-sm text-text-primary placeholder:text-text-tertiary ds-focus-ring';
+const fieldArea = 'w-full rounded-md border border-border-subtle bg-surface-canvas px-3 py-2 text-sm text-text-primary placeholder:text-text-tertiary ds-focus-ring';
+const fieldError = 'mt-1 text-xs text-status-danger';
 </script>
 
 <template>
     <Head title="Edit Stock Audit" />
 
-    <AuthenticatedLayout>
+    <AppLayout>
         <template #header>
-            <div class="flex justify-between items-center">
-                <div>
-                    <h2 class="font-semibold text-2xl text-gray-900 dark:text-gray-100">Edit Stock Audit</h2>
-                    <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">{{ audit.audit_number }} - {{ audit.name }}</p>
-                </div>
-                <Link
-                    :href="route('stock-audits.show', audit.id)"
-                    class="px-4 py-2 bg-gray-200 dark:bg-dark-bg hover:bg-gray-300 dark:hover:bg-dark-bg/70 text-gray-700 dark:text-gray-300 font-medium rounded-lg transition"
-                >
-                    Back to Audit
-                </Link>
+            <div class="flex items-center gap-2 text-xs">
+                <Link :href="route('stock-audits.index')" class="text-text-tertiary hover:text-text-primary">Workspace</Link>
+                <span class="text-text-tertiary">/</span>
+                <Link :href="route('stock-audits.index')" class="text-text-tertiary hover:text-text-primary">Stock Audits</Link>
+                <span class="text-text-tertiary">/</span>
+                <span class="font-medium text-text-primary">Edit ({{ audit.audit_number }})</span>
             </div>
         </template>
 
-        <div class="py-12 bg-gray-50 dark:bg-dark-bg min-h-screen">
-            <div class="max-w-3xl mx-auto sm:px-6 lg:px-8">
-                <form @submit.prevent="submit" class="bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border shadow-sm sm:rounded-lg p-6">
-                    <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-6">Audit Details</h3>
+        <PageHeader title="Edit Stock Audit" :description="`${audit.audit_number} - ${audit.name}`">
+            <template #actions>
+                <Button variant="secondary" size="sm" as="Link" :href="route('stock-audits.show', audit.id)">
+                    <ArrowLeft :size="14" />
+                    Back to Audit
+                </Button>
+                <Button variant="secondary" size="sm" as="Link" :href="route('stock-audits.show', audit.id)">
+                    <Eye :size="14" />
+                    View
+                </Button>
+            </template>
+        </PageHeader>
 
-                    <div class="space-y-6">
-                        <!-- Name -->
+        <form @submit.prevent="submit" class="mt-6 max-w-3xl">
+            <Card :padded="false">
+                <div class="px-5 pt-5"><h3 class="text-sm font-semibold text-text-primary">Audit Details</h3></div>
+                <div class="space-y-4 p-5">
+                    <!-- Name -->
+                    <div>
+                        <label for="name" :class="fieldLabel">Audit Name <span class="text-status-danger">*</span></label>
+                        <input
+                            id="name"
+                            v-model="form.name"
+                            type="text"
+                            required
+                            maxlength="255"
+                            :class="fieldInput"
+                        />
+                        <p v-if="form.errors.name" :class="fieldError">{{ form.errors.name }}</p>
+                    </div>
+
+                    <!-- Description -->
+                    <div>
+                        <label for="description" :class="fieldLabel">Description</label>
+                        <textarea
+                            id="description"
+                            v-model="form.description"
+                            rows="3"
+                            maxlength="1000"
+                            :class="fieldArea"
+                            placeholder="Describe the purpose of this audit..."
+                        ></textarea>
+                        <p v-if="form.errors.description" :class="fieldError">{{ form.errors.description }}</p>
+                    </div>
+
+                    <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+                        <!-- Audit Type -->
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                                Audit Name <span class="text-red-500">*</span>
-                            </label>
-                            <input
-                                v-model="form.name"
-                                type="text"
+                            <label for="audit_type" :class="fieldLabel">Audit Type <span class="text-status-danger">*</span></label>
+                            <select
+                                id="audit_type"
+                                v-model="form.audit_type"
                                 required
-                                maxlength="255"
-                                class="block w-full rounded-md bg-gray-50 dark:bg-dark-bg border-gray-200 dark:border-dark-border text-gray-900 dark:text-gray-100 shadow-sm focus:border-primary-400 focus:ring-primary-400"
-                                :class="{ 'border-red-500': form.errors.name }"
-                            />
-                            <p v-if="form.errors.name" class="mt-1 text-sm text-red-600 dark:text-red-400">
-                                {{ form.errors.name }}
-                            </p>
+                                :class="fieldInput"
+                            >
+                                <option v-for="(label, value) in auditTypes" :key="value" :value="value">{{ label }}</option>
+                            </select>
+                            <p v-if="form.errors.audit_type" :class="fieldError">{{ form.errors.audit_type }}</p>
                         </div>
 
-                        <!-- Description -->
+                        <!-- Location -->
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                                Description
-                            </label>
-                            <textarea
-                                v-model="form.description"
-                                rows="3"
-                                maxlength="1000"
-                                class="block w-full rounded-md bg-gray-50 dark:bg-dark-bg border-gray-200 dark:border-dark-border text-gray-900 dark:text-gray-100 shadow-sm focus:border-primary-400 focus:ring-primary-400"
-                                :class="{ 'border-red-500': form.errors.description }"
-                                placeholder="Describe the purpose of this audit..."
-                            ></textarea>
-                            <p v-if="form.errors.description" class="mt-1 text-sm text-red-600 dark:text-red-400">
-                                {{ form.errors.description }}
-                            </p>
-                        </div>
-
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <!-- Audit Type -->
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                                    Audit Type <span class="text-red-500">*</span>
-                                </label>
-                                <select
-                                    v-model="form.audit_type"
-                                    required
-                                    class="block w-full rounded-md bg-gray-50 dark:bg-dark-bg border-gray-200 dark:border-dark-border text-gray-900 dark:text-gray-100 shadow-sm focus:border-primary-400 focus:ring-primary-400"
-                                    :class="{ 'border-red-500': form.errors.audit_type }"
-                                >
-                                    <option v-for="(label, value) in auditTypes" :key="value" :value="value">{{ label }}</option>
-                                </select>
-                                <p v-if="form.errors.audit_type" class="mt-1 text-sm text-red-600 dark:text-red-400">
-                                    {{ form.errors.audit_type }}
-                                </p>
-                            </div>
-
-                            <!-- Location -->
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                                    Warehouse Location
-                                </label>
-                                <select
-                                    v-model="form.warehouse_location_id"
-                                    class="block w-full rounded-md bg-gray-50 dark:bg-dark-bg border-gray-200 dark:border-dark-border text-gray-900 dark:text-gray-100 shadow-sm focus:border-primary-400 focus:ring-primary-400"
-                                    :class="{ 'border-red-500': form.errors.warehouse_location_id }"
-                                >
-                                    <option value="">All Locations</option>
-                                    <option v-for="location in locations" :key="location.id" :value="location.id">
-                                        {{ location.name }}
-                                        <span v-if="location.code">({{ location.code }})</span>
-                                    </option>
-                                </select>
-                                <p v-if="form.errors.warehouse_location_id" class="mt-1 text-sm text-red-600 dark:text-red-400">
-                                    {{ form.errors.warehouse_location_id }}
-                                </p>
-                            </div>
-                        </div>
-
-                        <!-- Notes -->
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                                Notes
-                            </label>
-                            <textarea
-                                v-model="form.notes"
-                                rows="3"
-                                maxlength="2000"
-                                class="block w-full rounded-md bg-gray-50 dark:bg-dark-bg border-gray-200 dark:border-dark-border text-gray-900 dark:text-gray-100 shadow-sm focus:border-primary-400 focus:ring-primary-400"
-                                :class="{ 'border-red-500': form.errors.notes }"
-                                placeholder="Additional notes or instructions..."
-                            ></textarea>
-                            <p v-if="form.errors.notes" class="mt-1 text-sm text-red-600 dark:text-red-400">
-                                {{ form.errors.notes }}
-                            </p>
+                            <label for="warehouse_location_id" :class="fieldLabel">Warehouse Location</label>
+                            <select
+                                id="warehouse_location_id"
+                                v-model="form.warehouse_location_id"
+                                :class="fieldInput"
+                            >
+                                <option value="">All Locations</option>
+                                <option v-for="location in locations" :key="location.id" :value="location.id">
+                                    {{ location.name }}
+                                    <span v-if="location.code">({{ location.code }})</span>
+                                </option>
+                            </select>
+                            <p v-if="form.errors.warehouse_location_id" :class="fieldError">{{ form.errors.warehouse_location_id }}</p>
                         </div>
                     </div>
 
-                    <!-- Actions -->
-                    <div class="mt-8 flex gap-3 justify-end pt-6 border-t border-gray-200 dark:border-dark-border">
-                        <Link
-                            :href="route('stock-audits.show', audit.id)"
-                            class="px-4 py-2 bg-gray-200 dark:bg-dark-bg hover:bg-gray-300 dark:hover:bg-dark-bg/70 text-gray-700 dark:text-gray-300 font-medium rounded-lg transition"
-                        >
-                            Cancel
-                        </Link>
-                        <button
-                            type="submit"
-                            :disabled="form.processing || !form.name"
-                            class="px-4 py-2 bg-primary-500 hover:bg-primary-600 text-white font-medium rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                            {{ form.processing ? 'Saving...' : 'Update Audit' }}
-                        </button>
+                    <!-- Notes -->
+                    <div>
+                        <label for="notes" :class="fieldLabel">Notes</label>
+                        <textarea
+                            id="notes"
+                            v-model="form.notes"
+                            rows="3"
+                            maxlength="2000"
+                            :class="fieldArea"
+                            placeholder="Additional notes or instructions..."
+                        ></textarea>
+                        <p v-if="form.errors.notes" :class="fieldError">{{ form.errors.notes }}</p>
                     </div>
-                </form>
-            </div>
-        </div>
-    </AuthenticatedLayout>
+                </div>
+
+                <!-- Actions -->
+                <div class="flex justify-end gap-3 border-t border-border-subtle p-5">
+                    <Button variant="secondary" as="Link" :href="route('stock-audits.show', audit.id)">Cancel</Button>
+                    <Button type="submit" variant="default" :loading="form.processing" :disabled="form.processing || !form.name">
+                        {{ form.processing ? 'Saving...' : 'Update Audit' }}
+                    </Button>
+                </div>
+            </Card>
+        </form>
+    </AppLayout>
 </template>

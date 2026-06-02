@@ -1,6 +1,7 @@
 <script setup>
 import { useForm } from '@inertiajs/vue3';
 import { useI18n } from 'vue-i18n';
+import Button from '@/Components/ui/Button.vue';
 
 const { t } = useI18n();
 
@@ -20,15 +21,17 @@ const submit = () => {
         preserveScroll: true,
     });
 };
+
+const checkbox = 'h-4 w-4 rounded border-border-subtle bg-surface-canvas text-brand ds-focus-ring disabled:opacity-50';
 </script>
 
 <template>
-    <div class="bg-white dark:bg-dark-card shadow sm:rounded-lg">
-        <div class="px-6 py-5 border-b border-gray-200 dark:border-dark-border">
-            <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100">
+    <div class="rounded-lg border border-border-subtle bg-surface-overlay shadow-xs">
+        <div class="border-b border-border-subtle px-6 py-5">
+            <h3 class="text-lg font-medium text-text-primary">
                 {{ t('settings.notificationPreferences.title') }}
             </h3>
-            <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+            <p class="mt-1 text-sm text-text-secondary">
                 {{ t('settings.notificationPreferences.description') }}
             </p>
         </div>
@@ -37,49 +40,49 @@ const submit = () => {
             <div class="space-y-6">
                 <!-- Master Toggle -->
                 <div class="flex items-start">
-                    <div class="flex items-center h-5">
+                    <div class="flex h-5 items-center">
                         <input
                             v-model="form.email_enabled"
                             type="checkbox"
                             id="email_enabled"
-                            class="h-4 w-4 text-primary-400 border-gray-300 dark:border-dark-border rounded focus:ring-primary-400"
+                            :class="checkbox"
                         />
                     </div>
                     <div class="ml-3">
-                        <label for="email_enabled" class="font-medium text-gray-900 dark:text-gray-100">
+                        <label for="email_enabled" class="font-medium text-text-primary">
                             {{ t('settings.notificationPreferences.enableEmail') }}
                         </label>
-                        <p class="text-sm text-gray-500 dark:text-gray-400">
+                        <p class="text-sm text-text-secondary">
                             {{ t('settings.notificationPreferences.masterSwitch') }}
                         </p>
                     </div>
                 </div>
 
                 <!-- Divider -->
-                <div class="border-t border-gray-200 dark:border-dark-border"></div>
+                <div class="border-t border-border-subtle"></div>
 
                 <!-- Individual Preferences -->
                 <div class="space-y-4">
-                    <h4 class="text-sm font-medium text-gray-900 dark:text-gray-100">
+                    <h4 class="text-sm font-medium text-text-primary">
                         {{ t('settings.notificationPreferences.types') }}
                     </h4>
 
                     <!-- Low Stock Alerts -->
                     <div class="flex items-start pl-4">
-                        <div class="flex items-center h-5">
+                        <div class="flex h-5 items-center">
                             <input
                                 v-model="form.email_low_stock"
                                 type="checkbox"
                                 id="email_low_stock"
                                 :disabled="!form.email_enabled"
-                                class="h-4 w-4 text-primary-400 border-gray-300 dark:border-dark-border rounded focus:ring-primary-400 disabled:opacity-50"
+                                :class="checkbox"
                             />
                         </div>
                         <div class="ml-3">
-                            <label for="email_low_stock" class="text-sm font-medium text-gray-900 dark:text-gray-100">
+                            <label for="email_low_stock" class="text-sm font-medium text-text-primary">
                                 {{ t('settings.notificationPreferences.lowStock') }}
                             </label>
-                            <p class="text-sm text-gray-500 dark:text-gray-400">
+                            <p class="text-sm text-text-secondary">
                                 {{ t('settings.notificationPreferences.lowStockDesc') }}
                             </p>
                         </div>
@@ -87,20 +90,20 @@ const submit = () => {
 
                     <!-- Order Notifications -->
                     <div class="flex items-start pl-4">
-                        <div class="flex items-center h-5">
+                        <div class="flex h-5 items-center">
                             <input
                                 v-model="form.email_orders"
                                 type="checkbox"
                                 id="email_orders"
                                 :disabled="!form.email_enabled"
-                                class="h-4 w-4 text-primary-400 border-gray-300 dark:border-dark-border rounded focus:ring-primary-400 disabled:opacity-50"
+                                :class="checkbox"
                             />
                         </div>
                         <div class="ml-3">
-                            <label for="email_orders" class="text-sm font-medium text-gray-900 dark:text-gray-100">
+                            <label for="email_orders" class="text-sm font-medium text-text-primary">
                                 {{ t('settings.notificationPreferences.orders') }}
                             </label>
-                            <p class="text-sm text-gray-500 dark:text-gray-400">
+                            <p class="text-sm text-text-secondary">
                                 {{ t('settings.notificationPreferences.ordersDesc') }}
                             </p>
                         </div>
@@ -108,20 +111,20 @@ const submit = () => {
 
                     <!-- Approval Notifications -->
                     <div class="flex items-start pl-4">
-                        <div class="flex items-center h-5">
+                        <div class="flex h-5 items-center">
                             <input
                                 v-model="form.email_approvals"
                                 type="checkbox"
                                 id="email_approvals"
                                 :disabled="!form.email_enabled"
-                                class="h-4 w-4 text-primary-400 border-gray-300 dark:border-dark-border rounded focus:ring-primary-400 disabled:opacity-50"
+                                :class="checkbox"
                             />
                         </div>
                         <div class="ml-3">
-                            <label for="email_approvals" class="text-sm font-medium text-gray-900 dark:text-gray-100">
+                            <label for="email_approvals" class="text-sm font-medium text-text-primary">
                                 {{ t('settings.notificationPreferences.approvals') }}
                             </label>
-                            <p class="text-sm text-gray-500 dark:text-gray-400">
+                            <p class="text-sm text-text-secondary">
                                 {{ t('settings.notificationPreferences.approvalsDesc') }}
                             </p>
                         </div>
@@ -130,14 +133,10 @@ const submit = () => {
             </div>
 
             <!-- Submit Button -->
-            <div class="flex justify-end mt-6 pt-6 border-t border-gray-200 dark:border-dark-border">
-                <button
-                    type="submit"
-                    :disabled="form.processing"
-                    class="px-4 py-2 bg-primary-400 text-white rounded-md hover:bg-primary-500 disabled:opacity-50 disabled:cursor-not-allowed transition"
-                >
+            <div class="mt-6 flex justify-end border-t border-border-subtle pt-6">
+                <Button type="submit" variant="default" :loading="form.processing" :disabled="form.processing">
                     {{ form.processing ? t('common.saving') : t('settings.account.savePreferences') }}
-                </button>
+                </Button>
             </div>
         </form>
     </div>

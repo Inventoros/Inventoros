@@ -1,8 +1,13 @@
 <script setup>
-import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
+import AppLayout from '@/Layouts/AppLayout.vue';
 import PluginSlot from '@/Components/PluginSlot.vue';
+import PageHeader from '@/Components/ui/PageHeader.vue';
+import Card from '@/Components/ui/Card.vue';
+import Button from '@/Components/ui/Button.vue';
+import Badge from '@/Components/ui/Badge.vue';
 import { Head, Link, router } from '@inertiajs/vue3';
 import { useI18n } from 'vue-i18n';
+import { Pencil, ArrowLeft, Trash2, PackageOpen } from 'lucide-vue-next';
 
 const { t } = useI18n();
 
@@ -23,213 +28,187 @@ const formatCurrency = (value) => {
         currency: props.supplier.currency || 'USD',
     }).format(value || 0);
 };
+
+const thClass = 'px-4 py-2.5 text-left text-xs font-medium text-text-secondary';
 </script>
 
 <template>
     <Head :title="supplier.name" />
 
-    <AuthenticatedLayout>
+    <AppLayout>
         <template #header>
-            <div class="flex items-center justify-between">
-                <h2 class="font-semibold text-xl text-gray-900 dark:text-gray-100 leading-tight">
-                    {{ supplier.name }}
-                </h2>
-                <div class="flex items-center gap-2">
-                    <Link
-                        :href="route('suppliers.edit', supplier.id)"
-                        class="inline-flex items-center px-4 py-2 bg-primary-400 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-primary-500"
-                    >
-                        Edit
-                    </Link>
-                    <Link
-                        :href="route('suppliers.index')"
-                        class="inline-flex items-center px-4 py-2 bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-border rounded-md font-semibold text-xs text-gray-600 dark:text-gray-300 uppercase tracking-widest hover:bg-gray-100 dark:hover:bg-dark-bg/50"
-                    >
-                        Back
-                    </Link>
-                </div>
+            <div class="flex items-center gap-2 text-xs">
+                <Link :href="route('suppliers.index')" class="text-text-tertiary hover:text-text-primary">Workspace</Link>
+                <span class="text-text-tertiary">/</span>
+                <Link :href="route('suppliers.index')" class="text-text-tertiary hover:text-text-primary">{{ t('suppliers.title') }}</Link>
+                <span class="text-text-tertiary">/</span>
+                <span class="font-medium text-text-primary">{{ supplier.name }}</span>
             </div>
         </template>
 
-        <div class="py-12 bg-gray-50 dark:bg-dark-bg min-h-screen">
-            <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-                <!-- Plugin Slot: Header -->
-                <PluginSlot slot="header" :components="pluginComponents?.header" />
+        <PageHeader :title="supplier.name" :description="supplier.code ? `Code: ${supplier.code}` : 'Supplier details'">
+            <template #actions>
+                <Badge :variant="supplier.is_active ? 'success' : 'neutral'" size="sm" dot>
+                    {{ supplier.is_active ? t('common.active') : t('common.inactive') }}
+                </Badge>
+                <Button variant="default" size="sm" as="Link" :href="route('suppliers.edit', supplier.id)">
+                    <Pencil :size="14" />
+                    {{ t('common.edit') }}
+                </Button>
+                <Button variant="secondary" size="sm" as="Link" :href="route('suppliers.index')">
+                    <ArrowLeft :size="14" />
+                    {{ t('common.back') }}
+                </Button>
+            </template>
+        </PageHeader>
 
-                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    <!-- Main Info -->
-                    <div class="lg:col-span-2 space-y-6">
-                        <!-- Contact Information -->
-                        <div class="bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border overflow-hidden shadow-lg sm:rounded-lg">
-                            <div class="px-6 py-4 border-b border-gray-200 dark:border-dark-border">
-                                <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100">Contact Information</h3>
+        <!-- Plugin Slot: Header -->
+        <PluginSlot slot="header" :components="pluginComponents?.header" />
+
+        <div class="mt-6 grid grid-cols-1 gap-4 lg:grid-cols-3">
+            <!-- Main Info -->
+            <div class="space-y-4 lg:col-span-2">
+                <!-- Contact Information -->
+                <Card :padded="false">
+                    <div class="px-5 pt-5"><h3 class="text-sm font-semibold text-text-primary">Contact Information</h3></div>
+                    <div class="p-5">
+                        <dl class="grid grid-cols-1 gap-x-4 gap-y-6 sm:grid-cols-2">
+                            <div>
+                                <dt class="text-xs text-text-tertiary">Contact Person</dt>
+                                <dd class="mt-1 text-sm text-text-primary">{{ supplier.contact_name || '-' }}</dd>
                             </div>
-                            <div class="p-6">
-                                <dl class="grid grid-cols-1 gap-x-4 gap-y-6 sm:grid-cols-2">
-                                    <div>
-                                        <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Contact Person</dt>
-                                        <dd class="mt-1 text-sm text-gray-900 dark:text-gray-100">{{ supplier.contact_name || '-' }}</dd>
-                                    </div>
-                                    <div>
-                                        <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Email</dt>
-                                        <dd class="mt-1 text-sm text-gray-900 dark:text-gray-100">
-                                            <a v-if="supplier.email" :href="`mailto:${supplier.email}`" class="text-primary-400 hover:underline">
-                                                {{ supplier.email }}
-                                            </a>
-                                            <span v-else>-</span>
-                                        </dd>
-                                    </div>
-                                    <div>
-                                        <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Phone</dt>
-                                        <dd class="mt-1 text-sm text-gray-900 dark:text-gray-100">{{ supplier.phone || '-' }}</dd>
-                                    </div>
-                                    <div>
-                                        <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Website</dt>
-                                        <dd class="mt-1 text-sm text-gray-900 dark:text-gray-100">
-                                            <a v-if="supplier.website" :href="supplier.website" target="_blank" class="text-primary-400 hover:underline">
-                                                {{ supplier.website }}
-                                            </a>
-                                            <span v-else>-</span>
-                                        </dd>
-                                    </div>
-                                </dl>
+                            <div>
+                                <dt class="text-xs text-text-tertiary">Email</dt>
+                                <dd class="mt-1 text-sm text-text-primary">
+                                    <a v-if="supplier.email" :href="`mailto:${supplier.email}`" class="text-brand hover:underline">
+                                        {{ supplier.email }}
+                                    </a>
+                                    <span v-else>-</span>
+                                </dd>
                             </div>
+                            <div>
+                                <dt class="text-xs text-text-tertiary">Phone</dt>
+                                <dd class="mt-1 text-sm text-text-primary">{{ supplier.phone || '-' }}</dd>
+                            </div>
+                            <div>
+                                <dt class="text-xs text-text-tertiary">Website</dt>
+                                <dd class="mt-1 text-sm text-text-primary">
+                                    <a v-if="supplier.website" :href="supplier.website" target="_blank" class="text-brand hover:underline">
+                                        {{ supplier.website }}
+                                    </a>
+                                    <span v-else>-</span>
+                                </dd>
+                            </div>
+                        </dl>
+                    </div>
+                </Card>
+
+                <!-- Address -->
+                <Card :padded="false">
+                    <div class="px-5 pt-5"><h3 class="text-sm font-semibold text-text-primary">Address</h3></div>
+                    <div class="p-5">
+                        <p class="text-sm text-text-primary">
+                            <template v-if="supplier.address || supplier.city || supplier.state || supplier.zip_code || supplier.country">
+                                <span v-if="supplier.address">{{ supplier.address }}<br></span>
+                                <span v-if="supplier.city">{{ supplier.city }}, </span>
+                                <span v-if="supplier.state">{{ supplier.state }} </span>
+                                <span v-if="supplier.zip_code">{{ supplier.zip_code }}<br></span>
+                                <span v-if="supplier.country">{{ supplier.country }}</span>
+                            </template>
+                            <template v-else>
+                                <span class="text-text-tertiary">No address provided</span>
+                            </template>
+                        </p>
+                    </div>
+                </Card>
+
+                <!-- Products -->
+                <Card :padded="false">
+                    <div class="flex items-center justify-between px-5 pt-5">
+                        <h3 class="text-sm font-semibold text-text-primary">Products</h3>
+                        <Badge variant="brand" size="sm">{{ supplier.products?.length || 0 }}</Badge>
+                    </div>
+                    <div class="p-5">
+                        <div v-if="supplier.products?.length > 0" class="w-full overflow-x-auto rounded-lg border border-border-subtle">
+                            <table class="min-w-full text-sm">
+                                <thead>
+                                    <tr class="border-b border-border-subtle">
+                                        <th :class="thClass">Product</th>
+                                        <th :class="thClass">SKU</th>
+                                        <th :class="thClass">Supplier SKU</th>
+                                        <th :class="[thClass, 'text-right']">Cost Price</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr v-for="product in supplier.products" :key="product.id" class="border-b border-border-subtle transition-colors last:border-b-0 hover:bg-surface-overlay">
+                                        <td class="px-4 py-3">
+                                            <Link :href="route('products.show', product.id)" class="text-sm font-medium text-brand hover:underline">
+                                                {{ product.name }}
+                                            </Link>
+                                        </td>
+                                        <td class="px-4 py-3 text-sm text-text-tertiary">{{ product.sku }}</td>
+                                        <td class="px-4 py-3 text-sm text-text-tertiary">{{ product.pivot?.supplier_sku || '-' }}</td>
+                                        <td class="px-4 py-3 text-right text-sm tabular-nums text-text-secondary">{{ formatCurrency(product.pivot?.cost_price) }}</td>
+                                    </tr>
+                                </tbody>
+                            </table>
                         </div>
-
-                        <!-- Address -->
-                        <div class="bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border overflow-hidden shadow-lg sm:rounded-lg">
-                            <div class="px-6 py-4 border-b border-gray-200 dark:border-dark-border">
-                                <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100">Address</h3>
-                            </div>
-                            <div class="p-6">
-                                <p class="text-sm text-gray-900 dark:text-gray-100">
-                                    <template v-if="supplier.address || supplier.city || supplier.state || supplier.zip_code || supplier.country">
-                                        <span v-if="supplier.address">{{ supplier.address }}<br></span>
-                                        <span v-if="supplier.city">{{ supplier.city }}, </span>
-                                        <span v-if="supplier.state">{{ supplier.state }} </span>
-                                        <span v-if="supplier.zip_code">{{ supplier.zip_code }}<br></span>
-                                        <span v-if="supplier.country">{{ supplier.country }}</span>
-                                    </template>
-                                    <template v-else>
-                                        <span class="text-gray-500 dark:text-gray-400">No address provided</span>
-                                    </template>
-                                </p>
-                            </div>
-                        </div>
-
-                        <!-- Products -->
-                        <div class="bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border overflow-hidden shadow-lg sm:rounded-lg">
-                            <div class="px-6 py-4 border-b border-gray-200 dark:border-dark-border">
-                                <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100">Products ({{ supplier.products?.length || 0 }})</h3>
-                            </div>
-                            <div class="overflow-x-auto">
-                                <table v-if="supplier.products?.length > 0" class="min-w-full divide-y divide-gray-200 dark:divide-dark-border">
-                                    <thead class="bg-gray-50 dark:bg-dark-bg">
-                                        <tr>
-                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Product</th>
-                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">SKU</th>
-                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Supplier SKU</th>
-                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Cost Price</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody class="bg-white dark:bg-dark-card divide-y divide-gray-200 dark:divide-dark-border">
-                                        <tr v-for="product in supplier.products" :key="product.id">
-                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
-                                                <Link :href="route('products.show', product.id)" class="text-primary-400 hover:underline">
-                                                    {{ product.name }}
-                                                </Link>
-                                            </td>
-                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">{{ product.sku }}</td>
-                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">{{ product.pivot?.supplier_sku || '-' }}</td>
-                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">{{ formatCurrency(product.pivot?.cost_price) }}</td>
-                                        </tr>
-                                    </tbody>
-                                </table>
-                                <div v-else class="p-6 text-center text-gray-500 dark:text-gray-400">
-                                    No products linked to this supplier
-                                </div>
-                            </div>
+                        <div v-else class="flex flex-col items-center gap-2 py-8 text-center">
+                            <PackageOpen :size="22" class="text-text-tertiary" />
+                            <p class="text-sm text-text-tertiary">No products linked to this supplier</p>
                         </div>
                     </div>
+                </Card>
+            </div>
 
-                    <!-- Sidebar -->
-                    <div class="space-y-6">
-                        <!-- Status Card -->
-                        <div class="bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border overflow-hidden shadow-lg sm:rounded-lg">
-                            <div class="px-6 py-4 border-b border-gray-200 dark:border-dark-border">
-                                <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100">Status</h3>
+            <!-- Sidebar -->
+            <div class="space-y-4">
+                <!-- Business Details Card -->
+                <Card :padded="false">
+                    <div class="px-5 pt-5"><h3 class="text-sm font-semibold text-text-primary">Business Details</h3></div>
+                    <div class="p-5">
+                        <dl class="space-y-3">
+                            <div>
+                                <dt class="text-xs text-text-tertiary">Supplier Code</dt>
+                                <dd class="mt-1 text-sm text-text-primary">{{ supplier.code || '-' }}</dd>
                             </div>
-                            <div class="p-6">
-                                <span
-                                    :class="[
-                                        'inline-flex items-center px-3 py-1 rounded-full text-sm font-medium',
-                                        supplier.is_active
-                                            ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
-                                            : 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400'
-                                    ]"
-                                >
-                                    {{ supplier.is_active ? 'Active' : 'Inactive' }}
-                                </span>
+                            <div>
+                                <dt class="text-xs text-text-tertiary">Payment Terms</dt>
+                                <dd class="mt-1 text-sm text-text-primary">{{ supplier.payment_terms || '-' }}</dd>
                             </div>
-                        </div>
-
-                        <!-- Business Details Card -->
-                        <div class="bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border overflow-hidden shadow-lg sm:rounded-lg">
-                            <div class="px-6 py-4 border-b border-gray-200 dark:border-dark-border">
-                                <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100">Business Details</h3>
+                            <div>
+                                <dt class="text-xs text-text-tertiary">Currency</dt>
+                                <dd class="mt-1 text-sm text-text-primary">{{ supplier.currency || 'USD' }}</dd>
                             </div>
-                            <div class="p-6 space-y-4">
-                                <div>
-                                    <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Supplier Code</dt>
-                                    <dd class="mt-1 text-sm text-gray-900 dark:text-gray-100">{{ supplier.code || '-' }}</dd>
-                                </div>
-                                <div>
-                                    <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Payment Terms</dt>
-                                    <dd class="mt-1 text-sm text-gray-900 dark:text-gray-100">{{ supplier.payment_terms || '-' }}</dd>
-                                </div>
-                                <div>
-                                    <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Currency</dt>
-                                    <dd class="mt-1 text-sm text-gray-900 dark:text-gray-100">{{ supplier.currency || 'USD' }}</dd>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Notes Card -->
-                        <div v-if="supplier.notes" class="bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border overflow-hidden shadow-lg sm:rounded-lg">
-                            <div class="px-6 py-4 border-b border-gray-200 dark:border-dark-border">
-                                <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100">Notes</h3>
-                            </div>
-                            <div class="p-6">
-                                <p class="text-sm text-gray-600 dark:text-gray-300 whitespace-pre-wrap">{{ supplier.notes }}</p>
-                            </div>
-                        </div>
-
-                        <!-- Actions Card -->
-                        <div class="bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border overflow-hidden shadow-lg sm:rounded-lg">
-                            <div class="px-6 py-4 border-b border-gray-200 dark:border-dark-border">
-                                <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100">Actions</h3>
-                            </div>
-                            <div class="p-6 space-y-3">
-                                <Link
-                                    :href="route('suppliers.edit', supplier.id)"
-                                    class="w-full inline-flex justify-center items-center px-4 py-2 bg-primary-400 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-primary-500"
-                                >
-                                    Edit Supplier
-                                </Link>
-                                <button
-                                    @click="deleteSupplier"
-                                    class="w-full inline-flex justify-center items-center px-4 py-2 bg-red-500 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-red-600"
-                                >
-                                    Delete Supplier
-                                </button>
-                            </div>
-                        </div>
+                        </dl>
                     </div>
-                </div>
+                </Card>
 
-                <!-- Plugin Slot: Footer -->
-                <PluginSlot slot="footer" :components="pluginComponents?.footer" />
+                <!-- Notes Card -->
+                <Card v-if="supplier.notes" :padded="false">
+                    <div class="px-5 pt-5"><h3 class="text-sm font-semibold text-text-primary">Notes</h3></div>
+                    <div class="p-5">
+                        <p class="whitespace-pre-wrap text-sm text-text-secondary">{{ supplier.notes }}</p>
+                    </div>
+                </Card>
+
+                <!-- Danger Zone -->
+                <Card :padded="false">
+                    <div class="px-5 pt-5"><h3 class="text-sm font-semibold text-text-primary">Danger Zone</h3></div>
+                    <div class="p-5">
+                        <Button variant="danger" class="w-full" @click="deleteSupplier">
+                            <Trash2 :size="14" />
+                            Delete Supplier
+                        </Button>
+                        <p class="mt-2 text-xs text-text-tertiary">
+                            This permanently removes the supplier and cannot be undone.
+                        </p>
+                    </div>
+                </Card>
             </div>
         </div>
-    </AuthenticatedLayout>
+
+        <!-- Plugin Slot: Footer -->
+        <PluginSlot slot="footer" :components="pluginComponents?.footer" />
+    </AppLayout>
 </template>

@@ -1,7 +1,14 @@
 <script setup>
-import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
+import AppLayout from '@/Layouts/AppLayout.vue';
+import PageHeader from '@/Components/ui/PageHeader.vue';
+import Card from '@/Components/ui/Card.vue';
+import Button from '@/Components/ui/Button.vue';
+import Badge from '@/Components/ui/Badge.vue';
+import StatTile from '@/Components/ui/StatTile.vue';
 import { Head, Link, router } from '@inertiajs/vue3';
+import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
+import { Pencil, ArrowLeft, Trash2, ShoppingCart, Wallet, PackageOpen } from 'lucide-vue-next';
 
 const { t } = useI18n();
 
@@ -9,103 +16,135 @@ const props = defineProps({
     customer: Object,
 });
 
+const orders = computed(() => props.customer.orders || []);
+
+const totalSpend = computed(() =>
+    orders.value.reduce((sum, o) => sum + parseFloat(o.total || 0), 0)
+);
+
+const formatCurrency = (value) =>
+    new Intl.NumberFormat('en-US', {
+        style: 'currency',
+        currency: props.customer.currency || 'USD',
+    }).format(value || 0);
+
+const formatDate = (date) => (date ? new Date(date).toLocaleDateString() : '-');
+
+const statusVariant = (status) =>
+    ({
+        pending: 'warning',
+        processing: 'info',
+        shipped: 'brand',
+        delivered: 'success',
+        completed: 'success',
+        cancelled: 'danger',
+    }[status] || 'neutral');
+
 const deleteCustomer = () => {
     if (confirm(t('products.confirmDelete', { name: props.customer.name }))) {
         router.delete(route('customers.destroy', props.customer.id));
     }
 };
+
+const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-text-secondary';
 </script>
 
 <template>
     <Head :title="customer.name" />
 
-    <AuthenticatedLayout>
+    <AppLayout>
         <template #header>
-            <div class="flex items-center justify-between">
-                <h2 class="font-semibold text-xl text-gray-900 dark:text-gray-100 leading-tight">
-                    {{ customer.name }}
-                </h2>
-                <div class="flex items-center gap-3">
-                    <Link
-                        :href="route('customers.edit', customer.id)"
-                        class="inline-flex items-center px-4 py-2 bg-primary-400 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-primary-500"
-                    >
-                        {{ t('common.edit') }}
-                    </Link>
-                    <Link
-                        :href="route('customers.index')"
-                        class="inline-flex items-center px-4 py-2 bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-border rounded-md font-semibold text-xs text-gray-600 dark:text-gray-300 uppercase tracking-widest hover:bg-gray-100 dark:hover:bg-dark-bg/50"
-                    >
-                        {{ t('customers.create.backToCustomers') }}
-                    </Link>
-                </div>
+            <div class="flex items-center gap-2 text-xs">
+                <Link :href="route('customers.index')" class="text-text-tertiary hover:text-text-primary">Workspace</Link>
+                <span class="text-text-tertiary">/</span>
+                <Link :href="route('customers.index')" class="text-text-tertiary hover:text-text-primary">{{ t('customers.title') }}</Link>
+                <span class="text-text-tertiary">/</span>
+                <span class="font-medium text-text-primary">{{ customer.name }}</span>
             </div>
         </template>
 
-        <div class="py-12 bg-gray-50 dark:bg-dark-bg min-h-screen">
-            <div class="max-w-4xl mx-auto sm:px-6 lg:px-8 space-y-6">
-                <!-- Status Badge -->
-                <div class="flex items-center gap-3">
-                    <span
-                        :class="[
-                            'inline-flex items-center px-3 py-1 rounded-full text-sm font-medium',
-                            customer.is_active
-                                ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
-                                : 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400'
-                        ]"
-                    >
-                        {{ customer.is_active ? t('common.active') : t('common.inactive') }}
-                    </span>
-                    <span v-if="customer.code" class="text-gray-500 dark:text-gray-400">
-                        Code: {{ customer.code }}
-                    </span>
-                </div>
+        <PageHeader
+            :title="customer.name"
+            :description="customer.code ? `Code: ${customer.code}` : customer.company_name || null"
+        >
+            <template #actions>
+                <Badge :variant="customer.is_active ? 'success' : 'neutral'" size="sm" dot>
+                    {{ customer.is_active ? t('common.active') : t('common.inactive') }}
+                </Badge>
+                <Button variant="default" size="sm" as="Link" :href="route('customers.edit', customer.id)">
+                    <Pencil :size="14" />
+                    {{ t('common.edit') }}
+                </Button>
+                <Button variant="secondary" size="sm" as="Link" :href="route('customers.index')">
+                    <ArrowLeft :size="14" />
+                    {{ t('customers.create.backToCustomers') }}
+                </Button>
+            </template>
+        </PageHeader>
 
+        <!-- Key metrics -->
+        <section class="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <StatTile
+                :label="t('customers.show.recentOrders')"
+                :value="orders.length"
+                icon-tone="brand"
+            >
+                <template #icon><ShoppingCart :size="18" /></template>
+            </StatTile>
+            <StatTile
+                :label="t('common.total')"
+                :value="formatCurrency(totalSpend)"
+                :hint="customer.currency || 'USD'"
+                icon-tone="success"
+            >
+                <template #icon><Wallet :size="18" /></template>
+            </StatTile>
+        </section>
+
+        <div class="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-3">
+            <!-- Main column -->
+            <div class="space-y-4 lg:col-span-2">
                 <!-- Basic Information -->
-                <div class="bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border overflow-hidden shadow-lg sm:rounded-lg">
-                    <div class="px-6 py-4 border-b border-gray-200 dark:border-dark-border">
-                        <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100">{{ t('customers.show.basicInfo') }}</h3>
-                    </div>
-                    <div class="p-6">
+                <Card :padded="false">
+                    <div class="px-5 pt-5"><h3 class="text-sm font-semibold text-text-primary">{{ t('customers.show.basicInfo') }}</h3></div>
+                    <div class="p-5">
                         <dl class="grid grid-cols-1 gap-x-4 gap-y-6 sm:grid-cols-2">
                             <div>
-                                <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">{{ t('customers.show.customerName') }}</dt>
-                                <dd class="mt-1 text-sm text-gray-900 dark:text-gray-100">{{ customer.name }}</dd>
+                                <dt class="text-xs text-text-tertiary">{{ t('customers.show.customerName') }}</dt>
+                                <dd class="mt-1 text-sm text-text-primary">{{ customer.name }}</dd>
                             </div>
                             <div>
-                                <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">{{ t('customers.show.companyName') }}</dt>
-                                <dd class="mt-1 text-sm text-gray-900 dark:text-gray-100">{{ customer.company_name || '-' }}</dd>
+                                <dt class="text-xs text-text-tertiary">{{ t('customers.show.companyName') }}</dt>
+                                <dd class="mt-1 text-sm text-text-primary">{{ customer.company_name || '-' }}</dd>
                             </div>
                             <div>
-                                <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">{{ t('customers.show.contactPerson') }}</dt>
-                                <dd class="mt-1 text-sm text-gray-900 dark:text-gray-100">{{ customer.contact_name || '-' }}</dd>
+                                <dt class="text-xs text-text-tertiary">{{ t('customers.show.contactPerson') }}</dt>
+                                <dd class="mt-1 text-sm text-text-primary">{{ customer.contact_name || '-' }}</dd>
                             </div>
                             <div>
-                                <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">{{ t('common.email') }}</dt>
-                                <dd class="mt-1 text-sm text-gray-900 dark:text-gray-100">
-                                    <a v-if="customer.email" :href="`mailto:${customer.email}`" class="text-primary-400 hover:underline">
+                                <dt class="text-xs text-text-tertiary">{{ t('common.email') }}</dt>
+                                <dd class="mt-1 text-sm text-text-primary">
+                                    <a v-if="customer.email" :href="`mailto:${customer.email}`" class="text-brand hover:underline">
                                         {{ customer.email }}
                                     </a>
                                     <span v-else>-</span>
                                 </dd>
                             </div>
                             <div>
-                                <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">{{ t('common.phone') }}</dt>
-                                <dd class="mt-1 text-sm text-gray-900 dark:text-gray-100">{{ customer.phone || '-' }}</dd>
+                                <dt class="text-xs text-text-tertiary">{{ t('common.phone') }}</dt>
+                                <dd class="mt-1 text-sm text-text-primary">{{ customer.phone || '-' }}</dd>
                             </div>
                         </dl>
                     </div>
-                </div>
+                </Card>
 
                 <!-- Addresses -->
-                <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
+                <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
                     <!-- Billing Address -->
-                    <div class="bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border overflow-hidden shadow-lg sm:rounded-lg">
-                        <div class="px-6 py-4 border-b border-gray-200 dark:border-dark-border">
-                            <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100">{{ t('customers.show.billingAddress') }}</h3>
-                        </div>
-                        <div class="p-6">
-                            <address class="not-italic text-sm text-gray-900 dark:text-gray-100">
+                    <Card :padded="false">
+                        <div class="px-5 pt-5"><h3 class="text-sm font-semibold text-text-primary">{{ t('customers.show.billingAddress') }}</h3></div>
+                        <div class="p-5">
+                            <address class="not-italic text-sm text-text-primary">
                                 <template v-if="customer.billing_address || customer.billing_city">
                                     <div v-if="customer.billing_address">{{ customer.billing_address }}</div>
                                     <div v-if="customer.billing_city || customer.billing_state || customer.billing_zip_code">
@@ -113,18 +152,16 @@ const deleteCustomer = () => {
                                     </div>
                                     <div v-if="customer.billing_country">{{ customer.billing_country }}</div>
                                 </template>
-                                <span v-else class="text-gray-500 dark:text-gray-400">{{ t('customers.show.noBillingAddress') }}</span>
+                                <span v-else class="text-text-tertiary">{{ t('customers.show.noBillingAddress') }}</span>
                             </address>
                         </div>
-                    </div>
+                    </Card>
 
                     <!-- Shipping Address -->
-                    <div class="bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border overflow-hidden shadow-lg sm:rounded-lg">
-                        <div class="px-6 py-4 border-b border-gray-200 dark:border-dark-border">
-                            <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100">{{ t('customers.show.shippingAddress') }}</h3>
-                        </div>
-                        <div class="p-6">
-                            <address class="not-italic text-sm text-gray-900 dark:text-gray-100">
+                    <Card :padded="false">
+                        <div class="px-5 pt-5"><h3 class="text-sm font-semibold text-text-primary">{{ t('customers.show.shippingAddress') }}</h3></div>
+                        <div class="p-5">
+                            <address class="not-italic text-sm text-text-primary">
                                 <template v-if="customer.shipping_address || customer.shipping_city">
                                     <div v-if="customer.shipping_address">{{ customer.shipping_address }}</div>
                                     <div v-if="customer.shipping_city || customer.shipping_state || customer.shipping_zip_code">
@@ -132,76 +169,109 @@ const deleteCustomer = () => {
                                     </div>
                                     <div v-if="customer.shipping_country">{{ customer.shipping_country }}</div>
                                 </template>
-                                <span v-else class="text-gray-500 dark:text-gray-400">{{ t('customers.show.noShippingAddress') }}</span>
+                                <span v-else class="text-text-tertiary">{{ t('customers.show.noShippingAddress') }}</span>
                             </address>
                         </div>
-                    </div>
+                    </Card>
                 </div>
 
-                <!-- Business Details -->
-                <div class="bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border overflow-hidden shadow-lg sm:rounded-lg">
-                    <div class="px-6 py-4 border-b border-gray-200 dark:border-dark-border">
-                        <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100">{{ t('customers.show.businessDetails') }}</h3>
+                <!-- Order History -->
+                <Card :padded="false">
+                    <div class="px-5 pt-5"><h3 class="text-sm font-semibold text-text-primary">{{ t('customers.show.recentOrders') }}</h3></div>
+                    <div class="p-5">
+                        <div v-if="orders.length > 0" class="w-full overflow-x-auto rounded-lg border border-border-subtle">
+                            <table class="min-w-full text-sm">
+                                <thead>
+                                    <tr class="border-b border-border-subtle">
+                                        <th :class="thClass">{{ t('orders.show.orderNumber2') }}</th>
+                                        <th :class="thClass">{{ t('purchaseOrders.orderDate') }}</th>
+                                        <th :class="thClass">{{ t('common.status') }}</th>
+                                        <th :class="[thClass, 'text-right']">{{ t('common.total') }}</th>
+                                        <th :class="[thClass, 'text-right']">{{ t('common.actions') }}</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr
+                                        v-for="order in orders.slice(0, 5)"
+                                        :key="order.id"
+                                        class="border-b border-border-subtle transition-colors last:border-b-0 hover:bg-surface-overlay"
+                                    >
+                                        <td class="px-4 py-3">
+                                            <Link :href="route('orders.show', order.id)" class="font-medium text-brand hover:underline">
+                                                {{ order.order_number }}
+                                            </Link>
+                                        </td>
+                                        <td class="px-4 py-3 text-text-tertiary">{{ formatDate(order.created_at) }}</td>
+                                        <td class="px-4 py-3">
+                                            <Badge v-if="order.status" :variant="statusVariant(order.status)" size="sm" dot class="capitalize">
+                                                {{ order.status }}
+                                            </Badge>
+                                            <span v-else class="text-text-tertiary">-</span>
+                                        </td>
+                                        <td class="px-4 py-3 text-right font-medium tabular-nums text-text-primary">
+                                            {{ order.total != null ? formatCurrency(order.total) : '-' }}
+                                        </td>
+                                        <td class="px-4 py-3 text-right">
+                                            <Link :href="route('orders.show', order.id)" class="text-sm text-brand hover:underline">
+                                                {{ t('common.view') }}
+                                            </Link>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div v-else class="flex flex-col items-center gap-2 py-8 text-center">
+                            <PackageOpen :size="22" class="text-text-tertiary" />
+                            <p class="text-sm text-text-tertiary">{{ t('customers.show.noOrdersYet') }}</p>
+                        </div>
                     </div>
-                    <div class="p-6">
-                        <dl class="grid grid-cols-1 gap-x-4 gap-y-6 sm:grid-cols-2">
+                </Card>
+            </div>
+
+            <!-- Sidebar -->
+            <div class="space-y-4">
+                <!-- Business Details -->
+                <Card :padded="false">
+                    <div class="px-5 pt-5"><h3 class="text-sm font-semibold text-text-primary">{{ t('customers.show.businessDetails') }}</h3></div>
+                    <div class="p-5">
+                        <dl class="space-y-3">
                             <div>
-                                <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">{{ t('customers.show.taxIdVat') }}</dt>
-                                <dd class="mt-1 text-sm text-gray-900 dark:text-gray-100">{{ customer.tax_id || '-' }}</dd>
+                                <dt class="text-xs text-text-tertiary">{{ t('customers.show.taxIdVat') }}</dt>
+                                <dd class="mt-1 text-sm text-text-primary">{{ customer.tax_id || '-' }}</dd>
                             </div>
                             <div>
-                                <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">{{ t('customers.show.paymentTerms') }}</dt>
-                                <dd class="mt-1 text-sm text-gray-900 dark:text-gray-100">{{ customer.payment_terms || '-' }}</dd>
+                                <dt class="text-xs text-text-tertiary">{{ t('customers.show.paymentTerms') }}</dt>
+                                <dd class="mt-1 text-sm text-text-primary">{{ customer.payment_terms || '-' }}</dd>
                             </div>
                             <div>
-                                <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">{{ t('customers.show.creditLimit') }}</dt>
-                                <dd class="mt-1 text-sm text-gray-900 dark:text-gray-100">
+                                <dt class="text-xs text-text-tertiary">{{ t('customers.show.creditLimit') }}</dt>
+                                <dd class="mt-1 text-sm text-text-primary">
                                     {{ customer.credit_limit ? `${customer.currency} ${Number(customer.credit_limit).toLocaleString()}` : '-' }}
                                 </dd>
                             </div>
                             <div>
-                                <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">{{ t('common.currency') }}</dt>
-                                <dd class="mt-1 text-sm text-gray-900 dark:text-gray-100">{{ customer.currency }}</dd>
+                                <dt class="text-xs text-text-tertiary">{{ t('common.currency') }}</dt>
+                                <dd class="mt-1 text-sm text-text-primary">{{ customer.currency }}</dd>
                             </div>
-                            <div class="sm:col-span-2" v-if="customer.notes">
-                                <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">{{ t('common.notes') }}</dt>
-                                <dd class="mt-1 text-sm text-gray-900 dark:text-gray-100 whitespace-pre-wrap">{{ customer.notes }}</dd>
+                            <div v-if="customer.notes" class="border-t border-border-subtle pt-3">
+                                <dt class="text-xs text-text-tertiary">{{ t('common.notes') }}</dt>
+                                <dd class="mt-1 whitespace-pre-wrap text-sm text-text-primary">{{ customer.notes }}</dd>
                             </div>
                         </dl>
                     </div>
-                </div>
+                </Card>
 
-                <!-- Orders -->
-                <div class="bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border overflow-hidden shadow-lg sm:rounded-lg">
-                    <div class="px-6 py-4 border-b border-gray-200 dark:border-dark-border">
-                        <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100">{{ t('customers.show.recentOrders') }}</h3>
+                <!-- Danger Zone -->
+                <Card :padded="false">
+                    <div class="px-5 pt-5"><h3 class="text-sm font-semibold text-text-primary">{{ t('orders.show.dangerZone') }}</h3></div>
+                    <div class="p-5">
+                        <Button variant="danger" class="w-full" @click="deleteCustomer">
+                            <Trash2 :size="16" />
+                            {{ t('customers.show.deleteCustomer') }}
+                        </Button>
                     </div>
-                    <div class="p-6">
-                        <div v-if="customer.orders && customer.orders.length > 0" class="space-y-3">
-                            <div v-for="order in customer.orders.slice(0, 5)" :key="order.id" class="flex items-center justify-between py-2 border-b border-gray-100 dark:border-dark-border last:border-0">
-                                <div>
-                                    <span class="text-sm font-medium text-gray-900 dark:text-gray-100">{{ order.order_number }}</span>
-                                    <span class="text-sm text-gray-500 dark:text-gray-400 ml-2">{{ new Date(order.created_at).toLocaleDateString() }}</span>
-                                </div>
-                                <Link :href="route('orders.show', order.id)" class="text-primary-400 hover:underline text-sm">
-                                    {{ t('common.view') }}
-                                </Link>
-                            </div>
-                        </div>
-                        <p v-else class="text-gray-500 dark:text-gray-400 text-sm">{{ t('customers.show.noOrdersYet') }}</p>
-                    </div>
-                </div>
-
-                <!-- Actions -->
-                <div class="flex items-center justify-end gap-4">
-                    <button
-                        @click="deleteCustomer"
-                        class="inline-flex items-center px-4 py-2 bg-red-500 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-red-600"
-                    >
-                        {{ t('customers.show.deleteCustomer') }}
-                    </button>
-                </div>
+                </Card>
             </div>
         </div>
-    </AuthenticatedLayout>
+    </AppLayout>
 </template>

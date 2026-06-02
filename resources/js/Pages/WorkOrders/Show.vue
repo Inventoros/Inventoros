@@ -1,8 +1,14 @@
 <script setup>
-import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
+import AppLayout from '@/Layouts/AppLayout.vue';
+import PageHeader from '@/Components/ui/PageHeader.vue';
+import Card from '@/Components/ui/Card.vue';
+import Button from '@/Components/ui/Button.vue';
+import Badge from '@/Components/ui/Badge.vue';
+import StatTile from '@/Components/ui/StatTile.vue';
 import { Head, Link, router } from '@inertiajs/vue3';
 import { ref } from 'vue';
 import { useI18n } from 'vue-i18n';
+import { ArrowLeft, Play, CheckCircle2, X, Boxes, PackageCheck, Check, AlertTriangle } from 'lucide-vue-next';
 
 const { t } = useI18n();
 
@@ -31,16 +37,14 @@ const isStepCurrent = (stepKey) => {
     return stepKey === props.workOrder.status;
 };
 
-const getStatusBadgeClass = (status) => {
-    const classes = {
-        'draft': 'bg-gray-100 dark:bg-gray-900/30 text-gray-800 dark:text-gray-300',
-        'pending': 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300',
-        'in_progress': 'bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300',
-        'completed': 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300',
-        'cancelled': 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300',
-    };
-    return classes[status] || classes.draft;
-};
+const statusVariant = (status) =>
+    ({
+        draft: 'neutral',
+        pending: 'warning',
+        in_progress: 'info',
+        completed: 'success',
+        cancelled: 'danger',
+    }[status] || 'neutral');
 
 const getStatusLabel = (status) => {
     const labels = {
@@ -51,6 +55,18 @@ const getStatusLabel = (status) => {
         'cancelled': 'Cancelled',
     };
     return labels[status] || status;
+};
+
+const componentStatusVariant = (comp) => {
+    if ((comp.quantity_consumed || 0) >= comp.quantity_required) return 'success';
+    if ((comp.component?.stock || 0) >= comp.quantity_required) return 'warning';
+    return 'danger';
+};
+
+const componentStatusLabel = (comp) => {
+    if ((comp.quantity_consumed || 0) >= comp.quantity_required) return 'Consumed';
+    if ((comp.component?.stock || 0) >= comp.quantity_required) return 'Ready';
+    return 'Insufficient';
 };
 
 const formatDate = (dateStr) => {
@@ -94,283 +110,299 @@ const cancelWorkOrder = () => {
         onFinish: () => { processing.value = false; },
     });
 };
+
+const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-text-secondary';
+const fieldInput = 'h-9 w-full rounded-md border border-border-subtle bg-surface-canvas px-3 text-sm text-text-primary placeholder:text-text-tertiary ds-focus-ring';
 </script>
 
 <template>
     <Head :title="`Work Order ${workOrder.wo_number}`" />
 
-    <AuthenticatedLayout>
+    <AppLayout>
         <template #header>
-            <div class="flex justify-between items-center">
-                <div>
-                    <h2 class="font-semibold text-2xl text-gray-900 dark:text-gray-100">{{ workOrder.wo_number }}</h2>
-                    <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Work order details</p>
-                </div>
-                <div class="flex gap-2">
-                    <Link
-                        :href="route('work-orders.index')"
-                        class="px-4 py-2 bg-gray-200 dark:bg-dark-bg hover:bg-gray-300 dark:hover:bg-dark-bg/70 text-gray-700 dark:text-gray-300 font-medium rounded-lg transition"
-                    >
-                        Back to Work Orders
-                    </Link>
-                </div>
+            <div class="flex items-center gap-2 text-xs">
+                <Link :href="route('work-orders.index')" class="text-text-tertiary hover:text-text-primary">Workspace</Link>
+                <span class="text-text-tertiary">/</span>
+                <Link :href="route('work-orders.index')" class="text-text-tertiary hover:text-text-primary">Work Orders</Link>
+                <span class="text-text-tertiary">/</span>
+                <span class="font-medium text-text-primary">{{ workOrder.wo_number }}</span>
             </div>
         </template>
 
-        <div class="py-12 bg-gray-50 dark:bg-dark-bg min-h-screen">
-            <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-6">
+        <PageHeader :title="workOrder.wo_number" description="Work order details">
+            <template #actions>
+                <Badge :variant="statusVariant(workOrder.status)" size="sm" dot>{{ getStatusLabel(workOrder.status) }}</Badge>
+                <Button
+                    v-if="canStart"
+                    variant="default"
+                    size="sm"
+                    :disabled="processing"
+                    @click="startProduction"
+                >
+                    <Play :size="14" />
+                    Start Production
+                </Button>
+                <Button
+                    v-if="canCancel"
+                    variant="danger"
+                    size="sm"
+                    :disabled="processing"
+                    @click="cancelWorkOrder"
+                >
+                    <X :size="14" />
+                    Cancel Work Order
+                </Button>
+                <Button variant="secondary" size="sm" as="Link" :href="route('work-orders.index')">
+                    <ArrowLeft :size="14" />
+                    Back to Work Orders
+                </Button>
+            </template>
+        </PageHeader>
 
-                <!-- Status Timeline -->
-                <div v-if="workOrder.status !== 'cancelled'" class="bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border shadow-sm sm:rounded-lg p-6">
-                    <h3 class="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-4">Production Progress</h3>
-                    <div class="flex items-center justify-between">
-                        <template v-for="(step, index) in statusSteps" :key="step.key">
-                            <div class="flex items-center">
-                                <div
-                                    class="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition"
-                                    :class="isStepCompleted(step.key)
-                                        ? 'bg-primary-500 text-white'
-                                        : 'bg-gray-200 dark:bg-dark-bg text-gray-500 dark:text-gray-400'"
-                                >
-                                    <svg v-if="isStepCompleted(step.key) && !isStepCurrent(step.key)" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                                    </svg>
-                                    <span v-else>{{ index + 1 }}</span>
-                                </div>
-                                <span
-                                    class="ml-2 text-sm font-medium"
-                                    :class="isStepCurrent(step.key) ? 'text-primary-400' : isStepCompleted(step.key) ? 'text-gray-900 dark:text-gray-100' : 'text-gray-500 dark:text-gray-400'"
-                                >
-                                    {{ step.label }}
-                                </span>
-                            </div>
+        <!-- Status Timeline -->
+        <Card v-if="workOrder.status !== 'cancelled'" :padded="false" class="mt-6">
+            <div class="px-5 pt-5"><h3 class="text-sm font-semibold text-text-primary">Production Progress</h3></div>
+            <div class="p-5">
+                <div class="flex items-center justify-between">
+                    <template v-for="(step, index) in statusSteps" :key="step.key">
+                        <div class="flex items-center">
                             <div
-                                v-if="index < statusSteps.length - 1"
-                                class="flex-1 h-0.5 mx-4"
-                                :class="isStepCompleted(statusSteps[index + 1].key) ? 'bg-primary-500' : 'bg-gray-200 dark:bg-dark-bg'"
-                            ></div>
-                        </template>
-                    </div>
+                                class="flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold transition-colors"
+                                :class="isStepCompleted(step.key)
+                                    ? 'bg-brand text-brand-foreground'
+                                    : 'bg-surface-overlay text-text-tertiary'"
+                            >
+                                <Check v-if="isStepCompleted(step.key) && !isStepCurrent(step.key)" :size="16" />
+                                <span v-else>{{ index + 1 }}</span>
+                            </div>
+                            <span
+                                class="ml-2 text-sm font-medium"
+                                :class="isStepCurrent(step.key) ? 'text-brand' : isStepCompleted(step.key) ? 'text-text-primary' : 'text-text-tertiary'"
+                            >
+                                {{ step.label }}
+                            </span>
+                        </div>
+                        <div
+                            v-if="index < statusSteps.length - 1"
+                            class="mx-4 h-0.5 flex-1"
+                            :class="isStepCompleted(statusSteps[index + 1].key) ? 'bg-brand' : 'bg-border-subtle'"
+                        ></div>
+                    </template>
                 </div>
+            </div>
+        </Card>
 
-                <!-- Cancelled Banner -->
-                <div v-if="workOrder.status === 'cancelled'" class="bg-red-900/20 border border-red-800 rounded-lg p-4">
-                    <div class="flex items-center">
-                        <svg class="w-5 h-5 text-red-400 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
-                        </svg>
-                        <span class="text-red-300 font-medium">This work order has been cancelled.</span>
-                    </div>
-                </div>
+        <!-- Cancelled Banner -->
+        <Card v-if="workOrder.status === 'cancelled'" class="mt-6 border-status-danger/20 bg-status-danger-soft">
+            <div class="flex items-center gap-3">
+                <AlertTriangle :size="20" class="shrink-0 text-status-danger" />
+                <span class="text-sm font-medium text-status-danger">This work order has been cancelled.</span>
+            </div>
+        </Card>
 
-                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    <!-- Main Content -->
-                    <div class="lg:col-span-2 space-y-6">
-                        <!-- Work Order Details -->
-                        <div class="bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border shadow-sm sm:rounded-lg p-6">
-                            <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Work Order Details</h3>
-                            <div class="grid grid-cols-2 gap-4">
-                                <div>
-                                    <p class="text-xs text-gray-500 dark:text-gray-400 mb-1">Assembly Product</p>
+        <!-- Key metrics -->
+        <section class="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <StatTile
+                label="Quantity to Produce"
+                :value="workOrder.quantity"
+                icon-tone="brand"
+            >
+                <template #icon><Boxes :size="18" /></template>
+            </StatTile>
+            <StatTile
+                label="Quantity Produced"
+                :value="workOrder.quantity_produced || 0"
+                :icon-tone="(workOrder.quantity_produced || 0) >= workOrder.quantity ? 'success' : 'info'"
+            >
+                <template #icon><PackageCheck :size="18" /></template>
+            </StatTile>
+        </section>
+
+        <div class="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-3">
+            <!-- Main Content -->
+            <div class="space-y-4 lg:col-span-2">
+                <!-- Work Order Details -->
+                <Card :padded="false">
+                    <div class="px-5 pt-5"><h3 class="text-sm font-semibold text-text-primary">Work Order Details</h3></div>
+                    <div class="p-5">
+                        <dl class="grid grid-cols-2 gap-4">
+                            <div>
+                                <dt class="mb-1 text-xs text-text-tertiary">Assembly Product</dt>
+                                <dd>
                                     <Link
                                         v-if="workOrder.product"
                                         :href="route('products.show', workOrder.product.id)"
-                                        class="text-primary-400 hover:text-primary-300 font-medium"
+                                        class="font-medium text-brand hover:underline"
                                     >
                                         {{ workOrder.product.name }}
                                     </Link>
-                                    <p v-if="workOrder.product" class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">SKU: {{ workOrder.product.sku }}</p>
-                                </div>
-                                <div>
-                                    <p class="text-xs text-gray-500 dark:text-gray-400 mb-1">Status</p>
-                                    <span :class="['px-2 py-1 text-xs font-semibold rounded-full', getStatusBadgeClass(workOrder.status)]">
-                                        {{ getStatusLabel(workOrder.status) }}
-                                    </span>
-                                </div>
-                                <div>
-                                    <p class="text-xs text-gray-500 dark:text-gray-400 mb-1">Quantity to Produce</p>
-                                    <p class="text-lg font-bold text-gray-900 dark:text-gray-100">{{ workOrder.quantity }}</p>
-                                </div>
-                                <div>
-                                    <p class="text-xs text-gray-500 dark:text-gray-400 mb-1">Quantity Produced</p>
-                                    <p class="text-lg font-bold" :class="(workOrder.quantity_produced || 0) >= workOrder.quantity ? 'text-green-400' : 'text-gray-900 dark:text-gray-100'">
-                                        {{ workOrder.quantity_produced || 0 }}
-                                    </p>
-                                </div>
-                                <div v-if="workOrder.warehouse">
-                                    <p class="text-xs text-gray-500 dark:text-gray-400 mb-1">Warehouse</p>
-                                    <p class="text-sm text-gray-900 dark:text-gray-100">{{ workOrder.warehouse.name }}</p>
-                                </div>
-                                <div v-if="workOrder.notes">
-                                    <p class="text-xs text-gray-500 dark:text-gray-400 mb-1">Notes</p>
-                                    <p class="text-sm text-gray-900 dark:text-gray-100">{{ workOrder.notes }}</p>
-                                </div>
+                                    <p v-if="workOrder.product" class="mt-0.5 text-xs text-text-tertiary">SKU: {{ workOrder.product.sku }}</p>
+                                </dd>
                             </div>
-                        </div>
+                            <div>
+                                <dt class="mb-1 text-xs text-text-tertiary">Status</dt>
+                                <dd>
+                                    <Badge :variant="statusVariant(workOrder.status)" size="sm" dot>{{ getStatusLabel(workOrder.status) }}</Badge>
+                                </dd>
+                            </div>
+                            <div>
+                                <dt class="mb-1 text-xs text-text-tertiary">Quantity to Produce</dt>
+                                <dd class="text-lg font-bold tabular-nums text-text-primary">{{ workOrder.quantity }}</dd>
+                            </div>
+                            <div>
+                                <dt class="mb-1 text-xs text-text-tertiary">Quantity Produced</dt>
+                                <dd class="text-lg font-bold tabular-nums" :class="(workOrder.quantity_produced || 0) >= workOrder.quantity ? 'text-status-success' : 'text-text-primary'">
+                                    {{ workOrder.quantity_produced || 0 }}
+                                </dd>
+                            </div>
+                            <div v-if="workOrder.warehouse">
+                                <dt class="mb-1 text-xs text-text-tertiary">Warehouse</dt>
+                                <dd class="text-sm text-text-primary">{{ workOrder.warehouse.name }}</dd>
+                            </div>
+                            <div v-if="workOrder.notes">
+                                <dt class="mb-1 text-xs text-text-tertiary">Notes</dt>
+                                <dd class="text-sm text-text-primary">{{ workOrder.notes }}</dd>
+                            </div>
+                        </dl>
+                    </div>
+                </Card>
 
-                        <!-- Components Table -->
-                        <div class="bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border shadow-sm sm:rounded-lg overflow-hidden">
-                            <div class="p-6 border-b border-gray-200 dark:border-dark-border">
-                                <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">Required Components</h3>
-                            </div>
-                            <div class="overflow-x-auto">
-                                <table class="min-w-full divide-y divide-gray-200 dark:divide-dark-border">
-                                    <thead class="bg-gray-50 dark:bg-dark-bg">
-                                        <tr>
-                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Component</th>
-                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">SKU</th>
-                                            <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Required Qty</th>
-                                            <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Consumed</th>
-                                            <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Available</th>
-                                            <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Status</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody class="bg-white dark:bg-dark-card divide-y divide-gray-200 dark:divide-dark-border">
-                                        <tr v-for="comp in (workOrder.components || [])" :key="comp.id" class="hover:bg-gray-50 dark:hover:bg-dark-bg/50 transition">
-                                            <td class="px-6 py-4 whitespace-nowrap">
-                                                <Link
-                                                    v-if="comp.component"
-                                                    :href="route('products.show', comp.component.id)"
-                                                    class="text-primary-400 hover:text-primary-300 font-medium text-sm"
-                                                >
-                                                    {{ comp.component.name }}
-                                                </Link>
-                                                <span v-else class="text-sm text-gray-500">Unknown</span>
-                                            </td>
-                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                                                {{ comp.component?.sku || '-' }}
-                                            </td>
-                                            <td class="px-6 py-4 whitespace-nowrap text-center text-sm font-medium text-gray-900 dark:text-gray-100">
-                                                {{ comp.quantity_required }}
-                                            </td>
-                                            <td class="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-900 dark:text-gray-100">
-                                                {{ comp.quantity_consumed || 0 }}
-                                            </td>
-                                            <td class="px-6 py-4 whitespace-nowrap text-center text-sm" :class="(comp.component?.stock || 0) >= comp.quantity_required ? 'text-green-400' : 'text-red-400'">
-                                                {{ comp.component?.stock || 0 }}
-                                            </td>
-                                            <td class="px-6 py-4 whitespace-nowrap text-center">
-                                                <span
-                                                    v-if="(comp.quantity_consumed || 0) >= comp.quantity_required"
-                                                    class="px-2 py-0.5 text-xs font-semibold rounded-full bg-green-900/30 text-green-300"
-                                                >
-                                                    Consumed
-                                                </span>
-                                                <span
-                                                    v-else-if="(comp.component?.stock || 0) >= comp.quantity_required"
-                                                    class="px-2 py-0.5 text-xs font-semibold rounded-full bg-yellow-900/30 text-yellow-300"
-                                                >
-                                                    Ready
-                                                </span>
-                                                <span
-                                                    v-else
-                                                    class="px-2 py-0.5 text-xs font-semibold rounded-full bg-red-900/30 text-red-300"
-                                                >
-                                                    Insufficient
-                                                </span>
-                                            </td>
-                                        </tr>
+                <!-- Components Table -->
+                <Card :padded="false">
+                    <div class="px-5 pt-5"><h3 class="text-sm font-semibold text-text-primary">Required Components</h3></div>
+                    <div class="p-5">
+                        <div class="w-full overflow-x-auto rounded-lg border border-border-subtle">
+                            <table class="min-w-full">
+                                <thead>
+                                    <tr class="border-b border-border-subtle">
+                                        <th :class="thClass">Component</th>
+                                        <th :class="thClass">SKU</th>
+                                        <th :class="[thClass, 'text-center']">Required Qty</th>
+                                        <th :class="[thClass, 'text-center']">Consumed</th>
+                                        <th :class="[thClass, 'text-center']">Available</th>
+                                        <th :class="[thClass, 'text-center']">Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr v-for="comp in (workOrder.components || [])" :key="comp.id" class="border-b border-border-subtle transition-colors last:border-b-0 hover:bg-surface-overlay">
+                                        <td class="px-4 py-3">
+                                            <Link
+                                                v-if="comp.component"
+                                                :href="route('products.show', comp.component.id)"
+                                                class="text-sm font-medium text-brand hover:underline"
+                                            >
+                                                {{ comp.component.name }}
+                                            </Link>
+                                            <span v-else class="text-sm text-text-tertiary">Unknown</span>
+                                        </td>
+                                        <td class="px-4 py-3 text-sm text-text-tertiary">
+                                            {{ comp.component?.sku || '-' }}
+                                        </td>
+                                        <td class="px-4 py-3 text-center text-sm font-medium tabular-nums text-text-primary">
+                                            {{ comp.quantity_required }}
+                                        </td>
+                                        <td class="px-4 py-3 text-center text-sm tabular-nums text-text-primary">
+                                            {{ comp.quantity_consumed || 0 }}
+                                        </td>
+                                        <td class="px-4 py-3 text-center text-sm tabular-nums" :class="(comp.component?.stock || 0) >= comp.quantity_required ? 'text-status-success' : 'text-status-danger'">
+                                            {{ comp.component?.stock || 0 }}
+                                        </td>
+                                        <td class="px-4 py-3 text-center">
+                                            <Badge :variant="componentStatusVariant(comp)" size="sm">
+                                                {{ componentStatusLabel(comp) }}
+                                            </Badge>
+                                        </td>
+                                    </tr>
 
-                                        <tr v-if="!workOrder.components || workOrder.components.length === 0">
-                                            <td colspan="6" class="px-6 py-8 text-center text-sm text-gray-500 dark:text-gray-400">
-                                                No components recorded for this work order.
-                                            </td>
-                                        </tr>
-                                    </tbody>
-                                </table>
-                            </div>
+                                    <tr v-if="!workOrder.components || workOrder.components.length === 0">
+                                        <td colspan="6" class="px-4 py-8 text-center text-sm text-text-tertiary">
+                                            No components recorded for this work order.
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
                         </div>
                     </div>
+                </Card>
+            </div>
 
-                    <!-- Sidebar -->
-                    <div class="space-y-6">
-                        <!-- Actions -->
-                        <div v-if="!isReadOnly" class="bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border shadow-sm sm:rounded-lg p-6">
-                            <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Actions</h3>
-                            <div class="space-y-3">
-                                <button
-                                    v-if="canStart"
-                                    @click="startProduction"
-                                    :disabled="processing"
-                                    class="w-full px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition disabled:opacity-50"
-                                >
-                                    <svg class="w-4 h-4 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                    </svg>
-                                    Start Production
-                                </button>
-
-                                <div v-if="canComplete" class="space-y-2">
-                                    <label class="block text-sm font-medium text-gray-600 dark:text-gray-300">
-                                        Quantity Produced
-                                    </label>
-                                    <input
-                                        v-model.number="quantityProduced"
-                                        type="number"
-                                        min="1"
-                                        :max="workOrder.quantity"
-                                        class="block w-full rounded-md bg-gray-50 dark:bg-dark-bg border-gray-200 dark:border-dark-border text-gray-900 dark:text-gray-100 shadow-sm focus:border-primary-400 focus:ring-primary-400"
-                                    />
-                                    <button
-                                        @click="completeProduction"
-                                        :disabled="processing"
-                                        class="w-full px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-medium rounded-lg transition disabled:opacity-50"
-                                    >
-                                        <svg class="w-4 h-4 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                        </svg>
-                                        Complete Production
-                                    </button>
-                                </div>
-
-                                <button
-                                    v-if="canCancel"
-                                    @click="cancelWorkOrder"
-                                    :disabled="processing"
-                                    class="w-full px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-medium rounded-lg transition disabled:opacity-50"
-                                >
-                                    <svg class="w-4 h-4 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                                    </svg>
-                                    Cancel Work Order
-                                </button>
-                            </div>
-                        </div>
-
-                        <!-- Dates / Info -->
-                        <div class="bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border shadow-sm sm:rounded-lg p-6">
-                            <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Information</h3>
-                            <div class="space-y-3">
-                                <div>
-                                    <p class="text-xs text-gray-500 dark:text-gray-400 mb-1">Created By</p>
-                                    <p class="text-sm text-gray-900 dark:text-gray-100">{{ workOrder.created_by?.name || '-' }}</p>
-                                </div>
-                                <div>
-                                    <p class="text-xs text-gray-500 dark:text-gray-400 mb-1">Created</p>
-                                    <p class="text-sm text-gray-900 dark:text-gray-100">{{ formatDate(workOrder.created_at) }}</p>
-                                </div>
-                                <div v-if="workOrder.started_at">
-                                    <p class="text-xs text-gray-500 dark:text-gray-400 mb-1">Production Started</p>
-                                    <p class="text-sm text-gray-900 dark:text-gray-100">{{ formatDate(workOrder.started_at) }}</p>
-                                </div>
-                                <div v-if="workOrder.completed_at">
-                                    <p class="text-xs text-gray-500 dark:text-gray-400 mb-1">Completed</p>
-                                    <p class="text-sm text-gray-900 dark:text-gray-100">{{ formatDate(workOrder.completed_at) }}</p>
-                                </div>
-                                <div v-if="workOrder.cancelled_at">
-                                    <p class="text-xs text-gray-500 dark:text-gray-400 mb-1">Cancelled</p>
-                                    <p class="text-sm text-gray-900 dark:text-gray-100">{{ formatDate(workOrder.cancelled_at) }}</p>
-                                </div>
-                                <div>
-                                    <p class="text-xs text-gray-500 dark:text-gray-400 mb-1">Last Updated</p>
-                                    <p class="text-sm text-gray-900 dark:text-gray-100">{{ formatDate(workOrder.updated_at) }}</p>
-                                </div>
-                            </div>
+            <!-- Sidebar -->
+            <div class="space-y-4">
+                <!-- Complete Production -->
+                <Card v-if="!isReadOnly && canComplete" :padded="false">
+                    <div class="px-5 pt-5"><h3 class="text-sm font-semibold text-text-primary">Complete Production</h3></div>
+                    <div class="p-5">
+                        <div class="space-y-2">
+                            <label class="block text-sm font-medium text-text-secondary">
+                                Quantity Produced
+                            </label>
+                            <input
+                                v-model.number="quantityProduced"
+                                type="number"
+                                min="1"
+                                :max="workOrder.quantity"
+                                :class="fieldInput"
+                            />
+                            <Button
+                                variant="default"
+                                class="w-full"
+                                :disabled="processing"
+                                @click="completeProduction"
+                            >
+                                <CheckCircle2 :size="16" />
+                                Complete Production
+                            </Button>
                         </div>
                     </div>
-                </div>
+                </Card>
+
+                <!-- Dates / Info -->
+                <Card :padded="false">
+                    <div class="px-5 pt-5"><h3 class="text-sm font-semibold text-text-primary">Information</h3></div>
+                    <div class="p-5">
+                        <dl class="space-y-3">
+                            <div>
+                                <dt class="mb-1 text-xs text-text-tertiary">Created By</dt>
+                                <dd class="text-sm text-text-primary">{{ workOrder.created_by?.name || '-' }}</dd>
+                            </div>
+                            <div>
+                                <dt class="mb-1 text-xs text-text-tertiary">Created</dt>
+                                <dd class="text-sm text-text-primary">{{ formatDate(workOrder.created_at) }}</dd>
+                            </div>
+                            <div v-if="workOrder.started_at">
+                                <dt class="mb-1 text-xs text-text-tertiary">Production Started</dt>
+                                <dd class="text-sm text-text-primary">{{ formatDate(workOrder.started_at) }}</dd>
+                            </div>
+                            <div v-if="workOrder.completed_at">
+                                <dt class="mb-1 text-xs text-text-tertiary">Completed</dt>
+                                <dd class="text-sm text-text-primary">{{ formatDate(workOrder.completed_at) }}</dd>
+                            </div>
+                            <div v-if="workOrder.cancelled_at">
+                                <dt class="mb-1 text-xs text-text-tertiary">Cancelled</dt>
+                                <dd class="text-sm text-text-primary">{{ formatDate(workOrder.cancelled_at) }}</dd>
+                            </div>
+                            <div>
+                                <dt class="mb-1 text-xs text-text-tertiary">Last Updated</dt>
+                                <dd class="text-sm text-text-primary">{{ formatDate(workOrder.updated_at) }}</dd>
+                            </div>
+                        </dl>
+                    </div>
+                </Card>
+
+                <!-- Danger Zone -->
+                <Card v-if="canCancel" :padded="false">
+                    <div class="px-5 pt-5"><h3 class="text-sm font-semibold text-text-primary">Danger Zone</h3></div>
+                    <div class="p-5">
+                        <Button variant="danger" class="w-full" :disabled="processing" @click="cancelWorkOrder">
+                            <X :size="16" />
+                            Cancel Work Order
+                        </Button>
+                        <p class="mt-2 text-xs text-text-tertiary">
+                            Any reserved components will be released back to stock.
+                        </p>
+                    </div>
+                </Card>
             </div>
         </div>
-    </AuthenticatedLayout>
+    </AppLayout>
 </template>

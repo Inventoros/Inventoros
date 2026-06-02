@@ -1,8 +1,14 @@
 <script setup>
-import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
+import AppLayout from '@/Layouts/AppLayout.vue';
+import PageHeader from '@/Components/ui/PageHeader.vue';
+import Card from '@/Components/ui/Card.vue';
+import Button from '@/Components/ui/Button.vue';
+import Badge from '@/Components/ui/Badge.vue';
+import StatTile from '@/Components/ui/StatTile.vue';
 import { Head, Link, router } from '@inertiajs/vue3';
 import { useI18n } from 'vue-i18n';
 import { usePermissions } from '@/composables/usePermissions';
+import { Pencil, ArrowLeft, MapPin, Boxes, Users, Trash2 } from 'lucide-vue-next';
 
 const { t } = useI18n();
 const { hasPermission } = usePermissions();
@@ -19,234 +25,237 @@ const deleteWarehouse = () => {
         router.delete(route('warehouses.destroy', props.warehouse.id));
     }
 };
+
+const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-text-secondary';
 </script>
 
 <template>
     <Head :title="warehouse.name" />
 
-    <AuthenticatedLayout>
+    <AppLayout>
         <template #header>
-            <div class="flex items-center justify-between">
-                <h2 class="font-semibold text-xl text-gray-900 dark:text-gray-100 leading-tight">
-                    {{ warehouse.name }}
-                </h2>
-                <div class="flex items-center gap-2">
-                    <Link
-                        v-if="hasPermission('edit_warehouses')"
-                        :href="route('warehouses.edit', warehouse.id)"
-                        class="inline-flex items-center px-4 py-2 bg-primary-400 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-primary-500"
-                    >
-                        Edit
-                    </Link>
-                    <Link
-                        :href="route('warehouses.index')"
-                        class="inline-flex items-center px-4 py-2 bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-border rounded-md font-semibold text-xs text-gray-600 dark:text-gray-300 uppercase tracking-widest hover:bg-gray-100 dark:hover:bg-dark-bg/50"
-                    >
-                        Back
-                    </Link>
-                </div>
+            <div class="flex items-center gap-2 text-xs">
+                <Link :href="route('warehouses.index')" class="text-text-tertiary hover:text-text-primary">Workspace</Link>
+                <span class="text-text-tertiary">/</span>
+                <Link :href="route('warehouses.index')" class="text-text-tertiary hover:text-text-primary">Warehouses</Link>
+                <span class="text-text-tertiary">/</span>
+                <span class="font-medium text-text-primary">{{ warehouse.name }}</span>
             </div>
         </template>
 
-        <div class="py-12 bg-gray-50 dark:bg-dark-bg min-h-screen">
-            <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-                <!-- Status & Badges -->
-                <div class="flex items-center gap-3 mb-6">
-                    <span
-                        :class="[
-                            'inline-flex items-center px-3 py-1 rounded-full text-sm font-medium',
-                            warehouse.is_active
-                                ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
-                                : 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400'
-                        ]"
-                    >
-                        {{ warehouse.is_active ? 'Active' : 'Inactive' }}
-                    </span>
-                    <span
-                        v-if="warehouse.is_default"
-                        class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400"
-                    >
-                        Default Warehouse
-                    </span>
-                    <span class="text-gray-500 dark:text-gray-400">
-                        Code: {{ warehouse.code }}
-                    </span>
-                </div>
+        <PageHeader :title="warehouse.name" :description="`Code: ${warehouse.code}`">
+            <template #actions>
+                <Badge :variant="warehouse.is_active ? 'success' : 'neutral'" size="sm" dot>
+                    {{ warehouse.is_active ? 'Active' : 'Inactive' }}
+                </Badge>
+                <Badge v-if="warehouse.is_default" variant="info" size="sm">
+                    Default Warehouse
+                </Badge>
+                <Button
+                    v-if="hasPermission('edit_warehouses')"
+                    variant="default"
+                    size="sm"
+                    as="Link"
+                    :href="route('warehouses.edit', warehouse.id)"
+                >
+                    <Pencil :size="14" />
+                    Edit
+                </Button>
+                <Button variant="secondary" size="sm" as="Link" :href="route('warehouses.index')">
+                    <ArrowLeft :size="14" />
+                    Back
+                </Button>
+            </template>
+        </PageHeader>
 
-                <!-- Stats Cards -->
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-                    <div class="bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border overflow-hidden shadow-lg sm:rounded-lg p-6">
-                        <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Total Locations</dt>
-                        <dd class="mt-1 text-3xl font-semibold text-gray-900 dark:text-gray-100">{{ stats?.locations_count || 0 }}</dd>
+        <!-- Key metrics -->
+        <section class="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
+            <StatTile
+                label="Total Locations"
+                :value="stats?.locations_count || 0"
+                icon-tone="brand"
+            >
+                <template #icon><MapPin :size="18" /></template>
+            </StatTile>
+            <StatTile
+                label="Total Products Stored"
+                :value="stats?.products_count || 0"
+                icon-tone="success"
+            >
+                <template #icon><Boxes :size="18" /></template>
+            </StatTile>
+            <StatTile
+                label="Assigned Users"
+                :value="assignedUsers?.length || 0"
+                icon-tone="violet"
+            >
+                <template #icon><Users :size="18" /></template>
+            </StatTile>
+        </section>
+
+        <div class="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-3">
+            <!-- Main Info -->
+            <div class="space-y-4 lg:col-span-2">
+                <!-- Warehouse Details -->
+                <Card :padded="false">
+                    <div class="px-5 pt-5"><h3 class="text-sm font-semibold text-text-primary">Warehouse Details</h3></div>
+                    <div class="p-5">
+                        <dl class="grid grid-cols-1 gap-x-4 gap-y-6 sm:grid-cols-2">
+                            <div>
+                                <dt class="text-xs text-text-tertiary">Manager</dt>
+                                <dd class="mt-1 text-sm text-text-primary">{{ warehouse.manager_name || '-' }}</dd>
+                            </div>
+                            <div>
+                                <dt class="text-xs text-text-tertiary">Email</dt>
+                                <dd class="mt-1 text-sm text-text-primary">
+                                    <a v-if="warehouse.email" :href="`mailto:${warehouse.email}`" class="text-brand hover:underline">
+                                        {{ warehouse.email }}
+                                    </a>
+                                    <span v-else>-</span>
+                                </dd>
+                            </div>
+                            <div>
+                                <dt class="text-xs text-text-tertiary">Phone</dt>
+                                <dd class="mt-1 text-sm text-text-primary">{{ warehouse.phone || '-' }}</dd>
+                            </div>
+                            <div>
+                                <dt class="text-xs text-text-tertiary">Timezone</dt>
+                                <dd class="mt-1 text-sm text-text-primary">{{ warehouse.timezone || '-' }}</dd>
+                            </div>
+                            <div>
+                                <dt class="text-xs text-text-tertiary">Currency</dt>
+                                <dd class="mt-1 text-sm text-text-primary">{{ warehouse.currency || '-' }}</dd>
+                            </div>
+                            <div>
+                                <dt class="text-xs text-text-tertiary">Priority</dt>
+                                <dd class="mt-1 text-sm text-text-primary">{{ warehouse.priority ?? 0 }}</dd>
+                            </div>
+                            <div v-if="warehouse.description" class="sm:col-span-2">
+                                <dt class="text-xs text-text-tertiary">Description</dt>
+                                <dd class="mt-1 whitespace-pre-wrap text-sm text-text-primary">{{ warehouse.description }}</dd>
+                            </div>
+                        </dl>
                     </div>
-                    <div class="bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border overflow-hidden shadow-lg sm:rounded-lg p-6">
-                        <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Total Products Stored</dt>
-                        <dd class="mt-1 text-3xl font-semibold text-gray-900 dark:text-gray-100">{{ stats?.products_count || 0 }}</dd>
+                </Card>
+
+                <!-- Address -->
+                <Card :padded="false">
+                    <div class="px-5 pt-5"><h3 class="text-sm font-semibold text-text-primary">Address</h3></div>
+                    <div class="p-5">
+                        <p class="text-sm text-text-primary">
+                            <template v-if="warehouse.address_line_1 || warehouse.city || warehouse.province || warehouse.postal_code || warehouse.country">
+                                <span v-if="warehouse.address_line_1">{{ warehouse.address_line_1 }}<br></span>
+                                <span v-if="warehouse.address_line_2">{{ warehouse.address_line_2 }}<br></span>
+                                <span v-if="warehouse.city">{{ warehouse.city }}, </span>
+                                <span v-if="warehouse.province">{{ warehouse.province }} </span>
+                                <span v-if="warehouse.postal_code">{{ warehouse.postal_code }}<br></span>
+                                <span v-if="warehouse.country">{{ warehouse.country }}</span>
+                            </template>
+                            <template v-else>
+                                <span class="text-text-tertiary">No address provided</span>
+                            </template>
+                        </p>
                     </div>
-                    <div class="bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border overflow-hidden shadow-lg sm:rounded-lg p-6">
-                        <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Assigned Users</dt>
-                        <dd class="mt-1 text-3xl font-semibold text-gray-900 dark:text-gray-100">{{ assignedUsers?.length || 0 }}</dd>
-                    </div>
-                </div>
+                </Card>
 
-                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    <!-- Main Info -->
-                    <div class="lg:col-span-2 space-y-6">
-                        <!-- Warehouse Details -->
-                        <div class="bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border overflow-hidden shadow-lg sm:rounded-lg">
-                            <div class="px-6 py-4 border-b border-gray-200 dark:border-dark-border">
-                                <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100">Warehouse Details</h3>
-                            </div>
-                            <div class="p-6">
-                                <dl class="grid grid-cols-1 gap-x-4 gap-y-6 sm:grid-cols-2">
-                                    <div>
-                                        <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Manager</dt>
-                                        <dd class="mt-1 text-sm text-gray-900 dark:text-gray-100">{{ warehouse.manager_name || '-' }}</dd>
-                                    </div>
-                                    <div>
-                                        <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Email</dt>
-                                        <dd class="mt-1 text-sm text-gray-900 dark:text-gray-100">
-                                            <a v-if="warehouse.email" :href="`mailto:${warehouse.email}`" class="text-primary-400 hover:underline">
-                                                {{ warehouse.email }}
-                                            </a>
-                                            <span v-else>-</span>
-                                        </dd>
-                                    </div>
-                                    <div>
-                                        <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Phone</dt>
-                                        <dd class="mt-1 text-sm text-gray-900 dark:text-gray-100">{{ warehouse.phone || '-' }}</dd>
-                                    </div>
-                                    <div>
-                                        <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Timezone</dt>
-                                        <dd class="mt-1 text-sm text-gray-900 dark:text-gray-100">{{ warehouse.timezone || '-' }}</dd>
-                                    </div>
-                                    <div>
-                                        <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Currency</dt>
-                                        <dd class="mt-1 text-sm text-gray-900 dark:text-gray-100">{{ warehouse.currency || '-' }}</dd>
-                                    </div>
-                                    <div>
-                                        <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Priority</dt>
-                                        <dd class="mt-1 text-sm text-gray-900 dark:text-gray-100">{{ warehouse.priority ?? 0 }}</dd>
-                                    </div>
-                                    <div v-if="warehouse.description" class="sm:col-span-2">
-                                        <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Description</dt>
-                                        <dd class="mt-1 text-sm text-gray-900 dark:text-gray-100 whitespace-pre-wrap">{{ warehouse.description }}</dd>
-                                    </div>
-                                </dl>
-                            </div>
-                        </div>
-
-                        <!-- Address -->
-                        <div class="bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border overflow-hidden shadow-lg sm:rounded-lg">
-                            <div class="px-6 py-4 border-b border-gray-200 dark:border-dark-border">
-                                <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100">Address</h3>
-                            </div>
-                            <div class="p-6">
-                                <p class="text-sm text-gray-900 dark:text-gray-100">
-                                    <template v-if="warehouse.address_line_1 || warehouse.city || warehouse.province || warehouse.postal_code || warehouse.country">
-                                        <span v-if="warehouse.address_line_1">{{ warehouse.address_line_1 }}<br></span>
-                                        <span v-if="warehouse.address_line_2">{{ warehouse.address_line_2 }}<br></span>
-                                        <span v-if="warehouse.city">{{ warehouse.city }}, </span>
-                                        <span v-if="warehouse.province">{{ warehouse.province }} </span>
-                                        <span v-if="warehouse.postal_code">{{ warehouse.postal_code }}<br></span>
-                                        <span v-if="warehouse.country">{{ warehouse.country }}</span>
-                                    </template>
-                                    <template v-else>
-                                        <span class="text-gray-500 dark:text-gray-400">No address provided</span>
-                                    </template>
-                                </p>
-                            </div>
-                        </div>
-
-                        <!-- Locations -->
-                        <div class="bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border overflow-hidden shadow-lg sm:rounded-lg">
-                            <div class="px-6 py-4 border-b border-gray-200 dark:border-dark-border">
-                                <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100">Locations ({{ locations?.length || 0 }})</h3>
-                            </div>
-                            <div class="overflow-x-auto">
-                                <table v-if="locations && locations.length > 0" class="min-w-full divide-y divide-gray-200 dark:divide-dark-border">
-                                    <thead class="bg-gray-50 dark:bg-dark-bg">
-                                        <tr>
-                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Name</th>
-                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Code</th>
-                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Products</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody class="bg-white dark:bg-dark-card divide-y divide-gray-200 dark:divide-dark-border">
-                                        <tr v-for="location in locations" :key="location.id" class="hover:bg-gray-50 dark:hover:bg-dark-bg/50">
-                                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-gray-100">
-                                                {{ location.name }}
-                                            </td>
-                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                                                <span class="px-2 py-0.5 text-xs font-mono rounded bg-gray-50 dark:bg-dark-bg text-gray-600 dark:text-gray-300">
-                                                    {{ location.code }}
-                                                </span>
-                                            </td>
-                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                                                {{ location.products_count || 0 }}
-                                            </td>
-                                        </tr>
-                                    </tbody>
-                                </table>
-                                <div v-else class="p-6 text-center text-gray-500 dark:text-gray-400">
-                                    No locations in this warehouse
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Sidebar -->
-                    <div class="space-y-6">
-                        <!-- Assigned Users -->
-                        <div class="bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border overflow-hidden shadow-lg sm:rounded-lg">
-                            <div class="px-6 py-4 border-b border-gray-200 dark:border-dark-border">
-                                <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100">Assigned Users ({{ assignedUsers?.length || 0 }})</h3>
-                            </div>
-                            <div class="p-6">
-                                <div v-if="assignedUsers && assignedUsers.length > 0" class="space-y-3">
-                                    <div
-                                        v-for="user in assignedUsers"
-                                        :key="user.id"
-                                        class="flex items-center gap-3 py-2 border-b border-gray-100 dark:border-dark-border last:border-0"
+                <!-- Locations -->
+                <Card :padded="false">
+                    <div class="px-5 pt-5"><h3 class="text-sm font-semibold text-text-primary">Locations ({{ locations?.length || 0 }})</h3></div>
+                    <div class="p-5">
+                        <div v-if="locations && locations.length > 0" class="w-full overflow-x-auto rounded-lg border border-border-subtle">
+                            <table class="w-full text-sm">
+                                <thead>
+                                    <tr class="border-b border-border-subtle">
+                                        <th :class="thClass">Name</th>
+                                        <th :class="thClass">Code</th>
+                                        <th :class="thClass">Products</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr
+                                        v-for="location in locations"
+                                        :key="location.id"
+                                        class="border-b border-border-subtle transition-colors last:border-b-0 hover:bg-surface-overlay"
                                     >
-                                        <div class="w-8 h-8 bg-primary-400/20 rounded-full flex items-center justify-center flex-shrink-0">
-                                            <span class="text-xs font-medium text-primary-400">{{ user.name.charAt(0).toUpperCase() }}</span>
-                                        </div>
-                                        <div class="min-w-0">
-                                            <div class="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">{{ user.name }}</div>
-                                            <div class="text-xs text-gray-500 dark:text-gray-400 truncate">{{ user.email }}</div>
-                                        </div>
-                                    </div>
-                                </div>
-                                <p v-else class="text-sm text-gray-500 dark:text-gray-400">No users assigned to this warehouse.</p>
-                            </div>
+                                        <td class="px-4 py-3 text-sm font-medium text-text-primary">
+                                            {{ location.name }}
+                                        </td>
+                                        <td class="px-4 py-3">
+                                            <span class="rounded bg-surface-canvas px-2 py-0.5 font-mono text-xs text-text-secondary">
+                                                {{ location.code }}
+                                            </span>
+                                        </td>
+                                        <td class="px-4 py-3 text-sm tabular-nums text-text-secondary">
+                                            {{ location.products_count || 0 }}
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
                         </div>
-
-                        <!-- Actions Card -->
-                        <div class="bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border overflow-hidden shadow-lg sm:rounded-lg">
-                            <div class="px-6 py-4 border-b border-gray-200 dark:border-dark-border">
-                                <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100">Actions</h3>
-                            </div>
-                            <div class="p-6 space-y-3">
-                                <Link
-                                    v-if="hasPermission('edit_warehouses')"
-                                    :href="route('warehouses.edit', warehouse.id)"
-                                    class="w-full inline-flex justify-center items-center px-4 py-2 bg-primary-400 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-primary-500"
-                                >
-                                    Edit Warehouse
-                                </Link>
-                                <button
-                                    v-if="hasPermission('delete_warehouses') && !warehouse.is_default"
-                                    @click="deleteWarehouse"
-                                    class="w-full inline-flex justify-center items-center px-4 py-2 bg-red-500 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-red-600"
-                                >
-                                    Delete Warehouse
-                                </button>
-                            </div>
+                        <div v-else class="flex flex-col items-center gap-2 py-8 text-center">
+                            <MapPin :size="22" class="text-text-tertiary" />
+                            <p class="text-sm text-text-tertiary">No locations in this warehouse</p>
                         </div>
                     </div>
-                </div>
+                </Card>
+            </div>
+
+            <!-- Sidebar -->
+            <div class="space-y-4">
+                <!-- Assigned Users -->
+                <Card :padded="false">
+                    <div class="px-5 pt-5"><h3 class="text-sm font-semibold text-text-primary">Assigned Users ({{ assignedUsers?.length || 0 }})</h3></div>
+                    <div class="p-5">
+                        <div v-if="assignedUsers && assignedUsers.length > 0" class="space-y-3">
+                            <div
+                                v-for="user in assignedUsers"
+                                :key="user.id"
+                                class="flex items-center gap-3 border-b border-border-subtle py-2 last:border-0"
+                            >
+                                <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-brand-soft">
+                                    <span class="text-xs font-medium text-brand">{{ user.name.charAt(0).toUpperCase() }}</span>
+                                </div>
+                                <div class="min-w-0">
+                                    <div class="truncate text-sm font-medium text-text-primary">{{ user.name }}</div>
+                                    <div class="truncate text-xs text-text-tertiary">{{ user.email }}</div>
+                                </div>
+                            </div>
+                        </div>
+                        <p v-else class="text-sm text-text-tertiary">No users assigned to this warehouse.</p>
+                    </div>
+                </Card>
+
+                <!-- Actions -->
+                <Card v-if="hasPermission('edit_warehouses') || (hasPermission('delete_warehouses') && !warehouse.is_default)" :padded="false">
+                    <div class="px-5 pt-5"><h3 class="text-sm font-semibold text-text-primary">Actions</h3></div>
+                    <div class="space-y-3 p-5">
+                        <Button
+                            v-if="hasPermission('edit_warehouses')"
+                            variant="default"
+                            class="w-full"
+                            as="Link"
+                            :href="route('warehouses.edit', warehouse.id)"
+                        >
+                            <Pencil :size="16" />
+                            Edit Warehouse
+                        </Button>
+                    </div>
+                </Card>
+
+                <!-- Danger Zone -->
+                <Card v-if="hasPermission('delete_warehouses') && !warehouse.is_default" :padded="false">
+                    <div class="px-5 pt-5"><h3 class="text-sm font-semibold text-text-primary">Danger Zone</h3></div>
+                    <div class="p-5">
+                        <Button variant="danger" class="w-full" @click="deleteWarehouse">
+                            <Trash2 :size="16" />
+                            Delete Warehouse
+                        </Button>
+                        <p class="mt-2 text-xs text-text-tertiary">
+                            This action cannot be undone.
+                        </p>
+                    </div>
+                </Card>
             </div>
         </div>
-    </AuthenticatedLayout>
+    </AppLayout>
 </template>

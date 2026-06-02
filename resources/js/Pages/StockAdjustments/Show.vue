@@ -1,8 +1,14 @@
 <script setup>
-import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
+import AppLayout from '@/Layouts/AppLayout.vue';
+import PageHeader from '@/Components/ui/PageHeader.vue';
+import Card from '@/Components/ui/Card.vue';
+import Button from '@/Components/ui/Button.vue';
+import Badge from '@/Components/ui/Badge.vue';
+import StatTile from '@/Components/ui/StatTile.vue';
 import { Head, Link } from '@inertiajs/vue3';
 import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
+import { ArrowLeft, Boxes, ArrowUp, ArrowDown, Clock, CheckCircle2 } from 'lucide-vue-next';
 
 const { t } = useI18n();
 
@@ -10,18 +16,16 @@ const props = defineProps({
     adjustment: Object,
 });
 
-const getTypeBadgeClass = (type) => {
-    const classes = {
-        'manual': 'bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300',
-        'recount': 'bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-300',
-        'damage': 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300',
-        'loss': 'bg-orange-100 dark:bg-orange-900/30 text-orange-800 dark:text-orange-300',
-        'return': 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300',
-        'correction': 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300',
-        'order': 'bg-gray-100 dark:bg-gray-900/30 text-gray-800 dark:text-gray-300',
-    };
-    return classes[type] || classes.manual;
-};
+const typeVariant = (type) =>
+    ({
+        manual: 'info',
+        recount: 'brand',
+        damage: 'danger',
+        loss: 'warning',
+        return: 'success',
+        correction: 'warning',
+        order: 'neutral',
+    }[type] || 'info');
 
 const typeLabels = {
     'manual': 'Manual Adjustment',
@@ -35,199 +39,199 @@ const typeLabels = {
 
 const isIncrease = computed(() => props.adjustment.adjustment_quantity > 0);
 const isDecrease = computed(() => props.adjustment.adjustment_quantity < 0);
+
+const formatDate = (date) =>
+    new Date(date).toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+    });
+
+const formatTime = (date) =>
+    new Date(date).toLocaleTimeString('en-US', {
+        hour: '2-digit',
+        minute: '2-digit',
+    });
 </script>
 
 <template>
     <Head title="Stock Adjustment Details" />
 
-    <AuthenticatedLayout>
+    <AppLayout>
         <template #header>
-            <div class="flex justify-between items-center">
-                <div>
-                    <h2 class="font-semibold text-2xl text-gray-900 dark:text-gray-100">Stock Adjustment Details</h2>
-                    <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Adjustment #{{ adjustment.id }}</p>
-                </div>
-                <Link
-                    :href="route('stock-adjustments.index')"
-                    class="px-4 py-2 bg-gray-200 dark:bg-dark-bg hover:bg-gray-300 dark:hover:bg-dark-bg/70 text-gray-700 dark:text-gray-300 font-medium rounded-lg transition"
-                >
-                    Back to List
-                </Link>
+            <div class="flex items-center gap-2 text-xs">
+                <Link :href="route('stock-adjustments.index')" class="text-text-tertiary hover:text-text-primary">Workspace</Link>
+                <span class="text-text-tertiary">/</span>
+                <Link :href="route('stock-adjustments.index')" class="text-text-tertiary hover:text-text-primary">Stock Adjustments</Link>
+                <span class="text-text-tertiary">/</span>
+                <span class="font-medium text-text-primary">#{{ adjustment.id }}</span>
             </div>
         </template>
 
-        <div class="py-12 bg-gray-50 dark:bg-dark-bg min-h-screen">
-            <div class="max-w-4xl mx-auto sm:px-6 lg:px-8">
-                <!-- Summary Cards -->
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-                    <!-- Before -->
-                    <div class="bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border shadow-sm rounded-lg p-6">
-                        <p class="text-sm text-gray-500 dark:text-gray-400 mb-2">Stock Before</p>
-                        <p class="text-3xl font-bold text-gray-900 dark:text-gray-100">{{ adjustment.quantity_before }}</p>
-                    </div>
+        <PageHeader
+            title="Stock Adjustment Details"
+            :description="`Adjustment #${adjustment.id}`"
+        >
+            <template #actions>
+                <Badge :variant="typeVariant(adjustment.type)" size="sm">{{ typeLabels[adjustment.type] || adjustment.type }}</Badge>
+                <Button variant="secondary" size="sm" as="Link" :href="route('stock-adjustments.index')">
+                    <ArrowLeft :size="14" />
+                    Back to List
+                </Button>
+            </template>
+        </PageHeader>
 
-                    <!-- Change -->
-                    <div class="bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border shadow-sm rounded-lg p-6">
-                        <p class="text-sm text-gray-500 dark:text-gray-400 mb-2">Adjustment</p>
-                        <p class="text-3xl font-bold" :class="{
-                            'text-green-600 dark:text-green-400': isIncrease,
-                            'text-red-600 dark:text-red-400': isDecrease,
-                            'text-gray-600 dark:text-gray-400': !isIncrease && !isDecrease
-                        }">
-                            {{ adjustment.adjustment_quantity > 0 ? '+' : '' }}{{ adjustment.adjustment_quantity }}
-                        </p>
-                    </div>
+        <!-- Summary Tiles -->
+        <section class="mt-6 grid grid-cols-1 gap-3 md:grid-cols-3">
+            <StatTile
+                label="Stock Before"
+                :value="adjustment.quantity_before"
+                hint="units"
+                icon-tone="info"
+            >
+                <template #icon><Boxes :size="18" /></template>
+            </StatTile>
+            <StatTile
+                label="Adjustment"
+                :value="`${adjustment.adjustment_quantity > 0 ? '+' : ''}${adjustment.adjustment_quantity}`"
+                hint="units"
+                :icon-tone="isIncrease ? 'success' : isDecrease ? 'warning' : 'brand'"
+            >
+                <template #icon>
+                    <ArrowUp v-if="isIncrease" :size="18" />
+                    <ArrowDown v-else-if="isDecrease" :size="18" />
+                    <Boxes v-else :size="18" />
+                </template>
+            </StatTile>
+            <StatTile
+                label="Stock After"
+                :value="adjustment.quantity_after"
+                hint="units"
+                icon-tone="brand"
+            >
+                <template #icon><Boxes :size="18" /></template>
+            </StatTile>
+        </section>
 
-                    <!-- After -->
-                    <div class="bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border shadow-sm rounded-lg p-6">
-                        <p class="text-sm text-gray-500 dark:text-gray-400 mb-2">Stock After</p>
-                        <p class="text-3xl font-bold text-gray-900 dark:text-gray-100">{{ adjustment.quantity_after }}</p>
-                    </div>
-                </div>
-
-                <!-- Adjustment Details -->
-                <div class="bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border shadow-sm rounded-lg p-6 mb-6">
-                    <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-6">Adjustment Information</h3>
-
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div>
-                            <label class="block text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Product</label>
+        <!-- Adjustment Details -->
+        <Card :padded="false" class="mt-4">
+            <div class="px-5 pt-5"><h3 class="text-sm font-semibold text-text-primary">Adjustment Information</h3></div>
+            <div class="p-5">
+                <dl class="grid grid-cols-1 gap-6 md:grid-cols-2">
+                    <div>
+                        <dt class="mb-1 text-xs text-text-tertiary">Product</dt>
+                        <dd>
                             <Link
                                 :href="route('products.show', adjustment.product.id)"
-                                class="text-gray-900 dark:text-gray-100 hover:text-primary-400 font-medium"
+                                class="text-sm font-medium text-brand hover:underline"
                             >
                                 {{ adjustment.product.name }}
                             </Link>
-                            <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">SKU: {{ adjustment.product.sku }}</p>
-                        </div>
+                            <p class="mt-1 text-xs text-text-tertiary">SKU: {{ adjustment.product.sku }}</p>
+                        </dd>
+                    </div>
 
-                        <div>
-                            <label class="block text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Type</label>
-                            <span class="inline-flex px-3 py-1 text-sm font-semibold rounded-full" :class="getTypeBadgeClass(adjustment.type)">
+                    <div>
+                        <dt class="mb-1 text-xs text-text-tertiary">Type</dt>
+                        <dd>
+                            <Badge :variant="typeVariant(adjustment.type)" size="sm">
                                 {{ typeLabels[adjustment.type] || adjustment.type }}
-                            </span>
-                        </div>
+                            </Badge>
+                        </dd>
+                    </div>
 
-                        <div>
-                            <label class="block text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Adjusted By</label>
-                            <p class="text-gray-900 dark:text-gray-100">{{ adjustment.user?.name || 'System' }}</p>
-                            <p v-if="adjustment.user?.email" class="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                                {{ adjustment.user.email }}
+                    <div>
+                        <dt class="mb-1 text-xs text-text-tertiary">Adjusted By</dt>
+                        <dd class="text-sm text-text-primary">{{ adjustment.user?.name || 'System' }}</dd>
+                        <p v-if="adjustment.user?.email" class="mt-1 text-xs text-text-tertiary">
+                            {{ adjustment.user.email }}
+                        </p>
+                    </div>
+
+                    <div>
+                        <dt class="mb-1 text-xs text-text-tertiary">Date & Time</dt>
+                        <dd class="text-sm text-text-primary">{{ formatDate(adjustment.created_at) }}</dd>
+                        <p class="mt-1 text-xs text-text-tertiary">{{ formatTime(adjustment.created_at) }}</p>
+                    </div>
+
+                    <div class="md:col-span-2">
+                        <dt class="mb-1 text-xs text-text-tertiary">Reason</dt>
+                        <dd class="text-sm text-text-primary">{{ adjustment.reason }}</dd>
+                    </div>
+
+                    <div v-if="adjustment.notes" class="md:col-span-2">
+                        <dt class="mb-1 text-xs text-text-tertiary">Notes</dt>
+                        <dd class="whitespace-pre-line text-sm text-text-primary">{{ adjustment.notes }}</dd>
+                    </div>
+
+                    <div v-if="adjustment.reference_type" class="md:col-span-2">
+                        <dt class="mb-1 text-xs text-text-tertiary">Reference</dt>
+                        <dd class="rounded-lg border border-border-subtle bg-surface-canvas p-3">
+                            <p class="text-sm text-text-primary">
+                                {{ adjustment.reference_type }} #{{ adjustment.reference_id }}
                             </p>
-                        </div>
+                        </dd>
+                    </div>
+                </dl>
+            </div>
+        </Card>
 
-                        <div>
-                            <label class="block text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Date & Time</label>
-                            <p class="text-gray-900 dark:text-gray-100">
-                                {{ new Date(adjustment.created_at).toLocaleDateString('en-US', {
-                                    year: 'numeric',
-                                    month: 'long',
-                                    day: 'numeric'
-                                }) }}
-                            </p>
-                            <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                                {{ new Date(adjustment.created_at).toLocaleTimeString('en-US', {
-                                    hour: '2-digit',
-                                    minute: '2-digit'
-                                }) }}
-                            </p>
-                        </div>
+        <!-- Visual Timeline -->
+        <Card :padded="false" class="mt-4">
+            <div class="px-5 pt-5"><h3 class="text-sm font-semibold text-text-primary">Stock Change Timeline</h3></div>
+            <div class="p-5">
+                <div class="relative">
+                    <!-- Timeline line -->
+                    <div class="absolute left-8 top-8 bottom-8 w-px bg-border-subtle"></div>
 
-                        <div class="md:col-span-2">
-                            <label class="block text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Reason</label>
-                            <p class="text-gray-900 dark:text-gray-100">{{ adjustment.reason }}</p>
+                    <!-- Before -->
+                    <div class="relative mb-8 flex items-start gap-4">
+                        <div class="relative z-10 flex h-16 w-16 flex-shrink-0 items-center justify-center rounded-full bg-status-info-soft">
+                            <Clock :size="28" class="text-status-info" />
                         </div>
-
-                        <div v-if="adjustment.notes" class="md:col-span-2">
-                            <label class="block text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Notes</label>
-                            <p class="text-gray-900 dark:text-gray-100 whitespace-pre-line">{{ adjustment.notes }}</p>
-                        </div>
-
-                        <div v-if="adjustment.reference_type" class="md:col-span-2">
-                            <label class="block text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Reference</label>
-                            <div class="p-3 bg-gray-50 dark:bg-dark-bg rounded-lg border border-gray-200 dark:border-dark-border">
-                                <p class="text-sm text-gray-900 dark:text-gray-100">
-                                    {{ adjustment.reference_type }} #{{ adjustment.reference_id }}
-                                </p>
-                            </div>
+                        <div class="flex-1 rounded-lg border border-border-subtle bg-surface-canvas p-4">
+                            <p class="text-sm font-medium text-text-secondary">Starting Stock</p>
+                            <p class="mt-1 text-2xl font-bold tabular-nums text-text-primary">{{ adjustment.quantity_before }} units</p>
                         </div>
                     </div>
-                </div>
 
-                <!-- Visual Timeline -->
-                <div class="bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border shadow-sm rounded-lg p-6">
-                    <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-6">Stock Change Timeline</h3>
-
-                    <div class="relative">
-                        <!-- Timeline line -->
-                        <div class="absolute left-8 top-8 bottom-8 w-0.5 bg-gray-200 dark:bg-dark-border"></div>
-
-                        <!-- Before -->
-                        <div class="relative flex items-start gap-4 mb-8">
-                            <div class="flex-shrink-0 w-16 h-16 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center relative z-10">
-                                <svg class="w-8 h-8 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                </svg>
-                            </div>
-                            <div class="flex-1 bg-gray-50 dark:bg-dark-bg rounded-lg p-4">
-                                <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Starting Stock</p>
-                                <p class="text-2xl font-bold text-gray-900 dark:text-gray-100 mt-1">{{ adjustment.quantity_before }} units</p>
-                            </div>
+                    <!-- Adjustment -->
+                    <div class="relative mb-8 flex items-start gap-4">
+                        <div
+                            class="relative z-10 flex h-16 w-16 flex-shrink-0 items-center justify-center rounded-full"
+                            :class="isIncrease ? 'bg-status-success-soft' : 'bg-status-danger-soft'"
+                        >
+                            <ArrowUp v-if="isIncrease" :size="28" class="text-status-success" />
+                            <ArrowDown v-else :size="28" class="text-status-danger" />
                         </div>
-
-                        <!-- Adjustment -->
-                        <div class="relative flex items-start gap-4 mb-8">
-                            <div class="flex-shrink-0 w-16 h-16 rounded-full flex items-center justify-center relative z-10" :class="{
-                                'bg-green-100 dark:bg-green-900/30': isIncrease,
-                                'bg-red-100 dark:bg-red-900/30': isDecrease,
-                            }">
-                                <svg v-if="isIncrease" class="w-8 h-8 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 11l5-5m0 0l5 5m-5-5v12" />
-                                </svg>
-                                <svg v-else class="w-8 h-8 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 13l-5 5m0 0l-5-5m5 5V6" />
-                                </svg>
-                            </div>
-                            <div class="flex-1 rounded-lg p-4" :class="{
-                                'bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800': isIncrease,
-                                'bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800': isDecrease,
-                            }">
-                                <p class="text-sm font-medium" :class="{
-                                    'text-green-600 dark:text-green-400': isIncrease,
-                                    'text-red-600 dark:text-red-400': isDecrease,
-                                }">
-                                    {{ isIncrease ? 'Stock Increased' : 'Stock Decreased' }}
-                                </p>
-                                <p class="text-2xl font-bold mt-1" :class="{
-                                    'text-green-900 dark:text-green-100': isIncrease,
-                                    'text-red-900 dark:text-red-100': isDecrease,
-                                }">
-                                    {{ adjustment.adjustment_quantity > 0 ? '+' : '' }}{{ adjustment.adjustment_quantity }} units
-                                </p>
-                                <p class="text-xs mt-2" :class="{
-                                    'text-green-700 dark:text-green-300': isIncrease,
-                                    'text-red-700 dark:text-red-300': isDecrease,
-                                }">
-                                    {{ adjustment.reason }}
-                                </p>
-                            </div>
+                        <div
+                            class="flex-1 rounded-lg border p-4"
+                            :class="isIncrease ? 'border-status-success/20 bg-status-success-soft' : 'border-status-danger/20 bg-status-danger-soft'"
+                        >
+                            <p class="text-sm font-medium" :class="isIncrease ? 'text-status-success' : 'text-status-danger'">
+                                {{ isIncrease ? 'Stock Increased' : 'Stock Decreased' }}
+                            </p>
+                            <p class="mt-1 text-2xl font-bold tabular-nums" :class="isIncrease ? 'text-status-success' : 'text-status-danger'">
+                                {{ adjustment.adjustment_quantity > 0 ? '+' : '' }}{{ adjustment.adjustment_quantity }} units
+                            </p>
+                            <p class="mt-2 text-xs" :class="isIncrease ? 'text-status-success' : 'text-status-danger'">
+                                {{ adjustment.reason }}
+                            </p>
                         </div>
+                    </div>
 
-                        <!-- After -->
-                        <div class="relative flex items-start gap-4">
-                            <div class="flex-shrink-0 w-16 h-16 bg-primary-400/20 rounded-full flex items-center justify-center relative z-10">
-                                <svg class="w-8 h-8 text-primary-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                </svg>
-                            </div>
-                            <div class="flex-1 bg-primary-400/10 border border-primary-400/30 rounded-lg p-4">
-                                <p class="text-sm font-medium text-primary-600 dark:text-primary-400">Final Stock</p>
-                                <p class="text-2xl font-bold text-gray-900 dark:text-gray-100 mt-1">{{ adjustment.quantity_after }} units</p>
-                            </div>
+                    <!-- After -->
+                    <div class="relative flex items-start gap-4">
+                        <div class="relative z-10 flex h-16 w-16 flex-shrink-0 items-center justify-center rounded-full bg-brand-soft">
+                            <CheckCircle2 :size="28" class="text-brand" />
+                        </div>
+                        <div class="flex-1 rounded-lg border border-brand/20 bg-brand-soft p-4">
+                            <p class="text-sm font-medium text-brand">Final Stock</p>
+                            <p class="mt-1 text-2xl font-bold tabular-nums text-text-primary">{{ adjustment.quantity_after }} units</p>
                         </div>
                     </div>
                 </div>
             </div>
-        </div>
-    </AuthenticatedLayout>
+        </Card>
+    </AppLayout>
 </template>

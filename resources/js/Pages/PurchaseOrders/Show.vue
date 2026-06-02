@@ -1,8 +1,13 @@
 <script setup>
-import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
+import AppLayout from '@/Layouts/AppLayout.vue';
 import PluginSlot from '@/Components/PluginSlot.vue';
+import PageHeader from '@/Components/ui/PageHeader.vue';
+import Card from '@/Components/ui/Card.vue';
+import Button from '@/Components/ui/Button.vue';
+import Badge from '@/Components/ui/Badge.vue';
 import { Head, Link, router } from '@inertiajs/vue3';
 import { useI18n } from 'vue-i18n';
+import { ArrowLeft, Pencil, Download, Eye, Send, PackageCheck, Ban, Trash2 } from 'lucide-vue-next';
 
 const { t } = useI18n();
 
@@ -27,13 +32,14 @@ const formatDate = (dateString) => {
     });
 };
 
-const statusColors = {
-    draft: 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400',
-    sent: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400',
-    partial: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400',
-    received: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400',
-    cancelled: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400',
-};
+const statusVariant = (status) =>
+    ({
+        draft: 'neutral',
+        sent: 'info',
+        partial: 'warning',
+        received: 'success',
+        cancelled: 'danger',
+    }[status] || 'neutral');
 
 const statusLabels = {
     draft: 'Draft',
@@ -60,267 +66,309 @@ const deletePO = () => {
         router.delete(route('purchase-orders.destroy', props.purchaseOrder.id));
     }
 };
+
+const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-text-secondary';
 </script>
 
 <template>
     <Head :title="purchaseOrder.po_number" />
 
-    <AuthenticatedLayout>
+    <AppLayout>
         <template #header>
-            <div class="flex items-center justify-between">
-                <h2 class="font-semibold text-xl text-gray-900 dark:text-gray-100 leading-tight">
-                    {{ purchaseOrder.po_number }}
-                </h2>
-                <div class="flex items-center gap-2">
-                    <a
-                        :href="route('purchase-orders.invoice.download', purchaseOrder.id)"
-                        class="inline-flex items-center px-4 py-2 bg-green-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-green-700"
-                    >
-                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                        </svg>
-                        Download PDF
-                    </a>
-                    <a
-                        :href="route('purchase-orders.invoice.preview', purchaseOrder.id)"
-                        target="_blank"
-                        class="inline-flex items-center px-4 py-2 bg-blue-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-blue-700"
-                    >
-                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                        </svg>
-                        Preview PDF
-                    </a>
-                    <Link
-                        v-if="purchaseOrder.status === 'draft'"
-                        :href="route('purchase-orders.edit', purchaseOrder.id)"
-                        class="inline-flex items-center px-4 py-2 bg-primary-400 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-primary-500"
-                    >
-                        Edit
-                    </Link>
-                    <Link
-                        v-if="purchaseOrder.status === 'sent' || purchaseOrder.status === 'partial'"
-                        :href="route('purchase-orders.receive', purchaseOrder.id)"
-                        class="inline-flex items-center px-4 py-2 bg-green-500 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-green-600"
-                    >
-                        Receive Items
-                    </Link>
-                    <Link
-                        :href="route('purchase-orders.index')"
-                        class="inline-flex items-center px-4 py-2 bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-border rounded-md font-semibold text-xs text-gray-600 dark:text-gray-300 uppercase tracking-widest hover:bg-gray-100 dark:hover:bg-dark-bg/50"
-                    >
-                        Back
-                    </Link>
-                </div>
+            <div class="flex items-center gap-2 text-xs">
+                <Link :href="route('purchase-orders.index')" class="text-text-tertiary hover:text-text-primary">Workspace</Link>
+                <span class="text-text-tertiary">/</span>
+                <Link :href="route('purchase-orders.index')" class="text-text-tertiary hover:text-text-primary">{{ t('purchaseOrders.title') }}</Link>
+                <span class="text-text-tertiary">/</span>
+                <span class="font-medium text-text-primary">{{ purchaseOrder.po_number }}</span>
             </div>
         </template>
 
-        <div class="py-12 bg-gray-50 dark:bg-dark-bg min-h-screen">
-            <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-                <!-- Plugin Slot: Header -->
-                <PluginSlot slot="header" :components="pluginComponents?.header" />
+        <PageHeader
+            :title="purchaseOrder.po_number"
+            :description="`Order date ${formatDate(purchaseOrder.order_date)}`"
+        >
+            <template #actions>
+                <Badge :variant="statusVariant(purchaseOrder.status)" size="sm" dot>
+                    {{ statusLabels[purchaseOrder.status] || purchaseOrder.status }}
+                </Badge>
+                <Button
+                    variant="secondary"
+                    size="sm"
+                    as="a"
+                    :href="route('purchase-orders.invoice.download', purchaseOrder.id)"
+                >
+                    <Download :size="14" />
+                    Download PDF
+                </Button>
+                <Button
+                    variant="secondary"
+                    size="sm"
+                    as="a"
+                    :href="route('purchase-orders.invoice.preview', purchaseOrder.id)"
+                    target="_blank"
+                >
+                    <Eye :size="14" />
+                    Preview PDF
+                </Button>
+                <Button
+                    v-if="purchaseOrder.status === 'draft'"
+                    variant="default"
+                    size="sm"
+                    as="Link"
+                    :href="route('purchase-orders.edit', purchaseOrder.id)"
+                >
+                    <Pencil :size="14" />
+                    Edit
+                </Button>
+                <Button
+                    v-if="purchaseOrder.status === 'sent' || purchaseOrder.status === 'partial'"
+                    variant="default"
+                    size="sm"
+                    as="Link"
+                    :href="route('purchase-orders.receive', purchaseOrder.id)"
+                >
+                    <PackageCheck :size="14" />
+                    Receive Items
+                </Button>
+                <Button variant="secondary" size="sm" as="Link" :href="route('purchase-orders.index')">
+                    <ArrowLeft :size="14" />
+                    Back
+                </Button>
+            </template>
+        </PageHeader>
 
-                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    <!-- Main Content -->
-                    <div class="lg:col-span-2 space-y-6">
-                        <!-- Order Details -->
-                        <div class="bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border overflow-hidden shadow-lg sm:rounded-lg">
-                            <div class="px-6 py-4 border-b border-gray-200 dark:border-dark-border">
-                                <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100">Order Details</h3>
+        <!-- Plugin Slot: Header -->
+        <PluginSlot slot="header" :components="pluginComponents?.header" />
+
+        <div class="mt-6 grid grid-cols-1 gap-4 lg:grid-cols-3">
+            <!-- Left Column: Order Details & Items -->
+            <div class="space-y-4 lg:col-span-2">
+                <!-- Order Details -->
+                <Card :padded="false">
+                    <div class="px-5 pt-5"><h3 class="text-sm font-semibold text-text-primary">Order Details</h3></div>
+                    <div class="p-5">
+                        <dl class="grid grid-cols-1 gap-x-4 gap-y-6 sm:grid-cols-2">
+                            <div>
+                                <dt class="text-xs text-text-tertiary">Supplier</dt>
+                                <dd class="mt-1 text-sm text-text-primary">
+                                    <Link v-if="purchaseOrder.supplier" :href="route('suppliers.show', purchaseOrder.supplier.id)" class="text-brand hover:underline">
+                                        {{ purchaseOrder.supplier.name }}
+                                    </Link>
+                                    <span v-else>-</span>
+                                </dd>
                             </div>
-                            <div class="p-6">
-                                <dl class="grid grid-cols-1 gap-x-4 gap-y-6 sm:grid-cols-2">
-                                    <div>
-                                        <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Supplier</dt>
-                                        <dd class="mt-1 text-sm text-gray-900 dark:text-gray-100">
-                                            <Link v-if="purchaseOrder.supplier" :href="route('suppliers.show', purchaseOrder.supplier.id)" class="text-primary-400 hover:underline">
-                                                {{ purchaseOrder.supplier.name }}
+                            <div>
+                                <dt class="text-xs text-text-tertiary">Created By</dt>
+                                <dd class="mt-1 text-sm text-text-primary">{{ purchaseOrder.creator?.name || '-' }}</dd>
+                            </div>
+                            <div>
+                                <dt class="text-xs text-text-tertiary">Order Date</dt>
+                                <dd class="mt-1 text-sm text-text-primary">{{ formatDate(purchaseOrder.order_date) }}</dd>
+                            </div>
+                            <div>
+                                <dt class="text-xs text-text-tertiary">Expected Delivery</dt>
+                                <dd class="mt-1 text-sm text-text-primary">{{ formatDate(purchaseOrder.expected_date) }}</dd>
+                            </div>
+                            <div v-if="purchaseOrder.received_date">
+                                <dt class="text-xs text-text-tertiary">Received Date</dt>
+                                <dd class="mt-1 text-sm text-text-primary">{{ formatDate(purchaseOrder.received_date) }}</dd>
+                            </div>
+                            <div>
+                                <dt class="text-xs text-text-tertiary">Currency</dt>
+                                <dd class="mt-1 text-sm text-text-primary">{{ purchaseOrder.currency }}</dd>
+                            </div>
+                        </dl>
+                        <div v-if="purchaseOrder.notes" class="mt-6">
+                            <dt class="text-xs text-text-tertiary">Notes</dt>
+                            <dd class="mt-1 whitespace-pre-wrap text-sm text-text-secondary">{{ purchaseOrder.notes }}</dd>
+                        </div>
+                    </div>
+                </Card>
+
+                <!-- Items -->
+                <Card :padded="false">
+                    <div class="px-5 pt-5"><h3 class="text-sm font-semibold text-text-primary">Items ({{ purchaseOrder.items?.length || 0 }})</h3></div>
+                    <div class="p-5">
+                        <div class="w-full overflow-x-auto rounded-lg border border-border-subtle">
+                            <table class="w-full text-sm">
+                                <thead>
+                                    <tr class="border-b border-border-subtle">
+                                        <th :class="thClass">Product</th>
+                                        <th :class="thClass">SKU</th>
+                                        <th :class="thClass">Ordered</th>
+                                        <th :class="thClass">Received</th>
+                                        <th :class="thClass">Unit Cost</th>
+                                        <th :class="thClass">Total</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr v-for="item in purchaseOrder.items" :key="item.id" class="border-b border-border-subtle transition-colors last:border-b-0 hover:bg-surface-overlay">
+                                        <td class="px-4 py-3 text-sm text-text-primary">
+                                            <Link v-if="item.product" :href="route('products.show', item.product.id)" class="text-brand hover:underline">
+                                                {{ item.product_name }}
                                             </Link>
-                                            <span v-else>-</span>
-                                        </dd>
-                                    </div>
-                                    <div>
-                                        <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Created By</dt>
-                                        <dd class="mt-1 text-sm text-gray-900 dark:text-gray-100">{{ purchaseOrder.creator?.name || '-' }}</dd>
-                                    </div>
-                                    <div>
-                                        <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Order Date</dt>
-                                        <dd class="mt-1 text-sm text-gray-900 dark:text-gray-100">{{ formatDate(purchaseOrder.order_date) }}</dd>
-                                    </div>
-                                    <div>
-                                        <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Expected Delivery</dt>
-                                        <dd class="mt-1 text-sm text-gray-900 dark:text-gray-100">{{ formatDate(purchaseOrder.expected_date) }}</dd>
-                                    </div>
-                                    <div v-if="purchaseOrder.received_date">
-                                        <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Received Date</dt>
-                                        <dd class="mt-1 text-sm text-gray-900 dark:text-gray-100">{{ formatDate(purchaseOrder.received_date) }}</dd>
-                                    </div>
-                                    <div>
-                                        <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Currency</dt>
-                                        <dd class="mt-1 text-sm text-gray-900 dark:text-gray-100">{{ purchaseOrder.currency }}</dd>
-                                    </div>
-                                </dl>
-                                <div v-if="purchaseOrder.notes" class="mt-6">
-                                    <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Notes</dt>
-                                    <dd class="mt-1 text-sm text-gray-600 dark:text-gray-300 whitespace-pre-wrap">{{ purchaseOrder.notes }}</dd>
+                                            <span v-else>{{ item.product_name }}</span>
+                                        </td>
+                                        <td class="px-4 py-3 text-sm text-text-tertiary">
+                                            {{ item.sku || '-' }}
+                                            <span v-if="item.supplier_sku" class="block text-xs text-text-tertiary">
+                                                Supplier: {{ item.supplier_sku }}
+                                            </span>
+                                        </td>
+                                        <td class="px-4 py-3 text-sm tabular-nums text-text-primary">
+                                            {{ item.quantity_ordered }}
+                                        </td>
+                                        <td class="px-4 py-3 text-sm tabular-nums">
+                                            <span :class="[
+                                                item.quantity_received >= item.quantity_ordered
+                                                    ? 'text-status-success'
+                                                    : item.quantity_received > 0
+                                                        ? 'text-status-warning'
+                                                        : 'text-text-tertiary'
+                                            ]">
+                                                {{ item.quantity_received }}
+                                            </span>
+                                        </td>
+                                        <td class="px-4 py-3 text-sm tabular-nums text-text-tertiary">
+                                            {{ formatCurrency(item.unit_cost) }}
+                                        </td>
+                                        <td class="px-4 py-3 text-sm font-medium tabular-nums text-text-primary">
+                                            {{ formatCurrency(item.total) }}
+                                        </td>
+                                    </tr>
+                                </tbody>
+                                <tfoot>
+                                    <tr class="border-t border-border-subtle">
+                                        <td colspan="5" class="px-4 py-3 text-right text-sm font-medium text-text-secondary">Subtotal:</td>
+                                        <td class="px-4 py-3 text-sm font-medium tabular-nums text-text-primary">{{ formatCurrency(purchaseOrder.subtotal) }}</td>
+                                    </tr>
+                                    <tr v-if="purchaseOrder.tax > 0">
+                                        <td colspan="5" class="px-4 py-3 text-right text-sm font-medium text-text-secondary">Tax:</td>
+                                        <td class="px-4 py-3 text-sm tabular-nums text-text-primary">{{ formatCurrency(purchaseOrder.tax) }}</td>
+                                    </tr>
+                                    <tr v-if="purchaseOrder.shipping > 0">
+                                        <td colspan="5" class="px-4 py-3 text-right text-sm font-medium text-text-secondary">Shipping:</td>
+                                        <td class="px-4 py-3 text-sm tabular-nums text-text-primary">{{ formatCurrency(purchaseOrder.shipping) }}</td>
+                                    </tr>
+                                    <tr class="border-t border-border-subtle">
+                                        <td colspan="5" class="px-4 py-3 text-right text-sm font-bold text-text-primary">Total:</td>
+                                        <td class="px-4 py-3 text-sm font-bold tabular-nums text-brand">{{ formatCurrency(purchaseOrder.total) }}</td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                    </div>
+                </Card>
+            </div>
+
+            <!-- Right Column: Status & Actions -->
+            <div class="space-y-4">
+                <!-- Plugin Slot: Sidebar -->
+                <PluginSlot slot="sidebar" :components="pluginComponents?.sidebar" />
+
+                <!-- Status -->
+                <Card :padded="false">
+                    <div class="px-5 pt-5"><h3 class="text-sm font-semibold text-text-primary">Status</h3></div>
+                    <div class="p-5">
+                        <Badge :variant="statusVariant(purchaseOrder.status)" size="md" dot>
+                            {{ statusLabels[purchaseOrder.status] || purchaseOrder.status }}
+                        </Badge>
+                    </div>
+                </Card>
+
+                <!-- Order Summary -->
+                <Card :padded="false">
+                    <div class="px-5 pt-5"><h3 class="text-sm font-semibold text-text-primary">Order Summary</h3></div>
+                    <div class="p-5">
+                        <dl class="space-y-3">
+                            <div class="flex justify-between text-sm">
+                                <dt class="text-text-secondary">Subtotal</dt>
+                                <dd class="font-medium tabular-nums text-text-primary">{{ formatCurrency(purchaseOrder.subtotal) }}</dd>
+                            </div>
+                            <div v-if="purchaseOrder.tax > 0" class="flex justify-between text-sm">
+                                <dt class="text-text-secondary">Tax</dt>
+                                <dd class="font-medium tabular-nums text-text-primary">{{ formatCurrency(purchaseOrder.tax) }}</dd>
+                            </div>
+                            <div v-if="purchaseOrder.shipping > 0" class="flex justify-between text-sm">
+                                <dt class="text-text-secondary">Shipping</dt>
+                                <dd class="font-medium tabular-nums text-text-primary">{{ formatCurrency(purchaseOrder.shipping) }}</dd>
+                            </div>
+                            <div class="border-t border-border-subtle pt-3">
+                                <div class="flex items-center justify-between">
+                                    <dt class="text-sm font-semibold text-text-primary">Total</dt>
+                                    <dd class="text-xl font-bold tabular-nums text-brand">{{ formatCurrency(purchaseOrder.total) }}</dd>
                                 </div>
                             </div>
-                        </div>
-
-                        <!-- Items -->
-                        <div class="bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border overflow-hidden shadow-lg sm:rounded-lg">
-                            <div class="px-6 py-4 border-b border-gray-200 dark:border-dark-border">
-                                <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100">Items ({{ purchaseOrder.items?.length || 0 }})</h3>
-                            </div>
-                            <div class="overflow-x-auto">
-                                <table class="min-w-full divide-y divide-gray-200 dark:divide-dark-border">
-                                    <thead class="bg-gray-50 dark:bg-dark-bg">
-                                        <tr>
-                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Product</th>
-                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">SKU</th>
-                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Ordered</th>
-                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Received</th>
-                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Unit Cost</th>
-                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Total</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody class="bg-white dark:bg-dark-card divide-y divide-gray-200 dark:divide-dark-border">
-                                        <tr v-for="item in purchaseOrder.items" :key="item.id">
-                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
-                                                <Link v-if="item.product" :href="route('products.show', item.product.id)" class="text-primary-400 hover:underline">
-                                                    {{ item.product_name }}
-                                                </Link>
-                                                <span v-else>{{ item.product_name }}</span>
-                                            </td>
-                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                                                {{ item.sku || '-' }}
-                                                <span v-if="item.supplier_sku" class="block text-xs text-gray-400 dark:text-gray-500">
-                                                    Supplier: {{ item.supplier_sku }}
-                                                </span>
-                                            </td>
-                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
-                                                {{ item.quantity_ordered }}
-                                            </td>
-                                            <td class="px-6 py-4 whitespace-nowrap text-sm">
-                                                <span :class="[
-                                                    item.quantity_received >= item.quantity_ordered
-                                                        ? 'text-green-600 dark:text-green-400'
-                                                        : item.quantity_received > 0
-                                                            ? 'text-yellow-600 dark:text-yellow-400'
-                                                            : 'text-gray-500 dark:text-gray-400'
-                                                ]">
-                                                    {{ item.quantity_received }}
-                                                </span>
-                                            </td>
-                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                                                {{ formatCurrency(item.unit_cost) }}
-                                            </td>
-                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100 font-medium">
-                                                {{ formatCurrency(item.total) }}
-                                            </td>
-                                        </tr>
-                                    </tbody>
-                                    <tfoot class="bg-gray-50 dark:bg-dark-bg">
-                                        <tr>
-                                            <td colspan="5" class="px-6 py-3 text-right text-sm font-medium text-gray-500 dark:text-gray-400">Subtotal:</td>
-                                            <td class="px-6 py-3 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100 font-medium">{{ formatCurrency(purchaseOrder.subtotal) }}</td>
-                                        </tr>
-                                        <tr v-if="purchaseOrder.tax > 0">
-                                            <td colspan="5" class="px-6 py-3 text-right text-sm font-medium text-gray-500 dark:text-gray-400">Tax:</td>
-                                            <td class="px-6 py-3 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">{{ formatCurrency(purchaseOrder.tax) }}</td>
-                                        </tr>
-                                        <tr v-if="purchaseOrder.shipping > 0">
-                                            <td colspan="5" class="px-6 py-3 text-right text-sm font-medium text-gray-500 dark:text-gray-400">Shipping:</td>
-                                            <td class="px-6 py-3 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">{{ formatCurrency(purchaseOrder.shipping) }}</td>
-                                        </tr>
-                                        <tr>
-                                            <td colspan="5" class="px-6 py-3 text-right text-sm font-bold text-gray-900 dark:text-gray-100">Total:</td>
-                                            <td class="px-6 py-3 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100 font-bold">{{ formatCurrency(purchaseOrder.total) }}</td>
-                                        </tr>
-                                    </tfoot>
-                                </table>
-                            </div>
-                        </div>
+                        </dl>
                     </div>
+                </Card>
 
-                    <!-- Sidebar -->
-                    <div class="space-y-6">
-                        <!-- Status Card -->
-                        <div class="bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border overflow-hidden shadow-lg sm:rounded-lg">
-                            <div class="px-6 py-4 border-b border-gray-200 dark:border-dark-border">
-                                <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100">Status</h3>
-                            </div>
-                            <div class="p-6">
-                                <span
-                                    :class="[
-                                        'inline-flex items-center px-3 py-1 rounded-full text-sm font-medium',
-                                        statusColors[purchaseOrder.status]
-                                    ]"
-                                >
-                                    {{ statusLabels[purchaseOrder.status] || purchaseOrder.status }}
-                                </span>
-                            </div>
-                        </div>
-
-                        <!-- Plugin Slot: Sidebar -->
-                        <PluginSlot slot="sidebar" :components="pluginComponents?.sidebar" />
-
-                        <!-- Actions Card -->
-                        <div class="bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border overflow-hidden shadow-lg sm:rounded-lg">
-                            <div class="px-6 py-4 border-b border-gray-200 dark:border-dark-border">
-                                <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100">Actions</h3>
-                            </div>
-                            <div class="p-6 space-y-3">
-                                <button
-                                    v-if="purchaseOrder.status === 'draft'"
-                                    @click="sendToSupplier"
-                                    class="w-full inline-flex justify-center items-center px-4 py-2 bg-blue-500 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-blue-600"
-                                >
-                                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                                    </svg>
-                                    Send to Supplier
-                                </button>
-                                <Link
-                                    v-if="purchaseOrder.status === 'sent' || purchaseOrder.status === 'partial'"
-                                    :href="route('purchase-orders.receive', purchaseOrder.id)"
-                                    class="w-full inline-flex justify-center items-center px-4 py-2 bg-green-500 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-green-600"
-                                >
-                                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
-                                    </svg>
-                                    Receive Items
-                                </Link>
-                                <Link
-                                    v-if="purchaseOrder.status === 'draft'"
-                                    :href="route('purchase-orders.edit', purchaseOrder.id)"
-                                    class="w-full inline-flex justify-center items-center px-4 py-2 bg-primary-400 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-primary-500"
-                                >
-                                    Edit Purchase Order
-                                </Link>
-                                <button
-                                    v-if="purchaseOrder.status === 'draft' || purchaseOrder.status === 'sent'"
-                                    @click="cancelPO"
-                                    class="w-full inline-flex justify-center items-center px-4 py-2 bg-yellow-500 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-yellow-600"
-                                >
-                                    Cancel Order
-                                </button>
-                                <button
-                                    v-if="purchaseOrder.status === 'draft'"
-                                    @click="deletePO"
-                                    class="w-full inline-flex justify-center items-center px-4 py-2 bg-red-500 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-red-600"
-                                >
-                                    Delete Order
-                                </button>
-                            </div>
-                        </div>
+                <!-- Actions -->
+                <Card
+                    v-if="purchaseOrder.status === 'draft' || purchaseOrder.status === 'sent' || purchaseOrder.status === 'partial'"
+                    :padded="false"
+                >
+                    <div class="px-5 pt-5"><h3 class="text-sm font-semibold text-text-primary">Actions</h3></div>
+                    <div class="space-y-3 p-5">
+                        <Button
+                            v-if="purchaseOrder.status === 'draft'"
+                            variant="default"
+                            class="w-full"
+                            @click="sendToSupplier"
+                        >
+                            <Send :size="16" />
+                            Send to Supplier
+                        </Button>
+                        <Button
+                            v-if="purchaseOrder.status === 'sent' || purchaseOrder.status === 'partial'"
+                            variant="default"
+                            class="w-full"
+                            as="Link"
+                            :href="route('purchase-orders.receive', purchaseOrder.id)"
+                        >
+                            <PackageCheck :size="16" />
+                            Receive Items
+                        </Button>
+                        <Button
+                            v-if="purchaseOrder.status === 'draft'"
+                            variant="secondary"
+                            class="w-full"
+                            as="Link"
+                            :href="route('purchase-orders.edit', purchaseOrder.id)"
+                        >
+                            <Pencil :size="16" />
+                            Edit Purchase Order
+                        </Button>
+                        <Button
+                            v-if="purchaseOrder.status === 'draft' || purchaseOrder.status === 'sent'"
+                            variant="secondary"
+                            class="w-full"
+                            @click="cancelPO"
+                        >
+                            <Ban :size="16" />
+                            Cancel Order
+                        </Button>
                     </div>
-                </div>
+                </Card>
 
-                <!-- Plugin Slot: Footer -->
-                <PluginSlot slot="footer" :components="pluginComponents?.footer" />
+                <!-- Danger Zone -->
+                <Card v-if="purchaseOrder.status === 'draft'" :padded="false">
+                    <div class="px-5 pt-5"><h3 class="text-sm font-semibold text-text-primary">Danger Zone</h3></div>
+                    <div class="p-5">
+                        <Button variant="danger" class="w-full" @click="deletePO">
+                            <Trash2 :size="16" />
+                            Delete Order
+                        </Button>
+                        <p class="mt-2 text-xs text-text-tertiary">
+                            This action cannot be undone.
+                        </p>
+                    </div>
+                </Card>
             </div>
         </div>
-    </AuthenticatedLayout>
+
+        <!-- Plugin Slot: Footer -->
+        <PluginSlot slot="footer" :components="pluginComponents?.footer" />
+    </AppLayout>
 </template>

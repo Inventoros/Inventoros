@@ -1,8 +1,13 @@
 <script setup>
-import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
+import AppLayout from '@/Layouts/AppLayout.vue';
+import PageHeader from '@/Components/ui/PageHeader.vue';
+import Card from '@/Components/ui/Card.vue';
+import Button from '@/Components/ui/Button.vue';
+import Badge from '@/Components/ui/Badge.vue';
 import { Head, Link, router } from '@inertiajs/vue3';
 import { ref } from 'vue';
 import { useI18n } from 'vue-i18n';
+import { ArrowLeft, CheckCircle2, XCircle } from 'lucide-vue-next';
 
 const { t } = useI18n();
 
@@ -12,15 +17,13 @@ const props = defineProps({
 
 const processing = ref(false);
 
-const getStatusBadgeClass = (status) => {
-    const classes = {
-        'pending': 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300',
-        'in_transit': 'bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300',
-        'completed': 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300',
-        'cancelled': 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300',
-    };
-    return classes[status] || classes.pending;
-};
+const statusVariant = (status) =>
+    ({
+        pending: 'warning',
+        in_transit: 'info',
+        completed: 'success',
+        cancelled: 'danger',
+    }[status] || 'neutral');
 
 const getStatusLabel = (status) => {
     const labels = {
@@ -61,125 +64,124 @@ const cancelTransfer = () => {
         onFinish: () => { processing.value = false; },
     });
 };
+
+const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-text-secondary';
 </script>
 
 <template>
     <Head :title="`Transfer ${transfer.transfer_number}`" />
 
-    <AuthenticatedLayout>
+    <AppLayout>
         <template #header>
-            <div class="flex justify-between items-center">
-                <div>
-                    <h2 class="font-semibold text-2xl text-gray-900 dark:text-gray-100">{{ transfer.transfer_number }}</h2>
-                    <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Stock transfer details</p>
-                </div>
-                <div class="flex gap-2">
-                    <Link
-                        :href="route('stock-transfers.index')"
-                        class="px-4 py-2 bg-gray-200 dark:bg-dark-bg hover:bg-gray-300 dark:hover:bg-dark-bg/70 text-gray-700 dark:text-gray-300 font-medium rounded-lg transition"
-                    >
-                        Back to List
-                    </Link>
-                </div>
+            <div class="flex items-center gap-2 text-xs">
+                <Link :href="route('stock-transfers.index')" class="text-text-tertiary hover:text-text-primary">Workspace</Link>
+                <span class="text-text-tertiary">/</span>
+                <Link :href="route('stock-transfers.index')" class="text-text-tertiary hover:text-text-primary">Stock Transfers</Link>
+                <span class="text-text-tertiary">/</span>
+                <span class="font-medium text-text-primary">{{ transfer.transfer_number }}</span>
             </div>
         </template>
 
-        <div class="py-12 bg-gray-50 dark:bg-dark-bg min-h-screen">
-            <div class="max-w-4xl mx-auto sm:px-6 lg:px-8 space-y-6">
-                <!-- Flash Messages -->
-                <div v-if="$page.props.flash?.success" class="p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
-                    <p class="text-sm text-green-800 dark:text-green-300">{{ $page.props.flash.success }}</p>
-                </div>
-                <div v-if="$page.props.flash?.error" class="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
-                    <p class="text-sm text-red-800 dark:text-red-300">{{ $page.props.flash.error }}</p>
-                </div>
+        <PageHeader :title="transfer.transfer_number" description="Stock transfer details">
+            <template #actions>
+                <Badge :variant="statusVariant(transfer.status)" size="md" dot>{{ getStatusLabel(transfer.status) }}</Badge>
+                <Button variant="secondary" size="sm" as="Link" :href="route('stock-transfers.index')">
+                    <ArrowLeft :size="14" />
+                    Back to List
+                </Button>
+            </template>
+        </PageHeader>
 
-                <!-- Transfer Info -->
-                <div class="bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border shadow-sm sm:rounded-lg p-6">
-                    <div class="flex justify-between items-start mb-6">
-                        <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">Transfer Details</h3>
-                        <span
-                            :class="getStatusBadgeClass(transfer.status)"
-                            class="px-3 py-1 rounded-full text-sm font-medium"
-                        >
-                            {{ getStatusLabel(transfer.status) }}
-                        </span>
-                    </div>
+        <div class="mt-6 space-y-4">
+            <!-- Flash Messages -->
+            <div v-if="$page.props.flash?.success" class="rounded-lg border border-status-success/20 bg-status-success-soft p-4">
+                <p class="text-sm text-status-success">{{ $page.props.flash.success }}</p>
+            </div>
+            <div v-if="$page.props.flash?.error" class="rounded-lg border border-status-danger/20 bg-status-danger-soft p-4">
+                <p class="text-sm text-status-danger">{{ $page.props.flash.error }}</p>
+            </div>
 
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- Transfer Info -->
+            <Card :padded="false">
+                <div class="flex items-center justify-between px-5 pt-5">
+                    <h3 class="text-sm font-semibold text-text-primary">Transfer Details</h3>
+                    <Badge :variant="statusVariant(transfer.status)" size="md" dot>{{ getStatusLabel(transfer.status) }}</Badge>
+                </div>
+                <div class="p-5">
+                    <dl class="grid grid-cols-1 gap-6 md:grid-cols-2">
                         <div>
-                            <p class="text-sm text-gray-500 dark:text-gray-400 mb-1">Transfer Number</p>
-                            <p class="text-sm font-medium text-gray-900 dark:text-gray-100">{{ transfer.transfer_number }}</p>
+                            <dt class="mb-1 text-xs text-text-tertiary">Transfer Number</dt>
+                            <dd class="text-sm font-medium text-text-primary">{{ transfer.transfer_number }}</dd>
                         </div>
                         <div>
-                            <p class="text-sm text-gray-500 dark:text-gray-400 mb-1">Transferred By</p>
-                            <p class="text-sm font-medium text-gray-900 dark:text-gray-100">{{ transfer.transferred_by_user?.name || '-' }}</p>
+                            <dt class="mb-1 text-xs text-text-tertiary">Transferred By</dt>
+                            <dd class="text-sm font-medium text-text-primary">{{ transfer.transferred_by_user?.name || '-' }}</dd>
                         </div>
                         <div>
-                            <p class="text-sm text-gray-500 dark:text-gray-400 mb-1">From Location</p>
-                            <p class="text-sm font-medium text-gray-900 dark:text-gray-100">
+                            <dt class="mb-1 text-xs text-text-tertiary">From Location</dt>
+                            <dd class="text-sm font-medium text-text-primary">
                                 {{ transfer.from_location?.name }}
-                                <span v-if="transfer.from_location?.code" class="text-gray-500 dark:text-gray-400">({{ transfer.from_location.code }})</span>
-                            </p>
+                                <span v-if="transfer.from_location?.code" class="text-text-tertiary">({{ transfer.from_location.code }})</span>
+                            </dd>
                         </div>
                         <div>
-                            <p class="text-sm text-gray-500 dark:text-gray-400 mb-1">To Location</p>
-                            <p class="text-sm font-medium text-gray-900 dark:text-gray-100">
+                            <dt class="mb-1 text-xs text-text-tertiary">To Location</dt>
+                            <dd class="text-sm font-medium text-text-primary">
                                 {{ transfer.to_location?.name }}
-                                <span v-if="transfer.to_location?.code" class="text-gray-500 dark:text-gray-400">({{ transfer.to_location.code }})</span>
-                            </p>
+                                <span v-if="transfer.to_location?.code" class="text-text-tertiary">({{ transfer.to_location.code }})</span>
+                            </dd>
                         </div>
                         <div>
-                            <p class="text-sm text-gray-500 dark:text-gray-400 mb-1">Created</p>
-                            <p class="text-sm font-medium text-gray-900 dark:text-gray-100">{{ formatDate(transfer.created_at) }}</p>
+                            <dt class="mb-1 text-xs text-text-tertiary">Created</dt>
+                            <dd class="text-sm font-medium text-text-primary">{{ formatDate(transfer.created_at) }}</dd>
                         </div>
                         <div v-if="transfer.completed_at">
-                            <p class="text-sm text-gray-500 dark:text-gray-400 mb-1">Completed</p>
-                            <p class="text-sm font-medium text-gray-900 dark:text-gray-100">{{ formatDate(transfer.completed_at) }}</p>
+                            <dt class="mb-1 text-xs text-text-tertiary">Completed</dt>
+                            <dd class="text-sm font-medium text-text-primary">{{ formatDate(transfer.completed_at) }}</dd>
                         </div>
-                    </div>
+                    </dl>
 
-                    <div v-if="transfer.notes" class="mt-6 pt-6 border-t border-gray-200 dark:border-dark-border">
-                        <p class="text-sm text-gray-500 dark:text-gray-400 mb-1">Notes</p>
-                        <p class="text-sm text-gray-900 dark:text-gray-100">{{ transfer.notes }}</p>
+                    <div v-if="transfer.notes" class="mt-6 border-t border-border-subtle pt-6">
+                        <p class="mb-1 text-xs text-text-tertiary">Notes</p>
+                        <p class="text-sm text-text-primary">{{ transfer.notes }}</p>
                     </div>
                 </div>
+            </Card>
 
-                <!-- Transfer Items -->
-                <div class="bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border shadow-sm sm:rounded-lg overflow-hidden">
-                    <div class="px-6 py-4 border-b border-gray-200 dark:border-dark-border">
-                        <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">Transfer Items</h3>
-                    </div>
-                    <div class="overflow-x-auto">
-                        <table class="min-w-full divide-y divide-gray-200 dark:divide-dark-border">
-                            <thead class="bg-gray-50 dark:bg-dark-bg">
-                                <tr>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Product</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">SKU</th>
-                                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Quantity</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Notes</th>
+            <!-- Transfer Items -->
+            <Card :padded="false">
+                <div class="px-5 pt-5"><h3 class="text-sm font-semibold text-text-primary">Transfer Items</h3></div>
+                <div class="p-5">
+                    <div class="w-full overflow-x-auto rounded-lg border border-border-subtle">
+                        <table class="min-w-full">
+                            <thead>
+                                <tr class="border-b border-border-subtle">
+                                    <th :class="thClass">Product</th>
+                                    <th :class="thClass">SKU</th>
+                                    <th :class="[thClass, 'text-right']">Quantity</th>
+                                    <th :class="thClass">Notes</th>
                                 </tr>
                             </thead>
-                            <tbody class="bg-white dark:bg-dark-card divide-y divide-gray-200 dark:divide-dark-border">
-                                <tr v-for="item in transfer.items" :key="item.id">
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-gray-100">
+                            <tbody>
+                                <tr v-for="item in transfer.items" :key="item.id" class="border-b border-border-subtle transition-colors last:border-b-0 hover:bg-surface-overlay">
+                                    <td class="whitespace-nowrap px-4 py-3 text-sm font-medium text-text-primary">
                                         {{ item.product?.name || '-' }}
                                     </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-400">
+                                    <td class="whitespace-nowrap px-4 py-3 text-sm text-text-tertiary">
                                         {{ item.product?.sku || '-' }}
                                     </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-right font-medium text-gray-900 dark:text-gray-100">
+                                    <td class="whitespace-nowrap px-4 py-3 text-right text-sm font-medium tabular-nums text-text-primary">
                                         {{ item.quantity }}
                                     </td>
-                                    <td class="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">
+                                    <td class="px-4 py-3 text-sm text-text-tertiary">
                                         {{ item.notes || '-' }}
                                     </td>
                                 </tr>
                             </tbody>
-                            <tfoot class="bg-gray-50 dark:bg-dark-bg">
-                                <tr>
-                                    <td colspan="2" class="px-6 py-3 text-sm font-medium text-gray-900 dark:text-gray-100">Total</td>
-                                    <td class="px-6 py-3 text-sm text-right font-bold text-gray-900 dark:text-gray-100">
+                            <tfoot>
+                                <tr class="border-t border-border-subtle">
+                                    <td colspan="2" class="px-4 py-3 text-sm font-medium text-text-primary">Total</td>
+                                    <td class="px-4 py-3 text-right text-sm font-bold tabular-nums text-text-primary">
                                         {{ transfer.items?.reduce((sum, item) => sum + item.quantity, 0) || 0 }}
                                     </td>
                                     <td></td>
@@ -188,33 +190,39 @@ const cancelTransfer = () => {
                         </table>
                     </div>
                 </div>
+            </Card>
 
-                <!-- Actions -->
-                <div v-if="canComplete || canCancel" class="bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border shadow-sm sm:rounded-lg p-6">
-                    <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Actions</h3>
-                    <div class="flex gap-3">
-                        <button
+            <!-- Actions -->
+            <Card v-if="canComplete || canCancel" :padded="false">
+                <div class="px-5 pt-5"><h3 class="text-sm font-semibold text-text-primary">Actions</h3></div>
+                <div class="p-5">
+                    <div class="flex flex-wrap gap-3">
+                        <Button
                             v-if="canComplete"
+                            variant="default"
+                            :loading="processing"
+                            :disabled="processing"
                             @click="completeTransfer"
-                            :disabled="processing"
-                            class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-medium rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed"
                         >
+                            <CheckCircle2 :size="16" />
                             {{ processing ? 'Processing...' : 'Complete Transfer' }}
-                        </button>
-                        <button
+                        </Button>
+                        <Button
                             v-if="canCancel"
-                            @click="cancelTransfer"
+                            variant="danger"
+                            :loading="processing"
                             :disabled="processing"
-                            class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-medium rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed"
+                            @click="cancelTransfer"
                         >
+                            <XCircle :size="16" />
                             {{ processing ? 'Processing...' : 'Cancel Transfer' }}
-                        </button>
+                        </Button>
                     </div>
-                    <p v-if="canComplete" class="mt-3 text-xs text-gray-500 dark:text-gray-400">
+                    <p v-if="canComplete" class="mt-3 text-xs text-text-tertiary">
                         Completing the transfer will deduct stock from the source location and add it to the destination location.
                     </p>
                 </div>
-            </div>
+            </Card>
         </div>
-    </AuthenticatedLayout>
+    </AppLayout>
 </template>

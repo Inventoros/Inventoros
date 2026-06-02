@@ -1,8 +1,23 @@
 <script setup>
-import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
+import AppLayout from '@/Layouts/AppLayout.vue';
+import PageHeader from '@/Components/ui/PageHeader.vue';
+import Card from '@/Components/ui/Card.vue';
+import Button from '@/Components/ui/Button.vue';
+import Badge from '@/Components/ui/Badge.vue';
+import StatTile from '@/Components/ui/StatTile.vue';
 import { Head, Link, router } from '@inertiajs/vue3';
 import { ref, computed } from 'vue';
 import { useI18n } from 'vue-i18n';
+import {
+    Pencil,
+    ArrowLeft,
+    Play,
+    CheckCircle2,
+    Trash2,
+    ListChecks,
+    Layers,
+    AlertTriangle,
+} from 'lucide-vue-next';
 
 const { t } = useI18n();
 
@@ -17,15 +32,13 @@ const countValue = ref(0);
 const countNotes = ref('');
 const savingCount = ref(false);
 
-const getStatusBadgeClass = (status) => {
-    const classes = {
-        'draft': 'bg-gray-100 dark:bg-gray-900/30 text-gray-800 dark:text-gray-300',
-        'in_progress': 'bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300',
-        'completed': 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300',
-        'cancelled': 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300',
-    };
-    return classes[status] || classes.draft;
-};
+const statusVariant = (status) =>
+    ({
+        draft: 'neutral',
+        in_progress: 'info',
+        completed: 'success',
+        cancelled: 'danger',
+    }[status] || 'neutral');
 
 const getStatusLabel = (status) => {
     const labels = {
@@ -37,15 +50,13 @@ const getStatusLabel = (status) => {
     return labels[status] || status;
 };
 
-const getItemStatusBadgeClass = (status) => {
-    const classes = {
-        'pending': 'bg-gray-100 dark:bg-gray-900/30 text-gray-800 dark:text-gray-300',
-        'counted': 'bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300',
-        'verified': 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300',
-        'adjusted': 'bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-300',
-    };
-    return classes[status] || classes.pending;
-};
+const itemStatusVariant = (status) =>
+    ({
+        pending: 'neutral',
+        counted: 'info',
+        verified: 'success',
+        adjusted: 'brand',
+    }[status] || 'neutral');
 
 const getItemStatusLabel = (status) => {
     const labels = {
@@ -148,11 +159,11 @@ const saveCount = async (item) => {
 };
 
 const getDiscrepancyClass = (item) => {
-    if (item.counted_quantity === null) return 'text-gray-400 dark:text-gray-500';
+    if (item.counted_quantity === null) return 'text-text-tertiary';
     const disc = item.counted_quantity - item.system_quantity;
-    if (disc > 0) return 'text-green-600 dark:text-green-400';
-    if (disc < 0) return 'text-red-600 dark:text-red-400';
-    return 'text-gray-600 dark:text-gray-300';
+    if (disc > 0) return 'text-status-success';
+    if (disc < 0) return 'text-status-danger';
+    return 'text-text-secondary';
 };
 
 const getDiscrepancyText = (item) => {
@@ -161,284 +172,315 @@ const getDiscrepancyText = (item) => {
     if (disc === 0) return '0';
     return (disc > 0 ? '+' : '') + disc;
 };
+
+const thClass = 'px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-text-tertiary';
 </script>
 
 <template>
     <Head :title="`Audit ${audit.audit_number}`" />
 
-    <AuthenticatedLayout>
+    <AppLayout>
         <template #header>
-            <div class="flex justify-between items-center">
-                <div>
-                    <h2 class="font-semibold text-2xl text-gray-900 dark:text-gray-100">{{ audit.audit_number }}</h2>
-                    <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">{{ audit.name }}</p>
-                </div>
-                <div class="flex gap-2">
-                    <Link
-                        v-if="canEdit"
-                        :href="route('stock-audits.edit', audit.id)"
-                        class="px-4 py-2 bg-gray-200 dark:bg-dark-bg hover:bg-gray-300 dark:hover:bg-dark-bg/70 text-gray-700 dark:text-gray-300 font-medium rounded-lg transition"
-                    >
-                        Edit
-                    </Link>
-                    <Link
-                        :href="route('stock-audits.index')"
-                        class="px-4 py-2 bg-gray-200 dark:bg-dark-bg hover:bg-gray-300 dark:hover:bg-dark-bg/70 text-gray-700 dark:text-gray-300 font-medium rounded-lg transition"
-                    >
-                        Back to List
-                    </Link>
-                </div>
+            <div class="flex items-center gap-2 text-xs">
+                <Link :href="route('stock-audits.index')" class="text-text-tertiary hover:text-text-primary">Workspace</Link>
+                <span class="text-text-tertiary">/</span>
+                <Link :href="route('stock-audits.index')" class="text-text-tertiary hover:text-text-primary">Stock Audits</Link>
+                <span class="text-text-tertiary">/</span>
+                <span class="font-medium text-text-primary">{{ audit.audit_number }}</span>
             </div>
         </template>
 
-        <div class="py-12 bg-gray-50 dark:bg-dark-bg min-h-screen">
-            <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-6">
-                <!-- Flash Messages -->
-                <div v-if="$page.props.flash?.success" class="p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
-                    <p class="text-sm text-green-800 dark:text-green-300">{{ $page.props.flash.success }}</p>
-                </div>
-                <div v-if="$page.props.flash?.error" class="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
-                    <p class="text-sm text-red-800 dark:text-red-300">{{ $page.props.flash.error }}</p>
-                </div>
+        <PageHeader :title="audit.audit_number" :description="audit.name">
+            <template #actions>
+                <Badge :variant="statusVariant(audit.status)" size="sm" dot>{{ getStatusLabel(audit.status) }}</Badge>
+                <Button
+                    v-if="canEdit"
+                    variant="default"
+                    size="sm"
+                    as="Link"
+                    :href="route('stock-audits.edit', audit.id)"
+                >
+                    <Pencil :size="14" />
+                    Edit
+                </Button>
+                <Button variant="secondary" size="sm" as="Link" :href="route('stock-audits.index')">
+                    <ArrowLeft :size="14" />
+                    Back to List
+                </Button>
+            </template>
+        </PageHeader>
 
-                <!-- Summary Cards -->
-                <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
-                    <div class="bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border shadow-sm rounded-lg p-6">
-                        <p class="text-sm text-gray-500 dark:text-gray-400 mb-2">Status</p>
-                        <span :class="getStatusBadgeClass(audit.status)" class="px-3 py-1 rounded-full text-sm font-medium">
-                            {{ getStatusLabel(audit.status) }}
-                        </span>
-                    </div>
-                    <div class="bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border shadow-sm rounded-lg p-6">
-                        <p class="text-sm text-gray-500 dark:text-gray-400 mb-2">Total Items</p>
-                        <p class="text-3xl font-bold text-gray-900 dark:text-gray-100">{{ summary.total_items }}</p>
-                    </div>
-                    <div class="bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border shadow-sm rounded-lg p-6">
-                        <p class="text-sm text-gray-500 dark:text-gray-400 mb-2">Progress</p>
-                        <p class="text-3xl font-bold text-gray-900 dark:text-gray-100">{{ summary.progress }}%</p>
-                        <div class="mt-2 w-full bg-gray-200 dark:bg-dark-bg rounded-full h-2">
-                            <div
-                                class="bg-primary-500 h-2 rounded-full transition-all duration-300"
-                                :style="{ width: summary.progress + '%' }"
-                            ></div>
-                        </div>
-                    </div>
-                    <div class="bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border shadow-sm rounded-lg p-6">
-                        <p class="text-sm text-gray-500 dark:text-gray-400 mb-2">Discrepancies</p>
-                        <p class="text-3xl font-bold" :class="summary.discrepancies > 0 ? 'text-red-600 dark:text-red-400' : 'text-green-600 dark:text-green-400'">
-                            {{ summary.discrepancies }}
-                        </p>
-                    </div>
-                </div>
+        <!-- Flash Messages -->
+        <div v-if="$page.props.flash?.success" class="mt-6 rounded-lg border border-status-success/20 bg-status-success-soft p-4">
+            <p class="text-sm text-status-success">{{ $page.props.flash.success }}</p>
+        </div>
+        <div v-if="$page.props.flash?.error" class="mt-6 rounded-lg border border-status-danger/20 bg-status-danger-soft p-4">
+            <p class="text-sm text-status-danger">{{ $page.props.flash.error }}</p>
+        </div>
 
-                <!-- Audit Details -->
-                <div class="bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border shadow-sm sm:rounded-lg p-6">
-                    <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-6">Audit Details</h3>
-
-                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        <div>
-                            <p class="text-sm text-gray-500 dark:text-gray-400 mb-1">Audit Type</p>
-                            <p class="text-sm font-medium text-gray-900 dark:text-gray-100">{{ typeLabels[audit.audit_type] || audit.audit_type }}</p>
-                        </div>
-                        <div>
-                            <p class="text-sm text-gray-500 dark:text-gray-400 mb-1">Location</p>
-                            <p class="text-sm font-medium text-gray-900 dark:text-gray-100">
-                                {{ audit.warehouse_location?.name || 'All Locations' }}
-                            </p>
-                        </div>
-                        <div>
-                            <p class="text-sm text-gray-500 dark:text-gray-400 mb-1">Created By</p>
-                            <p class="text-sm font-medium text-gray-900 dark:text-gray-100">{{ audit.creator?.name || '-' }}</p>
-                        </div>
-                        <div>
-                            <p class="text-sm text-gray-500 dark:text-gray-400 mb-1">Created</p>
-                            <p class="text-sm font-medium text-gray-900 dark:text-gray-100">{{ formatDate(audit.created_at) }}</p>
-                        </div>
-                        <div v-if="audit.started_at">
-                            <p class="text-sm text-gray-500 dark:text-gray-400 mb-1">Started</p>
-                            <p class="text-sm font-medium text-gray-900 dark:text-gray-100">{{ formatDate(audit.started_at) }}</p>
-                        </div>
-                        <div v-if="audit.completed_at">
-                            <p class="text-sm text-gray-500 dark:text-gray-400 mb-1">Completed</p>
-                            <p class="text-sm font-medium text-gray-900 dark:text-gray-100">{{ formatDate(audit.completed_at) }}</p>
-                        </div>
-                    </div>
-
-                    <div v-if="audit.description" class="mt-6 pt-6 border-t border-gray-200 dark:border-dark-border">
-                        <p class="text-sm text-gray-500 dark:text-gray-400 mb-1">Description</p>
-                        <p class="text-sm text-gray-900 dark:text-gray-100">{{ audit.description }}</p>
-                    </div>
-
-                    <div v-if="audit.notes" class="mt-4">
-                        <p class="text-sm text-gray-500 dark:text-gray-400 mb-1">Notes</p>
-                        <p class="text-sm text-gray-900 dark:text-gray-100 whitespace-pre-line">{{ audit.notes }}</p>
-                    </div>
-                </div>
-
-                <!-- Audit Items / Counting Interface -->
-                <div class="bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border shadow-sm sm:rounded-lg overflow-hidden">
-                    <div class="px-6 py-4 border-b border-gray-200 dark:border-dark-border">
-                        <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">
-                            Audit Items
-                            <span class="text-sm font-normal text-gray-500 dark:text-gray-400">
-                                ({{ summary.counted_items }} of {{ summary.total_items }} counted)
-                            </span>
-                        </h3>
-                    </div>
-                    <div class="overflow-x-auto">
-                        <table class="min-w-full divide-y divide-gray-200 dark:divide-dark-border">
-                            <thead class="bg-gray-50 dark:bg-dark-bg/50">
-                                <tr>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Product</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Location</th>
-                                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">System Qty</th>
-                                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Counted Qty</th>
-                                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Discrepancy</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Status</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Counted By</th>
-                                    <th v-if="canCount" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody class="divide-y divide-gray-200 dark:divide-dark-border">
-                                <template v-for="item in audit.items" :key="item.id">
-                                    <!-- Normal Row -->
-                                    <tr v-if="editingItemId !== item.id" class="hover:bg-gray-50 dark:hover:bg-dark-bg/50">
-                                        <td class="px-6 py-4 text-sm text-gray-900 dark:text-gray-100">
-                                            <div class="font-medium">{{ item.product?.name || '-' }}</div>
-                                            <div class="text-xs text-gray-500 dark:text-gray-400">SKU: {{ item.product?.sku || '-' }}</div>
-                                        </td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-300">
-                                            {{ item.location?.name || '-' }}
-                                        </td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-right text-sm text-gray-600 dark:text-gray-300">
-                                            {{ item.system_quantity }}
-                                        </td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium text-gray-900 dark:text-gray-100">
-                                            {{ item.counted_quantity !== null ? item.counted_quantity : '-' }}
-                                        </td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-semibold" :class="getDiscrepancyClass(item)">
-                                            {{ getDiscrepancyText(item) }}
-                                        </td>
-                                        <td class="px-6 py-4 whitespace-nowrap">
-                                            <span class="px-2 py-1 text-xs font-semibold rounded-full" :class="getItemStatusBadgeClass(item.status)">
-                                                {{ getItemStatusLabel(item.status) }}
-                                            </span>
-                                        </td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-300">
-                                            {{ item.counted_by_user?.name || '-' }}
-                                        </td>
-                                        <td v-if="canCount" class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                            <button
-                                                @click="startCounting(item)"
-                                                class="text-primary-400 hover:text-primary-300"
-                                            >
-                                                {{ item.counted_quantity !== null ? 'Recount' : 'Count' }}
-                                            </button>
-                                        </td>
-                                    </tr>
-
-                                    <!-- Inline Editing Row -->
-                                    <tr v-else class="bg-primary-400/5">
-                                        <td class="px-6 py-4 text-sm text-gray-900 dark:text-gray-100">
-                                            <div class="font-medium">{{ item.product?.name || '-' }}</div>
-                                            <div class="text-xs text-gray-500 dark:text-gray-400">SKU: {{ item.product?.sku || '-' }}</div>
-                                        </td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-300">
-                                            {{ item.location?.name || '-' }}
-                                        </td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-right text-sm text-gray-600 dark:text-gray-300">
-                                            {{ item.system_quantity }}
-                                        </td>
-                                        <td class="px-6 py-3">
-                                            <input
-                                                v-model.number="countValue"
-                                                type="number"
-                                                min="0"
-                                                step="1"
-                                                class="block w-24 ml-auto rounded-md bg-white dark:bg-dark-bg border-gray-300 dark:border-dark-border text-gray-900 dark:text-gray-100 text-right text-sm shadow-sm focus:border-primary-400 focus:ring-primary-400"
-                                                @keyup.enter="saveCount(item)"
-                                                @keyup.escape="cancelCounting"
-                                            />
-                                        </td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-semibold" :class="(countValue - item.system_quantity) > 0 ? 'text-green-600 dark:text-green-400' : (countValue - item.system_quantity) < 0 ? 'text-red-600 dark:text-red-400' : 'text-gray-600 dark:text-gray-300'">
-                                            {{ (countValue - item.system_quantity) > 0 ? '+' : '' }}{{ countValue - item.system_quantity }}
-                                        </td>
-                                        <td colspan="2" class="px-6 py-3">
-                                            <input
-                                                v-model="countNotes"
-                                                type="text"
-                                                placeholder="Notes (optional)"
-                                                class="block w-full rounded-md bg-white dark:bg-dark-bg border-gray-300 dark:border-dark-border text-gray-900 dark:text-gray-100 text-sm shadow-sm focus:border-primary-400 focus:ring-primary-400"
-                                                @keyup.enter="saveCount(item)"
-                                            />
-                                        </td>
-                                        <td v-if="canCount" class="px-6 py-3">
-                                            <div class="flex gap-2">
-                                                <button
-                                                    @click="saveCount(item)"
-                                                    :disabled="savingCount"
-                                                    class="px-3 py-1.5 bg-green-600 hover:bg-green-700 text-white text-xs font-medium rounded-md transition disabled:opacity-50"
-                                                >
-                                                    {{ savingCount ? '...' : 'Save' }}
-                                                </button>
-                                                <button
-                                                    @click="cancelCounting"
-                                                    class="px-3 py-1.5 bg-gray-200 dark:bg-dark-bg hover:bg-gray-300 dark:hover:bg-dark-bg/70 text-gray-700 dark:text-gray-300 text-xs font-medium rounded-md transition"
-                                                >
-                                                    Cancel
-                                                </button>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                </template>
-
-                                <tr v-if="!audit.items || audit.items.length === 0">
-                                    <td :colspan="canCount ? 8 : 7" class="px-6 py-12 text-center">
-                                        <p class="text-gray-500 dark:text-gray-400">No items in this audit</p>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-
-                <!-- Actions -->
-                <div v-if="canStart || canComplete || canDelete" class="bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border shadow-sm sm:rounded-lg p-6">
-                    <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Actions</h3>
-                    <div class="flex gap-3">
-                        <button
-                            v-if="canStart"
-                            @click="startAudit"
-                            :disabled="processing"
-                            class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                            {{ processing ? 'Processing...' : 'Start Audit' }}
-                        </button>
-                        <button
-                            v-if="canComplete"
-                            @click="completeAudit"
-                            :disabled="processing"
-                            class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-medium rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                            {{ processing ? 'Processing...' : 'Complete Audit' }}
-                        </button>
-                        <button
-                            v-if="canDelete"
-                            @click="deleteAudit"
-                            :disabled="processing"
-                            class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-medium rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                            {{ processing ? 'Processing...' : 'Delete Audit' }}
-                        </button>
-                    </div>
-                    <p v-if="canStart" class="mt-3 text-xs text-gray-500 dark:text-gray-400">
-                        Starting the audit will record current system stock levels and allow counting to begin.
-                    </p>
-                    <p v-if="canComplete" class="mt-3 text-xs text-gray-500 dark:text-gray-400">
-                        Completing the audit will create stock adjustments for any discrepancies between system and counted quantities.
-                    </p>
+        <!-- Summary metrics -->
+        <section class="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
+            <div class="rounded-lg border border-border-subtle bg-surface-raised p-4 transition-colors hover:border-border-strong">
+                <p class="text-xs font-medium uppercase tracking-wider text-text-tertiary">Status</p>
+                <div class="mt-2">
+                    <Badge :variant="statusVariant(audit.status)" size="md" dot>{{ getStatusLabel(audit.status) }}</Badge>
                 </div>
             </div>
-        </div>
-    </AuthenticatedLayout>
+            <StatTile
+                label="Total Items"
+                :value="summary.total_items"
+                icon-tone="brand"
+            >
+                <template #icon><Layers :size="18" /></template>
+            </StatTile>
+            <div class="rounded-lg border border-border-subtle bg-surface-raised p-4 transition-colors hover:border-border-strong">
+                <div class="flex items-start justify-between gap-2">
+                    <p class="text-xs font-medium uppercase tracking-wider text-text-tertiary">Progress</p>
+                    <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-status-info to-status-info text-white shadow-sm">
+                        <ListChecks :size="18" />
+                    </span>
+                </div>
+                <p class="mt-2 text-2xl font-semibold tabular-nums tracking-tight text-text-primary">{{ summary.progress }}%</p>
+                <div class="mt-2 h-2 w-full rounded-full bg-surface-sunken">
+                    <div
+                        class="h-2 rounded-full bg-brand transition-all duration-300"
+                        :style="{ width: summary.progress + '%' }"
+                    ></div>
+                </div>
+            </div>
+            <StatTile
+                label="Discrepancies"
+                :value="summary.discrepancies"
+                :icon-tone="summary.discrepancies > 0 ? 'warning' : 'success'"
+            >
+                <template #icon><AlertTriangle :size="18" /></template>
+            </StatTile>
+        </section>
+
+        <!-- Audit Details -->
+        <Card :padded="false" class="mt-4">
+            <div class="px-5 pt-5"><h3 class="text-sm font-semibold text-text-primary">Audit Details</h3></div>
+            <div class="p-5">
+                <div class="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+                    <div>
+                        <p class="mb-1 text-xs text-text-tertiary">Audit Type</p>
+                        <p class="text-sm font-medium text-text-primary">{{ typeLabels[audit.audit_type] || audit.audit_type }}</p>
+                    </div>
+                    <div>
+                        <p class="mb-1 text-xs text-text-tertiary">Location</p>
+                        <p class="text-sm font-medium text-text-primary">
+                            {{ audit.warehouse_location?.name || 'All Locations' }}
+                        </p>
+                    </div>
+                    <div>
+                        <p class="mb-1 text-xs text-text-tertiary">Created By</p>
+                        <p class="text-sm font-medium text-text-primary">{{ audit.creator?.name || '-' }}</p>
+                    </div>
+                    <div>
+                        <p class="mb-1 text-xs text-text-tertiary">Created</p>
+                        <p class="text-sm font-medium text-text-primary">{{ formatDate(audit.created_at) }}</p>
+                    </div>
+                    <div v-if="audit.started_at">
+                        <p class="mb-1 text-xs text-text-tertiary">Started</p>
+                        <p class="text-sm font-medium text-text-primary">{{ formatDate(audit.started_at) }}</p>
+                    </div>
+                    <div v-if="audit.completed_at">
+                        <p class="mb-1 text-xs text-text-tertiary">Completed</p>
+                        <p class="text-sm font-medium text-text-primary">{{ formatDate(audit.completed_at) }}</p>
+                    </div>
+                </div>
+
+                <div v-if="audit.description" class="mt-6 border-t border-border-subtle pt-6">
+                    <p class="mb-1 text-xs text-text-tertiary">Description</p>
+                    <p class="text-sm text-text-primary">{{ audit.description }}</p>
+                </div>
+
+                <div v-if="audit.notes" class="mt-4">
+                    <p class="mb-1 text-xs text-text-tertiary">Notes</p>
+                    <p class="whitespace-pre-line text-sm text-text-primary">{{ audit.notes }}</p>
+                </div>
+            </div>
+        </Card>
+
+        <!-- Audit Items / Counting Interface -->
+        <Card :padded="false" class="mt-4">
+            <div class="px-5 pt-5">
+                <h3 class="text-sm font-semibold text-text-primary">
+                    Audit Items
+                    <span class="text-xs font-normal text-text-tertiary">
+                        ({{ summary.counted_items }} of {{ summary.total_items }} counted)
+                    </span>
+                </h3>
+            </div>
+            <div class="mt-4 w-full overflow-x-auto">
+                <table class="min-w-full">
+                    <thead>
+                        <tr class="border-b border-border-subtle">
+                            <th :class="thClass">Product</th>
+                            <th :class="thClass">Location</th>
+                            <th :class="[thClass, 'text-right']">System Qty</th>
+                            <th :class="[thClass, 'text-right']">Counted Qty</th>
+                            <th :class="[thClass, 'text-right']">Discrepancy</th>
+                            <th :class="thClass">Status</th>
+                            <th :class="thClass">Counted By</th>
+                            <th v-if="canCount" :class="thClass">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <template v-for="item in audit.items" :key="item.id">
+                            <!-- Normal Row -->
+                            <tr v-if="editingItemId !== item.id" class="border-b border-border-subtle transition-colors last:border-b-0 hover:bg-surface-overlay">
+                                <td class="px-6 py-4 text-sm text-text-primary">
+                                    <div class="font-medium">{{ item.product?.name || '-' }}</div>
+                                    <div class="text-xs text-text-tertiary">SKU: {{ item.product?.sku || '-' }}</div>
+                                </td>
+                                <td class="whitespace-nowrap px-6 py-4 text-sm text-text-secondary">
+                                    {{ item.location?.name || '-' }}
+                                </td>
+                                <td class="whitespace-nowrap px-6 py-4 text-right text-sm tabular-nums text-text-secondary">
+                                    {{ item.system_quantity }}
+                                </td>
+                                <td class="whitespace-nowrap px-6 py-4 text-right text-sm font-medium tabular-nums text-text-primary">
+                                    {{ item.counted_quantity !== null ? item.counted_quantity : '-' }}
+                                </td>
+                                <td class="whitespace-nowrap px-6 py-4 text-right text-sm font-semibold tabular-nums" :class="getDiscrepancyClass(item)">
+                                    {{ getDiscrepancyText(item) }}
+                                </td>
+                                <td class="whitespace-nowrap px-6 py-4">
+                                    <Badge :variant="itemStatusVariant(item.status)" size="sm">
+                                        {{ getItemStatusLabel(item.status) }}
+                                    </Badge>
+                                </td>
+                                <td class="whitespace-nowrap px-6 py-4 text-sm text-text-secondary">
+                                    {{ item.counted_by_user?.name || '-' }}
+                                </td>
+                                <td v-if="canCount" class="whitespace-nowrap px-6 py-4 text-sm">
+                                    <button
+                                        @click="startCounting(item)"
+                                        class="text-sm font-medium text-brand hover:underline"
+                                    >
+                                        {{ item.counted_quantity !== null ? 'Recount' : 'Count' }}
+                                    </button>
+                                </td>
+                            </tr>
+
+                            <!-- Inline Editing Row -->
+                            <tr v-else class="border-b border-border-subtle bg-brand-soft last:border-b-0">
+                                <td class="px-6 py-4 text-sm text-text-primary">
+                                    <div class="font-medium">{{ item.product?.name || '-' }}</div>
+                                    <div class="text-xs text-text-tertiary">SKU: {{ item.product?.sku || '-' }}</div>
+                                </td>
+                                <td class="whitespace-nowrap px-6 py-4 text-sm text-text-secondary">
+                                    {{ item.location?.name || '-' }}
+                                </td>
+                                <td class="whitespace-nowrap px-6 py-4 text-right text-sm tabular-nums text-text-secondary">
+                                    {{ item.system_quantity }}
+                                </td>
+                                <td class="px-6 py-3">
+                                    <input
+                                        v-model.number="countValue"
+                                        type="number"
+                                        min="0"
+                                        step="1"
+                                        class="ml-auto block h-9 w-24 rounded-md border border-border-subtle bg-surface-canvas px-3 text-right text-sm text-text-primary ds-focus-ring"
+                                        @keyup.enter="saveCount(item)"
+                                        @keyup.escape="cancelCounting"
+                                    />
+                                </td>
+                                <td class="whitespace-nowrap px-6 py-4 text-right text-sm font-semibold tabular-nums" :class="(countValue - item.system_quantity) > 0 ? 'text-status-success' : (countValue - item.system_quantity) < 0 ? 'text-status-danger' : 'text-text-secondary'">
+                                    {{ (countValue - item.system_quantity) > 0 ? '+' : '' }}{{ countValue - item.system_quantity }}
+                                </td>
+                                <td colspan="2" class="px-6 py-3">
+                                    <input
+                                        v-model="countNotes"
+                                        type="text"
+                                        placeholder="Notes (optional)"
+                                        class="block h-9 w-full rounded-md border border-border-subtle bg-surface-canvas px-3 text-sm text-text-primary placeholder:text-text-tertiary ds-focus-ring"
+                                        @keyup.enter="saveCount(item)"
+                                    />
+                                </td>
+                                <td v-if="canCount" class="px-6 py-3">
+                                    <div class="flex gap-2">
+                                        <Button
+                                            size="sm"
+                                            :loading="savingCount"
+                                            :disabled="savingCount"
+                                            @click="saveCount(item)"
+                                        >
+                                            {{ savingCount ? '...' : 'Save' }}
+                                        </Button>
+                                        <Button
+                                            variant="secondary"
+                                            size="sm"
+                                            @click="cancelCounting"
+                                        >
+                                            Cancel
+                                        </Button>
+                                    </div>
+                                </td>
+                            </tr>
+                        </template>
+
+                        <tr v-if="!audit.items || audit.items.length === 0">
+                            <td :colspan="canCount ? 8 : 7" class="px-6 py-12 text-center">
+                                <p class="text-sm text-text-tertiary">No items in this audit</p>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </Card>
+
+        <!-- Actions -->
+        <Card v-if="canStart || canComplete" :padded="false" class="mt-4">
+            <div class="px-5 pt-5"><h3 class="text-sm font-semibold text-text-primary">Actions</h3></div>
+            <div class="p-5">
+                <div class="flex flex-wrap gap-3">
+                    <Button
+                        v-if="canStart"
+                        :loading="processing"
+                        :disabled="processing"
+                        @click="startAudit"
+                    >
+                        <Play :size="16" />
+                        {{ processing ? 'Processing...' : 'Start Audit' }}
+                    </Button>
+                    <Button
+                        v-if="canComplete"
+                        :loading="processing"
+                        :disabled="processing"
+                        @click="completeAudit"
+                    >
+                        <CheckCircle2 :size="16" />
+                        {{ processing ? 'Processing...' : 'Complete Audit' }}
+                    </Button>
+                </div>
+                <p v-if="canStart" class="mt-3 text-xs text-text-tertiary">
+                    Starting the audit will record current system stock levels and allow counting to begin.
+                </p>
+                <p v-if="canComplete" class="mt-3 text-xs text-text-tertiary">
+                    Completing the audit will create stock adjustments for any discrepancies between system and counted quantities.
+                </p>
+            </div>
+        </Card>
+
+        <!-- Danger Zone -->
+        <Card v-if="canDelete" :padded="false" class="mt-4">
+            <div class="px-5 pt-5"><h3 class="text-sm font-semibold text-text-primary">Danger Zone</h3></div>
+            <div class="p-5">
+                <Button
+                    variant="danger"
+                    :loading="processing"
+                    :disabled="processing"
+                    @click="deleteAudit"
+                >
+                    <Trash2 :size="16" />
+                    {{ processing ? 'Processing...' : 'Delete Audit' }}
+                </Button>
+                <p class="mt-2 text-xs text-text-tertiary">
+                    Deleting this audit is permanent and cannot be undone.
+                </p>
+            </div>
+        </Card>
+    </AppLayout>
 </template>
