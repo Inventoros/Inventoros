@@ -405,7 +405,7 @@ const thClass =
         <button
             v-if="$page.props.auth.permissions.includes('products.view')"
             @click="openScanner"
-            class="fixed bottom-6 right-6 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-brand to-brand-hover text-brand-foreground shadow-lg transition-all duration-200 hover:scale-110 hover:shadow-xl"
+            class="fixed bottom-6 right-6 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-brand text-brand-foreground shadow-md transition-colors duration-200 hover:bg-brand-hover"
             :title="t('products.scanBarcode')"
         >
             <ScanLine :size="24" />

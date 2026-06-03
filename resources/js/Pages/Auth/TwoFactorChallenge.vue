@@ -35,7 +35,7 @@ const toggleMode = () => {
     <GuestLayout>
         <Head title="Two-Factor Challenge" />
 
-        <div class="mb-4 text-sm text-gray-600 dark:text-gray-400">
+        <div class="mb-4 text-sm text-text-secondary">
             <template v-if="!useRecoveryCode">
                 Please enter the authentication code from your authenticator app.
             </template>
@@ -81,7 +81,7 @@ const toggleMode = () => {
                 <button
                     type="button"
                     @click="toggleMode"
-                    class="text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 underline"
+                    class="text-sm text-text-secondary hover:text-text-primary underline"
                 >
                     {{ useRecoveryCode ? 'Use authentication code' : 'Use a recovery code' }}
                 </button>

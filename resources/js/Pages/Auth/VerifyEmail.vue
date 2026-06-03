@@ -28,12 +28,12 @@ const verificationLinkSent = computed(
     <GuestLayout>
         <Head :title="t('auth.verifyEmail.title')" />
 
-        <div class="mb-4 text-sm text-gray-600 dark:text-gray-500 dark:text-gray-400">
+        <div class="mb-4 text-sm text-text-secondary">
             {{ t('auth.verifyEmail.description') }}
         </div>
 
         <div
-            class="mb-4 text-sm font-medium text-green-600 dark:text-green-400"
+            class="mb-4 text-sm font-medium text-status-success"
             v-if="verificationLinkSent"
         >
             {{ t('auth.verifyEmail.linkSent') }}
@@ -52,7 +52,7 @@ const verificationLinkSent = computed(
                     :href="route('logout')"
                     method="post"
                     as="button"
-                    class="rounded-md text-sm text-gray-600 underline hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 dark:text-gray-500 dark:text-gray-400 dark:hover:text-gray-900 dark:text-gray-100 dark:focus:ring-offset-gray-800"
+                    class="rounded-md text-sm text-text-secondary underline hover:text-text-primary ds-focus-ring"
                     >{{ t('auth.verifyEmail.logOut') }}</Link
                 >
             </div>

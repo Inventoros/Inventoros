@@ -103,42 +103,42 @@ const install = async () => {
 <template>
     <Head :title="t('install.database.title')" />
 
-    <div class="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center p-4">
+    <div class="min-h-screen bg-surface-canvas flex items-center justify-center p-4">
         <div class="max-w-2xl w-full">
             <!-- Header -->
             <div class="text-center mb-8">
-                <h1 class="text-3xl font-bold text-gray-900 mb-2">{{ t('install.database.title') }}</h1>
-                <p class="text-gray-600">{{ t('install.database.subtitle') }}</p>
+                <h1 class="text-3xl font-bold text-text-primary mb-2">{{ t('install.database.title') }}</h1>
+                <p class="text-text-secondary">{{ t('install.database.subtitle') }}</p>
             </div>
 
             <!-- Database Form Card -->
-            <div class="bg-white rounded-lg shadow-lg p-8">
+            <div class="bg-surface-base border border-border-subtle rounded-lg shadow-sm p-8">
                 <!-- Test Result Alert -->
                 <div v-if="testResult" class="mb-6">
                     <div
                         v-if="testResult.success"
-                        class="bg-green-50 border border-green-200 rounded-lg p-4"
+                        class="bg-status-success-soft border border-status-success/20 rounded-lg p-4"
                     >
                         <div class="flex">
-                            <svg class="w-5 h-5 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                            <svg class="w-5 h-5 text-status-success" fill="currentColor" viewBox="0 0 20 20">
                                 <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
                             </svg>
                             <div class="ml-3">
-                                <p class="text-sm font-semibold text-green-900">{{ testResult.message }}</p>
+                                <p class="text-sm font-semibold text-text-primary">{{ testResult.message }}</p>
                             </div>
                         </div>
                     </div>
 
                     <div
                         v-else
-                        class="bg-red-50 border border-red-200 rounded-lg p-4"
+                        class="bg-status-danger-soft border border-status-danger/20 rounded-lg p-4"
                     >
                         <div class="flex">
-                            <svg class="w-5 h-5 text-red-600" fill="currentColor" viewBox="0 0 20 20">
+                            <svg class="w-5 h-5 text-status-danger" fill="currentColor" viewBox="0 0 20 20">
                                 <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
                             </svg>
                             <div class="ml-3">
-                                <p class="text-sm font-semibold text-red-900">{{ testResult.message }}</p>
+                                <p class="text-sm font-semibold text-text-primary">{{ testResult.message }}</p>
                             </div>
                         </div>
                     </div>
@@ -147,14 +147,14 @@ const install = async () => {
                 <form @submit.prevent="install" class="space-y-6">
                     <!-- Database Driver (issue #50) -->
                     <div>
-                        <label for="driver" class="block text-sm font-medium text-gray-700 mb-2">
+                        <label for="driver" class="block text-sm font-medium text-text-secondary mb-2">
                             {{ t('install.database.driver') }}
                         </label>
                         <select
                             id="driver"
                             v-model="form.driver"
                             required
-                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-900 focus:border-transparent bg-white"
+                            class="w-full px-4 py-2 border border-border-subtle rounded-lg bg-surface-canvas text-text-primary focus:ring-2 focus:ring-brand focus:border-transparent"
                         >
                             <option value="mysql">{{ t('install.database.drivers.mysql') }}</option>
                             <option value="pgsql">{{ t('install.database.drivers.pgsql') }}</option>
@@ -163,7 +163,7 @@ const install = async () => {
 
                     <!-- Database Host -->
                     <div>
-                        <label for="host" class="block text-sm font-medium text-gray-700 mb-2">
+                        <label for="host" class="block text-sm font-medium text-text-secondary mb-2">
                             {{ t('install.database.host') }}
                         </label>
                         <input
@@ -171,14 +171,14 @@ const install = async () => {
                             v-model="form.host"
                             type="text"
                             required
-                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+                            class="w-full px-4 py-2 border border-border-subtle rounded-lg bg-surface-canvas text-text-primary placeholder:text-text-tertiary focus:ring-2 focus:ring-brand focus:border-transparent"
                             placeholder="localhost"
                         />
                     </div>
 
                     <!-- Database Port -->
                     <div>
-                        <label for="port" class="block text-sm font-medium text-gray-700 mb-2">
+                        <label for="port" class="block text-sm font-medium text-text-secondary mb-2">
                             {{ t('install.database.port') }}
                         </label>
                         <input
@@ -186,14 +186,14 @@ const install = async () => {
                             v-model.number="form.port"
                             type="number"
                             required
-                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+                            class="w-full px-4 py-2 border border-border-subtle rounded-lg bg-surface-canvas text-text-primary placeholder:text-text-tertiary focus:ring-2 focus:ring-brand focus:border-transparent"
                             :placeholder="String(DEFAULT_PORTS[form.driver])"
                         />
                     </div>
 
                     <!-- Database Name -->
                     <div>
-                        <label for="database" class="block text-sm font-medium text-gray-700 mb-2">
+                        <label for="database" class="block text-sm font-medium text-text-secondary mb-2">
                             {{ t('install.database.name') }}
                         </label>
                         <input
@@ -201,14 +201,14 @@ const install = async () => {
                             v-model="form.database"
                             type="text"
                             required
-                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+                            class="w-full px-4 py-2 border border-border-subtle rounded-lg bg-surface-canvas text-text-primary placeholder:text-text-tertiary focus:ring-2 focus:ring-brand focus:border-transparent"
                             placeholder="inventoros"
                         />
                     </div>
 
                     <!-- Database Username -->
                     <div>
-                        <label for="username" class="block text-sm font-medium text-gray-700 mb-2">
+                        <label for="username" class="block text-sm font-medium text-text-secondary mb-2">
                             {{ t('install.database.username') }}
                         </label>
                         <input
@@ -216,21 +216,21 @@ const install = async () => {
                             v-model="form.username"
                             type="text"
                             required
-                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+                            class="w-full px-4 py-2 border border-border-subtle rounded-lg bg-surface-canvas text-text-primary placeholder:text-text-tertiary focus:ring-2 focus:ring-brand focus:border-transparent"
                             placeholder="root"
                         />
                     </div>
 
                     <!-- Database Password -->
                     <div>
-                        <label for="password" class="block text-sm font-medium text-gray-700 mb-2">
+                        <label for="password" class="block text-sm font-medium text-text-secondary mb-2">
                             {{ t('install.database.password') }}
                         </label>
                         <input
                             id="password"
                             v-model="form.password"
                             type="password"
-                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+                            class="w-full px-4 py-2 border border-border-subtle rounded-lg bg-surface-canvas text-text-primary placeholder:text-text-tertiary focus:ring-2 focus:ring-brand focus:border-transparent"
                             :placeholder="t('install.database.passwordHint')"
                         />
                     </div>
@@ -241,7 +241,7 @@ const install = async () => {
                             type="button"
                             @click="testConnection"
                             :disabled="testing"
-                            class="w-full px-4 py-2 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition disabled:bg-blue-300"
+                            class="w-full px-4 py-2 bg-brand text-brand-foreground font-semibold rounded-lg hover:bg-brand-hover transition disabled:opacity-50"
                         >
                             <span v-if="testing">{{ t('install.database.testing') }}</span>
                             <span v-else>{{ t('install.database.testConnection') }}</span>
@@ -249,13 +249,13 @@ const install = async () => {
                     </div>
 
                     <!-- Info Box -->
-                    <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                    <div class="bg-status-info-soft border border-status-info/20 rounded-lg p-4">
                         <div class="flex">
-                            <svg class="w-5 h-5 text-blue-600 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                            <svg class="w-5 h-5 text-status-info mt-0.5" fill="currentColor" viewBox="0 0 20 20">
                                 <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
                             </svg>
                             <div class="ml-3">
-                                <p class="text-sm text-blue-800">
+                                <p class="text-sm text-text-secondary">
                                     {{ t('install.database.dbExistsHint') }}
                                 </p>
                             </div>
@@ -263,10 +263,10 @@ const install = async () => {
                     </div>
 
                     <!-- Navigation -->
-                    <div class="flex justify-between pt-6 border-t">
+                    <div class="flex justify-between pt-6 border-t border-border-subtle">
                         <Link
                             :href="route('install.requirements')"
-                            class="inline-flex items-center px-4 py-2 text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition"
+                            class="inline-flex items-center px-4 py-2 text-text-secondary bg-surface-base border border-border-subtle rounded-lg hover:bg-surface-overlay transition"
                         >
                             <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
@@ -277,7 +277,7 @@ const install = async () => {
                         <button
                             type="submit"
                             :disabled="installing || !testResult?.success"
-                            class="inline-flex items-center px-6 py-2 bg-gray-900 text-white font-semibold rounded-lg hover:bg-gray-800 transition disabled:bg-gray-300 disabled:cursor-not-allowed"
+                            class="inline-flex items-center px-6 py-2 bg-brand text-brand-foreground font-semibold rounded-lg hover:bg-brand-hover transition disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                             <span v-if="installing">{{ t('install.database.installing') }}</span>
                             <span v-else>{{ t('install.database.installDatabase') }}</span>

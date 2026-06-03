@@ -236,8 +236,8 @@ const thClass = 'px-6 py-3 text-left text-xs font-medium uppercase tracking-wide
             <div class="rounded-lg border border-border-subtle bg-surface-raised p-4 transition-colors hover:border-border-strong">
                 <div class="flex items-start justify-between gap-2">
                     <p class="text-xs font-medium uppercase tracking-wider text-text-tertiary">Progress</p>
-                    <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-status-info to-status-info text-white shadow-sm">
-                        <ListChecks :size="18" />
+                    <span class="shrink-0 text-status-info">
+                        <ListChecks :size="20" :stroke-width="1.5" />
                     </span>
                 </div>
                 <p class="mt-2 text-2xl font-semibold tabular-nums tracking-tight text-text-primary">{{ summary.progress }}%</p>
