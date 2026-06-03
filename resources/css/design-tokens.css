@@ -29,9 +29,11 @@
         --text-tertiary: 220 9% 64%;        /* hint text */
         --text-disabled: 220 9% 75%;
 
-        /* Accent — brighter blue (matches the marketing site + app primary). */
-        --accent: 217 91% 60%;              /* blue-500 #3b82f6 */
-        --accent-hover: 221 83% 53%;        /* blue-600 #2563eb */
+        /* Accent — brighter blue (matches the marketing site + app primary).
+           Light base is blue-600 (#2563eb, 5.16:1 on white) so text-brand meets
+           WCAG AA for normal text; blue-500 was only 3.68:1. */
+        --accent: 221 83% 53%;              /* blue-600 #2563eb */
+        --accent-hover: 226 71% 48%;        /* blue-700 #1d4ed8 */
         --accent-foreground: 0 0% 100%;
         --accent-soft: 214 95% 96%;         /* selected row, badge bg */
 
