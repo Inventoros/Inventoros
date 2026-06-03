@@ -410,6 +410,13 @@ final class PluginService
         }
 
         $manifest = json_decode(File::get($manifestPath), true);
+
+        if (! is_array($manifest)) {
+            Log::warning('Plugin manifest is not valid JSON; skipping', ['slug' => $slug]);
+
+            return;
+        }
+
         $mainFile = basename($manifest['main_file'] ?? 'Plugin.php');
         $pluginFile = realpath($pluginPath.'/'.$mainFile);
 
@@ -420,11 +427,18 @@ final class PluginService
         }
 
         if (File::exists($pluginFile)) {
-            // Load the plugin file - it will have access to all helper functions
-            require_once $pluginFile;
+            // Load the plugin file - it will have access to all helper functions.
+            // Isolate failures: a parse/fatal error or throw while loading one
+            // plugin must not take down every request (loadActivePlugins runs
+            // at boot for all active plugins).
+            try {
+                require_once $pluginFile;
 
-            // Run the plugin's init action if it exists
-            do_action('plugin_loaded', $slug, $manifest);
+                // Run the plugin's init action if it exists
+                do_action('plugin_loaded', $slug, $manifest);
+            } catch (\Throwable $e) {
+                Log::error('Failed to load plugin; skipping', ['slug' => $slug, 'error' => $e->getMessage()]);
+            }
         }
     }
 }
