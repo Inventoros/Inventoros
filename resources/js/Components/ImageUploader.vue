@@ -107,8 +107,8 @@ const formatFileSize = (bytes) => {
             :class="[
                 'border-2 border-dashed rounded-lg p-6 text-center transition cursor-pointer',
                 isDragging
-                    ? 'border-primary-400 bg-primary-400/10'
-                    : 'border-gray-300 dark:border-dark-border bg-gray-50 dark:bg-dark-bg hover:border-primary-400'
+                    ? 'border-brand bg-brand/10'
+                    : 'border-gray-300 dark:border-border-subtle bg-gray-50 dark:bg-surface-canvas hover:border-brand'
             ]"
             @click="$refs.fileInput.click()"
         >
@@ -143,7 +143,7 @@ const formatFileSize = (bytes) => {
             <div
                 v-for="(image, index) in images"
                 :key="index"
-                class="relative group bg-white dark:bg-dark-card rounded-lg border-2 border-gray-200 dark:border-dark-border overflow-hidden"
+                class="relative group bg-white dark:bg-surface-raised rounded-lg border-2 border-gray-200 dark:border-border-subtle overflow-hidden"
             >
                 <!-- Image Preview -->
                 <div class="aspect-square relative">
@@ -154,7 +154,7 @@ const formatFileSize = (bytes) => {
                     />
                     
                     <!-- Primary Badge -->
-                    <div v-if="index === 0" class="absolute top-2 left-2 px-2 py-1 bg-primary-400 text-white text-xs font-semibold rounded">
+                    <div v-if="index === 0" class="absolute top-2 left-2 px-2 py-1 bg-brand text-white text-xs font-semibold rounded">
                         Primary
                     </div>
 
@@ -165,7 +165,7 @@ const formatFileSize = (bytes) => {
                             v-if="index > 0"
                             @click="moveImage(index, index - 1)"
                             type="button"
-                            class="p-2 bg-white dark:bg-dark-card rounded-full hover:bg-gray-100 dark:hover:bg-dark-bg transition"
+                            class="p-2 bg-white dark:bg-surface-raised rounded-full hover:bg-gray-100 dark:hover:bg-surface-canvas transition"
                             title="Move left"
                         >
                             <svg class="w-5 h-5 text-gray-900 dark:text-gray-100" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -190,7 +190,7 @@ const formatFileSize = (bytes) => {
                             v-if="index < images.length - 1"
                             @click="moveImage(index, index + 1)"
                             type="button"
-                            class="p-2 bg-white dark:bg-dark-card rounded-full hover:bg-gray-100 dark:hover:bg-dark-bg transition"
+                            class="p-2 bg-white dark:bg-surface-raised rounded-full hover:bg-gray-100 dark:hover:bg-surface-canvas transition"
                             title="Move right"
                         >
                             <svg class="w-5 h-5 text-gray-900 dark:text-gray-100" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -201,7 +201,7 @@ const formatFileSize = (bytes) => {
                 </div>
 
                 <!-- Image Info -->
-                <div class="p-2 bg-gray-50 dark:bg-dark-bg">
+                <div class="p-2 bg-gray-50 dark:bg-surface-canvas">
                     <p class="text-xs text-gray-600 dark:text-gray-400 truncate" :title="image.name">
                         {{ image.name }}
                     </p>
@@ -213,7 +213,7 @@ const formatFileSize = (bytes) => {
         </div>
 
         <!-- Instructions -->
-        <div v-if="images.length === 0" class="text-center p-4 bg-gray-50 dark:bg-dark-bg rounded-lg">
+        <div v-if="images.length === 0" class="text-center p-4 bg-gray-50 dark:bg-surface-canvas rounded-lg">
             <p class="text-sm text-gray-600 dark:text-gray-400">
                 No images uploaded yet. The first image will be used as the primary product image.
             </p>

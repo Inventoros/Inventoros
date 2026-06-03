@@ -103,7 +103,7 @@ const statusBadgeClass = (status) => {
             </h3>
             <button
                 @click="showForm = !showForm"
-                class="inline-flex items-center px-3 py-1.5 bg-primary-400 text-white text-sm font-medium rounded-md hover:bg-primary-500 transition"
+                class="inline-flex items-center px-3 py-1.5 bg-brand text-white text-sm font-medium rounded-md hover:bg-brand-hover transition"
             >
                 <svg v-if="!showForm" class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
@@ -120,7 +120,7 @@ const statusBadgeClass = (status) => {
                     'px-2 py-1 text-xs rounded-full border transition',
                     statusFilter === 'all'
                         ? 'bg-gray-200 dark:bg-gray-700 border-gray-400 dark:border-gray-500 text-gray-900 dark:text-gray-100'
-                        : 'border-gray-200 dark:border-dark-border text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-dark-bg/50'
+                        : 'border-gray-200 dark:border-border-subtle text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-surface-canvas/50'
                 ]"
             >
                 All ({{ localSerials.length }})
@@ -133,7 +133,7 @@ const statusBadgeClass = (status) => {
                     'px-2 py-1 text-xs rounded-full border transition capitalize',
                     statusFilter === status
                         ? statusBadgeClass(status) + ' border-transparent'
-                        : 'border-gray-200 dark:border-dark-border text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-dark-bg/50'
+                        : 'border-gray-200 dark:border-border-subtle text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-surface-canvas/50'
                 ]"
             >
                 {{ status }} ({{ count }})
@@ -141,7 +141,7 @@ const statusBadgeClass = (status) => {
         </div>
 
         <!-- Add Serial Form -->
-        <div v-if="showForm" class="mb-4 p-4 bg-gray-50 dark:bg-dark-bg/50 rounded-lg border border-gray-200 dark:border-dark-border">
+        <div v-if="showForm" class="mb-4 p-4 bg-gray-50 dark:bg-surface-canvas/50 rounded-lg border border-gray-200 dark:border-border-subtle">
             <div v-if="error" class="mb-3 p-2 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 text-sm rounded">
                 {{ error }}
             </div>
@@ -153,14 +153,14 @@ const statusBadgeClass = (status) => {
                         type="text"
                         required
                         placeholder="e.g. SN-2026-00001"
-                        class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-dark-border rounded-md bg-white dark:bg-dark-card text-gray-900 dark:text-gray-100 focus:ring-primary-400 focus:border-primary-400"
+                        class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-border-subtle rounded-md bg-white dark:bg-surface-raised text-gray-900 dark:text-gray-100 focus:ring-brand focus:border-brand"
                     />
                 </div>
                 <div>
                     <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Status</label>
                     <select
                         v-model="form.status"
-                        class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-dark-border rounded-md bg-white dark:bg-dark-card text-gray-900 dark:text-gray-100 focus:ring-primary-400 focus:border-primary-400"
+                        class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-border-subtle rounded-md bg-white dark:bg-surface-raised text-gray-900 dark:text-gray-100 focus:ring-brand focus:border-brand"
                     >
                         <option value="available">Available</option>
                         <option value="sold">Sold</option>
@@ -174,13 +174,13 @@ const statusBadgeClass = (status) => {
                 <textarea
                     v-model="form.notes"
                     rows="2"
-                    class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-dark-border rounded-md bg-white dark:bg-dark-card text-gray-900 dark:text-gray-100 focus:ring-primary-400 focus:border-primary-400"
+                    class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-border-subtle rounded-md bg-white dark:bg-surface-raised text-gray-900 dark:text-gray-100 focus:ring-brand focus:border-brand"
                 ></textarea>
             </div>
             <button
                 @click="createSerial"
                 :disabled="loading || !form.serial_number"
-                class="px-4 py-2 bg-primary-400 text-white text-sm font-medium rounded-md hover:bg-primary-500 transition disabled:opacity-50"
+                class="px-4 py-2 bg-brand text-white text-sm font-medium rounded-md hover:bg-brand-hover transition disabled:opacity-50"
             >
                 {{ loading ? 'Creating...' : 'Create Serial' }}
             </button>
@@ -190,7 +190,7 @@ const statusBadgeClass = (status) => {
         <div v-if="filteredSerials.length > 0" class="overflow-x-auto">
             <table class="w-full text-sm">
                 <thead>
-                    <tr class="border-b border-gray-200 dark:border-dark-border">
+                    <tr class="border-b border-gray-200 dark:border-border-subtle">
                         <th class="text-left py-2 px-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Serial #</th>
                         <th class="text-left py-2 px-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Status</th>
                         <th class="text-left py-2 px-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Notes</th>
@@ -201,7 +201,7 @@ const statusBadgeClass = (status) => {
                     <tr
                         v-for="serial in filteredSerials"
                         :key="serial.id"
-                        class="border-b border-gray-100 dark:border-dark-border/50 hover:bg-gray-50 dark:hover:bg-dark-bg/30"
+                        class="border-b border-gray-100 dark:border-border-subtle/50 hover:bg-gray-50 dark:hover:bg-surface-canvas/30"
                     >
                         <td class="py-2 px-3 font-mono text-gray-900 dark:text-gray-100">{{ serial.serial_number }}</td>
                         <td class="py-2 px-3">

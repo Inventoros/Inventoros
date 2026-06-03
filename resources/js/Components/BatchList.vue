@@ -79,7 +79,7 @@ const isExpired = (expiryDate) => {
             </h3>
             <button
                 @click="showForm = !showForm"
-                class="inline-flex items-center px-3 py-1.5 bg-primary-400 text-white text-sm font-medium rounded-md hover:bg-primary-500 transition"
+                class="inline-flex items-center px-3 py-1.5 bg-brand text-white text-sm font-medium rounded-md hover:bg-brand-hover transition"
             >
                 <svg v-if="!showForm" class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
@@ -89,7 +89,7 @@ const isExpired = (expiryDate) => {
         </div>
 
         <!-- Add Batch Form -->
-        <div v-if="showForm" class="mb-4 p-4 bg-gray-50 dark:bg-dark-bg/50 rounded-lg border border-gray-200 dark:border-dark-border">
+        <div v-if="showForm" class="mb-4 p-4 bg-gray-50 dark:bg-surface-canvas/50 rounded-lg border border-gray-200 dark:border-border-subtle">
             <div v-if="error" class="mb-3 p-2 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 text-sm rounded">
                 {{ error }}
             </div>
@@ -100,7 +100,7 @@ const isExpired = (expiryDate) => {
                         v-model="form.batch_number"
                         type="text"
                         placeholder="e.g. BATCH-20260312-0001"
-                        class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-dark-border rounded-md bg-white dark:bg-dark-card text-gray-900 dark:text-gray-100 focus:ring-primary-400 focus:border-primary-400"
+                        class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-border-subtle rounded-md bg-white dark:bg-surface-raised text-gray-900 dark:text-gray-100 focus:ring-brand focus:border-brand"
                     />
                 </div>
                 <div>
@@ -110,7 +110,7 @@ const isExpired = (expiryDate) => {
                         type="number"
                         min="0"
                         required
-                        class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-dark-border rounded-md bg-white dark:bg-dark-card text-gray-900 dark:text-gray-100 focus:ring-primary-400 focus:border-primary-400"
+                        class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-border-subtle rounded-md bg-white dark:bg-surface-raised text-gray-900 dark:text-gray-100 focus:ring-brand focus:border-brand"
                     />
                 </div>
                 <div>
@@ -118,7 +118,7 @@ const isExpired = (expiryDate) => {
                     <input
                         v-model="form.manufactured_date"
                         type="date"
-                        class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-dark-border rounded-md bg-white dark:bg-dark-card text-gray-900 dark:text-gray-100 focus:ring-primary-400 focus:border-primary-400"
+                        class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-border-subtle rounded-md bg-white dark:bg-surface-raised text-gray-900 dark:text-gray-100 focus:ring-brand focus:border-brand"
                     />
                 </div>
                 <div>
@@ -126,7 +126,7 @@ const isExpired = (expiryDate) => {
                     <input
                         v-model="form.expiry_date"
                         type="date"
-                        class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-dark-border rounded-md bg-white dark:bg-dark-card text-gray-900 dark:text-gray-100 focus:ring-primary-400 focus:border-primary-400"
+                        class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-border-subtle rounded-md bg-white dark:bg-surface-raised text-gray-900 dark:text-gray-100 focus:ring-brand focus:border-brand"
                     />
                 </div>
             </div>
@@ -135,13 +135,13 @@ const isExpired = (expiryDate) => {
                 <textarea
                     v-model="form.notes"
                     rows="2"
-                    class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-dark-border rounded-md bg-white dark:bg-dark-card text-gray-900 dark:text-gray-100 focus:ring-primary-400 focus:border-primary-400"
+                    class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-border-subtle rounded-md bg-white dark:bg-surface-raised text-gray-900 dark:text-gray-100 focus:ring-brand focus:border-brand"
                 ></textarea>
             </div>
             <button
                 @click="createBatch"
                 :disabled="loading || !form.quantity"
-                class="px-4 py-2 bg-primary-400 text-white text-sm font-medium rounded-md hover:bg-primary-500 transition disabled:opacity-50"
+                class="px-4 py-2 bg-brand text-white text-sm font-medium rounded-md hover:bg-brand-hover transition disabled:opacity-50"
             >
                 {{ loading ? 'Creating...' : 'Create Batch' }}
             </button>
@@ -151,7 +151,7 @@ const isExpired = (expiryDate) => {
         <div v-if="localBatches.length > 0" class="overflow-x-auto">
             <table class="w-full text-sm">
                 <thead>
-                    <tr class="border-b border-gray-200 dark:border-dark-border">
+                    <tr class="border-b border-gray-200 dark:border-border-subtle">
                         <th class="text-left py-2 px-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Batch #</th>
                         <th class="text-left py-2 px-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Qty</th>
                         <th class="text-left py-2 px-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Manufactured</th>
@@ -163,7 +163,7 @@ const isExpired = (expiryDate) => {
                     <tr
                         v-for="batch in localBatches"
                         :key="batch.id"
-                        class="border-b border-gray-100 dark:border-dark-border/50 hover:bg-gray-50 dark:hover:bg-dark-bg/30"
+                        class="border-b border-gray-100 dark:border-border-subtle/50 hover:bg-gray-50 dark:hover:bg-surface-canvas/30"
                     >
                         <td class="py-2 px-3 font-mono text-gray-900 dark:text-gray-100">{{ batch.batch_number }}</td>
                         <td class="py-2 px-3 text-gray-900 dark:text-gray-100">{{ batch.quantity }}</td>

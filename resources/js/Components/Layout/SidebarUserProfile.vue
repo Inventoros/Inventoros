@@ -26,7 +26,7 @@ const userInitial = computed(() => user.value.name.charAt(0).toUpperCase());
                 :href="route('logout')"
                 method="post"
                 as="button"
-                class="w-9 h-9 rounded-lg bg-primary-600 flex items-center justify-center hover:bg-red-500 transition"
+                class="w-9 h-9 rounded-lg bg-brand flex items-center justify-center hover:bg-red-500 transition"
                 title="Logout"
             >
                 <span class="text-sm font-bold text-white">{{ userInitial }}</span>
@@ -35,7 +35,7 @@ const userInitial = computed(() => user.value.name.charAt(0).toUpperCase());
         <!-- Expanded: full profile -->
         <div v-else class="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-slate-800/50">
             <div class="flex-shrink-0">
-                <div class="w-9 h-9 rounded-lg bg-primary-600 flex items-center justify-center">
+                <div class="w-9 h-9 rounded-lg bg-brand flex items-center justify-center">
                     <span class="text-sm font-bold text-white">{{ userInitial }}</span>
                 </div>
             </div>
