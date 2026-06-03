@@ -63,6 +63,9 @@ class UpdateOrderMutation extends Mutation
     public function resolve($root, array $args, $context, ResolveInfo $resolveInfo, Closure $getSelectFields)
     {
         $user = auth()->user();
+        if (!$user) {
+            throw new \Illuminate\Auth\Access\AuthorizationException('Unauthenticated');
+        }
         if (!$user->hasPermission('edit_orders')) {
             throw new \Illuminate\Auth\Access\AuthorizationException('Unauthorized');
         }

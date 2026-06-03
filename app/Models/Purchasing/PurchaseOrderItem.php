@@ -135,6 +135,13 @@ class PurchaseOrderItem extends Model
             return null;
         }
 
+        // The product may have been deleted after this PO line was created;
+        // StockAdjustment::adjust() would fatal on a null product. Skip rather
+        // than record a receipt against a non-existent product.
+        if (! $this->product) {
+            return null;
+        }
+
         // Update received quantity
         $this->quantity_received += $quantityToReceive;
         $this->save();
