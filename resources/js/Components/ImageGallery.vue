@@ -75,7 +75,7 @@ if (typeof window !== 'undefined') {
 <template>
     <div v-if="images && images.length > 0" class="space-y-4">
         <!-- Main Image Display -->
-        <div class="relative aspect-square bg-white dark:bg-dark-bg rounded-lg border-2 border-gray-200 dark:border-dark-border overflow-hidden">
+        <div class="relative aspect-square bg-white dark:bg-surface-canvas rounded-lg border-2 border-gray-200 dark:border-border-subtle overflow-hidden">
             <img
                 :src="currentImage"
                 :alt="productName"
@@ -84,7 +84,7 @@ if (typeof window !== 'undefined') {
             />
 
             <!-- Primary Badge -->
-            <div v-if="currentIndex === 0" class="absolute top-4 left-4 px-3 py-1 bg-primary-400 text-white text-sm font-semibold rounded shadow-lg">
+            <div v-if="currentIndex === 0" class="absolute top-4 left-4 px-3 py-1 bg-brand text-white text-sm font-semibold rounded shadow-lg">
                 Primary
             </div>
 
@@ -131,8 +131,8 @@ if (typeof window !== 'undefined') {
                 :class="[
                     'relative aspect-square rounded-lg border-2 overflow-hidden transition cursor-pointer',
                     currentIndex === index
-                        ? 'border-primary-400 ring-2 ring-primary-400'
-                        : 'border-gray-200 dark:border-dark-border hover:border-primary-400/50'
+                        ? 'border-brand ring-2 ring-brand'
+                        : 'border-gray-200 dark:border-border-subtle hover:border-brand/50'
                 ]"
             >
                 <img
@@ -142,7 +142,7 @@ if (typeof window !== 'undefined') {
                 />
 
                 <!-- Primary indicator on thumbnail -->
-                <div v-if="index === 0" class="absolute top-1 left-1 px-1.5 py-0.5 bg-primary-400 text-white text-xs font-semibold rounded">
+                <div v-if="index === 0" class="absolute top-1 left-1 px-1.5 py-0.5 bg-brand text-white text-xs font-semibold rounded">
                     1°
                 </div>
             </button>
@@ -150,7 +150,7 @@ if (typeof window !== 'undefined') {
     </div>
 
     <!-- No Images Placeholder -->
-    <div v-else class="aspect-square bg-gray-100 dark:bg-dark-bg rounded-lg border-2 border-gray-200 dark:border-dark-border flex items-center justify-center">
+    <div v-else class="aspect-square bg-gray-100 dark:bg-surface-canvas rounded-lg border-2 border-gray-200 dark:border-border-subtle flex items-center justify-center">
         <div class="text-center">
             <svg class="w-24 h-24 mx-auto mb-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />

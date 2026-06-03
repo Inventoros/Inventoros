@@ -45,8 +45,8 @@ const onVariantUpdated = (updatedVariant) => {
 
 <template>
     <div class="overflow-x-auto">
-        <table class="min-w-full divide-y divide-gray-200 dark:divide-dark-border">
-            <thead class="bg-gray-50 dark:bg-dark-bg">
+        <table class="min-w-full divide-y divide-gray-200 dark:divide-border-subtle">
+            <thead class="bg-gray-50 dark:bg-surface-canvas">
                 <tr>
                     <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                         Variant
@@ -65,8 +65,8 @@ const onVariantUpdated = (updatedVariant) => {
                     </th>
                 </tr>
             </thead>
-            <tbody class="bg-white dark:bg-dark-card divide-y divide-gray-200 dark:divide-dark-border">
-                <tr v-for="variant in variants" :key="variant.id" class="hover:bg-gray-50 dark:hover:bg-dark-bg/50">
+            <tbody class="bg-white dark:bg-surface-raised divide-y divide-gray-200 dark:divide-border-subtle">
+                <tr v-for="variant in variants" :key="variant.id" class="hover:bg-gray-50 dark:hover:bg-surface-canvas/50">
                     <td class="px-4 py-3 whitespace-nowrap">
                         <span class="text-sm font-medium text-gray-900 dark:text-gray-100">
                             {{ variant.title }}
@@ -111,7 +111,7 @@ const onVariantUpdated = (updatedVariant) => {
         </table>
 
         <!-- Summary Row -->
-        <div v-if="variants.length > 0" class="mt-3 px-4 py-2 bg-gray-50 dark:bg-dark-bg rounded-lg flex items-center justify-between text-sm">
+        <div v-if="variants.length > 0" class="mt-3 px-4 py-2 bg-gray-50 dark:bg-surface-canvas rounded-lg flex items-center justify-between text-sm">
             <span class="text-gray-600 dark:text-gray-400">
                 Total Variants: <span class="font-medium text-gray-900 dark:text-gray-100">{{ variants.length }}</span>
             </span>

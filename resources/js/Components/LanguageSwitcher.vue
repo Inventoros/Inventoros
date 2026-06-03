@@ -30,7 +30,7 @@ onUnmounted(() => document.removeEventListener('click', handleClickOutside))
     <div ref="dropdownRef" class="relative">
         <button
             @click="isOpen = !isOpen"
-            class="flex items-center gap-2 px-3 py-2 text-sm text-gray-400 hover:text-gray-200 rounded-lg hover:bg-dark-bg/50 transition"
+            class="flex items-center gap-2 px-3 py-2 text-sm text-gray-400 hover:text-gray-200 rounded-lg hover:bg-surface-canvas/50 transition"
         >
             <span class="text-base">{{ currentLocale().flag }}</span>
             <span class="hidden sm:inline">{{ currentLocale().name }}</span>
@@ -49,7 +49,7 @@ onUnmounted(() => document.removeEventListener('click', handleClickOutside))
         >
             <div
                 v-if="isOpen"
-                class="absolute right-0 bottom-full mb-2 w-48 bg-dark-card border border-dark-border rounded-lg shadow-xl overflow-hidden z-50 max-h-80 overflow-y-auto"
+                class="absolute right-0 bottom-full mb-2 w-48 bg-surface-raised border border-border-subtle rounded-lg shadow-xl overflow-hidden z-50 max-h-80 overflow-y-auto"
             >
                 <button
                     v-for="loc in availableLocales"
@@ -58,8 +58,8 @@ onUnmounted(() => document.removeEventListener('click', handleClickOutside))
                     :class="[
                         'w-full flex items-center gap-3 px-4 py-2.5 text-sm transition',
                         locale === loc.code
-                            ? 'bg-primary-400/10 text-primary-400'
-                            : 'text-gray-400 hover:text-gray-200 hover:bg-dark-bg/50'
+                            ? 'bg-brand/10 text-brand'
+                            : 'text-gray-400 hover:text-gray-200 hover:bg-surface-canvas/50'
                     ]"
                 >
                     <span class="text-base">{{ loc.flag }}</span>

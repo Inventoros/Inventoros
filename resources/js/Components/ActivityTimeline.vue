@@ -101,14 +101,14 @@ const getChangedFields = (properties) => {
                     <!-- Connecting line -->
                     <span
                         v-if="idx !== activities.length - 1"
-                        class="absolute left-4 top-4 -ml-px h-full w-0.5 bg-gray-200 dark:bg-dark-border"
+                        class="absolute left-4 top-4 -ml-px h-full w-0.5 bg-gray-200 dark:bg-border-subtle"
                         aria-hidden="true"
                     />
 
                     <div class="relative flex space-x-3">
                         <!-- Icon node -->
                         <div>
-                            <span :class="['h-8 w-8 rounded-full flex items-center justify-center ring-4 ring-white dark:ring-dark-card', getActionColor(activity.action)]">
+                            <span :class="['h-8 w-8 rounded-full flex items-center justify-center ring-4 ring-white dark:ring-surface-raised', getActionColor(activity.action)]">
                                 <svg class="h-4 w-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" :d="getActionIcon(activity.action)" />
                                 </svg>

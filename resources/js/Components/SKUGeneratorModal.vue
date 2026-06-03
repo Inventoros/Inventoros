@@ -122,8 +122,8 @@ const close = () => {
                         :class="[
                             'p-3 text-left rounded-lg border-2 transition',
                             selectedPattern === preset.pattern
-                                ? 'border-primary-400 bg-primary-400/10'
-                                : 'border-gray-200 dark:border-dark-border hover:border-primary-400/50'
+                                ? 'border-brand bg-brand/10'
+                                : 'border-gray-200 dark:border-border-subtle hover:border-brand/50'
                         ]"
                     >
                         <div class="font-medium text-sm text-gray-900 dark:text-gray-100">{{ preset.name }}</div>
@@ -134,10 +134,10 @@ const close = () => {
 
             <div class="relative">
                 <div class="absolute inset-0 flex items-center">
-                    <div class="w-full border-t border-gray-200 dark:border-dark-border"></div>
+                    <div class="w-full border-t border-gray-200 dark:border-border-subtle"></div>
                 </div>
                 <div class="relative flex justify-center text-sm">
-                    <span class="px-2 bg-white dark:bg-dark-card text-gray-500 dark:text-gray-400">OR</span>
+                    <span class="px-2 bg-white dark:bg-surface-raised text-gray-500 dark:text-gray-400">OR</span>
                 </div>
             </div>
 
@@ -150,30 +150,30 @@ const close = () => {
                     v-model="customPattern"
                     @input="onCustomPatternInput"
                     type="text"
-                    class="block w-full rounded-md bg-gray-50 dark:bg-dark-bg border-gray-200 dark:border-dark-border text-gray-900 dark:text-gray-100 placeholder-gray-500 shadow-sm focus:border-primary-400 focus:ring-primary-400"
+                    class="block w-full rounded-md bg-gray-50 dark:bg-surface-canvas border-gray-200 dark:border-border-subtle text-gray-900 dark:text-gray-100 placeholder-gray-500 shadow-sm focus:border-brand focus:ring-brand"
                     placeholder="e.g., {category}-{year}-{number}"
                 />
             </div>
 
             <!-- Available Variables -->
-            <div class="p-4 bg-gray-50 dark:bg-dark-bg rounded-lg">
+            <div class="p-4 bg-gray-50 dark:bg-surface-canvas rounded-lg">
                 <p class="text-sm font-medium text-gray-600 dark:text-gray-300 mb-2">Available Variables:</p>
                 <div class="grid grid-cols-2 gap-2">
                     <div v-for="variable in skuPatterns.variables" :key="variable.key" class="text-xs">
-                        <code class="px-1 py-0.5 bg-gray-200 dark:bg-dark-card rounded text-primary-400">{{ variable.key }}</code>
+                        <code class="px-1 py-0.5 bg-gray-200 dark:bg-surface-raised rounded text-brand">{{ variable.key }}</code>
                         <span class="text-gray-600 dark:text-gray-400 ml-1">{{ variable.description }}</span>
                     </div>
                 </div>
             </div>
 
             <!-- Preview -->
-            <div v-if="skuPreview || skuGenerating" class="p-4 bg-primary-900/20 rounded-lg border border-primary-800">
+            <div v-if="skuPreview || skuGenerating" class="p-4 bg-brand/20 rounded-lg border border-brand">
                 <p class="text-sm font-medium text-gray-300 mb-2">Preview:</p>
                 <div v-if="skuGenerating" class="flex items-center gap-2">
-                    <div class="animate-spin rounded-full h-4 w-4 border-b-2 border-primary-400"></div>
+                    <div class="animate-spin rounded-full h-4 w-4 border-b-2 border-brand"></div>
                     <span class="text-sm text-gray-400">Generating...</span>
                 </div>
-                <p v-else class="text-lg font-mono font-bold text-primary-400">{{ skuPreview }}</p>
+                <p v-else class="text-lg font-mono font-bold text-brand">{{ skuPreview }}</p>
             </div>
         </div>
 
@@ -181,7 +181,7 @@ const close = () => {
             <button
                 type="button"
                 @click="close"
-                class="px-4 py-2 bg-dark-bg text-gray-600 dark:text-gray-300 rounded-md hover:bg-gray-100 dark:hover:bg-dark-bg/50"
+                class="px-4 py-2 bg-surface-canvas text-gray-600 dark:text-gray-300 rounded-md hover:bg-gray-100 dark:hover:bg-surface-canvas/50"
             >
                 {{ t('common.cancel') }}
             </button>
@@ -189,7 +189,7 @@ const close = () => {
                 type="button"
                 @click="applySKU"
                 :disabled="!skuPreview || skuPreview === 'Error generating preview'"
-                class="px-4 py-2 bg-primary-400 text-white rounded-md hover:bg-primary-500 disabled:opacity-50"
+                class="px-4 py-2 bg-brand text-white rounded-md hover:bg-brand-hover disabled:opacity-50"
             >
                 Apply SKU
             </button>

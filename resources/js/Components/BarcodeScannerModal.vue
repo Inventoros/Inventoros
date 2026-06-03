@@ -110,9 +110,9 @@ const selectProduct = () => {
                 <div class="absolute inset-0 bg-black/50" @click="close"></div>
 
                 <!-- Modal -->
-                <div class="relative bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border rounded-lg shadow-xl max-w-md w-full mx-4 max-h-[90vh] overflow-y-auto">
+                <div class="relative bg-white dark:bg-surface-raised border border-gray-200 dark:border-border-subtle rounded-lg shadow-xl max-w-md w-full mx-4 max-h-[90vh] overflow-y-auto">
                     <!-- Header -->
-                    <div class="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-dark-border">
+                    <div class="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-border-subtle">
                         <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100">
                             {{ t('stockAdjustments.create.scanBarcode') }}
                         </h3>
@@ -132,8 +132,8 @@ const selectProduct = () => {
                                 :class="[
                                     'px-4 py-2 text-sm rounded-md transition-colors',
                                     scannerMode === 'camera'
-                                        ? 'bg-primary-400 text-white'
-                                        : 'bg-gray-100 dark:bg-dark-bg text-gray-700 dark:text-gray-300'
+                                        ? 'bg-brand text-white'
+                                        : 'bg-gray-100 dark:bg-surface-canvas text-gray-700 dark:text-gray-300'
                                 ]"
                             >
                                 <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -147,8 +147,8 @@ const selectProduct = () => {
                                 :class="[
                                     'px-4 py-2 text-sm rounded-md transition-colors',
                                     scannerMode === 'manual'
-                                        ? 'bg-primary-400 text-white'
-                                        : 'bg-gray-100 dark:bg-dark-bg text-gray-700 dark:text-gray-300'
+                                        ? 'bg-brand text-white'
+                                        : 'bg-gray-100 dark:bg-surface-canvas text-gray-700 dark:text-gray-300'
                                 ]"
                             >
                                 <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -178,13 +178,13 @@ const selectProduct = () => {
                                 v-model="manualCode"
                                 type="text"
                                 placeholder="Enter barcode or SKU..."
-                                class="block w-full rounded-md bg-gray-50 dark:bg-dark-bg border-gray-200 dark:border-dark-border text-gray-900 dark:text-gray-100 placeholder-gray-500 shadow-sm focus:border-primary-400 focus:ring-primary-400"
+                                class="block w-full rounded-md bg-gray-50 dark:bg-surface-canvas border-gray-200 dark:border-border-subtle text-gray-900 dark:text-gray-100 placeholder-gray-500 shadow-sm focus:border-brand focus:ring-brand"
                                 @keyup.enter="submitManualCode"
                             />
                             <button
                                 @click="submitManualCode"
                                 :disabled="!manualCode.trim() || isLoading"
-                                class="w-full inline-flex justify-center items-center px-4 py-2 bg-primary-400 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-primary-500 disabled:opacity-50"
+                                class="w-full inline-flex justify-center items-center px-4 py-2 bg-brand border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-brand-hover disabled:opacity-50"
                             >
                                 <svg v-if="isLoading" class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
                                     <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
