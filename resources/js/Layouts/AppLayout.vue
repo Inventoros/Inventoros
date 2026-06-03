@@ -2,11 +2,10 @@
 /**
  * AppLayout — Linear-inspired authenticated layout.
  *
- * Lives alongside the legacy AuthenticatedLayout.vue while pages migrate
- * one at a time. To use, swap your page's `import AuthenticatedLayout`
- * for `import AppLayout` and you're done — the slot API is the same.
+ * The single authenticated layout for the app. To use, `import AppLayout`
+ * and wrap your page content in it; the default slot is the page body.
  *
- * Differences from the legacy layout:
+ * Design notes:
  *   - Light, single-surface sidebar (matches the workspace, not a dark slab)
  *   - Lucide icons (no inline SVG paths)
  *   - 240px fixed width — no collapse rail; mobile drawer instead

@@ -120,7 +120,7 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-t
                 <!-- Value bar visual -->
                 <div class="mt-3 h-2 w-full overflow-hidden rounded-full bg-surface-sunken">
                     <div
-                        class="h-full rounded-full bg-gradient-to-t from-sky-200 to-sky-500"
+                        class="h-full rounded-full bg-brand"
                         :style="{ width: barWidth(category.total_value) }"
                     />
                 </div>
