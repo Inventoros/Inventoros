@@ -17,6 +17,7 @@ import {
     FileSpreadsheet,
     FileText,
     Check,
+    RefreshCw,
     Info,
     X,
 } from 'lucide-vue-next';
@@ -181,15 +182,15 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium text-text-secondary';
 
                     <div v-if="flashWarning.stats" class="mt-3 space-y-2">
                         <div class="flex items-center gap-2 text-sm">
-                            <span class="text-status-success">✓ Imported:</span>
+                            <span class="inline-flex items-center gap-1 text-status-success"><Check :size="14" /> Imported:</span>
                             <span class="text-text-secondary">{{ flashWarning.stats.imported }}</span>
                         </div>
                         <div class="flex items-center gap-2 text-sm">
-                            <span class="text-status-info">↻ Updated:</span>
+                            <span class="inline-flex items-center gap-1 text-status-info"><RefreshCw :size="14" /> Updated:</span>
                             <span class="text-text-secondary">{{ flashWarning.stats.updated }}</span>
                         </div>
                         <div v-if="flashWarning.stats.errors.length > 0" class="flex items-start gap-2 text-sm">
-                            <span class="text-status-danger">✗ Errors:</span>
+                            <span class="inline-flex items-center gap-1 text-status-danger"><X :size="14" /> Errors:</span>
                             <div class="flex-1">
                                 <p class="mb-1 text-text-secondary">{{ flashWarning.stats.errors.length }} row(s) failed</p>
                                 <div class="max-h-40 space-y-1 overflow-y-auto">

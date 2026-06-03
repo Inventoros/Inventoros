@@ -46,7 +46,7 @@ const maxWidthClass = {
                 <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"></div>
 
                 <div
-                    :class="['relative bg-white dark:bg-dark-card rounded-lg shadow-xl w-full p-6', maxWidthClass[maxWidth]]"
+                    :class="['relative bg-white dark:bg-surface-raised rounded-lg shadow-xl w-full p-6', maxWidthClass[maxWidth]]"
                     @click.stop
                 >
                     <!-- Header -->
@@ -75,7 +75,7 @@ const maxWidthClass = {
                             <button
                                 type="button"
                                 @click="close"
-                                class="px-4 py-2 bg-dark-bg text-gray-600 dark:text-gray-300 rounded-md hover:bg-gray-100 dark:hover:bg-dark-bg/50"
+                                class="px-4 py-2 bg-surface-canvas text-gray-600 dark:text-gray-300 rounded-md hover:bg-gray-100 dark:hover:bg-surface-canvas/50"
                             >
                                 {{ t('common.cancel') }}
                             </button>
@@ -85,9 +85,9 @@ const maxWidthClass = {
                     <!-- Loading Overlay -->
                     <div
                         v-if="loading"
-                        class="absolute inset-0 bg-white/50 dark:bg-dark-card/50 flex items-center justify-center rounded-lg"
+                        class="absolute inset-0 bg-white/50 dark:bg-surface-raised/50 flex items-center justify-center rounded-lg"
                     >
-                        <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-400"></div>
+                        <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-brand"></div>
                     </div>
                 </div>
             </div>

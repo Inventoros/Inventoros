@@ -293,7 +293,7 @@ defineExpose({ open });
                                     :class="[
                                         'w-full flex items-center gap-3 px-4 py-2.5 text-left transition-colors',
                                         getSelectableIndex(item) === selectedIndex
-                                            ? 'bg-primary-50 dark:bg-primary-900/20'
+                                            ? 'bg-brand-soft dark:bg-brand/20'
                                             : 'hover:bg-gray-50 dark:hover:bg-gray-700/50'
                                     ]"
                                 >

@@ -44,7 +44,7 @@ const isActive = computed(() => {
             'flex items-center py-2.5 rounded-lg transition-all duration-150 text-sm',
             collapsed ? 'justify-center px-2' : 'gap-3 px-3',
             isActive
-                ? 'bg-primary-600/20 text-primary-400 font-semibold'
+                ? 'bg-brand/20 text-brand font-semibold'
                 : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800'
         ]"
         :title="collapsed ? label : ''"

@@ -217,7 +217,7 @@ const getEffectivePurchasePrice = (variant) => {
                 <div
                     v-for="(option, optIndex) in options"
                     :key="optIndex"
-                    class="p-4 bg-gray-50 dark:bg-dark-bg rounded-lg border border-gray-200 dark:border-dark-border"
+                    class="p-4 bg-gray-50 dark:bg-surface-canvas rounded-lg border border-gray-200 dark:border-border-subtle"
                 >
                     <div class="flex items-center justify-between mb-3">
                         <span class="font-medium text-gray-900 dark:text-gray-100">{{ option.name }}</span>
@@ -237,7 +237,7 @@ const getEffectivePurchasePrice = (variant) => {
                         <span
                             v-for="(value, valIndex) in option.values"
                             :key="valIndex"
-                            class="inline-flex items-center gap-1 px-3 py-1 bg-primary-400/20 text-primary-400 rounded-full text-sm"
+                            class="inline-flex items-center gap-1 px-3 py-1 bg-brand/20 text-brand rounded-full text-sm"
                         >
                             {{ value }}
                             <button
@@ -256,7 +256,7 @@ const getEffectivePurchasePrice = (variant) => {
                         <input
                             type="text"
                             placeholder="Add value..."
-                            class="px-3 py-1 text-sm bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border rounded-full text-gray-900 dark:text-gray-100 w-32"
+                            class="px-3 py-1 text-sm bg-white dark:bg-surface-raised border border-gray-200 dark:border-border-subtle rounded-full text-gray-900 dark:text-gray-100 w-32"
                             :disabled="disabled"
                             @keyup.enter="addValueToOption(optIndex, $event.target.value); $event.target.value = ''"
                         />
@@ -265,7 +265,7 @@ const getEffectivePurchasePrice = (variant) => {
             </div>
 
             <!-- Add Option Form -->
-            <div v-if="showAddOption && canAddOption" class="p-4 bg-gray-50 dark:bg-dark-bg rounded-lg border border-gray-200 dark:border-dark-border border-dashed">
+            <div v-if="showAddOption && canAddOption" class="p-4 bg-gray-50 dark:bg-surface-canvas rounded-lg border border-gray-200 dark:border-border-subtle border-dashed">
                 <div class="space-y-3">
                     <div>
                         <label class="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-1">
@@ -275,7 +275,7 @@ const getEffectivePurchasePrice = (variant) => {
                             v-model="newOptionName"
                             type="text"
                             placeholder="e.g., Size, Color, Material"
-                            class="block w-full rounded-md bg-white dark:bg-dark-card border-gray-200 dark:border-dark-border text-gray-900 dark:text-gray-100 shadow-sm focus:border-primary-400 focus:ring-primary-400"
+                            class="block w-full rounded-md bg-white dark:bg-surface-raised border-gray-200 dark:border-border-subtle text-gray-900 dark:text-gray-100 shadow-sm focus:border-brand focus:ring-brand"
                             :disabled="disabled"
                         />
                     </div>
@@ -287,7 +287,7 @@ const getEffectivePurchasePrice = (variant) => {
                             v-model="newOptionValues"
                             type="text"
                             placeholder="e.g., Small, Medium, Large"
-                            class="block w-full rounded-md bg-white dark:bg-dark-card border-gray-200 dark:border-dark-border text-gray-900 dark:text-gray-100 shadow-sm focus:border-primary-400 focus:ring-primary-400"
+                            class="block w-full rounded-md bg-white dark:bg-surface-raised border-gray-200 dark:border-border-subtle text-gray-900 dark:text-gray-100 shadow-sm focus:border-brand focus:ring-brand"
                             :disabled="disabled"
                         />
                     </div>
@@ -296,14 +296,14 @@ const getEffectivePurchasePrice = (variant) => {
                             type="button"
                             @click="addOption"
                             :disabled="disabled || !newOptionName || !newOptionValues"
-                            class="px-4 py-2 bg-primary-400 text-white rounded-md hover:bg-primary-500 disabled:opacity-50"
+                            class="px-4 py-2 bg-brand text-white rounded-md hover:bg-brand-hover disabled:opacity-50"
                         >
                             Add Option
                         </button>
                         <button
                             type="button"
                             @click="showAddOption = false; newOptionName = ''; newOptionValues = ''"
-                            class="px-4 py-2 bg-gray-200 dark:bg-dark-card text-gray-700 dark:text-gray-300 rounded-md hover:bg-gray-300 dark:hover:bg-dark-border"
+                            class="px-4 py-2 bg-gray-200 dark:bg-surface-raised text-gray-700 dark:text-gray-300 rounded-md hover:bg-gray-300 dark:hover:bg-border-subtle"
                         >
                             {{ t('common.cancel') }}
                         </button>
@@ -317,7 +317,7 @@ const getEffectivePurchasePrice = (variant) => {
                 type="button"
                 @click="showAddOption = true"
                 :disabled="disabled"
-                class="w-full p-4 border-2 border-dashed border-gray-300 dark:border-dark-border rounded-lg text-gray-500 dark:text-gray-400 hover:border-primary-400 hover:text-primary-400 transition disabled:opacity-50"
+                class="w-full p-4 border-2 border-dashed border-gray-300 dark:border-border-subtle rounded-lg text-gray-500 dark:text-gray-400 hover:border-brand hover:text-brand transition disabled:opacity-50"
             >
                 <svg class="w-6 h-6 mx-auto mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
@@ -344,8 +344,8 @@ const getEffectivePurchasePrice = (variant) => {
 
             <!-- Variants Table -->
             <div class="overflow-x-auto">
-                <table class="min-w-full divide-y divide-gray-200 dark:divide-dark-border">
-                    <thead class="bg-gray-50 dark:bg-dark-bg">
+                <table class="min-w-full divide-y divide-gray-200 dark:divide-border-subtle">
+                    <thead class="bg-gray-50 dark:bg-surface-canvas">
                         <tr>
                             <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
                                 Variant
@@ -364,7 +364,7 @@ const getEffectivePurchasePrice = (variant) => {
                             </th>
                         </tr>
                     </thead>
-                    <tbody class="bg-white dark:bg-dark-card divide-y divide-gray-200 dark:divide-dark-border">
+                    <tbody class="bg-white dark:bg-surface-raised divide-y divide-gray-200 dark:divide-border-subtle">
                         <tr v-for="(variant, index) in variants" :key="index">
                             <td class="px-4 py-3 whitespace-nowrap">
                                 <span class="text-sm font-medium text-gray-900 dark:text-gray-100">
@@ -377,7 +377,7 @@ const getEffectivePurchasePrice = (variant) => {
                                     @input="updateVariant(index, 'sku', $event.target.value)"
                                     type="text"
                                     placeholder="Auto-generate"
-                                    class="w-32 text-sm rounded-md bg-gray-50 dark:bg-dark-bg border-gray-200 dark:border-dark-border text-gray-900 dark:text-gray-100"
+                                    class="w-32 text-sm rounded-md bg-gray-50 dark:bg-surface-canvas border-gray-200 dark:border-border-subtle text-gray-900 dark:text-gray-100"
                                     :disabled="disabled"
                                 />
                             </td>
@@ -392,7 +392,7 @@ const getEffectivePurchasePrice = (variant) => {
                                         type="number"
                                         step="0.01"
                                         :placeholder="productPrice?.toString() || '0.00'"
-                                        class="pl-6 w-full text-sm rounded-md bg-gray-50 dark:bg-dark-bg border-gray-200 dark:border-dark-border text-gray-900 dark:text-gray-100"
+                                        class="pl-6 w-full text-sm rounded-md bg-gray-50 dark:bg-surface-canvas border-gray-200 dark:border-border-subtle text-gray-900 dark:text-gray-100"
                                         :disabled="disabled"
                                     />
                                 </div>
@@ -403,7 +403,7 @@ const getEffectivePurchasePrice = (variant) => {
                                     @input="updateVariant(index, 'stock', parseInt($event.target.value) || 0)"
                                     type="number"
                                     min="0"
-                                    class="w-20 text-sm rounded-md bg-gray-50 dark:bg-dark-bg border-gray-200 dark:border-dark-border text-gray-900 dark:text-gray-100"
+                                    class="w-20 text-sm rounded-md bg-gray-50 dark:bg-surface-canvas border-gray-200 dark:border-border-subtle text-gray-900 dark:text-gray-100"
                                     :disabled="disabled"
                                 />
                             </td>
@@ -416,7 +416,7 @@ const getEffectivePurchasePrice = (variant) => {
                                         class="sr-only peer"
                                         :disabled="disabled"
                                     />
-                                    <div class="w-9 h-5 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary-400/25 rounded-full peer dark:bg-dark-border peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all dark:border-gray-600 peer-checked:bg-primary-400"></div>
+                                    <div class="w-9 h-5 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-brand/25 rounded-full peer dark:bg-border-subtle peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all dark:border-gray-600 peer-checked:bg-brand"></div>
                                 </label>
                             </td>
                         </tr>
@@ -430,7 +430,7 @@ const getEffectivePurchasePrice = (variant) => {
                     type="button"
                     @click="bulkUpdateVariants('is_active', true)"
                     :disabled="disabled"
-                    class="text-primary-400 hover:text-primary-300 disabled:opacity-50"
+                    class="text-brand hover:text-brand disabled:opacity-50"
                 >
                     Enable All
                 </button>
@@ -438,7 +438,7 @@ const getEffectivePurchasePrice = (variant) => {
                     type="button"
                     @click="bulkUpdateVariants('is_active', false)"
                     :disabled="disabled"
-                    class="text-primary-400 hover:text-primary-300 disabled:opacity-50"
+                    class="text-brand hover:text-brand disabled:opacity-50"
                 >
                     Disable All
                 </button>

@@ -131,7 +131,7 @@ const adjustStock = async () => {
                 @click="closePopover"
             >
                 <div
-                    class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white dark:bg-dark-card rounded-lg shadow-xl border border-gray-200 dark:border-dark-border p-4 w-72"
+                    class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white dark:bg-surface-raised rounded-lg shadow-xl border border-gray-200 dark:border-border-subtle p-4 w-72"
                     @click.stop
                 >
                     <h4 class="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-3">
@@ -145,7 +145,7 @@ const adjustStock = async () => {
                         </label>
                         <select
                             v-model="adjustType"
-                            class="w-full text-sm rounded-md bg-gray-50 dark:bg-dark-bg border-gray-200 dark:border-dark-border text-gray-900 dark:text-gray-100"
+                            class="w-full text-sm rounded-md bg-gray-50 dark:bg-surface-canvas border-gray-200 dark:border-border-subtle text-gray-900 dark:text-gray-100"
                         >
                             <option v-for="type in adjustTypes" :key="type.value" :value="type.value">
                                 {{ type.label }}
@@ -162,7 +162,7 @@ const adjustStock = async () => {
                             v-model.number="quantity"
                             type="number"
                             min="1"
-                            class="w-full text-sm rounded-md bg-gray-50 dark:bg-dark-bg border-gray-200 dark:border-dark-border text-gray-900 dark:text-gray-100"
+                            class="w-full text-sm rounded-md bg-gray-50 dark:bg-surface-canvas border-gray-200 dark:border-border-subtle text-gray-900 dark:text-gray-100"
                         />
                     </div>
 
@@ -175,7 +175,7 @@ const adjustStock = async () => {
                             v-model="reason"
                             type="text"
                             placeholder="e.g., Restock, Damaged goods"
-                            class="w-full text-sm rounded-md bg-gray-50 dark:bg-dark-bg border-gray-200 dark:border-dark-border text-gray-900 dark:text-gray-100"
+                            class="w-full text-sm rounded-md bg-gray-50 dark:bg-surface-canvas border-gray-200 dark:border-border-subtle text-gray-900 dark:text-gray-100"
                         />
                     </div>
 
@@ -187,7 +187,7 @@ const adjustStock = async () => {
                         <button
                             type="button"
                             @click="closePopover"
-                            class="flex-1 px-3 py-1.5 text-sm bg-gray-100 dark:bg-dark-bg text-gray-700 dark:text-gray-300 rounded-md hover:bg-gray-200 dark:hover:bg-dark-border"
+                            class="flex-1 px-3 py-1.5 text-sm bg-gray-100 dark:bg-surface-canvas text-gray-700 dark:text-gray-300 rounded-md hover:bg-gray-200 dark:hover:bg-border-subtle"
                         >
                             {{ t('common.cancel') }}
                         </button>
@@ -195,7 +195,7 @@ const adjustStock = async () => {
                             type="button"
                             @click="adjustStock"
                             :disabled="loading"
-                            class="flex-1 px-3 py-1.5 text-sm bg-primary-400 text-white rounded-md hover:bg-primary-500 disabled:opacity-50"
+                            class="flex-1 px-3 py-1.5 text-sm bg-brand text-white rounded-md hover:bg-brand-hover disabled:opacity-50"
                         >
                             <span v-if="loading">...</span>
                             <span v-else>Apply</span>

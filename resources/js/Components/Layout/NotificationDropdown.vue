@@ -87,7 +87,7 @@ const getTypeColor = (type) => {
     const colors = {
         'low_stock': 'text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-500/10',
         'out_of_stock': 'text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-500/10',
-        'order_created': 'text-primary-600 dark:text-primary-400 bg-primary-50 dark:bg-primary-500/10',
+        'order_created': 'text-brand dark:text-brand bg-brand-soft dark:bg-brand/10',
         'order_status_updated': 'text-purple-600 dark:text-purple-400 bg-purple-50 dark:bg-purple-500/10',
         'order_shipped': 'text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-500/10',
         'order_delivered': 'text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-500/10',
@@ -119,7 +119,7 @@ defineExpose({ closeDropdown });
     <div class="relative">
         <button
             @click="toggleNotifications"
-            class="relative p-2 text-gray-500 hover:text-primary-600 dark:text-slate-400 dark:hover:text-primary-400 hover:bg-gray-100 dark:hover:bg-dark-card rounded-lg transition"
+            class="relative p-2 text-gray-500 hover:text-brand dark:text-slate-400 dark:hover:text-brand hover:bg-gray-100 dark:hover:bg-surface-raised rounded-lg transition"
             title="Notifications"
         >
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -127,7 +127,7 @@ defineExpose({ closeDropdown });
             </svg>
             <span
                 v-if="unreadCount > 0"
-                class="absolute -top-0.5 -right-0.5 flex items-center justify-center w-5 h-5 text-[10px] font-bold text-white bg-red-500 rounded-full ring-2 ring-white dark:ring-dark-bg"
+                class="absolute -top-0.5 -right-0.5 flex items-center justify-center w-5 h-5 text-[10px] font-bold text-white bg-red-500 rounded-full ring-2 ring-white dark:ring-surface-canvas"
             >
                 {{ unreadCount > 9 ? '9+' : unreadCount }}
             </span>
@@ -137,16 +137,16 @@ defineExpose({ closeDropdown });
         <div
             v-show="notificationsOpen"
             @click.stop
-            class="absolute right-0 mt-2 w-96 bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border rounded-xl shadow-xl overflow-hidden z-50"
+            class="absolute right-0 mt-2 w-96 bg-white dark:bg-surface-raised border border-gray-200 dark:border-border-subtle rounded-xl shadow-xl overflow-hidden z-50"
         >
             <!-- Header -->
-            <div class="flex items-center justify-between px-4 py-3 border-b border-gray-100 dark:border-dark-border">
+            <div class="flex items-center justify-between px-4 py-3 border-b border-gray-100 dark:border-border-subtle">
                 <h3 class="text-sm font-semibold text-gray-900 dark:text-gray-100">{{ t('nav.notifications') }}</h3>
                 <div class="flex items-center gap-3">
                     <button
                         v-if="unreadCount > 0"
                         @click="markAllAsRead"
-                        class="text-xs text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300 font-medium"
+                        class="text-xs text-brand dark:text-brand hover:text-brand dark:hover:text-brand font-medium"
                     >
                         Mark all read
                     </button>
@@ -163,7 +163,7 @@ defineExpose({ closeDropdown });
             <!-- Notifications List -->
             <div class="max-h-96 overflow-y-auto">
                 <div v-if="loadingNotifications" class="p-8 text-center">
-                    <svg class="animate-spin h-6 w-6 text-primary-500 mx-auto" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <svg class="animate-spin h-6 w-6 text-brand mx-auto" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                         <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                         <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                     </svg>
@@ -181,7 +181,7 @@ defineExpose({ closeDropdown });
                     v-for="notification in notifications"
                     :key="notification.id"
                     @click="markAsRead(notification)"
-                    class="w-full flex items-start gap-3 px-4 py-3 hover:bg-gray-50 dark:hover:bg-slate-800/50 transition border-b border-gray-50 dark:border-dark-border last:border-b-0 text-left"
+                    class="w-full flex items-start gap-3 px-4 py-3 hover:bg-gray-50 dark:hover:bg-slate-800/50 transition border-b border-gray-50 dark:border-border-subtle last:border-b-0 text-left"
                 >
                     <div :class="['flex-shrink-0 w-9 h-9 rounded-lg flex items-center justify-center', getTypeColor(notification.type)]">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -194,7 +194,7 @@ defineExpose({ closeDropdown });
                         <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">{{ formatDate(notification.created_at) }}</p>
                     </div>
                     <div class="flex-shrink-0 mt-1.5">
-                        <div class="w-2 h-2 bg-primary-500 rounded-full"></div>
+                        <div class="w-2 h-2 bg-brand rounded-full"></div>
                     </div>
                 </button>
             </div>
