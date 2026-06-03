@@ -8,27 +8,27 @@ const { t } = useI18n();
 <template>
     <Head :title="t('install.welcome.title')" />
 
-    <div class="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center p-4">
+    <div class="min-h-screen bg-surface-canvas flex items-center justify-center p-4">
         <div class="max-w-2xl w-full">
             <!-- Logo and Title -->
             <div class="text-center mb-8">
                 <div class="flex justify-center mb-4">
-                    <svg class="w-16 h-16 text-gray-800" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg class="w-16 h-16 text-brand" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
                     </svg>
                 </div>
-                <h1 class="text-4xl font-bold text-gray-900 mb-2">{{ t('install.welcome.title') }}</h1>
-                <p class="text-lg text-gray-600">{{ t('install.welcome.subtitle') }}</p>
+                <h1 class="text-4xl font-bold text-text-primary mb-2">{{ t('install.welcome.title') }}</h1>
+                <p class="text-lg text-text-secondary">{{ t('install.welcome.subtitle') }}</p>
             </div>
 
             <!-- Welcome Card -->
-            <div class="bg-white rounded-lg shadow-lg p-8">
+            <div class="bg-surface-base border border-border-subtle rounded-lg shadow-sm p-8">
                 <div class="mb-6">
-                    <h2 class="text-2xl font-semibold text-gray-900 mb-4">{{ t('install.welcome.wizard') }}</h2>
-                    <p class="text-gray-600 mb-4">
+                    <h2 class="text-2xl font-semibold text-text-primary mb-4">{{ t('install.welcome.wizard') }}</h2>
+                    <p class="text-text-secondary mb-4">
                         {{ t('install.welcome.description') }}
                     </p>
-                    <p class="text-gray-600">
+                    <p class="text-text-secondary">
                         {{ t('install.welcome.includes') }}:
                     </p>
                 </div>
@@ -36,55 +36,55 @@ const { t } = useI18n();
                 <!-- Installation Steps -->
                 <div class="space-y-4 mb-8">
                     <div class="flex items-start">
-                        <div class="flex-shrink-0 w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center text-gray-700 font-semibold">
+                        <div class="flex-shrink-0 w-8 h-8 bg-brand-soft rounded-full flex items-center justify-center text-brand font-semibold">
                             1
                         </div>
                         <div class="ml-4">
-                            <h3 class="font-semibold text-gray-900">{{ t('install.welcome.step1') }}</h3>
-                            <p class="text-sm text-gray-600">{{ t('install.welcome.step1Desc') }}</p>
+                            <h3 class="font-semibold text-text-primary">{{ t('install.welcome.step1') }}</h3>
+                            <p class="text-sm text-text-secondary">{{ t('install.welcome.step1Desc') }}</p>
                         </div>
                     </div>
 
                     <div class="flex items-start">
-                        <div class="flex-shrink-0 w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center text-gray-700 font-semibold">
+                        <div class="flex-shrink-0 w-8 h-8 bg-brand-soft rounded-full flex items-center justify-center text-brand font-semibold">
                             2
                         </div>
                         <div class="ml-4">
-                            <h3 class="font-semibold text-gray-900">{{ t('install.welcome.step2') }}</h3>
-                            <p class="text-sm text-gray-600">{{ t('install.welcome.step2Desc') }}</p>
+                            <h3 class="font-semibold text-text-primary">{{ t('install.welcome.step2') }}</h3>
+                            <p class="text-sm text-text-secondary">{{ t('install.welcome.step2Desc') }}</p>
                         </div>
                     </div>
 
                     <div class="flex items-start">
-                        <div class="flex-shrink-0 w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center text-gray-700 font-semibold">
+                        <div class="flex-shrink-0 w-8 h-8 bg-brand-soft rounded-full flex items-center justify-center text-brand font-semibold">
                             3
                         </div>
                         <div class="ml-4">
-                            <h3 class="font-semibold text-gray-900">{{ t('install.welcome.step3') }}</h3>
-                            <p class="text-sm text-gray-600">{{ t('install.welcome.step3Desc') }}</p>
+                            <h3 class="font-semibold text-text-primary">{{ t('install.welcome.step3') }}</h3>
+                            <p class="text-sm text-text-secondary">{{ t('install.welcome.step3Desc') }}</p>
                         </div>
                     </div>
 
                     <div class="flex items-start">
-                        <div class="flex-shrink-0 w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center text-gray-700 font-semibold">
+                        <div class="flex-shrink-0 w-8 h-8 bg-brand-soft rounded-full flex items-center justify-center text-brand font-semibold">
                             4
                         </div>
                         <div class="ml-4">
-                            <h3 class="font-semibold text-gray-900">{{ t('install.welcome.step4') }}</h3>
-                            <p class="text-sm text-gray-600">{{ t('install.welcome.step4Desc') }}</p>
+                            <h3 class="font-semibold text-text-primary">{{ t('install.welcome.step4') }}</h3>
+                            <p class="text-sm text-text-secondary">{{ t('install.welcome.step4Desc') }}</p>
                         </div>
                     </div>
                 </div>
 
                 <!-- Requirements Notice -->
-                <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+                <div class="bg-status-info-soft border border-status-info/20 rounded-lg p-4 mb-6">
                     <div class="flex">
-                        <svg class="w-5 h-5 text-blue-600 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                        <svg class="w-5 h-5 text-status-info mt-0.5" fill="currentColor" viewBox="0 0 20 20">
                             <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
                         </svg>
                         <div class="ml-3">
-                            <h3 class="text-sm font-semibold text-blue-900">{{ t('install.welcome.beforeBegin') }}</h3>
-                            <p class="text-sm text-blue-800 mt-1">
+                            <h3 class="text-sm font-semibold text-text-primary">{{ t('install.welcome.beforeBegin') }}</h3>
+                            <p class="text-sm text-text-secondary mt-1">
                                 {{ t('install.welcome.beforeBeginDesc') }}
                             </p>
                         </div>
@@ -95,7 +95,7 @@ const { t } = useI18n();
                 <div class="flex justify-end">
                     <Link
                         :href="route('install.requirements')"
-                        class="inline-flex items-center px-6 py-3 bg-gray-900 text-white font-semibold rounded-lg hover:bg-gray-800 transition"
+                        class="inline-flex items-center px-6 py-3 bg-brand text-brand-foreground font-semibold rounded-lg hover:bg-brand-hover transition"
                     >
                         {{ t('install.welcome.startInstallation') }}
                         <svg class="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -106,7 +106,7 @@ const { t } = useI18n();
             </div>
 
             <!-- Footer -->
-            <div class="text-center mt-6 text-sm text-gray-600">
+            <div class="text-center mt-6 text-sm text-text-secondary">
                 <p>{{ t('install.welcome.license') }}</p>
             </div>
         </div>

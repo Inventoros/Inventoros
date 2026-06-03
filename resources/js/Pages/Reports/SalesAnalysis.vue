@@ -166,7 +166,7 @@ const thClass =
                         <div v-for="item in byStatus" :key="item.status" class="flex h-full flex-1 flex-col items-center justify-end gap-2">
                             <span class="text-xs font-medium tabular-nums text-text-secondary">{{ formatCurrency(item.revenue) }}</span>
                             <div
-                                class="w-full max-w-[3rem] rounded-t-md bg-gradient-to-t from-sky-200 to-sky-500"
+                                class="w-full max-w-[3rem] rounded-t-md bg-brand"
                                 :style="{ height: barHeight(item.revenue) }"
                             ></div>
                         </div>

@@ -77,7 +77,9 @@
     "locked": "Locked",
     "deleting": "Deleting...",
     "creating": "Creating...",
-    "updating": "Updating..."
+    "updating": "Updating...",
+    "add": "Add",
+    "export": "Export"
   },
   "nav": {
     "dashboard": "Dashboard",
@@ -103,7 +105,8 @@
     "workOrders": "Work Orders",
     "account": "Account",
     "profile": "Profile",
-    "logOut": "Log Out"
+    "logOut": "Log Out",
+    "notifications": "Notifications"
   },
   "dashboard": {
     "title": "Dashboard",
@@ -282,7 +285,7 @@
       "editOrder": "Edit Order",
       "backToOrders": "Back to Orders",
       "orderItems": "Order Items",
-      "viewProduct": "View Product \u2192",
+      "viewProduct": "View Product →",
       "unitPrice": "Unit Price",
       "noItems": "No items in this order.",
       "customerInfo": "Customer Information",
@@ -371,7 +374,8 @@
     "edit": {
       "title": "Edit Purchase Order",
       "backToPo": "Back to Purchase Orders",
-      "updatePo": "Update Purchase Order"
+      "updatePo": "Update Purchase Order",
+      "viewDetails": "View Details"
     },
     "show": {
       "receiveItems": "Receive Items",
@@ -726,7 +730,9 @@
       "noteCreate": "Categories and locations will be created if they don't exist",
       "noteCurrency": "Default currency is USD if not specified",
       "noteSkip": "Invalid rows will be skipped and reported"
-    }
+    },
+    "exportProducts": "Export Products",
+    "importProducts": "Import Products"
   },
   "notifications": {
     "title": "Notifications",
@@ -738,7 +744,7 @@
     "read": "Read",
     "all": "All",
     "new": "New",
-    "viewDetails": "View Details \u2192",
+    "viewDetails": "View Details →",
     "markAsRead": "Mark as Read",
     "noNotifications": "No notifications",
     "allCaughtUp": "You're all caught up!",
@@ -834,7 +840,8 @@
       "testEmail": "Test Email Configuration",
       "sendTest": "Send Test Email",
       "sending": "Sending...",
-      "saveSettings": "Save Email Settings"
+      "saveSettings": "Save Email Settings",
+      "testSuccess": "Test email sent successfully."
     },
     "notificationPreferences": {
       "title": "Email Notification Preferences",
@@ -1060,7 +1067,10 @@
       "autoBackup": "A backup is automatically created before each update",
       "maintenanceMode": "The application will be in maintenance mode during updates",
       "autoMigrations": "Database migrations are run automatically during updates"
-    }
+    },
+    "createRole": "Create Role",
+    "createUser": "Create User",
+    "userDetails": "User Details"
   },
   "auth": {
     "login": {
