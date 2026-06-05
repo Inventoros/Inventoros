@@ -1,0 +1,12 @@
+{
+    "sections": [
+        { "slug": "getting-started", "label": "Getting Started", "anchor": "getting-started" },
+        { "slug": "installation-cpanel", "label": "Install on cPanel", "anchor": "installation-cpanel" },
+        { "slug": "installation-vps", "label": "Install on a VPS", "anchor": "installation-vps" },
+        { "slug": "installation-docker", "label": "Install with Docker", "anchor": "installation-docker" },
+        { "slug": "rest-api", "label": "REST & GraphQL API", "anchor": "rest-api" },
+        { "slug": "mcp-server", "label": "MCP Server", "anchor": "mcp-server" },
+        { "slug": "plugins", "label": "Plugin Development", "anchor": "plugins" },
+        { "slug": "updates", "label": "Updates & Backups", "anchor": "updates" }
+    ]
+}
