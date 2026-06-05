@@ -67,10 +67,18 @@ class UpdateController extends Controller
     /**
      * Check for available updates.
      *
+     * @param Request $request The incoming HTTP request
      * @return JsonResponse
      */
-    public function check(): JsonResponse
+    public function check(Request $request): JsonResponse
     {
+        $user = $request->user();
+
+        // Ensure only admins can check for updates
+        if (!$user->is_admin) {
+            abort(403, 'Only administrators can manage updates.');
+        }
+
         $currentVersion = $this->updateService->getCurrentVersion();
         $latestRelease = $this->updateService->getLatestRelease();
         $updateAvailable = $this->updateService->isUpdateAvailable();
@@ -171,8 +179,17 @@ class UpdateController extends Controller
         }
 
         $validated = $request->validate([
-            'backup_file' => 'required|string',
+            'backup_file' => ['required', 'string', 'regex:/^[A-Za-z0-9._-]+\.zip$/'],
         ]);
+
+        $knownBackups = array_column($this->updateService->listBackups(), 'filename');
+
+        if (! in_array($validated['backup_file'], $knownBackups, true)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Backup file not found',
+            ], 404);
+        }
 
         $backupPath = storage_path('app/backups/' . basename($validated['backup_file']));
 
@@ -206,8 +223,17 @@ class UpdateController extends Controller
         }
 
         $validated = $request->validate([
-            'backup_file' => 'required|string',
+            'backup_file' => ['required', 'string', 'regex:/^[A-Za-z0-9._-]+\.zip$/'],
         ]);
+
+        $knownBackups = array_column($this->updateService->listBackups(), 'filename');
+
+        if (! in_array($validated['backup_file'], $knownBackups, true)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Backup file not found',
+            ], 404);
+        }
 
         $backupPath = storage_path('app/backups/' . basename($validated['backup_file']));
 

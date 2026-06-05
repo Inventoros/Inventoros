@@ -270,10 +270,12 @@ class SecurityFixesTest extends TestCase
         $this->assertNotNull($response->headers->get('Permissions-Policy'));
     }
 
-    public function test_response_contains_x_xss_protection_header(): void
+    public function test_response_does_not_contain_x_xss_protection_header(): void
     {
+        // X-XSS-Protection is deprecated and must be absent; modern browsers
+        // rely on Content-Security-Policy instead.
         $response = $this->getResponseThroughSecurityHeaders();
-        $this->assertEquals('1; mode=block', $response->headers->get('X-XSS-Protection'));
+        $this->assertNull($response->headers->get('X-XSS-Protection'));
     }
 
     // =========================================================================

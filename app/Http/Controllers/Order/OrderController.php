@@ -248,141 +248,165 @@ class OrderController extends Controller
 
         $validated = $request->validated();
 
-        DB::transaction(function () use ($validated, $order) {
-            // Load existing items with product relationship
-            $order->load('items.product');
-            $existingItems = $order->items->keyBy('id');
+        try {
+            DB::transaction(function () use ($validated, $order) {
+                // Lock and re-read the order inside the transaction so a
+                // double-submit or a concurrent ship/cancel can't be acted on
+                // against a stale, pre-transaction model (e.g. restock twice).
+                $order = Order::whereKey($order->getKey())->lockForUpdate()->firstOrFail();
 
-            // Track which items to keep
-            $itemIdsToKeep = [];
+                // Load existing items with product relationship
+                $order->load('items.product');
+                $existingItems = $order->items->keyBy('id');
 
-            // Calculate new totals
-            $subtotal = 0;
-            $updatedItems = [];
+                // Track which items to keep
+                $itemIdsToKeep = [];
 
-            foreach ($validated['items'] as $itemData) {
-                $product = Product::where('id', $itemData['product_id'])->lockForUpdate()->first();
-                $itemSubtotal = $itemData['quantity'] * $itemData['unit_price'];
-                $subtotal += $itemSubtotal;
+                // Calculate new totals
+                $subtotal = 0;
+                $updatedItems = [];
 
-                if (! empty($itemData['id']) && $existingItems->has($itemData['id'])) {
-                    // Update existing item
-                    $existingItem = $existingItems->get($itemData['id']);
-                    $quantityDiff = $itemData['quantity'] - $existingItem->quantity;
+                foreach ($validated['items'] as $itemData) {
+                    $product = Product::whereKey($itemData['product_id'])
+                        ->where('organization_id', $order->organization_id)
+                        ->lockForUpdate()
+                        ->firstOrFail();
+                    $itemSubtotal = $itemData['quantity'] * $itemData['unit_price'];
+                    $subtotal += $itemSubtotal;
 
-                    // Adjust stock based on quantity change
-                    if ($quantityDiff > 0 && $product->stock < $quantityDiff) {
-                        throw new \RuntimeException("Insufficient stock for {$product->name}. Available: {$product->stock}, requested increase: {$quantityDiff}");
-                    }
-                    if ($quantityDiff != 0) {
+                    if (! empty($itemData['id']) && $existingItems->has($itemData['id'])) {
+                        // Update existing item
+                        $existingItem = $existingItems->get($itemData['id']);
+                        $quantityDiff = $itemData['quantity'] - $existingItem->quantity;
+
+                        // Adjust stock based on quantity change
+                        if ($quantityDiff > 0 && $product->stock < $quantityDiff) {
+                            throw new \RuntimeException("Insufficient stock for {$product->name}. Available: {$product->stock}, requested increase: {$quantityDiff}");
+                        }
+                        if ($quantityDiff != 0) {
+                            StockAdjustment::adjust(
+                                $product,
+                                -$quantityDiff,
+                                $quantityDiff > 0 ? 'order_fulfillment' : 'order_cancellation',
+                                "Order {$order->order_number} line updated",
+                                null,
+                                $order
+                            );
+                        }
+
+                        $existingItem->update([
+                            'product_id' => $itemData['product_id'],
+                            'product_name' => $product->name,
+                            'sku' => $product->sku,
+                            'quantity' => $itemData['quantity'],
+                            'unit_price' => $itemData['unit_price'],
+                            'subtotal' => $itemSubtotal,
+                            'total' => $itemSubtotal,
+                        ]);
+
+                        $itemIdsToKeep[] = $itemData['id'];
+                    } else {
+                        if ($product->stock < $itemData['quantity']) {
+                            throw new \RuntimeException("Insufficient stock for {$product->name}. Available: {$product->stock}, requested: {$itemData['quantity']}");
+                        }
+
+                        // New item
+                        $updatedItems[] = [
+                            'product_id' => $itemData['product_id'],
+                            'product_name' => $product->name,
+                            'sku' => $product->sku,
+                            'quantity' => $itemData['quantity'],
+                            'unit_price' => $itemData['unit_price'],
+                            'subtotal' => $itemSubtotal,
+                            'tax' => 0,
+                            'total' => $itemSubtotal,
+                        ];
+
+                        // Reduce stock for new items via the ledger.
                         StockAdjustment::adjust(
                             $product,
-                            -$quantityDiff,
-                            $quantityDiff > 0 ? 'order_fulfillment' : 'order_cancellation',
-                            "Order {$order->order_number} line updated",
+                            -$itemData['quantity'],
+                            'order_fulfillment',
+                            "Order {$order->order_number} item added",
                             null,
                             $order
                         );
                     }
-
-                    $existingItem->update([
-                        'product_id' => $itemData['product_id'],
-                        'product_name' => $product->name,
-                        'sku' => $product->sku,
-                        'quantity' => $itemData['quantity'],
-                        'unit_price' => $itemData['unit_price'],
-                        'subtotal' => $itemSubtotal,
-                        'total' => $itemSubtotal,
-                    ]);
-
-                    $itemIdsToKeep[] = $itemData['id'];
-                } else {
-                    if ($product->stock < $itemData['quantity']) {
-                        throw new \RuntimeException("Insufficient stock for {$product->name}. Available: {$product->stock}, requested: {$itemData['quantity']}");
-                    }
-
-                    // New item
-                    $updatedItems[] = [
-                        'product_id' => $itemData['product_id'],
-                        'product_name' => $product->name,
-                        'sku' => $product->sku,
-                        'quantity' => $itemData['quantity'],
-                        'unit_price' => $itemData['unit_price'],
-                        'subtotal' => $itemSubtotal,
-                        'tax' => 0,
-                        'total' => $itemSubtotal,
-                    ];
-
-                    // Reduce stock for new items via the ledger.
-                    StockAdjustment::adjust(
-                        $product,
-                        -$itemData['quantity'],
-                        'order_fulfillment',
-                        "Order {$order->order_number} item added",
-                        null,
-                        $order
-                    );
                 }
-            }
 
-            // Delete removed items and restore their stock
-            $itemsToDelete = $existingItems->filter(function ($item) use ($itemIdsToKeep) {
-                return ! in_array($item->id, $itemIdsToKeep);
-            });
+                // Delete removed items and restore their stock
+                $itemsToDelete = $existingItems->filter(function ($item) use ($itemIdsToKeep) {
+                    return ! in_array($item->id, $itemIdsToKeep);
+                });
 
-            foreach ($itemsToDelete as $item) {
-                if ($item->product) {
-                    StockAdjustment::adjust(
-                        $item->product,
-                        $item->quantity,
-                        'order_cancellation',
-                        "Order {$order->order_number} item removed",
-                        null,
-                        $order
-                    );
-                }
-                $item->delete();
-            }
-
-            // Create new items
-            if (! empty($updatedItems)) {
-                $order->items()->createMany($updatedItems);
-            }
-
-            // Restore stock when order is cancelled — route through
-            // StockAdjustment so the cancellation appears in the ledger and
-            // the row is locked correctly by adjust() itself.
-            if ($validated['status'] === 'cancelled' && $order->status !== OrderStatus::CANCELLED) {
-                $order->load('items.product');
-                foreach ($order->items as $item) {
+                foreach ($itemsToDelete as $item) {
                     if ($item->product) {
                         StockAdjustment::adjust(
                             $item->product,
                             $item->quantity,
                             'order_cancellation',
-                            "Order {$order->order_number} cancelled",
+                            "Order {$order->order_number} item removed",
                             null,
                             $order
                         );
                     }
+                    $item->delete();
                 }
-            }
 
-            // Update order totals and metadata
-            $validated['subtotal'] = $subtotal;
-            $validated['tax'] = $validated['tax'] ?? 0;
-            $validated['shipping'] = $validated['shipping'] ?? 0;
-            $validated['total'] = $subtotal + $validated['tax'] + $validated['shipping'];
+                // Create new items
+                if (! empty($updatedItems)) {
+                    $order->items()->createMany($updatedItems);
+                }
 
-            // Update order timestamps based on status
-            if ($validated['status'] === 'shipped' && ! $order->shipped_at) {
-                $validated['shipped_at'] = now();
-            } elseif ($validated['status'] === 'delivered' && ! $order->delivered_at) {
-                $validated['delivered_at'] = now();
-            }
+                // Restore stock when order is cancelled — route through
+                // StockAdjustment so the cancellation appears in the ledger and
+                // the row is locked correctly by adjust() itself.
+                if ($validated['status'] === 'cancelled' && $order->status !== OrderStatus::CANCELLED) {
+                    // Reject cancelling an order that already left the warehouse —
+                    // restocking would lie about inventory that physically isn't
+                    // here. Matches the REST/GraphQL guard. Thrown out to the
+                    // try/catch below, which flashes the error instead of 500ing.
+                    if (in_array($order->status, [OrderStatus::SHIPPED, OrderStatus::DELIVERED], true)) {
+                        throw new \RuntimeException(
+                            "Cannot cancel an order that has already been {$order->status->value}."
+                        );
+                    }
 
-            $order->update($validated);
-        });
+                    $order->load('items.product');
+                    foreach ($order->items as $item) {
+                        if ($item->product) {
+                            StockAdjustment::adjust(
+                                $item->product,
+                                $item->quantity,
+                                'order_cancellation',
+                                "Order {$order->order_number} cancelled",
+                                null,
+                                $order
+                            );
+                        }
+                    }
+                }
+
+                // Update order totals and metadata
+                $validated['subtotal'] = $subtotal;
+                $validated['tax'] = $validated['tax'] ?? 0;
+                $validated['shipping'] = $validated['shipping'] ?? 0;
+                $validated['total'] = $subtotal + $validated['tax'] + $validated['shipping'];
+
+                // Update order timestamps based on status
+                if ($validated['status'] === 'shipped' && ! $order->shipped_at) {
+                    $validated['shipped_at'] = now();
+                } elseif ($validated['status'] === 'delivered' && ! $order->delivered_at) {
+                    $validated['delivered_at'] = now();
+                }
+
+                $order->update($validated);
+            });
+        } catch (\RuntimeException $e) {
+            // Guard failures (e.g. cancelling a shipped order, insufficient
+            // stock on an item increase) flash an error rather than 500ing.
+            return redirect()->back()->with('error', $e->getMessage());
+        }
 
         return redirect()->route('orders.index')
             ->with('success', 'Order updated successfully.');

@@ -364,43 +364,58 @@ class StockAuditController extends Controller
 
         $adjustmentsCreated = 0;
 
-        DB::transaction(function () use ($stockAudit, &$adjustmentsCreated) {
-            $stockAudit->load('items.product');
+        try {
+            DB::transaction(function () use ($stockAudit, &$adjustmentsCreated) {
+                // Lock and re-read the audit so two concurrent completions
+                // serialize on this row; the second waits, then sees the
+                // 'completed' status and is rejected below — otherwise both
+                // would re-apply every recount adjustment (double write).
+                $stockAudit = StockAudit::whereKey($stockAudit->getKey())->lockForUpdate()->firstOrFail();
 
-            foreach ($stockAudit->items as $item) {
-                // Skip items that haven't been counted
-                if ($item->counted_quantity === null) {
-                    continue;
+                if ($stockAudit->status !== 'in_progress') {
+                    throw new \RuntimeException('Only in-progress audits can be completed.');
                 }
 
-                $discrepancy = $item->counted_quantity - $item->system_quantity;
+                $stockAudit->load('items.product');
 
-                // Update the discrepancy field
-                $item->update([
-                    'discrepancy' => $discrepancy,
-                    'status' => 'adjusted',
+                foreach ($stockAudit->items as $item) {
+                    // Skip items that haven't been counted
+                    if ($item->counted_quantity === null) {
+                        continue;
+                    }
+
+                    $discrepancy = $item->counted_quantity - $item->system_quantity;
+
+                    // Update the discrepancy field
+                    $item->update([
+                        'discrepancy' => $discrepancy,
+                        'status' => 'adjusted',
+                    ]);
+
+                    // Create stock adjustment if there's a discrepancy
+                    if ($discrepancy !== 0) {
+                        StockAdjustment::adjust(
+                            product: $item->product,
+                            quantity: $discrepancy,
+                            type: 'recount',
+                            reason: "Stock audit: {$stockAudit->audit_number}",
+                            notes: "Audit '{$stockAudit->name}' - System: {$item->system_quantity}, Counted: {$item->counted_quantity}",
+                            reference: $stockAudit,
+                        );
+
+                        $adjustmentsCreated++;
+                    }
+                }
+
+                $stockAudit->update([
+                    'status' => 'completed',
+                    'completed_at' => now(),
                 ]);
-
-                // Create stock adjustment if there's a discrepancy
-                if ($discrepancy !== 0) {
-                    StockAdjustment::adjust(
-                        product: $item->product,
-                        quantity: $discrepancy,
-                        type: 'recount',
-                        reason: "Stock audit: {$stockAudit->audit_number}",
-                        notes: "Audit '{$stockAudit->name}' - System: {$item->system_quantity}, Counted: {$item->counted_quantity}",
-                        reference: $stockAudit,
-                    );
-
-                    $adjustmentsCreated++;
-                }
-            }
-
-            $stockAudit->update([
-                'status' => 'completed',
-                'completed_at' => now(),
-            ]);
-        });
+            });
+        } catch (\RuntimeException $e) {
+            return redirect()->route('stock-audits.show', $stockAudit)
+                ->with('error', $e->getMessage());
+        }
 
         $message = 'Stock audit completed.';
         if ($adjustmentsCreated > 0) {

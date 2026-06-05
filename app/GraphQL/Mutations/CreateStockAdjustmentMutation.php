@@ -51,7 +51,7 @@ class CreateStockAdjustmentMutation extends Mutation
             'notes' => [
                 'type' => Type::string(),
                 'description' => 'Additional notes',
-                'rules' => ['nullable', 'string'],
+                'rules' => ['nullable', 'string', 'max:5000'],
             ],
         ];
     }

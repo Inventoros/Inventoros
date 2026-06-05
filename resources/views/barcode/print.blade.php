@@ -95,7 +95,7 @@
     </style>
 </head>
 <body>
-    <button class="print-button no-print" onclick="window.print()">=¨ Print Barcode</button>
+    <button id="barcode-print-btn" class="print-button no-print">=ï¿½ Print Barcode</button>
 
     <div class="barcode-label">
         <div class="product-name" title="{{ $product->name }}">{{ $product->name }}</div>
@@ -106,9 +106,10 @@
         <div class="barcode-number">{{ $code }}</div>
     </div>
 
-    <script>
-        // Auto-print on load (optional)
-        // window.onload = function() { window.print(); }
+    <script nonce="{{ \Illuminate\Support\Facades\Vite::cspNonce() }}">
+        document.getElementById('barcode-print-btn')?.addEventListener('click', function () {
+            window.print();
+        });
     </script>
 </body>
 </html>

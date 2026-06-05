@@ -34,13 +34,17 @@ final class PublicHostGuard
 
         $ips = static::resolveHost($host);
 
-        // If DNS lookup returned nothing, let the request proceed — the
-        // HTTP client will fail at connect time. Blocking here would
-        // false-positive in containerised / restricted-DNS environments
-        // (CI, certain Docker setups) where lookups for legitimate public
-        // hosts can briefly return empty. The actual SSRF threat surfaces
-        // only when we DO get back an IP and that IP turns out to be
-        // private — that case is still rejected below.
+        // In production an empty DNS answer fails CLOSED: we cannot prove the
+        // destination is public, and a host that returns no records here but
+        // resolves at connect time is a TOCTOU bypass. Outside production (CI,
+        // Docker, local) empty answers stay permissive because restricted-DNS
+        // environments routinely return empty for legitimate public hosts.
+        if ($ips === [] && app()->environment('production')) {
+            throw new RuntimeException(
+                "Webhook URL host '{$host}' did not resolve to any address"
+            );
+        }
+
         foreach ($ips as $ip) {
             if (!static::isPublicIp($ip)) {
                 throw new RuntimeException(

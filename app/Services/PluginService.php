@@ -55,6 +55,12 @@ final class PluginService
             if (File::exists($manifestPath)) {
                 $manifest = json_decode(File::get($manifestPath), true);
 
+                if (! is_array($manifest)) {
+                    Log::warning('Plugin manifest is not valid JSON; skipping', ['slug' => $pluginSlug]);
+
+                    continue;
+                }
+
                 // Get activation status from database
                 $dbPlugin = Plugin::where('slug', $pluginSlug)->first();
 
@@ -105,6 +111,8 @@ final class PluginService
      */
     public function activatePlugin(string $slug): bool
     {
+        $this->assertSafeSlug($slug);
+
         $plugin = Plugin::where('slug', $slug)->first();
 
         if (! $plugin) {
@@ -143,6 +151,8 @@ final class PluginService
      */
     public function deactivatePlugin(string $slug): bool
     {
+        $this->assertSafeSlug($slug);
+
         $plugin = Plugin::where('slug', $slug)->first();
 
         if ($plugin && $plugin->is_active) {
@@ -169,10 +179,21 @@ final class PluginService
      */
     public function deletePlugin(string $slug): bool
     {
+        $this->assertSafeSlug($slug);
+
         $pluginPath = $this->pluginsPath.'/'.$slug;
 
         if (! File::exists($pluginPath)) {
             return false;
+        }
+
+        // Verify the resolved path stays inside the plugins directory before
+        // touching the filesystem — defence-in-depth behind the slug guard.
+        $pluginsRoot = realpath($this->pluginsPath);
+        $resolved = realpath($pluginPath);
+        if (! $pluginsRoot || ! $resolved
+            || ! str_starts_with($resolved.DIRECTORY_SEPARATOR, $pluginsRoot.DIRECTORY_SEPARATOR)) {
+            throw new \RuntimeException('Plugin path escapes the plugins directory.');
         }
 
         $plugin = Plugin::where('slug', $slug)->first();
@@ -397,11 +418,20 @@ final class PluginService
      * Load a specific plugin.
      *
      * Requires the main plugin file and fires plugin_loaded action.
+     * Skips (with a warning) rather than throwing for unsafe slugs because
+     * this method runs at application boot for all DB-sourced slugs; a throw
+     * here would take down every request.
      *
      * @param  string  $slug  The plugin slug to load
      */
     protected function loadPlugin(string $slug): void
     {
+        if (! $this->isSafeSlug($slug)) {
+            Log::warning('Unsafe plugin slug skipped at load time', ['slug' => $slug]);
+
+            return;
+        }
+
         $pluginPath = $this->pluginsPath.'/'.$slug;
         $manifestPath = $pluginPath.'/plugin.json';
 
@@ -439,6 +469,25 @@ final class PluginService
             } catch (\Throwable $e) {
                 Log::error('Failed to load plugin; skipping', ['slug' => $slug, 'error' => $e->getMessage()]);
             }
+        }
+    }
+
+    /**
+     * A plugin slug is the basename of a directory under /plugins. Reject
+     * anything that could escape that directory when concatenated into a
+     * filesystem path (traversal, separators, absolute paths).
+     */
+    private function isSafeSlug(string $slug): bool
+    {
+        return $slug !== ''
+            && preg_match('/^[A-Za-z0-9][A-Za-z0-9._-]*$/', $slug) === 1
+            && ! str_contains($slug, '..');
+    }
+
+    private function assertSafeSlug(string $slug): void
+    {
+        if (! $this->isSafeSlug($slug)) {
+            throw new \RuntimeException('Invalid plugin slug.');
         }
     }
 }

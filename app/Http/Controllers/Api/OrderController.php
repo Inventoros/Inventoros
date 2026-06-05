@@ -206,28 +206,28 @@ class OrderController extends Controller
             }
         }
 
-        DB::transaction(function () use ($order, $validated, $cancelTransition) {
-            if ($cancelTransition) {
-                // Mirror Order\OrderController::update — restock through
-                // StockAdjustment so the cancellation is auditable and the
-                // product row is locked while we increment.
-                $order->load('items.product');
-                foreach ($order->items as $item) {
-                    if ($item->product) {
-                        StockAdjustment::adjust(
-                            $item->product,
-                            $item->quantity,
-                            'order_cancellation',
-                            "Order {$order->order_number} cancelled via API",
-                            null,
-                            $order
-                        );
-                    }
-                }
-            }
+        // Apply non-cancel field updates first, then route the cancel through
+        // the shared, locked OrderService::cancel() so web, REST, and GraphQL
+        // restock identically (once, idempotently, with the shipped/delivered
+        // guard re-checked under a row lock).
+        if ($cancelTransition) {
+            unset($validated['status']);
+        }
 
+        if ($validated !== []) {
             $order->update($validated);
-        });
+        }
+
+        if ($cancelTransition) {
+            try {
+                $order = $this->orderService->cancel($order);
+            } catch (\RuntimeException $e) {
+                return response()->json([
+                    'message' => $e->getMessage(),
+                    'error' => 'invalid_state_transition',
+                ], 422);
+            }
+        }
 
         $order->load('items');
 

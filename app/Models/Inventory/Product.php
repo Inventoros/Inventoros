@@ -12,6 +12,7 @@ use App\Models\Inventory\Concerns\CalculatesProductProfit;
 use App\Models\Inventory\Concerns\HasProductVariants;
 use App\Models\Inventory\Concerns\TracksStockLevels;
 use App\Traits\LogsActivity;
+use Database\Factories\ProductFactory;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -70,6 +71,11 @@ use Illuminate\Support\Carbon;
 class Product extends Model
 {
     use ActsAsAssembly, BelongsToOrganization, CalculatesProductProfit, HasFactory, HasProductVariants, LogsActivity, SoftDeletes, TracksStockLevels;
+
+    protected static function newFactory(): ProductFactory
+    {
+        return ProductFactory::new();
+    }
 
     /**
      * The attributes that are mass assignable.

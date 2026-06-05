@@ -188,7 +188,7 @@ final class WebhookEventSubscriber
                     'adjustment' => [
                         'id' => $adjustment->id,
                         'type' => $adjustment->type,
-                        'quantity' => $adjustment->quantity,
+                        'quantity' => $adjustment->adjustment_quantity,
                         'quantity_before' => $adjustment->quantity_before,
                         'quantity_after' => $adjustment->quantity_after,
                         'reason' => $adjustment->reason,
