@@ -284,7 +284,7 @@ jobs:
             # Detached Ed25519 signature over the exact zip bytes, base64-encoded
             # into <zip>.sig — the format App\Support\ReleaseSignatureVerifier
             # expects. Done with raw libsodium (no Laravel boot needed in CI).
-            php -r '$s = base64_decode(getenv("INVENTOROS_UPDATE_SECRET_KEY"), true); if ($s === false || strlen($s) !== SODIUM_CRYPTO_SIGN_SECRETKEYBYTES) { fwrite(STDERR, "Invalid INVENTOROS_UPDATE_SECRET_KEY\n"); exit(1); } $f = getenv("RELEASE_ZIP"); $sig = sodium_crypto_sign_detached(file_get_contents($f), $s); file_put_contents($f . ".sig", base64_encode($sig));'
+            php -r '$s = base64_decode(trim(getenv("INVENTOROS_UPDATE_SECRET_KEY")), true); if ($s === false || strlen($s) !== SODIUM_CRYPTO_SIGN_SECRETKEYBYTES) { fwrite(STDERR, "Invalid INVENTOROS_UPDATE_SECRET_KEY\n"); exit(1); } $f = getenv("RELEASE_ZIP"); $sig = sodium_crypto_sign_detached(file_get_contents($f), $s); file_put_contents($f . ".sig", base64_encode($sig));'
             echo "Signed $RELEASE_ZIP -> $RELEASE_ZIP.sig"
           else
             echo "::warning::INVENTOROS_UPDATE_SECRET_KEY is not set; release will be unsigned and in-app updates with signature verification enabled will reject it."
