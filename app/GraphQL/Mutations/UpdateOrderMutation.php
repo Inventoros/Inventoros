@@ -45,7 +45,7 @@ class UpdateOrderMutation extends Mutation
             'customer_address' => [
                 'type' => Type::string(),
                 'description' => 'Customer address',
-                'rules' => ['nullable', 'string'],
+                'rules' => ['nullable', 'string', 'max:5000'],
             ],
             'status' => [
                 'type' => Type::string(),
@@ -55,7 +55,7 @@ class UpdateOrderMutation extends Mutation
             'notes' => [
                 'type' => Type::string(),
                 'description' => 'Order notes',
-                'rules' => ['nullable', 'string'],
+                'rules' => ['nullable', 'string', 'max:5000'],
             ],
         ];
     }

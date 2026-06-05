@@ -60,7 +60,7 @@ class UpdateSupplierMutation extends Mutation
             'address' => [
                 'type' => Type::string(),
                 'description' => 'Street address',
-                'rules' => ['nullable', 'string'],
+                'rules' => ['nullable', 'string', 'max:5000'],
             ],
             'city' => [
                 'type' => Type::string(),
@@ -100,7 +100,7 @@ class UpdateSupplierMutation extends Mutation
             'notes' => [
                 'type' => Type::string(),
                 'description' => 'Additional notes',
-                'rules' => ['nullable', 'string'],
+                'rules' => ['nullable', 'string', 'max:5000'],
             ],
             'is_active' => [
                 'type' => Type::boolean(),

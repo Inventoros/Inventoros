@@ -47,7 +47,7 @@ class UpdateProductMutation extends Mutation
             'description' => [
                 'type' => Type::string(),
                 'description' => 'Product description',
-                'rules' => ['nullable', 'string'],
+                'rules' => ['nullable', 'string', 'max:5000'],
             ],
             'price' => [
                 'type' => Type::float(),
@@ -92,7 +92,7 @@ class UpdateProductMutation extends Mutation
             'notes' => [
                 'type' => Type::string(),
                 'description' => 'Additional notes',
-                'rules' => ['nullable', 'string'],
+                'rules' => ['nullable', 'string', 'max:5000'],
             ],
             'category_id' => [
                 'type' => Type::int(),
