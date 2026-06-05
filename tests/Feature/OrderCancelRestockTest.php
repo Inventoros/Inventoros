@@ -79,6 +79,12 @@ final class OrderCancelRestockTest extends TestCase
         // Idempotent: a second cancel must NOT restock again.
         app(OrderService::class)->cancel($order->fresh());
         $this->assertSame(100, $this->product->fresh()->stock);
+
+        // Idempotent at the ledger level too: exactly one cancellation row.
+        $this->assertSame(1, \App\Models\Inventory\StockAdjustment::query()
+            ->where('product_id', $this->product->id)
+            ->where('type', 'order_cancellation')
+            ->count());
     }
 
     public function test_service_cancel_rejects_shipped(): void
@@ -117,6 +123,29 @@ final class OrderCancelRestockTest extends TestCase
 
         $this->assertNotEmpty($response->json('errors'));
         $this->assertSame(95, $this->product->fresh()->stock); // unchanged
+    }
+
+    public function test_web_cancel_restocks(): void
+    {
+        $order = $this->makeOrder(5);
+        $this->assertSame(95, $this->product->fresh()->stock);
+        $order->load('items');
+
+        $response = $this->actingAs($this->admin)->put(route('orders.update', $order), [
+            'customer_name' => $order->customer_name,
+            'order_date' => now()->toDateString(),
+            'status' => 'cancelled',
+            'items' => $order->items->map(fn ($i) => [
+                'id' => $i->id,
+                'product_id' => $i->product_id,
+                'quantity' => $i->quantity,
+                'unit_price' => $i->unit_price,
+            ])->all(),
+        ]);
+
+        $response->assertSessionHasNoErrors();
+        $this->assertSame(100, $this->product->fresh()->stock);
+        $this->assertSame(OrderStatus::CANCELLED, $order->fresh()->status);
     }
 
     public function test_web_cancel_rejects_shipped(): void
