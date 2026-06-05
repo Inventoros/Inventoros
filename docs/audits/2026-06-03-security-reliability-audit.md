@@ -106,3 +106,29 @@ Surfaced incidentally during this pass (separate repo: public marketing + plugin
 3. **Concurrency** — add transactions + `lockForUpdate` + re-check to PO receiving, work-order complete/cancel, web order cancel, stock-audit complete, return receive (and add double-submit tests).
 4. **Marketing** — blog XSS sanitization + remove `is_admin` from `$fillable`.
 5. **SAFE follow-ups** — GraphQL `max:` caps, marketing rate-limit/headers/`noopener`/validation, PluginService list-path guard.
+
+---
+
+## Resolution — v1.0.3 (2026-06-05)
+
+Every actionable app finding above was fixed on branch `fix/audit-2026-06-03` and shipped in v1.0.3, each with regression tests:
+
+- **Plugin slug path containment** — `PluginService` validates slugs against `^[A-Za-z0-9][A-Za-z0-9._-]*$` (rejecting `..`/separators) on activate/deactivate/delete, plus realpath containment before any delete; `loadPlugin` skips unsafe slugs without throwing.
+- **GraphQL cross-tenant `exists` scoping** — `CreateProductMutation`/`UpdateProductMutation` resolvers reject `category_id`/`location_id` outside the caller's organization.
+- **GraphQL cancel-restock parity** — a shared `OrderService::cancel()` (locked, idempotent, rejects shipped/delivered) now backs the web, REST, and GraphQL surfaces; GraphQL no longer leaks stock on cancel.
+- **`UpdateController::check` is_admin guard** + **backup-file validation** (`^[A-Za-z0-9._-]+\.zip$` + membership in `listBackups()`).
+- **GraphQL `max:` caps** on free-text args (description/notes/address/customer_address) to match REST.
+- **SSRF guard fails closed** on empty DNS in production (`PublicHostGuard`).
+- **Nonce-based CSP** added (Vite + Ziggy nonce, vue-i18n JIT), deprecated `X-XSS-Protection` dropped, `camera=(self)` for the scanner.
+- **Concurrency** — `DB::transaction` + `lockForUpdate` + status re-check added to PO receiving, work-order complete/cancel, stock-audit complete, web order cancel, and return receive (each with a double-submit regression test).
+- **Web order-update product lookup** is now org-scoped + `firstOrFail()`.
+- **Stock notifications deferred** to `DB::afterCommit` (shorter lock hold).
+- **All advertised webhook events now dispatch** — `stock_adjusted`, low/out-of-stock alerts, `order_updated`/`order_status_changed`/`order_approved`/`order_rejected`, and `purchase_order_created`/`received`/`cancelled` fire via model observers (after commit), each covered by a dispatch test.
+- **Updater auto-restores** from backup when file replacement fails (and `replaceFiles` now throws on a failed copy).
+- **Import job** retries (`tries=3` + backoff) with idempotent SKU upserts; the upload is kept until the final attempt.
+- **Plugin manifest list guard** + a startup warning when uploads are enabled without signature verification.
+- **Signed releases** — the cpanel-release workflow now produces a detached Ed25519 `.sig`; the public key ships in `.env.example`.
+
+**Deferred (documented, not a regression):** per-location stock for `StockTransfer.complete` remains a feature-sized change; the existing no-op (with its in-code explanation) stands. The marketing-site (`inventoros.com`) appendix items are tracked and fixed in that repo separately.
+
+Full suite green (1248+ tests) and the frontend build clean at release.
