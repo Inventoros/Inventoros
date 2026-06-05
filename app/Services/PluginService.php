@@ -55,6 +55,12 @@ final class PluginService
             if (File::exists($manifestPath)) {
                 $manifest = json_decode(File::get($manifestPath), true);
 
+                if (! is_array($manifest)) {
+                    Log::warning('Plugin manifest is not valid JSON; skipping', ['slug' => $pluginSlug]);
+
+                    continue;
+                }
+
                 // Get activation status from database
                 $dbPlugin = Plugin::where('slug', $pluginSlug)->first();
 

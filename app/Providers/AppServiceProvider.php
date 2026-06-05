@@ -17,6 +17,7 @@ use Dedoc\Scramble\Support\Generator\SecurityScheme;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Vite;
 use Illuminate\Support\ServiceProvider;
@@ -60,6 +61,16 @@ class AppServiceProvider extends ServiceProvider
         if (file_exists(base_path('plugins'))) {
             $pluginService = app(PluginService::class);
             $pluginService->loadActivePlugins();
+        }
+
+        // Operators who enable plugin uploads without requiring signatures are
+        // one admin-account compromise away from RCE; surface that posture.
+        if (config('plugins.upload_enabled') && ! config('plugins.signature.required')) {
+            Log::warning(
+                'Plugin uploads are enabled without signature verification. '
+                .'Set INVENTOROS_PLUGIN_SIGNATURE_REQUIRED=true and configure '
+                .'INVENTOROS_PLUGIN_PUBLIC_KEY to require signed plugins.'
+            );
         }
 
         // Register webhook event subscriber
