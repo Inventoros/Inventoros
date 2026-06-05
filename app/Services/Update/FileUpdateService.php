@@ -18,7 +18,7 @@ use ZipArchive;
  * Downloads release archives, extracts them, and replaces
  * application files with new versions.
  */
-final class FileUpdateService
+class FileUpdateService
 {
     /**
      * @var string Path to temporary storage directory for update files
@@ -238,7 +238,9 @@ final class FileUpdateService
                     File::deleteDirectory($destDir);
                 }
 
-                File::copyDirectory($sourceDir, $destDir);
+                if (! File::copyDirectory($sourceDir, $destDir)) {
+                    throw new \RuntimeException("Failed to copy '{$dir}' during file replacement");
+                }
             }
         }
 

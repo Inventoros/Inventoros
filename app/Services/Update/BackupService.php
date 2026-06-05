@@ -15,7 +15,7 @@ use ZipArchive;
  * Creates, lists, and restores backups of the application files
  * and database for safe updates.
  */
-final class BackupService
+class BackupService
 {
     /**
      * @var string Path to the backup storage directory
