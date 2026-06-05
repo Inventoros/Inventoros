@@ -241,27 +241,43 @@ class ReturnOrderController extends Controller
             return redirect()->back()->with('error', 'Only approved returns can be received.');
         }
 
-        DB::transaction(function () use ($returnOrder) {
-            $returnOrder->load('items.product');
+        try {
+            DB::transaction(function () use ($returnOrder) {
+                // Re-read the return under a row lock and re-assert its status
+                // inside the transaction. The pre-transaction guard above runs
+                // against the unlocked route-model instance, so a concurrent
+                // double-submit could pass that check twice and double-restock.
+                // Locking + re-checking here forces the second request to wait,
+                // observe status === 'received', and bail without restocking.
+                $returnOrder = ReturnOrder::whereKey($returnOrder->getKey())->lockForUpdate()->firstOrFail();
 
-            foreach ($returnOrder->items as $item) {
-                if ($item->restock && $item->product) {
-                    StockAdjustment::adjust(
-                        $item->product,
-                        $item->quantity,
-                        'return',
-                        'Return restock',
-                        "Restocked from return {$returnOrder->return_number}",
-                        $returnOrder
-                    );
+                if ($returnOrder->status !== 'approved') {
+                    throw new \RuntimeException('Only approved returns can be received.');
                 }
-            }
 
-            $returnOrder->update([
-                'status' => 'received',
-                'processed_by' => auth()->id(),
-            ]);
-        });
+                $returnOrder->load('items.product');
+
+                foreach ($returnOrder->items as $item) {
+                    if ($item->restock && $item->product) {
+                        StockAdjustment::adjust(
+                            $item->product,
+                            $item->quantity,
+                            'return',
+                            'Return restock',
+                            "Restocked from return {$returnOrder->return_number}",
+                            $returnOrder
+                        );
+                    }
+                }
+
+                $returnOrder->update([
+                    'status' => 'received',
+                    'processed_by' => auth()->id(),
+                ]);
+            });
+        } catch (\RuntimeException $e) {
+            return redirect()->back()->with('error', $e->getMessage());
+        }
 
         return redirect()->back()->with('success', 'Return received and inventory updated.');
     }
