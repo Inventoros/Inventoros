@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services;
 
+use App\Enums\OrderStatus;
 use App\Exceptions\InsufficientStockException;
 use App\Exceptions\InvalidOrderItemException;
 use App\Models\Inventory\Product;
@@ -255,6 +256,52 @@ final class OrderService
         do_action('order_created', $order, $creator);
 
         return $order;
+    }
+
+    /**
+     * Cancel an order and restock its items.
+     *
+     * Locks the order row and re-reads status inside the transaction so a
+     * double-submit or a concurrent ship/cancel cannot restock twice or
+     * restock inventory that already left the warehouse. Shared by the web,
+     * REST, and GraphQL surfaces (MCP exposes no order mutation).
+     *
+     * @throws \RuntimeException When the order has already shipped/delivered.
+     */
+    public function cancel(Order $order): Order
+    {
+        return DB::transaction(function () use ($order) {
+            $locked = Order::whereKey($order->getKey())->lockForUpdate()->firstOrFail();
+
+            if ($locked->status === OrderStatus::CANCELLED) {
+                return $locked; // idempotent — never restock twice
+            }
+
+            if (in_array($locked->status, [OrderStatus::SHIPPED, OrderStatus::DELIVERED], true)) {
+                throw new \RuntimeException(
+                    "Cannot cancel an order that has already been {$locked->status->value}."
+                );
+            }
+
+            $locked->load('items.product');
+
+            foreach ($locked->items as $item) {
+                if ($item->product) {
+                    StockAdjustment::adjust(
+                        $item->product,
+                        $item->quantity,
+                        'order_cancellation',
+                        "Order {$locked->order_number} cancelled",
+                        null,
+                        $locked
+                    );
+                }
+            }
+
+            $locked->update(['status' => OrderStatus::CANCELLED]);
+
+            return $locked;
+        });
     }
 
     /**

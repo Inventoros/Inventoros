@@ -248,9 +248,15 @@ class OrderController extends Controller
 
         $validated = $request->validated();
 
-        DB::transaction(function () use ($validated, $order) {
-            // Load existing items with product relationship
-            $order->load('items.product');
+        try {
+            DB::transaction(function () use ($validated, $order) {
+                // Lock and re-read the order inside the transaction so a
+                // double-submit or a concurrent ship/cancel can't be acted on
+                // against a stale, pre-transaction model (e.g. restock twice).
+                $order = Order::whereKey($order->getKey())->lockForUpdate()->firstOrFail();
+
+                // Load existing items with product relationship
+                $order->load('items.product');
             $existingItems = $order->items->keyBy('id');
 
             // Track which items to keep
@@ -353,6 +359,16 @@ class OrderController extends Controller
             // StockAdjustment so the cancellation appears in the ledger and
             // the row is locked correctly by adjust() itself.
             if ($validated['status'] === 'cancelled' && $order->status !== OrderStatus::CANCELLED) {
+                // Reject cancelling an order that already left the warehouse —
+                // restocking would lie about inventory that physically isn't
+                // here. Matches the REST/GraphQL guard. Thrown out to the
+                // try/catch below, which flashes the error instead of 500ing.
+                if (in_array($order->status, [OrderStatus::SHIPPED, OrderStatus::DELIVERED], true)) {
+                    throw new \RuntimeException(
+                        "Cannot cancel an order that has already been {$order->status->value}."
+                    );
+                }
+
                 $order->load('items.product');
                 foreach ($order->items as $item) {
                     if ($item->product) {
@@ -381,8 +397,13 @@ class OrderController extends Controller
                 $validated['delivered_at'] = now();
             }
 
-            $order->update($validated);
-        });
+                $order->update($validated);
+            });
+        } catch (\RuntimeException $e) {
+            // Guard failures (e.g. cancelling a shipped order, insufficient
+            // stock on an item increase) flash an error rather than 500ing.
+            return redirect()->back()->with('error', $e->getMessage());
+        }
 
         return redirect()->route('orders.index')
             ->with('success', 'Order updated successfully.');
