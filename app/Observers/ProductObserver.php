@@ -6,6 +6,7 @@ namespace App\Observers;
 
 use App\Models\Inventory\Product;
 use App\Services\NotificationService;
+use Illuminate\Support\Facades\DB;
 
 /**
  * Observer for Product model events.
@@ -39,13 +40,22 @@ final class ProductObserver
             $oldStock = $product->getOriginal('stock');
             $newStock = $product->stock;
 
-            // Check if product went out of stock
+            // Defer the notification + webhook fan-out until the surrounding
+            // stock transaction commits: shorter lock hold, and nothing fires
+            // if the change rolls back. afterCommit runs immediately when no
+            // transaction is open.
             if ($oldStock > 0 && $newStock == 0) {
-                NotificationService::createOutOfStockNotification($product);
-            }
-            // Check if product is now low stock (but wasn't before)
-            elseif ($newStock > 0 && $newStock <= $product->min_stock && $oldStock > $product->min_stock) {
-                NotificationService::createLowStockNotification($product);
+                // Product went out of stock.
+                DB::afterCommit(function () use ($product) {
+                    NotificationService::createOutOfStockNotification($product);
+                    do_action('out_of_stock_alert', $product);
+                });
+            } elseif ($newStock > 0 && $newStock <= $product->min_stock && $oldStock > $product->min_stock) {
+                // Product crossed into low stock (but wasn't before).
+                DB::afterCommit(function () use ($product) {
+                    NotificationService::createLowStockNotification($product);
+                    do_action('low_stock_alert', $product);
+                });
             }
         }
     }

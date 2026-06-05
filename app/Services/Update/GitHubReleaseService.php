@@ -14,7 +14,7 @@ use Illuminate\Support\Facades\Log;
  * Fetches release information and determines update availability
  * by comparing versions with the GitHub repository.
  */
-final class GitHubReleaseService
+class GitHubReleaseService
 {
     /**
      * @var string The base URL for GitHub API requests

@@ -45,7 +45,7 @@ class UpdateOrderMutation extends Mutation
             'customer_address' => [
                 'type' => Type::string(),
                 'description' => 'Customer address',
-                'rules' => ['nullable', 'string'],
+                'rules' => ['nullable', 'string', 'max:5000'],
             ],
             'status' => [
                 'type' => Type::string(),
@@ -55,7 +55,7 @@ class UpdateOrderMutation extends Mutation
             'notes' => [
                 'type' => Type::string(),
                 'description' => 'Order notes',
-                'rules' => ['nullable', 'string'],
+                'rules' => ['nullable', 'string', 'max:5000'],
             ],
         ];
     }
@@ -80,6 +80,16 @@ class UpdateOrderMutation extends Mutation
 
         $updateData = collect($args)->except(['id'])->toArray();
 
+        // Detect a cancel transition: the status-only change that must restock.
+        // Route it through OrderService::cancel() so the web, REST, and GraphQL
+        // surfaces share one locked, idempotent, guard-enforcing implementation.
+        $cancelling = ($updateData['status'] ?? null) === 'cancelled'
+            && $order->status !== \App\Enums\OrderStatus::CANCELLED;
+
+        if ($cancelling) {
+            unset($updateData['status']);
+        }
+
         // Handle status change timestamps
         if (isset($updateData['status'])) {
             if ($updateData['status'] === 'shipped' && !$order->shipped_at) {
@@ -90,7 +100,18 @@ class UpdateOrderMutation extends Mutation
             }
         }
 
-        $order->update($updateData);
+        if ($updateData !== []) {
+            $order->update($updateData);
+        }
+
+        if ($cancelling) {
+            try {
+                $order = app(\App\Services\OrderService::class)->cancel($order);
+            } catch (\RuntimeException $e) {
+                throw new Error($e->getMessage());
+            }
+        }
+
         $order->load('items');
 
         return $order;

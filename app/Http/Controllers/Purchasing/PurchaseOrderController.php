@@ -15,6 +15,7 @@ use App\Models\Purchasing\PurchaseOrderItem;
 use App\Support\Money;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -410,17 +411,33 @@ class PurchaseOrderController extends Controller
 
         $receivedCount = 0;
 
-        foreach ($validated['items'] as $itemData) {
-            if ($itemData['quantity_to_receive'] > 0) {
-                $item = PurchaseOrderItem::where('id', $itemData['id'])
-                    ->where('purchase_order_id', $purchaseOrder->id)
-                    ->first();
+        try {
+            DB::transaction(function () use ($validated, $purchaseOrder, &$receivedCount) {
+                // Re-read with a row lock so two concurrent "Receive" submits
+                // serialize here; the second sees post-receive status/quantities.
+                $po = PurchaseOrder::whereKey($purchaseOrder->getKey())->lockForUpdate()->firstOrFail();
 
-                if ($item && $item->remaining_quantity > 0) {
-                    $item->receive($itemData['quantity_to_receive']);
-                    $receivedCount++;
+                if (! $po->canReceiveItems()) {
+                    throw new \RuntimeException('This purchase order cannot receive items.');
                 }
-            }
+
+                foreach ($validated['items'] as $itemData) {
+                    if ($itemData['quantity_to_receive'] > 0) {
+                        $item = PurchaseOrderItem::where('id', $itemData['id'])
+                            ->where('purchase_order_id', $po->id)
+                            ->lockForUpdate()
+                            ->first();
+
+                        if ($item && $item->remaining_quantity > 0) {
+                            $item->receive($itemData['quantity_to_receive']);
+                            $receivedCount++;
+                        }
+                    }
+                }
+            });
+        } catch (\RuntimeException $e) {
+            return redirect()->route('purchase-orders.show', $purchaseOrder)
+                ->with('error', $e->getMessage());
         }
 
         if ($receivedCount > 0) {

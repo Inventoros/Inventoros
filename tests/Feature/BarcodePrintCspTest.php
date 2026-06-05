@@ -1,0 +1,97 @@
+<?php
+
+namespace Tests\Feature;
+
+use App\Models\Auth\Organization;
+use App\Models\Inventory\Product;
+use App\Models\Inventory\ProductCategory;
+use App\Models\Role;
+use App\Models\System\SystemSetting;
+use App\Models\User;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\TestCase;
+
+class BarcodePrintCspTest extends TestCase
+{
+    use RefreshDatabase;
+
+    protected User $admin;
+    protected Organization $organization;
+    protected Product $product;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        SystemSetting::set('installed', true, 'boolean');
+
+        $this->organization = Organization::create([
+            'name' => 'Test Organization',
+            'email' => 'test@organization.com',
+            'currency' => 'USD',
+            'timezone' => 'UTC',
+        ]);
+
+        $this->admin = User::create([
+            'name' => 'Admin User',
+            'email' => 'admin@test.com',
+            'password' => bcrypt('password'),
+            'organization_id' => $this->organization->id,
+            'role' => 'admin',
+        ]);
+
+        $category = ProductCategory::create([
+            'organization_id' => $this->organization->id,
+            'name' => 'Test Category',
+            'slug' => 'test-category',
+        ]);
+
+        $this->product = Product::create([
+            'organization_id' => $this->organization->id,
+            'sku' => 'TEST-001',
+            'name' => 'Test Product',
+            'price' => 99.99,
+            'currency' => 'USD',
+            'stock' => 100,
+            'min_stock' => 10,
+            'category_id' => $category->id,
+            'barcode' => '1234567890128',
+        ]);
+
+        $this->createSystemRoles();
+    }
+
+    protected function createSystemRoles(): void
+    {
+        $adminRole = Role::firstOrCreate(
+            ['slug' => 'system-administrator'],
+            [
+                'name' => 'Administrator',
+                'is_system' => true,
+                'permissions' => ['view_products', 'edit_products'],
+            ]
+        );
+
+        $this->admin->roles()->syncWithoutDetaching([$adminRole->id]);
+    }
+
+    public function test_barcode_print_view_has_no_inline_onclick(): void
+    {
+        $response = $this->actingAs($this->admin)
+            ->get(route('products.barcode.print', $this->product));
+
+        $response->assertOk();
+        $this->assertStringNotContainsString('onclick=', $response->getContent());
+        $this->assertStringContainsString('<script nonce=', $response->getContent());
+    }
+
+    public function test_barcode_bulk_print_view_has_no_inline_onclick(): void
+    {
+        $response = $this->actingAs($this->admin)
+            ->get(route('products.barcode.bulk-print', ['ids' => $this->product->id]));
+
+        $response->assertOk();
+        $this->assertStringNotContainsString('onclick=', $response->getContent());
+        $this->assertStringContainsString('<script nonce=', $response->getContent());
+    }
+}

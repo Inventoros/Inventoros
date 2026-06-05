@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace App\GraphQL\Mutations;
 
 use App\Models\Inventory\Product;
+use App\Models\Inventory\ProductCategory;
+use App\Models\Inventory\ProductLocation;
 use Closure;
 use GraphQL\Error\Error;
 use GraphQL\Type\Definition\ResolveInfo;
@@ -45,7 +47,7 @@ class UpdateProductMutation extends Mutation
             'description' => [
                 'type' => Type::string(),
                 'description' => 'Product description',
-                'rules' => ['nullable', 'string'],
+                'rules' => ['nullable', 'string', 'max:5000'],
             ],
             'price' => [
                 'type' => Type::float(),
@@ -90,7 +92,7 @@ class UpdateProductMutation extends Mutation
             'notes' => [
                 'type' => Type::string(),
                 'description' => 'Additional notes',
-                'rules' => ['nullable', 'string'],
+                'rules' => ['nullable', 'string', 'max:5000'],
             ],
             'category_id' => [
                 'type' => Type::int(),
@@ -128,6 +130,20 @@ class UpdateProductMutation extends Mutation
 
         if (!$product) {
             throw new Error('Product not found');
+        }
+
+        if (isset($args['category_id']) && ! ProductCategory::query()
+                ->whereKey($args['category_id'])
+                ->where('organization_id', $user->organization_id)
+                ->exists()) {
+            throw new Error('Category not found');
+        }
+
+        if (isset($args['location_id']) && ! ProductLocation::query()
+                ->whereKey($args['location_id'])
+                ->where('organization_id', $user->organization_id)
+                ->exists()) {
+            throw new Error('Location not found');
         }
 
         $updateData = collect($args)->except(['id'])->toArray();

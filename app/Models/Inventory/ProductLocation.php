@@ -7,6 +7,7 @@ namespace App\Models\Inventory;
 use App\Models\Auth\Organization;
 use App\Models\Warehouse;
 use App\Traits\LogsActivity;
+use Database\Factories\ProductLocationFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -35,6 +36,11 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 class ProductLocation extends Model
 {
     use HasFactory, SoftDeletes, LogsActivity;
+
+    protected static function newFactory(): ProductLocationFactory
+    {
+        return ProductLocationFactory::new();
+    }
 
     /**
      * The attributes that are mass assignable.

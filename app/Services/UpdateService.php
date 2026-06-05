@@ -19,7 +19,7 @@ use Illuminate\Support\Facades\Log;
  * Handles the complete update process including backup creation,
  * downloading releases, file replacement, and database migrations.
  */
-final class UpdateService
+class UpdateService
 {
     public const MAINTENANCE_RETRY_SECONDS = 60;
 
@@ -145,7 +145,25 @@ final class UpdateService
             try {
                 // Step 6: Replace files
                 $this->log($progressCallback, 'Replacing application files...');
-                $this->fileService->replaceFiles($extractPath);
+                try {
+                    $this->fileService->replaceFiles($extractPath);
+                } catch (\Throwable $replaceError) {
+                    // The app is now half-replaced and may be unbootable; restore the
+                    // backup taken in Step 2 before surfacing the failure.
+                    Log::error('File replacement failed; restoring from backup', [
+                        'error' => $replaceError->getMessage(),
+                        'backup' => $backupPath,
+                    ]);
+                    $this->log($progressCallback, 'File replacement failed; restoring previous version...');
+                    $this->restoreFromBackup($backupPath);
+
+                    throw new Exception(
+                        'Update failed while replacing files; the previous version was restored: '
+                        .$replaceError->getMessage(),
+                        0,
+                        $replaceError
+                    );
+                }
 
                 // Step 7: Run migrations
                 $this->log($progressCallback, 'Running database migrations...');

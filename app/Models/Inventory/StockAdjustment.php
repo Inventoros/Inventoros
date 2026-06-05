@@ -210,6 +210,11 @@ class StockAdjustment extends Model
             );
             $product->syncOriginal();
 
+            // Fan out the webhook lifecycle event only once the surrounding
+            // stock transaction commits, so subscribers never see an
+            // adjustment that was rolled back and the lock is released sooner.
+            DB::afterCommit(fn () => do_action('stock_adjusted', $adjustment, $product));
+
             return $adjustment;
         });
     }
@@ -262,6 +267,10 @@ class StockAdjustment extends Model
                 array_merge($variant->getAttributes(), ['stock' => $quantityAfter])
             );
             $variant->syncOriginal();
+
+            // Pass null for the product so the subscriber resolves it from the
+            // adjustment relation; the webhook fires post-commit either way.
+            DB::afterCommit(fn () => do_action('stock_adjusted', $adjustment, null));
 
             return $adjustment;
         });

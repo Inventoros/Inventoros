@@ -102,4 +102,28 @@ class WebhookSsrfGuardTest extends TestCase
 
         Http::assertNothingSent();
     }
+
+    public function test_empty_dns_resolution_fails_closed_in_production(): void
+    {
+        $original = app()->environment();
+        $originalConfig = config('app.env');
+        app()['env'] = 'production';
+        config(['app.env' => 'production']);
+
+        try {
+            $this->expectException(RuntimeException::class);
+            // Reserved TLD guaranteed never to resolve (RFC 2606).
+            PublicHostGuard::assertPublic('https://nonexistent-host.invalid/webhook');
+        } finally {
+            app()['env'] = $original;
+            config(['app.env' => $originalConfig]);
+        }
+    }
+
+    public function test_empty_dns_resolution_proceeds_outside_production(): void
+    {
+        // testing env (not production) — empty DNS must NOT throw.
+        PublicHostGuard::assertPublic('https://nonexistent-host.invalid/webhook');
+        $this->addToAssertionCount(1);
+    }
 }
