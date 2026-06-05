@@ -40,6 +40,11 @@ export default defineConfig({
             },
         }),
     ],
+    define: {
+        // vue-i18n's default message compiler uses new Function(), which a
+        // no-unsafe-eval CSP blocks; JIT mode interprets the AST instead.
+        __INTLIFY_JIT_COMPILATION__: true,
+    },
     resolve: {
         alias: {
             '@': resolve(__dirname, 'resources/js'),
