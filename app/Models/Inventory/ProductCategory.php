@@ -7,6 +7,7 @@ namespace App\Models\Inventory;
 use App\Models\Auth\Organization;
 use App\Traits\HasSlug;
 use App\Traits\LogsActivity;
+use Database\Factories\ProductCategoryFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -34,6 +35,11 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 class ProductCategory extends Model
 {
     use HasFactory, SoftDeletes, LogsActivity, HasSlug;
+
+    protected static function newFactory(): ProductCategoryFactory
+    {
+        return ProductCategoryFactory::new();
+    }
 
     /**
      * The attributes that are mass assignable.

@@ -10,6 +10,7 @@ use App\Models\Order\Order;
 use App\Models\Setting;
 use App\Models\User;
 use App\Traits\HasSlug;
+use Database\Factories\OrganizationFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -44,6 +45,11 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 class Organization extends Model
 {
     use HasFactory, SoftDeletes, HasSlug;
+
+    protected static function newFactory(): OrganizationFactory
+    {
+        return OrganizationFactory::new();
+    }
 
     /**
      * The attributes that are mass assignable.

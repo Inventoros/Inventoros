@@ -258,6 +258,6 @@ return [
         // AutomaticPersistedQueriesMiddleware listed even if APQ is disabled, as the
         // temporary parsed request data is also used by the GraphQLUploadMiddleware
         \Rebing\GraphQL\Support\ExecutionMiddleware\AutomaticPersistedQueriesMiddleware::class,
-        \Rebing\GraphQL\Support\ExecutionMiddleware\AddAuthUserContextMiddleware::class,
+        \Rebing\GraphQL\Support\ExecutionMiddleware\AddAuthUserContextValueMiddleware::class,
     ],
 ];

@@ -5,7 +5,10 @@ declare(strict_types=1);
 namespace App\GraphQL\Mutations;
 
 use App\Models\Inventory\Product;
+use App\Models\Inventory\ProductCategory;
+use App\Models\Inventory\ProductLocation;
 use Closure;
+use GraphQL\Error\Error;
 use GraphQL\Type\Definition\ResolveInfo;
 use GraphQL\Type\Definition\Type;
 use Rebing\GraphQL\Support\Facades\GraphQL;
@@ -114,6 +117,20 @@ class CreateProductMutation extends Mutation
         $user = auth()->user();
         if (!$user->hasPermission('create_products')) {
             throw new \Illuminate\Auth\Access\AuthorizationException('Unauthorized');
+        }
+
+        if (isset($args['category_id']) && ! ProductCategory::query()
+                ->whereKey($args['category_id'])
+                ->where('organization_id', $user->organization_id)
+                ->exists()) {
+            throw new Error('Category not found');
+        }
+
+        if (isset($args['location_id']) && ! ProductLocation::query()
+                ->whereKey($args['location_id'])
+                ->where('organization_id', $user->organization_id)
+                ->exists()) {
+            throw new Error('Location not found');
         }
 
         $args['organization_id'] = $user->organization_id;
