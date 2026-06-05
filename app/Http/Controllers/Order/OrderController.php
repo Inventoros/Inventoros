@@ -267,7 +267,10 @@ class OrderController extends Controller
                 $updatedItems = [];
 
                 foreach ($validated['items'] as $itemData) {
-                    $product = Product::where('id', $itemData['product_id'])->lockForUpdate()->first();
+                    $product = Product::whereKey($itemData['product_id'])
+                        ->where('organization_id', $order->organization_id)
+                        ->lockForUpdate()
+                        ->firstOrFail();
                     $itemSubtotal = $itemData['quantity'] * $itemData['unit_price'];
                     $subtotal += $itemSubtotal;
 

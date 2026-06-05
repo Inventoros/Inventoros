@@ -197,4 +197,28 @@ final class OrderCancelRestockTest extends TestCase
         $response->assertStatus(422);
         $this->assertSame(95, $this->product->fresh()->stock); // unchanged
     }
+
+    public function test_web_update_rejects_foreign_product_id(): void
+    {
+        $foreignOrg = \App\Models\Auth\Organization::create([
+            'name' => 'Foreign', 'email' => 'f@org.com', 'currency' => 'USD', 'timezone' => 'UTC',
+        ]);
+        $foreignProduct = \App\Models\Inventory\Product::create([
+            'organization_id' => $foreignOrg->id, 'sku' => 'FOR-1', 'name' => 'Foreign',
+            'price' => 10.00, 'currency' => 'USD', 'stock' => 100, 'min_stock' => 0, 'is_active' => true,
+        ]);
+        $order = $this->makeOrder(5);
+
+        $response = $this->actingAs($this->admin)->put(route('orders.update', $order), [
+            'customer_name' => 'Acme',
+            'order_date' => now()->toDateString(),
+            'status' => 'pending',
+            'items' => [
+                ['product_id' => $foreignProduct->id, 'quantity' => 3, 'unit_price' => 10.00],
+            ],
+        ]);
+
+        $response->assertSessionHasErrors('items.0.product_id');
+        $this->assertSame(100, $foreignProduct->fresh()->stock); // untouched
+    }
 }
