@@ -425,7 +425,7 @@ class InstallerController extends Controller
             // the raw $value was concatenated unquoted — a password like
             // p@ss$1word became a shell-style variable lookup at parse time,
             // pa"ss broke the line, and # truncated the value at a comment.
-            $replacement = "{$key}=" . static::quoteEnvValue($value);
+            $replacement = "{$key}=" . static::quoteEnvValue((string) $value);
 
             // Match the key at the start of a line (handles commented and uncommented)
             $pattern = "/^#?\s*{$key}=.*/m";
