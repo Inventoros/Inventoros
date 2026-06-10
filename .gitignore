@@ -31,3 +31,8 @@ Thumbs.db
 /playwright-report/
 /blob-report/
 /playwright/.cache/
+
+# Claude / Agents
+.claude/
+CLAUDE.md
+AGENTS.md
