@@ -8,7 +8,7 @@ import Badge from '@/Components/ui/Badge.vue';
 import { Head, Link, useForm } from '@inertiajs/vue3';
 import { defineAsyncComponent, ref, computed } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { ArrowLeft, ScanLine, PackageCheck } from 'lucide-vue-next';
+import { ArrowLeft, ScanLine, PackageCheck } from '@lucide/vue';
 
 const BarcodeScannerModal = defineAsyncComponent(() => import('@/Components/BarcodeScannerModal.vue'));
 
@@ -292,3 +292,4 @@ const thClassCenter = 'px-4 py-2.5 text-center text-xs font-medium tracking-tigh
         />
     </AppLayout>
 </template>
+

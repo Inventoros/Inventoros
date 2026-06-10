@@ -15,7 +15,7 @@ import {
     DollarSign,
     ArrowLeft,
     Download,
-} from 'lucide-vue-next';
+} from '@lucide/vue';
 
 const { t } = useI18n();
 
@@ -195,3 +195,4 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-t
         </Card>
     </AppLayout>
 </template>
+

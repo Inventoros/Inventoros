@@ -6,7 +6,7 @@ import Button from '@/Components/ui/Button.vue';
 import Badge from '@/Components/ui/Badge.vue';
 import { Head, Link, useForm } from '@inertiajs/vue3';
 import { ref } from 'vue';
-import { ShieldCheck } from 'lucide-vue-next';
+import { ShieldCheck } from '@lucide/vue';
 
 const props = defineProps({
     qrCodeSvg: String,
@@ -182,3 +182,4 @@ const fieldError = 'mt-1 text-xs text-status-danger';
         </Card>
     </AppLayout>
 </template>
+

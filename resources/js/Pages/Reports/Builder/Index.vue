@@ -6,7 +6,7 @@ import Button from '@/Components/ui/Button.vue';
 import { Head, Link, router } from '@inertiajs/vue3';
 import { ref, computed } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { Plus, Search, Eye, Pencil, Trash2, Download, FileSpreadsheet } from 'lucide-vue-next';
+import { Plus, Search, Eye, Pencil, Trash2, Download, FileSpreadsheet } from '@lucide/vue';
 
 const { t } = useI18n();
 
@@ -149,3 +149,4 @@ const thClass =
         </div>
     </AppLayout>
 </template>
+

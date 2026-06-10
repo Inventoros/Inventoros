@@ -8,7 +8,7 @@ import StatTile from '@/Components/ui/StatTile.vue';
 import { Head, Link, router } from '@inertiajs/vue3';
 import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { Pencil, ArrowLeft, Trash2, ShoppingCart, Wallet, PackageOpen } from 'lucide-vue-next';
+import { Pencil, ArrowLeft, Trash2, ShoppingCart, Wallet, PackageOpen } from '@lucide/vue';
 
 const { t } = useI18n();
 
@@ -275,3 +275,4 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-t
         </div>
     </AppLayout>
 </template>
+

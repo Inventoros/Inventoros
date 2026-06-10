@@ -28,7 +28,7 @@ import {
     Info,
     Settings2,
     Package,
-} from 'lucide-vue-next';
+} from '@lucide/vue';
 
 const { t } = useI18n();
 const { hasPermission } = usePermissions();
@@ -745,3 +745,4 @@ const fieldInput = 'h-9 w-full rounded-md border border-border-subtle bg-surface
         <PluginSlot slot="footer" :components="pluginComponents?.footer" />
     </AppLayout>
 </template>
+

@@ -5,7 +5,7 @@ import Card from '@/Components/ui/Card.vue';
 import Button from '@/Components/ui/Button.vue';
 import { Head, Link, useForm } from '@inertiajs/vue3';
 import { defineAsyncComponent, computed, watch, ref, nextTick } from 'vue';
-import { ScanLine, AlertTriangle } from 'lucide-vue-next';
+import { ScanLine, AlertTriangle } from '@lucide/vue';
 
 const BarcodeScannerModal = defineAsyncComponent(() => import('@/Components/BarcodeScannerModal.vue'));
 import { useI18n } from 'vue-i18n';
@@ -278,3 +278,4 @@ const fieldError = 'mt-1 text-xs text-status-danger';
         />
     </AppLayout>
 </template>
+

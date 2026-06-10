@@ -17,7 +17,7 @@ import {
     ListChecks,
     Layers,
     AlertTriangle,
-} from 'lucide-vue-next';
+} from '@lucide/vue';
 
 const { t } = useI18n();
 
@@ -484,3 +484,4 @@ const thClass = 'px-6 py-3 text-left text-xs font-medium uppercase tracking-wide
         </Card>
     </AppLayout>
 </template>
+

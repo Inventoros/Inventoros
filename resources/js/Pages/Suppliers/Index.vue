@@ -8,7 +8,7 @@ import Badge from '@/Components/ui/Badge.vue';
 import { Head, Link, router } from '@inertiajs/vue3';
 import { ref } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { Plus, Search, Eye, Pencil, Trash2, Truck } from 'lucide-vue-next';
+import { Plus, Search, Eye, Pencil, Trash2, Truck } from '@lucide/vue';
 
 const { t } = useI18n();
 
@@ -181,3 +181,4 @@ const thClass =
         <PluginSlot slot="footer" :components="pluginComponents?.footer" />
     </AppLayout>
 </template>
+

@@ -41,7 +41,7 @@ import {
     Search,
     Menu,
     X,
-} from 'lucide-vue-next';
+} from '@lucide/vue';
 
 import { usePermissions } from '@/composables/usePermissions';
 import GlobalSearch from '@/Components/Layout/GlobalSearch.vue';
@@ -276,3 +276,4 @@ const isActive = (item) => item.active.some((pattern) => route().current(pattern
         <GlobalSearch ref="globalSearchRef" />
     </div>
 </template>
+

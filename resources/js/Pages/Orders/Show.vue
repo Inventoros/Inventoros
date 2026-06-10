@@ -9,7 +9,7 @@ import { Head, Link, router, useForm } from '@inertiajs/vue3';
 import { ref } from 'vue';
 import { usePermissions } from '@/composables/usePermissions';
 import { useI18n } from 'vue-i18n';
-import { ArrowLeft, Pencil, Download, Eye, Undo2, Trash2, X, AlertTriangle, PackageOpen } from 'lucide-vue-next';
+import { ArrowLeft, Pencil, Download, Eye, Undo2, Trash2, X, AlertTriangle, PackageOpen } from '@lucide/vue';
 
 const { t } = useI18n();
 
@@ -528,3 +528,4 @@ const formatDateShort = (date) => {
         </Teleport>
     </AppLayout>
 </template>
+

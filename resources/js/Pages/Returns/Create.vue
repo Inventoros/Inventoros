@@ -6,7 +6,7 @@ import Button from '@/Components/ui/Button.vue';
 import { Head, Link, useForm } from '@inertiajs/vue3';
 import { ref, computed } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { ArrowLeft, Trash2 } from 'lucide-vue-next';
+import { ArrowLeft, Trash2 } from '@lucide/vue';
 
 const { t } = useI18n();
 
@@ -274,3 +274,4 @@ const fieldError = 'mt-1 text-xs text-status-danger';
         </form>
     </AppLayout>
 </template>
+

@@ -13,7 +13,7 @@ import { ref, computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 import axios from 'axios';
 import ImageUploader from '@/Components/ImageUploader.vue';
-import { ArrowLeft, Eye, Zap, ChevronDown, Layers, Info, X, Trash2 } from 'lucide-vue-next';
+import { ArrowLeft, Eye, Zap, ChevronDown, Layers, Info, X, Trash2 } from '@lucide/vue';
 
 const { t } = useI18n();
 
@@ -660,3 +660,4 @@ const fieldError = 'mt-1 text-xs text-status-danger';
         />
     </AppLayout>
 </template>
+

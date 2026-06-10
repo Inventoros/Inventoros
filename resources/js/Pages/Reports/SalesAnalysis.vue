@@ -16,7 +16,7 @@ import {
     DollarSign,
     Boxes,
     TrendingUp,
-} from 'lucide-vue-next';
+} from '@lucide/vue';
 
 const { t } = useI18n();
 
@@ -235,3 +235,4 @@ const thClass =
         </section>
     </AppLayout>
 </template>
+

@@ -14,7 +14,7 @@ import {
     TrendingUp,
     Download,
     ArrowLeft,
-} from 'lucide-vue-next';
+} from '@lucide/vue';
 
 const { t } = useI18n();
 
@@ -220,3 +220,4 @@ const thRightClass =
         </section>
     </AppLayout>
 </template>
+

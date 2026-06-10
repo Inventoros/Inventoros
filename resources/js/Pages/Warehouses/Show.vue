@@ -8,7 +8,7 @@ import StatTile from '@/Components/ui/StatTile.vue';
 import { Head, Link, router } from '@inertiajs/vue3';
 import { useI18n } from 'vue-i18n';
 import { usePermissions } from '@/composables/usePermissions';
-import { Pencil, ArrowLeft, MapPin, Boxes, Users, Trash2 } from 'lucide-vue-next';
+import { Pencil, ArrowLeft, MapPin, Boxes, Users, Trash2 } from '@lucide/vue';
 
 const { t } = useI18n();
 const { hasPermission } = usePermissions();
@@ -259,3 +259,4 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-t
         </div>
     </AppLayout>
 </template>
+

@@ -7,7 +7,7 @@ import Badge from '@/Components/ui/Badge.vue';
 import { Head, Link, router } from '@inertiajs/vue3';
 import { ref } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { Pencil, ArrowLeft, Trash2, X, AlertTriangle, CheckCircle2 } from 'lucide-vue-next';
+import { Pencil, ArrowLeft, Trash2, X, AlertTriangle, CheckCircle2 } from '@lucide/vue';
 
 const props = defineProps({
     user: Object,
@@ -225,3 +225,4 @@ const roleVariant = (role) =>
         </Teleport>
     </AppLayout>
 </template>
+

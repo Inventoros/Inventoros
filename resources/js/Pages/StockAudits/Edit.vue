@@ -5,7 +5,7 @@ import Card from '@/Components/ui/Card.vue';
 import Button from '@/Components/ui/Button.vue';
 import { Head, Link, useForm } from '@inertiajs/vue3';
 import { useI18n } from 'vue-i18n';
-import { ArrowLeft, Eye } from 'lucide-vue-next';
+import { ArrowLeft, Eye } from '@lucide/vue';
 
 const { t } = useI18n();
 
@@ -151,3 +151,4 @@ const fieldError = 'mt-1 text-xs text-status-danger';
         </form>
     </AppLayout>
 </template>
+

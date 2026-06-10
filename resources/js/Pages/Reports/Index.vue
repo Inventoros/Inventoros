@@ -15,7 +15,7 @@ import {
     Wrench,
     ChevronRight,
     Plus,
-} from 'lucide-vue-next';
+} from '@lucide/vue';
 
 const { t } = useI18n();
 
@@ -144,3 +144,4 @@ const reportCards = [
         </section>
     </AppLayout>
 </template>
+

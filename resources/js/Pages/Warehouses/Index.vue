@@ -8,7 +8,7 @@ import { Head, Link, router } from '@inertiajs/vue3';
 import { ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { usePermissions } from '@/composables/usePermissions';
-import { Plus, Search, Eye, Pencil, Trash2, Warehouse } from 'lucide-vue-next';
+import { Plus, Search, Eye, Pencil, Trash2, Warehouse } from '@lucide/vue';
 
 const { t } = useI18n();
 const { hasPermission } = usePermissions();
@@ -195,3 +195,4 @@ const thClass =
         </div>
     </AppLayout>
 </template>
+

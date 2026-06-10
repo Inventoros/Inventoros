@@ -7,7 +7,7 @@ import Badge from '@/Components/ui/Badge.vue';
 import { Head, Link, router } from '@inertiajs/vue3';
 import { ref } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { ArrowLeft, CheckCircle2, XCircle } from 'lucide-vue-next';
+import { ArrowLeft, CheckCircle2, XCircle } from '@lucide/vue';
 
 const { t } = useI18n();
 
@@ -226,3 +226,4 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-t
         </div>
     </AppLayout>
 </template>
+

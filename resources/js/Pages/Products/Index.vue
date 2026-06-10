@@ -10,7 +10,7 @@ import { defineAsyncComponent, ref, onMounted, onUnmounted } from 'vue';
 import {
     Plus, Search, Eye, Pencil, Trash2, Copy, Barcode, ScanLine,
     AlertTriangle, Boxes, X,
-} from 'lucide-vue-next';
+} from '@lucide/vue';
 
 // Defer the modal (which transitively imports html5-qrcode, ~200 KB)
 // until the user actually opens the scanner.
@@ -415,3 +415,4 @@ const thClass =
         <BarcodeScannerModal :show="showScannerModal" @close="closeScanner" @product-found="handleProductFound" />
     </AppLayout>
 </template>
+

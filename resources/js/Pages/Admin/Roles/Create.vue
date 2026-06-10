@@ -6,7 +6,7 @@ import Button from '@/Components/ui/Button.vue';
 import Badge from '@/Components/ui/Badge.vue';
 import { Head, Link, useForm } from '@inertiajs/vue3';
 import { useI18n } from 'vue-i18n';
-import { ArrowLeft, Check } from 'lucide-vue-next';
+import { ArrowLeft, Check } from '@lucide/vue';
 
 const props = defineProps({
     permissions: Object,
@@ -279,3 +279,4 @@ const fieldError = 'mt-1 text-xs text-status-danger';
         </form>
     </AppLayout>
 </template>
+

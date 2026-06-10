@@ -6,7 +6,7 @@ import Button from '@/Components/ui/Button.vue';
 import Badge from '@/Components/ui/Badge.vue';
 import { Head, Link } from '@inertiajs/vue3';
 import { useI18n } from 'vue-i18n';
-import { Plus, Users, ShieldCheck } from 'lucide-vue-next';
+import { Plus, Users, ShieldCheck } from '@lucide/vue';
 
 defineProps({
     roles: Object,
@@ -122,3 +122,4 @@ const { t } = useI18n();
         </div>
     </AppLayout>
 </template>
+

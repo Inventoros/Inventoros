@@ -7,7 +7,7 @@ import Badge from '@/Components/ui/Badge.vue';
 import { Head, useForm, router } from '@inertiajs/vue3';
 import { ref } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { UploadCloud, Loader2, Puzzle, ExternalLink } from 'lucide-vue-next';
+import { UploadCloud, Loader2, Puzzle, ExternalLink } from '@lucide/vue';
 
 const props = defineProps({
     plugins: Array,
@@ -202,3 +202,4 @@ const deletePlugin = (slug, name) => {
         </div>
     </AppLayout>
 </template>
+

@@ -7,7 +7,7 @@ import Badge from '@/Components/ui/Badge.vue';
 import { Head, Link, router } from '@inertiajs/vue3';
 import { ref } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { Plus, Search, Eye, ArrowLeftRight } from 'lucide-vue-next';
+import { Plus, Search, Eye, ArrowLeftRight } from '@lucide/vue';
 
 const { t } = useI18n();
 
@@ -206,3 +206,4 @@ const thClass =
         </div>
     </AppLayout>
 </template>
+

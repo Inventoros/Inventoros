@@ -5,7 +5,7 @@ import Card from '@/Components/ui/Card.vue';
 import Button from '@/Components/ui/Button.vue';
 import { Head, Link, useForm } from '@inertiajs/vue3';
 import { ref } from 'vue';
-import { Users } from 'lucide-vue-next';
+import { Users } from '@lucide/vue';
 
 import { useI18n } from 'vue-i18n';
 const props = defineProps({
@@ -313,3 +313,4 @@ const tabs = [
         </div>
     </AppLayout>
 </template>
+

@@ -7,7 +7,7 @@ import Button from '@/Components/ui/Button.vue';
 import Badge from '@/Components/ui/Badge.vue';
 import { Head, Link, router } from '@inertiajs/vue3';
 import { ref } from 'vue';
-import { Plus, Search, Pencil, Trash2, MapPin, X } from 'lucide-vue-next';
+import { Plus, Search, Pencil, Trash2, MapPin, X } from '@lucide/vue';
 
 import { useI18n } from 'vue-i18n';
 const props = defineProps({
@@ -350,3 +350,4 @@ const labelClass = 'mb-1 block text-xs font-medium text-text-secondary';
         </Teleport>
     </AppLayout>
 </template>
+

@@ -22,7 +22,7 @@ return new class extends Migration
             $table->timestamp('next_retry_at')->nullable();
             $table->enum('status', ['pending', 'success', 'failed'])->default('pending');
             $table->timestamp('completed_at')->nullable();
-            $table->timestamp('created_at');
+            $table->timestamp('created_at')->useCurrent();
 
             $table->index(['webhook_id', 'status']);
             $table->index('next_retry_at');

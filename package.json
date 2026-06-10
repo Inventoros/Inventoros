@@ -20,7 +20,7 @@
         "@vitejs/plugin-vue": "^6.0.5",
         "autoprefixer": "^10.4.27",
         "axios": "^1.14.0",
-        "concurrently": "^9.0.1",
+        "concurrently": "^10.0.3",
         "laravel-vite-plugin": "^2.0.0",
         "postcss": "^8.5.8",
         "tailwindcss": "^3.2.1",
@@ -28,13 +28,14 @@
         "vue": "^3.4.0"
     },
     "dependencies": {
+        "@lucide/vue": "^1.17.0",
         "class-variance-authority": "^0.7.1",
         "clsx": "^2.1.1",
         "html5-qrcode": "^2.3.8",
-        "lucide-vue-next": "^1.0.0",
+        "shell-quote": "^1.8.4",
         "tailwind-merge": "^3.6.0",
         "tailwindcss-animate": "^1.0.7",
-        "vue-i18n": "^9.14.5",
+        "vue-i18n": "^11.4.5",
         "ziggy-js": "^2.6.2"
     }
 }

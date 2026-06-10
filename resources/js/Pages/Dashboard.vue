@@ -24,7 +24,7 @@ import {
     Activity,
     CheckCircle2,
     X,
-} from 'lucide-vue-next';
+} from '@lucide/vue';
 
 const { t } = useI18n();
 
@@ -498,3 +498,4 @@ const secondaryStats = () => [
         </Teleport>
     </AppLayout>
 </template>
+

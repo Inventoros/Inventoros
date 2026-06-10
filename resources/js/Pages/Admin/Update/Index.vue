@@ -15,7 +15,7 @@ import {
     Database,
     Trash2,
     RotateCcw,
-} from 'lucide-vue-next';
+} from '@lucide/vue';
 
 import { useI18n } from 'vue-i18n';
 const props = defineProps({
@@ -431,3 +431,4 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-t
         </div>
     </AppLayout>
 </template>
+

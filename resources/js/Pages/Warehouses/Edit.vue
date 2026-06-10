@@ -7,7 +7,7 @@ import { Head, Link, useForm, router } from '@inertiajs/vue3';
 import { useI18n } from 'vue-i18n';
 import { usePermissions } from '@/composables/usePermissions';
 import { ref, computed } from 'vue';
-import { ArrowLeft } from 'lucide-vue-next';
+import { ArrowLeft } from '@lucide/vue';
 
 const { t } = useI18n();
 const { hasPermission } = usePermissions();
@@ -310,3 +310,4 @@ const fieldError = 'mt-1 text-xs text-status-danger';
         </form>
     </AppLayout>
 </template>
+

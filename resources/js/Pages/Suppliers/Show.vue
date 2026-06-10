@@ -7,7 +7,7 @@ import Button from '@/Components/ui/Button.vue';
 import Badge from '@/Components/ui/Badge.vue';
 import { Head, Link, router } from '@inertiajs/vue3';
 import { useI18n } from 'vue-i18n';
-import { Pencil, ArrowLeft, Trash2, PackageOpen } from 'lucide-vue-next';
+import { Pencil, ArrowLeft, Trash2, PackageOpen } from '@lucide/vue';
 
 const { t } = useI18n();
 
@@ -212,3 +212,4 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium text-text-secondary';
         <PluginSlot slot="footer" :components="pluginComponents?.footer" />
     </AppLayout>
 </template>
+

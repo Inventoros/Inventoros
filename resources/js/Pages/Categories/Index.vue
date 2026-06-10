@@ -8,7 +8,7 @@ import Badge from '@/Components/ui/Badge.vue';
 import { Head, Link, router } from '@inertiajs/vue3';
 import { ref } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { Plus, Search, Pencil, Trash2, Tag, X } from 'lucide-vue-next';
+import { Plus, Search, Pencil, Trash2, Tag, X } from '@lucide/vue';
 
 const { t } = useI18n();
 
@@ -315,3 +315,4 @@ const inputClass =
         </Teleport>
     </AppLayout>
 </template>
+

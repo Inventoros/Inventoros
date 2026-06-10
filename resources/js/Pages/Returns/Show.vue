@@ -8,7 +8,7 @@ import { Head, Link, router } from '@inertiajs/vue3';
 import { ref } from 'vue';
 import { usePermissions } from '@/composables/usePermissions';
 import { useI18n } from 'vue-i18n';
-import { ArrowLeft, Check, PackageCheck, CheckCircle2, X, PackageOpen } from 'lucide-vue-next';
+import { ArrowLeft, Check, PackageCheck, CheckCircle2, X, PackageOpen } from '@lucide/vue';
 
 const { t } = useI18n();
 const { hasPermission } = usePermissions();
@@ -374,3 +374,4 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-t
         </Teleport>
     </AppLayout>
 </template>
+

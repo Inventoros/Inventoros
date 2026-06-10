@@ -8,7 +8,7 @@ import StatTile from '@/Components/ui/StatTile.vue';
 import { Head, Link, router } from '@inertiajs/vue3';
 import { ref } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { ArrowLeft, Play, CheckCircle2, X, Boxes, PackageCheck, Check, AlertTriangle } from 'lucide-vue-next';
+import { ArrowLeft, Play, CheckCircle2, X, Boxes, PackageCheck, Check, AlertTriangle } from '@lucide/vue';
 
 const { t } = useI18n();
 
@@ -406,3 +406,4 @@ const fieldInput = 'h-9 w-full rounded-md border border-border-subtle bg-surface
         </div>
     </AppLayout>
 </template>
+

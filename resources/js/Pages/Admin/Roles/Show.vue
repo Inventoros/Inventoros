@@ -7,7 +7,7 @@ import Badge from '@/Components/ui/Badge.vue';
 import { Head, Link, router } from '@inertiajs/vue3';
 import { ref, computed } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { Pencil, ArrowLeft, Trash2, CheckCircle2, ShieldAlert, Info, X, AlertTriangle } from 'lucide-vue-next';
+import { Pencil, ArrowLeft, Trash2, CheckCircle2, ShieldAlert, Info, X, AlertTriangle } from '@lucide/vue';
 
 const props = defineProps({
     role: Object,
@@ -289,3 +289,4 @@ const deleteRole = () => {
         </Teleport>
     </AppLayout>
 </template>
+

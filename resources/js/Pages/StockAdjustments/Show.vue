@@ -8,7 +8,7 @@ import StatTile from '@/Components/ui/StatTile.vue';
 import { Head, Link } from '@inertiajs/vue3';
 import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { ArrowLeft, Boxes, ArrowUp, ArrowDown, Clock, CheckCircle2 } from 'lucide-vue-next';
+import { ArrowLeft, Boxes, ArrowUp, ArrowDown, Clock, CheckCircle2 } from '@lucide/vue';
 
 const { t } = useI18n();
 
@@ -235,3 +235,4 @@ const formatTime = (date) =>
         </Card>
     </AppLayout>
 </template>
+

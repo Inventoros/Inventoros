@@ -7,7 +7,7 @@ import Badge from '@/Components/ui/Badge.vue';
 import { Head, Link, useForm } from '@inertiajs/vue3';
 import { ref, computed, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { ArrowLeft, Plus, Trash2, ChevronUp, ChevronDown, RefreshCw } from 'lucide-vue-next';
+import { ArrowLeft, Plus, Trash2, ChevronUp, ChevronDown, RefreshCw } from '@lucide/vue';
 import axios from 'axios';
 
 const { t } = useI18n();
@@ -473,3 +473,4 @@ const fieldError = 'mt-1 text-xs text-status-danger';
         </div>
     </AppLayout>
 </template>
+

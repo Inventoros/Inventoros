@@ -7,7 +7,7 @@ import Badge from '@/Components/ui/Badge.vue';
 import StatTile from '@/Components/ui/StatTile.vue';
 import { Head, Link, router } from '@inertiajs/vue3';
 import { useI18n } from 'vue-i18n';
-import { ArrowLeft, Pencil, Download, Trash2, Database, Columns3, Rows3, FileSpreadsheet } from 'lucide-vue-next';
+import { ArrowLeft, Pencil, Download, Trash2, Database, Columns3, Rows3, FileSpreadsheet } from '@lucide/vue';
 
 const { t } = useI18n();
 
@@ -180,3 +180,4 @@ const formatValue = (value, col) => {
         </Card>
     </AppLayout>
 </template>
+
