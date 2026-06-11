@@ -8,17 +8,71 @@
         @media print {
             @page {
                 size: letter;
-                margin: 0.5in;
+                margin: 0.5in 0.15in;
             }
             body {
                 margin: 0;
                 padding: 0;
+                background: white;
             }
             .no-print {
                 display: none !important;
             }
             .barcode-grid {
+                display: grid;
+                grid-template-columns: repeat(3, 1fr);
+                gap: 0;
+                width: 100%;
+                max-width: 8.2in;
                 padding: 0;
+                margin: 0;
+                background: transparent;
+                border-radius: 0;
+                box-shadow: none;
+                orphans: 1;
+                widows: 1;
+            }
+            .barcode-label {
+                width: 100%;
+                height: 1in;
+                break-inside: avoid;
+                page-break-inside: avoid;
+                border: 1px solid #d0d0d0 !important;
+                background: white !important;
+                padding: 0.08in !important;
+                box-sizing: border-box !important;
+                display: flex !important;
+                flex-direction: column !important;
+                justify-content: center !important;
+                align-items: center !important;
+                text-align: center !important;
+                margin: 0 !important;
+            }
+            .product-name {
+                font-size: 7pt !important;
+                line-height: 1.1 !important;
+                margin: 0 !important;
+                padding: 0 !important;
+            }
+            .product-sku {
+                font-size: 6pt !important;
+                line-height: 1.1 !important;
+                margin: 0 !important;
+                padding: 0 !important;
+            }
+            .barcode-number {
+                font-size: 6pt !important;
+                line-height: 1.1 !important;
+                margin: 0 !important;
+                padding: 0 !important;
+            }
+            .barcode-container {
+                margin: 0 !important;
+                padding: 0 !important;
+            }
+            .barcode-container svg {
+                max-height: 0.35in !important;
+                width: 100% !important;
             }
         }
 
@@ -100,13 +154,14 @@
             width: 2.5in;
             height: 1in;
             background: white;
-            border: 1px solid #ccc;
+            border: 1px solid #e8e8e8;
             padding: 0.1in;
             text-align: center;
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
+            box-sizing: border-box;
         }
 
         .product-name {
@@ -117,27 +172,43 @@
             overflow: hidden;
             text-overflow: ellipsis;
             width: 100%;
+            line-height: 1;
         }
 
         .product-sku {
             font-size: 7pt;
             color: #666;
-            margin-bottom: 4px;
+            margin-bottom: 2px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            width: 100%;
+            line-height: 1;
         }
 
         .barcode-container {
-            margin: 2px 0;
+            margin: 1px 0;
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
         .barcode-container svg {
             max-width: 100%;
+            max-height: 0.4in;
             height: auto;
         }
 
         .barcode-number {
-            font-size: 8pt;
+            font-size: 7pt;
             font-weight: bold;
-            margin-top: 2px;
+            margin-top: 1px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            width: 100%;
+            line-height: 1;
         }
 
         .empty-message {
