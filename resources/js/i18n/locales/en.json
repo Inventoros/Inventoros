@@ -404,11 +404,12 @@
       "confirmReceiving": "Confirm Receiving"
     },
     "currencies": {
-      "usd": "USD - US Dollar",
+      "aud": "AUD - Australian Dollar",
+      "bdt": "BDT (৳) - Bangladeshi Taka",
+      "cad": "CAD - Canadian Dollar",
       "eur": "EUR - Euro",
       "gbp": "GBP - British Pound",
-      "cad": "CAD - Canadian Dollar",
-      "aud": "AUD - Australian Dollar"
+      "usd": "USD - US Dollar"
     }
   },
   "suppliers": {

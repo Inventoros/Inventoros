@@ -38,10 +38,12 @@ const timezones = [
 ];
 
 const currencies = [
+    { value: 'AUD', label: 'AUD - Australian Dollar' },
+    { value: 'BDT', label: 'BDT (৳) - Bangladeshi Taka' },
     { value: 'CAD', label: 'CAD - Canadian Dollar' },
-    { value: 'USD', label: 'USD - US Dollar' },
     { value: 'EUR', label: 'EUR - Euro' },
     { value: 'GBP', label: 'GBP - British Pound' },
+    { value: 'USD', label: 'USD - US Dollar' },
 ];
 
 const submit = () => {
@@ -314,4 +316,3 @@ const fieldError = 'mt-1 text-xs text-status-danger';
         </form>
     </AppLayout>
 </template>
-
