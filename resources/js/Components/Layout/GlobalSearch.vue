@@ -121,6 +121,7 @@ function open() {
 function close() {
     isOpen.value = false;
     query.value = '';
+    selectedIndex.value = -1;
     if (debounceTimer) clearTimeout(debounceTimer);
 }
 
@@ -145,7 +146,7 @@ function handleKeydown(e) {
     } else if (e.key === 'Enter' && selectedIndex.value >= 0 && selectedIndex.value < count) {
         e.preventDefault();
         navigateToResult(items[selectedIndex.value]);
-    } else if (e.key === 'Escape') {
+    } else if (isEscapeKey(e)) {
         e.preventDefault();
         close();
     }
@@ -153,6 +154,12 @@ function handleKeydown(e) {
 
 // Global keyboard shortcut
 function handleGlobalKeydown(e) {
+    if (isOpen.value && isEscapeKey(e)) {
+        e.preventDefault();
+        close();
+        return;
+    }
+
     if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
         e.preventDefault();
         if (isOpen.value) {
@@ -163,13 +170,17 @@ function handleGlobalKeydown(e) {
     }
 }
 
+function isEscapeKey(e) {
+    return e.key === 'Escape' || e.key === 'Esc';
+}
+
 onMounted(() => {
-    window.addEventListener('keydown', handleGlobalKeydown);
+    window.addEventListener('keydown', handleGlobalKeydown, true);
     loadRecentSearches();
 });
 
 onUnmounted(() => {
-    window.removeEventListener('keydown', handleGlobalKeydown);
+    window.removeEventListener('keydown', handleGlobalKeydown, true);
     if (debounceTimer) clearTimeout(debounceTimer);
 });
 
