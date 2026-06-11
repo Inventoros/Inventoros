@@ -38,7 +38,7 @@ class ProductController extends Controller
      */
     public function index(Request $request): Response
     {
-        $organizationId = $request->user()->organization_id;
+        $organizationId = (int) $request->user()->organization_id;
 
         $activeWarehouseId = session('active_warehouse_id');
 
@@ -116,7 +116,7 @@ class ProductController extends Controller
      */
     public function create(Request $request): Response
     {
-        $organizationId = $request->user()->organization_id;
+        $organizationId = (int) $request->user()->organization_id;
 
         $categories = ProductCategory::forOrganization($organizationId)
             ->active()
@@ -251,7 +251,7 @@ class ProductController extends Controller
             abort(403, 'Unauthorized action.');
         }
 
-        $organizationId = $request->user()->organization_id;
+        $organizationId = (int) $request->user()->organization_id;
 
         $categories = ProductCategory::forOrganization($organizationId)
             ->active()

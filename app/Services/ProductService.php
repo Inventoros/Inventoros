@@ -65,6 +65,8 @@ final class ProductService
      */
     public function update(Product $product, array $data): Product
     {
+        $data = $this->normaliseCurrencies($data);
+
         if (isset($data['images'])) {
             $data = $this->processUpdateImages($product, $data);
         }
