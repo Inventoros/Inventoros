@@ -31,7 +31,7 @@ class SupplierController extends Controller
      */
     public function index(Request $request): Response
     {
-        $organizationId = $request->user()->organization_id;
+        $organizationId = (int) $request->user()->organization_id;
 
         $query = Supplier::withCount('products')
             ->forOrganization($organizationId)
