@@ -17,14 +17,20 @@ class EnsureTwoFactorVerified
     /**
      * Routes that should be excluded from the 2FA check.
      *
+     * Only the challenge itself (and logout) may be reached before the
+     * session has passed 2FA verification. The 2FA-settings routes
+     * (setup/enable/disable) are deliberately NOT exempt: once a user has
+     * 2FA enabled, a session that has only completed the password step must
+     * pass the challenge before it can turn the second factor off or rebind
+     * it — otherwise knowing the password alone defeats 2FA. First-time
+     * setup is unaffected because this middleware is a no-op while the user
+     * has no 2FA enabled (see handle()).
+     *
      * @var array<string>
      */
     protected array $except = [
         'two-factor.challenge',
         'two-factor.challenge.verify',
-        'two-factor.setup',
-        'two-factor.enable',
-        'two-factor.disable',
         'logout',
     ];
 
