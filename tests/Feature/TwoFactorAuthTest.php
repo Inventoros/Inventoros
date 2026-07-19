@@ -116,7 +116,10 @@ class TwoFactorAuthTest extends TestCase
     {
         $this->enableTwoFactorForUser($this->user);
 
+        // A verified session (the challenge has been passed) is the
+        // precondition for changing 2FA settings.
         $response = $this->actingAs($this->user)
+            ->withSession(['two_factor_verified' => true])
             ->post(route('two-factor.disable'), [
                 'password' => 'password',
             ]);
@@ -134,11 +137,70 @@ class TwoFactorAuthTest extends TestCase
         $this->enableTwoFactorForUser($this->user);
 
         $response = $this->actingAs($this->user)
+            ->withSession(['two_factor_verified' => true])
             ->post(route('two-factor.disable'), [
                 'password' => 'wrong-password',
             ]);
 
         $response->assertSessionHasErrors('password');
+
+        $this->user->refresh();
+        $this->assertTrue($this->user->two_factor_enabled);
+    }
+
+    // ── Unverified-session guard (2FA-settings hardening) ──────────
+    //
+    // After entering the correct password at login the session is
+    // authenticated but has NOT yet passed the TOTP challenge
+    // (`two_factor_verified` is false). An attacker who only knows the
+    // password must not be able to reach the 2FA-settings endpoints and
+    // turn the second factor off (or rebind it to a secret they control)
+    // before completing the challenge.
+
+    public function test_unverified_session_cannot_disable_two_factor(): void
+    {
+        $this->enableTwoFactorForUser($this->user);
+
+        // No `two_factor_verified` in the session — the state right after
+        // the password step at login.
+        $response = $this->actingAs($this->user)
+            ->post(route('two-factor.disable'), [
+                'password' => 'password',
+            ]);
+
+        $response->assertRedirect(route('two-factor.challenge'));
+
+        $this->user->refresh();
+        $this->assertTrue($this->user->two_factor_enabled);
+        $this->assertNotNull($this->user->two_factor_secret);
+    }
+
+    public function test_unverified_session_cannot_reach_two_factor_setup(): void
+    {
+        $this->enableTwoFactorForUser($this->user);
+
+        $response = $this->actingAs($this->user)
+            ->get(route('two-factor.setup'));
+
+        $response->assertRedirect(route('two-factor.challenge'));
+    }
+
+    public function test_unverified_session_cannot_rebind_two_factor_via_enable(): void
+    {
+        $this->enableTwoFactorForUser($this->user);
+
+        $google2fa = new Google2FA();
+        $attackerSecret = $google2fa->generateSecretKey();
+
+        $response = $this->actingAs($this->user)
+            ->withSession(['two_factor_secret' => $attackerSecret])
+            ->post(route('two-factor.enable'), [
+                'code' => $google2fa->getCurrentOtp($attackerSecret),
+            ]);
+
+        // Bounced to the challenge — the enable action (which would rebind
+        // the secret and mark the session verified) never runs.
+        $response->assertRedirect(route('two-factor.challenge'));
 
         $this->user->refresh();
         $this->assertTrue($this->user->two_factor_enabled);
