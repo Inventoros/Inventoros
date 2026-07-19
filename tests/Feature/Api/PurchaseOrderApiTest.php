@@ -98,6 +98,8 @@ class PurchaseOrderApiTest extends TestCase
                 'is_system' => true,
                 'permissions' => [
                     'view_purchase_orders',
+                    'create_purchase_orders',
+                    'delete_purchase_orders',
                     'manage_purchase_orders',
                     'receive_purchase_orders',
                     'edit_purchase_orders',

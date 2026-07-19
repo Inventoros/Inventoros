@@ -42,6 +42,20 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
+/*
+| Authorization note:
+| Write verbs (store/update/destroy) are gated by the per-verb
+| create_/edit_/delete_ permission, while read verbs (index/show) use
+| view_. The previous single `view_X|manage_X` gate on the whole
+| apiResource let a read-only user perform writes: `manage_products`,
+| `manage_orders`, `manage_suppliers`, `manage_purchase_orders`,
+| `manage_roles` and `manage_warehouses` are NOT real permissions
+| (see App\Enums\Permission), so the OR collapsed to the read
+| permission alone. Nested product sub-resources (options, variants,
+| batches, serials, components) are product edits, so their writes use
+| edit_products; a variant stock adjustment uses manage_stock.
+*/
+
 // API Version 1
 Route::prefix('v1')->as('api.')->middleware('throttle:api')->group(function () {
     // Public routes (rate limited)
@@ -58,35 +72,57 @@ Route::prefix('v1')->as('api.')->middleware('throttle:api')->group(function () {
         Route::delete('/tokens/{tokenId}', [AuthController::class, 'revokeToken']);
 
         // Products
-        Route::apiResource('products', ProductController::class)
-            ->middleware('api.permission:view_products|manage_products');
+        Route::apiResource('products', ProductController::class)->only(['index', 'show'])
+            ->middleware('api.permission:view_products');
+        Route::apiResource('products', ProductController::class)->only(['store'])
+            ->middleware('api.permission:create_products');
+        Route::apiResource('products', ProductController::class)->only(['update'])
+            ->middleware('api.permission:edit_products');
+        Route::apiResource('products', ProductController::class)->only(['destroy'])
+            ->middleware('api.permission:delete_products');
 
         // Product Options (nested under products)
-        Route::prefix('products/{product}')->middleware('api.permission:view_products|manage_products')->group(function () {
-            Route::apiResource('options', ProductOptionController::class);
-            Route::post('options/reorder', [ProductOptionController::class, 'reorder']);
+        Route::prefix('products/{product}')->group(function () {
+            Route::apiResource('options', ProductOptionController::class)->only(['index', 'show'])
+                ->middleware('api.permission:view_products');
+            Route::apiResource('options', ProductOptionController::class)->only(['store', 'update', 'destroy'])
+                ->middleware('api.permission:edit_products');
+            Route::post('options/reorder', [ProductOptionController::class, 'reorder'])
+                ->middleware('api.permission:edit_products');
         });
 
         // Product Variants (nested under products)
-        Route::prefix('products/{product}')->middleware('api.permission:view_products|manage_products')->group(function () {
-            Route::apiResource('variants', ProductVariantController::class);
-            Route::post('variants/{variant}/adjust-stock', [ProductVariantController::class, 'adjustStock']);
-            Route::post('variants/bulk', [ProductVariantController::class, 'bulkCreate']);
+        Route::prefix('products/{product}')->group(function () {
+            Route::apiResource('variants', ProductVariantController::class)->only(['index', 'show'])
+                ->middleware('api.permission:view_products');
+            Route::apiResource('variants', ProductVariantController::class)->only(['store', 'update', 'destroy'])
+                ->middleware('api.permission:edit_products');
+            Route::post('variants/{variant}/adjust-stock', [ProductVariantController::class, 'adjustStock'])
+                ->middleware('api.permission:manage_stock');
+            Route::post('variants/bulk', [ProductVariantController::class, 'bulkCreate'])
+                ->middleware('api.permission:edit_products');
         });
 
         // Batch Tracking (nested under products)
-        Route::prefix('products/{product}')->middleware('api.permission:view_products|manage_products')->group(function () {
-            Route::get('batches', [BatchTrackingController::class, 'index']);
-            Route::post('batches', [BatchTrackingController::class, 'store']);
-            Route::get('batches/{batch}', [BatchTrackingController::class, 'show']);
+        Route::prefix('products/{product}')->group(function () {
+            Route::get('batches', [BatchTrackingController::class, 'index'])
+                ->middleware('api.permission:view_products');
+            Route::post('batches', [BatchTrackingController::class, 'store'])
+                ->middleware('api.permission:edit_products');
+            Route::get('batches/{batch}', [BatchTrackingController::class, 'show'])
+                ->middleware('api.permission:view_products');
         });
 
         // Serial Tracking (nested under products)
-        Route::prefix('products/{product}')->middleware('api.permission:view_products|manage_products')->group(function () {
-            Route::get('serials', [SerialTrackingController::class, 'index']);
-            Route::post('serials', [SerialTrackingController::class, 'store']);
-            Route::get('serials/{serial}', [SerialTrackingController::class, 'show']);
-            Route::put('serials/{serial}', [SerialTrackingController::class, 'update']);
+        Route::prefix('products/{product}')->group(function () {
+            Route::get('serials', [SerialTrackingController::class, 'index'])
+                ->middleware('api.permission:view_products');
+            Route::post('serials', [SerialTrackingController::class, 'store'])
+                ->middleware('api.permission:edit_products');
+            Route::get('serials/{serial}', [SerialTrackingController::class, 'show'])
+                ->middleware('api.permission:view_products');
+            Route::put('serials/{serial}', [SerialTrackingController::class, 'update'])
+                ->middleware('api.permission:edit_products');
         });
 
         // Product Categories
@@ -98,8 +134,14 @@ Route::prefix('v1')->as('api.')->middleware('throttle:api')->group(function () {
             ->middleware('api.permission:view_locations|manage_locations');
 
         // Orders
-        Route::apiResource('orders', OrderController::class)
-            ->middleware('api.permission:view_orders|manage_orders');
+        Route::apiResource('orders', OrderController::class)->only(['index', 'show'])
+            ->middleware('api.permission:view_orders');
+        Route::apiResource('orders', OrderController::class)->only(['store'])
+            ->middleware('api.permission:create_orders');
+        Route::apiResource('orders', OrderController::class)->only(['update'])
+            ->middleware('api.permission:edit_orders');
+        Route::apiResource('orders', OrderController::class)->only(['destroy'])
+            ->middleware('api.permission:delete_orders');
 
         // Stock Audits
         Route::apiResource('stock-audits', ApiStockAuditController::class)
@@ -108,16 +150,31 @@ Route::prefix('v1')->as('api.')->middleware('throttle:api')->group(function () {
 
         // Stock Adjustments
         Route::apiResource('stock-adjustments', StockAdjustmentController::class)
-            ->only(['index', 'store', 'show'])
+            ->only(['index', 'show'])
             ->middleware('api.permission:view_stock_adjustments|manage_stock');
+        Route::apiResource('stock-adjustments', StockAdjustmentController::class)
+            ->only(['store'])
+            ->middleware('api.permission:manage_stock');
 
         // Suppliers (will be available after Supplier model is created)
-        Route::apiResource('suppliers', SupplierController::class)
-            ->middleware('api.permission:view_suppliers|manage_suppliers');
+        Route::apiResource('suppliers', SupplierController::class)->only(['index', 'show'])
+            ->middleware('api.permission:view_suppliers');
+        Route::apiResource('suppliers', SupplierController::class)->only(['store'])
+            ->middleware('api.permission:create_suppliers');
+        Route::apiResource('suppliers', SupplierController::class)->only(['update'])
+            ->middleware('api.permission:edit_suppliers');
+        Route::apiResource('suppliers', SupplierController::class)->only(['destroy'])
+            ->middleware('api.permission:delete_suppliers');
 
         // Purchase Orders
-        Route::apiResource('purchase-orders', PurchaseOrderController::class)
-            ->middleware('api.permission:view_purchase_orders|manage_purchase_orders');
+        Route::apiResource('purchase-orders', PurchaseOrderController::class)->only(['index', 'show'])
+            ->middleware('api.permission:view_purchase_orders');
+        Route::apiResource('purchase-orders', PurchaseOrderController::class)->only(['store'])
+            ->middleware('api.permission:create_purchase_orders');
+        Route::apiResource('purchase-orders', PurchaseOrderController::class)->only(['update'])
+            ->middleware('api.permission:edit_purchase_orders');
+        Route::apiResource('purchase-orders', PurchaseOrderController::class)->only(['destroy'])
+            ->middleware('api.permission:delete_purchase_orders');
         Route::post('purchase-orders/{purchaseOrder}/receive', [PurchaseOrderController::class, 'receive'])
             ->middleware('api.permission:receive_purchase_orders');
         Route::post('purchase-orders/{purchaseOrder}/send', [PurchaseOrderController::class, 'send'])
@@ -132,12 +189,24 @@ Route::prefix('v1')->as('api.')->middleware('throttle:api')->group(function () {
         // Permission Sets
         Route::get('permission-sets/categories', [PermissionSetController::class, 'categories'])
             ->middleware('api.permission:view_roles');
-        Route::apiResource('permission-sets', PermissionSetController::class)
-            ->middleware('api.permission:view_roles|manage_roles');
+        Route::apiResource('permission-sets', PermissionSetController::class)->only(['index', 'show'])
+            ->middleware('api.permission:view_roles');
+        Route::apiResource('permission-sets', PermissionSetController::class)->only(['store'])
+            ->middleware('api.permission:create_roles');
+        Route::apiResource('permission-sets', PermissionSetController::class)->only(['update'])
+            ->middleware('api.permission:edit_roles');
+        Route::apiResource('permission-sets', PermissionSetController::class)->only(['destroy'])
+            ->middleware('api.permission:delete_roles');
 
         // Warehouses
-        Route::apiResource('warehouses', \App\Http\Controllers\Api\WarehouseController::class)
-            ->middleware('api.permission:view_warehouses|manage_warehouses');
+        Route::apiResource('warehouses', \App\Http\Controllers\Api\WarehouseController::class)->only(['index', 'show'])
+            ->middleware('api.permission:view_warehouses');
+        Route::apiResource('warehouses', \App\Http\Controllers\Api\WarehouseController::class)->only(['store'])
+            ->middleware('api.permission:create_warehouses');
+        Route::apiResource('warehouses', \App\Http\Controllers\Api\WarehouseController::class)->only(['update'])
+            ->middleware('api.permission:edit_warehouses');
+        Route::apiResource('warehouses', \App\Http\Controllers\Api\WarehouseController::class)->only(['destroy'])
+            ->middleware('api.permission:delete_warehouses');
 
         // Work Orders
         Route::apiResource('work-orders', \App\Http\Controllers\Api\WorkOrderController::class)
@@ -151,11 +220,15 @@ Route::prefix('v1')->as('api.')->middleware('throttle:api')->group(function () {
             ->middleware('api.permission:manage_stock');
 
         // Product Components (nested under products)
-        Route::prefix('products/{product}')->middleware('api.permission:view_products|manage_products')->group(function () {
-            Route::get('components', [\App\Http\Controllers\Api\ProductComponentController::class, 'index']);
-            Route::post('components', [\App\Http\Controllers\Api\ProductComponentController::class, 'store']);
-            Route::put('components/{component}', [\App\Http\Controllers\Api\ProductComponentController::class, 'update']);
-            Route::delete('components/{component}', [\App\Http\Controllers\Api\ProductComponentController::class, 'destroy']);
+        Route::prefix('products/{product}')->group(function () {
+            Route::get('components', [\App\Http\Controllers\Api\ProductComponentController::class, 'index'])
+                ->middleware('api.permission:view_products');
+            Route::post('components', [\App\Http\Controllers\Api\ProductComponentController::class, 'store'])
+                ->middleware('api.permission:edit_products');
+            Route::put('components/{component}', [\App\Http\Controllers\Api\ProductComponentController::class, 'update'])
+                ->middleware('api.permission:edit_products');
+            Route::delete('components/{component}', [\App\Http\Controllers\Api\ProductComponentController::class, 'destroy'])
+                ->middleware('api.permission:edit_products');
         });
 
         // Saved Reports
