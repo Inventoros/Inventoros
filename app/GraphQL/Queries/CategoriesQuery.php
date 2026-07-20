@@ -8,6 +8,7 @@ use App\Models\Inventory\ProductCategory;
 use Closure;
 use GraphQL\Type\Definition\ResolveInfo;
 use GraphQL\Type\Definition\Type;
+use Illuminate\Auth\Access\AuthorizationException;
 use Rebing\GraphQL\Support\Facades\GraphQL;
 use Rebing\GraphQL\Support\Query;
 
@@ -51,6 +52,13 @@ class CategoriesQuery extends Query
 
     public function resolve($root, array $args, $context, ResolveInfo $resolveInfo, Closure $getSelectFields)
     {
+        // Read authorization: mirror the REST route's permission gate.
+        // GraphQL previously enforced none, so any authenticated user could
+        // read data their role is denied over REST.
+        if (! auth()->user()?->hasAnyPermission(['view_categories', 'manage_categories'])) {
+            throw new AuthorizationException('Unauthorized');
+        }
+
         $user = auth()->user();
         $organizationId = $user->organization_id;
 
@@ -61,7 +69,7 @@ class CategoriesQuery extends Query
             $query->where('is_active', $args['is_active']);
         }
 
-        if (!empty($args['root_only'])) {
+        if (! empty($args['root_only'])) {
             $query->root();
         }
 
@@ -69,7 +77,7 @@ class CategoriesQuery extends Query
             $query->where('parent_id', $args['parent_id']);
         }
 
-        if (!empty($args['search'])) {
+        if (! empty($args['search'])) {
             $query->where('name', 'like', "%{$args['search']}%");
         }
 

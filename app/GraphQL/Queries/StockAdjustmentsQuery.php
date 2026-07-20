@@ -8,6 +8,7 @@ use App\Models\Inventory\StockAdjustment;
 use Closure;
 use GraphQL\Type\Definition\ResolveInfo;
 use GraphQL\Type\Definition\Type;
+use Illuminate\Auth\Access\AuthorizationException;
 use Rebing\GraphQL\Support\Facades\GraphQL;
 use Rebing\GraphQL\Support\Query;
 
@@ -59,6 +60,13 @@ class StockAdjustmentsQuery extends Query
 
     public function resolve($root, array $args, $context, ResolveInfo $resolveInfo, Closure $getSelectFields)
     {
+        // Read authorization: mirror the REST route's permission gate.
+        // GraphQL previously enforced none, so any authenticated user could
+        // read data their role is denied over REST.
+        if (! auth()->user()?->hasAnyPermission(['view_stock_adjustments', 'manage_stock'])) {
+            throw new AuthorizationException('Unauthorized');
+        }
+
         $user = auth()->user();
         $organizationId = $user->organization_id;
 
@@ -69,15 +77,15 @@ class StockAdjustmentsQuery extends Query
             $query->forProduct($args['product_id']);
         }
 
-        if (!empty($args['type'])) {
+        if (! empty($args['type'])) {
             $query->ofType($args['type']);
         }
 
-        if (!empty($args['date_from'])) {
+        if (! empty($args['date_from'])) {
             $query->where('created_at', '>=', $args['date_from']);
         }
 
-        if (!empty($args['date_to'])) {
+        if (! empty($args['date_to'])) {
             $query->where('created_at', '<=', $args['date_to']);
         }
 

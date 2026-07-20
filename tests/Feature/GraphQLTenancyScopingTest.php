@@ -73,4 +73,35 @@ final class GraphQLTenancyScopingTest extends TestCase
         $response->assertJsonPath('errors.0.message', 'Location not found');
         $this->assertDatabaseHas('products', ['id' => $product->id, 'location_id' => null]);
     }
+
+    public function test_products_query_denied_without_view_permission(): void
+    {
+        $org = Organization::factory()->create();
+        // A plain user with no roles/permissions — cannot view products over REST.
+        $user = User::factory()->forOrganization($org->id)->create();
+        Product::factory()->create(['organization_id' => $org->id, 'name' => 'Secret Margin']);
+
+        Sanctum::actingAs($user, ['*']);
+
+        $response = $this->postJson('/graphql', ['query' => '{ products { id name } }']);
+
+        // The resolver denies the read: no rows leak, an authorization error is
+        // returned. Without the gate this query returned the full catalogue.
+        $response->assertJsonPath('data.products', null);
+        $this->assertNotEmpty($response->json('errors'));
+        $this->assertStringNotContainsString('Secret Margin', $response->getContent());
+    }
+
+    public function test_products_query_allowed_with_view_permission(): void
+    {
+        $org = Organization::factory()->create();
+        $user = User::factory()->admin()->forOrganization($org->id)->create();
+        Product::factory()->create(['organization_id' => $org->id, 'name' => 'Visible Product']);
+
+        Sanctum::actingAs($user, ['*']);
+
+        $response = $this->postJson('/graphql', ['query' => '{ products { id name } }']);
+
+        $response->assertJsonPath('data.products.0.name', 'Visible Product');
+    }
 }

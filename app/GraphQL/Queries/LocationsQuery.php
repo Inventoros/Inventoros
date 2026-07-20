@@ -8,6 +8,7 @@ use App\Models\Inventory\ProductLocation;
 use Closure;
 use GraphQL\Type\Definition\ResolveInfo;
 use GraphQL\Type\Definition\Type;
+use Illuminate\Auth\Access\AuthorizationException;
 use Rebing\GraphQL\Support\Facades\GraphQL;
 use Rebing\GraphQL\Support\Query;
 
@@ -43,6 +44,13 @@ class LocationsQuery extends Query
 
     public function resolve($root, array $args, $context, ResolveInfo $resolveInfo, Closure $getSelectFields)
     {
+        // Read authorization: mirror the REST route's permission gate.
+        // GraphQL previously enforced none, so any authenticated user could
+        // read data their role is denied over REST.
+        if (! auth()->user()?->hasAnyPermission(['view_locations', 'manage_locations'])) {
+            throw new AuthorizationException('Unauthorized');
+        }
+
         $user = auth()->user();
         $organizationId = $user->organization_id;
 
@@ -52,7 +60,7 @@ class LocationsQuery extends Query
             $query->where('is_active', $args['is_active']);
         }
 
-        if (!empty($args['search'])) {
+        if (! empty($args['search'])) {
             $search = $args['search'];
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
