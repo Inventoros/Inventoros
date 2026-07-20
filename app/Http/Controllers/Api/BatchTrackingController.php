@@ -29,7 +29,7 @@ class BatchTrackingController extends Controller
 
         $batches = $product->batches()
             ->latest()
-            ->paginate($request->input('per_page', 15));
+            ->paginate(min((int) $request->input('per_page', 15), 100));
 
         return ProductBatchResource::collection($batches);
     }

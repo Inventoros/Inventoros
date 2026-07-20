@@ -144,6 +144,25 @@ class BatchTrackingApiTest extends TestCase
             ->assertJsonCount(2, 'data');
     }
 
+    public function test_batch_list_caps_per_page_at_100(): void
+    {
+        Sanctum::actingAs($this->admin);
+
+        ProductBatch::create([
+            'organization_id' => $this->organization->id,
+            'product_id' => $this->product->id,
+            'batch_number' => 'BATCH-CAP',
+            'quantity' => 1,
+        ]);
+
+        // A huge per_page must be clamped so one request can't load the whole
+        // (one-row-per-unit) table into memory.
+        $response = $this->getJson("/api/v1/products/{$this->product->id}/batches?per_page=100000");
+
+        $response->assertStatus(200)
+            ->assertJsonPath('meta.per_page', 100);
+    }
+
     public function test_can_view_single_batch(): void
     {
         Sanctum::actingAs($this->admin);

@@ -34,7 +34,7 @@ class SerialTrackingController extends Controller
             $query->withStatus($request->input('status'));
         }
 
-        $serials = $query->latest()->paginate($request->input('per_page', 15));
+        $serials = $query->latest()->paginate(min((int) $request->input('per_page', 15), 100));
 
         return ProductSerialResource::collection($serials);
     }
