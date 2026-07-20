@@ -122,6 +122,7 @@ class ProductComponentApiTest extends TestCase
                 'is_system' => true,
                 'permissions' => [
                     'view_products',
+                    'edit_products',
                     'manage_products',
                 ],
             ]

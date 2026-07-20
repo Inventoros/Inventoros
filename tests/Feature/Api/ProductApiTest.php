@@ -83,6 +83,9 @@ class ProductApiTest extends TestCase
                 'is_system' => true,
                 'permissions' => [
                     'view_products',
+                    'create_products',
+                    'edit_products',
+                    'delete_products',
                     'manage_products',
                     'view_orders',
                     'manage_orders',
@@ -463,5 +466,69 @@ class ProductApiTest extends TestCase
         $response->assertStatus(200)
             ->assertJsonPath('data.0.name', 'Apple Product')
             ->assertJsonPath('data.1.name', 'Zebra Product');
+    }
+
+    // ==================== WRITE-AUTHORIZATION REGRESSION ====================
+    // A read-only user (view_products only) must not be able to create,
+    // update, or delete via the API. The apiResource previously gated every
+    // verb with `view_products|manage_products`; `manage_products` is not a
+    // real permission (see App\Enums\Permission), so the OR collapsed to
+    // `view_products` and read-only users could write. Writes now require the
+    // per-verb create/edit/delete permission.
+
+    public function test_view_only_user_cannot_create_product(): void
+    {
+        Sanctum::actingAs($this->viewOnlyUser);
+
+        $response = $this->postJson('/api/v1/products', [
+            'sku' => 'FORBIDDEN-001',
+            'name' => 'Should Not Be Created',
+            'price' => 10,
+            'currency' => 'USD',
+            'stock' => 1,
+            'min_stock' => 0,
+        ]);
+
+        $response->assertStatus(403);
+        $this->assertDatabaseMissing('products', ['sku' => 'FORBIDDEN-001']);
+    }
+
+    public function test_view_only_user_cannot_update_product(): void
+    {
+        $product = $this->createProduct(['name' => 'Original Name']);
+
+        Sanctum::actingAs($this->viewOnlyUser);
+
+        $response = $this->putJson('/api/v1/products/' . $product->id, [
+            'name' => 'Hacked Name',
+        ]);
+
+        $response->assertStatus(403);
+        $this->assertDatabaseHas('products', [
+            'id' => $product->id,
+            'name' => 'Original Name',
+        ]);
+    }
+
+    public function test_view_only_user_cannot_delete_product(): void
+    {
+        $product = $this->createProduct();
+
+        Sanctum::actingAs($this->viewOnlyUser);
+
+        $response = $this->deleteJson('/api/v1/products/' . $product->id);
+
+        $response->assertStatus(403);
+        $this->assertDatabaseHas('products', ['id' => $product->id]);
+    }
+
+    public function test_view_only_user_can_still_read_products(): void
+    {
+        $product = $this->createProduct();
+
+        Sanctum::actingAs($this->viewOnlyUser);
+
+        $this->getJson('/api/v1/products')->assertStatus(200);
+        $this->getJson('/api/v1/products/' . $product->id)->assertStatus(200);
     }
 }

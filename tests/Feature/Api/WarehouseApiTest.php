@@ -51,6 +51,9 @@ class WarehouseApiTest extends TestCase
                 'is_system' => true,
                 'permissions' => [
                     'view_warehouses',
+                    'create_warehouses',
+                    'edit_warehouses',
+                    'delete_warehouses',
                     'manage_warehouses',
                     'view_products',
                     'manage_products',

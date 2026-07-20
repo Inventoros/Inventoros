@@ -102,6 +102,9 @@ class OrderApiTest extends TestCase
                 'is_system' => true,
                 'permissions' => [
                     'view_orders',
+                    'create_orders',
+                    'edit_orders',
+                    'delete_orders',
                     'manage_orders',
                     'view_products',
                     'manage_products',

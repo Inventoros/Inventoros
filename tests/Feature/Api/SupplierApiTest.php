@@ -60,6 +60,9 @@ class SupplierApiTest extends TestCase
                 'is_system' => true,
                 'permissions' => [
                     'view_suppliers',
+                    'create_suppliers',
+                    'edit_suppliers',
+                    'delete_suppliers',
                     'manage_suppliers',
                 ],
             ]

@@ -62,7 +62,7 @@ class SerialTrackingApiTest extends TestCase
             [
                 'name' => 'Administrator',
                 'is_system' => true,
-                'permissions' => ['view_products', 'manage_products'],
+                'permissions' => ['view_products', 'edit_products', 'manage_products'],
             ]
         );
         $this->admin->roles()->syncWithoutDetaching([$adminRole->id]);
