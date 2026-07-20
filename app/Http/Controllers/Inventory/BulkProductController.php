@@ -6,6 +6,7 @@ namespace App\Http\Controllers\Inventory;
 
 use App\Http\Controllers\Controller;
 use App\Models\Inventory\Product;
+use App\Support\SpreadsheetSafety;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Symfony\Component\HttpFoundation\StreamedResponse;
@@ -157,10 +158,10 @@ class BulkProductController extends Controller
                 'Barcode',
                 'Active',
                 'Created At',
-            ]);
+            ], escape: '');
 
             foreach ($products as $product) {
-                fputcsv($handle, [
+                fputcsv($handle, SpreadsheetSafety::neutraliseRow([
                     $product->id,
                     $product->sku,
                     $product->name,
@@ -176,7 +177,7 @@ class BulkProductController extends Controller
                     $product->barcode,
                     $product->is_active ? 'Yes' : 'No',
                     $product->created_at?->toDateTimeString(),
-                ]);
+                ]), escape: '');
             }
 
             fclose($handle);

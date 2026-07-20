@@ -7,6 +7,7 @@ namespace App\Http\Controllers\Reports;
 use App\Http\Controllers\Controller;
 use App\Models\SavedReport;
 use App\Services\ReportDataService;
+use App\Support\SpreadsheetSafety;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -361,7 +362,7 @@ class ReportBuilderController extends Controller
             fwrite($handle, "\xEF\xBB\xBF");
 
             // Header row
-            fputcsv($handle, $headers);
+            fputcsv($handle, SpreadsheetSafety::neutraliseRow($headers), escape: '');
 
             // Data rows
             foreach ($data as $row) {
@@ -369,7 +370,7 @@ class ReportBuilderController extends Controller
                 foreach ($savedReport->columns as $col) {
                     $csvRow[] = $row->$col ?? '';
                 }
-                fputcsv($handle, $csvRow);
+                fputcsv($handle, SpreadsheetSafety::neutraliseRow($csvRow), escape: '');
             }
 
             fclose($handle);

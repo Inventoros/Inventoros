@@ -103,7 +103,7 @@ class ImportExportController extends Controller
 
         $callback = function () use ($headers) {
             $file = fopen('php://output', 'w');
-            fputcsv($file, $headers);
+            fputcsv($file, $headers, escape: '');
 
             // Add example row
             fputcsv($file, [
@@ -120,7 +120,7 @@ class ImportExportController extends Controller
                 '10',
                 'active',
                 'Example notes',
-            ]);
+            ], escape: '');
 
             fclose($file);
         };
