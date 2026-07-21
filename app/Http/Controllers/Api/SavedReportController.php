@@ -9,6 +9,7 @@ use App\Http\Requests\Api\SavedReport\StoreSavedReportRequest;
 use App\Http\Requests\Api\SavedReport\UpdateSavedReportRequest;
 use App\Models\SavedReport;
 use App\Services\ReportDataService;
+use App\Support\SpreadsheetSafety;
 use Dedoc\Scramble\Attributes\QueryParameter;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -316,7 +317,7 @@ class SavedReportController extends Controller
             fwrite($handle, "\xEF\xBB\xBF");
 
             // Header row
-            fputcsv($handle, $headers);
+            fputcsv($handle, SpreadsheetSafety::neutraliseRow($headers), escape: '');
 
             // Data rows
             foreach ($data as $row) {
@@ -324,7 +325,7 @@ class SavedReportController extends Controller
                 foreach ($report->columns as $col) {
                     $csvRow[] = $row->$col ?? '';
                 }
-                fputcsv($handle, $csvRow);
+                fputcsv($handle, SpreadsheetSafety::neutraliseRow($csvRow), escape: '');
             }
 
             fclose($handle);

