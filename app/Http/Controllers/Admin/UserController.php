@@ -91,6 +91,8 @@ class UserController extends Controller
 
         $validated = $request->validated();
 
+        $this->assertCanAssignRoles($validated['role_ids'] ?? [], $user);
+
         $newUser = User::create([
             'name' => $validated['name'],
             'email' => $validated['email'],
@@ -176,6 +178,8 @@ class UserController extends Controller
 
         $validated = $request->validated();
 
+        $this->assertCanAssignRoles($validated['role_ids'] ?? [], $currentUser);
+
         // Don't allow removing admin from the last admin
         if ($validated['role'] !== 'admin' && $user->role === 'admin') {
             $adminCount = User::where('organization_id', $currentUser->organization_id)
@@ -246,5 +250,38 @@ class UserController extends Controller
 
         return redirect()->route('users.index')
             ->with('success', 'User deleted successfully.');
+    }
+
+    /**
+     * Prevent privilege escalation through role assignment. `roles()->sync()`
+     * bypasses the model-level self-role guard, so a non-admin actor could
+     * otherwise attach the system-administrator role to themselves or another
+     * user. A non-admin may only assign roles that (a) belong to their own
+     * organization (or are system roles), (b) are not admin/manager-conferring,
+     * and (c) carry no permission the actor does not already hold.
+     *
+     * @param  array<int|string>  $roleIds
+     */
+    private function assertCanAssignRoles(array $roleIds, User $actor): void
+    {
+        if (empty($roleIds) || $actor->isAdmin()) {
+            return;
+        }
+
+        foreach (Role::whereIn('id', $roleIds)->get() as $role) {
+            if ($role->organization_id !== null && $role->organization_id !== $actor->organization_id) {
+                abort(403, 'You cannot assign a role from another organization.');
+            }
+
+            if (in_array($role->slug, ['system-administrator', 'system-manager'], true)) {
+                abort(403, 'You do not have permission to assign this role.');
+            }
+
+            foreach ($role->getAllPermissions() as $permission) {
+                if (! $actor->hasPermission($permission)) {
+                    abort(403, 'You cannot assign a role with more permissions than you hold.');
+                }
+            }
+        }
     }
 }

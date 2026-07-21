@@ -761,4 +761,54 @@ class UserControllerTest extends TestCase
         $this->assertNotNull($this->admin->organization);
         $this->assertEquals($this->organization->id, $this->admin->organization->id);
     }
+
+    // ==================== ROLE-ASSIGNMENT PRIVILEGE TESTS ====================
+
+    public function test_non_admin_cannot_grant_admin_role_via_role_ids(): void
+    {
+        // $this->member holds edit_users (can reach the route) but is NOT an admin.
+        $target = User::create([
+            'name' => 'Target',
+            'email' => 'target@test.com',
+            'password' => bcrypt('x'),
+            'organization_id' => $this->organization->id,
+            'role' => 'member',
+        ]);
+
+        $response = $this->actingAs($this->member)
+            ->put(route('users.update', $target), [
+                'name' => 'Target',
+                'email' => 'target@test.com',
+                'role' => 'member',
+                'role_ids' => [$this->adminRole->id],
+            ]);
+
+        $response->assertForbidden();
+
+        $target->refresh();
+        $this->assertFalse($target->roles->contains('id', $this->adminRole->id));
+        $this->assertFalse($target->isAdmin());
+    }
+
+    public function test_admin_can_still_grant_roles_via_role_ids(): void
+    {
+        $target = User::create([
+            'name' => 'Target2',
+            'email' => 'target2@test.com',
+            'password' => bcrypt('x'),
+            'organization_id' => $this->organization->id,
+            'role' => 'member',
+        ]);
+
+        $response = $this->actingAs($this->admin)
+            ->put(route('users.update', $target), [
+                'name' => 'Target2',
+                'email' => 'target2@test.com',
+                'role' => 'member',
+                'role_ids' => [$this->adminRole->id],
+            ]);
+
+        $response->assertRedirect(route('users.index'));
+        $this->assertTrue($target->fresh()->roles->contains('id', $this->adminRole->id));
+    }
 }
