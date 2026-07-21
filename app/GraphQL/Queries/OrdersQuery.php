@@ -8,6 +8,7 @@ use App\Models\Order\Order;
 use Closure;
 use GraphQL\Type\Definition\ResolveInfo;
 use GraphQL\Type\Definition\Type;
+use Illuminate\Auth\Access\AuthorizationException;
 use Rebing\GraphQL\Support\Facades\GraphQL;
 use Rebing\GraphQL\Support\Query;
 
@@ -63,13 +64,20 @@ class OrdersQuery extends Query
 
     public function resolve($root, array $args, $context, ResolveInfo $resolveInfo, Closure $getSelectFields)
     {
+        // Read authorization: mirror the REST route's permission gate.
+        // GraphQL previously enforced none, so any authenticated user could
+        // read data their role is denied over REST.
+        if (! auth()->user()?->hasPermission('view_orders')) {
+            throw new AuthorizationException('Unauthorized');
+        }
+
         $user = auth()->user();
         $organizationId = $user->organization_id;
 
         $query = Order::with('items')
             ->forOrganization($organizationId);
 
-        if (!empty($args['search'])) {
+        if (! empty($args['search'])) {
             $search = $args['search'];
             $query->where(function ($q) use ($search) {
                 $q->where('order_number', 'like', "%{$search}%")
@@ -78,19 +86,19 @@ class OrdersQuery extends Query
             });
         }
 
-        if (!empty($args['status'])) {
+        if (! empty($args['status'])) {
             $query->byStatus($args['status']);
         }
 
-        if (!empty($args['source'])) {
+        if (! empty($args['source'])) {
             $query->bySource($args['source']);
         }
 
-        if (!empty($args['date_from'])) {
+        if (! empty($args['date_from'])) {
             $query->where('order_date', '>=', $args['date_from']);
         }
 
-        if (!empty($args['date_to'])) {
+        if (! empty($args['date_to'])) {
             $query->where('order_date', '<=', $args['date_to']);
         }
 

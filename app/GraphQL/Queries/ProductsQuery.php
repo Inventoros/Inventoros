@@ -8,6 +8,7 @@ use App\Models\Inventory\Product;
 use Closure;
 use GraphQL\Type\Definition\ResolveInfo;
 use GraphQL\Type\Definition\Type;
+use Illuminate\Auth\Access\AuthorizationException;
 use Rebing\GraphQL\Support\Facades\GraphQL;
 use Rebing\GraphQL\Support\Query;
 
@@ -63,13 +64,20 @@ class ProductsQuery extends Query
 
     public function resolve($root, array $args, $context, ResolveInfo $resolveInfo, Closure $getSelectFields)
     {
+        // Read authorization: mirror the REST route's permission gate.
+        // GraphQL previously enforced none, so any authenticated user could
+        // read data their role is denied over REST.
+        if (! auth()->user()?->hasPermission('view_products')) {
+            throw new AuthorizationException('Unauthorized');
+        }
+
         $user = auth()->user();
         $organizationId = $user->organization_id;
 
         $query = Product::with(['category', 'location'])
             ->forOrganization($organizationId);
 
-        if (!empty($args['search'])) {
+        if (! empty($args['search'])) {
             $search = $args['search'];
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
@@ -90,7 +98,7 @@ class ProductsQuery extends Query
             $query->where('is_active', $args['is_active']);
         }
 
-        if (!empty($args['low_stock'])) {
+        if (! empty($args['low_stock'])) {
             $query->lowStock();
         }
 
