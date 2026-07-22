@@ -135,4 +135,48 @@ final class BackupServiceTest extends TestCase
 
         $this->assertFalse((new BackupService($this->backupDir))->importDatabaseDump($dump));
     }
+
+    public function test_mysql_import_passes_the_password_via_env_not_the_command_line(): void
+    {
+        config([
+            'database.default' => 'mysql',
+            'database.connections.mysql' => [
+                'driver' => 'mysql',
+                'username' => 'dbuser',
+                'password' => 'sup3r-secret-pw',
+                'host' => '127.0.0.1',
+                'database' => 'inventoros',
+            ],
+        ]);
+
+        $dump = $this->root.'/database.sql';
+        File::makeDirectory($this->root, 0755, true, true);
+        File::put($dump, '-- dump');
+
+        $service = new class($this->backupDir) extends BackupService
+        {
+            public ?string $captured = null;
+
+            public ?string $pwdDuringRun = null;
+
+            protected function runCommand(string $command): int
+            {
+                $this->captured = $command;
+                $this->pwdDuringRun = getenv('MYSQL_PWD') ?: null;
+
+                return 0;
+            }
+        };
+
+        $this->assertTrue($service->importDatabaseDump($dump));
+
+        // The password never appears on the command line (process list).
+        $this->assertStringNotContainsString('--password', (string) $service->captured);
+        $this->assertStringNotContainsString('sup3r-secret-pw', (string) $service->captured);
+
+        // It is supplied to the child process via MYSQL_PWD instead, and the
+        // env var is cleaned up afterwards.
+        $this->assertSame('sup3r-secret-pw', $service->pwdDuringRun);
+        $this->assertFalse(getenv('MYSQL_PWD'));
+    }
 }
