@@ -4,7 +4,7 @@ import PageHeader from '@/Components/ui/PageHeader.vue';
 import Card from '@/Components/ui/Card.vue';
 import Button from '@/Components/ui/Button.vue';
 import Badge from '@/Components/ui/Badge.vue';
-import { Head, Link, useForm, router } from '@inertiajs/vue3';
+import { Head, Link, useForm, router, usePage } from '@inertiajs/vue3';
 import { ref, computed } from 'vue';
 import { ArrowLeft, Pencil, Trash2, Send, RefreshCw, RotateCcw, ChevronDown, Inbox, X } from 'lucide-vue-next';
 
@@ -19,7 +19,11 @@ const props = defineProps({
 
 const { t } = useI18n();
 // State
-const showSecret = ref(false);
+// The signing secret is never sent on a normal page load. It is revealed
+// exactly once via a flash right after the webhook is created or its secret is
+// regenerated.
+const page = usePage();
+const revealedSecret = computed(() => page.props.flash?.newWebhookSecret ?? null);
 const copiedSecret = ref(false);
 const showEditModal = ref(false);
 const expandedDelivery = ref(null);
@@ -73,8 +77,9 @@ const retryDelivery = (delivery) => {
 };
 
 const copySecret = async () => {
+    if (!revealedSecret.value) return;
     try {
-        await navigator.clipboard.writeText(props.webhook.secret);
+        await navigator.clipboard.writeText(revealedSecret.value);
         copiedSecret.value = true;
         setTimeout(() => {
             copiedSecret.value = false;
@@ -123,11 +128,6 @@ const responseCodeClass = (code) => {
     if (code >= 500) return 'text-status-danger';
     return 'text-text-secondary';
 };
-
-const maskedSecret = computed(() => {
-    if (!props.webhook.secret) return '';
-    return props.webhook.secret.substring(0, 8) + '...' + props.webhook.secret.substring(props.webhook.secret.length - 8);
-});
 
 const getEventDescription = (event) => {
     for (const group in props.eventGroups) {
@@ -249,24 +249,32 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                             </div>
                             <div class="sm:col-span-2">
                                 <dt class="flex items-center justify-between text-xs text-text-tertiary">
-                                    <span>Secret</span>
-                                    <div class="flex items-center gap-3">
-                                        <button
-                                            @click="showSecret = !showSecret"
-                                            class="text-xs text-brand hover:underline"
-                                        >
-                                            {{ showSecret ? 'Hide' : 'Reveal' }}
-                                        </button>
-                                        <button
-                                            @click="copySecret"
-                                            class="text-xs text-brand hover:underline"
-                                        >
-                                            {{ copiedSecret ? 'Copied!' : 'Copy' }}
-                                        </button>
-                                    </div>
+                                    <span>Signing secret</span>
+                                    <button
+                                        v-if="revealedSecret"
+                                        @click="copySecret"
+                                        class="text-xs text-brand hover:underline"
+                                    >
+                                        {{ copiedSecret ? 'Copied!' : 'Copy' }}
+                                    </button>
                                 </dt>
-                                <dd class="mt-1 break-all rounded-lg bg-slate-900 p-4 font-mono text-xs text-slate-300">
-                                    {{ showSecret ? webhook.secret : maskedSecret }}
+                                <dd
+                                    v-if="revealedSecret"
+                                    class="mt-1 break-all rounded-lg bg-slate-900 p-4 font-mono text-xs text-slate-300"
+                                >
+                                    {{ revealedSecret }}
+                                    <p class="mt-2 font-sans text-amber-400">
+                                        Copy this now. For security it is shown only once and cannot be retrieved later.
+                                    </p>
+                                </dd>
+                                <dd
+                                    v-else
+                                    class="mt-1 rounded-lg bg-slate-900 p-4 font-mono text-xs text-slate-500"
+                                >
+                                    ****************
+                                    <p class="mt-2 font-sans text-text-tertiary">
+                                        Hidden for security. Regenerate the secret to issue a new one; it is shown only once.
+                                    </p>
                                 </dd>
                             </div>
                             <div>

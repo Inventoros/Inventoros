@@ -66,9 +66,13 @@ class WebhookController extends Controller
         $validated['organization_id'] = auth()->user()->organization_id;
         $validated['created_by'] = auth()->id();
 
-        Webhook::create($validated);
+        $webhook = Webhook::create($validated);
 
-        return redirect()->route('webhooks.index')->with('success', 'Webhook created successfully');
+        // Hand the plaintext signing secret back exactly once so the receiver
+        // can be configured. It is $hidden from serialization everywhere else.
+        return redirect()->route('webhooks.index')
+            ->with('success', 'Webhook created successfully')
+            ->with('newWebhookSecret', $webhook->secret);
     }
 
     /**
@@ -138,9 +142,13 @@ class WebhookController extends Controller
             abort(403);
         }
 
-        $webhook->update(['secret' => Str::random(64)]);
+        $secret = Str::random(64);
+        $webhook->update(['secret' => $secret]);
 
-        return redirect()->route('webhooks.show', $webhook)->with('success', 'Secret regenerated');
+        // Reveal the rotated secret exactly once so the receiver can be updated.
+        return redirect()->route('webhooks.show', $webhook)
+            ->with('success', 'Secret regenerated')
+            ->with('newWebhookSecret', $secret);
     }
 
     /**
