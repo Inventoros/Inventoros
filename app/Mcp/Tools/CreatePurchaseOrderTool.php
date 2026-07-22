@@ -7,6 +7,7 @@ namespace App\Mcp\Tools;
 use App\Mcp\Concerns\AuthenticatesMcpRequest;
 use App\Models\Inventory\Product;
 use App\Models\Purchasing\PurchaseOrder;
+use App\Support\Money;
 use Illuminate\Contracts\JsonSchema\JsonSchema;
 use Illuminate\Validation\Rule;
 use Laravel\Mcp\Request;
@@ -57,12 +58,12 @@ class CreatePurchaseOrderTool extends Tool
         ]);
 
         $po = PurchaseOrder::createWithNumber($orgId, function (string $poNumber) use ($validated, $orgId) {
-            $subtotal = 0.0;
+            $subtotal = '0';
             $rows = [];
             foreach ($validated['items'] as $item) {
                 $product = Product::forOrganization($orgId)->find($item['product_id']);
-                $itemSubtotal = $item['quantity'] * (float) $item['unit_cost'];
-                $subtotal += $itemSubtotal;
+                $itemSubtotal = Money::multiply($item['unit_cost'], $item['quantity']);
+                $subtotal = Money::add($subtotal, $itemSubtotal);
                 $rows[] = [
                     'product_id' => $product->id,
                     'product_name' => $product->name,
@@ -88,7 +89,7 @@ class CreatePurchaseOrderTool extends Tool
                 'subtotal' => $subtotal,
                 'tax' => $validated['tax'] ?? 0,
                 'shipping' => $validated['shipping'] ?? 0,
-                'total' => $subtotal + ($validated['tax'] ?? 0) + ($validated['shipping'] ?? 0),
+                'total' => Money::add($subtotal, $validated['tax'] ?? 0, $validated['shipping'] ?? 0),
                 'currency' => $validated['currency'],
                 'notes' => $validated['notes'] ?? null,
             ]);

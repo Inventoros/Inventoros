@@ -243,6 +243,32 @@ class PurchaseOrderApiTest extends TestCase
         ]);
     }
 
+    public function test_create_purchase_order_totals_use_exact_decimal_math(): void
+    {
+        Sanctum::actingAs($this->admin);
+
+        // Fractional line costs that accumulate: totals must be computed with
+        // the exact-decimal Money helper (as the web PO and order paths do),
+        // not by summing floats.
+        $response = $this->postJson('/api/v1/purchase-orders', [
+            'supplier_id' => $this->supplier->id,
+            'order_date' => now()->toDateString(),
+            'currency' => 'USD',
+            'tax' => 1.11,
+            'shipping' => 2.22,
+            'items' => [
+                ['product_id' => $this->product->id, 'quantity' => 3, 'unit_cost' => 3.33],
+                ['product_id' => $this->product->id, 'quantity' => 7, 'unit_cost' => 1.11],
+            ],
+        ]);
+
+        $response->assertStatus(201);
+
+        $po = PurchaseOrder::where('supplier_id', $this->supplier->id)->latest('id')->first();
+        $this->assertSame('17.76', (string) $po->subtotal);
+        $this->assertSame('21.09', (string) $po->total);
+    }
+
     public function test_create_purchase_order_validates_required_fields(): void
     {
         Sanctum::actingAs($this->admin);
