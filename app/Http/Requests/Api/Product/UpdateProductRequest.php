@@ -48,6 +48,7 @@ final class UpdateProductRequest extends FormRequest
             'images.*.name' => ['nullable', 'string'],
             'has_variants' => ['boolean'],
             'options' => ['nullable', 'array', 'max:3'],
+            'options.*.id' => ['nullable', 'integer'],
             'options.*.name' => ['required_with:options', 'string', 'max:255'],
             'options.*.values' => ['required_with:options', 'array', 'min:1'],
             'options.*.values.*' => ['string', 'max:255'],
