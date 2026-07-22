@@ -12,6 +12,7 @@ use App\Http\Resources\PurchaseOrderResource;
 use App\Models\Inventory\Product;
 use App\Models\Purchasing\PurchaseOrder;
 use App\Models\Purchasing\PurchaseOrderItem;
+use App\Support\Money;
 use Dedoc\Scramble\Attributes\QueryParameter;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -71,14 +72,15 @@ class PurchaseOrderController extends Controller
 
         $validated = $request->validated();
 
-        // Calculate order totals
-        $subtotal = 0;
+        // Calculate order totals with exact-decimal math, matching the web PO
+        // and sales-order paths rather than accumulating float rounding error.
+        $subtotal = '0';
         $orderItems = [];
 
         foreach ($validated['items'] as $item) {
             $product = Product::forOrganization($organizationId)->findOrFail($item['product_id']);
-            $itemSubtotal = $item['quantity'] * $item['unit_cost'];
-            $subtotal += $itemSubtotal;
+            $itemSubtotal = Money::multiply($item['unit_cost'], $item['quantity']);
+            $subtotal = Money::add($subtotal, $itemSubtotal);
 
             $orderItems[] = [
                 'product_id' => $item['product_id'],
@@ -109,7 +111,7 @@ class PurchaseOrderController extends Controller
                 'subtotal' => $subtotal,
                 'tax' => $validated['tax'] ?? 0,
                 'shipping' => $validated['shipping'] ?? 0,
-                'total' => $subtotal + ($validated['tax'] ?? 0) + ($validated['shipping'] ?? 0),
+                'total' => Money::add($subtotal, $validated['tax'] ?? 0, $validated['shipping'] ?? 0),
                 'currency' => $validated['currency'],
                 'notes' => $validated['notes'] ?? null,
             ]);
@@ -178,13 +180,13 @@ class PurchaseOrderController extends Controller
             $purchaseOrder->load('items');
             $existingItems = $purchaseOrder->items->keyBy('id');
             $itemIdsToKeep = [];
-            $subtotal = 0;
+            $subtotal = '0';
             $newItems = [];
 
             foreach ($validated['items'] as $itemData) {
                 $product = Product::forOrganization($organizationId)->findOrFail($itemData['product_id']);
-                $itemSubtotal = $itemData['quantity'] * $itemData['unit_cost'];
-                $subtotal += $itemSubtotal;
+                $itemSubtotal = Money::multiply($itemData['unit_cost'], $itemData['quantity']);
+                $subtotal = Money::add($subtotal, $itemSubtotal);
 
                 if (! empty($itemData['id']) && $existingItems->has($itemData['id'])) {
                     $existingItem = $existingItems->get($itemData['id']);
@@ -222,7 +224,7 @@ class PurchaseOrderController extends Controller
             }
 
             $validated['subtotal'] = $subtotal;
-            $validated['total'] = $subtotal + ($validated['tax'] ?? $purchaseOrder->tax) + ($validated['shipping'] ?? $purchaseOrder->shipping);
+            $validated['total'] = Money::add($subtotal, $validated['tax'] ?? $purchaseOrder->tax, $validated['shipping'] ?? $purchaseOrder->shipping);
         }
 
         unset($validated['items']);
