@@ -10,7 +10,6 @@ use App\Models\Purchasing\PurchaseOrder;
 use App\Models\Purchasing\PurchaseOrderItem;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 /**
@@ -37,8 +36,6 @@ class CheckReorderPointsCommand extends Command
 
     /**
      * Execute the console command.
-     *
-     * @return int
      */
     public function handle(): int
     {
@@ -49,8 +46,9 @@ class CheckReorderPointsCommand extends Command
         // same supplier. The TTL must outlive a normal run.
         $lock = Cache::lock('inventory:check-reorder-points', 600);
 
-        if (!$lock->get()) {
+        if (! $lock->get()) {
             $this->warn('Another reorder check is already running — skipping this invocation.');
+
             return Command::SUCCESS;
         }
 
@@ -77,6 +75,7 @@ class CheckReorderPointsCommand extends Command
 
         if ($products->isEmpty()) {
             $this->info('No products need reordering.');
+
             return Command::SUCCESS;
         }
 
@@ -98,21 +97,23 @@ class CheckReorderPointsCommand extends Command
             if (in_array($product->id, $productsWithExistingPOs)) {
                 $skippedExistingPO++;
                 $this->line("  Skipping {$product->name} (SKU: {$product->sku}) - existing PO found");
+
                 continue;
             }
 
             // Get primary supplier
             $primarySupplier = $product->suppliers->first();
 
-            if (!$primarySupplier) {
+            if (! $primarySupplier) {
                 $skippedNoSupplier++;
                 $this->warn("  Skipping {$product->name} (SKU: {$product->sku}) - no supplier assigned");
                 Log::warning("Reorder check: Product {$product->name} (ID: {$product->id}) has no supplier assigned");
+
                 continue;
             }
 
-            $key = $product->organization_id . '-' . $primarySupplier->id;
-            if (!isset($grouped[$key])) {
+            $key = $product->organization_id.'-'.$primarySupplier->id;
+            if (! isset($grouped[$key])) {
                 $grouped[$key] = [
                     'organization_id' => $product->organization_id,
                     'supplier_id' => $primarySupplier->id,
@@ -128,11 +129,11 @@ class CheckReorderPointsCommand extends Command
 
         foreach ($grouped as $group) {
             try {
-                DB::transaction(function () use ($group, &$createdPOs) {
+                $po = PurchaseOrder::createWithNumber($group['organization_id'], function (string $poNumber) use ($group) {
                     $po = PurchaseOrder::create([
                         'organization_id' => $group['organization_id'],
                         'supplier_id' => $group['supplier_id'],
-                        'po_number' => PurchaseOrder::generatePONumber($group['organization_id']),
+                        'po_number' => $poNumber,
                         'status' => PurchaseOrder::STATUS_DRAFT,
                         'order_date' => now(),
                         'subtotal' => 0,
@@ -191,13 +192,15 @@ class CheckReorderPointsCommand extends Command
                         ],
                     ]);
 
-                    $createdPOs++;
-
-                    $this->info("  Created PO {$po->po_number} with " . count($group['products']) . " items");
+                    return $po;
                 });
+
+                $createdPOs++;
+
+                $this->info("  Created PO {$po->po_number} with ".count($group['products']).' items');
             } catch (\Exception $e) {
                 $this->error("  Failed to create PO for supplier {$group['supplier_id']}: {$e->getMessage()}");
-                Log::error("Reorder check: Failed to create PO", [
+                Log::error('Reorder check: Failed to create PO', [
                     'supplier_id' => $group['supplier_id'],
                     'organization_id' => $group['organization_id'],
                     'error' => $e->getMessage(),

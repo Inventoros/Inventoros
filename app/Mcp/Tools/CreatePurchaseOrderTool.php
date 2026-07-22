@@ -6,10 +6,8 @@ namespace App\Mcp\Tools;
 
 use App\Mcp\Concerns\AuthenticatesMcpRequest;
 use App\Models\Inventory\Product;
-use App\Models\Inventory\Supplier;
 use App\Models\Purchasing\PurchaseOrder;
 use Illuminate\Contracts\JsonSchema\JsonSchema;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Laravel\Mcp\Request;
 use Laravel\Mcp\Response;
@@ -58,7 +56,7 @@ class CreatePurchaseOrderTool extends Tool
             'items.*.supplier_sku' => ['nullable', 'string', 'max:255'],
         ]);
 
-        $po = DB::transaction(function () use ($validated, $orgId) {
+        $po = PurchaseOrder::createWithNumber($orgId, function (string $poNumber) use ($validated, $orgId) {
             $subtotal = 0.0;
             $rows = [];
             foreach ($validated['items'] as $item) {
@@ -83,7 +81,7 @@ class CreatePurchaseOrderTool extends Tool
                 'organization_id' => $orgId,
                 'supplier_id' => $validated['supplier_id'],
                 'created_by' => $this->user()->id,
-                'po_number' => PurchaseOrder::generatePONumber($orgId),
+                'po_number' => $poNumber,
                 'status' => PurchaseOrder::STATUS_DRAFT,
                 'order_date' => $validated['order_date'],
                 'expected_date' => $validated['expected_date'] ?? null,

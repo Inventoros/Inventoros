@@ -94,23 +94,30 @@ class PurchaseOrderController extends Controller
             ];
         }
 
-        $purchaseOrder = PurchaseOrder::create([
-            'organization_id' => $organizationId,
-            'supplier_id' => $validated['supplier_id'],
-            'created_by' => $request->user()->id,
-            'po_number' => PurchaseOrder::generatePONumber($organizationId),
-            'status' => PurchaseOrder::STATUS_DRAFT,
-            'order_date' => $validated['order_date'],
-            'expected_date' => $validated['expected_date'] ?? null,
-            'subtotal' => $subtotal,
-            'tax' => $validated['tax'] ?? 0,
-            'shipping' => $validated['shipping'] ?? 0,
-            'total' => $subtotal + ($validated['tax'] ?? 0) + ($validated['shipping'] ?? 0),
-            'currency' => $validated['currency'],
-            'notes' => $validated['notes'] ?? null,
-        ]);
+        // Generate the PO number and insert the order + items atomically with a
+        // retry, so a concurrent create in the same tenant/day can't collide on
+        // po_number and 500.
+        $purchaseOrder = PurchaseOrder::createWithNumber($organizationId, function (string $poNumber) use ($organizationId, $validated, $request, $subtotal, $orderItems) {
+            $po = PurchaseOrder::create([
+                'organization_id' => $organizationId,
+                'supplier_id' => $validated['supplier_id'],
+                'created_by' => $request->user()->id,
+                'po_number' => $poNumber,
+                'status' => PurchaseOrder::STATUS_DRAFT,
+                'order_date' => $validated['order_date'],
+                'expected_date' => $validated['expected_date'] ?? null,
+                'subtotal' => $subtotal,
+                'tax' => $validated['tax'] ?? 0,
+                'shipping' => $validated['shipping'] ?? 0,
+                'total' => $subtotal + ($validated['tax'] ?? 0) + ($validated['shipping'] ?? 0),
+                'currency' => $validated['currency'],
+                'notes' => $validated['notes'] ?? null,
+            ]);
 
-        $purchaseOrder->items()->createMany($orderItems);
+            $po->items()->createMany($orderItems);
+
+            return $po;
+        });
 
         return response()->json([
             'message' => 'Purchase order created successfully',
