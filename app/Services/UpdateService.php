@@ -257,6 +257,15 @@ class UpdateService
             // Restore files
             $this->fileService->replaceFiles($extractPath);
 
+            // Import the database dump if the backup carried one. Without this
+            // a MySQL restore only rolled back the files and silently left the
+            // database on the failed/newer schema. SQLite and other file-based
+            // databases are already restored by the file replacement above.
+            $databaseDump = $extractPath.'/database.sql';
+            if (File::exists($databaseDump)) {
+                $this->backupService->importDatabaseDump($databaseDump);
+            }
+
             // Clear caches
             Artisan::call('optimize:clear');
             Artisan::call('optimize');

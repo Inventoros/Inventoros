@@ -24,35 +24,33 @@ class BackupService
 
     /**
      * Initialize the service and set up backup path.
+     *
+     * @param  string|null  $backupPath  Override the backup directory (mainly
+     *                                   for testing); defaults to the app's
+     *                                   storage/app/backups.
      */
-    public function __construct()
+    public function __construct(?string $backupPath = null)
     {
-        $this->backupPath = storage_path('app/backups');
+        $this->backupPath = $backupPath ?? storage_path('app/backups');
     }
 
     /**
-     * Create a backup of the current installation.
-     *
-     * Backs up application directories, configuration, and database.
-     *
-     * @return string Path to the created backup file
-     * @throws Exception If backup creation fails
+     * The application base path that backups are taken relative to. Overridable
+     * so the archive logic can be exercised against a fixture tree in tests.
      */
-    public function createBackup(): string
+    protected function basePath(): string
     {
-        $this->ensureBackupDirectoryExists();
+        return base_path();
+    }
 
-        $timestamp = now()->format('Y-m-d_His');
-        $backupFile = "{$this->backupPath}/backup_{$timestamp}.zip";
-
-        $zip = new ZipArchive();
-        if ($zip->open($backupFile, ZipArchive::CREATE | ZipArchive::OVERWRITE) !== true) {
-            throw new Exception('Could not create backup file');
-        }
-
-        $basePath = base_path();
-
-        $itemsToBackup = [
+    /**
+     * The top-level files and directories included in a backup.
+     *
+     * @return array<int, string>
+     */
+    protected function itemsToBackup(): array
+    {
+        return [
             '.env',
             'app',
             'bootstrap',
@@ -63,21 +61,62 @@ class BackupService
             'routes',
             'storage',
         ];
+    }
 
-        foreach ($itemsToBackup as $item) {
+    /**
+     * Create a backup of the current installation.
+     *
+     * Backs up application directories, configuration, and database.
+     *
+     * @return string Path to the created backup file
+     *
+     * @throws Exception If backup creation fails
+     */
+    public function createBackup(): string
+    {
+        $this->ensureBackupDirectoryExists();
+
+        $timestamp = now()->format('Y-m-d_His');
+        $backupFile = "{$this->backupPath}/backup_{$timestamp}.zip";
+
+        $zip = new ZipArchive;
+        if ($zip->open($backupFile, ZipArchive::CREATE | ZipArchive::OVERWRITE) !== true) {
+            throw new Exception('Could not create backup file');
+        }
+
+        $basePath = $this->basePath();
+
+        // Never recurse into the backup directory itself: it lives under
+        // storage/, so backing "storage" up unguarded would embed every prior
+        // backup (and the in-progress archive) into each new one, ballooning
+        // disk use until backups fail.
+        $excludePaths = [realpath($this->backupPath) ?: $this->backupPath];
+
+        foreach ($this->itemsToBackup() as $item) {
             $path = "{$basePath}/{$item}";
 
             if (File::isFile($path)) {
                 $zip->addFile($path, $item);
             } elseif (File::isDirectory($path)) {
-                $this->addDirectoryToZip($zip, $path, $item);
+                $this->addDirectoryToZip($zip, $path, $item, $excludePaths);
             }
         }
 
-        // Backup database
-        $this->backupDatabase("{$this->backupPath}/database_{$timestamp}.sql");
+        // Dump the database and fold it INTO the archive as database.sql so a
+        // restore can import it. Previously the dump was written next to the
+        // zip and never added, so MySQL backups shipped with no data at all.
+        $dumpPath = "{$this->backupPath}/database_{$timestamp}.sql";
+        if ($this->backupDatabase($dumpPath)) {
+            $zip->addFile($dumpPath, 'database.sql');
+        }
 
         $zip->close();
+
+        // The dump is only read by addFile() at close(); remove the loose copy
+        // now that it is safely inside the archive.
+        if (File::exists($dumpPath)) {
+            File::delete($dumpPath);
+        }
 
         return $backupFile;
     }
@@ -89,7 +128,7 @@ class BackupService
      */
     public function listBackups(): array
     {
-        if (!File::exists($this->backupPath)) {
+        if (! File::exists($this->backupPath)) {
             return [];
         }
 
@@ -108,7 +147,7 @@ class BackupService
         }
 
         // Sort by creation time, newest first
-        usort($backups, fn($a, $b) => $b['created_at'] <=> $a['created_at']);
+        usort($backups, fn ($a, $b) => $b['created_at'] <=> $a['created_at']);
 
         return $backups;
     }
@@ -116,14 +155,14 @@ class BackupService
     /**
      * Delete a backup file.
      *
-     * @param string $filename The backup filename to delete
+     * @param  string  $filename  The backup filename to delete
      * @return bool True if deletion was successful, false if file not found
      */
     public function deleteBackup(string $filename): bool
     {
         $path = "{$this->backupPath}/{$filename}";
 
-        if (!File::exists($path)) {
+        if (! File::exists($path)) {
             return false;
         }
 
@@ -142,12 +181,10 @@ class BackupService
 
     /**
      * Ensure backup directory exists.
-     *
-     * @return void
      */
     protected function ensureBackupDirectoryExists(): void
     {
-        if (!File::exists($this->backupPath)) {
+        if (! File::exists($this->backupPath)) {
             File::makeDirectory($this->backupPath, config('limits.permissions.directory'), true);
         }
     }
@@ -155,58 +192,144 @@ class BackupService
     /**
      * Add directory recursively to zip.
      *
-     * @param ZipArchive $zip The zip archive to add files to
-     * @param string $path The filesystem path to the directory
-     * @param string $zipPath The path within the zip archive
-     * @return void
+     * @param  ZipArchive  $zip  The zip archive to add files to
+     * @param  string  $path  The filesystem path to the directory
+     * @param  string  $zipPath  The path within the zip archive
      */
-    protected function addDirectoryToZip(ZipArchive $zip, string $path, string $zipPath): void
+    protected function addDirectoryToZip(ZipArchive $zip, string $path, string $zipPath, array $excludePaths = []): void
     {
         $files = File::allFiles($path);
 
         foreach ($files as $file) {
             $filePath = $file->getRealPath();
-            $relativePath = $zipPath . '/' . $file->getRelativePathname();
+
+            if ($this->isExcluded($filePath, $excludePaths)) {
+                continue;
+            }
+
+            $relativePath = $zipPath.'/'.$file->getRelativePathname();
             $zip->addFile($filePath, $relativePath);
         }
     }
 
     /**
-     * Backup database to SQL file.
+     * Whether a file lives under any excluded directory.
      *
-     * Currently supports MySQL databases via mysqldump.
-     *
-     * @param string $outputPath Path to write the SQL backup file
-     * @return void
+     * @param  array<int, string>  $excludePaths
      */
-    protected function backupDatabase(string $outputPath): void
+    protected function isExcluded(string $filePath, array $excludePaths): bool
+    {
+        $normalized = str_replace('\\', '/', $filePath);
+
+        foreach ($excludePaths as $exclude) {
+            $exclude = rtrim(str_replace('\\', '/', $exclude), '/');
+
+            if ($exclude !== '' && str_starts_with($normalized, $exclude.'/')) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Backup the database to a SQL file.
+     *
+     * Currently dumps MySQL databases via mysqldump. Other drivers (e.g.
+     * SQLite) store their data as a file that is already captured by the
+     * directory backup, so no separate dump is produced.
+     *
+     * @param  string  $outputPath  Path to write the SQL backup file
+     * @return bool Whether a dump file was produced at $outputPath
+     */
+    protected function backupDatabase(string $outputPath): bool
     {
         try {
             $dbConnection = config('database.default');
             $dbConfig = config("database.connections.{$dbConnection}");
 
-            if ($dbConfig['driver'] === 'mysql') {
-                $command = sprintf(
-                    'mysqldump --user=%s --password=%s --host=%s %s > %s',
-                    escapeshellarg($dbConfig['username']),
-                    escapeshellarg($dbConfig['password']),
-                    escapeshellarg($dbConfig['host']),
-                    escapeshellarg($dbConfig['database']),
-                    escapeshellarg($outputPath)
-                );
-
-                exec($command, $output, $returnCode);
-
-                if ($returnCode !== 0) {
-                    Log::warning('Database backup failed', ['return_code' => $returnCode]);
-                }
-            } else {
-                Log::info('Database backup skipped for non-MySQL database', [
+            if (($dbConfig['driver'] ?? null) !== 'mysql') {
+                Log::info('Database dump skipped for non-MySQL database', [
                     'driver' => $dbConfig['driver'] ?? 'unknown',
                 ]);
+
+                return false;
             }
+
+            $command = sprintf(
+                'mysqldump --user=%s --password=%s --host=%s %s > %s',
+                escapeshellarg($dbConfig['username']),
+                escapeshellarg($dbConfig['password']),
+                escapeshellarg($dbConfig['host']),
+                escapeshellarg($dbConfig['database']),
+                escapeshellarg($outputPath)
+            );
+
+            exec($command, $output, $returnCode);
+
+            if ($returnCode !== 0) {
+                Log::warning('Database backup failed', ['return_code' => $returnCode]);
+
+                return false;
+            }
+
+            return File::exists($outputPath);
         } catch (Exception $e) {
             Log::warning('Database backup failed', ['error' => $e->getMessage()]);
+
+            return false;
+        }
+    }
+
+    /**
+     * Import a database dump produced by a backup.
+     *
+     * Only meaningful for MySQL — SQLite/other file-based databases are
+     * restored by replacing their data file, so this is a graceful no-op there.
+     *
+     * @param  string  $sqlPath  Path to the extracted database.sql
+     * @return bool Whether the dump was imported
+     */
+    public function importDatabaseDump(string $sqlPath): bool
+    {
+        try {
+            if (! File::exists($sqlPath)) {
+                return false;
+            }
+
+            $dbConnection = config('database.default');
+            $dbConfig = config("database.connections.{$dbConnection}");
+
+            if (($dbConfig['driver'] ?? null) !== 'mysql') {
+                Log::info('Database import skipped for non-MySQL database', [
+                    'driver' => $dbConfig['driver'] ?? 'unknown',
+                ]);
+
+                return false;
+            }
+
+            $command = sprintf(
+                'mysql --user=%s --password=%s --host=%s %s < %s',
+                escapeshellarg($dbConfig['username']),
+                escapeshellarg($dbConfig['password']),
+                escapeshellarg($dbConfig['host']),
+                escapeshellarg($dbConfig['database']),
+                escapeshellarg($sqlPath)
+            );
+
+            exec($command, $output, $returnCode);
+
+            if ($returnCode !== 0) {
+                Log::error('Database import failed', ['return_code' => $returnCode]);
+
+                return false;
+            }
+
+            return true;
+        } catch (Exception $e) {
+            Log::error('Database import failed', ['error' => $e->getMessage()]);
+
+            return false;
         }
     }
 }
