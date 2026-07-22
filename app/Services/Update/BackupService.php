@@ -264,15 +264,17 @@ class BackupService
             }
 
             $command = sprintf(
-                'mysqldump --user=%s --password=%s --host=%s %s > %s',
+                'mysqldump --user=%s --host=%s %s > %s',
                 escapeshellarg($dbConfig['username']),
-                escapeshellarg($dbConfig['password']),
                 escapeshellarg($dbConfig['host']),
                 escapeshellarg($dbConfig['database']),
                 escapeshellarg($outputPath)
             );
 
-            exec($command, $output, $returnCode);
+            $returnCode = $this->withMysqlPassword(
+                (string) ($dbConfig['password'] ?? ''),
+                fn () => $this->runCommand($command)
+            );
 
             if ($returnCode !== 0) {
                 Log::warning('Database backup failed', ['return_code' => $returnCode]);
@@ -316,15 +318,17 @@ class BackupService
             }
 
             $command = sprintf(
-                'mysql --user=%s --password=%s --host=%s %s < %s',
+                'mysql --user=%s --host=%s %s < %s',
                 escapeshellarg($dbConfig['username']),
-                escapeshellarg($dbConfig['password']),
                 escapeshellarg($dbConfig['host']),
                 escapeshellarg($dbConfig['database']),
                 escapeshellarg($sqlPath)
             );
 
-            exec($command, $output, $returnCode);
+            $returnCode = $this->withMysqlPassword(
+                (string) ($dbConfig['password'] ?? ''),
+                fn () => $this->runCommand($command)
+            );
 
             if ($returnCode !== 0) {
                 Log::error('Database import failed', ['return_code' => $returnCode]);
@@ -337,6 +341,41 @@ class BackupService
             Log::error('Database import failed', ['error' => $e->getMessage()]);
 
             return false;
+        }
+    }
+
+    /**
+     * Run a shell command and return its exit code. Isolated so tests can
+     * capture the command without executing it.
+     */
+    protected function runCommand(string $command): int
+    {
+        exec($command, $output, $returnCode);
+
+        return $returnCode;
+    }
+
+    /**
+     * Run $callback with MYSQL_PWD set, so the mysql/mysqldump password is
+     * passed via the environment rather than on the command line where it
+     * would be visible in the host process list. The previous value is
+     * restored afterwards.
+     *
+     * @param  \Closure(): int  $callback
+     */
+    protected function withMysqlPassword(string $password, \Closure $callback): int
+    {
+        $previous = getenv('MYSQL_PWD');
+        putenv('MYSQL_PWD='.$password);
+
+        try {
+            return $callback();
+        } finally {
+            if ($previous === false) {
+                putenv('MYSQL_PWD');
+            } else {
+                putenv('MYSQL_PWD='.$previous);
+            }
         }
     }
 }
