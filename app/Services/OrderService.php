@@ -305,6 +305,48 @@ final class OrderService
     }
 
     /**
+     * Restock a soon-to-be-deleted order's items — but only when the stock it
+     * holds is still physically on hand and hasn't already been returned.
+     *
+     * Stock is decremented at creation, so a pending/processing order still
+     * "holds" those units and deleting it has to give them back. A
+     * SHIPPED/DELIVERED order's goods have physically left the warehouse, and a
+     * CANCELLED order was already restocked by cancel(): restocking either on
+     * delete would invent inventory that isn't there. The order row is locked
+     * and its status re-read inside this transaction so a concurrent
+     * ship/cancel cannot slip a phantom restock past the guard. The caller is
+     * responsible for deleting the order itself (web soft-deletes, REST hard-
+     * deletes its items first) within the same transaction.
+     */
+    public function restockForDeletion(Order $order): void
+    {
+        DB::transaction(function () use ($order) {
+            $locked = Order::whereKey($order->getKey())->lockForUpdate()->firstOrFail();
+
+            // Goods already gone (shipped/delivered) or already returned
+            // (cancelled) → deletion must not re-inject phantom stock.
+            if (in_array($locked->status, [OrderStatus::SHIPPED, OrderStatus::DELIVERED, OrderStatus::CANCELLED], true)) {
+                return;
+            }
+
+            $locked->load('items.product');
+
+            foreach ($locked->items as $item) {
+                if ($item->product) {
+                    StockAdjustment::adjust(
+                        $item->product,
+                        $item->quantity,
+                        'order_cancellation',
+                        "Order {$locked->order_number} deleted",
+                        null,
+                        $locked
+                    );
+                }
+            }
+        });
+    }
+
+    /**
      * Human-readable label for an insufficient-stock message.
      *
      * @param  array{product: Product, variant: ?ProductVariant}  $line
