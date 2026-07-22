@@ -9,6 +9,7 @@ use App\Http\Requests\Api\Product\StoreProductRequest;
 use App\Http\Requests\Api\Product\UpdateProductRequest;
 use App\Http\Resources\ProductResource;
 use App\Models\Inventory\Product;
+use App\Services\ProductService;
 use Dedoc\Scramble\Attributes\QueryParameter;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -19,6 +20,8 @@ use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
  */
 class ProductController extends Controller
 {
+    public function __construct(protected ProductService $productService) {}
+
     /**
      * List products.
      */
@@ -90,7 +93,10 @@ class ProductController extends Controller
         $validated['stock'] = $validated['stock'] ?? 0;
         $validated['tracking_type'] = $validated['tracking_type'] ?? 'none';
 
-        $product = Product::create($validated);
+        // Route through the shared ProductService so the REST surface handles
+        // variants, options, and base64 images identically to the web surface
+        // instead of silently dropping them.
+        $product = $this->productService->create($validated);
         $product->load(['category', 'location']);
 
         return response()->json([
@@ -140,7 +146,7 @@ class ProductController extends Controller
 
         $validated = $request->validated();
 
-        $product->update($validated);
+        $product = $this->productService->update($product, $validated);
         $product->load(['category', 'location']);
 
         return response()->json([

@@ -39,6 +39,28 @@ final class UpdateProductRequest extends FormRequest
             'is_active' => ['nullable', 'boolean'],
             'tracking_type' => ['nullable', 'string', 'in:none,batch,serial'],
             'metadata' => ['nullable', 'array'],
+
+            // Variants, options, and base64 images are processed by
+            // ProductService (shared with the web surface). Omitting variants
+            // leaves any existing ones untouched.
+            'images' => ['nullable', 'array', 'max:5'],
+            'images.*.preview' => ['nullable', 'string'],
+            'images.*.name' => ['nullable', 'string'],
+            'has_variants' => ['boolean'],
+            'options' => ['nullable', 'array', 'max:3'],
+            'options.*.name' => ['required_with:options', 'string', 'max:255'],
+            'options.*.values' => ['required_with:options', 'array', 'min:1'],
+            'options.*.values.*' => ['string', 'max:255'],
+            'variants' => ['nullable', 'array'],
+            'variants.*.id' => ['nullable', 'integer'],
+            'variants.*.option_values' => ['required_with:variants', 'array'],
+            'variants.*.sku' => ['nullable', 'string', 'max:255'],
+            'variants.*.barcode' => ['nullable', 'string', 'max:255'],
+            'variants.*.price' => ['nullable', 'numeric', 'min:0'],
+            'variants.*.purchase_price' => ['nullable', 'numeric', 'min:0'],
+            'variants.*.stock' => ['nullable', 'integer', 'min:0'],
+            'variants.*.min_stock' => ['nullable', 'integer', 'min:0'],
+            'variants.*.is_active' => ['boolean'],
         ];
     }
 }

@@ -4,13 +4,14 @@ declare(strict_types=1);
 
 namespace App\GraphQL\Mutations;
 
-use App\Models\Inventory\Product;
 use App\Models\Inventory\ProductCategory;
 use App\Models\Inventory\ProductLocation;
+use App\Services\ProductService;
 use Closure;
 use GraphQL\Error\Error;
 use GraphQL\Type\Definition\ResolveInfo;
 use GraphQL\Type\Definition\Type;
+use Illuminate\Auth\Access\AuthorizationException;
 use Rebing\GraphQL\Support\Facades\GraphQL;
 use Rebing\GraphQL\Support\Mutation;
 
@@ -115,21 +116,21 @@ class CreateProductMutation extends Mutation
     public function resolve($root, array $args, $context, ResolveInfo $resolveInfo, Closure $getSelectFields)
     {
         $user = auth()->user();
-        if (!$user->hasPermission('create_products')) {
-            throw new \Illuminate\Auth\Access\AuthorizationException('Unauthorized');
+        if (! $user->hasPermission('create_products')) {
+            throw new AuthorizationException('Unauthorized');
         }
 
         if (isset($args['category_id']) && ! ProductCategory::query()
-                ->whereKey($args['category_id'])
-                ->where('organization_id', $user->organization_id)
-                ->exists()) {
+            ->whereKey($args['category_id'])
+            ->where('organization_id', $user->organization_id)
+            ->exists()) {
             throw new Error('Category not found');
         }
 
         if (isset($args['location_id']) && ! ProductLocation::query()
-                ->whereKey($args['location_id'])
-                ->where('organization_id', $user->organization_id)
-                ->exists()) {
+            ->whereKey($args['location_id'])
+            ->where('organization_id', $user->organization_id)
+            ->exists()) {
             throw new Error('Location not found');
         }
 
@@ -138,7 +139,9 @@ class CreateProductMutation extends Mutation
         $args['stock'] = $args['stock'] ?? 0;
         $args['tracking_type'] = $args['tracking_type'] ?? 'none';
 
-        $product = Product::create($args);
+        // Route through the shared ProductService so every surface creates
+        // products identically (currency normalisation, images, variants).
+        $product = app(ProductService::class)->create($args);
         $product->load(['category', 'location']);
 
         return $product;
