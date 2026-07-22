@@ -6,6 +6,7 @@ use App\Models\Auth\Organization;
 use App\Models\Inventory\Product;
 use App\Models\Inventory\ProductCategory;
 use App\Models\Inventory\ProductLocation;
+use App\Models\Inventory\ProductOption;
 use App\Models\Inventory\ProductVariant;
 use App\Models\Role;
 use App\Models\System\SystemSetting;
@@ -360,6 +361,60 @@ class ProductApiTest extends TestCase
         $response->assertStatus(200);
         $this->assertSame('Keep Renamed', $product->fresh()->name);
         $this->assertSame(1, $product->fresh()->variants()->count());
+    }
+
+    public function test_update_with_only_options_key_preserves_variants(): void
+    {
+        Sanctum::actingAs($this->admin);
+
+        $product = Product::create([
+            'organization_id' => $this->organization->id,
+            'sku' => 'IND-001', 'name' => 'Indep', 'price' => 10.00, 'currency' => 'USD',
+            'stock' => 0, 'min_stock' => 0, 'has_variants' => true,
+        ]);
+        $option = ProductOption::create([
+            'product_id' => $product->id, 'name' => 'Size', 'values' => ['S', 'M'], 'position' => 0,
+        ]);
+        ProductVariant::create([
+            'product_id' => $product->id, 'organization_id' => $this->organization->id,
+            'sku' => 'IND-001-S', 'title' => 'S', 'option_values' => ['Size' => 'S'],
+            'stock' => 1, 'min_stock' => 0, 'is_active' => true, 'position' => 0,
+        ]);
+
+        // A partial update carrying only options must not wipe the variants.
+        $this->putJson("/api/v1/products/{$product->id}", [
+            'options' => [['id' => $option->id, 'name' => 'Size', 'values' => ['S', 'M', 'L']]],
+        ])->assertStatus(200);
+
+        $this->assertSame(1, $product->fresh()->variants()->count());
+    }
+
+    public function test_update_with_only_variants_key_preserves_options(): void
+    {
+        Sanctum::actingAs($this->admin);
+
+        $product = Product::create([
+            'organization_id' => $this->organization->id,
+            'sku' => 'IND-002', 'name' => 'Indep2', 'price' => 10.00, 'currency' => 'USD',
+            'stock' => 0, 'min_stock' => 0, 'has_variants' => true,
+        ]);
+        ProductOption::create([
+            'product_id' => $product->id, 'name' => 'Size', 'values' => ['S', 'M'], 'position' => 0,
+        ]);
+        ProductVariant::create([
+            'product_id' => $product->id, 'organization_id' => $this->organization->id,
+            'sku' => 'IND-002-S', 'title' => 'S', 'option_values' => ['Size' => 'S'],
+            'stock' => 1, 'min_stock' => 0, 'is_active' => true, 'position' => 0,
+        ]);
+
+        // A partial update carrying only variants must not wipe the options.
+        $this->putJson("/api/v1/products/{$product->id}", [
+            'variants' => [
+                ['option_values' => ['Size' => 'S'], 'sku' => 'IND-002-S2', 'price' => 11.00, 'stock' => 2],
+            ],
+        ])->assertStatus(200);
+
+        $this->assertSame(1, $product->fresh()->options()->count());
     }
 
     public function test_create_product_validates_required_fields(): void
