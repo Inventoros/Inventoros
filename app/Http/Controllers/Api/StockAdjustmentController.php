@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Api;
 
+use App\Exceptions\InsufficientStockException;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\StockAdjustment\StoreStockAdjustmentRequest;
 use App\Http\Resources\StockAdjustmentResource;
@@ -84,13 +85,21 @@ class StockAdjustmentController extends Controller
         }
 
         // Create the stock adjustment
-        $adjustment = StockAdjustment::adjust(
-            $product,
-            $validated['quantity'],
-            $validated['type'],
-            $validated['reason'] ?? null,
-            $validated['notes'] ?? null
-        );
+        try {
+            $adjustment = StockAdjustment::adjust(
+                $product,
+                $validated['quantity'],
+                $validated['type'],
+                $validated['reason'] ?? null,
+                $validated['notes'] ?? null,
+                allowNegative: false
+            );
+        } catch (InsufficientStockException $e) {
+            return response()->json([
+                'message' => $e->getMessage(),
+                'errors' => ['quantity' => [$e->getMessage()]],
+            ], 422);
+        }
 
         $adjustment->load(['product', 'user']);
 
