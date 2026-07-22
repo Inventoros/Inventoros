@@ -40,7 +40,6 @@ class Webhook extends Model
     protected $fillable = [
         'name',
         'url',
-        'secret',
         'events',
         'is_active',
         'organization_id',

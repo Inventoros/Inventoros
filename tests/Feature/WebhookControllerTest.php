@@ -87,14 +87,39 @@ class WebhookControllerTest extends TestCase
 
     protected function createWebhook(array $attributes = []): Webhook
     {
-        return Webhook::create(array_merge([
+        $secret = $attributes['secret'] ?? 'test-secret';
+        unset($attributes['secret']);
+
+        $webhook = Webhook::create(array_merge([
             'organization_id' => $this->organization->id,
             'name' => 'Test Webhook',
             'url' => 'https://example.com/webhook',
-            'secret' => 'test-secret',
             'events' => ['order.created'],
             'is_active' => true,
         ], $attributes));
+
+        // `secret` is intentionally not mass-assignable; set it directly so a
+        // test can pin a known value.
+        $webhook->secret = $secret;
+        $webhook->save();
+
+        return $webhook;
+    }
+
+    public function test_webhook_secret_is_not_mass_assignable(): void
+    {
+        $webhook = new Webhook;
+        $webhook->fill([
+            'name' => 'Hook',
+            'url' => 'https://example.com/hook',
+            'events' => ['order.created'],
+            'is_active' => true,
+            'organization_id' => $this->organization->id,
+            'secret' => 'attacker-chosen-secret',
+        ]);
+
+        // A request payload must never be able to set the signing secret.
+        $this->assertNotSame('attacker-chosen-secret', $webhook->secret);
     }
 
     public function test_admin_can_view_webhooks_list(): void
