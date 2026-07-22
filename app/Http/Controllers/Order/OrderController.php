@@ -340,16 +340,8 @@ class OrderController extends Controller
                 });
 
                 foreach ($itemsToDelete as $item) {
-                    if ($item->product) {
-                        StockAdjustment::adjust(
-                            $item->product,
-                            $item->quantity,
-                            'order_cancellation',
-                            "Order {$order->order_number} item removed",
-                            null,
-                            $order
-                        );
-                    }
+                    $item->loadMissing('variant');
+                    $this->orderService->restockItem($item, "Order {$order->order_number} item removed", $order);
                     $item->delete();
                 }
 
@@ -372,18 +364,9 @@ class OrderController extends Controller
                         );
                     }
 
-                    $order->load('items.product');
+                    $order->load('items.product', 'items.variant');
                     foreach ($order->items as $item) {
-                        if ($item->product) {
-                            StockAdjustment::adjust(
-                                $item->product,
-                                $item->quantity,
-                                'order_cancellation',
-                                "Order {$order->order_number} cancelled",
-                                null,
-                                $order
-                            );
-                        }
+                        $this->orderService->restockItem($item, "Order {$order->order_number} cancelled", $order);
                     }
                 }
 
@@ -508,18 +491,9 @@ class OrderController extends Controller
             // audit trail line up with what's physically available — without
             // this the rejected order holds phantom reserved stock forever
             // and the reorder logic over-purchases.
-            $order->load('items.product');
+            $order->load('items.product', 'items.variant');
             foreach ($order->items as $item) {
-                if ($item->product) {
-                    StockAdjustment::adjust(
-                        $item->product,
-                        $item->quantity,
-                        'order_cancellation',
-                        "Order {$order->order_number} rejected",
-                        null,
-                        $order
-                    );
-                }
+                $this->orderService->restockItem($item, "Order {$order->order_number} rejected", $order);
             }
 
             $order->update([
