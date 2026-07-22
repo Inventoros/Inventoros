@@ -9,7 +9,9 @@ use App\Models\Concerns\BelongsToOrganization;
 use App\Models\Inventory\StockAdjustment;
 use App\Models\Inventory\Supplier;
 use App\Models\User;
+use App\Support\SequenceNumberRetry;
 use App\Traits\LogsActivity;
+use Closure;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
@@ -18,6 +20,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
 
 /**
  * Represents a purchase order in the system.
@@ -223,6 +226,35 @@ class PurchaseOrder extends Model
         }
 
         return $prefix.str_pad((string) $newNumber, 4, '0', STR_PAD_LEFT);
+    }
+
+    /**
+     * Create a purchase order (and whatever the callback builds alongside it)
+     * with a race-safe PO number.
+     *
+     * generatePONumber() computes the next number as MAX(po_number) + 1 — a
+     * non-atomic read-modify-write. Two concurrent creates in the same tenant
+     * on the same day can read the same MAX and land on the same number; the
+     * loser then hits the per-org UNIQUE constraint and 500s. Mirroring
+     * OrderService, the number generation and the insert run together inside a
+     * transaction wrapped in SequenceNumberRetry, so a collision rolls the
+     * attempt back and re-runs with a freshly read number.
+     *
+     * The retry wraps the transaction (not the reverse) so every attempt runs
+     * in its own clean transaction — required on Postgres, where a constraint
+     * violation aborts the surrounding transaction. Keep side effects that must
+     * not repeat (counters, console output, notifications) OUTSIDE this call,
+     * acting on the returned order, since the callback re-runs on collision.
+     *
+     * @param  Closure(string $poNumber): PurchaseOrder  $make  Receives the
+     *                                                          generated number and returns the persisted order, creating its
+     *                                                          items and totals inside the same transaction.
+     */
+    public static function createWithNumber(int $organizationId, Closure $make): self
+    {
+        return SequenceNumberRetry::create(
+            fn () => DB::transaction(fn () => $make(self::generatePONumber($organizationId)))
+        );
     }
 
     /**
