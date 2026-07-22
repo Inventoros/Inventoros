@@ -12,6 +12,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules;
+use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -24,23 +25,25 @@ class RegisteredUserController extends Controller
 {
     /**
      * Display the registration view.
-     *
-     * @return Response
      */
     public function create(): Response
     {
+        abort_unless((bool) config('auth.registration_enabled'), 404);
+
         return Inertia::render('Auth/Register');
     }
 
     /**
      * Handle an incoming registration request.
      *
-     * @param Request $request The incoming HTTP request containing registration data
-     * @return RedirectResponse
-     * @throws \Illuminate\Validation\ValidationException
+     * @param  Request  $request  The incoming HTTP request containing registration data
+     *
+     * @throws ValidationException
      */
     public function store(Request $request): RedirectResponse
     {
+        abort_unless((bool) config('auth.registration_enabled'), 404);
+
         $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|string|lowercase|email|max:255|unique:'.User::class,

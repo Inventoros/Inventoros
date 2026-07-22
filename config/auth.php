@@ -1,6 +1,23 @@
 <?php
 
+use App\Models\User;
+
 return [
+
+    /*
+    |--------------------------------------------------------------------------
+    | Public Registration
+    |--------------------------------------------------------------------------
+    |
+    | Whether the public self-registration routes are enabled. Off by default:
+    | the installer provisions the first admin and organization, and a
+    | self-registered account is org-less with no permissions. Operators who
+    | want open sign-up (and who add their own organization onboarding) can
+    | opt in with REGISTRATION_ENABLED=true.
+    |
+    */
+
+    'registration_enabled' => env('REGISTRATION_ENABLED', false),
 
     /*
     |--------------------------------------------------------------------------
@@ -67,7 +84,7 @@ return [
     'providers' => [
         'users' => [
             'driver' => 'eloquent',
-            'model' => env('AUTH_MODEL', App\Models\User::class),
+            'model' => env('AUTH_MODEL', User::class),
         ],
 
         // 'users' => [
