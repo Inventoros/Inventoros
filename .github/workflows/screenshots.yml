@@ -16,6 +16,12 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          # This workflow triggers on tag pushes, where checkout would land on
+          # a detached HEAD. Check out the default branch so the screenshots
+          # commit below has a branch to push to (a tag is cut from main's tip,
+          # so its code matches).
+          ref: main
 
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
@@ -78,3 +84,4 @@ jobs:
         with:
           commit_message: 'chore(screenshots): update from CI [skip ci]'
           file_pattern: 'screenshots/*.png'
+          branch: main
