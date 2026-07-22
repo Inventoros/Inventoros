@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Inventory;
 
+use App\Exceptions\InsufficientStockException;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StockAdjustment\StoreStockAdjustmentRequest;
 use App\Models\Inventory\Product;
@@ -132,13 +133,20 @@ class StockAdjustmentController extends Controller
             ->firstOrFail();
 
         // Create the adjustment
-        StockAdjustment::adjust(
-            product: $product,
-            quantity: $validated['adjustment_quantity'],
-            type: $validated['type'],
-            reason: $validated['reason'],
-            notes: $validated['notes'] ?? null
-        );
+        try {
+            StockAdjustment::adjust(
+                product: $product,
+                quantity: $validated['adjustment_quantity'],
+                type: $validated['type'],
+                reason: $validated['reason'],
+                notes: $validated['notes'] ?? null,
+                allowNegative: false
+            );
+        } catch (InsufficientStockException $e) {
+            return redirect()->back()
+                ->withErrors(['adjustment_quantity' => $e->getMessage()])
+                ->withInput();
+        }
 
         return redirect()->route('stock-adjustments.index')
             ->with('success', 'Stock adjustment created successfully.');

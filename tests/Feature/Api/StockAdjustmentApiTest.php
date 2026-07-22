@@ -6,6 +6,7 @@ use App\Models\Auth\Organization;
 use App\Models\Inventory\Product;
 use App\Models\Inventory\ProductCategory;
 use App\Models\Inventory\ProductLocation;
+use App\Models\Inventory\ProductVariant;
 use App\Models\Inventory\StockAdjustment;
 use App\Models\Role;
 use App\Models\System\SystemSetting;
@@ -248,6 +249,54 @@ class StockAdjustmentApiTest extends TestCase
 
         $this->product->refresh();
         $this->assertEquals($initialStock - 10, $this->product->stock);
+    }
+
+    public function test_cannot_remove_more_stock_than_on_hand(): void
+    {
+        Sanctum::actingAs($this->admin);
+
+        $before = $this->product->stock;
+
+        $response = $this->postJson('/api/v1/stock-adjustments', [
+            'product_id' => $this->product->id,
+            'type' => 'damage',
+            'quantity' => -($before + 50),
+            'reason' => 'Over-removal attempt',
+        ]);
+
+        $response->assertStatus(422)
+            ->assertJsonValidationErrors(['quantity']);
+
+        // Nothing was written: stock is unchanged and no adjustment persisted.
+        $this->product->refresh();
+        $this->assertEquals($before, $this->product->stock);
+        $this->assertDatabaseMissing('stock_adjustments', ['reason' => 'Over-removal attempt']);
+    }
+
+    public function test_variant_adjust_cannot_remove_more_than_on_hand(): void
+    {
+        Sanctum::actingAs($this->admin);
+
+        $variant = ProductVariant::create([
+            'organization_id' => $this->organization->id,
+            'product_id' => $this->product->id,
+            'sku' => 'VAR-CAP-1',
+            'title' => 'Medium',
+            'option_values' => ['size' => 'M'],
+            'price' => 10.00,
+            'stock' => 5,
+            'is_active' => true,
+        ]);
+
+        $response = $this->postJson(
+            "/api/v1/products/{$this->product->id}/variants/{$variant->id}/adjust-stock",
+            ['quantity' => -20, 'type' => 'decrease']
+        );
+
+        $response->assertStatus(422)
+            ->assertJsonValidationErrors(['quantity']);
+
+        $this->assertEquals(5, $variant->fresh()->stock);
     }
 
     public function test_create_adjustment_validates_required_fields(): void

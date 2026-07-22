@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Api;
 
+use App\Exceptions\InsufficientStockException;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\ProductVariant\StoreProductVariantRequest;
 use App\Http\Requests\Api\ProductVariant\UpdateProductVariantRequest;
@@ -187,13 +188,21 @@ class ProductVariantController extends Controller
             'notes' => ['nullable', 'string'],
         ]);
 
-        $adjustment = StockAdjustment::adjustVariant(
-            $variant,
-            $validated['quantity'],
-            $validated['type'],
-            $validated['reason'] ?? null,
-            $validated['notes'] ?? null
-        );
+        try {
+            $adjustment = StockAdjustment::adjustVariant(
+                $variant,
+                $validated['quantity'],
+                $validated['type'],
+                $validated['reason'] ?? null,
+                $validated['notes'] ?? null,
+                allowNegative: false
+            );
+        } catch (InsufficientStockException $e) {
+            return response()->json([
+                'message' => $e->getMessage(),
+                'errors' => ['quantity' => [$e->getMessage()]],
+            ], 422);
+        }
 
         $variant->refresh();
 

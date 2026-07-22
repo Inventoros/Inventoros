@@ -4,11 +4,14 @@ declare(strict_types=1);
 
 namespace App\Models\Inventory;
 
+use App\Exceptions\InsufficientStockException;
 use App\Models\Auth\Organization;
 use App\Models\User;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -27,13 +30,13 @@ use Illuminate\Support\Facades\DB;
  * @property string|null $notes
  * @property string|null $reference_type
  * @property int|null $reference_id
- * @property \Illuminate\Support\Carbon|null $created_at
- * @property \Illuminate\Support\Carbon|null $updated_at
- * @property-read \App\Models\Auth\Organization $organization
- * @property-read \App\Models\Inventory\Product $product
- * @property-read \App\Models\User|null $user
- * @property-read \App\Models\Inventory\ProductVariant|null $variant
- * @property-read \Illuminate\Database\Eloquent\Model|null $reference
+ * @property Carbon|null $created_at
+ * @property Carbon|null $updated_at
+ * @property-read Organization $organization
+ * @property-read Product $product
+ * @property-read User|null $user
+ * @property-read ProductVariant|null $variant
+ * @property-read Model|null $reference
  */
 class StockAdjustment extends Model
 {
@@ -63,7 +66,7 @@ class StockAdjustment extends Model
     /**
      * Get the organization that owns the stock adjustment.
      *
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo<\App\Models\Auth\Organization, $this>
+     * @return BelongsTo<Organization, $this>
      */
     public function organization(): BelongsTo
     {
@@ -73,7 +76,7 @@ class StockAdjustment extends Model
     /**
      * Get the product associated with the adjustment.
      *
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo<\App\Models\Inventory\Product, $this>
+     * @return BelongsTo<Product, $this>
      */
     public function product(): BelongsTo
     {
@@ -83,7 +86,7 @@ class StockAdjustment extends Model
     /**
      * Get the user who made the adjustment.
      *
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo<\App\Models\User, $this>
+     * @return BelongsTo<User, $this>
      */
     public function user(): BelongsTo
     {
@@ -93,7 +96,7 @@ class StockAdjustment extends Model
     /**
      * Get the variant associated with the adjustment.
      *
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo<\App\Models\Inventory\ProductVariant, $this>
+     * @return BelongsTo<ProductVariant, $this>
      */
     public function variant(): BelongsTo
     {
@@ -103,7 +106,7 @@ class StockAdjustment extends Model
     /**
      * Get the reference model (Order, Purchase, etc.).
      *
-     * @return \Illuminate\Database\Eloquent\Relations\MorphTo<\Illuminate\Database\Eloquent\Model, $this>
+     * @return MorphTo<Model, $this>
      */
     public function reference(): MorphTo
     {
@@ -113,9 +116,9 @@ class StockAdjustment extends Model
     /**
      * Scope to filter by variant.
      *
-     * @param \Illuminate\Database\Eloquent\Builder<static> $query
-     * @param int $variantId
-     * @return \Illuminate\Database\Eloquent\Builder<static>
+     * @param  Builder<static>  $query
+     * @param  int  $variantId
+     * @return Builder<static>
      */
     public function scopeForVariant($query, $variantId)
     {
@@ -125,9 +128,9 @@ class StockAdjustment extends Model
     /**
      * Scope to filter by organization.
      *
-     * @param \Illuminate\Database\Eloquent\Builder<static> $query
-     * @param int $organizationId
-     * @return \Illuminate\Database\Eloquent\Builder<static>
+     * @param  Builder<static>  $query
+     * @param  int  $organizationId
+     * @return Builder<static>
      */
     public function scopeForOrganization($query, $organizationId)
     {
@@ -137,9 +140,9 @@ class StockAdjustment extends Model
     /**
      * Scope to filter by product.
      *
-     * @param \Illuminate\Database\Eloquent\Builder<static> $query
-     * @param int $productId
-     * @return \Illuminate\Database\Eloquent\Builder<static>
+     * @param  Builder<static>  $query
+     * @param  int  $productId
+     * @return Builder<static>
      */
     public function scopeForProduct($query, $productId)
     {
@@ -149,9 +152,9 @@ class StockAdjustment extends Model
     /**
      * Scope to filter by type.
      *
-     * @param \Illuminate\Database\Eloquent\Builder<static> $query
-     * @param string $type
-     * @return \Illuminate\Database\Eloquent\Builder<static>
+     * @param  Builder<static>  $query
+     * @param  string  $type
+     * @return Builder<static>
      */
     public function scopeOfType($query, $type)
     {
@@ -161,12 +164,6 @@ class StockAdjustment extends Model
     /**
      * Create a stock adjustment and update product stock.
      *
-     * @param \App\Models\Inventory\Product $product
-     * @param int $quantity
-     * @param string $type
-     * @param string|null $reason
-     * @param string|null $notes
-     * @param \Illuminate\Database\Eloquent\Model|null $reference
      * @return static
      */
     public static function adjust(
@@ -175,9 +172,10 @@ class StockAdjustment extends Model
         string $type,
         ?string $reason = null,
         ?string $notes = null,
-        ?Model $reference = null
+        ?Model $reference = null,
+        bool $allowNegative = true
     ): self {
-        return DB::transaction(function () use ($product, $quantity, $type, $reason, $notes, $reference) {
+        return DB::transaction(function () use ($product, $quantity, $type, $reason, $notes, $reference, $allowNegative) {
             // Re-fetch the product with a row lock so concurrent adjustments
             // serialize on this row; otherwise two callers can both read
             // the same pre-image, compute different "after" values, and
@@ -186,6 +184,12 @@ class StockAdjustment extends Model
 
             $quantityBefore = $locked->stock;
             $quantityAfter = $quantityBefore + $quantity;
+
+            if (! $allowNegative && $quantityAfter < 0) {
+                throw new InsufficientStockException(
+                    'Cannot remove '.abs($quantity)." units; only {$quantityBefore} on hand."
+                );
+            }
 
             $adjustment = self::create([
                 'organization_id' => $locked->organization_id,
@@ -222,12 +226,6 @@ class StockAdjustment extends Model
     /**
      * Create a stock adjustment for a product variant.
      *
-     * @param \App\Models\Inventory\ProductVariant $variant
-     * @param int $quantity
-     * @param string $type
-     * @param string|null $reason
-     * @param string|null $notes
-     * @param \Illuminate\Database\Eloquent\Model|null $reference
      * @return static
      */
     public static function adjustVariant(
@@ -236,15 +234,22 @@ class StockAdjustment extends Model
         string $type,
         ?string $reason = null,
         ?string $notes = null,
-        ?Model $reference = null
+        ?Model $reference = null,
+        bool $allowNegative = true
     ): self {
-        return DB::transaction(function () use ($variant, $quantity, $type, $reason, $notes, $reference) {
+        return DB::transaction(function () use ($variant, $quantity, $type, $reason, $notes, $reference, $allowNegative) {
             // Re-fetch the variant with a row lock — same race protection as
             // adjust() above.
             $locked = ProductVariant::where('id', $variant->id)->lockForUpdate()->firstOrFail();
 
             $quantityBefore = $locked->stock;
             $quantityAfter = $quantityBefore + $quantity;
+
+            if (! $allowNegative && $quantityAfter < 0) {
+                throw new InsufficientStockException(
+                    'Cannot remove '.abs($quantity)." units; only {$quantityBefore} on hand."
+                );
+            }
 
             $adjustment = self::create([
                 'organization_id' => $locked->organization_id,
