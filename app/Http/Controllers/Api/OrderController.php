@@ -9,7 +9,6 @@ use App\Exceptions\InsufficientStockException;
 use App\Exceptions\InvalidOrderItemException;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\OrderResource;
-use App\Models\Inventory\StockAdjustment;
 use App\Models\Order\Order;
 use App\Services\OrderService;
 use Dedoc\Scramble\Attributes\QueryParameter;
@@ -252,30 +251,15 @@ class OrderController extends Controller
             ], 404);
         }
 
-        $order->load('items.product');
-
         return DB::transaction(function () use ($order) {
-            // Restore stock for each item through StockAdjustment so the
-            // cancellation is reflected in the ledger. adjust() takes
-            // lockForUpdate internally so concurrent deletes do not
-            // lose increments.
-            foreach ($order->items as $item) {
-                if ($item->product) {
-                    StockAdjustment::adjust(
-                        $item->product,
-                        $item->quantity,
-                        'order_cancellation',
-                        "Order {$order->order_number} deleted",
-                        null,
-                        $order
-                    );
-                }
-            }
+            // Restock only when the units are still on hand and unreturned. The
+            // service re-reads the locked status so a shipped/delivered order
+            // (goods gone) or an already-cancelled order (already restocked)
+            // isn't restocked into phantom inventory.
+            $this->orderService->restockForDeletion($order);
 
-            // Delete order items
+            // Delete order items, then the order itself.
             $order->items()->delete();
-
-            // Delete order
             $order->delete();
 
             return response()->json([

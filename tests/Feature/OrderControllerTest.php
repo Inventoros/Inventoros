@@ -976,6 +976,48 @@ class OrderControllerTest extends TestCase
         $this->assertEquals($initialStock + 1, $this->product->stock);
     }
 
+    public function test_deleting_shipped_order_does_not_restock_phantom_inventory(): void
+    {
+        $order = $this->createOrder(['status' => 'shipped']);
+        $stockBefore = $this->product->fresh()->stock;
+
+        $this->actingAs($this->admin)
+            ->delete(route('orders.destroy', $order))
+            ->assertRedirect(route('orders.index'));
+
+        $this->assertSoftDeleted('orders', ['id' => $order->id]);
+
+        // Goods physically left the warehouse when the order shipped; deleting
+        // the record must not put them back on hand as phantom stock.
+        $this->assertSame($stockBefore, $this->product->fresh()->stock);
+    }
+
+    public function test_deleting_delivered_order_does_not_restock_phantom_inventory(): void
+    {
+        $order = $this->createOrder(['status' => 'delivered']);
+        $stockBefore = $this->product->fresh()->stock;
+
+        $this->actingAs($this->admin)
+            ->delete(route('orders.destroy', $order))
+            ->assertRedirect(route('orders.index'));
+
+        $this->assertSame($stockBefore, $this->product->fresh()->stock);
+    }
+
+    public function test_deleting_cancelled_order_does_not_double_restock(): void
+    {
+        $order = $this->createOrder(['status' => 'cancelled']);
+        $stockBefore = $this->product->fresh()->stock;
+
+        $this->actingAs($this->admin)
+            ->delete(route('orders.destroy', $order))
+            ->assertRedirect(route('orders.index'));
+
+        // A cancelled order already had its stock returned by cancel(); deleting
+        // it must not restock a second time.
+        $this->assertSame($stockBefore, $this->product->fresh()->stock);
+    }
+
     public function test_member_cannot_delete_order(): void
     {
         $order = $this->createOrder();

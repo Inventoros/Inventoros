@@ -427,23 +427,11 @@ class OrderController extends Controller
         }
 
         DB::transaction(function () use ($order) {
-            // Load items with product relationship for stock restoration
-            $order->load('items.product');
-
-            // Restore stock for all items via StockAdjustment so the
-            // deletion is reflected in the ledger.
-            foreach ($order->items as $item) {
-                if ($item->product) {
-                    StockAdjustment::adjust(
-                        $item->product,
-                        $item->quantity,
-                        'order_cancellation',
-                        "Order {$order->order_number} deleted",
-                        null,
-                        $order
-                    );
-                }
-            }
+            // Restock only when the units are still on hand and unreturned. The
+            // service re-reads the locked status so a shipped/delivered order
+            // (goods gone) or an already-cancelled order (already restocked)
+            // isn't restocked into phantom inventory.
+            $this->orderService->restockForDeletion($order);
 
             $order->delete();
         });

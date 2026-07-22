@@ -527,6 +527,57 @@ class OrderApiTest extends TestCase
         $this->assertSoftDeleted('orders', ['id' => $order->id]);
     }
 
+    public function test_deleting_shipped_order_does_not_restock_phantom_inventory(): void
+    {
+        Sanctum::actingAs($this->admin);
+
+        $order = $this->createOrder(['status' => 'shipped']);
+        $order->items()->create([
+            'product_id' => $this->product->id,
+            'product_name' => $this->product->name,
+            'sku' => $this->product->sku,
+            'quantity' => 5,
+            'unit_price' => 10.00,
+            'subtotal' => 50.00,
+            'tax' => 0,
+            'total' => 50.00,
+        ]);
+        $stockBefore = $this->product->fresh()->stock;
+
+        $this->deleteJson("/api/v1/orders/{$order->id}")->assertStatus(200);
+
+        // Shipped goods are gone; deletion must not re-inject phantom stock or
+        // write a cancellation ledger row for inventory that never came back.
+        $this->assertSame($stockBefore, $this->product->fresh()->stock);
+        $this->assertDatabaseMissing('stock_adjustments', [
+            'reference_id' => $order->id,
+            'type' => 'order_cancellation',
+        ]);
+    }
+
+    public function test_deleting_cancelled_order_does_not_double_restock(): void
+    {
+        Sanctum::actingAs($this->admin);
+
+        $order = $this->createOrder(['status' => 'cancelled']);
+        $order->items()->create([
+            'product_id' => $this->product->id,
+            'product_name' => $this->product->name,
+            'sku' => $this->product->sku,
+            'quantity' => 5,
+            'unit_price' => 10.00,
+            'subtotal' => 50.00,
+            'tax' => 0,
+            'total' => 50.00,
+        ]);
+        $stockBefore = $this->product->fresh()->stock;
+
+        $this->deleteJson("/api/v1/orders/{$order->id}")->assertStatus(200);
+
+        // Already restocked by cancel(); deleting must not add the units twice.
+        $this->assertSame($stockBefore, $this->product->fresh()->stock);
+    }
+
     public function test_cannot_delete_order_from_different_organization(): void
     {
         Sanctum::actingAs($this->admin);
