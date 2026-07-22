@@ -69,20 +69,27 @@ final class ProductService
             $data = $this->processUpdateImages($product, $data);
         }
 
+        // Only manage variants/options when the caller actually sends them. A
+        // partial update (e.g. a REST call changing just the name) must leave
+        // existing variants untouched rather than wiping them, while the web
+        // edit form — which always submits the full variant set — keeps its
+        // replace-on-save behaviour.
+        $managesVariants = array_key_exists('variants', $data) || array_key_exists('options', $data);
+        $disablingVariants = array_key_exists('has_variants', $data) && ! $data['has_variants'];
         $options = $data['options'] ?? [];
         $variants = $data['variants'] ?? [];
         unset($data['options'], $data['variants']);
 
-        DB::transaction(function () use ($product, $data, $options, $variants) {
+        DB::transaction(function () use ($product, $data, $options, $variants, $managesVariants, $disablingVariants) {
             $product->update($data);
 
-            if ($data['has_variants'] ?? $product->has_variants) {
-                $this->syncOptions($product, $options);
-                $this->syncVariants($product, $variants);
-            } else {
-                // If variants are disabled, delete all options and variants
+            if ($disablingVariants) {
+                // Variants explicitly turned off: clear options and variants.
                 $product->options()->delete();
                 $product->variants()->delete();
+            } elseif ($managesVariants && $product->has_variants) {
+                $this->syncOptions($product, $options);
+                $this->syncVariants($product, $variants);
             }
         });
 

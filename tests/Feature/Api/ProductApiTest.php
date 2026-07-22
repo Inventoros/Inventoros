@@ -6,10 +6,12 @@ use App\Models\Auth\Organization;
 use App\Models\Inventory\Product;
 use App\Models\Inventory\ProductCategory;
 use App\Models\Inventory\ProductLocation;
+use App\Models\Inventory\ProductVariant;
 use App\Models\Role;
 use App\Models\System\SystemSetting;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Storage;
 use Laravel\Sanctum\Sanctum;
 use Tests\TestCase;
 
@@ -18,9 +20,13 @@ class ProductApiTest extends TestCase
     use RefreshDatabase;
 
     protected User $admin;
+
     protected User $viewOnlyUser;
+
     protected Organization $organization;
+
     protected ProductCategory $category;
+
     protected ProductLocation $location;
 
     protected function setUp(): void
@@ -110,7 +116,7 @@ class ProductApiTest extends TestCase
     {
         return Product::create(array_merge([
             'organization_id' => $this->organization->id,
-            'sku' => 'TEST-' . uniqid(),
+            'sku' => 'TEST-'.uniqid(),
             'name' => 'Test Product',
             'price' => 99.99,
             'currency' => 'USD',
@@ -171,7 +177,7 @@ class ProductApiTest extends TestCase
         $this->createProduct(['name' => 'Electronics Item', 'category_id' => $this->category->id]);
         $this->createProduct(['name' => 'Clothing Item', 'category_id' => $otherCategory->id]);
 
-        $response = $this->getJson('/api/v1/products?category_id=' . $this->category->id);
+        $response = $this->getJson('/api/v1/products?category_id='.$this->category->id);
 
         $response->assertStatus(200)
             ->assertJsonCount(1, 'data');
@@ -243,6 +249,117 @@ class ProductApiTest extends TestCase
             'sku' => 'NEW-001',
             'organization_id' => $this->organization->id,
         ]);
+    }
+
+    public function test_create_product_with_variants_persists_them(): void
+    {
+        Sanctum::actingAs($this->admin);
+
+        $response = $this->postJson('/api/v1/products', [
+            'sku' => 'VAR-001',
+            'name' => 'Variant Product',
+            'price' => 10.00,
+            'currency' => 'USD',
+            'stock' => 0,
+            'min_stock' => 0,
+            'has_variants' => true,
+            'options' => [
+                ['name' => 'Size', 'values' => ['S', 'M']],
+            ],
+            'variants' => [
+                ['option_values' => ['Size' => 'S'], 'sku' => 'VAR-001-S', 'price' => 10.00, 'stock' => 5],
+                ['option_values' => ['Size' => 'M'], 'sku' => 'VAR-001-M', 'price' => 12.00, 'stock' => 3],
+            ],
+        ]);
+
+        $response->assertStatus(201);
+
+        // Previously the REST surface bypassed ProductService and dropped these.
+        $product = Product::where('sku', 'VAR-001')->firstOrFail();
+        $this->assertTrue((bool) $product->has_variants);
+        $this->assertSame(2, $product->variants()->count());
+        $this->assertDatabaseHas('product_variants', [
+            'product_id' => $product->id,
+            'sku' => 'VAR-001-S',
+        ]);
+    }
+
+    public function test_create_product_with_base64_image_stores_it(): void
+    {
+        Storage::fake('public');
+        Sanctum::actingAs($this->admin);
+
+        $png = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==';
+
+        $response = $this->postJson('/api/v1/products', [
+            'sku' => 'IMG-001',
+            'name' => 'Image Product',
+            'price' => 10.00,
+            'currency' => 'USD',
+            'stock' => 0,
+            'min_stock' => 0,
+            'images' => [
+                ['preview' => $png],
+            ],
+        ]);
+
+        $response->assertStatus(201);
+
+        $product = Product::where('sku', 'IMG-001')->firstOrFail();
+        $this->assertNotEmpty($product->images);
+        $this->assertNotNull($product->thumbnail);
+        Storage::disk('public')->assertExists($product->thumbnail);
+    }
+
+    public function test_update_product_syncs_variants(): void
+    {
+        Sanctum::actingAs($this->admin);
+
+        $product = Product::create([
+            'organization_id' => $this->organization->id,
+            'sku' => 'UPD-001', 'name' => 'To Vary', 'price' => 10.00, 'currency' => 'USD',
+            'stock' => 0, 'min_stock' => 0, 'has_variants' => false,
+        ]);
+
+        $response = $this->putJson("/api/v1/products/{$product->id}", [
+            'sku' => 'UPD-001',
+            'name' => 'To Vary',
+            'has_variants' => true,
+            'options' => [['name' => 'Color', 'values' => ['Red']]],
+            'variants' => [
+                ['option_values' => ['Color' => 'Red'], 'sku' => 'UPD-001-R', 'price' => 11.00, 'stock' => 4],
+            ],
+        ]);
+
+        $response->assertStatus(200);
+        $this->assertSame(1, $product->fresh()->variants()->count());
+    }
+
+    public function test_partial_update_preserves_existing_variants(): void
+    {
+        Sanctum::actingAs($this->admin);
+
+        $product = Product::create([
+            'organization_id' => $this->organization->id,
+            'sku' => 'KEEP-001', 'name' => 'Keep', 'price' => 10.00, 'currency' => 'USD',
+            'stock' => 0, 'min_stock' => 0, 'has_variants' => true,
+        ]);
+        ProductVariant::create([
+            'product_id' => $product->id,
+            'organization_id' => $this->organization->id,
+            'sku' => 'KEEP-001-A', 'title' => 'A', 'option_values' => ['x' => 'a'],
+            'stock' => 1, 'min_stock' => 0, 'is_active' => true, 'position' => 0,
+        ]);
+
+        // A partial update that does not carry variants must not wipe them.
+        $response = $this->putJson("/api/v1/products/{$product->id}", [
+            'sku' => 'KEEP-001',
+            'name' => 'Keep Renamed',
+        ]);
+
+        $response->assertStatus(200);
+        $this->assertSame('Keep Renamed', $product->fresh()->name);
+        $this->assertSame(1, $product->fresh()->variants()->count());
     }
 
     public function test_create_product_validates_required_fields(): void
@@ -499,7 +616,7 @@ class ProductApiTest extends TestCase
 
         Sanctum::actingAs($this->viewOnlyUser);
 
-        $response = $this->putJson('/api/v1/products/' . $product->id, [
+        $response = $this->putJson('/api/v1/products/'.$product->id, [
             'name' => 'Hacked Name',
         ]);
 
@@ -516,7 +633,7 @@ class ProductApiTest extends TestCase
 
         Sanctum::actingAs($this->viewOnlyUser);
 
-        $response = $this->deleteJson('/api/v1/products/' . $product->id);
+        $response = $this->deleteJson('/api/v1/products/'.$product->id);
 
         $response->assertStatus(403);
         $this->assertDatabaseHas('products', ['id' => $product->id]);
@@ -529,6 +646,6 @@ class ProductApiTest extends TestCase
         Sanctum::actingAs($this->viewOnlyUser);
 
         $this->getJson('/api/v1/products')->assertStatus(200);
-        $this->getJson('/api/v1/products/' . $product->id)->assertStatus(200);
+        $this->getJson('/api/v1/products/'.$product->id)->assertStatus(200);
     }
 }
