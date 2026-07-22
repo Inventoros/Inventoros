@@ -283,19 +283,10 @@ final class OrderService
                 );
             }
 
-            $locked->load('items.product');
+            $locked->load('items.product', 'items.variant');
 
             foreach ($locked->items as $item) {
-                if ($item->product) {
-                    StockAdjustment::adjust(
-                        $item->product,
-                        $item->quantity,
-                        'order_cancellation',
-                        "Order {$locked->order_number} cancelled",
-                        null,
-                        $locked
-                    );
-                }
+                $this->restockItem($item, "Order {$locked->order_number} cancelled", $locked);
             }
 
             $locked->update(['status' => OrderStatus::CANCELLED]);
@@ -329,21 +320,49 @@ final class OrderService
                 return;
             }
 
-            $locked->load('items.product');
+            $locked->load('items.product', 'items.variant');
 
             foreach ($locked->items as $item) {
-                if ($item->product) {
-                    StockAdjustment::adjust(
-                        $item->product,
-                        $item->quantity,
-                        'order_cancellation',
-                        "Order {$locked->order_number} deleted",
-                        null,
-                        $locked
-                    );
-                }
+                $this->restockItem($item, "Order {$locked->order_number} deleted", $locked);
             }
         });
+    }
+
+    /**
+     * Restock a single order line to the stock target that order creation
+     * decremented: the variant when the line was sold as one, otherwise the
+     * product. Crediting the parent product for a variant line would leave the
+     * variant permanently depleted while inflating the parent's on-hand count.
+     *
+     * Public so the web order controller's hand-rolled edit/reject restock
+     * loops share the same variant-aware logic. The caller must have loaded the
+     * item's `product` (and `variant` for variant lines).
+     */
+    public function restockItem(OrderItem $item, string $reason, Order $order): void
+    {
+        if ($item->product_variant_id !== null && $item->variant !== null) {
+            StockAdjustment::adjustVariant(
+                $item->variant,
+                $item->quantity,
+                'order_cancellation',
+                $reason,
+                null,
+                $order
+            );
+
+            return;
+        }
+
+        if ($item->product !== null) {
+            StockAdjustment::adjust(
+                $item->product,
+                $item->quantity,
+                'order_cancellation',
+                $reason,
+                null,
+                $order
+            );
+        }
     }
 
     /**
