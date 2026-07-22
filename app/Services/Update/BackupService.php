@@ -203,6 +203,13 @@ class BackupService
         foreach ($files as $file) {
             $filePath = $file->getRealPath();
 
+            // A file that vanished mid-walk (transient cache/log files, broken
+            // symlinks) resolves to false. Skip it rather than passing false to
+            // the string-typed exclusion check and aborting the whole backup.
+            if ($filePath === false) {
+                continue;
+            }
+
             if ($this->isExcluded($filePath, $excludePaths)) {
                 continue;
             }

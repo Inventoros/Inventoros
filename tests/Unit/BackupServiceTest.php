@@ -99,6 +99,32 @@ final class BackupServiceTest extends TestCase
         $this->assertSame([], glob($this->backupDir.'/*.sql'));
     }
 
+    public function test_backup_skips_files_that_resolve_to_no_real_path(): void
+    {
+        // A broken symlink resolves getRealPath() to false. The backup must
+        // skip it rather than passing false to the string-typed exclusion
+        // check and aborting the entire backup with a TypeError.
+        $link = $this->base.'/app/broken-link';
+        if (@symlink($this->base.'/app/does-not-exist', $link) === false) {
+            $this->markTestSkipped('Symlinks are not supported in this environment.');
+        }
+
+        $zipPath = $this->service()->createBackup();
+
+        $this->assertFileExists($zipPath);
+
+        $zip = new ZipArchive;
+        $zip->open($zipPath);
+        $names = [];
+        for ($i = 0; $i < $zip->numFiles; $i++) {
+            $names[] = $zip->getNameIndex($i);
+        }
+        $zip->close();
+
+        // The valid file is still captured; the backup did not abort.
+        $this->assertContains('app/Foo.php', $names);
+    }
+
     public function test_import_database_dump_skips_non_mysql_drivers(): void
     {
         // The suite runs on sqlite, whose data is restored via file replacement,
