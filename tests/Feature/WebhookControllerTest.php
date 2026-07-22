@@ -9,6 +9,7 @@ use App\Models\User;
 use App\Models\Webhook;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Gate;
+use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
 
 class WebhookControllerTest extends TestCase
@@ -16,7 +17,9 @@ class WebhookControllerTest extends TestCase
     use RefreshDatabase;
 
     protected User $admin;
+
     protected User $member;
+
     protected Organization $organization;
 
     protected function setUp(): void
@@ -111,6 +114,73 @@ class WebhookControllerTest extends TestCase
 
         // The controller doesn't have a create() method, so this returns 500
         $response->assertStatus(500);
+    }
+
+    public function test_index_does_not_expose_the_webhook_signing_secret(): void
+    {
+        $this->createWebhook(['secret' => 'super-secret-signing-key']);
+
+        $response = $this->actingAs($this->admin)->get(route('webhooks.index'));
+
+        $response->assertStatus(200);
+        // The signing secret must never be serialized into the page props —
+        // anyone able to read them could forge signed deliveries.
+        $response->assertInertia(fn (Assert $page) => $page
+            ->component('Settings/Webhooks/Index')
+            ->missing('webhooks.0.secret')
+        );
+        $response->assertDontSee('super-secret-signing-key');
+    }
+
+    public function test_show_does_not_expose_the_webhook_signing_secret(): void
+    {
+        $webhook = $this->createWebhook(['secret' => 'super-secret-signing-key']);
+
+        $response = $this->actingAs($this->admin)->get(route('webhooks.show', $webhook));
+
+        $response->assertStatus(200);
+        $response->assertInertia(fn (Assert $page) => $page
+            ->component('Settings/Webhooks/Show')
+            ->where('webhook.id', $webhook->id)
+            ->missing('webhook.secret')
+        );
+        $response->assertDontSee('super-secret-signing-key');
+    }
+
+    public function test_creating_a_webhook_reveals_its_secret_exactly_once(): void
+    {
+        $response = $this->actingAs($this->admin)->post(route('webhooks.store'), [
+            'name' => 'Reveal Once',
+            'url' => 'https://example.com/hook',
+            'events' => ['order.created'],
+            'is_active' => true,
+        ]);
+
+        $response->assertRedirect(route('webhooks.index'));
+
+        // The plaintext secret is handed back exactly once, via a one-time
+        // flash, so the receiver can be configured without it living in props.
+        $response->assertSessionHas('newWebhookSecret');
+        $revealed = session('newWebhookSecret');
+        $this->assertIsString($revealed);
+
+        $webhook = Webhook::where('name', 'Reveal Once')->firstOrFail();
+        $this->assertSame($webhook->secret, $revealed);
+    }
+
+    public function test_regenerating_the_secret_reveals_it_once_and_rotates_it(): void
+    {
+        $webhook = $this->createWebhook(['secret' => 'old-secret']);
+
+        $response = $this->actingAs($this->admin)
+            ->post(route('webhooks.regenerate-secret', $webhook));
+
+        $response->assertRedirect(route('webhooks.show', $webhook));
+        $response->assertSessionHas('newWebhookSecret');
+
+        $revealed = session('newWebhookSecret');
+        $this->assertNotSame('old-secret', $revealed);
+        $this->assertSame($revealed, $webhook->fresh()->secret);
     }
 
     public function test_admin_can_create_webhook(): void

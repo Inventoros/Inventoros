@@ -4,8 +4,8 @@ import PageHeader from '@/Components/ui/PageHeader.vue';
 import Card from '@/Components/ui/Card.vue';
 import Button from '@/Components/ui/Button.vue';
 import Badge from '@/Components/ui/Badge.vue';
-import { Head, Link, useForm, router } from '@inertiajs/vue3';
-import { ref } from 'vue';
+import { Head, Link, useForm, router, usePage } from '@inertiajs/vue3';
+import { ref, computed } from 'vue';
 import { Plus, Info, Eye, Pencil, Trash2, Webhook, X } from 'lucide-vue-next';
 
 import { useI18n } from 'vue-i18n';
@@ -17,6 +17,25 @@ const props = defineProps({
 
 
 const { t } = useI18n();
+
+// One-time reveal of a newly created webhook's signing secret. The secret is
+// never sent on a normal page load; it arrives once via a flash after create.
+const page = usePage();
+const revealedSecret = computed(() => page.props.flash?.newWebhookSecret ?? null);
+const copiedSecret = ref(false);
+const copySecret = async () => {
+    if (!revealedSecret.value) return;
+    try {
+        await navigator.clipboard.writeText(revealedSecret.value);
+        copiedSecret.value = true;
+        setTimeout(() => {
+            copiedSecret.value = false;
+        }, 2000);
+    } catch (err) {
+        console.error('Failed to copy secret:', err);
+    }
+};
+
 // Modal state
 const showCreateModal = ref(false);
 const showEditModal = ref(false);
@@ -173,6 +192,26 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                 </Button>
             </template>
         </PageHeader>
+
+        <!-- One-time signing secret, shown once right after creation -->
+        <div
+            v-if="revealedSecret"
+            class="mt-6 flex items-start gap-3 rounded-lg border border-amber-500/30 bg-amber-500/10 p-4"
+        >
+            <Info :size="18" class="mt-0.5 shrink-0 text-amber-500" />
+            <div class="min-w-0 flex-1">
+                <h3 class="text-sm font-medium text-text-primary">Signing secret</h3>
+                <p class="mt-1 text-sm text-text-secondary">
+                    Copy this now. For security it is shown only once and cannot be retrieved later.
+                </p>
+                <div class="mt-2 flex items-center gap-3">
+                    <code class="min-w-0 flex-1 break-all rounded-md bg-slate-900 p-3 font-mono text-xs text-slate-300">{{ revealedSecret }}</code>
+                    <button @click="copySecret" class="shrink-0 text-xs text-brand hover:underline">
+                        {{ copiedSecret ? 'Copied!' : 'Copy' }}
+                    </button>
+                </div>
+            </div>
+        </div>
 
         <!-- Info Banner -->
         <div class="mt-6 flex items-start gap-3 rounded-lg border border-status-info/20 bg-status-info-soft p-4">

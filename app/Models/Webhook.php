@@ -5,9 +5,12 @@ declare(strict_types=1);
 namespace App\Models;
 
 use App\Models\Auth\Organization;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Str;
 
 /**
@@ -21,11 +24,11 @@ use Illuminate\Support\Str;
  * @property array $events
  * @property bool $is_active
  * @property int|null $created_by
- * @property \Illuminate\Support\Carbon|null $created_at
- * @property \Illuminate\Support\Carbon|null $updated_at
- * @property-read \App\Models\Auth\Organization $organization
- * @property-read \App\Models\User|null $creator
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\WebhookDelivery[] $deliveries
+ * @property Carbon|null $created_at
+ * @property Carbon|null $updated_at
+ * @property-read Organization $organization
+ * @property-read User|null $creator
+ * @property-read Collection|WebhookDelivery[] $deliveries
  */
 class Webhook extends Model
 {
@@ -45,6 +48,20 @@ class Webhook extends Model
     ];
 
     /**
+     * The attributes hidden from array/JSON serialization.
+     *
+     * The signing secret must never reach the frontend on a normal page load —
+     * anyone able to read the props could forge signed deliveries. It is
+     * revealed exactly once (as a one-time flash) when created or regenerated;
+     * see WebhookController.
+     *
+     * @var array<int, string>
+     */
+    protected $hidden = [
+        'secret',
+    ];
+
+    /**
      * Get the attributes that should be cast.
      *
      * @return array<string, string>
@@ -60,8 +77,6 @@ class Webhook extends Model
 
     /**
      * Boot the model.
-     *
-     * @return void
      */
     protected static function boot(): void
     {
@@ -77,7 +92,7 @@ class Webhook extends Model
     /**
      * Get the organization that owns the webhook.
      *
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo<\App\Models\Auth\Organization, $this>
+     * @return BelongsTo<Organization, $this>
      */
     public function organization(): BelongsTo
     {
@@ -87,7 +102,7 @@ class Webhook extends Model
     /**
      * Get the user who created the webhook.
      *
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo<\App\Models\User, $this>
+     * @return BelongsTo<User, $this>
      */
     public function creator(): BelongsTo
     {
@@ -97,7 +112,7 @@ class Webhook extends Model
     /**
      * Get the deliveries for this webhook.
      *
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany<\App\Models\WebhookDelivery, $this>
+     * @return HasMany<WebhookDelivery, $this>
      */
     public function deliveries(): HasMany
     {
@@ -107,9 +122,8 @@ class Webhook extends Model
     /**
      * Scope a query to only include webhooks for a specific organization.
      *
-     * @param \Illuminate\Database\Eloquent\Builder<static> $query
-     * @param int $organizationId
-     * @return \Illuminate\Database\Eloquent\Builder<static>
+     * @param  Builder<static>  $query
+     * @return Builder<static>
      */
     public function scopeForOrganization($query, int $organizationId)
     {
@@ -119,8 +133,8 @@ class Webhook extends Model
     /**
      * Scope a query to only include active webhooks.
      *
-     * @param \Illuminate\Database\Eloquent\Builder<static> $query
-     * @return \Illuminate\Database\Eloquent\Builder<static>
+     * @param  Builder<static>  $query
+     * @return Builder<static>
      */
     public function scopeActive($query)
     {
@@ -130,9 +144,8 @@ class Webhook extends Model
     /**
      * Scope a query to only include webhooks subscribed to a specific event.
      *
-     * @param \Illuminate\Database\Eloquent\Builder<static> $query
-     * @param string $event
-     * @return \Illuminate\Database\Eloquent\Builder<static>
+     * @param  Builder<static>  $query
+     * @return Builder<static>
      */
     public function scopeSubscribedTo($query, string $event)
     {
@@ -141,9 +154,6 @@ class Webhook extends Model
 
     /**
      * Check if this webhook is subscribed to a specific event.
-     *
-     * @param string $event
-     * @return bool
      */
     public function isSubscribedTo(string $event): bool
     {

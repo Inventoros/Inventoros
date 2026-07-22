@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Middleware;
 
+use App\Services\PluginUIService;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 
@@ -42,7 +43,7 @@ class HandleInertiaRequests extends Middleware
         // Get plugin menu items
         $pluginMenuItems = [];
         if ($user) {
-            $pluginUIService = app(\App\Services\PluginUIService::class);
+            $pluginUIService = app(PluginUIService::class);
             $pluginMenuItems = $pluginUIService->getMenuItems();
         }
 
@@ -54,9 +55,18 @@ class HandleInertiaRequests extends Middleware
             ],
             'pluginMenuItems' => $pluginMenuItems,
             'locale' => app()->getLocale(),
+            'flash' => [
+                // One-time reveal of a webhook signing secret after create/
+                // regenerate. Flashed by WebhookController, present for exactly
+                // the one redirected request, never persisted into props.
+                'newWebhookSecret' => $request->session()->get('newWebhookSecret'),
+            ],
             'warehouses' => function () {
                 $user = auth()->user();
-                if (!$user) return [];
+                if (! $user) {
+                    return [];
+                }
+
                 return $user->accessibleWarehouses()
                     ->get(['warehouses.id', 'warehouses.name', 'warehouses.code', 'warehouses.is_default'])
                     ->toArray();
