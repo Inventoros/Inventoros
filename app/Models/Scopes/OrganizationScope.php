@@ -32,6 +32,15 @@ final class OrganizationScope implements Scope
         $organizationId = auth()->user()->organization_id;
 
         if ($organizationId === null) {
+            // An authenticated user with no organization owns no tenant data.
+            // Fail CLOSED — constrain to nothing — rather than returning
+            // unscoped, which would expose every tenant's rows to an org-less
+            // account (e.g. a user straight out of public self-registration,
+            // before onboarding assigns an org). Trusted cross-tenant callers
+            // still opt out explicitly with
+            // Model::withoutGlobalScope(OrganizationScope::class).
+            $builder->whereRaw('1 = 0');
+
             return;
         }
 

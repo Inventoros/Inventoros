@@ -85,4 +85,21 @@ class OrganizationScopeTest extends TestCase
 
         $this->assertSame($this->orgA->id, $product->organization_id);
     }
+
+    public function test_authenticated_user_without_an_organization_sees_no_tenant_data(): void
+    {
+        // A self-registered account before onboarding assigns an org is
+        // authenticated but has a null organization_id. The scope must fail
+        // CLOSED — an org-less account (even an "admin") must not fall through
+        // to an unscoped query that exposes every tenant's rows.
+        $orphan = User::create([
+            'name' => 'Orphan', 'email' => 'orphan@user.com', 'password' => bcrypt('x'),
+            'organization_id' => null, 'role' => 'admin',
+        ]);
+
+        $this->actingAs($orphan);
+
+        $this->assertSame(0, Product::count());
+        $this->assertTrue(Product::pluck('sku')->isEmpty());
+    }
 }
