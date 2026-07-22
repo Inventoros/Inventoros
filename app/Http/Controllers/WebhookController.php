@@ -142,8 +142,11 @@ class WebhookController extends Controller
             abort(403);
         }
 
+        // Set the secret directly rather than via mass assignment: `secret` is
+        // deliberately not $fillable so no request payload can ever set it.
         $secret = Str::random(64);
-        $webhook->update(['secret' => $secret]);
+        $webhook->secret = $secret;
+        $webhook->save();
 
         // Reveal the rotated secret exactly once so the receiver can be updated.
         return redirect()->route('webhooks.show', $webhook)
