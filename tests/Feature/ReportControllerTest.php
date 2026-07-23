@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\Auth\Organization;
 use App\Models\Inventory\Product;
+use App\Models\Inventory\StockAdjustment;
 use App\Models\Order\Order;
 use App\Models\Order\OrderItem;
 use App\Models\Role;
@@ -17,7 +18,9 @@ class ReportControllerTest extends TestCase
     use RefreshDatabase;
 
     protected User $admin;
+
     protected User $viewOnlyUser;
+
     protected Organization $organization;
 
     protected function setUp(): void
@@ -106,6 +109,56 @@ class ReportControllerTest extends TestCase
             ->get(route('reports.low-stock'));
 
         $response->assertStatus(200);
+    }
+
+    public function test_stock_movement_summary_honors_the_active_filters(): void
+    {
+        $product = Product::create([
+            'organization_id' => $this->organization->id, 'sku' => 'SM-1', 'name' => 'SM',
+            'price' => 1, 'currency' => 'USD', 'stock' => 100, 'min_stock' => 0,
+        ]);
+
+        // Two 'manual' increases (+5, +3) and one 'damage' decrease (-2).
+        foreach ([['manual', 5], ['manual', 3], ['damage', -2]] as [$type, $qty]) {
+            StockAdjustment::create([
+                'organization_id' => $this->organization->id,
+                'product_id' => $product->id,
+                'user_id' => $this->admin->id,
+                'type' => $type,
+                'quantity_before' => 100,
+                'quantity_after' => 100 + $qty,
+                'adjustment_quantity' => $qty,
+                'reason' => 'test',
+            ]);
+        }
+
+        $response = $this->actingAs($this->admin)
+            ->get(route('reports.stock-movement', ['type' => 'manual']));
+
+        // Summary must reflect only the filtered (manual) rows, not the whole org.
+        $response->assertInertia(fn ($page) => $page
+            ->where('summary.total_adjustments', 2)
+            ->where('summary.total_increases', 8)
+            ->where('summary.total_decreases', 0)
+        );
+    }
+
+    public function test_low_stock_reorder_cost_is_never_negative_with_null_max_stock(): void
+    {
+        // Low-stock product (stock <= min_stock) with no max_stock target.
+        Product::create([
+            'organization_id' => $this->organization->id, 'sku' => 'LS-1', 'name' => 'LS',
+            'price' => 10, 'purchase_price' => 5, 'currency' => 'USD',
+            'stock' => 2, 'min_stock' => 10, 'max_stock' => null, 'is_active' => true,
+        ]);
+
+        $response = $this->actingAs($this->admin)->get(route('reports.low-stock'));
+
+        // Falls back to min_stock (10) as the target: (10 - 2) * 5 = 40, never
+        // a negative cost from null - stock.
+        $response->assertInertia(fn ($page) => $page
+            ->where('summary.total_reorder_cost', 40)
+        );
     }
 
     public function test_user_without_permission_cannot_view_reports(): void

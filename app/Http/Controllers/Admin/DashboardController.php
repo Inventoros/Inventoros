@@ -12,11 +12,11 @@ use App\Models\Inventory\ProductLocation;
 use App\Models\Inventory\StockAdjustment;
 use App\Models\Order\Order;
 use App\Models\User;
-use App\Services\PluginUIService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
+use Inertia\Response;
 
 /**
  * Controller for the admin dashboard.
@@ -29,7 +29,7 @@ class DashboardController extends Controller
     /**
      * Display the admin dashboard.
      *
-     * @return \Inertia\Response
+     * @return Response
      */
     public function index()
     {
@@ -101,9 +101,9 @@ class DashboardController extends Controller
 
         // Get stock value by category
         $stockByCategory = ProductCategory::where('product_categories.organization_id', $user->organization_id)
-            ->leftJoin('products', function($join) {
+            ->leftJoin('products', function ($join) {
                 $join->on('products.category_id', '=', 'product_categories.id')
-                     ->where('products.is_active', true);
+                    ->where('products.is_active', true);
             })
             ->selectRaw('product_categories.name, product_categories.id, COALESCE(SUM(products.price * products.stock), 0) as value, COUNT(products.id) as count')
             ->groupBy('product_categories.id', 'product_categories.name')
@@ -118,7 +118,9 @@ class DashboardController extends Controller
             ->map(function ($log) {
                 return [
                     'id' => $log->id,
-                    'user' => $log->user->name,
+                    // The acting user may have been deleted (or be a system
+                    // action with no user); don't 500 the whole dashboard.
+                    'user' => $log->user?->name ?? 'System',
                     'action' => $log->action,
                     'description' => $log->description,
                     'created_at' => $log->created_at->diffForHumans(),
@@ -136,6 +138,7 @@ class DashboardController extends Controller
             ->get()
             ->map(function ($product) {
                 $primarySupplier = $product->suppliers->first();
+
                 return [
                     'id' => $product->id,
                     'name' => $product->name,
@@ -221,8 +224,7 @@ class DashboardController extends Controller
     /**
      * Update the user's dashboard widget preferences.
      *
-     * @param Request $request The incoming HTTP request
-     * @return JsonResponse
+     * @param  Request  $request  The incoming HTTP request
      */
     public function updateWidgets(Request $request): JsonResponse
     {
@@ -247,9 +249,9 @@ class DashboardController extends Controller
         $submittedKeys = array_keys($request->input('widgets'));
         $invalidKeys = array_diff($submittedKeys, $validWidgetKeys);
 
-        if (!empty($invalidKeys)) {
+        if (! empty($invalidKeys)) {
             return response()->json([
-                'message' => 'Invalid widget keys: ' . implode(', ', $invalidKeys),
+                'message' => 'Invalid widget keys: '.implode(', ', $invalidKeys),
                 'errors' => ['widgets' => ['Contains invalid widget keys.']],
             ], 422);
         }
