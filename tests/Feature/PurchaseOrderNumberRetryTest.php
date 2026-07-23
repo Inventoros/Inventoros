@@ -67,4 +67,36 @@ class PurchaseOrderNumberRetryTest extends TestCase
         // attempt, so the retry did not leave a phantom row behind.
         $this->assertSame(1, PurchaseOrder::count());
     }
+
+    public function test_po_number_generation_accounts_for_soft_deleted_purchase_orders(): void
+    {
+        SystemSetting::set('installed', true, 'boolean');
+
+        $org = Organization::create([
+            'name' => 'SoftOrg', 'email' => 'so@test.com', 'currency' => 'USD', 'timezone' => 'UTC',
+        ]);
+        $supplier = Supplier::create([
+            'organization_id' => $org->id, 'name' => 'S', 'email' => 's@x.com', 'is_active' => true,
+        ]);
+
+        $today = now()->format('Ymd');
+
+        // Soft-delete the highest-numbered PO of the day. The unique index
+        // still counts the trashed row, so a generator reading MAX() through
+        // the default scope regenerates the same number forever.
+        $po = PurchaseOrder::create([
+            'organization_id' => $org->id, 'supplier_id' => $supplier->id,
+            'po_number' => "PO-{$today}-0001", 'status' => PurchaseOrder::STATUS_DRAFT,
+            'order_date' => now(), 'subtotal' => 0, 'tax' => 0, 'shipping' => 0, 'total' => 0, 'currency' => 'USD',
+        ]);
+        $po->delete();
+
+        $new = PurchaseOrder::createWithNumber($org->id, fn (string $poNumber) => PurchaseOrder::create([
+            'organization_id' => $org->id, 'supplier_id' => $supplier->id,
+            'po_number' => $poNumber, 'status' => PurchaseOrder::STATUS_DRAFT,
+            'order_date' => now(), 'subtotal' => 0, 'tax' => 0, 'shipping' => 0, 'total' => 0, 'currency' => 'USD',
+        ]));
+
+        $this->assertNotSame("PO-{$today}-0001", $new->po_number);
+    }
 }

@@ -212,9 +212,10 @@ class PurchaseOrder extends Model
         $date = now()->format('Ymd');
         $prefix = "PO-{$date}-";
 
-        // Get the highest number for today across all organizations
-        // to avoid unique constraint violations
-        $lastPO = self::where('po_number', 'like', "{$prefix}%")
+        // Get the highest number for today. Include soft-deleted rows: the
+        // unique index still counts them, so ignoring a trashed highest-of-the-
+        // day number would regenerate a colliding value no retry can escape.
+        $lastPO = self::withTrashed()->where('po_number', 'like', "{$prefix}%")
             ->orderBy('po_number', 'desc')
             ->first();
 
