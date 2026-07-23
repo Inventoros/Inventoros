@@ -19,11 +19,17 @@ class ProductDuplicationAndBulkTest extends TestCase
     use RefreshDatabase;
 
     protected User $admin;
+
     protected User $member;
+
     protected User $viewOnlyUser;
+
     protected Organization $organization;
+
     protected ProductCategory $category;
+
     protected ProductCategory $otherCategory;
+
     protected ProductLocation $location;
 
     protected function setUp(): void
@@ -140,7 +146,7 @@ class ProductDuplicationAndBulkTest extends TestCase
     {
         return Product::create(array_merge([
             'organization_id' => $this->organization->id,
-            'sku' => 'TEST-' . uniqid(),
+            'sku' => 'TEST-'.uniqid(),
             'name' => 'Test Product',
             'description' => 'A test product description',
             'price' => 99.99,
@@ -329,6 +335,34 @@ class ProductDuplicationAndBulkTest extends TestCase
         $this->assertDatabaseHas('products', [
             'id' => $product2->id,
             'category_id' => $this->otherCategory->id,
+        ]);
+    }
+
+    public function test_bulk_update_category_rejects_a_cross_org_category(): void
+    {
+        $otherOrg = Organization::create([
+            'name' => 'Other Org', 'email' => 'other@org.com',
+            'currency' => 'USD', 'timezone' => 'UTC',
+        ]);
+        $foreignCategory = ProductCategory::create([
+            'organization_id' => $otherOrg->id,
+            'name' => 'Foreign Line', 'slug' => 'foreign-'.uniqid(), 'is_active' => true,
+        ]);
+
+        $product = $this->createProduct(['category_id' => $this->category->id]);
+
+        $response = $this->actingAs($this->admin)
+            ->post(route('products.bulk.update-category'), [
+                'ids' => [$product->id],
+                'category_id' => $foreignCategory->id,
+            ]);
+
+        // Pointing a product at another org's category is rejected, so its name
+        // can't leak into this org's product lists/exports.
+        $response->assertSessionHasErrors('category_id');
+        $this->assertDatabaseHas('products', [
+            'id' => $product->id,
+            'category_id' => $this->category->id,
         ]);
     }
 
