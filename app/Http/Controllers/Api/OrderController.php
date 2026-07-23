@@ -186,6 +186,18 @@ class OrderController extends Controller
             && $validated['status'] === 'cancelled'
             && $order->status !== OrderStatus::CANCELLED;
 
+        // A cancelled order's stock was already restored on cancel; reactivating
+        // it would oversell (a live order with its inventory handed back).
+        // Cancellation is terminal — create a new order instead.
+        if ($order->status === OrderStatus::CANCELLED
+            && isset($validated['status'])
+            && $validated['status'] !== 'cancelled') {
+            return response()->json([
+                'message' => 'A cancelled order cannot be reactivated. Create a new order instead.',
+                'error' => 'invalid_state_transition',
+            ], 422);
+        }
+
         // Reject cancellation of orders that already left the warehouse;
         // restocking would lie about inventory that physically isn't here.
         if ($cancelTransition && in_array($order->status, [OrderStatus::SHIPPED, OrderStatus::DELIVERED], true)) {

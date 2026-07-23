@@ -785,6 +785,29 @@ class OrderControllerTest extends TestCase
         ]);
     }
 
+    public function test_cannot_reactivate_a_cancelled_order(): void
+    {
+        $order = $this->createOrder(['status' => 'cancelled']);
+
+        $response = $this->actingAs($this->admin)
+            ->put(route('orders.update', $order), [
+                'customer_name' => 'Trying To Reactivate',
+                'status' => 'pending',
+                'order_date' => now()->format('Y-m-d'),
+                'items' => [[
+                    'id' => $order->items->first()->id,
+                    'product_id' => $this->product->id,
+                    'quantity' => 1,
+                    'unit_price' => 99.99,
+                ]],
+            ]);
+
+        // A cancelled order's stock was already restored; reactivating it would
+        // oversell, so the transition is refused and the order stays cancelled.
+        $response->assertSessionHas('error');
+        $this->assertDatabaseHas('orders', ['id' => $order->id, 'status' => 'cancelled']);
+    }
+
     public function test_member_can_update_order(): void
     {
         $order = $this->createOrder(['customer_name' => 'Original Customer']);
