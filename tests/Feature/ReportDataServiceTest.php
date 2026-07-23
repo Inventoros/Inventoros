@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Feature;
 
+use App\Models\User;
 use App\Services\ReportDataService;
 use Illuminate\Support\Collection;
 use Tests\TestCase;
@@ -58,7 +59,7 @@ class ReportDataServiceTest extends TestCase
             ['name' => 'Sprocket', 'org' => $orgId],
         ]));
 
-        $rows = $this->service()->executeReport(42, 'widgets', ['name']);
+        $rows = $this->service()->executeReport(new User, 42, 'widgets', ['name']);
 
         $this->assertInstanceOf(Collection::class, $rows);
         $this->assertSame('Sprocket', $rows->first()['name']);
@@ -74,7 +75,7 @@ class ReportDataServiceTest extends TestCase
         $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage('No query handler registered');
 
-        $this->service()->executeReport(1, 'widgets', ['name']);
+        $this->service()->executeReport(new User, 1, 'widgets', ['name']);
     }
 
     public function test_unknown_data_source_throws(): void
@@ -82,6 +83,6 @@ class ReportDataServiceTest extends TestCase
         $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage('Invalid data source');
 
-        $this->service()->executeReport(1, 'nope', ['x']);
+        $this->service()->executeReport(new User, 1, 'nope', ['x']);
     }
 }
