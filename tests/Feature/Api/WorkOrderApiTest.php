@@ -12,6 +12,8 @@ use App\Models\Role;
 use App\Models\System\SystemSetting;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Notification;
 use Laravel\Sanctum\Sanctum;
 use Tests\TestCase;
 
@@ -20,10 +22,15 @@ class WorkOrderApiTest extends TestCase
     use RefreshDatabase;
 
     protected User $admin;
+
     protected Organization $organization;
+
     protected Product $assemblyProduct;
+
     protected Product $componentProduct1;
+
     protected Product $componentProduct2;
+
     protected Product $standardProduct;
 
     protected function setUp(): void
@@ -336,6 +343,45 @@ class WorkOrderApiTest extends TestCase
         $this->assertEquals($initialAssemblyStock + 5, $this->assemblyProduct->stock);
         $this->assertEquals($initialComp1Stock - 10, $this->componentProduct1->stock);
         $this->assertEquals($initialComp2Stock - 5, $this->componentProduct2->stock);
+    }
+
+    public function test_complete_is_rejected_when_a_component_would_go_negative(): void
+    {
+        Mail::fake();
+        Notification::fake();
+
+        Sanctum::actingAs($this->admin);
+
+        $workOrder = WorkOrder::create([
+            'organization_id' => $this->organization->id,
+            'product_id' => $this->assemblyProduct->id,
+            'created_by' => $this->admin->id,
+            'work_order_number' => 'WO-NEG-0001',
+            'quantity' => 5,
+            'status' => 'in_progress',
+            'started_at' => now(),
+        ]);
+        $workOrder->items()->create([
+            'product_id' => $this->componentProduct1->id,
+            'quantity_required' => 10,
+            'quantity_consumed' => 0,
+        ]);
+
+        // The component was drained below the requirement while the WO sat in
+        // progress (sales, another WO). Completing must not drive it negative.
+        $this->componentProduct1->update(['stock' => 3]);
+
+        $response = $this->postJson("/api/v1/work-orders/{$workOrder->id}/complete");
+
+        $response->assertStatus(422)->assertJsonPath('error', 'insufficient_stock');
+
+        // No negative stock, no phantom production, WO stays in progress.
+        $this->assertSame(3, $this->componentProduct1->fresh()->stock);
+        $this->assertSame(0, $this->assemblyProduct->fresh()->stock);
+        $this->assertDatabaseHas('work_orders', [
+            'id' => $workOrder->id,
+            'status' => 'in_progress',
+        ]);
     }
 
     // ==================== CANCEL TESTS ====================

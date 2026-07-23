@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Api;
 
+use App\Exceptions\InsufficientStockException;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\WorkOrder\StoreWorkOrderRequest;
 use App\Models\Inventory\Product;
@@ -235,45 +236,67 @@ class WorkOrderController extends Controller
 
         $quantityProduced = $validated['quantity_produced'] ?? $workOrder->quantity;
 
-        DB::transaction(function () use ($workOrder, $quantityProduced) {
-            $workOrder->load('items.product');
+        try {
+            DB::transaction(function () use ($workOrder, $quantityProduced) {
+                // Lock and re-read the row so a concurrent complete cannot pass
+                // the pre-transaction guard and double-consume/double-produce
+                // stock. Re-assert the status against the locked instance.
+                $locked = WorkOrder::whereKey($workOrder->getKey())->lockForUpdate()->firstOrFail();
 
-            // Decrement component stock
-            foreach ($workOrder->items as $item) {
-                $consumeQty = $item->quantity_required - $item->quantity_consumed;
-                $consumeQtyInt = (int) ceil($consumeQty);
-
-                if ($consumeQtyInt > 0) {
-                    StockAdjustment::adjust(
-                        $item->product,
-                        -$consumeQtyInt,
-                        'assembly_consumption',
-                        "Consumed for work order {$workOrder->work_order_number}",
-                        "Assembly of {$workOrder->product->name}",
-                        $workOrder
-                    );
-
-                    $item->update(['quantity_consumed' => $item->quantity_required]);
+                if ($locked->status !== 'in_progress') {
+                    throw new \RuntimeException('Only in-progress work orders can be completed.');
                 }
-            }
 
-            // Increment assembly product stock
-            $assemblyProduct = $workOrder->product;
-            StockAdjustment::adjust(
-                $assemblyProduct,
-                $quantityProduced,
-                'assembly_production',
-                "Produced from work order {$workOrder->work_order_number}",
-                "Assembled {$quantityProduced} units",
-                $workOrder
-            );
+                $locked->load('items.product');
 
-            $workOrder->update([
-                'status' => 'completed',
-                'quantity_produced' => $quantityProduced,
-                'completed_at' => now(),
-            ]);
-        });
+                // Decrement component stock, refusing to drive any component
+                // negative — availability may have changed while the WO sat in
+                // progress. A shortfall aborts the whole completion.
+                foreach ($locked->items as $item) {
+                    $consumeQtyInt = (int) ceil($item->quantity_required - $item->quantity_consumed);
+
+                    if ($consumeQtyInt > 0) {
+                        StockAdjustment::adjust(
+                            $item->product,
+                            -$consumeQtyInt,
+                            'assembly_consumption',
+                            "Consumed for work order {$locked->work_order_number}",
+                            "Assembly of {$locked->product->name}",
+                            $locked,
+                            allowNegative: false
+                        );
+
+                        $item->update(['quantity_consumed' => $item->quantity_required]);
+                    }
+                }
+
+                // Increment assembly product stock
+                StockAdjustment::adjust(
+                    $locked->product,
+                    $quantityProduced,
+                    'assembly_production',
+                    "Produced from work order {$locked->work_order_number}",
+                    "Assembled {$quantityProduced} units",
+                    $locked
+                );
+
+                $locked->update([
+                    'status' => 'completed',
+                    'quantity_produced' => $quantityProduced,
+                    'completed_at' => now(),
+                ]);
+            });
+        } catch (InsufficientStockException $e) {
+            return response()->json([
+                'message' => $e->getMessage(),
+                'error' => 'insufficient_stock',
+            ], 422);
+        } catch (\RuntimeException $e) {
+            return response()->json([
+                'message' => $e->getMessage(),
+                'error' => 'invalid_status',
+            ], 422);
+        }
 
         $workOrder->refresh()->load(['product:id,name,sku,thumbnail', 'creator:id,name']);
 
@@ -307,31 +330,46 @@ class WorkOrderController extends Controller
             ], 422);
         }
 
-        DB::transaction(function () use ($workOrder) {
-            // If in_progress, restore any consumed component stock
-            if ($workOrder->status === 'in_progress') {
-                $workOrder->load('items.product');
+        try {
+            DB::transaction(function () use ($workOrder) {
+                // Lock and re-read so a cancel can't race a concurrent complete
+                // (each would otherwise act on a stale status).
+                $locked = WorkOrder::whereKey($workOrder->getKey())->lockForUpdate()->firstOrFail();
 
-                foreach ($workOrder->items as $item) {
-                    $consumedQty = (int) ceil((float) $item->quantity_consumed);
+                if (! in_array($locked->status, ['draft', 'pending', 'in_progress'], true)) {
+                    throw new \RuntimeException('Only draft, pending, or in-progress work orders can be cancelled.');
+                }
 
-                    if ($consumedQty > 0) {
-                        StockAdjustment::adjust(
-                            $item->product,
-                            $consumedQty,
-                            'assembly_reversal',
-                            "Reversed for cancelled work order {$workOrder->work_order_number}",
-                            'Work order cancelled - restoring consumed stock',
-                            $workOrder
-                        );
+                // If in_progress, restore any consumed component stock
+                if ($locked->status === 'in_progress') {
+                    $locked->load('items.product');
 
-                        $item->update(['quantity_consumed' => 0]);
+                    foreach ($locked->items as $item) {
+                        $consumedQty = (int) ceil((float) $item->quantity_consumed);
+
+                        if ($consumedQty > 0) {
+                            StockAdjustment::adjust(
+                                $item->product,
+                                $consumedQty,
+                                'assembly_reversal',
+                                "Reversed for cancelled work order {$locked->work_order_number}",
+                                'Work order cancelled - restoring consumed stock',
+                                $locked
+                            );
+
+                            $item->update(['quantity_consumed' => 0]);
+                        }
                     }
                 }
-            }
 
-            $workOrder->update(['status' => 'cancelled']);
-        });
+                $locked->update(['status' => 'cancelled']);
+            });
+        } catch (\RuntimeException $e) {
+            return response()->json([
+                'message' => $e->getMessage(),
+                'error' => 'invalid_status',
+            ], 422);
+        }
 
         $workOrder->refresh()->load(['product:id,name,sku,thumbnail', 'creator:id,name']);
 

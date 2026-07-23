@@ -12,6 +12,8 @@ use App\Models\Role;
 use App\Models\System\SystemSetting;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Notification;
 use Tests\TestCase;
 
 class WorkOrderConcurrencyTest extends TestCase
@@ -19,11 +21,17 @@ class WorkOrderConcurrencyTest extends TestCase
     use RefreshDatabase;
 
     protected User $admin;
+
     protected Organization $organization;
+
     protected ProductCategory $category;
+
     protected ProductLocation $location;
+
     protected Product $assembly;
+
     protected Product $component;
+
     protected WorkOrder $workOrder;
 
     protected function setUp(): void
@@ -125,7 +133,7 @@ class WorkOrderConcurrencyTest extends TestCase
     {
         return Product::create(array_merge([
             'organization_id' => $this->organization->id,
-            'sku' => 'TEST-' . uniqid(),
+            'sku' => 'TEST-'.uniqid(),
             'name' => 'Test Product',
             'price' => 99.99,
             'purchase_price' => 50.00,
@@ -173,5 +181,27 @@ class WorkOrderConcurrencyTest extends TestCase
 
         $response->assertSessionHas('error');
         $this->assertSame($componentAfter, $this->component->fresh()->stock);
+    }
+
+    public function test_complete_is_rejected_when_a_component_would_go_negative(): void
+    {
+        Mail::fake();
+        Notification::fake();
+
+        $this->actingAs($this->admin);
+
+        // Component drained below the required 10 while the WO sat in progress.
+        $this->component->update(['stock' => 3]);
+
+        $response = $this->post(route('work-orders.complete', $this->workOrder));
+
+        $response->assertSessionHas('error');
+
+        // No negative stock, no phantom production, WO stays in progress.
+        $this->assertSame(3, $this->component->fresh()->stock);
+        $this->assertDatabaseHas('work_orders', [
+            'id' => $this->workOrder->id,
+            'status' => 'in_progress',
+        ]);
     }
 }
