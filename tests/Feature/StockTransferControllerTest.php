@@ -20,13 +20,21 @@ class StockTransferControllerTest extends TestCase
     use RefreshDatabase;
 
     protected User $admin;
+
     protected User $stockManager;
+
     protected User $viewOnlyUser;
+
     protected Organization $organization;
+
     protected Product $product;
+
     protected Product $product2;
+
     protected ProductCategory $category;
+
     protected ProductLocation $locationA;
+
     protected ProductLocation $locationB;
 
     protected function setUp(): void
@@ -427,6 +435,21 @@ class StockTransferControllerTest extends TestCase
     }
 
     // ==================== COMPLETE TRANSFER TESTS ====================
+
+    public function test_completing_a_transfer_repoints_the_product_to_the_destination(): void
+    {
+        $transfer = $this->createTransfer(); // product at A, transfer A -> B
+
+        $this->assertSame($this->locationA->id, $this->product->fresh()->location_id);
+
+        $this->actingAs($this->admin)
+            ->post(route('stock-transfers.complete', $transfer))
+            ->assertRedirect(route('stock-transfers.show', $transfer));
+
+        // The product now records the destination location, matching where the
+        // goods physically moved.
+        $this->assertSame($this->locationB->id, $this->product->fresh()->location_id);
+    }
 
     public function test_completing_transfer_records_single_audit_adjustment_per_item(): void
     {

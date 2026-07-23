@@ -266,6 +266,13 @@ class StockTransferController extends Controller
                         );
                     }
 
+                    // Repoint the product to the destination location. Inventoros
+                    // tracks a single location per product, so a completed
+                    // transfer moves that pointer — otherwise the transfer was
+                    // pure paperwork and the product still recorded at its origin,
+                    // diverging from where the goods physically are.
+                    $product->update(['location_id' => $stockTransfer->to_location_id]);
+
                     // Inventoros stores stock globally on products.stock with no
                     // per-location/per-warehouse breakdown. A "transfer" between
                     // ProductLocations is therefore paperwork only — there is no
