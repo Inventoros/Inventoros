@@ -12,6 +12,7 @@ use App\Models\Inventory\ProductSerial;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 
 /**
@@ -118,11 +119,31 @@ class SerialTrackingController extends Controller
             'notes' => ['nullable', 'string'],
         ]);
 
-        $serial->update($validated);
+        return DB::transaction(function () use ($serial, $validated) {
+            // Lock and re-read so two concurrent requests can't both allocate
+            // the same physical serial to different orders.
+            $locked = ProductSerial::whereKey($serial->getKey())->lockForUpdate()->firstOrFail();
 
-        return response()->json([
-            'message' => 'Serial number updated successfully',
-            'data' => new ProductSerialResource($serial),
-        ]);
+            $target = $validated['status'];
+            $allocating = in_array($target, [ProductSerial::STATUS_SOLD, ProductSerial::STATUS_RESERVED], true);
+            $alreadyAllocated = in_array($locked->status, [ProductSerial::STATUS_SOLD, ProductSerial::STATUS_RESERVED], true);
+            // reserved -> sold is the legitimate completion of a reservation.
+            $completingReservation = $locked->status === ProductSerial::STATUS_RESERVED
+                && $target === ProductSerial::STATUS_SOLD;
+
+            if ($allocating && $alreadyAllocated && ! $completingReservation) {
+                return response()->json([
+                    'message' => 'This serial number is already allocated.',
+                    'error' => 'already_allocated',
+                ], 409);
+            }
+
+            $locked->update($validated);
+
+            return response()->json([
+                'message' => 'Serial number updated successfully',
+                'data' => new ProductSerialResource($locked),
+            ]);
+        });
     }
 }
