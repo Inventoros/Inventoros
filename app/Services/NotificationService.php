@@ -106,20 +106,20 @@ final class NotificationService
             $mailableClass = apply_filters('email_mailable_class', null, $type, $data);
 
             if ($mailableClass) {
-                Mail::to($user->email)->send(new $mailableClass($data));
+                Mail::to($user->email)->queue(new $mailableClass($data));
             } else {
                 // Use default email types
                 switch ($type) {
                     case 'low_stock':
                     case 'out_of_stock':
-                        Mail::to($user->email)->send(new LowStockEmail($data));
+                        Mail::to($user->email)->queue(new LowStockEmail($data));
                         break;
                     case 'order_status_updated':
-                        Mail::to($user->email)->send(new OrderStatusEmail($data));
+                        Mail::to($user->email)->queue(new OrderStatusEmail($data));
                         break;
                     case 'order_approved':
                     case 'order_rejected':
-                        Mail::to($user->email)->send(new OrderApprovalEmail($data));
+                        Mail::to($user->email)->queue(new OrderApprovalEmail($data));
                         break;
                     default:
                         Log::warning('No email mailable configured for notification type', [
