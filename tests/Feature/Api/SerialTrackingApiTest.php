@@ -4,9 +4,9 @@ namespace Tests\Feature\Api;
 
 use App\Models\Auth\Organization;
 use App\Models\Inventory\Product;
-use App\Models\Inventory\ProductSerial;
 use App\Models\Inventory\ProductCategory;
 use App\Models\Inventory\ProductLocation;
+use App\Models\Inventory\ProductSerial;
 use App\Models\Role;
 use App\Models\System\SystemSetting;
 use App\Models\User;
@@ -19,7 +19,9 @@ class SerialTrackingApiTest extends TestCase
     use RefreshDatabase;
 
     protected User $admin;
+
     protected Organization $organization;
+
     protected Product $product;
 
     protected function setUp(): void
@@ -218,6 +220,30 @@ class SerialTrackingApiTest extends TestCase
         $response->assertStatus(200)
             ->assertJsonPath('data.status', 'sold');
 
+        $this->assertDatabaseHas('product_serials', [
+            'id' => $serial->id,
+            'status' => 'sold',
+        ]);
+    }
+
+    public function test_an_already_sold_serial_cannot_be_allocated_again(): void
+    {
+        Sanctum::actingAs($this->admin);
+
+        // A serial already sold to one order: a second shipment must not be able
+        // to sell the same physical unit again.
+        $serial = ProductSerial::create([
+            'organization_id' => $this->organization->id,
+            'product_id' => $this->product->id,
+            'serial_number' => 'SN-DUP-001',
+            'status' => 'sold',
+        ]);
+
+        $response = $this->putJson("/api/v1/products/{$this->product->id}/serials/{$serial->id}", [
+            'status' => 'sold',
+        ]);
+
+        $response->assertStatus(409)->assertJsonPath('error', 'already_allocated');
         $this->assertDatabaseHas('product_serials', [
             'id' => $serial->id,
             'status' => 'sold',
