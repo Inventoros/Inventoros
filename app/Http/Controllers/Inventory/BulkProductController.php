@@ -7,8 +7,10 @@ namespace App\Http\Controllers\Inventory;
 use App\Http\Controllers\Controller;
 use App\Models\Inventory\Product;
 use App\Support\SpreadsheetSafety;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rule;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 /**
@@ -22,8 +24,7 @@ class BulkProductController extends Controller
     /**
      * Bulk delete selected products.
      *
-     * @param Request $request
-     * @return \Illuminate\Http\RedirectResponse
+     * @return RedirectResponse
      */
     public function bulkDelete(Request $request)
     {
@@ -49,18 +50,20 @@ class BulkProductController extends Controller
     /**
      * Bulk update category for selected products.
      *
-     * @param Request $request
-     * @return \Illuminate\Http\RedirectResponse
+     * @return RedirectResponse
      */
     public function bulkUpdateCategory(Request $request)
     {
+        $organizationId = $request->user()->organization_id;
+
         $validated = $request->validate([
             'ids' => 'required|array|min:1',
             'ids.*' => 'integer|exists:products,id',
-            'category_id' => 'required|exists:product_categories,id',
+            // Org-scope the category like every other FK reference, so a user
+            // can't point their products at another organization's category
+            // (which then leaks that category's name into their lists/exports).
+            'category_id' => ['required', 'integer', Rule::exists('product_categories', 'id')->where('organization_id', $organizationId)],
         ]);
-
-        $organizationId = $request->user()->organization_id;
 
         $count = Product::forOrganization($organizationId)
             ->whereIn('id', $validated['ids'])
@@ -75,8 +78,7 @@ class BulkProductController extends Controller
      *
      * Supports percentage (multiply) and fixed (add/subtract) adjustments.
      *
-     * @param Request $request
-     * @return \Illuminate\Http\RedirectResponse
+     * @return RedirectResponse
      */
     public function bulkUpdatePrice(Request $request)
     {
@@ -115,9 +117,6 @@ class BulkProductController extends Controller
 
     /**
      * Bulk export selected products as CSV.
-     *
-     * @param Request $request
-     * @return StreamedResponse
      */
     public function bulkExport(Request $request): StreamedResponse
     {
@@ -135,7 +134,7 @@ class BulkProductController extends Controller
 
         $headers = [
             'Content-Type' => 'text/csv; charset=UTF-8',
-            'Content-Disposition' => 'attachment; filename="products-export-' . now()->format('Y-m-d') . '.csv"',
+            'Content-Disposition' => 'attachment; filename="products-export-'.now()->format('Y-m-d').'.csv"',
         ];
 
         return response()->streamDownload(function () use ($products) {
@@ -181,6 +180,6 @@ class BulkProductController extends Controller
             }
 
             fclose($handle);
-        }, 'products-export-' . now()->format('Y-m-d') . '.csv', $headers);
+        }, 'products-export-'.now()->format('Y-m-d').'.csv', $headers);
     }
 }
