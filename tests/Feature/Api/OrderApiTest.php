@@ -486,6 +486,21 @@ class OrderApiTest extends TestCase
         ]);
     }
 
+    public function test_cannot_reactivate_a_cancelled_order(): void
+    {
+        Sanctum::actingAs($this->admin);
+
+        $order = $this->createOrder(['status' => 'cancelled']);
+
+        // A cancelled order's stock was already restored; reactivating it would
+        // oversell, so the transition is refused.
+        $this->patchJson("/api/v1/orders/{$order->id}", ['status' => 'pending'])
+            ->assertStatus(422)
+            ->assertJsonPath('error', 'invalid_state_transition');
+
+        $this->assertDatabaseHas('orders', ['id' => $order->id, 'status' => 'cancelled']);
+    }
+
     public function test_cannot_update_order_from_different_organization(): void
     {
         Sanctum::actingAs($this->admin);

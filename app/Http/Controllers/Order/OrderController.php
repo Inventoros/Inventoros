@@ -255,6 +255,16 @@ class OrderController extends Controller
                 // against a stale, pre-transaction model (e.g. restock twice).
                 $order = Order::whereKey($order->getKey())->lockForUpdate()->firstOrFail();
 
+                // A cancelled order's stock was already restored on cancel;
+                // reactivating it would oversell (a live order with its
+                // inventory handed back). Cancellation is terminal — create a
+                // new order instead.
+                if ($order->status === OrderStatus::CANCELLED
+                    && isset($validated['status'])
+                    && $validated['status'] !== OrderStatus::CANCELLED->value) {
+                    throw new \RuntimeException('A cancelled order cannot be reactivated. Create a new order instead.');
+                }
+
                 // Load existing items with product relationship
                 $order->load('items.product');
                 $existingItems = $order->items->keyBy('id');
