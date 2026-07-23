@@ -257,13 +257,17 @@ class WorkOrderController extends Controller
                     $consumeQtyInt = (int) ceil($consumeQty);
 
                     if ($consumeQtyInt > 0) {
+                        // Re-validate availability under the lock and refuse to
+                        // drive a component negative: stock may have been drained
+                        // (by sales, other WOs) while this WO sat in progress.
                         StockAdjustment::adjust(
                             $item->product,
                             -$consumeQtyInt,
                             'assembly_consumption',
                             "Consumed for work order {$workOrder->work_order_number}",
                             "Assembly of {$workOrder->product->name}",
-                            $workOrder
+                            $workOrder,
+                            allowNegative: false
                         );
 
                         $item->update(['quantity_consumed' => $item->quantity_required]);
