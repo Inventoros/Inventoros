@@ -11,7 +11,6 @@ use App\Models\Order\Order;
 use App\Models\Order\OrderItem;
 use App\Models\SavedReport;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -26,8 +25,6 @@ class ReportController extends Controller
 {
     /**
      * Display the reports dashboard.
-     *
-     * @return Response
      */
     public function index(Request $request): Response
     {
@@ -46,8 +43,7 @@ class ReportController extends Controller
     /**
      * Inventory Valuation Report.
      *
-     * @param Request $request The incoming HTTP request
-     * @return Response
+     * @param  Request  $request  The incoming HTTP request
      */
     public function inventoryValuation(Request $request): Response
     {
@@ -101,8 +97,7 @@ class ReportController extends Controller
     /**
      * Stock Movement Report.
      *
-     * @param Request $request The incoming HTTP request
-     * @return Response
+     * @param  Request  $request  The incoming HTTP request
      */
     public function stockMovement(Request $request): Response
     {
@@ -129,17 +124,18 @@ class ReportController extends Controller
             $query->where('type', $request->type);
         }
 
-        $adjustments = $query->latest()->paginate(50)->withQueryString();
-
-        // Summary statistics
+        // Summary statistics over the SAME filtered set as the table (clone so
+        // each aggregate gets its own builder). Previously these ignored the
+        // date/product/type filters, so the headline totals contradicted the
+        // rows shown.
         $summary = [
-            'total_adjustments' => StockAdjustment::forOrganization($organizationId)->count(),
-            'total_increases' => StockAdjustment::forOrganization($organizationId)
-                ->where('adjustment_quantity', '>', 0)->sum('adjustment_quantity'),
-            'total_decreases' => abs(StockAdjustment::forOrganization($organizationId)
-                ->where('adjustment_quantity', '<', 0)->sum('adjustment_quantity')),
-            'net_change' => StockAdjustment::forOrganization($organizationId)->sum('adjustment_quantity'),
+            'total_adjustments' => (clone $query)->count(),
+            'total_increases' => (clone $query)->where('adjustment_quantity', '>', 0)->sum('adjustment_quantity'),
+            'total_decreases' => abs((clone $query)->where('adjustment_quantity', '<', 0)->sum('adjustment_quantity')),
+            'net_change' => (clone $query)->sum('adjustment_quantity'),
         ];
+
+        $adjustments = $query->latest()->paginate(50)->withQueryString();
 
         // Get products for filter
         $products = Product::forOrganization($organizationId)
@@ -158,8 +154,7 @@ class ReportController extends Controller
     /**
      * Sales Analysis Report.
      *
-     * @param Request $request The incoming HTTP request
-     * @return Response
+     * @param  Request  $request  The incoming HTTP request
      */
     public function salesAnalysis(Request $request): Response
     {
@@ -169,8 +164,8 @@ class ReportController extends Controller
         // using whereDate so the order_date index can serve the predicate.
         $dateFrom = $request->date_from ?? now()->subDays(30)->format('Y-m-d');
         $dateTo = $request->date_to ?? now()->format('Y-m-d');
-        $fromTimestamp = $dateFrom . ' 00:00:00';
-        $toTimestamp = $dateTo . ' 23:59:59';
+        $fromTimestamp = $dateFrom.' 00:00:00';
+        $toTimestamp = $dateTo.' 23:59:59';
 
         // Each aggregate is its own SQL round-trip — previously the
         // controller hydrated every Order + nested items.product for the
@@ -265,8 +260,7 @@ class ReportController extends Controller
     /**
      * Low Stock Report.
      *
-     * @param Request $request The incoming HTTP request
-     * @return Response
+     * @param  Request  $request  The incoming HTTP request
      */
     public function lowStock(Request $request): Response
     {
@@ -288,10 +282,14 @@ class ReportController extends Controller
                     'current_stock' => $product->stock,
                     'min_stock' => $product->min_stock,
                     'max_stock' => $product->max_stock,
-                    'deficit' => $product->min_stock - $product->stock,
+                    'deficit' => max(0, $product->min_stock - $product->stock),
                     'status' => $product->stock <= 0 ? 'out_of_stock' : 'low_stock',
                     'price' => $product->price,
-                    'reorder_cost' => ($product->max_stock - $product->stock) * ($product->purchase_price ?? $product->price),
+                    // Reorder up to max_stock; fall back to reorder_point /
+                    // min_stock when it's null, and never let a null or
+                    // already-satisfied target produce a negative cost.
+                    'reorder_cost' => max(0, ($product->max_stock ?? $product->reorder_point ?? $product->min_stock ?? 0) - $product->stock)
+                        * ($product->purchase_price ?? $product->price),
                 ];
             });
 
@@ -311,8 +309,7 @@ class ReportController extends Controller
     /**
      * Category Performance Report.
      *
-     * @param Request $request The incoming HTTP request
-     * @return Response
+     * @param  Request  $request  The incoming HTTP request
      */
     public function categoryPerformance(Request $request): Response
     {
@@ -327,6 +324,7 @@ class ReportController extends Controller
 
         $categoryStats = $products->map(function ($items, $categoryId) {
             $category = $items->first()->category;
+
             return [
                 'category_id' => $categoryId,
                 'category_name' => $category?->name ?? 'Uncategorized',

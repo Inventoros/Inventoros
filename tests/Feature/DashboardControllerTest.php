@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\ActivityLog;
 use App\Models\Auth\Organization;
 use App\Models\Inventory\Product;
 use App\Models\Order\Order;
@@ -16,6 +17,7 @@ class DashboardControllerTest extends TestCase
     use RefreshDatabase;
 
     protected User $admin;
+
     protected Organization $organization;
 
     protected function setUp(): void
@@ -57,6 +59,24 @@ class DashboardControllerTest extends TestCase
             ->get(route('dashboard'));
 
         $response->assertStatus(200);
+    }
+
+    public function test_dashboard_renders_when_an_activity_log_has_no_user(): void
+    {
+        // A system action, or one whose acting user was since deleted, has a
+        // null user relation. The activity feed must not 500 the dashboard.
+        ActivityLog::create([
+            'organization_id' => $this->organization->id,
+            'user_id' => null,
+            'subject_type' => Organization::class,
+            'subject_id' => $this->organization->id,
+            'action' => 'system_action',
+            'description' => 'A system action with no user',
+        ]);
+
+        $this->actingAs($this->admin)
+            ->get(route('dashboard'))
+            ->assertStatus(200);
     }
 
     public function test_guest_cannot_view_dashboard(): void
