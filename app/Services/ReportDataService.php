@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Services;
 
+use App\Models\User;
+use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Database\Query\Builder;
 use Illuminate\Database\Query\Expression;
 use Illuminate\Support\Collection;
@@ -129,12 +131,19 @@ class ReportDataService
      * @throws \InvalidArgumentException
      */
     public function executeReport(
+        User $user,
         int $organizationId,
         string $dataSource,
         array $columns,
         ?array $filters = null,
         ?array $sort = null
     ): Collection {
+        // Enforce the per-source view permission on top of view_reports, so a
+        // reporting role can't export customer PII / supplier contacts /
+        // financials it isn't otherwise allowed to read. Checked against the
+        // acting (viewing) user, so a SHARED report re-checks each viewer.
+        $this->authorizeDataSource($user, $dataSource);
+
         if (! $this->isValidDataSource($dataSource)) {
             throw new \InvalidArgumentException("Invalid data source: {$dataSource}");
         }
@@ -151,6 +160,33 @@ class ReportDataService
             // returns null when no handler is registered.
             default => $this->executePluginDataSource($organizationId, $dataSource, $columns, $filters, $sort),
         };
+    }
+
+    /**
+     * The view permission each tenant data source requires beyond view_reports.
+     * Sources without an entry (e.g. stock_adjustments, plugin sources) remain
+     * gated by view_reports alone.
+     */
+    private const SOURCE_PERMISSION = [
+        'products' => 'view_products',
+        'orders' => 'view_orders',
+        'customers' => 'view_customers',
+        'suppliers' => 'view_suppliers',
+        'purchase_orders' => 'view_purchase_orders',
+    ];
+
+    /**
+     * @throws AuthorizationException When the user lacks the source's view permission.
+     */
+    private function authorizeDataSource(User $user, string $dataSource): void
+    {
+        $permission = self::SOURCE_PERMISSION[$dataSource] ?? null;
+
+        if ($permission !== null && ! $user->hasPermission($permission)) {
+            throw new AuthorizationException(
+                "You do not have permission to report on the {$dataSource} data source."
+            );
+        }
     }
 
     /**

@@ -8,7 +8,9 @@ use App\Http\Controllers\Controller;
 use App\Models\SavedReport;
 use App\Services\ReportDataService;
 use App\Support\SpreadsheetSafety;
+use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -28,9 +30,6 @@ class ReportBuilderController extends Controller
 
     /**
      * List saved reports (own + shared).
-     *
-     * @param Request $request
-     * @return Response
      */
     public function index(Request $request): Response
     {
@@ -67,9 +66,6 @@ class ReportBuilderController extends Controller
 
     /**
      * Show the report builder form.
-     *
-     * @param Request $request
-     * @return Response
      */
     public function create(Request $request): Response
     {
@@ -83,8 +79,7 @@ class ReportBuilderController extends Controller
     /**
      * Save a new report configuration.
      *
-     * @param Request $request
-     * @return \Illuminate\Http\RedirectResponse
+     * @return RedirectResponse
      */
     public function store(Request $request)
     {
@@ -109,15 +104,15 @@ class ReportBuilderController extends Controller
         ]);
 
         // Validate the data source
-        if (!$this->reportDataService->isValidDataSource($validated['data_source'])) {
+        if (! $this->reportDataService->isValidDataSource($validated['data_source'])) {
             return back()->withErrors(['data_source' => 'Invalid data source.']);
         }
 
         // Validate columns belong to the data source
         $validColumns = $this->reportDataService->getValidColumns($validated['data_source']);
         $invalidColumns = array_diff($validated['columns'], $validColumns);
-        if (!empty($invalidColumns)) {
-            return back()->withErrors(['columns' => 'Invalid columns: ' . implode(', ', $invalidColumns)]);
+        if (! empty($invalidColumns)) {
+            return back()->withErrors(['columns' => 'Invalid columns: '.implode(', ', $invalidColumns)]);
         }
 
         $report = SavedReport::create([
@@ -141,10 +136,6 @@ class ReportBuilderController extends Controller
 
     /**
      * Execute and display a saved report.
-     *
-     * @param Request $request
-     * @param SavedReport $savedReport
-     * @return Response
      */
     public function show(Request $request, SavedReport $savedReport): Response
     {
@@ -154,11 +145,12 @@ class ReportBuilderController extends Controller
         if ($savedReport->organization_id !== $user->organization_id) {
             abort(403);
         }
-        if ($savedReport->created_by !== $user->id && !$savedReport->is_shared) {
+        if ($savedReport->created_by !== $user->id && ! $savedReport->is_shared) {
             abort(403);
         }
 
         $data = $this->reportDataService->executeReport(
+            $user,
             $savedReport->organization_id,
             $savedReport->data_source,
             $savedReport->columns,
@@ -200,10 +192,6 @@ class ReportBuilderController extends Controller
 
     /**
      * Show edit form for a saved report.
-     *
-     * @param Request $request
-     * @param SavedReport $savedReport
-     * @return Response
      */
     public function edit(Request $request, SavedReport $savedReport): Response
     {
@@ -236,9 +224,7 @@ class ReportBuilderController extends Controller
     /**
      * Update a saved report configuration.
      *
-     * @param Request $request
-     * @param SavedReport $savedReport
-     * @return \Illuminate\Http\RedirectResponse
+     * @return RedirectResponse
      */
     public function update(Request $request, SavedReport $savedReport)
     {
@@ -267,14 +253,14 @@ class ReportBuilderController extends Controller
             'is_shared' => 'boolean',
         ]);
 
-        if (!$this->reportDataService->isValidDataSource($validated['data_source'])) {
+        if (! $this->reportDataService->isValidDataSource($validated['data_source'])) {
             return back()->withErrors(['data_source' => 'Invalid data source.']);
         }
 
         $validColumns = $this->reportDataService->getValidColumns($validated['data_source']);
         $invalidColumns = array_diff($validated['columns'], $validColumns);
-        if (!empty($invalidColumns)) {
-            return back()->withErrors(['columns' => 'Invalid columns: ' . implode(', ', $invalidColumns)]);
+        if (! empty($invalidColumns)) {
+            return back()->withErrors(['columns' => 'Invalid columns: '.implode(', ', $invalidColumns)]);
         }
 
         $savedReport->update([
@@ -297,9 +283,7 @@ class ReportBuilderController extends Controller
     /**
      * Delete a saved report.
      *
-     * @param Request $request
-     * @param SavedReport $savedReport
-     * @return \Illuminate\Http\RedirectResponse
+     * @return RedirectResponse
      */
     public function destroy(Request $request, SavedReport $savedReport)
     {
@@ -319,10 +303,6 @@ class ReportBuilderController extends Controller
 
     /**
      * Export a saved report as CSV.
-     *
-     * @param Request $request
-     * @param SavedReport $savedReport
-     * @return StreamedResponse
      */
     public function export(Request $request, SavedReport $savedReport): StreamedResponse
     {
@@ -332,11 +312,12 @@ class ReportBuilderController extends Controller
         if ($savedReport->organization_id !== $user->organization_id) {
             abort(403);
         }
-        if ($savedReport->created_by !== $user->id && !$savedReport->is_shared) {
+        if ($savedReport->created_by !== $user->id && ! $savedReport->is_shared) {
             abort(403);
         }
 
         $data = $this->reportDataService->executeReport(
+            $user,
             $savedReport->organization_id,
             $savedReport->data_source,
             $savedReport->columns,
@@ -353,7 +334,7 @@ class ReportBuilderController extends Controller
             $headers[] = $sourceConfig['columns'][$col]['label'] ?? $col;
         }
 
-        $filename = str_replace(' ', '_', strtolower($savedReport->name)) . '_' . now()->format('Y-m-d') . '.csv';
+        $filename = str_replace(' ', '_', strtolower($savedReport->name)).'_'.now()->format('Y-m-d').'.csv';
 
         return response()->streamDownload(function () use ($data, $savedReport, $headers) {
             $handle = fopen('php://output', 'w');
@@ -381,9 +362,6 @@ class ReportBuilderController extends Controller
 
     /**
      * Preview report data without saving (live preview in builder).
-     *
-     * @param Request $request
-     * @return JsonResponse
      */
     public function preview(Request $request): JsonResponse
     {
@@ -402,7 +380,7 @@ class ReportBuilderController extends Controller
             'sort.direction' => 'required_with:sort|string|in:asc,desc',
         ]);
 
-        if (!$this->reportDataService->isValidDataSource($validated['data_source'])) {
+        if (! $this->reportDataService->isValidDataSource($validated['data_source'])) {
             return response()->json(['error' => 'Invalid data source.'], 422);
         }
 
@@ -415,6 +393,7 @@ class ReportBuilderController extends Controller
 
         try {
             $data = $this->reportDataService->executeReport(
+                $user,
                 $user->organization_id,
                 $validated['data_source'],
                 $requestedColumns,
@@ -435,6 +414,8 @@ class ReportBuilderController extends Controller
                 'total' => $data->count(),
                 'columnLabels' => $columnLabels,
             ]);
+        } catch (AuthorizationException $e) {
+            return response()->json(['error' => $e->getMessage()], 403);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Failed to execute report query.'], 500);
         }
