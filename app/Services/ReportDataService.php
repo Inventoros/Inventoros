@@ -148,7 +148,7 @@ class ReportDataService
             throw new \InvalidArgumentException("Invalid data source: {$dataSource}");
         }
 
-        return match ($dataSource) {
+        $rows = match ($dataSource) {
             'products' => $this->queryProducts($organizationId, $columns, $filters, $sort),
             'orders' => $this->queryOrders($organizationId, $columns, $filters, $sort),
             'stock_adjustments' => $this->queryStockAdjustments($organizationId, $columns, $filters, $sort),
@@ -160,6 +160,10 @@ class ReportDataService
             // returns null when no handler is registered.
             default => $this->executePluginDataSource($organizationId, $dataSource, $columns, $filters, $sort),
         };
+
+        // Built-in sources cap in SQL; this also bounds plugin sources that
+        // ignore the limit.
+        return $rows->take($this->maxRows())->values();
     }
 
     /**
@@ -174,6 +178,16 @@ class ReportDataService
         'suppliers' => 'view_suppliers',
         'purchase_orders' => 'view_purchase_orders',
     ];
+
+    /**
+     * Hard row cap applied to every report query, so a report over a huge
+     * tenant can't materialise an unbounded result set into memory (OOM) or
+     * time out. Configurable via reports.max_rows.
+     */
+    private function maxRows(): int
+    {
+        return (int) config('reports.max_rows', 10000);
+    }
 
     /**
      * @throws AuthorizationException When the user lacks the source's view permission.
@@ -283,7 +297,7 @@ class ReportDataService
         $this->applyFilters($query, $filters, $filterMap);
         $this->applySorting($query, $sort, $filterMap);
 
-        return $query->get();
+        return $query->limit($this->maxRows())->get();
     }
 
     /**
@@ -323,7 +337,7 @@ class ReportDataService
         $this->applyFilters($query, $filters, $filterMap);
         $this->applySorting($query, $sort, $filterMap);
 
-        return $query->get();
+        return $query->limit($this->maxRows())->get();
     }
 
     /**
@@ -359,7 +373,7 @@ class ReportDataService
         $this->applyFilters($query, $filters, $filterMap);
         $this->applySorting($query, $sort, $filterMap);
 
-        return $query->get();
+        return $query->limit($this->maxRows())->get();
     }
 
     /**
@@ -433,7 +447,7 @@ class ReportDataService
 
         $this->applySorting($query, $sort, $filterMap);
 
-        return $query->get();
+        return $query->limit($this->maxRows())->get();
     }
 
     /**
@@ -500,7 +514,7 @@ class ReportDataService
 
         $this->applySorting($query, $sort, $filterMap);
 
-        return $query->get();
+        return $query->limit($this->maxRows())->get();
     }
 
     /**
@@ -537,7 +551,7 @@ class ReportDataService
         $this->applyFilters($query, $filters, $filterMap);
         $this->applySorting($query, $sort, $filterMap);
 
-        return $query->get();
+        return $query->limit($this->maxRows())->get();
     }
 
     /**

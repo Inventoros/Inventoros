@@ -9,6 +9,7 @@ use App\Models\Role;
 use App\Models\SavedReport;
 use App\Models\System\SystemSetting;
 use App\Models\User;
+use App\Services\ReportDataService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -271,6 +272,26 @@ class ReportBuilderTest extends TestCase
 
         $response->assertStatus(200)
             ->assertJsonStructure(['data', 'total', 'columnLabels']);
+    }
+
+    public function test_report_rows_are_capped_at_the_configured_limit(): void
+    {
+        config(['reports.max_rows' => 3]);
+
+        for ($i = 0; $i < 5; $i++) {
+            Product::create([
+                'organization_id' => $this->organization->id,
+                'sku' => "CAP-{$i}", 'name' => "Cap {$i}",
+                'price' => 1, 'currency' => 'USD', 'stock' => 1, 'min_stock' => 0,
+            ]);
+        }
+
+        // A report over a huge tenant must not materialise an unbounded set.
+        $rows = app(ReportDataService::class)->executeReport(
+            $this->admin, $this->organization->id, 'products', ['name', 'sku']
+        );
+
+        $this->assertCount(3, $rows);
     }
 
     public function test_report_builder_enforces_per_data_source_view_permission(): void
