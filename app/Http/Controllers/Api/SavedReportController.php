@@ -11,6 +11,7 @@ use App\Models\SavedReport;
 use App\Services\ReportDataService;
 use App\Support\SpreadsheetSafety;
 use Dedoc\Scramble\Attributes\QueryParameter;
+use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\StreamedResponse;
@@ -133,12 +134,18 @@ class SavedReportController extends Controller
 
         try {
             $data = $this->reportDataService->executeReport(
+                $user,
                 $report->organization_id,
                 $report->data_source,
                 $report->columns,
                 $report->filters,
                 $report->sort
             );
+        } catch (AuthorizationException $e) {
+            return response()->json([
+                'message' => $e->getMessage(),
+                'error' => 'forbidden',
+            ], 403);
         } catch (\Exception $e) {
             return response()->json([
                 'message' => 'Failed to execute report query.',
@@ -286,12 +293,18 @@ class SavedReportController extends Controller
 
         try {
             $data = $this->reportDataService->executeReport(
+                $user,
                 $report->organization_id,
                 $report->data_source,
                 $report->columns,
                 $report->filters,
                 $report->sort
             );
+        } catch (AuthorizationException $e) {
+            return response()->json([
+                'message' => $e->getMessage(),
+                'error' => 'forbidden',
+            ], 403);
         } catch (\Exception $e) {
             return response()->json([
                 'message' => 'Failed to execute report query.',

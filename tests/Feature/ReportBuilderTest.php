@@ -17,7 +17,9 @@ class ReportBuilderTest extends TestCase
     use RefreshDatabase;
 
     protected User $admin;
+
     protected User $member;
+
     protected Organization $organization;
 
     protected function setUp(): void
@@ -271,6 +273,43 @@ class ReportBuilderTest extends TestCase
             ->assertJsonStructure(['data', 'total', 'columnLabels']);
     }
 
+    public function test_report_builder_enforces_per_data_source_view_permission(): void
+    {
+        // A non-admin reporting user who can view reports + products, but NOT
+        // customers. view_reports alone must not unlock customer PII export.
+        $reporter = User::create([
+            'name' => 'Reporter', 'email' => 'reporter@test.com',
+            'password' => bcrypt('x'), 'organization_id' => $this->organization->id,
+        ]);
+        $reporter->forceFill(['role' => 'member'])->save();
+
+        $role = Role::create([
+            'slug' => 'custom-reporter', 'name' => 'Reporter', 'is_system' => false,
+            'permissions' => ['view_reports', 'view_products'],
+        ]);
+        $reporter->roles()->syncWithoutDetaching([$role->id]);
+
+        // Customers is refused — the report would expose PII they can't read.
+        $this->actingAs($reporter)
+            ->postJson(route('reports.builder.preview'), [
+                'data_source' => 'customers',
+                'columns' => ['name', 'email'],
+            ])
+            ->assertStatus(403);
+
+        // A source they can view still works.
+        Product::create([
+            'organization_id' => $this->organization->id,
+            'name' => 'Widget', 'sku' => 'WID-1', 'price' => 10.00, 'stock' => 5,
+        ]);
+        $this->actingAs($reporter)
+            ->postJson(route('reports.builder.preview'), [
+                'data_source' => 'products',
+                'columns' => ['name', 'sku'],
+            ])
+            ->assertStatus(200);
+    }
+
     public function test_products_data_source_returns_correct_columns(): void
     {
         Product::create([
@@ -458,7 +497,10 @@ class ReportBuilderTest extends TestCase
             [
                 'name' => 'Report Viewer',
                 'is_system' => false,
-                'permissions' => ['view_reports'],
+                // Viewing a shared products report needs view_products too, not
+                // just view_reports — the source permission is re-checked per
+                // viewer.
+                'permissions' => ['view_reports', 'view_products'],
             ]
         );
         $this->member->roles()->syncWithoutDetaching([$memberRole->id]);
