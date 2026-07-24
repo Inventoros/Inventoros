@@ -173,9 +173,10 @@ class StockAdjustment extends Model
         ?string $reason = null,
         ?string $notes = null,
         ?Model $reference = null,
-        bool $allowNegative = true
+        bool $allowNegative = true,
+        ?User $actor = null
     ): self {
-        return DB::transaction(function () use ($product, $quantity, $type, $reason, $notes, $reference, $allowNegative) {
+        return DB::transaction(function () use ($product, $quantity, $type, $reason, $notes, $reference, $allowNegative, $actor) {
             // Re-fetch the product with a row lock so concurrent adjustments
             // serialize on this row; otherwise two callers can both read
             // the same pre-image, compute different "after" values, and
@@ -194,7 +195,9 @@ class StockAdjustment extends Model
             $adjustment = self::create([
                 'organization_id' => $locked->organization_id,
                 'product_id' => $locked->id,
-                'user_id' => auth()->id(),
+                // Prefer an explicit actor (system/console callers that run
+                // outside a request) and fall back to the authenticated user.
+                'user_id' => $actor?->id ?? auth()->id(),
                 'type' => $type,
                 'quantity_before' => $quantityBefore,
                 'quantity_after' => $quantityAfter,
