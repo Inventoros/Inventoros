@@ -276,8 +276,11 @@ class Order extends Model
         $prefix = 'ORD-';
         $date = now()->format('Ymd');
 
-        // Get the last order number for today, scoped by organization
-        $query = static::where('order_number', 'like', $prefix.$date.'%');
+        // Get the last order number for today, scoped by organization. Include
+        // soft-deleted rows: the unique index still counts them, so ignoring a
+        // trashed highest-of-the-day number would regenerate a colliding value
+        // that no retry can escape.
+        $query = static::withTrashed()->where('order_number', 'like', $prefix.$date.'%');
         if ($organizationId !== null) {
             $query->where('organization_id', $organizationId);
         }

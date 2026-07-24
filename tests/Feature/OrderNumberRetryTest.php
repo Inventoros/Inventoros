@@ -5,7 +5,6 @@ namespace Tests\Feature;
 use App\Models\Auth\Organization;
 use App\Models\Inventory\Product;
 use App\Models\Order\Order;
-use App\Models\Role;
 use App\Models\System\SystemSetting;
 use App\Models\User;
 use App\Support\SequenceNumberRetry;
@@ -73,6 +72,50 @@ class OrderNumberRetryTest extends TestCase
         $this->assertStringStartsWith("ORD-{$today}-", $created->order_number);
     }
 
+    public function test_order_number_generation_accounts_for_soft_deleted_orders(): void
+    {
+        SystemSetting::set('installed', true, 'boolean');
+
+        $org = Organization::create([
+            'name' => 'SoftOrg', 'email' => 'so@test.com', 'currency' => 'USD', 'timezone' => 'UTC',
+        ]);
+        $admin = User::create([
+            'name' => 'Admin', 'email' => 'a@test.com', 'password' => bcrypt('x'),
+            'organization_id' => $org->id, 'role' => 'admin',
+        ]);
+        $product = Product::create([
+            'organization_id' => $org->id, 'sku' => 'SD-SKU-001', 'name' => 'SD Product',
+            'price' => 10, 'currency' => 'USD', 'stock' => 100, 'min_stock' => 0, 'is_active' => true,
+        ]);
+
+        $today = now()->format('Ymd');
+
+        // Soft-delete the highest-numbered order of the day (the most common
+        // thing to delete). The unique index still counts the trashed row, so
+        // a generator that reads MAX() through the default scope regenerates
+        // the same number forever and locks the org out of creating orders.
+        $order = Order::create([
+            'organization_id' => $org->id,
+            'order_number' => "ORD-{$today}-0001",
+            'source' => 'manual', 'customer_name' => 'Deleted', 'status' => 'pending',
+            'subtotal' => 0, 'tax' => 0, 'shipping' => 0, 'total' => 0,
+            'currency' => 'USD', 'order_date' => now(),
+        ]);
+        $order->delete();
+
+        Sanctum::actingAs($admin);
+
+        $response = $this->postJson('/api/v1/orders', [
+            'customer_name' => 'After Delete',
+            'items' => [['product_id' => $product->id, 'quantity' => 1, 'unit_price' => 10.0]],
+        ]);
+
+        $response->assertStatus(201);
+
+        $created = Order::where('customer_name', 'After Delete')->firstOrFail();
+        $this->assertNotSame("ORD-{$today}-0001", $created->order_number);
+    }
+
     public function test_retry_helper_recovers_from_unique_violation(): void
     {
         $attempts = 0;
@@ -85,11 +128,12 @@ class OrderNumberRetryTest extends TestCase
                     'INSERT INTO orders ...',
                     [],
                     tap(new \PDOException('SQLSTATE[23000]: Integrity constraint violation: 19 UNIQUE constraint failed', 23000), function ($e) {
-                    $e->errorInfo = ['23000', 19, 'UNIQUE constraint failed'];
-                })
+                        $e->errorInfo = ['23000', 19, 'UNIQUE constraint failed'];
+                    })
                 );
             }
-            return 'ok-after-' . $attempts;
+
+            return 'ok-after-'.$attempts;
         });
 
         $this->assertSame('ok-after-3', $result);
