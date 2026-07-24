@@ -19,10 +19,15 @@ class ProductComponentApiTest extends TestCase
     use RefreshDatabase;
 
     protected User $admin;
+
     protected Organization $organization;
+
     protected Product $kitProduct;
+
     protected Product $componentProductA;
+
     protected Product $componentProductB;
+
     protected Product $standardProduct;
 
     protected function setUp(): void
@@ -181,6 +186,34 @@ class ProductComponentApiTest extends TestCase
         $this->assertDatabaseHas('product_components', [
             'parent_product_id' => $this->kitProduct->id,
             'component_product_id' => $this->componentProductA->id,
+        ]);
+    }
+
+    public function test_cannot_add_a_variant_tracked_product_as_a_component(): void
+    {
+        Sanctum::actingAs($this->admin);
+
+        // A variant-tracked product keeps its stock on ProductVariant; used as a
+        // component, work-order consumption would decrement the parent's unused
+        // stock (driving it negative) while the variant stock is never touched.
+        $variantProduct = Product::create([
+            'organization_id' => $this->organization->id,
+            'type' => 'standard', 'sku' => 'VAR-COMP-1', 'name' => 'Variant Component',
+            'price' => 5, 'currency' => 'USD', 'stock' => 0, 'min_stock' => 0,
+            'has_variants' => true,
+        ]);
+
+        $response = $this->postJson("/api/v1/products/{$this->kitProduct->id}/components", [
+            'component_product_id' => $variantProduct->id,
+            'quantity' => 1,
+        ]);
+
+        $response->assertStatus(422)
+            ->assertJsonValidationErrors(['component_product_id']);
+
+        $this->assertDatabaseMissing('product_components', [
+            'parent_product_id' => $this->kitProduct->id,
+            'component_product_id' => $variantProduct->id,
         ]);
     }
 

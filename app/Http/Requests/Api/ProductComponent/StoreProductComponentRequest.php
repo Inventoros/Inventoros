@@ -36,6 +36,18 @@ final class StoreProductComponentRequest extends FormRequest
                         $fail('A product cannot be a component of itself.');
                     }
                 },
+                function ($attribute, $value, $fail) use ($organizationId) {
+                    // Variant-tracked products keep stock on ProductVariant, but
+                    // work-order consumption decrements the parent's (unused)
+                    // stock — forbid them as components until variant-level BOM
+                    // support lands.
+                    $component = Product::where('id', $value)
+                        ->where('organization_id', $organizationId)
+                        ->first();
+                    if ($component && $component->has_variants) {
+                        $fail('Variant-tracked products cannot be used as components.');
+                    }
+                },
                 Rule::unique('product_components')
                     ->where('parent_product_id', $product->id),
             ],

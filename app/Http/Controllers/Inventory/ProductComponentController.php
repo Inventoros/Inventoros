@@ -22,9 +22,8 @@ class ProductComponentController extends Controller
     /**
      * Display a listing of components for a product.
      *
-     * @param Request $request The incoming HTTP request
-     * @param Product $product The parent product (kit or assembly)
-     * @return JsonResponse
+     * @param  Request  $request  The incoming HTTP request
+     * @param  Product  $product  The parent product (kit or assembly)
      */
     public function index(Request $request, Product $product): JsonResponse
     {
@@ -43,9 +42,8 @@ class ProductComponentController extends Controller
     /**
      * Store a new component for a product.
      *
-     * @param Request $request The incoming HTTP request
-     * @param Product $product The parent product (kit or assembly)
-     * @return JsonResponse
+     * @param  Request  $request  The incoming HTTP request
+     * @param  Product  $product  The parent product (kit or assembly)
      */
     public function store(Request $request, Product $product): JsonResponse
     {
@@ -62,6 +60,19 @@ class ProductComponentController extends Controller
                     // Prevent self-referencing
                     if ((int) $value === $product->id) {
                         $fail('A product cannot be a component of itself.');
+                    }
+                },
+                function ($attribute, $value, $fail) use ($organizationId) {
+                    // A variant-tracked product keeps its stock on ProductVariant,
+                    // but work-order consumption decrements the parent product's
+                    // (unused) stock. Forbid it until variant-level BOM support
+                    // lands, so a WO can't drive the parent negative while the
+                    // real variant stock is never touched.
+                    $component = Product::where('id', $value)
+                        ->where('organization_id', $organizationId)
+                        ->first();
+                    if ($component && $component->has_variants) {
+                        $fail('Variant-tracked products cannot be used as components.');
                     }
                 },
                 Rule::unique('product_components')
@@ -100,10 +111,9 @@ class ProductComponentController extends Controller
     /**
      * Update a component's quantity or notes.
      *
-     * @param Request $request The incoming HTTP request
-     * @param Product $product The parent product (kit or assembly)
-     * @param ProductComponent $component The component to update
-     * @return JsonResponse
+     * @param  Request  $request  The incoming HTTP request
+     * @param  Product  $product  The parent product (kit or assembly)
+     * @param  ProductComponent  $component  The component to update
      */
     public function update(Request $request, Product $product, ProductComponent $component): JsonResponse
     {
@@ -127,10 +137,9 @@ class ProductComponentController extends Controller
     /**
      * Remove a component from a product.
      *
-     * @param Request $request The incoming HTTP request
-     * @param Product $product The parent product (kit or assembly)
-     * @param ProductComponent $component The component to remove
-     * @return JsonResponse
+     * @param  Request  $request  The incoming HTTP request
+     * @param  Product  $product  The parent product (kit or assembly)
+     * @param  ProductComponent  $component  The component to remove
      */
     public function destroy(Request $request, Product $product, ProductComponent $component): JsonResponse
     {
@@ -147,9 +156,8 @@ class ProductComponentController extends Controller
     /**
      * Reorder components for a product.
      *
-     * @param Request $request The incoming HTTP request
-     * @param Product $product The parent product (kit or assembly)
-     * @return JsonResponse
+     * @param  Request  $request  The incoming HTTP request
+     * @param  Product  $product  The parent product (kit or assembly)
      */
     public function reorder(Request $request, Product $product): JsonResponse
     {
@@ -180,10 +188,6 @@ class ProductComponentController extends Controller
     /**
      * Authorize that the product belongs to the user's organization
      * and is a kit or assembly type.
-     *
-     * @param Request $request
-     * @param Product $product
-     * @return void
      */
     private function authorizeProduct(Request $request, Product $product): void
     {
@@ -191,17 +195,13 @@ class ProductComponentController extends Controller
             abort(403, 'Unauthorized action.');
         }
 
-        if (!in_array($product->type, ['kit', 'assembly'])) {
+        if (! in_array($product->type, ['kit', 'assembly'])) {
             abort(422, 'Only kit and assembly products can have components.');
         }
     }
 
     /**
      * Authorize that the component belongs to the given product.
-     *
-     * @param Product $product
-     * @param ProductComponent $component
-     * @return void
      */
     private function authorizeComponent(Product $product, ProductComponent $component): void
     {
@@ -216,17 +216,16 @@ class ProductComponentController extends Controller
      * A circular reference occurs when product A contains product B,
      * and product B (directly or indirectly) contains product A.
      *
-     * @param int $parentId The parent product ID
-     * @param int $componentId The component product ID to add
-     * @param array $visited Previously visited product IDs (for recursion)
-     * @return bool
+     * @param  int  $parentId  The parent product ID
+     * @param  int  $componentId  The component product ID to add
+     * @param  array  $visited  Previously visited product IDs (for recursion)
      */
     private function wouldCreateCircularReference(int $parentId, int $componentId, array $visited = []): bool
     {
         // Check if the component product has components that reference back to parent
         $componentProduct = Product::find($componentId);
 
-        if (!$componentProduct || !in_array($componentProduct->type, ['kit', 'assembly'])) {
+        if (! $componentProduct || ! in_array($componentProduct->type, ['kit', 'assembly'])) {
             return false;
         }
 
