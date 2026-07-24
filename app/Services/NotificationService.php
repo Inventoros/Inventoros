@@ -14,6 +14,7 @@ use App\Models\Inventory\Product;
 use App\Models\Notification;
 use App\Models\Order\Order;
 use App\Models\User;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 
@@ -159,6 +160,17 @@ final class NotificationService
      */
     public static function createLowStockNotification(Product $product): void
     {
+        // Suppress repeat low-stock alerts for the same product within a
+        // cooldown window, so a product that stays low doesn't re-alert (and
+        // re-email every stock manager) on every subsequent stock adjustment.
+        $cooldownKey = "low_stock_alerted:{$product->id}";
+        if (Cache::has($cooldownKey)) {
+            return;
+        }
+        Cache::put($cooldownKey, true, now()->addMinutes(
+            (int) config('notifications.low_stock_cooldown_minutes', 1440)
+        ));
+
         // Get all users in the organization with manage_stock permission
         $users = User::where('organization_id', $product->organization_id)
             ->whereHas('roles', function ($query) {
