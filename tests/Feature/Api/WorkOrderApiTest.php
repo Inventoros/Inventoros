@@ -384,6 +384,40 @@ class WorkOrderApiTest extends TestCase
         ]);
     }
 
+    public function test_partial_production_consumes_components_proportionally(): void
+    {
+        Mail::fake();
+        Notification::fake();
+
+        Sanctum::actingAs($this->admin);
+
+        $workOrder = WorkOrder::create([
+            'organization_id' => $this->organization->id,
+            'product_id' => $this->assemblyProduct->id,
+            'created_by' => $this->admin->id,
+            'work_order_number' => 'WO-PARTIAL-0001',
+            'quantity' => 5,
+            'status' => 'in_progress',
+            'started_at' => now(),
+        ]);
+        $workOrder->items()->create([
+            'product_id' => $this->componentProduct1->id,
+            'quantity_required' => 10, // 2 per unit x 5 planned
+            'quantity_consumed' => 0,
+        ]);
+
+        $comp1Before = $this->componentProduct1->stock; // 100
+
+        // Produce only 1 of the 5 planned.
+        $this->postJson("/api/v1/work-orders/{$workOrder->id}/complete", [
+            'quantity_produced' => 1,
+        ])->assertStatus(200);
+
+        // Components consumed in proportion (10 * 1/5 = 2), not the full 10.
+        $this->assertSame($comp1Before - 2, $this->componentProduct1->fresh()->stock);
+        $this->assertSame(1, $this->assemblyProduct->fresh()->stock);
+    }
+
     // ==================== CANCEL TESTS ====================
 
     public function test_can_cancel_work_order(): void

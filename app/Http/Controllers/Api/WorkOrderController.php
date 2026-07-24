@@ -253,7 +253,10 @@ class WorkOrderController extends Controller
                 // negative — availability may have changed while the WO sat in
                 // progress. A shortfall aborts the whole completion.
                 foreach ($locked->items as $item) {
-                    $consumeQtyInt = (int) ceil($item->quantity_required - $item->quantity_consumed);
+                    // Consume in proportion to what was actually produced, not
+                    // the full planned quantity.
+                    $targetConsumed = (int) ceil($item->quantity_required * ($quantityProduced / $locked->quantity));
+                    $consumeQtyInt = $targetConsumed - (int) $item->quantity_consumed;
 
                     if ($consumeQtyInt > 0) {
                         StockAdjustment::adjust(
@@ -266,7 +269,7 @@ class WorkOrderController extends Controller
                             allowNegative: false
                         );
 
-                        $item->update(['quantity_consumed' => $item->quantity_required]);
+                        $item->update(['quantity_consumed' => $targetConsumed]);
                     }
                 }
 

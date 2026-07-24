@@ -251,10 +251,12 @@ class WorkOrderController extends Controller
 
                 $workOrder->load('items.product');
 
-                // Decrement component stock
+                // Decrement component stock in proportion to what was actually
+                // produced, not the full planned quantity — a partial completion
+                // must not burn (and destroy) components for units never made.
                 foreach ($workOrder->items as $item) {
-                    $consumeQty = $item->quantity_required - $item->quantity_consumed;
-                    $consumeQtyInt = (int) ceil($consumeQty);
+                    $targetConsumed = (int) ceil($item->quantity_required * ($quantityProduced / $workOrder->quantity));
+                    $consumeQtyInt = $targetConsumed - (int) $item->quantity_consumed;
 
                     if ($consumeQtyInt > 0) {
                         // Re-validate availability under the lock and refuse to
@@ -270,7 +272,7 @@ class WorkOrderController extends Controller
                             allowNegative: false
                         );
 
-                        $item->update(['quantity_consumed' => $item->quantity_required]);
+                        $item->update(['quantity_consumed' => $targetConsumed]);
                     }
                 }
 
