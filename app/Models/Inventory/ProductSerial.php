@@ -5,9 +5,11 @@ declare(strict_types=1);
 namespace App\Models\Inventory;
 
 use App\Models\Auth\Organization;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Carbon;
 
 /**
  * Represents a serial number for a product.
@@ -18,18 +20,21 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property string $serial_number
  * @property string $status
  * @property string|null $notes
- * @property \Illuminate\Support\Carbon|null $created_at
- * @property \Illuminate\Support\Carbon|null $updated_at
- * @property-read \App\Models\Auth\Organization $organization
- * @property-read \App\Models\Inventory\Product $product
+ * @property Carbon|null $created_at
+ * @property Carbon|null $updated_at
+ * @property-read Organization $organization
+ * @property-read Product $product
  */
 class ProductSerial extends Model
 {
     use HasFactory;
 
     public const STATUS_AVAILABLE = 'available';
+
     public const STATUS_SOLD = 'sold';
+
     public const STATUS_RESERVED = 'reserved';
+
     public const STATUS_DAMAGED = 'damaged';
 
     public const VALID_STATUSES = [
@@ -49,13 +54,14 @@ class ProductSerial extends Model
         'product_id',
         'serial_number',
         'status',
+        'order_item_id',
         'notes',
     ];
 
     /**
      * Get the organization that owns this serial.
      *
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo<\App\Models\Auth\Organization, $this>
+     * @return BelongsTo<Organization, $this>
      */
     public function organization(): BelongsTo
     {
@@ -65,7 +71,7 @@ class ProductSerial extends Model
     /**
      * Get the product that owns this serial.
      *
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo<\App\Models\Inventory\Product, $this>
+     * @return BelongsTo<Product, $this>
      */
     public function product(): BelongsTo
     {
@@ -75,9 +81,9 @@ class ProductSerial extends Model
     /**
      * Scope a query to only include serials from a specific organization.
      *
-     * @param \Illuminate\Database\Eloquent\Builder<static> $query
-     * @param int $organizationId
-     * @return \Illuminate\Database\Eloquent\Builder<static>
+     * @param  Builder<static>  $query
+     * @param  int  $organizationId
+     * @return Builder<static>
      */
     public function scopeForOrganization($query, $organizationId)
     {
@@ -87,9 +93,8 @@ class ProductSerial extends Model
     /**
      * Scope a query to only include serials with a specific status.
      *
-     * @param \Illuminate\Database\Eloquent\Builder<static> $query
-     * @param string $status
-     * @return \Illuminate\Database\Eloquent\Builder<static>
+     * @param  Builder<static>  $query
+     * @return Builder<static>
      */
     public function scopeWithStatus($query, string $status)
     {
@@ -98,8 +103,6 @@ class ProductSerial extends Model
 
     /**
      * Check if the serial is available.
-     *
-     * @return bool
      */
     public function isAvailable(): bool
     {
