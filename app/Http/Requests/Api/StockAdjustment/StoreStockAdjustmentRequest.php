@@ -26,6 +26,16 @@ final class StoreStockAdjustmentRequest extends FormRequest
             'type' => ['required', 'string', 'in:manual,count,damage,return,transfer'],
             'reason' => ['nullable', 'string', 'max:255'],
             'notes' => ['nullable', 'string'],
+            // Optional: apply the adjustment to a specific location bin so the
+            // per-location breakdown stays in step with the total. Omitted =
+            // adjust the total only (leaves the breakdown untouched).
+            'location_id' => [
+                'nullable',
+                'integer',
+                Rule::exists('product_locations', 'id')
+                    ->where('organization_id', $organizationId)
+                    ->whereNull('deleted_at'),
+            ],
         ];
     }
 }

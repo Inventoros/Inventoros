@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services;
 
+use App\Exceptions\InsufficientStockException;
 use App\Models\Inventory\Product;
 use App\Models\Inventory\ProductLocationStock;
 use Illuminate\Support\Collection;
@@ -98,6 +99,40 @@ final class ProductLocationStockService
             ['organization_id' => $product->organization_id, 'quantity' => 0],
         );
         $toRow->increment('quantity', $quantity);
+    }
+
+    /**
+     * Apply a signed delta to a product's quantity at one location bin,
+     * keeping the per-location breakdown in step with a stock adjustment on
+     * the same product. Lazily bins the product first, so the delta lands on
+     * top of its real on-hand rather than an empty bin.
+     *
+     * Must run inside the adjustment's transaction (which holds the product
+     * row lock). When $allowNegativeBin is false, refuses to drive the bin
+     * below zero.
+     *
+     * @throws InsufficientStockException when the bin would go negative
+     */
+    public function applyDelta(Product $product, int $locationId, int $delta, bool $allowNegativeBin = true): int
+    {
+        $this->ensureBinned($product);
+
+        $row = ProductLocationStock::firstOrCreate(
+            ['product_id' => $product->id, 'location_id' => $locationId],
+            ['organization_id' => $product->organization_id, 'quantity' => 0],
+        );
+
+        $after = (int) $row->quantity + $delta;
+
+        if (! $allowNegativeBin && $after < 0) {
+            throw new InsufficientStockException(
+                'Cannot remove '.abs($delta)." units from that location for {$product->name}: only {$row->quantity} on hand there."
+            );
+        }
+
+        $row->update(['quantity' => $after]);
+
+        return $after;
     }
 
     /**
