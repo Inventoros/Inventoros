@@ -245,6 +245,20 @@ final class OrderService
                 $targets[$key]->decrement('stock', $totalQty);
             }
 
+            // Allocate serials to each serial-tracked line, pinning the consumed
+            // units to their order item so a later cancellation releases exactly
+            // those serials. Best-effort during the transition to
+            // serials-as-source-of-truth: products without enough tracked
+            // serials are left untouched, so creation is unchanged for them.
+            $order->load('items');
+            $allocator = app(TrackedStockAllocationService::class);
+            foreach ($order->items as $orderItem) {
+                $product = $products->get($orderItem->product_id);
+                if ($product !== null) {
+                    $allocator->allocateForOrderItem($product, (int) $orderItem->quantity, $orderItem);
+                }
+            }
+
             return $order;
         }));
 
@@ -340,6 +354,11 @@ final class OrderService
      */
     public function restockItem(OrderItem $item, string $reason, Order $order): void
     {
+        // Return any serials this line consumed to available before restocking
+        // the count, so the serial records track the goods coming back. No-op
+        // for untracked lines and best-effort skips.
+        app(TrackedStockAllocationService::class)->releaseForOrderItem($item);
+
         if ($item->product_variant_id !== null && $item->variant !== null) {
             StockAdjustment::adjustVariant(
                 $item->variant,
