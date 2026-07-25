@@ -12,6 +12,7 @@ use App\Models\Inventory\ProductLocation;
 use App\Models\Inventory\StockAdjustment;
 use App\Models\Inventory\StockTransfer;
 use App\Models\Inventory\StockTransferItem;
+use App\Services\ProductLocationStockService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -236,7 +237,7 @@ class StockTransferController extends Controller
      * @param  StockTransfer  $stockTransfer  The stock transfer to complete
      * @return RedirectResponse
      */
-    public function complete(Request $request, StockTransfer $stockTransfer)
+    public function complete(Request $request, StockTransfer $stockTransfer, ProductLocationStockService $locationStock)
     {
         if ($stockTransfer->organization_id !== $request->user()->organization_id) {
             abort(403, 'Unauthorized action.');
@@ -248,7 +249,7 @@ class StockTransferController extends Controller
         }
 
         try {
-            DB::transaction(function () use ($stockTransfer) {
+            DB::transaction(function () use ($stockTransfer, $locationStock) {
                 $stockTransfer->load('items', 'fromLocation', 'toLocation');
 
                 foreach ($stockTransfer->items as $item) {
@@ -266,23 +267,28 @@ class StockTransferController extends Controller
                         );
                     }
 
-                    // Repoint the product to the destination location. Inventoros
-                    // tracks a single location per product, so a completed
-                    // transfer moves that pointer — otherwise the transfer was
-                    // pure paperwork and the product still recorded at its origin,
-                    // diverging from where the goods physically are.
+                    // Move the quantity between the source and destination location
+                    // bins. products.stock (the total on hand) is unchanged — the
+                    // goods are still owned, just in a different place — but the
+                    // per-location breakdown now reflects the move, so the source
+                    // bin can no longer be over-drawn by a later transfer. Guards
+                    // the source bin (throws if short).
+                    $locationStock->move(
+                        $product,
+                        $stockTransfer->from_location_id,
+                        $stockTransfer->to_location_id,
+                        $item->quantity,
+                    );
+
+                    // Repoint the product's primary location to the destination so
+                    // single-location views keep matching where the bulk of the
+                    // goods moved.
                     $product->update(['location_id' => $stockTransfer->to_location_id]);
 
-                    // Inventoros stores stock globally on products.stock with no
-                    // per-location/per-warehouse breakdown. A "transfer" between
-                    // ProductLocations is therefore paperwork only — there is no
-                    // physical column to decrement at the source and increment at
-                    // the destination. The previous implementation wrote two
-                    // cancelling stock adjustments (-qty then +qty on the same
-                    // row), which left the audit ledger reconciling to zero and
-                    // masked the fact that nothing moved. Record one audit row
-                    // per item with adjustment_quantity = 0 instead, until per-
-                    // location stock tracking lands as a separate change.
+                    // Record one audit row per item. products.stock does not change
+                    // on a transfer (the move is between locations, tracked in
+                    // product_location_stocks), so adjustment_quantity is 0; the
+                    // reason captures the source and destination for the ledger.
                     StockAdjustment::create([
                         'organization_id' => $stockTransfer->organization_id,
                         'product_id' => $product->id,
