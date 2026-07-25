@@ -57,6 +57,77 @@ final class ProductLocationStockService
     }
 
     /**
+     * Move quantity of a product from one location bin to another. The total
+     * (products.stock) is unchanged — only the per-location breakdown shifts.
+     *
+     * The source bin must hold at least $quantity. A product that has never
+     * been binned is lazily seeded at its assigned location first (from its
+     * current stock), so a transfer of a single-location product behaves
+     * exactly like the pre-per-location global check.
+     *
+     * Must run inside a transaction that already holds a row lock on the
+     * product, so concurrent transfers of the same product serialize.
+     *
+     * @throws \RuntimeException when the source bin is short
+     */
+    public function move(Product $product, int $fromLocationId, int $toLocationId, int $quantity): void
+    {
+        if ($quantity <= 0) {
+            return;
+        }
+
+        $this->ensureBinned($product);
+
+        $fromRow = ProductLocationStock::query()
+            ->where('product_id', $product->id)
+            ->where('location_id', $fromLocationId)
+            ->first();
+
+        $available = (int) ($fromRow->quantity ?? 0);
+
+        if ($available < $quantity) {
+            throw new \RuntimeException(
+                "Insufficient stock at the source location for {$product->name}: have {$available}, transfer requires {$quantity}."
+            );
+        }
+
+        $fromRow->decrement('quantity', $quantity);
+
+        $toRow = ProductLocationStock::firstOrCreate(
+            ['product_id' => $product->id, 'location_id' => $toLocationId],
+            ['organization_id' => $product->organization_id, 'quantity' => 0],
+        );
+        $toRow->increment('quantity', $quantity);
+    }
+
+    /**
+     * Seed a product's full current stock at its assigned location if it has
+     * no per-location rows yet. No-op once the product is binned, or if it has
+     * no assigned location to seed from.
+     */
+    private function ensureBinned(Product $product): void
+    {
+        if ($product->location_id === null) {
+            return;
+        }
+
+        $alreadyBinned = ProductLocationStock::query()
+            ->where('product_id', $product->id)
+            ->exists();
+
+        if ($alreadyBinned) {
+            return;
+        }
+
+        ProductLocationStock::create([
+            'organization_id' => $product->organization_id,
+            'product_id' => $product->id,
+            'location_id' => $product->location_id,
+            'quantity' => (int) $product->stock,
+        ]);
+    }
+
+    /**
      * Seed a per-location row for every product that has an assigned location
      * but no row there yet, using the product's current stock. Idempotent:
      * products already binned at their location are left untouched, so this is

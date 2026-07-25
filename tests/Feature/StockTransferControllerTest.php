@@ -6,6 +6,7 @@ use App\Models\Auth\Organization;
 use App\Models\Inventory\Product;
 use App\Models\Inventory\ProductCategory;
 use App\Models\Inventory\ProductLocation;
+use App\Models\Inventory\ProductLocationStock;
 use App\Models\Inventory\StockAdjustment;
 use App\Models\Inventory\StockTransfer;
 use App\Models\Inventory\StockTransferItem;
@@ -489,6 +490,57 @@ class StockTransferControllerTest extends TestCase
         $this->assertEquals($initialStock, $entry->quantity_after);
         $this->assertStringContainsString('Warehouse A', $entry->reason);
         $this->assertStringContainsString('Warehouse B', $entry->reason);
+    }
+
+    public function test_completing_a_transfer_moves_quantity_between_location_bins(): void
+    {
+        $transfer = $this->createTransfer(); // product at A (stock 100), transfer 10 A -> B
+
+        $this->actingAs($this->admin)
+            ->post(route('stock-transfers.complete', $transfer))
+            ->assertRedirect(route('stock-transfers.show', $transfer));
+
+        // The total on hand is unchanged — the goods only changed location.
+        $this->assertSame(100, $this->product->fresh()->stock);
+
+        // The per-location breakdown now reflects the move: the unbinned product
+        // was lazily seeded with its full stock at A, then 10 moved to B.
+        $this->assertSame(90, ProductLocationStock::where('product_id', $this->product->id)
+            ->where('location_id', $this->locationA->id)->value('quantity'));
+        $this->assertSame(10, ProductLocationStock::where('product_id', $this->product->id)
+            ->where('location_id', $this->locationB->id)->value('quantity'));
+    }
+
+    public function test_transfer_fails_when_source_bin_is_short_even_if_global_stock_suffices(): void
+    {
+        // Global stock is 100, but only 5 units are actually binned at A (the
+        // rest is unassigned). A transfer of 10 from A must fail: you cannot
+        // move more than physically sits at the source location.
+        ProductLocationStock::create([
+            'organization_id' => $this->organization->id,
+            'product_id' => $this->product->id,
+            'location_id' => $this->locationA->id,
+            'quantity' => 5,
+        ]);
+
+        $transfer = $this->createTransfer(); // wants to move 10 from A
+
+        $this->actingAs($this->admin)
+            ->post(route('stock-transfers.complete', $transfer))
+            ->assertRedirect(route('stock-transfers.show', $transfer))
+            ->assertSessionHas('error');
+
+        $transfer->refresh();
+        $this->assertSame('pending', $transfer->status);
+
+        // Rolled back cleanly: the source bin is untouched and no destination
+        // bin was created.
+        $this->assertSame(5, ProductLocationStock::where('product_id', $this->product->id)
+            ->where('location_id', $this->locationA->id)->value('quantity'));
+        $this->assertNull(ProductLocationStock::where('product_id', $this->product->id)
+            ->where('location_id', $this->locationB->id)->value('quantity'));
+        $this->assertSame(0, StockAdjustment::where('reference_type', StockTransfer::class)
+            ->where('reference_id', $transfer->id)->count());
     }
 
     public function test_completing_transfer_fails_when_source_stock_insufficient(): void
