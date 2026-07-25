@@ -1,0 +1,99 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\Services;
+
+use App\Models\Inventory\Product;
+use App\Models\Inventory\ProductLocationStock;
+use Illuminate\Support\Collection;
+
+/**
+ * Reads the per-location on-hand breakdown behind products.stock, and can
+ * (re)seed it from the products' assigned locations.
+ *
+ * This slice is read-only with respect to live stock: it never changes
+ * products.stock. Location-aware writes (adjustments, transfers) land in
+ * later slices.
+ */
+final class ProductLocationStockService
+{
+    /**
+     * On-hand quantity of a product at a single location (0 if unbinned there).
+     */
+    public function quantityAt(Product $product, int $locationId): int
+    {
+        return (int) (ProductLocationStock::query()
+            ->where('product_id', $product->id)
+            ->where('location_id', $locationId)
+            ->value('quantity') ?? 0);
+    }
+
+    /**
+     * The product's on-hand quantity per location, richest first, with the
+     * location eager-loaded for display.
+     *
+     * @return Collection<int, ProductLocationStock>
+     */
+    public function breakdown(Product $product): Collection
+    {
+        return ProductLocationStock::query()
+            ->with('location')
+            ->where('product_id', $product->id)
+            ->orderByDesc('quantity')
+            ->get();
+    }
+
+    /**
+     * Total quantity assigned to locations for a product. Equals
+     * $product->stock once every unit has been binned; less if some stock is
+     * still unassigned.
+     */
+    public function totalAssigned(Product $product): int
+    {
+        return (int) ProductLocationStock::query()
+            ->where('product_id', $product->id)
+            ->sum('quantity');
+    }
+
+    /**
+     * Seed a per-location row for every product that has an assigned location
+     * but no row there yet, using the product's current stock. Idempotent:
+     * products already binned at their location are left untouched, so this is
+     * safe to re-run to repair drift after the initial migration backfill.
+     *
+     * @return int the number of rows created
+     */
+    public function backfill(?int $organizationId = null): int
+    {
+        $created = 0;
+
+        Product::query()
+            ->whereNotNull('location_id')
+            ->when($organizationId !== null, fn ($q) => $q->where('organization_id', $organizationId))
+            ->orderBy('id')
+            ->chunkById(500, function (Collection $products) use (&$created): void {
+                foreach ($products as $product) {
+                    $alreadyBinned = ProductLocationStock::query()
+                        ->where('product_id', $product->id)
+                        ->where('location_id', $product->location_id)
+                        ->exists();
+
+                    if ($alreadyBinned) {
+                        continue;
+                    }
+
+                    ProductLocationStock::create([
+                        'organization_id' => $product->organization_id,
+                        'product_id' => $product->id,
+                        'location_id' => $product->location_id,
+                        'quantity' => (int) $product->stock,
+                    ]);
+
+                    $created++;
+                }
+            });
+
+        return $created;
+    }
+}

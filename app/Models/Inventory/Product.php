@@ -167,6 +167,17 @@ class Product extends Model
     }
 
     /**
+     * Get the per-location on-hand breakdown for this product. The sum of
+     * these quantities equals $this->stock for products that have been binned.
+     *
+     * @return HasMany<ProductLocationStock, $this>
+     */
+    public function locationStocks(): HasMany
+    {
+        return $this->hasMany(ProductLocationStock::class);
+    }
+
+    /**
      * Get all stock adjustments for this product.
      *
      * @return HasMany<StockAdjustment, $this>
