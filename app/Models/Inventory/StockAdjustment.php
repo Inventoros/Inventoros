@@ -7,6 +7,7 @@ namespace App\Models\Inventory;
 use App\Exceptions\InsufficientStockException;
 use App\Models\Auth\Organization;
 use App\Models\User;
+use App\Services\ProductLocationStockService;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -174,9 +175,10 @@ class StockAdjustment extends Model
         ?string $notes = null,
         ?Model $reference = null,
         bool $allowNegative = true,
-        ?User $actor = null
+        ?User $actor = null,
+        ?int $locationId = null
     ): self {
-        return DB::transaction(function () use ($product, $quantity, $type, $reason, $notes, $reference, $allowNegative, $actor) {
+        return DB::transaction(function () use ($product, $quantity, $type, $reason, $notes, $reference, $allowNegative, $actor, $locationId) {
             // Re-fetch the product with a row lock so concurrent adjustments
             // serialize on this row; otherwise two callers can both read
             // the same pre-image, compute different "after" values, and
@@ -207,6 +209,18 @@ class StockAdjustment extends Model
                 'reference_type' => $reference ? get_class($reference) : null,
                 'reference_id' => $reference?->id,
             ]);
+
+            // When the adjustment names a location, mirror the delta into that
+            // location bin so the per-location breakdown stays in step with the
+            // total. Done BEFORE updating the total so that lazily seeding an
+            // unbinned product reads its pre-adjustment stock (otherwise the
+            // delta would be counted twice). Runs under the same product row
+            // lock; a short bin with allowNegative=false throws and rolls the
+            // whole adjustment back.
+            if ($locationId !== null) {
+                app(ProductLocationStockService::class)
+                    ->applyDelta($locked, $locationId, $quantity, allowNegativeBin: $allowNegative);
+            }
 
             $locked->update(['stock' => $quantityAfter]);
 

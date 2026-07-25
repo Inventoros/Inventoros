@@ -6,6 +6,7 @@ use App\Models\Auth\Organization;
 use App\Models\Inventory\Product;
 use App\Models\Inventory\ProductCategory;
 use App\Models\Inventory\ProductLocation;
+use App\Models\Inventory\ProductLocationStock;
 use App\Models\Inventory\ProductVariant;
 use App\Models\Inventory\StockAdjustment;
 use App\Models\Role;
@@ -20,10 +21,15 @@ class StockAdjustmentApiTest extends TestCase
     use RefreshDatabase;
 
     protected User $admin;
+
     protected User $viewOnlyUser;
+
     protected Organization $organization;
+
     protected ProductCategory $category;
+
     protected ProductLocation $location;
+
     protected Product $product;
 
     protected function setUp(): void
@@ -166,7 +172,7 @@ class StockAdjustmentApiTest extends TestCase
         $this->createStockAdjustment(['product_id' => $this->product->id]);
         $this->createStockAdjustment(['product_id' => $otherProduct->id]);
 
-        $response = $this->getJson('/api/v1/stock-adjustments?product_id=' . $this->product->id);
+        $response = $this->getJson('/api/v1/stock-adjustments?product_id='.$this->product->id);
 
         $response->assertStatus(200)
             ->assertJsonCount(1, 'data');
@@ -271,6 +277,76 @@ class StockAdjustmentApiTest extends TestCase
         $this->product->refresh();
         $this->assertEquals($before, $this->product->stock);
         $this->assertDatabaseMissing('stock_adjustments', ['reason' => 'Over-removal attempt']);
+    }
+
+    public function test_adjustment_with_a_location_syncs_the_bin_and_the_total(): void
+    {
+        Sanctum::actingAs($this->admin);
+
+        $response = $this->postJson('/api/v1/stock-adjustments', [
+            'product_id' => $this->product->id,
+            'type' => 'manual',
+            'quantity' => 25,
+            'location_id' => $this->location->id,
+            'reason' => 'Recount at WH-A',
+        ]);
+
+        $response->assertStatus(201);
+
+        // Total moves as before...
+        $this->assertSame(125, $this->product->fresh()->stock);
+        // ...and the location bin now matches it (lazily seeded at 100, +25).
+        $this->assertSame(125, ProductLocationStock::where('product_id', $this->product->id)
+            ->where('location_id', $this->location->id)->value('quantity'));
+    }
+
+    public function test_adjustment_without_a_location_leaves_the_breakdown_untouched(): void
+    {
+        Sanctum::actingAs($this->admin);
+
+        $response = $this->postJson('/api/v1/stock-adjustments', [
+            'product_id' => $this->product->id,
+            'type' => 'manual',
+            'quantity' => 25,
+            'reason' => 'Global recount',
+        ]);
+
+        $response->assertStatus(201);
+        $this->assertSame(125, $this->product->fresh()->stock);
+        // Backward-compatible: no location named, so no bin rows are created.
+        $this->assertSame(0, ProductLocationStock::where('product_id', $this->product->id)->count());
+    }
+
+    public function test_adjustment_cannot_remove_more_than_a_location_bin_holds(): void
+    {
+        Sanctum::actingAs($this->admin);
+
+        $locationB = ProductLocation::create([
+            'organization_id' => $this->organization->id,
+            'name' => 'Warehouse B', 'code' => 'WH-B', 'is_active' => true,
+        ]);
+        // 100 total, split 95 at A / 5 at B.
+        ProductLocationStock::create(['organization_id' => $this->organization->id, 'product_id' => $this->product->id, 'location_id' => $this->location->id, 'quantity' => 95]);
+        ProductLocationStock::create(['organization_id' => $this->organization->id, 'product_id' => $this->product->id, 'location_id' => $locationB->id, 'quantity' => 5]);
+
+        // Removing 30 from B: the global total (100) could absorb it, but B only
+        // holds 5, so the location-scoped adjustment must be rejected.
+        $response = $this->postJson('/api/v1/stock-adjustments', [
+            'product_id' => $this->product->id,
+            'type' => 'damage',
+            'quantity' => -30,
+            'location_id' => $locationB->id,
+            'reason' => 'Over-removal from B',
+        ]);
+
+        $response->assertStatus(422)
+            ->assertJsonValidationErrors(['quantity']);
+
+        // Rolled back cleanly: total, both bins, and the ledger are untouched.
+        $this->assertSame(100, $this->product->fresh()->stock);
+        $this->assertSame(95, ProductLocationStock::where('product_id', $this->product->id)->where('location_id', $this->location->id)->value('quantity'));
+        $this->assertSame(5, ProductLocationStock::where('product_id', $this->product->id)->where('location_id', $locationB->id)->value('quantity'));
+        $this->assertDatabaseMissing('stock_adjustments', ['reason' => 'Over-removal from B']);
     }
 
     public function test_variant_adjust_cannot_remove_more_than_on_hand(): void
