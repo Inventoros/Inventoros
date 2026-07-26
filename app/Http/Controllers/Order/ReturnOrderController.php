@@ -166,10 +166,18 @@ class ReturnOrderController extends Controller
                 ]);
 
                 foreach ($validated['items'] as $item) {
+                    // Derive the product from the order line, NOT the client
+                    // payload. order_item_id is what caps the return quantity and
+                    // computes the refund; taking product_id from the request
+                    // instead let a caller point the restock at a different
+                    // product than the one actually on that line, inflating an
+                    // arbitrary product's on-hand on receive.
+                    $orderItem = $order->items->firstWhere('id', $item['order_item_id']);
+
                     ReturnOrderItem::create([
                         'return_order_id' => $returnOrder->id,
-                        'order_item_id' => $item['order_item_id'],
-                        'product_id' => $item['product_id'],
+                        'order_item_id' => $orderItem->id,
+                        'product_id' => $orderItem->product_id,
                         'quantity' => $item['quantity'],
                         'condition' => $item['condition'],
                         'restock' => $item['restock'],
@@ -265,7 +273,12 @@ class ReturnOrderController extends Controller
                             'return',
                             'Return restock',
                             "Restocked from return {$returnOrder->return_number}",
-                            $returnOrder
+                            $returnOrder,
+                            // Book the returned units into the product's location
+                            // bin so the per-location breakdown rises with the
+                            // total instead of drifting into "unassigned" — the
+                            // same treatment order-cancel and PO-receipt use.
+                            locationId: $item->product->location_id,
                         );
                     }
                 }
