@@ -252,6 +252,24 @@ class WorkOrderController extends Controller
 
                 $workOrder->load('items.product');
 
+                // Lock every product this completion touches (components +
+                // assembly) up front, ordered by id, BEFORE any bin/stock
+                // mutation. Bin operations (consume/receive) and adjust() must
+                // always run product-locked-first; order creation and transfers
+                // lock the product then the bins, so acquiring the product locks
+                // here first keeps that global order and avoids an ABBA deadlock
+                // when a component is also being sold concurrently.
+                $productIds = $workOrder->items->pluck('product_id')
+                    ->push($workOrder->product_id)
+                    ->filter()
+                    ->unique()
+                    ->sort()
+                    ->values();
+                Product::whereIn('id', $productIds)
+                    ->where('organization_id', $workOrder->organization_id)
+                    ->lockForUpdate()
+                    ->get();
+
                 // Decrement component stock in proportion to what was actually
                 // produced, not the full planned quantity — a partial completion
                 // must not burn (and destroy) components for units never made.

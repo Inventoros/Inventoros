@@ -250,6 +250,22 @@ class WorkOrderController extends Controller
 
                 $locked->load('items.product');
 
+                // Lock every product this completion touches (components +
+                // assembly) up front, ordered by id, BEFORE any bin/stock
+                // mutation, so bin operations run product-locked-first and this
+                // path cannot ABBA-deadlock with a concurrent sale of a
+                // component (order creation locks product then bins).
+                $productIds = $locked->items->pluck('product_id')
+                    ->push($locked->product_id)
+                    ->filter()
+                    ->unique()
+                    ->sort()
+                    ->values();
+                Product::whereIn('id', $productIds)
+                    ->where('organization_id', $locked->organization_id)
+                    ->lockForUpdate()
+                    ->get();
+
                 // Decrement component stock, refusing to drive any component
                 // negative — availability may have changed while the WO sat in
                 // progress. A shortfall aborts the whole completion.

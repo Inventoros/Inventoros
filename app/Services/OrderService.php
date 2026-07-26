@@ -365,6 +365,17 @@ final class OrderService
      */
     public function restockItem(OrderItem $item, string $reason, Order $order): void
     {
+        // Lock the product row FIRST, before releasing tracked records or
+        // adjusting stock. create() locks the product then allocates serials/
+        // batches and bins; this restock path releases them then adjusts, so
+        // without the leading product lock the two acquire (product, serials/
+        // batches) in opposite orders and can ABBA-deadlock on a concurrent
+        // order creation for the same product. adjust()'s later re-lock is
+        // harmlessly re-entrant.
+        if ($item->product_id !== null) {
+            Product::whereKey($item->product_id)->lockForUpdate()->first();
+        }
+
         // Return any serials this line consumed to available before restocking
         // the count, so the serial records track the goods coming back. No-op
         // for untracked lines and best-effort skips.
