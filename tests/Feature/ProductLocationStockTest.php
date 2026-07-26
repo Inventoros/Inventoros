@@ -116,4 +116,28 @@ class ProductLocationStockTest extends TestCase
             ->expectsOutputToContain('Backfilled 1 product-location stock row(s).')
             ->assertExitCode(0);
     }
+
+    public function test_backfill_does_not_double_seed_a_product_whose_location_changed(): void
+    {
+        $org = $this->org();
+        $a = $this->location($org, 'A');
+        $b = $this->location($org, 'B');
+
+        // Product was binned at A (holds its full stock there)...
+        $product = $this->product($org, 'P-1', 10, $a->id);
+        ProductLocationStock::create([
+            'organization_id' => $org->id, 'product_id' => $product->id,
+            'location_id' => $a->id, 'quantity' => 10,
+        ]);
+        // ...then its primary location was reassigned to B without moving stock.
+        $product->update(['location_id' => $b->id]);
+
+        $service = app(ProductLocationStockService::class);
+
+        // Re-running the repair must NOT seed a second full-stock row at B
+        // (which would make SUM(bins) = 20 for a product with stock 10).
+        $this->assertSame(0, $service->backfill());
+        $this->assertSame(1, ProductLocationStock::where('product_id', $product->id)->count());
+        $this->assertSame(10, $service->totalAssigned($product));
+    }
 }
