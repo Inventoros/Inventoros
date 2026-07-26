@@ -102,6 +102,76 @@ final class ProductLocationStockService
     }
 
     /**
+     * Deplete a product's bins to satisfy a decrement (a sale, a component
+     * consumed), draining the product's primary location first and then the
+     * fullest bins. Keeps SUM(bins) in step with a falling products.stock so a
+     * bin never claims more than exists.
+     *
+     * Best-effort: an unbinned product is lazily seeded from its assigned
+     * location first; a product with no location is left alone (its stock has
+     * no bins to move). Any shortfall beyond what the bins hold simply came
+     * from unassigned stock. Call BEFORE decrementing products.stock so the
+     * lazy seed reads the pre-decrement total.
+     *
+     * Must run inside the caller's product-locked transaction.
+     */
+    public function consume(Product $product, int $quantity): void
+    {
+        if ($quantity <= 0) {
+            return;
+        }
+
+        $this->ensureBinned($product);
+
+        $bins = ProductLocationStock::query()
+            ->where('product_id', $product->id)
+            ->where('quantity', '>', 0)
+            // Primary location first, then the fullest bins.
+            ->orderByRaw('location_id = ? desc', [$product->location_id ?? 0])
+            ->orderByDesc('quantity')
+            ->orderBy('id')
+            ->lockForUpdate()
+            ->get();
+
+        $remaining = $quantity;
+
+        foreach ($bins as $bin) {
+            if ($remaining <= 0) {
+                break;
+            }
+
+            $take = min($remaining, (int) $bin->quantity);
+            $bin->decrement('quantity', $take);
+            $remaining -= $take;
+        }
+    }
+
+    /**
+     * Add received or returned units to a location bin (the product's primary
+     * location by default), lazily creating it. Keeps SUM(bins) in step with a
+     * rising products.stock. No-op when there is no location to receive into.
+     *
+     * Must run inside the caller's product-locked transaction.
+     */
+    public function receive(Product $product, int $quantity, ?int $locationId = null): void
+    {
+        if ($quantity <= 0) {
+            return;
+        }
+
+        $locationId ??= $product->location_id;
+
+        if ($locationId === null) {
+            return;
+        }
+
+        ProductLocationStock::firstOrCreate(
+            ['product_id' => $product->id, 'location_id' => $locationId],
+            ['organization_id' => $product->organization_id, 'quantity' => 0],
+        )->increment('quantity', $quantity);
+    }
+
+    /**
      * Apply a signed delta to a product's quantity at one location bin,
      * keeping the per-location breakdown in step with a stock adjustment on
      * the same product. Lazily bins the product first, so the delta lands on
