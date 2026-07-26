@@ -234,9 +234,15 @@ final class ProductLocationStockService
 
     /**
      * Seed a per-location row for every product that has an assigned location
-     * but no row there yet, using the product's current stock. Idempotent:
-     * products already binned at their location are left untouched, so this is
-     * safe to re-run to repair drift after the initial migration backfill.
+     * but no location rows AT ALL yet, using the product's current stock.
+     * Idempotent: any product that already has a bin (at its current location
+     * or anywhere else, e.g. after a transfer or a location change) is left
+     * untouched, so this is safe to re-run to repair drift after the initial
+     * migration backfill.
+     *
+     * The product-wide existence check matches ensureBinned(): keying on the
+     * product's *current* location_id would seed a second full-stock row after
+     * a product is reassigned to a new location, doubling SUM(bins).
      *
      * @return int the number of rows created
      */
@@ -252,7 +258,6 @@ final class ProductLocationStockService
                 foreach ($products as $product) {
                     $alreadyBinned = ProductLocationStock::query()
                         ->where('product_id', $product->id)
-                        ->where('location_id', $product->location_id)
                         ->exists();
 
                     if ($alreadyBinned) {
