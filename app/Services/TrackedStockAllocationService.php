@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Services;
 
 use App\Enums\TrackingType;
+use App\Exceptions\InsufficientStockException;
 use App\Models\Inventory\OrderItemBatchAllocation;
 use App\Models\Inventory\Product;
 use App\Models\Inventory\ProductBatch;
@@ -76,6 +77,12 @@ final class TrackedStockAllocationService
             ->get();
 
         if ($available->count() < $quantity) {
+            if ($this->strictMode()) {
+                throw new InsufficientStockException(
+                    "Not enough tracked serials for {$product->name}: {$available->count()} available, {$quantity} required."
+                );
+            }
+
             // Not fully tracked — leave the serials alone rather than
             // partially allocating or failing the order.
             return 0;
@@ -128,7 +135,15 @@ final class TrackedStockAllocationService
             ->lockForUpdate()
             ->get();
 
-        if ((int) $batches->sum('quantity') < $quantity) {
+        $totalAvailable = (int) $batches->sum('quantity');
+
+        if ($totalAvailable < $quantity) {
+            if ($this->strictMode()) {
+                throw new InsufficientStockException(
+                    "Not enough tracked batch quantity for {$product->name}: {$totalAvailable} available, {$quantity} required."
+                );
+            }
+
             return 0;
         }
 
@@ -174,6 +189,17 @@ final class TrackedStockAllocationService
         }
 
         return $released;
+    }
+
+    /**
+     * When strict mode is on, tracked records are authoritative: an order for
+     * a tracked product must be fully covered by serials/batches or it is
+     * rejected. Off (default) is best-effort — under-populated products are
+     * left untouched.
+     */
+    private function strictMode(): bool
+    {
+        return (bool) config('inventory.strict_tracked_stock', false);
     }
 
     private function trackingType(Product $product): ?TrackingType
