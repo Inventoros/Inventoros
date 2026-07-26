@@ -7,6 +7,7 @@ use App\Models\Inventory\Product;
 use App\Models\Inventory\ProductCategory;
 use App\Models\Inventory\ProductComponent;
 use App\Models\Inventory\ProductLocation;
+use App\Models\Inventory\ProductLocationStock;
 use App\Models\Inventory\WorkOrder;
 use App\Models\Inventory\WorkOrderItem;
 use App\Models\Role;
@@ -20,9 +21,13 @@ class WorkOrderControllerTest extends TestCase
     use RefreshDatabase;
 
     protected User $admin;
+
     protected User $viewer;
+
     protected Organization $organization;
+
     protected ProductCategory $category;
+
     protected ProductLocation $location;
 
     protected function setUp(): void
@@ -114,7 +119,7 @@ class WorkOrderControllerTest extends TestCase
     {
         return Product::create(array_merge([
             'organization_id' => $this->organization->id,
-            'sku' => 'TEST-' . uniqid(),
+            'sku' => 'TEST-'.uniqid(),
             'name' => 'Test Product',
             'price' => 99.99,
             'purchase_price' => 50.00,
@@ -387,6 +392,42 @@ class WorkOrderControllerTest extends TestCase
         // Assembly stock should be incremented
         $data['assembly']->refresh();
         $this->assertEquals(5, $data['assembly']->stock); // 0 + 5
+    }
+
+    public function test_completing_a_work_order_syncs_component_and_assembly_location_bins(): void
+    {
+        $data = $this->createAssemblyWithComponents(0, 100, 100);
+
+        $workOrder = WorkOrder::create([
+            'organization_id' => $this->organization->id,
+            'product_id' => $data['assembly']->id,
+            'created_by' => $this->admin->id,
+            'work_order_number' => WorkOrder::generateWorkOrderNumber($this->organization->id),
+            'quantity' => 5,
+            'status' => 'in_progress',
+            'started_at' => now(),
+        ]);
+        WorkOrderItem::create([
+            'work_order_id' => $workOrder->id, 'product_id' => $data['compA']->id,
+            'quantity_required' => 10, 'quantity_consumed' => 0,
+        ]);
+        WorkOrderItem::create([
+            'work_order_id' => $workOrder->id, 'product_id' => $data['compB']->id,
+            'quantity_required' => 15, 'quantity_consumed' => 0,
+        ]);
+
+        $this->actingAs($this->admin)
+            ->post(route('work-orders.complete', $workOrder))
+            ->assertRedirect(route('work-orders.show', $workOrder));
+
+        $binAt = fn (Product $p) => (int) ProductLocationStock::where('product_id', $p->id)
+            ->where('location_id', $this->location->id)->value('quantity');
+
+        // Components were drawn out of their location bins (lazily seeded at 100),
+        // and the assembled units were booked into the assembly's bin.
+        $this->assertSame(90, $binAt($data['compA'])); // 100 - 10
+        $this->assertSame(85, $binAt($data['compB'])); // 100 - 15
+        $this->assertSame(5, $binAt($data['assembly'])); // 0 + 5
     }
 
     // ==================== CANCEL TESTS ====================

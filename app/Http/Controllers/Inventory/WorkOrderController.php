@@ -10,6 +10,7 @@ use App\Models\Inventory\Product;
 use App\Models\Inventory\StockAdjustment;
 use App\Models\Inventory\WorkOrder;
 use App\Models\Inventory\WorkOrderItem;
+use App\Services\ProductLocationStockService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -259,6 +260,11 @@ class WorkOrderController extends Controller
                     $consumeQtyInt = $targetConsumed - (int) $item->quantity_consumed;
 
                     if ($consumeQtyInt > 0) {
+                        // Draw the consumed components out of their location bins
+                        // before the total drops, so an unbinned component seeds
+                        // from its pre-consumption stock.
+                        app(ProductLocationStockService::class)->consume($item->product, $consumeQtyInt);
+
                         // Re-validate availability under the lock and refuse to
                         // drive a component negative: stock may have been drained
                         // (by sales, other WOs) while this WO sat in progress.
@@ -286,6 +292,9 @@ class WorkOrderController extends Controller
                     "Assembled {$quantityProduced} units",
                     $workOrder
                 );
+
+                // Book the assembled units into the product's primary bin.
+                app(ProductLocationStockService::class)->receive($assemblyProduct, $quantityProduced);
 
                 $workOrder->update([
                     'status' => 'completed',
@@ -348,6 +357,9 @@ class WorkOrderController extends Controller
                                 'Work order cancelled - restoring consumed stock',
                                 $workOrder
                             );
+
+                            // Return the components to their primary bin.
+                            app(ProductLocationStockService::class)->receive($item->product, $consumedQty);
 
                             $item->update(['quantity_consumed' => 0]);
                         }
