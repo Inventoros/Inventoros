@@ -8,6 +8,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\ProductLocation\StoreProductLocationRequest;
 use App\Http\Requests\ProductLocation\UpdateProductLocationRequest;
 use App\Models\Inventory\ProductLocation;
+use App\Models\Inventory\ProductLocationStock;
 use App\Models\Warehouse;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -133,10 +134,23 @@ class ProductLocationController extends Controller
             abort(403, 'Unauthorized action.');
         }
 
-        // Check if location has products
+        // Check if location has products (as their primary location)
         if ($location->products()->count() > 0) {
             return redirect()->back()
                 ->withErrors(['location' => 'Cannot delete location with associated products.']);
+        }
+
+        // Check if the location still holds stock in a bin. Locations are
+        // soft-deleted, so the product_location_stocks cascade never fires —
+        // deleting a location that holds stock (common after a transfer moved
+        // stock here from a product whose primary location is elsewhere) would
+        // strand that stock against a trashed location.
+        if (ProductLocationStock::query()
+            ->where('location_id', $location->id)
+            ->where('quantity', '>', 0)
+            ->exists()) {
+            return redirect()->back()
+                ->withErrors(['location' => 'Cannot delete a location that still holds stock. Transfer its stock elsewhere first.']);
         }
 
         $location->delete();
