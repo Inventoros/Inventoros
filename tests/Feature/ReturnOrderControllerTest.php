@@ -6,6 +6,7 @@ use App\Models\Auth\Organization;
 use App\Models\Inventory\Product;
 use App\Models\Inventory\ProductCategory;
 use App\Models\Inventory\ProductLocation;
+use App\Models\Inventory\ProductLocationStock;
 use App\Models\Inventory\StockAdjustment;
 use App\Models\Order\Order;
 use App\Models\Order\OrderItem;
@@ -22,12 +23,19 @@ class ReturnOrderControllerTest extends TestCase
     use RefreshDatabase;
 
     protected User $admin;
+
     protected User $member;
+
     protected User $viewOnlyUser;
+
     protected Organization $organization;
+
     protected Product $product;
+
     protected Product $product2;
+
     protected ProductCategory $category;
+
     protected ProductLocation $location;
 
     protected function setUp(): void
@@ -169,7 +177,7 @@ class ReturnOrderControllerTest extends TestCase
     {
         $order = Order::create(array_merge([
             'organization_id' => $this->organization->id,
-            'order_number' => 'ORD-' . now()->format('Ymd') . '-' . str_pad((string) mt_rand(1, 9999), 4, '0', STR_PAD_LEFT),
+            'order_number' => 'ORD-'.now()->format('Ymd').'-'.str_pad((string) mt_rand(1, 9999), 4, '0', STR_PAD_LEFT),
             'source' => 'manual',
             'customer_name' => 'Test Customer',
             'customer_email' => 'customer@test.com',
@@ -416,6 +424,60 @@ class ReturnOrderControllerTest extends TestCase
             'condition' => 'damaged',
             'restock' => false,
         ]);
+    }
+
+    public function test_return_binds_the_product_to_the_order_line_not_a_forged_payload(): void
+    {
+        // Order line is for $this->product; the client forges a different
+        // product_id ($this->product2) on the same order_item_id.
+        $order = $this->createOrder();
+        $orderItem = $order->items->first();
+
+        $this->actingAs($this->admin)->post(route('returns.store'), [
+            'order_id' => $order->id,
+            'type' => 'return',
+            'reason' => 'Defective product',
+            'items' => [[
+                'order_item_id' => $orderItem->id,
+                'product_id' => $this->product2->id, // forged — not the order line's product
+                'quantity' => 1,
+                'condition' => 'new',
+                'restock' => true,
+            ]],
+        ])->assertRedirect();
+
+        // The return line records the ORDER LINE's product, so receive() can't be
+        // steered to restock an unrelated product.
+        $this->assertDatabaseHas('return_order_items', [
+            'order_item_id' => $orderItem->id,
+            'product_id' => $this->product->id,
+        ]);
+        $this->assertDatabaseMissing('return_order_items', [
+            'order_item_id' => $orderItem->id,
+            'product_id' => $this->product2->id,
+        ]);
+    }
+
+    public function test_receiving_a_restockable_return_books_units_into_the_products_bin(): void
+    {
+        $order = $this->createOrder(); // product line, product stock 100 @ location
+        $return = $this->createReturnOrder($order, ['status' => 'approved'], [[
+            'order_item_id' => $order->items->first()->id,
+            'product_id' => $this->product->id,
+            'quantity' => 2,
+            'condition' => 'new',
+            'restock' => true,
+        ]]);
+
+        $this->actingAs($this->admin)
+            ->post(route('returns.receive', $return))
+            ->assertRedirect();
+
+        // Total and the location bin both rise by 2 (lazily seeded at 100), so
+        // the returned units don't drift into "unassigned".
+        $this->assertSame(102, (int) $this->product->fresh()->stock);
+        $this->assertSame(102, (int) ProductLocationStock::where('product_id', $this->product->id)
+            ->where('location_id', $this->location->id)->value('quantity'));
     }
 
     public function test_cannot_return_more_than_ordered_quantity(): void
