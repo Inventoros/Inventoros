@@ -241,8 +241,19 @@ final class OrderService
             // Decrement stock once per unique target — the variant when one was
             // chosen, otherwise the product. This is the fix for variant counts
             // drifting: a line sold as a variant no longer decrements the parent.
+            $locationStock = app(ProductLocationStockService::class);
             foreach ($perTargetQty as $key => $totalQty) {
-                $targets[$key]->decrement('stock', $totalQty);
+                $target = $targets[$key];
+
+                // Draw the sold units out of the product's location bins before
+                // dropping the total, so the per-location breakdown never claims
+                // more than exists. Products only (bins are per-product; variant
+                // stock has no location breakdown).
+                if ($target instanceof Product) {
+                    $locationStock->consume($target, $totalQty);
+                }
+
+                $target->decrement('stock', $totalQty);
             }
 
             // Allocate serials to each serial-tracked line, pinning the consumed
@@ -381,6 +392,12 @@ final class OrderService
                 null,
                 $order
             );
+
+            // Return the units to the product's primary location bin so the
+            // breakdown rises with the restored total. (Units are restored to
+            // the primary location rather than the exact bins they were drawn
+            // from — a deliberate simplification; totals stay correct.)
+            app(ProductLocationStockService::class)->receive($item->product, $item->quantity);
         }
     }
 
