@@ -183,7 +183,7 @@ final class ProductLocationStockService
      *
      * @throws InsufficientStockException when the bin would go negative
      */
-    public function applyDelta(Product $product, int $locationId, int $delta, bool $allowNegativeBin = true): int
+    public function applyDelta(Product $product, int $locationId, int $delta, bool $allowNegativeBin = false): int
     {
         $this->ensureBinned($product);
 
