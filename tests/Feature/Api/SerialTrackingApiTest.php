@@ -7,6 +7,8 @@ use App\Models\Inventory\Product;
 use App\Models\Inventory\ProductCategory;
 use App\Models\Inventory\ProductLocation;
 use App\Models\Inventory\ProductSerial;
+use App\Models\Order\Order;
+use App\Models\Order\OrderItem;
 use App\Models\Role;
 use App\Models\System\SystemSetting;
 use App\Models\User;
@@ -224,6 +226,62 @@ class SerialTrackingApiTest extends TestCase
             'id' => $serial->id,
             'status' => 'sold',
         ]);
+    }
+
+    private function orderItemFor(Product $product): OrderItem
+    {
+        $order = Order::create([
+            'organization_id' => $this->organization->id,
+            'order_number' => 'ORD-'.uniqid(),
+            'source' => 'manual', 'customer_name' => 'Acme', 'status' => 'pending',
+            'subtotal' => 10, 'tax' => 0, 'shipping' => 0, 'total' => 10,
+            'currency' => 'USD', 'order_date' => now(),
+        ]);
+
+        return OrderItem::create([
+            'order_id' => $order->id, 'product_id' => $product->id,
+            'product_name' => $product->name, 'sku' => $product->sku,
+            'quantity' => 1, 'unit_price' => 10, 'subtotal' => 10, 'tax' => 0, 'total' => 10,
+        ]);
+    }
+
+    public function test_deallocating_a_serial_clears_its_order_line_pin(): void
+    {
+        Sanctum::actingAs($this->admin);
+
+        $orderItem = $this->orderItemFor($this->product);
+        $serial = ProductSerial::create([
+            'organization_id' => $this->organization->id, 'product_id' => $this->product->id,
+            'serial_number' => 'SN-REL-001', 'status' => 'sold',
+        ]);
+        // order_item_id is not fillable; set it as the allocation service would.
+        $serial->forceFill(['order_item_id' => $orderItem->id])->save();
+
+        $this->putJson("/api/v1/products/{$this->product->id}/serials/{$serial->id}", ['status' => 'available'])
+            ->assertStatus(200)
+            ->assertJsonPath('data.status', 'available');
+
+        // Freeing the serial clears the stale link, so a later release can't skip
+        // it and it can't be silently re-allocated to a second order.
+        $this->assertNull($serial->fresh()->order_item_id);
+    }
+
+    public function test_serial_update_cannot_pin_an_order_item_via_mass_assignment(): void
+    {
+        Sanctum::actingAs($this->admin);
+
+        $orderItem = $this->orderItemFor($this->product);
+        $serial = ProductSerial::create([
+            'organization_id' => $this->organization->id, 'product_id' => $this->product->id,
+            'serial_number' => 'SN-MA-001', 'status' => 'available',
+        ]);
+
+        // A forged order_item_id in the payload must be ignored (not fillable).
+        $this->putJson("/api/v1/products/{$this->product->id}/serials/{$serial->id}", [
+            'status' => 'available', 'order_item_id' => $orderItem->id,
+        ])->assertStatus(200);
+
+        $this->assertNull($serial->fresh()->order_item_id);
     }
 
     public function test_an_already_sold_serial_cannot_be_allocated_again(): void

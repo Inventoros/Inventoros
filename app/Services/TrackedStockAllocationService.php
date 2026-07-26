@@ -89,10 +89,10 @@ final class TrackedStockAllocationService
         }
 
         foreach ($available as $serial) {
-            $serial->update([
-                'status' => ProductSerial::STATUS_SOLD,
-                'order_item_id' => $orderItem->id,
-            ]);
+            // order_item_id is not mass-assignable; set it directly.
+            $serial->status = ProductSerial::STATUS_SOLD;
+            $serial->order_item_id = $orderItem->id;
+            $serial->save();
         }
 
         return $available->count();
@@ -107,10 +107,9 @@ final class TrackedStockAllocationService
             ->get();
 
         foreach ($serials as $serial) {
-            $serial->update([
-                'status' => ProductSerial::STATUS_AVAILABLE,
-                'order_item_id' => null,
-            ]);
+            $serial->status = ProductSerial::STATUS_AVAILABLE;
+            $serial->order_item_id = null;
+            $serial->save();
         }
 
         return $serials->count();

@@ -140,6 +140,15 @@ class SerialTrackingController extends Controller
 
             $locked->update($validated);
 
+            // Moving a serial OUT of an allocated state (sold/reserved) frees it.
+            // Clear the order-line pin so a stale link can't make release skip it
+            // or let it be silently re-allocated to a second order. order_item_id
+            // is not fillable, so it is cleared explicitly here.
+            if ($alreadyAllocated && ! $allocating) {
+                $locked->order_item_id = null;
+                $locked->save();
+            }
+
             return response()->json([
                 'message' => 'Serial number updated successfully',
                 'data' => new ProductSerialResource($locked),

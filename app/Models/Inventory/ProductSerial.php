@@ -54,9 +54,13 @@ class ProductSerial extends Model
         'product_id',
         'serial_number',
         'status',
-        'order_item_id',
         'notes',
     ];
+
+    // order_item_id is deliberately NOT fillable: it links a serial to the
+    // order line that consumed it and is set only by the allocation service. A
+    // request must never be able to pin a serial to an arbitrary order line via
+    // mass assignment.
 
     /**
      * Get the organization that owns this serial.
