@@ -10,7 +10,6 @@ use App\Http\Requests\Order\StoreOrderRequest;
 use App\Http\Requests\Order\UpdateOrderRequest;
 use App\Http\Resources\OrderResource;
 use App\Models\Inventory\Product;
-use App\Models\Inventory\StockAdjustment;
 use App\Models\Order\Order;
 use App\Models\Warehouse;
 use App\Services\NotificationService;
@@ -265,108 +264,13 @@ class OrderController extends Controller
                     throw new \RuntimeException('A cancelled order cannot be reactivated. Create a new order instead.');
                 }
 
-                // Load existing items with product relationship
-                $order->load('items.product');
-                $existingItems = $order->items->keyBy('id');
+                $isCancelling = $validated['status'] === 'cancelled'
+                    && $order->status !== OrderStatus::CANCELLED;
 
-                // Track which items to keep
-                $itemIdsToKeep = [];
-
-                // Calculate new totals
-                $subtotal = 0;
-                $updatedItems = [];
-
-                foreach ($validated['items'] as $itemData) {
-                    $product = Product::whereKey($itemData['product_id'])
-                        ->where('organization_id', $order->organization_id)
-                        ->lockForUpdate()
-                        ->firstOrFail();
-                    $itemSubtotal = $itemData['quantity'] * $itemData['unit_price'];
-                    $subtotal += $itemSubtotal;
-
-                    if (! empty($itemData['id']) && $existingItems->has($itemData['id'])) {
-                        // Update existing item
-                        $existingItem = $existingItems->get($itemData['id']);
-                        $quantityDiff = $itemData['quantity'] - $existingItem->quantity;
-
-                        // Adjust stock based on quantity change
-                        if ($quantityDiff > 0 && $product->stock < $quantityDiff) {
-                            throw new \RuntimeException("Insufficient stock for {$product->name}. Available: {$product->stock}, requested increase: {$quantityDiff}");
-                        }
-                        if ($quantityDiff != 0) {
-                            StockAdjustment::adjust(
-                                $product,
-                                -$quantityDiff,
-                                $quantityDiff > 0 ? 'order_fulfillment' : 'order_cancellation',
-                                "Order {$order->order_number} line updated",
-                                null,
-                                $order
-                            );
-                        }
-
-                        $existingItem->update([
-                            'product_id' => $itemData['product_id'],
-                            'product_name' => $product->name,
-                            'sku' => $product->sku,
-                            'quantity' => $itemData['quantity'],
-                            'unit_price' => $itemData['unit_price'],
-                            'subtotal' => $itemSubtotal,
-                            'total' => $itemSubtotal,
-                        ]);
-
-                        $itemIdsToKeep[] = $itemData['id'];
-                    } else {
-                        if ($product->stock < $itemData['quantity']) {
-                            throw new \RuntimeException("Insufficient stock for {$product->name}. Available: {$product->stock}, requested: {$itemData['quantity']}");
-                        }
-
-                        // New item
-                        $updatedItems[] = [
-                            'product_id' => $itemData['product_id'],
-                            'product_name' => $product->name,
-                            'sku' => $product->sku,
-                            'quantity' => $itemData['quantity'],
-                            'unit_price' => $itemData['unit_price'],
-                            'subtotal' => $itemSubtotal,
-                            'tax' => 0,
-                            'total' => $itemSubtotal,
-                        ];
-
-                        // Reduce stock for new items via the ledger.
-                        StockAdjustment::adjust(
-                            $product,
-                            -$itemData['quantity'],
-                            'order_fulfillment',
-                            "Order {$order->order_number} item added",
-                            null,
-                            $order
-                        );
-                    }
-                }
-
-                // Delete removed items and restore their stock
-                $itemsToDelete = $existingItems->filter(function ($item) use ($itemIdsToKeep) {
-                    return ! in_array($item->id, $itemIdsToKeep);
-                });
-
-                foreach ($itemsToDelete as $item) {
-                    $item->loadMissing('variant');
-                    $this->orderService->restockItem($item, "Order {$order->order_number} item removed", $order);
-                    $item->delete();
-                }
-
-                // Create new items
-                if (! empty($updatedItems)) {
-                    $order->items()->createMany($updatedItems);
-                }
-
-                // Restore stock when order is cancelled — route through
-                // StockAdjustment so the cancellation appears in the ledger and
-                // the row is locked correctly by adjust() itself.
-                if ($validated['status'] === 'cancelled' && $order->status !== OrderStatus::CANCELLED) {
+                if ($isCancelling) {
                     // Reject cancelling an order that already left the warehouse —
                     // restocking would lie about inventory that physically isn't
-                    // here. Matches the REST/GraphQL guard. Thrown out to the
+                    // here. Matches the REST/GraphQL guard. Thrown to the
                     // try/catch below, which flashes the error instead of 500ing.
                     if (in_array($order->status, [OrderStatus::SHIPPED, OrderStatus::DELIVERED], true)) {
                         throw new \RuntimeException(
@@ -374,10 +278,26 @@ class OrderController extends Controller
                         );
                     }
 
+                    // Release the order's stock (serials/batches/bins included)
+                    // but keep the line items as a historical record.
                     $order->load('items.product', 'items.variant');
                     foreach ($order->items as $item) {
                         $this->orderService->restockItem($item, "Order {$order->order_number} cancelled", $order);
                     }
+
+                    $subtotal = (float) $order->subtotal;
+                } else {
+                    // Any other edit replaces the lines wholesale through the
+                    // audited fulfilment paths (bin consume + serial/batch
+                    // allocation + variant-aware ledger), so quantity changes and
+                    // added/removed lines cannot drift the per-location breakdown
+                    // or the tracked records the way a hand-rolled per-line adjust
+                    // did. InsufficientStock / InvalidOrderItem both extend
+                    // RuntimeException and are flashed by the catch below.
+                    $subtotal = (float) $this->orderService->replaceItems(
+                        $order,
+                        $validated['items'],
+                    );
                 }
 
                 // Update order totals and metadata
