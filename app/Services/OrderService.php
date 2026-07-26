@@ -413,6 +413,139 @@ final class OrderService
     }
 
     /**
+     * Replace an order's line items wholesale: release everything the order
+     * currently holds (stock, serials, batches, and location bins) back to
+     * inventory, then re-fulfil the supplied line set through the same audited
+     * paths create() uses — bin consume + serial/batch allocation + a
+     * variant-aware ledger.
+     *
+     * The web order edit used to hand-roll per-line stock adjustments that
+     * touched neither the per-location bins nor the tracked serial/batch
+     * records (and always decremented the parent for variant lines), so every
+     * quantity change silently drifted the invariants. Routing edits through
+     * this method keeps them consistent.
+     *
+     * Must run inside the caller's transaction, which holds the order lock.
+     *
+     * @param  array<int, array{product_id:int, product_variant_id?:int|null, quantity:int, unit_price?:mixed}>  $items
+     * @return string the recomputed subtotal (Money string)
+     */
+    public function replaceItems(Order $order, array $items): string
+    {
+        // 1. Release the existing lines completely, then drop them. restockItem
+        //    locks the product first, releases serials/batches, restocks the
+        //    count, and re-bins — returning inventory to its pre-order state.
+        $order->load('items.product', 'items.variant');
+        foreach ($order->items as $existing) {
+            $this->restockItem($existing, "Order {$order->order_number} edited", $order);
+            $existing->delete();
+        }
+
+        // 2. Lock every product/variant the new lines reference, ordered by id,
+        //    before any bin/stock mutation (product-before-bins ordering).
+        $productIds = collect($items)->pluck('product_id')->filter()->unique()->sort()->values();
+        $products = Product::whereIn('id', $productIds)
+            ->where('organization_id', $order->organization_id)
+            ->lockForUpdate()
+            ->get()
+            ->keyBy('id');
+
+        $variantIds = collect($items)->pluck('product_variant_id')->filter()->unique()->sort()->values();
+        $variants = $variantIds->isEmpty()
+            ? collect()
+            : ProductVariant::whereIn('id', $variantIds)
+                ->where('organization_id', $order->organization_id)
+                ->lockForUpdate()
+                ->get()
+                ->keyBy('id');
+
+        // 3. Resolve each line's target (variant vs product) and validate
+        //    availability across all lines against a running balance.
+        $resolved = [];
+        $running = [];
+        foreach ($items as $item) {
+            $product = $products->get($item['product_id']);
+            if (! $product) {
+                throw new InvalidOrderItemException("Product not found: {$item['product_id']}");
+            }
+
+            $variantId = $item['product_variant_id'] ?? null;
+            if ($variantId !== null) {
+                $variant = $variants->get($variantId);
+                if (! $variant || $variant->product_id !== $product->id) {
+                    throw new InvalidOrderItemException("Variant {$variantId} does not belong to product {$product->name}.");
+                }
+                $target = $variant;
+                $key = "v{$variantId}";
+            } else {
+                if ($product->has_variants) {
+                    throw new InvalidOrderItemException("{$product->name} is sold by variant; each line item needs a product_variant_id.");
+                }
+                $variant = null;
+                $target = $product;
+                $key = "p{$product->id}";
+            }
+
+            $qty = (int) $item['quantity'];
+            $running[$key] = ($running[$key] ?? (int) $target->stock) - $qty;
+            if ($running[$key] < 0) {
+                throw new InsufficientStockException(
+                    "Insufficient stock for {$product->name}. Available: {$target->stock}, requested: {$qty}"
+                );
+            }
+
+            $resolved[] = compact('item', 'product', 'variant', 'qty');
+        }
+
+        // 4. Fulfil each line: create the item, then decrement the right target —
+        //    consuming bins + allocating serials/batches for product lines.
+        $subtotal = '0';
+        $locationStock = app(ProductLocationStockService::class);
+        $allocator = app(TrackedStockAllocationService::class);
+
+        foreach ($resolved as $line) {
+            $item = $line['item'];
+            $product = $line['product'];
+            $variant = $line['variant'];
+            $qty = $line['qty'];
+
+            $unitPrice = $item['unit_price'] ?? $variant?->price ?? $product->selling_price ?? $product->price ?? 0;
+            $itemSubtotal = Money::multiply($unitPrice, $qty);
+            $subtotal = Money::add($subtotal, $itemSubtotal);
+
+            $orderItem = $order->items()->create([
+                'product_id' => $product->id,
+                'product_variant_id' => $variant?->id,
+                'product_name' => $product->name,
+                'sku' => $variant?->sku ?? $product->sku,
+                'quantity' => $qty,
+                'unit_price' => $unitPrice,
+                'subtotal' => $itemSubtotal,
+                'tax' => 0,
+                'total' => $itemSubtotal,
+            ]);
+
+            if ($variant !== null) {
+                StockAdjustment::adjustVariant(
+                    $variant, -$qty, 'order_fulfillment',
+                    "Order {$order->order_number} edited", null, $order, allowNegative: false,
+                );
+            } else {
+                // consume() before adjust() so the lazy bin seed reads the
+                // pre-decrement total; allocate after the item exists.
+                $locationStock->consume($product, $qty);
+                StockAdjustment::adjust(
+                    $product, -$qty, 'order_fulfillment',
+                    "Order {$order->order_number} edited", null, $order, allowNegative: false,
+                );
+                $allocator->allocateForOrderItem($product, $qty, $orderItem);
+            }
+        }
+
+        return $subtotal;
+    }
+
+    /**
      * Human-readable label for an insufficient-stock message.
      *
      * @param  array{product: Product, variant: ?ProductVariant}  $line
