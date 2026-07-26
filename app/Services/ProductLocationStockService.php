@@ -224,12 +224,15 @@ final class ProductLocationStockService
             return;
         }
 
-        ProductLocationStock::create([
-            'organization_id' => $product->organization_id,
-            'product_id' => $product->id,
-            'location_id' => $product->location_id,
-            'quantity' => (int) $product->stock,
-        ]);
+        // firstOrCreate (not create) so that if two callers race past the
+        // exists() check the insert is idempotent on the (product, location)
+        // unique key rather than throwing a duplicate-key error. Callers hold
+        // the product row lock, which already serializes this per product; this
+        // is defence in depth.
+        ProductLocationStock::firstOrCreate(
+            ['product_id' => $product->id, 'location_id' => $product->location_id],
+            ['organization_id' => $product->organization_id, 'quantity' => (int) $product->stock],
+        );
     }
 
     /**
