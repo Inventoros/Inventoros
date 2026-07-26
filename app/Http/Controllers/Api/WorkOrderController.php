@@ -11,6 +11,7 @@ use App\Models\Inventory\Product;
 use App\Models\Inventory\StockAdjustment;
 use App\Models\Inventory\WorkOrder;
 use App\Models\Inventory\WorkOrderItem;
+use App\Services\ProductLocationStockService;
 use Dedoc\Scramble\Attributes\QueryParameter;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -259,6 +260,11 @@ class WorkOrderController extends Controller
                     $consumeQtyInt = $targetConsumed - (int) $item->quantity_consumed;
 
                     if ($consumeQtyInt > 0) {
+                        // Draw the consumed components out of their location bins
+                        // before the total drops (unbinned components seed from
+                        // their pre-consumption stock).
+                        app(ProductLocationStockService::class)->consume($item->product, $consumeQtyInt);
+
                         StockAdjustment::adjust(
                             $item->product,
                             -$consumeQtyInt,
@@ -282,6 +288,9 @@ class WorkOrderController extends Controller
                     "Assembled {$quantityProduced} units",
                     $locked
                 );
+
+                // Book the assembled units into the product's primary bin.
+                app(ProductLocationStockService::class)->receive($locked->product, $quantityProduced);
 
                 $locked->update([
                     'status' => 'completed',
@@ -359,6 +368,9 @@ class WorkOrderController extends Controller
                                 'Work order cancelled - restoring consumed stock',
                                 $locked
                             );
+
+                            // Return the components to their primary bin.
+                            app(ProductLocationStockService::class)->receive($item->product, $consumedQty);
 
                             $item->update(['quantity_consumed' => 0]);
                         }
