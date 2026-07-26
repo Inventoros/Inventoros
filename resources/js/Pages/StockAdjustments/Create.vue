@@ -15,12 +15,14 @@ const { t } = useI18n();
 const props = defineProps({
     products: Array,
     types: Object,
+    locations: { type: Array, default: () => [] },
 });
 
 const form = useForm({
     product_id: '',
     type: 'manual',
     adjustment_quantity: 0,
+    location_id: null,
     reason: '',
     notes: '',
 });
@@ -180,6 +182,26 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                             </select>
                             <p v-if="form.errors.type" :class="fieldError">
                                 {{ form.errors.type }}
+                            </p>
+                        </div>
+
+                        <!-- Location (optional) -->
+                        <div v-if="locations.length">
+                            <label :class="fieldLabel">Location (Optional)</label>
+                            <select
+                                v-model="form.location_id"
+                                :class="[fieldInput, { 'border-status-danger': form.errors.location_id }]"
+                            >
+                                <option :value="null">No specific location</option>
+                                <option v-for="location in locations" :key="location.id" :value="location.id">
+                                    {{ location.name }}<template v-if="location.code"> ({{ location.code }})</template>
+                                </option>
+                            </select>
+                            <p class="mt-1 text-xs text-text-tertiary">
+                                Apply this adjustment to a specific location so the per-location breakdown stays in step. Leave blank to adjust the total only.
+                            </p>
+                            <p v-if="form.errors.location_id" :class="fieldError">
+                                {{ form.errors.location_id }}
                             </p>
                         </div>
 

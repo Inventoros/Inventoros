@@ -6,6 +6,7 @@ use App\Models\Auth\Organization;
 use App\Models\Inventory\Product;
 use App\Models\Inventory\ProductCategory;
 use App\Models\Inventory\ProductLocation;
+use App\Models\Inventory\ProductLocationStock;
 use App\Models\Inventory\StockAdjustment;
 use App\Models\Role;
 use App\Models\System\SystemSetting;
@@ -18,11 +19,17 @@ class StockAdjustmentControllerTest extends TestCase
     use RefreshDatabase;
 
     protected User $admin;
+
     protected User $stockManager;
+
     protected User $viewOnlyUser;
+
     protected Organization $organization;
+
     protected Product $product;
+
     protected ProductCategory $category;
+
     protected ProductLocation $location;
 
     protected function setUp(): void
@@ -342,6 +349,34 @@ class StockAdjustmentControllerTest extends TestCase
         // Check stock was updated
         $this->product->refresh();
         $this->assertEquals($initialStock + 25, $this->product->stock);
+    }
+
+    public function test_create_form_provides_locations_for_the_picker(): void
+    {
+        $this->actingAs($this->admin)
+            ->get(route('stock-adjustments.create'))
+            ->assertInertia(fn ($page) => $page
+                ->component('StockAdjustments/Create')
+                ->has('locations', 1)
+            );
+    }
+
+    public function test_web_adjustment_with_a_location_syncs_the_bin(): void
+    {
+        $this->actingAs($this->admin)
+            ->post(route('stock-adjustments.store'), [
+                'product_id' => $this->product->id,
+                'type' => 'manual',
+                'adjustment_quantity' => 25,
+                'location_id' => $this->location->id,
+                'reason' => 'Recount at the warehouse',
+            ])
+            ->assertRedirect(route('stock-adjustments.index'));
+
+        // Total and the location bin move together (lazily seeded at 100, +25).
+        $this->assertSame(125, (int) $this->product->fresh()->stock);
+        $this->assertSame(125, (int) ProductLocationStock::where('product_id', $this->product->id)
+            ->where('location_id', $this->location->id)->value('quantity'));
     }
 
     public function test_admin_can_create_negative_stock_adjustment(): void

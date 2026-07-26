@@ -8,6 +8,7 @@ use App\Exceptions\InsufficientStockException;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StockAdjustment\StoreStockAdjustmentRequest;
 use App\Models\Inventory\Product;
+use App\Models\Inventory\ProductLocation;
 use App\Models\Inventory\StockAdjustment;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
@@ -102,6 +103,11 @@ class StockAdjustmentController extends Controller
             ->orderBy('name')
             ->get(['id', 'name', 'sku', 'stock']);
 
+        $locations = ProductLocation::forOrganization($organizationId)
+            ->active()
+            ->orderBy('name')
+            ->get(['id', 'name', 'code']);
+
         $types = [
             'manual' => 'Manual Adjustment',
             'recount' => 'Stock Recount',
@@ -114,6 +120,7 @@ class StockAdjustmentController extends Controller
         return Inertia::render('StockAdjustments/Create', [
             'products' => $products,
             'types' => $types,
+            'locations' => $locations,
         ]);
     }
 
@@ -140,7 +147,8 @@ class StockAdjustmentController extends Controller
                 type: $validated['type'],
                 reason: $validated['reason'],
                 notes: $validated['notes'] ?? null,
-                allowNegative: false
+                allowNegative: false,
+                locationId: $validated['location_id'] ?? null,
             );
         } catch (InsufficientStockException $e) {
             return redirect()->back()
