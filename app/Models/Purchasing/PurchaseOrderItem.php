@@ -8,6 +8,7 @@ use App\Models\Inventory\Product;
 use App\Models\Inventory\StockAdjustment;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Carbon;
 
 /**
  * Represents an item within a purchase order.
@@ -26,11 +27,11 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property string $total
  * @property string|null $notes
  * @property array|null $metadata
- * @property \Illuminate\Support\Carbon|null $created_at
- * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property Carbon|null $created_at
+ * @property Carbon|null $updated_at
  * @property-read int $remaining_quantity
- * @property-read \App\Models\Purchasing\PurchaseOrder $purchaseOrder
- * @property-read \App\Models\Inventory\Product|null $product
+ * @property-read PurchaseOrder $purchaseOrder
+ * @property-read Product|null $product
  */
 class PurchaseOrderItem extends Model
 {
@@ -65,7 +66,7 @@ class PurchaseOrderItem extends Model
     /**
      * Get the purchase order this item belongs to.
      *
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo<\App\Models\Purchasing\PurchaseOrder, $this>
+     * @return BelongsTo<PurchaseOrder, $this>
      */
     public function purchaseOrder(): BelongsTo
     {
@@ -75,7 +76,7 @@ class PurchaseOrderItem extends Model
     /**
      * Get the product associated with this item.
      *
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo<\App\Models\Inventory\Product, $this>
+     * @return BelongsTo<Product, $this>
      */
     public function product(): BelongsTo
     {
@@ -84,8 +85,6 @@ class PurchaseOrderItem extends Model
 
     /**
      * Calculate and set totals based on quantity and unit cost.
-     *
-     * @return void
      */
     public function calculateTotals(): void
     {
@@ -95,8 +94,6 @@ class PurchaseOrderItem extends Model
 
     /**
      * Check if item is fully received.
-     *
-     * @return bool
      */
     public function isFullyReceived(): bool
     {
@@ -105,8 +102,6 @@ class PurchaseOrderItem extends Model
 
     /**
      * Get remaining quantity to receive.
-     *
-     * @return int
      */
     public function getRemainingQuantityAttribute(): int
     {
@@ -118,8 +113,7 @@ class PurchaseOrderItem extends Model
      *
      * Creates a stock adjustment and updates product stock.
      *
-     * @param int $quantity The quantity to receive
-     * @return \App\Models\Inventory\StockAdjustment|null
+     * @param  int  $quantity  The quantity to receive
      */
     public function receive(int $quantity): ?StockAdjustment
     {
@@ -154,7 +148,11 @@ class PurchaseOrderItem extends Model
             type: 'purchase',
             reason: "PO {$purchaseOrder->po_number} received",
             notes: $this->notes,
-            reference: $purchaseOrder
+            reference: $purchaseOrder,
+            // Book the received goods into the product's location so the
+            // per-location breakdown rises with the total instead of drifting
+            // into "unassigned". Null location -> total only (adjust() skips it).
+            locationId: $this->product->location_id,
         );
 
         // Update the purchase order status
@@ -167,9 +165,6 @@ class PurchaseOrderItem extends Model
     /**
      * Static method to create item from product.
      *
-     * @param \App\Models\Inventory\Product $product
-     * @param int $quantity
-     * @param float|null $unitCost
      * @return static
      */
     public static function fromProduct(Product $product, int $quantity, ?float $unitCost = null): self

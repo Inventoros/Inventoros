@@ -8,9 +8,9 @@ use App\Models\Auth\Organization;
 use App\Models\Inventory\Product;
 use App\Models\Inventory\ProductCategory;
 use App\Models\Inventory\ProductLocation;
+use App\Models\Inventory\ProductLocationStock;
 use App\Models\Inventory\Supplier;
 use App\Models\Purchasing\PurchaseOrder;
-use App\Models\Purchasing\PurchaseOrderItem;
 use App\Models\Role;
 use App\Models\System\SystemSetting;
 use App\Models\User;
@@ -153,5 +153,33 @@ final class PurchaseOrderReceivingConcurrencyTest extends TestCase
 
         $this->assertSame(10, $this->product->fresh()->stock);
         $this->assertSame(10, $item->fresh()->quantity_received);
+    }
+
+    public function test_receiving_books_the_goods_into_the_products_location_bin(): void
+    {
+        $po = PurchaseOrder::create([
+            'organization_id' => $this->organization->id,
+            'supplier_id' => $this->supplier->id,
+            'created_by' => $this->admin->id,
+            'po_number' => 'PO-RECV-BIN',
+            'status' => PurchaseOrder::STATUS_SENT,
+            'order_date' => now()->toDateString(),
+            'subtotal' => 50.00, 'tax' => 0, 'total' => 50.00, 'currency' => 'USD',
+        ]);
+        $item = $po->items()->create([
+            'product_id' => $this->product->id, 'product_name' => $this->product->name, 'sku' => $this->product->sku,
+            'quantity_ordered' => 10, 'quantity_received' => 0,
+            'unit_cost' => 5.00, 'subtotal' => 50.00, 'tax' => 0, 'total' => 50.00,
+        ]);
+
+        $this->actingAs($this->admin)
+            ->post(route('purchase-orders.process-receiving', $po), ['items' => [['id' => $item->id, 'quantity_to_receive' => 10]]])
+            ->assertRedirect();
+
+        // The received units land in the product's location bin, in step with
+        // the total (both 10), rather than drifting into "unassigned".
+        $this->assertSame(10, (int) $this->product->fresh()->stock);
+        $this->assertSame(10, (int) ProductLocationStock::where('product_id', $this->product->id)
+            ->where('location_id', $this->product->location_id)->value('quantity'));
     }
 }
