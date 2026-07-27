@@ -55,11 +55,16 @@ final class TrackedStockAllocationService
      * available, batch quantities back to their batches. No-op when nothing was
      * allocated (untracked products and best-effort skips).
      *
+     * $limit caps how many units are released: null releases everything the
+     * line still holds (order cancel/delete/edit), while a partial return
+     * passes the returned quantity so only those units come back and the rest
+     * stay allocated to the still-open order.
+     *
      * @return int the number of units released
      */
-    public function releaseForOrderItem(OrderItem $orderItem): int
+    public function releaseForOrderItem(OrderItem $orderItem, ?int $limit = null): int
     {
-        return $this->releaseSerials($orderItem) + $this->releaseBatches($orderItem);
+        return $this->releaseSerials($orderItem, $limit) + $this->releaseBatches($orderItem, $limit);
     }
 
     /**
@@ -98,13 +103,23 @@ final class TrackedStockAllocationService
         return $available->count();
     }
 
-    private function releaseSerials(OrderItem $orderItem): int
+    private function releaseSerials(OrderItem $orderItem, ?int $limit = null): int
     {
-        $serials = ProductSerial::query()
+        if ($limit !== null && $limit <= 0) {
+            return 0;
+        }
+
+        $query = ProductSerial::query()
             ->where('order_item_id', $orderItem->id)
             ->where('status', ProductSerial::STATUS_SOLD)
-            ->lockForUpdate()
-            ->get();
+            ->orderBy('id')
+            ->lockForUpdate();
+
+        if ($limit !== null) {
+            $query->limit($limit);
+        }
+
+        $serials = $query->get();
 
         foreach ($serials as $serial) {
             $serial->status = ProductSerial::STATUS_AVAILABLE;
@@ -169,22 +184,47 @@ final class TrackedStockAllocationService
         return $quantity;
     }
 
-    private function releaseBatches(OrderItem $orderItem): int
+    private function releaseBatches(OrderItem $orderItem, ?int $limit = null): int
     {
+        if ($limit !== null && $limit <= 0) {
+            return 0;
+        }
+
         $allocations = OrderItemBatchAllocation::query()
             ->where('order_item_id', $orderItem->id)
+            ->orderBy('id')
             ->lockForUpdate()
             ->get();
 
         $released = 0;
+        $remaining = $limit; // null = unlimited
 
         foreach ($allocations as $allocation) {
+            if ($remaining !== null && $remaining <= 0) {
+                break;
+            }
+
+            $restore = $remaining === null
+                ? (int) $allocation->quantity
+                : min($remaining, (int) $allocation->quantity);
+
             ProductBatch::query()
                 ->whereKey($allocation->product_batch_id)
-                ->increment('quantity', $allocation->quantity);
+                ->increment('quantity', $restore);
 
-            $released += (int) $allocation->quantity;
-            $allocation->delete();
+            $released += $restore;
+
+            if ($restore >= (int) $allocation->quantity) {
+                $allocation->delete();
+            } else {
+                // Partial restore: the allocation keeps the still-consumed
+                // remainder so a later cancel returns exactly the rest.
+                $allocation->decrement('quantity', $restore);
+            }
+
+            if ($remaining !== null) {
+                $remaining -= $restore;
+            }
         }
 
         return $released;

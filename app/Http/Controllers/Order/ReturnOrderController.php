@@ -9,8 +9,10 @@ use App\Http\Requests\ReturnOrder\RejectReturnOrderRequest;
 use App\Http\Requests\ReturnOrder\StoreReturnOrderRequest;
 use App\Models\Inventory\StockAdjustment;
 use App\Models\Order\Order;
+use App\Models\Order\OrderItem;
 use App\Models\Order\ReturnOrder;
 use App\Models\Order\ReturnOrderItem;
+use App\Services\TrackedStockAllocationService;
 use App\Support\Money;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -280,6 +282,19 @@ class ReturnOrderController extends Controller
                             // same treatment order-cancel and PO-receipt use.
                             locationId: $item->product->location_id,
                         );
+
+                        // Return the specific serials/batches this line consumed
+                        // back to available, up to the returned quantity, so
+                        // COUNT(available) rises with the total instead of lagging
+                        // until reconcile. Runs after adjust() locked the product,
+                        // preserving the product-before-tracked lock order.
+                        if ($item->order_item_id !== null) {
+                            $orderItem = OrderItem::find($item->order_item_id);
+                            if ($orderItem !== null) {
+                                app(TrackedStockAllocationService::class)
+                                    ->releaseForOrderItem($orderItem, (int) $item->quantity);
+                            }
+                        }
                     }
                 }
 
