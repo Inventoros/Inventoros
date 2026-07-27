@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Models\Inventory;
 
 use App\Models\Auth\Organization;
+use App\Models\Concerns\BelongsToOrganization;
 use App\Models\Order\OrderItem;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -22,7 +23,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  */
 class OrderItemBatchAllocation extends Model
 {
-    use HasFactory;
+    use BelongsToOrganization, HasFactory;
 
     /**
      * @var array<int, string>
