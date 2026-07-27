@@ -5,14 +5,18 @@ declare(strict_types=1);
 namespace App\Models\Inventory;
 
 use App\Models\Auth\Organization;
+use App\Models\Concerns\BelongsToOrganization;
 use App\Models\Warehouse;
 use App\Traits\LogsActivity;
 use Database\Factories\ProductLocationFactory;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Carbon;
 
 /**
  * Represents a physical location for storing products.
@@ -26,16 +30,16 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property string|null $shelf
  * @property string|null $bin
  * @property bool $is_active
- * @property \Illuminate\Support\Carbon|null $created_at
- * @property \Illuminate\Support\Carbon|null $updated_at
- * @property \Illuminate\Support\Carbon|null $deleted_at
+ * @property Carbon|null $created_at
+ * @property Carbon|null $updated_at
+ * @property Carbon|null $deleted_at
  * @property-read string $full_location
- * @property-read \App\Models\Auth\Organization $organization
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Inventory\Product[] $products
+ * @property-read Organization $organization
+ * @property-read Collection|Product[] $products
  */
 class ProductLocation extends Model
 {
-    use HasFactory, SoftDeletes, LogsActivity;
+    use BelongsToOrganization, HasFactory, LogsActivity, SoftDeletes;
 
     protected static function newFactory(): ProductLocationFactory
     {
@@ -74,7 +78,7 @@ class ProductLocation extends Model
     /**
      * Get the organization that owns the location.
      *
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo<\App\Models\Auth\Organization, $this>
+     * @return BelongsTo<Organization, $this>
      */
     public function organization(): BelongsTo
     {
@@ -89,7 +93,7 @@ class ProductLocation extends Model
     /**
      * Get the products at this location.
      *
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany<\App\Models\Inventory\Product, $this>
+     * @return HasMany<Product, $this>
      */
     public function products(): HasMany
     {
@@ -99,9 +103,9 @@ class ProductLocation extends Model
     /**
      * Scope a query to only include locations from a specific organization.
      *
-     * @param \Illuminate\Database\Eloquent\Builder<static> $query
-     * @param int $organizationId
-     * @return \Illuminate\Database\Eloquent\Builder<static>
+     * @param  Builder<static>  $query
+     * @param  int  $organizationId
+     * @return Builder<static>
      */
     public function scopeForOrganization($query, $organizationId)
     {
@@ -111,8 +115,8 @@ class ProductLocation extends Model
     /**
      * Scope a query to only include active locations.
      *
-     * @param \Illuminate\Database\Eloquent\Builder<static> $query
-     * @return \Illuminate\Database\Eloquent\Builder<static>
+     * @param  Builder<static>  $query
+     * @return Builder<static>
      */
     public function scopeActive($query)
     {
@@ -121,8 +125,6 @@ class ProductLocation extends Model
 
     /**
      * Get the full location identifier.
-     *
-     * @return string
      */
     public function getFullLocationAttribute(): string
     {
