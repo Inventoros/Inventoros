@@ -11,6 +11,7 @@ use App\Models\ActivityLog;
 use App\Models\Inventory\Product;
 use App\Models\Inventory\ProductCategory;
 use App\Models\Inventory\ProductLocation;
+use App\Services\ProductLocationStockService;
 use App\Services\ProductService;
 use App\Support\PluginQueryGuard;
 use Illuminate\Http\RedirectResponse;
@@ -221,6 +222,9 @@ class ProductController extends Controller
         $data = [
             'product' => $product,
             'activities' => $activities,
+            // Per-location on-hand breakdown (location name + quantity), richest
+            // bin first. Empty for products that hold no binned stock.
+            'locationBreakdown' => app(ProductLocationStockService::class)->breakdown($product),
             'pluginComponents' => [
                 'header' => get_page_components('products.show', 'header'),
                 'sidebar' => get_page_components('products.show', 'sidebar'),

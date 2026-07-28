@@ -6,6 +6,7 @@ use App\Models\Auth\Organization;
 use App\Models\Inventory\Product;
 use App\Models\Inventory\ProductCategory;
 use App\Models\Inventory\ProductLocation;
+use App\Models\Inventory\ProductLocationStock;
 use App\Models\Role;
 use App\Models\System\SystemSetting;
 use App\Models\User;
@@ -17,10 +18,15 @@ class ProductControllerTest extends TestCase
     use RefreshDatabase;
 
     protected User $admin;
+
     protected User $member;
+
     protected User $viewOnlyUser;
+
     protected Organization $organization;
+
     protected ProductCategory $category;
+
     protected ProductLocation $location;
 
     protected function setUp(): void
@@ -144,7 +150,7 @@ class ProductControllerTest extends TestCase
     {
         return Product::create(array_merge([
             'organization_id' => $this->organization->id,
-            'sku' => 'TEST-' . uniqid(),
+            'sku' => 'TEST-'.uniqid(),
             'name' => 'Test Product',
             'description' => 'A test product description',
             'price' => 99.99,
@@ -445,6 +451,26 @@ class ProductControllerTest extends TestCase
             ->get(route('products.show', $product));
 
         $response->assertStatus(200);
+    }
+
+    public function test_product_show_exposes_the_per_location_breakdown(): void
+    {
+        $product = $this->createProduct(['location_id' => $this->location->id]);
+        ProductLocationStock::create([
+            'organization_id' => $this->organization->id,
+            'product_id' => $product->id,
+            'location_id' => $this->location->id,
+            'quantity' => 7,
+        ]);
+
+        $this->actingAs($this->admin)
+            ->get(route('products.show', $product))
+            ->assertInertia(fn ($page) => $page
+                ->component('Products/Show')
+                ->has('locationBreakdown', 1)
+                ->where('locationBreakdown.0.quantity', 7)
+                ->where('locationBreakdown.0.location.id', $this->location->id)
+            );
     }
 
     public function test_user_cannot_view_product_from_different_organization(): void
