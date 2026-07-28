@@ -36,6 +36,7 @@ const { hasPermission } = usePermissions();
 const props = defineProps({
     product: Object,
     activities: Array,
+    locationBreakdown: { type: Array, default: () => [] },
     pluginComponents: Object,
 });
 
@@ -344,6 +345,22 @@ const fieldInput = 'h-9 w-full rounded-md border border-border-subtle bg-surface
                                 <p class="text-text-primary">
                                     {{ product.location?.name || t('products.show.noLocation') }}
                                 </p>
+                            </div>
+                            <div v-if="locationBreakdown.length" class="sm:col-span-2">
+                                <h4 class="mb-1 text-sm font-medium text-text-tertiary">{{ t('products.show.stockByLocation') }}</h4>
+                                <ul class="divide-y divide-border-subtle rounded-md border border-border-subtle">
+                                    <li
+                                        v-for="bin in locationBreakdown"
+                                        :key="bin.id"
+                                        class="flex items-center justify-between px-3 py-1.5 text-sm"
+                                    >
+                                        <span class="text-text-primary">
+                                            {{ bin.location?.name || t('products.show.noLocation') }}
+                                            <span v-if="bin.location?.code" class="text-text-tertiary">({{ bin.location.code }})</span>
+                                        </span>
+                                        <span class="tabular-nums font-medium text-text-primary">{{ bin.quantity }}</span>
+                                    </li>
+                                </ul>
                             </div>
                         </div>
                     </div>

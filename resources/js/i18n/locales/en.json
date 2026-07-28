@@ -205,6 +205,7 @@
       "generateFromSku": "Generate from SKU",
       "uncategorized": "Uncategorized",
       "noLocation": "No location",
+      "stockByLocation": "Stock by location",
       "pricingInfo": "Pricing Information",
       "sellingPrice": "Selling Price",
       "purchasePrice": "Purchase Price",
