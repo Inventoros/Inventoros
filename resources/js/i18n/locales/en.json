@@ -331,6 +331,7 @@
       "addFirstItem": "Add First Item",
       "noItems": "No items in this order",
       "selectProduct": "Select a product",
+      "variant": "Variant",
       "qty": "Qty *",
       "unitPrice": "Unit Price *",
       "shippedAt": "Shipped at:",
