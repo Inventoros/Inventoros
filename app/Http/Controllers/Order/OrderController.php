@@ -223,7 +223,10 @@ class OrderController extends Controller
             ->with(['category', 'location'])
             ->get(['id', 'name', 'sku', 'price', 'stock', 'category_id', 'location_id']);
 
-        $order->load('items');
+        // Load each line's variant so the edit form can show and preserve
+        // variant lines (the web form can't pick a variant, but it must round-
+        // trip an existing one rather than dropping it and breaking the edit).
+        $order->load('items.variant');
 
         return Inertia::render('Orders/Edit', [
             'order' => $order,

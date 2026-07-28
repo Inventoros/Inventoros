@@ -27,10 +27,22 @@ const form = useForm({
     items: props.order.items.map(item => ({
         id: item.id,
         product_id: item.product_id,
+        // Preserve variant lines through the edit. The web form can't pick a
+        // variant, but dropping it would make the backend reject the line
+        // (a variant-tracked product needs a variant).
+        product_variant_id: item.product_variant_id ?? null,
         quantity: item.quantity,
         unit_price: parseFloat(item.unit_price),
     })),
 });
+
+// The variant title for an existing line (null for new lines and non-variant
+// lines), used to show and lock variant rows.
+const variantTitleFor = (formItem) => {
+    if (!formItem.id) return null;
+    const original = props.order.items.find(i => i.id === formItem.id);
+    return original?.variant?.title ?? null;
+};
 
 const submit = () => {
     form.put(route('orders.update', props.order.id), {
@@ -52,6 +64,7 @@ const addItem = () => {
     form.items.push({
         id: null,
         product_id: '',
+        product_variant_id: null,
         quantity: 1,
         unit_price: 0,
     });
@@ -165,6 +178,7 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                                                 v-model="item.product_id"
                                                 @change="updateItemPrice(index)"
                                                 :class="fieldInput"
+                                                :disabled="!!variantTitleFor(item)"
                                                 required
                                             >
                                                 <option value="">{{ t('orders.edit.selectProduct') }}</option>
@@ -172,6 +186,9 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                                                     {{ product.name }} ({{ product.sku }}) - Stock: {{ product.stock }}
                                                 </option>
                                             </select>
+                                            <p v-if="variantTitleFor(item)" class="mt-1 text-xs text-text-tertiary">
+                                                {{ t('orders.edit.variant') }}: {{ variantTitleFor(item) }}
+                                            </p>
                                             <p v-if="form.errors[`items.${index}.product_id`]" :class="fieldError">
                                                 {{ form.errors[`items.${index}.product_id`] }}
                                             </p>

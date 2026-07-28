@@ -6,6 +6,7 @@ use App\Models\Auth\Organization;
 use App\Models\Inventory\Product;
 use App\Models\Inventory\ProductCategory;
 use App\Models\Inventory\ProductLocation;
+use App\Models\Inventory\ProductVariant;
 use App\Models\Inventory\StockAdjustment;
 use App\Models\Order\Order;
 use App\Models\Order\OrderItem;
@@ -926,6 +927,67 @@ class OrderControllerTest extends TestCase
         // Stock should decrease by 2 (3 - 1)
         $this->product->refresh();
         $this->assertEquals($initialStock - 2, $this->product->stock);
+    }
+
+    private function variantOrder(): array
+    {
+        $product = Product::create([
+            'organization_id' => $this->organization->id, 'sku' => 'VAR-P', 'name' => 'Varied',
+            'price' => 10, 'currency' => 'USD', 'stock' => 50, 'min_stock' => 0,
+            'has_variants' => true, 'is_active' => true, 'category_id' => $this->category->id,
+            'location_id' => $this->location->id,
+        ]);
+        // Variant already holds 8 (2 of its 10 "sold" to this order).
+        $variant = ProductVariant::create([
+            'organization_id' => $this->organization->id, 'product_id' => $product->id,
+            'sku' => 'VAR-M', 'title' => 'Medium', 'option_values' => ['size' => 'M'],
+            'price' => 10, 'stock' => 8, 'is_active' => true,
+        ]);
+        $order = $this->createOrder([], [[
+            'product_id' => $product->id, 'product_variant_id' => $variant->id,
+            'product_name' => $product->name, 'sku' => $variant->sku,
+            'quantity' => 2, 'unit_price' => 10, 'subtotal' => 20, 'tax' => 0, 'total' => 20,
+        ]]);
+
+        return [$product, $variant, $order->fresh('items')];
+    }
+
+    public function test_order_edit_page_loads_variant_lines(): void
+    {
+        [, $variant, $order] = $this->variantOrder();
+
+        $this->actingAs($this->admin)
+            ->get(route('orders.edit', $order))
+            ->assertInertia(fn ($page) => $page
+                ->component('Orders/Edit')
+                ->where('order.items.0.product_variant_id', $variant->id)
+                ->where('order.items.0.variant.title', 'Medium')
+            );
+    }
+
+    public function test_editing_a_variant_order_line_preserves_and_adjusts_the_variant(): void
+    {
+        Mail::fake();
+        Notification::fake();
+        [$product, $variant, $order] = $this->variantOrder();
+        $orderItem = $order->items->first();
+
+        // Edit the variant line 2 -> 4 through the web update route (the form now
+        // round-trips product_variant_id).
+        $this->actingAs($this->admin)
+            ->put(route('orders.update', $order), [
+                'customer_name' => 'X', 'status' => 'pending', 'order_date' => now()->format('Y-m-d'),
+                'items' => [[
+                    'id' => $orderItem->id, 'product_id' => $product->id,
+                    'product_variant_id' => $variant->id, 'quantity' => 4, 'unit_price' => 10,
+                ]],
+            ])
+            ->assertRedirect(route('orders.index'));
+
+        // The variant absorbs the change (8 + 2 released - 4 re-fulfilled = 6);
+        // the parent product's own stock is never touched.
+        $this->assertSame(6, (int) $variant->fresh()->stock);
+        $this->assertSame(50, (int) $product->fresh()->stock);
     }
 
     public function test_order_update_sets_shipped_at_when_status_changes_to_shipped(): void
