@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Mail;
 
+use App\Mail\Concerns\AppliesOrganizationMailConfig;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
 use Illuminate\Queue\SerializesModels;
@@ -15,16 +16,14 @@ use Illuminate\Queue\SerializesModels;
  */
 class LowStockEmail extends Mailable
 {
-    use Queueable, SerializesModels;
+    use AppliesOrganizationMailConfig, Queueable, SerializesModels;
 
     /**
      * Create a new message instance.
      *
-     * @param array $data The notification data containing product information
+     * @param  array  $data  The notification data containing product information
      */
-    public function __construct(public array $data)
-    {
-    }
+    public function __construct(public array $data) {}
 
     /**
      * Build the message.
@@ -33,7 +32,9 @@ class LowStockEmail extends Mailable
      */
     public function build()
     {
-        return $this->subject('Low Stock Alert - ' . ($this->data['product']?->name ?? 'Unknown Product'))
+        $this->applyOrganizationMailConfig();
+
+        return $this->subject('Low Stock Alert - '.($this->data['product']?->name ?? 'Unknown Product'))
             ->view('emails.low-stock-alert')
             ->with($this->data);
     }

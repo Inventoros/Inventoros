@@ -21,33 +21,48 @@ use RuntimeException;
 final class SettingsService
 {
     public const CACHE_TTL_SECONDS = 3600;
+
     public const DEFAULT_SMTP_PORT = 587;
 
     /**
      * Get a setting value for current organization.
      *
-     * @param string $key The setting key to retrieve
-     * @param mixed $default Default value if setting not found
+     * @param  string  $key  The setting key to retrieve
+     * @param  mixed  $default  Default value if setting not found
      * @return mixed The setting value or default
+     *
      * @throws RuntimeException If no authenticated user with organization
      */
-    public static function get(string $key, mixed $default = null): mixed
+    public static function get(string $key, mixed $default = null, ?int $organizationId = null): mixed
     {
-        $organizationId = auth()->user()?->organization_id;
-        if (!$organizationId) {
+        // Resolve the organization explicitly when given (queue/console callers
+        // that run outside a request), falling back to the authenticated user.
+        // Without this a background job — e.g. a product import that pushes
+        // stock across the low-stock threshold and fires a notification — throws
+        // "User must be authenticated" and fails.
+        $organizationId ??= auth()->user()?->organization_id;
+        if (! $organizationId) {
             throw new RuntimeException('User must be authenticated to access settings');
         }
 
-        // First check if this is an encrypted setting - if so, skip cache
+        $cacheKey = "settings.{$organizationId}.{$key}";
+
+        // Cache-first: previously the row was queried BEFORE Cache::remember, so
+        // the cache never actually saved a query. Serve non-encrypted settings
+        // straight from cache when present.
+        if (Cache::has($cacheKey)) {
+            return Cache::get($cacheKey);
+        }
+
         $setting = Setting::where('organization_id', $organizationId)
             ->where('key', $key)
             ->first();
 
-        if (!$setting) {
+        if (! $setting) {
             return $default;
         }
 
-        // Don't cache encrypted settings for security
+        // Don't cache encrypted settings for security.
         if ($setting->encrypted) {
             try {
                 return Crypt::decryptString($setting->value);
@@ -59,29 +74,29 @@ final class SettingsService
                     'organization_id' => $organizationId,
                     'key' => $key,
                 ]);
+
                 return $default;
             }
         }
 
-        // For non-encrypted settings, use cache
-        return Cache::remember("settings.{$organizationId}.{$key}", 3600, function () use ($setting) {
-            return $setting->value;
-        });
+        Cache::put($cacheKey, $setting->value, 3600);
+
+        return $setting->value;
     }
 
     /**
      * Set a setting value.
      *
-     * @param string $key The setting key to set
-     * @param mixed $value The value to store
-     * @param bool $encrypted Whether to encrypt the value (default: false)
-     * @return void
+     * @param  string  $key  The setting key to set
+     * @param  mixed  $value  The value to store
+     * @param  bool  $encrypted  Whether to encrypt the value (default: false)
+     *
      * @throws RuntimeException If no authenticated user with organization
      */
     public static function set(string $key, $value, bool $encrypted = false): void
     {
         $organizationId = auth()->user()?->organization_id;
-        if (!$organizationId) {
+        if (! $organizationId) {
             throw new RuntimeException('User must be authenticated to access settings');
         }
 
@@ -104,25 +119,25 @@ final class SettingsService
      *
      * @return array{provider: string, from_address: string|null, from_name: string|null, smtp: array, mailgun: array, sendgrid: array} Email configuration array
      */
-    public static function getEmailConfig(): array
+    public static function getEmailConfig(?int $organizationId = null): array
     {
         return [
-            'provider' => self::get('email.provider', 'smtp'),
-            'from_address' => self::get('email.from_address'),
-            'from_name' => self::get('email.from_name'),
+            'provider' => self::get('email.provider', 'smtp', $organizationId),
+            'from_address' => self::get('email.from_address', null, $organizationId),
+            'from_name' => self::get('email.from_name', null, $organizationId),
             'smtp' => [
-                'host' => self::get('email.smtp.host'),
-                'port' => self::get('email.smtp.port', 587),
-                'username' => self::get('email.smtp.username'),
-                'password' => self::get('email.smtp.password'),
-                'encryption' => self::get('email.smtp.encryption', 'tls'),
+                'host' => self::get('email.smtp.host', null, $organizationId),
+                'port' => self::get('email.smtp.port', 587, $organizationId),
+                'username' => self::get('email.smtp.username', null, $organizationId),
+                'password' => self::get('email.smtp.password', null, $organizationId),
+                'encryption' => self::get('email.smtp.encryption', 'tls', $organizationId),
             ],
             'mailgun' => [
-                'domain' => self::get('email.mailgun.domain'),
-                'secret' => self::get('email.mailgun.secret'),
+                'domain' => self::get('email.mailgun.domain', null, $organizationId),
+                'secret' => self::get('email.mailgun.secret', null, $organizationId),
             ],
             'sendgrid' => [
-                'api_key' => self::get('email.sendgrid.api_key'),
+                'api_key' => self::get('email.sendgrid.api_key', null, $organizationId),
             ],
         ];
     }
@@ -132,22 +147,22 @@ final class SettingsService
      *
      * Configures mail driver, from address, and provider-specific settings
      * based on stored organization settings.
-     *
-     * @return void
      */
-    public static function applyEmailConfig(): void
+    public static function applyEmailConfig(?int $organizationId = null): void
     {
-        $config = self::getEmailConfig();
+        $config = self::getEmailConfig($organizationId);
+
+        $organizationId ??= auth()->user()?->organization_id;
 
         // Validate critical configuration
         if (empty($config['from_address'])) {
             Log::warning('Email configuration missing critical field: from_address', [
-                'organization_id' => auth()->user()?->organization_id,
+                'organization_id' => $organizationId,
             ]);
         }
         if (empty($config['provider'])) {
             Log::warning('Email configuration missing critical field: provider', [
-                'organization_id' => auth()->user()?->organization_id,
+                'organization_id' => $organizationId,
             ]);
         }
 
