@@ -523,7 +523,14 @@ class ReportDataService
     private function queryPurchaseOrders(int $organizationId, array $columns, ?array $filters, ?array $sort): Collection
     {
         $query = DB::table('purchase_orders')
-            ->leftJoin('suppliers', 'purchase_orders.supplier_id', '=', 'suppliers.id')
+            // Constrain the supplier join to the same organization so a PO whose
+            // supplier_id was set to another tenant's id (defence in depth
+            // alongside the org-scoped request rule) resolves supplier_name to
+            // null rather than leaking the foreign supplier's name.
+            ->leftJoin('suppliers', function ($join) use ($organizationId) {
+                $join->on('purchase_orders.supplier_id', '=', 'suppliers.id')
+                    ->where('suppliers.organization_id', '=', $organizationId);
+            })
             ->where('purchase_orders.organization_id', $organizationId)
             ->whereNull('purchase_orders.deleted_at');
 
