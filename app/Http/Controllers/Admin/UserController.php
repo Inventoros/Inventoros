@@ -91,7 +91,7 @@ class UserController extends Controller
 
         $validated = $request->validated();
 
-        $this->assertCanAssignRoles($validated['role_ids'] ?? [], $user);
+        $this->assertCanAssignRoles($validated['role_ids'] ?? [], $user, $validated['role']);
 
         $newUser = User::create([
             'name' => $validated['name'],
@@ -178,7 +178,7 @@ class UserController extends Controller
 
         $validated = $request->validated();
 
-        $this->assertCanAssignRoles($validated['role_ids'] ?? [], $currentUser);
+        $this->assertCanAssignRoles($validated['role_ids'] ?? [], $currentUser, $validated['role']);
 
         // Don't allow removing admin from the last admin
         if ($validated['role'] !== 'admin' && $user->role === 'admin') {
@@ -262,10 +262,20 @@ class UserController extends Controller
      *
      * @param  array<int|string>  $roleIds
      */
-    private function assertCanAssignRoles(array $roleIds, User $actor): void
+    private function assertCanAssignRoles(array $roleIds, User $actor, ?string $baseRole = null): void
     {
-        if (empty($roleIds) || $actor->isAdmin()) {
+        if ($actor->isAdmin()) {
             return;
+        }
+
+        // isAdmin() is derived from the base `role` column (role === 'admin'),
+        // so the base role is the primary escalation vector. A non-admin may
+        // only assign the plain `member` base role — never admin/manager — and
+        // this MUST be checked even when no custom role_ids are supplied. The
+        // previous guard returned early on empty role_ids, letting a delegated
+        // user-manager mint a full admin with `role: admin` and no role_ids.
+        if ($baseRole !== null && $baseRole !== 'member') {
+            abort(403, 'You do not have permission to assign this role.');
         }
 
         foreach (Role::whereIn('id', $roleIds)->get() as $role) {
