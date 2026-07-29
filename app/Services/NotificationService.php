@@ -86,8 +86,14 @@ final class NotificationService
             return;
         }
 
-        // Apply organization's email configuration
-        SettingsService::applyEmailConfig();
+        // The recipient's organization owns the mail config. Thread it into the
+        // mailable data so the mailable can apply it in build() — which runs in
+        // the queue WORKER at send time. Applying it here (the web/import
+        // process) was doubly wrong: it mutated config in a process that never
+        // sends the queued mail (so real emails silently used the default
+        // mailer), and it called SettingsService without an org on the queue,
+        // throwing "User must be authenticated" and failing the job.
+        $data['organization_id'] = $user->organization_id;
 
         // HOOK: Allow plugins to modify email data
         $data = apply_filters('email_notification_data', $data, $type, $user);

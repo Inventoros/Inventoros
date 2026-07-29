@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Mail;
 
+use App\Mail\Concerns\AppliesOrganizationMailConfig;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
 use Illuminate\Queue\SerializesModels;
@@ -15,16 +16,14 @@ use Illuminate\Queue\SerializesModels;
  */
 class OrderStatusEmail extends Mailable
 {
-    use Queueable, SerializesModels;
+    use AppliesOrganizationMailConfig, Queueable, SerializesModels;
 
     /**
      * Create a new message instance.
      *
-     * @param array $data The notification data containing order information
+     * @param  array  $data  The notification data containing order information
      */
-    public function __construct(public array $data)
-    {
-    }
+    public function __construct(public array $data) {}
 
     /**
      * Build the message.
@@ -33,7 +32,9 @@ class OrderStatusEmail extends Mailable
      */
     public function build()
     {
-        return $this->subject('Order Status Updated - #' . ($this->data['order']?->order_number ?? 'N/A'))
+        $this->applyOrganizationMailConfig();
+
+        return $this->subject('Order Status Updated - #'.($this->data['order']?->order_number ?? 'N/A'))
             ->view('emails.order-status')
             ->with($this->data);
     }
