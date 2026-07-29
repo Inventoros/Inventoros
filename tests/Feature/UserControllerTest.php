@@ -15,9 +15,13 @@ class UserControllerTest extends TestCase
     use RefreshDatabase;
 
     protected User $admin;
+
     protected User $member;
+
     protected User $viewOnlyUser;
+
     protected Organization $organization;
+
     protected Role $adminRole;
 
     protected function setUp(): void
@@ -226,6 +230,50 @@ class UserControllerTest extends TestCase
             'organization_id' => $this->organization->id,
             'role' => 'member',
         ]);
+    }
+
+    public function test_non_admin_with_create_users_cannot_mint_an_admin(): void
+    {
+        // $this->member is a non-admin that holds create_users/edit_users via a
+        // custom role — exactly the delegated-onboarding scenario.
+        $response = $this->actingAs($this->member)
+            ->post(route('users.store'), [
+                'name' => 'Escalated', 'email' => 'escalated@test.com',
+                'password' => 'Password123!', 'password_confirmation' => 'Password123!',
+                'role' => 'admin', // attempt to mint a full admin
+            ]);
+
+        $response->assertStatus(403);
+        $this->assertDatabaseMissing('users', ['email' => 'escalated@test.com']);
+    }
+
+    public function test_non_admin_can_still_create_a_member(): void
+    {
+        $this->actingAs($this->member)
+            ->post(route('users.store'), [
+                'name' => 'Colleague', 'email' => 'colleague@test.com',
+                'password' => 'Password123!', 'password_confirmation' => 'Password123!',
+                'role' => 'member',
+            ])
+            ->assertRedirect(route('users.index'));
+
+        $this->assertDatabaseHas('users', ['email' => 'colleague@test.com', 'role' => 'member']);
+    }
+
+    public function test_non_admin_cannot_escalate_an_existing_user_to_admin(): void
+    {
+        $target = User::create([
+            'name' => 'Target', 'email' => 'target@test.com', 'password' => bcrypt('x'),
+            'organization_id' => $this->organization->id, 'role' => 'member',
+        ]);
+
+        $this->actingAs($this->member)
+            ->put(route('users.update', $target), [
+                'name' => 'Target', 'email' => 'target@test.com', 'role' => 'admin',
+            ])
+            ->assertStatus(403);
+
+        $this->assertDatabaseHas('users', ['id' => $target->id, 'role' => 'member']);
     }
 
     public function test_admin_can_create_admin_user(): void

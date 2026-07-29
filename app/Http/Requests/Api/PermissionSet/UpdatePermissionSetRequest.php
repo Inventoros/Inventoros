@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace App\Http\Requests\Api\PermissionSet;
 
+use App\Enums\Permission;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 /**
  * Validates a permission set update via the REST API. Rules unchanged from
@@ -23,7 +25,7 @@ final class UpdatePermissionSetRequest extends FormRequest
             'category' => ['nullable', 'string', 'max:50'],
             'icon' => ['nullable', 'string', 'max:50'],
             'permissions' => ['sometimes', 'array', 'min:1'],
-            'permissions.*' => ['string'],
+            'permissions.*' => ['string', Rule::in(array_column(Permission::cases(), 'value'))],
             'is_active' => ['sometimes', 'boolean'],
         ];
     }

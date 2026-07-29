@@ -8,6 +8,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\PermissionSet\StorePermissionSetRequest;
 use App\Http\Requests\Api\PermissionSet\UpdatePermissionSetRequest;
 use App\Models\PermissionSet;
+use App\Models\User;
 use Dedoc\Scramble\Attributes\QueryParameter;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -63,6 +64,10 @@ class PermissionSetController extends Controller
     public function store(StorePermissionSetRequest $request): JsonResponse
     {
         $validated = $request->validated();
+
+        if ($denied = $this->permissionsExceedingActor($request->user(), $validated['permissions'] ?? [])) {
+            return $denied;
+        }
 
         $validated['organization_id'] = $request->user()->organization_id;
         $validated['is_template'] = false;
@@ -130,6 +135,10 @@ class PermissionSetController extends Controller
 
         $validated = $request->validated();
 
+        if ($denied = $this->permissionsExceedingActor($request->user(), $validated['permissions'] ?? [])) {
+            return $denied;
+        }
+
         $permissionSet->update($validated);
 
         return response()->json([
@@ -187,5 +196,31 @@ class PermissionSetController extends Controller
                 ['value' => 'reports', 'label' => 'Reports'],
             ],
         ]);
+    }
+
+    /**
+     * Guard: a non-admin may only build/edit a permission set from permissions
+     * they themselves hold, so a delegated permission-set manager can't embed
+     * manage_organization / delete_users etc. into a set applied to their own
+     * role and escalate (set permissions merge into effective role
+     * permissions). Admins are unrestricted. Returns a 403 response when the
+     * request exceeds the actor's own permissions, or null when allowed.
+     */
+    private function permissionsExceedingActor(User $actor, array $requested): ?JsonResponse
+    {
+        if ($actor->isAdmin() || $requested === []) {
+            return null;
+        }
+
+        $exceeds = array_values(array_diff($requested, $actor->getAllPermissions()));
+
+        if ($exceeds !== []) {
+            return response()->json([
+                'message' => 'You cannot include permissions you do not hold: '.implode(', ', $exceeds),
+                'error' => 'forbidden',
+            ], 403);
+        }
+
+        return null;
     }
 }
