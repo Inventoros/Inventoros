@@ -5,20 +5,23 @@ declare(strict_types=1);
 namespace App\Http\Requests\PurchaseOrder;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 /**
- * Validates a new purchase order (web surface). Rules unchanged from the
- * previous inline validation in Purchasing\PurchaseOrderController::store.
+ * Validates a new purchase order (web surface). supplier_id and product_id are
+ * org-scoped so a PO can't reference another tenant's supplier/product.
  */
 final class StorePurchaseOrderRequest extends FormRequest
 {
     /**
-     * @return array<string, string>
+     * @return array<string, mixed>
      */
     public function rules(): array
     {
+        $organizationId = $this->user()->organization_id;
+
         return [
-            'supplier_id' => 'required|exists:suppliers,id',
+            'supplier_id' => ['required', Rule::exists('suppliers', 'id')->where('organization_id', $organizationId)],
             'order_date' => 'required|date',
             'expected_date' => 'nullable|date|after_or_equal:order_date',
             'currency' => 'required|string|max:3',
@@ -26,7 +29,7 @@ final class StorePurchaseOrderRequest extends FormRequest
             'tax' => 'nullable|numeric|min:0',
             'notes' => 'nullable|string',
             'items' => 'required|array|min:1',
-            'items.*.product_id' => 'required|exists:products,id',
+            'items.*.product_id' => ['required', Rule::exists('products', 'id')->where('organization_id', $organizationId)],
             'items.*.quantity' => 'required|integer|min:1',
             'items.*.unit_cost' => 'required|numeric|min:0',
             'items.*.supplier_sku' => 'nullable|string|max:255',
