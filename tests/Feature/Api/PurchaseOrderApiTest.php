@@ -20,9 +20,13 @@ class PurchaseOrderApiTest extends TestCase
     use RefreshDatabase;
 
     protected User $admin;
+
     protected User $viewOnlyUser;
+
     protected Organization $organization;
+
     protected Supplier $supplier;
+
     protected Product $product;
 
     protected function setUp(): void
@@ -125,7 +129,7 @@ class PurchaseOrderApiTest extends TestCase
         return PurchaseOrder::create(array_merge([
             'organization_id' => $this->organization->id,
             'supplier_id' => $this->supplier->id,
-            'po_number' => 'PO-' . uniqid(),
+            'po_number' => 'PO-'.uniqid(),
             'status' => 'draft',
             'order_date' => now()->toDateString(),
             'subtotal' => 500.00,
@@ -183,7 +187,7 @@ class PurchaseOrderApiTest extends TestCase
         $this->createPurchaseOrder(['supplier_id' => $this->supplier->id]);
         $this->createPurchaseOrder(['supplier_id' => $otherSupplier->id]);
 
-        $response = $this->getJson('/api/v1/purchase-orders?supplier_id=' . $this->supplier->id);
+        $response = $this->getJson('/api/v1/purchase-orders?supplier_id='.$this->supplier->id);
 
         $response->assertStatus(200)
             ->assertJsonCount(1, 'data');
@@ -500,6 +504,31 @@ class PurchaseOrderApiTest extends TestCase
 
         $this->product->refresh();
         $this->assertEquals($initialStock + 10, $this->product->stock);
+    }
+
+    public function test_double_submit_via_api_does_not_over_receive(): void
+    {
+        Sanctum::actingAs($this->admin);
+
+        $po = $this->createPurchaseOrder(['status' => 'sent']);
+        $item = $po->items()->create([
+            'product_id' => $this->product->id,
+            'product_name' => $this->product->name,
+            'quantity_ordered' => 10, 'quantity_received' => 0,
+            'unit_cost' => 50.00, 'subtotal' => 500.00, 'tax' => 0, 'total' => 500.00,
+        ]);
+        $initialStock = $this->product->stock;
+        $payload = ['items' => [['id' => $item->id, 'quantity_to_receive' => 10]]];
+
+        $this->postJson("/api/v1/purchase-orders/{$po->id}/receive", $payload)->assertStatus(200);
+        $this->assertSame($initialStock + 10, $this->product->fresh()->stock);
+
+        // Replaying the identical receive must not book stock again — the PO is
+        // now fully received; the lock + re-check reject the second call.
+        $this->postJson("/api/v1/purchase-orders/{$po->id}/receive", $payload);
+
+        $this->assertSame($initialStock + 10, $this->product->fresh()->stock);
+        $this->assertSame(10, (int) $item->fresh()->quantity_received);
     }
 
     public function test_can_partially_receive_purchase_order(): void

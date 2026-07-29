@@ -17,6 +17,7 @@ use Dedoc\Scramble\Attributes\QueryParameter;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Illuminate\Support\Facades\DB;
 
 /**
  * @tags Purchase Orders
@@ -291,17 +292,40 @@ class PurchaseOrderController extends Controller
 
         $receivedCount = 0;
 
-        foreach ($validated['items'] as $itemData) {
-            if ($itemData['quantity_to_receive'] > 0) {
-                $item = PurchaseOrderItem::where('id', $itemData['id'])
-                    ->where('purchase_order_id', $purchaseOrder->id)
-                    ->first();
+        try {
+            DB::transaction(function () use ($validated, $purchaseOrder, &$receivedCount) {
+                // Re-read the PO under a row lock so two concurrent receive calls
+                // (a double-submit, a retried timeout, or two integration workers)
+                // serialize here; the second observes the post-receive
+                // status/quantities instead of the same stale pre-image, which
+                // otherwise let both book stock and over-receive up to 2x. Each
+                // item is likewise locked before receive(). Mirrors the web
+                // processReceiving path.
+                $po = PurchaseOrder::whereKey($purchaseOrder->getKey())->lockForUpdate()->firstOrFail();
 
-                if ($item && $item->remaining_quantity > 0) {
-                    $item->receive($itemData['quantity_to_receive']);
-                    $receivedCount++;
+                if (! $po->canReceiveItems()) {
+                    throw new \RuntimeException('This purchase order cannot receive items.');
                 }
-            }
+
+                foreach ($validated['items'] as $itemData) {
+                    if ($itemData['quantity_to_receive'] > 0) {
+                        $item = PurchaseOrderItem::where('id', $itemData['id'])
+                            ->where('purchase_order_id', $po->id)
+                            ->lockForUpdate()
+                            ->first();
+
+                        if ($item && $item->remaining_quantity > 0) {
+                            $item->receive($itemData['quantity_to_receive']);
+                            $receivedCount++;
+                        }
+                    }
+                }
+            });
+        } catch (\RuntimeException $e) {
+            return response()->json([
+                'message' => $e->getMessage(),
+                'error' => 'cannot_receive',
+            ], 422);
         }
 
         if ($receivedCount === 0) {
