@@ -4,9 +4,10 @@ declare(strict_types=1);
 
 namespace App\Mcp\Concerns;
 
+use App\Http\Middleware\CheckApiPermission;
 use App\Models\User;
-use Illuminate\Auth\AuthenticationException;
 use Illuminate\Auth\Access\AuthorizationException;
+use Illuminate\Auth\AuthenticationException;
 use Illuminate\Support\Facades\Auth;
 
 trait AuthenticatesMcpRequest
@@ -38,7 +39,19 @@ trait AuthenticatesMcpRequest
      */
     protected function authorize(array $permissions): void
     {
-        if (! $this->user()->hasAnyPermission($permissions)) {
+        $user = $this->user();
+
+        // Enforce the acting token's declared abilities as well as the user's
+        // role permissions, so a scoped ("read-only") token can't drive a
+        // destructive MCP tool. Unrestricted for session tokens, no declared
+        // scope, or a `*` token (see CheckApiPermission::tokenAllows).
+        $tokenAllows = CheckApiPermission::tokenAllows($user->currentAccessToken());
+
+        $granted = collect($permissions)->contains(
+            fn (string $p): bool => $user->hasPermission($p) && $tokenAllows($p)
+        );
+
+        if (! $granted) {
             throw new AuthorizationException(
                 'Token lacks any of the required permissions: '.implode(', ', $permissions)
             );
