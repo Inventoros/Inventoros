@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Requests\Customer;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 /**
  * Validates a customer edit (web surface). Rules unchanged from the previous
@@ -17,9 +18,11 @@ final class UpdateCustomerRequest extends FormRequest
      */
     public function rules(): array
     {
+        $organizationId = $this->user()->organization_id;
+
         return [
             'name' => ['sometimes', 'string', 'max:255'],
-            'code' => ['nullable', 'string', 'max:255'],
+            'code' => ['nullable', 'string', 'max:255', Rule::unique('customers', 'code')->where('organization_id', $organizationId)->ignore($this->route('customer'))],
             'company_name' => ['nullable', 'string', 'max:255'],
             'contact_name' => ['nullable', 'string', 'max:255'],
             'email' => ['nullable', 'email', 'max:255'],

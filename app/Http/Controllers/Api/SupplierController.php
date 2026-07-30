@@ -143,6 +143,16 @@ class SupplierController extends Controller
             ], 422);
         }
 
+        // Block deletion while the supplier still has open (non-terminal) POs,
+        // which would otherwise be orphaned (supplier soft-deleted, PO->supplier
+        // not withTrashed).
+        if ($supplier->hasOpenPurchaseOrders()) {
+            return response()->json([
+                'message' => 'Cannot delete a supplier with open purchase orders',
+                'error' => 'has_open_purchase_orders',
+            ], 422);
+        }
+
         $supplier->delete();
 
         return response()->json([

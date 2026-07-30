@@ -5,21 +5,24 @@ declare(strict_types=1);
 namespace App\Http\Requests\Supplier;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 /**
- * Validates a supplier edit (web surface). Rules unchanged from the previous
- * inline validation in Inventory\SupplierController::update (name is `sometimes`).
+ * Validates a supplier edit (web surface). `code` is org-scoped unique
+ * (ignoring this supplier) so it can't collide with another supplier's code.
  */
 final class UpdateSupplierRequest extends FormRequest
 {
     /**
-     * @return array<string, array<int, string>>
+     * @return array<string, mixed>
      */
     public function rules(): array
     {
+        $organizationId = $this->user()->organization_id;
+
         return [
             'name' => ['sometimes', 'string', 'max:255'],
-            'code' => ['nullable', 'string', 'max:255'],
+            'code' => ['nullable', 'string', 'max:255', Rule::unique('suppliers', 'code')->where('organization_id', $organizationId)->ignore($this->route('supplier'))],
             'contact_name' => ['nullable', 'string', 'max:255'],
             'email' => ['nullable', 'email', 'max:255'],
             'phone' => ['nullable', 'string', 'max:255'],
