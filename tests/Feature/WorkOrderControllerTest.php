@@ -394,6 +394,30 @@ class WorkOrderControllerTest extends TestCase
         $this->assertEquals(5, $data['assembly']->stock); // 0 + 5
     }
 
+    public function test_work_order_creation_recovers_from_a_number_collision(): void
+    {
+        $data = $this->createAssemblyWithComponents();
+
+        // Inject a twin with the same work_order_number on the first insert, so
+        // the per-org UNIQUE index trips once; the SequenceNumberRetry wrapper
+        // must roll back and retry with a fresh number rather than 500.
+        $collided = false;
+        WorkOrder::creating(function (WorkOrder $wo) use (&$collided) {
+            if ($collided) {
+                return;
+            }
+            $collided = true;
+            WorkOrder::withoutEvents(fn () => WorkOrder::create($wo->getAttributes()));
+        });
+
+        $this->actingAs($this->admin)
+            ->post(route('work-orders.store'), ['product_id' => $data['assembly']->id, 'quantity' => 5])
+            ->assertRedirect();
+
+        $this->assertTrue($collided, 'Expected the injected twin to force a UNIQUE collision.');
+        $this->assertDatabaseHas('work_orders', ['product_id' => $data['assembly']->id, 'quantity' => 5]);
+    }
+
     public function test_completing_a_work_order_syncs_component_and_assembly_location_bins(): void
     {
         $data = $this->createAssemblyWithComponents(0, 100, 100);
