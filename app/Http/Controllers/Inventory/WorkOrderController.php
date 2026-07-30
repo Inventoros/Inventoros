@@ -11,6 +11,7 @@ use App\Models\Inventory\StockAdjustment;
 use App\Models\Inventory\WorkOrder;
 use App\Models\Inventory\WorkOrderItem;
 use App\Services\ProductLocationStockService;
+use App\Support\SequenceNumberRetry;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -116,7 +117,9 @@ class WorkOrderController extends Controller
                 ->withInput();
         }
 
-        $workOrder = DB::transaction(function () use ($validated, $organizationId, $request, $components) {
+        // Retry on a work_order_number unique collision (concurrent creates in
+        // the same org read the same MAX+1); nothing serialises them otherwise.
+        $workOrder = SequenceNumberRetry::create(fn () => DB::transaction(function () use ($validated, $organizationId, $request, $components) {
             $workOrder = WorkOrder::create([
                 'organization_id' => $organizationId,
                 'product_id' => $validated['product_id'],
@@ -139,7 +142,7 @@ class WorkOrderController extends Controller
             }
 
             return $workOrder;
-        });
+        }));
 
         return redirect()->route('work-orders.show', $workOrder)
             ->with('success', 'Work order created successfully.');

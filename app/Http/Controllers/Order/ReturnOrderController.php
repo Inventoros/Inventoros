@@ -14,6 +14,7 @@ use App\Models\Order\ReturnOrder;
 use App\Models\Order\ReturnOrderItem;
 use App\Services\TrackedStockAllocationService;
 use App\Support\Money;
+use App\Support\SequenceNumberRetry;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
@@ -105,7 +106,11 @@ class ReturnOrderController extends Controller
         $order->load('items');
 
         try {
-            $returnOrder = DB::transaction(function () use ($validated, $organizationId, $order) {
+            // Retry on a return_number unique collision: two returns for
+            // different orders in the same org/second read the same MAX and
+            // would otherwise 500 (the parent-order lock only serialises returns
+            // of the SAME order).
+            $returnOrder = SequenceNumberRetry::create(fn () => DB::transaction(function () use ($validated, $organizationId, $order) {
                 // Lock the parent Order row, not the aggregate. The previous
                 // implementation applied lockForUpdate() to a SELECT with
                 // GROUP BY — Postgres rejects locking aggregated rows
@@ -187,7 +192,7 @@ class ReturnOrderController extends Controller
                 }
 
                 return $returnOrder;
-            });
+            }));
 
             return redirect()->route('returns.show', $returnOrder)
                 ->with('success', 'Return request created successfully.');

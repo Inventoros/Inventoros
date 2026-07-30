@@ -12,6 +12,7 @@ use App\Models\Inventory\StockAdjustment;
 use App\Models\Inventory\WorkOrder;
 use App\Models\Inventory\WorkOrderItem;
 use App\Services\ProductLocationStockService;
+use App\Support\SequenceNumberRetry;
 use Dedoc\Scramble\Attributes\QueryParameter;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -97,7 +98,9 @@ class WorkOrderController extends Controller
             ], 422);
         }
 
-        $workOrder = DB::transaction(function () use ($validated, $organizationId, $request, $components) {
+        // Retry on a work_order_number unique collision (concurrent creates in
+        // the same org read the same MAX+1); nothing serialises them otherwise.
+        $workOrder = SequenceNumberRetry::create(fn () => DB::transaction(function () use ($validated, $organizationId, $request, $components) {
             $workOrder = WorkOrder::create([
                 'organization_id' => $organizationId,
                 'product_id' => $validated['product_id'],
@@ -120,7 +123,7 @@ class WorkOrderController extends Controller
             }
 
             return $workOrder;
-        });
+        }));
 
         $workOrder->load(['product:id,name,sku,thumbnail', 'creator:id,name', 'items.product:id,name,sku,stock']);
 
