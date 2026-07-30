@@ -234,6 +234,19 @@ class SupplierController extends Controller
                 ->with('error', 'Cannot delete supplier with associated products.');
         }
 
+        // Block deletion while the supplier still has open (non-terminal) POs.
+        // Suppliers are soft-deleted and PurchaseOrder::supplier() doesn't
+        // withTrashed, so deleting one with open POs would leave those POs with
+        // a null supplier across the index/show and receiving flows.
+        if ($supplier->hasOpenPurchaseOrders()) {
+            $message = 'Cannot delete a supplier with open purchase orders.';
+            if ($request->wantsJson()) {
+                return response()->json(['message' => $message], 422);
+            }
+
+            return redirect()->route('suppliers.index')->with('error', $message);
+        }
+
         // Hook: Before supplier deletion
         do_action('supplier_before_delete', $supplier, $request->user());
 

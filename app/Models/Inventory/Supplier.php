@@ -6,6 +6,7 @@ namespace App\Models\Inventory;
 
 use App\Models\Auth\Organization;
 use App\Models\Concerns\BelongsToOrganization;
+use App\Models\Purchasing\PurchaseOrder;
 use App\Traits\LogsActivity;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
@@ -13,6 +14,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Carbon;
 
@@ -106,6 +108,31 @@ class Supplier extends Model
         return $this->belongsToMany(Product::class, 'product_supplier')
             ->withPivot(['cost_price', 'supplier_sku', 'lead_time_days', 'minimum_order_quantity', 'is_primary'])
             ->withTimestamps();
+    }
+
+    /**
+     * Get the purchase orders placed with this supplier.
+     *
+     * @return HasMany<PurchaseOrder, $this>
+     */
+    public function purchaseOrders(): HasMany
+    {
+        return $this->hasMany(PurchaseOrder::class);
+    }
+
+    /**
+     * Whether the supplier still has open (non-terminal) purchase orders, which
+     * must block deletion so their vendor linkage isn't orphaned.
+     */
+    public function hasOpenPurchaseOrders(): bool
+    {
+        return $this->purchaseOrders()
+            ->whereIn('status', [
+                PurchaseOrder::STATUS_DRAFT,
+                PurchaseOrder::STATUS_SENT,
+                PurchaseOrder::STATUS_PARTIAL,
+            ])
+            ->exists();
     }
 
     /**
