@@ -22,7 +22,7 @@ class RecentOrdersResource extends Resource
 
     public function handle(Request $request): Response
     {
-        $this->authorize(['view_orders', 'manage_orders']);
+        $this->authorize(['view_orders']);
 
         $orders = Order::query()
             ->forOrganization($this->organizationId())

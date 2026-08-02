@@ -37,7 +37,7 @@ class ListOrdersTool extends Tool
 
     public function handle(Request $request): Response
     {
-        $this->authorize(['view_orders', 'manage_orders']);
+        $this->authorize(['view_orders']);
 
         $orgId = $this->organizationId();
 

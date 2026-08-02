@@ -7,6 +7,7 @@ namespace Tests\Feature\Mcp;
 use App\Mcp\Resources\LowStockResource;
 use App\Mcp\Servers\InventorosServer;
 use App\Mcp\Tools\AdjustStockTool;
+use App\Mcp\Tools\CreateOrderTool;
 use App\Mcp\Tools\GetProductTool;
 use App\Mcp\Tools\ListLowStockTool;
 use App\Mcp\Tools\ListProductsTool;
@@ -327,5 +328,38 @@ class InventorosMcpServerTest extends TestCase
         ]);
 
         $response->assertStatus(401);
+    }
+
+    /**
+     * Regression: the MCP order/PO/stock-adjustment gates authorized against
+     * permission names that do not exist in the Permission enum (e.g.
+     * 'manage_orders'), so a delegated non-admin holding a real permission was
+     * wrongly locked out and only admins could drive those tools. The gates now
+     * reference real enum permissions.
+     */
+    public function test_delegated_member_with_create_orders_permission_can_use_the_order_tool(): void
+    {
+        $role = Role::firstOrCreate(
+            ['slug' => 'order-creator'],
+            ['name' => 'Order Creator', 'is_system' => false, 'permissions' => ['create_orders']]
+        );
+
+        $agent = User::create([
+            'name' => 'Order Agent',
+            'email' => 'order-agent@test.com',
+            'password' => bcrypt('password'),
+            'organization_id' => $this->organization->id,
+            'role' => 'member',
+        ]);
+        $agent->roles()->syncWithoutDetaching([$role->id]);
+
+        $product = $this->product();
+
+        InventorosServer::actingAs($agent)
+            ->tool(CreateOrderTool::class, [
+                'customer_name' => 'Acme Corp',
+                'items' => [['product_id' => $product->id, 'quantity' => 1]],
+            ])
+            ->assertOk();
     }
 }

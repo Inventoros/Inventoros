@@ -34,7 +34,7 @@ class ListPurchaseOrdersTool extends Tool
 
     public function handle(Request $request): Response
     {
-        $this->authorize(['view_purchase_orders', 'manage_purchase_orders']);
+        $this->authorize(['view_purchase_orders']);
 
         $query = PurchaseOrder::with(['supplier'])
             ->withCount('items')

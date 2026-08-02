@@ -30,7 +30,7 @@ class SendPurchaseOrderTool extends Tool
 
     public function handle(Request $request): Response
     {
-        $this->authorize(['edit_purchase_orders', 'manage_purchase_orders']);
+        $this->authorize(['edit_purchase_orders']);
 
         $request->validate(['id' => ['required', 'integer']]);
 

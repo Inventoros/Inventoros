@@ -59,7 +59,7 @@ class CreateStockAdjustmentMutation extends Mutation
     public function resolve($root, array $args, $context, ResolveInfo $resolveInfo, Closure $getSelectFields)
     {
         $user = auth()->user();
-        if (!$user->hasPermission('create_stock_adjustments')) {
+        if (!$user->hasPermission('manage_stock')) {
             throw new \Illuminate\Auth\Access\AuthorizationException('Unauthorized');
         }
 

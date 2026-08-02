@@ -32,7 +32,7 @@ class ReceivePurchaseOrderTool extends Tool
 
     public function handle(Request $request): Response
     {
-        $this->authorize(['receive_purchase_orders', 'manage_purchase_orders']);
+        $this->authorize(['receive_purchase_orders']);
 
         $orgId = $this->organizationId();
 

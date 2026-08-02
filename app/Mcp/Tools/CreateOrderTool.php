@@ -37,7 +37,7 @@ class CreateOrderTool extends Tool
 
     public function handle(Request $request): Response
     {
-        $this->authorize(['manage_orders']);
+        $this->authorize(['create_orders']);
 
         $orgId = $this->organizationId();
 
