@@ -10,6 +10,7 @@ use App\Services\Update\GitHubReleaseService;
 use App\Support\SafeZipExtractor;
 use Exception;
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Log;
 
@@ -104,6 +105,19 @@ class UpdateService
      */
     public function update(?string $downloadUrl = null, ?callable $progressCallback = null): array
     {
+        // Serialize updates: a second admin (or a scheduled trigger) must never run a
+        // concurrent update — parallel file replacement + migrations would corrupt the
+        // install — so fail fast if another update already holds the lock.
+        $lock = Cache::lock('inventoros:update', 900);
+
+        if (! $lock->get()) {
+            return [
+                'success' => false,
+                'message' => 'An update is already in progress. Please wait for it to finish.',
+                'error' => 'update_in_progress',
+            ];
+        }
+
         try {
             $this->log($progressCallback, 'Starting update process...');
 
@@ -143,45 +157,53 @@ class UpdateService
             Artisan::call('down', ['--retry' => 60]);
 
             try {
-                // Step 6: Replace files
-                $this->log($progressCallback, 'Replacing application files...');
+                // Steps 6-9 mutate the live installation: first the files, then the
+                // database schema, then caches + the version marker. If ANY of them
+                // fails the install is left in a broken half-state — most importantly
+                // new application files running against the OLD schema when a migration
+                // throws, or the old files against a partially-migrated schema. Restore
+                // the pre-update backup (files AND the database dump) on any failure in
+                // this block, not just a file-replacement failure.
                 try {
+                    // Step 6: Replace files
+                    $this->log($progressCallback, 'Replacing application files...');
                     $this->fileService->replaceFiles($extractPath);
-                } catch (\Throwable $replaceError) {
-                    // The app is now half-replaced and may be unbootable; restore the
-                    // backup taken in Step 2 before surfacing the failure.
-                    Log::error('File replacement failed; restoring from backup', [
-                        'error' => $replaceError->getMessage(),
+
+                    // Step 7: Run migrations
+                    $this->log($progressCallback, 'Running database migrations...');
+                    Artisan::call('migrate', ['--force' => true]);
+
+                    // Step 8: Clear and rebuild caches
+                    $this->log($progressCallback, 'Clearing caches...');
+                    Artisan::call('optimize:clear');
+
+                    $this->log($progressCallback, 'Rebuilding caches...');
+                    Artisan::call('optimize');
+
+                    // Step 9: Update version file
+                    if ($newVersion !== 'unknown') {
+                        $this->writeVersionFile($this->githubService->stripVersion($newVersion));
+                    }
+                } catch (\Throwable $applyError) {
+                    // The install is now half-updated (files and/or schema); restore
+                    // the backup taken in Step 2 before surfacing the failure.
+                    Log::error('Update failed after mutating the installation; restoring from backup', [
+                        'error' => $applyError->getMessage(),
                         'backup' => $backupPath,
                     ]);
-                    $this->log($progressCallback, 'File replacement failed; restoring previous version...');
+                    $this->log($progressCallback, 'Update failed; restoring previous version...');
                     $this->restoreFromBackup($backupPath);
 
                     throw new Exception(
-                        'Update failed while replacing files; the previous version was restored: '
-                        .$replaceError->getMessage(),
+                        'Update failed and the previous version was restored: '
+                        .$applyError->getMessage(),
                         0,
-                        $replaceError
+                        $applyError
                     );
                 }
 
-                // Step 7: Run migrations
-                $this->log($progressCallback, 'Running database migrations...');
-                Artisan::call('migrate', ['--force' => true]);
-
-                // Step 8: Clear and rebuild caches
-                $this->log($progressCallback, 'Clearing caches...');
-                Artisan::call('optimize:clear');
-
-                $this->log($progressCallback, 'Rebuilding caches...');
-                Artisan::call('optimize');
-
-                // Step 9: Update version file
-                if ($newVersion !== 'unknown') {
-                    $this->writeVersionFile($this->githubService->stripVersion($newVersion));
-                }
-
-                // Step 10: Cleanup temp files
+                // Step 10: Cleanup temp files. Benign — these are temp artifacts only,
+                // so a cleanup failure must not roll back an otherwise-successful update.
                 $this->log($progressCallback, 'Cleaning up temporary files...');
                 $this->fileService->cleanup($zipPath, $extractPath);
 
@@ -217,6 +239,8 @@ class UpdateService
                 'message' => 'Update failed: '.$e->getMessage(),
                 'error' => $e->getMessage(),
             ];
+        } finally {
+            $lock->release();
         }
     }
 
