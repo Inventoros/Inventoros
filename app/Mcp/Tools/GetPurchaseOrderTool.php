@@ -28,7 +28,7 @@ class GetPurchaseOrderTool extends Tool
 
     public function handle(Request $request): Response
     {
-        $this->authorize(['view_purchase_orders', 'manage_purchase_orders']);
+        $this->authorize(['view_purchase_orders']);
 
         $request->validate(['id' => ['required', 'integer']]);
 

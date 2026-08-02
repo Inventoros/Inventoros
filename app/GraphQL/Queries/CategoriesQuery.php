@@ -55,7 +55,7 @@ class CategoriesQuery extends Query
         // Read authorization: mirror the REST route's permission gate.
         // GraphQL previously enforced none, so any authenticated user could
         // read data their role is denied over REST.
-        if (! auth()->user()?->hasAnyPermission(['view_categories', 'manage_categories'])) {
+        if (! auth()->user()?->hasAnyPermission(['manage_categories'])) {
             throw new AuthorizationException('Unauthorized');
         }
 

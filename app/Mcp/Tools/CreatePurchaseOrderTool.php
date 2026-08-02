@@ -38,7 +38,7 @@ class CreatePurchaseOrderTool extends Tool
 
     public function handle(Request $request): Response
     {
-        $this->authorize(['manage_purchase_orders']);
+        $this->authorize(['create_purchase_orders']);
 
         $orgId = $this->organizationId();
 
