@@ -93,14 +93,6 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-t
         </PageHeader>
 
         <div class="mt-6 space-y-4">
-            <!-- Flash Messages -->
-            <div v-if="$page.props.flash?.success" class="rounded-lg border border-status-success/20 bg-status-success-soft p-4">
-                <p class="text-sm text-status-success">{{ $page.props.flash.success }}</p>
-            </div>
-            <div v-if="$page.props.flash?.error" class="rounded-lg border border-status-danger/20 bg-status-danger-soft p-4">
-                <p class="text-sm text-status-danger">{{ $page.props.flash.error }}</p>
-            </div>
-
             <!-- Transfer Info -->
             <Card :padded="false">
                 <div class="flex items-center justify-between px-5 pt-5">

@@ -44,6 +44,7 @@ import {
 } from 'lucide-vue-next';
 
 import { usePermissions } from '@/composables/usePermissions';
+import FlashMessages from '@/Components/Layout/FlashMessages.vue';
 import GlobalSearch from '@/Components/Layout/GlobalSearch.vue';
 import NotificationDropdown from '@/Components/Layout/NotificationDropdown.vue';
 import ThemeToggle from '@/Components/Layout/ThemeToggle.vue';
@@ -274,5 +275,6 @@ const isActive = (item) => item.active.some((pattern) => route().current(pattern
         </div>
 
         <GlobalSearch ref="globalSearchRef" />
+        <FlashMessages />
     </div>
 </template>
