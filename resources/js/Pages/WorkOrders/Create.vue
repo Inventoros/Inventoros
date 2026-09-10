@@ -166,45 +166,47 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                                 Materials needed to produce {{ form.quantity }} unit{{ form.quantity !== 1 ? 's' : '' }} of {{ selectedProduct.name }}
                             </p>
                         </div>
-                        <table class="min-w-full divide-y divide-border-subtle">
-                            <thead class="bg-surface-canvas">
-                                <tr>
-                                    <th class="px-4 py-2 text-left text-xs font-medium uppercase tracking-wider text-text-tertiary">Component</th>
-                                    <th class="px-4 py-2 text-left text-xs font-medium uppercase tracking-wider text-text-tertiary">SKU</th>
-                                    <th class="px-4 py-2 text-center text-xs font-medium uppercase tracking-wider text-text-tertiary">Required</th>
-                                    <th class="px-4 py-2 text-center text-xs font-medium uppercase tracking-wider text-text-tertiary">Available</th>
-                                    <th class="px-4 py-2 text-center text-xs font-medium uppercase tracking-wider text-text-tertiary">Status</th>
-                                </tr>
-                            </thead>
-                            <tbody class="divide-y divide-border-subtle">
-                                <tr
-                                    v-for="comp in requiredComponents"
-                                    :key="comp.id"
-                                    :class="!comp.sufficient ? 'bg-status-danger/10' : ''"
-                                >
-                                    <td class="px-4 py-3 text-sm text-text-primary">
-                                        {{ comp.component?.name || 'Unknown' }}
-                                    </td>
-                                    <td class="px-4 py-3 text-sm text-text-tertiary">
-                                        {{ comp.component?.sku || '-' }}
-                                    </td>
-                                    <td class="px-4 py-3 text-center text-sm font-medium text-text-primary">
-                                        {{ comp.required_qty }}
-                                    </td>
-                                    <td class="px-4 py-3 text-center text-sm" :class="comp.sufficient ? 'text-status-success' : 'font-semibold text-status-danger'">
-                                        {{ comp.available }}
-                                    </td>
-                                    <td class="px-4 py-3 text-center">
-                                        <span
-                                            class="rounded-full px-2 py-0.5 text-xs font-semibold"
-                                            :class="comp.sufficient ? 'bg-status-success/15 text-status-success' : 'bg-status-danger/15 text-status-danger'"
-                                        >
-                                            {{ comp.sufficient ? 'OK' : 'Insufficient' }}
-                                        </span>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full divide-y divide-border-subtle">
+                                <thead class="bg-surface-canvas">
+                                    <tr>
+                                        <th class="px-4 py-2 text-left text-xs font-medium uppercase tracking-wider text-text-tertiary">Component</th>
+                                        <th class="px-4 py-2 text-left text-xs font-medium uppercase tracking-wider text-text-tertiary">SKU</th>
+                                        <th class="px-4 py-2 text-center text-xs font-medium uppercase tracking-wider text-text-tertiary">Required</th>
+                                        <th class="px-4 py-2 text-center text-xs font-medium uppercase tracking-wider text-text-tertiary">Available</th>
+                                        <th class="px-4 py-2 text-center text-xs font-medium uppercase tracking-wider text-text-tertiary">Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-border-subtle">
+                                    <tr
+                                        v-for="comp in requiredComponents"
+                                        :key="comp.id"
+                                        :class="!comp.sufficient ? 'bg-status-danger/10' : ''"
+                                    >
+                                        <td class="px-4 py-3 text-sm text-text-primary">
+                                            {{ comp.component?.name || 'Unknown' }}
+                                        </td>
+                                        <td class="px-4 py-3 text-sm text-text-tertiary">
+                                            {{ comp.component?.sku || '-' }}
+                                        </td>
+                                        <td class="px-4 py-3 text-center text-sm font-medium text-text-primary">
+                                            {{ comp.required_qty }}
+                                        </td>
+                                        <td class="px-4 py-3 text-center text-sm" :class="comp.sufficient ? 'text-status-success' : 'font-semibold text-status-danger'">
+                                            {{ comp.available }}
+                                        </td>
+                                        <td class="px-4 py-3 text-center">
+                                            <span
+                                                class="rounded-full px-2 py-0.5 text-xs font-semibold"
+                                                :class="comp.sufficient ? 'bg-status-success/15 text-status-success' : 'bg-status-danger/15 text-status-danger'"
+                                            >
+                                                {{ comp.sufficient ? 'OK' : 'Insufficient' }}
+                                            </span>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
 
                         <!-- Insufficient Stock Warning -->
                         <div v-if="!allComponentsSufficient" class="border-t border-border-subtle bg-status-danger/10 px-4 py-3">
