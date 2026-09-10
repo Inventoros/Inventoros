@@ -10,8 +10,6 @@ import { useI18n } from 'vue-i18n';
 import {
     Upload,
     Download,
-    CheckCircle2,
-    AlertCircle,
     AlertTriangle,
     SlidersHorizontal,
     FileSpreadsheet,
@@ -53,9 +51,9 @@ const exportFilters = ref({
 
 const showExportFilters = ref(false);
 
-// Get flash messages and stats
-const flashSuccess = computed(() => page.props.flash?.success);
-const flashError = computed(() => page.props.flash?.error);
+// The importer flashes a structured warning (message + per-row stats) that
+// the global FlashMessages renderer deliberately skips, so this page keeps
+// rendering that one itself. Plain success/error strings are global now.
 const flashWarning = computed(() => page.props.flash?.warning);
 
 const handleFileSelect = (event) => {
@@ -156,22 +154,6 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium text-text-secondary';
         </template>
 
         <PageHeader title="Import / Export" description="Bulk import products from a file, or export your inventory data." />
-
-        <!-- Success Message -->
-        <Card v-if="flashSuccess" class="mt-6 border-status-success/20 bg-status-success-soft">
-            <div class="flex items-start gap-3">
-                <CheckCircle2 :size="20" class="shrink-0 text-status-success" />
-                <p class="text-sm text-status-success">{{ flashSuccess }}</p>
-            </div>
-        </Card>
-
-        <!-- Error Message -->
-        <Card v-if="flashError" class="mt-6 border-status-danger/20 bg-status-danger-soft">
-            <div class="flex items-start gap-3">
-                <AlertCircle :size="20" class="shrink-0 text-status-danger" />
-                <p class="text-sm text-status-danger">{{ flashError }}</p>
-            </div>
-        </Card>
 
         <!-- Warning Message with Stats -->
         <Card v-if="flashWarning" class="mt-6 border-status-warning/20 bg-status-warning-soft">

@@ -210,14 +210,6 @@ const thClass = 'px-6 py-3 text-left text-xs font-medium uppercase tracking-wide
             </template>
         </PageHeader>
 
-        <!-- Flash Messages -->
-        <div v-if="$page.props.flash?.success" class="mt-6 rounded-lg border border-status-success/20 bg-status-success-soft p-4">
-            <p class="text-sm text-status-success">{{ $page.props.flash.success }}</p>
-        </div>
-        <div v-if="$page.props.flash?.error" class="mt-6 rounded-lg border border-status-danger/20 bg-status-danger-soft p-4">
-            <p class="text-sm text-status-danger">{{ $page.props.flash.error }}</p>
-        </div>
-
         <!-- Summary metrics -->
         <section class="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
             <div class="rounded-lg border border-border-subtle bg-surface-raised p-4 transition-colors hover:border-border-strong">

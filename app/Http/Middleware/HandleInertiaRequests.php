@@ -56,6 +56,20 @@ class HandleInertiaRequests extends Middleware
             'pluginMenuItems' => $pluginMenuItems,
             'locale' => app()->getLocale(),
             'flash' => [
+                // Controllers redirect with ->with('success'|'error'|...) in
+                // hundreds of places, and none of it reached the browser
+                // because it was never shared. The keys below are the four the
+                // application actually flashes; anything else stays server-side.
+                //
+                // Values are passed through untouched. Most are strings and are
+                // rendered globally by FlashMessages; the importer flashes a
+                // structured ['message' => ..., 'stats' => ...] payload that its
+                // own page renders, so this must not coerce or reshape them.
+                'success' => $request->session()->get('success'),
+                'error' => $request->session()->get('error'),
+                'warning' => $request->session()->get('warning'),
+                'status' => $request->session()->get('status'),
+
                 // One-time reveal of a webhook signing secret after create/
                 // regenerate. Flashed by WebhookController, present for exactly
                 // the one redirected request, never persisted into props.
