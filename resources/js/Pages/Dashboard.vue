@@ -37,6 +37,7 @@ const props = defineProps({
     stockByCategory: Array,
     widgetPreferences: Object,
     pluginComponents: Object,
+    can: { type: Object, default: () => ({}) },
 });
 
 const showCustomizeModal = ref(false);
@@ -105,12 +106,15 @@ const reorderColumns = [
 
 // Secondary stat tiles (revenue_chart widget)
 const secondaryStats = () => [
-    { label: t('dashboard.pendingOrders'), value: formatNumber(props.stats?.pendingOrders), href: route('orders.index', { status: 'pending' }), tone: 'text-status-warning' },
-    { label: t('dashboard.categories'), value: props.stats?.categories, href: route('categories.index'), tone: 'text-brand' },
-    { label: t('dashboard.locations'), value: props.stats?.locations, href: route('locations.index'), tone: 'text-brand' },
-    { label: t('dashboard.inventoryValue'), value: formatCompactCurrency(props.stats?.totalValue), href: null, tone: 'text-status-success' },
-    { label: t('dashboard.revenueThisMonth'), value: formatCompactCurrency(props.stats?.revenueThisMonth), href: null, tone: 'text-brand' },
-];
+    { key: 'pendingOrders', label: t('dashboard.pendingOrders'), value: formatNumber(props.stats?.pendingOrders), href: route('orders.index', { status: 'pending' }), tone: 'text-status-warning' },
+    { key: 'categories', label: t('dashboard.categories'), value: props.stats?.categories, href: route('categories.index'), tone: 'text-brand' },
+    { key: 'locations', label: t('dashboard.locations'), value: props.stats?.locations, href: route('locations.index'), tone: 'text-brand' },
+    { key: 'totalValue', label: t('dashboard.inventoryValue'), value: formatCompactCurrency(props.stats?.totalValue), href: null, tone: 'text-status-success' },
+    { key: 'revenueThisMonth', label: t('dashboard.revenueThisMonth'), value: formatCompactCurrency(props.stats?.revenueThisMonth), href: null, tone: 'text-brand' },
+// A withheld figure is absent from `stats`, not zeroed, so filtering on
+// presence also drops the link that went with it -- several point at index
+// routes the same user would be refused.
+].filter((stat) => props.stats?.[stat.key] !== undefined);
 </script>
 
 <template>
@@ -150,6 +154,7 @@ const secondaryStats = () => [
         <!-- Primary stats -->
         <section v-if="widgets.stats_overview" class="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
             <StatTile
+                v-if="stats.totalProducts !== undefined"
                 :label="t('dashboard.totalProducts')"
                 :value="formatNumber(stats.totalProducts)"
                 hint="active in catalog"
@@ -158,6 +163,7 @@ const secondaryStats = () => [
                 <template #icon><Boxes :size="20" :stroke-width="1.5" /></template>
             </StatTile>
             <StatTile
+                v-if="stats.totalValue !== undefined"
                 :label="t('dashboard.totalValue')"
                 :value="formatCompactCurrency(stats.totalValue)"
                 hint="at cost"
@@ -166,6 +172,7 @@ const secondaryStats = () => [
                 <template #icon><DollarSign :size="20" :stroke-width="1.5" /></template>
             </StatTile>
             <StatTile
+                v-if="stats.lowStockProducts !== undefined"
                 :label="t('dashboard.lowStock')"
                 :value="formatNumber(stats.lowStockProducts)"
                 :delta="stats.lowStockProducts > 0 ? 'attention' : null"
@@ -176,6 +183,7 @@ const secondaryStats = () => [
                 <template #icon><AlertTriangle :size="20" :stroke-width="1.5" /></template>
             </StatTile>
             <StatTile
+                v-if="stats.totalOrders !== undefined"
                 :label="t('dashboard.totalOrders')"
                 :value="formatNumber(stats.totalOrders)"
                 hint="all time"

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Admin;
 
+use App\Enums\Permission;
 use App\Http\Controllers\Controller;
 use App\Models\ActivityLog;
 use App\Models\Inventory\Product;
@@ -36,6 +37,21 @@ class DashboardController extends Controller
         $user = auth()->user();
         $orgId = $user->organization_id;
 
+        // A dashboard tile must not disclose what the page it summarises would
+        // refuse to show. Every figure below is gated on the permission that
+        // already guards its own screen: products and orders on their index
+        // routes, and the two money aggregates on view_reports, because
+        // reports.inventory-valuation and reports.sales-analysis show exactly
+        // those numbers and sit behind permission:view_reports.
+        //
+        // Gating happens here rather than in the template so the values never
+        // enter the Inertia payload. It also stops the queries running at all
+        // for a user who could not be shown the answer.
+        $canViewProducts = $user->hasPermission(Permission::VIEW_PRODUCTS);
+        $canViewOrders = $user->hasPermission(Permission::VIEW_ORDERS);
+        $canViewReports = $user->hasPermission(Permission::VIEW_REPORTS);
+        $canViewActivity = $user->hasPermission(Permission::VIEW_ACTIVITY_LOG);
+
         // Consolidate the five product-level aggregates (count, active stock
         // value, low-stock count) into one selectRaw round-trip and the three
         // order-level aggregates (count, pending count, month revenue) into
@@ -44,32 +60,47 @@ class DashboardController extends Controller
         $monthStart = now()->startOfMonth();
         $monthEnd = now()->endOfMonth();
 
-        $productAgg = Product::where('organization_id', $orgId)
-            ->selectRaw('
-                COUNT(*) as total_count,
-                COALESCE(SUM(CASE WHEN is_active THEN price * stock ELSE 0 END), 0) as total_value,
-                SUM(CASE WHEN stock <= min_stock THEN 1 ELSE 0 END) as low_stock_count
-            ')
-            ->first();
+        // The product round-trip carries both the counts (view_products) and
+        // the valuation (view_reports), so it runs when either is held and the
+        // individual figures are picked out below. Same for orders.
+        $productAgg = ($canViewProducts || $canViewReports)
+            ? Product::where('organization_id', $orgId)
+                ->selectRaw('
+                    COUNT(*) as total_count,
+                    COALESCE(SUM(CASE WHEN is_active THEN price * stock ELSE 0 END), 0) as total_value,
+                    SUM(CASE WHEN stock <= min_stock THEN 1 ELSE 0 END) as low_stock_count
+                ')
+                ->first()
+            : null;
 
-        $orderAgg = Order::where('organization_id', $orgId)
-            ->selectRaw('
-                COUNT(*) as total_count,
-                SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) as pending_count,
-                COALESCE(SUM(CASE WHEN order_date >= ? AND order_date <= ? THEN total ELSE 0 END), 0) as month_revenue
-            ', ['pending', $monthStart, $monthEnd])
-            ->first();
+        $orderAgg = ($canViewOrders || $canViewReports)
+            ? Order::where('organization_id', $orgId)
+                ->selectRaw('
+                    COUNT(*) as total_count,
+                    SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) as pending_count,
+                    COALESCE(SUM(CASE WHEN order_date >= ? AND order_date <= ? THEN total ELSE 0 END), 0) as month_revenue
+                ', ['pending', $monthStart, $monthEnd])
+                ->first()
+            : null;
 
-        $stats = [
-            'totalProducts' => (int) ($productAgg->total_count ?? 0),
-            'totalValue' => (float) ($productAgg->total_value ?? 0),
-            'lowStockProducts' => (int) ($productAgg->low_stock_count ?? 0),
-            'categories' => ProductCategory::where('organization_id', $orgId)->count(),
-            'locations' => ProductLocation::where('organization_id', $orgId)->count(),
-            'totalOrders' => (int) ($orderAgg->total_count ?? 0),
-            'pendingOrders' => (int) ($orderAgg->pending_count ?? 0),
-            'revenueThisMonth' => (float) ($orderAgg->month_revenue ?? 0),
-        ];
+        $stats = [];
+
+        if ($canViewProducts) {
+            $stats['totalProducts'] = (int) ($productAgg->total_count ?? 0);
+            $stats['lowStockProducts'] = (int) ($productAgg->low_stock_count ?? 0);
+            $stats['categories'] = ProductCategory::where('organization_id', $orgId)->count();
+            $stats['locations'] = ProductLocation::where('organization_id', $orgId)->count();
+        }
+
+        if ($canViewOrders) {
+            $stats['totalOrders'] = (int) ($orderAgg->total_count ?? 0);
+            $stats['pendingOrders'] = (int) ($orderAgg->pending_count ?? 0);
+        }
+
+        if ($canViewReports) {
+            $stats['totalValue'] = (float) ($productAgg->total_value ?? 0);
+            $stats['revenueThisMonth'] = (float) ($orderAgg->month_revenue ?? 0);
+        }
 
         // Hook: Allow plugins to modify stats
         $stats = apply_filters('dashboard_stats_data', $stats, $user);
@@ -78,14 +109,14 @@ class DashboardController extends Controller
         do_action('dashboard_stats_calculated', $stats, $user);
 
         // Get recent products
-        $recentProducts = Product::where('organization_id', $user->organization_id)
+        $recentProducts = ! $canViewProducts ? collect() : Product::where('organization_id', $user->organization_id)
             ->with(['category', 'location'])
             ->latest()
             ->limit(5)
             ->get();
 
         // Get low stock products
-        $lowStockProducts = Product::where('organization_id', $user->organization_id)
+        $lowStockProducts = ! $canViewProducts ? collect() : Product::where('organization_id', $user->organization_id)
             ->whereColumn('stock', '<=', 'min_stock')
             ->with(['category', 'location'])
             ->orderBy('stock', 'asc')
@@ -93,14 +124,15 @@ class DashboardController extends Controller
             ->get();
 
         // Get recent orders
-        $recentOrders = Order::where('organization_id', $user->organization_id)
+        $recentOrders = ! $canViewOrders ? collect() : Order::where('organization_id', $user->organization_id)
             ->with('items')
             ->latest('order_date')
             ->limit(5)
             ->get();
 
-        // Get stock value by category
-        $stockByCategory = ProductCategory::where('product_categories.organization_id', $user->organization_id)
+        // Get stock value by category. This is reports.category-performance
+        // in miniature, so it takes the same permission that page does.
+        $stockByCategory = ! $canViewReports ? collect() : ProductCategory::where('product_categories.organization_id', $user->organization_id)
             ->leftJoin('products', function ($join) {
                 $join->on('products.category_id', '=', 'product_categories.id')
                     ->where('products.is_active', true);
@@ -110,7 +142,7 @@ class DashboardController extends Controller
             ->get();
 
         // Get recent activity logs
-        $recentActivity = ActivityLog::where('organization_id', $user->organization_id)
+        $recentActivity = ! $canViewActivity ? collect() : ActivityLog::where('organization_id', $user->organization_id)
             ->with('user')
             ->latest()
             ->limit(10)
@@ -128,7 +160,7 @@ class DashboardController extends Controller
             });
 
         // Get reorder suggestions (products below reorder point)
-        $reorderSuggestions = Product::where('organization_id', $user->organization_id)
+        $reorderSuggestions = ! $canViewProducts ? collect() : Product::where('organization_id', $user->organization_id)
             ->needsReorder()
             ->with(['category', 'suppliers' => function ($query) {
                 $query->wherePivot('is_primary', true);
@@ -152,7 +184,7 @@ class DashboardController extends Controller
             });
 
         // Get stock movements (last 7 days)
-        $stockMovements = StockAdjustment::where('organization_id', $user->organization_id)
+        $stockMovements = ! $canViewProducts ? collect() : StockAdjustment::where('organization_id', $user->organization_id)
             ->where('created_at', '>=', now()->subDays(7))
             ->select(DB::raw('DATE(created_at) as date'), DB::raw('SUM(adjustment_quantity) as total'))
             ->groupBy('date')
@@ -166,7 +198,7 @@ class DashboardController extends Controller
             });
 
         // Get top products by value
-        $topProducts = Product::where('organization_id', $user->organization_id)
+        $topProducts = ! $canViewProducts ? collect() : Product::where('organization_id', $user->organization_id)
             ->where('is_active', true)
             ->where('stock', '>', 0)
             ->selectRaw('id, name, sku, price, stock, (price * stock) as total_value')
@@ -190,6 +222,27 @@ class DashboardController extends Controller
         // Merge with defaults to ensure any new widgets are visible by default
         $widgetPreferences = array_merge($defaultWidgets, $widgetPreferences);
 
+        // Widget preferences are a display choice, not an access control: the
+        // user sets them, so a preference alone can never be what keeps a
+        // figure hidden. Turn off anything the permissions do not allow, so a
+        // withheld card disappears rather than rendering an empty state that
+        // implies the organisation has no orders.
+        $widgetAllowed = [
+            'stats_overview' => $canViewProducts || $canViewOrders || $canViewReports,
+            'revenue_chart' => $canViewProducts || $canViewOrders || $canViewReports,
+            'stock_movements' => $canViewProducts,
+            'low_stock_alerts' => $canViewProducts,
+            'recent_orders' => $canViewOrders,
+            'recent_products' => $canViewProducts,
+            'top_products' => $canViewProducts,
+            'stock_by_category' => $canViewReports,
+            'reorder_suggestions' => $canViewProducts,
+        ];
+
+        foreach ($widgetAllowed as $widget => $allowed) {
+            $widgetPreferences[$widget] = $widgetPreferences[$widget] && $allowed;
+        }
+
         $data = [
             'stats' => $stats,
             'recentProducts' => $recentProducts,
@@ -198,6 +251,11 @@ class DashboardController extends Controller
             'recentOrders' => $recentOrders,
             'stockByCategory' => $stockByCategory,
             'recentActivity' => $recentActivity,
+            'can' => [
+                'viewProducts' => $canViewProducts,
+                'viewOrders' => $canViewOrders,
+                'viewReports' => $canViewReports,
+            ],
             'stockMovements' => $stockMovements,
             'topProducts' => $topProducts,
             'widgetPreferences' => $widgetPreferences,
