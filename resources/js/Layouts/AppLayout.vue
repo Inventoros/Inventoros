@@ -14,7 +14,7 @@
  *   - Top strip is a thin 44px row, breadcrumb + actions
  *   - Density: 8px nav rows, 13px font, hover = subtle surface change
  */
-import { computed, onMounted, ref, watch } from 'vue';
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import { Link, router, usePage } from '@inertiajs/vue3';
 import { useI18n } from 'vue-i18n';
 import {
@@ -62,6 +62,23 @@ onMounted(() => {
     router.on('start', () => {
         mobileOpen.value = false;
     });
+});
+
+/**
+ * Lock the page behind the mobile drawer.
+ *
+ * The drawer is a fixed overlay, so without this the body keeps scrolling
+ * under it: a swipe meant for the nav list scrolls the page instead, and
+ * closing the drawer leaves you somewhere you never meant to be. Scoped to
+ * the drawer being open, and restored on unmount so a page transition
+ * mid-animation cannot strand the lock.
+ */
+watch(mobileOpen, (open) => {
+    document.body.style.overflow = open ? 'hidden' : '';
+});
+
+onBeforeUnmount(() => {
+    document.body.style.overflow = '';
 });
 
 // Cmd/Ctrl-K opens global search anywhere
