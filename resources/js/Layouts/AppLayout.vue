@@ -49,6 +49,7 @@ import GlobalSearch from '@/Components/Layout/GlobalSearch.vue';
 import NotificationDropdown from '@/Components/Layout/NotificationDropdown.vue';
 import ThemeToggle from '@/Components/Layout/ThemeToggle.vue';
 import WarehouseSwitcher from '@/Components/WarehouseSwitcher.vue';
+import LegalFooter from '@/Components/LegalFooter.vue';
 
 const { t } = useI18n();
 const page = usePage();
@@ -289,6 +290,8 @@ const isActive = (item) => item.active.some((pattern) => route().current(pattern
             <main class="px-4 md:px-6 py-6 md:py-8">
                 <slot />
             </main>
+
+            <LegalFooter class="px-4 md:px-6 py-6 border-t border-border-subtle" />
         </div>
 
         <GlobalSearch ref="globalSearchRef" />

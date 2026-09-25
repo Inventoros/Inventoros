@@ -8,7 +8,7 @@
 
 <p align="center">
   <a href="https://github.com/Inventoros/Inventoros/actions/workflows/tests.yml"><img src="https://github.com/Inventoros/Inventoros/actions/workflows/tests.yml/badge.svg" alt="Tests"></a>
-  <a href="https://opensource.org/licenses/MIT"><img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="License: MIT"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/License-AGPL_v3-blue.svg" alt="License: AGPL v3"></a>
   <a href="https://laravel.com"><img src="https://img.shields.io/badge/Laravel-13-FF2D20?logo=laravel" alt="Laravel 13"></a>
   <a href="https://php.net"><img src="https://img.shields.io/badge/PHP-8.3+-777BB4?logo=php" alt="PHP 8.3+"></a>
   <a href="https://vuejs.org"><img src="https://img.shields.io/badge/Vue-3-4FC08D?logo=vuedotjs" alt="Vue 3"></a>
@@ -271,7 +271,11 @@ We welcome contributions! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for guid
 
 ## License
 
-Inventoros is open-source software licensed under the [MIT license](LICENSE).
+Copyright (c) 2025-2026 Inventoros ([inventoros.com](https://inventoros.com)).
+
+Inventoros is free, open-source software licensed under the [GNU Affero General Public License v3.0](LICENSE) (AGPL-3.0-only). If you run a modified version of Inventoros as a network service, the AGPL requires you to offer your users the source code of that modified version.
+
+Releases up to and including v1.0.8 were published under the MIT license and remain available under those terms.
 
 ## Acknowledgments
 
