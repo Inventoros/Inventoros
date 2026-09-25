@@ -1,5 +1,6 @@
 <script setup>
 import ApplicationLogo from '@/Components/ApplicationLogo.vue';
+import LegalFooter from '@/Components/LegalFooter.vue';
 import { Link } from '@inertiajs/vue3';
 </script>
 
@@ -18,5 +19,7 @@ import { Link } from '@inertiajs/vue3';
         >
             <slot />
         </div>
+
+        <LegalFooter class="mt-6 mb-6 px-6 sm:max-w-md w-full flex justify-center" />
     </div>
 </template>
