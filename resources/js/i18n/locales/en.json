@@ -279,7 +279,17 @@
       "statusLabel": "Status *",
       "notesPlaceholder": "Internal notes...",
       "orderSummary": "Order Summary",
-      "creatingOrder": "Creating Order..."
+      "creatingOrder": "Creating Order...",
+      "variant": "Variant",
+      "chooseVariant": "Choose a variant...",
+      "variantRequired": "Choose a variant for this product.",
+      "savedCustomer": "Saved customer",
+      "customerHint": "Pick a saved customer to fill in their details, or type a one-off customer below.",
+      "searchCustomers": "Search customers by name, email or code...",
+      "searchingCustomers": "Searching...",
+      "noCustomersFound": "No matching customers. Type the details below for a one-off customer.",
+      "linkedCustomer": "Linked to saved customer {name}",
+      "clearCustomer": "Use a one-off customer"
     },
     "show": {
       "orderNumber": "Order #{number}",

@@ -58,6 +58,7 @@ Route::get('/purchase-orders/{purchaseOrder}/invoice/preview', [PurchaseOrderInv
 Route::get('/orders', [OrderController::class, 'index'])->name('orders.index')->middleware('permission:view_orders');
 Route::get('/orders/create', [OrderController::class, 'create'])->name('orders.create')->middleware('permission:create_orders');
 Route::post('/orders', [OrderController::class, 'store'])->name('orders.store')->middleware('permission:create_orders');
+Route::get('/orders/customer-lookup', [OrderController::class, 'customerLookup'])->name('orders.customer-lookup')->middleware('permission:view_orders');
 Route::get('/orders/{order}/edit', [OrderController::class, 'edit'])->name('orders.edit')->middleware('permission:edit_orders');
 Route::put('/orders/{order}', [OrderController::class, 'update'])->name('orders.update')->middleware('permission:edit_orders');
 Route::patch('/orders/{order}', [OrderController::class, 'update'])->middleware('permission:edit_orders');
