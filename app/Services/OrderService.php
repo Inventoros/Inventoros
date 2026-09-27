@@ -55,18 +55,29 @@ final class OrderService
      * @param  User  $creator  The acting user; sets organization_id, created_by,
      *                         and the ledger actor.
      * @param  string  $source  Order source channel (manual, ebay, …).
+     * @param  bool  $adjustStock  False records the order and its lines without
+     *                             touching inventory: no availability check, no
+     *                             stock decrement, no bin consumption, no ledger
+     *                             rows, no serial allocation. Used by the
+     *                             historical order import, where the goods left
+     *                             long ago and current stock already reflects it.
+     * @param  bool  $announce  False skips the `order_created` action, so no
+     *                          order.created webhook is queued and no plugin
+     *                          listener runs. Used by the order import for
+     *                          historical orders (and on request), which are
+     *                          records of past sales, not new ones.
      *
      * @throws \Exception When a product is missing or stock is insufficient.
      * @throws QueryException On unrecoverable DB errors.
      */
-    public function create(array $data, User $creator, string $source = 'manual'): Order
+    public function create(array $data, User $creator, string $source = 'manual', bool $adjustStock = true, bool $announce = true): Order
     {
         $data['organization_id'] = $creator->organization_id;
         $data['created_by'] = $creator->id;
         $data['source'] = $source;
         $data['approval_status'] ??= 'pending';
 
-        $order = SequenceNumberRetry::create(fn () => DB::transaction(function () use ($data, $creator) {
+        $order = SequenceNumberRetry::create(fn () => DB::transaction(function () use ($data, $creator, $adjustStock) {
             $orgId = $data['organization_id'];
             $data['order_number'] = Order::generateOrderNumber($orgId);
 
@@ -131,7 +142,7 @@ final class OrderService
             // target (same product, or same variant) accumulate against one
             // running balance.
             $running = [];
-            foreach ($lines as $line) {
+            foreach ($adjustStock ? $lines : [] as $line) {
                 $key = $line['key'];
                 $running[$key] = ($running[$key] ?? (int) $line['target']->stock) - $line['qty'];
                 if ($running[$key] < 0) {
@@ -236,13 +247,15 @@ final class OrderService
                 $adj['reference_id'] = $order->id;
             }
             unset($adj);
-            StockAdjustment::insert($adjustmentRows);
+            if ($adjustStock) {
+                StockAdjustment::insert($adjustmentRows);
+            }
 
             // Decrement stock once per unique target — the variant when one was
             // chosen, otherwise the product. This is the fix for variant counts
             // drifting: a line sold as a variant no longer decrements the parent.
             $locationStock = app(ProductLocationStockService::class);
-            foreach ($perTargetQty as $key => $totalQty) {
+            foreach ($adjustStock ? $perTargetQty : [] as $key => $totalQty) {
                 $target = $targets[$key];
 
                 // Draw the sold units out of the product's location bins before
@@ -263,7 +276,7 @@ final class OrderService
             // serials are left untouched, so creation is unchanged for them.
             $order->load('items');
             $allocator = app(TrackedStockAllocationService::class);
-            foreach ($order->items as $orderItem) {
+            foreach ($adjustStock ? $order->items : [] as $orderItem) {
                 $product = $products->get($orderItem->product_id);
                 if ($product !== null) {
                     $allocator->allocateForOrderItem($product, (int) $orderItem->quantity, $orderItem);
@@ -278,7 +291,9 @@ final class OrderService
         // so plugins and webhooks observe order creation consistently, with the
         // full aggregate present (firing on the model `created` event would see
         // an itemless order, since items are inserted after Order::create).
-        do_action('order_created', $order, $creator);
+        if ($announce) {
+            do_action('order_created', $order, $creator);
+        }
 
         return $order;
     }

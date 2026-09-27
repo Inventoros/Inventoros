@@ -11,6 +11,7 @@ use App\Http\Requests\Admin\User\UpdateUserRequest;
 use App\Models\Role;
 use App\Models\User;
 use App\Services\SecurityEventLogger;
+use App\Support\RoleAssignmentGuard;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -275,45 +276,14 @@ class UserController extends Controller
     }
 
     /**
-     * Prevent privilege escalation through role assignment. `roles()->sync()`
-     * bypasses the model-level self-role guard, so a non-admin actor could
-     * otherwise attach the system-administrator role to themselves or another
-     * user. A non-admin may only assign roles that (a) belong to their own
-     * organization (or are system roles), (b) are not admin/manager-conferring,
-     * and (c) carry no permission the actor does not already hold.
+     * Prevent privilege escalation through role assignment. The rules live in
+     * RoleAssignmentGuard so the user CSV import enforces exactly the same
+     * ones.
      *
      * @param  array<int|string>  $roleIds
      */
     private function assertCanAssignRoles(array $roleIds, User $actor, ?string $baseRole = null): void
     {
-        if ($actor->isAdmin()) {
-            return;
-        }
-
-        // isAdmin() is derived from the base `role` column (role === 'admin'),
-        // so the base role is the primary escalation vector. A non-admin may
-        // only assign the plain `member` base role — never admin/manager — and
-        // this MUST be checked even when no custom role_ids are supplied. The
-        // previous guard returned early on empty role_ids, letting a delegated
-        // user-manager mint a full admin with `role: admin` and no role_ids.
-        if ($baseRole !== null && $baseRole !== 'member') {
-            abort(403, 'You do not have permission to assign this role.');
-        }
-
-        foreach (Role::whereIn('id', $roleIds)->get() as $role) {
-            if ($role->organization_id !== null && $role->organization_id !== $actor->organization_id) {
-                abort(403, 'You cannot assign a role from another organization.');
-            }
-
-            if (in_array($role->slug, ['system-administrator', 'system-manager'], true)) {
-                abort(403, 'You do not have permission to assign this role.');
-            }
-
-            foreach ($role->getAllPermissions() as $permission) {
-                if (! $actor->hasPermission($permission)) {
-                    abort(403, 'You cannot assign a role with more permissions than you hold.');
-                }
-            }
-        }
+        RoleAssignmentGuard::authorize($roleIds, $actor, $baseRole);
     }
 }

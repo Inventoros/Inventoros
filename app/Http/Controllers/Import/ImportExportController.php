@@ -4,14 +4,19 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Import;
 
+use App\Enums\OrderStatus;
 use App\Exports\ExportFactory;
 use App\Http\Controllers\Controller;
+use App\Imports\OrdersImport;
 use App\Imports\ProductsImport;
+use App\Imports\UsersImport;
 use App\Jobs\GenerateDataExportJob;
+use App\Jobs\ProcessOrderImportJob;
 use App\Jobs\ProcessProductImportJob;
 use App\Models\DataExport;
 use App\Models\Inventory\ProductCategory;
 use App\Models\Inventory\ProductLocation;
+use App\Support\ProductCurrencyColumns;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -31,6 +36,11 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
  */
 class ImportExportController extends Controller
 {
+    /**
+     * Upload rule shared by every import endpoint.
+     */
+    private const IMPORT_FILE_RULE = 'required|file|mimes:csv,txt,xlsx,xls|mimetypes:text/csv,text/plain,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel|max:10240'; // 10MB max
+
     /**
      * Display the import/export page.
      *
@@ -59,6 +69,12 @@ class ImportExportController extends Controller
             'categories' => $categories,
             'locations' => $locations,
             'exports' => $exports,
+            // The per-currency price columns the product CSV carries.
+            'currencyColumns' => array_map(
+                fn (string $code) => 'price_'.$code,
+                ProductCurrencyColumns::currenciesFor($organizationId),
+            ),
+            'orderStatuses' => OrderStatus::values(),
         ]);
     }
 
@@ -103,9 +119,15 @@ class ImportExportController extends Controller
             'supplier_cost',
         ];
 
+        // One price column per additional currency the organization uses.
+        $currencies = ProductCurrencyColumns::currenciesFor($request->user()->organization_id);
+        foreach ($currencies as $code) {
+            $headers[] = 'price_'.$code;
+        }
+
         $filename = 'product_import_template.csv';
 
-        $callback = function () use ($headers) {
+        $callback = function () use ($headers, $currencies) {
             $file = fopen('php://output', 'w');
             fputcsv($file, $headers, escape: '');
 
@@ -128,6 +150,7 @@ class ImportExportController extends Controller
                 'Example Supplier',
                 'EX-SUP-001',
                 '45.00',
+                ...array_fill(0, count($currencies), ''),
             ], escape: '');
 
             fclose($file);
@@ -148,7 +171,7 @@ class ImportExportController extends Controller
     public function importProducts(Request $request)
     {
         $request->validate([
-            'file' => 'required|file|mimes:csv,txt,xlsx,xls|mimetypes:text/csv,text/plain,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel|max:10240', // 10MB max
+            'file' => self::IMPORT_FILE_RULE,
         ]);
 
         try {
@@ -172,16 +195,11 @@ class ImportExportController extends Controller
 
             $stats = $import->getStats();
 
-            if (count($stats['errors']) > 0) {
-                return redirect()->route('import-export.index')
-                    ->with('warning', [
-                        'message' => 'Import completed with some errors',
-                        'stats' => $stats,
-                    ]);
-            }
-
-            return redirect()->route('import-export.index')
-                ->with('success', 'Products imported successfully! Created: '.$stats['imported'].', Updated: '.$stats['updated']);
+            return $this->redirectWithImportResult(
+                'products',
+                $stats,
+                'Products imported successfully! Created: '.$stats['imported'].', Updated: '.$stats['updated'],
+            );
         } catch (\Exception $e) {
             Log::error('Product import failed', [
                 'user_id' => $request->user()->id,
@@ -196,6 +214,178 @@ class ImportExportController extends Controller
     }
 
     /**
+     * Download the user import template. There is deliberately no password
+     * column: imported users set their own password via an emailed link.
+     */
+    public function downloadUserTemplate(): StreamedResponse
+    {
+        return response()->stream(function () {
+            $file = fopen('php://output', 'w');
+            fputcsv($file, ['name', 'email', 'role', 'roles'], escape: '');
+            fputcsv($file, ['Example Member', 'member@example.com', 'member', 'Picker; Packer'], escape: '');
+            fputcsv($file, ['Example Manager', 'manager@example.com', 'manager', ''], escape: '');
+            fclose($file);
+        }, 200, [
+            'Content-Type' => 'text/csv',
+            'Content-Disposition' => 'attachment; filename="user_import_template.csv"',
+        ]);
+    }
+
+    /**
+     * Import users into the current organization.
+     *
+     * `send_invites` (default on) emails each new user a set-password link;
+     * off leaves the invitation pending (they use "Forgot your password?").
+     * Role assignment goes through the same escalation guard as the user form.
+     */
+    public function importUsers(Request $request): RedirectResponse
+    {
+        $request->validate([
+            'file' => self::IMPORT_FILE_RULE,
+            'send_invites' => 'nullable|boolean',
+        ]);
+
+        $user = $request->user();
+
+        try {
+            $import = new UsersImport($user, $request->boolean('send_invites', true));
+            Excel::import($import, $request->file('file'));
+            $stats = $import->getStats();
+
+            return $this->redirectWithImportResult(
+                'users',
+                $stats,
+                'Users imported successfully! Created: '.$stats['imported'],
+            );
+        } catch (\Exception $e) {
+            Log::error('User import failed', [
+                'user_id' => $user->id,
+                'organization_id' => $user->organization_id,
+                'error' => $e->getMessage(),
+            ]);
+
+            return redirect()->route('import-export.index')
+                ->with('error', 'Import failed: '.$e->getMessage());
+        }
+    }
+
+    /**
+     * Download the order import template.
+     *
+     * One row per order line; rows sharing an external_reference are one
+     * order. See OrdersImport for the full format.
+     */
+    public function downloadOrderTemplate(): StreamedResponse
+    {
+        $headers = [
+            'external_reference', 'order_date', 'status', 'customer_name', 'customer_email',
+            'product_sku', 'variant_sku', 'quantity', 'unit_price', 'line_tax',
+            'order_tax', 'order_shipping', 'currency', 'shipped_at', 'delivered_at', 'notes',
+        ];
+
+        $examples = [
+            ['SHOP-1001', '2026-01-15', 'delivered', 'Example Customer', 'customer@example.com', 'SKU-001', '', '2', '19.99', '', '4.00', '5.00', 'USD', '2026-01-16', '2026-01-18', 'Imported from old shop'],
+            ['SHOP-1001', '', '', '', '', '', 'SKU-002-L', '1', '29.99', '', '', '', '', '', '', ''],
+            ['SHOP-1002', '2026-01-16', 'pending', 'Another Customer', '', 'SKU-001', '', '1', '', '', '', '', '', '', '', ''],
+        ];
+
+        return response()->stream(function () use ($headers, $examples) {
+            $file = fopen('php://output', 'w');
+            fputcsv($file, $headers, escape: '');
+            foreach ($examples as $row) {
+                fputcsv($file, $row, escape: '');
+            }
+            fclose($file);
+        }, 200, [
+            'Content-Type' => 'text/csv',
+            'Content-Disposition' => 'attachment; filename="order_import_template.csv"',
+        ]);
+    }
+
+    /**
+     * Import orders from a CSV/Excel file (one row per order line).
+     *
+     * `historical` records the orders without adjusting stock and never fires
+     * order.created webhooks. `notify_integrations` (default on) controls the
+     * order.created webhooks / plugin hooks for a stock-adjusting import.
+     * Large files are queued like the product import.
+     */
+    public function importOrders(Request $request): RedirectResponse
+    {
+        $request->validate([
+            'file' => self::IMPORT_FILE_RULE,
+            'historical' => 'nullable|boolean',
+            'notify_integrations' => 'nullable|boolean',
+        ]);
+
+        $user = $request->user();
+        $historical = $request->boolean('historical');
+        $notifyIntegrations = $request->boolean('notify_integrations', true);
+        $file = $request->file('file');
+
+        try {
+            if ($file->getSize() > config('imports.sync_max_kb') * 1024) {
+                $disk = config('imports.disk');
+                $path = $file->store('imports/'.$user->organization_id, $disk);
+
+                ProcessOrderImportJob::dispatch($user->organization_id, $user->id, $disk, $path, $historical, $notifyIntegrations);
+
+                return redirect()->route('import-export.index')
+                    ->with('success', "Your order import is being processed. You'll be notified when it's complete.");
+            }
+
+            $import = new OrdersImport($user, $historical, $notifyIntegrations);
+            Excel::import($import, $file);
+            $stats = $import->getStats();
+
+            return $this->redirectWithImportResult(
+                'orders',
+                $stats,
+                'Orders imported successfully! Created: '.$stats['imported'].', Skipped (already imported): '.$stats['skipped'],
+            );
+        } catch (\Exception $e) {
+            Log::error('Order import failed', [
+                'user_id' => $user->id,
+                'organization_id' => $user->organization_id,
+                'file' => $file?->getClientOriginalName(),
+                'error' => $e->getMessage(),
+            ]);
+
+            return redirect()->route('import-export.index')
+                ->with('error', 'Import failed: '.$e->getMessage());
+        }
+    }
+
+    /**
+     * Redirect back to the import page with an import's outcome.
+     *
+     * A clean import flashes a plain success string (rendered globally). An
+     * import with row errors OR warnings flashes a structured payload instead,
+     * which the Import/Export page renders row by row: warnings such as
+     * duplicate-SKU skips are not failures, but the user still needs to see
+     * them rather than have them silently dropped.
+     *
+     * @param  array<string, mixed>  $stats
+     */
+    private function redirectWithImportResult(string $type, array $stats, string $successMessage): RedirectResponse
+    {
+        $errors = count($stats['errors'] ?? []);
+        $warnings = count($stats['warnings'] ?? []);
+
+        $redirect = redirect()->route('import-export.index');
+
+        if ($errors === 0 && $warnings === 0) {
+            return $redirect->with('success', $successMessage);
+        }
+
+        return $redirect->with('warning', [
+            'type' => $type,
+            'message' => $errors > 0 ? 'Import completed with some errors' : 'Import completed with warnings',
+            'stats' => $stats,
+        ]);
+    }
+
+    /**
      * Export orders to Excel file.
      *
      * @param  Request  $request  The incoming HTTP request containing export filters
@@ -205,7 +395,11 @@ class ImportExportController extends Controller
     {
         $filters = $request->only(['status', 'date_from', 'date_to', 'customer_id']);
 
-        return $this->streamOrQueueExport($request, 'orders', $filters);
+        // mode=lines exports one row per order line (see OrderLinesExport);
+        // the default stays one row per order.
+        $type = $request->query('mode') === 'lines' ? 'order_lines' : 'orders';
+
+        return $this->streamOrQueueExport($request, $type, $filters);
     }
 
     /**
@@ -274,6 +468,13 @@ class ImportExportController extends Controller
         // Route-model binding is org-scoped by the global scope, so a
         // cross-tenant id already 404s; guard the file state explicitly.
         abort_unless($dataExport->isDownloadable(), 404);
+
+        // A user export needs view_users to create (see the route), so the
+        // stored file needs it to download too.
+        abort_if(
+            $dataExport->type === 'users' && ! $request->user()->hasPermission('view_users'),
+            403,
+        );
 
         return Storage::disk($dataExport->disk)->download($dataExport->path, $dataExport->filename);
     }

@@ -563,9 +563,14 @@ final class NotificationService
     /**
      * Notify the requesting user that a queued import has finished.
      *
-     * @param  array{imported?: int, updated?: int, errors?: array<int, mixed>}  $stats
+     * Row errors and warnings are counted in the message and the first few of
+     * each are kept on the notification, so a queued import's warnings (e.g.
+     * duplicate-SKU skips) are not lost just because nobody was on the page.
+     *
+     * @param  array{imported?: int, updated?: int, skipped?: int, errors?: array<int, mixed>, warnings?: array<int, mixed>}  $stats
+     * @param  string  $subject  What was imported, e.g. "product" or "order".
      */
-    public static function createImportCompleteNotification(int $organizationId, int $userId, array $stats): void
+    public static function createImportCompleteNotification(int $organizationId, int $userId, array $stats, string $subject = 'product'): void
     {
         $user = User::find($userId);
         if (! $user || ! self::shouldNotifyUser($user, 'import_complete')) {
@@ -573,20 +578,38 @@ final class NotificationService
         }
 
         $imported = $stats['imported'] ?? 0;
-        $updated = $stats['updated'] ?? 0;
         $errorCount = count($stats['errors'] ?? []);
-        $errorNote = $errorCount > 0 ? ", {$errorCount} error(s)" : '';
+        $warningCount = count($stats['warnings'] ?? []);
+
+        $parts = ["{$imported} created"];
+        if (array_key_exists('updated', $stats)) {
+            $parts[] = "{$stats['updated']} updated";
+        }
+        if (array_key_exists('skipped', $stats)) {
+            $parts[] = "{$stats['skipped']} skipped";
+        }
+        if ($errorCount > 0) {
+            $parts[] = "{$errorCount} error(s)";
+        }
+        if ($warningCount > 0) {
+            $parts[] = "{$warningCount} warning(s)";
+        }
 
         Notification::create([
             'organization_id' => $organizationId,
             'user_id' => $userId,
             'type' => 'import_complete',
             'title' => 'Import Complete',
-            'message' => "Your product import finished: {$imported} created, {$updated} updated{$errorNote}.",
+            'message' => "Your {$subject} import finished: ".implode(', ', $parts).'.',
             'data' => [
+                'subject' => $subject,
                 'imported' => $imported,
-                'updated' => $updated,
+                'updated' => $stats['updated'] ?? null,
+                'skipped' => $stats['skipped'] ?? null,
                 'error_count' => $errorCount,
+                'warning_count' => $warningCount,
+                'errors' => array_slice($stats['errors'] ?? [], 0, 50),
+                'warnings' => array_slice($stats['warnings'] ?? [], 0, 50),
             ],
             'action_url' => route('import-export.index'),
             'priority' => $errorCount > 0 ? 'high' : 'normal',
@@ -596,7 +619,7 @@ final class NotificationService
     /**
      * Notify the requesting user that a queued import failed.
      */
-    public static function createImportFailedNotification(int $organizationId, int $userId): void
+    public static function createImportFailedNotification(int $organizationId, int $userId, string $subject = 'product'): void
     {
         $user = User::find($userId);
         if (! $user || ! self::shouldNotifyUser($user, 'import_failed')) {
@@ -608,7 +631,7 @@ final class NotificationService
             'user_id' => $userId,
             'type' => 'import_failed',
             'title' => 'Import Failed',
-            'message' => 'Your product import could not be processed. Please check the file and try again.',
+            'message' => "Your {$subject} import could not be processed. Please check the file and try again.",
             'data' => [],
             'action_url' => route('import-export.index'),
             'priority' => 'high',

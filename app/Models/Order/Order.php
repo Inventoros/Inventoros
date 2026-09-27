@@ -34,6 +34,7 @@ use Illuminate\Support\Carbon;
  * @property string|null $invoice_sent_to
  * @property string|null $source
  * @property string|null $external_id
+ * @property string|null $external_reference
  * @property string|null $customer_name
  * @property string|null $customer_email
  * @property string|null $customer_address
@@ -91,6 +92,7 @@ class Order extends Model
         'invoice_sent_to',
         'source',
         'external_id',
+        'external_reference',
         'customer_name',
         'customer_email',
         'customer_address',

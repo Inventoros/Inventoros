@@ -9,6 +9,7 @@ use App\Models\Inventory\ProductCategory;
 use App\Models\Inventory\ProductLocation;
 use App\Models\Inventory\Supplier;
 use App\Services\ProductService;
+use App\Support\ProductCurrencyColumns;
 use App\Support\SpreadsheetSafety;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Validator;
@@ -77,6 +78,12 @@ final class ProductsImport implements SkipsOnFailure, ToCollection, WithChunkRea
     protected int $rowOffset = 0;
 
     /**
+     * Whether unknown price_xxx columns have already been reported, so the
+     * warning is raised once per file rather than once per row.
+     */
+    protected bool $unknownCurrenciesReported = false;
+
+    /**
      * Create a new import instance.
      *
      * @param  int  $organizationId  The organization to import products into
@@ -98,13 +105,20 @@ final class ProductsImport implements SkipsOnFailure, ToCollection, WithChunkRea
 
             try {
                 // Validate the row
-                $validator = Validator::make($row->toArray(), [
+                $currencyColumns = $this->currencyColumns($row->keys()->all(), $rowNumber);
+
+                $rules = [
                     'name' => 'required|string|max:255',
                     'sku' => 'required|string|max:255',
                     'price' => 'required|numeric|min:0',
                     'stock' => 'required|integer|min:0',
                     'min_stock' => 'nullable|integer|min:0',
-                ]);
+                ];
+                foreach (array_keys($currencyColumns) as $key) {
+                    $rules[$key] = 'nullable|numeric|min:0';
+                }
+
+                $validator = Validator::make($row->toArray(), $rules);
 
                 if ($validator->fails()) {
                     $this->errors[] = [
@@ -122,7 +136,7 @@ final class ProductsImport implements SkipsOnFailure, ToCollection, WithChunkRea
                 if (isset($this->seenSkus[$sku])) {
                     $this->warnings[] = [
                         'row' => $rowNumber,
-                        'warnings' => ["Duplicate SKU '{$sku}' in this file — row skipped (first occurrence kept)."],
+                        'warnings' => ["Duplicate SKU '{$sku}' in this file; row skipped (first occurrence kept)."],
                     ];
 
                     continue;
@@ -194,6 +208,14 @@ final class ProductsImport implements SkipsOnFailure, ToCollection, WithChunkRea
                     'notes' => $sanitise($row['notes'] ?? null),
                     'organization_id' => $this->organizationId,
                 ];
+
+                if ($currencyColumns !== []) {
+                    $productData['price_in_currencies'] = $this->mergeCurrencyPrices(
+                        $product?->price_in_currencies,
+                        $row,
+                        $currencyColumns,
+                    );
+                }
 
                 if ($product) {
                     // Update existing product, restoring it first if it was
@@ -276,6 +298,66 @@ final class ProductsImport implements SkipsOnFailure, ToCollection, WithChunkRea
             'supplier_sku' => $sku !== '' ? mb_substr((string) SpreadsheetSafety::sanitiseImport($sku), 0, 255) : null,
             'cost_price' => $costPrice,
         ]);
+    }
+
+    /**
+     * The row's per-currency price columns (price_eur => EUR), limited to the
+     * supported currencies. Unknown price_xxx columns are reported once.
+     *
+     * @param  array<int, int|string>  $keys
+     * @return array<string, string>
+     */
+    protected function currencyColumns(array $keys, int $rowNumber): array
+    {
+        $columns = [];
+        $unknown = [];
+
+        foreach ($keys as $key) {
+            $code = ProductCurrencyColumns::currencyFromImportKey((string) $key);
+            if ($code === null) {
+                continue;
+            }
+
+            if (ProductCurrencyColumns::isSupported($code)) {
+                $columns[(string) $key] = $code;
+            } else {
+                $unknown[] = (string) $key;
+            }
+        }
+
+        if ($unknown !== [] && ! $this->unknownCurrenciesReported) {
+            $this->unknownCurrenciesReported = true;
+            $this->warn($rowNumber, 'Unknown currency column(s) ignored: '.implode(', ', $unknown).'.');
+        }
+
+        return $columns;
+    }
+
+    /**
+     * Apply the row's currency columns over the product's existing prices. A
+     * filled cell sets that currency, a blank cell removes it, and currencies
+     * without a column in the file are left untouched.
+     *
+     * @param  array<string, mixed>|null  $existing
+     * @param  Collection<string, mixed>|array<string, mixed>  $row
+     * @param  array<string, string>  $columns
+     * @return array<string, float>|null
+     */
+    protected function mergeCurrencyPrices(?array $existing, $row, array $columns): ?array
+    {
+        $prices = array_change_key_case($existing ?? [], CASE_UPPER);
+
+        foreach ($columns as $key => $code) {
+            $value = $row[$key] ?? null;
+
+            if ($value === null || trim((string) $value) === '') {
+                unset($prices[$code]);
+            } else {
+                $prices[$code] = round((float) $value, 2);
+            }
+        }
+
+        return $prices === [] ? null : $prices;
     }
 
     /**

@@ -46,8 +46,15 @@ Route::prefix('import-export')->name('import-export.')->group(function () {
     Route::get('/', [ImportExportController::class, 'index'])->middleware('permission:export_data|import_data')->name('index');
     Route::get('/export-products', [ImportExportController::class, 'exportProducts'])->middleware('permission:export_data')->name('export-products');
     Route::get('/export-orders', [ImportExportController::class, 'exportOrders'])->middleware('permission:export_data')->name('export-orders');
-    Route::get('/export-users', [ImportExportController::class, 'exportUsers'])->middleware('permission:export_data')->name('export-users');
+    // The user list (emails, roles) is only for people who may view users.
+    Route::get('/export-users', [ImportExportController::class, 'exportUsers'])->middleware(['permission:export_data', 'permission:view_users'])->name('export-users');
     Route::get('/downloads/{dataExport}', [ImportExportController::class, 'download'])->middleware('permission:export_data')->name('download');
     Route::get('/download-template', [ImportExportController::class, 'downloadTemplate'])->middleware('permission:import_data')->name('download-template');
     Route::post('/import-products', [ImportExportController::class, 'importProducts'])->middleware('permission:import_data')->name('import-products');
+    // Order import creates orders (and customers), so it needs create_orders too.
+    Route::get('/download-order-template', [ImportExportController::class, 'downloadOrderTemplate'])->middleware(['permission:import_data', 'permission:create_orders'])->name('download-order-template');
+    Route::post('/import-orders', [ImportExportController::class, 'importOrders'])->middleware(['permission:import_data', 'permission:create_orders'])->name('import-orders');
+    // User import creates accounts, so it needs create_users too.
+    Route::get('/download-user-template', [ImportExportController::class, 'downloadUserTemplate'])->middleware(['permission:import_data', 'permission:create_users'])->name('download-user-template');
+    Route::post('/import-users', [ImportExportController::class, 'importUsers'])->middleware(['permission:import_data', 'permission:create_users'])->name('import-users');
 });

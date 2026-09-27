@@ -20,7 +20,7 @@ final class ExportFactory
      *
      * @var array<int, string>
      */
-    public const TYPES = ['products', 'orders', 'users'];
+    public const TYPES = ['products', 'orders', 'order_lines', 'users'];
 
     /**
      * Build the export instance for a given type.
@@ -32,6 +32,7 @@ final class ExportFactory
         return match ($type) {
             'products' => new ProductsExport($organizationId, $filters),
             'orders' => new OrdersExport($organizationId, $filters),
+            'order_lines' => new OrderLinesExport($organizationId, $filters),
             'users' => new UsersExport($organizationId, $filters),
             default => throw new \InvalidArgumentException("Unknown export type: {$type}"),
         };

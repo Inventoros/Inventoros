@@ -6,6 +6,7 @@ namespace App\Exports;
 
 use App\Models\Inventory\Product;
 use App\Services\ReorderService;
+use App\Support\ProductCurrencyColumns;
 use Maatwebsite\Excel\Concerns\FromQuery;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithMapping;
@@ -32,6 +33,13 @@ final class ProductsExport implements FromQuery, WithHeadings, WithMapping, With
      * @var array
      */
     protected $filters;
+
+    /**
+     * Additional currencies exported as one price column each, resolved once.
+     *
+     * @var array<int, string>|null
+     */
+    private ?array $currencies = null;
 
     /**
      * Create a new export instance.
@@ -101,7 +109,19 @@ final class ProductsExport implements FromQuery, WithHeadings, WithMapping, With
             'Supplier Name',
             'Supplier SKU',
             'Supplier Cost',
+            ...array_map(fn (string $code) => "Price {$code}", $this->currencies()),
         ];
+    }
+
+    /**
+     * The additional currencies this organization prices products in. Each
+     * becomes a "Price XXX" column, which the importer reads back as price_xxx.
+     *
+     * @return array<int, string>
+     */
+    private function currencies(): array
+    {
+        return $this->currencies ??= ProductCurrencyColumns::currenciesFor((int) $this->organizationId);
     }
 
     /**
@@ -111,6 +131,7 @@ final class ProductsExport implements FromQuery, WithHeadings, WithMapping, With
     {
         // Only the primary supplier link is eager-loaded (see query()).
         $primary = $product->suppliers->first();
+        $prices = array_change_key_case((array) ($product->price_in_currencies ?? []), CASE_UPPER);
 
         return \App\Support\SpreadsheetSafety::neutraliseRow([
             $product->id,
@@ -132,6 +153,10 @@ final class ProductsExport implements FromQuery, WithHeadings, WithMapping, With
             $primary?->name ?? '',
             $primary?->pivot?->supplier_sku ?? '',
             $primary?->pivot?->cost_price ?? '',
+            ...array_map(
+                fn (string $code) => $prices[$code] ?? '',
+                $this->currencies(),
+            ),
         ]);
     }
 

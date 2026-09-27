@@ -23,6 +23,13 @@ final class OrderObserver
      */
     public function created(Order $order): void
     {
+        // A bulk order import would otherwise raise one "new order" alert per
+        // imported (often historical) order. The importer gets a single
+        // summary instead.
+        if ($order->source === 'import') {
+            return;
+        }
+
         NotificationService::createOrderCreatedNotification($order);
     }
 
