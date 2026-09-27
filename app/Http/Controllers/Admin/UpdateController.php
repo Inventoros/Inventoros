@@ -130,11 +130,15 @@ class UpdateController extends Controller
 
         try {
             $backupPath = $this->updateService->createBackup();
+            $method = $this->updateService->lastDatabaseBackupMethod();
 
             return response()->json([
                 'success' => true,
-                'message' => 'Backup created successfully',
+                'message' => $method === 'none'
+                    ? 'Backup created without the database (INVENTOROS_UPDATE_ALLOW_NO_DB_BACKUP is set)'
+                    : "Backup created successfully (database backed up using {$method})",
                 'backupPath' => $backupPath,
+                'databaseMethod' => $method,
             ]);
         } catch (\Exception $e) {
             Log::error('Backup creation failed', [

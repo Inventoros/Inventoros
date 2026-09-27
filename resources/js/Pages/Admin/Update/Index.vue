@@ -107,12 +107,12 @@ const createBackup = async () => {
         const response = await axios.post(route('admin.update.backup'));
 
         if (response.data.success) {
-            alert('Backup created successfully!');
+            alert(response.data.message || 'Backup created successfully!');
             router.reload();
         }
     } catch (error) {
         console.error('Backup failed:', error);
-        alert('Failed to create backup. Please check the logs.');
+        alert(error.response?.data?.message || 'Failed to create backup. Please check the logs.');
     } finally {
         isCreatingBackup.value = false;
     }

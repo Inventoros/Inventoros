@@ -62,11 +62,11 @@ final class BackupServiceTest extends TestCase
                 return ['app', 'storage'];
             }
 
-            protected function backupDatabase(string $outputPath): bool
+            protected function backupDatabase(string $outputBase): ?array
             {
-                File::put($outputPath, '-- fake dump');
+                File::put($outputBase.'.sql', '-- fake dump');
 
-                return true;
+                return ['driver' => 'sqlite', 'method' => 'php-dump', 'path' => $outputBase.'.sql', 'file' => 'database.sql'];
             }
         };
     }
@@ -125,58 +125,19 @@ final class BackupServiceTest extends TestCase
         $this->assertContains('app/Foo.php', $names);
     }
 
-    public function test_import_database_dump_skips_non_mysql_drivers(): void
+    public function test_restore_refuses_a_legacy_mysql_dump_on_another_driver(): void
     {
-        // The suite runs on sqlite, whose data is restored via file replacement,
-        // so a SQL import is a graceful no-op rather than an error.
-        $dump = $this->root.'/database.sql';
-        File::makeDirectory($this->root, 0755, true, true);
-        File::put($dump, '-- noop');
+        // A manifest-less backup with database.sql came from mysqldump. On a
+        // SQLite install that dump cannot be replayed, and silently skipping
+        // it would report a restore that never touched the data.
+        config(['database.connections.legacy_probe' => ['driver' => 'sqlite', 'database' => ':memory:', 'prefix' => '']]);
+        config(['database.default' => 'legacy_probe']);
 
-        $this->assertFalse((new BackupService($this->backupDir))->importDatabaseDump($dump));
-    }
+        $dir = $this->root.'/extract';
+        File::makeDirectory($dir, 0755, true, true);
+        File::put($dir.'/database.sql', '-- dump');
 
-    public function test_mysql_import_passes_the_password_via_env_not_the_command_line(): void
-    {
-        config([
-            'database.default' => 'mysql',
-            'database.connections.mysql' => [
-                'driver' => 'mysql',
-                'username' => 'dbuser',
-                'password' => 'sup3r-secret-pw',
-                'host' => '127.0.0.1',
-                'database' => 'inventoros',
-            ],
-        ]);
-
-        $dump = $this->root.'/database.sql';
-        File::makeDirectory($this->root, 0755, true, true);
-        File::put($dump, '-- dump');
-
-        $service = new class($this->backupDir) extends BackupService
-        {
-            public ?string $captured = null;
-
-            public ?string $pwdDuringRun = null;
-
-            protected function runCommand(string $command): int
-            {
-                $this->captured = $command;
-                $this->pwdDuringRun = getenv('MYSQL_PWD') ?: null;
-
-                return 0;
-            }
-        };
-
-        $this->assertTrue($service->importDatabaseDump($dump));
-
-        // The password never appears on the command line (process list).
-        $this->assertStringNotContainsString('--password', (string) $service->captured);
-        $this->assertStringNotContainsString('sup3r-secret-pw', (string) $service->captured);
-
-        // It is supplied to the child process via MYSQL_PWD instead, and the
-        // env var is cleaned up afterwards.
-        $this->assertSame('sup3r-secret-pw', $service->pwdDuringRun);
-        $this->assertFalse(getenv('MYSQL_PWD'));
+        $this->expectException(\RuntimeException::class);
+        (new BackupService($this->backupDir))->restoreDatabase($dir);
     }
 }

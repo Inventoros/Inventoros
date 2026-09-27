@@ -85,6 +85,15 @@ class UpdateService
     }
 
     /**
+     * How the database was captured by the last backup (mysqldump, pg_dump,
+     * sqlite-snapshot, php-dump, or none).
+     */
+    public function lastDatabaseBackupMethod(): ?string
+    {
+        return $this->backupService->lastDatabaseBackupMethod();
+    }
+
+    /**
      * List available backups.
      *
      * @return array<int, array{filename: string, path: string, size: int, created_at: int}> List of backup files sorted by creation time
@@ -138,7 +147,10 @@ class UpdateService
 
             // Step 2: Create backup
             $this->log($progressCallback, 'Creating backup...');
+            // createBackup() throws when the database could not be captured,
+            // which aborts the update here, before anything is touched.
             $backupPath = $this->backupService->createBackup();
+            $this->log($progressCallback, 'Database backed up using '.$this->backupService->lastDatabaseBackupMethod());
 
             // Step 3: Download release
             $this->log($progressCallback, 'Downloading update...');
@@ -281,14 +293,12 @@ class UpdateService
             // Restore files
             $this->fileService->replaceFiles($extractPath);
 
-            // Import the database dump if the backup carried one. Without this
-            // a MySQL restore only rolled back the files and silently left the
-            // database on the failed/newer schema. SQLite and other file-based
-            // databases are already restored by the file replacement above.
-            $databaseDump = $extractPath.'/database.sql';
-            if (File::exists($databaseDump)) {
-                $this->backupService->importDatabaseDump($databaseDump);
-            }
+            // Restore the database the same way it was captured (the archive's
+            // manifest records the method). A failure throws and fails the
+            // whole restore loudly rather than reporting success over data
+            // that was never rolled back.
+            $databaseMethod = $this->backupService->restoreDatabase($extractPath);
+            Log::info('Backup restore: database', ['method' => $databaseMethod ?? 'none (files-only backup)']);
 
             // Clear caches
             Artisan::call('optimize:clear');

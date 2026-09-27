@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Unit;
 
 use App\Services\Update\BackupService;
+use App\Services\Update\DatabaseBackupFailedException;
 use App\Services\Update\FileUpdateService;
 use App\Services\Update\GitHubReleaseService;
 use App\Services\UpdateService;
@@ -31,6 +32,7 @@ final class UpdateServiceRollbackTest extends TestCase
         $files = Mockery::mock(FileUpdateService::class);
 
         $backups->shouldReceive('createBackup')->once()->andReturn('/tmp/backup_test.zip');
+        $backups->shouldReceive('lastDatabaseBackupMethod')->andReturn('pg_dump');
         $files->shouldReceive('downloadRelease')->once()->andReturn('/tmp/update.zip');
         $files->shouldReceive('verifyArchiveSignature')->once();
         $files->shouldReceive('extractZip')->once()->andReturn('/tmp/extracted');
@@ -65,6 +67,7 @@ final class UpdateServiceRollbackTest extends TestCase
         $files = Mockery::mock(FileUpdateService::class);
 
         $backups->shouldReceive('createBackup')->once()->andReturn('/tmp/backup_test.zip');
+        $backups->shouldReceive('lastDatabaseBackupMethod')->andReturn('pg_dump');
         $files->shouldReceive('downloadRelease')->once()->andReturn('/tmp/update.zip');
         $files->shouldReceive('verifyArchiveSignature')->once();
         $files->shouldReceive('extractZip')->once()->andReturn('/tmp/extracted');
@@ -106,5 +109,50 @@ final class UpdateServiceRollbackTest extends TestCase
         } finally {
             $held->release();
         }
+    }
+
+    public function test_update_reports_the_database_backup_method(): void
+    {
+        Artisan::shouldReceive('call')->andReturn(0);
+
+        $github = Mockery::mock(GitHubReleaseService::class);
+        $backups = Mockery::mock(BackupService::class);
+        $files = Mockery::mock(FileUpdateService::class);
+
+        $backups->shouldReceive('createBackup')->once()->andReturn('/tmp/backup_test.zip');
+        $backups->shouldReceive('lastDatabaseBackupMethod')->andReturn('php-dump');
+        $files->shouldReceive('downloadRelease')->andThrow(new \RuntimeException('stop here'));
+
+        $messages = [];
+        (new UpdateService($github, $backups, $files))->update(
+            'https://github.com/Inventoros/Inventoros/releases/download/v9.9.9/x.zip',
+            function (string $message) use (&$messages) {
+                $messages[] = $message;
+            }
+        );
+
+        $this->assertContains('Database backed up using php-dump', $messages);
+    }
+
+    public function test_update_refuses_to_proceed_when_the_database_backup_fails(): void
+    {
+        // The app is never taken down (only the defensive 'up' in the error path runs).
+        Artisan::shouldReceive('call')->with('down', Mockery::any())->never();
+        Artisan::shouldReceive('call')->with('up')->andReturn(0);
+
+        $github = Mockery::mock(GitHubReleaseService::class);
+        $backups = Mockery::mock(BackupService::class);
+        $files = Mockery::mock(FileUpdateService::class);
+
+        $backups->shouldReceive('createBackup')->once()
+            ->andThrow(new DatabaseBackupFailedException('Could not back up the database'));
+        $files->shouldReceive('downloadRelease')->never();
+        $files->shouldReceive('replaceFiles')->never();
+
+        $result = (new UpdateService($github, $backups, $files))
+            ->update('https://github.com/Inventoros/Inventoros/releases/download/v9.9.9/x.zip');
+
+        $this->assertFalse($result['success']);
+        $this->assertStringContainsString('Could not back up the database', $result['message']);
     }
 }

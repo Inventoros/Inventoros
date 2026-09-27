@@ -128,6 +128,7 @@ class UpdateCommand extends Command
         try {
             $backupPath = $this->updateService->createBackup();
             $this->info("✓ Backup created successfully: {$backupPath}");
+            $this->info('  Database backed up using: '.$this->updateService->lastDatabaseBackupMethod());
             return self::SUCCESS;
         } catch (\Exception $e) {
             $this->error("Backup failed: {$e->getMessage()}");

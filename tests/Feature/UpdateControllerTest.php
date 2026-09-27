@@ -150,4 +150,32 @@ class UpdateControllerTest extends TestCase
 
         $response->assertStatus(422);
     }
+
+    public function test_backup_response_reports_the_database_backup_method(): void
+    {
+        $this->mock(\App\Services\UpdateService::class, function ($mock) {
+            $mock->shouldReceive('createBackup')->once()->andReturn('/backups/backup_x.zip');
+            $mock->shouldReceive('lastDatabaseBackupMethod')->andReturn('pg_dump');
+        });
+
+        $response = $this->actingAs($this->admin)->postJson(route('admin.update.backup'));
+
+        $response->assertOk()
+            ->assertJson(['success' => true, 'databaseMethod' => 'pg_dump']);
+        $this->assertStringContainsString('pg_dump', $response->json('message'));
+    }
+
+    public function test_backup_response_surfaces_a_database_backup_failure(): void
+    {
+        $this->mock(\App\Services\UpdateService::class, function ($mock) {
+            $mock->shouldReceive('createBackup')->once()->andThrow(
+                new \App\Services\Update\DatabaseBackupFailedException('Could not back up the database with any available method')
+            );
+        });
+
+        $response = $this->actingAs($this->admin)->postJson(route('admin.update.backup'));
+
+        $response->assertStatus(500)->assertJson(['success' => false]);
+        $this->assertStringContainsString('Could not back up the database', $response->json('message'));
+    }
 }
