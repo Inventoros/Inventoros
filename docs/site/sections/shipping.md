@@ -88,6 +88,14 @@ Omit `items` to ship every unit not yet in a shipment. Refusals (over-shipping, 
 
 To buy a label over the API, create the shipment with `"carrier": "easypost"` (and `weight_oz`), call `rates`, then `buy-label` with one of the returned rate ids. The label file is downloaded from the order page.
 
+### GraphQL
+
+`Order.shipments` lists an order's shipments (carrier, service, tracking number and link, status, cost, `shipped_at`, `delivered_at`, and `items` with the packed quantities). It is `null` unless the user holds `view_shipments` and the token allows it. The `shipments(order_id, status, carrier, limit)` query lists shipments newest first and needs `view_shipments` on both the role and the token.
+
+```graphql
+{ order(id: 42) { status shipments { carrier_name tracking_number tracking_url status items { product_name quantity } } } }
+```
+
 ### MCP tools
 
 - `list_shipments` (`view_shipments`). Paginated shipments, optionally for one order or status.
