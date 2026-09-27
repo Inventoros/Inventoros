@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace App\Imports;
 
+use App\Enums\SecurityEvent;
 use App\Models\Role;
 use App\Models\User;
 use App\Notifications\AccountInvitation;
+use App\Services\SecurityEventLogger;
 use App\Support\RoleAssignmentGuard;
 use App\Support\SpreadsheetSafety;
 use Illuminate\Support\Collection;
@@ -164,7 +166,17 @@ final class UsersImport implements ToCollection, WithHeadingRow
             ]);
 
             if ($roleIds !== []) {
-                $user->roles()->sync($roleIds);
+                // sync() writes the pivot directly, so log it like the user
+                // form does (the account creation itself is logged by
+                // UserSecurityObserver).
+                $changes = $user->roles()->sync($roleIds);
+                $names = Role::whereIn('id', $changes['attached'])->pluck('name')->all();
+
+                app(SecurityEventLogger::class)->record(SecurityEvent::USER_ROLES_SYNCED, $user, $this->importer, [
+                    'roles_added' => $names,
+                    'roles_removed' => [],
+                    'source' => 'import',
+                ]);
             }
 
             return $user;

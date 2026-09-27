@@ -110,6 +110,20 @@ final class UsersImportTest extends TestCase
         });
     }
 
+    public function test_imported_role_assignments_reach_the_security_log(): void
+    {
+        $this->import(['Pat Picker,pat@org.com,member,Picker']);
+
+        $pat = User::where('email', 'pat@org.com')->sole();
+        $entry = \App\Models\ActivityLog::where('action', 'user.roles_synced')
+            ->where('subject_type', User::class)
+            ->where('subject_id', $pat->id)
+            ->sole();
+
+        $this->assertSame($this->admin->id, $entry->user_id);
+        $this->assertStringContainsString('Picker', json_encode($entry->properties));
+    }
+
     public function test_invites_can_be_left_pending(): void
     {
         $this->import(['Pat Picker,pat@org.com,member,'], sendInvites: false);
