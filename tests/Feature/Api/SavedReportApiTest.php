@@ -235,6 +235,61 @@ class SavedReportApiTest extends TestCase
             ->assertHeader('content-type', 'text/csv; charset=UTF-8');
     }
 
+    public function test_export_supports_xlsx_and_pdf(): void
+    {
+        Sanctum::actingAs($this->admin);
+
+        \App\Models\Inventory\Product::create([
+            'organization_id' => $this->organization->id, 'name' => '=HYPERLINK("x")', 'sku' => 'API-X',
+            'price' => 5, 'currency' => 'USD', 'stock' => 7,
+        ]);
+        $report = $this->createSavedReport(['name' => 'Export Test']);
+
+        $xlsx = $this->get("/api/v1/reports/{$report->id}/export?format=xlsx");
+        $xlsx->assertStatus(200)
+            ->assertHeader('content-type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+
+        $path = tempnam(sys_get_temp_dir(), 'api').'.xlsx';
+        file_put_contents($path, $xlsx->streamedContent());
+        $sheet = \PhpOffice\PhpSpreadsheet\IOFactory::load($path)->getActiveSheet();
+        @unlink($path);
+        $this->assertSame("'=HYPERLINK(\"x\")", $sheet->getCell('A2')->getValue());
+        $this->assertSame(\PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_NUMERIC, $sheet->getCell('C2')->getDataType());
+
+        $pdf = $this->get("/api/v1/reports/{$report->id}/export?format=pdf");
+        $pdf->assertStatus(200)->assertHeader('content-type', 'application/pdf');
+        $this->assertStringStartsWith('%PDF', $pdf->streamedContent());
+    }
+
+    public function test_export_rejects_an_unknown_format(): void
+    {
+        Sanctum::actingAs($this->admin);
+
+        $report = $this->createSavedReport();
+
+        $this->getJson("/api/v1/reports/{$report->id}/export?format=html")
+            ->assertStatus(422)
+            ->assertJsonPath('error', 'invalid_format');
+    }
+
+    public function test_export_without_the_source_permission_is_forbidden_in_every_format(): void
+    {
+        $report = $this->createSavedReport(['is_shared' => true]);
+        $viewer = User::create([
+            'name' => 'Viewer', 'email' => 'viewer@test.com', 'password' => bcrypt('x'),
+            'organization_id' => $this->organization->id, 'role' => 'viewer',
+        ]);
+        $role = Role::create(['name' => 'Reports only', 'slug' => 'reports-only', 'is_system' => false, 'permissions' => ['view_reports']]);
+        $viewer->roles()->syncWithoutDetaching([$role->id]);
+        Sanctum::actingAs($viewer);
+
+        foreach (['csv', 'xlsx', 'pdf'] as $format) {
+            $this->getJson("/api/v1/reports/{$report->id}/export?format={$format}")
+                ->assertStatus(403)
+                ->assertJsonPath('error', 'forbidden');
+        }
+    }
+
     // ==================== AUTH TESTS ====================
 
     public function test_unauthenticated_gets_401(): void

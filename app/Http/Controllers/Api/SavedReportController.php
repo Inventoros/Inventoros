@@ -9,7 +9,8 @@ use App\Http\Requests\Api\SavedReport\StoreSavedReportRequest;
 use App\Http\Requests\Api\SavedReport\UpdateSavedReportRequest;
 use App\Models\SavedReport;
 use App\Services\ReportDataService;
-use App\Support\SpreadsheetSafety;
+use App\Services\Reports\ReportExporter;
+use App\Services\Reports\SavedReportRenderer;
 use Dedoc\Scramble\Attributes\QueryParameter;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\JsonResponse;
@@ -22,7 +23,8 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 class SavedReportController extends Controller
 {
     public function __construct(
-        private readonly ReportDataService $reportDataService
+        private readonly ReportDataService $reportDataService,
+        private readonly SavedReportRenderer $renderer,
     ) {}
 
     /**
@@ -268,11 +270,12 @@ class SavedReportController extends Controller
     }
 
     /**
-     * Export a saved report as CSV.
+     * Export a saved report as CSV (default), XLSX or PDF (?format=).
      *
      * @param  Request  $request  The incoming HTTP request
      * @param  SavedReport  $report  The saved report to export
      */
+    #[QueryParameter('format', description: 'Export format: csv (default), xlsx or pdf', type: 'string')]
     public function export(Request $request, SavedReport $report): StreamedResponse|JsonResponse
     {
         $user = $request->user();
@@ -291,15 +294,20 @@ class SavedReportController extends Controller
             ], 404);
         }
 
+        $format = (string) $request->query('format', 'csv');
+        if (! ReportExporter::isValidFormat($format)) {
+            return response()->json([
+                'message' => 'Unsupported export format. Use one of: '.implode(', ', ReportExporter::FORMATS).'.',
+                'error' => 'invalid_format',
+            ], 422);
+        }
+
+        // Same renderer as the web download and scheduled delivery: the rows
+        // are produced for the requesting user, so the per-source permission
+        // is re-checked, and CSV/XLSX cells are neutralised against formula
+        // injection.
         try {
-            $data = $this->reportDataService->executeReport(
-                $user,
-                $report->organization_id,
-                $report->data_source,
-                $report->columns,
-                $report->filters,
-                $report->sort
-            );
+            $rendered = $this->renderer->render($report, $user, $format);
         } catch (AuthorizationException $e) {
             return response()->json([
                 'message' => $e->getMessage(),
@@ -312,38 +320,13 @@ class SavedReportController extends Controller
             ], 500);
         }
 
-        $dataSources = $this->reportDataService->getAvailableDataSources();
-        $sourceConfig = $dataSources[$report->data_source] ?? [];
+        $filename = str_replace(' ', '_', strtolower($report->name)).'_'.now()->format('Y-m-d').'.'.$format;
 
-        // Build column headers
-        $headers = [];
-        foreach ($report->columns as $col) {
-            $headers[] = $sourceConfig['columns'][$col]['label'] ?? $col;
-        }
-
-        $filename = str_replace(' ', '_', strtolower($report->name)).'_'.now()->format('Y-m-d').'.csv';
-
-        return response()->streamDownload(function () use ($data, $report, $headers) {
-            $handle = fopen('php://output', 'w');
-
-            // Write UTF-8 BOM for Excel compatibility
-            fwrite($handle, "\xEF\xBB\xBF");
-
-            // Header row
-            fputcsv($handle, SpreadsheetSafety::neutraliseRow($headers), escape: '');
-
-            // Data rows
-            foreach ($data as $row) {
-                $csvRow = [];
-                foreach ($report->columns as $col) {
-                    $csvRow[] = $row->$col ?? '';
-                }
-                fputcsv($handle, SpreadsheetSafety::neutraliseRow($csvRow), escape: '');
-            }
-
-            fclose($handle);
+        return response()->streamDownload(function () use ($rendered): void {
+            echo $rendered->content;
         }, $filename, [
-            'Content-Type' => 'text/csv; charset=UTF-8',
+            'Content-Type' => $rendered->mimeType,
+            'X-Content-Type-Options' => 'nosniff',
         ]);
     }
 }
