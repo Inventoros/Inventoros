@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Api;
 
+use App\Enums\DiscountType;
 use App\Enums\OrderStatus;
 use App\Exceptions\DocumentEmailException;
 use App\Exceptions\InsufficientStockException;
@@ -113,6 +114,10 @@ class OrderController extends Controller
             'items.*.quantity' => ['required', 'integer', 'min:1'],
             'items.*.unit_price' => ['nullable', 'numeric', 'min:0'],
             'items.*.tax' => ['nullable', 'numeric', 'min:0'],
+            'items.*.discount_type' => ['nullable', Rule::in(DiscountType::values())],
+            'items.*.discount_value' => ['nullable', 'numeric', 'min:0', 'max:99999999'],
+            'discount_type' => ['nullable', Rule::in(DiscountType::values())],
+            'discount_value' => ['nullable', 'numeric', 'min:0', 'max:99999999'],
         ]);
 
         // API-specific defaults; the OrderService owns the create invariant
@@ -186,7 +191,15 @@ class OrderController extends Controller
             'status' => ['nullable', 'string', 'in:pending,processing,shipped,delivered,cancelled'],
             'notes' => ['nullable', 'string'],
             'metadata' => ['nullable', 'array'],
+            // Order-level discount; the totals are recomputed on the server.
+            'discount_type' => ['sometimes', 'nullable', Rule::in(DiscountType::values())],
+            'discount_value' => ['sometimes', 'nullable', 'numeric', 'min:0', 'max:99999999'],
         ]);
+
+        $discountChanged = array_key_exists('discount_type', $validated) || array_key_exists('discount_value', $validated);
+        $discountType = $validated['discount_type'] ?? null;
+        $discountValue = $validated['discount_value'] ?? null;
+        unset($validated['discount_type'], $validated['discount_value']);
 
         $cancelTransition = isset($validated['status'])
             && $validated['status'] === 'cancelled'
@@ -229,6 +242,10 @@ class OrderController extends Controller
         // guard re-checked under a row lock).
         if ($cancelTransition) {
             unset($validated['status']);
+        }
+
+        if ($discountChanged) {
+            $order = $this->orderService->changeOrderDiscount($order, $discountType, $discountValue);
         }
 
         if ($validated !== []) {

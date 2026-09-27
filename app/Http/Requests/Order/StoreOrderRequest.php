@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Requests\Order;
 
+use App\Enums\DiscountType;
 use App\Http\Requests\Concerns\ValidatesVariantLines;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
@@ -36,6 +37,8 @@ final class StoreOrderRequest extends FormRequest
             'order_date' => 'required|date',
             'shipping' => 'nullable|numeric|min:0',
             'tax' => 'nullable|numeric|min:0',
+            'discount_type' => ['nullable', Rule::in(DiscountType::values())],
+            'discount_value' => 'nullable|numeric|min:0|max:99999999',
             'notes' => 'nullable|string',
             'warehouse_id' => ['nullable', Rule::exists('warehouses', 'id')->where('organization_id', $organizationId)],
             'items' => 'required|array|min:1',
@@ -43,6 +46,8 @@ final class StoreOrderRequest extends FormRequest
             'items.*.product_variant_id' => ['nullable', Rule::exists('product_variants', 'id')->where('organization_id', $organizationId)],
             'items.*.quantity' => 'required|integer|min:1',
             'items.*.unit_price' => 'required|numeric|min:0',
+            'items.*.discount_type' => ['nullable', Rule::in(DiscountType::values())],
+            'items.*.discount_value' => 'nullable|numeric|min:0|max:99999999',
         ];
     }
 }

@@ -23,6 +23,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -146,6 +147,10 @@ class OrderController extends Controller
 
             return redirect()->route('orders.index')
                 ->with('success', 'Order created successfully.');
+        } catch (ValidationException $e) {
+            // Discount problems found while pricing the order are field
+            // errors; let Laravel send them back to the form.
+            throw $e;
         } catch (QueryException $e) {
             // Database errors carry SQL/table/column details in the
             // message that we don't want to render in an end-user flash
@@ -290,7 +295,6 @@ class OrderController extends Controller
                         $this->orderService->restockItem($item, "Order {$order->order_number} cancelled", $order);
                     }
 
-                    $subtotal = (float) $order->subtotal;
                 } else {
                     // Any other edit replaces the lines wholesale through the
                     // audited fulfilment paths (bin consume + serial/batch
@@ -299,17 +303,25 @@ class OrderController extends Controller
                     // or the tracked records the way a hand-rolled per-line adjust
                     // did. InsufficientStock / InvalidOrderItem both extend
                     // RuntimeException and are flashed by the catch below.
-                    $subtotal = (float) $this->orderService->replaceItems(
+                    $this->orderService->replaceItems(
                         $order,
                         $validated['items'],
                     );
                 }
 
-                // Update order totals and metadata
-                $validated['subtotal'] = $subtotal;
-                $validated['tax'] = $validated['tax'] ?? 0;
-                $validated['shipping'] = $validated['shipping'] ?? 0;
-                $validated['total'] = $subtotal + $validated['tax'] + $validated['shipping'];
+                // Recompute every total on the server from the stored lines
+                // (discounts, tax, shipping). A bad discount, or a total cut
+                // below what has already been paid, throws a
+                // ValidationException that rolls the edit back and returns
+                // the field errors to the form.
+                $this->orderService->recalculateTotals(
+                    $order,
+                    $validated['discount_type'] ?? null,
+                    $validated['discount_value'] ?? null,
+                    $validated['tax'] ?? 0,
+                    $validated['shipping'] ?? 0,
+                );
+                unset($validated['discount_type'], $validated['discount_value'], $validated['tax'], $validated['shipping']);
 
                 // Update order timestamps based on status
                 if ($validated['status'] === 'shipped' && ! $order->shipped_at) {

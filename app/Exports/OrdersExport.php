@@ -85,6 +85,7 @@ final class OrdersExport implements FromQuery, WithHeadings, WithMapping, WithSt
             'Customer Email',
             'Status',
             'Subtotal',
+            'Discount',
             'Tax',
             'Shipping',
             'Total',
@@ -108,6 +109,9 @@ final class OrdersExport implements FromQuery, WithHeadings, WithMapping, WithSt
             $order->customer ? $order->customer->email : ($order->customer_email ?? ''),
             $order->status,
             $order->subtotal,
+            // The whole discount (line + order level), so each row reconciles:
+            // Subtotal - Discount + Tax + Shipping = Total.
+            $order->discount_amount,
             $order->tax,
             $order->shipping,
             $order->total,

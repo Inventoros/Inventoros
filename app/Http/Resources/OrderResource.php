@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Resources;
 
+use App\Enums\Permission;
 use App\Models\Order\Order;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
@@ -46,19 +47,42 @@ class OrderResource extends JsonResource
                 'name' => $this->creator->name,
             ] : null),
             'subtotal' => $this->subtotal,
+            // discount_amount is the whole discount (lines + order level), so
+            // subtotal - discount_amount + tax + shipping = total.
+            'discount_type' => $this->discount_type,
+            'discount_value' => $this->discount_value,
+            'discount_amount' => $this->discount_amount,
+            'line_discount_total' => $this->whenLoaded('items', fn () => $this->resource->lineDiscountTotal()),
+            'order_discount_amount' => $this->whenLoaded('items', fn () => $this->resource->orderDiscountAmount()),
             'tax' => $this->tax,
             'shipping' => $this->shipping,
             'total' => $this->total,
+            // Payment position is financial detail behind view_payments: absent
+            // (not zero) for anyone without it.
+            $this->mergeWhen($this->canViewPayments($request), fn () => [
+                'amount_paid' => $this->amount_paid,
+                'balance_due' => $this->resource->balanceDue(),
+                'payment_status' => $this->payment_status,
+                'payments' => $this->whenLoaded('payments', fn () => OrderPaymentResource::collection($this->payments)->resolve($request)),
+            ]),
             'currency' => $this->currency,
             'order_date' => $this->order_date?->toIso8601String(),
             'shipped_at' => $this->shipped_at?->toIso8601String(),
             'delivered_at' => $this->delivered_at?->toIso8601String(),
             'notes' => $this->notes,
             'metadata' => $this->metadata,
-            'items' => OrderItemResource::collection($this->whenLoaded('items')),
+            // Resolved to plain arrays here: Inertia turns a nested resource
+            // collection prop into a {data: [...]} envelope, which the order
+            // pages (reading order.items as a list) could not iterate.
+            'items' => $this->whenLoaded('items', fn () => OrderItemResource::collection($this->items)->resolve($request)),
             'items_count' => $this->whenCounted('items'),
             'created_at' => $this->created_at?->toIso8601String(),
             'updated_at' => $this->updated_at?->toIso8601String(),
         ];
+    }
+
+    private function canViewPayments(Request $request): bool
+    {
+        return (bool) $request->user()?->hasPermission(Permission::VIEW_PAYMENTS);
     }
 }

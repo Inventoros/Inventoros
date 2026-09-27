@@ -13,6 +13,7 @@ use GraphQL\Error\Error;
 use GraphQL\Type\Definition\ResolveInfo;
 use GraphQL\Type\Definition\Type;
 use Illuminate\Auth\Access\AuthorizationException;
+use Illuminate\Validation\ValidationException;
 use Rebing\GraphQL\Support\Facades\GraphQL;
 use Rebing\GraphQL\Support\Mutation;
 
@@ -87,6 +88,16 @@ class CreateOrderMutation extends Mutation
                 'description' => 'Order notes',
                 'rules' => ['nullable', 'string'],
             ],
+            'discount_type' => [
+                'type' => Type::string(),
+                'description' => 'Order-level discount type: percent or fixed',
+                'rules' => ['nullable', 'string', 'in:percent,fixed'],
+            ],
+            'discount_value' => [
+                'type' => Type::float(),
+                'description' => 'Order-level discount: a percentage (0-100) or an amount, applied to the merchandise after line discounts and before tax',
+                'rules' => ['nullable', 'numeric', 'min:0'],
+            ],
             'items' => [
                 'type' => Type::nonNull(Type::listOf(Type::nonNull(GraphQL::type('OrderItemInput')))),
                 'description' => 'Order line items',
@@ -113,6 +124,9 @@ class CreateOrderMutation extends Mutation
             $order = app(OrderService::class)->create($args, $user, $args['source'] ?? 'graphql');
         } catch (InsufficientStockException|InvalidOrderItemException $e) {
             throw new Error($e->getMessage());
+        } catch (ValidationException $e) {
+            // Discount problems found while pricing the order.
+            throw new Error(collect($e->errors())->flatten()->first() ?? $e->getMessage());
         }
 
         return $order->load('items');
