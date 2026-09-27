@@ -32,6 +32,7 @@ For a restricted user:
 - **Transfers**: visible and actionable when either end is in their warehouses; stock can only be sent from a location they can access (sending to another warehouse is allowed).
 - **Stock audits**: only audits of a location in their warehouses; whole-organization audits (no location) are hidden and cannot be created.
 - **Purchase order receiving**: goods are booked into each product's primary location, so a line can only be received when that location is in their warehouses.
+- **Returns (RMA)**: a return belongs to the warehouses its goods go back to, which is the primary location of each line's product (where receiving the return restocks). A return is visible and can be approved, completed or rejected when any of its lines comes back to their warehouses; raising a return, or receiving one, needs every restocked line to land in their warehouses. The originating order is not used, because orders carry no location.
 - **Products**: the catalogue stays visible, but the per-location stock breakdown and per-warehouse levels show only their warehouses.
 
 Denied requests return 403 (web and REST), an error (GraphQL), or a tool error (MCP).

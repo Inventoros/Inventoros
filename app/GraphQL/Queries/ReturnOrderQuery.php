@@ -6,6 +6,7 @@ namespace App\GraphQL\Queries;
 
 use App\GraphQL\Concerns\RequiresPermissions;
 use App\Models\Order\ReturnOrder;
+use App\Services\ReturnOrderService;
 use GraphQL\Error\Error;
 use GraphQL\Type\Definition\Type;
 use Rebing\GraphQL\Support\Facades\GraphQL;
@@ -39,8 +40,12 @@ class ReturnOrderQuery extends Query
 
     public function resolve($root, array $args)
     {
-        return ReturnOrder::with(['order', 'items.product'])
+        $returnOrder = ReturnOrder::with(['order', 'items.product'])
             ->forOrganization($this->organizationId())
             ->find($args['id']) ?? throw new Error('Return not found');
+
+        app(ReturnOrderService::class)->authorizeView($returnOrder, $this->actor());
+
+        return $returnOrder;
     }
 }

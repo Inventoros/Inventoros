@@ -6,6 +6,7 @@ namespace App\GraphQL\Queries;
 
 use App\GraphQL\Concerns\RequiresPermissions;
 use App\Models\Order\ReturnOrder;
+use App\Services\ReturnOrderService;
 use GraphQL\Type\Definition\Type;
 use Rebing\GraphQL\Support\Facades\GraphQL;
 use Rebing\GraphQL\Support\Query;
@@ -43,6 +44,7 @@ class ReturnOrdersQuery extends Query
     {
         return ReturnOrder::with(['order', 'items.product'])
             ->forOrganization($this->organizationId())
+            ->tap(fn ($q) => app(ReturnOrderService::class)->scopeForUser($q, $this->actor()))
             ->when($args['status'] ?? null, fn ($query, $status) => $query->byStatus($status))
             ->when($args['type'] ?? null, fn ($query, $type) => $query->byType($type))
             ->when($args['order_id'] ?? null, fn ($query, $orderId) => $query->where('order_id', $orderId))
