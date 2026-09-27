@@ -1,6 +1,7 @@
 <script setup>
 import AppLayout from '@/Layouts/AppLayout.vue';
 import PluginSlot from '@/Components/PluginSlot.vue';
+import PluginWidgets from '@/Components/PluginWidgets.vue';
 import PageHeader from '@/Components/ui/PageHeader.vue';
 import StatTile from '@/Components/ui/StatTile.vue';
 import Card from '@/Components/ui/Card.vue';
@@ -39,6 +40,7 @@ const props = defineProps({
     stockByCategory: Array,
     widgetPreferences: Object,
     pluginComponents: Object,
+    pluginWidgets: { type: Array, default: () => [] },
     can: { type: Object, default: () => ({}) },
 });
 
@@ -438,6 +440,11 @@ const secondaryStats = () => [
                 </div>
             </Card>
         </section>
+
+        <!-- Plugin dashboard widgets (register_dashboard_widget) -->
+        <PluginWidgets :widgets="pluginWidgets" />
+        <!-- Plugin Slot: Widgets -->
+        <PluginSlot slot="widgets" :components="pluginComponents?.widgets" />
 
         <!-- Plugin Slot: After Content Grid -->
         <PluginSlot slot="after-content" :components="pluginComponents?.afterContent" />

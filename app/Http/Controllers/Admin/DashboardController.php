@@ -13,6 +13,7 @@ use App\Models\Inventory\ProductLocation;
 use App\Models\Inventory\StockAdjustment;
 use App\Models\Order\Order;
 use App\Models\User;
+use App\Services\PluginUIService;
 use App\Services\ReorderService;
 use App\Services\Reports\InventoryAnalyticsService;
 use Illuminate\Http\JsonResponse;
@@ -288,6 +289,9 @@ class DashboardController extends Controller
             'stockMovements' => $stockMovements,
             'topProducts' => $topProducts,
             'widgetPreferences' => $widgetPreferences,
+            // Plugin widgets (register_dashboard_widget), gated like the figures
+            // above: a widget the user may not see is absent, not empty.
+            'pluginWidgets' => app(PluginUIService::class)->getVisibleDashboardWidgets($user),
             'pluginComponents' => [
                 'header' => get_page_components('dashboard', 'header'),
                 'beforeStats' => get_page_components('dashboard', 'before-stats'),

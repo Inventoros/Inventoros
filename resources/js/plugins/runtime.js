@@ -18,7 +18,14 @@
  * or calls the same functions on `window.Inventoros` directly.
  */
 import * as Vue from 'vue';
-import { markRaw, reactive } from 'vue';
+import { defineAsyncComponent, markRaw, reactive } from 'vue';
+import { Head, Link, router, useForm, usePage } from '@inertiajs/vue3';
+import AppLayout from '@/Layouts/AppLayout.vue';
+import Badge from '@/Components/ui/Badge.vue';
+import Button from '@/Components/ui/Button.vue';
+import Card from '@/Components/ui/Card.vue';
+import CardHeader from '@/Components/ui/CardHeader.vue';
+import PageHeader from '@/Components/ui/PageHeader.vue';
 
 const components = reactive({});
 const slotComponents = reactive({});
@@ -26,6 +33,29 @@ const pages = {};
 const loading = new Map();
 
 const DEFAULT_POSITION = 100;
+
+// Components of plugins present when the app was built
+// (plugins/{slug}/resources/js/Components/{Name}.vue). Source installs only.
+const buildTimeComponents = import.meta.glob('../../../plugins/*/resources/js/Components/*.vue');
+const asyncBuildTimeComponents = new Map();
+
+/**
+ * Shared with plugin bundles so they use the app's own copies: a second copy
+ * of Inertia would not see the current page, and plugin pages should sit in
+ * the same layout and use the same building blocks as core pages.
+ */
+const shared = Object.freeze({
+    Vue,
+    Inertia: Object.freeze({ Head, Link, router, useForm, usePage }),
+    layouts: Object.freeze({ AppLayout: markRaw(AppLayout) }),
+    ui: Object.freeze({
+        Badge: markRaw(Badge),
+        Button: markRaw(Button),
+        Card: markRaw(Card),
+        CardHeader: markRaw(CardHeader),
+        PageHeader: markRaw(PageHeader),
+    }),
+});
 
 const componentKey = (plugin, name) => `${plugin}/${name}`;
 
@@ -84,7 +114,7 @@ function registerPage(name, component) {
 function scopedTo(slug) {
     return Object.freeze({
         slug,
-        Vue,
+        ...shared,
         registerComponent: (name, component) => registerComponent(slug, name, component),
         registerSlotComponent: (slot, component, options = {}) =>
             registerSlotComponent(slot, component, { ...options, plugin: slug }),
@@ -95,7 +125,7 @@ function scopedTo(slug) {
 export function installPluginRuntime() {
     window.Inventoros = Object.freeze({
         apiVersion: 1,
-        Vue,
+        ...shared,
         registerComponent,
         registerSlotComponent,
         registerPage,
@@ -154,6 +184,27 @@ export function loadPluginAssets(assets) {
 
 export function runtimeComponent(plugin, name) {
     return components[componentKey(plugin, name)] ?? null;
+}
+
+/**
+ * The component a server placement names: a runtime bundle's registration,
+ * else a component compiled into the app at build time, else null (a runtime
+ * bundle that has not loaded yet; the caller re-renders once it registers).
+ */
+export function resolvePluginComponent(plugin, name) {
+    const runtime = runtimeComponent(plugin, name);
+    if (runtime) {
+        return runtime;
+    }
+
+    const path = `../../../plugins/${plugin}/resources/js/Components/${name}.vue`;
+    if (!buildTimeComponents[path]) {
+        return null;
+    }
+    if (!asyncBuildTimeComponents.has(path)) {
+        asyncBuildTimeComponents.set(path, defineAsyncComponent(buildTimeComponents[path]));
+    }
+    return asyncBuildTimeComponents.get(path);
 }
 
 export function runtimeSlotComponents(page, slot) {

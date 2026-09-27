@@ -1,7 +1,7 @@
 <script setup>
-import { computed, defineAsyncComponent } from 'vue';
+import { computed } from 'vue';
 import { usePage } from '@inertiajs/vue3';
-import { pageIdFromComponent, runtimeComponent, runtimeSlotComponents } from '@/plugins/runtime';
+import { pageIdFromComponent, resolvePluginComponent, runtimeSlotComponents } from '@/plugins/runtime';
 
 const props = defineProps({
     slot: {
@@ -21,22 +21,6 @@ const props = defineProps({
     },
 });
 
-// Components of plugins that were present when the app was built
-// (plugins/{slug}/resources/js/Components/{Name}.vue).
-const buildTimeComponents = import.meta.glob('../../../plugins/*/resources/js/Components/*.vue');
-const asyncComponents = new Map();
-
-const buildTimeComponent = (plugin, component) => {
-    const path = `../../../plugins/${plugin}/resources/js/Components/${component}.vue`;
-    if (!buildTimeComponents[path]) {
-        return null;
-    }
-    if (!asyncComponents.has(path)) {
-        asyncComponents.set(path, defineAsyncComponent(buildTimeComponents[path]));
-    }
-    return asyncComponents.get(path);
-};
-
 const inertiaPage = usePage();
 const pageId = computed(() => props.page ?? pageIdFromComponent(inertiaPage.component));
 
@@ -47,7 +31,7 @@ const rendered = computed(() => {
     const placed = (props.components ?? [])
         .map((entry, index) => ({
             key: `server-${entry.plugin}-${entry.component}-${index}`,
-            is: runtimeComponent(entry.plugin, entry.component) ?? buildTimeComponent(entry.plugin, entry.component),
+            is: resolvePluginComponent(entry.plugin, entry.component),
             props: entry.data || {},
             position: entry.position ?? 100,
         }))
