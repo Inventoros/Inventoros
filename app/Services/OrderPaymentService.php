@@ -207,12 +207,31 @@ final class OrderPaymentService
             'amount' => $amount,
             'method' => $method,
             'reference' => $data['reference'] ?? null,
-            'paid_at' => isset($data['paid_at']) ? Carbon::parse($data['paid_at']) : now(),
+            'paid_at' => $this->paidAt($data['paid_at'] ?? null),
             'notes' => $data['notes'] ?? null,
         ]);
         $payment->save();
 
         return $payment;
+    }
+
+    /**
+     * When the money moved. A bare date (what the payment form sends) is
+     * stored at midday UTC rather than midnight, so it shows as the same
+     * calendar day in any viewer's timezone instead of slipping to the day
+     * before west of UTC.
+     */
+    private function paidAt(mixed $value): Carbon
+    {
+        if ($value === null || $value === '') {
+            return now();
+        }
+
+        if (is_string($value) && preg_match('/^\d{4}-\d{2}-\d{2}$/', $value) === 1) {
+            return Carbon::parse($value, 'UTC')->setTime(12, 0);
+        }
+
+        return Carbon::parse($value);
     }
 
     /**

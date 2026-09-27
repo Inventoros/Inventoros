@@ -116,6 +116,13 @@ class OrderPaymentServiceTest extends TestCase
         $this->assertSame('0.00', $order->balanceDue());
     }
 
+    public function test_a_date_only_paid_at_is_stored_at_midday_so_it_keeps_its_calendar_day(): void
+    {
+        $payment = $this->pay($this->order(), '10.00', ['paid_at' => '2026-03-05']);
+
+        $this->assertSame('2026-03-05 12:00:00', $payment->fresh()->paid_at->utc()->format('Y-m-d H:i:s'));
+    }
+
     public function test_an_overpayment_is_rejected_by_default(): void
     {
         $order = $this->order();
