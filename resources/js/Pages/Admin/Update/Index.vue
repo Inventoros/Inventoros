@@ -178,7 +178,7 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-t
             <div class="flex items-center gap-2 text-xs">
                 <Link :href="route('settings.account.index')" class="text-text-tertiary hover:text-text-primary">Workspace</Link>
                 <span class="text-text-tertiary">/</span>
-                <Link :href="route('settings.account.index')" class="text-text-tertiary hover:text-text-primary">Settings</Link>
+                <Link :href="route('settings.index')" class="text-text-tertiary hover:text-text-primary">Settings</Link>
                 <span class="text-text-tertiary">/</span>
                 <span class="font-medium text-text-primary">Updates</span>
             </div>

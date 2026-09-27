@@ -21,7 +21,7 @@ const toggleDropdown = () => {
 
 const selectWarehouse = (warehouseId) => {
     isOpen.value = false;
-    router.post(route('set-warehouse'), {
+    router.post(route('warehouses.set-active'), {
         warehouse_id: warehouseId,
     }, {
         preserveState: false,

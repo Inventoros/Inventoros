@@ -32,6 +32,10 @@ return Application::configure(basePath: dirname(__DIR__))
             EnsureTwoFactorVerified::class,
         ]);
 
+        // The language switcher writes this cookie from JavaScript, so it is
+        // never encrypted; left encrypted, Laravel discards it on every request.
+        $middleware->encryptCookies(except: [SetLocale::COOKIE]);
+
         $middleware->api(append: [
             SecurityHeaders::class,
         ]);

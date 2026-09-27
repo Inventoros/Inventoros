@@ -5,9 +5,11 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Http\Middleware\SetLocale;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Password;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -119,7 +121,7 @@ class AccountSettingsController extends Controller
 
         $validated = $request->validate([
             'theme' => 'nullable|in:light,dark,auto',
-            'language' => 'nullable|string|max:10',
+            'language' => ['nullable', 'string', Rule::in(SetLocale::SUPPORTED_LOCALES)],
             'items_per_page' => 'nullable|integer|min:10|max:100',
         ]);
 
@@ -129,5 +131,28 @@ class AccountSettingsController extends Controller
         $user->save();
 
         return redirect()->back()->with('success', 'Preferences updated successfully.');
+    }
+
+    /**
+     * Save the language picked in the top-strip language switcher.
+     *
+     * Only the language changes; the user's other preferences are kept.
+     *
+     * @param Request $request The incoming HTTP request containing the locale
+     * @return RedirectResponse
+     */
+    public function updateLocale(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'locale' => ['required', 'string', Rule::in(SetLocale::SUPPORTED_LOCALES)],
+        ]);
+
+        $user = $request->user();
+        $preferences = $user->notification_preferences ?? [];
+        $preferences['preferences'] = array_merge($preferences['preferences'] ?? [], ['language' => $validated['locale']]);
+        $user->notification_preferences = $preferences;
+        $user->save();
+
+        return redirect()->back();
     }
 }

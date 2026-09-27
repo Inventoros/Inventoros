@@ -608,7 +608,6 @@
       "addProductsHint": "Agrega productos a las categor\u00edas para ver los datos de rendimiento"
     },
     "moreReports": "M\u00e1s informes",
-    "moreReportsDesc": "Informes adicionales pr\u00f3ximamente",
     "adjustmentTypes": {
       "manual": "Manual",
       "recount": "Recuento",
@@ -1198,7 +1197,7 @@
       "step3": "Comienza a agregar productos a tu inventario",
       "step4": "Invita a miembros del equipo a tu organizaci\u00f3n",
       "resources": "Recursos \u00fatiles",
-      "docs": "Documentaci\u00f3n (Pr\u00f3ximamente)",
+      "docs": "Documentaci\u00f3n",
       "community": "Discusiones de la comunidad",
       "issues": "Reportar problemas",
       "goToLogin": "Ir al inicio de sesi\u00f3n",

@@ -608,7 +608,6 @@
       "addProductsHint": "Fügen Sie Produkte zu Kategorien hinzu, um Leistungsdaten zu sehen"
     },
     "moreReports": "Weitere Berichte",
-    "moreReportsDesc": "Weitere Berichte folgen in Kürze",
     "adjustmentTypes": {
       "manual": "Manuell",
       "recount": "Nachzählung",
@@ -1198,7 +1197,7 @@
       "step3": "Beginnen Sie, Produkte zu Ihrem Bestand hinzuzufügen",
       "step4": "Laden Sie Teammitglieder in Ihre Organisation ein",
       "resources": "Hilfreiche Ressourcen",
-      "docs": "Dokumentation (in Kürze verfügbar)",
+      "docs": "Dokumentation",
       "community": "Community-Diskussionen",
       "issues": "Probleme melden",
       "goToLogin": "Zur Anmeldung",

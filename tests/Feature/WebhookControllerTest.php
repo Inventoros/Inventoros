@@ -130,15 +130,17 @@ class WebhookControllerTest extends TestCase
         $response->assertStatus(200);
     }
 
-    public function test_admin_can_access_create_webhook_route(): void
+    public function test_webhooks_have_no_create_route_because_creation_is_a_modal(): void
     {
-        // WebhookController uses a resource route but doesn't implement create()
-        // Webhook creation is handled via the index page modal
-        $response = $this->actingAs($this->admin)
-            ->get(route('webhooks.create'));
+        // Creation and editing happen in modals on the index and show pages,
+        // so the resource must not register create/edit routes that point at
+        // controller methods which do not exist.
+        $this->assertFalse(\Illuminate\Support\Facades\Route::has('webhooks.create'));
+        $this->assertFalse(\Illuminate\Support\Facades\Route::has('webhooks.edit'));
 
-        // The controller doesn't have a create() method, so this returns 500
-        $response->assertStatus(500);
+        $this->actingAs($this->admin)
+            ->get('/webhooks/create')
+            ->assertNotFound();
     }
 
     public function test_index_does_not_expose_the_webhook_signing_secret(): void
@@ -237,17 +239,13 @@ class WebhookControllerTest extends TestCase
         $response->assertStatus(200);
     }
 
-    public function test_admin_can_access_edit_webhook_route(): void
+    public function test_webhook_edit_url_is_not_routed(): void
     {
         $webhook = $this->createWebhook();
 
-        // WebhookController uses a resource route but doesn't implement edit()
-        // Webhook editing is handled via the show page
-        $response = $this->actingAs($this->admin)
-            ->get(route('webhooks.edit', $webhook));
-
-        // The controller doesn't have an edit() method, so this returns 500
-        $response->assertStatus(500);
+        $this->actingAs($this->admin)
+            ->get('/webhooks/'.$webhook->id.'/edit')
+            ->assertNotFound();
     }
 
     public function test_admin_can_update_webhook(): void

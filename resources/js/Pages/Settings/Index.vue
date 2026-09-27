@@ -2,44 +2,84 @@
 import AppLayout from '@/Layouts/AppLayout.vue';
 import PageHeader from '@/Components/ui/PageHeader.vue';
 import Card from '@/Components/ui/Card.vue';
-import { Head, Link } from '@inertiajs/vue3';
+import { Head, Link, usePage } from '@inertiajs/vue3';
+import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
+import { usePermissions } from '@/composables/usePermissions';
 import {
     Building2,
     UserCircle,
+    Bell,
+    ShieldCheck,
     Mail,
     Webhook,
+    RefreshCw,
     ChevronRight,
 } from 'lucide-vue-next';
 
 const { t } = useI18n();
+const page = usePage();
+const { hasPermission } = usePermissions();
 
-const settingsSections = [
-    {
-        href: route('settings.organization.index'),
-        icon: Building2,
-        title: t('settings.organization.title'),
-        description: "Manage your organization's profile, regional preferences, and team members.",
-    },
+const isAdmin = computed(() => page.props.auth?.user?.role === 'admin');
+
+/**
+ * Every settings page. `perm` mirrors the route middleware; `adminOnly`
+ * mirrors controllers that additionally require the admin role.
+ */
+const allSections = [
     {
         href: route('settings.account.index'),
         icon: UserCircle,
         title: t('settings.account.title'),
-        description: 'Update your profile, password, notifications, and personal preferences.',
+        description: 'Update your profile, password, and personal preferences, including language.',
+    },
+    {
+        href: route('settings.account.index', { tab: 'notifications' }),
+        icon: Bell,
+        title: 'Notifications',
+        description: 'Choose which email and in-app notifications you receive.',
+    },
+    {
+        href: route('two-factor.setup'),
+        icon: ShieldCheck,
+        title: 'Two-factor authentication',
+        description: 'Protect your account with a one-time code from an authenticator app.',
+    },
+    {
+        href: route('settings.organization.index'),
+        icon: Building2,
+        title: t('settings.organization.title'),
+        description: "Manage your organization's profile and regional preferences.",
+        perm: 'view_settings',
     },
     {
         href: route('settings.email.index'),
         icon: Mail,
         title: t('settings.email.title'),
-        description: 'Configure how your organization sends email notifications.',
+        description: 'Configure how your organization sends email (SMTP, Mailgun, or SendGrid).',
+        perm: 'manage_organization',
     },
     {
         href: route('webhooks.index'),
         icon: Webhook,
         title: 'Webhooks',
         description: 'Connect external services and deliver real-time event notifications.',
+        perm: 'manage_organization',
+    },
+    {
+        href: route('admin.update.index'),
+        icon: RefreshCw,
+        title: 'Updates',
+        description: 'Check for new versions, update the application, and manage backups.',
+        perm: 'manage_organization',
+        adminOnly: true,
     },
 ];
+
+const settingsSections = computed(() =>
+    allSections.filter((s) => (!s.perm || hasPermission(s.perm)) && (!s.adminOnly || isAdmin.value))
+);
 </script>
 
 <template>

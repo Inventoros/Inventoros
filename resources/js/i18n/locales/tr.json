@@ -608,7 +608,6 @@
       "addProductsHint": "Performans verilerini görmek için kategorilere ürün ekleyin"
     },
     "moreReports": "Daha Fazla Rapor",
-    "moreReportsDesc": "Ek raporlar yakında gelecek",
     "adjustmentTypes": {
       "manual": "Manuel",
       "recount": "Sayım",
@@ -1198,7 +1197,7 @@
       "step3": "Envanterinize ürün eklemeye başlayın",
       "step4": "Ekip üyelerinizi organizasyonunuza davet edin",
       "resources": "Faydalı Kaynaklar",
-      "docs": "Dokümantasyon (Yakında)",
+      "docs": "Dokümantasyon",
       "community": "Topluluk Tartışmaları",
       "issues": "Sorun Bildirin",
       "goToLogin": "Giriş Sayfasına Git",

@@ -608,7 +608,6 @@
       "addProductsHint": "Aggiungi prodotti alle categorie per visualizzare i dati sulle prestazioni"
     },
     "moreReports": "Altri report",
-    "moreReportsDesc": "Report aggiuntivi in arrivo",
     "adjustmentTypes": {
       "manual": "Manuale",
       "recount": "Riconteggio",
@@ -1198,7 +1197,7 @@
       "step3": "Inizia ad aggiungere prodotti al tuo inventario",
       "step4": "Invita i membri del team nella tua organizzazione",
       "resources": "Risorse utili",
-      "docs": "Documentazione (in arrivo)",
+      "docs": "Documentazione",
       "community": "Discussioni della comunità",
       "issues": "Segnala problemi",
       "goToLogin": "Vai al login",

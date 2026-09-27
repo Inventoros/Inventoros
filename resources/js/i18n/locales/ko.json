@@ -608,7 +608,6 @@
       "addProductsHint": "성과 데이터를 보려면 카테고리에 제품을 추가하세요"
     },
     "moreReports": "추가 보고서",
-    "moreReportsDesc": "추가 보고서가 곧 제공될 예정입니다",
     "adjustmentTypes": {
       "manual": "수동",
       "recount": "재실사",
@@ -1198,7 +1197,7 @@
       "step3": "재고에 제품 추가 시작",
       "step4": "팀원을 조직에 초대",
       "resources": "유용한 리소스",
-      "docs": "문서 (준비 중)",
+      "docs": "문서",
       "community": "커뮤니티 토론",
       "issues": "문제 보고",
       "goToLogin": "로그인으로 이동",

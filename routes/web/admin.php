@@ -50,10 +50,9 @@ Route::prefix('plugins')->name('plugins.')->middleware('permission:view_plugins'
 
 // Settings - Permission based
 Route::prefix('settings')->name('settings.')->group(function () {
-    // Legacy settings route - redirect to organization settings
-    Route::get('/', function () {
-        return redirect()->route('settings.organization.index');
-    })->middleware('permission:view_settings')->name('index');
+    // Settings hub. Open to every signed-in user: it links to account
+    // settings and two-factor (everyone) and hides the admin-only sections.
+    Route::get('/', [SettingsController::class, 'hub'])->name('index');
 
     // Organization Settings
     Route::prefix('organization')->name('organization.')->middleware('permission:view_settings')->group(function () {
@@ -61,13 +60,8 @@ Route::prefix('settings')->name('settings.')->group(function () {
         Route::patch('/general', [OrganizationSettingsController::class, 'updateGeneral'])->middleware('permission:manage_organization')->name('update.general');
         Route::patch('/regional', [OrganizationSettingsController::class, 'updateRegional'])->middleware('permission:manage_organization')->name('update.regional');
 
-        // User management within organization settings (admin only)
-        Route::middleware('permission:manage_organization')->group(function () {
-            Route::get('/users', [OrganizationSettingsController::class, 'users'])->name('users.index');
-            Route::post('/users', [OrganizationSettingsController::class, 'storeUser'])->name('users.store');
-            Route::patch('/users/{user}', [OrganizationSettingsController::class, 'updateUser'])->name('users.update');
-            Route::delete('/users/{user}', [OrganizationSettingsController::class, 'destroyUser'])->name('users.destroy');
-        });
+        // Organization users are managed in /users; keep old links working.
+        Route::redirect('/users', '/users', 301);
     });
 
     // Dashboard Widget Preferences (accessible by all authenticated users)
@@ -81,11 +75,12 @@ Route::prefix('settings')->name('settings.')->group(function () {
         Route::patch('/password', [AccountSettingsController::class, 'updatePassword'])->name('update.password');
         Route::patch('/notifications', [AccountSettingsController::class, 'updateNotifications'])->name('update.notifications');
         Route::patch('/preferences', [AccountSettingsController::class, 'updatePreferences'])->name('update.preferences');
+        Route::patch('/locale', [AccountSettingsController::class, 'updateLocale'])->name('update.locale');
     });
 
     // Email Settings (admin only)
     Route::middleware('permission:manage_organization')->group(function () {
-        Route::get('/email', [SettingsController::class, 'index'])->name('email.index');
+        Route::get('/email', [SettingsController::class, 'email'])->name('email.index');
         Route::post('/email', [SettingsController::class, 'updateEmail'])->name('email.update');
         Route::post('/email/test', [SettingsController::class, 'testEmail'])->name('email.test');
     });
@@ -93,7 +88,8 @@ Route::prefix('settings')->name('settings.')->group(function () {
 
 // Webhooks
 Route::middleware('permission:manage_organization')->group(function () {
-    Route::resource('webhooks', WebhookController::class);
+    // Create and edit are modals on the index and show pages.
+    Route::resource('webhooks', WebhookController::class)->except(['create', 'edit']);
     Route::post('webhooks/{webhook}/regenerate-secret', [WebhookController::class, 'regenerateSecret'])->name('webhooks.regenerate-secret');
     Route::post('webhooks/{webhook}/test', [WebhookController::class, 'test'])->name('webhooks.test');
     Route::post('webhook-deliveries/{delivery}/retry', [WebhookController::class, 'retryDelivery'])->name('webhook-deliveries.retry');

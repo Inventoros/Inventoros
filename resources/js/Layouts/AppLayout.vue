@@ -34,6 +34,9 @@ import {
     FileSpreadsheet,
     BarChart3,
     Users,
+    Contact,
+    SlidersHorizontal,
+    History,
     ShieldCheck,
     Puzzle,
     Settings2,
@@ -49,11 +52,12 @@ import GlobalSearch from '@/Components/Layout/GlobalSearch.vue';
 import NotificationDropdown from '@/Components/Layout/NotificationDropdown.vue';
 import ThemeToggle from '@/Components/Layout/ThemeToggle.vue';
 import WarehouseSwitcher from '@/Components/WarehouseSwitcher.vue';
+import LanguageSwitcher from '@/Components/LanguageSwitcher.vue';
 import LegalFooter from '@/Components/LegalFooter.vue';
 
 const { t } = useI18n();
 const page = usePage();
-const { hasPermission } = usePermissions();
+const { hasPermission, hasAnyPermission } = usePermissions();
 
 const mobileOpen = ref(false);
 const globalSearchRef = ref(null);
@@ -105,6 +109,7 @@ const sections = computed(() => [
             { icon: LayoutGrid, name: 'Dashboard', href: route('dashboard'), active: ['dashboard'] },
             { icon: Boxes, name: 'Inventory', href: route('products.index'), active: ['products.*'], perm: 'view_products' },
             { icon: ShoppingCart, name: 'Orders', href: route('orders.index'), active: ['orders.*'], perm: 'view_orders' },
+            { icon: Contact, name: 'Customers', href: route('customers.index'), active: ['customers.*'], perm: 'view_customers' },
             { icon: Undo2, name: 'Returns', href: route('returns.index'), active: ['returns.*'], perm: 'manage_returns' },
             { icon: ClipboardList, name: 'Purchase Orders', href: route('purchase-orders.index'), active: ['purchase-orders.*'], perm: 'view_purchase_orders' },
             { icon: Truck, name: 'Suppliers', href: route('suppliers.index'), active: ['suppliers.*'], perm: 'view_suppliers' },
@@ -115,13 +120,14 @@ const sections = computed(() => [
         items: [
             { icon: Tag, name: 'Categories', href: route('categories.index'), active: ['categories.*'], perm: 'manage_categories' },
             { icon: MapPin, name: 'Locations', href: route('locations.index'), active: ['locations.*'], perm: 'manage_locations' },
-            { icon: Warehouse, name: 'Warehouses', href: route('warehouses.index'), active: ['warehouses.*'], perm: 'manage_warehouses' },
+            { icon: Warehouse, name: 'Warehouses', href: route('warehouses.index'), active: ['warehouses.*'], perm: 'view_warehouses' },
         ],
     },
     {
         label: 'Stock',
         items: [
-            { icon: ArrowLeftRight, name: 'Stock Transfers', href: route('stock-transfers.index'), active: ['stock-transfers.*'], perm: 'view_stock_transfers' },
+            { icon: SlidersHorizontal, name: 'Stock Adjustments', href: route('stock-adjustments.index'), active: ['stock-adjustments.*'], perm: 'manage_stock' },
+            { icon: ArrowLeftRight, name: 'Stock Transfers', href: route('stock-transfers.index'), active: ['stock-transfers.*'], perm: 'transfer_stock' },
             { icon: ScanLine, name: 'Stock Audits', href: route('stock-audits.index'), active: ['stock-audits.*'], perm: 'view_stock_audits' },
             { icon: Hammer, name: 'Work Orders', href: route('work-orders.index'), active: ['work-orders.*'], perm: 'manage_stock' },
         ],
@@ -129,26 +135,65 @@ const sections = computed(() => [
     {
         label: 'Insights',
         items: [
-            { icon: FileSpreadsheet, name: 'Import / Export', href: route('import-export.index'), active: ['import-export.*'], perm: 'manage_import_export' },
+            { icon: FileSpreadsheet, name: 'Import / Export', href: route('import-export.index'), active: ['import-export.*'], perm: ['export_data', 'import_data'] },
             { icon: BarChart3, name: 'Reports', href: route('reports.index'), active: ['reports.*'], perm: 'view_reports' },
+            { icon: History, name: 'Activity Log', href: route('activity-log.index'), active: ['activity-log.*'], perm: 'view_activity_log' },
         ],
+    },
+    {
+        label: 'Plugins',
+        items: pluginNavItems.value,
     },
     {
         label: 'Admin',
         items: [
-            { icon: Users, name: 'Users', href: route('users.index'), active: ['users.*'], perm: 'manage_users' },
-            { icon: ShieldCheck, name: 'Roles', href: route('roles.index'), active: ['roles.*'], perm: 'manage_roles' },
-            { icon: Puzzle, name: 'Plugins', href: route('plugins.index'), active: ['plugins.*'], perm: 'manage_plugins' },
-            { icon: Settings2, name: 'Settings', href: route('settings.account.index'), active: ['settings.*', 'webhooks.*', 'account.*'] },
+            { icon: Users, name: 'Users', href: route('users.index'), active: ['users.*'], perm: 'view_users' },
+            { icon: ShieldCheck, name: 'Roles', href: route('roles.index'), active: ['roles.*'], perm: 'view_roles' },
+            { icon: Puzzle, name: 'Plugins', href: route('plugins.index'), active: ['plugins.*'], perm: 'view_plugins' },
+            {
+                icon: Settings2,
+                name: 'Settings',
+                href: route('settings.index'),
+                active: ['settings.*', 'webhooks.*', 'two-factor.setup', 'admin.update.*'],
+            },
         ],
     },
 ]);
+
+/**
+ * Menu items registered by active plugins (register_menu_item()), shared as
+ * the `pluginMenuItems` prop. A plugin names either a route or a URL; items
+ * whose route is not registered are dropped rather than throwing.
+ */
+const pluginNavItems = computed(() =>
+    (page.props.pluginMenuItems || [])
+        .map((item) => {
+            const hasRoute = item.route && route().has(item.route);
+            const href = item.url || (hasRoute ? route(item.route) : null);
+            const active = item.active_routes?.length ? item.active_routes : (hasRoute ? [item.route] : []);
+
+            return {
+                icon: Puzzle,
+                name: item.label,
+                href,
+                active,
+                perm: item.permission || undefined,
+                external: /^https?:\/\//i.test(item.url || ''),
+            };
+        })
+        .filter((item) => item.href)
+);
+
+const canSee = (perm) => {
+    if (!perm) return true;
+    return Array.isArray(perm) ? hasAnyPermission(perm) : hasPermission(perm);
+};
 
 const visibleSections = computed(() =>
     sections.value
         .map((s) => ({
             ...s,
-            items: s.items.filter((i) => !i.perm || hasPermission(i.perm)),
+            items: s.items.filter((i) => canSee(i.perm)),
         }))
         .filter((s) => s.items.length > 0)
 );
@@ -229,7 +274,8 @@ const isActive = (item) => item.active.some((pattern) => route().current(pattern
                         {{ section.label }}
                     </p>
                     <div class="space-y-px">
-                        <Link
+                        <component
+                            :is="item.external ? 'a' : Link"
                             v-for="item in section.items"
                             :key="item.name"
                             :href="item.href"
@@ -247,7 +293,7 @@ const isActive = (item) => item.active.some((pattern) => route().current(pattern
                                 :class="isActive(item) ? 'text-brand' : 'text-text-tertiary group-hover:text-text-secondary'"
                             />
                             <span class="truncate flex-1">{{ item.name }}</span>
-                        </Link>
+                        </component>
                     </div>
                 </div>
             </nav>
@@ -281,6 +327,7 @@ const isActive = (item) => item.active.some((pattern) => route().current(pattern
                 </div>
                 <div class="flex items-center gap-1 shrink-0">
                     <WarehouseSwitcher />
+                    <LanguageSwitcher />
                     <ThemeToggle />
                     <NotificationDropdown />
                 </div>

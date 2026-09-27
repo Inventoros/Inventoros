@@ -608,7 +608,6 @@
       "addProductsHint": "向分类中添加产品以查看绩效数据"
     },
     "moreReports": "更多报表",
-    "moreReportsDesc": "更多报表即将推出",
     "adjustmentTypes": {
       "manual": "手动",
       "recount": "盘点",
@@ -1198,7 +1197,7 @@
       "step3": "开始添加产品到库存",
       "step4": "邀请团队成员加入组织",
       "resources": "有用的资源",
-      "docs": "文档（即将推出）",
+      "docs": "文档",
       "community": "社区讨论",
       "issues": "报告问题",
       "goToLogin": "前往登录",

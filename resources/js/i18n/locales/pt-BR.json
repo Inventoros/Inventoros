@@ -608,7 +608,6 @@
       "addProductsHint": "Adicione produtos às categorias para ver dados de desempenho"
     },
     "moreReports": "Mais Relatórios",
-    "moreReportsDesc": "Relatórios adicionais em breve",
     "adjustmentTypes": {
       "manual": "Manual",
       "recount": "Recontagem",
@@ -1198,7 +1197,7 @@
       "step3": "Comece a adicionar produtos ao seu estoque",
       "step4": "Convide membros da equipe para sua organização",
       "resources": "Recursos Úteis",
-      "docs": "Documentação (Em Breve)",
+      "docs": "Documentação",
       "community": "Discussões da Comunidade",
       "issues": "Reportar Problemas",
       "goToLogin": "Ir para o Login",
