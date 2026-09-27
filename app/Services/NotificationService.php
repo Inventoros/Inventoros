@@ -65,9 +65,10 @@ final class NotificationService
      */
     private static function sendEmailNotification(User $user, string $type, array $data): void
     {
-        // Check if user has email enabled
+        // Master email switch. `email_notifications` is the one key both
+        // settings pages write (the legacy `email_enabled` key was migrated).
         $preferences = $user->notification_preferences ?? [];
-        if (! ($preferences['email_enabled'] ?? true)) {
+        if (! ($preferences['email_notifications'] ?? true)) {
             return;
         }
 

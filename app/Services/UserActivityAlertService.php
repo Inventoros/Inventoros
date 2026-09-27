@@ -100,7 +100,7 @@ final class UserActivityAlertService
     {
         $prefs = $user->notification_preferences ?? [];
 
-        if (($prefs['email_notifications'] ?? true) === false || ($prefs['email_enabled'] ?? true) === false) {
+        if (($prefs['email_notifications'] ?? true) === false) {
             return false;
         }
 
