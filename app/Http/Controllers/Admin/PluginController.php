@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Admin;
 
+use App\Exceptions\PluginHookFailed;
 use App\Http\Controllers\Controller;
 use App\Services\PluginService;
 use Illuminate\Http\RedirectResponse;
@@ -99,7 +100,7 @@ class PluginController extends Controller
             ]);
 
             return redirect()->back()
-                ->with('error', 'Failed to activate plugin: '.$e->getMessage());
+                ->with('error', $e->getMessage());
         }
     }
 
@@ -115,6 +116,8 @@ class PluginController extends Controller
 
             return redirect()->back()
                 ->with('success', 'Plugin deactivated successfully.');
+        } catch (PluginHookFailed $e) {
+            return redirect()->back()->with('warning', $e->getMessage());
         } catch (\Exception $e) {
             Log::error('Plugin deactivation failed', [
                 'slug' => $slug,
@@ -138,6 +141,8 @@ class PluginController extends Controller
 
             return redirect()->back()
                 ->with('success', 'Plugin deleted successfully.');
+        } catch (PluginHookFailed $e) {
+            return redirect()->back()->with('warning', $e->getMessage());
         } catch (\Exception $e) {
             Log::error('Plugin deletion failed', [
                 'slug' => $slug,

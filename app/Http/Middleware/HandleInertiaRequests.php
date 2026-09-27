@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Middleware;
 
 use App\Services\ApprovalService;
+use App\Services\PluginService;
 use App\Services\PluginUIService;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
@@ -55,6 +56,9 @@ class HandleInertiaRequests extends Middleware
                 'permissions' => $user ? $user->getAllPermissions() : [],
             ],
             'pluginMenuItems' => $pluginMenuItems,
+            // Pre-built runtime UI bundles of active plugins; app.js import()s
+            // each entry so ZIP-installed plugins get UI without an npm build.
+            'pluginAssets' => fn () => $user ? app(PluginService::class)->runtimeAssets() : [],
             'locale' => app()->getLocale(),
             'flash' => [
                 // Controllers redirect with ->with('success'|'error'|...) in

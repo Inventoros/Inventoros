@@ -4,7 +4,10 @@ declare(strict_types=1);
 
 namespace App\Services;
 
+use App\Exceptions\PluginHookFailed;
 use App\Models\Plugin;
+use App\Services\Plugins\PluginAssetPublisher;
+use App\Services\Plugins\PluginRequirements;
 use App\Support\ReleaseSignatureVerifier;
 use App\Support\SafeZipExtractor;
 use Illuminate\Support\Facades\File;
@@ -26,11 +29,17 @@ final class PluginService
     protected string $pluginsPath;
 
     /**
+     * Publishes and removes plugins' runtime UI bundles under public/plugins.
+     */
+    protected PluginAssetPublisher $assets;
+
+    /**
      * Initialize the service and ensure plugins directory exists.
      */
     public function __construct()
     {
         $this->pluginsPath = base_path('plugins');
+        $this->assets = new PluginAssetPublisher($this->pluginsPath, public_path('plugins'));
 
         // Ensure plugins directory exists
         if (! File::exists($this->pluginsPath)) {
@@ -72,6 +81,8 @@ final class PluginService
                     'author' => $manifest['author'] ?? 'Unknown',
                     'author_url' => $manifest['author_url'] ?? '',
                     'requires' => $manifest['requires'] ?? '1.0.0',
+                    'requires_php' => $manifest['requires_php'] ?? null,
+                    'has_runtime_ui' => is_array($manifest['ui'] ?? null),
                     'main_file' => $manifest['main_file'] ?? 'Plugin.php',
                     'is_active' => $dbPlugin ? $dbPlugin->is_active : false,
                     'activated_at' => $dbPlugin ? $dbPlugin->activated_at : null,
@@ -104,39 +115,61 @@ final class PluginService
     /**
      * Activate a plugin.
      *
-     * Fires plugin activation hooks and loads the plugin.
+     * In order: checks the plugin is installed and its `requires` /
+     * `requires_php` are met, validates its runtime UI manifest, loads its
+     * main file, runs hooks/activate.php, publishes its dist/ assets and fires
+     * the `plugin_activated` actions. Only when all of that succeeds is the
+     * plugin marked active; any failure leaves it inactive (with published
+     * assets removed) and is rethrown with a readable message.
      *
      * @param  string  $slug  The plugin slug to activate
      * @return bool True on successful activation
+     *
+     * @throws \RuntimeException When the plugin is missing, unsupported or fails to activate.
      */
     public function activatePlugin(string $slug): bool
     {
         $this->assertSafeSlug($slug);
 
-        $plugin = Plugin::where('slug', $slug)->first();
-
-        if (! $plugin) {
-            // Create new plugin record if it doesn't exist
-            $plugin = Plugin::create([
-                'slug' => $slug,
-                'is_active' => false,
-            ]);
+        $manifest = $this->readManifest($slug);
+        if ($manifest === null) {
+            throw new \RuntimeException("Plugin \"{$slug}\" is not installed (no valid plugin.json).");
         }
 
-        if (! $plugin->is_active) {
-            $plugin->update([
-                'is_active' => true,
-                'activated_at' => now(),
-                'deactivated_at' => null,
-            ]);
+        $plugin = Plugin::firstOrCreate(['slug' => $slug], ['is_active' => false]);
 
-            // Load the plugin first so its hooks are registered
-            $this->loadPlugin($slug);
+        if ($plugin->is_active) {
+            return true;
+        }
 
-            // Fire activation action hook
+        $name = is_string($manifest['name'] ?? null) ? $manifest['name'] : $slug;
+
+        PluginRequirements::assertMet($manifest, $name);
+        $ui = $this->assets->uiFor($slug, $manifest);
+
+        try {
+            $this->loadPlugin($slug, strict: true);
+            $this->runLifecycleFile($slug, 'activate');
+
+            if ($ui !== null) {
+                $this->assets->publish($slug);
+            }
+
             do_action('plugin_activated', $slug);
             do_action("plugin_activated_{$slug}");
+        } catch (\Throwable $e) {
+            $this->assets->remove($slug);
+
+            Log::error('Plugin activation failed; plugin left inactive', ['slug' => $slug, 'error' => $e->getMessage()]);
+
+            throw new \RuntimeException("{$name} could not be activated: {$e->getMessage()}", 0, $e);
         }
+
+        $plugin->update([
+            'is_active' => true,
+            'activated_at' => now(),
+            'deactivated_at' => null,
+        ]);
 
         return true;
     }
@@ -144,10 +177,15 @@ final class PluginService
     /**
      * Deactivate a plugin.
      *
-     * Fires plugin deactivation hooks before deactivating.
+     * Fires the `plugin_deactivated` actions and runs hooks/deactivate.php,
+     * then marks the plugin inactive and removes its published assets. The
+     * plugin is deactivated even when its own code fails; that failure is
+     * reported afterwards as a PluginHookFailed.
      *
      * @param  string  $slug  The plugin slug to deactivate
      * @return bool True on successful deactivation
+     *
+     * @throws PluginHookFailed When the plugin was deactivated but its deactivate code failed.
      */
     public function deactivatePlugin(string $slug): bool
     {
@@ -155,15 +193,34 @@ final class PluginService
 
         $plugin = Plugin::where('slug', $slug)->first();
 
-        if ($plugin && $plugin->is_active) {
-            // Fire deactivation action hook BEFORE deactivating
+        if (! $plugin || ! $plugin->is_active) {
+            return true;
+        }
+
+        $failure = null;
+
+        try {
             do_action('plugin_deactivated', $slug);
             do_action("plugin_deactivated_{$slug}");
+            $this->runLifecycleFile($slug, 'deactivate');
+        } catch (\Throwable $e) {
+            $failure = $e;
+            Log::error('Plugin deactivate hook failed; deactivating anyway', ['slug' => $slug, 'error' => $e->getMessage()]);
+        }
 
-            $plugin->update([
-                'is_active' => false,
-                'deactivated_at' => now(),
-            ]);
+        $plugin->update([
+            'is_active' => false,
+            'deactivated_at' => now(),
+        ]);
+
+        $this->assets->remove($slug);
+
+        if ($failure !== null) {
+            throw new PluginHookFailed(
+                "The plugin was deactivated, but its deactivate hook failed: {$failure->getMessage()}",
+                0,
+                $failure
+            );
         }
 
         return true;
@@ -172,10 +229,16 @@ final class PluginService
     /**
      * Delete a plugin.
      *
-     * Runs uninstall hooks, deactivates, removes database record, and deletes files.
+     * Fires the `plugin_uninstalling` actions, deactivates the plugin (running
+     * hooks/deactivate.php if it was active), runs hooks/uninstall.php, then
+     * removes published assets, the database record and the plugin files.
+     * Files are removed even when the plugin's own cleanup code fails; that
+     * failure is reported afterwards as a PluginHookFailed.
      *
      * @param  string  $slug  The plugin slug to delete
      * @return bool True if plugin existed and was deleted, false if not found
+     *
+     * @throws PluginHookFailed When the plugin was deleted but its cleanup code failed.
      */
     public function deletePlugin(string $slug): bool
     {
@@ -203,22 +266,152 @@ final class PluginService
             $this->loadPlugin($slug);
         }
 
-        // Fire uninstall action hook
-        do_action('plugin_uninstalling', $slug);
-        do_action("plugin_uninstalling_{$slug}");
+        $failures = [];
 
-        // Deactivate first if active
-        $this->deactivatePlugin($slug);
+        try {
+            do_action('plugin_uninstalling', $slug);
+            do_action("plugin_uninstalling_{$slug}");
+        } catch (\Throwable $e) {
+            $failures[] = $e;
+        }
 
-        // Delete database record
+        try {
+            $this->deactivatePlugin($slug);
+        } catch (PluginHookFailed $e) {
+            $failures[] = $e->getPrevious() ?? $e;
+        }
+
+        try {
+            $this->runLifecycleFile($slug, 'uninstall');
+        } catch (\Throwable $e) {
+            $failures[] = $e;
+        }
+
+        $this->assets->remove($slug);
+
         if ($plugin) {
             $plugin->delete();
         }
 
-        // Delete the plugin directory
         File::deleteDirectory($pluginPath);
 
+        if ($failures !== []) {
+            $messages = implode('; ', array_map(fn (\Throwable $e) => $e->getMessage(), $failures));
+            Log::error('Plugin cleanup failed during deletion', ['slug' => $slug, 'error' => $messages]);
+
+            throw new PluginHookFailed(
+                "The plugin was deleted, but its cleanup code failed, so some of its data may remain: {$messages}",
+                0,
+                $failures[0]
+            );
+        }
+
         return true;
+    }
+
+    /**
+     * Runtime UI bundles of the active plugins, for the browser to import().
+     *
+     * Re-publishes a bundle whose public copy has gone missing (an in-place
+     * update can replace public/), and skips any plugin whose bundle is
+     * invalid rather than failing the page.
+     *
+     * @return array<int, array{slug: string, entry: string, styles: array<int, string>}>
+     */
+    public function runtimeAssets(): array
+    {
+        $assets = [];
+
+        foreach ($this->getActivatedPlugins() as $slug) {
+            if (! $this->isSafeSlug($slug)) {
+                continue;
+            }
+
+            $manifest = $this->readManifest($slug);
+            if ($manifest === null) {
+                continue;
+            }
+
+            try {
+                $ui = $this->assets->uiFor($slug, $manifest);
+                if ($ui === null) {
+                    continue;
+                }
+
+                if (! $this->assets->isPublished($slug, $ui['entry'])) {
+                    $this->assets->publish($slug);
+                }
+            } catch (\Throwable $e) {
+                Log::warning('Skipping plugin runtime UI', ['slug' => $slug, 'error' => $e->getMessage()]);
+
+                continue;
+            }
+
+            $version = rawurlencode(is_string($manifest['version'] ?? null) ? $manifest['version'] : '0');
+            $url = fn (string $path) => url("plugins/{$slug}/{$path}").'?v='.$version;
+
+            $assets[] = [
+                'slug' => $slug,
+                'entry' => $url($ui['entry']),
+                'styles' => array_map($url, $ui['styles']),
+            ];
+        }
+
+        return $assets;
+    }
+
+    /**
+     * Read and decode a plugin's manifest, or null when it is missing or not
+     * a JSON object.
+     *
+     * @return array<string, mixed>|null
+     */
+    protected function readManifest(string $slug): ?array
+    {
+        $manifestPath = $this->pluginsPath.'/'.$slug.'/plugin.json';
+
+        if (! File::exists($manifestPath)) {
+            return null;
+        }
+
+        $manifest = json_decode(File::get($manifestPath), true);
+
+        if (! is_array($manifest)) {
+            Log::warning('Plugin manifest is not valid JSON; skipping', ['slug' => $slug]);
+
+            return null;
+        }
+
+        return $manifest;
+    }
+
+    /**
+     * Run hooks/{activate,deactivate,uninstall}.php if the plugin ships it.
+     *
+     * The file is required inside a static closure so it cannot reach this
+     * service through $this, and it must resolve inside the plugin directory.
+     * Anything it throws propagates to the caller.
+     */
+    protected function runLifecycleFile(string $slug, string $hook): void
+    {
+        $pluginPath = realpath($this->pluginsPath.'/'.$slug);
+        if ($pluginPath === false) {
+            return;
+        }
+
+        $file = $pluginPath.DIRECTORY_SEPARATOR.'hooks'.DIRECTORY_SEPARATOR.$hook.'.php';
+        if (! is_file($file)) {
+            return;
+        }
+
+        $resolved = realpath($file);
+        if ($resolved === false || ! str_starts_with($resolved, $pluginPath.DIRECTORY_SEPARATOR)) {
+            throw new \RuntimeException("hooks/{$hook}.php resolves outside the plugin directory.");
+        }
+
+        (static function (string $__lifecycleFile): void {
+            require $__lifecycleFile;
+        })($resolved);
     }
 
     /**
@@ -355,6 +548,19 @@ final class PluginService
             throw new \RuntimeException('Invalid plugin: missing plugin.json');
         }
 
+        // Refuse a plugin this installation cannot run before it is kept.
+        $manifest = json_decode(File::get($manifestPath), true);
+        try {
+            if (! is_array($manifest)) {
+                throw new \RuntimeException('Invalid plugin: plugin.json is not a JSON object');
+            }
+
+            PluginRequirements::assertMet($manifest, is_string($manifest['name'] ?? null) ? $manifest['name'] : $rootFolder);
+        } catch (\RuntimeException $e) {
+            File::deleteDirectory($extractedRoot);
+            throw $e;
+        }
+
         return [
             'slug' => $rootFolder,
             'path' => $extractedRoot,
@@ -423,8 +629,9 @@ final class PluginService
      * here would take down every request.
      *
      * @param  string  $slug  The plugin slug to load
+     * @param  bool  $strict  Throw instead of logging when the plugin cannot load (used on activation)
      */
-    protected function loadPlugin(string $slug): void
+    protected function loadPlugin(string $slug, bool $strict = false): void
     {
         if (! $this->isSafeSlug($slug)) {
             Log::warning('Unsafe plugin slug skipped at load time', ['slug' => $slug]);
@@ -433,42 +640,44 @@ final class PluginService
         }
 
         $pluginPath = $this->pluginsPath.'/'.$slug;
-        $manifestPath = $pluginPath.'/plugin.json';
+        $manifest = $this->readManifest($slug);
 
-        if (! File::exists($manifestPath)) {
-            return;
-        }
-
-        $manifest = json_decode(File::get($manifestPath), true);
-
-        if (! is_array($manifest)) {
-            Log::warning('Plugin manifest is not valid JSON; skipping', ['slug' => $slug]);
+        if ($manifest === null) {
+            if ($strict) {
+                throw new \RuntimeException('plugin.json is missing or invalid.');
+            }
 
             return;
         }
 
-        $mainFile = basename($manifest['main_file'] ?? 'Plugin.php');
+        $mainFile = basename(is_string($manifest['main_file'] ?? null) ? $manifest['main_file'] : 'Plugin.php');
         $pluginFile = realpath($pluginPath.'/'.$mainFile);
 
         if (! $pluginFile || ! str_starts_with($pluginFile, realpath($pluginPath))) {
             Log::warning('Plugin main_file path traversal attempt blocked', ['slug' => $slug, 'main_file' => $manifest['main_file'] ?? null]);
 
+            if ($strict) {
+                throw new \RuntimeException("The main file \"{$mainFile}\" was not found in the plugin directory.");
+            }
+
             return;
         }
 
-        if (File::exists($pluginFile)) {
-            // Load the plugin file - it will have access to all helper functions.
-            // Isolate failures: a parse/fatal error or throw while loading one
-            // plugin must not take down every request (loadActivePlugins runs
-            // at boot for all active plugins).
-            try {
-                require_once $pluginFile;
+        // Load the plugin file - it will have access to all helper functions.
+        // At boot (non-strict) failures are isolated: a parse error or throw
+        // while loading one plugin must not take down every request. On
+        // activation (strict) the failure propagates so the plugin stays off.
+        try {
+            require_once $pluginFile;
 
-                // Run the plugin's init action if it exists
-                do_action('plugin_loaded', $slug, $manifest);
-            } catch (\Throwable $e) {
-                Log::error('Failed to load plugin; skipping', ['slug' => $slug, 'error' => $e->getMessage()]);
+            // Run the plugin's init action if it exists
+            do_action('plugin_loaded', $slug, $manifest);
+        } catch (\Throwable $e) {
+            if ($strict) {
+                throw $e;
             }
+
+            Log::error('Failed to load plugin; skipping', ['slug' => $slug, 'error' => $e->getMessage()]);
         }
     }
 
