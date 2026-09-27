@@ -14,6 +14,7 @@
  *    bundle, which Inventoros publishes and loads in the browser at runtime.
  */
 
+use App\Models\Inventory\Product;
 use Illuminate\Support\Facades\Log;
 
 // ========================================
@@ -27,7 +28,41 @@ add_page_component('dashboard', 'header', [
     'component' => 'HelloWorldBanner',
     'position' => 1,
     'data' => [
-        'version' => '1.1.0',
+        'version' => '1.2.0',
+    ],
+]);
+
+// A page of its own at /hello-world. The component comes from the bundle
+// (plugin.registerPage('Hello', ...)); props are computed per request.
+register_page('hello-world.index', 'Plugin::hello-world/Hello', [
+    'uri' => '/hello-world',
+    'title' => 'Hello World',
+    'props' => fn ($request, $user) => [
+        'name' => $user->name,
+        'productCount' => $user->hasPermission('view_products')
+            ? Product::where('organization_id', $user->organization_id)->count()
+            : null,
+    ],
+]);
+
+// A sidebar link to that page.
+register_menu_item([
+    'label' => 'Hello World',
+    'route' => 'hello-world.index',
+    'position' => 999,
+]);
+
+// A dashboard widget, shown only to users who can view products. Its data is
+// a closure, so the count is never queried for anyone else.
+register_dashboard_widget([
+    'id' => 'hello-world-products',
+    'title' => 'Hello World',
+    'plugin' => 'hello-world',
+    'component' => 'HelloWorldWidget',
+    'width' => 'quarter',
+    'permission' => 'view_products',
+    'data' => fn ($user) => [
+        'productCount' => Product::where('organization_id', $user->organization_id)->count(),
     ],
 ]);
 
@@ -71,9 +106,3 @@ add_action('plugin_loaded', function ($slug, $manifest) {
 //     return $stats;
 // });
 
-// Add a sidebar menu item.
-// register_menu_item([
-//     'label' => 'Hello World',
-//     'route' => 'dashboard',
-//     'position' => 999,
-// ]);
