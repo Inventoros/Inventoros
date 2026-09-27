@@ -151,7 +151,7 @@ class OrderNumberRetryTest extends TestCase
                 'INSERT ...',
                 [],
                 tap(new \PDOException('SQLSTATE[23000]: collision', 23000), function ($e) {
-                    $e->errorInfo = ['23000', 19, 'collision'];
+                    $e->errorInfo = ['23000', 19, 'UNIQUE constraint failed: orders.organization_id, orders.order_number'];
                 })
             );
         }, maxAttempts: 2);

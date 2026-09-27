@@ -6,6 +6,7 @@ namespace App\Support;
 
 use Closure;
 use Illuminate\Database\QueryException;
+use Illuminate\Database\UniqueConstraintViolationException;
 use RuntimeException;
 use Throwable;
 
@@ -57,13 +58,47 @@ final class SequenceNumberRetry
     }
 
     /**
-     * Detect a unique-constraint violation across MySQL, Postgres, and
-     * SQLite. MySQL/SQLite use SQLSTATE 23000; Postgres uses 23505.
+     * Whether a query failed because another row already holds the value
+     * (a genuine collision worth retrying with a fresh number).
+     *
+     * SQLSTATE alone cannot tell: SQLite and MySQL report EVERY integrity
+     * violation (NOT NULL, foreign key, check, unique) as 23000, so this
+     * looks at the driver-specific detail:
+     *
+     *  - Laravel's own UniqueConstraintViolationException (raised by the
+     *    connection when it recognises the error) is always a collision.
+     *  - Postgres: SQLSTATE 23505 (23502 not-null, 23503 FK are not).
+     *  - MySQL/MariaDB: driver code 1062 ER_DUP_ENTRY or 1586
+     *    ER_DUP_ENTRY_WITH_KEY_NAME (1048 not-null, 1451/1452 FK are not).
+     *  - SQL Server: driver code 2627 (unique/PK constraint) or 2601
+     *    (unique index) (515 not-null is not).
+     *  - SQLite: driver code 19 covers every constraint, so the message
+     *    decides: "UNIQUE constraint failed" (or the legacy "is not unique").
+     *
+     * Anything else is not retried: create() rethrows it unchanged.
      */
     public static function isUniqueConstraintViolation(QueryException $e): bool
     {
-        $sqlState = $e->errorInfo[0] ?? null;
+        if ($e instanceof UniqueConstraintViolationException) {
+            return true;
+        }
 
-        return in_array($sqlState, ['23000', '23505'], true);
+        $sqlState = (string) ($e->errorInfo[0] ?? '');
+        $driverCode = (int) ($e->errorInfo[1] ?? 0);
+        $message = (string) ($e->errorInfo[2] ?? $e->getMessage());
+
+        if ($sqlState === '23505') {
+            return true;
+        }
+
+        if ($sqlState !== '23000') {
+            return false;
+        }
+
+        if (in_array($driverCode, [1062, 1586, 2627, 2601], true)) {
+            return true;
+        }
+
+        return (bool) preg_match('/UNIQUE constraint failed|columns? .* (is|are) not unique/i', $message);
     }
 }
