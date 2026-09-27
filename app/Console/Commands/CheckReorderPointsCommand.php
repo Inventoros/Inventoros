@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace App\Console\Commands;
 
-use App\Models\ActivityLog;
 use App\Models\Inventory\Product;
 use App\Models\Purchasing\PurchaseOrder;
 use App\Models\Purchasing\PurchaseOrderItem;
+use App\Services\ReorderService;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
@@ -68,9 +68,7 @@ class CheckReorderPointsCommand extends Command
 
         // Get all products that need reorder
         $products = Product::needsReorder()
-            ->with(['suppliers' => function ($query) {
-                $query->wherePivot('is_primary', true);
-            }])
+            ->with(ReorderService::primarySupplierEagerLoad())
             ->get();
 
         if ($products->isEmpty()) {
@@ -124,76 +122,22 @@ class CheckReorderPointsCommand extends Command
             $grouped[$key]['products'][] = $product;
         }
 
-        // Create POs for each group
+        // Create POs for each group. Quantity and cost come from the shared
+        // ReorderService so the quick "Create PO" action suggests the same.
         $createdPOs = 0;
+        $reorder = app(ReorderService::class);
 
         foreach ($grouped as $group) {
             try {
-                $po = PurchaseOrder::createWithNumber($group['organization_id'], function (string $poNumber) use ($group) {
-                    $po = PurchaseOrder::create([
-                        'organization_id' => $group['organization_id'],
-                        'supplier_id' => $group['supplier_id'],
-                        'po_number' => $poNumber,
-                        'status' => PurchaseOrder::STATUS_DRAFT,
-                        'order_date' => now(),
-                        'subtotal' => 0,
-                        'tax' => 0,
-                        'shipping' => 0,
-                        'total' => 0,
-                        'notes' => 'Auto-generated reorder',
-                    ]);
-
-                    $subtotal = 0;
-
-                    foreach ($group['products'] as $product) {
-                        $costPrice = $product->suppliers->first()->pivot->cost_price
-                            ?? $product->purchase_price
-                            ?? $product->price
-                            ?? 0;
-
-                        $itemSubtotal = $product->reorder_quantity * $costPrice;
-
-                        PurchaseOrderItem::create([
-                            'purchase_order_id' => $po->id,
-                            'product_id' => $product->id,
-                            'product_name' => $product->name,
-                            'sku' => $product->sku,
-                            'quantity_ordered' => $product->reorder_quantity,
-                            'quantity_received' => 0,
-                            'unit_cost' => $costPrice,
-                            'subtotal' => $itemSubtotal,
-                            'tax' => 0,
-                            'total' => $itemSubtotal,
-                        ]);
-
-                        $subtotal += $itemSubtotal;
-                    }
-
-                    // Update PO totals
-                    $po->update([
-                        'subtotal' => $subtotal,
-                        'total' => $subtotal,
-                    ]);
-
-                    // Log activity
-                    $productNames = collect($group['products'])->pluck('name')->implode(', ');
-                    ActivityLog::create([
-                        'organization_id' => $group['organization_id'],
-                        'user_id' => null,
-                        'subject_type' => PurchaseOrder::class,
-                        'subject_id' => $po->id,
-                        'action' => 'auto_reorder',
-                        'description' => "Auto-generated purchase order {$po->po_number} for: {$productNames}",
-                        'properties' => [
-                            'po_number' => $po->po_number,
-                            'supplier_id' => $group['supplier_id'],
-                            'product_count' => count($group['products']),
-                            'total' => $subtotal,
-                        ],
-                    ]);
-
-                    return $po;
-                });
+                $po = $reorder->createDraftPurchaseOrder(
+                    organizationId: $group['organization_id'],
+                    supplierId: $group['supplier_id'],
+                    products: $group['products'],
+                    userId: null,
+                    notes: 'Auto-generated reorder',
+                    activityAction: 'auto_reorder',
+                    activityDescription: 'Auto-generated purchase order',
+                );
 
                 $createdPOs++;
 

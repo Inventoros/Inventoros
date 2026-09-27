@@ -527,6 +527,53 @@ class CheckReorderPointsCommandTest extends TestCase
         $this->assertStringContainsString('Auto-generated', $log->description);
     }
 
+    public function test_suppliers_linked_through_the_product_form_produce_draft_purchase_orders(): void
+    {
+        // End to end: the supplier link is created the way a user creates it
+        // (product edit form -> ProductService), not by attaching the pivot.
+        $product = Product::create([
+            'organization_id' => $this->organization->id,
+            'name' => 'Linked Product',
+            'sku' => 'LINK-001',
+            'price' => 10.00,
+            'currency' => 'USD',
+            'stock' => 2,
+            'min_stock' => 5,
+            'reorder_point' => 5,
+            'reorder_quantity' => 10,
+            'is_active' => true,
+        ]);
+        $backup = Supplier::create([
+            'organization_id' => $this->organization->id,
+            'name' => 'Backup Supplier',
+            'code' => 'SUP-0009',
+            'is_active' => true,
+        ]);
+
+        $this->actingAs($this->admin)->put(route('products.update', $product), [
+            'name' => 'Linked Product', 'sku' => 'LINK-001', 'price' => 10, 'stock' => 2, 'min_stock' => 5,
+            'reorder_point' => 5, 'reorder_quantity' => 10,
+            'suppliers' => [
+                ['supplier_id' => $backup->id, 'cost_price' => 9.00, 'is_primary' => false],
+                ['supplier_id' => $this->supplier->id, 'supplier_sku' => 'TS-LINK', 'cost_price' => 4.25, 'minimum_order_quantity' => 24, 'is_primary' => true],
+            ],
+        ])->assertSessionHasNoErrors();
+
+        $this->artisan('inventory:check-reorder-points')->assertExitCode(0);
+
+        $po = PurchaseOrder::sole();
+        $this->assertSame(PurchaseOrder::STATUS_DRAFT, $po->status);
+        $this->assertSame($this->supplier->id, $po->supplier_id);
+
+        $item = $po->items()->sole();
+        $this->assertSame($product->id, $item->product_id);
+        // Reorder quantity 10 is below the supplier's minimum order of 24.
+        $this->assertSame(24, $item->quantity_ordered);
+        $this->assertEquals(4.25, (float) $item->unit_cost);
+        $this->assertSame('TS-LINK', $item->supplier_sku);
+        $this->assertEquals(102.0, (float) $po->total);
+    }
+
     /** @test */
     public function it_skips_run_when_lock_is_already_held(): void
     {
