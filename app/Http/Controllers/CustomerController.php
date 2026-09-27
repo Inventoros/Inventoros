@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use App\Enums\Permission;
 use App\Http\Requests\Customer\StoreCustomerRequest;
 use App\Http\Requests\Customer\UpdateCustomerRequest;
 use App\Models\Customer;
+use App\Models\CustomerContact;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -97,8 +99,29 @@ class CustomerController extends Controller
         // Newest first: the page lists the most recent orders.
         $customer->load(['orders' => fn ($query) => $query->latest('order_date')->latest('id')]);
 
+        $organization = $customer->organization;
+
         return Inertia::render('Customers/Show', [
             'customer' => $customer,
+            'contacts' => $customer->contacts()
+                ->orderBy('id')
+                ->get()
+                ->map(fn (CustomerContact $contact) => [
+                    'id' => $contact->id,
+                    'name' => $contact->name,
+                    'email' => $contact->email,
+                    'status' => $contact->status(),
+                    'invited_at' => $contact->invited_at?->toIso8601String(),
+                    'activated_at' => $contact->activated_at?->toIso8601String(),
+                    'last_login_at' => $contact->last_login_at?->toIso8601String(),
+                    'revoked_at' => $contact->revoked_at?->toIso8601String(),
+                ])
+                ->values(),
+            'portal' => [
+                'enabled' => (bool) $organization?->portal_enabled,
+                'canManageContacts' => $request->user()->hasPermission(Permission::EDIT_CUSTOMERS),
+                'login_url' => $organization ? route('portal.login', ['organization' => $organization->slug]) : null,
+            ],
         ]);
     }
 
