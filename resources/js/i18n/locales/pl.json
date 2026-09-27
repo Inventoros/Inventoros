@@ -608,7 +608,6 @@
       "addProductsHint": "Dodaj produkty do kategorii, aby zobaczyć dane wydajności"
     },
     "moreReports": "Więcej raportów",
-    "moreReportsDesc": "Dodatkowe raporty wkrótce",
     "adjustmentTypes": {
       "manual": "Ręczna",
       "recount": "Przeliczenie",
@@ -1198,7 +1197,7 @@
       "step3": "Zacznij dodawać produkty do magazynu",
       "step4": "Zaproś członków zespołu do organizacji",
       "resources": "Przydatne zasoby",
-      "docs": "Dokumentacja (wkrótce)",
+      "docs": "Dokumentacja",
       "community": "Dyskusje społeczności",
       "issues": "Zgłoś problemy",
       "goToLogin": "Przejdź do logowania",

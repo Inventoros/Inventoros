@@ -608,7 +608,6 @@
       "addProductsHint": "Voeg producten toe aan categorieën om prestatiegegevens te zien"
     },
     "moreReports": "Meer rapporten",
-    "moreReportsDesc": "Extra rapporten komen binnenkort beschikbaar",
     "adjustmentTypes": {
       "manual": "Handmatig",
       "recount": "Hertelling",
@@ -1198,7 +1197,7 @@
       "step3": "Begin met het toevoegen van producten aan uw voorraad",
       "step4": "Nodig teamleden uit voor uw organisatie",
       "resources": "Nuttige bronnen",
-      "docs": "Documentatie (binnenkort beschikbaar)",
+      "docs": "Documentatie",
       "community": "Communitydiscussies",
       "issues": "Problemen melden",
       "goToLogin": "Naar inloggen",

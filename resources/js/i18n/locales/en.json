@@ -616,7 +616,6 @@
       "addProductsHint": "Add products to categories to see performance data"
     },
     "moreReports": "More Reports",
-    "moreReportsDesc": "Additional reports coming soon",
     "customReports": {
       "title": "Custom Report Builder",
       "description": "Build custom reports with flexible columns, filters, and sorting",
@@ -1224,7 +1223,7 @@
       "step3": "Start adding products to your inventory",
       "step4": "Invite team members to your organization",
       "resources": "Helpful Resources",
-      "docs": "Documentation (Coming Soon)",
+      "docs": "Documentation",
       "community": "Community Discussions",
       "issues": "Report Issues",
       "goToLogin": "Go to Login",

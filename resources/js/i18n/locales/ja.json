@@ -608,7 +608,6 @@
       "addProductsHint": "カテゴリに商品を追加してパフォーマンスデータを確認してください"
     },
     "moreReports": "その他のレポート",
-    "moreReportsDesc": "追加レポートは近日公開予定",
     "adjustmentTypes": {
       "manual": "手動",
       "recount": "棚卸し",
@@ -1198,7 +1197,7 @@
       "step3": "在庫に商品を追加開始",
       "step4": "チームメンバーを組織に招待",
       "resources": "参考リソース",
-      "docs": "ドキュメント（近日公開）",
+      "docs": "ドキュメント",
       "community": "コミュニティディスカッション",
       "issues": "問題を報告",
       "goToLogin": "ログインへ",

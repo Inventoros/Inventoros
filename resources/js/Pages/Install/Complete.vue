@@ -63,7 +63,7 @@ const { t } = useI18n();
                     <h2 class="text-lg font-semibold text-text-primary mb-4">{{ t('install.complete.resources') }}</h2>
                     <ul class="space-y-2 text-sm">
                         <li>
-                            <a href="https://github.com/inventoros/inventoros" target="_blank" class="text-brand hover:text-brand-hover hover:underline">
+                            <a href="https://inventoros.com/docs" target="_blank" rel="noopener" class="text-brand hover:text-brand-hover hover:underline">
                                 {{ t('install.complete.docs') }}
                             </a>
                         </li>
