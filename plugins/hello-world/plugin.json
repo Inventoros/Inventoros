@@ -1,9 +1,14 @@
 {
     "name": "Hello World Plugin",
-    "description": "👋 A friendly plugin that literally does nothing useful. Perfect for testing or just saying hi to your inventory system. Feel free to delete it anytime - we promise it won't get offended!",
-    "version": "1.0.0",
-    "author": "InventorOS Team",
+    "description": "A friendly example plugin: it greets you on the dashboard and shows how hooks, lifecycle files and runtime UI bundles fit together. Safe to delete at any time.",
+    "version": "1.3.0",
+    "author": "Inventoros Team",
     "author_url": "https://inventoros.com",
     "requires": "1.0.0",
-    "main_file": "Plugin.php"
+    "requires_php": "8.2",
+    "main_file": "Plugin.php",
+    "ui": {
+        "entry": "plugin.js",
+        "styles": ["plugin.css"]
+    }
 }

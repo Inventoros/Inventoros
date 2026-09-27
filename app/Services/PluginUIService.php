@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace App\Services;
 
+use App\Models\User;
+use Illuminate\Support\Facades\Log;
+
 /**
  * Service for plugins to register custom UI elements (pages, menus, etc).
  *
@@ -117,17 +120,22 @@ final class PluginUIService
     /**
      * Register a custom page route.
      *
+     * The route itself is added by routes/web.php (App\Support\PluginPageRoutes)
+     * and served by App\Http\Controllers\PluginPageController.
+     *
      * @param string $route Route name
      * @param string $component Inertia component name
-     * @param array $options Additional options (middleware, permission, title)
+     * @param array $options uri, permission, props (array or callable($request, $user)), title, middleware
      * @return void
      */
     public function registerPage(string $route, string $component, array $options = []): void
     {
         $defaults = [
+            'uri' => null,
             'middleware' => ['auth'],
             'permission' => null,
             'title' => 'Custom Page',
+            'props' => [],
         ];
 
         $this->customPages[$route] = array_merge($defaults, [
@@ -237,6 +245,147 @@ final class PluginUIService
     public function getAllPageComponents(string $page): array
     {
         return $this->pageComponents[$page] ?? [];
+    }
+
+    /**
+     * Whether a user may see a plugin UI entry.
+     *
+     * No permission means everyone who can see the host page. A string is a
+     * single permission; a list means any one of them. With a permission set
+     * and no user, the entry is hidden.
+     *
+     * @param  string|array<int, string>|null  $permission
+     */
+    public static function allows(?User $user, string|array|null $permission): bool
+    {
+        if ($permission === null || $permission === '' || $permission === []) {
+            return true;
+        }
+
+        if ($user === null) {
+            return false;
+        }
+
+        return is_array($permission)
+            ? $user->hasAnyPermission(array_values($permission))
+            : $user->hasPermission($permission);
+    }
+
+    /**
+     * Menu items the user may see, with submenu entries filtered the same way.
+     *
+     * @return array<int, array>
+     */
+    public function getVisibleMenuItems(?User $user): array
+    {
+        $items = [];
+
+        foreach ($this->getMenuItems() as $item) {
+            if (! self::allows($user, $item['permission'] ?? null)) {
+                continue;
+            }
+
+            $item['submenu'] = array_values(array_filter(
+                $item['submenu'] ?? [],
+                fn (array $sub) => self::allows($user, $sub['permission'] ?? null)
+            ));
+
+            $items[] = $item;
+        }
+
+        return $items;
+    }
+
+    /**
+     * Components for a page slot that the user may see, with callable `data`
+     * resolved for them. Components they may not see are left out entirely,
+     * and their data is never computed.
+     *
+     * @return array<int, array>
+     */
+    public function getVisiblePageComponents(?User $user, string $page, string $slot): array
+    {
+        $visible = [];
+
+        foreach ($this->getPageComponents($page, $slot) as $component) {
+            if (! self::allows($user, $component['permission'] ?? null)) {
+                continue;
+            }
+
+            $component['data'] = $this->resolveData($component['data'] ?? [], $user, "{$page}:{$slot}");
+            unset($component['permission']);
+
+            $visible[] = $component;
+        }
+
+        return $visible;
+    }
+
+    /**
+     * Dashboard widgets the user may see, shaped for the dashboard page.
+     *
+     * Like the built-in dashboard figures, a widget the user may not see is
+     * absent rather than empty, and its data is never computed. Widgets
+     * without a component are skipped.
+     *
+     * @return array<int, array{id: string, title: string, plugin: string|null, component: string, data: array, width: string, position: int}>
+     */
+    public function getVisibleDashboardWidgets(?User $user): array
+    {
+        $widgets = [];
+
+        foreach ($this->getDashboardWidgets() as $widget) {
+            if (! is_string($widget['component'] ?? null) || $widget['component'] === '') {
+                Log::warning('Plugin dashboard widget has no component; skipped', ['id' => $widget['id'] ?? null]);
+
+                continue;
+            }
+
+            if (! self::allows($user, $widget['permission'] ?? null)) {
+                continue;
+            }
+
+            $widgets[] = [
+                'id' => (string) $widget['id'],
+                'title' => (string) $widget['title'],
+                'plugin' => $widget['plugin'] ?? null,
+                'component' => $widget['component'],
+                'data' => $this->resolveData($widget['data'] ?? [], $user, 'dashboard widget '.$widget['id']),
+                'width' => in_array($widget['width'], ['full', 'half', 'third', 'quarter'], true) ? $widget['width'] : 'full',
+                'position' => (int) $widget['position'],
+            ];
+        }
+
+        return $widgets;
+    }
+
+    /**
+     * The page registered for a route name, if any.
+     *
+     * @return array<string, mixed>|null
+     */
+    public function getCustomPage(string $route): ?array
+    {
+        return $this->customPages[$route] ?? null;
+    }
+
+    /**
+     * @param  mixed  $data  An array, or a callable that receives the user and returns one.
+     * @return array<mixed>
+     */
+    private function resolveData(mixed $data, ?User $user, string $context): array
+    {
+        if ($data instanceof \Closure || (is_callable($data) && ! is_string($data))) {
+            $data = $data($user);
+        }
+
+        if (! is_array($data)) {
+            Log::warning('Plugin UI data must be an array; ignored', ['context' => $context]);
+
+            return [];
+        }
+
+        return $data;
     }
 
     /**

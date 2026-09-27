@@ -6,8 +6,13 @@ import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
 import { createApp, h } from 'vue';
 import { ZiggyVue } from 'ziggy-js';
 import i18n, { applyServerLocale } from './i18n';
+import { installPluginRuntime, loadPluginAssets, resolveRuntimePage } from './plugins/runtime';
 
 const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
+
+// window.Inventoros: Vue plus the plugin SDK, for pre-built plugin bundles
+// that are imported at runtime (see ./plugins/runtime.js).
+installPluginRuntime();
 
 // Glob patterns for pages
 const pages = import.meta.glob('./Pages/**/*.vue');
@@ -15,9 +20,15 @@ const pluginPages = import.meta.glob('../../plugins/*/resources/js/Pages/**/*.vu
 
 createInertiaApp({
     title: (title) => `${title} - ${appName}`,
-    resolve: (name) => {
+    resolve: async (name, page) => {
         // Check if this is a plugin page (format: Plugin::PluginName/PagePath)
         if (name.startsWith('Plugin::')) {
+            // A page registered by a runtime plugin bundle.
+            const runtimePage = await resolveRuntimePage(name, page);
+            if (runtimePage) {
+                return runtimePage;
+            }
+
             const [, pluginPath] = name.split('::');
             const [pluginName, ...pagePath] = pluginPath.split('/');
             const pageName = pagePath.join('/');
@@ -42,6 +53,10 @@ createInertiaApp({
         // visit that changed it (saving the language preference).
         applyServerLocale(props.initialPage?.props?.locale);
         router.on('navigate', (event) => applyServerLocale(event.detail.page.props.locale));
+
+        // Import the UI bundles of active plugins, and any newly activated one.
+        loadPluginAssets(props.initialPage?.props?.pluginAssets);
+        router.on('navigate', (event) => loadPluginAssets(event.detail.page.props.pluginAssets));
 
         return createApp({ render: () => h(App, props) })
             .use(plugin)

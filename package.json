@@ -4,6 +4,7 @@
     "type": "module",
     "scripts": {
         "build": "vite build",
+        "build:plugin:hello-world": "vite build --config plugins/hello-world/ui/vite.config.js",
         "dev": "vite",
         "test:js": "node --test \"tests/js/*.test.js\"",
         "test:e2e": "playwright test",

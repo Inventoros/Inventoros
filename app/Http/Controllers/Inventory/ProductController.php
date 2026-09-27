@@ -18,6 +18,7 @@ use App\Services\ProductLocationStockService;
 use App\Services\WarehouseStockLevelService;
 use App\Services\ProductService;
 use App\Support\PluginQueryGuard;
+use App\Support\ProductSearch;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -65,6 +66,9 @@ class ProductController extends Controller
                             $variants->where('sku', 'like', "%{$search}%")
                                 ->orWhere('barcode', 'like', "%{$search}%");
                         });
+
+                    // Hook: Let plugins add search conditions to the OR group
+                    ProductSearch::applyPluginFilter($q, (string) $search);
                 });
             })
             ->when($request->input('category'), function ($query, $category) {
@@ -86,6 +90,9 @@ class ProductController extends Controller
         $query = PluginQueryGuard::organizationScoped($query, Product::class, $organizationId);
 
         $products = $query->paginate(config('limits.pagination.default'))->withQueryString();
+
+        // Display values run the product_display_name / product_price_display filters.
+        $products->getCollection()->each->withDisplayValues();
 
         // Hook: Modify products collection before rendering
         $products = apply_filters('product_list_data', $products, $request);
@@ -218,6 +225,9 @@ class ProductController extends Controller
         if ($product->organization_id !== auth()->user()->organization_id) {
             abort(403, 'Unauthorized action.');
         }
+
+        // Display values run the product_display_name / product_price_display filters.
+        $product->withDisplayValues();
 
         // Hook: Modify product before displaying
         $product = apply_filters('product_show_data', $product, auth()->user());

@@ -1,131 +1,118 @@
 <?php
 
 /**
- * Hello World Plugin for InventorOS
+ * Hello World plugin for Inventoros.
  *
- * This plugin does absolutely nothing useful and that's perfectly okay!
- * It's here to show you how plugins work and give you something to delete
- * when you're feeling productive. Go ahead, we won't judge. 😊
+ * It does nothing useful, and that is fine: it exists to show how a plugin is
+ * put together. Read it alongside docs/PLUGIN_DEVELOPMENT.md.
  *
- * Seriously though, this demonstrates:
- * - How to use hooks and filters
- * - How to handle lifecycle events (activate, deactivate, uninstall)
- * - How to log plugin activity
- * - How plugins integrate with InventorOS
- *
- * Delete me whenever you want! I'm just here for moral support.
+ *  - Plugin.php (this file) is loaded on every request while the plugin is
+ *    active. Register actions, filters and UI placements here.
+ *  - hooks/activate.php, hooks/deactivate.php and hooks/uninstall.php run once
+ *    at those points in the plugin's lifecycle.
+ *  - ui/ holds the source of the dashboard banner; dist/ holds its pre-built
+ *    bundle, which Inventoros publishes and loads in the browser at runtime.
  */
 
-// ========================================
-// LIFECYCLE HOOKS (completely optional!)
-// ========================================
-
-// Runs when the plugin is activated
-add_action('plugin_activated_hello-world', function () {
-    \Illuminate\Support\Facades\Log::info('🎉 Hello World plugin was activated! Time to do... nothing!');
-
-    // This is where you'd typically:
-    // - Create database tables
-    // - Set up default options
-    // - Initialize plugin data
-});
-
-// Runs when the plugin is deactivated
-add_action('plugin_deactivated_hello-world', function () {
-    \Illuminate\Support\Facades\Log::info('😢 Hello World plugin was deactivated. We had a good run!');
-
-    // This is where you'd typically:
-    // - Clean up temporary data
-    // - Clear caches
-    // - Disable scheduled tasks
-});
-
-// Runs when the plugin is being deleted
-add_action('plugin_uninstalling_hello-world', function () {
-    \Illuminate\Support\Facades\Log::info('👋 Hello World plugin is being deleted. Goodbye cruel world!');
-
-    // This is where you'd typically:
-    // - Delete database tables
-    // - Remove all plugin data
-    // - Clean up any files created by the plugin
-});
+use App\Models\Inventory\Product;
+use Illuminate\Support\Facades\Log;
 
 // ========================================
-// REGULAR PLUGIN CODE
+// UI PLACEMENT
 // ========================================
 
-// Say hello when we load!
+// Put the banner at the top of the dashboard. The component itself comes from
+// the runtime bundle (ui/src/main.js registers "HelloWorldBanner").
+add_page_component('dashboard', 'header', [
+    'plugin' => 'hello-world',
+    'component' => 'HelloWorldBanner',
+    'position' => 1,
+    'data' => [
+        'version' => '1.3.0',
+    ],
+]);
+
+// A "Hello" tab on the product detail page, next to the core Overview tab.
+// The tab bar only appears on pages that have at least one plugin tab.
+add_page_component('products.show', 'tabs', [
+    'plugin' => 'hello-world',
+    'component' => 'HelloWorldTab',
+    'label' => 'Hello',
+    'permission' => 'view_products',
+    'data' => fn ($user) => ['sku' => request()->route('product')?->sku],
+]);
+
+// A page of its own at /hello-world. The component comes from the bundle
+// (plugin.registerPage('Hello', ...)); props are computed per request.
+register_page('hello-world.index', 'Plugin::hello-world/Hello', [
+    'uri' => '/hello-world',
+    'title' => 'Hello World',
+    'props' => fn ($request, $user) => [
+        'name' => $user->name,
+        'productCount' => $user->hasPermission('view_products')
+            ? Product::where('organization_id', $user->organization_id)->count()
+            : null,
+    ],
+]);
+
+// A sidebar link to that page.
+register_menu_item([
+    'label' => 'Hello World',
+    'route' => 'hello-world.index',
+    'position' => 999,
+]);
+
+// A dashboard widget, shown only to users who can view products. Its data is
+// a closure, so the count is never queried for anyone else.
+register_dashboard_widget([
+    'id' => 'hello-world-products',
+    'title' => 'Hello World',
+    'plugin' => 'hello-world',
+    'component' => 'HelloWorldWidget',
+    'width' => 'quarter',
+    'permission' => 'view_products',
+    'data' => fn ($user) => [
+        'productCount' => Product::where('organization_id', $user->organization_id)->count(),
+    ],
+]);
+
+// ========================================
+// ACTIONS
+// ========================================
+
 add_action('plugin_loaded', function ($slug, $manifest) {
     if ($slug === 'hello-world') {
-        \Illuminate\Support\Facades\Log::info('👋 Hello World! The plugin is loaded and doing... well, nothing really.', [
-            'version' => $manifest['version'] ?? 'unknown',
-            'message' => 'But hey, at least I exist!',
-        ]);
-
-        // Register the Hello World banner to appear on the dashboard
-        add_page_component('dashboard', 'header', [
-            'component' => 'HelloWorldBanner',
-            'plugin' => 'hello-world',
-            'position' => 1,
-        ]);
+        Log::debug('Hello World plugin loaded', ['version' => $manifest['version'] ?? 'unknown']);
     }
 });
 
 // ========================================
-// EXAMPLES (all commented out - uncomment to try!)
+// EXAMPLES (uncomment to try)
 // ========================================
 
-// Example 1: Log when products are created
-// add_action('product_created', function ($product) {
-//     \Illuminate\Support\Facades\Log::info('Hello World says: A product was born! 🎉', [
-//         'product_name' => $product->name,
-//     ]);
-// }, 10);
-
-// Example 2: Add a silly prefix to product names
-// add_filter('product_display_name', function ($name, $product) {
-//     return '✨ ' . $name . ' ✨';
-// }, 10);
-
-// Example 3: Track dashboard views
-// add_action('dashboard_viewed', function ($user) {
-//     \Illuminate\Support\Facades\Log::info('Hello World: Someone is looking at the dashboard! 👀', [
-//         'user' => $user->name,
-//     ]);
+// Log every new product, whichever surface created it.
+// add_action('product_created', function ($product, $user) {
+//     Log::info('Hello World: a product was created', ['sku' => $product->sku]);
 // });
 
-// Example 4: Add a custom menu item
-// register_menu_item([
-//     'label' => 'Hello World',
-//     'route' => 'dashboard', // Just link to dashboard for now
-//     'icon' => 'M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z',
-//     'position' => 999, // Show at the end
-// ]);
+// Decorate product names on the list and detail pages, the REST API and search.
+// add_filter('product_display_name', function ($name, $product) {
+//     return $product->isLowStock() ? $name.' (low stock)' : $name;
+// });
 
-// Example 5: Add custom data to dashboard stats
+// Show a 10% discount on displayed prices (the stored price is unchanged).
+// add_filter('product_price_display', function ($price, $product) {
+//     return $price === null ? null : round($price * 0.9, 2);
+// });
+
+// Let product search also match the notes field.
+// add_filter('product_search_query', function ($query, $term) {
+//     return $query->orWhere('notes', 'like', '%'.$term.'%');
+// });
+
+// Add a number to the dashboard statistics.
 // add_filter('dashboard_stats_data', function ($stats, $user) {
-//     $stats['hello_world_views'] = rand(1, 100); // Random number for fun
+//     $stats['hello_world_greetings'] = 1;
 //     return $stats;
-// }, 10);
+// });
 
-// Example 6: Add a widget to product show page
-// add_page_component('product.show', 'sidebar', [
-//     'component' => 'HelloWorldWidget', // Would need to create this Vue component
-//     'data' => ['message' => 'Hello from plugin!'],
-//     'position' => 999,
-// ]);
-
-// Example 7: Modify the product list query (show only active products)
-// add_filter('product_list_query', function ($query, $request) {
-//     return $query->where('is_active', true);
-// }, 10);
-
-/**
- * That's it! This plugin literally does nothing except say hello in the logs.
- * Want to make it do something? Uncomment the examples above!
- * Want to delete it? Go right ahead - we won't tell anyone. 🤐
- *
- * For more examples and documentation, see:
- * - PLUGIN_DEVELOPMENT.md
- * - app/Services/HookRegistry.php
- */

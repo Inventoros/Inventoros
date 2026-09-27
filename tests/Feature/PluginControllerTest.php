@@ -3,17 +3,21 @@
 namespace Tests\Feature;
 
 use App\Models\Auth\Organization;
+use App\Models\Plugin;
 use App\Models\Role;
 use App\Models\System\SystemSetting;
 use App\Models\User;
+use App\Services\PluginService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\File;
+use Tests\Feature\Concerns\InteractsWithFixturePlugins;
 use Tests\TestCase;
 use ZipArchive;
 
 class PluginControllerTest extends TestCase
 {
+    use InteractsWithFixturePlugins;
     use RefreshDatabase;
 
     protected User $admin;
@@ -120,6 +124,7 @@ class PluginControllerTest extends TestCase
             }
         }
         $this->createdPluginDirs = [];
+        $this->tearDownFixturePlugins();
 
         parent::tearDown();
     }
@@ -336,5 +341,38 @@ class PluginControllerTest extends TestCase
         $response->assertSessionHas('error');
         $this->assertStringContainsString('no public key is configured', session('error'));
         $this->assertFalse(File::isDirectory(base_path('plugins/p4-no-key')));
+    }
+
+    // ==================== LIFECYCLE FEEDBACK ====================
+
+    public function test_failed_activation_flashes_the_reason_and_leaves_the_plugin_inactive(): void
+    {
+        $slug = $this->makeFixturePlugin(['name' => 'Broken'], [
+            'hooks/activate.php' => "<?php\nthrow new \\RuntimeException('database unreachable');\n",
+        ]);
+
+        $this->actingAs($this->admin)
+            ->from(route('plugins.index'))
+            ->post(route('plugins.activate', $slug))
+            ->assertRedirect(route('plugins.index'))
+            ->assertSessionHas('error', 'Broken could not be activated: database unreachable');
+
+        $this->assertFalse((bool) Plugin::where('slug', $slug)->value('is_active'));
+    }
+
+    public function test_failed_deactivate_hook_flashes_a_warning(): void
+    {
+        $slug = $this->makeFixturePlugin(files: [
+            'hooks/deactivate.php' => "<?php\nthrow new \\RuntimeException('cache locked');\n",
+        ]);
+        app(PluginService::class)->activatePlugin($slug);
+
+        $this->actingAs($this->admin)
+            ->from(route('plugins.index'))
+            ->post(route('plugins.deactivate', $slug))
+            ->assertSessionHas('warning', fn (string $warning) => str_contains($warning, 'cache locked'))
+            ->assertSessionMissing('error');
+
+        $this->assertFalse((bool) Plugin::where('slug', $slug)->value('is_active'));
     }
 }
