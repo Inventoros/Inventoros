@@ -834,7 +834,9 @@
       "importTitle": "Import Orders",
       "importSubtitle": "Bring orders over from another system",
       "historical": "Historical import: don't adjust stock",
-      "historicalHelp": "Records the orders and their lines without changing inventory. Use this for past orders whose goods have already left, so current stock stays as it is.",
+      "historicalHelp": "Records the orders and their lines without changing inventory. Use this for past orders whose goods have already left, so current stock stays as it is. Webhooks and plugins are not notified.",
+      "notifyIntegrations": "Notify webhooks and plugins about each order",
+      "notifyIntegrationsHelp": "Sends an order.created webhook and runs plugin order hooks for every imported order, as if it were entered by hand. Turn off if the orders already exist in the connected systems.",
       "importButton": "Import Orders",
       "formatTitle": "Order file format",
       "linesExportTitle": "Line-items export",
@@ -847,7 +849,8 @@
       "ruleAllOrNothing": "The whole file is checked first. An order with any invalid row is not imported at all, and each problem is reported by row.",
       "ruleDuplicates": "An external_reference that was already imported is skipped, so importing the same file twice never duplicates orders.",
       "ruleCustomers": "Customers are matched by email. Otherwise a new customer is created.",
-      "ruleStock": "Stock is deducted like a hand-entered order, and an order without enough stock is not imported. Historical imports and cancelled orders never change stock."
+      "ruleStock": "Stock is deducted like a hand-entered order, and an order without enough stock is not imported. Historical imports and cancelled orders never change stock.",
+      "ruleIntegrations": "Historical imports never send order.created webhooks. Other imports send them by default; untick the option to skip them."
     },
     "users": {
       "exportTitle": "Export Users",

@@ -264,6 +264,87 @@ final class OrdersImportTest extends TestCase
         $this->assertSame(0, Notification::where('type', 'order_created')->count());
     }
 
+    private function orderCreatedWebhook(): \App\Models\Webhook
+    {
+        return \App\Models\Webhook::create([
+            'organization_id' => $this->org->id,
+            'name' => 'Orders',
+            'url' => 'https://example.com/hook',
+            'secret' => 'shh',
+            'events' => ['order.created'],
+            'is_active' => true,
+            'created_by' => $this->admin->id,
+        ]);
+    }
+
+    private function orderCreatedDeliveries(): int
+    {
+        return \App\Models\WebhookDelivery::where('event', 'order.created')->count();
+    }
+
+    public function test_a_historical_import_fires_no_order_created_webhooks_or_hooks(): void
+    {
+        \Illuminate\Support\Facades\Queue::fake();
+        $this->orderCreatedWebhook();
+        $hookCalls = 0;
+        add_action('order_created', function () use (&$hookCalls): void {
+            $hookCalls++;
+        });
+
+        $this->import(['H-1,2024-01-05,delivered,Acme,,WID-1,,1,10,,,'], historical: true);
+
+        $this->assertTrue(Order::where('external_reference', 'H-1')->exists());
+        $this->assertSame(0, $this->orderCreatedDeliveries());
+        $this->assertSame(0, $hookCalls);
+    }
+
+    public function test_a_stock_adjusting_import_fires_order_created_webhooks_by_default(): void
+    {
+        \Illuminate\Support\Facades\Queue::fake();
+        $this->orderCreatedWebhook();
+
+        $this->import([
+            'W-1,2026-01-05,pending,Acme,,WID-1,,1,10,,,',
+            'W-2,2026-01-05,pending,Acme,,WID-1,,1,10,,,',
+        ]);
+
+        $this->assertSame(2, $this->orderCreatedDeliveries());
+    }
+
+    public function test_a_stock_adjusting_import_can_skip_notifying_integrations(): void
+    {
+        \Illuminate\Support\Facades\Queue::fake();
+        $this->orderCreatedWebhook();
+
+        $import = new OrdersImport($this->admin, historical: false, notifyIntegrations: false);
+        Excel::import($import, $this->csv(['W-3,2026-01-05,pending,Acme,,WID-1,,1,10,,,']));
+
+        $this->assertTrue(Order::where('external_reference', 'W-3')->exists());
+        $this->assertSame(19, $this->widget->fresh()->stock);
+        $this->assertSame(0, $this->orderCreatedDeliveries());
+    }
+
+    public function test_the_endpoint_passes_the_webhook_option_and_the_queued_job_carries_it(): void
+    {
+        \Illuminate\Support\Facades\Queue::fake();
+        $this->orderCreatedWebhook();
+
+        $this->actingAs($this->admin)->post(route('import-export.import-orders'), [
+            'file' => $this->csv(['W-4,2026-01-05,pending,Acme,,WID-1,,1,10,,,']),
+            'notify_integrations' => '0',
+        ])->assertRedirect(route('import-export.index'));
+        $this->assertSame(0, $this->orderCreatedDeliveries());
+
+        Bus::fake();
+        Storage::fake(config('imports.disk'));
+        config(['imports.sync_max_kb' => 0]);
+        $this->actingAs($this->admin)->post(route('import-export.import-orders'), [
+            'file' => $this->csv(['W-5,2026-01-05,pending,Acme,,WID-1,,1,10,,,']),
+            'notify_integrations' => '0',
+        ]);
+        Bus::assertDispatched(ProcessOrderImportJob::class, fn ($job) => $job->notifyIntegrations === false);
+    }
+
     public function test_the_endpoint_imports_and_honours_the_historical_flag(): void
     {
         $response = $this->actingAs($this->admin)->post(route('import-export.import-orders'), [

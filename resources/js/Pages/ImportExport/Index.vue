@@ -146,11 +146,16 @@ const exportOrders = () => {
     });
 };
 
-const orderImport = useForm({ file: null, historical: false });
+const orderImport = useForm({ file: null, historical: false, notify_integrations: true });
 
 const submitOrderImport = () => {
     orderImport
-        .transform((data) => ({ ...data, historical: data.historical ? 1 : 0 }))
+        .transform((data) => ({
+            ...data,
+            historical: data.historical ? 1 : 0,
+            // Historical imports never notify integrations (server-enforced too).
+            notify_integrations: !data.historical && data.notify_integrations ? 1 : 0,
+        }))
         .post(route('import-export.import-orders'), {
             preserveScroll: true,
             onSuccess: () => orderImport.reset('file'),
@@ -519,6 +524,17 @@ const code = 'rounded bg-surface-overlay px-1 py-0.5 font-mono text-xs text-text
                                 </span>
                             </label>
 
+                            <label
+                                v-if="!orderImport.historical"
+                                class="flex items-start gap-2 rounded-lg border border-border-subtle bg-surface-canvas p-3 text-sm"
+                            >
+                                <input v-model="orderImport.notify_integrations" type="checkbox" :class="[checkbox, 'mt-0.5']" />
+                                <span>
+                                    <span class="block font-medium text-text-primary">{{ t('importExport.orders.notifyIntegrations') }}</span>
+                                    <span class="block text-text-tertiary">{{ t('importExport.orders.notifyIntegrationsHelp') }}</span>
+                                </span>
+                            </label>
+
                             <Button
                                 type="submit"
                                 variant="default"
@@ -566,6 +582,7 @@ const code = 'rounded bg-surface-overlay px-1 py-0.5 font-mono text-xs text-text
                                 <li class="flex items-start gap-2"><Info :size="16" class="mt-0.5 shrink-0 text-brand" /><span>{{ t('importExport.orders.ruleDuplicates') }}</span></li>
                                 <li class="flex items-start gap-2"><Info :size="16" class="mt-0.5 shrink-0 text-brand" /><span>{{ t('importExport.orders.ruleCustomers') }}</span></li>
                                 <li class="flex items-start gap-2"><Info :size="16" class="mt-0.5 shrink-0 text-brand" /><span>{{ t('importExport.orders.ruleStock') }}</span></li>
+                                <li class="flex items-start gap-2"><Info :size="16" class="mt-0.5 shrink-0 text-brand" /><span>{{ t('importExport.orders.ruleIntegrations') }}</span></li>
                             </ul>
                         </div>
                     </div>

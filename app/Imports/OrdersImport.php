@@ -57,6 +57,18 @@ use Throwable;
  * current stock already reflects them. Cancelled orders never move stock in
  * either mode.
  *
+ * Integrations (the `order_created` action: order.created webhooks and plugin
+ * listeners):
+ *  - Historical imports NEVER announce their orders. They are records of
+ *    sales that already happened, often long ago; firing order.created would
+ *    make a downstream system (fulfilment, accounting, a shop) act on them as
+ *    new sales.
+ *  - Stock-adjusting imports announce each order by default, because they
+ *    behave like orders entered by hand (stock moves, so integrations that
+ *    track orders or stock should hear about them). $notifyIntegrations =
+ *    false turns this off, e.g. when migrating live-but-already-synced
+ *    orders.
+ *
  * Customers are matched to an existing customer of this organization by
  * email (case-insensitive); otherwise a customer record is created (named by
  * customer_name, or the email when no name is given). Orders with neither a
@@ -95,6 +107,7 @@ final class OrdersImport implements ToCollection, WithHeadingRow
     public function __construct(
         private readonly User $importer,
         private readonly bool $historical = false,
+        private readonly bool $notifyIntegrations = true,
     ) {
         $this->organizationId = (int) $importer->organization_id;
     }
@@ -361,7 +374,7 @@ final class OrdersImport implements ToCollection, WithHeadingRow
                     'notes' => $header['notes'] ?? null,
                     'warehouse_id' => $this->defaultWarehouseId(),
                     'items' => $order['items'],
-                ], $this->importer, 'import', $adjustStock);
+                ], $this->importer, 'import', $adjustStock, $this->announcesOrders());
 
                 $this->imported++;
             });
@@ -450,6 +463,15 @@ final class OrdersImport implements ToCollection, WithHeadingRow
         }
 
         return $this->variantsBySku[$sku];
+    }
+
+    /**
+     * Whether created orders fire `order_created` (webhooks + plugins).
+     * Historical imports never do; see the class docblock.
+     */
+    private function announcesOrders(): bool
+    {
+        return ! $this->historical && $this->notifyIntegrations;
     }
 
     private function organizationCurrency(): string

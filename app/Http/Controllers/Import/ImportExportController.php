@@ -305,18 +305,22 @@ class ImportExportController extends Controller
     /**
      * Import orders from a CSV/Excel file (one row per order line).
      *
-     * `historical` records the orders without adjusting stock. Large files are
-     * queued like the product import.
+     * `historical` records the orders without adjusting stock and never fires
+     * order.created webhooks. `notify_integrations` (default on) controls the
+     * order.created webhooks / plugin hooks for a stock-adjusting import.
+     * Large files are queued like the product import.
      */
     public function importOrders(Request $request): RedirectResponse
     {
         $request->validate([
             'file' => self::IMPORT_FILE_RULE,
             'historical' => 'nullable|boolean',
+            'notify_integrations' => 'nullable|boolean',
         ]);
 
         $user = $request->user();
         $historical = $request->boolean('historical');
+        $notifyIntegrations = $request->boolean('notify_integrations', true);
         $file = $request->file('file');
 
         try {
@@ -324,13 +328,13 @@ class ImportExportController extends Controller
                 $disk = config('imports.disk');
                 $path = $file->store('imports/'.$user->organization_id, $disk);
 
-                ProcessOrderImportJob::dispatch($user->organization_id, $user->id, $disk, $path, $historical);
+                ProcessOrderImportJob::dispatch($user->organization_id, $user->id, $disk, $path, $historical, $notifyIntegrations);
 
                 return redirect()->route('import-export.index')
                     ->with('success', "Your order import is being processed. You'll be notified when it's complete.");
             }
 
-            $import = new OrdersImport($user, $historical);
+            $import = new OrdersImport($user, $historical, $notifyIntegrations);
             Excel::import($import, $file);
             $stats = $import->getStats();
 

@@ -114,8 +114,20 @@ stock reduction, no bin movement, no stock-adjustment entries and no serial
 allocation. **Cancelled** orders never change stock in either mode.
 
 Imported orders get `source = import`. They don't send a "new order" alert for
-each order; you get one summary when the import finishes. Webhooks and plugin
-hooks for `order_created` still fire as normal.
+each order; you get one summary when the import finishes.
+
+**Webhooks and plugins.** The `order_created` action drives both the
+`order.created` webhook and plugin order hooks.
+
+- **Historical imports never fire it.** These orders are records of sales
+  that already happened. Announcing them as new would make a connected
+  fulfilment, accounting or shop system act on them again.
+- **Stock-adjusting imports fire it for each order by default**, because they
+  behave like hand-entered orders: stock moves, and integrations that follow
+  orders or stock should hear about it. Untick "Notify webhooks and plugins
+  about each order" (`notify_integrations=0`) to skip it, for example when the
+  orders already exist in the connected systems. Queued imports keep this
+  setting.
 
 ## Users
 
@@ -142,3 +154,8 @@ or `,`). A user export can be imported again as it is.
   system roles. Another organization's roles never match.
 - An email that already has an account, or that appears earlier in the file,
   is skipped with a warning.
+- **Admin alerts.** Admins who have user activity alerts turned on get one
+  "N users imported" email for the whole import. It lists the accounts (up to
+  50) and says how many have admin access. They do not get a separate "new
+  user" email per row. The security log still has a `user.created` entry for
+  every account.

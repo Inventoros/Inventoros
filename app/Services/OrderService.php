@@ -61,11 +61,16 @@ final class OrderService
      *                             rows, no serial allocation. Used by the
      *                             historical order import, where the goods left
      *                             long ago and current stock already reflects it.
+     * @param  bool  $announce  False skips the `order_created` action, so no
+     *                          order.created webhook is queued and no plugin
+     *                          listener runs. Used by the order import for
+     *                          historical orders (and on request), which are
+     *                          records of past sales, not new ones.
      *
      * @throws \Exception When a product is missing or stock is insufficient.
      * @throws QueryException On unrecoverable DB errors.
      */
-    public function create(array $data, User $creator, string $source = 'manual', bool $adjustStock = true): Order
+    public function create(array $data, User $creator, string $source = 'manual', bool $adjustStock = true, bool $announce = true): Order
     {
         $data['organization_id'] = $creator->organization_id;
         $data['created_by'] = $creator->id;
@@ -286,7 +291,9 @@ final class OrderService
         // so plugins and webhooks observe order creation consistently, with the
         // full aggregate present (firing on the model `created` event would see
         // an itemless order, since items are inserted after Order::create).
-        do_action('order_created', $order, $creator);
+        if ($announce) {
+            do_action('order_created', $order, $creator);
+        }
 
         return $order;
     }

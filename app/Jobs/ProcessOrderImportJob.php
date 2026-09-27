@@ -48,13 +48,14 @@ final class ProcessOrderImportJob implements ShouldQueue
         public string $disk,
         public string $path,
         public bool $historical,
+        public bool $notifyIntegrations = true,
     ) {}
 
     public function handle(): void
     {
         $importer = User::where('organization_id', $this->organizationId)->findOrFail($this->userId);
 
-        $import = new OrdersImport($importer, $this->historical);
+        $import = new OrdersImport($importer, $this->historical, $this->notifyIntegrations);
         Excel::import($import, $this->path, $this->disk);
 
         NotificationService::createImportCompleteNotification(
