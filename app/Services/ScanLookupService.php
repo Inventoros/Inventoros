@@ -16,6 +16,7 @@ use App\Models\Inventory\ProductVariant;
  *   1. a product's own barcode or SKU,
  *   2. a variant's barcode or SKU (exact barcode beats SKU), returning its
  *      product and the variant,
+ *   2b. a product's barcode or SKU ignoring case,
  *   3. a product deep link printed in a product QR code (only this
  *      installation's own product URL),
  *   4. a location QR code (`LOC:<code>` or `LOC:#<id>`) or a plain location
@@ -43,6 +44,11 @@ final class ScanLookupService
         $product = $variant?->product()->with(['category', 'location', 'suppliers'])->first();
         if ($variant && $product) {
             return ['type' => 'product', 'product' => $product, 'variant' => $variant];
+        }
+
+        $product = $this->findProductIgnoringCase($organizationId, $code);
+        if ($product) {
+            return ['type' => 'product', 'product' => $product, 'variant' => null];
         }
 
         $product = $this->findProductByLink($organizationId, $code);
@@ -81,13 +87,54 @@ final class ScanLookupService
 
     private function findProduct(int $organizationId, string $code): ?Product
     {
+        return $this->pickExact(
+            $this->productCandidates($organizationId, fn ($query) => $query
+                ->where('barcode', $code)
+                ->orWhere('sku', $code)),
+            $code
+        );
+    }
+
+    /**
+     * Case-insensitive product match, tried only after every exact match
+     * failed. Plain equality is case-insensitive on MySQL (collation) but not
+     * on SQLite or PostgreSQL, so without this the same scan resolved
+     * differently depending on the database.
+     */
+    private function findProductIgnoringCase(int $organizationId, string $code): ?Product
+    {
+        $needle = mb_strtolower($code);
+        $candidates = $this->productCandidates($organizationId, fn ($query) => $query
+            ->whereRaw('LOWER(barcode) = ?', [$needle])
+            ->orWhereRaw('LOWER(sku) = ?', [$needle]));
+
+        return $this->pickExact($candidates, $code) ?? $candidates->first();
+    }
+
+    /**
+     * @param  \Closure(\Illuminate\Database\Eloquent\Builder<Product>): mixed  $match
+     * @return \Illuminate\Support\Collection<int, Product>
+     */
+    private function productCandidates(int $organizationId, \Closure $match)
+    {
         return Product::forOrganization($organizationId)
-            ->where(function ($query) use ($code) {
-                $query->where('barcode', $code)
-                    ->orWhere('sku', $code);
-            })
+            ->where($match)
             ->with(['category', 'location', 'suppliers'])
-            ->first();
+            ->orderBy('id')
+            ->limit(10)
+            ->get();
+    }
+
+    /**
+     * A byte-exact barcode beats a byte-exact SKU. Compared in PHP so the
+     * choice does not depend on the database collation.
+     *
+     * @param  \Illuminate\Support\Collection<int, Product>  $products
+     */
+    private function pickExact($products, string $code): ?Product
+    {
+        return $products->first(fn (Product $p) => $p->barcode === $code)
+            ?? $products->first(fn (Product $p) => $p->sku === $code);
     }
 
     private function findVariant(int $organizationId, string $code): ?ProductVariant
