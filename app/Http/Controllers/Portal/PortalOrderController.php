@@ -5,11 +5,14 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Portal;
 
 use App\Enums\OrderStatus;
+use App\Enums\ShipmentStatus;
 use App\Models\Order\Order;
 use App\Models\Order\OrderItem;
 use App\Models\Order\OrderPayment;
 use App\Models\Order\ReturnOrder;
 use App\Models\Scopes\OrganizationScope;
+use App\Models\Shipping\Shipment;
+use App\Models\Shipping\ShipmentItem;
 use App\Services\Documents\DocumentPdfService;
 use App\Services\ReturnOrderService;
 use App\Support\Money;
@@ -79,6 +82,7 @@ class PortalOrderController extends PortalController
 
         return Inertia::render('Portal/Orders/Show', [
             'order' => $this->orderSummary($order) + [
+                'shipments' => $this->shipments($order),
                 'discount_type' => $order->discount_type?->value,
                 'discount_value' => $order->discount_value,
                 'discount_amount' => $order->discount_amount,
@@ -97,6 +101,64 @@ class PortalOrderController extends PortalController
             ],
             'returns' => $returns,
         ]);
+    }
+
+    /**
+     * The order's shipments as the customer should see them: carrier,
+     * tracking, status, dates and packed lines. Label files and URLs, costs,
+     * carrier ids, rates, raw carrier responses and warehouse addresses stay
+     * internal, and cancelled shipments are left out. $order has already
+     * been matched to the contact's organization and customer; the shipment
+     * query repeats the organization constraint rather than trusting the
+     * foreign key alone.
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    private function shipments(Order $order): array
+    {
+        return Shipment::withoutGlobalScope(OrganizationScope::class)
+            ->where('organization_id', $order->organization_id)
+            ->where('order_id', $order->id)
+            ->where('status', '!=', ShipmentStatus::CANCELLED->value)
+            ->with('items.orderItem')
+            ->orderBy('id')
+            ->get()
+            ->map(fn (Shipment $shipment) => [
+                'id' => $shipment->id,
+                'carrier_name' => $shipment->carrier_name,
+                'service' => $shipment->service,
+                'tracking_number' => $shipment->tracking_number,
+                'tracking_url' => $this->safeTrackingUrl($shipment->tracking_url),
+                'status' => $shipment->status->value,
+                'status_label' => $shipment->status->label(),
+                'shipped_at' => $shipment->shipped_at?->toIso8601String(),
+                'delivered_at' => $shipment->delivered_at?->toIso8601String(),
+                'items' => $shipment->items
+                    ->filter(fn (ShipmentItem $item) => $item->orderItem !== null && (int) $item->orderItem->order_id === (int) $order->id)
+                    ->map(fn (ShipmentItem $item) => [
+                        'product_name' => $item->orderItem->product_name,
+                        'sku' => $item->orderItem->sku,
+                        'quantity' => (int) $item->quantity,
+                    ])
+                    ->values()
+                    ->all(),
+            ])
+            ->values()
+            ->all();
+    }
+
+    /**
+     * Only plain web links are rendered as a tracking link.
+     */
+    private function safeTrackingUrl(?string $url): ?string
+    {
+        if ($url === null || $url === '') {
+            return null;
+        }
+
+        $scheme = strtolower((string) parse_url($url, PHP_URL_SCHEME));
+
+        return in_array($scheme, ['http', 'https'], true) ? $url : null;
     }
 
     /**
