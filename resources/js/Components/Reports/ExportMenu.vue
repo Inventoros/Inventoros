@@ -12,6 +12,9 @@ const props = defineProps({
     // Optional alternate breakdown (e.g. "category"), passed as ?group=.
     group: { type: String, default: null },
     size: { type: String, default: 'sm' },
+    // Query key carrying the format: report pages use ?export=, the saved
+    // report download route uses ?format=.
+    formatParam: { type: String, default: 'export' },
 });
 
 const { t } = useI18n();
@@ -23,7 +26,7 @@ const formats = [
 ];
 
 const hrefFor = (format) => {
-    const query = { ...props.params, export: format };
+    const query = { ...props.params, [props.formatParam]: format };
     if (props.group) query.group = props.group;
     return route(props.routeName, query);
 };

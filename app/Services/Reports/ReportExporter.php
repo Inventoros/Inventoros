@@ -13,7 +13,7 @@ use Maatwebsite\Excel\DefaultValueBinder;
 use Maatwebsite\Excel\Excel as ExcelWriter;
 use Maatwebsite\Excel\Facades\Excel;
 use PhpOffice\PhpSpreadsheet\Cell\Cell;
-use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 /**
  * Renders any tabular report (fixed reports and saved builder reports) as
@@ -76,13 +76,16 @@ class ReportExporter
      * @param  iterable<int, array<int, mixed>>  $rows
      * @param  array<int, string>  $notes
      */
-    public function download(string $format, string $title, array $headers, iterable $rows, array $notes = []): Response
+    public function download(string $format, string $title, array $headers, iterable $rows, array $notes = []): StreamedResponse
     {
         $rendered = $this->render($format, $title, $headers, $rows, $notes);
 
-        return response($rendered->content, 200, [
+        // Streamed like the builder's original CSV export, so every report
+        // download behaves (and tests) the same way.
+        return response()->streamDownload(function () use ($rendered): void {
+            echo $rendered->content;
+        }, $rendered->filename, [
             'Content-Type' => $rendered->mimeType,
-            'Content-Disposition' => 'attachment; filename="'.$rendered->filename.'"',
             'X-Content-Type-Options' => 'nosniff',
         ]);
     }

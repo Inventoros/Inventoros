@@ -190,7 +190,7 @@ class AnalyticsReportControllerTest extends TestCase
         $this->assertStringContainsString('text/csv', $response->headers->get('Content-Type'));
         $this->assertStringContainsString('attachment', $response->headers->get('Content-Disposition'));
 
-        $body = $response->getContent();
+        $body = $response->streamedContent();
         $this->assertStringContainsString("'=HYPERLINK", $body);
         $this->assertStringNotContainsString('THEIRS', $body);
     }
@@ -227,7 +227,7 @@ class AnalyticsReportControllerTest extends TestCase
             ['reports.profit-margin', 'category', 'Margin %'],
             ['reports.sales-by-location', 'location', 'Location'],
         ] as [$route, $group, $expectedHeader]) {
-            $body = $this->actingAs($user)->get(route($route, ['export' => 'csv', 'group' => $group]))->getContent();
+            $body = $this->actingAs($user)->get(route($route, ['export' => 'csv', 'group' => $group]))->streamedContent();
             $this->assertStringContainsString($expectedHeader, $body, $route);
         }
     }

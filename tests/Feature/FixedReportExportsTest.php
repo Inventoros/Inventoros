@@ -151,7 +151,7 @@ class FixedReportExportsTest extends TestCase
     {
         $body = $this->actingAs($this->admin)
             ->get(route('reports.inventory-valuation', ['export' => 'csv']))
-            ->getContent();
+            ->streamedContent();
 
         $this->assertStringContainsString("'=cmd|calc", $body);
         $this->assertStringNotContainsString('THEIRS', $body);
@@ -161,7 +161,7 @@ class FixedReportExportsTest extends TestCase
     {
         $body = $this->actingAs($this->admin)
             ->get(route('reports.low-stock', ['export' => 'csv']))
-            ->getContent();
+            ->streamedContent();
 
         $this->assertStringContainsString('VAL-B', $body);   // stock 4 <= min 20
         $this->assertStringNotContainsString('VAL-A', $body); // stock 10 > min 1

@@ -7,7 +7,8 @@ namespace App\Http\Controllers\Reports;
 use App\Http\Controllers\Controller;
 use App\Models\SavedReport;
 use App\Services\ReportDataService;
-use App\Support\SpreadsheetSafety;
+use App\Services\Reports\ReportExporter;
+use App\Services\Reports\SavedReportRenderer;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -25,7 +26,8 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 class ReportBuilderController extends Controller
 {
     public function __construct(
-        private readonly ReportDataService $reportDataService
+        private readonly ReportDataService $reportDataService,
+        private readonly SavedReportRenderer $renderer,
     ) {}
 
     /**
@@ -302,7 +304,10 @@ class ReportBuilderController extends Controller
     }
 
     /**
-     * Export a saved report as CSV.
+     * Export a saved report as CSV (default), XLSX or PDF (?format=).
+     *
+     * The rows are produced for the downloading user, so the per-source view
+     * permission is re-checked for each viewer of a shared report.
      */
     public function export(Request $request, SavedReport $savedReport): StreamedResponse
     {
@@ -316,47 +321,21 @@ class ReportBuilderController extends Controller
             abort(403);
         }
 
-        $data = $this->reportDataService->executeReport(
-            $user,
-            $savedReport->organization_id,
-            $savedReport->data_source,
-            $savedReport->columns,
-            $savedReport->filters,
-            $savedReport->sort
-        );
-
-        $dataSources = $this->reportDataService->getAvailableDataSources();
-        $sourceConfig = $dataSources[$savedReport->data_source] ?? [];
-
-        // Build column headers
-        $headers = [];
-        foreach ($savedReport->columns as $col) {
-            $headers[] = $sourceConfig['columns'][$col]['label'] ?? $col;
+        $format = (string) $request->query('format', 'csv');
+        if (! ReportExporter::isValidFormat($format)) {
+            abort(422, 'Unsupported export format.');
         }
 
-        $filename = str_replace(' ', '_', strtolower($savedReport->name)).'_'.now()->format('Y-m-d').'.csv';
+        $rendered = $this->renderer->render($savedReport, $user, $format);
 
-        return response()->streamDownload(function () use ($data, $savedReport, $headers) {
-            $handle = fopen('php://output', 'w');
+        // Keep the original download name shape for saved reports.
+        $filename = str_replace(' ', '_', strtolower($savedReport->name)).'_'.now()->format('Y-m-d').'.'.$format;
 
-            // Write UTF-8 BOM for Excel compatibility
-            fwrite($handle, "\xEF\xBB\xBF");
-
-            // Header row
-            fputcsv($handle, SpreadsheetSafety::neutraliseRow($headers), escape: '');
-
-            // Data rows
-            foreach ($data as $row) {
-                $csvRow = [];
-                foreach ($savedReport->columns as $col) {
-                    $csvRow[] = $row->$col ?? '';
-                }
-                fputcsv($handle, SpreadsheetSafety::neutraliseRow($csvRow), escape: '');
-            }
-
-            fclose($handle);
+        return response()->streamDownload(function () use ($rendered): void {
+            echo $rendered->content;
         }, $filename, [
-            'Content-Type' => 'text/csv; charset=UTF-8',
+            'Content-Type' => $rendered->mimeType,
+            'X-Content-Type-Options' => 'nosniff',
         ]);
     }
 
