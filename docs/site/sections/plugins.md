@@ -93,6 +93,12 @@ export default function setup(plugin) {
 
 While the plugin is active, Inventoros copies `dist/` to `public/plugins/my-plugin/` and the browser imports the bundle. No npm build of Inventoros is needed, so this works on cPanel and for uploaded plugins.
 
+A plugin can also add a page of its own with `register_page()`, which the bundle supplies with `plugin.registerPage()`, and a dashboard card with `register_dashboard_widget()`. Bundles get the app's layout, Inertia helpers and core UI components from `window.Inventoros`, so plugin pages look like the rest of the app.
+
+Every placement, menu item, widget and page accepts a `permission`. It is checked on the server: users without it never receive the entry, or get a 403 for a page. Data passed as a closure is only computed for users who may see it.
+
+Activate or deactivate a plugin over SSH with `php artisan plugin:activate my-plugin` and `php artisan plugin:deactivate my-plugin`.
+
 ### Enabling plugin uploads
 
 Plugin uploads are disabled by default. Enabling them lets any admin user upload a ZIP that is loaded into the application process, which means an admin compromise becomes remote code execution. Review the security notes before turning this on.

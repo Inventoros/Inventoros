@@ -84,6 +84,8 @@ Versions may be written `1.2`, `1.2.3`, `v1.2.3` or `1.2.3-beta`. A value that i
   7. marks the plugin active.
 
   If any step throws, the plugin stays inactive, its published files are removed and the Plugins page shows the error.
+
+  Over SSH the same lifecycle runs with `php artisan plugin:activate {slug}` and `php artisan plugin:deactivate {slug}`.
 - **Deactivate**: fires `plugin_deactivated` and `plugin_deactivated_{slug}`, runs `hooks/deactivate.php`, marks the plugin inactive and removes `public/plugins/{slug}/`. The plugin is deactivated even if its own code throws; the page then shows a warning.
 - **Delete**: fires `plugin_uninstalling` and `plugin_uninstalling_{slug}`, deactivates the plugin, runs `hooks/uninstall.php` (whether or not the plugin was active), then removes its published files, its database record and its folder. The files are removed even if the plugin's cleanup throws; the page then shows a warning.
 
@@ -246,6 +248,8 @@ A `user_permissions` filter is deliberately not offered: letting plugins rewrite
 
 ## Plugin UI
 
+Every server-side UI registration takes an optional `permission`: a permission name from `app/Enums/Permission.php`, or a list of names meaning "any of". It is enforced on the server. A user who lacks it never receives the entry, and an entry with a permission is hidden from guests. Where an entry takes `data` or `props`, you can pass a closure instead of an array. The closure only runs for users who pass the permission check, so a figure they may not see is never computed.
+
 ### Menu items
 
 ```php
@@ -257,7 +261,7 @@ register_menu_item([
 ]);
 ```
 
-Items whose route does not exist are dropped.
+Items whose route does not exist are dropped. Submenu entries (`'submenu' => [[...], ...]`) are filtered by their own `permission` the same way.
 
 ### Components in existing pages
 
@@ -265,10 +269,19 @@ The server decides where a component goes; the browser bundle supplies it. Place
 
 ```php
 add_page_component('products.show', 'sidebar', [
-    'plugin' => 'my-plugin',          // your slug
-    'component' => 'StockNotes',      // the name your bundle registers
-    'data' => ['title' => 'Notes'],   // passed to the component as props
-    'position' => 10,                 // lower renders first
+    'plugin' => 'my-plugin',              // your slug
+    'component' => 'StockNotes',          // the name your bundle registers
+    'data' => ['title' => 'Notes'],       // passed to the component as props
+    'permission' => 'view_products',      // optional
+    'position' => 10,                     // lower renders first
+]);
+
+// Data computed per request, only for users who pass the permission check.
+add_page_component('products.index', 'header', [
+    'plugin' => 'my-plugin',
+    'component' => 'MarginSummary',
+    'permission' => 'view_reports',
+    'data' => fn ($user) => ['margin' => my_plugin_margin($user->organization_id)],
 ]);
 ```
 
@@ -276,7 +289,7 @@ Pages and slots that render plugin components:
 
 | Page | Slots |
 |------|-------|
-| `dashboard` | `header`, `before-stats`, `after-stats`, `before-content`, `after-content`, `footer` |
+| `dashboard` | `header`, `before-stats`, `after-stats`, `before-content`, `widgets`, `after-content`, `footer` |
 | `products.index` | `header`, `before-table`, `footer` |
 | `products.show` | `header`, `sidebar`, `footer` |
 | `products.create`, `products.edit` | `header`, `before-form`, `after-form` |
@@ -289,17 +302,62 @@ Pages and slots that render plugin components:
 | `suppliers.show`, `suppliers.create`, `suppliers.edit` | `header`, `footer` |
 | `categories.index`, `locations.index` | `header`, `footer` |
 
+### Dashboard widgets
+
+A widget is a titled card on the dashboard, below the built-in cards:
+
+```php
+register_dashboard_widget([
+    'id' => 'my-plugin-margins',          // unique
+    'title' => 'Gross margin',
+    'plugin' => 'my-plugin',
+    'component' => 'MarginWidget',        // registered by your bundle
+    'width' => 'half',                    // full, half, third or quarter
+    'position' => 10,
+    'permission' => 'view_reports',
+    'data' => fn ($user) => ['margin' => my_plugin_margin($user->organization_id)],
+]);
+```
+
+Widgets are gated like the dashboard's own figures. A widget the user may not see is left out of the page entirely rather than shown empty or as zero. Its closure never runs for them, so a query behind it costs nothing for users who cannot see it. The `data` becomes the component's props. A widget without a `component` is skipped.
+
+### Plugin pages
+
+`register_page()` gives your plugin a page of its own: a GET route that renders a `Plugin::` Inertia page, which your bundle supplies with `registerPage()`.
+
+```php
+register_page('my-plugin.settings', 'Plugin::my-plugin/Settings', [
+    'uri' => '/my-plugin/settings',       // default: the route name with dots as slashes
+    'title' => 'My Plugin settings',      // passed to the page as the `title` prop
+    'permission' => 'manage_plugins',     // users without it get 403
+    'props' => fn ($request, $user) => [  // or a plain array
+        'settings' => my_plugin_settings($user->organization_id),
+    ],
+    'middleware' => ['auth'],             // default; the web middleware group always applies
+]);
+```
+
+```js
+// ui/src/main.js
+plugin.registerPage('Settings', SettingsPage);   // becomes 'Plugin::my-plugin/Settings'
+```
+
+The route is added after all core routes. A page cannot reuse a route name that already exists (it is skipped and logged), so a plugin cannot take over a core route or link. Link to it by name as usual (`route('my-plugin.settings')`), for example from a menu item.
+
+If you cache routes (`php artisan route:cache`), rebuild the cache after activating or deactivating a plugin that registers pages. A cached route whose plugin is no longer active answers 404.
+
 ### The runtime bundle
 
 The cPanel release and ZIP-uploaded plugins never run `npm`, so a plugin ships its UI already built. The bundle is an ES module built with Vite in library mode, with Vue left out: the app exposes its own Vue as `window.Inventoros.Vue`, and components must use that copy to share the app's reactivity.
 
-While the plugin is active, Inventoros copies `dist/` to `public/plugins/{slug}/` and lists the bundle in the `pluginAssets` page prop. The browser imports it once (from the same origin, which the app's Content Security Policy allows through `script-src 'self'`) and adds its stylesheets. Only static web files are published: `.js`, `.mjs`, `.css`, `.map`, `.json`, images, fonts and `.txt`. PHP files, dotfiles such as `.htaccess`, and symlinks are skipped, and `ui.entry`/`ui.styles` must point inside `dist/`.
+While the plugin is active, Inventoros copies `dist/` to `public/plugins/{slug}/` and lists the bundle in the `pluginAssets` page prop. When the manifest `version` changes, the copy is refreshed on the next page load. The browser imports the bundle once, from the same origin, which the app's Content Security Policy allows through `script-src 'self'`, and adds its stylesheets. This works on a full page load and after client-side navigation. Only static web files are published: `.js`, `.mjs`, `.css`, `.map`, `.json`, images, fonts and `.txt`. PHP files, dotfiles such as `.htaccess`, and symlinks are skipped, and `ui.entry`/`ui.styles` must point inside `dist/`.
 
 The bundle's default export is called with an SDK scoped to the plugin:
 
 ```js
 // ui/src/main.js
 import StockNotes from './StockNotes.vue';
+import MarginWidget from './MarginWidget.vue';
 import SettingsPage from './SettingsPage.vue';
 import Hint from './Hint.vue';
 
@@ -307,11 +365,14 @@ export default function setup(plugin) {
     // Implements add_page_component(..., ['plugin' => 'my-plugin', 'component' => 'StockNotes']).
     plugin.registerComponent('StockNotes', StockNotes);
 
+    // Implements register_dashboard_widget([... 'component' => 'MarginWidget']).
+    plugin.registerComponent('MarginWidget', MarginWidget);
+
+    // Supplies the page for register_page(..., 'Plugin::my-plugin/Settings').
+    plugin.registerPage('Settings', SettingsPage);
+
     // Adds a component to a slot from the browser alone ("<page>:<slot>").
     plugin.registerSlotComponent('dashboard:after-stats', Hint, { position: 50, props: { tone: 'info' } });
-
-    // Supplies the page for Inertia::render('Plugin::my-plugin/Settings').
-    plugin.registerPage('Settings', SettingsPage);
 }
 ```
 
@@ -319,13 +380,44 @@ export default function setup(plugin) {
 |------------|---------|
 | `plugin.slug` | The plugin's slug. |
 | `plugin.Vue` | The app's Vue (same as `window.Inventoros.Vue`). |
-| `plugin.registerComponent(name, component)` | Provide the component for a server placement made with `add_page_component()`. |
+| `plugin.Inertia` | The app's `Head`, `Link`, `router`, `useForm` and `usePage`. Use these, not your own copy of `@inertiajs/vue3`, which would not see the current page. |
+| `plugin.layouts.AppLayout` | The application layout (sidebar, header, flash messages), for plugin pages. |
+| `plugin.ui` | Core building blocks: `PageHeader`, `Card`, `CardHeader`, `Button`, `Badge`. |
+| `plugin.registerComponent(name, component)` | Provide the component for a server placement (`add_page_component()`) or a dashboard widget. |
+| `plugin.registerPage(page, component)` | Provide the page component rendered by `register_page(..., 'Plugin::{slug}/{page}')`. |
 | `plugin.registerSlotComponent(slot, component, { position, props })` | Render a component in a slot without a server placement. `slot` is `"<page>:<slot>"`, for example `"products.show:sidebar"`. |
-| `plugin.registerPage(page, component)` | Provide the page component rendered by `Inertia::render('Plugin::{slug}/{page}')`. |
 
-The same functions are available globally as `window.Inventoros.registerComponent(slug, name, component)`, `window.Inventoros.registerSlotComponent(slot, component, options)`, `window.Inventoros.registerPage('Plugin::slug/Page', component)` and `window.Inventoros.plugin(slug)`.
+The same members are available globally on `window.Inventoros`, where the register functions take the slug explicitly: `registerComponent(slug, name, component)`, `registerSlotComponent(slot, component, options)` and `registerPage('Plugin::slug/Page', component)`. `window.Inventoros.plugin(slug)` returns the scoped SDK.
 
-Components placed from the server render only for users who can see that page; `registerSlotComponent()` components render for everyone who can see the page, so gate sensitive UI with a server placement or a server-side check.
+A plugin page, using the shared layout and helpers:
+
+```vue
+<!-- ui/src/SettingsPage.vue -->
+<script setup>
+const {
+    layouts: { AppLayout },
+    ui: { PageHeader, Card },
+    Inertia: { Head, useForm },
+} = window.Inventoros;
+
+const props = defineProps({ title: String, settings: Object });
+const form = useForm({ ...props.settings });
+</script>
+
+<template>
+    <Head :title="title" />
+    <AppLayout>
+        <div>
+            <PageHeader :title="title" />
+            <Card class="my-plugin-card">...</Card>
+        </div>
+    </AppLayout>
+</template>
+```
+
+Wrap the page body in a single root element inside `AppLayout`, as core pages do.
+
+Server placements and widgets carry a server-enforced `permission`. `registerSlotComponent()` components are browser-only and render for everyone who can see the page, so gate sensitive UI with a server placement instead.
 
 Styling: the app's Tailwind build does not scan plugins, so Tailwind classes that the app itself does not use will have no CSS. Put styles in `<style scoped>` blocks (they are extracted to your CSS file) and use the design tokens, which are HSL triplets that follow the light and dark theme:
 
@@ -338,27 +430,6 @@ Styling: the app's Tailwind build does not scan plugins, so Tailwind classes tha
 ```
 
 Available tokens include `--surface-canvas`, `--surface-base`, `--surface-raised`, `--surface-sunken`, `--border-subtle`, `--border-strong`, `--text-primary`, `--text-secondary`, `--text-tertiary`, `--accent`, `--accent-soft`, `--status-success`, `--status-warning`, `--status-danger` and `--ring`.
-
-### Plugin pages
-
-Register a route in `Plugin.php` that renders a `Plugin::` component, and register the page in your bundle:
-
-```php
-use Illuminate\Support\Facades\Route;
-use Inertia\Inertia;
-
-Route::middleware(['web', 'auth'])->get('/my-plugin/settings', function () {
-    abort_unless(auth()->user()->hasPermission('manage_plugins'), 403);
-
-    return Inertia::render('Plugin::my-plugin/Settings', ['saved' => false]);
-})->name('my-plugin.settings');
-```
-
-```js
-plugin.registerPage('Settings', SettingsPage);
-```
-
-If you cache routes (`php artisan route:cache`), rebuild the cache after activating or deactivating a plugin that adds routes.
 
 ### Build-time components (source installs only)
 
