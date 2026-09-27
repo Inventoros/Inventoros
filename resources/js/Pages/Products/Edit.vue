@@ -6,6 +6,7 @@ import Button from '@/Components/ui/Button.vue';
 import Badge from '@/Components/ui/Badge.vue';
 import PluginSlot from '@/Components/PluginSlot.vue';
 import ProductVariantManager from '@/Components/ProductVariantManager.vue';
+import ProductSupplierManager from '@/Components/ProductSupplierManager.vue';
 import QuickAddModal from '@/Components/QuickAddModal.vue';
 import SKUGeneratorModal from '@/Components/SKUGeneratorModal.vue';
 import { Head, Link, useForm, router } from '@inertiajs/vue3';
@@ -21,6 +22,7 @@ const props = defineProps({
     product: Object,
     categories: Array,
     locations: Array,
+    suppliers: { type: Array, default: () => [] },
     currencies: Object,
     defaultCurrency: String,
     pluginComponents: Object,
@@ -52,6 +54,20 @@ const prepareExistingVariants = () => {
     }));
 };
 
+// Existing supplier links, primary first, in the shape the form submits
+const prepareExistingSuppliers = () => {
+    return [...(props.product.suppliers || [])]
+        .sort((a, b) => Number(b.pivot?.is_primary) - Number(a.pivot?.is_primary))
+        .map(s => ({
+            supplier_id: s.id,
+            supplier_sku: s.pivot?.supplier_sku || '',
+            cost_price: s.pivot?.cost_price ?? '',
+            lead_time_days: s.pivot?.lead_time_days ?? '',
+            minimum_order_quantity: s.pivot?.minimum_order_quantity ?? '',
+            is_primary: !!s.pivot?.is_primary,
+        }));
+};
+
 const form = useForm({
     name: props.product.name,
     description: props.product.description,
@@ -77,6 +93,7 @@ const form = useForm({
     type: props.product.type || 'standard',
     options: prepareExistingOptions(),
     variants: prepareExistingVariants(),
+    suppliers: prepareExistingSuppliers(),
 });
 
 // Variant management
@@ -480,6 +497,20 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                             @update:model-value="updateVariantData"
                             :product-price="form.price"
                             :product-purchase-price="form.purchase_price"
+                            :currency-symbol="getCurrencySymbol(product.currency || defaultCurrency)"
+                        />
+                    </div>
+                </Card>
+
+                <!-- Suppliers (Full Width) -->
+                <Card :padded="false" class="lg:col-span-2">
+                    <div class="px-5 pt-5"><h3 class="text-sm font-semibold text-text-primary">{{ t('productSuppliers.title') }}</h3></div>
+                    <div class="p-5">
+                        <ProductSupplierManager
+                            v-model="form.suppliers"
+                            :suppliers="suppliers"
+                            :linked="product.suppliers || []"
+                            :errors="form.errors"
                             :currency-symbol="getCurrencySymbol(product.currency || defaultCurrency)"
                         />
                     </div>
