@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Api;
 
 use App\Exceptions\InsufficientStockException;
+use App\Exceptions\InvalidStateException;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\WorkOrder\StoreWorkOrderRequest;
 use App\Models\Inventory\Product;
@@ -12,6 +13,7 @@ use App\Models\Inventory\StockAdjustment;
 use App\Models\Inventory\WorkOrder;
 use App\Models\Inventory\WorkOrderItem;
 use App\Services\ProductLocationStockService;
+use App\Services\WorkOrderService;
 use App\Support\SequenceNumberRetry;
 use Dedoc\Scramble\Attributes\QueryParameter;
 use Illuminate\Http\JsonResponse;
@@ -411,5 +413,29 @@ class WorkOrderController extends Controller
             'message' => 'Work order has been cancelled',
             'data' => $workOrder,
         ]);
+    }
+
+    /**
+     * Delete a work order.
+     *
+     * Only draft or cancelled work orders, which have never moved stock, can
+     * be deleted; anything else is a 422 `invalid_status`.
+     */
+    public function destroy(Request $request, WorkOrder $workOrder, WorkOrderService $workOrders): JsonResponse
+    {
+        if ($workOrder->organization_id !== $request->user()->organization_id) {
+            return response()->json([
+                'message' => 'Work order not found',
+                'error' => 'not_found',
+            ], 404);
+        }
+
+        try {
+            $workOrders->delete($workOrder);
+        } catch (InvalidStateException $e) {
+            return response()->json(['message' => $e->getMessage(), 'error' => $e->errorCode], 422);
+        }
+
+        return response()->json(['message' => 'Work order deleted successfully']);
     }
 }

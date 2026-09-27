@@ -61,7 +61,7 @@ class ProductLocationApiTest extends TestCase
                 'name' => 'Administrator',
                 'is_system' => true,
                 'permissions' => [
-                    'view_locations',
+                    'manage_locations',
                     'manage_locations',
                 ],
             ]
@@ -72,7 +72,7 @@ class ProductLocationApiTest extends TestCase
             [
                 'name' => 'Viewer',
                 'is_system' => true,
-                'permissions' => ['view_locations'],
+                'permissions' => ['manage_locations'],
             ]
         );
 

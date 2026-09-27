@@ -2,41 +2,71 @@
 
 declare(strict_types=1);
 
+use App\GraphQL\Mutations\ApproveReturnOrderMutation;
+use App\GraphQL\Mutations\CompleteStockTransferMutation;
+use App\GraphQL\Mutations\CreateCustomerMutation;
 use App\GraphQL\Mutations\CreateOrderMutation;
 use App\GraphQL\Mutations\CreateProductMutation;
+use App\GraphQL\Mutations\CreatePurchaseOrderMutation;
+use App\GraphQL\Mutations\CreateReturnOrderMutation;
 use App\GraphQL\Mutations\CreateStockAdjustmentMutation;
+use App\GraphQL\Mutations\CreateStockTransferMutation;
 use App\GraphQL\Mutations\CreateSupplierMutation;
 use App\GraphQL\Mutations\DecideApprovalMutation;
 use App\GraphQL\Mutations\DeleteProductMutation;
+use App\GraphQL\Mutations\ReceivePurchaseOrderMutation;
+use App\GraphQL\Mutations\ReceiveReturnOrderMutation;
 use App\GraphQL\Mutations\RequestStockAdjustmentApprovalMutation;
+use App\GraphQL\Mutations\UpdateCustomerMutation;
 use App\GraphQL\Mutations\UpdateOrderMutation;
 use App\GraphQL\Mutations\UpdateProductMutation;
+use App\GraphQL\Mutations\UpdatePurchaseOrderMutation;
 use App\GraphQL\Mutations\UpdateSupplierMutation;
 use App\GraphQL\Queries\CategoriesQuery;
+use App\GraphQL\Queries\CustomerQuery;
+use App\GraphQL\Queries\CustomersQuery;
 use App\GraphQL\Queries\LocationsQuery;
 use App\GraphQL\Queries\OrderQuery;
 use App\GraphQL\Queries\OrdersQuery;
 use App\GraphQL\Queries\PendingApprovalsQuery;
 use App\GraphQL\Queries\ProductQuery;
 use App\GraphQL\Queries\ProductsQuery;
+use App\GraphQL\Queries\ProductVariantsQuery;
 use App\GraphQL\Queries\PurchaseOrderQuery;
 use App\GraphQL\Queries\PurchaseOrdersQuery;
+use App\GraphQL\Queries\ReturnOrderQuery;
+use App\GraphQL\Queries\ReturnOrdersQuery;
 use App\GraphQL\Queries\StockAdjustmentsQuery;
+use App\GraphQL\Queries\StockTransferQuery;
+use App\GraphQL\Queries\StockTransfersQuery;
 use App\GraphQL\Queries\SupplierQuery;
 use App\GraphQL\Queries\SuppliersQuery;
+use App\GraphQL\Queries\UserQuery;
+use App\GraphQL\Queries\UsersQuery;
 use App\GraphQL\Types\ApprovalItemType;
+use App\GraphQL\Types\CustomerType;
 use App\GraphQL\Types\LocationType;
 use App\GraphQL\Types\OrderItemInputType;
-use App\GraphQL\Types\ProductSupplierInputType;
 use App\GraphQL\Types\OrderItemType;
 use App\GraphQL\Types\OrderType;
 use App\GraphQL\Types\ProductCategoryType;
+use App\GraphQL\Types\ProductSupplierInputType;
 use App\GraphQL\Types\ProductType;
 use App\GraphQL\Types\ProductVariantType;
+use App\GraphQL\Types\PurchaseOrderItemInputType;
 use App\GraphQL\Types\PurchaseOrderItemType;
+use App\GraphQL\Types\PurchaseOrderReceiveItemInputType;
 use App\GraphQL\Types\PurchaseOrderType;
+use App\GraphQL\Types\ReturnOrderItemInputType;
+use App\GraphQL\Types\ReturnOrderItemType;
+use App\GraphQL\Types\ReturnOrderType;
+use App\GraphQL\Types\RoleType;
 use App\GraphQL\Types\StockAdjustmentType;
+use App\GraphQL\Types\StockTransferItemInputType;
+use App\GraphQL\Types\StockTransferItemType;
+use App\GraphQL\Types\StockTransferType;
 use App\GraphQL\Types\SupplierType;
+use App\GraphQL\Types\UserType;
 
 return [
 
@@ -111,6 +141,15 @@ return [
                 'locations' => LocationsQuery::class,
                 'categories' => CategoriesQuery::class,
                 'pendingApprovals' => PendingApprovalsQuery::class,
+                'customers' => CustomersQuery::class,
+                'customer' => CustomerQuery::class,
+                'returnOrders' => ReturnOrdersQuery::class,
+                'returnOrder' => ReturnOrderQuery::class,
+                'stockTransfers' => StockTransfersQuery::class,
+                'stockTransfer' => StockTransferQuery::class,
+                'users' => UsersQuery::class,
+                'user' => UserQuery::class,
+                'productVariants' => ProductVariantsQuery::class,
             ],
             'mutation' => [
                 'createProduct' => CreateProductMutation::class,
@@ -123,8 +162,19 @@ return [
                 'updateSupplier' => UpdateSupplierMutation::class,
                 'requestStockAdjustmentApproval' => RequestStockAdjustmentApprovalMutation::class,
                 'decideApproval' => DecideApprovalMutation::class,
+                'createCustomer' => CreateCustomerMutation::class,
+                'updateCustomer' => UpdateCustomerMutation::class,
+                'createReturnOrder' => CreateReturnOrderMutation::class,
+                'approveReturnOrder' => ApproveReturnOrderMutation::class,
+                'receiveReturnOrder' => ReceiveReturnOrderMutation::class,
+                'createStockTransfer' => CreateStockTransferMutation::class,
+                'completeStockTransfer' => CompleteStockTransferMutation::class,
+                'createPurchaseOrder' => CreatePurchaseOrderMutation::class,
+                'updatePurchaseOrder' => UpdatePurchaseOrderMutation::class,
+                'receivePurchaseOrder' => ReceivePurchaseOrderMutation::class,
             ],
-            'middleware' => ['auth:sanctum'],
+            // Same named limiter as the REST API (60/min per user, or per IP).
+            'middleware' => ['throttle:api', 'auth:sanctum'],
             'method' => ['GET', 'POST'],
         ],
     ],
@@ -150,6 +200,17 @@ return [
         'StockAdjustment' => StockAdjustmentType::class,
         'Location' => LocationType::class,
         'OrderItemInput' => OrderItemInputType::class,
+        'Customer' => CustomerType::class,
+        'ReturnOrder' => ReturnOrderType::class,
+        'ReturnOrderItem' => ReturnOrderItemType::class,
+        'ReturnOrderItemInput' => ReturnOrderItemInputType::class,
+        'StockTransfer' => StockTransferType::class,
+        'StockTransferItem' => StockTransferItemType::class,
+        'StockTransferItemInput' => StockTransferItemInputType::class,
+        'User' => UserType::class,
+        'Role' => RoleType::class,
+        'PurchaseOrderItemInput' => PurchaseOrderItemInputType::class,
+        'PurchaseOrderReceiveItemInput' => PurchaseOrderReceiveItemInputType::class,
         'ProductSupplierInput' => ProductSupplierInputType::class,
         'ApprovalItem' => ApprovalItemType::class,
     ],

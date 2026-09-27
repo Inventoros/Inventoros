@@ -6,18 +6,28 @@ namespace App\Providers;
 
 use App\Listeners\SecurityEventSubscriber;
 use App\Listeners\WebhookEventSubscriber;
+use App\Models\Customer;
 use App\Models\Inventory\Product;
 use App\Models\Inventory\ProductLocationStock;
+use App\Models\Inventory\StockAudit;
+use App\Models\Inventory\StockTransfer;
+use App\Models\Inventory\WorkOrder;
 use App\Models\Order\Order;
+use App\Models\Order\ReturnOrder;
 use App\Models\Purchasing\PurchaseOrder;
 use App\Models\Role;
 use App\Models\User;
+use App\Observers\CustomerObserver;
 use App\Observers\OrderObserver;
 use App\Observers\ProductLocationStockObserver;
 use App\Observers\ProductObserver;
 use App\Observers\PurchaseOrderObserver;
+use App\Observers\ReturnOrderObserver;
 use App\Observers\RoleSecurityObserver;
+use App\Observers\StockAuditObserver;
+use App\Observers\StockTransferObserver;
 use App\Observers\UserSecurityObserver;
+use App\Observers\WorkOrderObserver;
 use App\Services\PluginService;
 use App\Services\PluginUIService;
 use Dedoc\Scramble\Scramble;
@@ -68,6 +78,11 @@ class AppServiceProvider extends ServiceProvider
         ProductLocationStock::observe(ProductLocationStockObserver::class);
         Order::observe(OrderObserver::class);
         PurchaseOrder::observe(PurchaseOrderObserver::class);
+        Customer::observe(CustomerObserver::class);
+        ReturnOrder::observe(ReturnOrderObserver::class);
+        StockTransfer::observe(StockTransferObserver::class);
+        WorkOrder::observe(WorkOrderObserver::class);
+        StockAudit::observe(StockAuditObserver::class);
 
         // Load active plugins
         if (file_exists(base_path('plugins'))) {
@@ -100,9 +115,15 @@ class AppServiceProvider extends ServiceProvider
             );
         });
 
-        // Gate for viewing API docs in production
-        Gate::define('viewApiDocs', function ($user = null) {
-            return true;
+        // The interactive API docs describe every endpoint and permission, so
+        // outside local development they require a signed-in user unless the
+        // operator opts in with API_DOCS_PUBLIC=true.
+        Gate::define('viewApiDocs', function (?User $user = null): bool {
+            if (app()->environment('local') || config('scramble.public_docs')) {
+                return true;
+            }
+
+            return $user !== null;
         });
     }
 }

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\GraphQL\Mutations;
 
+use App\GraphQL\Concerns\RequiresPermissions;
 use App\Models\Inventory\Product;
 use Closure;
 use GraphQL\Error\Error;
@@ -13,6 +14,17 @@ use Rebing\GraphQL\Support\Mutation;
 
 class DeleteProductMutation extends Mutation
 {
+    use RequiresPermissions;
+
+    /**
+     * The REST route's gate; enforced (with the token's abilities) before
+     * the resolver runs. See EnforcePermissions.
+     */
+    protected function permissions(): array
+    {
+        return ['delete_products'];
+    }
+
     protected $attributes = [
         'name' => 'deleteProduct',
         'description' => 'Delete a product (soft delete)',

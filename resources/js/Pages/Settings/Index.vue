@@ -11,6 +11,7 @@ import {
     UserCircle,
     Bell,
     ShieldCheck,
+    KeyRound,
     Mail,
     Webhook,
     RefreshCw,
@@ -45,6 +46,12 @@ const allSections = [
         icon: ShieldCheck,
         title: 'Two-factor authentication',
         description: 'Protect your account with a one-time code from an authenticator app.',
+    },
+    {
+        href: route('settings.api-tokens.index'),
+        icon: KeyRound,
+        title: t('settings.apiTokens.title'),
+        description: t('settings.apiTokens.hubDescription'),
     },
     {
         href: route('settings.organization.index'),

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\GraphQL\Queries;
 
+use App\GraphQL\Concerns\RequiresPermissions;
 use App\Models\Inventory\Supplier;
 use Closure;
 use GraphQL\Type\Definition\ResolveInfo;
@@ -14,6 +15,17 @@ use Rebing\GraphQL\Support\Query;
 
 class SupplierQuery extends Query
 {
+    use RequiresPermissions;
+
+    /**
+     * The REST route's gate; enforced (with the token's abilities) before
+     * the resolver runs. See EnforcePermissions.
+     */
+    protected function permissions(): array
+    {
+        return ['view_suppliers'];
+    }
+
     protected $attributes = [
         'name' => 'supplier',
         'description' => 'Get a single supplier by ID',

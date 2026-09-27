@@ -60,7 +60,7 @@ class ProductCategoryApiTest extends TestCase
                 'name' => 'Administrator',
                 'is_system' => true,
                 'permissions' => [
-                    'view_categories',
+                    'manage_categories',
                     'manage_categories',
                 ],
             ]
@@ -71,7 +71,7 @@ class ProductCategoryApiTest extends TestCase
             [
                 'name' => 'Viewer',
                 'is_system' => true,
-                'permissions' => ['view_categories'],
+                'permissions' => ['manage_categories'],
             ]
         );
 

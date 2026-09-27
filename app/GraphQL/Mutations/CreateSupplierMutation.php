@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\GraphQL\Mutations;
 
+use App\GraphQL\Concerns\RequiresPermissions;
 use App\Models\Inventory\Supplier;
 use Closure;
 use GraphQL\Type\Definition\ResolveInfo;
@@ -13,6 +14,17 @@ use Rebing\GraphQL\Support\Mutation;
 
 class CreateSupplierMutation extends Mutation
 {
+    use RequiresPermissions;
+
+    /**
+     * The REST route's gate; enforced (with the token's abilities) before
+     * the resolver runs. See EnforcePermissions.
+     */
+    protected function permissions(): array
+    {
+        return ['create_suppliers'];
+    }
+
     protected $attributes = [
         'name' => 'createSupplier',
         'description' => 'Create a new supplier',

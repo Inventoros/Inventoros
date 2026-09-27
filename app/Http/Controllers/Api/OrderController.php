@@ -5,11 +5,17 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Api;
 
 use App\Enums\OrderStatus;
+use App\Exceptions\DocumentEmailException;
 use App\Exceptions\InsufficientStockException;
 use App\Exceptions\InvalidOrderItemException;
+use App\Exceptions\InvalidStateException;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Api\Order\ApproveOrderRequest;
+use App\Http\Requests\Api\Order\RejectOrderRequest;
+use App\Http\Requests\SendDocumentEmailRequest;
 use App\Http\Resources\OrderResource;
 use App\Models\Order\Order;
+use App\Services\OrderInvoiceEmailService;
 use App\Services\OrderService;
 use Dedoc\Scramble\Attributes\QueryParameter;
 use Illuminate\Http\JsonResponse;
@@ -278,5 +284,71 @@ class OrderController extends Controller
                 'message' => 'Order deleted successfully',
             ]);
         });
+    }
+
+    /**
+     * Approve an order that is pending approval.
+     */
+    public function approve(ApproveOrderRequest $request, Order $order): JsonResponse
+    {
+        try {
+            $approved = $this->orderService->approve($order, $request->user(), $request->validated()['notes'] ?? null);
+        } catch (InvalidStateException $e) {
+            return response()->json(['message' => $e->getMessage(), 'error' => $e->errorCode], 422);
+        }
+
+        return response()->json([
+            'message' => 'Order approved successfully',
+            'data' => new OrderResource($approved->load(['items', 'approver'])),
+        ]);
+    }
+
+    /**
+     * Reject an order that is pending approval.
+     *
+     * The order is cancelled and the stock it reserved is restored.
+     */
+    public function reject(RejectOrderRequest $request, Order $order): JsonResponse
+    {
+        try {
+            $rejected = $this->orderService->reject($order, $request->user(), $request->validated()['notes']);
+        } catch (InvalidStateException $e) {
+            return response()->json(['message' => $e->getMessage(), 'error' => $e->errorCode], 422);
+        }
+
+        return response()->json([
+            'message' => 'Order rejected',
+            'data' => new OrderResource($rejected->load(['items', 'approver'])),
+        ]);
+    }
+
+    /**
+     * Email the order's invoice to the customer.
+     *
+     * Queues an email with the invoice PDF attached to the customer (or `to`,
+     * when given), assigning the invoice number on first use. Re-sending is
+     * allowed. Fails with 422 `missing_recipient` when there is no valid
+     * recipient.
+     *
+     * @param  SendDocumentEmailRequest  $request  Optional `to`, `cc` (array or comma separated) and `message`
+     */
+    public function emailInvoice(SendDocumentEmailRequest $request, Order $order, OrderInvoiceEmailService $emails): JsonResponse
+    {
+        try {
+            $order = $emails->send(
+                $order,
+                $request->user(),
+                $request->recipient(),
+                $request->ccList(),
+                $request->customMessage(),
+            );
+        } catch (DocumentEmailException $e) {
+            return response()->json(['message' => $e->getMessage(), 'error' => $e->reason], 422);
+        }
+
+        return response()->json([
+            'message' => 'Invoice emailed',
+            'data' => new OrderResource($order),
+        ]);
     }
 }

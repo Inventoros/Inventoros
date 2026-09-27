@@ -29,6 +29,7 @@ class OrderResource extends JsonResource
             'invoice_sent_to' => $this->invoice_sent_to,
             'source' => $this->source,
             'external_id' => $this->external_id,
+            'customer_id' => $this->customer_id,
             'customer_name' => $this->customer_name,
             'customer_email' => $this->customer_email,
             'customer_address' => $this->customer_address,

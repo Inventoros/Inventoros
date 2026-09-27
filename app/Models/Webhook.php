@@ -152,6 +152,22 @@ class Webhook extends Model
     }
 
     /**
+     * Replace the signing secret with a fresh random one and return it.
+     *
+     * The secret is set directly rather than via mass assignment: `secret` is
+     * deliberately not $fillable so no request payload can ever set it. The
+     * caller reveals the returned plaintext exactly once.
+     */
+    public function rotateSecret(): string
+    {
+        $secret = Str::random(64);
+        $this->secret = $secret;
+        $this->save();
+
+        return $secret;
+    }
+
+    /**
      * Check if this webhook is subscribed to a specific event.
      */
     public function isSubscribedTo(string $event): bool

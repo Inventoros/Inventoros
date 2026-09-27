@@ -4,9 +4,10 @@ declare(strict_types=1);
 
 namespace App\GraphQL\Mutations;
 
+use App\GraphQL\Concerns\RequiresPermissions;
+use App\Http\Requests\Concerns\ValidatesProductSuppliers;
 use App\Models\Inventory\ProductCategory;
 use App\Models\Inventory\ProductLocation;
-use App\Http\Requests\Concerns\ValidatesProductSuppliers;
 use App\Services\ProductService;
 use Closure;
 use GraphQL\Error\Error;
@@ -18,6 +19,17 @@ use Rebing\GraphQL\Support\Mutation;
 
 class CreateProductMutation extends Mutation
 {
+    use RequiresPermissions;
+
+    /**
+     * The REST route's gate; enforced (with the token's abilities) before
+     * the resolver runs. See EnforcePermissions.
+     */
+    protected function permissions(): array
+    {
+        return ['create_products'];
+    }
+
     use ValidatesProductSuppliers;
 
     protected $attributes = [

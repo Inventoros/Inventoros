@@ -162,6 +162,13 @@ MARKDOWN,
         RestrictedDocsAccess::class,
     ],
 
+    /*
+     * Outside local development the docs UI and spec require a signed-in
+     * user (see the viewApiDocs gate). Set API_DOCS_PUBLIC=true to publish
+     * them to everyone.
+     */
+    'public_docs' => (bool) env('API_DOCS_PUBLIC', false),
+
     'extensions' => [
         \App\Support\Scramble\PermissionExtension::class,
     ],

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\GraphQL\Queries;
 
+use App\GraphQL\Concerns\RequiresPermissions;
 use App\Models\Order\Order;
 use Closure;
 use GraphQL\Type\Definition\ResolveInfo;
@@ -14,6 +15,17 @@ use Rebing\GraphQL\Support\Query;
 
 class OrderQuery extends Query
 {
+    use RequiresPermissions;
+
+    /**
+     * The REST route's gate; enforced (with the token's abilities) before
+     * the resolver runs. See EnforcePermissions.
+     */
+    protected function permissions(): array
+    {
+        return ['view_orders'];
+    }
+
     protected $attributes = [
         'name' => 'order',
         'description' => 'Get a single order by ID',

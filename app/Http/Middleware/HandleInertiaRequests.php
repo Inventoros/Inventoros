@@ -75,6 +75,10 @@ class HandleInertiaRequests extends Middleware
                 // regenerate. Flashed by WebhookController, present for exactly
                 // the one redirected request, never persisted into props.
                 'newWebhookSecret' => $request->session()->get('newWebhookSecret'),
+
+                // One-time reveal of a new API token's plaintext, flashed by
+                // ApiTokenController::store for the one redirected request.
+                'newApiToken' => $request->session()->get('newApiToken'),
             ],
             'warehouses' => function () {
                 $user = auth()->user();

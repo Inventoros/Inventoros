@@ -110,6 +110,25 @@ final class WebhookService
             'purchase_order.created',
             'purchase_order.received',
             'purchase_order.cancelled',
+
+            // Customer events
+            'customer.created',
+            'customer.updated',
+            'customer.deleted',
+
+            // Return (RMA) events
+            'return.created',
+            'return.received',
+
+            // Stock transfer events
+            'transfer.created',
+            'transfer.completed',
+
+            // Work order events
+            'work_order.completed',
+
+            // Stock audit events
+            'stock_audit.completed',
         ];
     }
 
@@ -142,6 +161,25 @@ final class WebhookService
                 'purchase_order.created' => 'When a purchase order is created',
                 'purchase_order.received' => 'When a purchase order is received',
                 'purchase_order.cancelled' => 'When a purchase order is cancelled',
+            ],
+            'Customer' => [
+                'customer.created' => 'When a new customer is created',
+                'customer.updated' => 'When a customer is updated',
+                'customer.deleted' => 'When a customer is deleted',
+            ],
+            'Return' => [
+                'return.created' => 'When a return (RMA) is requested',
+                'return.received' => 'When returned items are received',
+            ],
+            'Stock Transfer' => [
+                'transfer.created' => 'When a stock transfer is created',
+                'transfer.completed' => 'When a stock transfer is completed',
+            ],
+            'Work Order' => [
+                'work_order.completed' => 'When a work order is completed',
+            ],
+            'Stock Audit' => [
+                'stock_audit.completed' => 'When a stock audit is completed',
             ],
         ];
     }

@@ -4,21 +4,17 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Inventory;
 
-use App\Exceptions\ApprovalException;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StockTransfer\StoreStockTransferRequest;
 use App\Http\Requests\StockTransfer\UpdateStockTransferRequest;
 use App\Models\Inventory\Product;
 use App\Models\Inventory\ProductLocation;
-use App\Models\Inventory\StockAdjustment;
 use App\Models\Inventory\StockTransfer;
-use App\Models\Inventory\StockTransferItem;
 use App\Services\ApprovalService;
-use App\Services\ProductLocationStockService;
+use App\Services\StockTransferService;
 use App\Services\WarehouseAccessService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -108,77 +104,14 @@ class StockTransferController extends Controller
     /**
      * Store a newly created stock transfer.
      *
-     * @param  Request  $request  The incoming HTTP request
      * @return RedirectResponse
      */
-    public function store(StoreStockTransferRequest $request)
+    public function store(StoreStockTransferRequest $request, StockTransferService $transfers)
     {
-        $validated = $request->validated();
-
-        $organizationId = $request->user()->organization_id;
-
-        // Verify locations belong to the user's organization
-        $fromLocation = ProductLocation::where('id', $validated['from_location_id'])
-            ->forOrganization($organizationId)
-            ->firstOrFail();
-
-        $toLocation = ProductLocation::where('id', $validated['to_location_id'])
-            ->forOrganization($organizationId)
-            ->firstOrFail();
-
         // Stock can only leave a warehouse the user works in.
-        $this->warehouseAccess->authorizeLocation($request->user(), $fromLocation);
+        $this->warehouseAccess->authorizeLocation($request->user(), (int) $request->validated()['from_location_id']);
 
-        // Determine if this is an inter-warehouse transfer
-        $isInterWarehouse = false;
-        $fromWarehouseId = $fromLocation->warehouse_id;
-        $toWarehouseId = $toLocation->warehouse_id;
-
-        if ($fromWarehouseId && $toWarehouseId && $fromWarehouseId !== $toWarehouseId) {
-            $isInterWarehouse = true;
-        }
-
-        $transfer = DB::transaction(function () use ($validated, $organizationId, $request, $isInterWarehouse, $fromWarehouseId, $toWarehouseId) {
-            $transferData = [
-                'organization_id' => $organizationId,
-                'transfer_number' => StockTransfer::generateTransferNumber($organizationId),
-                'from_location_id' => $validated['from_location_id'],
-                'to_location_id' => $validated['to_location_id'],
-                'transferred_by' => $request->user()->id,
-                'status' => 'pending',
-                'notes' => $validated['notes'] ?? null,
-                'is_inter_warehouse' => $isInterWarehouse,
-            ];
-
-            if ($isInterWarehouse) {
-                $transferData['from_warehouse_id'] = $fromWarehouseId;
-                $transferData['to_warehouse_id'] = $toWarehouseId;
-                $transferData['shipping_method'] = $validated['shipping_method'] ?? null;
-                $transferData['tracking_number'] = $validated['tracking_number'] ?? null;
-                $transferData['estimated_arrival'] = $validated['estimated_arrival'] ?? null;
-            }
-
-            $transfer = StockTransfer::create($transferData);
-
-            foreach ($validated['items'] as $item) {
-                // Verify product belongs to organization
-                Product::where('id', $item['product_id'])
-                    ->forOrganization($organizationId)
-                    ->firstOrFail();
-
-                StockTransferItem::create([
-                    'stock_transfer_id' => $transfer->id,
-                    'product_id' => $item['product_id'],
-                    'quantity' => $item['quantity'],
-                    'notes' => $item['notes'] ?? null,
-                ]);
-            }
-
-            return $transfer;
-        });
-
-        // Held for approval when the organization requires it (no-op otherwise).
-        app(ApprovalService::class)->holdTransferIfRequired($transfer, $request->user());
+        $transfer = $transfers->create($request->user()->organization_id, $request->user(), $request->validated());
 
         return redirect()->route('stock-transfers.show', $transfer)
             ->with('success', $transfer->approval_status === StockTransfer::APPROVAL_PENDING
@@ -214,50 +147,21 @@ class StockTransferController extends Controller
     /**
      * Update a stock transfer (e.g., status change to in_transit for inter-warehouse).
      *
-     * @param  Request  $request  The incoming HTTP request
-     * @param  StockTransfer  $stockTransfer  The stock transfer to update
      * @return RedirectResponse
      */
-    public function update(UpdateStockTransferRequest $request, StockTransfer $stockTransfer)
+    public function update(UpdateStockTransferRequest $request, StockTransfer $stockTransfer, StockTransferService $transfers)
     {
-        if ($stockTransfer->organization_id !== $request->user()->organization_id) {
-            abort(403, 'Unauthorized action.');
-        }
-
-        $this->warehouseAccess->authorizeAnyLocation($request->user(), [$stockTransfer->from_location_id, $stockTransfer->to_location_id]);
-
-        if ($blocked = $this->approvalBlock($stockTransfer)) {
-            return $blocked;
-        }
+        $this->authorizeTransfer($request, $stockTransfer);
 
         $validated = $request->validated();
 
         // Handle status change to in_transit
         if (isset($validated['status']) && $validated['status'] === 'in_transit') {
-            if ($stockTransfer->status !== 'pending') {
-                return redirect()->route('stock-transfers.show', $stockTransfer)
-                    ->with('error', 'Only pending transfers can be marked as in transit.');
-            }
-
-            $updateData = [
-                'status' => 'in_transit',
-                'shipped_at' => now(),
-            ];
-
-            if (isset($validated['shipping_method'])) {
-                $updateData['shipping_method'] = $validated['shipping_method'];
-            }
-            if (isset($validated['tracking_number'])) {
-                $updateData['tracking_number'] = $validated['tracking_number'];
-            }
-            if (isset($validated['estimated_arrival'])) {
-                $updateData['estimated_arrival'] = $validated['estimated_arrival'];
-            }
-
-            $stockTransfer->update($updateData);
-
-            return redirect()->route('stock-transfers.show', $stockTransfer)
-                ->with('success', 'Stock transfer marked as in transit.');
+            return $this->transition(
+                $stockTransfer,
+                fn () => $transfers->ship($stockTransfer, $request->user(), $validated),
+                'Stock transfer marked as in transit.',
+            );
         }
 
         return redirect()->route('stock-transfers.show', $stockTransfer);
@@ -266,135 +170,57 @@ class StockTransferController extends Controller
     /**
      * Complete a stock transfer, adjusting stock levels.
      *
-     * @param  Request  $request  The incoming HTTP request
-     * @param  StockTransfer  $stockTransfer  The stock transfer to complete
      * @return RedirectResponse
      */
-    public function complete(Request $request, StockTransfer $stockTransfer, ProductLocationStockService $locationStock)
+    public function complete(Request $request, StockTransfer $stockTransfer, StockTransferService $transfers)
+    {
+        $this->authorizeTransfer($request, $stockTransfer);
+
+        return $this->transition(
+            $stockTransfer,
+            fn () => $transfers->complete($stockTransfer, $request->user()),
+            'Stock transfer completed.',
+        );
+    }
+
+    /**
+     * Cancel a stock transfer.
+     *
+     * @return RedirectResponse
+     */
+    public function cancel(Request $request, StockTransfer $stockTransfer, StockTransferService $transfers)
+    {
+        $this->authorizeTransfer($request, $stockTransfer);
+
+        return $this->transition(
+            $stockTransfer,
+            fn () => $transfers->cancel($stockTransfer, $request->user()),
+            'Stock transfer has been cancelled.',
+        );
+    }
+
+    private function authorizeTransfer(Request $request, StockTransfer $stockTransfer): void
     {
         if ($stockTransfer->organization_id !== $request->user()->organization_id) {
             abort(403, 'Unauthorized action.');
         }
 
         $this->warehouseAccess->authorizeAnyLocation($request->user(), [$stockTransfer->from_location_id, $stockTransfer->to_location_id]);
+    }
 
-        if (! in_array($stockTransfer->status, ['pending', 'in_transit'])) {
-            return redirect()->route('stock-transfers.show', $stockTransfer)
-                ->with('error', 'Only pending or in-transit transfers can be completed.');
-        }
-
-        if ($blocked = $this->approvalBlock($stockTransfer)) {
-            return $blocked;
-        }
-
+    /**
+     * Run a lifecycle transition, flashing the service's refusal as an error.
+     */
+    private function transition(StockTransfer $stockTransfer, callable $action, string $success): RedirectResponse
+    {
         try {
-            DB::transaction(function () use ($stockTransfer, $locationStock) {
-                $stockTransfer->load('items', 'fromLocation', 'toLocation');
-
-                foreach ($stockTransfer->items as $item) {
-                    // Lock the product row for the duration of this transaction so two
-                    // concurrent transfers cannot pass the stock check based on the
-                    // same pre-image.
-                    $product = Product::where('id', $item->product_id)
-                        ->where('organization_id', $stockTransfer->organization_id)
-                        ->lockForUpdate()
-                        ->firstOrFail();
-
-                    if ($product->stock < $item->quantity) {
-                        throw new \RuntimeException(
-                            "Insufficient stock for {$product->name}: have {$product->stock}, transfer requires {$item->quantity}."
-                        );
-                    }
-
-                    // Move the quantity between the source and destination location
-                    // bins. products.stock (the total on hand) is unchanged — the
-                    // goods are still owned, just in a different place — but the
-                    // per-location breakdown now reflects the move, so the source
-                    // bin can no longer be over-drawn by a later transfer. Guards
-                    // the source bin (throws if short).
-                    $locationStock->move(
-                        $product,
-                        $stockTransfer->from_location_id,
-                        $stockTransfer->to_location_id,
-                        $item->quantity,
-                    );
-
-                    // Repoint the product's primary location to the destination so
-                    // single-location views keep matching where the bulk of the
-                    // goods moved.
-                    $product->update(['location_id' => $stockTransfer->to_location_id]);
-
-                    // Record one audit row per item. products.stock does not change
-                    // on a transfer (the move is between locations, tracked in
-                    // product_location_stocks), so adjustment_quantity is 0; the
-                    // reason captures the source and destination for the ledger.
-                    StockAdjustment::create([
-                        'organization_id' => $stockTransfer->organization_id,
-                        'product_id' => $product->id,
-                        'user_id' => auth()->id(),
-                        'type' => 'transfer',
-                        'quantity_before' => $product->stock,
-                        'quantity_after' => $product->stock,
-                        'adjustment_quantity' => 0,
-                        'reason' => "Transfer {$item->quantity} from {$stockTransfer->fromLocation->name} to {$stockTransfer->toLocation->name}",
-                        'notes' => "Transfer #{$stockTransfer->transfer_number}",
-                        'reference_type' => StockTransfer::class,
-                        'reference_id' => $stockTransfer->id,
-                    ]);
-                }
-
-                $stockTransfer->update([
-                    'status' => 'completed',
-                    'completed_at' => now(),
-                ]);
-            });
+            $action();
         } catch (\RuntimeException $e) {
             return redirect()->route('stock-transfers.show', $stockTransfer)
                 ->with('error', $e->getMessage());
         }
 
         return redirect()->route('stock-transfers.show', $stockTransfer)
-            ->with('success', 'Stock transfer completed.');
-    }
-
-    /**
-     * Redirect back with the reason when approval still blocks this transfer
-     * from shipping or completing; null when it may proceed.
-     */
-    private function approvalBlock(StockTransfer $stockTransfer): ?RedirectResponse
-    {
-        try {
-            app(ApprovalService::class)->assertTransferMayProceed($stockTransfer);
-        } catch (ApprovalException $e) {
-            return redirect()->route('stock-transfers.show', $stockTransfer)->with('error', $e->getMessage());
-        }
-
-        return null;
-    }
-
-    /**
-     * Cancel a stock transfer.
-     *
-     * @param  Request  $request  The incoming HTTP request
-     * @param  StockTransfer  $stockTransfer  The stock transfer to cancel
-     * @return RedirectResponse
-     */
-    public function cancel(Request $request, StockTransfer $stockTransfer)
-    {
-        if ($stockTransfer->organization_id !== $request->user()->organization_id) {
-            abort(403, 'Unauthorized action.');
-        }
-
-        $this->warehouseAccess->authorizeAnyLocation($request->user(), [$stockTransfer->from_location_id, $stockTransfer->to_location_id]);
-
-        if (! in_array($stockTransfer->status, ['pending', 'in_transit'])) {
-            return redirect()->route('stock-transfers.show', $stockTransfer)
-                ->with('error', 'Only pending or in-transit transfers can be cancelled.');
-        }
-
-        $stockTransfer->update(['status' => 'cancelled']);
-
-        return redirect()->route('stock-transfers.show', $stockTransfer)
-            ->with('success', 'Stock transfer has been cancelled.');
+            ->with('success', $success);
     }
 }

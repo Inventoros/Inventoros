@@ -1,10 +1,10 @@
-Inventoros offers programmatic access to every resource: products, stock, orders, suppliers, purchase orders, work orders, and more. Data is available over a REST API and an equivalent GraphQL endpoint.
+Inventoros offers programmatic access to every resource: products, stock, orders, customers, returns, stock transfers, stock audits, suppliers, purchase orders, work orders, webhooks, users, and more. Data is available over a REST API and an equivalent GraphQL endpoint.
 
 ### Endpoints at a glance
 
 - REST: `{your-host}/api/v1`
 - GraphQL: `{your-host}/graphql`
-- OpenAPI 3.0 spec and interactive docs: `{your-host}/docs/api`
+- OpenAPI 3.0 spec and interactive docs: `{your-host}/docs/api` (sign-in required outside local development unless `API_DOCS_PUBLIC=true`)
 - Auth: Sanctum bearer token
 
 `{your-host}` matches the `APP_URL` value in your `.env` (for example `http://localhost` or `https://inventoros.example.com`).
@@ -28,6 +28,8 @@ curl -X POST "${APP_URL}/api/v1/login" \
 
 The response contains a `token` shown only once. Store it securely. It inherits the user's organization scope and permissions.
 
+You can also create tokens in the app under **Settings > API tokens**. There you name the token and tick the permissions it may use, chosen from the permissions you hold; the token is shown once. The same page lists your tokens with when each was last used, and revokes them.
+
 Token management endpoints:
 
 - `POST /api/v1/login`. Issue a new token (rate-limited 5/min/IP).
@@ -42,23 +44,25 @@ Every record carries an `organization_id`, and the API automatically scopes requ
 
 ### Permissions
 
-Routes are guarded by `api.permission:` middleware. The token's user must hold one of the listed permissions; the middleware accepts `|`-separated permissions and grants access when the user holds any of them. Common strings:
+Routes are guarded by `api.permission:` middleware, one permission per verb (read, create, edit, delete). The token's user must hold the permission, and when the token was created with a list of abilities the token must include it too, so a read-only token stays read-only even for an admin. Permissions by resource:
 
-- `view_products`, `manage_products`
-- `view_orders`, `manage_orders`
-- `view_suppliers`, `manage_suppliers`
-- `view_purchase_orders`, `manage_purchase_orders`, `edit_purchase_orders`, `receive_purchase_orders`
-- `manage_stock`, `view_stock_adjustments`, `view_stock_audits`
-- `view_warehouses`, `manage_warehouses`
-- `view_categories`, `manage_categories`
-- `view_locations`, `manage_locations`
-- `view_reports`, `view_roles`, `manage_roles`
+- Products: `view_products`, `create_products`, `edit_products`, `delete_products`; stock moves `manage_stock`
+- Categories: `manage_categories`; locations: `manage_locations`; stock adjustments and work orders: `manage_stock`
+- Customers: `view_customers`, `create_customers`, `edit_customers`, `delete_customers` (a customer's orders also need `view_orders`)
+- Orders: `view_orders`, `create_orders`, `edit_orders` (also emailing the invoice), `delete_orders`, `approve_orders`
+- Returns: `manage_returns`
+- Stock transfers: `transfer_stock`
+- Stock audits: `view_stock_audits`, `create_stock_audits`, `manage_stock_audits` (start, count, complete)
+- Suppliers and purchase orders: `view_suppliers`, `create_suppliers`, `edit_suppliers`, `delete_suppliers`, `view_purchase_orders`, `create_purchase_orders`, `edit_purchase_orders`, `delete_purchase_orders`, `receive_purchase_orders`
+- Warehouses: `view_warehouses`, `create_warehouses`, `edit_warehouses`, `delete_warehouses`
+- Users: `view_users`, `create_users`, `edit_users`; webhooks: `manage_organization`
+- Reports and roles: `view_reports`, `view_roles`, `create_roles`, `edit_roles`, `delete_roles`
 
 A request lacking the required permission returns `403 forbidden`.
 
 ### Rate limits
 
-- Default: 60 requests per minute per user (or per IP if anonymous), keyed across the entire `/api/v1/*` group.
+- Default: 60 requests per minute per user (or per IP if anonymous), keyed across the entire `/api/v1/*` group. `POST /graphql` uses the same limiter.
 - `POST /api/v1/login`: 5 requests per minute per IP.
 
 Exceeded limits return `429 Too Many Requests` with a `Retry-After` header. Successful responses include `X-RateLimit-Limit` and `X-RateLimit-Remaining`.
@@ -93,7 +97,7 @@ Every error returns JSON with the same shape:
 }
 ```
 
-Validation errors additionally include the standard Laravel `errors` map. Common codes: `unauthenticated`, `forbidden`, `not_found`, `insufficient_stock`, `cannot_send`, `cannot_receive`, `cannot_cancel`.
+Validation errors additionally include the standard Laravel `errors` map. An id in the request body that belongs to another organization is a validation error. Common codes: `unauthenticated`, `forbidden`, `not_found`, `insufficient_stock`, `invalid_status`, `already_processed`, `missing_recipient`, `has_orders`, `cannot_send`, `cannot_receive`, `cannot_cancel`.
 
 ### Resources
 
@@ -102,16 +106,21 @@ All paths are relative to `/api/v1`. See the OpenAPI spec for full schemas:
 - Auth: login / logout / user / token CRUD
 - Products: CRUD, plus nested options, variants, components, batches, serials
 - Categories, Locations, Warehouses: CRUD
-- Orders: CRUD with line items; auto-decrements stock
+- Orders: CRUD with line items; auto-decrements stock. Plus `approve`, `reject` and `invoice/email`
+- Customers: CRUD plus `GET /customers/{id}/orders`
+- Returns (RMA): list, show, create, then `approve`, `receive` (restocks), `complete` or `reject`
+- Stock Transfers: list, show, create, then `ship`, `complete` (moves stock between location bins) or `cancel`
 - Stock Adjustments: record signed deltas with a reason
-- Stock Audits: read-only view of cycle counts
+- Stock Audits: list, show, create, `start`, `items/{item}/count`, `complete` (books recount adjustments)
 - Suppliers: CRUD
 - Purchase Orders: CRUD plus `send`, `receive`, `cancel`
-- Work Orders: read plus `start`, `complete`, `cancel`
-
-Users assigned to specific warehouses only see and act on locations, stock adjustments, stock audits and purchase order receiving in those warehouses; anything else returns `403`. Admins and roles with `access_all_warehouses` are never restricted.
+- Work Orders: read plus `start`, `complete`, `cancel`, and delete while draft or cancelled
+- Webhooks: CRUD, `regenerate-secret` and `deliveries`. The signing secret is returned only on create and regenerate
+- Users: list, show, create and update, with the same role-assignment guards as the web app
 - Barcode lookup: `GET /barcode/{code}`
 - Permission Sets, Saved Reports: admin surfaces
+
+Users assigned to specific warehouses only see and act on locations, stock adjustments, stock audits, stock transfers (either end) and purchase order receiving in those warehouses, over REST and GraphQL alike; anything else returns `403`. Admins and roles with `access_all_warehouses` are never restricted.
 
 ### Examples
 
@@ -202,9 +211,51 @@ $order = $client->post('orders', [
 ])->throw()->json('data');
 ```
 
+Receive a return and restock it:
+
+```bash
+curl -X POST "${APP_URL}/api/v1/returns" \
+  -H "Authorization: Bearer ${TOKEN}" \
+  -H "Content-Type: application/json" \
+  -d '{"order_id": 1042, "type": "return", "reason": "Damaged in transit",
+       "items": [{ "order_item_id": 5531, "quantity": 2, "condition": "damaged", "restock": false }]}'
+
+curl -X POST "${APP_URL}/api/v1/returns/17/approve" -H "Authorization: Bearer ${TOKEN}"
+curl -X POST "${APP_URL}/api/v1/returns/17/receive" -H "Authorization: Bearer ${TOKEN}"
+```
+
+### Webhook events
+
+Subscribe a URL to any of these events under **Settings > Webhooks** or with `POST /api/v1/webhooks`. Each delivery is signed with HMAC-SHA256 using the webhook's secret, and fires only after the change is committed.
+
+| Group | Events |
+| --- | --- |
+| Product | `product.created`, `product.updated`, `product.deleted`, `product.low_stock`, `product.out_of_stock` |
+| Order | `order.created`, `order.updated`, `order.status_changed`, `order.approved`, `order.rejected` |
+| Stock | `stock.adjusted` |
+| Purchase order | `purchase_order.created`, `purchase_order.received`, `purchase_order.cancelled` |
+| Customer | `customer.created`, `customer.updated`, `customer.deleted` |
+| Return | `return.created`, `return.received` |
+| Stock transfer | `transfer.created`, `transfer.completed` |
+| Work order | `work_order.completed` |
+| Stock audit | `stock_audit.completed` |
+
 ### GraphQL
 
-The same data is available via GraphQL at `POST /graphql`, powered by `rebing/graphql-laravel`. Authentication is the same Sanctum bearer token. The schema covers products, orders, suppliers, purchase orders, stock adjustments, locations, and categories. Use any GraphQL client (Apollo, urql, graphql-request, and so on).
+The same data is available via GraphQL at `POST /graphql`, powered by `rebing/graphql-laravel`. Authentication is the same Sanctum bearer token. Use any GraphQL client (Apollo, urql, graphql-request, and so on).
+
+Queries: `products`, `product`, `orders`, `order`, `suppliers`, `supplier`, `purchaseOrders`, `purchaseOrder`, `stockAdjustments`, `locations`, `categories`, `customers`, `customer`, `returnOrders`, `returnOrder`, `stockTransfers`, `stockTransfer`, `users`, `user` (read-only) and `productVariants`.
+
+Mutations: `createProduct`, `updateProduct`, `deleteProduct`, `createOrder`, `updateOrder`, `createStockAdjustment`, `createSupplier`, `updateSupplier`, `createCustomer`, `updateCustomer`, `createReturnOrder`, `approveReturnOrder`, `receiveReturnOrder`, `createStockTransfer`, `completeStockTransfer`, `createPurchaseOrder`, `updatePurchaseOrder` and `receivePurchaseOrder`.
+
+Every field is gated like the matching REST route: the user must hold the permission and the token must allow it, so a scoped token is enforced the same way over GraphQL. Mutations call the same services as the web app and REST API, so a return received or a transfer completed over GraphQL restocks and moves bins exactly as it would anywhere else. List queries accept `limit` (default 50, max 100). The endpoint shares the REST rate limit of 60 requests per minute.
+
+```bash
+curl -X POST "${APP_URL}/graphql" \
+  -H "Authorization: Bearer ${TOKEN}" \
+  -H "Content-Type: application/json" \
+  -d '{"query":"{ stockTransfers(status: \"pending\") { transfer_number from_location { name } to_location { name } items { quantity product { sku } } } }"}'
+```
 
 ### Versioning
 

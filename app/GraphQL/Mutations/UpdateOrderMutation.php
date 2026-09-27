@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\GraphQL\Mutations;
 
+use App\GraphQL\Concerns\RequiresPermissions;
 use App\Models\Order\Order;
 use Closure;
 use GraphQL\Error\Error;
@@ -14,6 +15,17 @@ use Rebing\GraphQL\Support\Mutation;
 
 class UpdateOrderMutation extends Mutation
 {
+    use RequiresPermissions;
+
+    /**
+     * The REST route's gate; enforced (with the token's abilities) before
+     * the resolver runs. See EnforcePermissions.
+     */
+    protected function permissions(): array
+    {
+        return ['edit_orders'];
+    }
+
     protected $attributes = [
         'name' => 'updateOrder',
         'description' => 'Update an existing order',

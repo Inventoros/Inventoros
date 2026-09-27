@@ -4,17 +4,14 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Admin;
 
-use App\Enums\SecurityEvent;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\User\StoreUserRequest;
 use App\Http\Requests\Admin\User\UpdateUserRequest;
 use App\Models\Role;
 use App\Models\User;
-use App\Services\SecurityEventLogger;
-use App\Support\RoleAssignmentGuard;
+use App\Services\UserManagementService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Hash;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -88,26 +85,9 @@ class UserController extends Controller
      *
      * @param  Request  $request  The incoming HTTP request containing user data
      */
-    public function store(StoreUserRequest $request): RedirectResponse
+    public function store(StoreUserRequest $request, UserManagementService $users): RedirectResponse
     {
-        $user = $request->user();
-
-        $validated = $request->validated();
-
-        $this->assertCanAssignRoles($validated['role_ids'] ?? [], $user, $validated['role']);
-
-        $newUser = User::create([
-            'name' => $validated['name'],
-            'email' => $validated['email'],
-            'password' => Hash::make($validated['password']),
-            'organization_id' => $user->organization_id,
-            'role' => $validated['role'],
-        ]);
-
-        // Assign additional custom roles if provided
-        if (! empty($validated['role_ids'])) {
-            $this->logRoleSync($newUser, $user, $newUser->roles()->sync($validated['role_ids']));
-        }
+        $users->create($request->user(), $request->validated());
 
         return redirect()->route('users.index')
             ->with('success', 'User created successfully.');
@@ -170,7 +150,7 @@ class UserController extends Controller
      * @param  Request  $request  The incoming HTTP request containing updated user data
      * @param  User  $user  The user to update
      */
-    public function update(UpdateUserRequest $request, User $user): RedirectResponse
+    public function update(UpdateUserRequest $request, User $user, UserManagementService $users): RedirectResponse
     {
         $currentUser = $request->user();
 
@@ -179,38 +159,7 @@ class UserController extends Controller
             abort(403, 'You can only update users in your organization.');
         }
 
-        $validated = $request->validated();
-
-        $this->assertCanAssignRoles($validated['role_ids'] ?? [], $currentUser, $validated['role']);
-
-        // Don't allow removing admin from the last admin
-        if ($validated['role'] !== 'admin' && $user->role === 'admin') {
-            $adminCount = User::where('organization_id', $currentUser->organization_id)
-                ->where('role', 'admin')
-                ->count();
-
-            if ($adminCount <= 1) {
-                return redirect()->back()
-                    ->withErrors(['role' => 'Cannot remove admin role from the last administrator.']);
-            }
-        }
-
-        $updateData = [
-            'name' => $validated['name'],
-            'email' => $validated['email'],
-            'role' => $validated['role'],
-        ];
-
-        if (! empty($validated['password'])) {
-            $updateData['password'] = Hash::make($validated['password']);
-        }
-
-        $user->update($updateData);
-
-        // Sync roles if provided
-        if (isset($validated['role_ids'])) {
-            $this->logRoleSync($user, $currentUser, $user->roles()->sync($validated['role_ids']));
-        }
+        $users->update($currentUser, $user, $request->validated());
 
         return redirect()->route('users.index')
             ->with('success', 'User updated successfully.');
@@ -253,37 +202,5 @@ class UserController extends Controller
 
         return redirect()->route('users.index')
             ->with('success', 'User deleted successfully.');
-    }
-
-    /**
-     * Record custom role assignments to the security log. `roles()->sync()`
-     * writes the pivot directly, so no model event reports it.
-     *
-     * @param  array{attached: array<int, int>, detached: array<int, int>, updated: array<int, int>}  $changes
-     */
-    private function logRoleSync(User $user, User $actor, array $changes): void
-    {
-        if ($changes['attached'] === [] && $changes['detached'] === []) {
-            return;
-        }
-
-        $names = Role::whereIn('id', array_merge($changes['attached'], $changes['detached']))->pluck('name', 'id');
-
-        app(SecurityEventLogger::class)->record(SecurityEvent::USER_ROLES_SYNCED, $user, $actor, [
-            'roles_added' => array_values(array_map(fn ($id) => $names[$id] ?? $id, $changes['attached'])),
-            'roles_removed' => array_values(array_map(fn ($id) => $names[$id] ?? $id, $changes['detached'])),
-        ]);
-    }
-
-    /**
-     * Prevent privilege escalation through role assignment. The rules live in
-     * RoleAssignmentGuard so the user CSV import enforces exactly the same
-     * ones.
-     *
-     * @param  array<int|string>  $roleIds
-     */
-    private function assertCanAssignRoles(array $roleIds, User $actor, ?string $baseRole = null): void
-    {
-        RoleAssignmentGuard::authorize($roleIds, $actor, $baseRole);
     }
 }

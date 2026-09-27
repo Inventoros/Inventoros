@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Inventory;
 
+use App\Exceptions\InvalidStateException;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\WorkOrder\StoreWorkOrderRequest;
 use App\Models\Inventory\Product;
@@ -11,6 +12,7 @@ use App\Models\Inventory\StockAdjustment;
 use App\Models\Inventory\WorkOrder;
 use App\Models\Inventory\WorkOrderItem;
 use App\Services\ProductLocationStockService;
+use App\Services\WorkOrderService;
 use App\Support\SequenceNumberRetry;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -26,11 +28,6 @@ use Inertia\Response;
  */
 class WorkOrderController extends Controller
 {
-    /**
-     * Statuses in which a work order has not moved any stock and can be deleted.
-     */
-    private const DELETABLE_STATUSES = ['draft', 'cancelled'];
-
     /**
      * Display a listing of work orders.
      *
@@ -415,28 +412,15 @@ class WorkOrderController extends Controller
      * @param  WorkOrder  $workOrder  The work order to delete
      * @return RedirectResponse
      */
-    public function destroy(Request $request, WorkOrder $workOrder)
+    public function destroy(Request $request, WorkOrder $workOrder, WorkOrderService $workOrders)
     {
         $this->authorizeWorkOrder($request, $workOrder);
 
-        $deleted = DB::transaction(function () use ($workOrder) {
-            // Lock and re-check so a concurrent start cannot slip in between
-            // the guard and the delete.
-            $locked = WorkOrder::whereKey($workOrder->getKey())->lockForUpdate()->firstOrFail();
-
-            if (! in_array($locked->status, self::DELETABLE_STATUSES, true)) {
-                return false;
-            }
-
-            $locked->items()->delete();
-            $locked->delete();
-
-            return true;
-        });
-
-        if (! $deleted) {
+        try {
+            $workOrders->delete($workOrder);
+        } catch (InvalidStateException $e) {
             return redirect()->route('work-orders.show', $workOrder)
-                ->with('error', 'Only draft or cancelled work orders can be deleted.');
+                ->with('error', $e->getMessage());
         }
 
         return redirect()->route('work-orders.index')

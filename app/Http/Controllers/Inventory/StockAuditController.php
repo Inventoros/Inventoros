@@ -9,14 +9,13 @@ use App\Http\Requests\StockAudit\StoreStockAuditRequest;
 use App\Http\Requests\StockAudit\UpdateStockAuditRequest;
 use App\Models\Inventory\Product;
 use App\Models\Inventory\ProductLocation;
-use App\Models\Inventory\StockAdjustment;
 use App\Models\Inventory\StockAudit;
 use App\Models\Inventory\StockAuditItem;
+use App\Services\StockAuditService;
 use App\Services\WarehouseAccessService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -110,64 +109,15 @@ class StockAuditController extends Controller
     /**
      * Store a newly created stock audit.
      *
-     * @param  Request  $request  The incoming HTTP request
      * @return RedirectResponse
      */
-    public function store(StoreStockAuditRequest $request)
+    public function store(StoreStockAuditRequest $request, StockAuditService $audits)
     {
-        $validated = $request->validated();
-
-        $organizationId = $request->user()->organization_id;
-
-        // Verify location belongs to organization if provided
-        if (! empty($validated['warehouse_location_id'])) {
-            ProductLocation::where('id', $validated['warehouse_location_id'])
-                ->forOrganization($organizationId)
-                ->firstOrFail();
-        }
-
         // A restricted user audits their own warehouses only; an audit with no
         // location spans the whole organization.
-        $this->warehouseAccess->authorizeLocation($request->user(), $validated['warehouse_location_id'] ?? null);
+        $this->warehouseAccess->authorizeLocation($request->user(), $request->validated()['warehouse_location_id'] ?? null);
 
-        $audit = DB::transaction(function () use ($validated, $organizationId, $request) {
-            $audit = StockAudit::create([
-                'organization_id' => $organizationId,
-                'audit_number' => StockAudit::generateAuditNumber($organizationId),
-                'name' => $validated['name'],
-                'description' => $validated['description'] ?? null,
-                'status' => 'draft',
-                'audit_type' => $validated['audit_type'],
-                'warehouse_location_id' => $validated['warehouse_location_id'] ?? null,
-                'notes' => $validated['notes'] ?? null,
-                'created_by' => $request->user()->id,
-            ]);
-
-            // Get products to include in the audit
-            $productQuery = Product::forOrganization($organizationId)->active();
-
-            if (! empty($validated['product_ids'])) {
-                // Specific products selected
-                $productQuery->whereIn('id', $validated['product_ids']);
-            } elseif (! empty($validated['warehouse_location_id'])) {
-                // Filter by location
-                $productQuery->where('location_id', $validated['warehouse_location_id']);
-            }
-
-            $products = $productQuery->get();
-
-            foreach ($products as $product) {
-                StockAuditItem::create([
-                    'stock_audit_id' => $audit->id,
-                    'product_id' => $product->id,
-                    'location_id' => $product->location_id,
-                    'system_quantity' => $product->stock,
-                    'status' => 'pending',
-                ]);
-            }
-
-            return $audit;
-        });
+        $audit = $audits->create($request->user()->organization_id, $request->user(), $request->validated());
 
         return redirect()->route('stock-audits.show', $audit)
             ->with('success', 'Stock audit created successfully with '.$audit->items()->count().' items.');
@@ -329,11 +279,9 @@ class StockAuditController extends Controller
     /**
      * Start a stock audit (transition from draft to in_progress).
      *
-     * @param  Request  $request  The incoming HTTP request
-     * @param  StockAudit  $stockAudit  The stock audit to start
      * @return RedirectResponse
      */
-    public function start(Request $request, StockAudit $stockAudit)
+    public function start(Request $request, StockAudit $stockAudit, StockAuditService $audits)
     {
         if ($stockAudit->organization_id !== $request->user()->organization_id) {
             abort(403, 'Unauthorized action.');
@@ -341,28 +289,12 @@ class StockAuditController extends Controller
 
         $this->warehouseAccess->authorizeLocation($request->user(), $stockAudit->warehouse_location_id);
 
-        if ($stockAudit->status !== 'draft') {
+        try {
+            $audits->start($stockAudit, $request->user());
+        } catch (\RuntimeException $e) {
             return redirect()->route('stock-audits.show', $stockAudit)
-                ->with('error', 'Only draft audits can be started.');
+                ->with('error', $e->getMessage());
         }
-
-        if ($stockAudit->items()->count() === 0) {
-            return redirect()->route('stock-audits.show', $stockAudit)
-                ->with('error', 'Cannot start an audit with no items.');
-        }
-
-        // Refresh system quantities from current stock levels
-        DB::transaction(function () use ($stockAudit) {
-            foreach ($stockAudit->items as $item) {
-                $currentStock = $item->product->stock;
-                $item->update(['system_quantity' => $currentStock]);
-            }
-
-            $stockAudit->update([
-                'status' => 'in_progress',
-                'started_at' => now(),
-            ]);
-        });
 
         return redirect()->route('stock-audits.show', $stockAudit)
             ->with('success', 'Stock audit started. System quantities have been recorded.');
@@ -371,11 +303,9 @@ class StockAuditController extends Controller
     /**
      * Complete a stock audit and create stock adjustments for discrepancies.
      *
-     * @param  Request  $request  The incoming HTTP request
-     * @param  StockAudit  $stockAudit  The stock audit to complete
      * @return RedirectResponse
      */
-    public function complete(Request $request, StockAudit $stockAudit)
+    public function complete(Request $request, StockAudit $stockAudit, StockAuditService $audits)
     {
         if ($stockAudit->organization_id !== $request->user()->organization_id) {
             abort(403, 'Unauthorized action.');
@@ -383,61 +313,8 @@ class StockAuditController extends Controller
 
         $this->warehouseAccess->authorizeLocation($request->user(), $stockAudit->warehouse_location_id);
 
-        if ($stockAudit->status !== 'in_progress') {
-            return redirect()->route('stock-audits.show', $stockAudit)
-                ->with('error', 'Only in-progress audits can be completed.');
-        }
-
-        $adjustmentsCreated = 0;
-
         try {
-            DB::transaction(function () use ($stockAudit, &$adjustmentsCreated) {
-                // Lock and re-read the audit so two concurrent completions
-                // serialize on this row; the second waits, then sees the
-                // 'completed' status and is rejected below — otherwise both
-                // would re-apply every recount adjustment (double write).
-                $stockAudit = StockAudit::whereKey($stockAudit->getKey())->lockForUpdate()->firstOrFail();
-
-                if ($stockAudit->status !== 'in_progress') {
-                    throw new \RuntimeException('Only in-progress audits can be completed.');
-                }
-
-                $stockAudit->load('items.product');
-
-                foreach ($stockAudit->items as $item) {
-                    // Skip items that haven't been counted
-                    if ($item->counted_quantity === null) {
-                        continue;
-                    }
-
-                    $discrepancy = $item->counted_quantity - $item->system_quantity;
-
-                    // Update the discrepancy field
-                    $item->update([
-                        'discrepancy' => $discrepancy,
-                        'status' => 'adjusted',
-                    ]);
-
-                    // Create stock adjustment if there's a discrepancy
-                    if ($discrepancy !== 0) {
-                        StockAdjustment::adjust(
-                            product: $item->product,
-                            quantity: $discrepancy,
-                            type: 'recount',
-                            reason: "Stock audit: {$stockAudit->audit_number}",
-                            notes: "Audit '{$stockAudit->name}' - System: {$item->system_quantity}, Counted: {$item->counted_quantity}",
-                            reference: $stockAudit,
-                        );
-
-                        $adjustmentsCreated++;
-                    }
-                }
-
-                $stockAudit->update([
-                    'status' => 'completed',
-                    'completed_at' => now(),
-                ]);
-            });
+            $adjustmentsCreated = $audits->complete($stockAudit, $request->user());
         } catch (\RuntimeException $e) {
             return redirect()->route('stock-audits.show', $stockAudit)
                 ->with('error', $e->getMessage());
@@ -456,12 +333,8 @@ class StockAuditController extends Controller
 
     /**
      * Update the count for an individual audit item (AJAX endpoint).
-     *
-     * @param  Request  $request  The incoming HTTP request
-     * @param  StockAudit  $stockAudit  The stock audit
-     * @param  StockAuditItem  $item  The audit item to update
      */
-    public function updateCount(Request $request, StockAudit $stockAudit, StockAuditItem $item): JsonResponse
+    public function updateCount(Request $request, StockAudit $stockAudit, StockAuditItem $item, StockAuditService $audits): JsonResponse
     {
         if ($stockAudit->organization_id !== $request->user()->organization_id
             || ! $this->warehouseAccess->canAccessLocation($request->user(), $stockAudit->warehouse_location_id)) {
@@ -481,16 +354,11 @@ class StockAuditController extends Controller
             'notes' => 'nullable|string|max:500',
         ]);
 
-        $discrepancy = $validated['counted_quantity'] - $item->system_quantity;
-
-        $item->update([
-            'counted_quantity' => $validated['counted_quantity'],
-            'discrepancy' => $discrepancy,
-            'status' => 'counted',
-            'counted_by' => $request->user()->id,
-            'counted_at' => now(),
-            'notes' => $validated['notes'] ?? $item->notes,
-        ]);
+        try {
+            $audits->recordCount($stockAudit, $item, $request->user(), (int) $validated['counted_quantity'], $validated['notes'] ?? null);
+        } catch (\RuntimeException $e) {
+            return response()->json(['message' => $e->getMessage()], 422);
+        }
 
         return response()->json([
             'message' => 'Count updated successfully',

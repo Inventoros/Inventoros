@@ -65,6 +65,15 @@ class PurchaseOrderType extends GraphQLType
                 'description' => 'Date received',
                 'resolve' => fn (PurchaseOrder $po) => $po->received_date?->format('Y-m-d'),
             ],
+            'sent_at' => [
+                'type' => Type::string(),
+                'description' => 'When the purchase order was last emailed to the supplier',
+                'resolve' => fn (PurchaseOrder $po) => $po->sent_at?->toIso8601String(),
+            ],
+            'sent_to' => [
+                'type' => Type::string(),
+                'description' => 'Address the purchase order was last emailed to',
+            ],
             'subtotal' => [
                 'type' => Type::float(),
                 'description' => 'Subtotal amount',

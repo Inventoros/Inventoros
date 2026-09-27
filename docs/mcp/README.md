@@ -102,6 +102,7 @@ Restart the client. The Inventoros tools will appear in the tool picker.
 | `list_orders` | `view_orders` or `manage_orders` | Paginated orders with filters for status, source, warehouse, date range. |
 | `get_order` | `view_orders` or `manage_orders` | Single order with line items. |
 | `create_order` | `manage_orders` | Create order; decrements stock per item; fails if any line is short. Marked **destructive**. |
+| `email_order_invoice` | `edit_orders` | Email the order's invoice PDF to the customer (or `to`), with optional CC and message. Assigns the invoice number on first use. Marked **destructive**. |
 
 ### Purchasing
 
@@ -120,6 +121,7 @@ Restart the client. The Inventoros tools will appear in the tool picker.
 |---|---|---|
 | `list_work_orders` | `manage_stock` | Paginated work orders with status filter. |
 | `start_work_order` | `manage_stock` | Validate component stock and transition to in_progress. Marked **destructive**. |
+| `delete_work_order` | `manage_stock` | Delete a draft or cancelled work order. Marked **destructive**. |
 
 ### Catalog (write)
 
