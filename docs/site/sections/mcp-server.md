@@ -106,6 +106,8 @@ Sales:
 - `create_order` (`create_orders`). Create an order; decrements stock; fails if any line is short. Accepts optional line and order discounts (applied before tax). Destructive.
 - `email_order_invoice` (`edit_orders`). Email the order's invoice PDF to the customer, or to `to`, with optional CC and message. Destructive.
 - `record_payment` (`record_payments`). Record a payment against an order. Partial payments are fine; a payment above the balance due needs `allow_overpayment`; cancelled orders are refused. Destructive.
+- `list_shipments` (`view_shipments`). Paginated shipments with carrier, tracking and status; filter by order or status.
+- `create_shipment` (`create_shipments`). Record a shipment with manual tracking, optionally marking it shipped. Destructive.
 
 Purchasing:
 

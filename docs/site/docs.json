@@ -6,6 +6,7 @@
         { "slug": "installation-docker", "label": "Install with Docker", "anchor": "installation-docker" },
         { "slug": "rest-api", "label": "REST & GraphQL API", "anchor": "rest-api" },
         { "slug": "mcp-server", "label": "MCP Server", "anchor": "mcp-server" },
+        { "slug": "shipping", "label": "Shipping & Carriers", "anchor": "shipping" },
         { "slug": "plugins", "label": "Plugin Development", "anchor": "plugins" },
         { "slug": "updates", "label": "Updates & Backups", "anchor": "updates" }
     ]
