@@ -60,6 +60,7 @@ class ProductLocation extends Model
         'aisle',
         'shelf',
         'bin',
+        'capacity',
         'is_active',
     ];
 
@@ -72,6 +73,7 @@ class ProductLocation extends Model
     {
         return [
             'is_active' => 'boolean',
+            'capacity' => 'integer',
         ];
     }
 

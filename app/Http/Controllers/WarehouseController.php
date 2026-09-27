@@ -44,7 +44,7 @@ class WarehouseController extends Controller
                 });
             })
             ->orderByDesc('is_default')
-            ->orderBy('priority')
+            ->orderByDesc('priority') // higher priority is used first for fulfilment
             ->latest()
             ->paginate(15)
             ->withQueryString();
@@ -141,9 +141,18 @@ class WarehouseController extends Controller
             ->get()
             ->map(function ($location) use ($onHandByLocation) {
                 $location->on_hand = (int) ($onHandByLocation[$location->id] ?? 0);
+                $location->utilisation = $this->utilisation($location->on_hand, $location->capacity);
 
                 return $location;
             });
+
+        // The warehouse's own capacity, else the sum of its locations'
+        // capacities when any are set. Null means utilisation is unknown.
+        $onHand = (int) $onHandByLocation->sum();
+        $capacity = $warehouse->capacity
+            ?? ($locations->contains(fn ($location) => $location->capacity !== null)
+                ? (int) $locations->sum(fn ($location) => (int) $location->capacity)
+                : null);
 
         $assignedUsers = $warehouse->users()
             ->select(['users.id', 'users.name', 'users.email'])
@@ -161,9 +170,23 @@ class WarehouseController extends Controller
                     ->where('quantity', '>', 0)
                     ->distinct()
                     ->count('product_id'),
-                'on_hand' => (int) $onHandByLocation->sum(),
+                'on_hand' => $onHand,
+                'capacity' => $capacity,
+                'utilisation' => $this->utilisation($onHand, $capacity),
             ],
         ]);
+    }
+
+    /**
+     * Percentage of capacity in use, rounded; null when there is no capacity.
+     */
+    private function utilisation(int $onHand, ?int $capacity): ?int
+    {
+        if ($capacity === null || $capacity <= 0) {
+            return null;
+        }
+
+        return (int) round($onHand / $capacity * 100);
     }
 
     /**

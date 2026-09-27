@@ -25,6 +25,7 @@ const form = useForm({
     timezone: 'America/Toronto',
     currency: 'CAD',
     priority: 0,
+    capacity: null,
     is_active: true,
 });
 
@@ -288,6 +289,13 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                             />
                             <p class="mt-1 text-xs text-text-tertiary">Higher priority warehouses are used first for fulfillment.</p>
                             <p v-if="form.errors.priority" :class="fieldError">{{ form.errors.priority }}</p>
+                        </div>
+
+                        <div>
+                            <label for="capacity" :class="fieldLabel">{{ t('warehouses.fields.capacity') }}</label>
+                            <input id="capacity" v-model.number="form.capacity" type="number" min="0" :class="fieldInput" />
+                            <p class="mt-1 text-xs text-text-tertiary">{{ t('warehouses.fields.capacityHint') }}</p>
+                            <p v-if="form.errors.capacity" :class="fieldError">{{ form.errors.capacity }}</p>
                         </div>
 
                         <div class="flex items-center pt-6">

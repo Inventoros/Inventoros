@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Requests\Api\ProductLocation;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 /**
  * Validates a product location update via the REST API. Rules unchanged from
@@ -13,7 +14,7 @@ use Illuminate\Foundation\Http\FormRequest;
 final class UpdateProductLocationRequest extends FormRequest
 {
     /**
-     * @return array<string, array<int, string>>
+     * @return array<string, array<int, mixed>>
      */
     public function rules(): array
     {
@@ -25,6 +26,9 @@ final class UpdateProductLocationRequest extends FormRequest
             'shelf' => ['nullable', 'string', 'max:255'],
             'bin' => ['nullable', 'string', 'max:255'],
             'is_active' => ['nullable', 'boolean'],
+            'capacity' => ['nullable', 'integer', 'min:0', 'max:2147483647'],
+            // Optional: the warehouse this location belongs to (same org).
+            'warehouse_id' => ['nullable', 'integer', Rule::exists('warehouses', 'id')->where('organization_id', $this->user()->organization_id)->whereNull('deleted_at')],
         ];
     }
 }

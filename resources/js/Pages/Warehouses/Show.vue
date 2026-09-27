@@ -8,7 +8,7 @@ import StatTile from '@/Components/ui/StatTile.vue';
 import { Head, Link, router } from '@inertiajs/vue3';
 import { useI18n } from 'vue-i18n';
 import { usePermissions } from '@/composables/usePermissions';
-import { Pencil, ArrowLeft, MapPin, Boxes, Users, Trash2, Star } from 'lucide-vue-next';
+import { Pencil, ArrowLeft, MapPin, Boxes, Users, Trash2, Star, Gauge } from 'lucide-vue-next';
 
 const { t } = useI18n();
 const { hasPermission } = usePermissions();
@@ -75,7 +75,7 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-t
         </PageHeader>
 
         <!-- Key metrics -->
-        <section class="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
+        <section class="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
             <StatTile
                 label="Total Locations"
                 :value="stats?.locations_count || 0"
@@ -96,6 +96,16 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-t
                 icon-tone="violet"
             >
                 <template #icon><Users :size="18" /></template>
+            </StatTile>
+            <StatTile
+                :label="t('warehouses.capacity.utilisation')"
+                :value="stats?.utilisation != null ? `${stats.utilisation}%` : '-'"
+                :hint="stats?.capacity != null
+                    ? t('warehouses.capacity.ofCapacity', { onHand: stats.on_hand ?? 0, capacity: stats.capacity })
+                    : t('warehouses.capacity.noCapacity')"
+                :icon-tone="stats?.utilisation >= 90 ? 'warning' : 'brand'"
+            >
+                <template #icon><Gauge :size="18" /></template>
             </StatTile>
         </section>
 
@@ -176,6 +186,7 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-t
                                         <th :class="thClass">Code</th>
                                         <th :class="thClass">Products</th>
                                         <th :class="thClass">{{ t('warehouses.columns.onHand') }}</th>
+                                        <th :class="thClass">{{ t('warehouses.capacity.column') }}</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -197,6 +208,13 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-t
                                         </td>
                                         <td class="px-4 py-3 text-sm tabular-nums text-text-secondary">
                                             {{ location.on_hand || 0 }}
+                                        </td>
+                                        <td class="px-4 py-3 text-sm tabular-nums text-text-secondary">
+                                            <template v-if="location.capacity != null">
+                                                {{ location.capacity }}
+                                                <span class="text-text-tertiary">({{ location.utilisation }}%)</span>
+                                            </template>
+                                            <span v-else class="text-text-tertiary">-</span>
                                         </td>
                                     </tr>
                                 </tbody>

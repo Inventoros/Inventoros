@@ -57,6 +57,20 @@ class WebWarehouseAccessTest extends TestCase
             ->assertForbidden();
 
         $this->assertDatabaseMissing('product_locations', ['code' => 'B-9']);
+
+        // No warehouse at all would put it outside every assignment.
+        $this->actingAs($this->restricted)
+            ->post(route('locations.store'), ['name' => 'Floating', 'code' => 'F-1'])
+            ->assertForbidden();
+    }
+
+    public function test_can_create_a_location_in_own_warehouse(): void
+    {
+        $this->actingAs($this->restricted)
+            ->post(route('locations.store'), ['name' => 'Alpha Rack', 'code' => 'A-2', 'warehouse_id' => $this->warehouseA->id, 'capacity' => 30])
+            ->assertRedirect(route('locations.index'));
+
+        $this->assertDatabaseHas('product_locations', ['code' => 'A-2', 'warehouse_id' => $this->warehouseA->id, 'capacity' => 30]);
     }
 
     // Stock adjustments

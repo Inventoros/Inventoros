@@ -12,6 +12,7 @@ import { Plus, Search, Pencil, Trash2, MapPin, X, QrCode } from 'lucide-vue-next
 import { useI18n } from 'vue-i18n';
 const props = defineProps({
     locations: Object,
+    warehouses: { type: Array, default: () => [] },
     filters: Object,
     pluginComponents: Object,
 });
@@ -22,7 +23,16 @@ const search = ref(props.filters?.search || '');
 const showCreateModal = ref(false);
 const showEditModal = ref(false);
 const editingLocation = ref(null);
-const locationForm = ref({ name: '', code: '', description: '' });
+// A lone warehouse (e.g. a user assigned to one) is preselected for new locations.
+const blankLocation = () => ({
+    name: '',
+    code: '',
+    description: '',
+    warehouse_id: props.warehouses.length === 1 ? props.warehouses[0].id : null,
+    capacity: null,
+});
+const locationForm = ref(blankLocation());
+const formMode = ref('create');
 
 const searchLocations = () => {
     router.get(route('locations.index'), {
@@ -39,7 +49,8 @@ const clearFilters = () => {
 };
 
 const openCreateModal = () => {
-    locationForm.value = { name: '', code: '', description: '' };
+    locationForm.value = blankLocation();
+    formMode.value = 'create';
     showCreateModal.value = true;
 };
 
@@ -49,7 +60,10 @@ const openEditModal = (location) => {
         name: location.name,
         code: location.code,
         description: location.description || '',
+        warehouse_id: location.warehouse_id ?? null,
+        capacity: location.capacity ?? null,
     };
+    formMode.value = 'edit';
     showEditModal.value = true;
 };
 
@@ -57,7 +71,7 @@ const createLocation = () => {
     router.post(route('locations.store'), locationForm.value, {
         onSuccess: () => {
             showCreateModal.value = false;
-            locationForm.value = { name: '', code: '', description: '' };
+            locationForm.value = blankLocation();
         },
     });
 };
@@ -67,7 +81,7 @@ const updateLocation = () => {
         onSuccess: () => {
             showEditModal.value = false;
             editingLocation.value = null;
-            locationForm.value = { name: '', code: '', description: '' };
+            locationForm.value = blankLocation();
         },
     });
 };
@@ -153,8 +167,14 @@ const labelClass = 'mb-1 block text-xs font-medium text-text-secondary';
                                 {{ location.code }}
                             </span>
                         </div>
+                        <p v-if="location.warehouse" class="text-xs text-text-secondary">
+                            {{ location.warehouse.name }}
+                        </p>
                         <p v-if="location.description" class="text-sm text-text-tertiary">
                             {{ location.description }}
+                        </p>
+                        <p v-if="location.capacity" class="mt-1 text-xs text-text-tertiary">
+                            {{ t('locations.capacityValue', { capacity: location.capacity }) }}
                         </p>
                     </div>
                     <Badge variant="warning" size="sm">{{ location.products_count }} products</Badge>
@@ -290,6 +310,28 @@ const labelClass = 'mb-1 block text-xs font-medium text-text-secondary';
                             ></textarea>
                         </div>
 
+                        <div>
+                            <label :for="`location-warehouse-${formMode}`" :class="labelClass">{{ t('locations.warehouse') }}</label>
+                            <select :id="`location-warehouse-${formMode}`" v-model="locationForm.warehouse_id" :class="inputClass">
+                                <option :value="null">{{ t('locations.noWarehouse') }}</option>
+                                <option v-for="warehouse in warehouses" :key="warehouse.id" :value="warehouse.id">
+                                    {{ warehouse.name }}{{ warehouse.code ? ` (${warehouse.code})` : '' }}
+                                </option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label :for="`location-capacity-${formMode}`" :class="labelClass">{{ t('locations.capacity') }}</label>
+                            <input
+                                :id="`location-capacity-${formMode}`"
+                                v-model.number="locationForm.capacity"
+                                type="number"
+                                min="0"
+                                :class="inputClass"
+                            />
+                            <p class="mt-1 text-xs text-text-tertiary">{{ t('locations.capacityHint') }}</p>
+                        </div>
+
                         <div class="mt-6 flex justify-end gap-2">
                             <Button type="button" variant="secondary" size="sm" @click="showCreateModal = false">{{ t('common.cancel') }}</Button>
                             <Button type="submit" variant="default" size="sm">Create Location</Button>
@@ -351,6 +393,28 @@ const labelClass = 'mb-1 block text-xs font-medium text-text-secondary';
                                 rows="3"
                                 class="w-full rounded-md border border-border-subtle bg-surface-canvas px-3 py-2 text-sm text-text-primary placeholder:text-text-tertiary ds-focus-ring"
                             ></textarea>
+                        </div>
+
+                        <div>
+                            <label :for="`location-warehouse-${formMode}`" :class="labelClass">{{ t('locations.warehouse') }}</label>
+                            <select :id="`location-warehouse-${formMode}`" v-model="locationForm.warehouse_id" :class="inputClass">
+                                <option :value="null">{{ t('locations.noWarehouse') }}</option>
+                                <option v-for="warehouse in warehouses" :key="warehouse.id" :value="warehouse.id">
+                                    {{ warehouse.name }}{{ warehouse.code ? ` (${warehouse.code})` : '' }}
+                                </option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label :for="`location-capacity-${formMode}`" :class="labelClass">{{ t('locations.capacity') }}</label>
+                            <input
+                                :id="`location-capacity-${formMode}`"
+                                v-model.number="locationForm.capacity"
+                                type="number"
+                                min="0"
+                                :class="inputClass"
+                            />
+                            <p class="mt-1 text-xs text-text-tertiary">{{ t('locations.capacityHint') }}</p>
                         </div>
 
                         <div class="mt-6 flex justify-end gap-2">

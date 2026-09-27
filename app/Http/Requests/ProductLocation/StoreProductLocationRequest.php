@@ -26,6 +26,7 @@ final class StoreProductLocationRequest extends FormRequest
             'code' => 'required|string|max:50',
             'description' => 'nullable|string',
             'is_active' => 'boolean',
+            'capacity' => ['nullable', 'integer', 'min:0', 'max:2147483647'],
             'warehouse_id' => [
                 'nullable',
                 'exists:warehouses,id',

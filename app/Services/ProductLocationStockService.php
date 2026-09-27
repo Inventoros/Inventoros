@@ -9,6 +9,7 @@ use App\Models\Inventory\Product;
 use App\Models\Inventory\ProductLocationStock;
 use App\Models\User;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 
 /**
  * Reads the per-location on-hand breakdown behind products.stock, and can
@@ -106,9 +107,11 @@ final class ProductLocationStockService
 
     /**
      * Deplete a product's bins to satisfy a decrement (a sale, a component
-     * consumed), draining the product's primary location first and then the
-     * fullest bins. Keeps SUM(bins) in step with a falling products.stock so a
-     * bin never claims more than exists.
+     * consumed). Bins in the highest-priority warehouse go first (warehouse
+     * priority, higher first; a location with no warehouse counts as 0);
+     * within equal priority the product's primary location drains first,
+     * then the fullest bins. Keeps SUM(bins) in step with a falling
+     * products.stock so a bin never claims more than exists.
      *
      * Best-effort: an unbinned product is lazily seeded from its assigned
      * location first; a product with no location is left alone (its stock has
@@ -129,7 +132,17 @@ final class ProductLocationStockService
         $bins = ProductLocationStock::query()
             ->where('product_id', $product->id)
             ->where('quantity', '>', 0)
-            // Primary location first, then the fullest bins.
+            // Preferred warehouse first, then the primary location, then the
+            // fullest bins.
+            ->orderByDesc(
+                DB::table('product_locations')
+                    ->leftJoin('warehouses', function ($join) {
+                        $join->on('warehouses.id', '=', 'product_locations.warehouse_id')
+                            ->whereNull('warehouses.deleted_at');
+                    })
+                    ->whereColumn('product_locations.id', 'product_location_stocks.location_id')
+                    ->selectRaw('coalesce(max(warehouses.priority), 0)')
+            )
             ->orderByRaw('location_id = ? desc', [$product->location_id ?? 0])
             ->orderByDesc('quantity')
             ->orderBy('id')

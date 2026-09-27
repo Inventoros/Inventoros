@@ -592,7 +592,12 @@
     "codePlaceholder": "e.g., WH-A",
     "descPlaceholder": "Optional description...",
     "printQrLabel": "Print QR label",
-    "printAllQrLabels": "Print QR Labels"
+    "printAllQrLabels": "Print QR Labels",
+    "warehouse": "Warehouse",
+    "noWarehouse": "No warehouse",
+    "capacity": "Capacity (units)",
+    "capacityHint": "Optional. Used to show how full the location is.",
+    "capacityValue": "Capacity: {capacity} units"
   },
   "reports": {
     "title": "Reports & Analytics",
@@ -1443,6 +1448,8 @@
       "currency": "Currency",
       "priority": "Priority",
       "priorityHint": "Higher priority warehouses are used first for fulfillment.",
+      "capacity": "Capacity (units)",
+      "capacityHint": "Optional. Leave blank to use the total capacity of this warehouse's locations.",
       "isActive": "Active"
     },
     "sections": {
@@ -1481,6 +1488,13 @@
       "makeDefault": "Make default",
       "confirm": "Make \"{name}\" the default warehouse?",
       "hint": "The default warehouse is preselected for new orders."
+    },
+    "capacity": {
+      "utilisation": "Utilisation",
+      "ofCapacity": "{onHand} of {capacity} units",
+      "noCapacity": "No capacity set",
+      "onHand": "Units on hand",
+      "column": "Capacity"
     },
     "stockLevels": {
       "title": "Stock by warehouse",
