@@ -12,7 +12,6 @@ use App\Models\WebhookDelivery;
 use App\Services\WebhookService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -142,11 +141,7 @@ class WebhookController extends Controller
             abort(403);
         }
 
-        // Set the secret directly rather than via mass assignment: `secret` is
-        // deliberately not $fillable so no request payload can ever set it.
-        $secret = Str::random(64);
-        $webhook->secret = $secret;
-        $webhook->save();
+        $secret = $webhook->rotateSecret();
 
         // Reveal the rotated secret exactly once so the receiver can be updated.
         return redirect()->route('webhooks.show', $webhook)

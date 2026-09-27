@@ -3,6 +3,7 @@
 use App\Http\Middleware\CheckApiPermission;
 use App\Http\Middleware\CheckInstallation;
 use App\Http\Middleware\CheckPermission;
+use App\Http\Middleware\EnsureTenantOwnership;
 use App\Http\Middleware\EnsureTwoFactorVerified;
 use App\Http\Middleware\EnsureUserIsAdmin;
 use App\Http\Middleware\EnsureUserIsManager;
@@ -48,6 +49,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'manager' => EnsureUserIsManager::class,
             'permission' => CheckPermission::class,
             'api.permission' => CheckApiPermission::class,
+            'api.tenant' => EnsureTenantOwnership::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

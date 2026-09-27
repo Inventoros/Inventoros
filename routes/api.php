@@ -3,19 +3,24 @@
 use App\Http\Controllers\Api\ApprovalController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\BarcodeLookupController;
-use App\Http\Controllers\Api\OrderController;
-use App\Http\Controllers\Api\ProductCategoryController;
 use App\Http\Controllers\Api\BatchTrackingController;
+use App\Http\Controllers\Api\CustomerController;
+use App\Http\Controllers\Api\OrderController;
+use App\Http\Controllers\Api\PermissionSetController;
+use App\Http\Controllers\Api\ProductCategoryController;
 use App\Http\Controllers\Api\ProductController;
 use App\Http\Controllers\Api\ProductLocationController;
-use App\Http\Controllers\Api\SerialTrackingController;
 use App\Http\Controllers\Api\ProductOptionController;
 use App\Http\Controllers\Api\ProductVariantController;
 use App\Http\Controllers\Api\PurchaseOrderController;
+use App\Http\Controllers\Api\ReturnOrderController;
+use App\Http\Controllers\Api\SerialTrackingController;
 use App\Http\Controllers\Api\StockAdjustmentController;
 use App\Http\Controllers\Api\StockAuditController as ApiStockAuditController;
+use App\Http\Controllers\Api\StockTransferController;
 use App\Http\Controllers\Api\SupplierController;
-use App\Http\Controllers\Api\PermissionSetController;
+use App\Http\Controllers\Api\UserController;
+use App\Http\Controllers\Api\WebhookController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -244,6 +249,73 @@ Route::prefix('v1')->as('api.')->middleware('throttle:api')->group(function () {
                 ->middleware('api.permission:edit_products');
             Route::delete('components/{component}', [\App\Http\Controllers\Api\ProductComponentController::class, 'destroy'])
                 ->middleware('api.permission:edit_products');
+        });
+
+        // Parity endpoints. api.tenant answers 404 for any route-bound model
+        // owned by another organization before validation can run.
+        Route::middleware('api.tenant')->group(function () {
+            // Order approval workflow
+            Route::post('orders/{order}/approve', [OrderController::class, 'approve'])
+                ->middleware('api.permission:approve_orders');
+            Route::post('orders/{order}/reject', [OrderController::class, 'reject'])
+                ->middleware('api.permission:approve_orders');
+
+            // Customers
+            Route::apiResource('customers', CustomerController::class)->only(['index', 'show'])
+                ->middleware('api.permission:view_customers');
+            Route::apiResource('customers', CustomerController::class)->only(['store'])
+                ->middleware('api.permission:create_customers');
+            Route::apiResource('customers', CustomerController::class)->only(['update'])
+                ->middleware('api.permission:edit_customers');
+            Route::apiResource('customers', CustomerController::class)->only(['destroy'])
+                ->middleware('api.permission:delete_customers');
+            Route::get('customers/{customer}/orders', [CustomerController::class, 'orders'])
+                ->middleware('api.permission:view_customers|view_orders,all');
+
+            // Returns (RMA) - one permission covers the whole lifecycle, as on the web
+            Route::middleware('api.permission:manage_returns')->group(function () {
+                Route::apiResource('returns', ReturnOrderController::class)
+                    ->only(['index', 'show', 'store'])
+                    ->parameters(['returns' => 'returnOrder']);
+                Route::post('returns/{returnOrder}/approve', [ReturnOrderController::class, 'approve']);
+                Route::post('returns/{returnOrder}/receive', [ReturnOrderController::class, 'receive']);
+                Route::post('returns/{returnOrder}/complete', [ReturnOrderController::class, 'complete']);
+                Route::post('returns/{returnOrder}/reject', [ReturnOrderController::class, 'reject']);
+            });
+
+            // Stock Transfers
+            Route::middleware('api.permission:transfer_stock')->group(function () {
+                Route::apiResource('stock-transfers', StockTransferController::class)
+                    ->only(['index', 'show', 'store']);
+                Route::post('stock-transfers/{stockTransfer}/ship', [StockTransferController::class, 'ship']);
+                Route::post('stock-transfers/{stockTransfer}/complete', [StockTransferController::class, 'complete']);
+                Route::post('stock-transfers/{stockTransfer}/cancel', [StockTransferController::class, 'cancel']);
+            });
+
+            // Stock Audits (write)
+            Route::post('stock-audits', [ApiStockAuditController::class, 'store'])
+                ->middleware('api.permission:create_stock_audits');
+            Route::post('stock-audits/{stockAudit}/start', [ApiStockAuditController::class, 'start'])
+                ->middleware('api.permission:manage_stock_audits');
+            Route::post('stock-audits/{stockAudit}/items/{item}/count', [ApiStockAuditController::class, 'recordCount'])
+                ->middleware('api.permission:manage_stock_audits');
+            Route::post('stock-audits/{stockAudit}/complete', [ApiStockAuditController::class, 'complete'])
+                ->middleware('api.permission:manage_stock_audits');
+
+            // Webhooks - organization administration, as on the web
+            Route::middleware('api.permission:manage_organization')->group(function () {
+                Route::apiResource('webhooks', WebhookController::class);
+                Route::post('webhooks/{webhook}/regenerate-secret', [WebhookController::class, 'regenerateSecret']);
+                Route::get('webhooks/{webhook}/deliveries', [WebhookController::class, 'deliveries']);
+            });
+
+            // Users
+            Route::apiResource('users', UserController::class)->only(['index', 'show'])
+                ->middleware('api.permission:view_users');
+            Route::apiResource('users', UserController::class)->only(['store'])
+                ->middleware('api.permission:create_users');
+            Route::apiResource('users', UserController::class)->only(['update'])
+                ->middleware('api.permission:edit_users');
         });
 
         // Saved Reports

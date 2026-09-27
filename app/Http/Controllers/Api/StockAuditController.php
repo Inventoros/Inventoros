@@ -4,20 +4,28 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Api;
 
+use App\Http\Controllers\Api\Concerns\HandlesApiResponses;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Api\StockAudit\RecordStockAuditCountRequest;
+use App\Http\Requests\Api\StockAudit\StoreStockAuditRequest;
+use App\Http\Resources\StockAuditItemResource;
 use App\Http\Resources\StockAuditResource;
 use App\Models\Inventory\StockAudit;
+use App\Models\Inventory\StockAuditItem;
+use App\Services\StockAuditService;
 use App\Services\WarehouseAccessService;
+use Dedoc\Scramble\Attributes\QueryParameter;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
-use Dedoc\Scramble\Attributes\QueryParameter;
 
 /**
  * @tags Stock Audits
  */
 class StockAuditController extends Controller
 {
+    use HandlesApiResponses;
+
     /**
      * List stock audits.
      */
@@ -83,5 +91,87 @@ class StockAuditController extends Controller
         return response()->json([
             'data' => new StockAuditResource($stockAudit),
         ]);
+    }
+
+    /**
+     * Create a draft stock audit.
+     *
+     * Items are seeded from `product_ids` when given, otherwise from the
+     * products at `warehouse_location_id`, otherwise from every active product.
+     */
+    public function store(StoreStockAuditRequest $request, StockAuditService $audits): JsonResponse
+    {
+        $audit = $audits->create($request->user()->organization_id, $request->user(), $request->validated());
+
+        return response()->json([
+            'message' => 'Stock audit created successfully',
+            'data' => new StockAuditResource($this->loaded($audit)),
+        ], 201);
+    }
+
+    /**
+     * Start a draft audit, snapshotting current system quantities.
+     */
+    public function start(Request $request, StockAudit $stockAudit, StockAuditService $audits): JsonResponse
+    {
+        $this->ensureOwned($request, $stockAudit, 'Stock audit');
+
+        try {
+            $audits->start($stockAudit);
+        } catch (\RuntimeException $e) {
+            return $this->stateError($e);
+        }
+
+        return response()->json([
+            'message' => 'Stock audit started',
+            'data' => new StockAuditResource($this->loaded($stockAudit->fresh())),
+        ]);
+    }
+
+    /**
+     * Record the physical count for one item of an in-progress audit.
+     */
+    public function recordCount(RecordStockAuditCountRequest $request, StockAudit $stockAudit, StockAuditItem $item, StockAuditService $audits): JsonResponse
+    {
+        $this->ensureOwned($request, $stockAudit, 'Stock audit');
+
+        $validated = $request->validated();
+
+        try {
+            $audits->recordCount($stockAudit, $item, $request->user(), (int) $validated['counted_quantity'], $validated['notes'] ?? null);
+        } catch (\RuntimeException $e) {
+            return $this->stateError($e);
+        }
+
+        return response()->json([
+            'message' => 'Count recorded',
+            'data' => new StockAuditItemResource($item->fresh(['product', 'countedByUser'])),
+        ]);
+    }
+
+    /**
+     * Complete an in-progress audit, booking a recount stock adjustment for
+     * every counted item that differs from its system quantity.
+     */
+    public function complete(Request $request, StockAudit $stockAudit, StockAuditService $audits): JsonResponse
+    {
+        $this->ensureOwned($request, $stockAudit, 'Stock audit');
+
+        try {
+            $adjustmentsCreated = $audits->complete($stockAudit);
+        } catch (\RuntimeException $e) {
+            return $this->stateError($e);
+        }
+
+        return response()->json([
+            'message' => 'Stock audit completed',
+            'adjustments_created' => $adjustmentsCreated,
+            'data' => new StockAuditResource($this->loaded($stockAudit->fresh())),
+        ]);
+    }
+
+    private function loaded(StockAudit $audit): StockAudit
+    {
+        return $audit->load(['warehouseLocation', 'creator', 'items.product', 'items.location', 'items.countedByUser']);
     }
 }
