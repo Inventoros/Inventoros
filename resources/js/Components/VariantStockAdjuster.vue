@@ -55,9 +55,28 @@ const closePopover = () => {
     showPopover.value = false;
 };
 
+// The endpoint applies a signed delta to the variant's stock. Map the
+// entered amount to that delta: removals are negative, and a recount is
+// the difference between the counted amount and the current stock.
+const signedDelta = () => {
+    const amount = Number(quantity.value);
+    switch (adjustType.value) {
+        case 'decrease':
+        case 'damage':
+            return -amount;
+        case 'recount':
+            return amount - (Number(props.variant.stock) || 0);
+        default:
+            return amount;
+    }
+};
+
 const adjustStock = async () => {
-    if (quantity.value < 1) {
-        error.value = 'Quantity must be at least 1';
+    const minimum = adjustType.value === 'recount' ? 0 : 1;
+    if (!Number.isInteger(Number(quantity.value)) || quantity.value < minimum) {
+        error.value = adjustType.value === 'recount'
+            ? t('components.stockAdjuster.countedQuantityMin')
+            : t('components.stockAdjuster.quantityMin');
         return;
     }
 
@@ -66,9 +85,9 @@ const adjustStock = async () => {
 
     try {
         const response = await axios.post(
-            `/api/products/${props.productId}/variants/${props.variant.id}/adjust-stock`,
+            route('products.variants.adjust-stock', [props.productId, props.variant.id]),
             {
-                quantity: quantity.value,
+                quantity: signedDelta(),
                 type: adjustType.value,
                 reason: reason.value || null,
             }
@@ -156,12 +175,12 @@ const adjustStock = async () => {
                     <!-- Quantity -->
                     <div class="mb-3">
                         <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
-                            Quantity
+                            {{ adjustType === 'recount' ? t('components.stockAdjuster.countedQuantity') : t('components.stockAdjuster.quantity') }}
                         </label>
                         <input
                             v-model.number="quantity"
                             type="number"
-                            min="1"
+                            :min="adjustType === 'recount' ? 0 : 1"
                             class="w-full text-sm rounded-md bg-gray-50 dark:bg-surface-canvas border-gray-200 dark:border-border-subtle text-gray-900 dark:text-gray-100"
                         />
                     </div>

@@ -49,7 +49,7 @@ const createBatch = async () => {
         if (form.value.expiry_date) payload.expiry_date = form.value.expiry_date;
         if (form.value.notes) payload.notes = form.value.notes;
 
-        const response = await axios.post(`/api/v1/products/${props.productId}/batches`, payload);
+        const response = await axios.post(route('products.batches.store', props.productId), payload);
         localBatches.value.unshift(response.data.data);
         emit('batch-created', response.data.data);
         resetForm();
@@ -64,6 +64,10 @@ const createBatch = async () => {
         loading.value = false;
     }
 };
+
+// Batches seeded from the page props are serialized models (ISO datetimes);
+// batches returned by the endpoint are plain dates. Show both as YYYY-MM-DD.
+const formatDate = (value) => (value ? String(value).slice(0, 10) : '-');
 
 const isExpired = (expiryDate) => {
     if (!expiryDate) return false;
@@ -167,14 +171,14 @@ const isExpired = (expiryDate) => {
                     >
                         <td class="py-2 px-3 font-mono text-gray-900 dark:text-gray-100">{{ batch.batch_number }}</td>
                         <td class="py-2 px-3 text-gray-900 dark:text-gray-100">{{ batch.quantity }}</td>
-                        <td class="py-2 px-3 text-gray-600 dark:text-gray-400">{{ batch.manufactured_date || '-' }}</td>
+                        <td class="py-2 px-3 text-gray-600 dark:text-gray-400">{{ formatDate(batch.manufactured_date) }}</td>
                         <td class="py-2 px-3">
                             <span v-if="batch.expiry_date" :class="[
                                 isExpired(batch.expiry_date)
                                     ? 'text-red-600 dark:text-red-400 font-medium'
                                     : 'text-gray-600 dark:text-gray-400'
                             ]">
-                                {{ batch.expiry_date }}
+                                {{ formatDate(batch.expiry_date) }}
                                 <span v-if="isExpired(batch.expiry_date)" class="text-xs ml-1">(expired)</span>
                             </span>
                             <span v-else class="text-gray-400">-</span>

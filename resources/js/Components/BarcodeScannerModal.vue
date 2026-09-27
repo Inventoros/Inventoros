@@ -41,7 +41,7 @@ const lookupBarcode = async (code) => {
     foundProduct.value = null;
 
     try {
-        const response = await axios.get(`/api/v1/barcode/${encodeURIComponent(code)}`);
+        const response = await axios.get(route('barcode.lookup'), { params: { code } });
 
         if (response.data.found) {
             foundProduct.value = response.data.product;

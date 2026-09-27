@@ -135,7 +135,9 @@ class ProductVariant extends Model
      */
     public function getEffectivePriceAttribute(): float
     {
-        return $this->price ?? $this->product->price ?? 0;
+        // Prices are decimal-cast (numeric strings); the float return type
+        // under strict_types would otherwise throw on every serialization.
+        return (float) ($this->price ?? $this->product?->price ?? 0);
     }
 
     /**
@@ -145,7 +147,7 @@ class ProductVariant extends Model
      */
     public function getEffectivePurchasePriceAttribute(): float
     {
-        return $this->purchase_price ?? $this->product->purchase_price ?? 0;
+        return (float) ($this->purchase_price ?? $this->product?->purchase_price ?? 0);
     }
 
     /**

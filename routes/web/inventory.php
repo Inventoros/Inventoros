@@ -2,6 +2,10 @@
 
 declare(strict_types=1);
 
+use App\Http\Controllers\Api\BarcodeLookupController as ApiBarcodeLookupController;
+use App\Http\Controllers\Api\BatchTrackingController as ApiBatchTrackingController;
+use App\Http\Controllers\Api\ProductVariantController as ApiProductVariantController;
+use App\Http\Controllers\Api\SerialTrackingController as ApiSerialTrackingController;
 use App\Http\Controllers\Inventory\BarcodeController;
 use App\Http\Controllers\Inventory\BulkProductController;
 use App\Http\Controllers\Inventory\ProductCategoryController;
@@ -68,6 +72,19 @@ Route::prefix('products/{product}/components')->middleware('permission:edit_prod
     Route::delete('/{component}', [ProductComponentController::class, 'destroy'])->name('products.components.destroy');
     Route::post('/reorder', [ProductComponentController::class, 'reorder'])->name('products.components.reorder');
 });
+
+// In-app JSON endpoints called with axios by product-page components
+// (BatchList, SerialList, VariantStockAdjuster, BarcodeScannerModal). They
+// reuse the REST API controllers but ride the web session: CSRF via the
+// XSRF-TOKEN cookie, two-factor enforcement, and no stateful-domain config.
+// The /api/v1 routes stay bearer-token only for external clients.
+Route::prefix('products/{product}')->name('products.')->group(function () {
+    Route::post('/batches', [ApiBatchTrackingController::class, 'store'])->name('batches.store')->middleware('permission:edit_products');
+    Route::post('/serials', [ApiSerialTrackingController::class, 'store'])->name('serials.store')->middleware('permission:edit_products');
+    Route::put('/serials/{serial}', [ApiSerialTrackingController::class, 'update'])->name('serials.update')->middleware('permission:edit_products');
+    Route::post('/variants/{variant}/adjust-stock', [ApiProductVariantController::class, 'adjustStock'])->name('variants.adjust-stock')->middleware('permission:manage_stock');
+});
+Route::get('/barcode/lookup', [ApiBarcodeLookupController::class, 'lookupByQuery'])->name('barcode.lookup')->middleware('permission:view_products');
 
 // Work Orders
 Route::resource('work-orders', WorkOrderController::class)->except(['edit', 'update'])->middleware('permission:manage_stock');
