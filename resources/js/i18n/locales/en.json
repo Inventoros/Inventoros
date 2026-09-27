@@ -2145,7 +2145,7 @@
     "save": "Save",
     "byPaymentStatus": "Orders by payment status",
     "outstanding": "Outstanding",
-    "ordersCount": "{count} orders"
+    "ordersCount": "{n} order | {n} orders"
   },
   "discounts": {
     "discount": "Discount",
@@ -2178,7 +2178,7 @@
     "orders": "Orders",
     "total": "Total",
     "age": "Age",
-    "days": "{count} days",
+    "days": "{n} day | {n} days",
     "orderDate": "Order date",
     "orderTotal": "Order total",
     "paid": "Paid",

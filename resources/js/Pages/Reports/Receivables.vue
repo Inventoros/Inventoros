@@ -52,6 +52,11 @@ const share = (amount) => {
     return total > 0 ? Math.round(((parseFloat(amount) || 0) / total) * 100) : 0;
 };
 
+// order_date arrives as a plain YYYY-MM-DD; read it as a local calendar day
+// (new Date('YYYY-MM-DD') would treat it as UTC midnight and show the day
+// before west of UTC).
+const formatDay = (day) => (day ? new Date(`${day}T00:00:00`).toLocaleDateString() : '-');
+
 const exportReport = () => window.print();
 
 const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-text-secondary';
@@ -102,11 +107,11 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-t
             <div class="grid grid-cols-2 divide-border-subtle sm:grid-cols-5 sm:divide-x">
                 <div v-for="bucket in buckets" :key="bucket.key" class="p-4">
                     <p class="text-[11px] font-medium uppercase tracking-wider text-text-tertiary">{{ bucketLabel(bucket.key) }}</p>
-                    <p :class="['mt-1 text-lg font-semibold tabular-nums', bucketTone(bucket.key)]">{{ formatCurrency(bucket.amount) }}</p>
+                    <p :class="['mt-1 text-lg font-semibold tabular-nums', parseFloat(bucket.amount) > 0 ? bucketTone(bucket.key) : 'text-text-tertiary']">{{ formatCurrency(bucket.amount) }}</p>
                     <div class="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-surface-sunken" aria-hidden="true">
                         <div class="h-full rounded-full bg-brand" :style="{ width: `${share(bucket.amount)}%` }"></div>
                     </div>
-                    <p class="mt-1 text-xs text-text-tertiary">{{ t('payments.ordersCount', { count: bucket.count }) }}</p>
+                    <p class="mt-1 text-xs text-text-tertiary">{{ t('payments.ordersCount', bucket.count) }}</p>
                 </div>
             </div>
             <p class="border-t border-border-subtle px-4 py-3 text-xs text-text-tertiary">{{ t('receivables.agingNote') }}</p>
@@ -178,9 +183,9 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-t
                                     <Link :href="route('orders.show', order.id)" class="font-mono text-xs font-medium text-text-primary hover:text-brand">{{ order.order_number }}</Link>
                                 </td>
                                 <td class="px-4 py-3 text-text-primary">{{ order.customer || '-' }}</td>
-                                <td class="px-4 py-3 whitespace-nowrap text-text-secondary">{{ order.order_date ? new Date(order.order_date).toLocaleDateString() : '-' }}</td>
+                                <td class="px-4 py-3 whitespace-nowrap text-text-secondary">{{ formatDay(order.order_date) }}</td>
                                 <td class="px-4 py-3 whitespace-nowrap">
-                                    <Badge :variant="bucketVariant(order.bucket)" size="sm">{{ t('receivables.days', { count: order.age_days }) }}</Badge>
+                                    <Badge :variant="bucketVariant(order.bucket)" size="sm">{{ t('receivables.days', order.age_days) }}</Badge>
                                 </td>
                                 <td class="px-4 py-3 text-right tabular-nums text-text-secondary">{{ formatCurrency(order.total) }}</td>
                                 <td class="px-4 py-3 text-right tabular-nums text-text-secondary">{{ formatCurrency(order.amount_paid) }}</td>
