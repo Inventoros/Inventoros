@@ -218,6 +218,111 @@ class StockAdjustmentApprovalTest extends TestCase
         $this->assertSame(95, $this->product->fresh()->stock);
     }
 
+    private function makeVariant(int $stock = 20): ProductVariant
+    {
+        $this->product->update(['has_variants' => true]);
+
+        return ProductVariant::create([
+            'organization_id' => $this->org->id, 'product_id' => $this->product->id,
+            'sku' => 'B-1-RED', 'title' => 'Red', 'option_values' => ['Color' => 'Red'], 'stock' => $stock, 'is_active' => true,
+        ]);
+    }
+
+    public function test_api_adjusts_a_variant_directly_when_approvals_are_off(): void
+    {
+        $variant = $this->makeVariant();
+        Sanctum::actingAs($this->requester);
+
+        $this->postJson('/api/v1/stock-adjustments', [
+            'product_id' => $this->product->id, 'product_variant_id' => $variant->id,
+            'quantity' => -4, 'type' => 'damage',
+        ])->assertCreated();
+
+        $this->assertSame(16, $variant->fresh()->stock);
+        $this->assertSame(100, $this->product->fresh()->stock, 'Product total is not the variant ledger.');
+        $this->assertSame($variant->id, StockAdjustment::sole()->product_variant_id);
+    }
+
+    public function test_api_variant_adjustment_cannot_go_negative(): void
+    {
+        $variant = $this->makeVariant(3);
+        Sanctum::actingAs($this->requester);
+
+        $this->postJson('/api/v1/stock-adjustments', [
+            'product_id' => $this->product->id, 'product_variant_id' => $variant->id,
+            'quantity' => -5, 'type' => 'damage',
+        ])->assertStatus(422)->assertJsonValidationErrors('quantity');
+
+        $this->assertSame(3, $variant->fresh()->stock);
+    }
+
+    public function test_api_rejects_a_variant_of_another_product_or_with_a_location(): void
+    {
+        $variant = $this->makeVariant();
+        $other = \App\Models\Inventory\Product::create([
+            'organization_id' => $this->org->id, 'sku' => 'N-1', 'name' => 'Nut', 'price' => 1, 'currency' => 'USD', 'stock' => 5, 'is_active' => true,
+        ]);
+        Sanctum::actingAs($this->requester);
+
+        $this->postJson('/api/v1/stock-adjustments', [
+            'product_id' => $other->id, 'product_variant_id' => $variant->id, 'quantity' => 1, 'type' => 'manual',
+        ])->assertStatus(422)->assertJsonValidationErrors('product_variant_id');
+
+        $this->postJson('/api/v1/stock-adjustments', [
+            'product_id' => $this->product->id, 'product_variant_id' => $variant->id, 'quantity' => 1, 'type' => 'manual',
+            'location_id' => $this->locationA->id,
+        ])->assertStatus(422)->assertJsonValidationErrors('location_id');
+
+        $this->assertSame(20, $variant->fresh()->stock);
+        $this->assertSame(0, StockAdjustment::count());
+    }
+
+    public function test_api_holds_a_variant_adjustment_for_approval_and_applies_it_to_the_variant(): void
+    {
+        $this->enableApprovals(['stock_adjustments_enabled' => true]);
+        $variant = $this->makeVariant();
+        Sanctum::actingAs($this->requester);
+
+        $this->postJson('/api/v1/stock-adjustments', [
+            'product_id' => $this->product->id, 'product_variant_id' => $variant->id,
+            'quantity' => -4, 'type' => 'damage',
+        ])->assertStatus(202)->assertJsonPath('status', 'pending_approval');
+
+        $this->assertSame(20, $variant->fresh()->stock);
+        $request = StockAdjustmentRequest::sole();
+        $this->assertSame($variant->id, $request->product_variant_id);
+
+        Sanctum::actingAs($this->approver);
+        $this->postJson("/api/v1/approvals/stock_adjustment/{$request->id}/approve")->assertOk();
+
+        $this->assertSame(16, $variant->fresh()->stock);
+        $this->assertSame($variant->id, StockAdjustment::sole()->product_variant_id);
+    }
+
+    public function test_held_adjustment_carries_its_location_to_approval(): void
+    {
+        $this->enableApprovals(['stock_adjustments_enabled' => true]);
+        \App\Models\Inventory\ProductLocationStock::create([
+            'organization_id' => $this->org->id, 'product_id' => $this->product->id,
+            'location_id' => $this->locationA->id, 'quantity' => 100,
+        ]);
+        Sanctum::actingAs($this->requester);
+
+        $this->postJson('/api/v1/stock-adjustments', [
+            'product_id' => $this->product->id, 'quantity' => -5, 'type' => 'damage', 'location_id' => $this->locationA->id,
+        ])->assertStatus(202);
+
+        $request = StockAdjustmentRequest::sole();
+        $this->assertSame($this->locationA->id, $request->location_id);
+
+        Sanctum::actingAs($this->approver);
+        $this->postJson("/api/v1/approvals/stock_adjustment/{$request->id}/approve")->assertOk();
+
+        $this->assertSame(95, $this->product->fresh()->stock);
+        $this->assertSame(95, (int) \App\Models\Inventory\ProductLocationStock::where('product_id', $this->product->id)
+            ->where('location_id', $this->locationA->id)->value('quantity'));
+    }
+
     public function test_mcp_holds_the_adjustment_and_approves_through_the_service(): void
     {
         $this->enableApprovals(['stock_adjustments_enabled' => true]);

@@ -9,6 +9,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\StockAdjustment\StoreStockAdjustmentRequest;
 use App\Http\Resources\StockAdjustmentResource;
 use App\Models\Inventory\Product;
+use App\Models\Inventory\ProductVariant;
 use App\Models\Inventory\StockAdjustment;
 use App\Models\Inventory\StockAdjustmentRequest;
 use App\Services\ApprovalService;
@@ -91,18 +92,24 @@ class StockAdjustmentController extends Controller
         // A restricted user may only adjust a bin in one of their warehouses.
         app(WarehouseAccessService::class)->authorizeLocation($request->user(), $validated['location_id'] ?? null);
 
+        // The request confirmed the variant belongs to this product; variant
+        // stock moves through the variant ledger (adjustVariant).
+        $variant = ! empty($validated['product_variant_id'])
+            ? ProductVariant::where('product_id', $product->id)->find($validated['product_variant_id'])
+            : null;
+
         // Applied now, or held for approval (202) when the organization's
         // approval rules cover it.
         try {
             $adjustment = $approvals->submitStockAdjustment(
                 user: $request->user(),
                 product: $product,
-                variant: null,
+                variant: $variant,
                 quantity: (int) $validated['quantity'],
                 type: $validated['type'],
                 reason: $validated['reason'] ?? null,
                 notes: $validated['notes'] ?? null,
-                locationId: $validated['location_id'] ?? null,
+                locationId: $variant ? null : ($validated['location_id'] ?? null),
             );
         } catch (InsufficientStockException $e) {
             return response()->json([
