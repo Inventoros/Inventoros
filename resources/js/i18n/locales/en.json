@@ -2398,6 +2398,21 @@
       "balanceDue": "Balance due",
       "refund": "Refund",
       "noPayments": "No payments recorded yet.",
+      "shipments": "Shipments",
+      "shipment": "Shipment {number}",
+      "trackingNumber": "Tracking number",
+      "track": "Track package",
+      "shippedOn": "Shipped {date}",
+      "deliveredOn": "Delivered {date}",
+      "contents": "Contents",
+      "shipmentStatuses": {
+        "pending": "Preparing",
+        "label_created": "Preparing",
+        "shipped": "Shipped",
+        "in_transit": "In transit",
+        "delivered": "Delivered",
+        "exception": "Delivery issue"
+      },
       "paymentStatuses": {
         "unpaid": "Unpaid",
         "partial": "Partly paid",

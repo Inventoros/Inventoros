@@ -8,7 +8,8 @@ import { formatDate, formatMoney } from '@/lib/portal';
 import { Head, Link } from '@inertiajs/vue3';
 import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { ArrowLeft, CheckCircle2, Circle, FileDown, RotateCcw } from 'lucide-vue-next';
+import Badge from '@/Components/ui/Badge.vue';
+import { ArrowLeft, CheckCircle2, Circle, ExternalLink, FileDown, RotateCcw, Truck } from 'lucide-vue-next';
 
 const props = defineProps({
     order: { type: Object, required: true },
@@ -18,6 +19,22 @@ const props = defineProps({
 const { t, te } = useI18n();
 
 const money = (value) => formatMoney(value, props.order.currency);
+
+const shipments = computed(() => props.order.shipments || []);
+
+const SHIPMENT_VARIANTS = {
+    pending: 'neutral',
+    label_created: 'neutral',
+    shipped: 'brand',
+    in_transit: 'info',
+    delivered: 'success',
+    exception: 'danger',
+};
+
+const shipmentStatusLabel = (shipment) => {
+    const key = `portal.order.shipmentStatuses.${shipment.status}`;
+    return te(key) ? t(key) : shipment.status_label;
+};
 
 const hasDiscount = computed(() => Number(props.order.discount_amount || 0) > 0);
 
@@ -130,6 +147,55 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-t
                             </div>
                         </dl>
                     </div>
+                </Card>
+
+                <Card v-if="shipments.length" :padded="false">
+                    <div class="px-5 pt-5"><h2 class="text-sm font-semibold text-text-primary">{{ t('portal.order.shipments') }}</h2></div>
+                    <ul class="divide-y divide-border-subtle p-5 pt-2">
+                        <li v-for="(shipment, index) in shipments" :key="shipment.id" class="space-y-2 py-3 first:pt-2 last:pb-0">
+                            <div class="flex flex-wrap items-start justify-between gap-2">
+                                <div class="flex min-w-0 items-start gap-2.5">
+                                    <Truck :size="16" class="mt-0.5 shrink-0 text-text-tertiary" />
+                                    <div class="min-w-0">
+                                        <p class="text-sm font-medium text-text-primary">
+                                            {{ t('portal.order.shipment', { number: index + 1 }) }}
+                                            <span v-if="shipment.carrier_name" class="font-normal text-text-secondary">
+                                                · {{ shipment.carrier_name }}<span v-if="shipment.service"> {{ shipment.service }}</span>
+                                            </span>
+                                        </p>
+                                        <p v-if="shipment.tracking_number" class="break-all text-xs text-text-tertiary">
+                                            {{ t('portal.order.trackingNumber') }} {{ shipment.tracking_number }}
+                                        </p>
+                                        <p class="text-xs text-text-tertiary">
+                                            <span v-if="shipment.shipped_at">{{ t('portal.order.shippedOn', { date: formatDate(shipment.shipped_at) }) }}</span>
+                                            <span v-if="shipment.shipped_at && shipment.delivered_at"> · </span>
+                                            <span v-if="shipment.delivered_at">{{ t('portal.order.deliveredOn', { date: formatDate(shipment.delivered_at) }) }}</span>
+                                        </p>
+                                    </div>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <Badge :variant="SHIPMENT_VARIANTS[shipment.status] || 'neutral'" size="sm" dot>
+                                        {{ shipmentStatusLabel(shipment) }}
+                                    </Badge>
+                                    <a
+                                        v-if="shipment.tracking_url"
+                                        :href="shipment.tracking_url"
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        class="inline-flex items-center gap-1 text-xs text-brand hover:underline"
+                                    >
+                                        {{ t('portal.order.track') }}
+                                        <ExternalLink :size="12" />
+                                    </a>
+                                </div>
+                            </div>
+                            <ul v-if="shipment.items.length" class="ml-6 space-y-0.5 text-xs text-text-secondary">
+                                <li v-for="(line, lineIndex) in shipment.items" :key="lineIndex">
+                                    {{ line.quantity }} x {{ line.product_name }} <span class="text-text-tertiary">({{ line.sku }})</span>
+                                </li>
+                            </ul>
+                        </li>
+                    </ul>
                 </Card>
 
                 <Card v-if="returns.length" :padded="false">
