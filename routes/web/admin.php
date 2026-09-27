@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Http\Controllers\Admin\AccountSettingsController;
 use App\Http\Controllers\Admin\ActivityLogController;
+use App\Http\Controllers\Admin\ApiTokenController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\OrganizationSettingsController;
 use App\Http\Controllers\Admin\PluginController;
@@ -77,6 +78,13 @@ Route::prefix('settings')->name('settings.')->group(function () {
         Route::patch('/notifications', [AccountSettingsController::class, 'updateNotifications'])->name('update.notifications');
         Route::patch('/preferences', [AccountSettingsController::class, 'updatePreferences'])->name('update.preferences');
         Route::patch('/locale', [AccountSettingsController::class, 'updateLocale'])->name('update.locale');
+    });
+
+    // API tokens (every signed-in user manages their own)
+    Route::prefix('api-tokens')->name('api-tokens.')->group(function () {
+        Route::get('/', [ApiTokenController::class, 'index'])->name('index');
+        Route::post('/', [ApiTokenController::class, 'store'])->name('store');
+        Route::delete('/{tokenId}', [ApiTokenController::class, 'destroy'])->whereNumber('tokenId')->name('destroy');
     });
 
     // Email Settings (admin only)
