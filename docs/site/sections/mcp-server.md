@@ -104,6 +104,7 @@ Sales:
 - `list_orders` (`view_orders` or `manage_orders`). Paginated orders with status, source, warehouse, and date filters.
 - `get_order` (`view_orders` or `manage_orders`). Single order with line items.
 - `create_order` (`manage_orders`). Create an order; decrements stock; fails if any line is short. Destructive.
+- `email_order_invoice` (`edit_orders`). Email the order's invoice PDF to the customer, or to `to`, with optional CC and message. Destructive.
 
 Purchasing:
 

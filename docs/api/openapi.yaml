@@ -85,6 +85,11 @@ tags:
   - name: Barcode Lookup
   - name: Permission Sets
   - name: Saved Reports
+  - name: Customers
+  - name: Returns
+  - name: Stock Transfers
+  - name: Webhooks
+  - name: Users
 
 paths:
   /login:
@@ -893,6 +898,16 @@ paths:
         - $ref: '#/components/parameters/PerPage'
         - $ref: '#/components/parameters/Page'
       responses: { '200': { description: Paginated stock audits } }
+    post:
+      tags: [Stock Audits]
+      summary: Create a draft stock audit
+      description: "Requires `create_stock_audits`. Items are seeded from product_ids, else the products at warehouse_location_id, else every active product."
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: '#/components/schemas/StockAuditInput' } } }
+      responses:
+        '201': { description: Created }
+        '422': { $ref: '#/components/responses/ValidationError' }
 
   /stock-audits/{stockAudit}:
     parameters:
@@ -1000,7 +1015,7 @@ paths:
                       quantity_to_receive: { type: integer, minimum: 0 }
       responses:
         '200': { description: Items received }
-        '422': { description: PO cannot receive items, or no items received }
+        '422': { description: "PO cannot receive items, or no items received" }
 
   /purchase-orders/{purchaseOrder}/send:
     parameters:
@@ -1101,6 +1116,459 @@ paths:
       responses:
         '200': { description: Cancelled }
         '422': { description: Invalid status }
+
+  /orders/{order}/approve:
+    parameters:
+      - { name: order, in: path, required: true, schema: { type: integer } }
+    post:
+      tags: [Orders]
+      summary: Approve an order that is pending approval
+      description: "Requires `approve_orders`."
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                notes: { type: string, maxLength: 500 }
+      responses:
+        '200': { description: Approved, content: { application/json: { schema: { type: object, properties: { data: { $ref: '#/components/schemas/Order' } } } } } }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '422': { description: "Already approved or rejected (`already_processed`)" }
+
+  /orders/{order}/reject:
+    parameters:
+      - { name: order, in: path, required: true, schema: { type: integer } }
+    post:
+      tags: [Orders]
+      summary: Reject an order that is pending approval (cancels it and restores its stock)
+      description: "Requires `approve_orders`."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [notes]
+              properties:
+                notes: { type: string, maxLength: 500 }
+      responses:
+        '200': { description: Rejected, content: { application/json: { schema: { type: object, properties: { data: { $ref: '#/components/schemas/Order' } } } } } }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '422': { description: "Validation error, or already approved or rejected (`already_processed`)" }
+
+  /orders/{order}/invoice/email:
+    parameters:
+      - { name: order, in: path, required: true, schema: { type: integer } }
+    post:
+      tags: [Orders]
+      summary: Email the order's invoice PDF to the customer
+      description: "Requires `edit_orders`. Assigns the invoice number on first use. Can be re-sent."
+      requestBody:
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/DocumentEmailInput' }
+      responses:
+        '200': { description: Invoice emailed, content: { application/json: { schema: { type: object, properties: { data: { $ref: '#/components/schemas/Order' } } } } } }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '422': { description: "No customer email and no `to` (`missing_recipient`), or validation error" }
+
+  /customers:
+    get:
+      tags: [Customers]
+      summary: List customers
+      description: "Requires `view_customers`."
+      parameters:
+        - { name: search, in: query, schema: { type: string } }
+        - { name: is_active, in: query, schema: { type: boolean } }
+        - { name: sort_by, in: query, schema: { type: string, enum: [created_at, updated_at, name, code, email] } }
+        - { name: sort_dir, in: query, schema: { type: string, enum: [asc, desc] } }
+        - $ref: '#/components/parameters/PerPage'
+        - $ref: '#/components/parameters/Page'
+      responses: { '200': { description: Paginated customers (with orders_count) } }
+    post:
+      tags: [Customers]
+      summary: Create a customer
+      description: "Requires `create_customers`."
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: '#/components/schemas/CustomerInput' } } }
+      responses:
+        '201': { description: Created, content: { application/json: { schema: { type: object, properties: { message: { type: string }, data: { $ref: '#/components/schemas/Customer' } } } } } }
+        '422': { $ref: '#/components/responses/ValidationError' }
+
+  /customers/{customer}:
+    parameters:
+      - { name: customer, in: path, required: true, schema: { type: integer } }
+    get:
+      tags: [Customers]
+      summary: Show a customer
+      description: "Requires `view_customers`."
+      responses:
+        '200': { description: Customer, content: { application/json: { schema: { type: object, properties: { data: { $ref: '#/components/schemas/Customer' } } } } } }
+        '404': { $ref: '#/components/responses/NotFound' }
+    put:
+      tags: [Customers]
+      summary: Update a customer
+      description: "Requires `edit_customers`. All fields optional."
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: '#/components/schemas/CustomerInput' } } }
+      responses:
+        '200': { description: Updated }
+        '404': { $ref: '#/components/responses/NotFound' }
+    delete:
+      tags: [Customers]
+      summary: Delete a customer (soft delete)
+      description: "Requires `delete_customers`."
+      responses:
+        '200': { description: Deleted }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '422': { description: "Customer has orders (`has_orders`)" }
+
+  /customers/{customer}/orders:
+    parameters:
+      - { name: customer, in: path, required: true, schema: { type: integer } }
+    get:
+      tags: [Customers]
+      summary: List a customer's orders
+      description: "Requires both `view_customers` and `view_orders`."
+      parameters:
+        - $ref: '#/components/parameters/PerPage'
+        - $ref: '#/components/parameters/Page'
+      responses:
+        '200': { description: Paginated orders }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /returns:
+    get:
+      tags: [Returns]
+      summary: List returns (RMAs)
+      description: "Requires `manage_returns`."
+      parameters:
+        - { name: search, in: query, schema: { type: string }, description: "Return number, order number or customer name" }
+        - { name: status, in: query, schema: { type: string, enum: [pending, approved, received, completed, rejected] } }
+        - { name: type, in: query, schema: { type: string, enum: [return, exchange] } }
+        - { name: order_id, in: query, schema: { type: integer } }
+        - $ref: '#/components/parameters/PerPage'
+        - $ref: '#/components/parameters/Page'
+      responses: { '200': { description: Paginated returns } }
+    post:
+      tags: [Returns]
+      summary: Create a return against an order
+      description: "Requires `manage_returns`. The product of each line is taken from the order line. A line may not exceed the ordered quantity minus what earlier non-rejected returns claimed."
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: '#/components/schemas/ReturnOrderInput' } } }
+      responses:
+        '201': { description: Created, content: { application/json: { schema: { type: object, properties: { data: { $ref: '#/components/schemas/ReturnOrder' } } } } } }
+        '422': { $ref: '#/components/responses/ValidationError' }
+
+  /returns/{returnOrder}:
+    parameters:
+      - { name: returnOrder, in: path, required: true, schema: { type: integer } }
+    get:
+      tags: [Returns]
+      summary: Show a return
+      responses:
+        '200': { description: Return, content: { application/json: { schema: { type: object, properties: { data: { $ref: '#/components/schemas/ReturnOrder' } } } } } }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /returns/{returnOrder}/approve:
+    parameters:
+      - { name: returnOrder, in: path, required: true, schema: { type: integer } }
+    post:
+      tags: [Returns]
+      summary: Approve a pending return
+      responses:
+        '200': { description: Approved }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '422': { description: "Not pending (`invalid_status`)" }
+
+  /returns/{returnOrder}/receive:
+    parameters:
+      - { name: returnOrder, in: path, required: true, schema: { type: integer } }
+    post:
+      tags: [Returns]
+      summary: Receive an approved return (restocks lines marked for restock)
+      responses:
+        '200': { description: Received }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '422': { description: "Not approved (`invalid_status`)" }
+
+  /returns/{returnOrder}/complete:
+    parameters:
+      - { name: returnOrder, in: path, required: true, schema: { type: integer } }
+    post:
+      tags: [Returns]
+      summary: Complete a received return
+      responses:
+        '200': { description: Completed }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '422': { description: "Not received (`invalid_status`)" }
+
+  /returns/{returnOrder}/reject:
+    parameters:
+      - { name: returnOrder, in: path, required: true, schema: { type: integer } }
+    post:
+      tags: [Returns]
+      summary: Reject a pending return
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                notes: { type: string, maxLength: 2000, description: Rejection reason }
+      responses:
+        '200': { description: Rejected }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '422': { description: "Not pending (`invalid_status`)" }
+
+  /stock-transfers:
+    get:
+      tags: [Stock Transfers]
+      summary: List stock transfers
+      description: "Requires `transfer_stock`."
+      parameters:
+        - { name: search, in: query, schema: { type: string } }
+        - { name: status, in: query, schema: { type: string, enum: [pending, in_transit, completed, cancelled] } }
+        - { name: warehouse_id, in: query, schema: { type: integer } }
+        - $ref: '#/components/parameters/PerPage'
+        - $ref: '#/components/parameters/Page'
+      responses: { '200': { description: Paginated transfers } }
+    post:
+      tags: [Stock Transfers]
+      summary: Create a pending stock transfer
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: '#/components/schemas/StockTransferInput' } } }
+      responses:
+        '201': { description: Created, content: { application/json: { schema: { type: object, properties: { data: { $ref: '#/components/schemas/StockTransfer' } } } } } }
+        '422': { $ref: '#/components/responses/ValidationError' }
+
+  /stock-transfers/{stockTransfer}:
+    parameters:
+      - { name: stockTransfer, in: path, required: true, schema: { type: integer } }
+    get:
+      tags: [Stock Transfers]
+      summary: Show a stock transfer
+      responses:
+        '200': { description: Transfer, content: { application/json: { schema: { type: object, properties: { data: { $ref: '#/components/schemas/StockTransfer' } } } } } }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /stock-transfers/{stockTransfer}/ship:
+    parameters:
+      - { name: stockTransfer, in: path, required: true, schema: { type: integer } }
+    post:
+      tags: [Stock Transfers]
+      summary: Mark a pending transfer as in transit
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                shipping_method: { type: string, maxLength: 255 }
+                tracking_number: { type: string, maxLength: 255 }
+                estimated_arrival: { type: string, format: date }
+      responses:
+        '200': { description: In transit }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '422': { description: "Not pending (`invalid_status`)" }
+
+  /stock-transfers/{stockTransfer}/complete:
+    parameters:
+      - { name: stockTransfer, in: path, required: true, schema: { type: integer } }
+    post:
+      tags: [Stock Transfers]
+      summary: Complete a transfer, moving each line from the source bin to the destination bin
+      description: "Total stock is unchanged; the per-location breakdown moves. A short source bin fails the whole transfer."
+      responses:
+        '200': { description: Completed }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '422': { description: "Not pending or in transit (`invalid_status`), or not enough stock at the source (`insufficient_stock`)" }
+
+  /stock-transfers/{stockTransfer}/cancel:
+    parameters:
+      - { name: stockTransfer, in: path, required: true, schema: { type: integer } }
+    post:
+      tags: [Stock Transfers]
+      summary: Cancel a pending or in-transit transfer
+      responses:
+        '200': { description: Cancelled }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '422': { description: "Already completed or cancelled (`invalid_status`)" }
+
+  /stock-audits/{stockAudit}/start:
+    parameters:
+      - { name: stockAudit, in: path, required: true, schema: { type: integer } }
+    post:
+      tags: [Stock Audits]
+      summary: Start a draft audit (snapshots system quantities)
+      description: "Requires `manage_stock_audits`."
+      responses:
+        '200': { description: Started }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '422': { description: "Not a draft (`invalid_status`) or no items (`no_items`)" }
+
+  /stock-audits/{stockAudit}/items/{item}/count:
+    parameters:
+      - { name: stockAudit, in: path, required: true, schema: { type: integer } }
+      - { name: item, in: path, required: true, schema: { type: integer } }
+    post:
+      tags: [Stock Audits]
+      summary: Record the physical count for an audit item
+      description: "Requires `manage_stock_audits`."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [counted_quantity]
+              properties:
+                counted_quantity: { type: integer, minimum: 0 }
+                notes: { type: string, maxLength: 500 }
+      responses:
+        '200': { description: Count recorded }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '422': { description: "Audit not in progress (`invalid_status`) or item belongs to another audit (`item_mismatch`)" }
+
+  /stock-audits/{stockAudit}/complete:
+    parameters:
+      - { name: stockAudit, in: path, required: true, schema: { type: integer } }
+    post:
+      tags: [Stock Audits]
+      summary: Complete an audit, booking a recount adjustment per discrepancy
+      description: "Requires `manage_stock_audits`. The response includes `adjustments_created`."
+      responses:
+        '200': { description: Completed }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '422': { description: "Not in progress (`invalid_status`)" }
+
+  /webhooks:
+    get:
+      tags: [Webhooks]
+      summary: List webhooks
+      description: "Requires `manage_organization`. The signing secret is never included."
+      parameters:
+        - $ref: '#/components/parameters/PerPage'
+        - $ref: '#/components/parameters/Page'
+      responses: { '200': { description: Paginated webhooks } }
+    post:
+      tags: [Webhooks]
+      summary: Create a webhook
+      description: "The response carries the plaintext signing `secret`. It is shown only here and on regenerate-secret."
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: '#/components/schemas/WebhookInput' } } }
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/Webhook' }
+                  secret: { type: string, description: "HMAC-SHA256 signing secret, shown once" }
+        '422': { $ref: '#/components/responses/ValidationError' }
+
+  /webhooks/{webhook}:
+    parameters:
+      - { name: webhook, in: path, required: true, schema: { type: integer } }
+    get:
+      tags: [Webhooks]
+      summary: Show a webhook
+      responses:
+        '200': { description: Webhook, content: { application/json: { schema: { type: object, properties: { data: { $ref: '#/components/schemas/Webhook' } } } } } }
+        '404': { $ref: '#/components/responses/NotFound' }
+    put:
+      tags: [Webhooks]
+      summary: Update a webhook
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: '#/components/schemas/WebhookInput' } } }
+      responses:
+        '200': { description: Updated }
+        '404': { $ref: '#/components/responses/NotFound' }
+    delete:
+      tags: [Webhooks]
+      summary: Delete a webhook
+      responses:
+        '200': { description: Deleted }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /webhooks/{webhook}/regenerate-secret:
+    parameters:
+      - { name: webhook, in: path, required: true, schema: { type: integer } }
+    post:
+      tags: [Webhooks]
+      summary: Rotate the signing secret
+      description: "The response carries the new plaintext `secret`, shown once."
+      responses:
+        '200': { description: Rotated }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /webhooks/{webhook}/deliveries:
+    parameters:
+      - { name: webhook, in: path, required: true, schema: { type: integer } }
+    get:
+      tags: [Webhooks]
+      summary: List a webhook's deliveries, newest first
+      parameters:
+        - { name: status, in: query, schema: { type: string, enum: [pending, success, failed] } }
+        - $ref: '#/components/parameters/PerPage'
+        - $ref: '#/components/parameters/Page'
+      responses:
+        '200': { description: Paginated deliveries }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /users:
+    get:
+      tags: [Users]
+      summary: List users in the organization
+      description: "Requires `view_users`."
+      parameters:
+        - { name: search, in: query, schema: { type: string } }
+        - { name: role, in: query, schema: { type: string, enum: [admin, manager, member] } }
+        - $ref: '#/components/parameters/PerPage'
+        - $ref: '#/components/parameters/Page'
+      responses: { '200': { description: Paginated users } }
+    post:
+      tags: [Users]
+      summary: Create a user
+      description: "Requires `create_users`. A non-admin may only assign the `member` base role and custom roles whose permissions they already hold (403 otherwise)."
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: '#/components/schemas/UserInput' } } }
+      responses:
+        '201': { description: Created, content: { application/json: { schema: { type: object, properties: { data: { $ref: '#/components/schemas/User' } } } } } }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+
+  /users/{user}:
+    parameters:
+      - { name: user, in: path, required: true, schema: { type: integer } }
+    get:
+      tags: [Users]
+      summary: Show a user
+      responses:
+        '200': { description: User, content: { application/json: { schema: { type: object, properties: { data: { $ref: '#/components/schemas/User' } } } } } }
+        '404': { $ref: '#/components/responses/NotFound' }
+    put:
+      tags: [Users]
+      summary: Update a user
+      description: "Requires `edit_users`. Same role-assignment guards as create; demoting the last administrator is a 422 on `role`. `password` is optional."
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: '#/components/schemas/UserInput' } } }
+      responses:
+        '200': { description: Updated }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '422': { $ref: '#/components/responses/ValidationError' }
 
   /barcode/{code}:
     parameters:
@@ -1234,7 +1702,7 @@ paths:
       tags: [Saved Reports]
       summary: Execute and display a saved report
       responses:
-        '200': { description: Report results (rows, total, column labels) }
+        '200': { description: "Report results (rows, total, column labels)" }
         '404': { $ref: '#/components/responses/NotFound' }
         '500': { description: Failed to execute report query }
     put:
@@ -1637,3 +2105,216 @@ components:
         currency: { type: string, maxLength: 3 }
         is_active: { type: boolean }
         priority: { type: integer, minimum: 0 }
+
+    DocumentEmailInput:
+      type: object
+      properties:
+        to: { type: string, format: email, maxLength: 255, description: "Recipient override; defaults to the address on file" }
+        cc:
+          description: "CC addresses, as an array or a comma separated string"
+          oneOf:
+            - { type: array, items: { type: string, format: email } }
+            - { type: string }
+        message: { type: string, description: "Optional note included in the email body" }
+
+    Customer:
+      type: object
+      properties:
+        id: { type: integer }
+        name: { type: string }
+        code: { type: string, nullable: true }
+        company_name: { type: string, nullable: true }
+        contact_name: { type: string, nullable: true }
+        email: { type: string, nullable: true }
+        phone: { type: string, nullable: true }
+        billing_address: { type: string, nullable: true }
+        shipping_address: { type: string, nullable: true }
+        tax_id: { type: string, nullable: true }
+        payment_terms: { type: string, nullable: true }
+        credit_limit: { type: string, nullable: true }
+        currency: { type: string, nullable: true }
+        is_active: { type: boolean }
+        orders_count: { type: integer }
+        created_at: { type: string, format: date-time }
+        updated_at: { type: string, format: date-time }
+
+    CustomerInput:
+      type: object
+      required: [name]
+      properties:
+        name: { type: string, maxLength: 255 }
+        code: { type: string, maxLength: 255, description: "Unique within the organization." }
+        company_name: { type: string, maxLength: 255 }
+        contact_name: { type: string, maxLength: 255 }
+        email: { type: string, format: email, maxLength: 255 }
+        phone: { type: string, maxLength: 255 }
+        billing_address: { type: string }
+        billing_city: { type: string, maxLength: 255 }
+        billing_state: { type: string, maxLength: 255 }
+        billing_zip_code: { type: string, maxLength: 255 }
+        billing_country: { type: string, maxLength: 255 }
+        shipping_address: { type: string }
+        shipping_city: { type: string, maxLength: 255 }
+        shipping_state: { type: string, maxLength: 255 }
+        shipping_zip_code: { type: string, maxLength: 255 }
+        shipping_country: { type: string, maxLength: 255 }
+        tax_id: { type: string, maxLength: 255 }
+        payment_terms: { type: string, maxLength: 255 }
+        credit_limit: { type: number, minimum: 0 }
+        currency: { type: string, maxLength: 3 }
+        notes: { type: string }
+        is_active: { type: boolean }
+
+    ReturnOrder:
+      type: object
+      properties:
+        id: { type: integer }
+        return_number: { type: string }
+        order_id: { type: integer }
+        type: { type: string, enum: [return, exchange] }
+        status: { type: string, enum: [pending, approved, received, completed, rejected] }
+        reason: { type: string }
+        notes: { type: string, nullable: true }
+        refund_amount: { type: string }
+        completed_at: { type: string, format: date-time, nullable: true }
+        order: { type: object, properties: { id: { type: integer }, order_number: { type: string }, customer_name: { type: string } } }
+        items:
+          type: array
+          items:
+            type: object
+            properties:
+              id: { type: integer }
+              order_item_id: { type: integer }
+              product_id: { type: integer }
+              quantity: { type: integer }
+              condition: { type: string, enum: [new, used, damaged] }
+              restock: { type: boolean }
+
+    ReturnOrderInput:
+      type: object
+      required: [order_id, type, reason, items]
+      properties:
+        order_id: { type: integer }
+        type: { type: string, enum: [return, exchange] }
+        reason: { type: string, maxLength: 1000 }
+        notes: { type: string, maxLength: 2000 }
+        items:
+          type: array
+          minItems: 1
+          items:
+            type: object
+            required: [order_item_id, quantity, condition, restock]
+            properties:
+              order_item_id: { type: integer, description: "A line of the order in order_id" }
+              quantity: { type: integer, minimum: 1 }
+              condition: { type: string, enum: [new, used, damaged] }
+              restock: { type: boolean }
+
+    StockTransfer:
+      type: object
+      properties:
+        id: { type: integer }
+        transfer_number: { type: string }
+        status: { type: string, enum: [pending, in_transit, completed, cancelled] }
+        from_location_id: { type: integer }
+        to_location_id: { type: integer }
+        is_inter_warehouse: { type: boolean }
+        shipping_method: { type: string, nullable: true }
+        tracking_number: { type: string, nullable: true }
+        shipped_at: { type: string, format: date-time, nullable: true }
+        completed_at: { type: string, format: date-time, nullable: true }
+        items:
+          type: array
+          items:
+            type: object
+            properties:
+              id: { type: integer }
+              product_id: { type: integer }
+              quantity: { type: integer }
+
+    StockTransferInput:
+      type: object
+      required: [from_location_id, to_location_id, items]
+      properties:
+        from_location_id: { type: integer }
+        to_location_id: { type: integer, description: "Must differ from from_location_id" }
+        notes: { type: string, maxLength: 1000 }
+        shipping_method: { type: string, maxLength: 255 }
+        tracking_number: { type: string, maxLength: 255 }
+        estimated_arrival: { type: string, format: date }
+        items:
+          type: array
+          minItems: 1
+          items:
+            type: object
+            required: [product_id, quantity]
+            properties:
+              product_id: { type: integer }
+              quantity: { type: integer, minimum: 1 }
+              notes: { type: string, maxLength: 500 }
+
+    StockAuditInput:
+      type: object
+      required: [name, audit_type]
+      properties:
+        name: { type: string, maxLength: 255 }
+        description: { type: string, maxLength: 1000 }
+        audit_type: { type: string, enum: [full, cycle, spot] }
+        warehouse_location_id: { type: integer, description: "Audit the products at this location" }
+        notes: { type: string, maxLength: 2000 }
+        product_ids:
+          type: array
+          items: { type: integer }
+          description: "Audit exactly these products (takes precedence over warehouse_location_id)"
+
+    Webhook:
+      type: object
+      properties:
+        id: { type: integer }
+        name: { type: string }
+        url: { type: string, format: uri }
+        events: { type: array, items: { type: string } }
+        is_active: { type: boolean }
+        deliveries_count: { type: integer }
+        created_at: { type: string, format: date-time }
+
+    WebhookInput:
+      type: object
+      required: [name, url, events]
+      properties:
+        name: { type: string, maxLength: 255 }
+        url: { type: string, format: uri, maxLength: 2048, description: "Must not be a local, metadata, private or reserved address" }
+        events:
+          type: array
+          minItems: 1
+          items:
+            type: string
+            enum: [product.created, product.updated, product.deleted, product.low_stock, product.out_of_stock, order.created, order.updated, order.status_changed, order.approved, order.rejected, stock.adjusted, purchase_order.created, purchase_order.received, purchase_order.cancelled, customer.created, customer.updated, customer.deleted, return.created, return.received, transfer.created, transfer.completed, work_order.completed, stock_audit.completed]
+        is_active: { type: boolean }
+
+    User:
+      type: object
+      properties:
+        id: { type: integer }
+        name: { type: string }
+        email: { type: string, format: email }
+        role: { type: string, enum: [admin, manager, member] }
+        organization_id: { type: integer }
+        two_factor_enabled: { type: boolean }
+        roles:
+          type: array
+          items: { type: object, properties: { id: { type: integer }, name: { type: string }, slug: { type: string } } }
+
+    UserInput:
+      type: object
+      required: [name, email, role]
+      properties:
+        name: { type: string, maxLength: 255 }
+        email: { type: string, format: email, maxLength: 255 }
+        password: { type: string, description: "Required on create; optional on update" }
+        password_confirmation: { type: string }
+        role: { type: string, enum: [admin, manager, member] }
+        role_ids:
+          type: array
+          items: { type: integer }
+          description: "Custom roles of this organization (or system roles)"
