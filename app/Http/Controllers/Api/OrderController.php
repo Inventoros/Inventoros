@@ -6,6 +6,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Enums\DiscountType;
 use App\Enums\OrderStatus;
+use App\Enums\PaymentStatus;
 use App\Exceptions\DocumentEmailException;
 use App\Exceptions\InsufficientStockException;
 use App\Exceptions\InvalidOrderItemException;
@@ -41,6 +42,7 @@ class OrderController extends Controller
     #[QueryParameter('search', description: 'Search by order number, customer name, or email', type: 'string')]
     #[QueryParameter('status', description: 'Filter by status', type: 'string', enum: ['pending', 'processing', 'shipped', 'delivered', 'cancelled'])]
     #[QueryParameter('source', description: 'Filter by order source', type: 'string')]
+    #[QueryParameter('payment_status', description: 'Filter by payment status (requires view_payments)', type: 'string', enum: ['unpaid', 'partial', 'paid', 'overpaid', 'refunded'])]
     #[QueryParameter('warehouse_id', description: 'Filter by warehouse ID', type: 'integer')]
     #[QueryParameter('date_from', description: 'Filter orders from this date (YYYY-MM-DD)', type: 'string', example: '2025-01-01')]
     #[QueryParameter('date_to', description: 'Filter orders until this date (YYYY-MM-DD)', type: 'string', example: '2025-12-31')]
@@ -74,7 +76,13 @@ class OrderController extends Controller
             })
             ->when($request->input('date_to'), function ($query, $dateTo) {
                 $query->where('order_date', '<=', $dateTo);
-            });
+            })
+            // Only for callers who may see payments; otherwise ignored.
+            ->when(
+                $request->user()->hasPermission('view_payments')
+                    && in_array($request->input('payment_status'), PaymentStatus::values(), true),
+                fn ($query) => $query->where('payment_status', $request->input('payment_status'))
+            );
 
         // Sorting (allowlist to prevent SQL injection)
         $allowedSortColumns = ['created_at', 'updated_at', 'order_number', 'customer_name', 'total', 'status', 'order_date'];

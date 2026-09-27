@@ -3,6 +3,7 @@
 use App\Http\Controllers\Api\ApprovalController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\BarcodeLookupController;
+use App\Http\Controllers\Api\OrderPaymentController;
 use App\Http\Controllers\Api\BatchTrackingController;
 use App\Http\Controllers\Api\CustomerController;
 use App\Http\Controllers\Api\OrderController;
@@ -148,6 +149,16 @@ Route::prefix('v1')->as('api.')->middleware('throttle:api')->group(function () {
             ->middleware('api.permission:edit_orders');
         Route::apiResource('orders', OrderController::class)->only(['destroy'])
             ->middleware('api.permission:delete_orders');
+
+        // Order payments and refunds
+        Route::get('orders/{order}/payments', [OrderPaymentController::class, 'index'])
+            ->middleware('api.permission:view_payments');
+        Route::post('orders/{order}/payments', [OrderPaymentController::class, 'store'])
+            ->middleware('api.permission:record_payments');
+        Route::post('orders/{order}/refunds', [OrderPaymentController::class, 'refund'])
+            ->middleware('api.permission:record_payments');
+        Route::post('orders/{order}/payments/{payment}/void', [OrderPaymentController::class, 'void'])
+            ->middleware('api.permission:record_payments');
 
         // Stock Audits
         Route::apiResource('stock-audits', ApiStockAuditController::class)

@@ -5,6 +5,9 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Order;
 
 use App\Enums\OrderStatus;
+use App\Enums\PaymentMethod;
+use App\Enums\PaymentStatus;
+use App\Enums\Permission;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Order\StoreOrderRequest;
 use App\Http\Requests\Order\UpdateOrderRequest;
@@ -47,6 +50,7 @@ class OrderController extends Controller
     public function index(Request $request): Response
     {
         $organizationId = $request->user()->organization_id;
+        $canViewPayments = $request->user()->hasPermission(Permission::VIEW_PAYMENTS);
 
         $activeWarehouseId = session('active_warehouse_id');
 
@@ -68,6 +72,11 @@ class OrderController extends Controller
             ->when($request->input('source'), function ($query, $source) {
                 $query->bySource($source);
             })
+            // Filtering by payment status would reveal which orders are paid,
+            // so it only applies for users who may see payments.
+            ->when($canViewPayments && in_array($request->input('payment_status'), PaymentStatus::values(), true), function ($query) use ($request) {
+                $query->where('payment_status', $request->input('payment_status'));
+            })
             ->latest('order_date')
             ->paginate(config('limits.pagination.default'))
             ->withQueryString();
@@ -84,8 +93,10 @@ class OrderController extends Controller
 
         return Inertia::render('Orders/Index', [
             'orders' => $orders,
-            'filters' => $request->only(['search', 'status', 'source']),
+            'filters' => $request->only($canViewPayments ? ['search', 'status', 'source', 'payment_status'] : ['search', 'status', 'source']),
             'statuses' => ['pending', 'processing', 'shipped', 'delivered', 'cancelled'],
+            'canViewPayments' => $canViewPayments,
+            'paymentStatuses' => $canViewPayments ? PaymentStatus::values() : [],
             'sources' => ['manual', 'ebay', 'shopify', 'amazon'],
             'activeWarehouse' => $activeWarehouse,
             'pluginComponents' => [
@@ -191,6 +202,11 @@ class OrderController extends Controller
             abort(403, 'Unauthorized action.');
         }
 
+        $canViewPayments = auth()->user()->hasPermission(Permission::VIEW_PAYMENTS);
+        if ($canViewPayments) {
+            $order->load(['payments' => fn ($query) => $query->with(['user', 'voider'])->orderBy('paid_at')->orderBy('id')]);
+        }
+
         // Check if user can approve orders
         $canApprove = auth()->user()->hasPermission('approve_orders');
 
@@ -199,6 +215,10 @@ class OrderController extends Controller
             // endpoint expose the same order shape (P2-15).
             'order' => (new OrderResource($order))->resolve(request()),
             'canApprove' => $canApprove,
+            'canRecordPayments' => $canViewPayments && auth()->user()->hasPermission(Permission::RECORD_PAYMENTS),
+            'paymentMethods' => $canViewPayments
+                ? array_map(fn (PaymentMethod $method) => ['value' => $method->value, 'label' => $method->label()], PaymentMethod::cases())
+                : [],
             'pluginComponents' => [
                 'header' => get_page_components('orders.show', 'header'),
                 'sidebar' => get_page_components('orders.show', 'sidebar'),

@@ -6,6 +6,7 @@ use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\Inventory\SupplierController;
 use App\Http\Controllers\Order\InvoiceController;
 use App\Http\Controllers\Order\OrderController;
+use App\Http\Controllers\Order\OrderPaymentController;
 use App\Http\Controllers\Order\ReturnOrderController;
 use App\Http\Controllers\Purchasing\PurchaseOrderController;
 use App\Http\Controllers\Purchasing\PurchaseOrderInvoiceController;
@@ -69,6 +70,10 @@ Route::get('/orders/{order}', [OrderController::class, 'show'])->name('orders.sh
 Route::delete('/orders/{order}', [OrderController::class, 'destroy'])->name('orders.destroy')->middleware('permission:delete_orders');
 Route::post('/orders/{order}/approve', [OrderController::class, 'approve'])->name('orders.approve')->middleware('permission:approve_orders');
 Route::post('/orders/{order}/reject', [OrderController::class, 'reject'])->name('orders.reject')->middleware('permission:approve_orders');
+
+// Order Payments
+Route::post('/orders/{order}/payments', [OrderPaymentController::class, 'store'])->name('orders.payments.store')->middleware('permission:record_payments');
+Route::post('/orders/{order}/payments/{payment}/void', [OrderPaymentController::class, 'void'])->name('orders.payments.void')->middleware('permission:record_payments');
 
 // Order Invoice PDF
 Route::get('/orders/{order}/invoice/download', [InvoiceController::class, 'download'])->name('orders.invoice.download')->middleware('permission:view_orders');

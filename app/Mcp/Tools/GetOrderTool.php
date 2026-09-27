@@ -41,7 +41,7 @@ class GetOrderTool extends Tool
             return Response::error('Order not found in this organization.');
         }
 
-        return Response::json([
+        $payload = [
             'id' => $order->id,
             'order_number' => $order->order_number,
             'customer_name' => $order->customer_name,
@@ -49,6 +49,9 @@ class GetOrderTool extends Tool
             'customer_address' => $order->customer_address,
             'status' => $order->status,
             'subtotal' => $order->subtotal,
+            'discount_type' => $order->discount_type?->value,
+            'discount_value' => $order->discount_value,
+            'discount_amount' => $order->discount_amount,
             'tax' => $order->tax,
             'shipping' => $order->shipping,
             'total' => $order->total,
@@ -65,9 +68,19 @@ class GetOrderTool extends Tool
                 'quantity' => $item->quantity,
                 'unit_price' => $item->unit_price,
                 'subtotal' => $item->subtotal,
+                'discount_amount' => $item->discount_amount,
                 'tax' => $item->tax,
                 'total' => $item->total,
             ])->all(),
-        ]);
+        ];
+
+        // Payment position only for tokens that may see payments.
+        if ($this->user()->hasPermission('view_payments')) {
+            $payload['amount_paid'] = $order->amount_paid;
+            $payload['balance_due'] = $order->balanceDue();
+            $payload['payment_status'] = $order->payment_status?->value;
+        }
+
+        return Response::json($payload);
     }
 }
