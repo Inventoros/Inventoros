@@ -97,6 +97,10 @@ class ImportExportController extends Controller
             'min_stock',
             'status',
             'notes',
+            'supplier_code',
+            'supplier_name',
+            'supplier_sku',
+            'supplier_cost',
         ];
 
         $filename = 'product_import_template.csv';
@@ -120,6 +124,10 @@ class ImportExportController extends Controller
                 '10',
                 'active',
                 'Example notes',
+                'SUP-001',
+                'Example Supplier',
+                'EX-SUP-001',
+                '45.00',
             ], escape: '');
 
             fclose($file);

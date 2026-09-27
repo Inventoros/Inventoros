@@ -28,6 +28,7 @@ import {
     Info,
     Settings2,
     Package,
+    Truck,
 } from 'lucide-vue-next';
 
 const { t } = useI18n();
@@ -37,6 +38,7 @@ const props = defineProps({
     product: Object,
     activities: Array,
     locationBreakdown: { type: Array, default: () => [] },
+    priceHistory: { type: Array, default: () => [] },
     pluginComponents: Object,
 });
 
@@ -61,6 +63,17 @@ const getStockStatus = () => {
 };
 
 const stockStatus = getStockStatus();
+
+// Supplier links, primary first
+const productSuppliers = computed(() =>
+    [...(props.product.suppliers || [])].sort(
+        (a, b) => Number(b.pivot?.is_primary) - Number(a.pivot?.is_primary)
+    )
+);
+
+const formatDate = (iso) => (iso ? new Date(iso).toLocaleDateString() : '-');
+
+const supplierThClass = 'px-4 py-2.5 text-left text-xs font-medium text-text-secondary';
 
 // Load barcode on mount if product has barcode or SKU
 onMounted(() => {
@@ -428,6 +441,91 @@ const fieldInput = 'h-9 w-full rounded-md border border-border-subtle bg-surface
                                     </p>
                                 </div>
                             </div>
+                        </div>
+                    </div>
+                </Card>
+
+                <!-- Suppliers -->
+                <Card :padded="false">
+                    <div class="flex items-center justify-between px-5 pt-5">
+                        <h3 class="text-sm font-semibold text-text-primary">{{ t('productSuppliers.title') }}</h3>
+                        <Button v-if="hasPermission('edit_products')" variant="ghost" size="sm" as="Link" :href="route('products.edit', product.id)">
+                            <Pencil :size="14" />
+                            {{ t('common.edit') }}
+                        </Button>
+                    </div>
+                    <div class="p-5">
+                        <div v-if="productSuppliers.length > 0" class="w-full overflow-x-auto rounded-lg border border-border-subtle">
+                            <table class="min-w-full text-sm">
+                                <thead>
+                                    <tr class="border-b border-border-subtle">
+                                        <th :class="supplierThClass">{{ t('productSuppliers.supplier') }}</th>
+                                        <th :class="supplierThClass">{{ t('productSuppliers.supplierSku') }}</th>
+                                        <th :class="[supplierThClass, 'text-right']">{{ t('productSuppliers.costPrice') }}</th>
+                                        <th :class="[supplierThClass, 'text-right']">{{ t('productSuppliers.leadTimeDays') }}</th>
+                                        <th :class="[supplierThClass, 'text-right']">{{ t('productSuppliers.minimumOrderQuantity') }}</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr v-for="supplier in productSuppliers" :key="supplier.id" class="border-b border-border-subtle last:border-b-0">
+                                        <td class="px-4 py-3">
+                                            <div class="flex items-center gap-2">
+                                                <Link :href="route('suppliers.show', supplier.id)" class="font-medium text-brand hover:underline">{{ supplier.name }}</Link>
+                                                <Badge v-if="supplier.pivot?.is_primary" variant="brand" size="sm">{{ t('productSuppliers.primary') }}</Badge>
+                                            </div>
+                                        </td>
+                                        <td class="px-4 py-3 font-mono text-xs text-text-secondary">{{ supplier.pivot?.supplier_sku || '-' }}</td>
+                                        <td class="px-4 py-3 text-right tabular-nums text-text-primary">{{ supplier.pivot?.cost_price != null ? formatCurrency(supplier.pivot.cost_price) : '-' }}</td>
+                                        <td class="px-4 py-3 text-right tabular-nums text-text-secondary">{{ supplier.pivot?.lead_time_days ?? '-' }}</td>
+                                        <td class="px-4 py-3 text-right tabular-nums text-text-secondary">{{ supplier.pivot?.minimum_order_quantity ?? '-' }}</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div v-else class="flex flex-col items-center gap-2 py-6 text-center">
+                            <Truck :size="20" class="text-text-tertiary" />
+                            <p class="text-sm text-text-tertiary">{{ t('productSuppliers.empty') }}</p>
+                            <Link v-if="hasPermission('edit_products')" :href="route('products.edit', product.id)" class="text-sm font-medium text-brand hover:underline">
+                                {{ t('productSuppliers.add') }}
+                            </Link>
+                        </div>
+                    </div>
+                </Card>
+
+                <!-- Supplier price history -->
+                <Card v-if="priceHistory.length > 0" :padded="false">
+                    <div class="px-5 pt-5"><h3 class="text-sm font-semibold text-text-primary">{{ t('productSuppliers.priceHistory') }}</h3></div>
+                    <div class="p-5">
+                        <div class="w-full overflow-x-auto rounded-lg border border-border-subtle">
+                            <table class="min-w-full text-sm">
+                                <thead>
+                                    <tr class="border-b border-border-subtle">
+                                        <th :class="supplierThClass">{{ t('productSuppliers.recordedAt') }}</th>
+                                        <th :class="supplierThClass">{{ t('productSuppliers.supplier') }}</th>
+                                        <th :class="[supplierThClass, 'text-right']">{{ t('productSuppliers.costPrice') }}</th>
+                                        <th :class="supplierThClass">{{ t('productSuppliers.source') }}</th>
+                                        <th :class="supplierThClass">{{ t('productSuppliers.recordedBy') }}</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr v-for="entry in priceHistory" :key="entry.id" class="border-b border-border-subtle last:border-b-0">
+                                        <td class="whitespace-nowrap px-4 py-2.5 text-text-secondary">{{ formatDate(entry.recorded_at) }}</td>
+                                        <td class="px-4 py-2.5 text-text-primary">{{ entry.supplier_name || '-' }}</td>
+                                        <td class="px-4 py-2.5 text-right tabular-nums text-text-primary">{{ formatCurrency(entry.cost_price) }}</td>
+                                        <td class="px-4 py-2.5 text-text-secondary">
+                                            <Link
+                                                v-if="entry.source === 'purchase_order' && entry.purchase_order_id"
+                                                :href="route('purchase-orders.show', entry.purchase_order_id)"
+                                                class="text-brand hover:underline"
+                                            >
+                                                {{ t('productSuppliers.sourcePurchaseOrder', { number: entry.po_number }) }}
+                                            </Link>
+                                            <span v-else>{{ t('productSuppliers.sourceLink') }}</span>
+                                        </td>
+                                        <td class="px-4 py-2.5 text-text-tertiary">{{ entry.user_name || '-' }}</td>
+                                    </tr>
+                                </tbody>
+                            </table>
                         </div>
                     </div>
                 </Card>

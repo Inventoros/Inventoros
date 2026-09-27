@@ -38,7 +38,7 @@ class ProductController extends Controller
     {
         $organizationId = $request->user()->organization_id;
 
-        $query = Product::with(['category', 'location'])
+        $query = Product::with(['category', 'location', 'suppliers'])
             ->forOrganization($organizationId)
             ->when($request->input('warehouse_id'), function ($query, $warehouseId) {
                 $query->whereHas('location', function ($q) use ($warehouseId) {
@@ -97,7 +97,7 @@ class ProductController extends Controller
         // variants, options, and base64 images identically to the web surface
         // instead of silently dropping them.
         $product = $this->productService->create($validated);
-        $product->load(['category', 'location']);
+        $product->load(['category', 'location', 'suppliers']);
 
         return response()->json([
             'message' => 'Product created successfully',
@@ -121,7 +121,7 @@ class ProductController extends Controller
             ], 404);
         }
 
-        $product->load(['category', 'location']);
+        $product->load(['category', 'location', 'suppliers']);
 
         return response()->json([
             'data' => new ProductResource($product),
@@ -147,7 +147,7 @@ class ProductController extends Controller
         $validated = $request->validated();
 
         $product = $this->productService->update($product, $validated);
-        $product->load(['category', 'location']);
+        $product->load(['category', 'location', 'suppliers']);
 
         return response()->json([
             'message' => 'Product updated successfully',

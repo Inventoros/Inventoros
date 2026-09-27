@@ -49,7 +49,7 @@ class ListSuppliersTool extends Tool
             ->when($request->get('is_active') !== null, fn ($q) => $q->where('is_active', (bool) $request->get('is_active')))
             ->orderBy('name')
             ->limit($limit)
-            ->get(['id', 'name', 'code', 'contact_name', 'email', 'phone', 'currency', 'is_active']);
+            ->get(['id', 'name', 'code', 'contact_name', 'email', 'phone', 'currency', 'is_active', 'rating']);
 
         return Response::json([
             'count' => $suppliers->count(),

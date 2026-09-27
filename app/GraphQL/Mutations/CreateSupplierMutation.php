@@ -101,6 +101,11 @@ class CreateSupplierMutation extends Mutation
                 'description' => 'Whether the supplier is active',
                 'rules' => ['nullable', 'boolean'],
             ],
+            'rating' => [
+                'type' => Type::int(),
+                'description' => 'Supplier rating from 1 to 5',
+                'rules' => ['nullable', 'integer', 'between:1,5'],
+            ],
         ];
     }
 

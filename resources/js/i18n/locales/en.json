@@ -424,6 +424,40 @@
       "aud": "AUD - Australian Dollar"
     }
   },
+  "productSuppliers": {
+    "title": "Suppliers",
+    "hint": "Link the suppliers you buy this product from. The primary supplier is used for automatic reorders and quick purchase orders.",
+    "add": "Add supplier",
+    "selectSupplier": "Select a supplier",
+    "supplier": "Supplier",
+    "supplierSku": "Supplier SKU",
+    "costPrice": "Cost price",
+    "leadTimeDays": "Lead time (days)",
+    "minimumOrderQuantity": "Min order qty",
+    "minimumOrderPlaceholder": "None",
+    "primary": "Primary",
+    "remove": "Remove supplier",
+    "empty": "No suppliers linked yet.",
+    "noSuppliersYet": "Your organization has no active suppliers yet.",
+    "createSupplier": "Create a supplier",
+    "priceHistory": "Supplier price history",
+    "priceHistoryEmpty": "No supplier costs recorded yet.",
+    "recordedAt": "Date",
+    "source": "Source",
+    "sourceLink": "Supplier link",
+    "sourcePurchaseOrder": "PO {number}",
+    "recordedBy": "By"
+  },
+  "quickReorder": {
+    "createPo": "Create PO",
+    "createPos": "Create draft POs ({count})",
+    "selectForReorder": "Select {name} for a purchase order",
+    "selectAll": "Select all reorderable products",
+    "suggestedQty": "Suggested qty",
+    "noSupplier": "No supplier",
+    "addSupplier": "Add a supplier",
+    "hint": "Creates one draft purchase order per primary supplier. Products without a supplier are skipped."
+  },
   "suppliers": {
     "title": "Suppliers",
     "addSupplier": "Add Supplier",
@@ -431,6 +465,12 @@
     "contact": "Contact",
     "noSuppliersFound": "No suppliers found",
     "getStarted": "Get started by adding a new supplier.",
+    "rating": {
+      "label": "Rating",
+      "hint": "How well this supplier performs, from 1 to 5. Click the current rating again to clear it.",
+      "none": "Not rated",
+      "stars": "{count} out of 5"
+    },
     "create": {
       "title": "Add Supplier",
       "backToSuppliers": "Back to Suppliers",

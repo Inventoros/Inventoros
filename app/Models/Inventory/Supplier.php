@@ -39,6 +39,7 @@ use Illuminate\Support\Carbon;
  * @property string|null $notes
  * @property array|null $metadata
  * @property bool $is_active
+ * @property int|null $rating
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  * @property Carbon|null $deleted_at
@@ -73,6 +74,7 @@ class Supplier extends Model
         'notes',
         'metadata',
         'is_active',
+        'rating',
     ];
 
     /**
@@ -85,6 +87,7 @@ class Supplier extends Model
         return [
             'is_active' => 'boolean',
             'metadata' => 'array',
+            'rating' => 'integer',
         ];
     }
 
@@ -106,7 +109,8 @@ class Supplier extends Model
     public function products(): BelongsToMany
     {
         return $this->belongsToMany(Product::class, 'product_supplier')
-            ->withPivot(['cost_price', 'supplier_sku', 'lead_time_days', 'minimum_order_quantity', 'is_primary'])
+            ->using(ProductSupplier::class)
+            ->withPivot(['id', 'cost_price', 'supplier_sku', 'lead_time_days', 'minimum_order_quantity', 'is_primary'])
             ->withTimestamps();
     }
 

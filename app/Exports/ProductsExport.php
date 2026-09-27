@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Exports;
 
 use App\Models\Inventory\Product;
+use App\Services\ReorderService;
 use Maatwebsite\Excel\Concerns\FromQuery;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithMapping;
@@ -50,7 +51,7 @@ final class ProductsExport implements FromQuery, WithHeadings, WithMapping, With
     public function query(): \Illuminate\Database\Eloquent\Builder
     {
         $query = Product::query()
-            ->with(['category', 'location'])
+            ->with(array_merge(['category', 'location'], ReorderService::primarySupplierEagerLoad()))
             ->forOrganization($this->organizationId);
 
         // Apply filters
@@ -96,6 +97,10 @@ final class ProductsExport implements FromQuery, WithHeadings, WithMapping, With
             'Status',
             'Notes',
             'Created At',
+            'Supplier Code',
+            'Supplier Name',
+            'Supplier SKU',
+            'Supplier Cost',
         ];
     }
 
@@ -104,6 +109,9 @@ final class ProductsExport implements FromQuery, WithHeadings, WithMapping, With
      */
     public function map($product): array
     {
+        // Only the primary supplier link is eager-loaded (see query()).
+        $primary = $product->suppliers->first();
+
         return \App\Support\SpreadsheetSafety::neutraliseRow([
             $product->id,
             $product->name,
@@ -120,6 +128,10 @@ final class ProductsExport implements FromQuery, WithHeadings, WithMapping, With
             $product->is_active ? 'active' : 'inactive',
             $product->notes,
             $product->created_at->format('Y-m-d H:i:s'),
+            $primary?->code ?? '',
+            $primary?->name ?? '',
+            $primary?->pivot?->supplier_sku ?? '',
+            $primary?->pivot?->cost_price ?? '',
         ]);
     }
 

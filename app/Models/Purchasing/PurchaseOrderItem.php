@@ -7,6 +7,7 @@ namespace App\Models\Purchasing;
 use App\Models\Inventory\Product;
 use App\Models\Inventory\ProductVariant;
 use App\Models\Inventory\StockAdjustment;
+use App\Models\Inventory\SupplierPriceHistory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Carbon;
@@ -211,11 +212,41 @@ class PurchaseOrderItem extends Model
             locationId: $this->product->location_id,
         );
 
+        $this->recordSupplierCost($purchaseOrder);
+
         // Update the purchase order status
         $purchaseOrder->refresh();
         $purchaseOrder->updateReceivingStatus();
 
         return $adjustment;
+    }
+
+    /**
+     * Log the unit cost this line was received at to the supplier price
+     * history. A line received in several partial deliveries is logged once.
+     */
+    protected function recordSupplierCost(PurchaseOrder $purchaseOrder): void
+    {
+        if (! $purchaseOrder->supplier_id || $this->unit_cost === null) {
+            return;
+        }
+
+        $alreadyRecorded = SupplierPriceHistory::withoutGlobalScopes()
+            ->where('purchase_order_id', $purchaseOrder->id)
+            ->where('product_id', $this->product_id)
+            ->where('source', SupplierPriceHistory::SOURCE_PURCHASE_ORDER)
+            ->where('cost_price', $this->unit_cost)
+            ->exists();
+
+        if (! $alreadyRecorded) {
+            SupplierPriceHistory::record(
+                $this->product,
+                (int) $purchaseOrder->supplier_id,
+                $this->unit_cost,
+                SupplierPriceHistory::SOURCE_PURCHASE_ORDER,
+                $purchaseOrder->id,
+            );
+        }
     }
 
     /**

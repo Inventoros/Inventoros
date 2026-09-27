@@ -6,6 +6,7 @@ import Button from '@/Components/ui/Button.vue';
 import Badge from '@/Components/ui/Badge.vue';
 import PluginSlot from '@/Components/PluginSlot.vue';
 import ProductVariantManager from '@/Components/ProductVariantManager.vue';
+import ProductSupplierManager from '@/Components/ProductSupplierManager.vue';
 import QuickAddModal from '@/Components/QuickAddModal.vue';
 import SKUGeneratorModal from '@/Components/SKUGeneratorModal.vue';
 import { Head, Link, useForm, router } from '@inertiajs/vue3';
@@ -20,6 +21,7 @@ const { t } = useI18n();
 const props = defineProps({
     categories: Array,
     locations: Array,
+    suppliers: { type: Array, default: () => [] },
     currencies: Object,
     defaultCurrency: String,
     pluginComponents: Object,
@@ -47,6 +49,7 @@ const form = useForm({
     type: 'standard',
     options: [],
     variants: [],
+    suppliers: [],
 });
 
 // Variant management
@@ -497,6 +500,21 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                                 @update:model-value="updateVariantData"
                                 :product-price="form.price"
                                 :product-purchase-price="form.purchase_price"
+                                :currency-symbol="getCurrencySymbol(form.currency)"
+                            />
+                        </div>
+                    </Card>
+                </div>
+
+                <!-- Suppliers (Full Width) -->
+                <div class="lg:col-span-2">
+                    <Card :padded="false">
+                        <div class="px-5 pt-5"><h3 class="text-sm font-semibold text-text-primary">{{ t('productSuppliers.title') }}</h3></div>
+                        <div class="p-5">
+                            <ProductSupplierManager
+                                v-model="form.suppliers"
+                                :suppliers="suppliers"
+                                :errors="form.errors"
                                 :currency-symbol="getCurrencySymbol(form.currency)"
                             />
                         </div>

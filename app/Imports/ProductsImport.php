@@ -7,6 +7,8 @@ namespace App\Imports;
 use App\Models\Inventory\Product;
 use App\Models\Inventory\ProductCategory;
 use App\Models\Inventory\ProductLocation;
+use App\Models\Inventory\Supplier;
+use App\Services\ProductService;
 use App\Support\SpreadsheetSafety;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Validator;
@@ -203,9 +205,11 @@ final class ProductsImport implements SkipsOnFailure, ToCollection, WithChunkRea
                     $this->updated++;
                 } else {
                     // Create new product
-                    Product::create($productData);
+                    $product = Product::create($productData);
                     $this->imported++;
                 }
+
+                $this->applyPrimarySupplier($product, $row, $rowNumber);
             } catch (\Exception $e) {
                 $this->errors[] = [
                     'row' => $rowNumber,
@@ -216,6 +220,78 @@ final class ProductsImport implements SkipsOnFailure, ToCollection, WithChunkRea
 
         // Advance the absolute-row offset for the next chunk.
         $this->rowOffset += $rows->count();
+    }
+
+    /**
+     * Link the row's primary supplier (supplier_code, else supplier_name) with
+     * its supplier_sku and supplier_cost. An unknown supplier or a bad cost is
+     * a row warning, never a failed row: the product itself is already saved.
+     *
+     * @param  Collection<string, mixed>|array<string, mixed>  $row
+     */
+    protected function applyPrimarySupplier(Product $product, $row, int $rowNumber): void
+    {
+        $code = trim((string) ($row['supplier_code'] ?? ''));
+        $name = trim((string) ($row['supplier_name'] ?? ''));
+        $sku = trim((string) ($row['supplier_sku'] ?? ''));
+        $cost = trim((string) ($row['supplier_cost'] ?? ''));
+
+        if ($code === '' && $name === '') {
+            if ($sku !== '' || $cost !== '') {
+                $this->warn($rowNumber, 'supplier_sku/supplier_cost ignored: add a supplier_code or supplier_name to link a supplier.');
+            }
+
+            return;
+        }
+
+        $suppliers = Supplier::withoutGlobalScopes()
+            ->where('organization_id', $this->organizationId)
+            ->whereNull('deleted_at');
+
+        $supplier = $code !== ''
+            ? (clone $suppliers)->where('code', $code)->first()
+            : null;
+
+        if (! $supplier && $name !== '') {
+            $supplier = (clone $suppliers)->whereRaw('LOWER(name) = ?', [mb_strtolower($name)])->first();
+        }
+
+        if (! $supplier) {
+            $label = $code !== '' ? $code : $name;
+            $this->warn($rowNumber, "Supplier '{$label}' not found; the product was imported without a supplier link.");
+
+            return;
+        }
+
+        $costPrice = null;
+        if ($cost !== '') {
+            if (is_numeric($cost) && (float) $cost >= 0) {
+                $costPrice = round((float) $cost, 2);
+            } else {
+                $this->warn($rowNumber, "Invalid supplier_cost '{$cost}' ignored.");
+            }
+        }
+
+        app(ProductService::class)->setPrimarySupplier($product, $supplier->id, [
+            'supplier_sku' => $sku !== '' ? mb_substr((string) SpreadsheetSafety::sanitiseImport($sku), 0, 255) : null,
+            'cost_price' => $costPrice,
+        ]);
+    }
+
+    /**
+     * Add a non-fatal warning for a row, merging with any it already has.
+     */
+    protected function warn(int $rowNumber, string $message): void
+    {
+        foreach ($this->warnings as $index => $warning) {
+            if ($warning['row'] === $rowNumber) {
+                $this->warnings[$index]['warnings'][] = $message;
+
+                return;
+            }
+        }
+
+        $this->warnings[] = ['row' => $rowNumber, 'warnings' => [$message]];
     }
 
     /**

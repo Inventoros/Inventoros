@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Requests\Api\Product;
 
+use App\Http\Requests\Concerns\ValidatesProductSuppliers;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -14,6 +15,8 @@ use Illuminate\Validation\Rule;
  */
 final class UpdateProductRequest extends FormRequest
 {
+    use ValidatesProductSuppliers;
+
     /**
      * @return array<string, mixed>
      */
@@ -62,6 +65,6 @@ final class UpdateProductRequest extends FormRequest
             'variants.*.stock' => ['nullable', 'integer', 'min:0'],
             'variants.*.min_stock' => ['nullable', 'integer', 'min:0'],
             'variants.*.is_active' => ['boolean'],
-        ];
+        ] + $this->productSupplierRules($organizationId);
     }
 }

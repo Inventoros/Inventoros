@@ -39,6 +39,7 @@ class SupplierResource extends JsonResource
             'notes' => $this->notes,
             'metadata' => $this->metadata,
             'is_active' => $this->is_active,
+            'rating' => $this->rating,
             'products_count' => $this->whenCounted('products'),
             'products' => ProductResource::collection($this->whenLoaded('products')),
             'created_at' => $this->created_at?->toIso8601String(),
