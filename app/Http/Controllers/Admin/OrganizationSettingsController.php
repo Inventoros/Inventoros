@@ -36,7 +36,38 @@ class OrganizationSettingsController extends Controller
             'user' => $user,
             'approvalSettings' => ApprovalSettings::forOrganization($organization)->toArray(),
             'canManageOrganization' => $user->hasPermission('manage_organization'),
+            'portal' => [
+                'enabled' => (bool) $organization?->portal_enabled,
+                'login_url' => $organization ? route('portal.login', ['organization' => $organization->slug]) : null,
+            ],
         ]);
+    }
+
+    /**
+     * Turn the customer portal on or off for the organization.
+     *
+     * @param Request $request The incoming HTTP request
+     * @return RedirectResponse
+     */
+    public function updatePortal(Request $request): RedirectResponse
+    {
+        $user = $request->user();
+
+        if (! $user->is_admin) {
+            abort(403, 'Only administrators can update organization settings.');
+        }
+
+        $validated = $request->validate([
+            'portal_enabled' => 'required|boolean',
+        ]);
+
+        $organization = Organization::find($user->organization_id);
+        $organization->forceFill(['portal_enabled' => (bool) $validated['portal_enabled']])->save();
+
+        return redirect()->back()->with(
+            'success',
+            $organization->portal_enabled ? 'Customer portal turned on.' : 'Customer portal turned off.'
+        );
     }
 
     /**

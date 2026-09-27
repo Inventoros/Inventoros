@@ -7,6 +7,7 @@ namespace App\Http\Controllers\Order;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\ReturnOrder\RejectReturnOrderRequest;
 use App\Http\Requests\ReturnOrder\StoreReturnOrderRequest;
+use App\Http\Requests\ReturnOrder\UpdateReturnLinesRequest;
 use App\Models\Order\Order;
 use App\Models\Order\ReturnOrder;
 use App\Services\ReturnOrderService;
@@ -116,6 +117,20 @@ class ReturnOrderController extends Controller
         return Inertia::render('Returns/Show', [
             'returnOrder' => $returnOrder,
         ]);
+    }
+
+    /**
+     * Change the restock flag and/or condition of lines before the return is
+     * received.
+     */
+    public function updateLines(UpdateReturnLinesRequest $request, ReturnOrder $returnOrder, ReturnOrderService $returns)
+    {
+        $this->authorizeReturn($returnOrder);
+
+        return $this->transition(
+            fn () => $returns->updateLines($returnOrder, $request->user(), $request->validated()['items']),
+            'Return lines updated.',
+        );
     }
 
     /**

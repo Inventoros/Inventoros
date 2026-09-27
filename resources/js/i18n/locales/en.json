@@ -2284,5 +2284,230 @@
     "agingNote": "Age is counted in days from the order date. Cancelled and overpaid orders are not included.",
     "truncated": "Showing the oldest {count} orders. The totals above cover every order.",
     "empty": "Nothing outstanding. Every live order is paid in full."
+  },
+  "returns": {
+    "lines": {
+      "edit": "Edit lines",
+      "save": "Save lines",
+      "cancel": "Cancel",
+      "hint": "Change what is put back on the shelf. Stock only moves when the return is received."
+    }
+  },
+  "portal": {
+    "customerPortal": "Customer portal",
+    "nav": {
+      "dashboard": "Dashboard",
+      "orders": "Orders",
+      "returns": "Returns",
+      "signOut": "Sign out",
+      "menu": "Menu"
+    },
+    "statuses": {
+      "pending": "Pending",
+      "processing": "Processing",
+      "shipped": "Shipped",
+      "delivered": "Delivered",
+      "cancelled": "Cancelled",
+      "approved": "Approved",
+      "received": "Received",
+      "completed": "Completed",
+      "rejected": "Rejected"
+    },
+    "login": {
+      "title": "Sign in",
+      "heading": "Sign in to {org}",
+      "subtitle": "Follow your orders, download invoices and request returns.",
+      "email": "Email",
+      "password": "Password",
+      "submit": "Sign in",
+      "forgot": "Forgot your password?"
+    },
+    "forgot": {
+      "title": "Forgot password",
+      "description": "Enter your email and we will send you a link to choose a new password.",
+      "email": "Email",
+      "submit": "Email reset link",
+      "back": "Back to sign in"
+    },
+    "reset": {
+      "title": "Reset password",
+      "email": "Email",
+      "password": "New password",
+      "confirm": "Confirm password",
+      "submit": "Reset password"
+    },
+    "invitation": {
+      "title": "Set up your account",
+      "heading": "Welcome, {name}",
+      "description": "Choose a password to finish setting up your {org} customer portal account.",
+      "email": "Email",
+      "password": "Password",
+      "confirm": "Confirm password",
+      "submit": "Set password and sign in"
+    },
+    "dashboard": {
+      "title": "Dashboard",
+      "welcome": "Welcome back, {name}",
+      "description": "Your orders and returns with {org}.",
+      "orders": "Orders",
+      "openOrders": "Open orders",
+      "openReturns": "Open returns",
+      "recentOrders": "Recent orders",
+      "viewAll": "View all orders",
+      "noOrders": "No orders yet."
+    },
+    "orders": {
+      "title": "Orders",
+      "description": "Every order you have placed with {org}.",
+      "number": "Order",
+      "date": "Date",
+      "status": "Status",
+      "items": "Items",
+      "total": "Total",
+      "view": "View",
+      "empty": "No orders yet.",
+      "back": "Back to orders"
+    },
+    "order": {
+      "title": "Order {number}",
+      "lines": "Items",
+      "product": "Product",
+      "sku": "SKU",
+      "quantity": "Qty",
+      "unitPrice": "Unit price",
+      "lineTotal": "Total",
+      "subtotal": "Subtotal",
+      "tax": "Tax",
+      "shipping": "Shipping",
+      "total": "Total",
+      "progress": "Progress",
+      "ordered": "Ordered",
+      "shipped": "Shipped",
+      "delivered": "Delivered",
+      "shipTo": "Ship to",
+      "invoice": "Invoice",
+      "downloadInvoice": "Download invoice",
+      "invoiceNotReady": "The invoice is available once your order is being processed.",
+      "requestReturn": "Request a return",
+      "returns": "Returns for this order",
+      "returned": "{count} returned",
+      "discount": "Discount",
+      "lineDiscount": "Discount {amount}",
+      "payments": "Payments",
+      "paid": "Paid",
+      "balanceDue": "Balance due",
+      "refund": "Refund",
+      "noPayments": "No payments recorded yet.",
+      "shipments": "Shipments",
+      "shipment": "Shipment {number}",
+      "trackingNumber": "Tracking number",
+      "track": "Track package",
+      "shippedOn": "Shipped {date}",
+      "deliveredOn": "Delivered {date}",
+      "contents": "Contents",
+      "shipmentStatuses": {
+        "pending": "Preparing",
+        "label_created": "Preparing",
+        "shipped": "Shipped",
+        "in_transit": "In transit",
+        "delivered": "Delivered",
+        "exception": "Delivery issue"
+      },
+      "paymentStatuses": {
+        "unpaid": "Unpaid",
+        "partial": "Partly paid",
+        "paid": "Paid",
+        "overpaid": "Overpaid",
+        "refunded": "Refunded"
+      }
+    },
+    "returns": {
+      "title": "Returns",
+      "description": "Your return requests and where they stand.",
+      "number": "Return",
+      "order": "Order",
+      "type": "Type",
+      "status": "Status",
+      "requested": "Requested",
+      "refund": "Refund",
+      "empty": "No returns yet. You can request one from a delivered order.",
+      "view": "View",
+      "back": "Back to returns",
+      "types": {
+        "return": "Return",
+        "exchange": "Exchange"
+      }
+    },
+    "returnForm": {
+      "title": "Request a return",
+      "description": "Order {number}. Choose the items and quantities you want to send back.",
+      "type": "What would you like?",
+      "reason": "Reason",
+      "reasonPlaceholder": "Tell us what went wrong",
+      "notes": "Additional notes",
+      "notesPlaceholder": "Optional",
+      "quantity": "Quantity",
+      "available": "{count} available",
+      "condition": "Condition",
+      "conditions": {
+        "new": "Unopened",
+        "used": "Opened or used",
+        "damaged": "Damaged"
+      },
+      "submit": "Submit request",
+      "cancel": "Cancel",
+      "nothingSelected": "Choose at least one item to return.",
+      "noneReturnable": "Everything on this order is already on a return."
+    },
+    "returnShow": {
+      "title": "Return {number}",
+      "forOrder": "For order {number}",
+      "reason": "Reason",
+      "notes": "Notes",
+      "items": "Items",
+      "condition": "Condition",
+      "nextSteps": "What happens next",
+      "steps": {
+        "pending": "We have your request and will review it shortly.",
+        "approved": "Your return is approved. Please send the items back to us.",
+        "received": "We have received your items and are finishing the return.",
+        "completed": "This return is complete.",
+        "rejected": "This return was not approved. See the notes for the reason."
+      }
+    },
+    "staff": {
+      "title": "Portal access",
+      "description": "People at this customer who can sign in to your customer portal.",
+      "disabled": "The customer portal is off. An administrator can turn it on in organization settings.",
+      "invite": "Invite contact",
+      "name": "Name",
+      "email": "Email",
+      "send": "Send invitation",
+      "cancel": "Cancel",
+      "resend": "Resend invitation",
+      "revoke": "Revoke access",
+      "confirmRevoke": "Revoke portal access for {email}? They will be signed out and cannot sign in again unless invited.",
+      "empty": "No portal contacts yet.",
+      "lastLogin": "Last sign-in {date}",
+      "invited": "Invited {date}",
+      "neverSignedIn": "Never signed in",
+      "signInPage": "Portal sign-in page",
+      "statuses": {
+        "invited": "Invited",
+        "active": "Active",
+        "revoked": "Revoked"
+      }
+    },
+    "settings": {
+      "tab": "Customer Portal",
+      "title": "Customer portal",
+      "description": "Let your customers' contacts sign in to follow their orders, download invoices and request returns.",
+      "enabled": "The portal is on.",
+      "disabled": "The portal is off. Its pages return Not Found until you turn it on.",
+      "turnOn": "Turn on portal",
+      "turnOff": "Turn off portal",
+      "loginUrl": "Sign-in page",
+      "hint": "Invite contacts from a customer's page. Each contact only sees their own company's orders, invoices and returns."
+    }
   }
 }

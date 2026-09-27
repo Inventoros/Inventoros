@@ -60,6 +60,12 @@ final class SecurityEventSubscriber
         // read, copied, or logged.
         $email = isset($event->credentials['email']) ? (string) $event->credentials['email'] : null;
 
+        // Customer portal sign-ins are recorded by the portal itself, against
+        // the contact, so they never read as a staff account's failed login.
+        if ($event->guard === 'customer') {
+            return;
+        }
+
         if (! $event->user instanceof User) {
             $this->logger->recordUnknownAccount(SecurityEvent::LOGIN_FAILED, $email);
 

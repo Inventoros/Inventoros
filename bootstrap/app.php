@@ -9,12 +9,24 @@ use App\Http\Middleware\EnsureUserIsAdmin;
 use App\Http\Middleware\EnsureUserIsManager;
 use App\Http\Middleware\HandleInertiaRequests;
 use App\Http\Middleware\LogAccessDenied;
+use App\Http\Middleware\Portal\AuthenticatePortalContact;
+use App\Http\Middleware\Portal\HandlePortalInertiaRequests;
+use App\Http\Middleware\Portal\RedirectIfPortalAuthenticated;
+use App\Http\Middleware\Portal\ResolvePortalOrganization;
+use App\Http\Middleware\Portal\UsePortalGuard;
 use App\Http\Middleware\SecurityHeaders;
 use App\Http\Middleware\SetLocale;
+use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
+use Illuminate\Cookie\Middleware\EncryptCookies;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
+use Illuminate\Foundation\Http\Middleware\ValidateCsrfToken;
 use Illuminate\Http\Middleware\AddLinkHeadersForPreloadedAssets;
+use Illuminate\Routing\Middleware\SubstituteBindings;
+use Illuminate\Session\Middleware\StartSession;
+use Illuminate\Support\Facades\Route;
+use Illuminate\View\Middleware\ShareErrorsFromSession;
 use Sentry\Laravel\Integration;
 
 return Application::configure(basePath: dirname(__DIR__))
@@ -23,6 +35,15 @@ return Application::configure(basePath: dirname(__DIR__))
         api: __DIR__.'/../routes/api.php',
         commands: __DIR__.'/../routes/console.php',
         health: '/up',
+        // The customer portal runs in its own middleware group (below), not
+        // `web`: it must not pass through the staff Inertia props, two-factor
+        // gate or access-denied logging, all of which read the staff user.
+        then: function () {
+            Route::middleware('portal')
+                ->prefix('portal/{organization}')
+                ->name('portal.')
+                ->group(base_path('routes/portal.php'));
+        },
     )
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->web(append: [
@@ -44,7 +65,29 @@ return Application::configure(basePath: dirname(__DIR__))
             LogAccessDenied::class,
         ]);
 
+        // Customer portal. The session, cookies and CSRF are the same as
+        // `web`; the guard is switched to `customer` before anything reads
+        // the user, and the portal organization is resolved (or 404s) before
+        // the portal's own Inertia props are shared.
+        $middleware->group('portal', [
+            EncryptCookies::class,
+            AddQueuedCookiesToResponse::class,
+            StartSession::class,
+            ShareErrorsFromSession::class,
+            ValidateCsrfToken::class,
+            SubstituteBindings::class,
+            AddLinkHeadersForPreloadedAssets::class,
+            CheckInstallation::class,
+            UsePortalGuard::class,
+            SetLocale::class,
+            ResolvePortalOrganization::class,
+            HandlePortalInertiaRequests::class,
+            SecurityHeaders::class,
+        ]);
+
         $middleware->alias([
+            'portal.auth' => AuthenticatePortalContact::class,
+            'portal.guest' => RedirectIfPortalAuthenticated::class,
             'admin' => EnsureUserIsAdmin::class,
             'manager' => EnsureUserIsManager::class,
             'permission' => CheckPermission::class,

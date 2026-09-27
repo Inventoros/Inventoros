@@ -8,6 +8,7 @@ use App\Http\Controllers\Api\Concerns\HandlesApiResponses;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\ReturnOrder\StoreReturnOrderRequest;
 use App\Http\Requests\ReturnOrder\RejectReturnOrderRequest;
+use App\Http\Requests\ReturnOrder\UpdateReturnLinesRequest;
 use App\Http\Resources\ReturnOrderResource;
 use App\Models\Order\ReturnOrder;
 use App\Services\ReturnOrderService;
@@ -87,6 +88,17 @@ class ReturnOrderController extends Controller
         $this->returns->authorizeView($returnOrder, $request->user());
 
         return response()->json(['data' => new ReturnOrderResource($this->loaded($returnOrder))]);
+    }
+
+    /**
+     * Change the restock flag and/or condition of lines before the return is
+     * received. Allowed while the return is pending or approved.
+     */
+    public function updateLines(UpdateReturnLinesRequest $request, ReturnOrder $returnOrder): JsonResponse
+    {
+        $items = $request->validated()['items'];
+
+        return $this->transition($request, $returnOrder, fn () => $this->returns->updateLines($returnOrder, $request->user(), $items), 'Return lines updated');
     }
 
     /**

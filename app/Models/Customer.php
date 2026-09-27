@@ -52,6 +52,7 @@ use Illuminate\Support\Carbon;
  * @property-read string $full_shipping_address
  * @property-read Organization $organization
  * @property-read Collection|Order[] $orders
+ * @property-read Collection|CustomerContact[] $contacts
  */
 class Customer extends Model
 {
@@ -121,6 +122,18 @@ class Customer extends Model
     public function orders(): HasMany
     {
         return $this->hasMany(Order::class);
+    }
+
+    /**
+     * Portal contacts for this customer, constrained to the customer's own
+     * organization explicitly.
+     *
+     * @return HasMany<CustomerContact, $this>
+     */
+    public function contacts(): HasMany
+    {
+        return $this->hasMany(CustomerContact::class)
+            ->where('customer_contacts.organization_id', $this->organization_id);
     }
 
     /**

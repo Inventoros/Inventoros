@@ -194,7 +194,10 @@ class ActivityLog extends Model
         }
 
         $user = auth()->user();
-        if (!$user || !$user->organization_id) {
+        // Only staff accounts are attributed here: user_id references users,
+        // and a customer portal contact (customer guard) is not one. Portal
+        // actions are logged explicitly by the portal against the contact.
+        if (! $user instanceof User || ! $user->organization_id) {
             return null;
         }
 

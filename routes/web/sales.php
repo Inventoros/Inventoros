@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Http\Controllers\CustomerContactController;
 use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\Inventory\SupplierController;
 use App\Http\Controllers\Order\InvoiceController;
@@ -38,6 +39,11 @@ Route::get('/customers/{customer}/edit', [CustomerController::class, 'edit'])->n
 Route::put('/customers/{customer}', [CustomerController::class, 'update'])->name('customers.update')->middleware('permission:edit_customers');
 Route::patch('/customers/{customer}', [CustomerController::class, 'update'])->middleware('permission:edit_customers');
 Route::delete('/customers/{customer}', [CustomerController::class, 'destroy'])->name('customers.destroy')->middleware('permission:delete_customers');
+
+// Customer portal contacts (invite, resend invitation, revoke access)
+Route::post('/customers/{customer}/contacts', [CustomerContactController::class, 'store'])->name('customers.contacts.store')->middleware(['permission:edit_customers', 'throttle:30,1']);
+Route::post('/customers/{customer}/contacts/{contact}/resend', [CustomerContactController::class, 'resend'])->name('customers.contacts.resend')->middleware(['permission:edit_customers', 'throttle:30,1']);
+Route::delete('/customers/{customer}/contacts/{contact}', [CustomerContactController::class, 'destroy'])->name('customers.contacts.destroy')->middleware('permission:edit_customers');
 
 // Purchase Order Management - Permission based
 Route::get('/purchase-orders', [PurchaseOrderController::class, 'index'])->name('purchase-orders.index')->middleware('permission:view_purchase_orders');
@@ -94,6 +100,7 @@ Route::get('/returns', [ReturnOrderController::class, 'index'])->name('returns.i
 Route::get('/returns/create', [ReturnOrderController::class, 'create'])->name('returns.create')->middleware('permission:manage_returns');
 Route::post('/returns', [ReturnOrderController::class, 'store'])->name('returns.store')->middleware('permission:manage_returns');
 Route::get('/returns/{returnOrder}', [ReturnOrderController::class, 'show'])->name('returns.show')->middleware('permission:manage_returns');
+Route::patch('/returns/{returnOrder}/items', [ReturnOrderController::class, 'updateLines'])->name('returns.items.update')->middleware('permission:manage_returns');
 Route::post('/returns/{returnOrder}/approve', [ReturnOrderController::class, 'approve'])->name('returns.approve')->middleware('permission:manage_returns');
 Route::post('/returns/{returnOrder}/receive', [ReturnOrderController::class, 'receive'])->name('returns.receive')->middleware('permission:manage_returns');
 Route::post('/returns/{returnOrder}/complete', [ReturnOrderController::class, 'complete'])->name('returns.complete')->middleware('permission:manage_returns');

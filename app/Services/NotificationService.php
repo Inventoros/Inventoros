@@ -6,15 +6,18 @@ namespace App\Services;
 
 use App\Enums\OrderApprovalStatus;
 use App\Enums\OrderStatus;
+use App\Enums\Permission;
 use App\Mail\ApprovalEmail;
 use App\Mail\LowStockEmail;
 use App\Mail\OrderApprovalEmail;
 use App\Mail\OrderStatusEmail;
+use App\Models\CustomerContact;
 use App\Models\DataExport;
 use App\Models\Inventory\Product;
 use App\Models\Inventory\StockAudit;
 use App\Models\Notification;
 use App\Models\Order\Order;
+use App\Models\Order\ReturnOrder;
 use App\Models\User;
 use App\Models\Warehouse;
 use Illuminate\Support\Collection;
@@ -49,6 +52,7 @@ final class NotificationService
             'order_status_updated' => 'order_notifications',
             'order_shipped' => 'order_notifications',
             'order_delivered' => 'order_notifications',
+            'portal_return_requested' => 'order_notifications',
         ];
 
         $preferenceKey = $preferenceMap[$notificationType] ?? 'system_notifications';
@@ -618,6 +622,44 @@ final class NotificationService
             'action_url' => route('stock-audits.show', $audit->id),
             'priority' => 'normal',
         ]);
+    }
+
+    /**
+     * Notify staff who handle returns that a customer requested one in the
+     * customer portal.
+     *
+     * Recipients are the organization's users with manage_returns (admins
+     * included), which is who can act on the pending return.
+     */
+    public static function createPortalReturnRequestedNotification(ReturnOrder $returnOrder, Order $order, CustomerContact $contact): void
+    {
+        $users = User::where('organization_id', $returnOrder->organization_id)
+            ->get()
+            ->filter(fn (User $user) => $user->hasPermission(Permission::MANAGE_RETURNS));
+
+        foreach ($users as $user) {
+            if (! self::shouldNotifyUser($user, 'portal_return_requested')) {
+                continue;
+            }
+
+            Notification::create([
+                'organization_id' => $returnOrder->organization_id,
+                'user_id' => $user->id,
+                'type' => 'portal_return_requested',
+                'title' => 'Return Requested',
+                'message' => "{$contact->name} requested return {$returnOrder->return_number} for order #{$order->order_number} in the customer portal",
+                'data' => [
+                    'return_order_id' => $returnOrder->id,
+                    'return_number' => $returnOrder->return_number,
+                    'order_id' => $order->id,
+                    'order_number' => $order->order_number,
+                    'customer_id' => $contact->customer_id,
+                    'contact_name' => $contact->name,
+                ],
+                'action_url' => route('returns.show', $returnOrder->id),
+                'priority' => 'normal',
+            ]);
+        }
     }
 
     /**

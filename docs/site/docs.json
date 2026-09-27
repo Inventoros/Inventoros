@@ -4,6 +4,7 @@
         { "slug": "installation-cpanel", "label": "Install on cPanel", "anchor": "installation-cpanel" },
         { "slug": "installation-vps", "label": "Install on a VPS", "anchor": "installation-vps" },
         { "slug": "installation-docker", "label": "Install with Docker", "anchor": "installation-docker" },
+        { "slug": "customer-portal", "label": "Customer Portal", "anchor": "customer-portal" },
         { "slug": "rest-api", "label": "REST & GraphQL API", "anchor": "rest-api" },
         { "slug": "mcp-server", "label": "MCP Server", "anchor": "mcp-server" },
         { "slug": "shipping", "label": "Shipping & Carriers", "anchor": "shipping" },

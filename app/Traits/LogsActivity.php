@@ -88,9 +88,9 @@ trait LogsActivity
      * @param string $action The action being performed (created, updated, deleted)
      * @param string|null $description Human-readable description of the activity
      * @param array|null $properties Additional data to store with the log entry
-     * @return ActivityLog
+     * @return ActivityLog|null Null when there is no staff user to attribute it to.
      */
-    public function logActivity(string $action, ?string $description = null, ?array $properties = null): ActivityLog
+    public function logActivity(string $action, ?string $description = null, ?array $properties = null): ?ActivityLog
     {
         return ActivityLog::log($action, $this, $description, $properties);
     }

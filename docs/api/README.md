@@ -187,7 +187,7 @@ All paths are relative to `/api/v1`.
 | Warehouses            | `GET/POST /warehouses`, `GET/PUT/DELETE /warehouses/{id}`                                        |
 | Orders                | `GET/POST /orders`, `GET/PUT/DELETE /orders/{id}`, `POST /orders/{id}/{approve,reject}`, `POST /orders/{id}/invoice/email` |
 | Customers             | `GET/POST /customers`, `GET/PUT/DELETE /customers/{id}`, `GET /customers/{id}/orders`            |
-| Returns (RMA)         | `GET/POST /returns`, `GET /returns/{id}`, `POST /returns/{id}/{approve,receive,complete,reject}` |
+| Returns (RMA)         | `GET/POST /returns`, `GET /returns/{id}`, `PATCH /returns/{id}/items`, `POST /returns/{id}/{approve,receive,complete,reject}` |
 | Stock Transfers       | `GET/POST /stock-transfers`, `GET /stock-transfers/{id}`, `POST /stock-transfers/{id}/{ship,complete,cancel}` |
 | Stock Adjustments     | `GET/POST /stock-adjustments`, `GET /stock-adjustments/{id}`                                     |
 | Stock Audits          | `GET/POST /stock-audits`, `GET /stock-audits/{id}`, `POST /stock-audits/{id}/{start,complete}`, `POST /stock-audits/{id}/items/{item}/count` |

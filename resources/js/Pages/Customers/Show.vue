@@ -5,15 +5,18 @@ import Card from '@/Components/ui/Card.vue';
 import Button from '@/Components/ui/Button.vue';
 import Badge from '@/Components/ui/Badge.vue';
 import StatTile from '@/Components/ui/StatTile.vue';
-import { Head, Link, router } from '@inertiajs/vue3';
-import { computed } from 'vue';
+import InputError from '@/Components/InputError.vue';
+import { Head, Link, router, useForm } from '@inertiajs/vue3';
+import { computed, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { Pencil, ArrowLeft, Trash2, ShoppingCart, Wallet, PackageOpen } from 'lucide-vue-next';
+import { Pencil, ArrowLeft, Trash2, ShoppingCart, Wallet, PackageOpen, UserPlus, Send, Ban, ExternalLink } from 'lucide-vue-next';
 
 const { t } = useI18n();
 
 const props = defineProps({
     customer: Object,
+    contacts: { type: Array, default: () => [] },
+    portal: { type: Object, default: () => ({ enabled: false, canManageContacts: false, login_url: null }) },
 });
 
 const orders = computed(() => props.customer.orders || []);
@@ -39,6 +42,49 @@ const statusVariant = (status) =>
         completed: 'success',
         cancelled: 'danger',
     }[status] || 'neutral');
+
+// Portal contacts: invite, resend, revoke.
+const showInvite = ref(false);
+const inviteForm = useForm({ name: '', email: '' });
+
+const sendInvite = () => {
+    inviteForm.post(route('customers.contacts.store', props.customer.id), {
+        preserveScroll: true,
+        onSuccess: () => {
+            inviteForm.reset();
+            showInvite.value = false;
+        },
+    });
+};
+
+const cancelInvite = () => {
+    showInvite.value = false;
+    inviteForm.reset();
+    inviteForm.clearErrors();
+};
+
+const resendInvite = (contact) => {
+    router.post(route('customers.contacts.resend', [props.customer.id, contact.id]), {}, { preserveScroll: true });
+};
+
+const revokeContact = (contact) => {
+    if (confirm(t('portal.staff.confirmRevoke', { email: contact.email }))) {
+        router.delete(route('customers.contacts.destroy', [props.customer.id, contact.id]), { preserveScroll: true });
+    }
+};
+
+const contactVariant = (status) => ({ active: 'success', invited: 'warning', revoked: 'neutral' }[status] || 'neutral');
+
+const contactStatusLabel = (status) => t('portal.staff.statuses.' + status);
+
+const contactDetail = (contact) => {
+    if (contact.status === 'invited') {
+        return t('portal.staff.invited', { date: formatDate(contact.invited_at) });
+    }
+    return contact.last_login_at
+        ? t('portal.staff.lastLogin', { date: formatDate(contact.last_login_at) })
+        : t('portal.staff.neverSignedIn');
+};
 
 const deleteCustomer = () => {
     if (confirm(t('products.confirmDelete', { name: props.customer.name }))) {
@@ -258,6 +304,113 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-t
                                 <dd class="mt-1 whitespace-pre-wrap text-sm text-text-primary">{{ customer.notes }}</dd>
                             </div>
                         </dl>
+                    </div>
+                </Card>
+
+                <!-- Portal access -->
+                <Card :padded="false">
+                    <div class="flex items-start justify-between gap-3 px-5 pt-5">
+                        <div>
+                            <h3 class="text-sm font-semibold text-text-primary">{{ t('portal.staff.title') }}</h3>
+                            <p class="mt-0.5 text-xs text-text-tertiary">{{ t('portal.staff.description') }}</p>
+                        </div>
+                        <Button
+                            v-if="portal.enabled && portal.canManageContacts && !showInvite"
+                            variant="secondary"
+                            size="xs"
+                            @click="showInvite = true"
+                        >
+                            <UserPlus :size="13" />
+                            {{ t('portal.staff.invite') }}
+                        </Button>
+                    </div>
+                    <div class="space-y-4 p-5">
+                        <p v-if="!portal.enabled" class="rounded-md border border-border-subtle bg-surface-overlay px-3 py-2 text-xs text-text-secondary">
+                            {{ t('portal.staff.disabled') }}
+                        </p>
+
+                        <form v-if="showInvite" class="space-y-3 rounded-md border border-border-subtle p-3" @submit.prevent="sendInvite">
+                            <div>
+                                <label for="contact-name" class="mb-1 block text-xs font-medium text-text-secondary">{{ t('portal.staff.name') }}</label>
+                                <input
+                                    id="contact-name"
+                                    v-model="inviteForm.name"
+                                    type="text"
+                                    required
+                                    maxlength="255"
+                                    class="h-9 w-full rounded-md border border-border-subtle bg-surface-canvas px-3 text-sm text-text-primary ds-focus-ring"
+                                />
+                                <InputError class="mt-1" :message="inviteForm.errors.name" />
+                            </div>
+                            <div>
+                                <label for="contact-email" class="mb-1 block text-xs font-medium text-text-secondary">{{ t('portal.staff.email') }}</label>
+                                <input
+                                    id="contact-email"
+                                    v-model="inviteForm.email"
+                                    type="email"
+                                    required
+                                    maxlength="255"
+                                    class="h-9 w-full rounded-md border border-border-subtle bg-surface-canvas px-3 text-sm text-text-primary ds-focus-ring"
+                                />
+                                <InputError class="mt-1" :message="inviteForm.errors.email" />
+                            </div>
+                            <div class="flex justify-end gap-2">
+                                <Button variant="ghost" size="sm" @click="cancelInvite">
+                                    {{ t('portal.staff.cancel') }}
+                                </Button>
+                                <Button type="submit" size="sm" :loading="inviteForm.processing" :disabled="inviteForm.processing">
+                                    <Send :size="13" />
+                                    {{ t('portal.staff.send') }}
+                                </Button>
+                            </div>
+                        </form>
+
+                        <ul v-if="contacts.length" class="divide-y divide-border-subtle">
+                            <li v-for="contact in contacts" :key="contact.id" class="py-2.5 first:pt-0 last:pb-0">
+                                <div class="flex items-start justify-between gap-2">
+                                    <div class="min-w-0">
+                                        <p class="truncate text-sm font-medium text-text-primary">{{ contact.name }}</p>
+                                        <p class="truncate text-xs text-text-tertiary">{{ contact.email }}</p>
+                                        <p class="mt-0.5 text-xs text-text-tertiary">{{ contactDetail(contact) }}</p>
+                                    </div>
+                                    <Badge :variant="contactVariant(contact.status)" size="sm">
+                                        {{ contactStatusLabel(contact.status) }}
+                                    </Badge>
+                                </div>
+                                <div v-if="portal.canManageContacts" class="mt-1.5 flex flex-wrap gap-1">
+                                    <Button
+                                        v-if="portal.enabled && contact.status !== 'active'"
+                                        variant="ghost"
+                                        size="xs"
+                                        @click="resendInvite(contact)"
+                                    >
+                                        <Send :size="12" />
+                                        {{ t('portal.staff.resend') }}
+                                    </Button>
+                                    <Button
+                                        v-if="contact.status !== 'revoked'"
+                                        variant="ghost"
+                                        size="xs"
+                                        @click="revokeContact(contact)"
+                                    >
+                                        <Ban :size="12" />
+                                        {{ t('portal.staff.revoke') }}
+                                    </Button>
+                                </div>
+                            </li>
+                        </ul>
+                        <p v-else-if="portal.enabled" class="text-sm text-text-tertiary">{{ t('portal.staff.empty') }}</p>
+
+                        <a
+                            v-if="portal.enabled && portal.login_url"
+                            :href="portal.login_url"
+                            target="_blank"
+                            rel="noopener"
+                            class="inline-flex items-center gap-1 text-xs text-brand hover:underline"
+                        >
+                            <ExternalLink :size="12" />
+                            {{ t('portal.staff.signInPage') }}
+                        </a>
                     </div>
                 </Card>
 
