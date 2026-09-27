@@ -7,6 +7,8 @@ namespace App\Services;
 use App\Models\Inventory\Product;
 use App\Models\Inventory\ProductOption;
 use App\Models\Inventory\ProductVariant;
+use App\Models\Inventory\Supplier;
+use App\Models\Inventory\SupplierPriceHistory;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use InvalidArgumentException;
@@ -34,10 +36,16 @@ final class ProductService
 
         $options = $data['options'] ?? [];
         $variants = $data['variants'] ?? [];
-        unset($data['options'], $data['variants']);
+        $syncSuppliers = array_key_exists('suppliers', $data);
+        $suppliers = $data['suppliers'] ?? [];
+        unset($data['options'], $data['variants'], $data['suppliers']);
 
-        return DB::transaction(function () use ($data, $options, $variants) {
+        return DB::transaction(function () use ($data, $options, $variants, $syncSuppliers, $suppliers) {
             $product = Product::create($data);
+
+            if ($syncSuppliers) {
+                $this->syncSuppliers($product, $suppliers);
+            }
 
             if ($product->has_variants && ! empty($options)) {
                 foreach ($options as $index => $optionData) {
@@ -80,10 +88,19 @@ final class ProductService
         $disablingVariants = array_key_exists('has_variants', $data) && ! $data['has_variants'];
         $options = $data['options'] ?? [];
         $variants = $data['variants'] ?? [];
-        unset($data['options'], $data['variants']);
+        // Supplier links follow the same rule: only a present `suppliers` key
+        // re-syncs them (an empty array unlinks all); an API partial update
+        // that omits it leaves the links alone.
+        $syncSuppliers = array_key_exists('suppliers', $data);
+        $suppliers = $data['suppliers'] ?? [];
+        unset($data['options'], $data['variants'], $data['suppliers']);
 
-        DB::transaction(function () use ($product, $data, $options, $variants, $syncOptions, $syncVariants, $disablingVariants) {
+        DB::transaction(function () use ($product, $data, $options, $variants, $syncOptions, $syncVariants, $disablingVariants, $syncSuppliers, $suppliers) {
             $product->update($data);
+
+            if ($syncSuppliers) {
+                $this->syncSuppliers($product, $suppliers);
+            }
 
             if ($disablingVariants) {
                 // Variants explicitly turned off: clear options and variants.
@@ -105,6 +122,115 @@ final class ProductService
         });
 
         return $product;
+    }
+
+    /**
+     * Replace a product's supplier links with the given rows.
+     *
+     * Each row: supplier_id, supplier_sku?, cost_price?, lead_time_days?,
+     * minimum_order_quantity?, is_primary?. Exactly one resulting link is
+     * primary: the first row flagged is_primary, or the first row when none
+     * is. Every supplier must belong to the product's organization (callers
+     * validate this too; this is the backstop for surfaces that don't). A cost
+     * that is new or differs from the stored one is written to the supplier
+     * price history.
+     *
+     * @param  array<int, array<string, mixed>>  $rows
+     *
+     * @throws InvalidArgumentException when a supplier is not in the product's organization
+     */
+    public function syncSuppliers(Product $product, array $rows): void
+    {
+        $rows = array_values(array_filter($rows, fn ($row) => is_array($row) && ! empty($row['supplier_id'])));
+        $ids = array_map(fn ($row) => (int) $row['supplier_id'], $rows);
+
+        $ownIds = Supplier::withoutGlobalScopes()
+            ->where('organization_id', $product->organization_id)
+            ->whereNull('deleted_at')
+            ->whereIn('id', $ids)
+            ->pluck('id')
+            ->all();
+
+        if (count(array_diff($ids, $ownIds)) > 0) {
+            throw new InvalidArgumentException('One or more suppliers do not belong to this organization.');
+        }
+
+        $primaryIndex = 0;
+        foreach ($rows as $index => $row) {
+            if (filter_var($row['is_primary'] ?? false, FILTER_VALIDATE_BOOLEAN)) {
+                $primaryIndex = $index;
+                break;
+            }
+        }
+
+        $existing = DB::table('product_supplier')
+            ->where('product_id', $product->id)
+            ->pluck('cost_price', 'supplier_id');
+
+        $blankToNull = fn ($value) => ($value === null || $value === '') ? null : $value;
+
+        $sync = [];
+        foreach ($rows as $index => $row) {
+            $supplierId = (int) $row['supplier_id'];
+            $cost = $blankToNull($row['cost_price'] ?? null);
+            $cost = $cost === null ? null : round((float) $cost, 2);
+            $leadTime = $blankToNull($row['lead_time_days'] ?? null);
+            $moq = $blankToNull($row['minimum_order_quantity'] ?? null);
+
+            $sync[$supplierId] = [
+                'supplier_sku' => $blankToNull($row['supplier_sku'] ?? null),
+                'cost_price' => $cost,
+                'lead_time_days' => $leadTime === null ? null : (int) $leadTime,
+                'minimum_order_quantity' => $moq === null ? null : (int) $moq,
+                'is_primary' => $index === $primaryIndex,
+            ];
+
+            $previous = $existing->get($supplierId);
+            if ($cost !== null && ($previous === null || round((float) $previous, 2) !== $cost)) {
+                SupplierPriceHistory::record($product, $supplierId, $cost, SupplierPriceHistory::SOURCE_SUPPLIER_LINK);
+            }
+        }
+
+        $product->suppliers()->sync($sync);
+        $product->unsetRelation('suppliers');
+    }
+
+    /**
+     * Make one supplier the product's primary supplier, creating or updating
+     * that link while keeping the product's other supplier links (demoted).
+     * Null/blank attributes leave the stored value unchanged. Used by the
+     * product import, which only knows about the primary supplier.
+     *
+     * @param  array{supplier_sku?: string|null, cost_price?: float|int|string|null, lead_time_days?: int|null}  $attributes
+     */
+    public function setPrimarySupplier(Product $product, int $supplierId, array $attributes = []): void
+    {
+        $rows = DB::table('product_supplier')
+            ->where('product_id', $product->id)
+            ->orderBy('id')
+            ->get()
+            ->map(fn ($link) => [
+                'supplier_id' => (int) $link->supplier_id,
+                'supplier_sku' => $link->supplier_sku,
+                'cost_price' => $link->cost_price,
+                'lead_time_days' => $link->lead_time_days,
+                'minimum_order_quantity' => $link->minimum_order_quantity,
+                'is_primary' => false,
+            ])
+            ->keyBy('supplier_id')
+            ->all();
+
+        $row = $rows[$supplierId] ?? ['supplier_id' => $supplierId];
+        foreach (['supplier_sku', 'cost_price', 'lead_time_days'] as $key) {
+            if (isset($attributes[$key]) && $attributes[$key] !== '') {
+                $row[$key] = $attributes[$key];
+            }
+        }
+        $row['is_primary'] = true;
+
+        unset($rows[$supplierId]);
+
+        $this->syncSuppliers($product, array_merge([$row], array_values($rows)));
     }
 
     /**

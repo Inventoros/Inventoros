@@ -195,7 +195,8 @@ class Product extends Model
     public function suppliers(): BelongsToMany
     {
         return $this->belongsToMany(Supplier::class, 'product_supplier')
-            ->withPivot(['cost_price', 'supplier_sku', 'lead_time_days', 'minimum_order_quantity', 'is_primary'])
+            ->using(ProductSupplier::class)
+            ->withPivot(['id', 'cost_price', 'supplier_sku', 'lead_time_days', 'minimum_order_quantity', 'is_primary'])
             ->withTimestamps();
     }
 
@@ -207,6 +208,16 @@ class Product extends Model
     public function primarySupplier()
     {
         return $this->suppliers()->wherePivot('is_primary', true)->first();
+    }
+
+    /**
+     * Recorded supplier costs for this product, newest first.
+     *
+     * @return HasMany<SupplierPriceHistory, $this>
+     */
+    public function supplierPriceHistory(): HasMany
+    {
+        return $this->hasMany(SupplierPriceHistory::class)->latest('recorded_at')->latest('id');
     }
 
     /**

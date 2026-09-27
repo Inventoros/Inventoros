@@ -11,6 +11,8 @@ use App\Models\ActivityLog;
 use App\Models\Inventory\Product;
 use App\Models\Inventory\ProductCategory;
 use App\Models\Inventory\ProductLocation;
+use App\Models\Inventory\Supplier;
+use App\Models\Inventory\SupplierPriceHistory;
 use App\Services\ProductLocationStockService;
 use App\Services\ProductService;
 use App\Support\PluginQueryGuard;
@@ -139,6 +141,7 @@ class ProductController extends Controller
         return Inertia::render('Products/Create', [
             'categories' => $categories,
             'locations' => $locations,
+            'suppliers' => $this->supplierOptions($organizationId),
             'currencies' => $currencies,
             'defaultCurrency' => $defaultCurrency,
             'productTypes' => $productTypes,
@@ -194,7 +197,7 @@ class ProductController extends Controller
      */
     public function show(Product $product): Response
     {
-        $eagerLoad = ['category', 'location', 'organization', 'options', 'variants', 'batches', 'serials'];
+        $eagerLoad = ['category', 'location', 'organization', 'options', 'variants', 'batches', 'serials', 'suppliers'];
 
         // Eager-load components for kits and assemblies
         if (in_array($product->type, ['kit', 'assembly'])) {
@@ -219,9 +222,30 @@ class ProductController extends Controller
             ->take(20)
             ->get();
 
+        // Recent supplier costs (link edits and PO receipts), newest first.
+        $priceHistory = SupplierPriceHistory::where('product_id', $product->id)
+            ->where('organization_id', $product->organization_id)
+            ->with(['supplier:id,name', 'user:id,name', 'purchaseOrder:id,po_number'])
+            ->latest('recorded_at')
+            ->latest('id')
+            ->limit(25)
+            ->get()
+            ->map(fn (SupplierPriceHistory $entry) => [
+                'id' => $entry->id,
+                'supplier_id' => $entry->supplier_id,
+                'supplier_name' => $entry->supplier?->name,
+                'cost_price' => $entry->cost_price,
+                'source' => $entry->source,
+                'purchase_order_id' => $entry->purchase_order_id,
+                'po_number' => $entry->purchaseOrder?->po_number,
+                'user_name' => $entry->user?->name,
+                'recorded_at' => $entry->recorded_at?->toIso8601String(),
+            ]);
+
         $data = [
             'product' => $product,
             'activities' => $activities,
+            'priceHistory' => $priceHistory,
             // Per-location on-hand breakdown (location name + quantity), richest
             // bin first. Empty for products that hold no binned stock.
             'locationBreakdown' => app(ProductLocationStockService::class)->breakdown($product),
@@ -265,8 +289,8 @@ class ProductController extends Controller
             ->active()
             ->get(['id', 'name', 'code']);
 
-        // Load options and variants
-        $product->load(['options', 'variants']);
+        // Load options, variants and supplier links
+        $product->load(['options', 'variants', 'suppliers']);
 
         $currencies = config('currencies.supported');
         $defaultCurrency = config('currencies.default');
@@ -281,6 +305,7 @@ class ProductController extends Controller
             'product' => $product,
             'categories' => $categories,
             'locations' => $locations,
+            'suppliers' => $this->supplierOptions($organizationId),
             'currencies' => $currencies,
             'defaultCurrency' => $defaultCurrency,
             'productTypes' => $productTypes,
@@ -386,5 +411,18 @@ class ProductController extends Controller
 
         return redirect()->route('products.index')
             ->with('success', 'Product deleted successfully.');
+    }
+
+    /**
+     * Active suppliers of the organization, for the product form's supplier picker.
+     *
+     * @return \Illuminate\Support\Collection<int, Supplier>
+     */
+    private function supplierOptions(int $organizationId)
+    {
+        return Supplier::forOrganization($organizationId)
+            ->active()
+            ->orderBy('name')
+            ->get(['id', 'name', 'code', 'currency']);
     }
 }
