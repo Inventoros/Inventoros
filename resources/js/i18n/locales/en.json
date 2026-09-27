@@ -1012,6 +1012,8 @@
   },
   "plugins": {
     "title": "Plugins",
+    "overviewTab": "Overview",
+    "pageSections": "Page sections",
     "uploadPlugin": "Upload New Plugin",
     "chooseZip": "Choose a ZIP file",
     "dragDrop": "or drag and drop",

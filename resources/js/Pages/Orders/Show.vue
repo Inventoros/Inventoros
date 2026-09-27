@@ -1,6 +1,7 @@
 <script setup>
 import AppLayout from '@/Layouts/AppLayout.vue';
 import PluginSlot from '@/Components/PluginSlot.vue';
+import PluginTabs from '@/Components/PluginTabs.vue';
 import PageHeader from '@/Components/ui/PageHeader.vue';
 import Card from '@/Components/ui/Card.vue';
 import Button from '@/Components/ui/Button.vue';
@@ -257,374 +258,377 @@ const formatOrderDate = (date, long = false) =>
         <!-- Plugin Slot: Header -->
         <PluginSlot slot="header" :components="pluginComponents?.header" />
 
-        <div class="mt-6 grid grid-cols-1 gap-4 lg:grid-cols-3">
-            <!-- Left Column: Order Items & Details -->
-            <div class="space-y-4 lg:col-span-2">
-                <!-- Order Items -->
-                <Card :padded="false">
-                    <div class="px-5 pt-5"><h3 class="text-sm font-semibold text-text-primary">{{ t('orders.show.orderItems') }}</h3></div>
-                    <div class="p-5">
-                        <div v-if="order.items && order.items.length > 0" class="space-y-3">
-                            <div
-                                v-for="(item, index) in order.items"
-                                :key="index"
-                                class="flex items-center gap-4 rounded-lg border border-border-subtle bg-surface-canvas p-4"
-                            >
-                                <div class="flex-1 min-w-0">
-                                    <p class="font-medium text-text-primary">{{ item.product_name }}</p>
-                                    <p class="text-xs text-text-tertiary">SKU: {{ item.sku }}</p>
-                                    <p v-if="parseFloat(item.discount_amount) > 0" class="text-xs text-text-secondary">
-                                        {{ t('discounts.discount') }}<template v-if="item.discount_type === 'percent'"> ({{ parseFloat(item.discount_value) }}%)</template>: -{{ money(item.discount_amount) }}
-                                    </p>
-                                    <Link
-                                        v-if="item.product"
-                                        :href="route('products.show', item.product_id)"
-                                        class="mt-1 inline-block text-xs text-brand hover:underline"
-                                    >
-                                        {{ t('orders.show.viewProduct') }}
-                                    </Link>
-                                </div>
-
-                                <div class="text-right">
-                                    <p class="text-xs text-text-tertiary">{{ t('common.quantity') }}</p>
-                                    <p class="font-medium tabular-nums text-text-primary">{{ item.quantity }}</p>
-                                </div>
-
-                                <div class="text-right">
-                                    <p class="text-xs text-text-tertiary">{{ t('orders.show.unitPrice') }}</p>
-                                    <p class="font-medium tabular-nums text-text-primary">${{ parseFloat(item.unit_price).toFixed(2) }}</p>
-                                </div>
-
-                                <div class="min-w-[100px] text-right">
-                                    <p class="text-xs text-text-tertiary">{{ t('common.total') }}</p>
-                                    <p class="font-semibold tabular-nums text-text-primary">
-                                        ${{ parseFloat(item.total || item.subtotal || (item.quantity * item.unit_price)).toFixed(2) }}
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div v-else class="flex flex-col items-center gap-2 py-8 text-center">
-                            <PackageOpen :size="22" class="text-text-tertiary" />
-                            <p class="text-sm text-text-tertiary">{{ t('orders.show.noItems') }}</p>
-                        </div>
-                    </div>
-                </Card>
-
-                <!-- Payments (only present for users with view_payments) -->
-                <Card v-if="order.payments !== undefined" :padded="false">
-                    <div class="flex flex-wrap items-center justify-between gap-2 px-5 pt-5">
-                        <div class="flex items-center gap-2">
-                            <h3 class="text-sm font-semibold text-text-primary">{{ t('payments.title') }}</h3>
-                            <Badge v-if="order.payment_status" :variant="paymentStatusVariant(order.payment_status)" size="sm" dot>{{ t(`payments.status.${order.payment_status}`) }}</Badge>
-                        </div>
-                        <div v-if="canRecordPayments" class="flex items-center gap-2">
-                            <Button
-                                v-if="parseFloat(order.amount_paid) > 0"
-                                variant="secondary"
-                                size="sm"
-                                @click="openPaymentModal('refund')"
-                            >
-                                <RotateCcw :size="14" />
-                                {{ t('payments.recordRefund') }}
-                            </Button>
-                            <Button
-                                v-if="order.status !== 'cancelled'"
-                                variant="default"
-                                size="sm"
-                                @click="openPaymentModal('payment')"
-                            >
-                                <Plus :size="14" />
-                                {{ t('payments.recordPayment') }}
-                            </Button>
-                        </div>
-                    </div>
-                    <div class="p-5">
-                        <p v-if="order.status === 'cancelled' && canRecordPayments" class="mb-3 text-xs text-text-tertiary">{{ t('payments.cancelledNotice') }}</p>
-
-                        <ul v-if="order.payments.length > 0" class="divide-y divide-border-subtle rounded-lg border border-border-subtle">
-                            <li
-                                v-for="payment in order.payments"
-                                :key="payment.id"
-                                :class="['flex flex-wrap items-center gap-3 px-4 py-3', payment.voided_at ? 'opacity-60' : '']"
-                            >
-                                <div class="min-w-0 flex-1">
-                                    <div class="flex flex-wrap items-center gap-2">
-                                        <span :class="['text-sm font-medium text-text-primary', payment.voided_at ? 'line-through' : '']">
-                                            {{ payment.type === 'refund' ? t('payments.typeRefund') : t('payments.typePayment') }}, {{ payment.method_label }}
-                                        </span>
-                                        <Badge v-if="payment.voided_at" variant="neutral" size="sm">{{ t('payments.voided') }}</Badge>
-                                    </div>
-                                    <p class="text-xs text-text-tertiary">
-                                        {{ formatDateShort(payment.paid_at) }}
-                                        <template v-if="payment.reference"> · {{ payment.reference }}</template>
-                                        <template v-if="payment.recorded_by"> · {{ t('payments.recordedBy', { name: payment.recorded_by.name }) }}</template>
-                                    </p>
-                                    <p v-if="payment.notes" class="mt-1 text-xs text-text-secondary">{{ payment.notes }}</p>
-                                    <p v-if="payment.voided_at && payment.void_reason" class="mt-1 text-xs text-text-tertiary">{{ t('payments.voided') }}: {{ payment.void_reason }}</p>
-                                </div>
-                                <span :class="['text-sm font-semibold tabular-nums', payment.type === 'refund' ? 'text-status-danger' : 'text-status-success', payment.voided_at ? 'line-through' : '']">
-                                    {{ payment.type === 'refund' ? '-' : '' }}{{ money(payment.amount) }}
-                                </span>
-                                <button
-                                    v-if="canRecordPayments && !payment.voided_at"
-                                    type="button"
-                                    class="rounded-md px-2 py-1 text-xs text-text-tertiary transition-colors hover:bg-surface-sunken hover:text-status-danger ds-focus-ring"
-                                    @click="openVoidModal(payment)"
+        <!-- Plugin tabs: none registered renders the core content unchanged -->
+        <PluginTabs :components="pluginComponents?.tabs">
+            <div class="mt-6 grid grid-cols-1 gap-4 lg:grid-cols-3">
+                <!-- Left Column: Order Items & Details -->
+                <div class="space-y-4 lg:col-span-2">
+                    <!-- Order Items -->
+                    <Card :padded="false">
+                        <div class="px-5 pt-5"><h3 class="text-sm font-semibold text-text-primary">{{ t('orders.show.orderItems') }}</h3></div>
+                        <div class="p-5">
+                            <div v-if="order.items && order.items.length > 0" class="space-y-3">
+                                <div
+                                    v-for="(item, index) in order.items"
+                                    :key="index"
+                                    class="flex items-center gap-4 rounded-lg border border-border-subtle bg-surface-canvas p-4"
                                 >
-                                    {{ t('payments.void') }}
-                                </button>
-                            </li>
-                        </ul>
-                        <div v-else class="flex flex-col items-center gap-2 py-6 text-center">
-                            <Wallet :size="22" class="text-text-tertiary" />
-                            <p class="text-sm text-text-tertiary">{{ t('payments.noPayments') }}</p>
-                        </div>
-                    </div>
-                </Card>
+                                    <div class="flex-1 min-w-0">
+                                        <p class="font-medium text-text-primary">{{ item.product_name }}</p>
+                                        <p class="text-xs text-text-tertiary">SKU: {{ item.sku }}</p>
+                                        <p v-if="parseFloat(item.discount_amount) > 0" class="text-xs text-text-secondary">
+                                            {{ t('discounts.discount') }}<template v-if="item.discount_type === 'percent'"> ({{ parseFloat(item.discount_value) }}%)</template>: -{{ money(item.discount_amount) }}
+                                        </p>
+                                        <Link
+                                            v-if="item.product"
+                                            :href="route('products.show', item.product_id)"
+                                            class="mt-1 inline-block text-xs text-brand hover:underline"
+                                        >
+                                            {{ t('orders.show.viewProduct') }}
+                                        </Link>
+                                    </div>
 
-                <!-- Customer Information -->
-                <Card :padded="false">
-                    <div class="px-5 pt-5"><h3 class="text-sm font-semibold text-text-primary">{{ t('orders.show.customerInfo') }}</h3></div>
-                    <div class="p-5">
-                        <dl class="space-y-3">
-                            <div>
-                                <dt class="text-xs text-text-tertiary">{{ t('orders.show.customerName') }}</dt>
-                                <dd class="mt-1 text-sm text-text-primary">{{ order.customer_name }}</dd>
-                            </div>
+                                    <div class="text-right">
+                                        <p class="text-xs text-text-tertiary">{{ t('common.quantity') }}</p>
+                                        <p class="font-medium tabular-nums text-text-primary">{{ item.quantity }}</p>
+                                    </div>
 
-                            <div v-if="order.customer_email">
-                                <dt class="text-xs text-text-tertiary">{{ t('common.email') }}</dt>
-                                <dd class="mt-1 text-sm text-text-primary">
-                                    <a :href="`mailto:${order.customer_email}`" class="text-brand hover:underline">
-                                        {{ order.customer_email }}
-                                    </a>
-                                </dd>
-                            </div>
+                                    <div class="text-right">
+                                        <p class="text-xs text-text-tertiary">{{ t('orders.show.unitPrice') }}</p>
+                                        <p class="font-medium tabular-nums text-text-primary">${{ parseFloat(item.unit_price).toFixed(2) }}</p>
+                                    </div>
 
-                            <div v-if="order.customer_address">
-                                <dt class="text-xs text-text-tertiary">{{ t('orders.show.shippingAddress') }}</dt>
-                                <dd class="mt-1 whitespace-pre-line text-sm text-text-primary">{{ order.customer_address }}</dd>
-                            </div>
-                        </dl>
-                    </div>
-                </Card>
-
-                <!-- Order Timeline -->
-                <Card :padded="false">
-                    <div class="px-5 pt-5"><h3 class="text-sm font-semibold text-text-primary">{{ t('orders.show.orderTimeline') }}</h3></div>
-                    <div class="p-5">
-                        <div class="space-y-4">
-                            <div class="flex items-start gap-3">
-                                <div class="mt-2 h-2 w-2 flex-shrink-0 rounded-full bg-status-success"></div>
-                                <div class="flex-1">
-                                    <p class="text-sm font-medium text-text-primary">{{ t('orders.show.orderCreated') }}</p>
-                                    <p class="text-xs text-text-tertiary">{{ formatOrderDate(order.order_date, true) }}</p>
+                                    <div class="min-w-[100px] text-right">
+                                        <p class="text-xs text-text-tertiary">{{ t('common.total') }}</p>
+                                        <p class="font-semibold tabular-nums text-text-primary">
+                                            ${{ parseFloat(item.total || item.subtotal || (item.quantity * item.unit_price)).toFixed(2) }}
+                                        </p>
+                                    </div>
                                 </div>
                             </div>
 
-                            <div v-if="order.shipped_at" class="flex items-start gap-3">
-                                <div class="mt-2 h-2 w-2 flex-shrink-0 rounded-full bg-brand"></div>
-                                <div class="flex-1">
-                                    <p class="text-sm font-medium text-text-primary">{{ t('orders.show.orderShipped') }}</p>
-                                    <p class="text-xs text-text-tertiary">{{ formatDate(order.shipped_at) }}</p>
-                                </div>
-                            </div>
-
-                            <div v-if="order.delivered_at" class="flex items-start gap-3">
-                                <div class="mt-2 h-2 w-2 flex-shrink-0 rounded-full bg-status-success"></div>
-                                <div class="flex-1">
-                                    <p class="text-sm font-medium text-text-primary">{{ t('orders.show.orderDelivered') }}</p>
-                                    <p class="text-xs text-text-tertiary">{{ formatDate(order.delivered_at) }}</p>
-                                </div>
+                            <div v-else class="flex flex-col items-center gap-2 py-8 text-center">
+                                <PackageOpen :size="22" class="text-text-tertiary" />
+                                <p class="text-sm text-text-tertiary">{{ t('orders.show.noItems') }}</p>
                             </div>
                         </div>
-                    </div>
-                </Card>
+                    </Card>
 
-                <!-- Notes -->
-                <Card v-if="order.notes" :padded="false">
-                    <div class="px-5 pt-5"><h3 class="text-sm font-semibold text-text-primary">{{ t('orders.show.internalNotes') }}</h3></div>
-                    <div class="p-5">
-                        <p class="whitespace-pre-line text-sm text-text-secondary">{{ order.notes }}</p>
-                    </div>
-                </Card>
-            </div>
-
-            <!-- Right Column: Summary & Actions -->
-            <div class="space-y-4">
-                <!-- Plugin Slot: Sidebar -->
-                <PluginSlot slot="sidebar" :components="pluginComponents?.sidebar" />
-
-                <!-- Order Summary -->
-                <Card :padded="false">
-                    <div class="px-5 pt-5"><h3 class="text-sm font-semibold text-text-primary">{{ t('orders.show.orderSummary') }}</h3></div>
-                    <div class="p-5">
-                        <dl class="space-y-3">
-                            <div class="flex justify-between text-sm">
-                                <dt class="text-text-secondary">{{ t('common.subtotal') }}</dt>
-                                <dd class="font-medium tabular-nums text-text-primary">${{ parseFloat(order.subtotal).toFixed(2) }}</dd>
+                    <!-- Payments (only present for users with view_payments) -->
+                    <Card v-if="order.payments !== undefined" :padded="false">
+                        <div class="flex flex-wrap items-center justify-between gap-2 px-5 pt-5">
+                            <div class="flex items-center gap-2">
+                                <h3 class="text-sm font-semibold text-text-primary">{{ t('payments.title') }}</h3>
+                                <Badge v-if="order.payment_status" :variant="paymentStatusVariant(order.payment_status)" size="sm" dot>{{ t(`payments.status.${order.payment_status}`) }}</Badge>
                             </div>
-
-                            <div v-if="parseFloat(order.line_discount_total) > 0" class="flex justify-between text-sm">
-                                <dt class="text-text-secondary">{{ t('discounts.lineDiscounts') }}</dt>
-                                <dd class="font-medium tabular-nums text-text-primary">-{{ money(order.line_discount_total) }}</dd>
+                            <div v-if="canRecordPayments" class="flex items-center gap-2">
+                                <Button
+                                    v-if="parseFloat(order.amount_paid) > 0"
+                                    variant="secondary"
+                                    size="sm"
+                                    @click="openPaymentModal('refund')"
+                                >
+                                    <RotateCcw :size="14" />
+                                    {{ t('payments.recordRefund') }}
+                                </Button>
+                                <Button
+                                    v-if="order.status !== 'cancelled'"
+                                    variant="default"
+                                    size="sm"
+                                    @click="openPaymentModal('payment')"
+                                >
+                                    <Plus :size="14" />
+                                    {{ t('payments.recordPayment') }}
+                                </Button>
                             </div>
+                        </div>
+                        <div class="p-5">
+                            <p v-if="order.status === 'cancelled' && canRecordPayments" class="mb-3 text-xs text-text-tertiary">{{ t('payments.cancelledNotice') }}</p>
 
-                            <div v-if="parseFloat(order.order_discount_amount) > 0" class="flex justify-between text-sm">
-                                <dt class="text-text-secondary">
-                                    {{ t('discounts.orderDiscount') }}<template v-if="order.discount_type === 'percent'"> ({{ parseFloat(order.discount_value) }}%)</template>
-                                </dt>
-                                <dd class="font-medium tabular-nums text-text-primary">-{{ money(order.order_discount_amount) }}</dd>
+                            <ul v-if="order.payments.length > 0" class="divide-y divide-border-subtle rounded-lg border border-border-subtle">
+                                <li
+                                    v-for="payment in order.payments"
+                                    :key="payment.id"
+                                    :class="['flex flex-wrap items-center gap-3 px-4 py-3', payment.voided_at ? 'opacity-60' : '']"
+                                >
+                                    <div class="min-w-0 flex-1">
+                                        <div class="flex flex-wrap items-center gap-2">
+                                            <span :class="['text-sm font-medium text-text-primary', payment.voided_at ? 'line-through' : '']">
+                                                {{ payment.type === 'refund' ? t('payments.typeRefund') : t('payments.typePayment') }}, {{ payment.method_label }}
+                                            </span>
+                                            <Badge v-if="payment.voided_at" variant="neutral" size="sm">{{ t('payments.voided') }}</Badge>
+                                        </div>
+                                        <p class="text-xs text-text-tertiary">
+                                            {{ formatDateShort(payment.paid_at) }}
+                                            <template v-if="payment.reference"> · {{ payment.reference }}</template>
+                                            <template v-if="payment.recorded_by"> · {{ t('payments.recordedBy', { name: payment.recorded_by.name }) }}</template>
+                                        </p>
+                                        <p v-if="payment.notes" class="mt-1 text-xs text-text-secondary">{{ payment.notes }}</p>
+                                        <p v-if="payment.voided_at && payment.void_reason" class="mt-1 text-xs text-text-tertiary">{{ t('payments.voided') }}: {{ payment.void_reason }}</p>
+                                    </div>
+                                    <span :class="['text-sm font-semibold tabular-nums', payment.type === 'refund' ? 'text-status-danger' : 'text-status-success', payment.voided_at ? 'line-through' : '']">
+                                        {{ payment.type === 'refund' ? '-' : '' }}{{ money(payment.amount) }}
+                                    </span>
+                                    <button
+                                        v-if="canRecordPayments && !payment.voided_at"
+                                        type="button"
+                                        class="rounded-md px-2 py-1 text-xs text-text-tertiary transition-colors hover:bg-surface-sunken hover:text-status-danger ds-focus-ring"
+                                        @click="openVoidModal(payment)"
+                                    >
+                                        {{ t('payments.void') }}
+                                    </button>
+                                </li>
+                            </ul>
+                            <div v-else class="flex flex-col items-center gap-2 py-6 text-center">
+                                <Wallet :size="22" class="text-text-tertiary" />
+                                <p class="text-sm text-text-tertiary">{{ t('payments.noPayments') }}</p>
                             </div>
+                        </div>
+                    </Card>
 
-                            <div class="flex justify-between text-sm">
-                                <dt class="text-text-secondary">{{ t('common.tax') }}</dt>
-                                <dd class="font-medium tabular-nums text-text-primary">${{ parseFloat(order.tax || 0).toFixed(2) }}</dd>
-                            </div>
+                    <!-- Customer Information -->
+                    <Card :padded="false">
+                        <div class="px-5 pt-5"><h3 class="text-sm font-semibold text-text-primary">{{ t('orders.show.customerInfo') }}</h3></div>
+                        <div class="p-5">
+                            <dl class="space-y-3">
+                                <div>
+                                    <dt class="text-xs text-text-tertiary">{{ t('orders.show.customerName') }}</dt>
+                                    <dd class="mt-1 text-sm text-text-primary">{{ order.customer_name }}</dd>
+                                </div>
 
-                            <div class="flex justify-between text-sm">
-                                <dt class="text-text-secondary">{{ t('common.shipping') }}</dt>
-                                <dd class="font-medium tabular-nums text-text-primary">${{ parseFloat(order.shipping || 0).toFixed(2) }}</dd>
-                            </div>
+                                <div v-if="order.customer_email">
+                                    <dt class="text-xs text-text-tertiary">{{ t('common.email') }}</dt>
+                                    <dd class="mt-1 text-sm text-text-primary">
+                                        <a :href="`mailto:${order.customer_email}`" class="text-brand hover:underline">
+                                            {{ order.customer_email }}
+                                        </a>
+                                    </dd>
+                                </div>
 
-                            <div class="border-t border-border-subtle pt-3">
-                                <div class="flex items-center justify-between">
-                                    <dt class="text-sm font-semibold text-text-primary">{{ t('common.total') }}</dt>
-                                    <dd class="text-xl font-bold tabular-nums text-brand">${{ parseFloat(order.total).toFixed(2) }}</dd>
+                                <div v-if="order.customer_address">
+                                    <dt class="text-xs text-text-tertiary">{{ t('orders.show.shippingAddress') }}</dt>
+                                    <dd class="mt-1 whitespace-pre-line text-sm text-text-primary">{{ order.customer_address }}</dd>
+                                </div>
+                            </dl>
+                        </div>
+                    </Card>
+
+                    <!-- Order Timeline -->
+                    <Card :padded="false">
+                        <div class="px-5 pt-5"><h3 class="text-sm font-semibold text-text-primary">{{ t('orders.show.orderTimeline') }}</h3></div>
+                        <div class="p-5">
+                            <div class="space-y-4">
+                                <div class="flex items-start gap-3">
+                                    <div class="mt-2 h-2 w-2 flex-shrink-0 rounded-full bg-status-success"></div>
+                                    <div class="flex-1">
+                                        <p class="text-sm font-medium text-text-primary">{{ t('orders.show.orderCreated') }}</p>
+                                        <p class="text-xs text-text-tertiary">{{ formatOrderDate(order.order_date, true) }}</p>
+                                    </div>
+                                </div>
+
+                                <div v-if="order.shipped_at" class="flex items-start gap-3">
+                                    <div class="mt-2 h-2 w-2 flex-shrink-0 rounded-full bg-brand"></div>
+                                    <div class="flex-1">
+                                        <p class="text-sm font-medium text-text-primary">{{ t('orders.show.orderShipped') }}</p>
+                                        <p class="text-xs text-text-tertiary">{{ formatDate(order.shipped_at) }}</p>
+                                    </div>
+                                </div>
+
+                                <div v-if="order.delivered_at" class="flex items-start gap-3">
+                                    <div class="mt-2 h-2 w-2 flex-shrink-0 rounded-full bg-status-success"></div>
+                                    <div class="flex-1">
+                                        <p class="text-sm font-medium text-text-primary">{{ t('orders.show.orderDelivered') }}</p>
+                                        <p class="text-xs text-text-tertiary">{{ formatDate(order.delivered_at) }}</p>
+                                    </div>
                                 </div>
                             </div>
+                        </div>
+                    </Card>
 
-                            <template v-if="order.amount_paid !== undefined">
+                    <!-- Notes -->
+                    <Card v-if="order.notes" :padded="false">
+                        <div class="px-5 pt-5"><h3 class="text-sm font-semibold text-text-primary">{{ t('orders.show.internalNotes') }}</h3></div>
+                        <div class="p-5">
+                            <p class="whitespace-pre-line text-sm text-text-secondary">{{ order.notes }}</p>
+                        </div>
+                    </Card>
+                </div>
+
+                <!-- Right Column: Summary & Actions -->
+                <div class="space-y-4">
+                    <!-- Plugin Slot: Sidebar -->
+                    <PluginSlot slot="sidebar" :components="pluginComponents?.sidebar" />
+
+                    <!-- Order Summary -->
+                    <Card :padded="false">
+                        <div class="px-5 pt-5"><h3 class="text-sm font-semibold text-text-primary">{{ t('orders.show.orderSummary') }}</h3></div>
+                        <div class="p-5">
+                            <dl class="space-y-3">
                                 <div class="flex justify-between text-sm">
-                                    <dt class="text-text-secondary">{{ t('payments.amountPaid') }}</dt>
-                                    <dd class="font-medium tabular-nums text-text-primary">{{ money(order.amount_paid) }}</dd>
+                                    <dt class="text-text-secondary">{{ t('common.subtotal') }}</dt>
+                                    <dd class="font-medium tabular-nums text-text-primary">${{ parseFloat(order.subtotal).toFixed(2) }}</dd>
                                 </div>
+
+                                <div v-if="parseFloat(order.line_discount_total) > 0" class="flex justify-between text-sm">
+                                    <dt class="text-text-secondary">{{ t('discounts.lineDiscounts') }}</dt>
+                                    <dd class="font-medium tabular-nums text-text-primary">-{{ money(order.line_discount_total) }}</dd>
+                                </div>
+
+                                <div v-if="parseFloat(order.order_discount_amount) > 0" class="flex justify-between text-sm">
+                                    <dt class="text-text-secondary">
+                                        {{ t('discounts.orderDiscount') }}<template v-if="order.discount_type === 'percent'"> ({{ parseFloat(order.discount_value) }}%)</template>
+                                    </dt>
+                                    <dd class="font-medium tabular-nums text-text-primary">-{{ money(order.order_discount_amount) }}</dd>
+                                </div>
+
                                 <div class="flex justify-between text-sm">
-                                    <dt class="font-semibold text-text-primary">{{ t('payments.balanceDue') }}</dt>
-                                    <dd class="font-semibold tabular-nums text-text-primary">{{ money(order.balance_due) }}</dd>
+                                    <dt class="text-text-secondary">{{ t('common.tax') }}</dt>
+                                    <dd class="font-medium tabular-nums text-text-primary">${{ parseFloat(order.tax || 0).toFixed(2) }}</dd>
                                 </div>
-                            </template>
-                        </dl>
-                    </div>
-                </Card>
 
-                <!-- Order Details -->
-                <Card :padded="false">
-                    <div class="px-5 pt-5"><h3 class="text-sm font-semibold text-text-primary">{{ t('orders.show.orderDetails') }}</h3></div>
-                    <div class="p-5">
-                        <dl class="space-y-3">
-                            <div>
-                                <dt class="text-xs text-text-tertiary">{{ t('orders.show.orderNumber2') }}</dt>
-                                <dd class="mt-1 text-sm text-text-primary">{{ order.order_number }}</dd>
-                            </div>
+                                <div class="flex justify-between text-sm">
+                                    <dt class="text-text-secondary">{{ t('common.shipping') }}</dt>
+                                    <dd class="font-medium tabular-nums text-text-primary">${{ parseFloat(order.shipping || 0).toFixed(2) }}</dd>
+                                </div>
 
-                            <div>
-                                <dt class="text-xs text-text-tertiary">{{ t('orders.source') }}</dt>
-                                <dd class="mt-1">
-                                    <Badge variant="brand" size="sm" class="capitalize">{{ order.source }}</Badge>
-                                </dd>
-                            </div>
+                                <div class="border-t border-border-subtle pt-3">
+                                    <div class="flex items-center justify-between">
+                                        <dt class="text-sm font-semibold text-text-primary">{{ t('common.total') }}</dt>
+                                        <dd class="text-xl font-bold tabular-nums text-brand">${{ parseFloat(order.total).toFixed(2) }}</dd>
+                                    </div>
+                                </div>
 
-                            <div>
-                                <dt class="text-xs text-text-tertiary">{{ t('common.status') }}</dt>
-                                <dd class="mt-1">
-                                    <Badge :variant="statusVariant(order.status)" size="sm" dot class="capitalize">{{ order.status }}</Badge>
-                                </dd>
-                            </div>
-
-                            <div>
-                                <dt class="text-xs text-text-tertiary">{{ t('purchaseOrders.orderDate') }}</dt>
-                                <dd class="mt-1 text-sm text-text-primary">{{ formatOrderDate(order.order_date) }}</dd>
-                            </div>
-
-                            <div v-if="order.currency">
-                                <dt class="text-xs text-text-tertiary">{{ t('common.currency') }}</dt>
-                                <dd class="mt-1 text-sm text-text-primary">{{ order.currency }}</dd>
-                            </div>
-                        </dl>
-                    </div>
-                </Card>
-
-                <!-- Invoice -->
-                <Card :padded="false">
-                    <div class="flex items-center justify-between px-5 pt-5">
-                        <h3 class="text-sm font-semibold text-text-primary">{{ t('documentEmail.invoice') }}</h3>
-                        <Badge v-if="invoiceStatus" :variant="invoiceStatus.variant" size="sm" dot>{{ invoiceStatus.label }}</Badge>
-                    </div>
-                    <div class="p-5">
-                        <dl v-if="order.invoice_number" class="space-y-4">
-                            <div>
-                                <dt class="text-xs text-text-tertiary">{{ t('documentEmail.invoiceNumber') }}</dt>
-                                <dd class="mt-1 text-sm font-medium text-text-primary">{{ order.invoice_number }}</dd>
-                            </div>
-                        </dl>
-                        <p v-if="order.invoice_sent_at" class="mt-3 text-xs text-text-secondary">
-                            {{ t('documentEmail.sentOn', { to: order.invoice_sent_to, date: formatDate(order.invoice_sent_at) }) }}
-                        </p>
-                        <p v-else class="text-xs text-text-tertiary">{{ t('documentEmail.invoiceNotIssued') }}</p>
-                    </div>
-                </Card>
-
-                <!-- Approval Status -->
-                <Card v-if="order.approval_status" :padded="false">
-                    <div class="px-5 pt-5"><h3 class="text-sm font-semibold text-text-primary">{{ t('orders.show.approvalStatus') }}</h3></div>
-                    <div class="p-5">
-                        <dl class="space-y-3">
-                            <div>
-                                <dt class="text-xs text-text-tertiary">{{ t('common.status') }}</dt>
-                                <dd class="mt-1">
-                                    <Badge :variant="approvalStatusVariant(order.approval_status)" size="sm" dot class="capitalize">{{ order.approval_status }}</Badge>
-                                </dd>
-                            </div>
-
-                            <div v-if="order.creator">
-                                <dt class="text-xs text-text-tertiary">{{ t('orders.show.createdBy') }}</dt>
-                                <dd class="mt-1 text-sm text-text-primary">{{ order.creator.name }}</dd>
-                            </div>
-
-                            <div v-if="order.approver">
-                                <dt class="text-xs text-text-tertiary">{{ order.approval_status === 'approved' ? t('orders.show.approved') : t('orders.show.rejected') }} {{ t('orders.show.by') }}</dt>
-                                <dd class="mt-1 text-sm text-text-primary">{{ order.approver.name }}</dd>
-                            </div>
-
-                            <div v-if="order.approved_at">
-                                <dt class="text-xs text-text-tertiary">{{ t('orders.show.decisionDate') }}</dt>
-                                <dd class="mt-1 text-sm text-text-primary">{{ formatDate(order.approved_at) }}</dd>
-                            </div>
-
-                            <div v-if="order.approval_notes">
-                                <dt class="text-xs text-text-tertiary">{{ t('common.notes') }}</dt>
-                                <dd class="mt-1 text-sm text-text-secondary">{{ order.approval_notes }}</dd>
-                            </div>
-                        </dl>
-
-                        <!-- Approval Actions -->
-                        <div v-if="canApprove && order.approval_status === 'pending'" class="mt-4 space-y-2 border-t border-border-subtle pt-4">
-                            <Button variant="default" class="w-full" @click="openApprovalModal('approve')">
-                                {{ t('orders.show.approveOrder') }}
-                            </Button>
-                            <Button variant="danger" class="w-full" @click="openApprovalModal('reject')">
-                                {{ t('orders.show.rejectOrder') }}
-                            </Button>
+                                <template v-if="order.amount_paid !== undefined">
+                                    <div class="flex justify-between text-sm">
+                                        <dt class="text-text-secondary">{{ t('payments.amountPaid') }}</dt>
+                                        <dd class="font-medium tabular-nums text-text-primary">{{ money(order.amount_paid) }}</dd>
+                                    </div>
+                                    <div class="flex justify-between text-sm">
+                                        <dt class="font-semibold text-text-primary">{{ t('payments.balanceDue') }}</dt>
+                                        <dd class="font-semibold tabular-nums text-text-primary">{{ money(order.balance_due) }}</dd>
+                                    </div>
+                                </template>
+                            </dl>
                         </div>
-                    </div>
-                </Card>
+                    </Card>
 
-                <!-- Actions -->
-                <Card v-if="hasPermission('delete_orders')" :padded="false">
-                    <div class="px-5 pt-5"><h3 class="text-sm font-semibold text-text-primary">{{ t('orders.show.dangerZone') }}</h3></div>
-                    <div class="p-5">
-                        <Button variant="danger" class="w-full" @click="showDeleteModal = true">
-                            {{ t('orders.show.deleteOrder') }}
-                        </Button>
-                        <p class="mt-2 text-xs text-text-tertiary">
-                            {{ t('orders.show.deleteWarning') }}
-                        </p>
-                    </div>
-                </Card>
+                    <!-- Order Details -->
+                    <Card :padded="false">
+                        <div class="px-5 pt-5"><h3 class="text-sm font-semibold text-text-primary">{{ t('orders.show.orderDetails') }}</h3></div>
+                        <div class="p-5">
+                            <dl class="space-y-3">
+                                <div>
+                                    <dt class="text-xs text-text-tertiary">{{ t('orders.show.orderNumber2') }}</dt>
+                                    <dd class="mt-1 text-sm text-text-primary">{{ order.order_number }}</dd>
+                                </div>
+
+                                <div>
+                                    <dt class="text-xs text-text-tertiary">{{ t('orders.source') }}</dt>
+                                    <dd class="mt-1">
+                                        <Badge variant="brand" size="sm" class="capitalize">{{ order.source }}</Badge>
+                                    </dd>
+                                </div>
+
+                                <div>
+                                    <dt class="text-xs text-text-tertiary">{{ t('common.status') }}</dt>
+                                    <dd class="mt-1">
+                                        <Badge :variant="statusVariant(order.status)" size="sm" dot class="capitalize">{{ order.status }}</Badge>
+                                    </dd>
+                                </div>
+
+                                <div>
+                                    <dt class="text-xs text-text-tertiary">{{ t('purchaseOrders.orderDate') }}</dt>
+                                    <dd class="mt-1 text-sm text-text-primary">{{ formatOrderDate(order.order_date) }}</dd>
+                                </div>
+
+                                <div v-if="order.currency">
+                                    <dt class="text-xs text-text-tertiary">{{ t('common.currency') }}</dt>
+                                    <dd class="mt-1 text-sm text-text-primary">{{ order.currency }}</dd>
+                                </div>
+                            </dl>
+                        </div>
+                    </Card>
+
+                    <!-- Invoice -->
+                    <Card :padded="false">
+                        <div class="flex items-center justify-between px-5 pt-5">
+                            <h3 class="text-sm font-semibold text-text-primary">{{ t('documentEmail.invoice') }}</h3>
+                            <Badge v-if="invoiceStatus" :variant="invoiceStatus.variant" size="sm" dot>{{ invoiceStatus.label }}</Badge>
+                        </div>
+                        <div class="p-5">
+                            <dl v-if="order.invoice_number" class="space-y-4">
+                                <div>
+                                    <dt class="text-xs text-text-tertiary">{{ t('documentEmail.invoiceNumber') }}</dt>
+                                    <dd class="mt-1 text-sm font-medium text-text-primary">{{ order.invoice_number }}</dd>
+                                </div>
+                            </dl>
+                            <p v-if="order.invoice_sent_at" class="mt-3 text-xs text-text-secondary">
+                                {{ t('documentEmail.sentOn', { to: order.invoice_sent_to, date: formatDate(order.invoice_sent_at) }) }}
+                            </p>
+                            <p v-else class="text-xs text-text-tertiary">{{ t('documentEmail.invoiceNotIssued') }}</p>
+                        </div>
+                    </Card>
+
+                    <!-- Approval Status -->
+                    <Card v-if="order.approval_status" :padded="false">
+                        <div class="px-5 pt-5"><h3 class="text-sm font-semibold text-text-primary">{{ t('orders.show.approvalStatus') }}</h3></div>
+                        <div class="p-5">
+                            <dl class="space-y-3">
+                                <div>
+                                    <dt class="text-xs text-text-tertiary">{{ t('common.status') }}</dt>
+                                    <dd class="mt-1">
+                                        <Badge :variant="approvalStatusVariant(order.approval_status)" size="sm" dot class="capitalize">{{ order.approval_status }}</Badge>
+                                    </dd>
+                                </div>
+
+                                <div v-if="order.creator">
+                                    <dt class="text-xs text-text-tertiary">{{ t('orders.show.createdBy') }}</dt>
+                                    <dd class="mt-1 text-sm text-text-primary">{{ order.creator.name }}</dd>
+                                </div>
+
+                                <div v-if="order.approver">
+                                    <dt class="text-xs text-text-tertiary">{{ order.approval_status === 'approved' ? t('orders.show.approved') : t('orders.show.rejected') }} {{ t('orders.show.by') }}</dt>
+                                    <dd class="mt-1 text-sm text-text-primary">{{ order.approver.name }}</dd>
+                                </div>
+
+                                <div v-if="order.approved_at">
+                                    <dt class="text-xs text-text-tertiary">{{ t('orders.show.decisionDate') }}</dt>
+                                    <dd class="mt-1 text-sm text-text-primary">{{ formatDate(order.approved_at) }}</dd>
+                                </div>
+
+                                <div v-if="order.approval_notes">
+                                    <dt class="text-xs text-text-tertiary">{{ t('common.notes') }}</dt>
+                                    <dd class="mt-1 text-sm text-text-secondary">{{ order.approval_notes }}</dd>
+                                </div>
+                            </dl>
+
+                            <!-- Approval Actions -->
+                            <div v-if="canApprove && order.approval_status === 'pending'" class="mt-4 space-y-2 border-t border-border-subtle pt-4">
+                                <Button variant="default" class="w-full" @click="openApprovalModal('approve')">
+                                    {{ t('orders.show.approveOrder') }}
+                                </Button>
+                                <Button variant="danger" class="w-full" @click="openApprovalModal('reject')">
+                                    {{ t('orders.show.rejectOrder') }}
+                                </Button>
+                            </div>
+                        </div>
+                    </Card>
+
+                    <!-- Actions -->
+                    <Card v-if="hasPermission('delete_orders')" :padded="false">
+                        <div class="px-5 pt-5"><h3 class="text-sm font-semibold text-text-primary">{{ t('orders.show.dangerZone') }}</h3></div>
+                        <div class="p-5">
+                            <Button variant="danger" class="w-full" @click="showDeleteModal = true">
+                                {{ t('orders.show.deleteOrder') }}
+                            </Button>
+                            <p class="mt-2 text-xs text-text-tertiary">
+                                {{ t('orders.show.deleteWarning') }}
+                            </p>
+                        </div>
+                    </Card>
+                </div>
             </div>
-        </div>
+        </PluginTabs>
 
         <!-- Plugin Slot: Footer -->
         <PluginSlot slot="footer" :components="pluginComponents?.footer" />

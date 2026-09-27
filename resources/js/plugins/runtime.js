@@ -90,6 +90,7 @@ function registerSlotComponent(slot, component, options = {}) {
         component: markRaw(component),
         plugin: options.plugin ?? null,
         props: options.props ?? {},
+        label: options.label ?? null,
         position: Number.isFinite(options.position) ? options.position : DEFAULT_POSITION,
         id: `${options.plugin ?? 'runtime'}-${entries.length}`,
     });
