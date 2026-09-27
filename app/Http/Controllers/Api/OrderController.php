@@ -19,6 +19,7 @@ use App\Http\Resources\OrderResource;
 use App\Models\Order\Order;
 use App\Services\OrderInvoiceEmailService;
 use App\Services\OrderService;
+use App\Support\PaymentVisibility;
 use Dedoc\Scramble\Attributes\QueryParameter;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -79,7 +80,7 @@ class OrderController extends Controller
             })
             // Only for callers who may see payments; otherwise ignored.
             ->when(
-                $request->user()->hasPermission('view_payments')
+                PaymentVisibility::allows($request->user())
                     && in_array($request->input('payment_status'), PaymentStatus::values(), true),
                 fn ($query) => $query->where('payment_status', $request->input('payment_status'))
             );

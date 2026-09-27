@@ -340,6 +340,46 @@ class OrderPaymentSurfacesTest extends TestCase
             ->assertJsonPath('data.order.payments', null);
     }
 
+    public function test_a_token_scoped_without_view_payments_sees_no_payment_fields_even_for_an_admin(): void
+    {
+        $order = $this->order();
+        app(OrderPaymentService::class)->record($order, $this->admin, ['amount' => 25, 'method' => 'cash']);
+
+        // The admin holds every permission; the token only view_orders.
+        $token = $this->admin->createToken('orders-only', ['view_orders'])->plainTextToken;
+
+        $this->withToken($token)->postJson('/graphql', ['query' => sprintf('{ order(id: %d) { total amount_paid balance_due payment_status payments { amount } } }', $order->id)])
+            ->assertJsonPath('data.order.total', 100)
+            ->assertJsonPath('data.order.amount_paid', null)
+            ->assertJsonPath('data.order.balance_due', null)
+            ->assertJsonPath('data.order.payment_status', null)
+            ->assertJsonPath('data.order.payments', null);
+
+        $this->withToken($token)->getJson("/api/v1/orders/{$order->id}")
+            ->assertOk()
+            ->assertJsonMissingPath('data.amount_paid')
+            ->assertJsonMissingPath('data.payment_status');
+
+        // The payment_status filter is ignored rather than leaking which orders are paid.
+        $this->order();
+        $this->withToken($token)->getJson('/api/v1/orders?payment_status=unpaid')->assertOk()->assertJsonCount(2, 'data');
+
+        $this->withToken($token)->getJson("/api/v1/orders/{$order->id}/payments")->assertForbidden();
+        $this->withToken($token)->postJson("/api/v1/orders/{$order->id}/payments", ['amount' => 1, 'method' => 'cash'])->assertForbidden();
+    }
+
+    public function test_a_token_with_view_payments_sees_them(): void
+    {
+        $order = $this->order();
+        app(OrderPaymentService::class)->record($order, $this->admin, ['amount' => 25, 'method' => 'cash']);
+
+        $token = $this->admin->createToken('orders-and-payments', ['view_orders', 'view_payments'])->plainTextToken;
+
+        $this->withToken($token)->getJson("/api/v1/orders/{$order->id}")->assertJsonPath('data.payment_status', 'partial');
+        $this->withToken($token)->postJson('/graphql', ['query' => sprintf('{ order(id: %d) { payment_status } }', $order->id)])
+            ->assertJsonPath('data.order.payment_status', 'partial');
+    }
+
     // ---------------------------------------------------------------- MCP
 
     public function test_mcp_record_payment_tool(): void

@@ -6,6 +6,7 @@ namespace App\Mcp\Tools;
 
 use App\Mcp\Concerns\AuthenticatesMcpRequest;
 use App\Models\Order\Order;
+use App\Support\PaymentVisibility;
 use Illuminate\Contracts\JsonSchema\JsonSchema;
 use Laravel\Mcp\Request;
 use Laravel\Mcp\Response;
@@ -75,7 +76,7 @@ class GetOrderTool extends Tool
         ];
 
         // Payment position only for tokens that may see payments.
-        if ($this->user()->hasPermission('view_payments')) {
+        if (PaymentVisibility::allows($this->user())) {
             $payload['amount_paid'] = $order->amount_paid;
             $payload['balance_due'] = $order->balanceDue();
             $payload['payment_status'] = $order->payment_status?->value;

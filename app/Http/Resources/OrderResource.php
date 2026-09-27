@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace App\Http\Resources;
 
-use App\Enums\Permission;
 use App\Models\Order\Order;
+use App\Support\PaymentVisibility;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -83,6 +83,6 @@ class OrderResource extends JsonResource
 
     private function canViewPayments(Request $request): bool
     {
-        return (bool) $request->user()?->hasPermission(Permission::VIEW_PAYMENTS);
+        return PaymentVisibility::allows($request->user());
     }
 }

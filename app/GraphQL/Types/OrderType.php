@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\GraphQL\Types;
 
 use App\Models\Order\Order;
+use App\Support\PaymentVisibility;
 use GraphQL\Type\Definition\Type;
 use Rebing\GraphQL\Support\Facades\GraphQL;
 use Rebing\GraphQL\Support\Type as GraphQLType;
@@ -171,6 +172,7 @@ class OrderType extends GraphQLType
 
     private static function canViewPayments(): bool
     {
-        return (bool) auth()->user()?->hasPermission('view_payments');
+        // Role AND token abilities, like the REST view_payments routes.
+        return PaymentVisibility::allows(auth()->user());
     }
 }
