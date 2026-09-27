@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Mail;
 
 use App\Mail\Concerns\AppliesOrganizationMailConfig;
+use App\Mail\Concerns\UsesOrganizationBranding;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
 use Illuminate\Queue\SerializesModels;
@@ -16,7 +17,7 @@ use Illuminate\Queue\SerializesModels;
  */
 class LowStockEmail extends Mailable
 {
-    use AppliesOrganizationMailConfig, Queueable, SerializesModels;
+    use AppliesOrganizationMailConfig, Queueable, SerializesModels, UsesOrganizationBranding;
 
     /**
      * Create a new message instance.
@@ -36,6 +37,7 @@ class LowStockEmail extends Mailable
 
         return $this->subject('Low Stock Alert - '.($this->data['product']?->name ?? 'Unknown Product'))
             ->view('emails.low-stock-alert')
-            ->with($this->data);
+            ->text('emails.text.low-stock-alert')
+            ->with($this->data + $this->organizationBranding());
     }
 }

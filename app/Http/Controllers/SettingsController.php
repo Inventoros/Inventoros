@@ -107,6 +107,7 @@ class SettingsController extends Controller
             SettingsService::applyEmailConfig();
 
             Mail::to($request->test_email)->send(new TestEmail([
+                'organization_id' => auth()->user()->organization_id,
                 'organization' => auth()->user()->organization->name,
                 'tested_by' => auth()->user()->name,
             ]));
