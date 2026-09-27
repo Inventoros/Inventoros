@@ -1,585 +1,548 @@
-# InventorOS Plugin Development Guide
+# Inventoros Plugin Development Guide
 
-Welcome to the InventorOS Plugin Development Guide. This document will help you create powerful extensions for InventorOS using our WordPress-style hook and filter system.
+Plugins extend Inventoros without changing core files. A plugin is a folder under `/plugins` with a manifest, a PHP file that registers WordPress-style actions and filters, optional lifecycle files, and an optional pre-built browser bundle for its UI.
 
-## Table of Contents
+Everything in this guide is backed by code and tests: the hook tables are checked against `app/Services/HookRegistry.php`, which is itself checked against every hook the application fires (`tests/Feature/PluginHookDocumentationTest.php`). The `plugins/hello-world` plugin is a working example of every part.
 
-1. [Introduction](#introduction)
-2. [Getting Started](#getting-started)
-3. [Plugin Structure](#plugin-structure)
-4. [Plugin Manifest](#plugin-manifest)
-5. [Hooks and Filters](#hooks-and-filters)
-6. [Lifecycle Hooks](#lifecycle-hooks)
-7. [Available Hooks](#available-hooks)
-8. [Available Filters](#available-filters)
-9. [Best Practices](#best-practices)
+## Table of contents
+
+1. [Plugin structure](#plugin-structure)
+2. [The manifest (plugin.json)](#the-manifest-pluginjson)
+3. [Installing, activating and removing](#installing-activating-and-removing)
+4. [Actions and filters](#actions-and-filters)
+5. [Lifecycle files](#lifecycle-files)
+6. [Action reference](#action-reference)
+7. [Filter reference](#filter-reference)
+8. [Plugin UI](#plugin-ui)
+9. [Building and packaging a plugin](#building-and-packaging-a-plugin)
 10. [Examples](#examples)
+11. [Best practices](#best-practices)
+12. [Security notes](#security-notes)
+13. [Debugging](#debugging)
 
-## Introduction
+## Plugin structure
 
-InventorOS features a powerful plugin system that allows developers to extend and customize the application without modifying core files. The system is inspired by WordPress and uses actions (hooks) and filters to let plugins interact with the application.
-
-### Key Concepts
-
-- **Plugins** are stored in the `/plugins` directory at the project root
-- **Actions (Hooks)** let you execute code at specific points in the application
-- **Filters** let you modify data before it's used or displayed
-- **Lifecycle Hooks** run during plugin activation, deactivation, and uninstall
-
-## Getting Started
-
-### Prerequisites
-
-- Basic PHP knowledge
-- Understanding of Laravel framework
-- Familiarity with InventorOS structure
-
-### Creating Your First Plugin
-
-1. Create a new directory in `/plugins` with your plugin slug (e.g., `/plugins/my-plugin`)
-2. Create a `plugin.json` manifest file
-3. Create a main plugin file (e.g., `Plugin.php`)
-4. Add your hooks and filters
-5. Upload via the admin panel or place manually in the plugins directory
-
-## Plugin Structure
-
-A basic plugin structure looks like this:
-
-```
+```text
 my-plugin/
-├── plugin.json          # Required: Plugin metadata
-├── Plugin.php           # Required: Main plugin file
-├── hooks/               # Optional: Lifecycle hooks
-│   ├── activate.php     # Runs on activation
-│   ├── deactivate.php   # Runs on deactivation
-│   └── uninstall.php    # Runs on deletion
-├── src/                 # Optional: Additional PHP classes
-│   └── MyClass.php
-├── assets/              # Optional: CSS, JS, images
-│   ├── css/
-│   ├── js/
-│   └── images/
-└── README.md            # Optional: Documentation
+├── plugin.json          # Required: manifest
+├── Plugin.php           # Required: loaded on every request while active (name set by main_file)
+├── hooks/               # Optional: lifecycle files
+│   ├── activate.php     # Runs once on activation
+│   ├── deactivate.php   # Runs once on deactivation
+│   └── uninstall.php    # Runs once when the plugin is deleted
+├── src/                 # Optional: your own PHP classes (require them from Plugin.php)
+├── ui/                  # Optional: source of the browser bundle (not used at runtime)
+├── dist/                # Optional: the pre-built browser bundle, published while active
+└── README.md
 ```
 
-## Plugin Manifest
+The folder name is the plugin's **slug** (`my-plugin`). It may contain letters, digits, `.`, `_` and `-`, and must start with a letter or digit.
 
-Every plugin requires a `plugin.json` file with the following structure:
+## The manifest (plugin.json)
 
 ```json
 {
-    "name": "My Awesome Plugin",
-    "description": "A brief description of what your plugin does",
+    "name": "My Plugin",
+    "description": "What the plugin does",
     "version": "1.0.0",
     "author": "Your Name",
-    "author_url": "https://yourwebsite.com",
-    "requires": "1.0.0",
-    "main_file": "Plugin.php"
+    "author_url": "https://example.com",
+    "requires": "1.0.8",
+    "requires_php": "8.2",
+    "main_file": "Plugin.php",
+    "ui": {
+        "entry": "plugin.js",
+        "styles": ["plugin.css"]
+    }
 }
 ```
 
-### Manifest Fields
+| Field | Required | Meaning |
+|-------|----------|---------|
+| `name` | Yes | Display name. |
+| `description` | Yes | Short description for the Plugins page. |
+| `version` | Yes | The plugin's version. Also used to bust the browser cache of its UI bundle. |
+| `author` | Yes | Author name. |
+| `author_url` | No | Author website. |
+| `requires` | No | Minimum Inventoros version, compared with the `VERSION` file. Activation and upload are refused on older installs. |
+| `requires_php` | No | Minimum PHP version. Activation and upload are refused on older PHP. |
+| `main_file` | No | The PHP file loaded on every request while active. Defaults to `Plugin.php` and must sit in the plugin's root folder. |
+| `ui` | No | The plugin's pre-built browser bundle, see [Plugin UI](#plugin-ui). `entry` is a `.js`/`.mjs` file and `styles` a list of `.css` files, both relative to `dist/`. |
 
-| Field | Required | Description |
-|-------|----------|-------------|
-| `name` | Yes | Display name of your plugin |
-| `description` | Yes | Brief description (max 255 chars recommended) |
-| `version` | Yes | Plugin version (semantic versioning) |
-| `author` | Yes | Author name |
-| `author_url` | No | Author website URL |
-| `requires` | Yes | Minimum InventorOS version required |
-| `main_file` | Yes | Entry point PHP file (default: `Plugin.php`) |
+Versions may be written `1.2`, `1.2.3`, `v1.2.3` or `1.2.3-beta`. A value that is not a version number is refused with an error, so a typo cannot silently disable the check.
 
-## Hooks and Filters
+## Installing, activating and removing
 
-InventorOS provides eight global functions for working with hooks and filters:
+- **Install** by copying the folder into `/plugins`, or upload a ZIP from **Admin > Plugins**. Uploads are off by default (see [Security notes](#security-notes)). The ZIP must contain exactly one top-level folder, which becomes the slug.
+- **Activate** from the Plugins page. In order, Inventoros:
+  1. checks `requires` and `requires_php`,
+  2. validates the `ui` block,
+  3. loads `main_file`,
+  4. runs `hooks/activate.php`,
+  5. publishes `dist/` to `public/plugins/{slug}/`,
+  6. fires `plugin_activated` and `plugin_activated_{slug}`,
+  7. marks the plugin active.
 
-### Action Functions
+  If any step throws, the plugin stays inactive, its published files are removed and the Plugins page shows the error.
+- **Deactivate**: fires `plugin_deactivated` and `plugin_deactivated_{slug}`, runs `hooks/deactivate.php`, marks the plugin inactive and removes `public/plugins/{slug}/`. The plugin is deactivated even if its own code throws; the page then shows a warning.
+- **Delete**: fires `plugin_uninstalling` and `plugin_uninstalling_{slug}`, deactivates the plugin, runs `hooks/uninstall.php` (whether or not the plugin was active), then removes its published files, its database record and its folder. The files are removed even if the plugin's cleanup throws; the page then shows a warning.
 
-```php
-// Add an action hook
-add_action('hook_name', callable $callback, int $priority = 10);
-
-// Execute an action
-do_action('hook_name', ...$args);
-
-// Check if action exists
-has_action('hook_name');
-
-// Remove an action
-remove_action('hook_name', ?callable $callback = null);
-```
-
-### Filter Functions
+## Actions and filters
 
 ```php
-// Add a filter hook
-add_filter('filter_name', callable $callback, int $priority = 10);
+// Actions run code at a point in the application.
+add_action(string $tag, callable $callback, int $priority = 10): void;
+do_action(string $tag, ...$args): void;
+has_action(string $tag): bool;
+remove_action(string $tag, ?callable $callback = null): void;
 
-// Apply filters to a value
-$value = apply_filters('filter_name', $value, ...$args);
-
-// Check if filter exists
-has_filter('filter_name');
-
-// Remove a filter
-remove_filter('filter_name', ?callable $callback = null);
+// Filters receive a value and must return it (changed or not).
+add_filter(string $tag, callable $callback, int $priority = 10): void;
+apply_filters(string $tag, mixed $value, ...$args): mixed;
+has_filter(string $tag): bool;
+remove_filter(string $tag, ?callable $callback = null): void;
 ```
 
-### Priority
-
-Priority determines the order hooks/filters execute. Lower numbers run first (default: 10).
+Callbacks receive the arguments listed in the reference tables below, in that order. You may accept fewer. Lower priorities run first:
 
 ```php
-add_action('product_created', 'send_notification', 5);  // Runs first
-add_action('product_created', 'update_analytics', 10); // Runs second
-add_action('product_created', 'log_event', 20);        // Runs last
+add_action('product_created', fn ($product) => Log::info('first'), 5);
+add_action('product_created', fn ($product) => Log::info('second'));      // 10
+add_action('product_created', fn ($product) => Log::info('last'), 20);
 ```
 
-## Lifecycle Hooks
+You can fire your own hooks too, so other plugins can extend yours. Prefix them with your slug:
 
-Lifecycle hooks run at specific points in your plugin's lifecycle.
+```php
+do_action('my_plugin_report_sent', $report);
+```
 
-### Activation Hook (`hooks/activate.php`)
+## Lifecycle files
 
-Runs when the plugin is activated. Use for:
-- Creating database tables
-- Setting default options
-- Scheduling tasks
-- Initial setup
+Each file is plain PHP, run once with `require` in an isolated scope (no `$this`). Throwing aborts activation; on deactivation and deletion it is reported as a warning.
+
+`hooks/activate.php` runs after `Plugin.php` has loaded. Create tables and defaults here, and keep it safe to run twice:
 
 ```php
 <?php
-use Illuminate\Support\Facades\Schema;
-use Illuminate\Database\Schema\Blueprint;
 
-if (!Schema::hasTable('my_plugin_data')) {
-    Schema::create('my_plugin_data', function (Blueprint $table) {
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+if (! Schema::hasTable('my_plugin_notes')) {
+    Schema::create('my_plugin_notes', function (Blueprint $table) {
         $table->id();
-        $table->foreignId('organization_id')->constrained();
-        $table->string('key');
-        $table->text('value');
+        $table->foreignId('organization_id')->constrained()->cascadeOnDelete();
+        $table->foreignId('product_id')->constrained()->cascadeOnDelete();
+        $table->text('body');
         $table->timestamps();
     });
 }
 ```
 
-### Deactivation Hook (`hooks/deactivate.php`)
-
-Runs when the plugin is deactivated. Use for:
-- Clearing caches
-- Unscheduling tasks
-- Cleaning temporary data
+`hooks/deactivate.php` clears caches and stops scheduled work. Keep data; the plugin may come back:
 
 ```php
 <?php
+
 use Illuminate\Support\Facades\Cache;
 
-Cache::forget('my_plugin_cache');
+Cache::forget('my_plugin_summary');
 ```
 
-### Uninstall Hook (`hooks/uninstall.php`)
-
-Runs when the plugin is deleted. Use for:
-- Dropping database tables
-- Removing all plugin data
-- Complete cleanup
+`hooks/uninstall.php` removes everything the plugin created:
 
 ```php
 <?php
+
 use Illuminate\Support\Facades\Schema;
 
-Schema::dropIfExists('my_plugin_data');
+Schema::dropIfExists('my_plugin_notes');
 ```
 
-## Available Hooks
+## Action reference
 
-### Core Application Hooks
+"Web form" and "web UI" hooks fire only from the Inertia screens; the REST, GraphQL and MCP surfaces do not fire them. `product_created` fires on every surface.
 
-#### `plugin_loaded`
-Fires when a plugin is loaded.
+| Action | Arguments | When |
+|--------|-----------|------|
+| `plugin_loaded` | `$slug`, `$manifest` | After a plugin's main file is loaded (at boot for every active plugin, and on activation). |
+| `plugin_activated` | `$slug` | Any plugin is activated, after its `hooks/activate.php` ran. Throwing aborts the activation. |
+| `plugin_activated_{slug}` | none | A specific plugin is activated, for example `plugin_activated_my-plugin`. |
+| `plugin_deactivated` | `$slug` | Any plugin is deactivated, before its `hooks/deactivate.php` runs. |
+| `plugin_deactivated_{slug}` | none | A specific plugin is deactivated. |
+| `plugin_uninstalling` | `$slug` | Any plugin is about to be deleted, before its `hooks/uninstall.php` runs. |
+| `plugin_uninstalling_{slug}` | none | A specific plugin is about to be deleted. |
+| `product_created` | `$product`, `$user` | A product is created on any surface (web, REST, GraphQL, MCP, import). `$user` may be null. |
+| `product_before_create` | `$validated_data`, `$request` | Before a product is created from the web form. |
+| `product_after_create` | `$product`, `$request` | After a product is created from the web form. |
+| `product_before_update` | `$product`, `$validated_data`, `$request` | Before a product is updated from the web form. `$product` still holds the old values. |
+| `product_updated` | `$product`, `$user` | After a product is updated from the web form. |
+| `product_after_update` | `$product`, `$request` | After a product is updated from the web form. |
+| `product_before_delete` | `$product`, `$request` | Before a product is deleted from the web UI. |
+| `product_deleted` | `$product`, `$user` | After a product is deleted from the web UI. |
+| `product_after_delete` | `$product`, `$request` | After a product is deleted from the web UI. |
+| `product_viewed` | `$product`, `$user` | The product detail page is viewed. |
+| `product_list_viewed` | `$products`, `$user` | The product list page is viewed (`$products` is the paginator). |
+| `stock_adjusted` | `$stock_adjustment`, `$product` | A stock adjustment is committed. `$product` is null for a variant adjustment. |
+| `low_stock_alert` | `$product` | A product's stock drops to or below its minimum. |
+| `out_of_stock_alert` | `$product` | A product's stock reaches zero. |
+| `order_created` | `$order`, `$user` | An order and all its items are created. |
+| `order_updated` | `$order`, `$user` | An order is saved. |
+| `order_status_changed` | `$order`, `$old_status`, `$new_status`, `$user` | An order's status changes. |
+| `order_approved` | `$order`, `$user` | An order is approved. |
+| `order_rejected` | `$order`, `$user` | An order is rejected. |
+| `purchase_order_created` | `$purchase_order`, `$user` | A purchase order is created. |
+| `purchase_order_received` | `$purchase_order`, `$user` | A purchase order becomes fully received. |
+| `purchase_order_cancelled` | `$purchase_order`, `$user` | A purchase order is cancelled. |
+| `supplier_created` | `$supplier`, `$user` | A supplier is created from the web UI. |
+| `supplier_updated` | `$supplier`, `$user` | A supplier is updated from the web UI. |
+| `supplier_before_delete` | `$supplier`, `$user` | Before a supplier is deleted from the web UI. |
+| `supplier_deleted` | `$supplier`, `$user` | After a supplier is deleted from the web UI. |
+| `supplier_viewed` | `$supplier`, `$user` | The supplier detail page is viewed. |
+| `supplier_list_viewed` | `$suppliers`, `$user` | The supplier list page is viewed. |
+| `dashboard_stats_calculated` | `$stats`, `$user` | The dashboard statistics are calculated (after the `dashboard_stats_data` filter). |
+| `dashboard_stats` | `$stats`, `$user` | Alias of `dashboard_stats_calculated`, fired right after it with the same arguments. |
+| `dashboard_viewed` | `$user` | The dashboard is viewed. |
+| `email_notification_sent` | `$type`, `$user`, `$data` | A notification email is queued. |
+| `email_notification_failed` | `$type`, `$user`, `$data`, `$exception` | Queueing a notification email failed. |
+
+## Filter reference
+
+A filter callback receives the value first, then the listed context, and must return the value.
+
+| Filter | Arguments | What it changes |
+|--------|-----------|-----------------|
+| `product_display_name` | `$name`, `$product` | The product name shown on the product list and detail pages, in global search and as `display_name` in the REST product resource. The stored `name` is unchanged. |
+| `product_price_display` | `$price`, `$product` | The price shown on the product list and detail pages and as `display_price` in the REST product resource. `$price` is a float (or null). The stored `price`, order pricing and reports are unchanged. |
+| `product_search_query` | `$query`, `$search_term` | Product search on the product list, global search and `GET /api/v1/products?search=`. `$query` is the nested group of OR conditions that match the term: add alternatives with `orWhere()`. Tenant and other filters sit outside the group, so a plugin cannot widen them. |
+| `product_list_query` | `$query`, `$request` | The product list query. The organization scope is re-applied afterwards. |
+| `product_list_data` | `$products`, `$request` | The paginated products before the list page renders. |
+| `product_list_page_data` | `$data`, `$request` | All props of the product list page. |
+| `product_show_data` | `$product`, `$user` | The product before the detail page renders. |
+| `product_show_page_data` | `$data`, `$product` | All props of the product detail page. |
+| `product_store_validation_rules` | `$rules`, `$request` | Validation rules of the web product create form. |
+| `product_store_data` | `$validated_data`, `$request` | Validated data before a product is created from the web form. |
+| `product_store_response` | `$response`, `$product`, `$request` | The response after a product is created from the web form. |
+| `product_update_validation_rules` | `$rules`, `$product`, `$request` | Validation rules of the web product edit form. |
+| `product_update_data` | `$validated_data`, `$product`, `$request` | Validated data before a product is updated from the web form. |
+| `order_total_calculation` | `$total`, `$order` | The computed order total when an order is created or edited, after line items, discounts, tax and shipping. Return a non-negative number. |
+| `supplier_list_query` | `$query`, `$request` | The supplier list query. The organization scope is re-applied afterwards. |
+| `supplier_list_data` | `$suppliers`, `$request` | The paginated suppliers before the list page renders. |
+| `supplier_list_page_data` | `$data`, `$request` | All props of the supplier list page. |
+| `supplier_before_create` | `$validated_data`, `$request` | Validated data before a supplier is created. |
+| `supplier_before_show` | `$supplier`, `$request` | The supplier before its detail page renders. |
+| `supplier_before_update` | `$validated_data`, `$supplier`, `$request` | Validated data before a supplier is updated. |
+| `dashboard_stats_data` | `$stats`, `$user` | The dashboard statistics array. |
+| `dashboard_page_data` | `$data`, `$user` | All props of the dashboard page. |
+| `email_notification_data` | `$data`, `$type`, `$user` | The data passed to a notification email. |
+| `should_send_email` | `$should_send`, `$type`, `$user`, `$data` | Return false to stop a notification email. |
+| `email_mailable_class` | `$mailable_class`, `$type`, `$data` | Supply a Mailable class for a custom notification type. |
+| `report_data_sources` | `$sources` | Register extra data sources for the report builder. |
+| `report_query_{source}` | `$rows`, `$organization_id`, `$columns`, `$filters`, `$sort` | Return the rows (a Collection) for a data source you registered, for example `report_query_my_source`. |
+
+A `user_permissions` filter is deliberately not offered: letting plugins rewrite a user's permissions would be a privilege-escalation path.
+
+## Plugin UI
+
+### Menu items
 
 ```php
-add_action('plugin_loaded', function ($slug, $manifest) {
-    // Plugin initialization code
-}, 10);
+register_menu_item([
+    'label' => 'My Plugin',
+    'route' => 'my-plugin.settings',   // or 'url' => 'https://...'
+    'permission' => 'manage_plugins',  // optional
+    'position' => 100,
+]);
 ```
 
-**Parameters:**
-- `$slug` (string): Plugin slug
-- `$manifest` (array): Plugin manifest data
+Items whose route does not exist are dropped.
 
-### Product Hooks
+### Components in existing pages
 
-#### `product_created`
-Fires after a product is created.
+The server decides where a component goes; the browser bundle supplies it. Place it from `Plugin.php`:
 
 ```php
-add_action('product_created', function ($product) {
-    // Send notification
-    // Update external system
-    // Log event
-}, 10);
+add_page_component('products.show', 'sidebar', [
+    'plugin' => 'my-plugin',          // your slug
+    'component' => 'StockNotes',      // the name your bundle registers
+    'data' => ['title' => 'Notes'],   // passed to the component as props
+    'position' => 10,                 // lower renders first
+]);
 ```
 
-**Parameters:**
-- `$product` (Product): The created product model
+Pages and slots that render plugin components:
 
-#### `product_updated`
-Fires after a product is updated.
+| Page | Slots |
+|------|-------|
+| `dashboard` | `header`, `before-stats`, `after-stats`, `before-content`, `after-content`, `footer` |
+| `products.index` | `header`, `before-table`, `footer` |
+| `products.show` | `header`, `sidebar`, `footer` |
+| `products.create`, `products.edit` | `header`, `before-form`, `after-form` |
+| `orders.index` | `header`, `before-table`, `footer` |
+| `orders.show` | `header`, `sidebar`, `footer` |
+| `purchase-orders.index` | `header`, `before-table`, `footer` |
+| `purchase-orders.show` | `header`, `sidebar`, `footer` |
+| `purchase-orders.create`, `purchase-orders.edit`, `purchase-orders.receive` | `header`, `footer` |
+| `suppliers.index` | `header`, `before-table`, `footer` |
+| `suppliers.show`, `suppliers.create`, `suppliers.edit` | `header`, `footer` |
+| `categories.index`, `locations.index` | `header`, `footer` |
 
-```php
-add_action('product_updated', function ($product, $oldData) {
-    // Track changes
-    // Sync with external systems
-}, 10);
-```
+### The runtime bundle
 
-**Parameters:**
-- `$product` (Product): The updated product model
-- `$oldData` (array): Original product data
+The cPanel release and ZIP-uploaded plugins never run `npm`, so a plugin ships its UI already built. The bundle is an ES module built with Vite in library mode, with Vue left out: the app exposes its own Vue as `window.Inventoros.Vue`, and components must use that copy to share the app's reactivity.
 
-#### `product_deleted`
-Fires before a product is deleted.
+While the plugin is active, Inventoros copies `dist/` to `public/plugins/{slug}/` and lists the bundle in the `pluginAssets` page prop. The browser imports it once (from the same origin, which the app's Content Security Policy allows through `script-src 'self'`) and adds its stylesheets. Only static web files are published: `.js`, `.mjs`, `.css`, `.map`, `.json`, images, fonts and `.txt`. PHP files, dotfiles such as `.htaccess`, and symlinks are skipped, and `ui.entry`/`ui.styles` must point inside `dist/`.
 
-```php
-add_action('product_deleted', function ($product) {
-    // Clean up related data
-    // Notify users
-}, 10);
-```
+The bundle's default export is called with an SDK scoped to the plugin:
 
-**Parameters:**
-- `$product` (Product): The product being deleted
+```js
+// ui/src/main.js
+import StockNotes from './StockNotes.vue';
+import SettingsPage from './SettingsPage.vue';
+import Hint from './Hint.vue';
 
-### Order Hooks
+export default function setup(plugin) {
+    // Implements add_page_component(..., ['plugin' => 'my-plugin', 'component' => 'StockNotes']).
+    plugin.registerComponent('StockNotes', StockNotes);
 
-#### `order_created`
-Fires after an order is created.
+    // Adds a component to a slot from the browser alone ("<page>:<slot>").
+    plugin.registerSlotComponent('dashboard:after-stats', Hint, { position: 50, props: { tone: 'info' } });
 
-```php
-add_action('order_created', function ($order) {
-    // Send confirmation email
-    // Update inventory
-    // Notify warehouse
-}, 10);
-```
-
-**Parameters:**
-- `$order` (Order): The created order model
-
-#### `order_status_changed`
-Fires when an order status changes.
-
-```php
-add_action('order_status_changed', function ($order, $oldStatus, $newStatus) {
-    // Send status update email
-    // Trigger workflows
-}, 10);
-```
-
-**Parameters:**
-- `$order` (Order): The order model
-- `$oldStatus` (string): Previous status
-- `$newStatus` (string): New status
-
-### Dashboard Hooks
-
-#### `dashboard_stats`
-Fires when dashboard statistics are rendered.
-
-```php
-add_action('dashboard_stats', function () {
-    // Add custom stats
-    // Log analytics
-}, 10);
-```
-
-## Available Filters
-
-Filters allow you to modify data before it's used or displayed.
-
-### Product Filters
-
-#### `product_display_name`
-Modify product name before display.
-
-```php
-add_filter('product_display_name', function ($name, $product) {
-    // Add prefix/suffix
-    // Translate
-    // Format
-    return $name;
-}, 10);
-```
-
-**Parameters:**
-- `$name` (string): Product name
-- `$product` (Product): Product model
-
-**Returns:** Modified name (string)
-
-#### `product_price_display`
-Modify product price before display.
-
-```php
-add_filter('product_price_display', function ($price, $product) {
-    // Apply discounts
-    // Add markup
-    // Currency conversion
-    return $price;
-}, 10);
-```
-
-**Parameters:**
-- `$price` (float): Product price
-- `$product` (Product): Product model
-
-**Returns:** Modified price (float)
-
-#### `product_search_query`
-Modify the product search query.
-
-```php
-add_filter('product_search_query', function ($query, $searchTerm) {
-    // Add custom search logic
-    // Search additional fields
-    return $query;
-}, 10);
-```
-
-**Parameters:**
-- `$query` (Builder): Laravel query builder instance
-- `$searchTerm` (string): Search term
-
-**Returns:** Modified query (Builder)
-
-### Order Filters
-
-#### `order_total_calculation`
-Modify the order total. Runs once each time `OrderService` computes an order's totals (on create and on every edit, from every surface), after line and order discounts, tax and shipping have been applied.
-
-```php
-add_filter('order_total_calculation', function ($total, $order) {
-    // Add a fee: return a 2-dp decimal string (or number).
-    return \App\Support\Money::add($total, '2.50');
-}, 10);
-```
-
-**Parameters:**
-- `$total` (string): The computed total as a 2-dp decimal string: `subtotal - discount_amount + tax + shipping`
-- `$order` (Order): The order, with its subtotal, discount, tax and shipping already set. On create it is not saved yet, so it has no `id`.
-
-**Returns:** Modified total (numeric). A negative total, or one below what the customer has already paid, is rejected with a validation error. A plugin that changes the total also breaks the `subtotal - discount + tax + shipping = total` identity on the stored row, so prefer adjusting inputs where you can.
-
-## Best Practices
-
-### 1. Use Descriptive Hook Names
-```php
-// Good
-add_action('my_plugin_send_notification', $callback);
-
-// Bad
-add_action('send', $callback);
-```
-
-### 2. Always Return Values in Filters
-```php
-// Good
-add_filter('product_price', function ($price, $product) {
-    return $price * 1.1;
-}, 10);
-
-// Bad - doesn't return
-add_filter('product_price', function ($price, $product) {
-    $price * 1.1;
-}, 10);
-```
-
-### 3. Check for Existing Data
-```php
-add_action('activate', function () {
-    if (!Schema::hasTable('my_table')) {
-        Schema::create('my_table', function ($table) {
-            // ...
-        });
-    }
-});
-```
-
-### 4. Namespace Your Plugin
-```php
-namespace MyPlugin;
-
-class MyClass {
-    // Your code
+    // Supplies the page for Inertia::render('Plugin::my-plugin/Settings').
+    plugin.registerPage('Settings', SettingsPage);
 }
 ```
 
-### 5. Handle Errors Gracefully
-```php
-add_action('product_created', function ($product) {
-    try {
-        // Your code
-    } catch (\Exception $e) {
-        \Log::error('My Plugin Error: ' . $e->getMessage());
-    }
-});
+| SDK member | Purpose |
+|------------|---------|
+| `plugin.slug` | The plugin's slug. |
+| `plugin.Vue` | The app's Vue (same as `window.Inventoros.Vue`). |
+| `plugin.registerComponent(name, component)` | Provide the component for a server placement made with `add_page_component()`. |
+| `plugin.registerSlotComponent(slot, component, { position, props })` | Render a component in a slot without a server placement. `slot` is `"<page>:<slot>"`, for example `"products.show:sidebar"`. |
+| `plugin.registerPage(page, component)` | Provide the page component rendered by `Inertia::render('Plugin::{slug}/{page}')`. |
+
+The same functions are available globally as `window.Inventoros.registerComponent(slug, name, component)`, `window.Inventoros.registerSlotComponent(slot, component, options)`, `window.Inventoros.registerPage('Plugin::slug/Page', component)` and `window.Inventoros.plugin(slug)`.
+
+Components placed from the server render only for users who can see that page; `registerSlotComponent()` components render for everyone who can see the page, so gate sensitive UI with a server placement or a server-side check.
+
+Styling: the app's Tailwind build does not scan plugins, so Tailwind classes that the app itself does not use will have no CSS. Put styles in `<style scoped>` blocks (they are extracted to your CSS file) and use the design tokens, which are HSL triplets that follow the light and dark theme:
+
+```css
+.my-card {
+    background: hsl(var(--surface-raised));
+    border: 1px solid hsl(var(--border-subtle));
+    color: hsl(var(--text-primary));
+}
 ```
 
-### 6. Respect Organization Scoping
-Always filter data by organization_id when querying the database:
+Available tokens include `--surface-canvas`, `--surface-base`, `--surface-raised`, `--surface-sunken`, `--border-subtle`, `--border-strong`, `--text-primary`, `--text-secondary`, `--text-tertiary`, `--accent`, `--accent-soft`, `--status-success`, `--status-warning`, `--status-danger` and `--ring`.
+
+### Plugin pages
+
+Register a route in `Plugin.php` that renders a `Plugin::` component, and register the page in your bundle:
 
 ```php
-$products = Product::where('organization_id', $organizationId)->get();
+use Illuminate\Support\Facades\Route;
+use Inertia\Inertia;
+
+Route::middleware(['web', 'auth'])->get('/my-plugin/settings', function () {
+    abort_unless(auth()->user()->hasPermission('manage_plugins'), 403);
+
+    return Inertia::render('Plugin::my-plugin/Settings', ['saved' => false]);
+})->name('my-plugin.settings');
 ```
 
-### 7. Clean Up After Yourself
-Always implement the uninstall hook to remove your plugin's data:
-
-```php
-// hooks/uninstall.php
-Schema::dropIfExists('my_plugin_table');
+```js
+plugin.registerPage('Settings', SettingsPage);
 ```
+
+If you cache routes (`php artisan route:cache`), rebuild the cache after activating or deactivating a plugin that adds routes.
+
+### Build-time components (source installs only)
+
+Installs that build the frontend themselves also pick up `plugins/{slug}/resources/js/Components/{Name}.vue` and `plugins/{slug}/resources/js/Pages/**/*.vue` at `npm run build` time. That route does not work for uploaded plugins or the cPanel release, so prefer the runtime bundle.
+
+## Building and packaging a plugin
+
+1. Copy `plugins/hello-world/ui/vite.config.js` and `ui/package.json` into your plugin's `ui/` folder and put your entry in `ui/src/main.js`. The config maps every `import ... from 'vue'` to `window.Inventoros.Vue`, writes `dist/plugin.js` and `dist/plugin.css`, and ignores the app's PostCSS setup.
+2. Build:
+
+   ```bash
+   cd plugins/my-plugin/ui
+   npm install
+   npm run build
+   ```
+
+   Inside the Inventoros repository you can skip `npm install` and run `npx vite build --config plugins/my-plugin/ui/vite.config.js` from the root; `npm run build:plugin:hello-world` does this for the example.
+3. Point `ui.entry` (and `ui.styles`) in `plugin.json` at the built files, relative to `dist/`.
+4. Bump `version` in `plugin.json` whenever the bundle changes, so browsers fetch the new file.
+5. Zip the plugin folder so the archive has a single top-level folder named after the slug, without `ui/node_modules`:
+
+   ```bash
+   cd plugins
+   zip -r my-plugin.zip my-plugin -x 'my-plugin/ui/node_modules/*'
+   ```
+
+6. Optionally sign it for installs that require signed plugins: `php artisan update:sign my-plugin.zip` writes `my-plugin.zip.sig`; paste its contents into the upload form's signature field.
+
+Every Inventoros release attaches `hello-world-plugin.zip`, built exactly this way.
 
 ## Examples
 
-### Example 1: Email Notification Plugin
+### Low-stock notifier
 
 ```php
 <?php
-// plugins/email-notifications/Plugin.php
+// plugins/low-stock-notifier/Plugin.php
 
-use App\Models\Inventory\Product;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 
-// Send email when product is low on stock
-add_action('product_updated', function ($product) {
-    if ($product->isLowStock()) {
-        Mail::to('admin@example.com')->send(
-            new \App\Mail\LowStockAlert($product)
+// Email the warehouse when a product first drops to its minimum stock.
+add_action('low_stock_alert', function ($product) {
+    try {
+        Mail::raw(
+            "{$product->name} ({$product->sku}) is down to {$product->stock}.",
+            fn ($message) => $message->to('warehouse@example.com')->subject('Low stock: '.$product->sku)
         );
+    } catch (\Throwable $e) {
+        Log::error('Low stock notifier failed', ['error' => $e->getMessage()]);
     }
-}, 10);
+});
 
-// Add custom product field
+// Flag low-stock products wherever product names are displayed.
 add_filter('product_display_name', function ($name, $product) {
-    if ($product->isLowStock()) {
-        return '⚠️ ' . $name;
-    }
-    return $name;
-}, 10);
+    return $product->isLowStock() ? $name.' (low stock)' : $name;
+});
 ```
 
-### Example 2: Custom Pricing Plugin
+### Custom pricing
 
 ```php
 <?php
 // plugins/dynamic-pricing/Plugin.php
 
-use App\Models\Inventory\Product;
+use Illuminate\Support\Facades\Log;
 
-// Apply volume discounts
+// Show volume discounts on well-stocked products. Only the displayed price
+// changes; the stored price and order pricing do not.
 add_filter('product_price_display', function ($price, $product) {
-    $discount = 0;
-
-    if ($product->stock > 100) {
-        $discount = 0.10; // 10% discount
-    } elseif ($product->stock > 50) {
-        $discount = 0.05; // 5% discount
+    if ($price === null) {
+        return null;
     }
 
-    return $price * (1 - $discount);
-}, 10);
+    $discount = match (true) {
+        $product->stock > 100 => 0.10,
+        $product->stock > 50 => 0.05,
+        default => 0.0,
+    };
 
-// Log price changes
-add_action('product_updated', function ($product, $oldData) {
-    if ($oldData['price'] !== $product->price) {
-        \Log::info('Price changed', [
-            'product' => $product->name,
-            'old_price' => $oldData['price'],
-            'new_price' => $product->price,
+    return round($price * (1 - $discount), 2);
+});
+
+// Log price changes made from the product form. The product still holds its
+// old price when product_before_update fires.
+add_action('product_before_update', function ($product, $data) {
+    if (array_key_exists('price', $data) && (float) $data['price'] !== (float) $product->price) {
+        Log::info('Price changed', [
+            'sku' => $product->sku,
+            'old_price' => (float) $product->price,
+            'new_price' => (float) $data['price'],
         ]);
     }
-}, 10);
+});
+
+// Add a handling fee to every order total.
+add_filter('order_total_calculation', function ($total, $order) {
+    return round((float) $total + 2.50, 2);
+});
 ```
 
-### Example 3: Analytics Plugin
+### Search by notes
+
+```php
+<?php
+// plugins/search-notes/Plugin.php
+
+add_filter('product_search_query', function ($query, $term) {
+    return $query->orWhere('notes', 'like', '%'.$term.'%');
+});
+```
+
+### Product view analytics
+
+```php
+<?php
+// plugins/analytics/hooks/activate.php
+
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+if (! Schema::hasTable('plugin_analytics_views')) {
+    Schema::create('plugin_analytics_views', function (Blueprint $table) {
+        $table->id();
+        $table->foreignId('organization_id')->constrained()->cascadeOnDelete();
+        $table->foreignId('product_id')->constrained()->cascadeOnDelete();
+        $table->timestamp('viewed_at');
+    });
+}
+```
 
 ```php
 <?php
 // plugins/analytics/Plugin.php
 
-use App\Models\Inventory\Product;
-use App\Models\Order\Order;
 use Illuminate\Support\Facades\DB;
 
-// Track product views
-add_action('product_viewed', function ($product) {
+add_action('product_viewed', function ($product, $user) {
     DB::table('plugin_analytics_views')->insert([
-        'product_id' => $product->id,
         'organization_id' => $product->organization_id,
+        'product_id' => $product->id,
         'viewed_at' => now(),
     ]);
-}, 10);
+});
 
-// Track conversions
-add_action('order_created', function ($order) {
-    foreach ($order->items as $item) {
-        DB::table('plugin_analytics_conversions')->insert([
-            'product_id' => $item->product_id,
-            'order_id' => $order->id,
-            'organization_id' => $order->organization_id,
-            'quantity' => $item->quantity,
-            'revenue' => $item->total,
-            'converted_at' => now(),
-        ]);
-    }
-}, 10);
+add_filter('dashboard_stats_data', function ($stats, $user) {
+    $stats['productViewsToday'] = DB::table('plugin_analytics_views')
+        ->where('organization_id', $user->organization_id)
+        ->where('viewed_at', '>=', today())
+        ->count();
+
+    return $stats;
+});
 ```
 
-## Testing Your Plugin
+```php
+<?php
+// plugins/analytics/hooks/uninstall.php
 
-1. **Upload** your plugin ZIP through the admin panel
-2. **Activate** the plugin
-3. **Test** all functionality thoroughly
-4. **Check logs** for any errors: `storage/logs/laravel.log`
-5. **Deactivate** and verify cleanup
-6. **Delete** and verify complete removal
+use Illuminate\Support\Facades\Schema;
+
+Schema::dropIfExists('plugin_analytics_views');
+```
+
+## Best practices
+
+- **Always return from filters.** A filter that returns nothing replaces the value with `null`.
+- **Scope data by organization.** Inventoros is multi-tenant: store `organization_id` on every row you create and filter by it when you read.
+- **Make `activate.php` idempotent** (`Schema::hasTable` before `Schema::create`) and clean up everything in `uninstall.php`.
+- **Catch your own errors** in hooks that talk to other systems, so a failing mail server does not break product saves.
+- **Namespace your PHP classes** (`namespace MyPlugin;`) and prefix custom hook names and tables with your slug.
+- **Declare `requires`** with the lowest Inventoros version you tested against.
+
+## Security notes
+
+A plugin runs PHP inside the application with full access to the database and filesystem. Install only plugins you trust.
+
+- Uploads are disabled until `INVENTOROS_ALLOW_PLUGIN_UPLOADS=true` is set, because an admin who can upload a plugin can run code on the server.
+- `INVENTOROS_PLUGIN_SIGNATURE_REQUIRED=true` with `INVENTOROS_PLUGIN_PUBLIC_KEY` accepts only ZIPs signed with your key.
+- Uploaded ZIPs are checked for path traversal, entry count and size before extraction.
+- Query filters (`product_list_query`, `supplier_list_query`) have the organization scope re-applied after they run, and `product_search_query` only sees the search group.
 
 ## Debugging
 
-Enable debug mode in `.env`:
-
-```env
-APP_DEBUG=true
-LOG_LEVEL=debug
-```
-
-Add logging to your plugin:
-
-```php
-\Log::debug('My Plugin: Something happened', ['data' => $data]);
-```
-
-## Need Help?
-
-- Check the example plugin in `/plugins/example-plugin`
-- Review the core hook implementations
-- Open an issue on GitHub
-- Join our community forum
-
-## Publishing Your Plugin
-
-When ready to share your plugin:
-
-1. Create comprehensive README.md
-2. Add version number to plugin.json
-3. Test thoroughly across different organizations
-4. Create a ZIP file of your plugin directory
-5. Share on the InventorOS plugin marketplace
-
----
-
-Happy plugin development! 🚀
+- Plugin load, activation and hook failures are logged to `storage/logs/laravel.log` with the plugin slug.
+- A plugin whose main file throws at boot is skipped for that request (and logged) rather than taking the application down.
+- A runtime bundle that fails to import is reported in the browser console as `[Inventoros] Plugin "{slug}" UI failed to load.`
+- Check `window.Inventoros` and the `pluginAssets` prop (Vue devtools, or `JSON.parse(document.querySelector('script[data-page]').textContent).props.pluginAssets`) to see which bundles the page is loading.
