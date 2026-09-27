@@ -12,6 +12,7 @@ use App\Mail\OrderApprovalEmail;
 use App\Mail\OrderStatusEmail;
 use App\Models\DataExport;
 use App\Models\Inventory\Product;
+use App\Models\Inventory\StockAudit;
 use App\Models\Notification;
 use App\Models\Order\Order;
 use App\Models\User;
@@ -589,6 +590,33 @@ final class NotificationService
             'actor' => $approver->name,
             'notes' => $notes,
             'notification_url' => $url,
+        ]);
+    }
+
+    /**
+     * Tell the assignee a scheduled cycle count is ready to be counted.
+     */
+    public static function createCycleCountAssignedNotification(StockAudit $audit, User $assignee): void
+    {
+        if (! self::shouldNotifyUser($assignee, 'cycle_count_assigned')) {
+            return;
+        }
+
+        $count = $audit->items()->count();
+
+        Notification::create([
+            'organization_id' => $audit->organization_id,
+            'user_id' => $assignee->id,
+            'type' => 'cycle_count_assigned',
+            'title' => 'Cycle Count Assigned',
+            'message' => "Cycle count {$audit->audit_number} ({$count} product(s)) is ready for you to count.",
+            'data' => [
+                'stock_audit_id' => $audit->id,
+                'audit_number' => $audit->audit_number,
+                'items' => $count,
+            ],
+            'action_url' => route('stock-audits.show', $audit->id),
+            'priority' => 'normal',
         ]);
     }
 

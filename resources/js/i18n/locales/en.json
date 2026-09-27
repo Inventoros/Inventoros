@@ -1805,5 +1805,45 @@
       "adminsSelfApprove": "Admins can approve their own requests",
       "adminsSelfApproveHelp": "Nobody else can approve a request they raised. Turn this off to hold admins to the same rule."
     }
+  },
+  "cycleCounts": {
+    "title": "Cycle count schedules",
+    "description": "Recurring counts that create a draft cycle audit of the products counted least recently.",
+    "backToAudits": "Stock audits",
+    "new": "New schedule",
+    "edit": "Edit schedule",
+    "create": "Create schedule",
+    "formHint": "Each run creates a draft cycle audit for the products in scope that were counted least recently, and tells the assignee.",
+    "empty": "No cycle count schedules yet.",
+    "emptyHint": "Schedule a daily, weekly or monthly count of a few products at a time so every item gets counted in rotation.",
+    "name": "Name",
+    "namePlaceholder": "Weekly aisle A count",
+    "frequency": "Frequency",
+    "frequencies": {
+      "daily": "Daily",
+      "weekly": "Weekly",
+      "monthly": "Monthly"
+    },
+    "scope": "Scope",
+    "scopes": {
+      "all": "All products",
+      "location": "Location",
+      "warehouse": "Warehouse",
+      "category": "Category"
+    },
+    "choose": "Choose one",
+    "perRun": "Products per run",
+    "perRunHelp": "Products never counted come first, then the ones counted longest ago.",
+    "assignee": "Assignee",
+    "unassigned": "Unassigned",
+    "firstRun": "First run",
+    "nextRun": "Next run",
+    "firstRunHelp": "Leave blank to run at the next scheduler check.",
+    "lastAudit": "Last audit",
+    "active": "Active",
+    "paused": "Paused",
+    "activeLabel": "Active (runs on schedule)",
+    "runNow": "Run now",
+    "confirmDelete": "Delete the schedule \"{name}\"? Audits it already created are kept."
   }
 }

@@ -46,11 +46,13 @@ class StockAudit extends Model
         'description',
         'status',
         'audit_type',
+        'cycle_count_schedule_id',
         'warehouse_location_id',
         'started_at',
         'completed_at',
         'notes',
         'created_by',
+        'assigned_to',
     ];
 
     protected function casts(): array
@@ -89,6 +91,26 @@ class StockAudit extends Model
     public function creator(): BelongsTo
     {
         return $this->belongsTo(User::class, 'created_by');
+    }
+
+    /**
+     * The user a scheduled cycle count was assigned to.
+     *
+     * @return BelongsTo<User, $this>
+     */
+    public function assignee(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'assigned_to');
+    }
+
+    /**
+     * The cycle count schedule that generated this audit, if any.
+     *
+     * @return BelongsTo<CycleCountSchedule, $this>
+     */
+    public function cycleCountSchedule(): BelongsTo
+    {
+        return $this->belongsTo(CycleCountSchedule::class);
     }
 
     /**
