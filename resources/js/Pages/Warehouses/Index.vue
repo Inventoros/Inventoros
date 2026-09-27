@@ -8,7 +8,7 @@ import { Head, Link, router } from '@inertiajs/vue3';
 import { ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { usePermissions } from '@/composables/usePermissions';
-import { Plus, Search, Eye, Pencil, Trash2, Warehouse } from 'lucide-vue-next';
+import { Plus, Search, Eye, Pencil, Trash2, Warehouse, Star } from 'lucide-vue-next';
 
 const { t } = useI18n();
 const { hasPermission } = usePermissions();
@@ -41,6 +41,12 @@ const searchWarehouses = () => {
 const clearFilters = () => {
     search.value = '';
     searchWarehouses();
+};
+
+const makeDefault = (warehouse) => {
+    if (confirm(t('warehouses.default.confirm', { name: warehouse.name }))) {
+        router.post(route('warehouses.set-default', warehouse.id), {}, { preserveScroll: true });
+    }
 };
 
 const deleteWarehouse = (warehouse) => {
@@ -178,6 +184,16 @@ const thClass =
                             <div class="flex items-center justify-end gap-1">
                                 <Link :href="route('warehouses.show', warehouse.id)" class="rounded-md p-1.5 text-text-tertiary transition-colors hover:bg-surface-overlay hover:text-brand" title="View"><Eye :size="16" /></Link>
                                 <Link v-if="hasPermission('edit_warehouses')" :href="route('warehouses.edit', warehouse.id)" class="rounded-md p-1.5 text-text-tertiary transition-colors hover:bg-surface-overlay hover:text-status-success" title="Edit"><Pencil :size="16" /></Link>
+                                <button
+                                    v-if="hasPermission('edit_warehouses') && !warehouse.is_default"
+                                    type="button"
+                                    @click="makeDefault(warehouse)"
+                                    class="rounded-md p-1.5 text-text-tertiary transition-colors hover:bg-surface-overlay hover:text-brand"
+                                    :title="t('warehouses.default.makeDefault')"
+                                    :aria-label="t('warehouses.default.makeDefault')"
+                                >
+                                    <Star :size="16" />
+                                </button>
                                 <button
                                     v-if="hasPermission('delete_warehouses')"
                                     @click="deleteWarehouse(warehouse)"

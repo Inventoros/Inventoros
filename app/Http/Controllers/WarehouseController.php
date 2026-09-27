@@ -6,6 +6,8 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\Warehouse\StoreWarehouseRequest;
 use App\Http\Requests\Warehouse\UpdateWarehouseRequest;
+use App\Enums\Permission;
+use App\Models\Inventory\ProductLocationStock;
 use App\Models\User;
 use App\Models\Warehouse;
 use App\Services\WarehouseAccessService;
@@ -126,11 +128,41 @@ class WarehouseController extends Controller
 
         $this->warehouseAccess->authorizeWarehouse($request->user(), $warehouse->id);
 
-        $warehouse->load(['locations', 'users']);
-        $warehouse->loadCount(['locations', 'users']);
+        // On-hand per location = the sum of the product bins held there.
+        $onHandByLocation = ProductLocationStock::query()
+            ->whereIn('location_id', $warehouse->locations()->pluck('id'))
+            ->groupBy('location_id')
+            ->selectRaw('location_id, SUM(quantity) as on_hand')
+            ->pluck('on_hand', 'location_id');
+
+        $locations = $warehouse->locations()
+            ->withCount('products')
+            ->orderBy('name')
+            ->get()
+            ->map(function ($location) use ($onHandByLocation) {
+                $location->on_hand = (int) ($onHandByLocation[$location->id] ?? 0);
+
+                return $location;
+            });
+
+        $assignedUsers = $warehouse->users()
+            ->select(['users.id', 'users.name', 'users.email'])
+            ->orderBy('users.name')
+            ->get();
 
         return Inertia::render('Warehouses/Show', [
             'warehouse' => $warehouse,
+            'locations' => $locations,
+            'assignedUsers' => $assignedUsers,
+            'stats' => [
+                'locations_count' => $locations->count(),
+                'products_count' => ProductLocationStock::query()
+                    ->whereIn('location_id', $locations->pluck('id'))
+                    ->where('quantity', '>', 0)
+                    ->distinct()
+                    ->count('product_id'),
+                'on_hand' => (int) $onHandByLocation->sum(),
+            ],
         ]);
     }
 
@@ -145,17 +177,24 @@ class WarehouseController extends Controller
 
         $this->warehouseAccess->authorizeWarehouse($request->user(), $warehouse->id);
 
-        $warehouse->load(['users']);
-
-        // Get all org users for assignment dropdown
-        $orgUsers = User::where('organization_id', $request->user()->organization_id)
-            ->select(['id', 'name', 'email'])
+        // Every org user, flagged when an assignment would not restrict them
+        // (admins and access_all_warehouses holders see every warehouse).
+        $users = User::where('organization_id', $request->user()->organization_id)
+            ->with('roles')
             ->orderBy('name')
-            ->get();
+            ->get(['id', 'name', 'email', 'role'])
+            ->map(fn (User $user) => [
+                'id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
+                'has_all_warehouse_access' => $user->isAdmin() || $user->hasPermission(Permission::ACCESS_ALL_WAREHOUSES),
+            ])
+            ->values();
 
         return Inertia::render('Warehouses/Edit', [
             'warehouse' => $warehouse,
-            'orgUsers' => $orgUsers,
+            'users' => $users,
+            'assignedUserIds' => $warehouse->users()->pluck('users.id')->map(fn ($id) => (int) $id)->values(),
         ]);
     }
 
@@ -217,8 +256,9 @@ class WarehouseController extends Controller
 
         $this->warehouseAccess->authorizeWarehouse($request->user(), $warehouse->id);
 
+        // 'present' (not 'required') so an empty list clears every assignment.
         $validated = $request->validate([
-            'user_ids' => ['required', 'array'],
+            'user_ids' => ['present', 'array'],
             'user_ids.*' => ['integer', Rule::exists('users', 'id')->where('organization_id', $request->user()->organization_id)],
         ]);
 

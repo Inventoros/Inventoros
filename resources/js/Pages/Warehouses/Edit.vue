@@ -3,6 +3,7 @@ import AppLayout from '@/Layouts/AppLayout.vue';
 import PageHeader from '@/Components/ui/PageHeader.vue';
 import Card from '@/Components/ui/Card.vue';
 import Button from '@/Components/ui/Button.vue';
+import Badge from '@/Components/ui/Badge.vue';
 import { Head, Link, useForm, router } from '@inertiajs/vue3';
 import { useI18n } from 'vue-i18n';
 import { usePermissions } from '@/composables/usePermissions';
@@ -14,8 +15,8 @@ const { hasPermission } = usePermissions();
 
 const props = defineProps({
     warehouse: Object,
-    users: Array,
-    assignedUserIds: Array,
+    users: { type: Array, default: () => [] },
+    assignedUserIds: { type: Array, default: () => [] },
 });
 
 const form = useForm({
@@ -35,7 +36,12 @@ const form = useForm({
     currency: props.warehouse.currency || 'CAD',
     priority: props.warehouse.priority ?? 0,
     is_active: props.warehouse.is_active ?? true,
-    user_ids: props.assignedUserIds || [],
+});
+
+// User assignment saves separately: it has its own route and permission
+// (manage_warehouse_users), independent of editing the warehouse details.
+const usersForm = useForm({
+    user_ids: [...props.assignedUserIds],
 });
 
 const timezones = [
@@ -67,16 +73,22 @@ const filteredUsers = computed(() => {
 });
 
 const toggleUser = (userId) => {
-    const index = form.user_ids.indexOf(userId);
+    const index = usersForm.user_ids.indexOf(userId);
     if (index === -1) {
-        form.user_ids.push(userId);
+        usersForm.user_ids.push(userId);
     } else {
-        form.user_ids.splice(index, 1);
+        usersForm.user_ids.splice(index, 1);
     }
 };
 
 const submit = () => {
     form.put(route('warehouses.update', props.warehouse.id));
+};
+
+const saveUsers = () => {
+    usersForm.post(route('warehouses.users.update', props.warehouse.id), {
+        preserveScroll: true,
+    });
 };
 
 const fieldLabel = 'mb-1 block text-sm font-medium text-text-secondary';
@@ -251,53 +263,6 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                 </div>
             </Card>
 
-            <!-- User Access -->
-            <Card v-if="hasPermission('manage_warehouse_users') && users" :padded="false">
-                <div class="px-5 pt-5"><h3 class="text-sm font-semibold text-text-primary">User Access</h3></div>
-                <div class="p-5">
-                    <p class="text-sm text-text-tertiary mb-4">
-                        Select which users have access to this warehouse. Users without access will not see this warehouse or its inventory.
-                    </p>
-
-                    <!-- User search -->
-                    <div class="mb-4">
-                        <input
-                            v-model="userSearch"
-                            type="text"
-                            placeholder="Search users..."
-                            :class="fieldInput"
-                        />
-                    </div>
-
-                    <div class="border border-border-subtle rounded-lg max-h-64 overflow-y-auto">
-                        <div
-                            v-for="user in filteredUsers"
-                            :key="user.id"
-                            class="flex items-center px-4 py-3 border-b border-border-subtle last:border-0 hover:bg-surface-sunken"
-                        >
-                            <label class="flex items-center flex-1 cursor-pointer">
-                                <input
-                                    type="checkbox"
-                                    :checked="form.user_ids.includes(user.id)"
-                                    @change="toggleUser(user.id)"
-                                    class="rounded border-border-subtle bg-surface-canvas text-brand ds-focus-ring"
-                                />
-                                <div class="ml-3">
-                                    <div class="text-sm font-medium text-text-primary">{{ user.name }}</div>
-                                    <div class="text-sm text-text-tertiary">{{ user.email }}</div>
-                                </div>
-                            </label>
-                        </div>
-                        <div v-if="filteredUsers.length === 0" class="px-4 py-6 text-center text-sm text-text-tertiary">
-                            No users found.
-                        </div>
-                    </div>
-                    <p class="mt-2 text-xs text-text-tertiary">
-                        {{ form.user_ids.length }} user(s) selected
-                    </p>
-                </div>
-            </Card>
-
             <!-- Actions -->
             <div class="flex items-center justify-end gap-2 border-t border-border-subtle pt-6">
                 <Button variant="secondary" as="Link" :href="route('warehouses.index')">
@@ -307,6 +272,59 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                     Update Warehouse
                 </Button>
             </div>
+        </form>
+
+        <!-- User Access (separate form: its own route and permission) -->
+        <form v-if="hasPermission('manage_warehouse_users')" id="user-access" @submit.prevent="saveUsers" class="mt-6">
+            <Card :padded="false">
+                <div class="px-5 pt-5"><h3 class="text-sm font-semibold text-text-primary">{{ t('warehouses.users.title') }}</h3></div>
+                <div class="p-5">
+                    <p class="mb-4 text-sm text-text-tertiary">{{ t('warehouses.users.hint') }}</p>
+
+                    <div class="mb-4">
+                        <input
+                            v-model="userSearch"
+                            type="text"
+                            :placeholder="t('warehouses.users.searchPlaceholder')"
+                            :aria-label="t('warehouses.users.searchPlaceholder')"
+                            :class="fieldInput"
+                        />
+                    </div>
+
+                    <div class="max-h-64 overflow-y-auto rounded-lg border border-border-subtle">
+                        <label
+                            v-for="user in filteredUsers"
+                            :key="user.id"
+                            class="flex cursor-pointer items-center gap-3 border-b border-border-subtle px-4 py-3 last:border-0 hover:bg-surface-sunken"
+                        >
+                            <input
+                                type="checkbox"
+                                :checked="usersForm.user_ids.includes(user.id)"
+                                @change="toggleUser(user.id)"
+                                class="rounded border-border-subtle bg-surface-canvas text-brand ds-focus-ring"
+                            />
+                            <span class="min-w-0 flex-1">
+                                <span class="block truncate text-sm font-medium text-text-primary">{{ user.name }}</span>
+                                <span class="block truncate text-sm text-text-tertiary">{{ user.email }}</span>
+                            </span>
+                            <Badge v-if="user.has_all_warehouse_access" variant="neutral" size="sm">{{ t('warehouses.users.allWarehouses') }}</Badge>
+                        </label>
+                        <div v-if="filteredUsers.length === 0" class="px-4 py-6 text-center text-sm text-text-tertiary">
+                            {{ t('warehouses.users.noUsers') }}
+                        </div>
+                    </div>
+                    <p v-if="usersForm.errors.user_ids" :class="fieldError">{{ usersForm.errors.user_ids }}</p>
+
+                    <div class="mt-3 flex flex-wrap items-center justify-between gap-2">
+                        <p class="text-xs text-text-tertiary">
+                            {{ t('warehouses.users.selected', { count: usersForm.user_ids.length }) }}
+                        </p>
+                        <Button type="submit" variant="default" size="sm" :loading="usersForm.processing" :disabled="usersForm.processing">
+                            {{ t('warehouses.users.save') }}
+                        </Button>
+                    </div>
+                </div>
+            </Card>
         </form>
     </AppLayout>
 </template>

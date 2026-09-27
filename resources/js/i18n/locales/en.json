@@ -1423,7 +1423,8 @@
       "locations": "Locations",
       "status": "Status",
       "default": "Default",
-      "actions": "Actions"
+      "actions": "Actions",
+      "onHand": "On hand"
     },
     "fields": {
       "name": "Warehouse Name",
@@ -1462,6 +1463,24 @@
       "title": "Warehouse access",
       "restrictLabel": "Restrict users to their assigned warehouses",
       "restrictHint": "Users assigned to warehouses only see and move stock in those warehouses. Turn this on to also hide all warehouse stock from users with no assignment. Admins and roles with Access All Warehouses are never restricted."
+    },
+    "users": {
+      "title": "User access",
+      "hint": "Users you assign here can only see and move stock in the warehouses they are assigned to. Admins and roles with Access All Warehouses always see every warehouse.",
+      "searchPlaceholder": "Search users...",
+      "noUsers": "No users found.",
+      "selected": "{count} user(s) selected",
+      "save": "Save user access",
+      "allWarehouses": "All warehouses",
+      "assigned": "Assigned users ({count})",
+      "noneAssigned": "No users assigned to this warehouse.",
+      "manage": "Manage user access"
+    },
+    "default": {
+      "badge": "Default warehouse",
+      "makeDefault": "Make default",
+      "confirm": "Make \"{name}\" the default warehouse?",
+      "hint": "The default warehouse is preselected for new orders."
     }
   },
   "workOrders": {
