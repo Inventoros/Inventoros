@@ -9,6 +9,7 @@ use App\Services\SettingsService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
 use Inertia\Inertia;
+use Inertia\Response;
 
 /**
  * Controller for managing application settings.
@@ -19,19 +20,43 @@ use Inertia\Inertia;
 class SettingsController extends Controller
 {
     /**
-     * Display the settings index page.
-     *
-     * @param Request $request The incoming HTTP request
-     * @return \Inertia\Response|\Illuminate\Http\RedirectResponse
+     * Stored provider secrets, as [config section, key]. They are never sent
+     * to the browser; the page gets a "<key>_set" flag instead, and a blank
+     * value on save keeps the stored one.
      */
-    public function index()
+    private const SECRET_FIELDS = [
+        ['smtp', 'password'],
+        ['mailgun', 'secret'],
+        ['sendgrid', 'api_key'],
+    ];
+
+    /**
+     * Display the settings hub, which links to every settings page. The page
+     * hides the sections the user has no permission for.
+     */
+    public function hub(): Response
+    {
+        return Inertia::render('Settings/Index');
+    }
+
+    /**
+     * Display the email (SMTP/provider) and notification preferences page.
+     */
+    public function email(): Response
     {
         if (!auth()->user()->isAdmin()) {
             abort(403, 'Only organization admins can access settings');
         }
 
-        return Inertia::render('Settings/Index', [
-            'emailConfig' => SettingsService::getEmailConfig(),
+        $emailConfig = SettingsService::getEmailConfig();
+
+        foreach (self::SECRET_FIELDS as [$section, $key]) {
+            $emailConfig[$section][$key.'_set'] = filled($emailConfig[$section][$key] ?? null);
+            $emailConfig[$section][$key] = '';
+        }
+
+        return Inertia::render('Settings/Email', [
+            'emailConfig' => $emailConfig,
             'userPreferences' => auth()->user()->notification_preferences ?? [],
         ]);
     }
@@ -74,14 +99,14 @@ class SettingsController extends Controller
         if ($validated['provider'] === 'smtp') {
             SettingsService::set('email.smtp.host', $validated['smtp']['host']);
             SettingsService::set('email.smtp.port', $validated['smtp']['port']);
-            SettingsService::set('email.smtp.username', $validated['smtp']['username']);
-            SettingsService::set('email.smtp.password', $validated['smtp']['password'], true);
+            SettingsService::set('email.smtp.username', $validated['smtp']['username'] ?? null);
+            $this->setSecret('email.smtp.password', $validated['smtp']['password'] ?? null);
             SettingsService::set('email.smtp.encryption', $validated['smtp']['encryption']);
         } elseif ($validated['provider'] === 'mailgun') {
             SettingsService::set('email.mailgun.domain', $validated['mailgun']['domain']);
-            SettingsService::set('email.mailgun.secret', $validated['mailgun']['secret'], true);
+            $this->setSecret('email.mailgun.secret', $validated['mailgun']['secret'] ?? null);
         } elseif ($validated['provider'] === 'sendgrid') {
-            SettingsService::set('email.sendgrid.api_key', $validated['sendgrid']['api_key'], true);
+            $this->setSecret('email.sendgrid.api_key', $validated['sendgrid']['api_key'] ?? null);
         }
 
         return back()->with('success', 'Email settings saved successfully');
@@ -121,5 +146,19 @@ class SettingsController extends Controller
 
             return back()->with('error', 'Failed to send test email: ' . $e->getMessage());
         }
+    }
+
+    /**
+     * Store an encrypted provider secret, keeping the stored value when the
+     * form left the field blank (the page never receives the stored secret,
+     * so blank means "unchanged").
+     */
+    private function setSecret(string $key, ?string $value): void
+    {
+        if (blank($value)) {
+            return;
+        }
+
+        SettingsService::set($key, $value, true);
     }
 }

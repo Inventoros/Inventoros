@@ -831,6 +831,7 @@
       "username": "Username",
       "password": "Password",
       "passwordHint": "Leave blank to keep current password",
+      "secretSaved": "Saved. Leave blank to keep it.",
       "encryption": "Encryption",
       "tls": "TLS",
       "ssl": "SSL",

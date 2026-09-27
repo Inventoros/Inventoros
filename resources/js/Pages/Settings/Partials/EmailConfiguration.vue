@@ -169,7 +169,8 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                         v-model="form.smtp.password"
                         type="password"
                         :class="fieldInput"
-                        :placeholder="t('settings.email.passwordHint')"
+                        :placeholder="emailConfig.smtp?.password_set ? t('settings.email.secretSaved') : t('settings.email.passwordHint')"
+                        autocomplete="new-password"
                     />
                 </div>
 
@@ -209,7 +210,8 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                         v-model="form.mailgun.secret"
                         type="password"
                         :class="fieldInput"
-                        placeholder="key-..."
+                        :placeholder="emailConfig.mailgun?.secret_set ? t('settings.email.secretSaved') : 'key-...'"
+                        autocomplete="new-password"
                     />
                 </div>
             </div>
@@ -226,7 +228,8 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                         v-model="form.sendgrid.api_key"
                         type="password"
                         :class="fieldInput"
-                        placeholder="SG...."
+                        :placeholder="emailConfig.sendgrid?.api_key_set ? t('settings.email.secretSaved') : 'SG....'"
+                        autocomplete="new-password"
                     />
                 </div>
             </div>

@@ -244,12 +244,13 @@ class SettingsPermissionTest extends TestCase
         $this->assertFalse($this->manager->hasPermission('delete_users'));
     }
 
-    public function test_legacy_settings_route_redirects_to_organization_settings(): void
+    public function test_settings_route_renders_the_settings_hub(): void
     {
         $response = $this->actingAs($this->admin)
             ->get(route('settings.index'));
 
-        $response->assertRedirect(route('settings.organization.index'));
+        $response->assertOk();
+        $response->assertInertia(fn ($page) => $page->component('Settings/Index'));
     }
 
     public function test_guest_cannot_access_organization_settings(): void
