@@ -337,9 +337,10 @@ class InstallerController extends Controller
         return [
             [
                 'name' => 'PHP Version',
-                'required' => '8.2.0',
+                // Keep in step with composer.json's "php" constraint.
+                'required' => '8.4.1',
                 'current' => PHP_VERSION,
-                'met' => version_compare(PHP_VERSION, '8.2.0', '>='),
+                'met' => version_compare(PHP_VERSION, '8.4.1', '>='),
             ],
             [
                 'name' => 'PDO Extension',
@@ -410,12 +411,12 @@ class InstallerController extends Controller
     /**
      * Update .env file with new values.
      *
-     * @param array<string, string> $data The key-value pairs to update
+     * @param array<string, string|int|float|bool|null> $data The key-value pairs to update
      * @return void
      */
     protected function updateEnvFile(array $data): void
     {
-        $envFile = base_path('.env');
+        $envFile = $this->envFilePath();
         $envContent = file_get_contents($envFile);
 
         foreach ($data as $key => $value) {
@@ -425,7 +426,9 @@ class InstallerController extends Controller
             // the raw $value was concatenated unquoted — a password like
             // p@ss$1word became a shell-style variable lookup at parse time,
             // pa"ss broke the line, and # truncated the value at a comment.
-            $replacement = "{$key}=" . static::quoteEnvValue($value);
+            // Values arrive straight from the request: the wizard posts the
+            // port as a JSON number, which is an int here.
+            $replacement = "{$key}=" . static::quoteEnvValue((string) $value);
 
             // Match the key at the start of a line (handles commented and uncommented)
             $pattern = "/^#?\s*{$key}=.*/m";
@@ -452,6 +455,14 @@ class InstallerController extends Controller
         }
 
         file_put_contents($envFile, $envContent);
+    }
+
+    /**
+     * The .env file the installer writes. Overridable for tests.
+     */
+    protected function envFilePath(): string
+    {
+        return base_path('.env');
     }
 
     /**

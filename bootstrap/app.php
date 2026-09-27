@@ -8,6 +8,7 @@ use App\Http\Middleware\EnsureTwoFactorVerified;
 use App\Http\Middleware\EnsureUserIsAdmin;
 use App\Http\Middleware\EnsureUserIsManager;
 use App\Http\Middleware\HandleInertiaRequests;
+use App\Http\Middleware\RejectNonNumericModelKeys;
 use App\Http\Middleware\LogAccessDenied;
 use App\Http\Middleware\Portal\AuthenticatePortalContact;
 use App\Http\Middleware\Portal\HandlePortalInertiaRequests;
@@ -46,6 +47,15 @@ return Application::configure(basePath: dirname(__DIR__))
         },
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        // 404 for non-numeric ids before route-model binding hits the
+        // database (PostgreSQL errors on `id = 'abc'` against a bigint).
+        $middleware->web(prepend: [RejectNonNumericModelKeys::class]);
+        $middleware->api(prepend: [RejectNonNumericModelKeys::class]);
+        $middleware->prependToPriorityList(
+            before: \Illuminate\Routing\Middleware\SubstituteBindings::class,
+            prepend: RejectNonNumericModelKeys::class,
+        );
+
         $middleware->web(append: [
             AddLinkHeadersForPreloadedAssets::class,
             CheckInstallation::class,

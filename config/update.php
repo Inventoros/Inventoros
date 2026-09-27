@@ -77,6 +77,24 @@ return [
     |
     */
 
+    /*
+    |--------------------------------------------------------------------------
+    | Database backup requirement
+    |--------------------------------------------------------------------------
+    |
+    | Every backup (and therefore every update) must capture the database, via
+    | mysqldump / pg_dump, a SQLite snapshot, or the built-in PHP dumper. If
+    | none of them works the backup fails and the updater refuses to touch the
+    | installation. Set this to true only if you back the database up some
+    | other way and accept files-only backups.
+    |
+    */
+
+    'allow_missing_database_backup' => filter_var(
+        env('INVENTOROS_UPDATE_ALLOW_NO_DB_BACKUP', false),
+        FILTER_VALIDATE_BOOL
+    ),
+
     'signature' => [
         'required' => filter_var(
             env('INVENTOROS_UPDATE_SIGNATURE_REQUIRED', true),

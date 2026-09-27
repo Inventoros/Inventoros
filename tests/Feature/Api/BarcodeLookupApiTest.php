@@ -239,8 +239,25 @@ class BarcodeLookupApiTest extends TestCase
 
         $response = $this->getJson('/api/v1/barcode/uppercase-sku');
 
-        // The implementation does an exact match, so case-sensitive lookup returns 404
-        $response->assertStatus(404);
+        // Scanners and people type SKUs in either case. MySQL's collation
+        // matched case-insensitively while SQLite/PostgreSQL did not, so the
+        // same lookup gave different answers per database; now it matches
+        // regardless of case everywhere.
+        $response->assertStatus(200)
+            ->assertJsonPath('product.sku', 'UPPERCASE-SKU');
+    }
+
+    public function test_exact_case_match_wins_over_a_case_insensitive_one(): void
+    {
+        Sanctum::actingAs($this->admin);
+
+        $this->createProduct(['sku' => 'OTHER-1', 'barcode' => 'ABC123']);
+        $this->createProduct(['sku' => 'abc123']);
+
+        $response = $this->getJson('/api/v1/barcode/abc123');
+
+        $response->assertStatus(200)
+            ->assertJsonPath('product.sku', 'abc123');
     }
 
     public function test_lookup_returns_category_and_location(): void

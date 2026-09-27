@@ -11,6 +11,18 @@ return new class extends Migration
      */
     public function up(): void
     {
+        // products references product_categories and product_locations, but
+        // their migrations sort after this one. SQLite accepted the dangling
+        // foreign keys; MySQL and PostgreSQL reject them, so a fresh install
+        // on either failed here. Run those (hasTable-guarded, idempotent)
+        // migrations first; when their own turn comes they are no-ops.
+        foreach ([
+            '2025_10_12_034229_create_product_categories_table.php',
+            '2025_10_12_034229_create_product_locations_table.php',
+        ] as $dependency) {
+            (require __DIR__.'/'.$dependency)->up();
+        }
+
         if (!Schema::hasTable('products')) {
             Schema::create('products', function (Blueprint $table) {
                 $table->id();

@@ -1,4 +1,5 @@
-# Inventoros local dev stack.
+# Inventoros local DEVELOPMENT stack (APP_DEBUG=true, bind-mounted source).
+# For production use docker-compose.prod.yml and the root Dockerfile instead.
 #
 # One-command boot:    docker compose up
 # With Postgres:       docker compose --profile postgres up
@@ -20,7 +21,7 @@
 x-php: &php-base
   build:
     context: .
-    dockerfile: Dockerfile
+    dockerfile: docker/dev.Dockerfile
     args:
       PHP_VERSION: "8.4"
   image: inventoros:dev

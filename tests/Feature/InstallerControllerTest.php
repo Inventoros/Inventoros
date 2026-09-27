@@ -32,4 +32,54 @@ class InstallerControllerTest extends TestCase
         $this->assertDatabaseMissing('organizations', ['name' => 'Hijack Org']);
     }
 
+    public function test_installer_php_requirement_matches_composer_json(): void
+    {
+        // The wizard used to advertise PHP 8.2 while the locked dependencies
+        // need far newer; the stated minimum must be composer.json's.
+        $composer = json_decode((string) file_get_contents(base_path('composer.json')), true);
+        $minimum = ltrim((string) $composer['require']['php'], '^~>=');
+
+        $response = $this->get('/install/requirements');
+
+        $response->assertOk();
+        $php = collect($response->viewData('page')['props']['requirements'])->firstWhere('name', 'PHP Version');
+        $this->assertSame($minimum, $php['required']);
+    }
+
+    public function test_database_step_accepts_the_numeric_port_the_wizard_sends(): void
+    {
+        // The wizard posts `port` as a JSON number. Writing it to .env used to
+        // hit quoteEnvValue(string) with an int: a TypeError, so every install
+        // through the browser died with a bare 500 on the database step.
+        $envFile = storage_path('app/testing/installer.env');
+        \Illuminate\Support\Facades\File::ensureDirectoryExists(dirname($envFile));
+        file_put_contents($envFile, "APP_NAME=Inventoros\nDB_CONNECTION=sqlite\n");
+
+        $this->app->bind(\App\Http\Controllers\Install\InstallerController::class, fn () => new class($envFile) extends \App\Http\Controllers\Install\InstallerController
+        {
+            public function __construct(private string $testEnvFile) {}
+
+            protected function envFilePath(): string
+            {
+                return $this->testEnvFile;
+            }
+        });
+        \Illuminate\Support\Facades\Artisan::shouldReceive('call')->andReturn(0);
+
+        $response = $this->postJson('/install/database/install', [
+            'driver' => 'mysql',
+            'host' => '127.0.0.1',
+            'port' => 3306,
+            'database' => 'inventoros',
+            'username' => 'inventoros',
+            'password' => 'secret',
+        ]);
+
+        $this->assertNotSame('Server Error', $response->json('message'));
+        $env = (string) file_get_contents($envFile);
+        $this->assertStringContainsString('DB_CONNECTION="mysql"', $env);
+        $this->assertStringContainsString('DB_PORT="3306"', $env);
+
+        \Illuminate\Support\Facades\File::deleteDirectory(storage_path('app/testing'));
+    }
 }

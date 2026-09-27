@@ -80,7 +80,9 @@ class ReturnLineAdjustmentTest extends TestCase
         $this->assertSame($this->admin->id, $log->user_id);
         $this->assertSame(ReturnOrder::class, $log->subject_type);
         $this->assertSame($return->id, $log->subject_id);
-        $this->assertSame(
+        // assertEquals: MySQL's JSON type stores object keys in its own
+        // order (shortest first), so "new" comes back before "old".
+        $this->assertEquals(
             ['restock' => ['old' => false, 'new' => true], 'condition' => ['old' => 'damaged', 'new' => 'used']],
             $log->properties['lines'][$line->id],
         );

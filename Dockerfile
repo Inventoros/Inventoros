@@ -1,82 +1,140 @@
 # syntax=docker/dockerfile:1.7
 
-# Single-image dev runtime for Inventoros: FrankenPHP (Caddy + PHP-FPM in one binary)
-# + Node for asset builds. SQLite works out of the box; Postgres works via the
-# postgres profile in docker-compose.yml.
+# Inventoros production image.
 #
-# Build:   docker build -t inventoros .
-# Run:     docker compose up
-# See:     docker/README.md
+#   assets  -> Node builds the Vite bundle
+#   vendor  -> Composer installs production dependencies (no dev packages)
+#   runtime -> FrankenPHP (Caddy + PHP in one binary) serving /app/public
+#
+# Runs as a non-root user on port 8080, APP_DEBUG=false, caches config,
+# routes, views and events at start, and keeps /app/storage on a volume.
+# Migrations only run when RUN_MIGRATIONS=true (see docker/entrypoint.prod.sh).
+#
+# Build:  docker build -t inventoros .
+# Run:    docker compose -f docker-compose.prod.yml up -d
+# Docs:   docs/site/sections/installation-docker.md
 
 ARG PHP_VERSION=8.4
+ARG NODE_VERSION=22
 
+############################################
+# PHP base: runtime extensions + DB clients
+############################################
 FROM dunglas/frankenphp:1-php${PHP_VERSION} AS base
 
-ARG USER=app
-ARG UID=1000
-ARG GID=1000
-
-ENV SERVER_NAME=:80 \
-    APP_ENV=local \
-    APP_DEBUG=true \
-    PHP_INI_DIR=/usr/local/etc/php
-
-# System deps + PHP extensions Inventoros needs
-RUN apt-get update && apt-get install -y --no-install-recommends \
-        git curl unzip ca-certificates \
-        libsqlite3-dev libpq-dev libzip-dev libpng-dev libjpeg-dev libfreetype6-dev \
-        libicu-dev libxml2-dev libonig-dev \
-        nodejs npm \
-    && install-php-extensions \
-        pdo_sqlite pdo_pgsql pdo_mysql \
-        gd intl zip bcmath exif pcntl \
-        opcache redis \
-    && apt-get clean && rm -rf /var/lib/apt/lists/*
-
-# Composer
-COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
-
-# Non-root user (matches typical Linux UID; FrankenPHP/Caddy still binds :80 via cap)
-RUN groupadd -g ${GID} ${USER} && useradd -m -u ${UID} -g ${GID} -s /bin/bash ${USER} \
-    && setcap cap_net_bind_service=+ep /usr/local/bin/frankenphp \
-    && mkdir -p /data/caddy /config/caddy \
-    && chown -R ${USER}:${USER} /data/caddy /config/caddy
+# pdo_* for MySQL/PostgreSQL/SQLite, plus what the app and its packages use.
+# The mysql/postgresql clients let the in-app backup use mysqldump/pg_dump;
+# the PostgreSQL client comes from the PGDG repo so it can dump any current
+# server version (Debian's own client refuses to dump newer servers).
+RUN set -eux; \
+    apt-get update; \
+    apt-get install -y --no-install-recommends ca-certificates curl gnupg unzip; \
+    install -d /usr/share/postgresql-common/pgdg; \
+    curl -fsSL -o /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc https://www.postgresql.org/media/keys/ACCC4CF8.asc; \
+    . /etc/os-release; \
+    echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt.postgresql.org/pub/repos/apt ${VERSION_CODENAME}-pgdg main" > /etc/apt/sources.list.d/pgdg.list; \
+    apt-get update; \
+    apt-get install -y --no-install-recommends postgresql-client-17 mariadb-client sqlite3; \
+    install-php-extensions \
+        pdo_mysql pdo_pgsql pdo_sqlite \
+        bcmath exif gd intl pcntl zip opcache redis; \
+    apt-get purge -y --auto-remove gnupg; \
+    rm -rf /var/lib/apt/lists/*; \
+    command -v mysqldump; command -v pg_dump
 
 WORKDIR /app
 
-# PHP recommended dev settings
-RUN cp ${PHP_INI_DIR}/php.ini-development ${PHP_INI_DIR}/php.ini \
-    && sed -ri 's/^memory_limit\s*=.*/memory_limit = 512M/' ${PHP_INI_DIR}/php.ini \
-    && sed -ri 's/^upload_max_filesize\s*=.*/upload_max_filesize = 32M/' ${PHP_INI_DIR}/php.ini \
-    && sed -ri 's/^post_max_size\s*=.*/post_max_size = 32M/' ${PHP_INI_DIR}/php.ini
+############################################
+# Frontend assets
+############################################
+FROM node:${NODE_VERSION}-bookworm-slim AS assets
 
-# Caddyfile (FrankenPHP serves PHP and static files in one binary)
-COPY docker/Caddyfile /etc/caddy/Caddyfile
-
-# Composer + node deps (cached)
-COPY composer.json composer.lock ./
-RUN composer install --no-interaction --no-scripts --no-autoloader --prefer-dist
+WORKDIR /app
 
 COPY package.json package-lock.json ./
 RUN npm ci --no-audit --no-fund
 
-# App source
-COPY --chown=${USER}:${USER} . /app
+COPY vite.config.js postcss.config.js tailwind.config.js jsconfig.json ./
+COPY resources ./resources
+COPY plugins ./plugins
+COPY public ./public
+RUN npm run build
 
-# Build assets, autoloader, optimise
-RUN composer dump-autoload --optimize \
-    && npm run build \
-    && mkdir -p storage/framework/{sessions,cache,views,testing} \
-                storage/app/public storage/logs bootstrap/cache database \
-    && chown -R ${USER}:${USER} /app
+############################################
+# Composer dependencies (production only)
+############################################
+FROM base AS vendor
 
-# Entrypoint runs migrations, key:generate, storage:link before serving
-COPY docker/entrypoint.sh /usr/local/bin/entrypoint
-RUN chmod +x /usr/local/bin/entrypoint
+COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
-USER ${USER}
+COPY composer.json composer.lock ./
+RUN composer install \
+        --no-dev --no-interaction --no-progress --prefer-dist \
+        --no-scripts --no-autoloader
 
-EXPOSE 80
+COPY . .
+RUN composer dump-autoload --no-dev --optimize --no-scripts
 
-ENTRYPOINT ["entrypoint"]
+############################################
+# Runtime image
+############################################
+FROM base AS runtime
+
+ARG UID=1000
+ARG GID=1000
+
+ENV APP_ENV=production \
+    APP_DEBUG=false \
+    LOG_CHANNEL=stderr \
+    LOG_LEVEL=warning \
+    SERVER_NAME=:8080 \
+    XDG_CONFIG_HOME=/config \
+    XDG_DATA_HOME=/data \
+    RUN_MIGRATIONS=false
+
+RUN set -eux; \
+    cp "$PHP_INI_DIR/php.ini-production" "$PHP_INI_DIR/php.ini"; \
+    { \
+        echo 'memory_limit=512M'; \
+        echo 'upload_max_filesize=32M'; \
+        echo 'post_max_size=32M'; \
+        echo 'expose_php=Off'; \
+        echo 'opcache.enable=1'; \
+        echo 'opcache.enable_cli=0'; \
+        echo 'opcache.memory_consumption=192'; \
+        echo 'opcache.max_accelerated_files=20000'; \
+        echo 'opcache.validate_timestamps=0'; \
+    } > "$PHP_INI_DIR/conf.d/zz-inventoros.ini"; \
+    groupadd --gid "${GID}" app; \
+    useradd --uid "${UID}" --gid app --create-home --shell /usr/sbin/nologin app; \
+    setcap cap_net_bind_service=+ep /usr/local/bin/frankenphp; \
+    mkdir -p /data/caddy /config/caddy; \
+    chown -R app:app /data /config
+
+COPY docker/Caddyfile.prod /etc/caddy/Caddyfile
+COPY --chmod=755 docker/entrypoint.prod.sh /usr/local/bin/inventoros-entrypoint
+
+COPY --chown=app:app . /app
+COPY --from=vendor --chown=app:app /app/vendor /app/vendor
+COPY --from=assets --chown=app:app /app/public/build /app/public/build
+
+RUN set -eux; \
+    rm -rf tests e2e screenshots docs node_modules docker-compose*.yml playwright.config.ts; \
+    mkdir -p storage/app/public storage/framework/cache/data storage/framework/sessions \
+             storage/framework/views storage/logs bootstrap/cache; \
+    # The web installer writes DB settings to .env; it must exist and be writable.
+    touch .env; \
+    chown -R app:app storage bootstrap/cache .env public; \
+    su app -s /bin/sh -c "php artisan package:discover --ansi"
+
+USER app
+
+VOLUME ["/app/storage"]
+
+EXPOSE 8080
+
+HEALTHCHECK --interval=30s --timeout=5s --start-period=60s --retries=5 \
+    CMD curl -fsS http://127.0.0.1:8080/up || exit 1
+
+ENTRYPOINT ["inventoros-entrypoint"]
 CMD ["frankenphp", "run", "--config", "/etc/caddy/Caddyfile"]

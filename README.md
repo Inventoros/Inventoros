@@ -10,7 +10,7 @@
   <a href="https://github.com/Inventoros/Inventoros/actions/workflows/tests.yml"><img src="https://github.com/Inventoros/Inventoros/actions/workflows/tests.yml/badge.svg" alt="Tests"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-AGPL_v3-blue.svg" alt="License: AGPL v3"></a>
   <a href="https://laravel.com"><img src="https://img.shields.io/badge/Laravel-13-FF2D20?logo=laravel" alt="Laravel 13"></a>
-  <a href="https://php.net"><img src="https://img.shields.io/badge/PHP-8.3+-777BB4?logo=php" alt="PHP 8.3+"></a>
+  <a href="https://php.net"><img src="https://img.shields.io/badge/PHP-8.4-777BB4?logo=php" alt="PHP 8.4"></a>
   <a href="https://vuejs.org"><img src="https://img.shields.io/badge/Vue-3-4FC08D?logo=vuedotjs" alt="Vue 3"></a>
   <a href="https://inertiajs.com"><img src="https://img.shields.io/badge/Inertia.js-v3-6B46C1" alt="Inertia.js"></a>
   <a href="CODE_OF_CONDUCT.md"><img src="https://img.shields.io/badge/Contributor%20Covenant-2.1-4baaaa.svg" alt="Code of Conduct"></a>
@@ -131,7 +131,7 @@ Inventoros is an open-source Inventory and Warehouse Management System (WMS) bui
 
 | Layer | Technology |
 |-------|-----------|
-| Backend | Laravel 13 (PHP 8.3+) |
+| Backend | Laravel 13 (PHP 8.4) |
 | Frontend | Inertia.js v3 + Vue 3 + Tailwind CSS |
 | Build | Vite 7 |
 | Database | SQLite (dev) / MySQL 8+ / PostgreSQL 13+ |
@@ -141,9 +141,9 @@ Inventoros is an open-source Inventory and Warehouse Management System (WMS) bui
 
 ## Requirements
 
-- PHP 8.3 or higher
+- PHP 8.4 (8.4.1 or newer)
 - Composer 2.x
-- Node.js 18+ and npm
+- Node.js 20.19+ or 22.12+ and npm (Vite 7)
 - MySQL 8.0+ or PostgreSQL 13+ (SQLite for development)
 - Redis (optional, recommended for production queues)
 

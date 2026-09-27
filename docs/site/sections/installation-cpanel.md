@@ -12,7 +12,7 @@ The cPanel release packages are specially built and include:
 ### Prerequisites
 
 - Access to your cPanel control panel
-- PHP 8.2 or higher enabled for your domain
+- PHP 8.4 enabled for your domain (8.4.1 or newer)
 - A MySQL database available
 - SSH access (recommended) or the cPanel Terminal
 - At least 512MB of disk space
@@ -165,7 +165,7 @@ For addon domains, if your addon domain points to `~/yourdomain.com`:
 - 500 Internal Server Error. Check storage and bootstrap/cache permissions, verify `.env` exists, and check `~/inventoros/storage/logs/laravel.log` for errors.
 - Assets not loading (CSS / JS broken). Ensure the `build/` folder was uploaded to `public_html` and `.htaccess` is present. Check that `APP_URL` matches your domain.
 - Database connection failed. Verify the credentials in `.env`. Test the same credentials in phpMyAdmin. Ensure the database user has privileges.
-- PHP version issues. In cPanel, open MultiPHP Manager or Select PHP Version and ensure PHP 8.2+ is selected for your domain.
+- PHP version issues. In cPanel, open MultiPHP Manager or Select PHP Version and ensure PHP 8.4 is selected for your domain.
 - Storage link issues. If uploaded files are not accessible, verify the symlink with `ls -la ~/public_html/storage` and recreate it if needed.
 
 Report an issue: https://github.com/Inventoros/Inventoros/issues

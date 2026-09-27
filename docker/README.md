@@ -1,6 +1,6 @@
 # Running Inventoros with Docker
 
-Single-image dev stack: FrankenPHP (Caddy + PHP-FPM in one binary) serves the Laravel app, with Mailpit for catching outgoing email. Postgres and Redis are opt-in via Compose profiles so the default boot is zero-config.
+Single-image dev stack (built from `docker/dev.Dockerfile`): FrankenPHP (Caddy + PHP-FPM in one binary) serves the Laravel app, with Mailpit for catching outgoing email. Postgres and Redis are opt-in via Compose profiles so the default boot is zero-config.
 
 ## Quick start
 
@@ -72,16 +72,11 @@ docker compose exec app npm run build
 
 - **Port** — set `APP_PORT=80` in `.env` (or your shell) before `docker compose up` to expose on a different host port.
 - **Mailpit ports** — `MAILPIT_PORT=8025`, `MAILPIT_SMTP_PORT=1025` (defaults).
-- **PHP version** — change `PHP_VERSION` build arg in `docker-compose.yml`. Tested on 8.4 (matches CI). Inventoros requires PHP ≥ 8.2.
+- **PHP version** — change `PHP_VERSION` build arg in `docker-compose.yml`. Tested on 8.4 (matches CI). Inventoros requires PHP 8.4.1 or newer.
 
-## Production note
+## Production
 
-This image targets local dev. Bind-mounts of `app/`, `routes/`, etc. let you edit code without rebuilding. For a production build:
-
-1. Drop those bind-mounts from your production compose file.
-2. Set `APP_ENV=production`, `APP_DEBUG=false`.
-3. Run `php artisan config:cache route:cache view:cache` in the entrypoint.
-4. Replace `:80` in the Caddyfile with your domain — FrankenPHP will provision Let's Encrypt certs automatically (`auto_https on` is the default once a hostname is present).
+This stack is for development only. For production use the multi-stage `Dockerfile` at the repo root (published as `ghcr.io/inventoros/inventoros`) with `docker-compose.prod.yml`: non-root, `APP_DEBUG=false`, caches built at start, migrations only when `RUN_MIGRATIONS=true`, and dedicated worker/scheduler containers on PostgreSQL. See `docs/site/sections/installation-docker.md`.
 
 ## Troubleshooting
 

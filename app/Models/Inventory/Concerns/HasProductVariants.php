@@ -51,7 +51,8 @@ trait HasProductVariants
     public function getTotalStockAttribute(): int
     {
         if ($this->has_variants && $this->variants()->exists()) {
-            return $this->variants()->sum('stock');
+            // SUM() is a numeric string on MySQL/PostgreSQL; the return type is int.
+            return (int) $this->variants()->sum('stock');
         }
 
         return $this->stock;

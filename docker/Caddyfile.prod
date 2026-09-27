@@ -1,0 +1,22 @@
+# Production Caddyfile for the Inventoros image.
+#
+# SERVER_NAME defaults to :8080 (plain HTTP, for use behind a reverse proxy or
+# load balancer that terminates TLS). Set SERVER_NAME to your domain, e.g.
+# "inventory.example.com", and publish ports 80/443 to let Caddy obtain and
+# renew a Let's Encrypt certificate itself.
+
+{
+	frankenphp
+	{$CADDY_GLOBAL_OPTIONS}
+}
+
+{$SERVER_NAME::8080} {
+	root * /app/public
+	encode zstd br gzip
+
+	# Long-lived caching for fingerprinted Vite assets.
+	@build path /build/*
+	header @build Cache-Control "public, max-age=31536000, immutable"
+
+	php_server
+}

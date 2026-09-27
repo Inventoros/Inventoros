@@ -29,7 +29,9 @@ return new class extends Migration
             $table->timestamp('recorded_at');
             $table->timestamps();
 
-            $table->index(['organization_id', 'product_id', 'recorded_at']);
+            // Named explicitly: the generated name is 68 characters and MySQL
+            // rejects identifiers over 64, which broke migrate on MySQL.
+            $table->index(['organization_id', 'product_id', 'recorded_at'], 'supplier_price_history_org_product_recorded_index');
             $table->index(['supplier_id', 'product_id']);
         });
     }

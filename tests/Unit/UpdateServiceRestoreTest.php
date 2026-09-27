@@ -60,7 +60,7 @@ final class UpdateServiceRestoreTest extends TestCase
     public function test_restore_imports_the_database_dump_when_the_backup_contains_one(): void
     {
         [$service, $backups] = $this->service();
-        $backups->shouldReceive('importDatabaseDump')->once()->andReturn(true);
+        $backups->shouldReceive('restoreDatabase')->once()->andReturn('php-dump');
 
         $result = $service->restoreFromBackup($this->makeBackupZip(withDatabase: true));
 
@@ -70,10 +70,21 @@ final class UpdateServiceRestoreTest extends TestCase
     public function test_restore_does_not_import_when_the_backup_has_no_database_dump(): void
     {
         [$service, $backups] = $this->service();
-        $backups->shouldReceive('importDatabaseDump')->never();
+        $backups->shouldReceive('restoreDatabase')->once()->andReturn(null);
 
         $result = $service->restoreFromBackup($this->makeBackupZip(withDatabase: false));
 
         $this->assertTrue($result['success']);
+    }
+
+    public function test_restore_fails_loudly_when_the_database_cannot_be_restored(): void
+    {
+        [$service, $backups] = $this->service();
+        $backups->shouldReceive('restoreDatabase')->once()->andThrow(new \RuntimeException('psql exited with code 3'));
+
+        $result = $service->restoreFromBackup($this->makeBackupZip(withDatabase: true));
+
+        $this->assertFalse($result['success']);
+        $this->assertStringContainsString('psql exited with code 3', $result['message']);
     }
 }

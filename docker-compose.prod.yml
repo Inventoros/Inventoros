@@ -1,0 +1,100 @@
+# Inventoros production stack: web app + queue worker + scheduler + PostgreSQL.
+#
+#   1. Create a .env next to this file with at least:
+#        APP_KEY=base64:...        (echo "base64:$(openssl rand -base64 32)")
+#        APP_URL=https://inventory.example.com
+#        DB_PASSWORD=a-long-random-password
+#   2. docker compose -f docker-compose.prod.yml up -d
+#   3. Open APP_URL/install to create the first organization and admin.
+#
+# The image is pulled from GHCR. To build from this checkout instead:
+#   docker compose -f docker-compose.prod.yml up -d --build
+#
+# All three PHP services share one image, one environment and one storage
+# volume. Only `app` runs migrations (RUN_MIGRATIONS=true); worker and
+# scheduler wait for it to be healthy so they never race on the schema.
+
+x-inventoros: &inventoros
+  image: ${INVENTOROS_IMAGE:-ghcr.io/inventoros/inventoros:latest}
+  build:
+    context: .
+    dockerfile: Dockerfile
+  restart: unless-stopped
+  environment: &inventoros-env
+    APP_NAME: ${APP_NAME:-Inventoros}
+    APP_ENV: production
+    APP_DEBUG: "false"
+    APP_KEY: ${APP_KEY:?Set APP_KEY in .env (echo "base64:$(openssl rand -base64 32)")}
+    APP_URL: ${APP_URL:-http://localhost:8080}
+    LOG_CHANNEL: stderr
+    LOG_LEVEL: ${LOG_LEVEL:-warning}
+    DB_CONNECTION: pgsql
+    DB_HOST: db
+    DB_PORT: "5432"
+    DB_DATABASE: ${DB_DATABASE:-inventoros}
+    DB_USERNAME: ${DB_USERNAME:-inventoros}
+    DB_PASSWORD: ${DB_PASSWORD:?Set DB_PASSWORD in .env}
+    SESSION_DRIVER: database
+    SESSION_SECURE_COOKIE: ${SESSION_SECURE_COOKIE:-true}
+    CACHE_STORE: database
+    QUEUE_CONNECTION: database
+    MAIL_MAILER: ${MAIL_MAILER:-log}
+    MAIL_HOST: ${MAIL_HOST:-}
+    MAIL_PORT: ${MAIL_PORT:-587}
+    MAIL_USERNAME: ${MAIL_USERNAME:-}
+    MAIL_PASSWORD: ${MAIL_PASSWORD:-}
+    MAIL_FROM_ADDRESS: ${MAIL_FROM_ADDRESS:-inventory@example.com}
+    MAIL_FROM_NAME: ${MAIL_FROM_NAME:-Inventoros}
+    SERVER_NAME: ${SERVER_NAME:-:8080}
+    RUN_MIGRATIONS: "false"
+  volumes:
+    - storage:/app/storage
+  depends_on:
+    db:
+      condition: service_healthy
+
+services:
+  app:
+    <<: *inventoros
+    environment:
+      <<: *inventoros-env
+      RUN_MIGRATIONS: "true"
+    ports:
+      - "${APP_PORT:-8080}:8080"
+
+  worker:
+    <<: *inventoros
+    command: ["php", "artisan", "queue:work", "--tries=3", "--max-time=3600", "--sleep=3"]
+    healthcheck:
+      disable: true
+    depends_on:
+      app:
+        condition: service_healthy
+
+  scheduler:
+    <<: *inventoros
+    command: ["php", "artisan", "schedule:work"]
+    healthcheck:
+      disable: true
+    depends_on:
+      app:
+        condition: service_healthy
+
+  db:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${DB_DATABASE:-inventoros}
+      POSTGRES_USER: ${DB_USERNAME:-inventoros}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?Set DB_PASSWORD in .env}
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U \"$${POSTGRES_USER}\" -d \"$${POSTGRES_DB}\""]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+volumes:
+  storage:
+  db-data:

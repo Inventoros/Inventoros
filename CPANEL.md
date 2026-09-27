@@ -5,10 +5,10 @@ This guide explains how to deploy Inventoros on shared hosting using cPanel.
 ## Prerequisites
 
 Before deploying, ensure your hosting provider supports:
-- PHP 8.2 or higher
+- PHP 8.4 (8.4.1 or newer)
 - MySQL 8.0+ or PostgreSQL 13+
 - Composer (or SSH access to run it)
-- Node.js 18+ (for building assets, can be done locally)
+- Node.js 20.19+ or 22.12+ (for building assets, can be done locally)
 
 ## Deployment Steps
 
@@ -177,7 +177,7 @@ or failing endpoint will slow down the request that triggered it. Acceptable for
 low-volume single-tenant installs; prefer Option A otherwise.
 
 > **Docker / VPS deploys** ship a dedicated `worker` and `scheduler` container
-> (`docker-compose.yml`) and example systemd units (`deploy/systemd/`), so the
+> (`docker-compose.prod.yml`) and example systemd units (`deploy/systemd/`), so the
 > cron setup above is only needed on cPanel-style shared hosting.
 
 ### 10. Enable SSL
@@ -195,7 +195,7 @@ low-volume single-tenant installs; prefer Option A otherwise.
 
 ### Blank Page
 - Ensure `APP_DEBUG=true` temporarily to see errors
-- Verify PHP version is 8.2 or higher (check in cPanel > Select PHP Version)
+- Verify PHP version is 8.4 (check in cPanel > Select PHP Version)
 
 ### Assets Not Loading
 - Verify you ran `npm run build` before uploading
@@ -213,7 +213,7 @@ Most cPanel hosts allow you to select the PHP version:
 
 1. Go to **Select PHP Version** or **MultiPHP Manager**
 2. Select your domain
-3. Choose PHP 8.2 or higher
+3. Choose PHP 8.4
 4. Enable required extensions: `pdo_mysql`, `mbstring`, `openssl`, `tokenizer`, `xml`, `ctype`, `json`, `bcmath`
 
 ## Performance Tips

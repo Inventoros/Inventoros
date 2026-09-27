@@ -225,9 +225,10 @@ class ReportController extends Controller
         // rows shown.
         $summary = [
             'total_adjustments' => (clone $query)->count(),
-            'total_increases' => (clone $query)->where('adjustment_quantity', '>', 0)->sum('adjustment_quantity'),
-            'total_decreases' => abs((clone $query)->where('adjustment_quantity', '<', 0)->sum('adjustment_quantity')),
-            'net_change' => (clone $query)->sum('adjustment_quantity'),
+            // SUM() comes back as a numeric string on MySQL/PostgreSQL.
+            'total_increases' => (int) (clone $query)->where('adjustment_quantity', '>', 0)->sum('adjustment_quantity'),
+            'total_decreases' => abs((int) (clone $query)->where('adjustment_quantity', '<', 0)->sum('adjustment_quantity')),
+            'net_change' => (int) (clone $query)->sum('adjustment_quantity'),
         ];
 
         if ($format = ReportExporter::requestedFormat($request)) {
