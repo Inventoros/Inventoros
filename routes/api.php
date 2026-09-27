@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\ApprovalController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\BarcodeLookupController;
 use App\Http\Controllers\Api\OrderController;
@@ -181,6 +182,20 @@ Route::prefix('v1')->as('api.')->middleware('throttle:api')->group(function () {
             ->middleware('api.permission:edit_purchase_orders');
         Route::post('purchase-orders/{purchaseOrder}/cancel', [PurchaseOrderController::class, 'cancel'])
             ->middleware('api.permission:edit_purchase_orders');
+        Route::post('purchase-orders/{purchaseOrder}/submit-for-approval', [PurchaseOrderController::class, 'submitForApproval'])
+            ->middleware('api.permission:edit_purchase_orders');
+
+        // Approvals. Listing is open to every user (it only shows what they
+        // may decide, or their own requests); deciding needs an approve_*
+        // permission, checked per type by ApprovalService.
+        Route::get('approvals', [ApprovalController::class, 'index']);
+        Route::get('approvals/mine', [ApprovalController::class, 'mine']);
+        Route::post('approvals/{type}/{id}/approve', [ApprovalController::class, 'approve'])
+            ->whereIn('type', ['purchase_order', 'stock_adjustment', 'stock_transfer'])->whereNumber('id')
+            ->middleware('api.permission:approve_purchase_orders|approve_stock_adjustments|approve_stock_transfers');
+        Route::post('approvals/{type}/{id}/reject', [ApprovalController::class, 'reject'])
+            ->whereIn('type', ['purchase_order', 'stock_adjustment', 'stock_transfer'])->whereNumber('id')
+            ->middleware('api.permission:approve_purchase_orders|approve_stock_adjustments|approve_stock_transfers');
 
         // Barcode Lookup
         Route::get('barcode/{code}', [BarcodeLookupController::class, 'lookup'])

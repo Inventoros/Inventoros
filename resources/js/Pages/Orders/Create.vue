@@ -5,9 +5,12 @@ import Card from '@/Components/ui/Card.vue';
 import Button from '@/Components/ui/Button.vue';
 import CustomerPicker from '@/Components/CustomerPicker.vue';
 import { Head, Link, useForm } from '@inertiajs/vue3';
-import { ref, computed } from 'vue';
+import { ref, computed, defineAsyncComponent } from 'vue';
+import { useBarcodeWedge, useBarcodeLookup } from '@/composables/useBarcodeWedge';
 import { useI18n } from 'vue-i18n';
-import { ArrowLeft, Plus, Trash2, PackageOpen } from 'lucide-vue-next';
+import { ArrowLeft, Plus, Trash2, PackageOpen, ScanLine } from 'lucide-vue-next';
+
+const BarcodeScannerModal = defineAsyncComponent(() => import('@/Components/BarcodeScannerModal.vue'));
 
 const { t } = useI18n();
 
@@ -98,6 +101,87 @@ const addItem = () => {
     variantError.value = '';
     quantity.value = 1;
 };
+
+// --- Scanning ---------------------------------------------------------
+// Scan (camera modal or keyboard-wedge scanner) to add a line. A variant
+// barcode adds that variant directly; a product that is sold by variant but
+// was scanned by its own code is loaded into the picker above so the variant
+// can be chosen. Scanning a line that already exists adds one to it.
+const showScanner = ref(false);
+const scanMessage = ref('');
+const scanMessageTone = ref('info');
+const { lookup } = useBarcodeLookup();
+
+const setScanMessage = (message, tone) => {
+    scanMessage.value = message;
+    scanMessageTone.value = tone;
+};
+
+const addScannedLine = (product, variant) => {
+    const variantId = variant?.id ?? null;
+    const existing = form.items.find(item => item.product_id === product.id && item.product_variant_id === variantId);
+    if (existing) {
+        existing.quantity += 1;
+    } else {
+        form.items.push({
+            product_id: product.id,
+            product_variant_id: variantId,
+            product_name: product.name,
+            variant_title: variant?.title ?? null,
+            sku: variant?.sku || product.sku,
+            quantity: 1,
+            unit_price: parseFloat(variant?.price ?? product.price) || 0,
+        });
+    }
+    const line = form.items.find(item => item.product_id === product.id && item.product_variant_id === variantId);
+    const label = variant ? `${product.name} (${variant.title})` : product.name;
+    setScanMessage(t('scanning.addedToLine', { name: label, quantity: line.quantity }), 'success');
+};
+
+const onScannedProduct = (scannedProduct, scannedVariant = null) => {
+    showScanner.value = false;
+    // Use the form's own product data (price, active variants, stock).
+    const product = props.products.find(p => p.id === scannedProduct.id);
+    if (!product) {
+        setScanMessage(t('scanning.notSellable', { name: scannedProduct.name }), 'warning');
+        return;
+    }
+
+    if (product.has_variants) {
+        const variant = scannedVariant
+            ? product.variants.find(v => v.id === scannedVariant.id && v.is_active) ?? null
+            : null;
+        if (!variant) {
+            // No variant came back: load the product so the variant can be picked.
+            selectedProduct.value = product.id;
+            selectedVariant.value = null;
+            quantity.value = 1;
+            variantError.value = '';
+            setScanMessage(t('scanning.pickVariant', { name: product.name }), 'warning');
+            document.getElementById('add_variant')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            return;
+        }
+        addScannedLine(product, variant);
+        return;
+    }
+
+    addScannedLine(product, null);
+};
+
+const onScannedCode = async (code) => {
+    try {
+        const found = await lookup(code);
+        if (!found) {
+            setScanMessage(t('scanning.notFound', { code }), 'danger');
+            return;
+        }
+        onScannedProduct(found.product, found.variant);
+    } catch (error) {
+        setScanMessage(t('scanning.lookupFailed'), 'danger');
+    }
+};
+
+useBarcodeWedge(onScannedCode, { enabled: () => !showScanner.value });
 
 const removeItem = (index) => {
     form.items.splice(index, 1);
@@ -191,7 +275,29 @@ const fieldError = 'mt-1 text-xs text-status-danger';
 
                     <!-- Order items -->
                     <Card :padded="false">
-                        <div class="px-5 pt-5"><h3 class="text-sm font-semibold text-text-primary">{{ t('orders.create.orderItems') }}</h3></div>
+                        <div class="flex flex-wrap items-center justify-between gap-2 px-5 pt-5">
+                            <h3 class="text-sm font-semibold text-text-primary">{{ t('orders.create.orderItems') }}</h3>
+                            <Button type="button" variant="secondary" size="lg" class="min-h-11" @click="showScanner = true">
+                                <ScanLine :size="16" />
+                                {{ t('scanning.scan') }}
+                            </Button>
+                        </div>
+                        <div class="px-5 pt-2">
+                            <p class="text-xs text-text-tertiary">{{ t('scanning.orderHint') }}</p>
+                            <p
+                                v-if="scanMessage"
+                                class="mt-1 text-sm font-medium"
+                                :class="{
+                                    'text-status-success': scanMessageTone === 'success',
+                                    'text-status-warning': scanMessageTone === 'warning',
+                                    'text-status-danger': scanMessageTone === 'danger',
+                                }"
+                                role="status"
+                                aria-live="polite"
+                            >
+                                {{ scanMessage }}
+                            </p>
+                        </div>
                         <div class="p-5">
                             <!-- Add item -->
                             <div class="mb-5 rounded-lg border border-border-subtle bg-surface-canvas p-4">
@@ -230,8 +336,8 @@ const fieldError = 'mt-1 text-xs text-status-danger';
 
                             <!-- Items list -->
                             <div v-if="form.items.length > 0" class="space-y-3">
-                                <div v-for="(item, index) in form.items" :key="index" class="flex items-center gap-4 rounded-lg border border-border-subtle bg-surface-canvas p-4">
-                                    <div class="flex-1 min-w-0">
+                                <div v-for="(item, index) in form.items" :key="index" class="flex flex-wrap items-center gap-4 rounded-lg border border-border-subtle bg-surface-canvas p-4">
+                                    <div class="min-w-0 flex-1 basis-full sm:basis-0">
                                         <p class="font-medium text-text-primary">{{ item.product_name }}</p>
                                         <p v-if="item.variant_title" class="text-xs text-text-secondary">{{ t('orders.create.variant') }}: {{ item.variant_title }}</p>
                                         <p class="text-xs text-text-tertiary">SKU: {{ item.sku }}</p>
@@ -323,5 +429,12 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                 </div>
             </div>
         </form>
+
+        <!-- Barcode Scanner Modal -->
+        <BarcodeScannerModal
+            :show="showScanner"
+            @close="showScanner = false"
+            @product-found="onScannedProduct"
+        />
     </AppLayout>
 </template>

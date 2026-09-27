@@ -9,6 +9,7 @@ use App\Models\Concerns\BelongsToOrganization;
 use App\Models\Inventory\StockAdjustment;
 use App\Models\Inventory\Supplier;
 use App\Models\User;
+use App\Support\ApprovalSettings;
 use App\Support\SequenceNumberRetry;
 use App\Traits\LogsActivity;
 use Closure;
@@ -36,6 +37,12 @@ use Illuminate\Support\Facades\DB;
  * @property Carbon|null $received_date
  * @property Carbon|null $sent_at
  * @property string|null $sent_to
+ * @property string|null $approval_status
+ * @property int|null $approval_requested_by
+ * @property Carbon|null $approval_requested_at
+ * @property int|null $approved_by
+ * @property Carbon|null $approved_at
+ * @property string|null $approval_notes
  * @property string $subtotal
  * @property string $tax
  * @property string $shipping
@@ -51,6 +58,8 @@ use Illuminate\Support\Facades\DB;
  * @property-read Organization $organization
  * @property-read Supplier $supplier
  * @property-read User|null $creator
+ * @property-read User|null $approver
+ * @property-read User|null $approvalRequester
  * @property-read Collection|PurchaseOrderItem[] $items
  * @property-read Collection|StockAdjustment[] $stockAdjustments
  */
@@ -69,6 +78,12 @@ class PurchaseOrder extends Model
         'received_date',
         'sent_at',
         'sent_to',
+        'approval_status',
+        'approval_requested_by',
+        'approval_requested_at',
+        'approved_by',
+        'approved_at',
+        'approval_notes',
         'subtotal',
         'tax',
         'shipping',
@@ -83,6 +98,8 @@ class PurchaseOrder extends Model
         'expected_date' => 'date',
         'received_date' => 'date',
         'sent_at' => 'datetime',
+        'approval_requested_at' => 'datetime',
+        'approved_at' => 'datetime',
         'subtotal' => 'decimal:2',
         'tax' => 'decimal:2',
         'shipping' => 'decimal:2',
@@ -105,6 +122,47 @@ class PurchaseOrder extends Model
     public const STATUS_RECEIVED = 'received';
 
     public const STATUS_CANCELLED = 'cancelled';
+
+    /**
+     * Approval states. NULL means no approval was asked for.
+     */
+    public const APPROVAL_PENDING = 'pending';
+
+    public const APPROVAL_APPROVED = 'approved';
+
+    public const APPROVAL_REJECTED = 'rejected';
+
+    /**
+     * Fields that change what was approved. Editing any of them on an
+     * approved draft sends it back for approval.
+     *
+     * @var array<int, string>
+     */
+    public const APPROVED_TERMS = [
+        'supplier_id', 'subtotal', 'tax', 'shipping', 'total', 'currency',
+    ];
+
+    protected static function booted(): void
+    {
+        static::updating(function (PurchaseOrder $po): void {
+            if ($po->status === self::STATUS_DRAFT
+                && $po->getOriginal('approval_status') === self::APPROVAL_APPROVED
+                && ! $po->isDirty('approval_status')
+                && $po->isDirty(self::APPROVED_TERMS)) {
+                $po->clearApproval();
+            }
+        });
+    }
+
+    /**
+     * Drop a previous approval decision so the PO has to be approved again.
+     */
+    public function clearApproval(): void
+    {
+        $this->approval_status = null;
+        $this->approved_by = null;
+        $this->approved_at = null;
+    }
 
     /**
      * Get the organization that owns the purchase order.
@@ -134,6 +192,26 @@ class PurchaseOrder extends Model
     public function creator(): BelongsTo
     {
         return $this->belongsTo(User::class, 'created_by');
+    }
+
+    /**
+     * Get the user who approved or rejected this purchase order.
+     *
+     * @return BelongsTo<User, $this>
+     */
+    public function approver(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'approved_by');
+    }
+
+    /**
+     * Get the user who submitted this purchase order for approval.
+     *
+     * @return BelongsTo<User, $this>
+     */
+    public function approvalRequester(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'approval_requested_by');
     }
 
     /**
@@ -279,7 +357,42 @@ class PurchaseOrder extends Model
      */
     public function canBeEdited(): bool
     {
-        return in_array($this->status, [self::STATUS_DRAFT]);
+        // A draft awaiting an approval decision is frozen so the approver
+        // decides on what they see.
+        return $this->status === self::STATUS_DRAFT
+            && $this->approval_status !== self::APPROVAL_PENDING;
+    }
+
+    /**
+     * Whether the organization's approval rules apply to this PO's total.
+     */
+    public function needsApproval(): bool
+    {
+        $organization = $this->relationLoaded('organization') ? $this->organization : $this->organization_id;
+
+        return ApprovalSettings::forOrganization($organization)
+            ->purchaseOrderNeedsApproval((float) $this->total);
+    }
+
+    /**
+     * A draft that needs approval and does not have it yet.
+     */
+    public function awaitsApproval(): bool
+    {
+        return $this->status === self::STATUS_DRAFT
+            && $this->approval_status !== self::APPROVAL_APPROVED
+            && $this->needsApproval();
+    }
+
+    /**
+     * Check if the PO can be submitted for approval.
+     */
+    public function canBeSubmittedForApproval(): bool
+    {
+        return $this->status === self::STATUS_DRAFT
+            && in_array($this->approval_status, [null, self::APPROVAL_REJECTED], true)
+            && $this->needsApproval()
+            && $this->items()->count() > 0;
     }
 
     /**
@@ -293,7 +406,9 @@ class PurchaseOrder extends Model
             return true;
         }
 
-        return $this->status === self::STATUS_DRAFT && $this->items()->count() > 0;
+        return $this->status === self::STATUS_DRAFT
+            && $this->items()->count() > 0
+            && ! $this->awaitsApproval();
     }
 
     /**

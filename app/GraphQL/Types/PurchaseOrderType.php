@@ -32,6 +32,14 @@ class PurchaseOrderType extends GraphQLType
                 'type' => Type::nonNull(Type::string()),
                 'description' => 'Status: draft, sent, partial, received, cancelled',
             ],
+            'approval_status' => [
+                'type' => Type::string(),
+                'description' => 'Approval state: null (none asked for), pending, approved, rejected',
+            ],
+            'approval_notes' => [
+                'type' => Type::string(),
+                'description' => 'Approver comment or rejection reason',
+            ],
             'status_label' => [
                 'type' => Type::string(),
                 'description' => 'Human-readable status label',

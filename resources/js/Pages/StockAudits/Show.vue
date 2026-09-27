@@ -6,8 +6,10 @@ import Button from '@/Components/ui/Button.vue';
 import Badge from '@/Components/ui/Badge.vue';
 import StatTile from '@/Components/ui/StatTile.vue';
 import { Head, Link, router } from '@inertiajs/vue3';
-import { ref, computed } from 'vue';
+import axios from 'axios';
+import { ref, computed, nextTick, defineAsyncComponent } from 'vue';
 import { useI18n } from 'vue-i18n';
+import { useBarcodeWedge, useBarcodeLookup } from '@/composables/useBarcodeWedge';
 import {
     Pencil,
     ArrowLeft,
@@ -17,7 +19,10 @@ import {
     ListChecks,
     Layers,
     AlertTriangle,
+    ScanLine,
 } from 'lucide-vue-next';
+
+const BarcodeScannerModal = defineAsyncComponent(() => import('@/Components/BarcodeScannerModal.vue'));
 
 const { t } = useI18n();
 
@@ -157,6 +162,94 @@ const saveCount = async (item) => {
         savingCount.value = false;
     }
 };
+
+// --- Scanning ---------------------------------------------------------
+// Scan (camera modal or a keyboard-wedge scanner) to find an audit line.
+// In "add one" mode each scan counts one more unit on the matched line;
+// in "enter count" mode the scan opens that line's count input instead.
+const showScanner = ref(false);
+const scanMode = ref('increment'); // 'increment' | 'enter'
+const scanMessage = ref('');
+const scanMessageTone = ref('info');
+const highlightedItemId = ref(null);
+const { lookup } = useBarcodeLookup();
+
+const setScanMessage = (message, tone = 'info') => {
+    scanMessage.value = message;
+    scanMessageTone.value = tone;
+};
+
+// A variant barcode matches the line for that variant. A product code matches
+// the product's own line (no variant), falling back to its first line.
+const findAuditLine = (product, variant) => {
+    const items = props.audit.items || [];
+    if (variant) {
+        return items.find(item => item.product_variant_id === variant.id) || null;
+    }
+    return items.find(item => item.product_id === product.id && !item.product_variant_id)
+        || items.find(item => item.product_id === product.id)
+        || null;
+};
+
+const focusLine = async (item) => {
+    highlightedItemId.value = item.id;
+    await nextTick();
+    const row = document.getElementById(`audit-item-${item.id}`);
+    row?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    setTimeout(() => {
+        if (highlightedItemId.value === item.id) highlightedItemId.value = null;
+    }, 2500);
+};
+
+const incrementLine = async (item) => {
+    const next = (item.counted_quantity ?? 0) + 1;
+    try {
+        await axios.post(route('stock-audits.items.count', { stockAudit: props.audit.id, item: item.id }), {
+            counted_quantity: next,
+            notes: item.notes || null,
+        });
+        item.counted_quantity = next;
+        item.status = 'counted';
+        setScanMessage(t('scanning.countedOne', { name: item.product?.name || '', count: next }), 'success');
+        router.reload({ only: ['audit', 'summary'] });
+    } catch (error) {
+        setScanMessage(error.response?.data?.message || t('scanning.saveFailed'), 'danger');
+    }
+};
+
+const onScannedProduct = async (product, variant = null) => {
+    showScanner.value = false;
+    if (!canCount.value) return;
+    const item = findAuditLine(product, variant);
+    if (!item) {
+        setScanMessage(t('scanning.notInAudit', { name: variant?.title ? `${product.name} (${variant.title})` : product.name }), 'warning');
+        return;
+    }
+    await focusLine(item);
+    if (scanMode.value === 'enter') {
+        startCounting(item);
+        await nextTick();
+        document.getElementById(`audit-count-input-${item.id}`)?.focus();
+        setScanMessage(t('scanning.enterCountFor', { name: item.product?.name || '' }));
+        return;
+    }
+    await incrementLine(item);
+};
+
+const onScannedCode = async (code) => {
+    try {
+        const found = await lookup(code);
+        if (!found) {
+            setScanMessage(t('scanning.notFound', { code }), 'danger');
+            return;
+        }
+        await onScannedProduct(found.product, found.variant);
+    } catch (error) {
+        setScanMessage(t('scanning.lookupFailed'), 'danger');
+    }
+};
+
+useBarcodeWedge(onScannedCode, { enabled: () => canCount.value && !showScanner.value });
 
 const getDiscrepancyClass = (item) => {
     if (item.counted_quantity === null) return 'text-text-tertiary';
@@ -303,6 +396,53 @@ const thClass = 'px-6 py-3 text-left text-xs font-medium uppercase tracking-wide
                         ({{ summary.counted_items }} of {{ summary.total_items }} counted)
                     </span>
                 </h3>
+
+                <!-- Scan to count -->
+                <div v-if="canCount" class="mt-4 rounded-lg border border-border-subtle bg-surface-sunken p-3">
+                    <div class="flex flex-wrap items-center gap-3">
+                        <Button size="lg" class="min-h-11" @click="showScanner = true">
+                            <ScanLine :size="18" />
+                            {{ t('scanning.scan') }}
+                        </Button>
+                        <div class="flex flex-wrap gap-2" role="radiogroup" :aria-label="t('scanning.modeLabel')">
+                            <button
+                                type="button"
+                                role="radio"
+                                :aria-checked="scanMode === 'increment'"
+                                class="min-h-11 rounded-md border px-3 text-sm font-medium ds-focus-ring"
+                                :class="scanMode === 'increment' ? 'border-brand bg-brand-soft text-brand' : 'border-border-subtle bg-surface-raised text-text-secondary'"
+                                @click="scanMode = 'increment'"
+                            >
+                                {{ t('scanning.modeIncrement') }}
+                            </button>
+                            <button
+                                type="button"
+                                role="radio"
+                                :aria-checked="scanMode === 'enter'"
+                                class="min-h-11 rounded-md border px-3 text-sm font-medium ds-focus-ring"
+                                :class="scanMode === 'enter' ? 'border-brand bg-brand-soft text-brand' : 'border-border-subtle bg-surface-raised text-text-secondary'"
+                                @click="scanMode = 'enter'"
+                            >
+                                {{ t('scanning.modeEnter') }}
+                            </button>
+                        </div>
+                    </div>
+                    <p class="mt-2 text-xs text-text-tertiary">{{ t('scanning.auditHint') }}</p>
+                    <p
+                        v-if="scanMessage"
+                        class="mt-2 text-sm font-medium"
+                        :class="{
+                            'text-status-success': scanMessageTone === 'success',
+                            'text-status-warning': scanMessageTone === 'warning',
+                            'text-status-danger': scanMessageTone === 'danger',
+                            'text-text-secondary': scanMessageTone === 'info',
+                        }"
+                        role="status"
+                        aria-live="polite"
+                    >
+                        {{ scanMessage }}
+                    </p>
+                </div>
             </div>
             <div class="mt-4 w-full overflow-x-auto">
                 <table class="min-w-full">
@@ -321,7 +461,7 @@ const thClass = 'px-6 py-3 text-left text-xs font-medium uppercase tracking-wide
                     <tbody>
                         <template v-for="item in audit.items" :key="item.id">
                             <!-- Normal Row -->
-                            <tr v-if="editingItemId !== item.id" class="border-b border-border-subtle transition-colors last:border-b-0 hover:bg-surface-overlay">
+                            <tr v-if="editingItemId !== item.id" :id="`audit-item-${item.id}`" class="border-b border-border-subtle transition-colors last:border-b-0 hover:bg-surface-overlay" :class="{ 'bg-brand-soft': highlightedItemId === item.id }">
                                 <td class="px-6 py-4 text-sm text-text-primary">
                                     <div class="font-medium">{{ item.product?.name || '-' }}</div>
                                     <div class="text-xs text-text-tertiary">SKU: {{ item.product?.sku || '-' }}</div>
@@ -357,7 +497,7 @@ const thClass = 'px-6 py-3 text-left text-xs font-medium uppercase tracking-wide
                             </tr>
 
                             <!-- Inline Editing Row -->
-                            <tr v-else class="border-b border-border-subtle bg-brand-soft last:border-b-0">
+                            <tr v-else :id="`audit-item-${item.id}`" class="border-b border-border-subtle bg-brand-soft last:border-b-0">
                                 <td class="px-6 py-4 text-sm text-text-primary">
                                     <div class="font-medium">{{ item.product?.name || '-' }}</div>
                                     <div class="text-xs text-text-tertiary">SKU: {{ item.product?.sku || '-' }}</div>
@@ -370,6 +510,7 @@ const thClass = 'px-6 py-3 text-left text-xs font-medium uppercase tracking-wide
                                 </td>
                                 <td class="px-6 py-3">
                                     <input
+                                        :id="`audit-count-input-${item.id}`"
                                         v-model.number="countValue"
                                         type="number"
                                         min="0"
@@ -474,5 +615,12 @@ const thClass = 'px-6 py-3 text-left text-xs font-medium uppercase tracking-wide
                 </p>
             </div>
         </Card>
+
+        <!-- Barcode Scanner Modal -->
+        <BarcodeScannerModal
+            :show="showScanner"
+            @close="showScanner = false"
+            @product-found="onScannedProduct"
+        />
     </AppLayout>
 </template>

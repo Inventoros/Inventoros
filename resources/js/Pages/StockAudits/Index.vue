@@ -7,7 +7,7 @@ import Badge from '@/Components/ui/Badge.vue';
 import { Head, Link, router } from '@inertiajs/vue3';
 import { ref } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { Plus, Search, Eye, ClipboardList } from 'lucide-vue-next';
+import { Plus, Search, Eye, ClipboardList, CalendarClock } from 'lucide-vue-next';
 
 const { t } = useI18n();
 
@@ -75,6 +75,10 @@ const thClass =
 
         <PageHeader title="Stock Audits" description="Manage stock audits and cycle counts.">
             <template #actions>
+                <Button variant="secondary" size="sm" as="Link" :href="route('cycle-counts.index')">
+                    <CalendarClock :size="14" />
+                    {{ t('cycleCounts.title') }}
+                </Button>
                 <Button variant="default" size="sm" as="Link" :href="route('stock-audits.create')">
                     <Plus :size="14" />
                     New Audit

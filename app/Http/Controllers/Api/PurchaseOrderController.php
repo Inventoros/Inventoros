@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Api;
 
+use App\Exceptions\ApprovalException;
 use App\Exceptions\DocumentEmailException;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\PurchaseOrder\ReceivePurchaseOrderRequest;
@@ -14,8 +15,9 @@ use App\Http\Resources\PurchaseOrderResource;
 use App\Models\Inventory\Product;
 use App\Models\Purchasing\PurchaseOrder;
 use App\Models\Purchasing\PurchaseOrderItem;
-use App\Services\WarehouseAccessService;
+use App\Services\ApprovalService;
 use App\Services\PurchaseOrderEmailService;
+use App\Services\WarehouseAccessService;
 use App\Support\Money;
 use Dedoc\Scramble\Attributes\QueryParameter;
 use Illuminate\Http\JsonResponse;
@@ -392,6 +394,26 @@ class PurchaseOrderController extends Controller
 
         return response()->json([
             'message' => 'Purchase order sent',
+            'data' => new PurchaseOrderResource($purchaseOrder),
+        ]);
+    }
+
+    /**
+     * Submit a draft purchase order for approval.
+     *
+     * Only needed when the organization requires approval for this PO
+     * (see the approval settings); approvers are notified.
+     */
+    public function submitForApproval(Request $request, PurchaseOrder $purchaseOrder, ApprovalService $approvals): JsonResponse
+    {
+        try {
+            $purchaseOrder = $approvals->submitPurchaseOrder($purchaseOrder, $request->user());
+        } catch (ApprovalException $e) {
+            return response()->json(['message' => $e->getMessage(), 'error' => $e->reason], $e->status());
+        }
+
+        return response()->json([
+            'message' => 'Purchase order submitted for approval',
             'data' => new PurchaseOrderResource($purchaseOrder),
         ]);
     }

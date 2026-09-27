@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Inventory;
 
+use App\Exceptions\ApprovalException;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StockTransfer\StoreStockTransferRequest;
 use App\Http\Requests\StockTransfer\UpdateStockTransferRequest;
@@ -12,6 +13,7 @@ use App\Models\Inventory\ProductLocation;
 use App\Models\Inventory\StockAdjustment;
 use App\Models\Inventory\StockTransfer;
 use App\Models\Inventory\StockTransferItem;
+use App\Services\ApprovalService;
 use App\Services\ProductLocationStockService;
 use App\Services\WarehouseAccessService;
 use Illuminate\Http\RedirectResponse;
@@ -175,8 +177,13 @@ class StockTransferController extends Controller
             return $transfer;
         });
 
+        // Held for approval when the organization requires it (no-op otherwise).
+        app(ApprovalService::class)->holdTransferIfRequired($transfer, $request->user());
+
         return redirect()->route('stock-transfers.show', $transfer)
-            ->with('success', 'Stock transfer created successfully.');
+            ->with('success', $transfer->approval_status === StockTransfer::APPROVAL_PENDING
+                ? 'Stock transfer created. It needs approval before it can ship or be completed.'
+                : 'Stock transfer created successfully.');
     }
 
     /**
@@ -193,10 +200,14 @@ class StockTransferController extends Controller
 
         $this->warehouseAccess->authorizeAnyLocation($request->user(), [$stockTransfer->from_location_id, $stockTransfer->to_location_id]);
 
-        $stockTransfer->load(['fromLocation', 'toLocation', 'transferredBy', 'items.product']);
+        $stockTransfer->load(['fromLocation', 'toLocation', 'transferredBy', 'items.product', 'approver']);
 
         return Inertia::render('StockTransfers/Show', [
             'transfer' => $stockTransfer,
+            'approval' => [
+                'can_decide' => $stockTransfer->approval_status === StockTransfer::APPROVAL_PENDING
+                    && app(ApprovalService::class)->canDecide($request->user(), ApprovalService::STOCK_TRANSFER, $stockTransfer),
+            ],
         ]);
     }
 
@@ -214,6 +225,10 @@ class StockTransferController extends Controller
         }
 
         $this->warehouseAccess->authorizeAnyLocation($request->user(), [$stockTransfer->from_location_id, $stockTransfer->to_location_id]);
+
+        if ($blocked = $this->approvalBlock($stockTransfer)) {
+            return $blocked;
+        }
 
         $validated = $request->validated();
 
@@ -266,6 +281,10 @@ class StockTransferController extends Controller
         if (! in_array($stockTransfer->status, ['pending', 'in_transit'])) {
             return redirect()->route('stock-transfers.show', $stockTransfer)
                 ->with('error', 'Only pending or in-transit transfers can be completed.');
+        }
+
+        if ($blocked = $this->approvalBlock($stockTransfer)) {
+            return $blocked;
         }
 
         try {
@@ -336,6 +355,21 @@ class StockTransferController extends Controller
 
         return redirect()->route('stock-transfers.show', $stockTransfer)
             ->with('success', 'Stock transfer completed.');
+    }
+
+    /**
+     * Redirect back with the reason when approval still blocks this transfer
+     * from shipping or completing; null when it may proceed.
+     */
+    private function approvalBlock(StockTransfer $stockTransfer): ?RedirectResponse
+    {
+        try {
+            app(ApprovalService::class)->assertTransferMayProceed($stockTransfer);
+        } catch (ApprovalException $e) {
+            return redirect()->route('stock-transfers.show', $stockTransfer)->with('error', $e->getMessage());
+        }
+
+        return null;
     }
 
     /**

@@ -59,6 +59,7 @@ Route::prefix('settings')->name('settings.')->group(function () {
         Route::get('/', [OrganizationSettingsController::class, 'index'])->name('index');
         Route::patch('/general', [OrganizationSettingsController::class, 'updateGeneral'])->middleware('permission:manage_organization')->name('update.general');
         Route::patch('/regional', [OrganizationSettingsController::class, 'updateRegional'])->middleware('permission:manage_organization')->name('update.regional');
+        Route::patch('/approvals', [OrganizationSettingsController::class, 'updateApprovals'])->middleware('permission:manage_organization')->name('update.approvals');
 
         // Organization users are managed in /users; keep old links working.
         Route::redirect('/users', '/users', 301);

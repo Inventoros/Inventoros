@@ -4,12 +4,13 @@ declare(strict_types=1);
 
 namespace App\Mcp\Tools;
 
+use App\Exceptions\InsufficientStockException;
 use App\Mcp\Concerns\AuthenticatesMcpRequest;
 use App\Models\Inventory\Product;
 use App\Models\Inventory\ProductLocation;
-use App\Models\Inventory\StockAdjustment;
+use App\Models\Inventory\StockAdjustmentRequest;
+use App\Services\ApprovalService;
 use Illuminate\Contracts\JsonSchema\JsonSchema;
-use Illuminate\Support\Facades\DB;
 use Laravel\Mcp\Request;
 use Laravel\Mcp\Response;
 use Laravel\Mcp\Server\Tool;
@@ -20,7 +21,7 @@ class AdjustStockTool extends Tool
 {
     use AuthenticatesMcpRequest;
 
-    protected string $description = 'Adjust the on-hand stock of a product by a positive or negative integer, recording the reason. WARNING: this writes to inventory. Always confirm the product id and quantity with the user before invoking. Use type "manual" for plain corrections, "count" for cycle-count adjustments, "damage" for write-offs, "return" for customer returns, "transfer" for inter-warehouse moves.';
+    protected string $description = 'Adjust the on-hand stock of a product by a positive or negative integer, recording the reason. WARNING: this writes to inventory. Always confirm the product id and quantity with the user before invoking. Use type "manual" for plain corrections, "count" for cycle-count adjustments, "damage" for write-offs, "return" for customer returns, "transfer" for inter-warehouse moves. When the organization requires approval for this adjustment, nothing changes yet: the result has status "pending_approval" and stock moves once an approver approves it.';
 
     public function schema(JsonSchema $schema): array
     {
@@ -68,14 +69,30 @@ class AdjustStockTool extends Tool
             return Response::error("Cannot remove {$validated['quantity']} units; only {$product->stock} on hand.");
         }
 
-        $adjustment = DB::transaction(fn () => StockAdjustment::adjust(
-            $product,
-            $validated['quantity'],
-            $validated['type'],
-            $validated['reason'] ?? null,
-            $validated['notes'] ?? null,
-            locationId: $locationId,
-        ));
+        $approvals = app(ApprovalService::class);
+
+        try {
+            $adjustment = $approvals->submitStockAdjustment(
+                user: $this->user(),
+                product: $product,
+                variant: null,
+                quantity: (int) $validated['quantity'],
+                type: $validated['type'],
+                reason: $validated['reason'] ?? null,
+                notes: $validated['notes'] ?? null,
+                locationId: $locationId,
+            );
+        } catch (InsufficientStockException $e) {
+            return Response::error($e->getMessage());
+        }
+
+        if ($adjustment instanceof StockAdjustmentRequest) {
+            return Response::json([
+                'message' => 'This adjustment needs approval. It was sent to an approver; stock has not changed yet.',
+                'status' => 'pending_approval',
+                'request' => $approvals->describe(ApprovalService::STOCK_ADJUSTMENT, $adjustment),
+            ]);
+        }
 
         $product->refresh();
 

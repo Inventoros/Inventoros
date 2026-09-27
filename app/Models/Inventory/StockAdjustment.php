@@ -264,9 +264,10 @@ class StockAdjustment extends Model
         ?string $reason = null,
         ?string $notes = null,
         ?Model $reference = null,
-        bool $allowNegative = true
+        bool $allowNegative = true,
+        ?User $actor = null
     ): self {
-        return DB::transaction(function () use ($variant, $quantity, $type, $reason, $notes, $reference, $allowNegative) {
+        return DB::transaction(function () use ($variant, $quantity, $type, $reason, $notes, $reference, $allowNegative, $actor) {
             // Re-fetch the variant with a row lock — same race protection as
             // adjust() above.
             $locked = ProductVariant::where('id', $variant->id)->lockForUpdate()->firstOrFail();
@@ -284,7 +285,8 @@ class StockAdjustment extends Model
                 'organization_id' => $locked->organization_id,
                 'product_id' => $locked->product_id,
                 'product_variant_id' => $locked->id,
-                'user_id' => auth()->id(),
+                // Same actor rule as adjust(): an explicit actor wins.
+                'user_id' => $actor?->id ?? auth()->id(),
                 'type' => $type,
                 'quantity_before' => $quantityBefore,
                 'quantity_after' => $quantityAfter,

@@ -248,6 +248,22 @@ class PermissionSet extends Model
                 ],
             ],
             [
+                'name' => 'Approver',
+                'slug' => 'approver',
+                'description' => 'Approve or reject purchase orders, stock adjustments and stock transfers that need sign-off.',
+                'category' => 'admin',
+                'icon' => 'check-badge',
+                'permissions' => [
+                    Permission::VIEW_PRODUCTS->value,
+                    Permission::VIEW_PURCHASE_ORDERS->value,
+                    Permission::APPROVE_PURCHASE_ORDERS->value,
+                    Permission::MANAGE_STOCK->value,
+                    Permission::APPROVE_STOCK_ADJUSTMENTS->value,
+                    Permission::TRANSFER_STOCK->value,
+                    Permission::APPROVE_STOCK_TRANSFERS->value,
+                ],
+            ],
+            [
                 'name' => 'Read-Only Auditor',
                 'slug' => 'read-only-auditor',
                 'description' => 'View-only access to all data for auditing purposes.',

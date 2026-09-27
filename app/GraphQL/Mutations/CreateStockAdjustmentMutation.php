@@ -7,6 +7,7 @@ namespace App\GraphQL\Mutations;
 use App\Models\Inventory\Product;
 use App\Models\Inventory\ProductLocation;
 use App\Models\Inventory\StockAdjustment;
+use App\Services\ApprovalService;
 use App\Services\WarehouseAccessService;
 use Closure;
 use GraphQL\Error\Error;
@@ -88,6 +89,12 @@ class CreateStockAdjustmentMutation extends Mutation
 
         // A restricted user may only adjust a bin in one of their warehouses.
         app(WarehouseAccessService::class)->authorizeLocation($user, $locationId);
+
+        // An adjustment the organization's approval rules cover cannot be
+        // applied directly; it has to go through an approver.
+        if (app(ApprovalService::class)->stockAdjustmentNeedsApproval($product, null, (int) $args['quantity'])) {
+            throw new Error('This adjustment needs approval. Submit it with requestStockAdjustmentApproval.');
+        }
 
         $adjustment = StockAdjustment::adjust(
             $product,

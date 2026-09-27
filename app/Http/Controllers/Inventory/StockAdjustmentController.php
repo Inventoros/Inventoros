@@ -8,10 +8,12 @@ use App\Exceptions\InsufficientStockException;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StockAdjustment\StoreStockAdjustmentRequest;
 use App\Models\Inventory\Product;
-use App\Models\Inventory\ProductVariant;
 use App\Models\Inventory\ProductLocation;
+use App\Models\Inventory\ProductVariant;
 use App\Models\Inventory\StockAdjustment;
+use App\Models\Inventory\StockAdjustmentRequest;
 use App\Models\User;
+use App\Services\ApprovalService;
 use App\Services\WarehouseAccessService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -155,7 +157,7 @@ class StockAdjustmentController extends Controller
      * @param  Request  $request  The incoming HTTP request containing adjustment data
      * @return RedirectResponse
      */
-    public function store(StoreStockAdjustmentRequest $request)
+    public function store(StoreStockAdjustmentRequest $request, ApprovalService $approvals)
     {
         $validated = $request->validated();
 
@@ -168,40 +170,34 @@ class StockAdjustmentController extends Controller
         // warehouses; an adjustment without a bin changes the org-wide total.
         $this->warehouseAccess->authorizeLocation($request->user(), $validated['location_id'] ?? null);
 
-        // Create the adjustment
+        // The request confirmed the variant belongs to this product; variant
+        // stock moves through the variant ledger path.
+        $variant = ! empty($validated['product_variant_id'])
+            ? ProductVariant::where('product_id', $product->id)->findOrFail($validated['product_variant_id'])
+            : null;
+
+        // Applied now, or held for approval when the organization's approval
+        // rules cover it. Either way through the one shared service.
         try {
-            if (! empty($validated['product_variant_id'])) {
-                // The request confirmed the variant belongs to this product;
-                // variant stock moves through the variant ledger path.
-                $variant = ProductVariant::where('product_id', $product->id)
-                    ->findOrFail($validated['product_variant_id']);
-
-                StockAdjustment::adjustVariant(
-                    variant: $variant,
-                    quantity: $validated['adjustment_quantity'],
-                    type: $validated['type'],
-                    reason: $validated['reason'],
-                    notes: $validated['notes'] ?? null,
-                    allowNegative: false,
-                );
-
-                return redirect()->route('stock-adjustments.index')
-                    ->with('success', 'Stock adjustment created successfully.');
-            }
-
-            StockAdjustment::adjust(
+            $result = $approvals->submitStockAdjustment(
+                user: $request->user(),
                 product: $product,
-                quantity: $validated['adjustment_quantity'],
+                variant: $variant,
+                quantity: (int) $validated['adjustment_quantity'],
                 type: $validated['type'],
                 reason: $validated['reason'],
                 notes: $validated['notes'] ?? null,
-                allowNegative: false,
-                locationId: $validated['location_id'] ?? null,
+                locationId: $variant ? null : ($validated['location_id'] ?? null),
             );
         } catch (InsufficientStockException $e) {
             return redirect()->back()
                 ->withErrors(['adjustment_quantity' => $e->getMessage()])
                 ->withInput();
+        }
+
+        if ($result instanceof StockAdjustmentRequest) {
+            return redirect()->route('stock-adjustments.index')
+                ->with('success', 'This adjustment needs approval. It was sent to an approver and stock will change once it is approved.');
         }
 
         return redirect()->route('stock-adjustments.index')

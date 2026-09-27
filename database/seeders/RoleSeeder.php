@@ -54,6 +54,12 @@ class RoleSeeder extends Seeder
                     Permission::DELETE_ORDERS->value,
                     Permission::APPROVE_ORDERS->value,
 
+                    // Managers sign off on the approval workflows an
+                    // organization turns on (all off by default).
+                    Permission::APPROVE_PURCHASE_ORDERS->value,
+                    Permission::APPROVE_STOCK_ADJUSTMENTS->value,
+                    Permission::APPROVE_STOCK_TRANSFERS->value,
+
                     Permission::VIEW_STOCK_AUDITS->value,
                     Permission::CREATE_STOCK_AUDITS->value,
 

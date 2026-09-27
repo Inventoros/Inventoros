@@ -11,6 +11,8 @@ import { useI18n } from 'vue-i18n';
 const props = defineProps({
     organization: Object,
     user: Object,
+    approvalSettings: { type: Object, default: () => ({}) },
+    canManageOrganization: { type: Boolean, default: false },
 });
 
 
@@ -50,6 +52,32 @@ const submitRegional = () => {
 };
 
 const isAdmin = props.user.is_admin;
+
+// Approval workflows. All off by default; a blank threshold means every
+// request of that kind needs approval once the workflow is on.
+const approvalsForm = useForm({
+    purchase_orders_enabled: !!props.approvalSettings.purchase_orders_enabled,
+    purchase_orders_threshold: props.approvalSettings.purchase_orders_threshold ?? '',
+    stock_adjustments_enabled: !!props.approvalSettings.stock_adjustments_enabled,
+    stock_adjustments_quantity_threshold: props.approvalSettings.stock_adjustments_quantity_threshold ?? '',
+    stock_adjustments_value_threshold: props.approvalSettings.stock_adjustments_value_threshold ?? '',
+    stock_transfers_enabled: !!props.approvalSettings.stock_transfers_enabled,
+    admins_can_self_approve: props.approvalSettings.admins_can_self_approve ?? true,
+});
+
+const submitApprovals = () => {
+    approvalsForm
+        .transform((data) => ({
+            ...data,
+            purchase_orders_threshold: data.purchase_orders_threshold === '' ? null : data.purchase_orders_threshold,
+            stock_adjustments_quantity_threshold: data.stock_adjustments_quantity_threshold === '' ? null : data.stock_adjustments_quantity_threshold,
+            stock_adjustments_value_threshold: data.stock_adjustments_value_threshold === '' ? null : data.stock_adjustments_value_threshold,
+        }))
+        .patch(route('settings.organization.update.approvals'), { preserveScroll: true });
+};
+
+const toggleRow = 'flex items-start gap-3 min-h-11 py-2';
+const toggleBox = 'mt-0.5 h-5 w-5 shrink-0 rounded border-border-strong text-brand ds-focus-ring disabled:opacity-60';
 
 const fieldLabel = 'mb-1 block text-sm font-medium text-text-secondary';
 const fieldInput = 'h-9 w-full rounded-md border border-border-subtle bg-surface-canvas px-3 text-sm text-text-primary placeholder:text-text-tertiary ds-focus-ring disabled:cursor-not-allowed disabled:opacity-60';
@@ -102,6 +130,17 @@ const tabs = [
                     ]"
                 >
                     Regional Settings
+                </button>
+                <button
+                    @click="activeTab = 'approvals'"
+                    :class="[
+                        'border-b-2 px-1 py-3 text-sm font-medium transition-colors',
+                        activeTab === 'approvals'
+                            ? 'border-brand text-brand'
+                            : 'border-transparent text-text-tertiary hover:border-border-strong hover:text-text-secondary'
+                    ]"
+                >
+                    {{ t('approvals.settings.tab') }}
                 </button>
                 <button
                     v-if="isAdmin"
@@ -289,6 +328,83 @@ const tabs = [
                         <div v-if="isAdmin" class="mt-6 flex justify-end">
                             <Button type="submit" variant="default" :loading="regionalForm.processing" :disabled="regionalForm.processing">
                                 Save Changes
+                            </Button>
+                        </div>
+                    </div>
+                </form>
+            </Card>
+        </div>
+
+        <!-- Approvals Tab -->
+        <div v-show="activeTab === 'approvals'" class="mt-6">
+            <Card :padded="false">
+                <form @submit.prevent="submitApprovals">
+                    <div class="px-5 pt-5">
+                        <h3 class="text-sm font-semibold text-text-primary">{{ t('approvals.settings.title') }}</h3>
+                        <p class="mt-1 text-sm text-text-secondary">{{ t('approvals.settings.description') }}</p>
+                    </div>
+                    <div class="space-y-6 p-5">
+                        <!-- Purchase orders -->
+                        <fieldset class="space-y-2">
+                            <label :class="toggleRow">
+                                <input v-model="approvalsForm.purchase_orders_enabled" type="checkbox" :class="toggleBox" :disabled="!canManageOrganization" />
+                                <span>
+                                    <span class="block text-sm font-medium text-text-primary">{{ t('approvals.settings.purchaseOrders') }}</span>
+                                    <span class="block text-xs text-text-tertiary">{{ t('approvals.settings.purchaseOrdersHelp') }}</span>
+                                </span>
+                            </label>
+                            <div v-if="approvalsForm.purchase_orders_enabled" class="pl-8 sm:max-w-xs">
+                                <label for="po_threshold" :class="fieldLabel">{{ t('approvals.settings.poThreshold') }}</label>
+                                <input id="po_threshold" v-model="approvalsForm.purchase_orders_threshold" type="number" min="0" step="0.01" inputmode="decimal" :class="fieldInput" :disabled="!canManageOrganization" :placeholder="t('approvals.settings.everyOne')" />
+                                <p v-if="approvalsForm.errors.purchase_orders_threshold" :class="fieldError">{{ approvalsForm.errors.purchase_orders_threshold }}</p>
+                            </div>
+                        </fieldset>
+
+                        <!-- Stock adjustments -->
+                        <fieldset class="space-y-2">
+                            <label :class="toggleRow">
+                                <input v-model="approvalsForm.stock_adjustments_enabled" type="checkbox" :class="toggleBox" :disabled="!canManageOrganization" />
+                                <span>
+                                    <span class="block text-sm font-medium text-text-primary">{{ t('approvals.settings.stockAdjustments') }}</span>
+                                    <span class="block text-xs text-text-tertiary">{{ t('approvals.settings.stockAdjustmentsHelp') }}</span>
+                                </span>
+                            </label>
+                            <div v-if="approvalsForm.stock_adjustments_enabled" class="grid grid-cols-1 gap-4 pl-8 sm:grid-cols-2">
+                                <div>
+                                    <label for="adj_qty_threshold" :class="fieldLabel">{{ t('approvals.settings.quantityThreshold') }}</label>
+                                    <input id="adj_qty_threshold" v-model="approvalsForm.stock_adjustments_quantity_threshold" type="number" min="0" step="1" inputmode="numeric" :class="fieldInput" :disabled="!canManageOrganization" :placeholder="t('approvals.settings.noLimit')" />
+                                    <p v-if="approvalsForm.errors.stock_adjustments_quantity_threshold" :class="fieldError">{{ approvalsForm.errors.stock_adjustments_quantity_threshold }}</p>
+                                </div>
+                                <div>
+                                    <label for="adj_value_threshold" :class="fieldLabel">{{ t('approvals.settings.valueThreshold') }}</label>
+                                    <input id="adj_value_threshold" v-model="approvalsForm.stock_adjustments_value_threshold" type="number" min="0" step="0.01" inputmode="decimal" :class="fieldInput" :disabled="!canManageOrganization" :placeholder="t('approvals.settings.noLimit')" />
+                                    <p v-if="approvalsForm.errors.stock_adjustments_value_threshold" :class="fieldError">{{ approvalsForm.errors.stock_adjustments_value_threshold }}</p>
+                                </div>
+                                <p class="text-xs text-text-tertiary sm:col-span-2">{{ t('approvals.settings.thresholdHelp') }}</p>
+                            </div>
+                        </fieldset>
+
+                        <!-- Stock transfers -->
+                        <label :class="toggleRow">
+                            <input v-model="approvalsForm.stock_transfers_enabled" type="checkbox" :class="toggleBox" :disabled="!canManageOrganization" />
+                            <span>
+                                <span class="block text-sm font-medium text-text-primary">{{ t('approvals.settings.stockTransfers') }}</span>
+                                <span class="block text-xs text-text-tertiary">{{ t('approvals.settings.stockTransfersHelp') }}</span>
+                            </span>
+                        </label>
+
+                        <!-- Self-approval -->
+                        <label :class="[toggleRow, 'border-t border-border-subtle pt-4']">
+                            <input v-model="approvalsForm.admins_can_self_approve" type="checkbox" :class="toggleBox" :disabled="!canManageOrganization" />
+                            <span>
+                                <span class="block text-sm font-medium text-text-primary">{{ t('approvals.settings.adminsSelfApprove') }}</span>
+                                <span class="block text-xs text-text-tertiary">{{ t('approvals.settings.adminsSelfApproveHelp') }}</span>
+                            </span>
+                        </label>
+
+                        <div v-if="canManageOrganization" class="flex justify-end">
+                            <Button type="submit" variant="default" :loading="approvalsForm.processing" :disabled="approvalsForm.processing">
+                                {{ t('common.saveChanges') }}
                             </Button>
                         </div>
                     </div>

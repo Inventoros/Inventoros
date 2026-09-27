@@ -9,7 +9,10 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\StockAdjustment\StoreStockAdjustmentRequest;
 use App\Http\Resources\StockAdjustmentResource;
 use App\Models\Inventory\Product;
+use App\Models\Inventory\ProductVariant;
 use App\Models\Inventory\StockAdjustment;
+use App\Models\Inventory\StockAdjustmentRequest;
+use App\Services\ApprovalService;
 use App\Services\WarehouseAccessService;
 use Dedoc\Scramble\Attributes\QueryParameter;
 use Illuminate\Http\JsonResponse;
@@ -68,7 +71,7 @@ class StockAdjustmentController extends Controller
      *
      * @param  Request  $request  The incoming HTTP request containing adjustment data
      */
-    public function store(StoreStockAdjustmentRequest $request): JsonResponse
+    public function store(StoreStockAdjustmentRequest $request, ApprovalService $approvals): JsonResponse
     {
         $organizationId = $request->user()->organization_id;
 
@@ -89,22 +92,38 @@ class StockAdjustmentController extends Controller
         // A restricted user may only adjust a bin in one of their warehouses.
         app(WarehouseAccessService::class)->authorizeLocation($request->user(), $validated['location_id'] ?? null);
 
-        // Create the stock adjustment
+        // The request confirmed the variant belongs to this product; variant
+        // stock moves through the variant ledger (adjustVariant).
+        $variant = ! empty($validated['product_variant_id'])
+            ? ProductVariant::where('product_id', $product->id)->find($validated['product_variant_id'])
+            : null;
+
+        // Applied now, or held for approval (202) when the organization's
+        // approval rules cover it.
         try {
-            $adjustment = StockAdjustment::adjust(
-                $product,
-                $validated['quantity'],
-                $validated['type'],
-                $validated['reason'] ?? null,
-                $validated['notes'] ?? null,
-                allowNegative: false,
-                locationId: $validated['location_id'] ?? null,
+            $adjustment = $approvals->submitStockAdjustment(
+                user: $request->user(),
+                product: $product,
+                variant: $variant,
+                quantity: (int) $validated['quantity'],
+                type: $validated['type'],
+                reason: $validated['reason'] ?? null,
+                notes: $validated['notes'] ?? null,
+                locationId: $variant ? null : ($validated['location_id'] ?? null),
             );
         } catch (InsufficientStockException $e) {
             return response()->json([
                 'message' => $e->getMessage(),
                 'errors' => ['quantity' => [$e->getMessage()]],
             ], 422);
+        }
+
+        if ($adjustment instanceof StockAdjustmentRequest) {
+            return response()->json([
+                'message' => 'Stock adjustment submitted for approval; stock changes once it is approved',
+                'status' => 'pending_approval',
+                'data' => $approvals->describe(ApprovalService::STOCK_ADJUSTMENT, $adjustment->load(['product', 'variant', 'requester'])),
+            ], 202);
         }
 
         $adjustment->load(['product', 'user']);

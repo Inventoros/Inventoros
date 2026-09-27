@@ -10,6 +10,10 @@ Artisan::command('inspire', function () {
 
 Schedule::command('inventory:check-reorder-points')->dailyAt('06:00');
 
+// Scheduled cycle counts: turn every due schedule into a draft stock audit.
+// Hourly, so a schedule's run time is honoured to within the hour.
+Schedule::command('inventory:run-cycle-counts')->hourly()->withoutOverlapping();
+
 // Retention pruning — see PruneActivityLogsCommand and
 // PruneWebhookDeliveriesCommand for the rationale (PII, table-size
 // runaway). Run nightly at off-peak times. Defaults are conservative:

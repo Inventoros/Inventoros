@@ -6,6 +6,7 @@ import Card from '@/Components/ui/Card.vue';
 import Button from '@/Components/ui/Button.vue';
 import Badge from '@/Components/ui/Badge.vue';
 import SendDocumentModal from '@/Components/SendDocumentModal.vue';
+import ApprovalPanel from '@/Components/ApprovalPanel.vue';
 import { Head, Link, router } from '@inertiajs/vue3';
 import { computed, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
@@ -16,7 +17,17 @@ const { t } = useI18n();
 const props = defineProps({
     purchaseOrder: Object,
     pluginComponents: Object,
+    approval: { type: Object, default: () => ({}) },
 });
+
+// A draft the organization's approval rules cover cannot be sent until it
+// is approved, and is frozen while an approver is looking at it.
+const awaitingApproval = computed(() =>
+    props.purchaseOrder.status === 'draft'
+    && props.approval.needs_approval
+    && props.purchaseOrder.approval_status !== 'approved'
+);
+const lockedForApproval = computed(() => props.purchaseOrder.approval_status === 'pending');
 
 const formatCurrency = (value) => {
     return new Intl.NumberFormat('en-US', {
@@ -54,7 +65,7 @@ const statusLabels = {
 const showSendModal = ref(false);
 
 // Drafts are sent for the first time; orders already with the supplier can be re-sent.
-const canSend = computed(() => ['draft', 'sent', 'partial'].includes(props.purchaseOrder.status));
+const canSend = computed(() => ['draft', 'sent', 'partial'].includes(props.purchaseOrder.status) && !awaitingApproval.value);
 const isResend = computed(() => props.purchaseOrder.status !== 'draft');
 
 const sentSummary = computed(() =>
@@ -120,7 +131,7 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-t
                     Preview PDF
                 </Button>
                 <Button
-                    v-if="purchaseOrder.status === 'draft'"
+                    v-if="purchaseOrder.status === 'draft' && !lockedForApproval"
                     variant="default"
                     size="sm"
                     as="Link"
@@ -148,6 +159,21 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-t
 
         <!-- Plugin Slot: Header -->
         <PluginSlot slot="header" :components="pluginComponents?.header" />
+
+        <ApprovalPanel
+            class="mt-6"
+            type="purchase_order"
+            :id="purchaseOrder.id"
+            :status="purchaseOrder.approval_status"
+            :needs-approval="purchaseOrder.status === 'draft' && !!approval.needs_approval"
+            :requester="purchaseOrder.approval_requester?.name || null"
+            :approver="purchaseOrder.approver?.name || null"
+            :approved-at="purchaseOrder.approved_at"
+            :notes="purchaseOrder.approval_notes"
+            :can-decide="!!approval.can_decide"
+            :can-submit="!!approval.can_submit"
+            :submit-url="route('purchase-orders.submit-approval', purchaseOrder.id)"
+        />
 
         <div class="mt-6 grid grid-cols-1 gap-4 lg:grid-cols-3">
             <!-- Left Column: Order Details & Items -->
@@ -330,6 +356,9 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-t
                             <Send :size="16" />
                             {{ isResend ? t('documentEmail.resendPo') : t('documentEmail.sendPo') }}
                         </Button>
+                        <p v-if="awaitingApproval" class="text-xs text-text-tertiary">
+                            {{ t('approvals.poSendBlocked') }}
+                        </p>
                         <Button
                             v-if="purchaseOrder.status === 'sent' || purchaseOrder.status === 'partial'"
                             variant="default"
@@ -341,7 +370,7 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-t
                             Receive Items
                         </Button>
                         <Button
-                            v-if="purchaseOrder.status === 'draft'"
+                            v-if="purchaseOrder.status === 'draft' && !lockedForApproval"
                             variant="secondary"
                             class="w-full"
                             as="Link"

@@ -35,6 +35,7 @@ import {
     BarChart3,
     Users,
     Contact,
+    BadgeCheck,
     SlidersHorizontal,
     History,
     ShieldCheck,
@@ -96,6 +97,8 @@ const handleHotkey = (e) => {
 onMounted(() => window.addEventListener('keydown', handleHotkey));
 
 const user = computed(() => page.props.auth?.user);
+// Requests waiting for this user's decision, shown on the Approvals item.
+const pendingApprovalsCount = computed(() => Number(page.props.pendingApprovalsCount || 0));
 const workspaceName = computed(() => page.props.auth?.organization?.name || 'Inventoros');
 
 /**
@@ -113,6 +116,7 @@ const sections = computed(() => [
             { icon: Undo2, name: 'Returns', href: route('returns.index'), active: ['returns.*'], perm: 'manage_returns' },
             { icon: ClipboardList, name: 'Purchase Orders', href: route('purchase-orders.index'), active: ['purchase-orders.*'], perm: 'view_purchase_orders' },
             { icon: Truck, name: 'Suppliers', href: route('suppliers.index'), active: ['suppliers.*'], perm: 'view_suppliers' },
+            { icon: BadgeCheck, name: 'Approvals', href: route('approvals.index'), active: ['approvals.*'], perm: ['approve_purchase_orders', 'approve_stock_adjustments', 'approve_stock_transfers'], badge: pendingApprovalsCount.value },
         ],
     },
     {
@@ -293,6 +297,13 @@ const isActive = (item) => item.active.some((pattern) => route().current(pattern
                                 :class="isActive(item) ? 'text-brand' : 'text-text-tertiary group-hover:text-text-secondary'"
                             />
                             <span class="truncate flex-1">{{ item.name }}</span>
+                            <span
+                                v-if="item.badge"
+                                class="ml-auto inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-status-warning-soft px-1.5 text-[11px] font-semibold tabular-nums text-status-warning"
+                                :aria-label="`${item.badge} waiting`"
+                            >
+                                {{ item.badge > 99 ? '99+' : item.badge }}
+                            </span>
                         </component>
                     </div>
                 </div>

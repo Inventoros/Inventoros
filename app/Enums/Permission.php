@@ -53,6 +53,7 @@ enum Permission: string
     case EDIT_PURCHASE_ORDERS = 'edit_purchase_orders';
     case DELETE_PURCHASE_ORDERS = 'delete_purchase_orders';
     case RECEIVE_PURCHASE_ORDERS = 'receive_purchase_orders';
+    case APPROVE_PURCHASE_ORDERS = 'approve_purchase_orders';
 
     // Order Management
     case VIEW_ORDERS = 'view_orders';
@@ -74,6 +75,10 @@ enum Permission: string
     case VIEW_STOCK_AUDITS = 'view_stock_audits';
     case CREATE_STOCK_AUDITS = 'create_stock_audits';
     case MANAGE_STOCK_AUDITS = 'manage_stock_audits';
+
+    // Stock Approvals
+    case APPROVE_STOCK_ADJUSTMENTS = 'approve_stock_adjustments';
+    case APPROVE_STOCK_TRANSFERS = 'approve_stock_transfers';
 
     // Warehouse Management
     case VIEW_WAREHOUSES = 'view_warehouses';
@@ -134,6 +139,7 @@ enum Permission: string
             self::EDIT_PURCHASE_ORDERS => 'Edit Purchase Orders',
             self::DELETE_PURCHASE_ORDERS => 'Delete Purchase Orders',
             self::RECEIVE_PURCHASE_ORDERS => 'Receive Purchase Orders',
+            self::APPROVE_PURCHASE_ORDERS => 'Approve Purchase Orders',
 
             self::VIEW_ORDERS => 'View Orders',
             self::CREATE_ORDERS => 'Create Orders',
@@ -144,6 +150,8 @@ enum Permission: string
             self::VIEW_STOCK_AUDITS => 'View Stock Audits',
             self::CREATE_STOCK_AUDITS => 'Create Stock Audits',
             self::MANAGE_STOCK_AUDITS => 'Manage Stock Audits',
+            self::APPROVE_STOCK_ADJUSTMENTS => 'Approve Stock Adjustments',
+            self::APPROVE_STOCK_TRANSFERS => 'Approve Stock Transfers',
 
             self::VIEW_SETTINGS => 'View Settings',
             self::EDIT_SETTINGS => 'Edit Settings',
@@ -210,6 +218,7 @@ enum Permission: string
             self::EDIT_PURCHASE_ORDERS => 'Can edit purchase orders',
             self::DELETE_PURCHASE_ORDERS => 'Can delete purchase orders',
             self::RECEIVE_PURCHASE_ORDERS => 'Can receive items from purchase orders',
+            self::APPROVE_PURCHASE_ORDERS => 'Can approve or reject purchase orders that need approval before they are sent',
 
             self::VIEW_ORDERS => 'Can view orders',
             self::CREATE_ORDERS => 'Can create new orders',
@@ -220,6 +229,8 @@ enum Permission: string
             self::VIEW_STOCK_AUDITS => 'Can view stock audits and cycle counts',
             self::CREATE_STOCK_AUDITS => 'Can create new stock audits',
             self::MANAGE_STOCK_AUDITS => 'Can manage stock audits, start, complete, and adjust counts',
+            self::APPROVE_STOCK_ADJUSTMENTS => 'Can approve or reject stock adjustments that need approval before stock changes',
+            self::APPROVE_STOCK_TRANSFERS => 'Can approve or reject stock transfers that need approval before they ship',
 
             self::VIEW_SETTINGS => 'Can view system settings',
             self::EDIT_SETTINGS => 'Can modify system settings',
@@ -256,11 +267,13 @@ enum Permission: string
             self::VIEW_ROLES, self::CREATE_ROLES, self::EDIT_ROLES, self::DELETE_ROLES => 'Role Management',
             self::VIEW_PRODUCTS, self::CREATE_PRODUCTS, self::EDIT_PRODUCTS, self::DELETE_PRODUCTS,
             self::MANAGE_STOCK, self::TRANSFER_STOCK, self::MANAGE_CATEGORIES, self::MANAGE_LOCATIONS,
-            self::VIEW_STOCK_AUDITS, self::CREATE_STOCK_AUDITS, self::MANAGE_STOCK_AUDITS => 'Inventory Management',
+            self::VIEW_STOCK_AUDITS, self::CREATE_STOCK_AUDITS, self::MANAGE_STOCK_AUDITS,
+            self::APPROVE_STOCK_ADJUSTMENTS, self::APPROVE_STOCK_TRANSFERS => 'Inventory Management',
             self::VIEW_CUSTOMERS, self::CREATE_CUSTOMERS, self::EDIT_CUSTOMERS, self::DELETE_CUSTOMERS => 'Customer Management',
             self::VIEW_SUPPLIERS, self::CREATE_SUPPLIERS, self::EDIT_SUPPLIERS, self::DELETE_SUPPLIERS => 'Supplier Management',
             self::VIEW_PURCHASE_ORDERS, self::CREATE_PURCHASE_ORDERS, self::EDIT_PURCHASE_ORDERS,
-            self::DELETE_PURCHASE_ORDERS, self::RECEIVE_PURCHASE_ORDERS => 'Purchase Order Management',
+            self::DELETE_PURCHASE_ORDERS, self::RECEIVE_PURCHASE_ORDERS,
+            self::APPROVE_PURCHASE_ORDERS => 'Purchase Order Management',
             self::VIEW_ORDERS, self::CREATE_ORDERS, self::EDIT_ORDERS, self::DELETE_ORDERS,
             self::APPROVE_ORDERS => 'Order Management',
             self::VIEW_WAREHOUSES, self::CREATE_WAREHOUSES, self::EDIT_WAREHOUSES,
