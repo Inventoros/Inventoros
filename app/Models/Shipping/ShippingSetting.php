@@ -11,7 +11,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Str;
 
 /**
- * An organization's shipping configuration. The EasyPost API key and webhook
+ * An organization's shipping configuration. The EasyPost API keys and webhook
  * secret use the `encrypted` cast, so they are encrypted at rest with the app
  * key, and they are never serialized to a client ($hidden).
  *
@@ -19,6 +19,7 @@ use Illuminate\Support\Str;
  * @property int $organization_id
  * @property bool $easypost_enabled
  * @property string|null $easypost_api_key
+ * @property string|null $easypost_test_api_key
  * @property bool $easypost_test_mode
  * @property string|null $easypost_webhook_secret
  * @property string $webhook_token
@@ -35,6 +36,7 @@ class ShippingSetting extends Model
         'organization_id',
         'easypost_enabled',
         'easypost_api_key',
+        'easypost_test_api_key',
         'easypost_test_mode',
         'easypost_webhook_secret',
         'webhook_token',
@@ -46,6 +48,7 @@ class ShippingSetting extends Model
 
     protected $hidden = [
         'easypost_api_key',
+        'easypost_test_api_key',
         'easypost_webhook_secret',
         'webhook_token',
     ];
@@ -61,6 +64,7 @@ class ShippingSetting extends Model
         return [
             'easypost_enabled' => 'boolean',
             'easypost_api_key' => 'encrypted',
+            'easypost_test_api_key' => 'encrypted',
             'easypost_test_mode' => 'boolean',
             'easypost_webhook_secret' => 'encrypted',
             'from_address' => 'array',
@@ -92,11 +96,22 @@ class ShippingSetting extends Model
     }
 
     /**
-     * Whether EasyPost is switched on and has a key to call it with.
+     * The EasyPost key in use: the test key in test mode, otherwise the
+     * production key.
+     */
+    public function easyPostKey(): ?string
+    {
+        $key = $this->easypost_test_mode ? $this->easypost_test_api_key : $this->easypost_api_key;
+
+        return filled($key) ? (string) $key : null;
+    }
+
+    /**
+     * Whether EasyPost is switched on and has a key for the current mode.
      */
     public function easyPostConfigured(): bool
     {
-        return $this->easypost_enabled && filled($this->easypost_api_key);
+        return $this->easypost_enabled && $this->easyPostKey() !== null;
     }
 
     /**

@@ -1,0 +1,44 @@
+{
+    "object": "Event",
+    "id": "evt_8a1b2c3d4e5f11f0b1c2ac1f6bc53342",
+    "mode": "test",
+    "description": "tracker.updated",
+    "previous_attributes": {
+        "status": "out_for_delivery"
+    },
+    "pending_urls": [
+        "https://inventoros.example.com/webhooks/easypost/TOKEN"
+    ],
+    "completed_urls": [],
+    "status": "pending",
+    "user_id": "user_2f1a0b9c8d7e4f6a5b4c3d2e1f0a9b8c",
+    "created_at": "2026-09-30T18:12:07.000Z",
+    "updated_at": "2026-09-30T18:12:07.000Z",
+    "result": {
+        "id": "trk_c1d2e3f4a5b64c7d8e9f0a1b2c3d4e5f",
+        "object": "Tracker",
+        "mode": "test",
+        "tracking_code": "9400100208271109836487",
+        "status": "delivered",
+        "status_detail": "arrived_at_destination",
+        "carrier": "USPS",
+        "public_url": "https://track.easypost.com/djE6dHJrX2MxZDJlM2Y0YTViNjRjN2Q4ZTlmMGExYjJjM2Q0ZTVm",
+        "est_delivery_date": "2026-09-30T00:00:00Z",
+        "shipment_id": "shp_4d7f2c9b1e5a4f0e9c3b8a2d6e1f0a7b",
+        "signed_by": "C CUSTOMER",
+        "tracking_details": [
+            {
+                "object": "TrackingDetail",
+                "message": "Delivered, Front Door/Porch",
+                "description": "",
+                "status": "delivered",
+                "status_detail": "arrived_at_destination",
+                "datetime": "2026-09-30T18:04:00Z",
+                "source": "USPS",
+                "tracking_location": {"object": "TrackingLocation", "city": "SAN FRANCISCO", "state": "CA", "country": "US", "zip": "94107"}
+            }
+        ],
+        "created_at": "2026-09-27T15:21:41Z",
+        "updated_at": "2026-09-30T18:12:06Z"
+    }
+}

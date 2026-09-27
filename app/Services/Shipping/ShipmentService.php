@@ -98,6 +98,8 @@ final class ShipmentService
                 'service' => $this->clean($data['service'] ?? null),
                 'tracking_number' => $trackingNumber,
                 'tracking_url' => $this->clean($data['tracking_url'] ?? null) ?? TrackingUrls::guess($carrierName, $trackingNumber),
+                'to_address' => $this->address($data['to_address'] ?? null) ?? $this->defaultToAddress($locked),
+                'from_address' => $this->address($data['from_address'] ?? null) ?? $this->defaultFromAddress($locked, $warehouseId),
                 'cost' => $data['cost'] ?? null,
                 'currency' => $data['currency'] ?? $locked->currency ?? 'USD',
                 'weight_oz' => $data['weight_oz'] ?? ($parcel['weight_oz'] ?? null),
@@ -570,6 +572,113 @@ final class ShipmentService
     private function notifyCustomer(Shipment $shipment): void
     {
         // Filled in with the shipment email.
+    }
+
+    /**
+     * The ship-to address for an order, in EasyPost's address shape: the
+     * linked customer's shipping address (else billing), else the order's
+     * free-text address as street lines for the user to complete.
+     *
+     * @return array<string, string|null>
+     */
+    public function defaultToAddress(Order $order): array
+    {
+        $customer = $order->customer_id
+            ? \App\Models\Customer::withoutGlobalScopes()->find($order->customer_id)
+            : null;
+
+        $base = [
+            'name' => $order->customer_name,
+            'company' => $customer?->company_name,
+            'phone' => $customer?->phone,
+            'email' => $order->customer_email ?? $customer?->email,
+        ];
+
+        if ($customer && filled($customer->shipping_address)) {
+            return $base + [
+                'street1' => $customer->shipping_address,
+                'street2' => null,
+                'city' => $customer->shipping_city,
+                'state' => $customer->shipping_state,
+                'zip' => $customer->shipping_zip_code,
+                'country' => $customer->shipping_country,
+            ];
+        }
+
+        if ($customer && filled($customer->billing_address)) {
+            return $base + [
+                'street1' => $customer->billing_address,
+                'street2' => null,
+                'city' => $customer->billing_city,
+                'state' => $customer->billing_state,
+                'zip' => $customer->billing_zip_code,
+                'country' => $customer->billing_country,
+            ];
+        }
+
+        $lines = array_values(array_filter(array_map('trim', preg_split('/\r\n|\r|\n/', (string) $order->customer_address))));
+
+        return $base + [
+            'street1' => $lines[0] ?? null,
+            'street2' => $lines[1] ?? null,
+            'city' => null,
+            'state' => null,
+            'zip' => null,
+            'country' => null,
+        ];
+    }
+
+    /**
+     * The ship-from address: the organization's configured default, else the
+     * ship-from warehouse's address.
+     *
+     * @return array<string, string|null>
+     */
+    public function defaultFromAddress(Order $order, ?int $warehouseId = null): array
+    {
+        $settings = ShippingSetting::forOrganization((int) $order->organization_id);
+        $configured = $this->address($settings->from_address);
+
+        if ($configured !== null && filled($configured['street1'] ?? null)) {
+            return $configured;
+        }
+
+        $warehouse = Warehouse::withoutGlobalScopes()->find($warehouseId ?? $order->warehouse_id ?? $settings->default_warehouse_id);
+        $organization = \App\Models\Auth\Organization::query()->withoutGlobalScopes()->find($order->organization_id);
+
+        return [
+            'name' => $warehouse?->manager_name ?: $organization?->name,
+            'company' => $organization?->name,
+            'street1' => $warehouse?->address_line_1,
+            'street2' => $warehouse?->address_line_2,
+            'city' => $warehouse?->city,
+            'state' => $warehouse?->province,
+            'zip' => $warehouse?->postal_code,
+            'country' => $warehouse?->country,
+            'phone' => $warehouse?->phone ?: $organization?->phone,
+            'email' => $warehouse?->email ?: $organization?->email,
+        ];
+    }
+
+    /**
+     * Normalise a submitted address to EasyPost's keys, or null when empty.
+     *
+     * @return array<string, string|null>|null
+     */
+    private function address(mixed $address): ?array
+    {
+        if (! is_array($address)) {
+            return null;
+        }
+
+        $keys = ['name', 'company', 'street1', 'street2', 'city', 'state', 'zip', 'country', 'phone', 'email'];
+        $normalised = [];
+
+        foreach ($keys as $key) {
+            $normalised[$key] = $this->clean($address[$key] ?? null);
+        }
+
+        return array_filter($normalised) === [] ? null : $normalised;
     }
 
     private function clean(mixed $value): ?string

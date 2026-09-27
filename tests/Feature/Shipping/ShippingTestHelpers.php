@@ -5,9 +5,11 @@ declare(strict_types=1);
 namespace Tests\Feature\Shipping;
 
 use App\Models\Auth\Organization;
+use App\Models\Customer;
 use App\Models\Inventory\Product;
 use App\Models\Order\Order;
 use App\Models\Role;
+use App\Models\Shipping\ShippingSetting;
 use App\Models\System\SystemSetting;
 use App\Models\User;
 use App\Models\Warehouse;
@@ -81,6 +83,55 @@ trait ShippingTestHelpers
                 'product_id' => $l[0]->id, 'quantity' => $l[1], 'unit_price' => 10,
             ], $lines),
         ], $overrides), $this->admin)->fresh('items');
+    }
+
+    /**
+     * Switch EasyPost on for the organization (test mode, test key).
+     */
+    protected function configureEasyPost(array $overrides = []): ShippingSetting
+    {
+        $settings = ShippingSetting::forOrganization($this->organization->id);
+        $settings->fill(array_merge([
+            'easypost_enabled' => true,
+            'easypost_test_mode' => true,
+            'easypost_test_api_key' => 'EZTK_test_key_123',
+            'easypost_api_key' => 'EZAK_live_key_456',
+            'easypost_webhook_secret' => 'whsec_example_secret',
+            'default_parcel' => ['weight_oz' => 15.4, 'length_in' => 10, 'width_in' => 8, 'height_in' => 4],
+        ], $overrides))->save();
+
+        return $settings;
+    }
+
+    /**
+     * The decoded contents of an EasyPost response fixture.
+     *
+     * @return array<string, mixed>
+     */
+    protected function easyPostFixture(string $name): array
+    {
+        return json_decode((string) file_get_contents(base_path("tests/Fixtures/easypost/{$name}.json")), true);
+    }
+
+    /**
+     * An order whose ship-to address is complete enough to rate.
+     */
+    protected function makeRateableOrder(): Order
+    {
+        $customer = Customer::create([
+            'organization_id' => $this->organization->id,
+            'name' => 'Casey Customer',
+            'email' => 'casey@customer.test',
+            'phone' => '4155551212',
+            'shipping_address' => '388 Townsend St',
+            'shipping_city' => 'San Francisco',
+            'shipping_state' => 'CA',
+            'shipping_zip_code' => '94107',
+            'shipping_country' => 'US',
+            'is_active' => true,
+        ]);
+
+        return $this->makeOrder([], ['customer_id' => $customer->id]);
     }
 
     /**

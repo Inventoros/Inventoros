@@ -29,6 +29,8 @@ use Illuminate\Support\Carbon;
  * @property string|null $service
  * @property string|null $tracking_number
  * @property string|null $tracking_url
+ * @property array|null $to_address
+ * @property array|null $from_address
  * @property string|null $label_path
  * @property string|null $label_url
  * @property string|null $carrier_shipment_id
@@ -63,6 +65,8 @@ class Shipment extends Model
         'service',
         'tracking_number',
         'tracking_url',
+        'to_address',
+        'from_address',
         'label_path',
         'label_url',
         'carrier_shipment_id',
@@ -100,6 +104,8 @@ class Shipment extends Model
     {
         return [
             'status' => ShipmentStatus::class,
+            'to_address' => 'array',
+            'from_address' => 'array',
             'carrier_rates' => 'array',
             'carrier_response' => 'array',
             'cost' => 'decimal:2',
@@ -193,6 +199,7 @@ class Shipment extends Model
             'service' => $this->service,
             'tracking_number' => $this->tracking_number,
             'tracking_url' => $this->tracking_url,
+            'to_address' => $this->to_address,
             'has_label' => $this->hasLabel(),
             'cost' => $this->cost,
             'currency' => $this->currency,

@@ -11,7 +11,8 @@ use Illuminate\Support\Facades\Schema;
  *
  * carrier is the integration that owns the shipment (manual or easypost);
  * carrier_name/service are the human-facing carrier and service level
- * (for example USPS Priority). The raw carrier purchase response is kept in
+ * (for example USPS Priority). to_address/from_address snapshot where the
+ * parcel went, in EasyPost's address shape. The raw carrier purchase response is kept in
  * carrier_response so a bought label is never lost, even if the label file
  * download that follows it fails.
  */
@@ -31,6 +32,9 @@ return new class extends Migration
             $table->string('service')->nullable();
             $table->string('tracking_number')->nullable();
             $table->string('tracking_url', 2048)->nullable();
+
+            $table->json('to_address')->nullable();
+            $table->json('from_address')->nullable();
 
             $table->string('label_path')->nullable();
             $table->string('label_url', 2048)->nullable();

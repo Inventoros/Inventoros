@@ -1,0 +1,7 @@
+{
+    "error": {
+        "code": "APIKEY.INACTIVE",
+        "message": "This api key is no longer active. Please use a different api key or reactivate this key.",
+        "errors": []
+    }
+}
