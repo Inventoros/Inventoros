@@ -279,14 +279,14 @@ class ImportExportController extends Controller
     {
         $headers = [
             'external_reference', 'order_date', 'status', 'customer_name', 'customer_email',
-            'product_sku', 'variant_sku', 'quantity', 'unit_price', 'line_tax',
+            'product_sku', 'variant_sku', 'quantity', 'unit_price', 'line_tax', 'unit_cost',
             'order_tax', 'order_shipping', 'currency', 'shipped_at', 'delivered_at', 'notes',
         ];
 
         $examples = [
-            ['SHOP-1001', '2026-01-15', 'delivered', 'Example Customer', 'customer@example.com', 'SKU-001', '', '2', '19.99', '', '4.00', '5.00', 'USD', '2026-01-16', '2026-01-18', 'Imported from old shop'],
-            ['SHOP-1001', '', '', '', '', '', 'SKU-002-L', '1', '29.99', '', '', '', '', '', '', ''],
-            ['SHOP-1002', '2026-01-16', 'pending', 'Another Customer', '', 'SKU-001', '', '1', '', '', '', '', '', '', '', ''],
+            ['SHOP-1001', '2026-01-15', 'delivered', 'Example Customer', 'customer@example.com', 'SKU-001', '', '2', '19.99', '', '8.50', '4.00', '5.00', 'USD', '2026-01-16', '2026-01-18', 'Imported from old shop'],
+            ['SHOP-1001', '', '', '', '', '', 'SKU-002-L', '1', '29.99', '', '', '', '', '', '', '', ''],
+            ['SHOP-1002', '2026-01-16', 'pending', 'Another Customer', '', 'SKU-001', '', '1', '', '', '', '', '', '', '', '', ''],
         ];
 
         return response()->stream(function () use ($headers, $examples) {

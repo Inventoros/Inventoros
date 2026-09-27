@@ -5,9 +5,13 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Reports;
 
 use App\Http\Controllers\Controller;
+use App\Models\Auth\Organization;
+use App\Models\ReportSchedule;
 use App\Models\SavedReport;
+use App\Models\User;
 use App\Services\ReportDataService;
-use App\Support\SpreadsheetSafety;
+use App\Services\Reports\ReportExporter;
+use App\Services\Reports\SavedReportRenderer;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -25,7 +29,8 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 class ReportBuilderController extends Controller
 {
     public function __construct(
-        private readonly ReportDataService $reportDataService
+        private readonly ReportDataService $reportDataService,
+        private readonly SavedReportRenderer $renderer,
     ) {}
 
     /**
@@ -187,7 +192,52 @@ class ReportBuilderController extends Controller
             'data' => $data,
             'columnLabels' => $columnLabels,
             'dataSources' => $dataSources,
-        ]);
+        ] + $this->scheduleProps($savedReport, $user));
+    }
+
+    /**
+     * Delivery schedules and the pickable recipients, for the report's owner
+     * only (they are the only one who can manage them). Other viewers get
+     * empty lists, so organization member emails never reach them here.
+     *
+     * @return array<string, mixed>
+     */
+    private function scheduleProps(SavedReport $savedReport, User $user): array
+    {
+        $isOwner = $savedReport->created_by === $user->id;
+
+        $timezone = (string) (Organization::query()->withoutGlobalScopes()->whereKey($savedReport->organization_id)->value('timezone') ?: 'UTC');
+
+        return [
+            'schedules' => ! $isOwner ? [] : $savedReport->schedules()
+                ->orderBy('id')
+                ->get()
+                ->map(fn (ReportSchedule $s) => [
+                    'id' => $s->id,
+                    'frequency' => $s->frequency,
+                    'day_of_week' => $s->day_of_week,
+                    'day_of_month' => $s->day_of_month,
+                    'time_of_day' => $s->time_of_day,
+                    'format' => $s->format,
+                    'recipients' => $s->recipients,
+                    'is_active' => $s->is_active,
+                    'next_run_at' => $s->next_run_at?->toISOString(),
+                    'last_run_at' => $s->last_run_at?->toISOString(),
+                    'last_status' => $s->last_status,
+                ])
+                ->all(),
+            'recipientOptions' => ! $isOwner ? [] : User::query()
+                ->where('organization_id', $savedReport->organization_id)
+                ->orderBy('name')
+                ->get(['id', 'name', 'email'])
+                ->map(fn (User $u) => ['id' => $u->id, 'name' => $u->name, 'email' => $u->email])
+                ->all(),
+            'scheduleOptions' => [
+                'timezone' => $timezone,
+                'frequencies' => ReportSchedule::FREQUENCIES,
+                'formats' => ReportExporter::FORMATS,
+            ],
+        ];
     }
 
     /**
@@ -302,7 +352,10 @@ class ReportBuilderController extends Controller
     }
 
     /**
-     * Export a saved report as CSV.
+     * Export a saved report as CSV (default), XLSX or PDF (?format=).
+     *
+     * The rows are produced for the downloading user, so the per-source view
+     * permission is re-checked for each viewer of a shared report.
      */
     public function export(Request $request, SavedReport $savedReport): StreamedResponse
     {
@@ -316,47 +369,21 @@ class ReportBuilderController extends Controller
             abort(403);
         }
 
-        $data = $this->reportDataService->executeReport(
-            $user,
-            $savedReport->organization_id,
-            $savedReport->data_source,
-            $savedReport->columns,
-            $savedReport->filters,
-            $savedReport->sort
-        );
-
-        $dataSources = $this->reportDataService->getAvailableDataSources();
-        $sourceConfig = $dataSources[$savedReport->data_source] ?? [];
-
-        // Build column headers
-        $headers = [];
-        foreach ($savedReport->columns as $col) {
-            $headers[] = $sourceConfig['columns'][$col]['label'] ?? $col;
+        $format = (string) $request->query('format', 'csv');
+        if (! ReportExporter::isValidFormat($format)) {
+            abort(422, 'Unsupported export format.');
         }
 
-        $filename = str_replace(' ', '_', strtolower($savedReport->name)).'_'.now()->format('Y-m-d').'.csv';
+        $rendered = $this->renderer->render($savedReport, $user, $format);
 
-        return response()->streamDownload(function () use ($data, $savedReport, $headers) {
-            $handle = fopen('php://output', 'w');
+        // Keep the original download name shape for saved reports.
+        $filename = str_replace(' ', '_', strtolower($savedReport->name)).'_'.now()->format('Y-m-d').'.'.$format;
 
-            // Write UTF-8 BOM for Excel compatibility
-            fwrite($handle, "\xEF\xBB\xBF");
-
-            // Header row
-            fputcsv($handle, SpreadsheetSafety::neutraliseRow($headers), escape: '');
-
-            // Data rows
-            foreach ($data as $row) {
-                $csvRow = [];
-                foreach ($savedReport->columns as $col) {
-                    $csvRow[] = $row->$col ?? '';
-                }
-                fputcsv($handle, SpreadsheetSafety::neutraliseRow($csvRow), escape: '');
-            }
-
-            fclose($handle);
+        return response()->streamDownload(function () use ($rendered): void {
+            echo $rendered->content;
         }, $filename, [
-            'Content-Type' => 'text/csv; charset=UTF-8',
+            'Content-Type' => $rendered->mimeType,
+            'X-Content-Type-Options' => 'nosniff',
         ]);
     }
 

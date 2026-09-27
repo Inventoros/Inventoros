@@ -76,6 +76,7 @@ order line. The column names match the line-items export.
 | `quantity` | yes | Whole number, 1 or more. |
 | `unit_price` | no | Blank uses the variant's or product's current price. |
 | `line_tax` | no | Tax on this line. |
+| `unit_cost` | no | What one unit cost you when it was sold, 0 or more. Used by the profit margin and inventory turnover reports. See unit cost below. |
 | `order_tax`, `order_shipping` | no | Order-level amounts. |
 | `currency`, `shipped_at`, `delivered_at`, `notes` | no | |
 
@@ -113,6 +114,22 @@ them. The orders and their lines are recorded with their prices, dates and
 statuses, but inventory is not touched at all: there is no stock check, no
 stock reduction, no bin movement, no stock-adjustment entries and no serial
 allocation. **Cancelled** orders never change stock in either mode.
+
+**Unit cost.** Every order line records its unit cost at the time of sale,
+which the profit margin and inventory turnover reports use as the cost of goods
+sold.
+
+- **With a `unit_cost` value**, that cost is recorded exactly as given, in
+  either mode.
+- **Without one, on a historical import**, the line gets the current purchase
+  price (the variant's own when it has one, otherwise the product's). The line
+  is marked as an estimate, because the goods were sold earlier at a cost the
+  file didn't give. The reports count and flag estimated units.
+- **Without one, on a stock-adjusting import**, the line gets the current
+  purchase price and is not marked. It is treated like an order entered by
+  hand today.
+- A product with no purchase price leaves the line's cost unknown. The reports
+  flag it as missing, not as zero.
 
 Imported orders get `source = import`. They don't send a "new order" alert for
 each order; you get one summary when the import finishes.

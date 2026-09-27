@@ -11,9 +11,15 @@ use App\Models\Order\Order;
 use App\Models\Order\OrderItem;
 use App\Models\SavedReport;
 use App\Services\ReorderService;
+use App\Services\Reports\InventoryAnalyticsService;
+use App\Services\Reports\ReportExporter;
+use App\Services\Reports\ReportPeriod;
+use App\Services\WarehouseAccessService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
+use Symfony\Component\HttpFoundation\Response as HttpResponse;
 
 /**
  * Controller for generating reports.
@@ -24,6 +30,11 @@ use Inertia\Response;
  */
 class ReportController extends Controller
 {
+    public function __construct(
+        private readonly ReportExporter $exporter,
+        private readonly InventoryAnalyticsService $analytics,
+    ) {}
+
     /**
      * Display the reports dashboard.
      */
@@ -44,54 +55,134 @@ class ReportController extends Controller
     /**
      * Inventory Valuation Report.
      *
+     * Totals and the by-category / by-location breakdowns are SQL aggregates
+     * over every active product; the product list is capped at
+     * reports.max_rows (highest stock value first) so a large catalogue is
+     * never hydrated into memory. ?export=csv|xlsx|pdf downloads the product
+     * list, or the breakdown named by ?group=category|location.
+     *
      * @param  Request  $request  The incoming HTTP request
      */
-    public function inventoryValuation(Request $request): Response
+    public function inventoryValuation(Request $request): Response|HttpResponse
     {
         $organizationId = $request->user()->organization_id;
+        $maxRows = $this->analytics->maxRows();
 
-        $products = Product::forOrganization($organizationId)
-            ->with(['category', 'location'])
-            ->where('is_active', true)
+        $base = fn () => DB::table('products')
+            ->where('products.organization_id', $organizationId)
+            ->whereNull('products.deleted_at')
+            ->where('products.is_active', true);
+
+        $totals = $base()->selectRaw('
+            COUNT(*) as total_items,
+            COALESCE(SUM(stock), 0) as total_quantity,
+            COALESCE(SUM(stock * price), 0) as total_stock_value,
+            COALESCE(SUM(stock * COALESCE(purchase_price, 0)), 0) as total_cost_value,
+            COALESCE(SUM(stock * (price - COALESCE(purchase_price, 0))), 0) as total_profit_potential
+        ')->first();
+
+        $summary = [
+            'total_items' => (int) $totals->total_items,
+            'total_quantity' => (int) $totals->total_quantity,
+            'total_stock_value' => round((float) $totals->total_stock_value, 2),
+            'total_cost_value' => round((float) $totals->total_cost_value, 2),
+            'total_profit_potential' => round((float) $totals->total_profit_potential, 2),
+        ];
+
+        $products = $base()
+            ->leftJoin('product_categories', 'product_categories.id', '=', 'products.category_id')
+            ->leftJoin('product_locations', 'product_locations.id', '=', 'products.location_id')
+            ->selectRaw('
+                products.id, products.name, products.sku, products.stock, products.price, products.purchase_price,
+                product_categories.name as category, product_locations.name as location,
+                (products.stock * products.price) as stock_value
+            ')
+            ->orderByDesc('stock_value')
+            ->orderBy('products.id')
+            ->limit($maxRows)
             ->get()
             ->map(function ($product) {
+                $price = (float) $product->price;
+                $cost = (float) ($product->purchase_price ?? 0);
+                $stock = (int) $product->stock;
+
                 return [
-                    'id' => $product->id,
+                    'id' => (int) $product->id,
                     'name' => $product->name,
                     'sku' => $product->sku,
-                    'category' => $product->category?->name,
-                    'location' => $product->location?->name,
-                    'stock' => $product->stock,
-                    'price' => $product->price,
-                    'purchase_price' => $product->purchase_price ?? 0,
-                    'stock_value' => $product->stock * $product->price,
-                    'cost_value' => $product->stock * ($product->purchase_price ?? 0),
-                    'profit_potential' => $product->stock * ($product->price - ($product->purchase_price ?? 0)),
+                    'category' => $product->category,
+                    'location' => $product->location,
+                    'stock' => $stock,
+                    'price' => $price,
+                    'purchase_price' => $cost,
+                    'stock_value' => round($stock * $price, 2),
+                    'cost_value' => round($stock * $cost, 2),
+                    'profit_potential' => round($stock * ($price - $cost), 2),
                 ];
             });
 
-        $summary = [
-            'total_items' => $products->count(),
-            'total_quantity' => $products->sum('stock'),
-            'total_stock_value' => $products->sum('stock_value'),
-            'total_cost_value' => $products->sum('cost_value'),
-            'total_profit_potential' => $products->sum('profit_potential'),
-        ];
+        $byCategory = $base()
+            ->leftJoin('product_categories', 'product_categories.id', '=', 'products.category_id')
+            ->groupBy('products.category_id', 'product_categories.name')
+            ->selectRaw('
+                products.category_id as category_id,
+                product_categories.name as category,
+                COUNT(*) as items,
+                COALESCE(SUM(products.stock), 0) as quantity,
+                COALESCE(SUM(products.stock * products.price), 0) as value
+            ')
+            ->orderByDesc('value')
+            ->limit($maxRows)
+            ->get()
+            ->map(fn ($row) => [
+                'category_id' => $row->category_id === null ? null : (int) $row->category_id,
+                'category' => $row->category ?: 'Uncategorized',
+                'items' => (int) $row->items,
+                'quantity' => (int) $row->quantity,
+                'value' => round((float) $row->value, 2),
+            ])
+            ->values();
 
-        // Group by category
-        $byCategory = $products->groupBy('category')->map(function ($items, $category) {
-            return [
-                'category' => $category ?: 'Uncategorized',
-                'items' => $items->count(),
-                'quantity' => $items->sum('stock'),
-                'value' => $items->sum('stock_value'),
-            ];
-        })->values();
+        // Per-location stock follows warehouse access (#224).
+        $byLocation = $this->analytics->valuationByLocation(
+            $organizationId,
+            app(WarehouseAccessService::class)->accessibleWarehouseIds($request->user())
+        );
+
+        if ($format = ReportExporter::requestedFormat($request)) {
+            return match ($request->query('group')) {
+                'category' => $this->exporter->download(
+                    $format,
+                    'Inventory Valuation by Category',
+                    ['Category', 'Products', 'Quantity', 'Stock value'],
+                    $byCategory->map(fn (array $r) => [$r['category'], $r['items'], $r['quantity'], $r['value']])
+                ),
+                'location' => $this->exporter->download(
+                    $format,
+                    'Inventory Valuation by Location',
+                    ['Location', 'Warehouse', 'Products', 'Quantity', 'Cost value', 'Retail value'],
+                    array_map(fn (array $r) => [
+                        $r['location'] ?? 'Unallocated', $r['warehouse'], $r['products'], $r['quantity'], $r['cost_value'], $r['retail_value'],
+                    ], $byLocation)
+                ),
+                default => $this->exporter->download(
+                    $format,
+                    'Inventory Valuation',
+                    ['Product', 'SKU', 'Category', 'Location', 'Stock', 'Price', 'Purchase price', 'Stock value', 'Cost value', 'Profit potential'],
+                    $products->map(fn (array $r) => [
+                        $r['name'], $r['sku'], $r['category'], $r['location'], $r['stock'], $r['price'],
+                        $r['purchase_price'], $r['stock_value'], $r['cost_value'], $r['profit_potential'],
+                    ])
+                ),
+            };
+        }
 
         return Inertia::render('Reports/InventoryValuation', [
             'products' => $products,
             'summary' => $summary,
             'byCategory' => $byCategory,
+            'byLocation' => $byLocation,
+            'truncated' => $summary['total_items'] > $products->count(),
         ]);
     }
 
@@ -100,7 +191,7 @@ class ReportController extends Controller
      *
      * @param  Request  $request  The incoming HTTP request
      */
-    public function stockMovement(Request $request): Response
+    public function stockMovement(Request $request): Response|HttpResponse
     {
         $organizationId = $request->user()->organization_id;
 
@@ -136,6 +227,25 @@ class ReportController extends Controller
             'net_change' => (clone $query)->sum('adjustment_quantity'),
         ];
 
+        if ($format = ReportExporter::requestedFormat($request)) {
+            return $this->exporter->download(
+                $format,
+                'Stock Movement',
+                ['Date', 'Product', 'SKU', 'Type', 'Before', 'Change', 'After', 'Reason', 'User'],
+                (clone $query)->latest()->limit($this->analytics->maxRows())->get()->map(fn (StockAdjustment $a) => [
+                    $a->created_at?->format('Y-m-d H:i'),
+                    $a->product?->name,
+                    $a->product?->sku,
+                    $a->type,
+                    (int) $a->quantity_before,
+                    (int) $a->adjustment_quantity,
+                    (int) $a->quantity_after,
+                    $a->reason,
+                    $a->user?->name,
+                ])
+            );
+        }
+
         $adjustments = $query->latest()->paginate(50)->withQueryString();
 
         // Get products for filter
@@ -157,14 +267,16 @@ class ReportController extends Controller
      *
      * @param  Request  $request  The incoming HTTP request
      */
-    public function salesAnalysis(Request $request): Response
+    public function salesAnalysis(Request $request): Response|HttpResponse
     {
         $organizationId = $request->user()->organization_id;
 
         // Date filters — pass through as boundary timestamps rather than
         // using whereDate so the order_date index can serve the predicate.
-        $dateFrom = $request->date_from ?? now()->subDays(30)->format('Y-m-d');
-        $dateTo = $request->date_to ?? now()->format('Y-m-d');
+        // Parsed and validated (malformed dates fall back to the last 30
+        // days) so the same period drives the comparison below.
+        $period = ReportPeriod::fromRequest($request);
+        ['date_from' => $dateFrom, 'date_to' => $dateTo] = $period->toFilters();
         $fromTimestamp = $dateFrom.' 00:00:00';
         $toTimestamp = $dateTo.' 23:59:59';
 
@@ -246,11 +358,58 @@ class ReportController extends Controller
             ])
             ->values();
 
+        // Period-over-period: the same headline figures for the equal-length
+        // period immediately before, with the change in percent (null when
+        // the previous period had nothing to compare against).
+        $previousPeriod = $period->previous();
+        $current = $this->analytics->salesSummary($organizationId, $period);
+        $previous = $this->analytics->salesSummary($organizationId, $previousPeriod);
+        $delta = [];
+        foreach ($current as $key => $value) {
+            $delta[$key] = InventoryAnalyticsService::deltaPct((float) $value, (float) $previous[$key]);
+        }
+        $comparison = [
+            'previousPeriod' => $previousPeriod->toFilters(),
+            'previous' => $previous,
+            'delta' => $delta,
+        ];
+
+        if ($format = ReportExporter::requestedFormat($request)) {
+            $notes = ['Period: '.$period->label().'.'];
+
+            return match ($request->query('group')) {
+                'status' => $this->exporter->download(
+                    $format,
+                    'Sales by Status',
+                    ['Status', 'Orders', 'Revenue'],
+                    $byStatus->map(fn (array $r) => [
+                        $r['status'] instanceof \BackedEnum ? $r['status']->value : (string) $r['status'], $r['count'], $r['revenue'],
+                    ]),
+                    $notes
+                ),
+                'products' => $this->exporter->download(
+                    $format,
+                    'Top Selling Products',
+                    ['Product', 'SKU', 'Units sold', 'Revenue'],
+                    $topProducts->map(fn (array $r) => [$r['product_name'], $r['sku'], $r['quantity_sold'], $r['revenue']]),
+                    $notes
+                ),
+                default => $this->exporter->download(
+                    $format,
+                    'Sales Analysis',
+                    ['Date', 'Orders', 'Revenue'],
+                    $dailySales->map(fn (array $r) => [(string) $r['date'], $r['orders'], $r['revenue']]),
+                    $notes
+                ),
+            };
+        }
+
         return Inertia::render('Reports/SalesAnalysis', [
             'summary' => $summary,
             'byStatus' => $byStatus,
             'topProducts' => $topProducts,
             'dailySales' => $dailySales,
+            'comparison' => $comparison,
             'filters' => [
                 'date_from' => $dateFrom,
                 'date_to' => $dateTo,
@@ -263,7 +422,7 @@ class ReportController extends Controller
      *
      * @param  Request  $request  The incoming HTTP request
      */
-    public function lowStock(Request $request): Response
+    public function lowStock(Request $request): Response|HttpResponse
     {
         $organizationId = $request->user()->organization_id;
 
@@ -309,6 +468,19 @@ class ReportController extends Controller
             'total_reorder_cost' => $products->sum('reorder_cost'),
         ];
 
+        if ($format = ReportExporter::requestedFormat($request)) {
+            return $this->exporter->download(
+                $format,
+                'Low Stock',
+                ['Product', 'SKU', 'Category', 'Location', 'Current stock', 'Min stock', 'Max stock', 'Deficit', 'Status', 'Supplier', 'Suggested quantity', 'Reorder cost'],
+                $products->take($this->analytics->maxRows())->map(fn (array $r) => [
+                    $r['name'], $r['sku'], $r['category'], $r['location'], (int) $r['current_stock'], (int) $r['min_stock'],
+                    $r['max_stock'] === null ? null : (int) $r['max_stock'], (int) $r['deficit'], $r['status'],
+                    $r['supplier'], $r['suggested_quantity'] === null ? null : (int) $r['suggested_quantity'], (float) $r['reorder_cost'],
+                ])
+            );
+        }
+
         return Inertia::render('Reports/LowStock', [
             'products' => $products,
             'summary' => $summary,
@@ -318,42 +490,58 @@ class ReportController extends Controller
     /**
      * Category Performance Report.
      *
+     * One GROUP BY over active products; ?export=csv|xlsx|pdf downloads it.
+     *
      * @param  Request  $request  The incoming HTTP request
      */
-    public function categoryPerformance(Request $request): Response
+    public function categoryPerformance(Request $request): Response|HttpResponse
     {
         $organizationId = $request->user()->organization_id;
 
-        // Get all products grouped by category
-        $products = Product::forOrganization($organizationId)
-            ->with('category')
-            ->where('is_active', true)
+        $categoryStats = DB::table('products')
+            ->leftJoin('product_categories', 'product_categories.id', '=', 'products.category_id')
+            ->where('products.organization_id', $organizationId)
+            ->whereNull('products.deleted_at')
+            ->where('products.is_active', true)
+            ->groupBy('products.category_id', 'product_categories.name')
+            ->selectRaw('
+                products.category_id as category_id,
+                product_categories.name as category_name,
+                COUNT(*) as product_count,
+                COALESCE(SUM(products.stock), 0) as total_stock,
+                COALESCE(SUM(products.stock * products.price), 0) as total_value,
+                SUM(CASE WHEN products.stock <= products.min_stock THEN 1 ELSE 0 END) as low_stock_items
+            ')
+            ->orderByDesc('total_value')
+            ->limit($this->analytics->maxRows())
             ->get()
-            ->groupBy('category_id');
+            ->map(fn ($row) => [
+                'category_id' => $row->category_id === null ? null : (int) $row->category_id,
+                'category_name' => $row->category_name ?? 'Uncategorized',
+                'product_count' => (int) $row->product_count,
+                'total_stock' => (int) $row->total_stock,
+                'total_value' => round((float) $row->total_value, 2),
+                'low_stock_items' => (int) $row->low_stock_items,
+            ])
+            ->values();
 
-        $categoryStats = $products->map(function ($items, $categoryId) {
-            $category = $items->first()->category;
-
-            return [
-                'category_id' => $categoryId,
-                'category_name' => $category?->name ?? 'Uncategorized',
-                'product_count' => $items->count(),
-                'total_stock' => $items->sum('stock'),
-                'total_value' => $items->sum(function ($p) {
-                    return $p->stock * $p->price;
-                }),
-                'low_stock_items' => $items->filter(function ($p) {
-                    return $p->stock <= $p->min_stock;
-                })->count(),
-            ];
-        })->values()->sortByDesc('total_value');
+        if ($format = ReportExporter::requestedFormat($request)) {
+            return $this->exporter->download(
+                $format,
+                'Category Performance',
+                ['Category', 'Products', 'Total stock', 'Total value', 'Low stock items'],
+                $categoryStats->map(fn (array $r) => [
+                    $r['category_name'], $r['product_count'], $r['total_stock'], $r['total_value'], $r['low_stock_items'],
+                ])
+            );
+        }
 
         return Inertia::render('Reports/CategoryPerformance', [
             'categories' => $categoryStats,
             'summary' => [
                 'total_categories' => $categoryStats->count(),
                 'total_products' => $categoryStats->sum('product_count'),
-                'total_value' => $categoryStats->sum('total_value'),
+                'total_value' => round((float) $categoryStats->sum('total_value'), 2),
             ],
         ]);
     }

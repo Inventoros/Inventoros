@@ -15,4 +15,16 @@ return [
 
     'max_rows' => (int) env('REPORTS_MAX_ROWS', 10000),
 
+    /*
+    |--------------------------------------------------------------------------
+    | PDF row cap
+    |--------------------------------------------------------------------------
+    |
+    | PDF exports print at most this many rows (with a note saying so); CSV
+    | and Excel exports carry the full max_rows-bounded set. Default: 1000.
+    |
+    */
+
+    'pdf_max_rows' => (int) env('REPORTS_PDF_MAX_ROWS', 1000),
+
 ];

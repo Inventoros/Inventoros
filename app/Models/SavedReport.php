@@ -7,6 +7,7 @@ namespace App\Models;
 use App\Models\Auth\Organization;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
  * Represents a saved custom report configuration.
@@ -82,6 +83,14 @@ class SavedReport extends Model
     public function creator(): BelongsTo
     {
         return $this->belongsTo(User::class, 'created_by');
+    }
+
+    /**
+     * Scheduled email deliveries of this report.
+     */
+    public function schedules(): HasMany
+    {
+        return $this->hasMany(ReportSchedule::class);
     }
 
     /**

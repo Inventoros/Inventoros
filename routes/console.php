@@ -14,6 +14,11 @@ Schedule::command('inventory:check-reorder-points')->dailyAt('06:00');
 // Hourly, so a schedule's run time is honoured to within the hour.
 Schedule::command('inventory:run-cycle-counts')->hourly()->withoutOverlapping();
 
+// Scheduled saved-report emails. Schedules are set to the minute in the
+// organization's time zone; each run sends whatever has come due since the
+// last one and claims it, so overlapping runs never double-send.
+Schedule::command('reports:send-scheduled')->everyFifteenMinutes()->withoutOverlapping();
+
 // Retention pruning — see PruneActivityLogsCommand and
 // PruneWebhookDeliveriesCommand for the rationale (PII, table-size
 // runaway). Run nightly at off-peak times. Defaults are conservative:

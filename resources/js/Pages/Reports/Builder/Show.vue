@@ -5,9 +5,11 @@ import Card from '@/Components/ui/Card.vue';
 import Button from '@/Components/ui/Button.vue';
 import Badge from '@/Components/ui/Badge.vue';
 import StatTile from '@/Components/ui/StatTile.vue';
+import ExportMenu from '@/Components/Reports/ExportMenu.vue';
+import ReportSchedules from '@/Components/Reports/ReportSchedules.vue';
 import { Head, Link, router } from '@inertiajs/vue3';
 import { useI18n } from 'vue-i18n';
-import { ArrowLeft, Pencil, Download, Trash2, Database, Columns3, Rows3, FileSpreadsheet } from 'lucide-vue-next';
+import { ArrowLeft, Pencil, Trash2, Database, Columns3, Rows3, FileSpreadsheet } from 'lucide-vue-next';
 
 const { t } = useI18n();
 
@@ -16,14 +18,13 @@ const props = defineProps({
     data: Array,
     columnLabels: Object,
     dataSources: Object,
+    schedules: { type: Array, default: () => [] },
+    recipientOptions: { type: Array, default: () => [] },
+    scheduleOptions: { type: Object, default: () => ({ timezone: 'UTC', frequencies: [], formats: [] }) },
 });
 
 const dataSourceLabel = (key) => {
     return props.dataSources?.[key]?.label || key;
-};
-
-const exportReport = () => {
-    window.location.href = route('reports.builder.export', props.report.id);
 };
 
 const deleteReport = () => {
@@ -76,10 +77,7 @@ const formatValue = (value, col) => {
                     <Pencil :size="14" />
                     {{ t('reportBuilder.actions.edit') }}
                 </Button>
-                <Button variant="secondary" size="sm" @click="exportReport">
-                    <Download :size="14" />
-                    {{ t('reportBuilder.exportCSV') }}
-                </Button>
+                <ExportMenu route-name="reports.builder.export" :params="{ saved_report: report.id }" format-param="format" />
                 <Button v-if="report.is_owner" variant="danger" size="sm" @click="deleteReport">
                     <Trash2 :size="14" />
                     {{ t('reportBuilder.actions.delete') }}
@@ -128,6 +126,15 @@ const formatValue = (value, col) => {
                 </div>
             </div>
         </Card>
+
+        <!-- Scheduled delivery (owner only) -->
+        <ReportSchedules
+            v-if="report.is_owner"
+            :report-id="report.id"
+            :schedules="schedules"
+            :recipient-options="recipientOptions"
+            :options="scheduleOptions"
+        />
 
         <!-- Results -->
         <Card :padded="false" class="mt-4">

@@ -108,6 +108,7 @@ const secondaryStats = () => [
     { key: 'locations', label: t('dashboard.locations'), value: props.stats?.locations, href: route('locations.index'), tone: 'text-brand' },
     { key: 'totalValue', label: t('dashboard.inventoryValue'), value: formatCompactCurrency(props.stats?.totalValue), href: null, tone: 'text-status-success' },
     { key: 'revenueThisMonth', label: t('dashboard.revenueThisMonth'), value: formatCompactCurrency(props.stats?.revenueThisMonth), href: null, tone: 'text-brand' },
+    { key: 'deadStockValue', label: t('dashboard.deadStockValue'), value: formatCompactCurrency(props.stats?.deadStockValue), href: route('reports.dead-stock'), tone: 'text-status-warning' },
 // A withheld figure is absent from `stats`, not zeroed, so filtering on
 // presence also drops the link that went with it -- several point at index
 // routes the same user would be refused.

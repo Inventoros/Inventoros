@@ -195,6 +195,8 @@ final class OrderService
                     'sku' => $variant?->sku ?? $product->sku,
                     'quantity' => $qty,
                     'unit_price' => $unitPrice,
+                    // Cost at the time of sale, for margin and turnover reports.
+                    'unit_cost' => OrderItem::costAtSale($product, $variant),
                     'subtotal' => $itemSubtotal,
                     'tax' => $itemTax,
                     'total' => Money::add($itemSubtotal, $itemTax),
@@ -533,6 +535,22 @@ final class OrderService
         //    locks the product first, releases serials/batches, restocks the
         //    count, and re-bins — returning inventory to its pre-order state.
         $order->load('items.product', 'items.variant');
+
+        // Remember what each product/variant cost when it was originally sold,
+        // so an edit does not re-price lines that were already on the order
+        // (even if their quantity grows). Only products/variants new to the
+        // order take today's cost. The backfill marker travels with the cost.
+        $originalCosts = [];
+        foreach ($order->items as $existing) {
+            $key = $existing->product_id.':'.($existing->product_variant_id ?? '');
+            if (! isset($originalCosts[$key]) || $originalCosts[$key]['unit_cost'] === null) {
+                $originalCosts[$key] = [
+                    'unit_cost' => $existing->getRawOriginal('unit_cost'),
+                    'unit_cost_backfilled_at' => $existing->getRawOriginal('unit_cost_backfilled_at'),
+                ];
+            }
+        }
+
         foreach ($order->items as $existing) {
             $this->restockItem($existing, "Order {$order->order_number} edited", $order);
             $existing->delete();
@@ -620,7 +638,10 @@ final class OrderService
                 'subtotal' => $itemSubtotal,
                 'tax' => 0,
                 'total' => $itemSubtotal,
-            ]);
+            ] + ($originalCosts[$product->id.':'.($variant?->id ?? '')] ?? [
+                'unit_cost' => OrderItem::costAtSale($product, $variant),
+                'unit_cost_backfilled_at' => null,
+            ]));
 
             if ($variant !== null) {
                 StockAdjustment::adjustVariant(

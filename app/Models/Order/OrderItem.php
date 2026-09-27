@@ -21,6 +21,8 @@ use Illuminate\Support\Carbon;
  * @property string|null $sku
  * @property int $quantity
  * @property string $unit_price
+ * @property string|null $unit_cost Unit cost at the time of sale (null when unknown)
+ * @property Carbon|null $unit_cost_backfilled_at Set when unit_cost was estimated from current cost by the backfill
  * @property string $subtotal
  * @property string $tax
  * @property string $total
@@ -47,6 +49,8 @@ class OrderItem extends Model
         'sku',
         'quantity',
         'unit_price',
+        'unit_cost',
+        'unit_cost_backfilled_at',
         'subtotal',
         'tax',
         'total',
@@ -64,11 +68,25 @@ class OrderItem extends Model
             'product_variant_id' => 'integer',
             'quantity' => 'integer',
             'unit_price' => 'decimal:2',
+            'unit_cost' => 'decimal:2',
+            'unit_cost_backfilled_at' => 'datetime',
             'subtotal' => 'decimal:2',
             'tax' => 'decimal:2',
             'total' => 'decimal:2',
             'metadata' => 'array',
         ];
+    }
+
+    /**
+     * The unit cost to record on a line sold now: the variant's own purchase
+     * price when it has one, otherwise the product's. Null when neither is
+     * known, so reports can tell "unknown" from "free".
+     */
+    public static function costAtSale(Product $product, ?ProductVariant $variant = null): ?string
+    {
+        $cost = $variant?->purchase_price ?? $product->purchase_price;
+
+        return $cost === null ? null : (string) $cost;
     }
 
     /**

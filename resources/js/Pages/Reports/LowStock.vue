@@ -6,6 +6,7 @@ import CardHeader from '@/Components/ui/CardHeader.vue';
 import StatTile from '@/Components/ui/StatTile.vue';
 import Button from '@/Components/ui/Button.vue';
 import Badge from '@/Components/ui/Badge.vue';
+import ExportMenu from '@/Components/Reports/ExportMenu.vue';
 import { Head, Link } from '@inertiajs/vue3';
 import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
@@ -57,6 +58,7 @@ const thClassRight = 'px-4 py-2.5 text-right text-xs font-medium tracking-tight 
 
         <PageHeader :title="t('reports.lowStock.title')" :description="t('reports.lowStock.description')">
             <template #actions>
+                <ExportMenu route-name="reports.low-stock" />
                 <Button variant="secondary" size="sm" as="Link" :href="route('reports.index')">
                     <ArrowLeft :size="14" />
                     {{ t('reports.backToReports') }}
