@@ -50,6 +50,7 @@ class OrderItem extends Model
         'quantity',
         'unit_price',
         'unit_cost',
+        'unit_cost_backfilled_at',
         'subtotal',
         'tax',
         'total',

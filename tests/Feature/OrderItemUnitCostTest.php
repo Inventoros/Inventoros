@@ -104,18 +104,86 @@ class OrderItemUnitCostTest extends TestCase
         $this->assertNull($order->items()->first()->unit_cost);
     }
 
-    public function test_editing_an_order_records_the_cost_on_the_new_lines(): void
+    private function replaceItems($order, array $items): void
+    {
+        $this->actingAs($this->creator);
+        DB::transaction(fn () => app(OrderService::class)->replaceItems($order, $items));
+    }
+
+    public function test_editing_keeps_the_original_cost_on_matching_lines_even_when_quantity_grows(): void
     {
         $product = $this->product('P-EDIT', 3);
         $order = $this->createOrder([['product_id' => $product->id, 'quantity' => 1, 'unit_price' => 20]]);
         $product->update(['purchase_price' => 4]);
 
-        $this->actingAs($this->creator);
-        DB::transaction(fn () => app(OrderService::class)->replaceItems($order, [
-            ['product_id' => $product->id, 'quantity' => 2, 'unit_price' => 20],
-        ]));
+        $this->replaceItems($order, [['product_id' => $product->id, 'quantity' => 2, 'unit_price' => 20]]);
 
-        $this->assertSame('4.00', (string) $order->items()->first()->unit_cost);
+        $item = $order->items()->sole();
+        $this->assertSame(2, $item->quantity);
+        $this->assertSame('3.00', (string) $item->unit_cost);
+        $this->assertNull($item->unit_cost_backfilled_at);
+    }
+
+    public function test_editing_gives_new_products_and_variants_the_current_cost(): void
+    {
+        $kept = $this->product('P-KEPT', 3);
+        $added = $this->product('P-ADDED', 5);
+        $parent = $this->product('P-PARENT', 1, true);
+        $red = $this->variant($parent, 'V-RED', 2);
+        $blue = $this->variant($parent, 'V-BLUE', 2);
+
+        $order = $this->createOrder([
+            ['product_id' => $kept->id, 'quantity' => 1, 'unit_price' => 20],
+            ['product_id' => $parent->id, 'product_variant_id' => $red->id, 'quantity' => 1],
+        ]);
+        foreach ([$kept, $added] as $p) {
+            $p->update(['purchase_price' => 9]);
+        }
+        $red->update(['purchase_price' => 7]);
+        $blue->update(['purchase_price' => 8]);
+
+        $this->replaceItems($order, [
+            ['product_id' => $kept->id, 'quantity' => 1, 'unit_price' => 20],
+            ['product_id' => $added->id, 'quantity' => 1, 'unit_price' => 20],
+            ['product_id' => $parent->id, 'product_variant_id' => $red->id, 'quantity' => 3],
+            ['product_id' => $parent->id, 'product_variant_id' => $blue->id, 'quantity' => 1],
+        ]);
+
+        $cost = fn (int $productId, ?int $variantId = null) => (string) $order->items()
+            ->where('product_id', $productId)->where('product_variant_id', $variantId)->sole()->unit_cost;
+
+        $this->assertSame('3.00', $cost($kept->id));             // matched: original
+        $this->assertSame('9.00', $cost($added->id));            // new product: current
+        $this->assertSame('2.00', $cost($parent->id, $red->id)); // matched variant: original
+        $this->assertSame('8.00', $cost($parent->id, $blue->id)); // new variant: current
+    }
+
+    public function test_editing_carries_the_backfill_marker_with_the_preserved_cost(): void
+    {
+        $product = $this->product('P-BACKFILLED', 3);
+        $order = $this->createOrder([['product_id' => $product->id, 'quantity' => 1, 'unit_price' => 20]]);
+        $marker = now()->subMonth()->startOfSecond();
+        $order->items()->update(['unit_cost' => 2.5, 'unit_cost_backfilled_at' => $marker]);
+
+        $this->replaceItems($order, [['product_id' => $product->id, 'quantity' => 4, 'unit_price' => 20]]);
+
+        $item = $order->items()->sole();
+        $this->assertSame('2.50', (string) $item->unit_cost);
+        $this->assertSame($marker->toDateTimeString(), $item->unit_cost_backfilled_at->toDateTimeString());
+    }
+
+    public function test_a_product_split_across_lines_keeps_its_original_cost_on_every_line(): void
+    {
+        $product = $this->product('P-SPLIT', 3);
+        $order = $this->createOrder([['product_id' => $product->id, 'quantity' => 1, 'unit_price' => 20]]);
+        $product->update(['purchase_price' => 6]);
+
+        $this->replaceItems($order, [
+            ['product_id' => $product->id, 'quantity' => 1, 'unit_price' => 20],
+            ['product_id' => $product->id, 'quantity' => 2, 'unit_price' => 18],
+        ]);
+
+        $this->assertSame(['3.00', '3.00'], $order->items()->orderBy('id')->pluck('unit_cost')->map(fn ($c) => (string) $c)->all());
     }
 
     public function test_the_migration_backfills_existing_rows_from_current_cost_and_marks_them(): void
