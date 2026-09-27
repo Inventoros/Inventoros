@@ -63,6 +63,9 @@ class RoleSeeder extends Seeder
                     Permission::VIEW_PAYMENTS->value,
                     Permission::RECORD_PAYMENTS->value,
 
+                    Permission::VIEW_SHIPMENTS->value,
+                    Permission::CREATE_SHIPMENTS->value,
+
                     Permission::VIEW_STOCK_AUDITS->value,
                     Permission::CREATE_STOCK_AUDITS->value,
 
