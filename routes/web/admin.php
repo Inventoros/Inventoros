@@ -8,6 +8,7 @@ use App\Http\Controllers\Admin\ApiTokenController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\OrganizationSettingsController;
 use App\Http\Controllers\Admin\PluginController;
+use App\Http\Controllers\Admin\PluginMarketplaceController;
 use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Admin\UpdateController;
 use App\Http\Controllers\Admin\UserController;
@@ -45,6 +46,19 @@ Route::delete('/roles/{role}', [RoleController::class, 'destroy'])->name('roles.
 Route::prefix('plugins')->name('plugins.')->middleware('permission:view_plugins')->group(function () {
     Route::get('/', [PluginController::class, 'index'])->name('index');
     Route::post('/upload', [PluginController::class, 'upload'])->middleware('permission:manage_plugins')->name('upload');
+
+    // Marketplace: browse inventoros.com and install signed plugins in one click.
+    Route::prefix('marketplace')->name('marketplace')->group(function () {
+        Route::get('/', [PluginMarketplaceController::class, 'index']);
+        Route::middleware('permission:manage_plugins')->group(function () {
+            Route::post('/connect', [PluginMarketplaceController::class, 'connect'])->middleware('throttle:10,1')->name('.connect');
+            Route::delete('/connect', [PluginMarketplaceController::class, 'disconnect'])->name('.disconnect');
+            Route::post('/{slug}/install', [PluginMarketplaceController::class, 'install'])
+                ->where('slug', '[A-Za-z0-9][A-Za-z0-9_-]*')->middleware('throttle:10,1')->name('.install');
+            Route::post('/{slug}/update', [PluginMarketplaceController::class, 'update'])
+                ->where('slug', '[A-Za-z0-9][A-Za-z0-9_-]*')->middleware('throttle:10,1')->name('.update');
+        });
+    });
     Route::post('/{plugin}/activate', [PluginController::class, 'activate'])->middleware('permission:manage_plugins')->name('activate');
     Route::post('/{plugin}/deactivate', [PluginController::class, 'deactivate'])->middleware('permission:manage_plugins')->name('deactivate');
     Route::delete('/{plugin}', [PluginController::class, 'destroy'])->middleware('permission:manage_plugins')->name('destroy');

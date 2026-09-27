@@ -1,0 +1,268 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\Services\Marketplace;
+
+use Illuminate\Http\Client\PendingRequest;
+use Illuminate\Http\Client\Response;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Http;
+use Psr\Http\Message\ResponseInterface;
+
+/**
+ * Talks to the inventoros.com marketplace API (/api/v1/marketplace).
+ *
+ * SSRF guard: every request goes to the single configured origin, which must
+ * be a bare https URL, with a path built only from fixed segments and a
+ * validated slug. Redirects are never followed, so a response cannot bounce
+ * the app to another host.
+ */
+final class MarketplaceClient
+{
+    private const API_PATH = '/api/v1/marketplace';
+
+    private const SLUG_PATTERN = '/^[a-z0-9][a-z0-9_-]{0,99}$/i';
+
+    public static function isValidSlug(string $slug): bool
+    {
+        return preg_match(self::SLUG_PATTERN, $slug) === 1;
+    }
+
+    /**
+     * The configured marketplace origin, validated.
+     *
+     * @throws MarketplaceException When the configured URL is not a bare https origin.
+     */
+    public function origin(): string
+    {
+        $url = trim((string) config('marketplace.url', ''));
+        $parts = parse_url($url);
+
+        $valid = is_array($parts)
+            && strtolower((string) ($parts['scheme'] ?? '')) === 'https'
+            && ($parts['host'] ?? '') !== ''
+            && ! isset($parts['user'])
+            && ! isset($parts['pass'])
+            && ! isset($parts['query'])
+            && ! isset($parts['fragment'])
+            && in_array($parts['path'] ?? '', ['', '/'], true);
+
+        if (! $valid) {
+            throw new MarketplaceException(
+                'The marketplace URL is not a valid https address. Set INVENTOROS_MARKETPLACE_URL to an https origin such as https://inventoros.com.'
+            );
+        }
+
+        $port = isset($parts['port']) ? ':'.(int) $parts['port'] : '';
+
+        return 'https://'.strtolower((string) $parts['host']).$port;
+    }
+
+    /**
+     * Link to a plugin's public marketplace page, for "buy it here" messages.
+     */
+    public function pageUrl(string $slug): string
+    {
+        return $this->origin().'/marketplace/'.rawurlencode($slug);
+    }
+
+    /**
+     * Installable plugins, as the (optionally authenticated) account sees them.
+     * Cached briefly per token.
+     *
+     * @return array<int, array<string, mixed>>
+     *
+     * @throws MarketplaceException
+     */
+    public function catalog(?string $token): array
+    {
+        $origin = $this->origin();
+        $seconds = (int) config('marketplace.cache_seconds', 300);
+
+        $fetch = function () use ($token): array {
+            $data = $this->json($this->get('/plugins', $token), 'load the plugin catalog');
+
+            return array_values(array_filter(
+                is_array($data['data'] ?? null) ? $data['data'] : [],
+                fn ($entry) => is_array($entry) && is_string($entry['slug'] ?? null) && self::isValidSlug($entry['slug']),
+            ));
+        };
+
+        if ($seconds <= 0) {
+            return $fetch();
+        }
+
+        return Cache::remember('marketplace.catalog.'.hash('sha256', $origin.'|'.($token ?? '')), $seconds, $fetch);
+    }
+
+    /**
+     * One plugin's catalog entry, or null when the marketplace does not list it.
+     *
+     * @return array<string, mixed>|null
+     *
+     * @throws MarketplaceException
+     */
+    public function plugin(string $slug, ?string $token): ?array
+    {
+        $this->assertSlug($slug);
+
+        $response = $this->get('/plugins/'.rawurlencode($slug), $token);
+
+        if ($response->status() === 404) {
+            return null;
+        }
+
+        $data = $this->json($response, 'look up this plugin');
+        $entry = $data['data'] ?? null;
+
+        if (! is_array($entry) || ($entry['slug'] ?? null) !== $slug) {
+            throw new MarketplaceException('The marketplace returned an unexpected answer for this plugin.');
+        }
+
+        return $entry;
+    }
+
+    /**
+     * The inventoros.com account a token belongs to.
+     *
+     * @return array{name: string, email: string, owned: array<int, string>}
+     *
+     * @throws MarketplaceException When the token is rejected or the marketplace is unreachable.
+     */
+    public function me(string $token): array
+    {
+        $response = $this->get('/me', $token);
+
+        if (in_array($response->status(), [401, 403], true)) {
+            throw new MarketplaceException('The marketplace rejected this token. Create a new marketplace connection token on your inventoros.com account page and paste it here.');
+        }
+
+        $data = $this->json($response, 'check the token')['data'] ?? null;
+
+        return [
+            'name' => is_string($data['name'] ?? null) ? $data['name'] : '',
+            'email' => is_string($data['email'] ?? null) ? $data['email'] : '',
+            'owned' => array_values(array_filter((array) ($data['owned'] ?? []), 'is_string')),
+        ];
+    }
+
+    /**
+     * Download a plugin's latest package to a temporary file. The caller
+     * verifies it and must delete the file.
+     *
+     * @return array{path: string, signature: string|null, checksum: string|null, version: string|null}
+     *
+     * @throws MarketplaceException
+     */
+    public function download(string $slug, ?string $token): array
+    {
+        $this->assertSlug($slug);
+
+        $max = (int) config('marketplace.max_download_bytes', 50 * 1024 * 1024);
+        $tooLarge = fn () => new MarketplaceException('The plugin package is larger than the download size limit (INVENTOROS_MARKETPLACE_MAX_DOWNLOAD_BYTES).');
+
+        try {
+            $response = $this->request($token)
+                ->withOptions([
+                    'on_headers' => function (ResponseInterface $response) use ($max) {
+                        if ((int) $response->getHeaderLine('Content-Length') > $max) {
+                            throw new \RuntimeException('too large');
+                        }
+                    },
+                ])
+                ->get($this->origin().self::API_PATH.'/plugins/'.rawurlencode($slug).'/download');
+        } catch (MarketplaceException $e) {
+            throw $e;
+        } catch (\Throwable $e) {
+            if (str_contains($e->getMessage(), 'too large')) {
+                throw $tooLarge();
+            }
+
+            throw new MarketplaceException('Could not reach the marketplace to download this plugin. Try again later.', 0, $e);
+        }
+
+        match (true) {
+            $response->successful() => null,
+            $response->status() === 401 => throw new MarketplaceException($token
+                ? 'The marketplace rejected your connected account. Reconnect your inventoros.com account and try again.'
+                : 'This is a paid plugin. Connect your inventoros.com account on the Marketplace tab to install it.'),
+            $response->status() === 403 => throw new MarketplaceException(
+                'Your connected inventoros.com account does not own this plugin. Get it at '.$this->pageUrl($slug).'.'
+            ),
+            $response->status() === 404 => throw new MarketplaceException('This plugin is not available from the marketplace.'),
+            $response->status() === 429 => throw new MarketplaceException('The marketplace is limiting requests right now. Try again in a minute.'),
+            default => throw new MarketplaceException("The marketplace could not serve this plugin (HTTP {$response->status()})."),
+        };
+
+        $body = $response->body();
+        if (strlen($body) > $max) {
+            throw $tooLarge();
+        }
+
+        $directory = storage_path('app/marketplace-downloads');
+        File::ensureDirectoryExists($directory);
+        $path = $directory.'/'.bin2hex(random_bytes(8)).'.zip';
+        File::put($path, $body);
+
+        $header = fn (string $name) => ($value = trim($response->header($name))) === '' ? null : $value;
+
+        return [
+            'path' => $path,
+            'signature' => $header('X-Marketplace-Signature'),
+            'checksum' => $header('X-Marketplace-Checksum'),
+            'version' => $header('X-Marketplace-Version'),
+        ];
+    }
+
+    private function assertSlug(string $slug): void
+    {
+        if (! self::isValidSlug($slug)) {
+            throw new MarketplaceException('Invalid plugin slug.');
+        }
+    }
+
+    private function request(?string $token): PendingRequest
+    {
+        $request = Http::acceptJson()
+            ->timeout((int) config('marketplace.timeout', 20))
+            ->withOptions(['allow_redirects' => false]);
+
+        return $token !== null && $token !== '' ? $request->withToken($token) : $request;
+    }
+
+    /**
+     * @throws MarketplaceException
+     */
+    private function get(string $path, ?string $token): Response
+    {
+        $url = $this->origin().self::API_PATH.$path;
+
+        try {
+            return $this->request($token)->get($url);
+        } catch (\Throwable $e) {
+            throw new MarketplaceException('Could not reach the marketplace. Check the connection and try again.', 0, $e);
+        }
+    }
+
+    /**
+     * @return array<string, mixed>
+     *
+     * @throws MarketplaceException
+     */
+    private function json(Response $response, string $action): array
+    {
+        if ($response->status() === 429) {
+            throw new MarketplaceException('The marketplace is limiting requests right now. Try again in a minute.');
+        }
+
+        $data = $response->successful() ? $response->json() : null;
+
+        if (! is_array($data)) {
+            throw new MarketplaceException("Could not {$action}: the marketplace answered with HTTP {$response->status()}.");
+        }
+
+        return $data;
+    }
+}

@@ -37,6 +37,8 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property bool $is_active
  * @property bool $portal_enabled
  * @property array|null $settings
+ * @property string|null $marketplace_token
+ * @property array{name?: string, email?: string, connected_at?: string}|null $marketplace_account
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property \Illuminate\Support\Carbon|null $deleted_at
@@ -78,6 +80,16 @@ class Organization extends Model
     ];
 
     /**
+     * The marketplace API token is a bearer credential for the organization's
+     * inventoros.com account; it is never serialized to the browser.
+     *
+     * @var array<int, string>
+     */
+    protected $hidden = [
+        'marketplace_token',
+    ];
+
+    /**
      * The attributes that should be cast.
      *
      * @var array<string, string>
@@ -88,6 +100,8 @@ class Organization extends Model
             'is_active' => 'boolean',
             'portal_enabled' => 'boolean',
             'settings' => 'array',
+            'marketplace_token' => 'encrypted',
+            'marketplace_account' => 'array',
         ];
     }
 
