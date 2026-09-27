@@ -120,6 +120,7 @@
     "pendingOrders": "Pending Orders",
     "locations": "Locations",
     "inventoryValue": "Inventory Value",
+    "deadStockValue": "Idle Stock (90 days)",
     "lowStockItems": "Low Stock Items",
     "recentOrders": "Recent Orders",
     "viewAll": "View All",

@@ -6,6 +6,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Enums\Permission;
 use App\Http\Controllers\Controller;
+use App\Services\Reports\InventoryAnalyticsService;
 use App\Models\ActivityLog;
 use App\Models\Inventory\Product;
 use App\Models\Inventory\ProductCategory;
@@ -101,6 +102,15 @@ class DashboardController extends Controller
         if ($canViewReports) {
             $stats['totalValue'] = (float) ($productAgg->total_value ?? 0);
             $stats['revenueThisMonth'] = (float) ($orderAgg->month_revenue ?? 0);
+        }
+
+        // Stock idle for 90 days (no sale and no outbound movement), at cost.
+        // It is the dead stock report's headline, so it takes that report's
+        // permissions; one aggregate query, skipped entirely otherwise.
+        if ($canViewReports && $canViewProducts && $canViewOrders) {
+            $deadStock = app(InventoryAnalyticsService::class)->deadStockSummary($orgId, 90, now());
+            $stats['deadStockValue'] = $deadStock['total_value'];
+            $stats['deadStockCount'] = $deadStock['product_count'];
         }
 
         // Hook: Allow plugins to modify stats
