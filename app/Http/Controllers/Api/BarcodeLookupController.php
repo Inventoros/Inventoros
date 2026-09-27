@@ -6,10 +6,8 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Http\Resources\ProductResource;
-use App\Models\Inventory\Product;
-use App\Models\Inventory\ProductLocation;
 use App\Models\Inventory\ProductVariant;
-use App\Services\QrCodeService;
+use App\Services\ScanLookupService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -18,6 +16,8 @@ use Illuminate\Http\Request;
  */
 class BarcodeLookupController extends Controller
 {
+    public function __construct(private readonly ScanLookupService $scans) {}
+
     /**
      * Lookup a product or storage location by a scanned code.
      *
@@ -28,9 +28,8 @@ class BarcodeLookupController extends Controller
      * `LOC:#<id>`) or a plain location code. The response carries `type` =
      * `product` or `location`.
      *
-     * @param Request $request The incoming HTTP request
-     * @param string $code The scanned code
-     * @return JsonResponse
+     * @param  Request  $request  The incoming HTTP request
+     * @param  string  $code  The scanned code
      */
     public function lookup(Request $request, string $code): JsonResponse
     {
@@ -56,133 +55,54 @@ class BarcodeLookupController extends Controller
 
     private function find(Request $request, string $code): JsonResponse
     {
-        $organizationId = $request->user()->organization_id;
-        $code = trim($code);
+        $match = $this->scans->resolve((int) $request->user()->organization_id, $code);
 
-        // Search by barcode first, then by SKU
-        $product = Product::forOrganization($organizationId)
-            ->where(function ($query) use ($code) {
-                $query->where('barcode', $code)
-                    ->orWhere('sku', $code);
-            })
-            ->with(['category', 'location', 'suppliers'])
-            ->first();
-
-        $variant = null;
-
-        if (! $product) {
-            $variant = ProductVariant::where('organization_id', $organizationId)
-                ->where(function ($query) use ($code) {
-                    $query->where('barcode', $code)
-                        ->orWhere('sku', $code);
-                })
-                ->whereHas('product', fn ($query) => $query->where('organization_id', $organizationId))
-                // An exact barcode match beats a SKU match on another variant.
-                ->orderByRaw('CASE WHEN barcode = ? THEN 0 ELSE 1 END', [$code])
-                ->orderBy('id')
-                ->first();
-
-            $product = $variant?->product()
-                ->with(['category', 'location', 'suppliers'])
-                ->first();
-        }
-
-        $product ??= $this->findProductByLink($organizationId, $code);
-
-        if ($product) {
+        if ($match === null) {
             return response()->json([
-                'found' => true,
-                'type' => 'product',
-                'product' => new ProductResource($product),
-                'variant' => $variant ? [
-                    'id' => $variant->id,
-                    'product_id' => $variant->product_id,
-                    'title' => $variant->title,
-                    'sku' => $variant->sku,
-                    'barcode' => $variant->barcode,
-                    'option_values' => $variant->option_values,
-                    'price' => $variant->price,
-                    'purchase_price' => $variant->purchase_price,
-                    'stock' => (int) $variant->stock,
-                    'is_active' => (bool) $variant->is_active,
-                ] : null,
-            ]);
+                'found' => false,
+                'product' => null,
+                'message' => 'No product found with this barcode or SKU.',
+            ], 404);
         }
 
-        $location = $this->findLocation($organizationId, $code);
-
-        if ($location) {
+        if ($match['type'] === 'location') {
             return response()->json([
                 'found' => true,
                 'type' => 'location',
                 'product' => null,
                 'variant' => null,
-                'location' => [
-                    'id' => $location->id,
-                    'name' => $location->name,
-                    'code' => $location->code,
-                    'description' => $location->description,
-                    'aisle' => $location->aisle,
-                    'shelf' => $location->shelf,
-                    'bin' => $location->bin,
-                    'warehouse' => $location->warehouse?->name,
-                    'product_count' => $location->products()->count(),
-                    'products_url' => route('products.index', ['location' => $location->id]),
-                ],
+                'location' => $this->scans->locationSummary($match['location']),
             ]);
         }
 
         return response()->json([
-            'found' => false,
-            'product' => null,
-            'message' => 'No product found with this barcode or SKU.',
-        ], 404);
+            'found' => true,
+            'type' => 'product',
+            'product' => new ProductResource($match['product']),
+            'variant' => $this->variantSummary($match['variant']),
+        ]);
     }
 
     /**
-     * Resolve a product page URL printed in a product QR code. Only links to
-     * this installation's own product page match: the scanned URL must equal
-     * the URL the app generates for that product id.
+     * @return array<string, mixed>|null
      */
-    private function findProductByLink(int $organizationId, string $code): ?Product
+    private function variantSummary(?ProductVariant $variant): ?array
     {
-        if (! str_starts_with($code, 'http://') && ! str_starts_with($code, 'https://')) {
+        if ($variant === null) {
             return null;
         }
 
-        $path = (string) parse_url($code, PHP_URL_PATH);
-        if (! preg_match('#/products/(\d+)/?$#', $path, $matches)) {
-            return null;
-        }
-
-        $id = (int) $matches[1];
-        $withoutQuery = (string) strtok($code, '?#');
-
-        if (rtrim($withoutQuery, '/') !== rtrim(route('products.show', $id), '/')) {
-            return null;
-        }
-
-        return Product::forOrganization($organizationId)
-            ->with(['category', 'location', 'suppliers'])
-            ->find($id);
-    }
-
-    private function findLocation(int $organizationId, string $code): ?ProductLocation
-    {
-        $query = ProductLocation::query()
-            ->where('organization_id', $organizationId)
-            ->with('warehouse');
-
-        if (str_starts_with($code, QrCodeService::LOCATION_PREFIX)) {
-            $value = substr($code, strlen(QrCodeService::LOCATION_PREFIX));
-
-            if (preg_match('/^#(\d+)$/', $value, $matches)) {
-                return $query->find((int) $matches[1]);
-            }
-
-            return $value === '' ? null : $query->where('code', $value)->first();
-        }
-
-        return $code === '' ? null : $query->where('code', $code)->first();
+        return [
+            'id' => $variant->id,
+            'product_id' => $variant->product_id,
+            'title' => $variant->title,
+            'sku' => $variant->sku,
+            'barcode' => $variant->barcode,
+            'option_values' => $variant->option_values,
+            'price' => $variant->price,
+            'purchase_price' => $variant->purchase_price,
+            'stock' => (int) $variant->stock,
+            'is_active' => (bool) $variant->is_active,
+        ];
     }
 }
