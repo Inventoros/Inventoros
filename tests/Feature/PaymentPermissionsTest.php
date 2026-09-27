@@ -79,7 +79,7 @@ class PaymentPermissionsTest extends TestCase
             'permissions' => ['view_orders', 'edit_orders'],
         ]);
 
-        $migration = require database_path('migrations/2026_09_28_000003_grant_payment_permissions_to_system_manager.php');
+        $migration = require database_path('migrations/2026_09_28_000012_grant_payment_permissions_to_system_manager.php');
         $migration->up();
         $migration->up(); // idempotent
 
@@ -88,5 +88,29 @@ class PaymentPermissionsTest extends TestCase
 
         $migration->down();
         $this->assertSame(['view_orders', 'edit_orders'], $manager->fresh()->permissions);
+    }
+
+    public function test_the_migration_grants_them_to_existing_permission_set_templates(): void
+    {
+        $make = fn (string $slug) => PermissionSet::create([
+            'name' => $slug, 'slug' => $slug, 'category' => 'orders', 'is_template' => true,
+            'permissions' => ['view_orders'],
+        ]);
+        $processor = $make('order-processor');
+        $auditor = $make('read-only-auditor');
+        $viewer = $make('reports-viewer');
+        $staff = $make('warehouse-staff');
+
+        $migration = require database_path('migrations/2026_09_28_000012_grant_payment_permissions_to_system_manager.php');
+        $migration->up();
+
+        $this->assertSame(['view_orders', 'view_payments', 'record_payments'], $processor->fresh()->permissions);
+        $this->assertSame(['view_orders', 'view_payments'], $auditor->fresh()->permissions);
+        $this->assertSame(['view_orders', 'view_payments'], $viewer->fresh()->permissions);
+        $this->assertSame(['view_orders'], $staff->fresh()->permissions);
+
+        $migration->down();
+        $this->assertSame(['view_orders'], $processor->fresh()->permissions);
+        $this->assertSame(['view_orders'], $auditor->fresh()->permissions);
     }
 }
