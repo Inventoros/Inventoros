@@ -6,7 +6,9 @@ use App\GraphQL\Mutations\CreateOrderMutation;
 use App\GraphQL\Mutations\CreateProductMutation;
 use App\GraphQL\Mutations\CreateStockAdjustmentMutation;
 use App\GraphQL\Mutations\CreateSupplierMutation;
+use App\GraphQL\Mutations\DecideApprovalMutation;
 use App\GraphQL\Mutations\DeleteProductMutation;
+use App\GraphQL\Mutations\RequestStockAdjustmentApprovalMutation;
 use App\GraphQL\Mutations\UpdateOrderMutation;
 use App\GraphQL\Mutations\UpdateProductMutation;
 use App\GraphQL\Mutations\UpdateSupplierMutation;
@@ -14,6 +16,7 @@ use App\GraphQL\Queries\CategoriesQuery;
 use App\GraphQL\Queries\LocationsQuery;
 use App\GraphQL\Queries\OrderQuery;
 use App\GraphQL\Queries\OrdersQuery;
+use App\GraphQL\Queries\PendingApprovalsQuery;
 use App\GraphQL\Queries\ProductQuery;
 use App\GraphQL\Queries\ProductsQuery;
 use App\GraphQL\Queries\PurchaseOrderQuery;
@@ -21,6 +24,7 @@ use App\GraphQL\Queries\PurchaseOrdersQuery;
 use App\GraphQL\Queries\StockAdjustmentsQuery;
 use App\GraphQL\Queries\SupplierQuery;
 use App\GraphQL\Queries\SuppliersQuery;
+use App\GraphQL\Types\ApprovalItemType;
 use App\GraphQL\Types\LocationType;
 use App\GraphQL\Types\OrderItemInputType;
 use App\GraphQL\Types\ProductSupplierInputType;
@@ -106,6 +110,7 @@ return [
                 'stockAdjustments' => StockAdjustmentsQuery::class,
                 'locations' => LocationsQuery::class,
                 'categories' => CategoriesQuery::class,
+                'pendingApprovals' => PendingApprovalsQuery::class,
             ],
             'mutation' => [
                 'createProduct' => CreateProductMutation::class,
@@ -116,6 +121,8 @@ return [
                 'createStockAdjustment' => CreateStockAdjustmentMutation::class,
                 'createSupplier' => CreateSupplierMutation::class,
                 'updateSupplier' => UpdateSupplierMutation::class,
+                'requestStockAdjustmentApproval' => RequestStockAdjustmentApprovalMutation::class,
+                'decideApproval' => DecideApprovalMutation::class,
             ],
             'middleware' => ['auth:sanctum'],
             'method' => ['GET', 'POST'],
@@ -144,6 +151,7 @@ return [
         'Location' => LocationType::class,
         'OrderItemInput' => OrderItemInputType::class,
         'ProductSupplierInput' => ProductSupplierInputType::class,
+        'ApprovalItem' => ApprovalItemType::class,
     ],
 
     // The types will be loaded on demand. Default is to load all types on each request

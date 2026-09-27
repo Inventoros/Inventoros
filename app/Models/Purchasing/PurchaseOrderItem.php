@@ -39,6 +39,25 @@ use Illuminate\Support\Carbon;
  */
 class PurchaseOrderItem extends Model
 {
+    protected static function booted(): void
+    {
+        // Changing the lines of an approved draft changes what was approved,
+        // so it has to go back for approval before it can be sent.
+        $reopen = function (PurchaseOrderItem $item): void {
+            $po = PurchaseOrder::withoutGlobalScopes()->find($item->purchase_order_id);
+
+            if ($po
+                && $po->status === PurchaseOrder::STATUS_DRAFT
+                && $po->approval_status === PurchaseOrder::APPROVAL_APPROVED) {
+                $po->clearApproval();
+                $po->save();
+            }
+        };
+
+        static::saved($reopen);
+        static::deleted($reopen);
+    }
+
     protected $fillable = [
         'purchase_order_id',
         'product_id',

@@ -6,6 +6,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Auth\Organization;
+use App\Support\ApprovalSettings;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -33,7 +34,41 @@ class OrganizationSettingsController extends Controller
         return Inertia::render('Settings/Organization/Index', [
             'organization' => $organization,
             'user' => $user,
+            'approvalSettings' => ApprovalSettings::forOrganization($organization)->toArray(),
+            'canManageOrganization' => $user->hasPermission('manage_organization'),
         ]);
+    }
+
+    /**
+     * Update the organization's approval workflow settings.
+     *
+     * Every workflow is off by default; a blank threshold means every
+     * request of that kind needs approval once the workflow is on.
+     */
+    public function updateApprovals(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'purchase_orders_enabled' => 'boolean',
+            'purchase_orders_threshold' => 'nullable|numeric|min:0|max:999999999',
+            'stock_adjustments_enabled' => 'boolean',
+            'stock_adjustments_quantity_threshold' => 'nullable|integer|min:0|max:999999999',
+            'stock_adjustments_value_threshold' => 'nullable|numeric|min:0|max:999999999',
+            'stock_transfers_enabled' => 'boolean',
+            'admins_can_self_approve' => 'boolean',
+        ]);
+
+        $organization = Organization::findOrFail($request->user()->organization_id);
+
+        $approvals = ApprovalSettings::fromArray(array_merge(
+            ApprovalSettings::forOrganization($organization)->toArray(),
+            $validated,
+        ));
+
+        $settings = $organization->settings ?? [];
+        $settings[ApprovalSettings::KEY] = $approvals->toArray();
+        $organization->update(['settings' => $settings]);
+
+        return redirect()->back()->with('success', 'Approval settings saved.');
     }
 
     /**

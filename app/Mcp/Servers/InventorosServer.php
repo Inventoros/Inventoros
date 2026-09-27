@@ -11,6 +11,7 @@ use App\Mcp\Tools\AdjustStockTool;
 use App\Mcp\Tools\CreateOrderTool;
 use App\Mcp\Tools\CreateProductTool;
 use App\Mcp\Tools\CreatePurchaseOrderTool;
+use App\Mcp\Tools\DecideApprovalTool;
 use App\Mcp\Tools\GetOrderTool;
 use App\Mcp\Tools\GetProductTool;
 use App\Mcp\Tools\GetPurchaseOrderTool;
@@ -18,6 +19,7 @@ use App\Mcp\Tools\ListCategoriesTool;
 use App\Mcp\Tools\ListLocationsTool;
 use App\Mcp\Tools\ListLowStockTool;
 use App\Mcp\Tools\ListOrdersTool;
+use App\Mcp\Tools\ListPendingApprovalsTool;
 use App\Mcp\Tools\ListProductsTool;
 use App\Mcp\Tools\ListPurchaseOrdersTool;
 use App\Mcp\Tools\ListSuppliersTool;
@@ -28,6 +30,7 @@ use App\Mcp\Tools\ReceivePurchaseOrderTool;
 use App\Mcp\Tools\SearchProductsTool;
 use App\Mcp\Tools\SendPurchaseOrderTool;
 use App\Mcp\Tools\StartWorkOrderTool;
+use App\Mcp\Tools\SubmitPurchaseOrderForApprovalTool;
 use App\Mcp\Tools\WhoAmITool;
 use Laravel\Mcp\Server;
 
@@ -93,6 +96,11 @@ class InventorosServer extends Server
         CreatePurchaseOrderTool::class,
         SendPurchaseOrderTool::class,
         ReceivePurchaseOrderTool::class,
+        SubmitPurchaseOrderForApprovalTool::class,
+
+        // Approvals
+        ListPendingApprovalsTool::class,
+        DecideApprovalTool::class,
 
         // Manufacturing
         ListWorkOrdersTool::class,

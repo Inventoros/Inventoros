@@ -18,6 +18,8 @@ class DocumentEmailException extends RuntimeException
 
     public const NOT_SENDABLE = 'cannot_send';
 
+    public const APPROVAL_REQUIRED = 'approval_required';
+
     public function __construct(string $message, public readonly string $reason)
     {
         parent::__construct($message);
@@ -31,5 +33,10 @@ class DocumentEmailException extends RuntimeException
     public static function notSendable(string $message): self
     {
         return new self($message, self::NOT_SENDABLE);
+    }
+
+    public static function approvalRequired(string $message): self
+    {
+        return new self($message, self::APPROVAL_REQUIRED);
     }
 }

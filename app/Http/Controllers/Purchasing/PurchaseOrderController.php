@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Purchasing;
 
+use App\Exceptions\ApprovalException;
 use App\Exceptions\DocumentEmailException;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\PurchaseOrder\ProcessReceivingRequest;
@@ -15,6 +16,7 @@ use App\Models\Inventory\ProductVariant;
 use App\Models\Inventory\Supplier;
 use App\Models\Purchasing\PurchaseOrder;
 use App\Models\Purchasing\PurchaseOrderItem;
+use App\Services\ApprovalService;
 use App\Services\PurchaseOrderEmailService;
 use App\Services\WarehouseAccessService;
 use App\Support\Money;
@@ -187,10 +189,16 @@ class PurchaseOrderController extends Controller
             abort(403, 'Unauthorized action.');
         }
 
-        $purchaseOrder->load(['supplier', 'creator', 'items.product', 'items.variant']);
+        $purchaseOrder->load(['supplier', 'creator', 'items.product', 'items.variant', 'approver', 'approvalRequester']);
 
         return Inertia::render('PurchaseOrders/Show', [
             'purchaseOrder' => $purchaseOrder,
+            'approval' => [
+                'needs_approval' => $purchaseOrder->status === PurchaseOrder::STATUS_DRAFT && $purchaseOrder->needsApproval(),
+                'can_submit' => $purchaseOrder->canBeSubmittedForApproval() && $request->user()->hasPermission('edit_purchase_orders'),
+                'can_decide' => $purchaseOrder->approval_status === PurchaseOrder::APPROVAL_PENDING
+                    && app(ApprovalService::class)->canDecide($request->user(), ApprovalService::PURCHASE_ORDER, $purchaseOrder),
+            ],
             'pluginComponents' => [
                 'header' => get_page_components('purchase-orders.show', 'header'),
                 'sidebar' => get_page_components('purchase-orders.show', 'sidebar'),
@@ -498,6 +506,28 @@ class PurchaseOrderController extends Controller
 
         return redirect()->route('purchase-orders.show', $purchaseOrder)
             ->with('success', "Purchase order emailed to {$purchaseOrder->sent_to}.");
+    }
+
+    /**
+     * Submit a draft purchase order for approval.
+     *
+     * @param  Request  $request  The incoming HTTP request
+     * @param  PurchaseOrder  $purchaseOrder  The draft to submit
+     */
+    public function submitForApproval(Request $request, PurchaseOrder $purchaseOrder, ApprovalService $approvals): RedirectResponse
+    {
+        try {
+            $approvals->submitPurchaseOrder($purchaseOrder, $request->user());
+        } catch (ApprovalException $e) {
+            if ($e->reason === ApprovalException::NOT_FOUND) {
+                abort(403, 'Unauthorized action.');
+            }
+
+            return redirect()->route('purchase-orders.show', $purchaseOrder)->with('error', $e->getMessage());
+        }
+
+        return redirect()->route('purchase-orders.show', $purchaseOrder)
+            ->with('success', 'Purchase order submitted for approval.');
     }
 
     /**

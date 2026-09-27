@@ -6,6 +6,7 @@ namespace App\Services;
 
 use App\Enums\OrderApprovalStatus;
 use App\Enums\OrderStatus;
+use App\Mail\ApprovalEmail;
 use App\Mail\LowStockEmail;
 use App\Mail\OrderApprovalEmail;
 use App\Mail\OrderStatusEmail;
@@ -15,6 +16,7 @@ use App\Models\Notification;
 use App\Models\Order\Order;
 use App\Models\User;
 use App\Models\Warehouse;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
@@ -81,6 +83,9 @@ final class NotificationService
             'order_status_updated' => 'email_orders',
             'order_approved' => 'email_approvals',
             'order_rejected' => 'email_approvals',
+            'approval_requested' => 'email_approvals',
+            'approval_approved' => 'email_approvals',
+            'approval_rejected' => 'email_approvals',
         ];
 
         $prefKey = $emailPreferenceMap[$type] ?? null;
@@ -129,6 +134,11 @@ final class NotificationService
                     case 'order_approved':
                     case 'order_rejected':
                         Mail::to($user->email)->queue(new OrderApprovalEmail($data));
+                        break;
+                    case 'approval_requested':
+                    case 'approval_approved':
+                    case 'approval_rejected':
+                        Mail::to($user->email)->queue(new ApprovalEmail($data));
                         break;
                     default:
                         Log::warning('No email mailable configured for notification type', [
@@ -498,6 +508,87 @@ final class NotificationService
         self::sendEmailNotification($user, 'order_'.$status, [
             'order' => $order,
             'notification_url' => route('orders.show', $order->id),
+        ]);
+    }
+
+    /**
+     * Tell each approver that a request is waiting for their decision.
+     *
+     * @param  array<string, mixed>  $item  a request description from ApprovalService::describe()
+     * @param  Collection<int, User>  $approvers
+     */
+    public static function createApprovalRequestedNotifications(array $item, Collection $approvers, User $requester): void
+    {
+        $url = route('approvals.index');
+
+        foreach ($approvers as $user) {
+            if (! self::shouldNotifyUser($user, 'approval_requested')) {
+                continue;
+            }
+
+            Notification::create([
+                'organization_id' => $user->organization_id,
+                'user_id' => $user->id,
+                'type' => 'approval_requested',
+                'title' => 'Approval Needed',
+                'message' => "{$requester->name} asked for approval of {$item['title']}.",
+                'data' => [
+                    'approval_type' => $item['type'],
+                    'approval_id' => $item['id'],
+                    'reference' => $item['reference'],
+                    'requested_by' => $requester->name,
+                ],
+                'action_url' => $url,
+                'priority' => 'high',
+            ]);
+
+            self::sendEmailNotification($user, 'approval_requested', [
+                'kind' => 'requested',
+                'item' => $item,
+                'actor' => $requester->name,
+                'notes' => null,
+                'notification_url' => $url,
+            ]);
+        }
+    }
+
+    /**
+     * Tell the requester their request was approved or rejected.
+     *
+     * @param  array<string, mixed>  $item  a request description from ApprovalService::describe()
+     */
+    public static function createApprovalDecisionNotification(array $item, User $requester, User $approver, string $status, ?string $notes): void
+    {
+        if (! self::shouldNotifyUser($requester, 'approval_'.$status)) {
+            return;
+        }
+
+        $url = $item['url'] ?? route('approvals.index');
+
+        Notification::create([
+            'organization_id' => $requester->organization_id,
+            'user_id' => $requester->id,
+            'type' => 'approval_'.$status,
+            'title' => 'Request '.ucfirst($status),
+            'message' => ucfirst($item['title'])." was {$status} by {$approver->name}".($notes ? ": {$notes}" : '.'),
+            'data' => [
+                'approval_type' => $item['type'],
+                'approval_id' => $item['id'],
+                'reference' => $item['reference'],
+                'status' => $status,
+                'notes' => $notes,
+                'approver' => $approver->name,
+            ],
+            'action_url' => $url,
+            'priority' => $status === 'rejected' ? 'high' : 'normal',
+        ]);
+
+        self::sendEmailNotification($requester, 'approval_'.$status, [
+            'kind' => $status,
+            'item' => $item,
+            'actor' => $approver->name,
+            'notes' => $notes,
+            'notification_url' => $url,
         ]);
     }
 

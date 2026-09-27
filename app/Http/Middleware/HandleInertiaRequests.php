@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Middleware;
 
+use App\Services\ApprovalService;
 use App\Services\PluginUIService;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
@@ -87,6 +88,18 @@ class HandleInertiaRequests extends Middleware
             },
             'activeWarehouseId' => function () {
                 return session('active_warehouse_id');
+            },
+            // Badge on the "Approvals" nav item: requests this user can decide.
+            'pendingApprovalsCount' => function () use ($user) {
+                if (! $user) {
+                    return 0;
+                }
+
+                $canApprove = $user->hasAnyPermission([
+                    'approve_purchase_orders', 'approve_stock_adjustments', 'approve_stock_transfers',
+                ]);
+
+                return $canApprove ? app(ApprovalService::class)->pendingCountFor($user) : 0;
             },
         ];
     }

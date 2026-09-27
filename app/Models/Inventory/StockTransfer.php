@@ -52,7 +52,22 @@ class StockTransfer extends Model
         'estimated_arrival',
         'notes',
         'completed_at',
+        'approval_status',
+        'approval_requested_by',
+        'approval_requested_at',
+        'approved_by',
+        'approved_at',
+        'approval_notes',
     ];
+
+    /**
+     * Approval states. NULL means no approval was asked for.
+     */
+    public const APPROVAL_PENDING = 'pending';
+
+    public const APPROVAL_APPROVED = 'approved';
+
+    public const APPROVAL_REJECTED = 'rejected';
 
     protected function casts(): array
     {
@@ -61,6 +76,8 @@ class StockTransfer extends Model
             'shipped_at' => 'datetime',
             'estimated_arrival' => 'datetime',
             'completed_at' => 'datetime',
+            'approval_requested_at' => 'datetime',
+            'approved_at' => 'datetime',
         ];
     }
 
@@ -112,6 +129,24 @@ class StockTransfer extends Model
     public function transferredBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'transferred_by');
+    }
+
+    /**
+     * Get the user who approved or rejected this transfer.
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo<\App\Models\User, $this>
+     */
+    public function approver(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'approved_by');
+    }
+
+    /**
+     * Whether shipping or completing this transfer still waits on approval.
+     */
+    public function awaitsApproval(): bool
+    {
+        return in_array($this->approval_status, [self::APPROVAL_PENDING, self::APPROVAL_REJECTED], true);
     }
 
     /**

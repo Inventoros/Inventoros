@@ -35,6 +35,14 @@ class PurchaseOrderEmailService
         array $cc = [],
         ?string $message = null,
     ): PurchaseOrder {
+        if ($purchaseOrder->awaitsApproval()) {
+            throw DocumentEmailException::approvalRequired(match ($purchaseOrder->approval_status) {
+                PurchaseOrder::APPROVAL_PENDING => "Purchase order {$purchaseOrder->po_number} is waiting for approval and cannot be sent yet.",
+                PurchaseOrder::APPROVAL_REJECTED => "Purchase order {$purchaseOrder->po_number} was rejected. Update it and submit it for approval again before sending.",
+                default => "Purchase order {$purchaseOrder->po_number} needs approval before it can be sent. Submit it for approval first.",
+            });
+        }
+
         if (! $purchaseOrder->canBeSent()) {
             throw DocumentEmailException::notSendable(
                 "Purchase order {$purchaseOrder->po_number} is {$purchaseOrder->status_label} and cannot be sent. Only drafts with at least one item, or orders already sent, can be sent."
