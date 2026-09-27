@@ -2382,7 +2382,21 @@
       "invoiceNotReady": "The invoice is available once your order is being processed.",
       "requestReturn": "Request a return",
       "returns": "Returns for this order",
-      "returned": "{count} returned"
+      "returned": "{count} returned",
+      "discount": "Discount",
+      "lineDiscount": "Discount {amount}",
+      "payments": "Payments",
+      "paid": "Paid",
+      "balanceDue": "Balance due",
+      "refund": "Refund",
+      "noPayments": "No payments recorded yet.",
+      "paymentStatuses": {
+        "unpaid": "Unpaid",
+        "partial": "Partly paid",
+        "paid": "Paid",
+        "overpaid": "Overpaid",
+        "refunded": "Refunded"
+      }
     },
     "returns": {
       "title": "Returns",

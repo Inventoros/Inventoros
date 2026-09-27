@@ -15,9 +15,16 @@ const props = defineProps({
     returns: { type: Array, default: () => [] },
 });
 
-const { t } = useI18n();
+const { t, te } = useI18n();
 
 const money = (value) => formatMoney(value, props.order.currency);
+
+const hasDiscount = computed(() => Number(props.order.discount_amount || 0) > 0);
+
+const paymentStatusLabel = computed(() => {
+    const key = `portal.order.paymentStatuses.${props.order.payment_status}`;
+    return te(key) ? t(key) : props.order.payment_status;
+});
 
 const progress = computed(() => [
     { key: 'ordered', label: t('portal.order.ordered'), date: props.order.order_date, done: true },
@@ -85,6 +92,7 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-t
                                             <div class="font-medium text-text-primary">{{ item.product_name }}</div>
                                             <div class="text-xs text-text-tertiary">
                                                 {{ t('portal.order.sku') }} {{ item.sku }}
+                                                <span v-if="Number(item.discount_amount || 0) > 0"> · {{ t('portal.order.lineDiscount', { amount: money(item.discount_amount) }) }}</span>
                                                 <span v-if="item.returned_quantity > 0"> · {{ t('portal.order.returned', { count: item.returned_quantity }) }}</span>
                                             </div>
                                         </td>
@@ -100,6 +108,13 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-t
                             <div class="flex justify-between text-text-secondary">
                                 <dt>{{ t('portal.order.subtotal') }}</dt>
                                 <dd class="tabular-nums">{{ money(order.subtotal) }}</dd>
+                            </div>
+                            <div v-if="hasDiscount" class="flex justify-between text-text-secondary">
+                                <dt>
+                                    {{ t('portal.order.discount') }}
+                                    <span v-if="order.discount_type === 'percent'">({{ Number(order.discount_value) }}%)</span>
+                                </dt>
+                                <dd class="tabular-nums">-{{ money(order.discount_amount) }}</dd>
                             </div>
                             <div class="flex justify-between text-text-secondary">
                                 <dt>{{ t('portal.order.tax') }}</dt>
@@ -144,6 +159,35 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-t
                             </div>
                         </li>
                     </ol>
+                </Card>
+
+                <Card :padded="false">
+                    <div class="flex items-center justify-between gap-2 px-5 pt-5">
+                        <h2 class="text-sm font-semibold text-text-primary">{{ t('portal.order.payments') }}</h2>
+                        <span v-if="order.payment_status" class="text-xs text-text-tertiary">{{ paymentStatusLabel }}</span>
+                    </div>
+                    <div class="space-y-3 p-5 text-sm">
+                        <ul v-if="order.payments && order.payments.length" class="space-y-1.5">
+                            <li v-for="payment in order.payments" :key="payment.id" class="flex justify-between gap-2 text-text-secondary">
+                                <span>
+                                    {{ formatDate(payment.paid_at) }}
+                                    <span class="text-text-tertiary">· {{ payment.type === 'refund' ? t('portal.order.refund') : payment.method_label }}</span>
+                                </span>
+                                <span class="tabular-nums">{{ payment.type === 'refund' ? '-' : '' }}{{ money(payment.amount) }}</span>
+                            </li>
+                        </ul>
+                        <p v-else class="text-text-tertiary">{{ t('portal.order.noPayments') }}</p>
+                        <dl class="space-y-1.5 border-t border-border-subtle pt-3">
+                            <div class="flex justify-between text-text-secondary">
+                                <dt>{{ t('portal.order.paid') }}</dt>
+                                <dd class="tabular-nums">{{ money(order.amount_paid) }}</dd>
+                            </div>
+                            <div class="flex justify-between font-semibold text-text-primary">
+                                <dt>{{ t('portal.order.balanceDue') }}</dt>
+                                <dd class="tabular-nums">{{ money(order.balance_due) }}</dd>
+                            </div>
+                        </dl>
+                    </div>
                 </Card>
 
                 <Card :padded="false">

@@ -134,6 +134,8 @@ abstract class PortalController extends Controller
             'sku' => $item->sku,
             'quantity' => (int) $item->quantity,
             'unit_price' => $item->unit_price,
+            'subtotal' => $item->subtotal,
+            'discount_amount' => $item->discount_amount,
             'tax' => $item->tax,
             'total' => $item->total,
             'returned_quantity' => $alreadyReturned,

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Feature\Portal;
 
 use App\Enums\OrderStatus;
+use App\Models\Order\OrderPayment;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -76,6 +77,49 @@ class PortalOrdersTest extends TestCase
                 ->missing('order.notes')
                 ->missing('order.created_by')
                 ->missing('order.metadata'));
+    }
+
+    public function test_order_detail_shows_discounts_and_payments(): void
+    {
+        $org = $this->makeOrganization('Acme Wholesale');
+        $customer = $this->makeCustomer($org, 'Buyer A');
+        $contact = $this->makeContact($customer, 'a@buyer.test');
+        $product = $this->makeProduct($org, 'SKU-1');
+        $order = $this->makeOrder($customer, 'ORD-A-1', OrderStatus::DELIVERED, [
+            ['product' => $product, 'quantity' => 10, 'unit_price' => 10],
+        ]);
+        $order->forceFill([
+            'discount_type' => 'percent',
+            'discount_value' => 10,
+            'discount_amount' => 10,
+            'total' => 90,
+        ])->save();
+
+        OrderPayment::create([
+            'organization_id' => $org->id, 'order_id' => $order->id, 'type' => 'payment',
+            'amount' => 50, 'method' => 'card', 'reference' => 'internal-ref', 'notes' => 'Staff note',
+            'paid_at' => now()->subDay(),
+        ]);
+        OrderPayment::create([
+            'organization_id' => $org->id, 'order_id' => $order->id, 'type' => 'payment',
+            'amount' => 999, 'method' => 'cash', 'paid_at' => now(), 'voided_at' => now(),
+        ]);
+        $order->forceFill(['amount_paid' => 50, 'payment_status' => 'partial'])->save();
+
+        $this->actingAs($contact, 'customer')
+            ->get($this->portalUrl($org, 'orders/'.$order->id))
+            ->assertOk()
+            ->assertInertia(fn ($page) => $page
+                ->where('order.discount_amount', '10.00')
+                ->where('order.discount_type', 'percent')
+                ->where('order.amount_paid', '50.00')
+                ->where('order.balance_due', '40.00')
+                ->where('order.payment_status', 'partial')
+                ->has('order.payments', 1)
+                ->where('order.payments.0.amount', '50.00')
+                ->where('order.payments.0.method', 'card')
+                ->missing('order.payments.0.notes')
+                ->missing('order.payments.0.reference'));
     }
 
     public function test_another_customers_order_is_not_found(): void

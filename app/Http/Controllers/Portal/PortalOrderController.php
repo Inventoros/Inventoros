@@ -7,9 +7,12 @@ namespace App\Http\Controllers\Portal;
 use App\Enums\OrderStatus;
 use App\Models\Order\Order;
 use App\Models\Order\OrderItem;
+use App\Models\Order\OrderPayment;
 use App\Models\Order\ReturnOrder;
+use App\Models\Scopes\OrganizationScope;
 use App\Services\Documents\DocumentPdfService;
 use App\Services\ReturnOrderService;
+use App\Support\Money;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -56,8 +59,33 @@ class PortalOrderController extends PortalController
             ->map(fn (ReturnOrder $r) => $this->returnSummary($r))
             ->values();
 
+        // Payments the customer made (and refunds they received). Voided rows
+        // were mistakes; references and notes are internal bookkeeping.
+        $payments = $order->payments()
+            ->withoutGlobalScope(OrganizationScope::class)
+            ->where('organization_id', $order->organization_id)
+            ->whereNull('voided_at')
+            ->orderBy('paid_at')
+            ->get()
+            ->map(fn (OrderPayment $payment) => [
+                'id' => $payment->id,
+                'type' => $payment->type?->value,
+                'amount' => $payment->amount,
+                'method' => $payment->method?->value,
+                'method_label' => $payment->method?->label(),
+                'paid_at' => $payment->paid_at?->toIso8601String(),
+            ])
+            ->values();
+
         return Inertia::render('Portal/Orders/Show', [
             'order' => $this->orderSummary($order) + [
+                'discount_type' => $order->discount_type?->value,
+                'discount_value' => $order->discount_value,
+                'discount_amount' => $order->discount_amount,
+                'amount_paid' => $order->amount_paid,
+                'balance_due' => Money::max('0', Money::subtract($order->total, $order->amount_paid ?? '0')),
+                'payment_status' => $order->payment_status?->value,
+                'payments' => $payments,
                 'subtotal' => $order->subtotal,
                 'tax' => $order->tax,
                 'shipping' => $order->shipping,
