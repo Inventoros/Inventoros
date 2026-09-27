@@ -18,6 +18,7 @@ use App\Models\Inventory\ProductVariant;
 use App\Models\Order\Order;
 use App\Models\Warehouse;
 use App\Services\OrderService;
+use App\Services\Shipping\OrderShippingPanel;
 use App\Support\Search;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\JsonResponse;
@@ -219,6 +220,8 @@ class OrderController extends Controller
             'paymentMethods' => $canViewPayments
                 ? array_map(fn (PaymentMethod $method) => ['value' => $method->value, 'label' => $method->label()], PaymentMethod::cases())
                 : [],
+            // Shipments and the "Ship" modal data (null without view_shipments).
+            ...app(OrderShippingPanel::class)->forOrder($order, auth()->user()),
             'pluginComponents' => [
                 'header' => get_page_components('orders.show', 'header'),
                 'sidebar' => get_page_components('orders.show', 'sidebar'),

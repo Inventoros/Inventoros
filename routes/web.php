@@ -3,6 +3,8 @@
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Install\InstallerController;
 use App\Support\PluginPageRoutes;
+use App\Http\Controllers\Webhooks\EasyPostWebhookController;
+use Illuminate\Foundation\Http\Middleware\ValidateCsrfToken;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -36,6 +38,15 @@ Route::get('/', function () {
 Route::get('/dashboard', [DashboardController::class, 'index'])
     ->middleware(['auth', 'verified'])
     ->name('dashboard');
+
+// EasyPost tracking webhooks. Public (EasyPost cannot log in), so the route
+// carries an unguessable per-organization token and every request must carry
+// a valid HMAC signature; CSRF does not apply to a server-to-server POST.
+Route::post('/webhooks/easypost/{token}', EasyPostWebhookController::class)
+    ->where('token', '[A-Za-z0-9]{32,64}')
+    ->middleware('throttle:120,1')
+    ->withoutMiddleware([ValidateCsrfToken::class])
+    ->name('webhooks.easypost');
 
 // Authenticated application routes, split by module. Each file declares its
 // routes with Route:: and is required inside this group, inheriting `auth`.

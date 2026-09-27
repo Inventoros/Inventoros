@@ -14,6 +14,7 @@ import {
     KeyRound,
     Mail,
     Webhook,
+    Truck,
     RefreshCw,
     ChevronRight,
 } from 'lucide-vue-next';
@@ -65,6 +66,13 @@ const allSections = [
         icon: Mail,
         title: t('settings.email.title'),
         description: 'Configure how your organization sends email (SMTP, Mailgun, or SendGrid).',
+        perm: 'manage_organization',
+    },
+    {
+        href: route('settings.shipping.index'),
+        icon: Truck,
+        title: t('shipping.settings.title'),
+        description: t('shipping.settings.description'),
         perm: 'manage_organization',
     },
     {

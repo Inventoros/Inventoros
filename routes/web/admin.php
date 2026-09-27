@@ -12,6 +12,7 @@ use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Admin\UpdateController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\SettingsController;
+use App\Http\Controllers\ShippingSettingsController;
 use App\Http\Controllers\WebhookController;
 use Illuminate\Support\Facades\Route;
 
@@ -92,6 +93,11 @@ Route::prefix('settings')->name('settings.')->group(function () {
         Route::get('/email', [SettingsController::class, 'email'])->name('email.index');
         Route::post('/email', [SettingsController::class, 'updateEmail'])->name('email.update');
         Route::post('/email/test', [SettingsController::class, 'testEmail'])->name('email.test');
+
+        // Shipping (EasyPost credentials, ship-from defaults)
+        Route::get('/shipping', [ShippingSettingsController::class, 'index'])->name('shipping.index');
+        Route::patch('/shipping', [ShippingSettingsController::class, 'update'])->name('shipping.update');
+        Route::post('/shipping/webhook-token', [ShippingSettingsController::class, 'rotateWebhookToken'])->name('shipping.webhook-token');
     });
 });
 

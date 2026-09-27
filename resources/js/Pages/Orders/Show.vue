@@ -7,6 +7,7 @@ import Card from '@/Components/ui/Card.vue';
 import Button from '@/Components/ui/Button.vue';
 import Badge from '@/Components/ui/Badge.vue';
 import SendDocumentModal from '@/Components/SendDocumentModal.vue';
+import ShipmentsPanel from '@/Components/Shipping/ShipmentsPanel.vue';
 import { Head, Link, router, useForm } from '@inertiajs/vue3';
 import { computed, ref } from 'vue';
 import { usePermissions } from '@/composables/usePermissions';
@@ -24,6 +25,8 @@ const props = defineProps({
     canRecordPayments: Boolean,
     paymentMethods: { type: Array, default: () => [] },
     pluginComponents: Object,
+    shipments: { type: Array, default: null },
+    shipping: { type: Object, default: null },
 });
 
 const money = (value) => `$${(parseFloat(value) || 0).toFixed(2)}`;
@@ -385,6 +388,9 @@ const formatOrderDate = (date, long = false) =>
                             </div>
                         </div>
                     </Card>
+
+                    <!-- Shipments (null without view_shipments) -->
+                    <ShipmentsPanel v-if="shipping" :order="order" :shipments="shipments || []" :shipping="shipping" />
 
                     <!-- Customer Information -->
                     <Card :padded="false">
