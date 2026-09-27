@@ -270,6 +270,20 @@ class PurchaseOrderApprovalTest extends TestCase
             ->assertNotFound();
     }
 
+    public function test_a_deleted_po_cannot_be_approved(): void
+    {
+        $this->enableApprovals(['purchase_orders_enabled' => true]);
+        $po = $this->draftPo();
+        $this->actingAs($this->requester)->post(route('purchase-orders.submit-approval', $po));
+        $po->delete();
+
+        $this->actingAs($this->approver)
+            ->post(route('approvals.approve', ['type' => 'purchase_order', 'id' => $po->id]))
+            ->assertNotFound();
+
+        $this->assertSame('pending', PurchaseOrder::withTrashed()->find($po->id)->approval_status);
+    }
+
     // ==================== REST ====================
 
     public function test_api_send_is_refused_until_approved_and_the_api_can_submit_and_approve(): void
