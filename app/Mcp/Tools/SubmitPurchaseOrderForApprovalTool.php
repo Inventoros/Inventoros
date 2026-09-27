@@ -17,6 +17,8 @@ class SubmitPurchaseOrderForApprovalTool extends Tool
 {
     use AuthenticatesMcpRequest;
 
+    protected string $name = 'submit_purchase_order_for_approval';
+
     protected string $description = 'Submit a draft purchase order for approval. Only needed when the organization requires approval for this PO (sending it fails with an approval error otherwise). Approvers are notified; the PO cannot be edited or sent until one of them decides.';
 
     public function schema(JsonSchema $schema): array

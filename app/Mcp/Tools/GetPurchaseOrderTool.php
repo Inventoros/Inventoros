@@ -17,6 +17,8 @@ class GetPurchaseOrderTool extends Tool
 {
     use AuthenticatesMcpRequest;
 
+    protected string $name = 'get_purchase_order';
+
     protected string $description = 'Fetch a single purchase order with supplier and line items.';
 
     public function schema(JsonSchema $schema): array

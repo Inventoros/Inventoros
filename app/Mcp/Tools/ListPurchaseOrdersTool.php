@@ -17,6 +17,8 @@ class ListPurchaseOrdersTool extends Tool
 {
     use AuthenticatesMcpRequest;
 
+    protected string $name = 'list_purchase_orders';
+
     protected string $description = 'List purchase orders. Filter by status, supplier, or free-text search on PO number / supplier name.';
 
     public function schema(JsonSchema $schema): array

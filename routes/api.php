@@ -16,6 +16,7 @@ use App\Http\Controllers\Api\ProductVariantController;
 use App\Http\Controllers\Api\PurchaseOrderController;
 use App\Http\Controllers\Api\ReturnOrderController;
 use App\Http\Controllers\Api\SerialTrackingController;
+use App\Http\Controllers\Api\ShipmentController;
 use App\Http\Controllers\Api\StockAdjustmentController;
 use App\Http\Controllers\Api\StockAuditController as ApiStockAuditController;
 use App\Http\Controllers\Api\StockTransferController;
@@ -159,6 +160,24 @@ Route::prefix('v1')->as('api.')->middleware('throttle:api')->group(function () {
             ->middleware('api.permission:record_payments');
         Route::post('orders/{order}/payments/{payment}/void', [OrderPaymentController::class, 'void'])
             ->middleware('api.permission:record_payments');
+
+        // Shipments
+        Route::get('orders/{order}/shipments', [ShipmentController::class, 'forOrder'])
+            ->middleware('api.permission:view_shipments');
+        Route::post('orders/{order}/shipments', [ShipmentController::class, 'store'])
+            ->middleware('api.permission:create_shipments');
+        Route::get('shipments', [ShipmentController::class, 'index'])
+            ->middleware('api.permission:view_shipments');
+        Route::get('shipments/{shipment}', [ShipmentController::class, 'show'])
+            ->middleware('api.permission:view_shipments');
+        Route::post('shipments/{shipment}/ship', [ShipmentController::class, 'ship'])
+            ->middleware('api.permission:create_shipments');
+        Route::post('shipments/{shipment}/rates', [ShipmentController::class, 'rates'])
+            ->middleware('api.permission:create_shipments');
+        Route::post('shipments/{shipment}/buy-label', [ShipmentController::class, 'buyLabel'])
+            ->middleware('api.permission:create_shipments');
+        Route::post('shipments/{shipment}/void-label', [ShipmentController::class, 'voidLabel'])
+            ->middleware('api.permission:create_shipments');
 
         // Stock Audits
         Route::apiResource('stock-audits', ApiStockAuditController::class)

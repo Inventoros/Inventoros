@@ -17,6 +17,8 @@ class SearchProductsTool extends Tool
 {
     use AuthenticatesMcpRequest;
 
+    protected string $name = 'search_products';
+
     protected string $description = 'Find a small set of products by free-text query. Optimized for the AI to look up "what is this thing" without paginating. Returns up to 10 matches with id, sku, name, stock and price.';
 
     public function schema(JsonSchema $schema): array

@@ -95,6 +95,10 @@ enum Permission: string
     // Returns Management
     case MANAGE_RETURNS = 'manage_returns';
 
+    // Shipping
+    case VIEW_SHIPMENTS = 'view_shipments';
+    case CREATE_SHIPMENTS = 'create_shipments';
+
     // Reports & Data
     case VIEW_REPORTS = 'view_reports';
     case EXPORT_DATA = 'export_data';
@@ -175,6 +179,9 @@ enum Permission: string
             self::ACCESS_ALL_WAREHOUSES => 'Access All Warehouses',
 
             self::MANAGE_RETURNS => 'Manage Returns',
+
+            self::VIEW_SHIPMENTS => 'View Shipments',
+            self::CREATE_SHIPMENTS => 'Create Shipments',
 
             self::VIEW_REPORTS => 'View Reports',
             self::EXPORT_DATA => 'Export Data',
@@ -258,6 +265,9 @@ enum Permission: string
 
             self::MANAGE_RETURNS => 'Can create and manage returns and exchanges',
 
+            self::VIEW_SHIPMENTS => 'Can view order shipments, tracking, and shipping labels',
+            self::CREATE_SHIPMENTS => 'Can create shipments, buy and void shipping labels, and mark orders shipped',
+
             self::VIEW_REPORTS => 'Can view system reports',
             self::EXPORT_DATA => 'Can export data from the system',
             self::IMPORT_DATA => 'Can import data into the system',
@@ -290,6 +300,7 @@ enum Permission: string
             self::VIEW_WAREHOUSES, self::CREATE_WAREHOUSES, self::EDIT_WAREHOUSES,
             self::DELETE_WAREHOUSES, self::MANAGE_WAREHOUSE_USERS, self::ACCESS_ALL_WAREHOUSES => 'Warehouse Management',
             self::MANAGE_RETURNS => 'Returns Management',
+            self::VIEW_SHIPMENTS, self::CREATE_SHIPMENTS => 'Shipping',
             self::VIEW_SETTINGS, self::EDIT_SETTINGS, self::MANAGE_ORGANIZATION => 'Settings',
             self::VIEW_PLUGINS, self::MANAGE_PLUGINS => 'Plugins',
             self::VIEW_REPORTS, self::EXPORT_DATA, self::IMPORT_DATA, self::VIEW_ACTIVITY_LOG => 'Reports & Data',

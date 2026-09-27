@@ -17,6 +17,8 @@ class ListProductsTool extends Tool
 {
     use AuthenticatesMcpRequest;
 
+    protected string $name = 'list_products';
+
     protected string $description = 'List products in the authenticated organization. Supports search by name/SKU/barcode, category and warehouse filters, low-stock filter, sorting and pagination.';
 
     public function schema(JsonSchema $schema): array

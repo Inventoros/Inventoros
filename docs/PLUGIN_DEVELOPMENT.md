@@ -197,6 +197,8 @@ Schema::dropIfExists('my_plugin_notes');
 | `order_rejected` | `$order`, `$user` | An order is rejected. |
 | `payment_recorded` | `$payment`, `$order`, `$user` | A payment or refund is recorded against an order (after commit). |
 | `payment_voided` | `$payment`, `$order`, `$user` | A payment or refund is voided (after commit). |
+| `shipment_created` | `$shipment`, `$user` | A shipment is created for an order (after commit). |
+| `shipment_delivered` | `$shipment` | A shipment is reported delivered (after commit). |
 | `purchase_order_created` | `$purchase_order`, `$user` | A purchase order is created. |
 | `purchase_order_received` | `$purchase_order`, `$user` | A purchase order becomes fully received. |
 | `purchase_order_cancelled` | `$purchase_order`, `$user` | A purchase order is cancelled. |

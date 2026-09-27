@@ -78,7 +78,7 @@ Add an entry to `~/.cursor/mcp.json` (or the workspace-level `.cursor/mcp.json`)
 
 ### Tool catalog
 
-23 tools across 7 surfaces. Tools marked destructive mutate state and should be confirmed before invocation.
+30 tools across 8 surfaces. Tools marked destructive mutate state and should be confirmed before invocation.
 
 Identity:
 
@@ -106,6 +106,8 @@ Sales:
 - `create_order` (`create_orders`). Create an order; decrements stock; fails if any line is short. Accepts optional line and order discounts (applied before tax). Destructive.
 - `email_order_invoice` (`edit_orders`). Email the order's invoice PDF to the customer, or to `to`, with optional CC and message. Destructive.
 - `record_payment` (`record_payments`). Record a payment against an order. Partial payments are fine; a payment above the balance due needs `allow_overpayment`; cancelled orders are refused. Destructive.
+- `list_shipments` (`view_shipments`). Paginated shipments with carrier, tracking and status; filter by order or status.
+- `create_shipment` (`create_shipments`). Record a shipment with manual tracking, optionally marking it shipped. Destructive.
 
 Purchasing:
 
@@ -115,6 +117,12 @@ Purchasing:
 - `create_purchase_order` (`create_purchase_orders`). Create a draft PO. Does not affect stock until received. Destructive.
 - `send_purchase_order` (`edit_purchase_orders`). Transition draft to sent. Destructive and idempotent.
 - `receive_purchase_order` (`receive_purchase_orders`). Receive items; writes stock; transitions to partial or received. Destructive.
+- `submit_purchase_order_for_approval` (`edit_purchase_orders`). Put a draft PO in front of the approvers when the organization requires approval. Destructive.
+
+Approvals:
+
+- `list_pending_approvals` (no single permission; returns only the purchase orders, stock adjustment requests and stock transfers the caller may decide). Each item carries the `type` and `id` to pass to `decide_approval`.
+- `decide_approval` (`approve_purchase_orders`, `approve_stock_adjustments` or `approve_stock_transfers`, by `type`). Approve or reject a pending request; rejecting needs notes. Destructive.
 
 Manufacturing:
 

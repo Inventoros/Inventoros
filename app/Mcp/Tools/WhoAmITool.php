@@ -16,6 +16,8 @@ class WhoAmITool extends Tool
 {
     use AuthenticatesMcpRequest;
 
+    protected string $name = 'who_am_i';
+
     protected string $description = 'Identify the authenticated user, organization, and the permissions this token holds. Run this first to confirm the token is wired up correctly.';
 
     public function handle(Request $request): Response

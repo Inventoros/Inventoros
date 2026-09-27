@@ -14,6 +14,7 @@ use App\Models\Order\Order;
 use App\Models\Order\OrderPayment;
 use App\Models\Order\ReturnOrder;
 use App\Models\Purchasing\PurchaseOrder;
+use App\Models\Shipping\Shipment;
 use App\Models\User;
 use App\Services\WebhookService;
 use Illuminate\Support\Facades\Log;
@@ -53,6 +54,10 @@ final class WebhookEventSubscriber
         // Payment events (refunds are recorded payments of type "refund")
         add_action('payment_recorded', [static::class, 'onPaymentRecorded'], 100);
         add_action('payment_voided', [static::class, 'onPaymentVoided'], 100);
+
+        // Shipment events (fired by ShipmentService after commit)
+        add_action('shipment_created', [static::class, 'onShipmentCreated'], 100);
+        add_action('shipment_delivered', [static::class, 'onShipmentDelivered'], 100);
 
         // Purchase order events
         add_action('purchase_order_created', [static::class, 'onPurchaseOrderCreated'], 100);
@@ -311,6 +316,44 @@ final class WebhookEventSubscriber
         } catch (\Exception $e) {
             Log::error('Failed to dispatch order.status_changed webhook', [
                 'order_id' => $order->id,
+                'error' => $e->getMessage(),
+            ]);
+        }
+    }
+
+    /**
+     * Handle shipment created event.
+     */
+    public static function onShipmentCreated(Shipment $shipment, ?User $user = null): void
+    {
+        self::dispatchShipment('shipment.created', $shipment, $user);
+    }
+
+    /**
+     * Handle shipment delivered event.
+     */
+    public static function onShipmentDelivered(Shipment $shipment, ?User $user = null): void
+    {
+        self::dispatchShipment('shipment.delivered', $shipment, $user);
+    }
+
+    private static function dispatchShipment(string $event, Shipment $shipment, ?User $user): void
+    {
+        try {
+            $order = Order::withoutGlobalScopes()->find($shipment->order_id);
+
+            WebhookService::dispatch($event, [
+                'shipment' => $shipment->fresh()?->toPublicArray() ?? $shipment->toPublicArray(),
+                'order' => $order ? [
+                    'id' => $order->id,
+                    'order_number' => $order->order_number,
+                    'status' => $order->status instanceof \BackedEnum ? $order->status->value : $order->status,
+                ] : null,
+                'triggered_by' => $user ? ['id' => $user->id, 'name' => $user->name] : null,
+            ], (int) $shipment->organization_id);
+        } catch (\Exception $e) {
+            Log::error("Failed to dispatch {$event} webhook", [
+                'shipment_id' => $shipment->id,
                 'error' => $e->getMessage(),
             ]);
         }

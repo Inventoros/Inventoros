@@ -21,6 +21,8 @@ class AdjustStockTool extends Tool
 {
     use AuthenticatesMcpRequest;
 
+    protected string $name = 'adjust_stock';
+
     protected string $description = 'Adjust the on-hand stock of a product by a positive or negative integer, recording the reason. WARNING: this writes to inventory. Always confirm the product id and quantity with the user before invoking. Use type "manual" for plain corrections, "count" for cycle-count adjustments, "damage" for write-offs, "return" for customer returns, "transfer" for inter-warehouse moves. When the organization requires approval for this adjustment, nothing changes yet: the result has status "pending_approval" and stock moves once an approver approves it.';
 
     public function schema(JsonSchema $schema): array

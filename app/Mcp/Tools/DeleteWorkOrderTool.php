@@ -19,6 +19,8 @@ class DeleteWorkOrderTool extends Tool
 {
     use AuthenticatesMcpRequest;
 
+    protected string $name = 'delete_work_order';
+
     protected string $description = 'Delete a draft or cancelled work order. Work orders that have started or completed (and so moved stock) cannot be deleted.';
 
     public function schema(JsonSchema $schema): array

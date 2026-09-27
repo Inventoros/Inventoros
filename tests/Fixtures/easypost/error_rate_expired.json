@@ -1,0 +1,7 @@
+{
+    "error": {
+        "code": "SHIPMENT.POSTAGE.FAILURE",
+        "message": "The rate you selected is no longer available. Please re-rate the shipment.",
+        "errors": []
+    }
+}

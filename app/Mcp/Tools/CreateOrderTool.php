@@ -18,6 +18,8 @@ class CreateOrderTool extends Tool
 {
     use AuthenticatesMcpRequest;
 
+    protected string $name = 'create_order';
+
     protected string $description = 'Create a sales order. WARNING: this decrements stock for every line item; the call fails entirely if any item is short. Always confirm the customer, currency, and item list with the user first.';
 
     public function schema(JsonSchema $schema): array

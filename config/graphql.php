@@ -36,6 +36,7 @@ use App\GraphQL\Queries\PurchaseOrderQuery;
 use App\GraphQL\Queries\PurchaseOrdersQuery;
 use App\GraphQL\Queries\ReturnOrderQuery;
 use App\GraphQL\Queries\ReturnOrdersQuery;
+use App\GraphQL\Queries\ShipmentsQuery;
 use App\GraphQL\Queries\StockAdjustmentsQuery;
 use App\GraphQL\Queries\StockTransferQuery;
 use App\GraphQL\Queries\StockTransfersQuery;
@@ -65,6 +66,8 @@ use App\GraphQL\Types\RoleType;
 use App\GraphQL\Types\StockAdjustmentType;
 use App\GraphQL\Types\StockTransferItemInputType;
 use App\GraphQL\Types\StockTransferItemType;
+use App\GraphQL\Types\ShipmentItemType;
+use App\GraphQL\Types\ShipmentType;
 use App\GraphQL\Types\StockTransferType;
 use App\GraphQL\Types\SupplierType;
 use App\GraphQL\Types\UserType;
@@ -151,6 +154,7 @@ return [
                 'users' => UsersQuery::class,
                 'user' => UserQuery::class,
                 'productVariants' => ProductVariantsQuery::class,
+                'shipments' => ShipmentsQuery::class,
             ],
             'mutation' => [
                 'createProduct' => CreateProductMutation::class,
@@ -215,6 +219,8 @@ return [
         'PurchaseOrderReceiveItemInput' => PurchaseOrderReceiveItemInputType::class,
         'ProductSupplierInput' => ProductSupplierInputType::class,
         'ApprovalItem' => ApprovalItemType::class,
+        'Shipment' => ShipmentType::class,
+        'ShipmentItem' => ShipmentItemType::class,
     ],
 
     // The types will be loaded on demand. Default is to load all types on each request

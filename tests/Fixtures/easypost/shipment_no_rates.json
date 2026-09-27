@@ -1,0 +1,19 @@
+{
+    "id": "shp_5e6f7a8b9c0d4e1f2a3b4c5d6e7f8a9b",
+    "object": "Shipment",
+    "mode": "test",
+    "status": "unknown",
+    "tracking_code": null,
+    "rates": [],
+    "messages": [
+        {
+            "carrier": "USPS",
+            "carrier_account_id": "ca_8dc116debcdb49b5a882a3a2b4b5d6e7",
+            "type": "rate_error",
+            "message": "Unable to retrieve USPS rates for this parcel: weight exceeds 70 lbs."
+        }
+    ],
+    "postage_label": null,
+    "selected_rate": null,
+    "tracker": null
+}

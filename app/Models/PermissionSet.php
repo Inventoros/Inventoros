@@ -216,6 +216,8 @@ class PermissionSet extends Model
                     Permission::APPROVE_ORDERS->value,
                     Permission::VIEW_PAYMENTS->value,
                     Permission::RECORD_PAYMENTS->value,
+                    Permission::VIEW_SHIPMENTS->value,
+                    Permission::CREATE_SHIPMENTS->value,
                 ],
             ],
             [
@@ -230,6 +232,8 @@ class PermissionSet extends Model
                     Permission::VIEW_ORDERS->value,
                     Permission::VIEW_PURCHASE_ORDERS->value,
                     Permission::RECEIVE_PURCHASE_ORDERS->value,
+                    Permission::VIEW_SHIPMENTS->value,
+                    Permission::CREATE_SHIPMENTS->value,
                 ],
             ],
             [
@@ -283,6 +287,7 @@ class PermissionSet extends Model
                     Permission::VIEW_REPORTS->value,
                     Permission::VIEW_ACTIVITY_LOG->value,
                     Permission::ACCESS_ALL_WAREHOUSES->value,
+                    Permission::VIEW_SHIPMENTS->value,
                 ],
             ],
             [

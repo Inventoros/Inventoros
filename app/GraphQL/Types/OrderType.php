@@ -6,6 +6,7 @@ namespace App\GraphQL\Types;
 
 use App\Models\Order\Order;
 use App\Support\PaymentVisibility;
+use App\Support\ShipmentVisibility;
 use GraphQL\Type\Definition\Type;
 use Rebing\GraphQL\Support\Facades\GraphQL;
 use Rebing\GraphQL\Support\Type as GraphQLType;
@@ -52,10 +53,13 @@ class OrderType extends GraphQLType
             'status' => [
                 'type' => Type::nonNull(Type::string()),
                 'description' => 'Order status',
+                // Cast to an enum on the model; GraphQL strings need the value.
+                'resolve' => fn (Order $order) => $order->status instanceof \BackedEnum ? $order->status->value : $order->status,
             ],
             'approval_status' => [
                 'type' => Type::string(),
                 'description' => 'Approval status',
+                'resolve' => fn (Order $order) => $order->approval_status instanceof \BackedEnum ? $order->approval_status->value : $order->approval_status,
             ],
             'invoice_number' => [
                 'type' => Type::string(),
@@ -123,6 +127,13 @@ class OrderType extends GraphQLType
                 'type' => Type::listOf(GraphQL::type('OrderPayment')),
                 'description' => 'Payments and refunds, voided ones included. Null without view_payments.',
                 'resolve' => fn (Order $order) => self::canViewPayments() ? $order->payments()->orderBy('paid_at')->orderBy('id')->get() : null,
+            ],
+            'shipments' => [
+                'type' => Type::listOf(GraphQL::type('Shipment')),
+                'description' => 'Shipments for this order, newest first, cancelled ones included. Null without view_shipments.',
+                'resolve' => fn (Order $order) => ShipmentVisibility::allows(auth()->user())
+                    ? $order->shipments()->with('items.orderItem')->latest('id')->get()
+                    : null,
             ],
             'currency' => [
                 'type' => Type::string(),

@@ -183,6 +183,16 @@ final class HookRegistry
                 'parameters' => ['$payment', '$order', '$user'],
                 'example' => "add_action('payment_voided', function (\$payment, \$order, \$user) { /* ... */ });",
             ],
+            'shipment_created' => [
+                'description' => 'Fired after a shipment is created for an order (after commit)',
+                'parameters' => ['$shipment', '$user'],
+                'example' => "add_action('shipment_created', function (\$shipment, \$user) { /* ... */ });",
+            ],
+            'shipment_delivered' => [
+                'description' => 'Fired after the carrier (or a user) reports a shipment delivered (after commit)',
+                'parameters' => ['$shipment'],
+                'example' => "add_action('shipment_delivered', function (\$shipment) { /* ... */ });",
+            ],
 
             // ========================================
             // PURCHASE ORDER HOOKS

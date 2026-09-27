@@ -1,0 +1,9 @@
+{
+    "id": "shp_4d7f2c9b1e5a4f0e9c3b8a2d6e1f0a7b",
+    "object": "Shipment",
+    "mode": "test",
+    "status": "unknown",
+    "tracking_code": "9400100208271109836487",
+    "refund_status": "submitted",
+    "updated_at": "2026-09-27T15:30:02Z"
+}

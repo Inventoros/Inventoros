@@ -17,6 +17,8 @@ class LookupBarcodeTool extends Tool
 {
     use AuthenticatesMcpRequest;
 
+    protected string $name = 'lookup_barcode';
+
     protected string $description = 'Look up a scanned code: a product or variant by exact barcode/SKU/UPC, a product QR deep link, or a storage location by its QR code (LOC:<code>) or location code. Same resolution as the in-app scanner.';
 
     public function schema(JsonSchema $schema): array

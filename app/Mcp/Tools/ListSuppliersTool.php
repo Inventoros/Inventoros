@@ -17,6 +17,8 @@ class ListSuppliersTool extends Tool
 {
     use AuthenticatesMcpRequest;
 
+    protected string $name = 'list_suppliers';
+
     protected string $description = 'List suppliers (vendors) for the authenticated organization. Filter by active flag, search by name or code.';
 
     public function schema(JsonSchema $schema): array

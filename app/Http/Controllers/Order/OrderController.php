@@ -18,6 +18,7 @@ use App\Models\Inventory\ProductVariant;
 use App\Models\Order\Order;
 use App\Models\Warehouse;
 use App\Services\OrderService;
+use App\Services\Shipping\OrderShippingPanel;
 use App\Support\Search;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\JsonResponse;
@@ -219,6 +220,8 @@ class OrderController extends Controller
             'paymentMethods' => $canViewPayments
                 ? array_map(fn (PaymentMethod $method) => ['value' => $method->value, 'label' => $method->label()], PaymentMethod::cases())
                 : [],
+            // Shipments and the "Ship" modal data (null without view_shipments).
+            ...app(OrderShippingPanel::class)->forOrder($order, auth()->user()),
             'pluginComponents' => [
                 'header' => get_page_components('orders.show', 'header'),
                 'sidebar' => get_page_components('orders.show', 'sidebar'),
@@ -308,6 +311,10 @@ class OrderController extends Controller
                         );
                     }
 
+                    // Partially shipped orders are still processing but some
+                    // goods have left; restocking them would invent inventory.
+                    $this->orderService->assertNoShippedGoods($order, 'cancel');
+
                     // Release the order's stock (serials/batches/bins included)
                     // but keep the line items as a historical record.
                     $order->load('items.product', 'items.variant');
@@ -376,15 +383,20 @@ class OrderController extends Controller
             abort(403, 'Unauthorized action.');
         }
 
-        DB::transaction(function () use ($order) {
-            // Restock only when the units are still on hand and unreturned. The
-            // service re-reads the locked status so a shipped/delivered order
-            // (goods gone) or an already-cancelled order (already restocked)
-            // isn't restocked into phantom inventory.
-            $this->orderService->restockForDeletion($order);
+        try {
+            DB::transaction(function () use ($order) {
+                // Restock only when the units are still on hand and unreturned. The
+                // service re-reads the locked status so a shipped/delivered order
+                // (goods gone) or an already-cancelled order (already restocked)
+                // isn't restocked into phantom inventory.
+                $this->orderService->restockForDeletion($order);
 
-            $order->delete();
-        });
+                $order->delete();
+            });
+        } catch (\RuntimeException $e) {
+            // e.g. a partially shipped order, whose shipped units cannot be restocked.
+            return redirect()->back()->with('error', $e->getMessage());
+        }
 
         return redirect()->route('orders.index')
             ->with('success', 'Order deleted successfully.');

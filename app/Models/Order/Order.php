@@ -278,6 +278,16 @@ class Order extends Model
     }
 
     /**
+     * Get the shipments sent for this order.
+     *
+     * @return HasMany<\App\Models\Shipping\Shipment, $this>
+     */
+    public function shipments(): HasMany
+    {
+        return $this->hasMany(\App\Models\Shipping\Shipment::class);
+    }
+
+    /**
      * Scope a query to only include orders from a specific organization.
      *
      * @param  Builder<static>  $query

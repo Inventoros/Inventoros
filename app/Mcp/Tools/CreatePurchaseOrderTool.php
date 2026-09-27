@@ -23,6 +23,8 @@ class CreatePurchaseOrderTool extends Tool
 {
     use AuthenticatesMcpRequest;
 
+    protected string $name = 'create_purchase_order';
+
     protected string $description = 'Create a draft purchase order for a supplier. The PO is created in "draft" status and does NOT affect stock until it is later sent and received. Always confirm supplier and item list before invoking.';
 
     public function schema(JsonSchema $schema): array

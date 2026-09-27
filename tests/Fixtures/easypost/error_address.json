@@ -1,0 +1,12 @@
+{
+    "error": {
+        "code": "ADDRESS.VERIFY.FAILURE",
+        "message": "Unable to verify address.",
+        "errors": [
+            {
+                "field": "address",
+                "message": "Address not found"
+            }
+        ]
+    }
+}

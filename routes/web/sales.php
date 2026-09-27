@@ -8,6 +8,7 @@ use App\Http\Controllers\Order\InvoiceController;
 use App\Http\Controllers\Order\OrderController;
 use App\Http\Controllers\Order\OrderPaymentController;
 use App\Http\Controllers\Order\ReturnOrderController;
+use App\Http\Controllers\Order\ShipmentController;
 use App\Http\Controllers\Purchasing\PurchaseOrderController;
 use App\Http\Controllers\Purchasing\PurchaseOrderInvoiceController;
 use App\Http\Controllers\Purchasing\QuickReorderController;
@@ -79,6 +80,14 @@ Route::post('/orders/{order}/payments/{payment}/void', [OrderPaymentController::
 Route::get('/orders/{order}/invoice/download', [InvoiceController::class, 'download'])->name('orders.invoice.download')->middleware('permission:view_orders');
 Route::get('/orders/{order}/invoice/preview', [InvoiceController::class, 'preview'])->name('orders.invoice.preview')->middleware('permission:view_orders');
 Route::post('/orders/{order}/invoice/email', [InvoiceController::class, 'email'])->name('orders.invoice.email')->middleware('permission:edit_orders');
+
+// Shipments - Permission based
+Route::post('/orders/{order}/shipments', [ShipmentController::class, 'store'])->name('orders.shipments.store')->middleware('permission:create_shipments');
+Route::post('/shipments/{shipment}/rates', [ShipmentController::class, 'rates'])->name('shipments.rates')->middleware('permission:create_shipments');
+Route::post('/shipments/{shipment}/buy', [ShipmentController::class, 'buy'])->name('shipments.buy')->middleware('permission:create_shipments');
+Route::post('/shipments/{shipment}/ship', [ShipmentController::class, 'ship'])->name('shipments.ship')->middleware('permission:create_shipments');
+Route::post('/shipments/{shipment}/cancel', [ShipmentController::class, 'cancel'])->name('shipments.cancel')->middleware('permission:create_shipments');
+Route::get('/shipments/{shipment}/label', [ShipmentController::class, 'label'])->name('shipments.label')->middleware('permission:view_shipments');
 
 // Return Orders (RMA) - Permission based
 Route::get('/returns', [ReturnOrderController::class, 'index'])->name('returns.index')->middleware('permission:manage_returns');

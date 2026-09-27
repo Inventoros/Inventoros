@@ -20,6 +20,8 @@ class SendPurchaseOrderTool extends Tool
 {
     use AuthenticatesMcpRequest;
 
+    protected string $name = 'send_purchase_order';
+
     protected string $description = 'Email a purchase order to its supplier with the PO PDF attached, and mark a draft as sent. A PO that is already sent (or partly received) can be re-sent; its status is unchanged. Fails, leaving the status unchanged, when the supplier has no email address and no "to" is given.';
 
     public function schema(JsonSchema $schema): array
