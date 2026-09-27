@@ -36,6 +36,7 @@ class ListLocationsTool extends Tool
         $locations = ProductLocation::query()
             ->where('organization_id', $this->organizationId())
             ->when($request->get('warehouse_id'), fn ($q, $id) => $q->where('warehouse_id', $id))
+            ->tap(fn ($q) => $this->warehouseAccess()->scopeLocations($q, $this->user()))
             ->orderBy('name')
             ->limit($limit)
             ->get(['id', 'name', 'description', 'warehouse_id']);

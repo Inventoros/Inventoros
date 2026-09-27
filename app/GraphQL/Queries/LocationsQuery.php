@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\GraphQL\Queries;
 
 use App\Models\Inventory\ProductLocation;
+use App\Services\WarehouseAccessService;
 use Closure;
 use GraphQL\Type\Definition\ResolveInfo;
 use GraphQL\Type\Definition\Type;
@@ -55,6 +56,8 @@ class LocationsQuery extends Query
         $organizationId = $user->organization_id;
 
         $query = ProductLocation::forOrganization($organizationId);
+
+        app(WarehouseAccessService::class)->scopeLocations($query, $user);
 
         if (isset($args['is_active'])) {
             $query->where('is_active', $args['is_active']);

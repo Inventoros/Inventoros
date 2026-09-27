@@ -1457,6 +1457,11 @@
       "addressLine1": "Street address",
       "addressLine2": "Suite, unit, building, floor, etc.",
       "postalCode": "e.g., M5V 2T6"
+    },
+    "access": {
+      "title": "Warehouse access",
+      "restrictLabel": "Restrict users to their assigned warehouses",
+      "restrictHint": "Users assigned to warehouses only see and move stock in those warehouses. Turn this on to also hide all warehouse stock from users with no assignment. Admins and roles with Access All Warehouses are never restricted."
     }
   },
   "workOrders": {

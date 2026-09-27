@@ -120,6 +120,7 @@ Route::resource('locations', ProductLocationController::class)
 
 // Warehouses - Permission based
 Route::resource('warehouses', WarehouseController::class)->middleware('permission:view_warehouses');
+Route::post('warehouses/access-policy', [WarehouseController::class, 'updateAccessPolicy'])->name('warehouses.access-policy')->middleware('permission:manage_warehouse_users');
 Route::post('warehouses/{warehouse}/users', [WarehouseController::class, 'updateUsers'])->name('warehouses.users.update')->middleware('permission:manage_warehouse_users');
 Route::post('warehouses/{warehouse}/set-default', [WarehouseController::class, 'setDefault'])->name('warehouses.set-default')->middleware('permission:edit_warehouses');
 Route::post('/set-warehouse', [WarehouseController::class, 'setActiveWarehouse'])->name('warehouses.set-active');

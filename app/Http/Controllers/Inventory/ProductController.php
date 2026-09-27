@@ -255,7 +255,8 @@ class ProductController extends Controller
             'priceHistory' => $priceHistory,
             // Per-location on-hand breakdown (location name + quantity), richest
             // bin first. Empty for products that hold no binned stock.
-            'locationBreakdown' => app(ProductLocationStockService::class)->breakdown($product),
+            // Restricted to the bins in warehouses the viewer can access.
+            'locationBreakdown' => app(ProductLocationStockService::class)->breakdown($product, auth()->user()),
             'pluginComponents' => [
                 'header' => get_page_components('products.show', 'header'),
                 'sidebar' => get_page_components('products.show', 'sidebar'),

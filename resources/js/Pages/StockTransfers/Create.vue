@@ -13,6 +13,14 @@ const { t } = useI18n();
 const props = defineProps({
     locations: Array,
     products: Array,
+    // Null when the user may send from any location; otherwise the ids of
+    // locations in the warehouses they are assigned to.
+    sourceLocationIds: { type: Array, default: null },
+});
+
+const availableFromLocations = computed(() => {
+    if (!props.sourceLocationIds) return props.locations;
+    return props.locations.filter(loc => props.sourceLocationIds.includes(loc.id));
 });
 
 const form = useForm({
@@ -100,7 +108,7 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                                 :class="fieldInput"
                             >
                                 <option value="">Select source location</option>
-                                <option v-for="location in locations" :key="location.id" :value="location.id">
+                                <option v-for="location in availableFromLocations" :key="location.id" :value="location.id">
                                     {{ location.name }} {{ location.code ? `(${location.code})` : '' }}
                                 </option>
                             </select>

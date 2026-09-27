@@ -16,6 +16,7 @@ use App\Models\Inventory\Supplier;
 use App\Models\Purchasing\PurchaseOrder;
 use App\Models\Purchasing\PurchaseOrderItem;
 use App\Services\PurchaseOrderEmailService;
+use App\Services\WarehouseAccessService;
 use App\Support\Money;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -421,6 +422,10 @@ class PurchaseOrderController extends Controller
         }
 
         $validated = $request->validated();
+
+        // Goods land in each product's primary location; a restricted user
+        // can only book them into their own warehouses.
+        app(WarehouseAccessService::class)->authorizeReceiving($request->user(), $purchaseOrder, $validated['items']);
 
         $receivedCount = 0;
 

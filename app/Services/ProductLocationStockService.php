@@ -7,6 +7,7 @@ namespace App\Services;
 use App\Exceptions\InsufficientStockException;
 use App\Models\Inventory\Product;
 use App\Models\Inventory\ProductLocationStock;
+use App\Models\User;
 use Illuminate\Support\Collection;
 
 /**
@@ -32,15 +33,17 @@ final class ProductLocationStockService
 
     /**
      * The product's on-hand quantity per location, richest first, with the
-     * location eager-loaded for display.
+     * location eager-loaded for display. Given a viewer, only the bins in
+     * warehouses they may access are returned.
      *
      * @return Collection<int, ProductLocationStock>
      */
-    public function breakdown(Product $product): Collection
+    public function breakdown(Product $product, ?User $viewer = null): Collection
     {
         return ProductLocationStock::query()
-            ->with('location')
+            ->with('location.warehouse:id,name,code')
             ->where('product_id', $product->id)
+            ->when($viewer, fn ($q) => app(WarehouseAccessService::class)->scopeByLocation($q, $viewer, 'location_id'))
             ->orderByDesc('quantity')
             ->get();
     }

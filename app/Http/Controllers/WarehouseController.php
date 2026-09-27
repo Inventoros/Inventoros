@@ -8,6 +8,7 @@ use App\Http\Requests\Warehouse\StoreWarehouseRequest;
 use App\Http\Requests\Warehouse\UpdateWarehouseRequest;
 use App\Models\User;
 use App\Models\Warehouse;
+use App\Services\WarehouseAccessService;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
@@ -21,6 +22,8 @@ use Inertia\Response;
  */
 class WarehouseController extends Controller
 {
+    public function __construct(private readonly WarehouseAccessService $warehouseAccess) {}
+
     /**
      * Display a listing of warehouses.
      */
@@ -30,6 +33,7 @@ class WarehouseController extends Controller
 
         $warehouses = Warehouse::forOrganization($organizationId)
             ->withCount(['locations', 'users'])
+            ->tap(fn ($q) => $this->warehouseAccess->scopeWarehouses($q, $request->user()))
             ->when($request->input('search'), function ($query, $search) {
                 $query->where(function ($q) use ($search) {
                     $q->where('name', 'like', "%{$search}%")
@@ -48,7 +52,27 @@ class WarehouseController extends Controller
             'filters' => [
                 'search' => $request->input('search', ''),
             ],
+            'restrictToAssigned' => $this->warehouseAccess->organizationRestrictsToAssigned((int) $organizationId),
         ]);
+    }
+
+    /**
+     * Turn the organization's "restrict users to assigned warehouses" policy
+     * on or off. When on, users with no warehouse assignment (and without
+     * access_all_warehouses) see no warehouse-bound stock at all.
+     */
+    public function updateAccessPolicy(Request $request)
+    {
+        $validated = $request->validate([
+            'restrict_to_assigned' => ['required', 'boolean'],
+        ]);
+
+        $this->warehouseAccess->setOrganizationRestrictsToAssigned(
+            (int) $request->user()->organization_id,
+            (bool) $validated['restrict_to_assigned'],
+        );
+
+        return redirect()->back()->with('success', 'Warehouse access policy updated.');
     }
 
     /**
@@ -100,6 +124,8 @@ class WarehouseController extends Controller
             abort(403, 'Unauthorized action.');
         }
 
+        $this->warehouseAccess->authorizeWarehouse($request->user(), $warehouse->id);
+
         $warehouse->load(['locations', 'users']);
         $warehouse->loadCount(['locations', 'users']);
 
@@ -116,6 +142,8 @@ class WarehouseController extends Controller
         if ($warehouse->organization_id !== $request->user()->organization_id) {
             abort(403, 'Unauthorized action.');
         }
+
+        $this->warehouseAccess->authorizeWarehouse($request->user(), $warehouse->id);
 
         $warehouse->load(['users']);
 
@@ -140,6 +168,8 @@ class WarehouseController extends Controller
             abort(403, 'Unauthorized action.');
         }
 
+        $this->warehouseAccess->authorizeWarehouse($request->user(), $warehouse->id);
+
         $validated = $request->validated();
 
         $warehouse->update($validated);
@@ -156,6 +186,8 @@ class WarehouseController extends Controller
         if ($warehouse->organization_id !== $request->user()->organization_id) {
             abort(403, 'Unauthorized action.');
         }
+
+        $this->warehouseAccess->authorizeWarehouse($request->user(), $warehouse->id);
 
         if ($warehouse->is_default) {
             return redirect()->back()
@@ -183,6 +215,8 @@ class WarehouseController extends Controller
             abort(403, 'Unauthorized action.');
         }
 
+        $this->warehouseAccess->authorizeWarehouse($request->user(), $warehouse->id);
+
         $validated = $request->validate([
             'user_ids' => ['required', 'array'],
             'user_ids.*' => ['integer', Rule::exists('users', 'id')->where('organization_id', $request->user()->organization_id)],
@@ -202,6 +236,8 @@ class WarehouseController extends Controller
         if ($warehouse->organization_id !== $request->user()->organization_id) {
             abort(403, 'Unauthorized action.');
         }
+
+        $this->warehouseAccess->authorizeWarehouse($request->user(), $warehouse->id);
 
         $organizationId = $request->user()->organization_id;
 

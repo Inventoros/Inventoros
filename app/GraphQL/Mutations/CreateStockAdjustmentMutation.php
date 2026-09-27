@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace App\GraphQL\Mutations;
 
 use App\Models\Inventory\Product;
+use App\Models\Inventory\ProductLocation;
 use App\Models\Inventory\StockAdjustment;
+use App\Services\WarehouseAccessService;
 use Closure;
 use GraphQL\Error\Error;
 use GraphQL\Type\Definition\ResolveInfo;
@@ -53,6 +55,11 @@ class CreateStockAdjustmentMutation extends Mutation
                 'description' => 'Additional notes',
                 'rules' => ['nullable', 'string', 'max:5000'],
             ],
+            'location_id' => [
+                'type' => Type::int(),
+                'description' => 'Location bin to apply the adjustment to. Required for users restricted to assigned warehouses.',
+                'rules' => ['nullable', 'integer'],
+            ],
         ];
     }
 
@@ -73,12 +80,22 @@ class CreateStockAdjustmentMutation extends Mutation
             throw new Error('Product not found');
         }
 
+        $locationId = $args['location_id'] ?? null;
+
+        if ($locationId !== null && ! ProductLocation::where('id', $locationId)->where('organization_id', $organizationId)->exists()) {
+            throw new Error('Location not found');
+        }
+
+        // A restricted user may only adjust a bin in one of their warehouses.
+        app(WarehouseAccessService::class)->authorizeLocation($user, $locationId);
+
         $adjustment = StockAdjustment::adjust(
             $product,
             $args['quantity'],
             $args['type'],
             $args['reason'] ?? null,
-            $args['notes'] ?? null
+            $args['notes'] ?? null,
+            locationId: $locationId,
         );
 
         $adjustment->load(['product', 'user']);

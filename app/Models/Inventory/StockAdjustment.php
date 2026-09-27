@@ -45,6 +45,7 @@ class StockAdjustment extends Model
         'organization_id',
         'product_id',
         'product_variant_id',
+        'location_id',
         'user_id',
         'type',
         'quantity_before',
@@ -72,6 +73,16 @@ class StockAdjustment extends Model
     public function organization(): BelongsTo
     {
         return $this->belongsTo(Organization::class);
+    }
+
+    /**
+     * The location bin the adjustment landed in, when it named one.
+     *
+     * @return BelongsTo<ProductLocation, $this>
+     */
+    public function location(): BelongsTo
+    {
+        return $this->belongsTo(ProductLocation::class, 'location_id');
     }
 
     /**
@@ -197,6 +208,7 @@ class StockAdjustment extends Model
             $adjustment = self::create([
                 'organization_id' => $locked->organization_id,
                 'product_id' => $locked->id,
+                'location_id' => $locationId,
                 // Prefer an explicit actor (system/console callers that run
                 // outside a request) and fall back to the authenticated user.
                 'user_id' => $actor?->id ?? auth()->id(),

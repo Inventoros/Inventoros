@@ -13,6 +13,7 @@ use App\Models\Inventory\StockAdjustment;
 use App\Models\Inventory\StockTransfer;
 use App\Models\Inventory\StockTransferItem;
 use App\Services\ProductLocationStockService;
+use App\Services\WarehouseAccessService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -27,6 +28,8 @@ use Inertia\Response;
  */
 class StockTransferController extends Controller
 {
+    public function __construct(private readonly WarehouseAccessService $warehouseAccess) {}
+
     /**
      * Display a listing of stock transfers.
      *
@@ -39,6 +42,7 @@ class StockTransferController extends Controller
 
         $query = StockTransfer::with(['fromLocation', 'toLocation', 'fromWarehouse', 'toWarehouse', 'transferredBy', 'items'])
             ->forOrganization($organizationId)
+            ->tap(fn ($q) => $this->warehouseAccess->scopeByAnyLocation($q, $request->user(), ['from_location_id', 'to_location_id']))
             ->when($activeWarehouseId, function ($query, $warehouseId) {
                 $query->where(function ($q) use ($warehouseId) {
                     $q->where('from_warehouse_id', $warehouseId)
@@ -76,10 +80,16 @@ class StockTransferController extends Controller
     {
         $organizationId = $request->user()->organization_id;
 
+        // Any location can be a destination (sending stock to another
+        // warehouse is allowed); the source must be one the user can access.
         $locations = ProductLocation::forOrganization($organizationId)
             ->active()
             ->orderBy('name')
-            ->get(['id', 'name', 'code']);
+            ->get(['id', 'name', 'code', 'warehouse_id']);
+
+        $sourceLocationIds = $this->warehouseAccess->isRestricted($request->user())
+            ? $locations->filter(fn ($location) => $this->warehouseAccess->canAccessLocation($request->user(), $location))->pluck('id')->values()
+            : null;
 
         $products = Product::forOrganization($organizationId)
             ->active()
@@ -88,6 +98,7 @@ class StockTransferController extends Controller
 
         return Inertia::render('StockTransfers/Create', [
             'locations' => $locations,
+            'sourceLocationIds' => $sourceLocationIds,
             'products' => $products,
         ]);
     }
@@ -112,6 +123,9 @@ class StockTransferController extends Controller
         $toLocation = ProductLocation::where('id', $validated['to_location_id'])
             ->forOrganization($organizationId)
             ->firstOrFail();
+
+        // Stock can only leave a warehouse the user works in.
+        $this->warehouseAccess->authorizeLocation($request->user(), $fromLocation);
 
         // Determine if this is an inter-warehouse transfer
         $isInterWarehouse = false;
@@ -177,6 +191,8 @@ class StockTransferController extends Controller
             abort(403, 'Unauthorized action.');
         }
 
+        $this->warehouseAccess->authorizeAnyLocation($request->user(), [$stockTransfer->from_location_id, $stockTransfer->to_location_id]);
+
         $stockTransfer->load(['fromLocation', 'toLocation', 'transferredBy', 'items.product']);
 
         return Inertia::render('StockTransfers/Show', [
@@ -196,6 +212,8 @@ class StockTransferController extends Controller
         if ($stockTransfer->organization_id !== $request->user()->organization_id) {
             abort(403, 'Unauthorized action.');
         }
+
+        $this->warehouseAccess->authorizeAnyLocation($request->user(), [$stockTransfer->from_location_id, $stockTransfer->to_location_id]);
 
         $validated = $request->validated();
 
@@ -242,6 +260,8 @@ class StockTransferController extends Controller
         if ($stockTransfer->organization_id !== $request->user()->organization_id) {
             abort(403, 'Unauthorized action.');
         }
+
+        $this->warehouseAccess->authorizeAnyLocation($request->user(), [$stockTransfer->from_location_id, $stockTransfer->to_location_id]);
 
         if (! in_array($stockTransfer->status, ['pending', 'in_transit'])) {
             return redirect()->route('stock-transfers.show', $stockTransfer)
@@ -330,6 +350,8 @@ class StockTransferController extends Controller
         if ($stockTransfer->organization_id !== $request->user()->organization_id) {
             abort(403, 'Unauthorized action.');
         }
+
+        $this->warehouseAccess->authorizeAnyLocation($request->user(), [$stockTransfer->from_location_id, $stockTransfer->to_location_id]);
 
         if (! in_array($stockTransfer->status, ['pending', 'in_transit'])) {
             return redirect()->route('stock-transfers.show', $stockTransfer)

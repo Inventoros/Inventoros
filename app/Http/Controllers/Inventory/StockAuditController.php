@@ -12,6 +12,7 @@ use App\Models\Inventory\ProductLocation;
 use App\Models\Inventory\StockAdjustment;
 use App\Models\Inventory\StockAudit;
 use App\Models\Inventory\StockAuditItem;
+use App\Services\WarehouseAccessService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -27,6 +28,8 @@ use Inertia\Response;
  */
 class StockAuditController extends Controller
 {
+    public function __construct(private readonly WarehouseAccessService $warehouseAccess) {}
+
     /**
      * Display a listing of stock audits.
      *
@@ -39,6 +42,7 @@ class StockAuditController extends Controller
         $query = StockAudit::with(['warehouseLocation', 'creator'])
             ->withCount('items')
             ->forOrganization($organizationId)
+            ->tap(fn ($q) => $this->warehouseAccess->scopeByLocation($q, $request->user(), 'warehouse_location_id'))
             ->when($request->input('search'), function ($query, $search) {
                 $query->where(function ($q) use ($search) {
                     $q->where('audit_number', 'like', "%{$search}%")
@@ -83,6 +87,7 @@ class StockAuditController extends Controller
 
         $locations = ProductLocation::forOrganization($organizationId)
             ->active()
+            ->tap(fn ($q) => $this->warehouseAccess->scopeLocations($q, $request->user()))
             ->orderBy('name')
             ->get(['id', 'name', 'code']);
 
@@ -120,6 +125,10 @@ class StockAuditController extends Controller
                 ->forOrganization($organizationId)
                 ->firstOrFail();
         }
+
+        // A restricted user audits their own warehouses only; an audit with no
+        // location spans the whole organization.
+        $this->warehouseAccess->authorizeLocation($request->user(), $validated['warehouse_location_id'] ?? null);
 
         $audit = DB::transaction(function () use ($validated, $organizationId, $request) {
             $audit = StockAudit::create([
@@ -176,6 +185,8 @@ class StockAuditController extends Controller
             abort(403, 'Unauthorized action.');
         }
 
+        $this->warehouseAccess->authorizeLocation($request->user(), $stockAudit->warehouse_location_id);
+
         $stockAudit->load([
             'warehouseLocation',
             'creator',
@@ -216,6 +227,8 @@ class StockAuditController extends Controller
             abort(403, 'Unauthorized action.');
         }
 
+        $this->warehouseAccess->authorizeLocation($request->user(), $stockAudit->warehouse_location_id);
+
         if ($stockAudit->status !== 'draft') {
             return redirect()->route('stock-audits.show', $stockAudit)
                 ->with('error', 'Only draft audits can be edited.');
@@ -225,6 +238,7 @@ class StockAuditController extends Controller
 
         $locations = ProductLocation::forOrganization($organizationId)
             ->active()
+            ->tap(fn ($q) => $this->warehouseAccess->scopeLocations($q, $request->user()))
             ->orderBy('name')
             ->get(['id', 'name', 'code']);
 
@@ -252,6 +266,8 @@ class StockAuditController extends Controller
             abort(403, 'Unauthorized action.');
         }
 
+        $this->warehouseAccess->authorizeLocation($request->user(), $stockAudit->warehouse_location_id);
+
         if ($stockAudit->status !== 'draft') {
             return redirect()->route('stock-audits.show', $stockAudit)
                 ->with('error', 'Only draft audits can be edited.');
@@ -267,6 +283,10 @@ class StockAuditController extends Controller
                 ->forOrganization($organizationId)
                 ->firstOrFail();
         }
+
+        // A restricted user audits their own warehouses only; an audit with no
+        // location spans the whole organization.
+        $this->warehouseAccess->authorizeLocation($request->user(), $validated['warehouse_location_id'] ?? null);
 
         $stockAudit->update([
             'name' => $validated['name'],
@@ -293,6 +313,8 @@ class StockAuditController extends Controller
             abort(403, 'Unauthorized action.');
         }
 
+        $this->warehouseAccess->authorizeLocation($request->user(), $stockAudit->warehouse_location_id);
+
         if ($stockAudit->status !== 'draft') {
             return redirect()->route('stock-audits.show', $stockAudit)
                 ->with('error', 'Only draft audits can be deleted.');
@@ -316,6 +338,8 @@ class StockAuditController extends Controller
         if ($stockAudit->organization_id !== $request->user()->organization_id) {
             abort(403, 'Unauthorized action.');
         }
+
+        $this->warehouseAccess->authorizeLocation($request->user(), $stockAudit->warehouse_location_id);
 
         if ($stockAudit->status !== 'draft') {
             return redirect()->route('stock-audits.show', $stockAudit)
@@ -356,6 +380,8 @@ class StockAuditController extends Controller
         if ($stockAudit->organization_id !== $request->user()->organization_id) {
             abort(403, 'Unauthorized action.');
         }
+
+        $this->warehouseAccess->authorizeLocation($request->user(), $stockAudit->warehouse_location_id);
 
         if ($stockAudit->status !== 'in_progress') {
             return redirect()->route('stock-audits.show', $stockAudit)
@@ -437,7 +463,8 @@ class StockAuditController extends Controller
      */
     public function updateCount(Request $request, StockAudit $stockAudit, StockAuditItem $item): JsonResponse
     {
-        if ($stockAudit->organization_id !== $request->user()->organization_id) {
+        if ($stockAudit->organization_id !== $request->user()->organization_id
+            || ! $this->warehouseAccess->canAccessLocation($request->user(), $stockAudit->warehouse_location_id)) {
             return response()->json(['message' => 'Unauthorized'], 403);
         }
 

@@ -16,7 +16,16 @@ const { hasPermission } = usePermissions();
 const props = defineProps({
     warehouses: Object,
     filters: Object,
+    restrictToAssigned: { type: Boolean, default: false },
 });
+
+const updateAccessPolicy = (event) => {
+    router.post(route('warehouses.access-policy'), {
+        restrict_to_assigned: event.target.checked,
+    }, {
+        preserveScroll: true,
+    });
+};
 
 const search = ref(props.filters?.search || '');
 
@@ -65,8 +74,25 @@ const thClass =
             </template>
         </PageHeader>
 
+        <!-- Access policy -->
+        <Card v-if="hasPermission('manage_warehouse_users')" class="mt-6">
+            <h3 class="text-sm font-semibold text-text-primary">{{ t('warehouses.access.title') }}</h3>
+            <label class="mt-3 flex items-start gap-3">
+                <input
+                    type="checkbox"
+                    :checked="restrictToAssigned"
+                    @change="updateAccessPolicy"
+                    class="mt-0.5 rounded border-border-subtle bg-surface-canvas text-brand ds-focus-ring"
+                />
+                <span>
+                    <span class="block text-sm font-medium text-text-primary">{{ t('warehouses.access.restrictLabel') }}</span>
+                    <span class="mt-1 block text-xs text-text-tertiary">{{ t('warehouses.access.restrictHint') }}</span>
+                </span>
+            </label>
+        </Card>
+
         <!-- Filters -->
-        <Card class="mt-6">
+        <Card class="mt-4">
             <form @submit.prevent="searchWarehouses" class="space-y-4">
                 <div class="grid grid-cols-1 gap-4 md:grid-cols-4">
                     <div class="md:col-span-2">

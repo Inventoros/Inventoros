@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\GraphQL\Queries;
 
 use App\Models\Inventory\StockAdjustment;
+use App\Services\WarehouseAccessService;
 use Closure;
 use GraphQL\Type\Definition\ResolveInfo;
 use GraphQL\Type\Definition\Type;
@@ -72,6 +73,8 @@ class StockAdjustmentsQuery extends Query
 
         $query = StockAdjustment::with(['product', 'user'])
             ->forOrganization($organizationId);
+
+        app(WarehouseAccessService::class)->scopeByLocation($query, $user, 'stock_adjustments.location_id');
 
         if (isset($args['product_id'])) {
             $query->forProduct($args['product_id']);

@@ -34,6 +34,7 @@ class ListWarehousesTool extends Tool
 
         $warehouses = Warehouse::query()
             ->where('organization_id', $this->organizationId())
+            ->tap(fn ($q) => $this->warehouseAccess()->scopeWarehouses($q, $this->user()))
             ->orderBy('name')
             ->limit($limit)
             ->get(['id', 'name', 'code', 'address_line_1', 'city', 'province', 'country', 'is_default', 'is_active']);

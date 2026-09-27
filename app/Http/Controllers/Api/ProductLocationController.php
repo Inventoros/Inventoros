@@ -9,6 +9,7 @@ use App\Http\Requests\Api\ProductLocation\StoreProductLocationRequest;
 use App\Http\Requests\Api\ProductLocation\UpdateProductLocationRequest;
 use App\Http\Resources\ProductLocationResource;
 use App\Models\Inventory\ProductLocation;
+use App\Services\WarehouseAccessService;
 use Dedoc\Scramble\Attributes\QueryParameter;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -33,6 +34,7 @@ class ProductLocationController extends Controller
 
         $query = ProductLocation::withCount('products')
             ->forOrganization($organizationId)
+            ->tap(fn ($q) => app(WarehouseAccessService::class)->scopeLocations($q, $request->user()))
             ->when($request->input('search'), function ($query, $search) {
                 $query->where(function ($q) use ($search) {
                     $q->where('name', 'like', "%{$search}%")
@@ -64,6 +66,8 @@ class ProductLocationController extends Controller
     {
         $validated = $request->validated();
 
+        app(WarehouseAccessService::class)->authorizeWarehouse($request->user(), isset($validated['warehouse_id']) ? (int) $validated['warehouse_id'] : null);
+
         $validated['organization_id'] = $request->user()->organization_id;
         $validated['is_active'] = $validated['is_active'] ?? true;
 
@@ -90,6 +94,8 @@ class ProductLocationController extends Controller
             ], 404);
         }
 
+        app(WarehouseAccessService::class)->authorizeLocation($request->user(), $location);
+
         $location->loadCount('products');
 
         return response()->json([
@@ -112,7 +118,14 @@ class ProductLocationController extends Controller
             ], 404);
         }
 
+        $access = app(WarehouseAccessService::class);
+        $access->authorizeLocation($request->user(), $location);
+
         $validated = $request->validated();
+
+        if (array_key_exists('warehouse_id', $validated)) {
+            $access->authorizeWarehouse($request->user(), $validated['warehouse_id'] !== null ? (int) $validated['warehouse_id'] : null);
+        }
 
         $location->update($validated);
 
@@ -136,6 +149,8 @@ class ProductLocationController extends Controller
                 'error' => 'not_found',
             ], 404);
         }
+
+        app(WarehouseAccessService::class)->authorizeLocation($request->user(), $location);
 
         // Check if location has products
         if ($location->products()->count() > 0) {

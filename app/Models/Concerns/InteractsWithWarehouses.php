@@ -5,13 +5,14 @@ declare(strict_types=1);
 namespace App\Models\Concerns;
 
 use App\Models\Warehouse;
+use App\Services\WarehouseAccessService;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 /**
  * Warehouse-access behaviour for the User model.
  *
- * Extracted verbatim from the User god-object (P2-4). Relies on isAdmin()
- * (provided by HasRolesAndPermissions, also used by User).
+ * Extracted from the User god-object (P2-4). Access decisions are delegated
+ * to WarehouseAccessService.
  */
 trait InteractsWithWarehouses
 {
@@ -24,21 +25,17 @@ trait InteractsWithWarehouses
     }
 
     /**
-     * Check if user has access to a specific warehouse.
-     * Admins have access to all warehouses.
+     * Check if user has access to a specific warehouse. The rule (admins,
+     * access_all_warehouses, assignments, the org restriction setting) lives
+     * in WarehouseAccessService.
      */
     public function hasWarehouseAccess(int $warehouseId): bool
     {
-        if ($this->isAdmin()) {
-            return true;
-        }
-
-        return $this->warehouses()->where('warehouses.id', $warehouseId)->exists();
+        return app(WarehouseAccessService::class)->canAccessWarehouse($this, $warehouseId);
     }
 
     /**
-     * Get warehouses the user can access.
-     * Admins see all org warehouses.
+     * Active warehouses the user can access (for the switcher and pickers).
      */
     public function accessibleWarehouses()
     {
@@ -46,10 +43,6 @@ trait InteractsWithWarehouses
             return Warehouse::where('id', 0); // empty query
         }
 
-        if ($this->isAdmin()) {
-            return Warehouse::forOrganization($this->organization_id)->active();
-        }
-
-        return $this->warehouses()->where('warehouses.organization_id', $this->organization_id)->active();
+        return app(WarehouseAccessService::class)->accessibleWarehousesQuery($this)->active();
     }
 }

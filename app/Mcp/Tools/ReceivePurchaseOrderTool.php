@@ -59,6 +59,10 @@ class ReceivePurchaseOrderTool extends Tool
             'items.*.quantity_to_receive' => ['required', 'integer', 'min:0'],
         ]);
 
+        // Goods land in each product's primary location; a restricted user
+        // can only book them into their own warehouses.
+        $this->warehouseAccess()->authorizeReceiving($this->user(), $po, $validated['items']);
+
         $received = 0;
 
         DB::transaction(function () use ($validated, $po, &$received) {
