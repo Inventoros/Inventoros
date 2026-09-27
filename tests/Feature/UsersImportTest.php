@@ -124,6 +124,59 @@ final class UsersImportTest extends TestCase
         $this->assertStringContainsString('Picker', json_encode($entry->properties));
     }
 
+    public function test_a_bulk_import_sends_one_summary_alert_instead_of_one_per_user(): void
+    {
+        \Illuminate\Support\Facades\Mail::fake();
+        $watcher = User::create([
+            'name' => 'Watcher', 'email' => 'watcher@org.com', 'password' => bcrypt('x'),
+            'organization_id' => $this->org->id, 'role' => 'admin',
+            'notification_preferences' => ['user_activity_alerts' => true],
+        ]);
+
+        $this->actingAs($this->admin);
+        $this->import([
+            'One,one@org.com,member,',
+            'Two,two@org.com,admin,',
+            'Three,three@org.com,member,',
+        ]);
+
+        $sent = \Illuminate\Support\Facades\Mail::queued(\App\Mail\UserActivityAlertEmail::class);
+        $this->assertCount(1, $sent);
+
+        $mail = $sent->first();
+        $this->assertTrue($mail->hasTo($watcher->email));
+        $this->assertSame(\App\Services\UserActivityAlertService::TYPE_USERS_IMPORTED, $mail->data['type']);
+        $this->assertSame(3, $mail->data['imported_count']);
+        $this->assertSame(1, $mail->data['admin_count']);
+        $this->assertSame('3 users imported', $mail->subjectLine());
+        $this->assertStringContainsString('two@org.com', view('emails.user-activity-alert', $mail->data)->render());
+
+        // The audit trail still records every account.
+        $this->assertSame(3, \App\Models\ActivityLog::where('action', 'user.created')->count());
+
+        // Single-user creation outside an import still alerts per user.
+        User::create([
+            'name' => 'Solo', 'email' => 'solo@org.com', 'password' => bcrypt('x'),
+            'organization_id' => $this->org->id, 'role' => 'member',
+        ]);
+        $this->assertCount(2, \Illuminate\Support\Facades\Mail::queued(\App\Mail\UserActivityAlertEmail::class));
+    }
+
+    public function test_an_import_that_creates_nobody_sends_no_alert(): void
+    {
+        \Illuminate\Support\Facades\Mail::fake();
+        User::create([
+            'name' => 'Watcher', 'email' => 'watcher@org.com', 'password' => bcrypt('x'),
+            'organization_id' => $this->org->id, 'role' => 'admin',
+            'notification_preferences' => ['user_activity_alerts' => true],
+        ]);
+
+        $this->actingAs($this->admin);
+        $this->import(['Dup,admin@org.com,member,']);
+
+        \Illuminate\Support\Facades\Mail::assertNothingQueued();
+    }
+
     public function test_invites_can_be_left_pending(): void
     {
         $this->import(['Pat Picker,pat@org.com,member,'], sendInvites: false);

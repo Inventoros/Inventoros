@@ -8,6 +8,7 @@
             \App\Services\UserActivityAlertService::TYPE_USER_CREATED => 'A new user was added',
             \App\Services\UserActivityAlertService::TYPE_PROMOTED_TO_ADMIN => 'A user was promoted to admin',
             \App\Services\UserActivityAlertService::TYPE_REPEATED_FAILED_LOGINS => 'Repeated failed sign-ins',
+            \App\Services\UserActivityAlertService::TYPE_USERS_IMPORTED => 'Users were imported',
             default => 'Account activity',
         };
     @endphp
@@ -22,12 +23,37 @@
             {{ $actor_name ?? 'An administrator' }} added a new user to your organization.
         @elseif($alertType === \App\Services\UserActivityAlertService::TYPE_PROMOTED_TO_ADMIN)
             {{ $actor_name ?? 'An administrator' }} gave a user full admin access to your organization.
+        @elseif($alertType === \App\Services\UserActivityAlertService::TYPE_USERS_IMPORTED)
+            {{ $actor_name ?? 'An administrator' }} imported {{ $imported_count ?? 0 }} {{ ($imported_count ?? 0) === 1 ? 'user' : 'users' }} into your organization from a file.
+            @if(($admin_count ?? 0) > 0)
+                {{ $admin_count }} of them {{ $admin_count === 1 ? 'has' : 'have' }} full admin access.
+            @endif
         @elseif($isWarning)
             there were {{ $failed_count ?? 0 }} failed sign-in attempts for one account in the last {{ $window_minutes ?? 15 }} minutes.
             If this was not the account owner, review the account and consider resetting its password.
         @endif
     </p>
 
+    @if($alertType === \App\Services\UserActivityAlertService::TYPE_USERS_IMPORTED)
+    <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #eff6ff; border-left: 4px solid #3b82f6; border-radius: 6px; margin: 20px 0;">
+        <tr>
+            <td style="padding: 20px;">
+                @foreach(($imported_users ?? []) as $imported)
+                    <span style="color: #111827; font-size: 14px; display: block; margin-bottom: 4px;">
+                        <strong>{{ $imported['name'] }}</strong> &lt;{{ $imported['email'] }}&gt;
+                        <span style="color: #6b7280; font-size: 13px;">({{ ucfirst($imported['role']) }})</span>
+                    </span>
+                @endforeach
+                @if(($unlisted_count ?? 0) > 0)
+                    <span style="color: #6b7280; font-size: 13px; display: block; margin-top: 6px;">and {{ $unlisted_count }} more</span>
+                @endif
+                @if(!empty($ip_address))
+                    <span style="color: #6b7280; font-size: 13px; display: block; margin-top: 6px;">IP address: {{ $ip_address }}</span>
+                @endif
+            </td>
+        </tr>
+    </table>
+    @else
     <table width="100%" cellpadding="0" cellspacing="0" style="background-color: {{ $isWarning ? '#fef3c7' : '#eff6ff' }}; border-left: 4px solid {{ $isWarning ? '#f59e0b' : '#3b82f6' }}; border-radius: 6px; margin: 20px 0;">
         <tr>
             <td style="padding: 20px;">
@@ -42,6 +68,7 @@
             </td>
         </tr>
     </table>
+    @endif
 
     @if(!empty($url))
         <p style="margin: 20px 0;">

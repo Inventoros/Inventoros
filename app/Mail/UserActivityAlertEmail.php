@@ -12,7 +12,8 @@ use Illuminate\Queue\SerializesModels;
 
 /**
  * Alerts an organization admin about account activity: a new user, a user
- * promoted to admin, or repeated failed sign-ins against one account.
+ * promoted to admin, repeated failed sign-ins against one account, or a bulk
+ * user import (one summary for the whole import).
  */
 class UserActivityAlertEmail extends Mailable
 {
@@ -45,6 +46,7 @@ class UserActivityAlertEmail extends Mailable
             UserActivityAlertService::TYPE_USER_CREATED => "New user added: {$name}",
             UserActivityAlertService::TYPE_PROMOTED_TO_ADMIN => "User promoted to admin: {$name}",
             UserActivityAlertService::TYPE_REPEATED_FAILED_LOGINS => "Repeated failed sign-ins for {$name}",
+            UserActivityAlertService::TYPE_USERS_IMPORTED => "{$name} imported",
             default => 'Account activity alert',
         };
     }

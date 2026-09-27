@@ -9,6 +9,7 @@ use App\Models\Role;
 use App\Models\User;
 use App\Notifications\AccountInvitation;
 use App\Services\SecurityEventLogger;
+use App\Services\UserActivityAlertService;
 use App\Support\RoleAssignmentGuard;
 use App\Support\SpreadsheetSafety;
 use Illuminate\Support\Collection;
@@ -58,6 +59,9 @@ final class UsersImport implements ToCollection, WithHeadingRow
     /** @var array<string, true> */
     private array $seenEmails = [];
 
+    /** @var array<int, User> Accounts created by this import, for the admin summary. */
+    private array $created = [];
+
     private bool $passwordColumnReported = false;
 
     public function __construct(
@@ -69,6 +73,24 @@ final class UsersImport implements ToCollection, WithHeadingRow
      * @param  Collection<int, Collection<string, mixed>>  $rows
      */
     public function collection(Collection $rows): void
+    {
+        // One "N users imported" admin alert for the whole file rather than
+        // a "new user" email per row. The security log still records each
+        // account (UserSecurityObserver).
+        UserActivityAlertService::withoutUserCreatedAlerts(fn () => $this->importRows($rows));
+
+        app(UserActivityAlertService::class)->notifyUsersImported(
+            (int) $this->importer->organization_id,
+            $this->created,
+            $this->importer,
+        );
+        $this->created = [];
+    }
+
+    /**
+     * @param  Collection<int, Collection<string, mixed>>  $rows
+     */
+    private function importRows(Collection $rows): void
     {
         foreach ($rows as $index => $row) {
             $rowNumber = $index + 2;
@@ -183,6 +205,7 @@ final class UsersImport implements ToCollection, WithHeadingRow
         });
 
         $this->imported++;
+        $this->created[] = $user;
 
         if (! $this->sendInvites) {
             return;
