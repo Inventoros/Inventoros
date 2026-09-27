@@ -12,6 +12,7 @@ use App\Mcp\Tools\CreateOrderTool;
 use App\Mcp\Tools\CreateProductTool;
 use App\Mcp\Tools\CreatePurchaseOrderTool;
 use App\Mcp\Tools\DecideApprovalTool;
+use App\Mcp\Tools\EmailOrderInvoiceTool;
 use App\Mcp\Tools\GetOrderTool;
 use App\Mcp\Tools\GetProductTool;
 use App\Mcp\Tools\GetPurchaseOrderTool;
@@ -88,6 +89,7 @@ class InventorosServer extends Server
         ListOrdersTool::class,
         GetOrderTool::class,
         CreateOrderTool::class,
+        EmailOrderInvoiceTool::class,
 
         // Purchasing
         ListSuppliersTool::class,

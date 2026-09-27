@@ -259,6 +259,8 @@ Route::prefix('v1')->as('api.')->middleware('throttle:api')->group(function () {
                 ->middleware('api.permission:approve_orders');
             Route::post('orders/{order}/reject', [OrderController::class, 'reject'])
                 ->middleware('api.permission:approve_orders');
+            Route::post('orders/{order}/invoice/email', [OrderController::class, 'emailInvoice'])
+                ->middleware('api.permission:edit_orders');
 
             // Customers
             Route::apiResource('customers', CustomerController::class)->only(['index', 'show'])
