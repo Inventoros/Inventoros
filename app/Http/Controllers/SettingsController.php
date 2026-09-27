@@ -44,9 +44,7 @@ class SettingsController extends Controller
      */
     public function email(): Response
     {
-        if (!auth()->user()->isAdmin()) {
-            abort(403, 'Only organization admins can access settings');
-        }
+        $this->authorizeEmailSettings();
 
         $emailConfig = SettingsService::getEmailConfig();
 
@@ -69,9 +67,7 @@ class SettingsController extends Controller
      */
     public function updateEmail(Request $request)
     {
-        if (!auth()->user()->isAdmin()) {
-            abort(403);
-        }
+        $this->authorizeEmailSettings();
 
         $validated = $request->validate([
             'provider' => 'required|in:smtp,phpmail,mailgun,sendgrid',
@@ -115,14 +111,16 @@ class SettingsController extends Controller
     /**
      * Send a test email to verify email configuration.
      *
+     * The page calls this with axios, which follows redirects, so a JSON
+     * caller gets JSON: 200 with a message on success, 422 with the error
+     * message on failure. Other callers get the redirect with a flash.
+     *
      * @param Request $request The incoming HTTP request containing test email address
-     * @return \Illuminate\Http\RedirectResponse
+     * @return \Illuminate\Http\RedirectResponse|\Illuminate\Http\JsonResponse
      */
     public function testEmail(Request $request)
     {
-        if (!auth()->user()->isAdmin()) {
-            abort(403);
-        }
+        $this->authorizeEmailSettings();
 
         $request->validate([
             'test_email' => 'required|email'
@@ -136,7 +134,11 @@ class SettingsController extends Controller
                 'tested_by' => auth()->user()->name,
             ]));
 
-            return back()->with('success', 'Test email sent successfully! Check your inbox.');
+            $message = 'Test email sent successfully! Check your inbox.';
+
+            return $request->expectsJson()
+                ? response()->json(['message' => $message])
+                : back()->with('success', $message);
 
         } catch (\Exception $e) {
             \Log::error('Test email failed', [
@@ -144,7 +146,11 @@ class SettingsController extends Controller
                 'organization_id' => auth()->user()->organization_id,
             ]);
 
-            return back()->with('error', 'Failed to send test email: ' . $e->getMessage());
+            $message = 'Failed to send test email: ' . $e->getMessage();
+
+            return $request->expectsJson()
+                ? response()->json(['message' => $message], 422)
+                : back()->with('error', $message);
         }
     }
 
@@ -160,5 +166,16 @@ class SettingsController extends Controller
         }
 
         SettingsService::set($key, $value, true);
+    }
+
+    /**
+     * Email settings are gated on manage_organization, the same permission
+     * the routes and the settings hub use (admins have every permission).
+     */
+    private function authorizeEmailSettings(): void
+    {
+        if (! auth()->user()->hasPermission('manage_organization')) {
+            abort(403, 'You do not have permission to manage email settings.');
+        }
     }
 }

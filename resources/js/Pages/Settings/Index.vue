@@ -59,7 +59,6 @@ const allSections = [
         title: t('settings.email.title'),
         description: 'Configure how your organization sends email (SMTP, Mailgun, or SendGrid).',
         perm: 'manage_organization',
-        adminOnly: true,
     },
     {
         href: route('webhooks.index'),

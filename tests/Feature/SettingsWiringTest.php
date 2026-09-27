@@ -2,11 +2,14 @@
 
 namespace Tests\Feature;
 
+use App\Mail\TestEmail;
 use App\Models\Auth\Organization;
+use App\Models\Role;
 use App\Models\System\SystemSetting;
 use App\Models\User;
 use App\Services\SettingsService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Route;
 use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
@@ -186,5 +189,113 @@ class SettingsWiringTest extends TestCase
         $this->actingAs($this->admin)
             ->get('/settings/organization/users')
             ->assertRedirect(route('users.index'));
+    }
+
+    /**
+     * A non-admin who has been granted manage_organization through a role.
+     */
+    private function orgManager(): User
+    {
+        $role = Role::create([
+            'name' => 'Org Manager',
+            'slug' => 'org-manager',
+            'organization_id' => $this->organization->id,
+            'permissions' => ['manage_organization'],
+        ]);
+
+        $user = User::create([
+            'name' => 'Org Manager',
+            'email' => 'orgmanager@test.com',
+            'password' => bcrypt('password'),
+            'organization_id' => $this->organization->id,
+        ]);
+        $user->forceFill(['role' => 'member'])->save();
+        $user->roles()->attach($role->id);
+
+        return $user;
+    }
+
+    /**
+     * The route and the settings hub gate email settings on
+     * manage_organization, so the controller must not additionally demand
+     * the admin role: that would put a link on the hub that opens a 403.
+     */
+    public function test_a_user_with_manage_organization_can_open_email_settings(): void
+    {
+        $this->actingAs($this->orgManager())
+            ->get(route('settings.email.index'))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page->component('Settings/Email'));
+    }
+
+    public function test_a_user_with_manage_organization_can_save_email_settings(): void
+    {
+        $this->actingAs($this->orgManager())
+            ->post(route('settings.email.update'), [
+                'provider' => 'smtp',
+                'from_address' => 'ops@example.com',
+                'from_name' => 'Ops',
+                'smtp' => ['host' => 'smtp.example.com', 'port' => 587, 'encryption' => 'tls'],
+            ])
+            ->assertSessionHasNoErrors()
+            ->assertRedirect();
+
+        $this->assertSame('smtp.example.com', SettingsService::get('email.smtp.host'));
+    }
+
+    public function test_the_hub_does_not_limit_email_settings_to_the_admin_role(): void
+    {
+        $hub = (string) file_get_contents(resource_path('js/Pages/Settings/Index.vue'));
+
+        $this->assertMatchesRegularExpression(
+            "/route\('settings\.email\.index'\),[^}]*perm: 'manage_organization',\s*\}/",
+            $hub,
+            'The email settings card should be gated on manage_organization only.',
+        );
+    }
+
+    public function test_members_cannot_send_a_test_email(): void
+    {
+        Mail::fake();
+
+        $this->actingAs($this->member)
+            ->postJson(route('settings.email.test'), ['test_email' => 'to@example.com'])
+            ->assertForbidden();
+
+        Mail::assertNothingSent();
+    }
+
+    /**
+     * The page sends the test with axios. A redirect is followed and lands
+     * on a 200, which the page showed as success even when sending failed.
+     */
+    public function test_a_successful_test_email_returns_json_success(): void
+    {
+        Mail::fake();
+
+        $this->actingAs($this->admin)
+            ->postJson(route('settings.email.test'), ['test_email' => 'to@example.com'])
+            ->assertOk()
+            ->assertJsonStructure(['message']);
+
+        Mail::assertSent(TestEmail::class, fn ($mail) => $mail->hasTo('to@example.com'));
+    }
+
+    public function test_a_failed_test_email_returns_an_error_the_page_can_show(): void
+    {
+        Mail::shouldReceive('to')->andThrow(new \RuntimeException('Connection refused by smtp.example.com'));
+
+        $this->actingAs($this->admin)
+            ->postJson(route('settings.email.test'), ['test_email' => 'to@example.com'])
+            ->assertStatus(422)
+            ->assertJsonPath('message', 'Failed to send test email: Connection refused by smtp.example.com');
+    }
+
+    public function test_an_invalid_test_email_address_is_a_validation_error(): void
+    {
+        $this->actingAs($this->admin)
+            ->postJson(route('settings.email.test'), ['test_email' => 'not-an-email'])
+            ->assertStatus(422)
+            ->assertJsonValidationErrors('test_email');
     }
 }
