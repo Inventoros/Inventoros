@@ -295,21 +295,29 @@ class OrderController extends Controller
             ], 404);
         }
 
-        return DB::transaction(function () use ($order) {
-            // Restock only when the units are still on hand and unreturned. The
-            // service re-reads the locked status so a shipped/delivered order
-            // (goods gone) or an already-cancelled order (already restocked)
-            // isn't restocked into phantom inventory.
-            $this->orderService->restockForDeletion($order);
+        try {
+            return DB::transaction(function () use ($order) {
+                // Restock only when the units are still on hand and unreturned. The
+                // service re-reads the locked status so a shipped/delivered order
+                // (goods gone) or an already-cancelled order (already restocked)
+                // isn't restocked into phantom inventory.
+                $this->orderService->restockForDeletion($order);
 
-            // Delete order items, then the order itself.
-            $order->items()->delete();
-            $order->delete();
+                // Delete order items, then the order itself.
+                $order->items()->delete();
+                $order->delete();
 
+                return response()->json([
+                    'message' => 'Order deleted successfully',
+                ]);
+            });
+        } catch (\RuntimeException $e) {
+            // A partially shipped order: its shipped units cannot be restocked.
             return response()->json([
-                'message' => 'Order deleted successfully',
-            ]);
-        });
+                'message' => $e->getMessage(),
+                'error' => 'invalid_state_transition',
+            ], 422);
+        }
     }
 
     /**

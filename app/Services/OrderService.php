@@ -15,6 +15,7 @@ use App\Models\Inventory\ProductVariant;
 use App\Models\Inventory\StockAdjustment;
 use App\Models\Order\Order;
 use App\Models\Order\OrderItem;
+use App\Models\Shipping\Shipment;
 use App\Models\User;
 use App\Support\Money;
 use App\Support\SequenceNumberRetry;
@@ -342,6 +343,10 @@ final class OrderService
                 );
             }
 
+            // A partially shipped order is still pending/processing, but some
+            // of its goods have left: restocking every line would invent them.
+            $this->assertNoShippedGoods($locked, 'cancel');
+
             $locked->load('items.product', 'items.variant');
 
             foreach ($locked->items as $item) {
@@ -460,6 +465,10 @@ final class OrderService
                 return;
             }
 
+            // Partially shipped: restocking every line would re-inject the
+            // units that already left, so refuse rather than guess.
+            $this->assertNoShippedGoods($locked, 'delete');
+
             $locked->load('items.product', 'items.variant');
 
             foreach ($locked->items as $item) {
@@ -550,6 +559,22 @@ final class OrderService
      */
     public function replaceItems(Order $order, array $items): string
     {
+        // Shipments point at the order's line rows. Once any are open the lines
+        // are frozen: resubmitting them unchanged (an edit that only touches
+        // the header) is a no-op, anything else is refused so a shipment never
+        // loses the lines it packed.
+        if (Shipment::withoutGlobalScopes()->where('order_id', $order->getKey())->active()->exists()) {
+            $order->load('items');
+
+            if (! $this->linesUnchanged($order, $items)) {
+                throw new InvalidOrderItemException(
+                    'Line items cannot be changed once the order has shipments. Cancel its open shipments first.'
+                );
+            }
+
+            return Money::add('0', ...$order->items->pluck('subtotal')->all());
+        }
+
         // 1. Release the existing lines completely, then drop them. restockItem
         //    locks the product first, releases serials/batches, restocks the
         //    count, and re-bins — returning inventory to its pre-order state.
@@ -736,6 +761,123 @@ final class OrderService
 
             return $locked;
         });
+    }
+
+    /**
+     * Move an order to a fulfilment status (processing, shipped, delivered)
+     * through the same path the order edit uses: lock, re-read, stamp
+     * shipped_at / delivered_at once, and update the model so OrderObserver
+     * sends the status notifications and webhooks. Stock is untouched: it left
+     * inventory when the order was created. Cancelling has its own restocking
+     * path, cancel().
+     *
+     * @throws \RuntimeException When the order is cancelled.
+     */
+    public function transitionStatus(Order $order, OrderStatus $to): Order
+    {
+        if ($to === OrderStatus::CANCELLED) {
+            throw new \InvalidArgumentException('Use OrderService::cancel() to cancel an order.');
+        }
+
+        return DB::transaction(function () use ($order, $to) {
+            $locked = Order::withoutGlobalScopes()->whereKey($order->getKey())->lockForUpdate()->firstOrFail();
+
+            if ($locked->status === $to) {
+                return $locked;
+            }
+
+            if ($locked->status === OrderStatus::CANCELLED) {
+                throw new \RuntimeException('A cancelled order cannot be reactivated. Create a new order instead.');
+            }
+
+            $attributes = ['status' => $to];
+
+            if (in_array($to, [OrderStatus::SHIPPED, OrderStatus::DELIVERED], true) && ! $locked->shipped_at) {
+                $attributes['shipped_at'] = now();
+            }
+
+            if ($to === OrderStatus::DELIVERED && ! $locked->delivered_at) {
+                $attributes['delivered_at'] = now();
+            }
+
+            $locked->update($attributes);
+
+            return $locked;
+        });
+    }
+
+    /**
+     * Refuse a restocking action when any of the order's shipments has left
+     * the warehouse. Runs inside the caller's transaction on a locked order.
+     *
+     * @throws \RuntimeException
+     */
+    public function assertNoShippedGoods(Order $order, string $action): void
+    {
+        $shipped = Shipment::withoutGlobalScopes()
+            ->where('order_id', $order->getKey())
+            ->leftWarehouse()
+            ->exists();
+
+        if ($shipped) {
+            throw new \RuntimeException(
+                "Cannot {$action} this order: some of its shipments have already left the warehouse."
+            );
+        }
+    }
+
+    /**
+     * Whether a submitted line set matches the order's current lines: same
+     * product, variant and quantity, and (when submitted) the same unit price
+     * and line discount.
+     *
+     * @param  array<int, array<string, mixed>>  $items
+     */
+    private function linesUnchanged(Order $order, array $items): bool
+    {
+        $money = fn ($v) => ($v === null || $v === '') ? null : Money::of($v);
+
+        $current = $order->items->map(fn (OrderItem $i) => [
+            'key' => ((int) $i->product_id).'|'.((int) ($i->product_variant_id ?? 0)).'|'.((int) $i->quantity),
+            'unit_price' => $money($i->unit_price),
+            'discount_type' => $i->discount_type instanceof \BackedEnum ? $i->discount_type->value : ($i->discount_type ?: null),
+            'discount_value' => $money($i->discount_value ?? null),
+        ])->values()->all();
+
+        if (count($current) !== count($items)) {
+            return false;
+        }
+
+        foreach ($items as $submitted) {
+            $key = ((int) ($submitted['product_id'] ?? 0)).'|'.((int) ($submitted['product_variant_id'] ?? 0)).'|'.((int) ($submitted['quantity'] ?? 0));
+            $found = null;
+
+            foreach ($current as $index => $line) {
+                if ($line['key'] !== $key) {
+                    continue;
+                }
+                if (array_key_exists('unit_price', $submitted) && $money($submitted['unit_price']) !== $line['unit_price']) {
+                    continue;
+                }
+                if (array_key_exists('discount_type', $submitted) && (($submitted['discount_type'] ?: null) !== $line['discount_type'])) {
+                    continue;
+                }
+                if (array_key_exists('discount_value', $submitted) && $line['discount_type'] !== null && $money($submitted['discount_value']) !== $line['discount_value']) {
+                    continue;
+                }
+
+                $found = $index;
+                break;
+            }
+
+            if ($found === null) {
+                return false;
+            }
+
+            unset($current[$found]);
+        }
+
+        return true;
     }
 
     /**

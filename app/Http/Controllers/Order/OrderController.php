@@ -308,6 +308,10 @@ class OrderController extends Controller
                         );
                     }
 
+                    // Partially shipped orders are still processing but some
+                    // goods have left; restocking them would invent inventory.
+                    $this->orderService->assertNoShippedGoods($order, 'cancel');
+
                     // Release the order's stock (serials/batches/bins included)
                     // but keep the line items as a historical record.
                     $order->load('items.product', 'items.variant');
@@ -376,15 +380,20 @@ class OrderController extends Controller
             abort(403, 'Unauthorized action.');
         }
 
-        DB::transaction(function () use ($order) {
-            // Restock only when the units are still on hand and unreturned. The
-            // service re-reads the locked status so a shipped/delivered order
-            // (goods gone) or an already-cancelled order (already restocked)
-            // isn't restocked into phantom inventory.
-            $this->orderService->restockForDeletion($order);
+        try {
+            DB::transaction(function () use ($order) {
+                // Restock only when the units are still on hand and unreturned. The
+                // service re-reads the locked status so a shipped/delivered order
+                // (goods gone) or an already-cancelled order (already restocked)
+                // isn't restocked into phantom inventory.
+                $this->orderService->restockForDeletion($order);
 
-            $order->delete();
-        });
+                $order->delete();
+            });
+        } catch (\RuntimeException $e) {
+            // e.g. a partially shipped order, whose shipped units cannot be restocked.
+            return redirect()->back()->with('error', $e->getMessage());
+        }
 
         return redirect()->route('orders.index')
             ->with('success', 'Order deleted successfully.');
