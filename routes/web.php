@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Install\InstallerController;
+use App\Support\PluginPageRoutes;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -49,3 +50,7 @@ Route::middleware('auth')->group(function () {
 });
 
 require __DIR__.'/auth.php';
+
+// Pages registered by active plugins with register_page(). Added last so a
+// plugin can never shadow a core route.
+PluginPageRoutes::register();

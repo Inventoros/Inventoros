@@ -136,7 +136,13 @@ if (!function_exists('register_menu_item')) {
 
 if (!function_exists('register_page')) {
     /**
-     * Register a custom page route
+     * Register a plugin page: a GET route that renders an Inertia component,
+     * usually 'Plugin::{slug}/{Page}' supplied by the plugin's UI bundle.
+     *
+     * Options: uri (defaults to the route name with dots as slashes),
+     * permission (string, or a list meaning any of; users without it get 403),
+     * props (array, or callable($request, $user) returning one), title, and
+     * middleware (defaults to ['auth']).
      *
      * @param string $route Route name
      * @param string $component Inertia component name
@@ -179,7 +185,9 @@ if (!function_exists('add_page_component')) {
 
 if (!function_exists('get_page_components')) {
     /**
-     * Get components for a specific page and slot
+     * Get the components for a page slot that the current user may see:
+     * entries whose `permission` they lack are left out, and callable `data`
+     * is resolved for them
      *
      * @param string $page Page identifier
      * @param string $slot Slot name
@@ -187,6 +195,6 @@ if (!function_exists('get_page_components')) {
      */
     function get_page_components(string $page, string $slot): array
     {
-        return app(\App\Services\PluginUIService::class)->getPageComponents($page, $slot);
+        return app(\App\Services\PluginUIService::class)->getVisiblePageComponents(auth()->user(), $page, $slot);
     }
 }

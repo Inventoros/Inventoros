@@ -46,7 +46,7 @@ class HandleInertiaRequests extends Middleware
         $pluginMenuItems = [];
         if ($user) {
             $pluginUIService = app(PluginUIService::class);
-            $pluginMenuItems = $pluginUIService->getMenuItems();
+            $pluginMenuItems = $pluginUIService->getVisibleMenuItems($user);
         }
 
         return [
