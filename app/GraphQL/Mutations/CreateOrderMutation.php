@@ -6,6 +6,7 @@ namespace App\GraphQL\Mutations;
 
 use App\Exceptions\InsufficientStockException;
 use App\Exceptions\InvalidOrderItemException;
+use App\GraphQL\Concerns\RequiresPermissions;
 use App\Services\OrderService;
 use Closure;
 use GraphQL\Error\Error;
@@ -17,6 +18,17 @@ use Rebing\GraphQL\Support\Mutation;
 
 class CreateOrderMutation extends Mutation
 {
+    use RequiresPermissions;
+
+    /**
+     * The REST route's gate; enforced (with the token's abilities) before
+     * the resolver runs. See EnforcePermissions.
+     */
+    protected function permissions(): array
+    {
+        return ['create_orders'];
+    }
+
     protected $attributes = [
         'name' => 'createOrder',
         'description' => 'Create a new order',

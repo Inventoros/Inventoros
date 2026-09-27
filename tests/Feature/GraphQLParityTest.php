@@ -123,6 +123,23 @@ final class GraphQLParityTest extends TestCase
         $this->assertDatabaseMissing('customers', ['name' => 'Nope']);
     }
 
+    public function test_pre_existing_fields_also_enforce_token_abilities(): void
+    {
+        // The admin role holds view_products and create_suppliers; the token
+        // only view_orders.
+        $token = $this->admin->createToken('orders-only', ['view_orders'])->plainTextToken;
+
+        $this->withToken($token)->postJson('/graphql', ['query' => '{ orders { id } }'])
+            ->assertJsonMissingPath('errors');
+
+        $products = $this->withToken($token)->postJson('/graphql', ['query' => '{ products { id } }']);
+        $this->assertSame('Unauthorized', $products->json('errors.0.message'));
+
+        $supplier = $this->withToken($token)->postJson('/graphql', ['query' => 'mutation { createSupplier(name: "Nope") { id } }']);
+        $this->assertSame('Unauthorized', $supplier->json('errors.0.message'));
+        $this->assertDatabaseMissing('suppliers', ['name' => 'Nope']);
+    }
+
     // ==================== RETURNS ====================
 
     public function test_return_lifecycle_through_graphql(): void

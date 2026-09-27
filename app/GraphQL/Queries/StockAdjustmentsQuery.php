@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\GraphQL\Queries;
 
+use App\GraphQL\Concerns\RequiresPermissions;
 use App\Models\Inventory\StockAdjustment;
 use App\Services\WarehouseAccessService;
 use Closure;
@@ -15,6 +16,17 @@ use Rebing\GraphQL\Support\Query;
 
 class StockAdjustmentsQuery extends Query
 {
+    use RequiresPermissions;
+
+    /**
+     * The REST route's gate; enforced (with the token's abilities) before
+     * the resolver runs. See EnforcePermissions.
+     */
+    protected function permissions(): array
+    {
+        return ['view_stock_adjustments', 'manage_stock'];
+    }
+
     protected $attributes = [
         'name' => 'stockAdjustments',
         'description' => 'List stock adjustments with optional filters',

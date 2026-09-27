@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\GraphQL\Mutations;
 
+use App\GraphQL\Concerns\RequiresPermissions;
 use App\Models\Inventory\Supplier;
 use Closure;
 use GraphQL\Error\Error;
@@ -14,6 +15,17 @@ use Rebing\GraphQL\Support\Mutation;
 
 class UpdateSupplierMutation extends Mutation
 {
+    use RequiresPermissions;
+
+    /**
+     * The REST route's gate; enforced (with the token's abilities) before
+     * the resolver runs. See EnforcePermissions.
+     */
+    protected function permissions(): array
+    {
+        return ['edit_suppliers'];
+    }
+
     protected $attributes = [
         'name' => 'updateSupplier',
         'description' => 'Update an existing supplier',

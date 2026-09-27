@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\GraphQL\Mutations;
 
+use App\GraphQL\Concerns\RequiresPermissions;
 use App\Models\Inventory\Product;
 use App\Models\Inventory\ProductLocation;
 use App\Models\Inventory\StockAdjustment;
@@ -18,6 +19,17 @@ use Rebing\GraphQL\Support\Mutation;
 
 class CreateStockAdjustmentMutation extends Mutation
 {
+    use RequiresPermissions;
+
+    /**
+     * The REST route's gate; enforced (with the token's abilities) before
+     * the resolver runs. See EnforcePermissions.
+     */
+    protected function permissions(): array
+    {
+        return ['manage_stock'];
+    }
+
     protected $attributes = [
         'name' => 'createStockAdjustment',
         'description' => 'Create a stock adjustment for a product',

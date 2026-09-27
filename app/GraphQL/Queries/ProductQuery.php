@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\GraphQL\Queries;
 
+use App\GraphQL\Concerns\RequiresPermissions;
 use App\Models\Inventory\Product;
 use Closure;
 use GraphQL\Type\Definition\ResolveInfo;
@@ -14,6 +15,17 @@ use Rebing\GraphQL\Support\Query;
 
 class ProductQuery extends Query
 {
+    use RequiresPermissions;
+
+    /**
+     * The REST route's gate; enforced (with the token's abilities) before
+     * the resolver runs. See EnforcePermissions.
+     */
+    protected function permissions(): array
+    {
+        return ['view_products'];
+    }
+
     protected $attributes = [
         'name' => 'product',
         'description' => 'Get a single product by ID',
