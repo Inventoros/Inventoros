@@ -99,6 +99,7 @@ class AccountSettingsController extends Controller
             'low_stock_alerts' => 'boolean',
             'order_notifications' => 'boolean',
             'system_notifications' => 'boolean',
+            'user_activity_alerts' => 'boolean',
         ]);
 
         // Store notification preferences

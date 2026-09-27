@@ -4,11 +4,13 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Admin;
 
+use App\Enums\SecurityEvent;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\User\StoreUserRequest;
 use App\Http\Requests\Admin\User\UpdateUserRequest;
 use App\Models\Role;
 use App\Models\User;
+use App\Services\SecurityEventLogger;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -103,7 +105,7 @@ class UserController extends Controller
 
         // Assign additional custom roles if provided
         if (! empty($validated['role_ids'])) {
-            $newUser->roles()->sync($validated['role_ids']);
+            $this->logRoleSync($newUser, $user, $newUser->roles()->sync($validated['role_ids']));
         }
 
         return redirect()->route('users.index')
@@ -206,7 +208,7 @@ class UserController extends Controller
 
         // Sync roles if provided
         if (isset($validated['role_ids'])) {
-            $user->roles()->sync($validated['role_ids']);
+            $this->logRoleSync($user, $currentUser, $user->roles()->sync($validated['role_ids']));
         }
 
         return redirect()->route('users.index')
@@ -250,6 +252,26 @@ class UserController extends Controller
 
         return redirect()->route('users.index')
             ->with('success', 'User deleted successfully.');
+    }
+
+    /**
+     * Record custom role assignments to the security log. `roles()->sync()`
+     * writes the pivot directly, so no model event reports it.
+     *
+     * @param  array{attached: array<int, int>, detached: array<int, int>, updated: array<int, int>}  $changes
+     */
+    private function logRoleSync(User $user, User $actor, array $changes): void
+    {
+        if ($changes['attached'] === [] && $changes['detached'] === []) {
+            return;
+        }
+
+        $names = Role::whereIn('id', array_merge($changes['attached'], $changes['detached']))->pluck('name', 'id');
+
+        app(SecurityEventLogger::class)->record(SecurityEvent::USER_ROLES_SYNCED, $user, $actor, [
+            'roles_added' => array_values(array_map(fn ($id) => $names[$id] ?? $id, $changes['attached'])),
+            'roles_removed' => array_values(array_map(fn ($id) => $names[$id] ?? $id, $changes['detached'])),
+        ]);
     }
 
     /**

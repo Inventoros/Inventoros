@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Admin;
 
+use App\Enums\SecurityEvent;
 use App\Exports\ActivityLogExport;
 use App\Http\Controllers\Controller;
 use App\Models\ActivityLog;
@@ -34,6 +35,11 @@ class ActivityLogController extends Controller
         // Filter by user
         if ($request->filled('user_id')) {
             $query->where('user_id', $request->user_id);
+        }
+
+        // Filter by category (audit trail of record changes vs security events)
+        if ($request->filled('category')) {
+            $query->forCategory((string) $request->category);
         }
 
         // Filter by action
@@ -89,7 +95,12 @@ class ActivityLogController extends Controller
 
         return Inertia::render('Admin/ActivityLog/Index', [
             'activities' => $activities,
-            'filters' => $request->only(['user_id', 'action', 'subject_type', 'date_from', 'date_to', 'search']),
+            'filters' => $request->only(['user_id', 'category', 'action', 'subject_type', 'date_from', 'date_to', 'search']),
+            'categories' => [
+                ['value' => ActivityLog::CATEGORY_AUDIT, 'label' => 'Record changes'],
+                ['value' => ActivityLog::CATEGORY_SECURITY, 'label' => 'Security'],
+            ],
+            'securityEvents' => SecurityEvent::options(),
             'users' => $users,
             'actions' => $actions,
             'subjectTypes' => $subjectTypes,
@@ -106,7 +117,7 @@ class ActivityLogController extends Controller
     {
         $organizationId = $request->user()->organization_id;
 
-        $filters = $request->only(['date_from', 'date_to', 'user_id', 'action']);
+        $filters = $request->only(['date_from', 'date_to', 'user_id', 'action', 'category']);
 
         $format = $request->input('format', 'xlsx');
         $extension = $format === 'csv' ? 'csv' : 'xlsx';

@@ -54,6 +54,9 @@ const notificationForm = useForm({
     low_stock_alerts: notificationPrefs.low_stock_alerts ?? true,
     order_notifications: notificationPrefs.order_notifications ?? true,
     system_notifications: notificationPrefs.system_notifications ?? true,
+    // Admin-only, opt-in: email about new users, promotions to admin, and
+    // repeated failed sign-ins.
+    user_activity_alerts: notificationPrefs.user_activity_alerts ?? false,
 });
 
 const submitNotifications = () => {
@@ -85,6 +88,9 @@ const toggles = [
     { key: 'low_stock_alerts', label: 'settings.account.lowStockAlerts', desc: 'settings.account.lowStockAlertsDesc' },
     { key: 'order_notifications', label: 'settings.account.orderNotifications', desc: 'settings.account.orderNotificationsDesc' },
     { key: 'system_notifications', label: 'settings.account.systemNotifications', desc: 'settings.account.systemNotificationsDesc' },
+    ...(props.user.role === 'admin'
+        ? [{ key: 'user_activity_alerts', label: 'settings.account.userActivityAlerts', desc: 'settings.account.userActivityAlertsDesc' }]
+        : []),
 ];
 </script>
 

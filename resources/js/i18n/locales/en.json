@@ -853,6 +853,8 @@
       "orderNotificationsDesc": "Receive notifications for new and updated orders",
       "systemNotifications": "System Notifications",
       "systemNotificationsDesc": "Get notified about system updates and maintenance",
+      "userActivityAlerts": "User Activity Alerts",
+      "userActivityAlertsDesc": "Email me when a user is added, a user is made an admin, or an account has 5 or more failed sign-ins in 15 minutes",
       "savePreferences": "Save Preferences",
       "userPreferences": "User Preferences",
       "theme": "Theme",
@@ -1085,7 +1087,12 @@
       "hour": "Hour",
       "minutes": "Minutes",
       "minute": "Minute",
-      "justNow": "Just now"
+      "justNow": "Just now",
+      "category": "Category",
+      "allCategories": "All categories",
+      "securityBadge": "Security",
+      "securityShortcut": "Security events",
+      "viewDetails": "View details"
     },
     "update": {
       "title": "System Update",

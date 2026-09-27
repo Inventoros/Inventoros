@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Auth;
 
+use App\Enums\SecurityEvent;
 use App\Http\Controllers\Controller;
+use App\Services\SecurityEventLogger;
 use BaconQrCode\Renderer\Image\SvgImageBackEnd;
 use BaconQrCode\Renderer\ImageRenderer;
 use BaconQrCode\Renderer\RendererStyle\RendererStyle;
@@ -95,6 +97,8 @@ class TwoFactorController extends Controller
             'two_factor_recovery_codes' => encrypt(json_encode(static::hashRecoveryCodes($recoveryCodes))),
         ]);
 
+        app(SecurityEventLogger::class)->record(SecurityEvent::TWO_FACTOR_ENABLED, $request->user(), $request->user());
+
         // Mark session as verified so middleware doesn't redirect
         $request->session()->put('two_factor_verified', true);
 
@@ -128,6 +132,8 @@ class TwoFactorController extends Controller
 
         $request->session()->forget('two_factor_verified');
 
+        app(SecurityEventLogger::class)->record(SecurityEvent::TWO_FACTOR_DISABLED, $request->user(), $request->user());
+
         return redirect()->route('settings.account.index')
             ->with('success', 'Two-factor authentication has been disabled.');
     }
@@ -160,6 +166,8 @@ class TwoFactorController extends Controller
         $valid = $this->google2fa->verifyKey($secret, $request->input('code'));
 
         if (!$valid) {
+            app(SecurityEventLogger::class)->record(SecurityEvent::TWO_FACTOR_FAILED, $user, $user, ['method' => 'totp']);
+
             return redirect()->back()
                 ->withErrors(['code' => 'The provided code is invalid.']);
         }
@@ -191,6 +199,8 @@ class TwoFactorController extends Controller
                 ])->save();
             });
         } catch (\RuntimeException $e) {
+            app(SecurityEventLogger::class)->record(SecurityEvent::TWO_FACTOR_FAILED, $user, $user, ['method' => 'recovery_code']);
+
             return redirect()->back()
                 ->withErrors(['code' => 'The provided recovery code is invalid.']);
         }

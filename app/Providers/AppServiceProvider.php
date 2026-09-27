@@ -4,13 +4,18 @@ declare(strict_types=1);
 
 namespace App\Providers;
 
+use App\Listeners\SecurityEventSubscriber;
 use App\Listeners\WebhookEventSubscriber;
 use App\Models\Inventory\Product;
 use App\Models\Order\Order;
 use App\Models\Purchasing\PurchaseOrder;
+use App\Models\Role;
+use App\Models\User;
 use App\Observers\OrderObserver;
 use App\Observers\ProductObserver;
 use App\Observers\PurchaseOrderObserver;
+use App\Observers\RoleSecurityObserver;
+use App\Observers\UserSecurityObserver;
 use App\Services\PluginService;
 use App\Services\PluginUIService;
 use Dedoc\Scramble\Scramble;
@@ -18,6 +23,7 @@ use Dedoc\Scramble\Support\Generator\OpenApi;
 use Dedoc\Scramble\Support\Generator\SecurityScheme;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\RateLimiter;
@@ -78,6 +84,11 @@ class AppServiceProvider extends ServiceProvider
 
         // Register webhook event subscriber
         WebhookEventSubscriber::subscribe();
+
+        // Security audit trail: sign-ins, 2FA, API tokens, account and role changes
+        Event::subscribe(SecurityEventSubscriber::class);
+        User::observe(UserSecurityObserver::class);
+        Role::observe(RoleSecurityObserver::class);
 
         // Scramble API documentation - Bearer token security
         Scramble::afterOpenApiGenerated(function (OpenApi $openApi) {
