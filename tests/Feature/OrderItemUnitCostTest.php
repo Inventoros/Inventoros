@@ -209,7 +209,7 @@ class OrderItemUnitCostTest extends TestCase
         $deletedProduct = $line(null, null);
         $alreadyCosted = $line($product->id, null, 1.5);
 
-        $migration = require database_path('migrations/2026_09_28_100002_add_unit_cost_to_order_items_table.php');
+        $migration = require database_path('migrations/2026_09_29_100002_add_unit_cost_to_order_items_table.php');
         $migration->backfill();
 
         $row = fn (int $id) => OrderItem::query()->find($id);
