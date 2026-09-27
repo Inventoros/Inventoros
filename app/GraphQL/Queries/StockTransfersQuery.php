@@ -6,6 +6,7 @@ namespace App\GraphQL\Queries;
 
 use App\GraphQL\Concerns\RequiresPermissions;
 use App\Models\Inventory\StockTransfer;
+use App\Services\WarehouseAccessService;
 use GraphQL\Type\Definition\Type;
 use Rebing\GraphQL\Support\Facades\GraphQL;
 use Rebing\GraphQL\Support\Query;
@@ -45,6 +46,7 @@ class StockTransfersQuery extends Query
     {
         return StockTransfer::with(self::WITH)
             ->forOrganization($this->organizationId())
+            ->tap(fn ($q) => app(WarehouseAccessService::class)->scopeByAnyLocation($q, $this->actor(), ['from_location_id', 'to_location_id']))
             ->when($args['status'] ?? null, fn ($query, $status) => $query->byStatus($status))
             ->when($args['search'] ?? null, fn ($query, $search) => $query->where('transfer_number', 'like', "%{$search}%"))
             ->latest()

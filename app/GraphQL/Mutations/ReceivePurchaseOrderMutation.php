@@ -49,7 +49,7 @@ class ReceivePurchaseOrderMutation extends Mutation
         $purchaseOrder = PurchaseOrder::forOrganization($this->organizationId())->find($args['id'])
             ?? throw new Error('Purchase order not found');
 
-        $received = $this->attempt(fn () => app(PurchaseOrderService::class)->receive($purchaseOrder, $args['items']));
+        $received = $this->attempt(fn () => app(PurchaseOrderService::class)->receive($purchaseOrder, $this->actor(), $args['items']));
 
         if ($received === 0) {
             throw new Error('No items were received');

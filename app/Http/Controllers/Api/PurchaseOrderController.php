@@ -17,7 +17,6 @@ use App\Models\Purchasing\PurchaseOrder;
 use App\Services\ApprovalService;
 use App\Services\PurchaseOrderEmailService;
 use App\Services\PurchaseOrderService;
-use App\Services\WarehouseAccessService;
 use Dedoc\Scramble\Attributes\QueryParameter;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -184,12 +183,8 @@ class PurchaseOrderController extends Controller
             ], 422);
         }
 
-        // Goods land in each product's primary location; a restricted user
-        // can only book them into their own warehouses.
-        app(WarehouseAccessService::class)->authorizeReceiving($request->user(), $purchaseOrder, $request->validated()['items']);
-
         try {
-            $receivedCount = $purchaseOrders->receive($purchaseOrder, $request->validated()['items']);
+            $receivedCount = $purchaseOrders->receive($purchaseOrder, $request->user(), $request->validated()['items']);
         } catch (\RuntimeException $e) {
             return response()->json([
                 'message' => $e->getMessage(),

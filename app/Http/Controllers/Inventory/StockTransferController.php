@@ -167,7 +167,7 @@ class StockTransferController extends Controller
         if (isset($validated['status']) && $validated['status'] === 'in_transit') {
             return $this->transition(
                 $stockTransfer,
-                fn () => $transfers->ship($stockTransfer, $validated),
+                fn () => $transfers->ship($stockTransfer, $request->user(), $validated),
                 'Stock transfer marked as in transit.',
             );
         }
@@ -206,7 +206,7 @@ class StockTransferController extends Controller
 
         return $this->transition(
             $stockTransfer,
-            fn () => $transfers->cancel($stockTransfer),
+            fn () => $transfers->cancel($stockTransfer, $request->user()),
             'Stock transfer has been cancelled.',
         );
     }

@@ -200,9 +200,9 @@ final class WebhookParityEventsTest extends TestCase
         $audit = $audits->create($this->org->id, $this->admin, [
             'name' => 'Spot', 'audit_type' => 'spot', 'product_ids' => [$this->product->id],
         ]);
-        $audits->start($audit);
+        $audits->start($audit, $this->admin);
         $audits->recordCount($audit->fresh(), $audit->items()->first(), $this->admin, 98);
-        $audits->complete($audit->fresh());
+        $audits->complete($audit->fresh(), $this->admin);
 
         $payload = $this->assertDelivered('stock_audit.completed');
         $this->assertSame($audit->audit_number, $payload['stock_audit']['audit_number']);

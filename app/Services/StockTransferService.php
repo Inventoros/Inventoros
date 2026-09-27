@@ -11,6 +11,7 @@ use App\Models\Inventory\StockAdjustment;
 use App\Models\Inventory\StockTransfer;
 use App\Models\Inventory\StockTransferItem;
 use App\Models\User;
+use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -19,12 +20,17 @@ use Illuminate\Support\Facades\DB;
  *
  * Shared by the web StockTransferController and the REST API so the location
  * bin move, product locking and ledger rows cannot drift between surfaces.
+ * Warehouse access is enforced here (WarehouseAccessService), so a user
+ * restricted to some warehouses is held to them on every surface.
  * State violations throw InvalidStateException; a short source bin throws the
  * RuntimeException raised by ProductLocationStockService::move().
  */
 final class StockTransferService
 {
-    public function __construct(private readonly ProductLocationStockService $locationStock) {}
+    public function __construct(
+        private readonly ProductLocationStockService $locationStock,
+        private readonly WarehouseAccessService $warehouseAccess,
+    ) {}
 
     /**
      * Create a pending transfer between two locations of the organization.
@@ -41,6 +47,10 @@ final class StockTransferService
         $toLocation = ProductLocation::where('id', $data['to_location_id'])
             ->forOrganization($organizationId)
             ->firstOrFail();
+
+        // Stock can only leave a warehouse the actor works in; any location
+        // may be the destination.
+        $this->warehouseAccess->authorizeLocation($actor, $fromLocation);
 
         // Determine if this is an inter-warehouse transfer
         $fromWarehouseId = $fromLocation->warehouse_id;
@@ -92,8 +102,10 @@ final class StockTransferService
      *
      * @param  array{shipping_method?: string|null, tracking_number?: string|null, estimated_arrival?: string|null}  $data
      */
-    public function ship(StockTransfer $transfer, array $data = []): StockTransfer
+    public function ship(StockTransfer $transfer, User $actor, array $data = []): StockTransfer
     {
+        $this->authorizeTransfer($actor, $transfer);
+
         if ($transfer->status !== 'pending') {
             throw new InvalidStateException('Only pending transfers can be marked as in transit.', 'invalid_status');
         }
@@ -120,6 +132,8 @@ final class StockTransferService
      */
     public function complete(StockTransfer $stockTransfer, User $actor): StockTransfer
     {
+        $this->authorizeTransfer($actor, $stockTransfer);
+
         if (! in_array($stockTransfer->status, ['pending', 'in_transit'], true)) {
             throw new InvalidStateException('Only pending or in-transit transfers can be completed.', 'invalid_status');
         }
@@ -200,8 +214,10 @@ final class StockTransferService
     /**
      * Cancel a pending or in-transit transfer. No stock has moved yet.
      */
-    public function cancel(StockTransfer $transfer): StockTransfer
+    public function cancel(StockTransfer $transfer, User $actor): StockTransfer
     {
+        $this->authorizeTransfer($actor, $transfer);
+
         if (! in_array($transfer->status, ['pending', 'in_transit'], true)) {
             throw new InvalidStateException('Only pending or in-transit transfers can be cancelled.', 'invalid_status');
         }
@@ -209,5 +225,15 @@ final class StockTransferService
         $transfer->update(['status' => 'cancelled']);
 
         return $transfer;
+    }
+
+    /**
+     * A transfer is visible to, and actionable by, either end of the move.
+     *
+     * @throws AuthorizationException
+     */
+    public function authorizeTransfer(User $actor, StockTransfer $transfer): void
+    {
+        $this->warehouseAccess->authorizeAnyLocation($actor, [$transfer->from_location_id, $transfer->to_location_id]);
     }
 }

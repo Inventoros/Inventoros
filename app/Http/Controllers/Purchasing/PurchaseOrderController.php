@@ -19,7 +19,6 @@ use App\Models\Purchasing\PurchaseOrder;
 use App\Services\ApprovalService;
 use App\Services\PurchaseOrderEmailService;
 use App\Services\PurchaseOrderService;
-use App\Services\WarehouseAccessService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -304,12 +303,8 @@ class PurchaseOrderController extends Controller
             abort(403, 'Unauthorized action.');
         }
 
-        // Goods land in each product's primary location; a restricted user
-        // can only book them into their own warehouses.
-        app(WarehouseAccessService::class)->authorizeReceiving($request->user(), $purchaseOrder, $request->validated()['items']);
-
         try {
-            $receivedCount = $purchaseOrders->receive($purchaseOrder, $request->validated()['items']);
+            $receivedCount = $purchaseOrders->receive($purchaseOrder, $request->user(), $request->validated()['items']);
         } catch (\RuntimeException $e) {
             return redirect()->route('purchase-orders.show', $purchaseOrder)
                 ->with('error', $e->getMessage());

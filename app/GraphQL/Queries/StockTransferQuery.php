@@ -6,6 +6,7 @@ namespace App\GraphQL\Queries;
 
 use App\GraphQL\Concerns\RequiresPermissions;
 use App\Models\Inventory\StockTransfer;
+use App\Services\StockTransferService;
 use GraphQL\Error\Error;
 use GraphQL\Type\Definition\Type;
 use Rebing\GraphQL\Support\Facades\GraphQL;
@@ -39,8 +40,12 @@ class StockTransferQuery extends Query
 
     public function resolve($root, array $args)
     {
-        return StockTransfer::with(StockTransfersQuery::WITH)
+        $transfer = StockTransfer::with(StockTransfersQuery::WITH)
             ->forOrganization($this->organizationId())
             ->find($args['id']) ?? throw new Error('Stock transfer not found');
+
+        app(StockTransferService::class)->authorizeTransfer($this->actor(), $transfer);
+
+        return $transfer;
     }
 }

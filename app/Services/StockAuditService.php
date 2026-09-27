@@ -23,6 +23,8 @@ use Illuminate\Support\Facades\DB;
  */
 final class StockAuditService
 {
+    public function __construct(private readonly WarehouseAccessService $warehouseAccess) {}
+
     /**
      * Create a draft audit and seed one item per product in scope.
      *
@@ -36,6 +38,10 @@ final class StockAuditService
                 ->forOrganization($organizationId)
                 ->firstOrFail();
         }
+
+        // A restricted user audits their own warehouses only; an audit with no
+        // location spans the whole organization.
+        $this->warehouseAccess->authorizeLocation($actor, $data['warehouse_location_id'] ?? null);
 
         return DB::transaction(function () use ($data, $organizationId, $actor) {
             $audit = StockAudit::create([
@@ -78,8 +84,10 @@ final class StockAuditService
     /**
      * Start a draft audit, snapshotting current system quantities.
      */
-    public function start(StockAudit $stockAudit): StockAudit
+    public function start(StockAudit $stockAudit, User $actor): StockAudit
     {
+        $this->warehouseAccess->authorizeLocation($actor, $stockAudit->warehouse_location_id);
+
         if ($stockAudit->status !== 'draft') {
             throw new InvalidStateException('Only draft audits can be started.', 'invalid_status');
         }
@@ -108,6 +116,8 @@ final class StockAuditService
      */
     public function recordCount(StockAudit $stockAudit, StockAuditItem $item, User $actor, int $countedQuantity, ?string $notes = null): StockAuditItem
     {
+        $this->warehouseAccess->authorizeLocation($actor, $stockAudit->warehouse_location_id);
+
         if ($stockAudit->status !== 'in_progress') {
             throw new InvalidStateException('Audit is not in progress', 'invalid_status');
         }
@@ -134,8 +144,10 @@ final class StockAuditService
      *
      * @return int the number of stock adjustments created
      */
-    public function complete(StockAudit $stockAudit): int
+    public function complete(StockAudit $stockAudit, User $actor): int
     {
+        $this->warehouseAccess->authorizeLocation($actor, $stockAudit->warehouse_location_id);
+
         if ($stockAudit->status !== 'in_progress') {
             throw new InvalidStateException('Only in-progress audits can be completed.', 'invalid_status');
         }

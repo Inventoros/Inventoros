@@ -23,6 +23,8 @@ use Illuminate\Support\Facades\DB;
  */
 final class PurchaseOrderService
 {
+    public function __construct(private readonly WarehouseAccessService $warehouseAccess) {}
+
     /**
      * Create a draft purchase order with its line items.
      *
@@ -134,8 +136,12 @@ final class PurchaseOrderService
      *
      * @throws InvalidStateException when the PO cannot receive items
      */
-    public function receive(PurchaseOrder $purchaseOrder, array $items): int
+    public function receive(PurchaseOrder $purchaseOrder, User $actor, array $items): int
     {
+        // Goods land in each product's primary location; a restricted user
+        // can only book them into their own warehouses.
+        $this->warehouseAccess->authorizeReceiving($actor, $purchaseOrder, $items);
+
         if (! $purchaseOrder->canReceiveItems()) {
             throw new InvalidStateException('This purchase order cannot receive items.', 'cannot_receive');
         }

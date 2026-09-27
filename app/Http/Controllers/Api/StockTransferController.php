@@ -11,6 +11,7 @@ use App\Http\Requests\Api\StockTransfer\StoreStockTransferRequest;
 use App\Http\Resources\StockTransferResource;
 use App\Models\Inventory\StockTransfer;
 use App\Services\StockTransferService;
+use App\Services\WarehouseAccessService;
 use Dedoc\Scramble\Attributes\QueryParameter;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -40,6 +41,7 @@ class StockTransferController extends Controller
         $transfers = StockTransfer::with(['fromLocation', 'toLocation', 'transferredBy'])
             ->withCount('items')
             ->forOrganization($request->user()->organization_id)
+            ->tap(fn ($q) => app(WarehouseAccessService::class)->scopeByAnyLocation($q, $request->user(), ['from_location_id', 'to_location_id']))
             ->when($request->input('warehouse_id'), function ($query, $warehouseId) {
                 $query->where(function ($q) use ($warehouseId) {
                     $q->where('from_warehouse_id', $warehouseId)
@@ -76,6 +78,7 @@ class StockTransferController extends Controller
     public function show(Request $request, StockTransfer $stockTransfer): JsonResponse
     {
         $this->ensureOwned($request, $stockTransfer, 'Stock transfer');
+        $this->transfers->authorizeTransfer($request->user(), $stockTransfer);
 
         return response()->json(['data' => new StockTransferResource($this->loaded($stockTransfer))]);
     }
@@ -85,7 +88,7 @@ class StockTransferController extends Controller
      */
     public function ship(ShipStockTransferRequest $request, StockTransfer $stockTransfer): JsonResponse
     {
-        return $this->transition($request, $stockTransfer, fn () => $this->transfers->ship($stockTransfer, $request->validated()), 'Stock transfer marked as in transit');
+        return $this->transition($request, $stockTransfer, fn () => $this->transfers->ship($stockTransfer, $request->user(), $request->validated()), 'Stock transfer marked as in transit');
     }
 
     /**
@@ -103,7 +106,7 @@ class StockTransferController extends Controller
      */
     public function cancel(Request $request, StockTransfer $stockTransfer): JsonResponse
     {
-        return $this->transition($request, $stockTransfer, fn () => $this->transfers->cancel($stockTransfer), 'Stock transfer cancelled');
+        return $this->transition($request, $stockTransfer, fn () => $this->transfers->cancel($stockTransfer, $request->user()), 'Stock transfer cancelled');
     }
 
     /**

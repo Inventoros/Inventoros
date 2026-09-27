@@ -120,7 +120,7 @@ All paths are relative to `/api/v1`. See the OpenAPI spec for full schemas:
 - Barcode lookup: `GET /barcode/{code}`
 - Permission Sets, Saved Reports: admin surfaces
 
-Users assigned to specific warehouses only see and act on locations, stock adjustments, stock audits and purchase order receiving in those warehouses; anything else returns `403`. Admins and roles with `access_all_warehouses` are never restricted.
+Users assigned to specific warehouses only see and act on locations, stock adjustments, stock audits, stock transfers (either end) and purchase order receiving in those warehouses, over REST and GraphQL alike; anything else returns `403`. Admins and roles with `access_all_warehouses` are never restricted.
 
 ### Examples
 

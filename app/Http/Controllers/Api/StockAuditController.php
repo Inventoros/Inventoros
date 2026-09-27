@@ -117,7 +117,7 @@ class StockAuditController extends Controller
         $this->ensureOwned($request, $stockAudit, 'Stock audit');
 
         try {
-            $audits->start($stockAudit);
+            $audits->start($stockAudit, $request->user());
         } catch (\RuntimeException $e) {
             return $this->stateError($e);
         }
@@ -158,7 +158,7 @@ class StockAuditController extends Controller
         $this->ensureOwned($request, $stockAudit, 'Stock audit');
 
         try {
-            $adjustmentsCreated = $audits->complete($stockAudit);
+            $adjustmentsCreated = $audits->complete($stockAudit, $request->user());
         } catch (\RuntimeException $e) {
             return $this->stateError($e);
         }

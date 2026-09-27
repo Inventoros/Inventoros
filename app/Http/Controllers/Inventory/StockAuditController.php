@@ -290,7 +290,7 @@ class StockAuditController extends Controller
         $this->warehouseAccess->authorizeLocation($request->user(), $stockAudit->warehouse_location_id);
 
         try {
-            $audits->start($stockAudit);
+            $audits->start($stockAudit, $request->user());
         } catch (\RuntimeException $e) {
             return redirect()->route('stock-audits.show', $stockAudit)
                 ->with('error', $e->getMessage());
@@ -314,7 +314,7 @@ class StockAuditController extends Controller
         $this->warehouseAccess->authorizeLocation($request->user(), $stockAudit->warehouse_location_id);
 
         try {
-            $adjustmentsCreated = $audits->complete($stockAudit);
+            $adjustmentsCreated = $audits->complete($stockAudit, $request->user());
         } catch (\RuntimeException $e) {
             return redirect()->route('stock-audits.show', $stockAudit)
                 ->with('error', $e->getMessage());
