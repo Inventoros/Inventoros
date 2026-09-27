@@ -7,6 +7,7 @@ use App\Http\Middleware\EnsureTwoFactorVerified;
 use App\Http\Middleware\EnsureUserIsAdmin;
 use App\Http\Middleware\EnsureUserIsManager;
 use App\Http\Middleware\HandleInertiaRequests;
+use App\Http\Middleware\LogAccessDenied;
 use App\Http\Middleware\SecurityHeaders;
 use App\Http\Middleware\SetLocale;
 use Illuminate\Foundation\Application;
@@ -30,6 +31,7 @@ return Application::configure(basePath: dirname(__DIR__))
             HandleInertiaRequests::class,
             SecurityHeaders::class,
             EnsureTwoFactorVerified::class,
+            LogAccessDenied::class,
         ]);
 
         // The language switcher writes this cookie from JavaScript, so it is
@@ -38,6 +40,7 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $middleware->api(append: [
             SecurityHeaders::class,
+            LogAccessDenied::class,
         ]);
 
         $middleware->alias([

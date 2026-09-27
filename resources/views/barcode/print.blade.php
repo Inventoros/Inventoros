@@ -87,15 +87,60 @@
             cursor: pointer;
             font-size: 14px;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
 
         .print-button:hover {
             background: #2563eb;
         }
+
+        .single-picker {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+        }
+
+        .type-picker {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+            color: #374151;
+        }
+
+        .type-picker select {
+            padding: 6px 8px;
+            border: 1px solid #d1d5db;
+            border-radius: 5px;
+            font-size: 13px;
+            background: white;
+        }
+
+        .type-picker button {
+            padding: 6px 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 5px;
+            background: white;
+            cursor: pointer;
+            font-size: 13px;
+        }
+
+        .barcode-type {
+            font-size: 6pt;
+            color: #666;
+            margin-top: 1px;
+        }
     </style>
 </head>
 <body>
-    <button id="barcode-print-btn" class="print-button no-print">=� Print Barcode</button>
+    <button id="barcode-print-btn" class="print-button no-print">
+        <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+        </svg>
+        Print Barcode
+    </button>
 
     <div class="barcode-label">
         <div class="product-name" title="{{ $product->name }}">{{ $product->name }}</div>
@@ -104,6 +149,20 @@
             {!! $barcode !!}
         </div>
         <div class="barcode-number">{{ $code }}</div>
+        <div class="barcode-type">{{ $type->label() }}</div>
+    </div>
+
+    <div class="single-picker">
+        <form method="GET" action="{{ route('products.barcode.print', $product) }}" class="type-picker no-print">
+        <label for="barcode-type">Barcode type</label>
+        <select id="barcode-type" name="type">
+            <option value="auto" @selected($selectedType === 'auto')>Product default</option>
+            @foreach($types as $option)
+                <option value="{{ $option->value }}" @selected($selectedType === $option->value)>{{ $option->label() }}</option>
+            @endforeach
+        </select>
+        <button type="submit">Apply</button>
+    </form>
     </div>
 
     <script nonce="{{ \Illuminate\Support\Facades\Vite::cspNonce() }}">

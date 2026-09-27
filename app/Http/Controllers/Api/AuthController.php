@@ -5,9 +5,13 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Api;
 
 use App\Enums\Permission;
+use App\Enums\SecurityEvent;
 use App\Http\Controllers\Auth\TwoFactorController;
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Services\SecurityEventLogger;
+use Illuminate\Auth\Events\Failed;
+use Illuminate\Auth\Events\Login;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -43,6 +47,10 @@ class AuthController extends Controller
         $user = User::where('email', $request->email)->first();
 
         if (!$user || !Hash::check($request->password, $user->password)) {
+            // Same event the web guard fires, so API sign-in failures reach the
+            // security log and failed-login alerts. Only the email is passed.
+            event(new Failed('sanctum', $user, ['email' => (string) $request->email]));
+
             throw ValidationException::withMessages([
                 'email' => ['The provided credentials are incorrect.'],
             ]);
@@ -51,6 +59,8 @@ class AuthController extends Controller
         if ($user->two_factor_enabled) {
             $this->verifyTwoFactor($request, $user);
         }
+
+        event(new Login('sanctum', $user, false));
 
         $deviceName = $request->device_name ?? 'api-token';
         $token = $user->createToken($deviceName);
@@ -104,6 +114,8 @@ class AuthController extends Controller
             });
 
             if (!$matched) {
+                app(SecurityEventLogger::class)->record(SecurityEvent::TWO_FACTOR_FAILED, $user, $user, ['method' => 'recovery_code', 'guard' => 'sanctum']);
+
                 throw ValidationException::withMessages([
                     'recovery_code' => ['The provided recovery code is invalid.'],
                 ]);
@@ -122,6 +134,8 @@ class AuthController extends Controller
         $secret = decrypt($user->two_factor_secret);
 
         if (!(new Google2FA())->verifyKey($secret, (string) $code)) {
+            app(SecurityEventLogger::class)->record(SecurityEvent::TWO_FACTOR_FAILED, $user, $user, ['method' => 'totp', 'guard' => 'sanctum']);
+
             throw ValidationException::withMessages([
                 'code' => ['The provided two-factor code is invalid.'],
             ]);

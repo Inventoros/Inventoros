@@ -44,6 +44,9 @@ final class CheckPermission
         }
 
         if (!$hasPermission) {
+            // Recorded by LogAccessDenied with the rest of the 403 context.
+            $request->attributes->set('security.required_permissions', $permissions);
+
             // If it's an Inertia request, render the 403 page
             if ($request->header('X-Inertia')) {
                 return \Inertia\Inertia::render('Errors/403', [

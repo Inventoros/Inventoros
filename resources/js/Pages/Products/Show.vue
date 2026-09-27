@@ -29,6 +29,7 @@ import {
     Settings2,
     Package,
     Truck,
+    QrCode,
 } from 'lucide-vue-next';
 
 const { t } = useI18n();
@@ -43,7 +44,29 @@ const props = defineProps({
 });
 
 const barcodeImage = ref(null);
+const barcodeTypeLabel = ref('');
 const barcodeLoading = ref(false);
+
+// QR code: encodes the SKU (any scanner, in-app lookup) or a link to this page.
+const qrMode = ref('sku');
+const qrImage = ref(null);
+const qrPayload = ref('');
+
+const loadQrCode = async () => {
+    try {
+        const response = await axios.get(route('products.qr.generate', { product: props.product.id, mode: qrMode.value }));
+        qrImage.value = response.data.qr;
+        qrPayload.value = response.data.payload;
+    } catch (error) {
+        console.error('Failed to load QR code:', error);
+    }
+};
+
+watch(qrMode, loadQrCode);
+
+const printQrLabel = () => {
+    window.open(route('products.qr.print', { product: props.product.id, mode: qrMode.value }), '_blank');
+};
 
 const formatCurrency = (value) => {
     return new Intl.NumberFormat('en-US', {
@@ -80,6 +103,7 @@ onMounted(() => {
     if (props.product.barcode || props.product.sku) {
         loadBarcode();
     }
+    loadQrCode();
 });
 
 const loadBarcode = async () => {
@@ -87,6 +111,7 @@ const loadBarcode = async () => {
     try {
         const response = await axios.get(route('products.barcode.generate', props.product.id));
         barcodeImage.value = response.data.barcode;
+        barcodeTypeLabel.value = response.data.type_label || '';
     } catch (error) {
         console.error('Failed to load barcode:', error);
     } finally {
@@ -755,6 +780,7 @@ const fieldInput = 'h-9 w-full rounded-md border border-border-subtle bg-surface
                                 <p class="font-mono text-sm text-text-secondary">
                                     {{ product.barcode || product.sku }}
                                 </p>
+                                <p v-if="barcodeTypeLabel" class="mt-0.5 text-xs text-text-tertiary">{{ barcodeTypeLabel }}</p>
                             </div>
 
                             <Button variant="default" class="w-full" @click="printBarcode">
@@ -778,6 +804,40 @@ const fieldInput = 'h-9 w-full rounded-md border border-border-subtle bg-surface
                                 {{ t('products.show.generateBarcode') }}
                             </Button>
                         </div>
+                    </div>
+                </Card>
+
+                <!-- QR Code -->
+                <Card :padded="false">
+                    <div class="flex items-center justify-between gap-3 px-5 pt-5">
+                        <h3 class="text-sm font-semibold text-text-primary">{{ t('products.show.qrCode') }}</h3>
+                        <div class="inline-flex rounded-md border border-border-subtle p-0.5" role="radiogroup" :aria-label="t('products.show.qrCode')">
+                            <button
+                                v-for="option in [{ value: 'sku', label: t('products.show.qrModeSku') }, { value: 'url', label: t('products.show.qrModeUrl') }]"
+                                :key="option.value"
+                                type="button"
+                                role="radio"
+                                :aria-checked="qrMode === option.value"
+                                :class="[
+                                    'rounded px-2 py-1 text-xs font-medium transition-colors ds-focus-ring',
+                                    qrMode === option.value ? 'bg-brand text-brand-foreground' : 'text-text-secondary hover:bg-surface-overlay',
+                                ]"
+                                @click="qrMode = option.value"
+                            >
+                                {{ option.label }}
+                            </button>
+                        </div>
+                    </div>
+                    <div class="space-y-3 p-5">
+                        <div v-if="qrImage" class="flex justify-center rounded-lg border border-border-subtle bg-white p-4">
+                            <img :src="qrImage" alt="QR code" class="h-40 w-40" />
+                        </div>
+                        <p class="break-all text-center font-mono text-xs text-text-secondary">{{ qrPayload }}</p>
+                        <p class="text-xs text-text-tertiary">{{ t('products.show.qrModeHint') }}</p>
+                        <Button variant="secondary" class="w-full" @click="printQrLabel">
+                            <QrCode :size="16" />
+                            {{ t('products.show.printQrLabel') }}
+                        </Button>
                     </div>
                 </Card>
 

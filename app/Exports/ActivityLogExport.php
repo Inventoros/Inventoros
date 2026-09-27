@@ -36,7 +36,7 @@ final class ActivityLogExport implements FromQuery, WithHeadings, WithMapping, W
      * Create a new export instance.
      *
      * @param int $organizationId The organization to export activity logs from
-     * @param array $filters Optional filters (date_from, date_to, user_id, action)
+     * @param array $filters Optional filters (date_from, date_to, user_id, action, category)
      */
     public function __construct(int $organizationId, array $filters = [])
     {
@@ -67,6 +67,10 @@ final class ActivityLogExport implements FromQuery, WithHeadings, WithMapping, W
 
         if (!empty($this->filters['action'])) {
             $query->where('action', $this->filters['action']);
+        }
+
+        if (!empty($this->filters['category'])) {
+            $query->where('category', $this->filters['category']);
         }
 
         return $query->orderBy('created_at', 'desc');

@@ -6,8 +6,8 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Http\Resources\ProductResource;
-use App\Models\Inventory\Product;
 use App\Models\Inventory\ProductVariant;
+use App\Services\ScanLookupService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -16,16 +16,20 @@ use Illuminate\Http\Request;
  */
 class BarcodeLookupController extends Controller
 {
+    public function __construct(private readonly ScanLookupService $scans) {}
+
     /**
-     * Lookup a product by barcode or SKU.
+     * Lookup a product or storage location by a scanned code.
      *
-     * A product's own barcode or SKU wins. Otherwise a variant's barcode or
-     * SKU resolves to its product, and the response names that variant so a
-     * scanner can pick it directly; `variant` is null for a product match.
+     * Resolves, in order: a product's own barcode or SKU; a variant's barcode
+     * or SKU (the response names that variant so a scanner can pick it
+     * directly; `variant` is null for a product match); a product deep link
+     * printed in a QR code; then a location QR code (`LOC:<code>` or
+     * `LOC:#<id>`) or a plain location code. The response carries `type` =
+     * `product` or `location`.
      *
-     * @param Request $request The incoming HTTP request
-     * @param string $code The barcode or SKU to lookup
-     * @return JsonResponse
+     * @param  Request  $request  The incoming HTTP request
+     * @param  string  $code  The scanned code
      */
     public function lookup(Request $request, string $code): JsonResponse
     {
@@ -33,7 +37,7 @@ class BarcodeLookupController extends Controller
     }
 
     /**
-     * Lookup a product by barcode or SKU passed as the `code` query parameter.
+     * Lookup a product or location by the `code` query parameter.
      *
      * Used by the in-app scanner over the web session. A query parameter
      * carries any code, including ones containing `/`, which an encoded path
@@ -42,7 +46,8 @@ class BarcodeLookupController extends Controller
     public function lookupByQuery(Request $request): JsonResponse
     {
         $validated = $request->validate([
-            'code' => ['required', 'string', 'max:255'],
+            // Product deep links from QR codes can be longer than a barcode.
+            'code' => ['required', 'string', 'max:2048'],
         ]);
 
         return $this->find($request, $validated['code']);
@@ -50,37 +55,9 @@ class BarcodeLookupController extends Controller
 
     private function find(Request $request, string $code): JsonResponse
     {
-        $organizationId = $request->user()->organization_id;
+        $match = $this->scans->resolve((int) $request->user()->organization_id, $code);
 
-        // Search by barcode first, then by SKU
-        $product = Product::forOrganization($organizationId)
-            ->where(function ($query) use ($code) {
-                $query->where('barcode', $code)
-                    ->orWhere('sku', $code);
-            })
-            ->with(['category', 'location', 'suppliers'])
-            ->first();
-
-        $variant = null;
-
-        if (! $product) {
-            $variant = ProductVariant::where('organization_id', $organizationId)
-                ->where(function ($query) use ($code) {
-                    $query->where('barcode', $code)
-                        ->orWhere('sku', $code);
-                })
-                ->whereHas('product', fn ($query) => $query->where('organization_id', $organizationId))
-                // An exact barcode match beats a SKU match on another variant.
-                ->orderByRaw('CASE WHEN barcode = ? THEN 0 ELSE 1 END', [$code])
-                ->orderBy('id')
-                ->first();
-
-            $product = $variant?->product()
-                ->with(['category', 'location', 'suppliers'])
-                ->first();
-        }
-
-        if (!$product) {
+        if ($match === null) {
             return response()->json([
                 'found' => false,
                 'product' => null,
@@ -88,21 +65,44 @@ class BarcodeLookupController extends Controller
             ], 404);
         }
 
+        if ($match['type'] === 'location') {
+            return response()->json([
+                'found' => true,
+                'type' => 'location',
+                'product' => null,
+                'variant' => null,
+                'location' => $this->scans->locationSummary($match['location']),
+            ]);
+        }
+
         return response()->json([
             'found' => true,
-            'product' => new ProductResource($product),
-            'variant' => $variant ? [
-                'id' => $variant->id,
-                'product_id' => $variant->product_id,
-                'title' => $variant->title,
-                'sku' => $variant->sku,
-                'barcode' => $variant->barcode,
-                'option_values' => $variant->option_values,
-                'price' => $variant->price,
-                'purchase_price' => $variant->purchase_price,
-                'stock' => (int) $variant->stock,
-                'is_active' => (bool) $variant->is_active,
-            ] : null,
+            'type' => 'product',
+            'product' => new ProductResource($match['product']),
+            'variant' => $this->variantSummary($match['variant']),
         ]);
+    }
+
+    /**
+     * @return array<string, mixed>|null
+     */
+    private function variantSummary(?ProductVariant $variant): ?array
+    {
+        if ($variant === null) {
+            return null;
+        }
+
+        return [
+            'id' => $variant->id,
+            'product_id' => $variant->product_id,
+            'title' => $variant->title,
+            'sku' => $variant->sku,
+            'barcode' => $variant->barcode,
+            'option_values' => $variant->option_values,
+            'price' => $variant->price,
+            'purchase_price' => $variant->purchase_price,
+            'stock' => (int) $variant->stock,
+            'is_active' => (bool) $variant->is_active,
+        ];
     }
 }

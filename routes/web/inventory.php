@@ -12,6 +12,7 @@ use App\Http\Controllers\Inventory\ProductCategoryController;
 use App\Http\Controllers\Inventory\ProductComponentController;
 use App\Http\Controllers\Inventory\ProductController;
 use App\Http\Controllers\Inventory\ProductLocationController;
+use App\Http\Controllers\Inventory\QrCodeController;
 use App\Http\Controllers\Inventory\SKUController;
 use App\Http\Controllers\Inventory\StockAdjustmentController;
 use App\Http\Controllers\Inventory\StockAuditController;
@@ -56,6 +57,21 @@ Route::prefix('products/{product}/barcode')->name('products.barcode.')->middlewa
 Route::get('/products/barcode/bulk-print', [BarcodeController::class, 'bulkPrint'])
     ->name('products.barcode.bulk-print')
     ->middleware('permission:view_products');
+
+// QR Codes: products encode their SKU or a deep link; locations their code
+Route::get('/products/qr/bulk-print', [QrCodeController::class, 'bulkPrint'])
+    ->name('products.qr.bulk-print')
+    ->middleware('permission:view_products');
+Route::prefix('products/{product}/qr')->name('products.qr.')->middleware('permission:view_products')->group(function () {
+    Route::get('/', [QrCodeController::class, 'generate'])->name('generate');
+    Route::get('/print', [QrCodeController::class, 'print'])->name('print');
+});
+Route::get('/locations/qr/bulk-print', [QrCodeController::class, 'bulkPrintLocations'])
+    ->name('locations.qr.bulk-print')
+    ->middleware('permission:manage_locations');
+Route::get('/locations/{location}/qr/print', [QrCodeController::class, 'printLocation'])
+    ->name('locations.qr.print')
+    ->middleware('permission:manage_locations');
 
 // SKU Management
 Route::prefix('sku')->name('sku.')->middleware('permission:view_products')->group(function () {

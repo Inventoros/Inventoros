@@ -59,6 +59,9 @@ final class CheckApiPermission
         }
 
         if (! $hasPermission) {
+            // Recorded by LogAccessDenied with the rest of the 403 context.
+            $request->attributes->set('security.required_permissions', $permissions);
+
             return response()->json([
                 'message' => 'You do not have the required permissions to perform this action.',
                 'error' => 'forbidden',

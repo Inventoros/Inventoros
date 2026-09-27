@@ -9,7 +9,7 @@ import { Head, Link, router } from '@inertiajs/vue3';
 import { defineAsyncComponent, ref, onMounted, onUnmounted } from 'vue';
 import {
     Plus, Search, Eye, Pencil, Trash2, Copy, Barcode, ScanLine,
-    AlertTriangle, Boxes, X,
+    AlertTriangle, Boxes, X, QrCode,
 } from 'lucide-vue-next';
 
 // Defer the modal (which transitively imports html5-qrcode, ~200 KB)
@@ -102,6 +102,16 @@ const printSelectedBarcodes = () => {
     if (selectedProducts.value.length === 0) return;
     const ids = selectedProducts.value.join(',');
     window.open(route('products.barcode.bulk-print', { ids }), '_blank');
+};
+
+const printSelectedQrLabels = () => {
+    if (selectedProducts.value.length === 0) return;
+    const ids = selectedProducts.value.join(',');
+    window.open(route('products.qr.bulk-print', { ids }), '_blank');
+};
+
+const handleLocationFound = (location) => {
+    router.visit(location.products_url);
 };
 
 const printBarcode = (productId) => {
@@ -260,6 +270,7 @@ const thClass =
             </div>
             <div class="flex flex-wrap items-center gap-2">
                 <Button variant="default" size="sm" @click="printSelectedBarcodes"><Barcode :size="14" />{{ t('products.printBarcodes') }}</Button>
+                <Button variant="secondary" size="sm" @click="printSelectedQrLabels"><QrCode :size="14" />{{ t('products.printQrLabels') }}</Button>
                 <Button variant="secondary" size="sm" :disabled="bulkProcessing" @click="showBulkCategoryModal = true">Change category</Button>
                 <Button variant="secondary" size="sm" :disabled="bulkProcessing" @click="showBulkPriceModal = true">Adjust price</Button>
                 <Button variant="secondary" size="sm" :disabled="bulkProcessing" @click="bulkExport">Export</Button>
@@ -412,6 +423,6 @@ const thClass =
         </button>
 
         <!-- Barcode Scanner Modal -->
-        <BarcodeScannerModal :show="showScannerModal" @close="closeScanner" @product-found="handleProductFound" />
+        <BarcodeScannerModal :show="showScannerModal" @close="closeScanner" @product-found="handleProductFound" @location-found="handleLocationFound" />
     </AppLayout>
 </template>

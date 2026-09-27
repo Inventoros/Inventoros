@@ -78,7 +78,7 @@ class OrderApiTest extends TestCase
             'organization_id' => $this->organization->id,
             'role' => 'admin',
             'notification_preferences' => [
-                'email_enabled' => false,
+                'email_notifications' => false,
             ],
         ]);
 

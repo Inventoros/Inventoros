@@ -16,6 +16,7 @@ use App\Mcp\Tools\SearchProductsTool;
 use App\Mcp\Tools\WhoAmITool;
 use App\Models\Auth\Organization;
 use App\Models\Inventory\Product;
+use App\Models\Inventory\ProductLocation;
 use App\Models\Role;
 use App\Models\System\SystemSetting;
 use App\Models\User;
@@ -229,6 +230,59 @@ class InventorosMcpServerTest extends TestCase
 
         InventorosServer::actingAs($this->admin)
             ->tool(LookupBarcodeTool::class, ['code' => 'LEAKY-CODE'])
+            ->assertHasErrors(['No product or variant found']);
+    }
+
+    public function test_lookup_barcode_resolves_location_qr_and_plain_location_codes(): void
+    {
+        $location = ProductLocation::create([
+            'organization_id' => $this->organization->id,
+            'name' => 'Aisle 7 Bin 3',
+            'code' => 'A7-B3',
+            'is_active' => true,
+        ]);
+        $this->product(['name' => 'Stored Here', 'location_id' => $location->id]);
+
+        InventorosServer::actingAs($this->admin)
+            ->tool(LookupBarcodeTool::class, ['code' => 'LOC:A7-B3'])
+            ->assertOk()
+            ->assertSee('"match":"location"')
+            ->assertSee('Aisle 7 Bin 3')
+            ->assertSee('"product_count":1');
+
+        InventorosServer::actingAs($this->admin)
+            ->tool(LookupBarcodeTool::class, ['code' => 'A7-B3'])
+            ->assertOk()
+            ->assertSee('"match":"location"');
+
+        InventorosServer::actingAs($this->admin)
+            ->tool(LookupBarcodeTool::class, ['code' => 'LOC:#'.$location->id])
+            ->assertOk()
+            ->assertSee('Aisle 7 Bin 3');
+    }
+
+    public function test_lookup_barcode_resolves_a_product_deep_link(): void
+    {
+        $product = $this->product(['name' => 'Linked Item']);
+
+        InventorosServer::actingAs($this->admin)
+            ->tool(LookupBarcodeTool::class, ['code' => route('products.show', $product)])
+            ->assertOk()
+            ->assertSee('"match":"product"')
+            ->assertSee('Linked Item');
+    }
+
+    public function test_lookup_barcode_does_not_resolve_other_org_locations(): void
+    {
+        ProductLocation::create([
+            'organization_id' => $this->otherOrganization->id,
+            'name' => 'Their Bin',
+            'code' => 'THEIRS-9',
+            'is_active' => true,
+        ]);
+
+        InventorosServer::actingAs($this->admin)
+            ->tool(LookupBarcodeTool::class, ['code' => 'LOC:THEIRS-9'])
             ->assertHasErrors(['No product or variant found']);
     }
 

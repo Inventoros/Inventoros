@@ -10,7 +10,7 @@ const props = defineProps({
 });
 
 const form = useForm({
-    email_enabled: props.preferences?.email_enabled ?? true,
+    email_notifications: props.preferences?.email_notifications ?? true,
     email_low_stock: props.preferences?.email_low_stock ?? true,
     email_orders: props.preferences?.email_orders ?? true,
     email_approvals: props.preferences?.email_approvals ?? true,
@@ -42,14 +42,14 @@ const checkbox = 'h-4 w-4 rounded border-border-subtle bg-surface-canvas text-br
                 <div class="flex items-start">
                     <div class="flex h-5 items-center">
                         <input
-                            v-model="form.email_enabled"
+                            v-model="form.email_notifications"
                             type="checkbox"
-                            id="email_enabled"
+                            id="email_notifications"
                             :class="checkbox"
                         />
                     </div>
                     <div class="ml-3">
-                        <label for="email_enabled" class="font-medium text-text-primary">
+                        <label for="email_notifications" class="font-medium text-text-primary">
                             {{ t('settings.notificationPreferences.enableEmail') }}
                         </label>
                         <p class="text-sm text-text-secondary">
@@ -74,7 +74,7 @@ const checkbox = 'h-4 w-4 rounded border-border-subtle bg-surface-canvas text-br
                                 v-model="form.email_low_stock"
                                 type="checkbox"
                                 id="email_low_stock"
-                                :disabled="!form.email_enabled"
+                                :disabled="!form.email_notifications"
                                 :class="checkbox"
                             />
                         </div>
@@ -95,7 +95,7 @@ const checkbox = 'h-4 w-4 rounded border-border-subtle bg-surface-canvas text-br
                                 v-model="form.email_orders"
                                 type="checkbox"
                                 id="email_orders"
-                                :disabled="!form.email_enabled"
+                                :disabled="!form.email_notifications"
                                 :class="checkbox"
                             />
                         </div>
@@ -116,7 +116,7 @@ const checkbox = 'h-4 w-4 rounded border-border-subtle bg-surface-canvas text-br
                                 v-model="form.email_approvals"
                                 type="checkbox"
                                 id="email_approvals"
-                                :disabled="!form.email_enabled"
+                                :disabled="!form.email_notifications"
                                 :class="checkbox"
                             />
                         </div>

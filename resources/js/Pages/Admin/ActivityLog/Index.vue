@@ -6,7 +6,7 @@ import Button from '@/Components/ui/Button.vue';
 import Badge from '@/Components/ui/Badge.vue';
 import { Head, Link, router } from '@inertiajs/vue3';
 import { ref } from 'vue';
-import { Search, Download, User, ChevronRight, FileText, Plus, Pencil, Trash2, Eye } from 'lucide-vue-next';
+import { Search, Download, User, ChevronRight, FileText, Plus, Pencil, Trash2, Eye, ShieldAlert } from 'lucide-vue-next';
 
 import { useI18n } from 'vue-i18n';
 const props = defineProps({
@@ -15,12 +15,15 @@ const props = defineProps({
     users: Array,
     actions: Array,
     subjectTypes: Array,
+    categories: { type: Array, default: () => [] },
+    securityEvents: { type: Array, default: () => [] },
 });
 
 
 const { t } = useI18n();
 const search = ref(props.filters.search || '');
 const user_id = ref(props.filters.user_id || '');
+const category = ref(props.filters.category || '');
 const action = ref(props.filters.action || '');
 const subject_type = ref(props.filters.subject_type || '');
 const date_from = ref(props.filters.date_from || '');
@@ -30,6 +33,7 @@ const applyFilters = () => {
     router.get(route('activity-log.index'), {
         search: search.value,
         user_id: user_id.value,
+        category: category.value,
         action: action.value,
         subject_type: subject_type.value,
         date_from: date_from.value,
@@ -43,6 +47,7 @@ const applyFilters = () => {
 const clearFilters = () => {
     search.value = '';
     user_id.value = '';
+    category.value = '';
     action.value = '';
     subject_type.value = '';
     date_from.value = '';
@@ -54,17 +59,44 @@ const exportUrl = (format) => {
     const params = new URLSearchParams();
     params.append('format', format);
     if (user_id.value) params.append('user_id', user_id.value);
+    if (category.value) params.append('category', category.value);
     if (action.value) params.append('action', action.value);
     if (date_from.value) params.append('date_from', date_from.value);
     if (date_to.value) params.append('date_to', date_to.value);
     return route('activity-log.export') + '?' + params.toString();
 };
 
-const actionVariant = (actionType) =>
-    ({ created: 'success', updated: 'info', deleted: 'danger', viewed: 'neutral' }[actionType] || 'neutral');
+const securityLabels = Object.fromEntries(props.securityEvents.map((e) => [e.value, e.label]));
 
-const actionIcon = (actionType) =>
-    ({ created: Plus, updated: Pencil, deleted: Trash2, viewed: Eye }[actionType] || FileText);
+// Security events that signal a problem rather than routine account activity.
+const securityWarnings = ['auth.failed', 'auth.lockout', 'two_factor.failed', 'two_factor.disabled', 'authz.denied'];
+
+const actionLabel = (actionType) =>
+    securityLabels[actionType] || (actionType ? actionType.charAt(0).toUpperCase() + actionType.slice(1) : '');
+
+const actionVariant = (actionType) => {
+    if (securityWarnings.includes(actionType)) return 'warning';
+    return { created: 'success', updated: 'info', deleted: 'danger', viewed: 'neutral' }[actionType] || 'neutral';
+};
+
+const actionIcon = (actionType, activityCategory) => {
+    if (activityCategory === 'security') return ShieldAlert;
+    return { created: Plus, updated: Pencil, deleted: Trash2, viewed: Eye }[actionType] || FileText;
+};
+
+const showSecurity = () => {
+    category.value = 'security';
+    applyFilters();
+};
+
+// Context recorded on security events (email attempted, route, token name).
+// Record changes keep their old/new table below.
+const securityDetails = (activity) => {
+    if (activity.category !== 'security' || !activity.properties) return [];
+    return Object.entries(activity.properties)
+        .filter(([, value]) => value !== null && value !== '' && !(Array.isArray(value) && value.length === 0))
+        .map(([key, value]) => ({ field: key, value }));
+};
 
 const formatDate = (dateString) => {
     return new Date(dateString).toLocaleString();
@@ -132,6 +164,10 @@ const selectClass =
 
         <PageHeader :title="t('admin.activityLog.title')" description="Audit trail of every change across your workspace.">
             <template #actions>
+                <Button variant="secondary" size="sm" @click="showSecurity">
+                    <ShieldAlert :size="14" />
+                    {{ t('admin.activityLog.securityShortcut') }}
+                </Button>
                 <Button variant="secondary" size="sm" as="a" :href="exportUrl('csv')">
                     <Download :size="14" />
                     Export CSV
@@ -171,12 +207,21 @@ const selectClass =
                         </select>
                     </div>
 
+                    <!-- Category Filter -->
+                    <div>
+                        <label for="category" class="mb-1 block text-xs font-medium text-text-secondary">{{ t('admin.activityLog.category') }}</label>
+                        <select id="category" v-model="category" :class="selectClass">
+                            <option value="">{{ t('admin.activityLog.allCategories') }}</option>
+                            <option v-for="cat in categories" :key="cat.value" :value="cat.value">{{ cat.label }}</option>
+                        </select>
+                    </div>
+
                     <!-- Action Filter -->
                     <div>
                         <label for="action" class="mb-1 block text-xs font-medium text-text-secondary">Action</label>
                         <select id="action" v-model="action" :class="selectClass">
                             <option value="">All Actions</option>
-                            <option v-for="act in actions" :key="act" :value="act">{{ act.charAt(0).toUpperCase() + act.slice(1) }}</option>
+                            <option v-for="act in actions" :key="act" :value="act">{{ actionLabel(act) }}</option>
                         </select>
                     </div>
 
@@ -228,9 +273,10 @@ const selectClass =
                                 created: 'border-status-success/20 bg-status-success-soft text-status-success',
                                 updated: 'border-status-info/20 bg-status-info-soft text-status-info',
                                 deleted: 'border-status-danger/20 bg-status-danger-soft text-status-danger',
-                            }[activity.action] || 'border-border-subtle bg-surface-overlay text-text-secondary',
+                            }[activity.action]
+                                || (securityWarnings.includes(activity.action) ? 'border-status-warning/20 bg-status-warning-soft text-status-warning' : 'border-border-subtle bg-surface-overlay text-text-secondary'),
                         ]">
-                            <component :is="actionIcon(activity.action)" :size="16" />
+                            <component :is="actionIcon(activity.action, activity.category)" :size="16" />
                         </span>
 
                         <!-- Content -->
@@ -244,12 +290,31 @@ const selectClass =
                                             {{ activity.user?.name || 'Unknown User' }}
                                         </span>
                                         <span>&middot;</span>
-                                        <Badge :variant="actionVariant(activity.action)" size="sm">{{ activity.action }}</Badge>
+                                        <Badge :variant="actionVariant(activity.action)" size="sm">{{ actionLabel(activity.action) }}</Badge>
+                                        <template v-if="activity.category === 'security'">
+                                            <span>&middot;</span>
+                                            <Badge variant="neutral" size="sm">{{ t('admin.activityLog.securityBadge') }}</Badge>
+                                        </template>
                                         <span>&middot;</span>
                                         <span>{{ activity.subject_type.split('\\').pop() }}</span>
                                         <span v-if="activity.ip_address">&middot;</span>
                                         <span v-if="activity.ip_address" class="font-mono">{{ activity.ip_address }}</span>
                                     </div>
+
+                                    <!-- Security event context -->
+                                    <details v-if="securityDetails(activity).length > 0" class="group mt-3">
+                                        <summary class="inline-flex cursor-pointer items-center gap-1 text-xs font-medium text-brand hover:underline">
+                                            <ChevronRight :size="14" class="transition-transform group-open:rotate-90" />
+                                            {{ t('admin.activityLog.viewDetails') }}
+                                        </summary>
+                                        <dl class="mt-2 grid grid-cols-1 gap-x-4 gap-y-1 rounded-lg border border-border-subtle bg-surface-canvas p-3 text-xs sm:grid-cols-[max-content_1fr]">
+                                            <template v-for="detail in securityDetails(activity)" :key="detail.field">
+                                                <dt class="font-medium text-text-secondary">{{ formatFieldName(detail.field) }}</dt>
+                                                <dd class="break-all font-mono text-text-primary">{{ formatValue(detail.value) }}</dd>
+                                            </template>
+                                        </dl>
+                                        <p v-if="activity.user_agent" class="mt-1 break-all text-xs text-text-tertiary">{{ activity.user_agent }}</p>
+                                    </details>
 
                                     <!-- Properties (old/new values) -->
                                     <div v-if="activity.properties && (activity.properties.old || activity.properties.new) && getChangedFields(activity.properties).length > 0" class="mt-3 space-y-2">

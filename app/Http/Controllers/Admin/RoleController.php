@@ -5,11 +5,13 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Admin;
 
 use App\Enums\Permission;
+use App\Enums\SecurityEvent;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\Role\StoreRoleRequest;
 use App\Http\Requests\Admin\Role\UpdateRoleRequest;
 use App\Models\PermissionSet;
 use App\Models\Role;
+use App\Services\SecurityEventLogger;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -251,7 +253,24 @@ class RoleController extends Controller
         ]);
 
         // Sync permission sets
-        $role->permissionSets()->sync($validated['permission_set_ids'] ?? []);
+        $setChanges = $role->permissionSets()->sync($validated['permission_set_ids'] ?? []);
+
+        // Pivot writes fire no model event, so record permission-set changes here.
+        if ($setChanges['attached'] !== [] || $setChanges['detached'] !== []) {
+            app(SecurityEventLogger::class)->record(
+                SecurityEvent::ROLE_UPDATED,
+                $role,
+                $currentUser,
+                [
+                    'role_id' => $role->id,
+                    'role_name' => $role->name,
+                    'permission_sets_added' => array_values($setChanges['attached']),
+                    'permission_sets_removed' => array_values($setChanges['detached']),
+                ],
+                SecurityEvent::ROLE_UPDATED->label().': '.$role->name,
+                $role->organization_id ?? $currentUser->organization_id,
+            );
+        }
 
         return redirect()->route('roles.index')
             ->with('success', 'Role updated successfully.');

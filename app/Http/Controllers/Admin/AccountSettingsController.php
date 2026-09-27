@@ -99,6 +99,11 @@ class AccountSettingsController extends Controller
             'low_stock_alerts' => 'boolean',
             'order_notifications' => 'boolean',
             'system_notifications' => 'boolean',
+            'user_activity_alerts' => 'boolean',
+            // Per-type email choices from the email settings page.
+            'email_low_stock' => 'boolean',
+            'email_orders' => 'boolean',
+            'email_approvals' => 'boolean',
         ]);
 
         // Store notification preferences

@@ -24,6 +24,7 @@ const props = defineProps({
     suppliers: { type: Array, default: () => [] },
     currencies: Object,
     defaultCurrency: String,
+    barcodeTypes: { type: Array, default: () => [] },
     pluginComponents: Object,
 });
 
@@ -42,6 +43,7 @@ const form = useForm({
     category_id: '',
     location_id: '',
     barcode: '',
+    barcode_type: '',
     notes: '',
     images: [],
     has_variants: false,
@@ -240,6 +242,16 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                             <label for="barcode" :class="fieldLabel">{{ t('products.create.barcode') }}</label>
                             <input id="barcode" v-model="form.barcode" type="text" :class="fieldInput" />
                             <p v-if="form.errors.barcode" :class="fieldError">{{ form.errors.barcode }}</p>
+                        </div>
+
+                        <!-- Barcode Type -->
+                        <div>
+                            <label for="barcode_type" :class="fieldLabel">{{ t('products.create.barcodeType') }}</label>
+                            <select id="barcode_type" v-model="form.barcode_type" :class="fieldInput">
+                                <option value="">{{ t('products.create.barcodeTypeAuto') }}</option>
+                                <option v-for="bt in barcodeTypes" :key="bt.value" :value="bt.value">{{ bt.label }}</option>
+                            </select>
+                            <p v-if="form.errors.barcode_type" :class="fieldError">{{ form.errors.barcode_type }}</p>
                         </div>
 
                         <!-- Product Type -->

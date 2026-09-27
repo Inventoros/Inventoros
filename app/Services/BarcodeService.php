@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services;
 
+use App\Enums\BarcodeType;
 use Picqer\Barcode\BarcodeGeneratorPNG;
 use Picqer\Barcode\BarcodeGeneratorHTML;
 use Picqer\Barcode\BarcodeGeneratorSVG;
@@ -11,8 +12,8 @@ use Picqer\Barcode\BarcodeGeneratorSVG;
 /**
  * Service for generating and validating barcodes.
  *
- * Supports CODE_128 barcode format and EAN-13 validation
- * with multiple output formats (PNG, HTML, SVG).
+ * Renders Code 128, EAN-13, UPC-A, EAN-8 and Code 39 (see BarcodeType)
+ * in PNG, HTML or SVG, and generates EAN-13 codes with valid check digits.
  */
 final class BarcodeService
 {
@@ -26,12 +27,13 @@ final class BarcodeService
      * @param string $code The barcode content
      * @param int $widthFactor Width multiplier (default: 2)
      * @param int $height Height in pixels (default: 50)
+     * @param BarcodeType $type Symbology (default: Code 128)
      * @return string Base64-encoded PNG image data
      */
-    public function generatePNG(string $code, int $widthFactor = 2, int $height = 50): string
+    public function generatePNG(string $code, int $widthFactor = 2, int $height = 50, BarcodeType $type = BarcodeType::CODE_128): string
     {
         $generator = new BarcodeGeneratorPNG();
-        return base64_encode($generator->getBarcode($code, $generator::TYPE_CODE_128, $widthFactor, $height));
+        return base64_encode($generator->getBarcode($code, $type->generatorType(), $widthFactor, $height));
     }
 
     /**
@@ -40,12 +42,13 @@ final class BarcodeService
      * @param string $code The barcode content
      * @param int $widthFactor Width multiplier (default: 2)
      * @param int $height Height in pixels (default: 50)
+     * @param BarcodeType $type Symbology (default: Code 128)
      * @return string HTML representation of the barcode
      */
-    public function generateHTML(string $code, int $widthFactor = 2, int $height = 50): string
+    public function generateHTML(string $code, int $widthFactor = 2, int $height = 50, BarcodeType $type = BarcodeType::CODE_128): string
     {
         $generator = new BarcodeGeneratorHTML();
-        return $generator->getBarcode($code, $generator::TYPE_CODE_128, $widthFactor, $height);
+        return $generator->getBarcode($code, $type->generatorType(), $widthFactor, $height);
     }
 
     /**
@@ -54,12 +57,13 @@ final class BarcodeService
      * @param string $code The barcode content
      * @param int $widthFactor Width multiplier (default: 2)
      * @param int $height Height in pixels (default: 50)
+     * @param BarcodeType $type Symbology (default: Code 128)
      * @return string SVG markup for the barcode
      */
-    public function generateSVG(string $code, int $widthFactor = 2, int $height = 50): string
+    public function generateSVG(string $code, int $widthFactor = 2, int $height = 50, BarcodeType $type = BarcodeType::CODE_128): string
     {
         $generator = new BarcodeGeneratorSVG();
-        return $generator->getBarcode($code, $generator::TYPE_CODE_128, $widthFactor, $height);
+        return $generator->getBarcode($code, $type->generatorType(), $widthFactor, $height);
     }
 
     /**

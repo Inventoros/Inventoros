@@ -15,6 +15,7 @@ use Illuminate\Database\Eloquent\Relations\MorphTo;
  * @property int $id
  * @property int $organization_id
  * @property int|null $user_id
+ * @property string $category
  * @property string|null $subject_type
  * @property int|null $subject_id
  * @property string $action
@@ -34,6 +35,7 @@ class ActivityLog extends Model
     protected $fillable = [
         'organization_id',
         'user_id',
+        'category',
         'subject_type',
         'subject_id',
         'action',
@@ -41,6 +43,17 @@ class ActivityLog extends Model
         'properties',
         'ip_address',
         'user_agent',
+    ];
+
+    public const CATEGORY_AUDIT = 'audit';
+
+    public const CATEGORY_SECURITY = 'security';
+
+    /**
+     * @var array<string, mixed>
+     */
+    protected $attributes = [
+        'category' => self::CATEGORY_AUDIT,
     ];
 
     protected $casts = [
@@ -108,6 +121,18 @@ class ActivityLog extends Model
         }
 
         return $query;
+    }
+
+    /**
+     * Scope to filter by category (audit or security).
+     *
+     * @param \Illuminate\Database\Eloquent\Builder<static> $query
+     * @param string $category
+     * @return \Illuminate\Database\Eloquent\Builder<static>
+     */
+    public function scopeForCategory($query, $category)
+    {
+        return $query->where('category', $category);
     }
 
     /**
