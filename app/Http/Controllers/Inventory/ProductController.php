@@ -55,7 +55,12 @@ class ProductController extends Controller
                 $query->where(function ($q) use ($search) {
                     $q->where('name', 'like', "%{$search}%")
                         ->orWhere('sku', 'like', "%{$search}%")
-                        ->orWhere('barcode', 'like', "%{$search}%");
+                        ->orWhere('barcode', 'like', "%{$search}%")
+                        // A variant's SKU or barcode finds its product too.
+                        ->orWhereHas('variants', function ($variants) use ($search) {
+                            $variants->where('sku', 'like', "%{$search}%")
+                                ->orWhere('barcode', 'like', "%{$search}%");
+                        });
                 });
             })
             ->when($request->input('category'), function ($query, $category) {

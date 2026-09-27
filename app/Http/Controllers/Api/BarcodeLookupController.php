@@ -7,6 +7,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\ProductResource;
 use App\Models\Inventory\Product;
+use App\Models\Inventory\ProductVariant;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -17,6 +18,10 @@ class BarcodeLookupController extends Controller
 {
     /**
      * Lookup a product by barcode or SKU.
+     *
+     * A product's own barcode or SKU wins. Otherwise a variant's barcode or
+     * SKU resolves to its product, and the response names that variant so a
+     * scanner can pick it directly; `variant` is null for a product match.
      *
      * @param Request $request The incoming HTTP request
      * @param string $code The barcode or SKU to lookup
@@ -56,6 +61,25 @@ class BarcodeLookupController extends Controller
             ->with(['category', 'location', 'suppliers'])
             ->first();
 
+        $variant = null;
+
+        if (! $product) {
+            $variant = ProductVariant::where('organization_id', $organizationId)
+                ->where(function ($query) use ($code) {
+                    $query->where('barcode', $code)
+                        ->orWhere('sku', $code);
+                })
+                ->whereHas('product', fn ($query) => $query->where('organization_id', $organizationId))
+                // An exact barcode match beats a SKU match on another variant.
+                ->orderByRaw('CASE WHEN barcode = ? THEN 0 ELSE 1 END', [$code])
+                ->orderBy('id')
+                ->first();
+
+            $product = $variant?->product()
+                ->with(['category', 'location', 'suppliers'])
+                ->first();
+        }
+
         if (!$product) {
             return response()->json([
                 'found' => false,
@@ -67,6 +91,18 @@ class BarcodeLookupController extends Controller
         return response()->json([
             'found' => true,
             'product' => new ProductResource($product),
+            'variant' => $variant ? [
+                'id' => $variant->id,
+                'product_id' => $variant->product_id,
+                'title' => $variant->title,
+                'sku' => $variant->sku,
+                'barcode' => $variant->barcode,
+                'option_values' => $variant->option_values,
+                'price' => $variant->price,
+                'purchase_price' => $variant->purchase_price,
+                'stock' => (int) $variant->stock,
+                'is_active' => (bool) $variant->is_active,
+            ] : null,
         ]);
     }
 }

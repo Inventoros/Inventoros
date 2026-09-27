@@ -34,17 +34,22 @@ class SearchController extends Controller
             ]);
         }
 
-        $products = Search::apply(
-            Product::where('organization_id', $organizationId),
-            ['name', 'sku', 'barcode'],
-            $query,
-        )
+        // A product matches on its own name/SKU/barcode or on one of its
+        // variants' SKU/barcode; a variant match is named in the subtitle.
+        $variantMatch = fn ($variants) => Search::apply($variants, ['sku', 'barcode'], $query);
+
+        $products = Product::where('organization_id', $organizationId)
+            ->where(function ($q) use ($query, $variantMatch) {
+                Search::apply($q, ['name', 'sku', 'barcode'], $query)
+                    ->orWhereHas('variants', $variantMatch);
+            })
+            ->with(['variants' => fn ($relation) => $variantMatch($relation->getQuery())])
             ->limit($limit)
             ->get()
             ->map(fn (Product $product) => [
                 'id' => $product->id,
                 'title' => $product->name,
-                'subtitle' => $product->sku ?? 'No SKU',
+                'subtitle' => $this->productSubtitle($product),
                 'url' => route('products.show', $product->id),
                 'type' => 'product',
                 'icon' => 'product',
@@ -121,5 +126,24 @@ class SearchController extends Controller
             'suppliers' => $suppliers->values(),
             'purchase_orders' => $purchaseOrders->values(),
         ]);
+    }
+
+    /**
+     * The product's SKU, plus the variant that matched when the hit came from
+     * a variant code rather than the product's own fields.
+     */
+    private function productSubtitle(Product $product): string
+    {
+        $sku = $product->sku ?? 'No SKU';
+        $variant = $product->variants->first();
+
+        if ($variant === null) {
+            return $sku;
+        }
+
+        $label = $variant->title ?: 'Variant';
+        $code = $variant->sku ?: $variant->barcode;
+
+        return "{$sku} · {$label} ({$code})";
     }
 }
