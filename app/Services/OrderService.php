@@ -194,6 +194,8 @@ final class OrderService
                     'sku' => $variant?->sku ?? $product->sku,
                     'quantity' => $qty,
                     'unit_price' => $unitPrice,
+                    // Cost at the time of sale, for margin and turnover reports.
+                    'unit_cost' => OrderItem::costAtSale($product, $variant),
                     'subtotal' => $itemSubtotal,
                     'tax' => $itemTax,
                     'total' => Money::add($itemSubtotal, $itemTax),
@@ -535,6 +537,7 @@ final class OrderService
                 'sku' => $variant?->sku ?? $product->sku,
                 'quantity' => $qty,
                 'unit_price' => $unitPrice,
+                'unit_cost' => OrderItem::costAtSale($product, $variant),
                 'subtotal' => $itemSubtotal,
                 'tax' => 0,
                 'total' => $itemSubtotal,
