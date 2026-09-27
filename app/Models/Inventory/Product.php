@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Models\Inventory;
 
+use App\Enums\BarcodeType;
 use App\Enums\TrackingType;
 use App\Models\Auth\Organization;
 use App\Models\Concerns\BelongsToOrganization;
@@ -42,6 +43,7 @@ use Illuminate\Support\Carbon;
  * @property int|null $reorder_point
  * @property int|null $reorder_quantity
  * @property string|null $barcode
+ * @property string|null $barcode_type
  * @property string|null $notes
  * @property string|null $image
  * @property array|null $images
@@ -99,6 +101,7 @@ class Product extends Model
         'reorder_point',
         'reorder_quantity',
         'barcode',
+        'barcode_type',
         'notes',
         'image',
         'images',
@@ -247,6 +250,30 @@ class Product extends Model
      * @param  int  $organizationId
      * @return Builder<static>
      */
+    public function barcodeValue(): ?string
+    {
+        $code = $this->barcode ?? $this->sku;
+
+        return $code === null || $code === '' ? null : (string) $code;
+    }
+
+    /**
+     * The symbology the barcode prints as: the explicit barcode_type when the
+     * value is valid for it, otherwise detected from the value (EAN-13 /
+     * UPC-A, else Code 128). A stale explicit type never breaks printing.
+     */
+    public function resolvedBarcodeType(?string $code = null): BarcodeType
+    {
+        $code ??= $this->barcodeValue() ?? '';
+        $explicit = $this->barcode_type ? BarcodeType::tryFrom($this->barcode_type) : null;
+
+        if ($explicit !== null && $explicit->isValid($code)) {
+            return $explicit;
+        }
+
+        return BarcodeType::detect($code);
+    }
+
     public function scopeForOrganization($query, $organizationId)
     {
         return $query->where('organization_id', $organizationId);

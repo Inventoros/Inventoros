@@ -92,6 +92,43 @@
         .print-button:hover {
             background: #2563eb;
         }
+
+        .single-picker {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+        }
+
+        .type-picker {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+            color: #374151;
+        }
+
+        .type-picker select {
+            padding: 6px 8px;
+            border: 1px solid #d1d5db;
+            border-radius: 5px;
+            font-size: 13px;
+            background: white;
+        }
+
+        .type-picker button {
+            padding: 6px 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 5px;
+            background: white;
+            cursor: pointer;
+            font-size: 13px;
+        }
+
+        .barcode-type {
+            font-size: 6pt;
+            color: #666;
+            margin-top: 1px;
+        }
     </style>
 </head>
 <body>
@@ -104,6 +141,20 @@
             {!! $barcode !!}
         </div>
         <div class="barcode-number">{{ $code }}</div>
+        <div class="barcode-type">{{ $type->label() }}</div>
+    </div>
+
+    <div class="single-picker">
+        <form method="GET" action="{{ route('products.barcode.print', $product) }}" class="type-picker no-print">
+        <label for="barcode-type">Barcode type</label>
+        <select id="barcode-type" name="type">
+            <option value="auto" @selected($selectedType === 'auto')>Product default</option>
+            @foreach($types as $option)
+                <option value="{{ $option->value }}" @selected($selectedType === $option->value)>{{ $option->label() }}</option>
+            @endforeach
+        </select>
+        <button type="submit">Apply</button>
+    </form>
     </div>
 
     <script nonce="{{ \Illuminate\Support\Facades\Vite::cspNonce() }}">

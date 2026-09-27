@@ -140,6 +140,42 @@
             margin-top: 2px;
         }
 
+        .type-picker {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+            color: #374151;
+        }
+
+        .type-picker select {
+            padding: 6px 8px;
+            border: 1px solid #d1d5db;
+            border-radius: 5px;
+            font-size: 13px;
+            background: white;
+        }
+
+        .type-picker button {
+            padding: 6px 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 5px;
+            background: white;
+            cursor: pointer;
+            font-size: 13px;
+        }
+
+        .barcode-type {
+            font-size: 6pt;
+            color: #666;
+            margin-top: 1px;
+        }
+
+        .fallback-note {
+            font-size: 6pt;
+            color: #b45309;
+        }
+
         .empty-message {
             text-align: center;
             padding: 40px;
@@ -151,6 +187,17 @@
     <div class="header no-print">
         <h1>Print {{ count($barcodes) }} Barcode{{ count($barcodes) > 1 ? 's' : '' }}</h1>
         <div class="header-actions">
+            <form method="GET" action="{{ route('products.barcode.bulk-print') }}" class="type-picker no-print">
+        <input type="hidden" name="ids" value="{{ $ids }}">
+        <label for="barcode-type">Barcode type</label>
+        <select id="barcode-type" name="type">
+            <option value="auto" @selected($selectedType === 'auto')>Product default</option>
+            @foreach($types as $option)
+                <option value="{{ $option->value }}" @selected($selectedType === $option->value)>{{ $option->label() }}</option>
+            @endforeach
+        </select>
+        <button type="submit">Apply</button>
+    </form>
             <button id="bulk-print-btn" class="print-button">
                 <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
@@ -171,6 +218,10 @@
                         {!! $item['barcode'] !!}
                     </div>
                     <div class="barcode-number">{{ $item['code'] }}</div>
+                    <div class="barcode-type">{{ $item['type']->label() }}</div>
+                    @if($item['fallback'])
+                        <div class="fallback-note no-print" title="This value is not valid for the chosen type">Kept {{ $item['type']->label() }}</div>
+                    @endif
                 </div>
             @endforeach
         </div>

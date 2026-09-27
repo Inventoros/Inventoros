@@ -43,6 +43,7 @@ const props = defineProps({
 });
 
 const barcodeImage = ref(null);
+const barcodeTypeLabel = ref('');
 const barcodeLoading = ref(false);
 
 const formatCurrency = (value) => {
@@ -87,6 +88,7 @@ const loadBarcode = async () => {
     try {
         const response = await axios.get(route('products.barcode.generate', props.product.id));
         barcodeImage.value = response.data.barcode;
+        barcodeTypeLabel.value = response.data.type_label || '';
     } catch (error) {
         console.error('Failed to load barcode:', error);
     } finally {
@@ -755,6 +757,7 @@ const fieldInput = 'h-9 w-full rounded-md border border-border-subtle bg-surface
                                 <p class="font-mono text-sm text-text-secondary">
                                     {{ product.barcode || product.sku }}
                                 </p>
+                                <p v-if="barcodeTypeLabel" class="mt-0.5 text-xs text-text-tertiary">{{ barcodeTypeLabel }}</p>
                             </div>
 
                             <Button variant="default" class="w-full" @click="printBarcode">

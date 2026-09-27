@@ -35,6 +35,7 @@ class ProductResource extends JsonResource
             'min_stock' => $this->min_stock,
             'max_stock' => $this->max_stock,
             'barcode' => $this->barcode,
+            'barcode_type' => $this->barcode_type,
             'notes' => $this->notes,
             'image' => $this->image,
             'images' => $this->images,

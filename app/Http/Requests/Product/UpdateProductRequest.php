@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace App\Http\Requests\Product;
 
-use App\Models\Inventory\Product;
+use App\Enums\BarcodeType;
 use App\Http\Requests\Concerns\ValidatesProductSuppliers;
+use App\Models\Inventory\Product;
+use App\Rules\BarcodeMatchesType;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -43,7 +45,8 @@ final class UpdateProductRequest extends FormRequest
             'max_stock' => 'nullable|integer|min:0',
             'reorder_point' => 'nullable|integer|min:0',
             'reorder_quantity' => 'nullable|integer|min:0',
-            'barcode' => 'nullable|string|max:255',
+            'barcode' => ['nullable', 'string', 'max:255', new BarcodeMatchesType($this->exists('barcode_type') ? $this->input('barcode_type') : $product->barcode_type)],
+            'barcode_type' => ['nullable', Rule::enum(BarcodeType::class)],
             'notes' => 'nullable|string',
             'category_id' => ['nullable', Rule::exists('product_categories', 'id')->where('organization_id', $organizationId)],
             'location_id' => ['nullable', Rule::exists('product_locations', 'id')->where('organization_id', $organizationId)],

@@ -169,6 +169,8 @@
       "sku": "SKU",
       "generateSku": "Generate SKU",
       "barcode": "Barcode",
+      "barcodeType": "Barcode Type",
+      "barcodeTypeAuto": "Detect automatically",
       "description": "Description",
       "pricingInventory": "Pricing & Inventory",
       "purchasePrice": "Purchase Price (Cost)",

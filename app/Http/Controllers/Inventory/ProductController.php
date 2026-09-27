@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Inventory;
 
+use App\Enums\BarcodeType;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Product\StoreProductRequest;
 use App\Http\Requests\Product\UpdateProductRequest;
@@ -150,6 +151,7 @@ class ProductController extends Controller
             'currencies' => $currencies,
             'defaultCurrency' => $defaultCurrency,
             'productTypes' => $productTypes,
+            'barcodeTypes' => BarcodeType::options(),
             'pluginComponents' => [
                 'header' => get_page_components('products.create', 'header'),
                 'beforeForm' => get_page_components('products.create', 'before-form'),
@@ -314,6 +316,7 @@ class ProductController extends Controller
             'currencies' => $currencies,
             'defaultCurrency' => $defaultCurrency,
             'productTypes' => $productTypes,
+            'barcodeTypes' => BarcodeType::options(),
             'pluginComponents' => [
                 'header' => get_page_components('products.edit', 'header'),
                 'beforeForm' => get_page_components('products.edit', 'before-form'),
