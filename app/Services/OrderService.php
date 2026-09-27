@@ -7,6 +7,7 @@ namespace App\Services;
 use App\Enums\OrderStatus;
 use App\Exceptions\InsufficientStockException;
 use App\Exceptions\InvalidOrderItemException;
+use App\Exceptions\InvalidStateException;
 use App\Models\Inventory\Product;
 use App\Models\Inventory\ProductVariant;
 use App\Models\Inventory\StockAdjustment;
@@ -333,6 +334,87 @@ final class OrderService
 
             return $locked;
         });
+    }
+
+    /**
+     * Approve an order that is pending approval.
+     *
+     * Locks and re-reads the order so a concurrent approve/reject cannot both
+     * pass the pending check. Shared by the web and REST surfaces.
+     *
+     * @throws InvalidStateException When the order was already approved/rejected.
+     */
+    public function approve(Order $order, User $approver, ?string $notes = null): Order
+    {
+        $approved = DB::transaction(function () use ($order, $approver, $notes) {
+            $locked = Order::whereKey($order->getKey())->lockForUpdate()->firstOrFail();
+
+            if (! $locked->isPendingApproval()) {
+                throw new InvalidStateException('Order has already been processed.', 'already_processed');
+            }
+
+            $locked->update([
+                'approval_status' => 'approved',
+                'approved_by' => $approver->id,
+                'approved_at' => now(),
+                'approval_notes' => $notes,
+            ]);
+
+            return $locked;
+        });
+
+        // Load the approver relationship for notification
+        $approved->load('approver');
+
+        // Send notification to order creator
+        NotificationService::createOrderApprovalNotification($approved);
+
+        return $approved;
+    }
+
+    /**
+     * Reject an order that is pending approval, cancelling it and restoring
+     * the stock that was decremented when it was created.
+     *
+     * @throws InvalidStateException When the order was already approved/rejected.
+     */
+    public function reject(Order $order, User $approver, string $notes): Order
+    {
+        $rejected = DB::transaction(function () use ($order, $approver, $notes) {
+            $locked = Order::whereKey($order->getKey())->lockForUpdate()->firstOrFail();
+
+            if (! $locked->isPendingApproval()) {
+                throw new InvalidStateException('Order has already been processed.', 'already_processed');
+            }
+
+            // Stock was decremented when the order was created. Rejection has
+            // to restore it through the ledger so the inventory count and
+            // audit trail line up with what's physically available — without
+            // this the rejected order holds phantom reserved stock forever
+            // and the reorder logic over-purchases.
+            $locked->load('items.product', 'items.variant');
+            foreach ($locked->items as $item) {
+                $this->restockItem($item, "Order {$locked->order_number} rejected", $locked);
+            }
+
+            $locked->update([
+                'approval_status' => 'rejected',
+                'status' => 'cancelled',
+                'approved_by' => $approver->id,
+                'approved_at' => now(),
+                'approval_notes' => $notes,
+            ]);
+
+            return $locked;
+        });
+
+        // Load the approver relationship for notification
+        $rejected->load('approver');
+
+        // Send notification to order creator
+        NotificationService::createOrderApprovalNotification($rejected);
+
+        return $rejected;
     }
 
     /**

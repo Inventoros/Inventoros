@@ -14,7 +14,6 @@ use App\Models\Inventory\Product;
 use App\Models\Inventory\ProductVariant;
 use App\Models\Order\Order;
 use App\Models\Warehouse;
-use App\Services\NotificationService;
 use App\Services\OrderService;
 use App\Support\Search;
 use Illuminate\Database\QueryException;
@@ -382,18 +381,11 @@ class OrderController extends Controller
             'notes' => 'nullable|string|max:500',
         ]);
 
-        $order->update([
-            'approval_status' => 'approved',
-            'approved_by' => $request->user()->id,
-            'approved_at' => now(),
-            'approval_notes' => $validated['notes'] ?? null,
-        ]);
-
-        // Load the approver relationship for notification
-        $order->load('approver');
-
-        // Send notification to order creator
-        NotificationService::createOrderApprovalNotification($order);
+        try {
+            $this->orderService->approve($order, $request->user(), $validated['notes'] ?? null);
+        } catch (\RuntimeException $e) {
+            return redirect()->back()->with('error', $e->getMessage());
+        }
 
         return redirect()->back()->with('success', 'Order approved successfully.');
     }
@@ -421,31 +413,11 @@ class OrderController extends Controller
             'notes' => 'required|string|max:500',
         ]);
 
-        DB::transaction(function () use ($order, $request, $validated) {
-            // Stock was decremented when the order was created. Rejection has
-            // to restore it through the ledger so the inventory count and
-            // audit trail line up with what's physically available — without
-            // this the rejected order holds phantom reserved stock forever
-            // and the reorder logic over-purchases.
-            $order->load('items.product', 'items.variant');
-            foreach ($order->items as $item) {
-                $this->orderService->restockItem($item, "Order {$order->order_number} rejected", $order);
-            }
-
-            $order->update([
-                'approval_status' => 'rejected',
-                'status' => 'cancelled',
-                'approved_by' => $request->user()->id,
-                'approved_at' => now(),
-                'approval_notes' => $validated['notes'],
-            ]);
-        });
-
-        // Load the approver relationship for notification
-        $order->load('approver');
-
-        // Send notification to order creator
-        NotificationService::createOrderApprovalNotification($order);
+        try {
+            $this->orderService->reject($order, $request->user(), $validated['notes']);
+        } catch (\RuntimeException $e) {
+            return redirect()->back()->with('error', $e->getMessage());
+        }
 
         return redirect()->back()->with('success', 'Order rejected.');
     }

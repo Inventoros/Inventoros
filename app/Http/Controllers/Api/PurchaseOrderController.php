@@ -6,24 +6,22 @@ namespace App\Http\Controllers\Api;
 
 use App\Exceptions\ApprovalException;
 use App\Exceptions\DocumentEmailException;
+use App\Exceptions\InvalidStateException;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\PurchaseOrder\ReceivePurchaseOrderRequest;
 use App\Http\Requests\Api\PurchaseOrder\StorePurchaseOrderRequest;
 use App\Http\Requests\Api\PurchaseOrder\UpdatePurchaseOrderRequest;
 use App\Http\Requests\SendDocumentEmailRequest;
 use App\Http\Resources\PurchaseOrderResource;
-use App\Models\Inventory\Product;
 use App\Models\Purchasing\PurchaseOrder;
-use App\Models\Purchasing\PurchaseOrderItem;
 use App\Services\ApprovalService;
 use App\Services\PurchaseOrderEmailService;
+use App\Services\PurchaseOrderService;
 use App\Services\WarehouseAccessService;
-use App\Support\Money;
 use Dedoc\Scramble\Attributes\QueryParameter;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
-use Illuminate\Support\Facades\DB;
 
 /**
  * @tags Purchase Orders
@@ -73,62 +71,9 @@ class PurchaseOrderController extends Controller
      *
      * @param  Request  $request  The incoming HTTP request containing purchase order data
      */
-    public function store(StorePurchaseOrderRequest $request): JsonResponse
+    public function store(StorePurchaseOrderRequest $request, PurchaseOrderService $purchaseOrders): JsonResponse
     {
-        $organizationId = $request->user()->organization_id;
-
-        $validated = $request->validated();
-
-        // Calculate order totals with exact-decimal math, matching the web PO
-        // and sales-order paths rather than accumulating float rounding error.
-        $subtotal = '0';
-        $orderItems = [];
-
-        foreach ($validated['items'] as $item) {
-            $product = Product::forOrganization($organizationId)->findOrFail($item['product_id']);
-            $variant = PurchaseOrderItem::resolveVariant($product, $item['product_variant_id'] ?? null);
-            $itemSubtotal = Money::multiply($item['unit_cost'], $item['quantity']);
-            $subtotal = Money::add($subtotal, $itemSubtotal);
-
-            $orderItems[] = [
-                'product_id' => $item['product_id'],
-                'product_variant_id' => $variant?->id,
-                'product_name' => $product->name,
-                'sku' => $variant?->sku ?? $product->sku,
-                'supplier_sku' => $item['supplier_sku'] ?? null,
-                'quantity_ordered' => $item['quantity'],
-                'quantity_received' => 0,
-                'unit_cost' => $item['unit_cost'],
-                'subtotal' => $itemSubtotal,
-                'tax' => 0,
-                'total' => $itemSubtotal,
-            ];
-        }
-
-        // Generate the PO number and insert the order + items atomically with a
-        // retry, so a concurrent create in the same tenant/day can't collide on
-        // po_number and 500.
-        $purchaseOrder = PurchaseOrder::createWithNumber($organizationId, function (string $poNumber) use ($organizationId, $validated, $request, $subtotal, $orderItems) {
-            $po = PurchaseOrder::create([
-                'organization_id' => $organizationId,
-                'supplier_id' => $validated['supplier_id'],
-                'created_by' => $request->user()->id,
-                'po_number' => $poNumber,
-                'status' => PurchaseOrder::STATUS_DRAFT,
-                'order_date' => $validated['order_date'],
-                'expected_date' => $validated['expected_date'] ?? null,
-                'subtotal' => $subtotal,
-                'tax' => $validated['tax'] ?? 0,
-                'shipping' => $validated['shipping'] ?? 0,
-                'total' => Money::add($subtotal, $validated['tax'] ?? 0, $validated['shipping'] ?? 0),
-                'currency' => $validated['currency'],
-                'notes' => $validated['notes'] ?? null,
-            ]);
-
-            $po->items()->createMany($orderItems);
-
-            return $po;
-        });
+        $purchaseOrder = $purchaseOrders->create($request->user()->organization_id, $request->user(), $request->validated());
 
         return response()->json([
             'message' => 'Purchase order created successfully',
@@ -164,7 +109,7 @@ class PurchaseOrderController extends Controller
      * @param  Request  $request  The incoming HTTP request containing updated purchase order data
      * @param  PurchaseOrder  $purchaseOrder  The purchase order to update
      */
-    public function update(UpdatePurchaseOrderRequest $request, PurchaseOrder $purchaseOrder): JsonResponse
+    public function update(UpdatePurchaseOrderRequest $request, PurchaseOrder $purchaseOrder, PurchaseOrderService $purchaseOrders): JsonResponse
     {
         if ($purchaseOrder->organization_id !== $request->user()->organization_id) {
             return response()->json([
@@ -173,78 +118,18 @@ class PurchaseOrderController extends Controller
             ], 404);
         }
 
-        if (! $purchaseOrder->canBeEdited()) {
+        try {
+            $updated = $purchaseOrders->update($purchaseOrder, $request->user()->organization_id, $request->validated());
+        } catch (InvalidStateException $e) {
             return response()->json([
-                'message' => 'This purchase order cannot be edited',
-                'error' => 'cannot_edit',
+                'message' => $e->getMessage(),
+                'error' => $e->errorCode,
             ], 422);
         }
 
-        $validated = $request->validated();
-
-        $organizationId = $request->user()->organization_id;
-
-        if (isset($validated['items'])) {
-            // Handle items update
-            $purchaseOrder->load('items');
-            $existingItems = $purchaseOrder->items->keyBy('id');
-            $itemIdsToKeep = [];
-            $subtotal = '0';
-            $newItems = [];
-
-            foreach ($validated['items'] as $itemData) {
-                $product = Product::forOrganization($organizationId)->findOrFail($itemData['product_id']);
-                $variant = PurchaseOrderItem::resolveVariant($product, $itemData['product_variant_id'] ?? null);
-                $itemSubtotal = Money::multiply($itemData['unit_cost'], $itemData['quantity']);
-                $subtotal = Money::add($subtotal, $itemSubtotal);
-
-                if (! empty($itemData['id']) && $existingItems->has($itemData['id'])) {
-                    $existingItem = $existingItems->get($itemData['id']);
-                    $existingItem->update([
-                        'product_id' => $itemData['product_id'],
-                        'product_variant_id' => $variant?->id,
-                        'product_name' => $product->name,
-                        'sku' => $variant?->sku ?? $product->sku,
-                        'supplier_sku' => $itemData['supplier_sku'] ?? null,
-                        'quantity_ordered' => $itemData['quantity'],
-                        'unit_cost' => $itemData['unit_cost'],
-                        'subtotal' => $itemSubtotal,
-                        'total' => $itemSubtotal,
-                    ]);
-                    $itemIdsToKeep[] = $itemData['id'];
-                } else {
-                    $newItems[] = [
-                        'product_id' => $itemData['product_id'],
-                        'product_variant_id' => $variant?->id,
-                        'product_name' => $product->name,
-                        'sku' => $variant?->sku ?? $product->sku,
-                        'supplier_sku' => $itemData['supplier_sku'] ?? null,
-                        'quantity_ordered' => $itemData['quantity'],
-                        'quantity_received' => 0,
-                        'unit_cost' => $itemData['unit_cost'],
-                        'subtotal' => $itemSubtotal,
-                        'tax' => 0,
-                        'total' => $itemSubtotal,
-                    ];
-                }
-            }
-
-            $existingItems->filter(fn ($item) => ! in_array($item->id, $itemIdsToKeep))->each->delete();
-
-            if (! empty($newItems)) {
-                $purchaseOrder->items()->createMany($newItems);
-            }
-
-            $validated['subtotal'] = $subtotal;
-            $validated['total'] = Money::add($subtotal, $validated['tax'] ?? $purchaseOrder->tax, $validated['shipping'] ?? $purchaseOrder->shipping);
-        }
-
-        unset($validated['items']);
-        $purchaseOrder->update($validated);
-
         return response()->json([
             'message' => 'Purchase order updated successfully',
-            'data' => new PurchaseOrderResource($purchaseOrder->fresh()->load(['supplier', 'items.product'])),
+            'data' => new PurchaseOrderResource($updated->load(['supplier', 'items.product'])),
         ]);
     }
 
@@ -283,7 +168,7 @@ class PurchaseOrderController extends Controller
      * @param  Request  $request  The incoming HTTP request containing received quantities
      * @param  PurchaseOrder  $purchaseOrder  The purchase order to receive items for
      */
-    public function receive(ReceivePurchaseOrderRequest $request, PurchaseOrder $purchaseOrder): JsonResponse
+    public function receive(ReceivePurchaseOrderRequest $request, PurchaseOrder $purchaseOrder, PurchaseOrderService $purchaseOrders): JsonResponse
     {
         if ($purchaseOrder->organization_id !== $request->user()->organization_id) {
             return response()->json([
@@ -299,43 +184,12 @@ class PurchaseOrderController extends Controller
             ], 422);
         }
 
-        $validated = $request->validated();
-
         // Goods land in each product's primary location; a restricted user
         // can only book them into their own warehouses.
-        app(WarehouseAccessService::class)->authorizeReceiving($request->user(), $purchaseOrder, $validated['items']);
-
-        $receivedCount = 0;
+        app(WarehouseAccessService::class)->authorizeReceiving($request->user(), $purchaseOrder, $request->validated()['items']);
 
         try {
-            DB::transaction(function () use ($validated, $purchaseOrder, &$receivedCount) {
-                // Re-read the PO under a row lock so two concurrent receive calls
-                // (a double-submit, a retried timeout, or two integration workers)
-                // serialize here; the second observes the post-receive
-                // status/quantities instead of the same stale pre-image, which
-                // otherwise let both book stock and over-receive up to 2x. Each
-                // item is likewise locked before receive(). Mirrors the web
-                // processReceiving path.
-                $po = PurchaseOrder::whereKey($purchaseOrder->getKey())->lockForUpdate()->firstOrFail();
-
-                if (! $po->canReceiveItems()) {
-                    throw new \RuntimeException('This purchase order cannot receive items.');
-                }
-
-                foreach ($validated['items'] as $itemData) {
-                    if ($itemData['quantity_to_receive'] > 0) {
-                        $item = PurchaseOrderItem::where('id', $itemData['id'])
-                            ->where('purchase_order_id', $po->id)
-                            ->lockForUpdate()
-                            ->first();
-
-                        if ($item && $item->remaining_quantity > 0) {
-                            $item->receive($itemData['quantity_to_receive']);
-                            $receivedCount++;
-                        }
-                    }
-                }
-            });
+            $receivedCount = $purchaseOrders->receive($purchaseOrder, $request->validated()['items']);
         } catch (\RuntimeException $e) {
             return response()->json([
                 'message' => $e->getMessage(),
