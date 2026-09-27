@@ -142,4 +142,6 @@ jobs:
           php artisan key:generate
 
       - name: Run PHPUnit tests
-        run: php artisan test --ansi --configuration=phpunit.${{ matrix.database }}.xml
+        # vendor/bin/phpunit directly: `artisan test --configuration` adds a
+        # second --configuration, and the resulting runner warning exits 1.
+        run: vendor/bin/phpunit --colors=always --configuration=phpunit.${{ matrix.database }}.xml
