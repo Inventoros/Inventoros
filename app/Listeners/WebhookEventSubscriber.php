@@ -4,9 +4,14 @@ declare(strict_types=1);
 
 namespace App\Listeners;
 
+use App\Models\Customer;
 use App\Models\Inventory\Product;
 use App\Models\Inventory\StockAdjustment;
+use App\Models\Inventory\StockAudit;
+use App\Models\Inventory\StockTransfer;
+use App\Models\Inventory\WorkOrder;
 use App\Models\Order\Order;
+use App\Models\Order\ReturnOrder;
 use App\Models\Purchasing\PurchaseOrder;
 use App\Models\User;
 use App\Services\WebhookService;
@@ -48,6 +53,23 @@ final class WebhookEventSubscriber
         add_action('purchase_order_created', [static::class, 'onPurchaseOrderCreated'], 100);
         add_action('purchase_order_received', [static::class, 'onPurchaseOrderReceived'], 100);
         add_action('purchase_order_cancelled', [static::class, 'onPurchaseOrderCancelled'], 100);
+
+        // Customer events
+        add_action('customer_created', [static::class, 'onCustomerCreated'], 100);
+        add_action('customer_updated', [static::class, 'onCustomerUpdated'], 100);
+        add_action('customer_deleted', [static::class, 'onCustomerDeleted'], 100);
+
+        // Return (RMA) events
+        add_action('return_created', [static::class, 'onReturnCreated'], 100);
+        add_action('return_received', [static::class, 'onReturnReceived'], 100);
+
+        // Stock transfer events
+        add_action('transfer_created', [static::class, 'onTransferCreated'], 100);
+        add_action('transfer_completed', [static::class, 'onTransferCompleted'], 100);
+
+        // Work order and stock audit events
+        add_action('work_order_completed', [static::class, 'onWorkOrderCompleted'], 100);
+        add_action('stock_audit_completed', [static::class, 'onStockAuditCompleted'], 100);
     }
 
     /**
@@ -426,6 +448,197 @@ final class WebhookEventSubscriber
                 'error' => $e->getMessage(),
             ]);
         }
+    }
+
+    public static function onCustomerCreated(Customer $customer, ?User $user = null): void
+    {
+        self::send('customer.created', $customer->organization_id, fn () => self::formatCustomerData($customer, $user), ['customer_id' => $customer->id]);
+    }
+
+    public static function onCustomerUpdated(Customer $customer, ?User $user = null): void
+    {
+        self::send('customer.updated', $customer->organization_id, fn () => self::formatCustomerData($customer, $user), ['customer_id' => $customer->id]);
+    }
+
+    public static function onCustomerDeleted(Customer $customer, ?User $user = null): void
+    {
+        self::send('customer.deleted', $customer->organization_id, fn () => self::formatCustomerData($customer, $user), ['customer_id' => $customer->id]);
+    }
+
+    public static function onReturnCreated(ReturnOrder $returnOrder, ?User $user = null): void
+    {
+        self::send('return.created', $returnOrder->organization_id, fn () => self::formatReturnData($returnOrder, $user), ['return_order_id' => $returnOrder->id]);
+    }
+
+    public static function onReturnReceived(ReturnOrder $returnOrder, ?User $user = null): void
+    {
+        self::send('return.received', $returnOrder->organization_id, fn () => self::formatReturnData($returnOrder, $user), ['return_order_id' => $returnOrder->id]);
+    }
+
+    public static function onTransferCreated(StockTransfer $transfer, ?User $user = null): void
+    {
+        self::send('transfer.created', $transfer->organization_id, fn () => self::formatTransferData($transfer, $user), ['stock_transfer_id' => $transfer->id]);
+    }
+
+    public static function onTransferCompleted(StockTransfer $transfer, ?User $user = null): void
+    {
+        self::send('transfer.completed', $transfer->organization_id, fn () => self::formatTransferData($transfer, $user), ['stock_transfer_id' => $transfer->id]);
+    }
+
+    public static function onWorkOrderCompleted(WorkOrder $workOrder, ?User $user = null): void
+    {
+        self::send('work_order.completed', $workOrder->organization_id, fn () => self::withUser([
+            'work_order' => [
+                'id' => $workOrder->id,
+                'work_order_number' => $workOrder->work_order_number,
+                'product_id' => $workOrder->product_id,
+                'warehouse_id' => $workOrder->warehouse_id,
+                'quantity' => $workOrder->quantity,
+                'quantity_produced' => $workOrder->quantity_produced,
+                'status' => $workOrder->status,
+                'started_at' => $workOrder->started_at?->toIso8601String(),
+                'completed_at' => $workOrder->completed_at?->toIso8601String(),
+            ],
+        ], $user), ['work_order_id' => $workOrder->id]);
+    }
+
+    public static function onStockAuditCompleted(StockAudit $stockAudit, ?User $user = null): void
+    {
+        self::send('stock_audit.completed', $stockAudit->organization_id, function () use ($stockAudit, $user) {
+            $items = $stockAudit->items()->get(['id', 'counted_quantity', 'discrepancy']);
+
+            return self::withUser([
+                'stock_audit' => [
+                    'id' => $stockAudit->id,
+                    'audit_number' => $stockAudit->audit_number,
+                    'name' => $stockAudit->name,
+                    'audit_type' => $stockAudit->audit_type,
+                    'status' => $stockAudit->status,
+                    'warehouse_location_id' => $stockAudit->warehouse_location_id,
+                    'started_at' => $stockAudit->started_at?->toIso8601String(),
+                    'completed_at' => $stockAudit->completed_at?->toIso8601String(),
+                    'items_count' => $items->count(),
+                    'counted_items' => $items->whereNotNull('counted_quantity')->count(),
+                    'discrepancies' => $items->filter(fn ($item) => (int) $item->discrepancy !== 0)->count(),
+                ],
+            ], $user);
+        }, ['stock_audit_id' => $stockAudit->id]);
+    }
+
+    /**
+     * Dispatch a webhook event, logging (never throwing) on failure so a
+     * webhook problem can never break the business operation that fired it.
+     *
+     * @param  callable(): array<string, mixed>  $payload
+     * @param  array<string, mixed>  $context
+     */
+    private static function send(string $event, int $organizationId, callable $payload, array $context): void
+    {
+        try {
+            WebhookService::dispatch($event, $payload(), $organizationId);
+        } catch (\Exception $e) {
+            Log::error("Failed to dispatch {$event} webhook", $context + ['error' => $e->getMessage()]);
+        }
+    }
+
+    /**
+     * @param  array<string, mixed>  $data
+     * @return array<string, mixed>
+     */
+    private static function withUser(array $data, ?User $user): array
+    {
+        if ($user) {
+            $data['user'] = [
+                'id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
+            ];
+        }
+
+        return $data;
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private static function formatCustomerData(Customer $customer, ?User $user = null): array
+    {
+        return self::withUser([
+            'customer' => [
+                'id' => $customer->id,
+                'name' => $customer->name,
+                'code' => $customer->code,
+                'company_name' => $customer->company_name,
+                'contact_name' => $customer->contact_name,
+                'email' => $customer->email,
+                'phone' => $customer->phone,
+                'currency' => $customer->currency,
+                'is_active' => $customer->is_active,
+                'created_at' => $customer->created_at?->toIso8601String(),
+                'updated_at' => $customer->updated_at?->toIso8601String(),
+                'deleted_at' => $customer->deleted_at?->toIso8601String(),
+            ],
+        ], $user);
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private static function formatReturnData(ReturnOrder $returnOrder, ?User $user = null): array
+    {
+        $returnOrder->load('items');
+
+        return self::withUser([
+            'return' => [
+                'id' => $returnOrder->id,
+                'return_number' => $returnOrder->return_number,
+                'order_id' => $returnOrder->order_id,
+                'type' => $returnOrder->type,
+                'status' => $returnOrder->status,
+                'reason' => $returnOrder->reason,
+                'refund_amount' => $returnOrder->refund_amount,
+                'created_at' => $returnOrder->created_at?->toIso8601String(),
+                'updated_at' => $returnOrder->updated_at?->toIso8601String(),
+                'items' => $returnOrder->items->map(fn ($item) => [
+                    'id' => $item->id,
+                    'order_item_id' => $item->order_item_id,
+                    'product_id' => $item->product_id,
+                    'quantity' => $item->quantity,
+                    'condition' => $item->condition,
+                    'restock' => $item->restock,
+                ])->toArray(),
+            ],
+        ], $user);
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private static function formatTransferData(StockTransfer $transfer, ?User $user = null): array
+    {
+        $transfer->load('items');
+
+        return self::withUser([
+            'transfer' => [
+                'id' => $transfer->id,
+                'transfer_number' => $transfer->transfer_number,
+                'status' => $transfer->status,
+                'from_location_id' => $transfer->from_location_id,
+                'to_location_id' => $transfer->to_location_id,
+                'from_warehouse_id' => $transfer->from_warehouse_id,
+                'to_warehouse_id' => $transfer->to_warehouse_id,
+                'is_inter_warehouse' => $transfer->is_inter_warehouse,
+                'tracking_number' => $transfer->tracking_number,
+                'shipped_at' => $transfer->shipped_at?->toIso8601String(),
+                'completed_at' => $transfer->completed_at?->toIso8601String(),
+                'created_at' => $transfer->created_at?->toIso8601String(),
+                'items' => $transfer->items->map(fn ($item) => [
+                    'id' => $item->id,
+                    'product_id' => $item->product_id,
+                    'quantity' => $item->quantity,
+                ])->toArray(),
+            ],
+        ], $user);
     }
 
     /**
