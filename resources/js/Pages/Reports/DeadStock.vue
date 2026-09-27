@@ -7,7 +7,7 @@ import Button from '@/Components/ui/Button.vue';
 import Badge from '@/Components/ui/Badge.vue';
 import StatTile from '@/Components/ui/StatTile.vue';
 import ExportMenu from '@/Components/Reports/ExportMenu.vue';
-import { formatCurrency, formatNumber, formatDate } from '@/lib/reportFormat';
+import { formatCurrency, formatNumber, formatDay, formatTimestampDate } from '@/lib/reportFormat';
 import { Head, Link, router } from '@inertiajs/vue3';
 import { ref } from 'vue';
 import { useI18n } from 'vue-i18n';
@@ -142,8 +142,8 @@ const thRightClass = 'px-4 py-2.5 text-right text-xs font-medium tracking-tight 
                                         <span v-else>{{ formatCurrency(row.unit_cost) }}</span>
                                     </td>
                                     <td class="px-4 py-3 text-right font-semibold tabular-nums text-text-primary">{{ formatCurrency(row.tied_up_value) }}</td>
-                                    <td class="px-4 py-3 text-text-secondary">{{ row.last_sale_at ? formatDate(row.last_sale_at) : t('reports.deadStock.never') }}</td>
-                                    <td class="px-4 py-3 text-text-secondary">{{ row.last_outbound_at ? formatDate(row.last_outbound_at) : t('reports.deadStock.never') }}</td>
+                                    <td class="px-4 py-3 text-text-secondary">{{ row.last_sale_at ? formatDay(row.last_sale_at) : t('reports.deadStock.never') }}</td>
+                                    <td class="px-4 py-3 text-text-secondary">{{ row.last_outbound_at ? formatTimestampDate(row.last_outbound_at) : t('reports.deadStock.never') }}</td>
                                 </tr>
                             </tbody>
                         </table>

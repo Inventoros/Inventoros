@@ -9,6 +9,7 @@ import { useOrderTotals, lineNetCents } from '@/composables/useOrderTotals';
 import { Head, Link, useForm } from '@inertiajs/vue3';
 import { ref } from 'vue';
 import { useI18n } from 'vue-i18n';
+import { toIsoDate } from '@/lib/dates';
 import { ArrowLeft, Plus, Trash2, PackageOpen } from 'lucide-vue-next';
 
 const { t } = useI18n();
@@ -24,7 +25,7 @@ const form = useForm({
     customer_email: props.order.customer_email,
     customer_address: props.order.customer_address,
     status: props.order.status,
-    order_date: props.order.order_date ? props.order.order_date.split('T')[0] : '',
+    order_date: toIsoDate(props.order.order_date),
     shipping: props.order.shipping || 0,
     tax: props.order.tax || 0,
     discount_type: props.order.discount_type ?? '',

@@ -1,3 +1,5 @@
+import { formatCalendarDate, formatDateValue, formatInstantDate } from './dates.js';
+
 // Shared number formatting for the report pages. Currency matches the
 // sibling report pages (USD display); figures come from the server already
 // rounded, so these only present them.
@@ -21,4 +23,13 @@ export const deltaTone = (value) => {
     return Number(value) > 0 ? 'up' : 'down';
 };
 
-export const formatDate = (value) => (value ? new Date(String(value).replace(' ', 'T')).toLocaleDateString() : '-');
+// Report rows come from raw queries, so dates arrive zone-less. Say which
+// kind each field is rather than guessing (see lib/dates.js):
+//  - formatDay: a calendar day (a date column, MAX(order_date));
+//  - formatTimestampDate: the viewer's day of a UTC timestamp (MAX(created_at)).
+export const formatDay = (value, locale = undefined) => formatCalendarDate(value, undefined, locale);
+
+export const formatTimestampDate = (value, locale = undefined) => formatInstantDate(value, undefined, locale);
+
+// A value of either kind (midnight = calendar day, other times = instant).
+export const formatDate = (value, locale = undefined) => formatDateValue(value, undefined, locale);
