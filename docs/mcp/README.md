@@ -121,6 +121,7 @@ Restart the client. The Inventoros tools will appear in the tool picker.
 |---|---|---|
 | `list_work_orders` | `manage_stock` | Paginated work orders with status filter. |
 | `start_work_order` | `manage_stock` | Validate component stock and transition to in_progress. Marked **destructive**. |
+| `delete_work_order` | `manage_stock` | Delete a draft or cancelled work order. Marked **destructive**. |
 
 ### Catalog (write)
 

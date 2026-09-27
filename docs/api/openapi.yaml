@@ -49,10 +49,12 @@ info:
 
     ## Permissions
 
-    Most routes are guarded by the `api.permission:` middleware which expects
-    one of the listed permissions on the authenticated user (e.g.
-    `view_products|manage_products` means the user needs at least one of
-    those two). Lacking permission returns `403`.
+    Every route is guarded by the `api.permission:` middleware with one
+    permission per verb, named from the Permission enum (for example
+    `view_products` to read, `edit_products` to update). Categories need
+    `manage_categories`, locations `manage_locations` and stock adjustments
+    `manage_stock`, as on the web. A token created with abilities must also
+    include the permission. Lacking permission returns `403`.
 
 servers:
   - url: '{baseUrl}/api/v1'
@@ -1079,6 +1081,14 @@ paths:
       tags: [Work Orders]
       summary: Show a work order
       responses: { '200': { description: Work order }, '404': { $ref: '#/components/responses/NotFound' } }
+    delete:
+      tags: [Work Orders]
+      summary: Delete a draft or cancelled work order
+      description: "Requires `manage_stock`. Work orders that have started or completed cannot be deleted."
+      responses:
+        '200': { description: Deleted }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '422': { description: "Not draft or cancelled (`invalid_status`)" }
 
   /work-orders/{workOrder}/start:
     parameters:

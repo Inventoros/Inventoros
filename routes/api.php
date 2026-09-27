@@ -230,7 +230,7 @@ Route::prefix('v1')->as('api.')->middleware('throttle:api')->group(function () {
 
         // Work Orders
         Route::apiResource('work-orders', \App\Http\Controllers\Api\WorkOrderController::class)
-            ->only(['index', 'store', 'show'])
+            ->only(['index', 'store', 'show', 'destroy'])
             ->middleware('api.permission:manage_stock');
         Route::post('work-orders/{workOrder}/start', [\App\Http\Controllers\Api\WorkOrderController::class, 'start'])
             ->middleware('api.permission:manage_stock');

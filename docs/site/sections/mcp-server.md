@@ -119,6 +119,7 @@ Manufacturing:
 
 - `list_work_orders` (`manage_stock`). Paginated work orders with a status filter.
 - `start_work_order` (`manage_stock`). Validate component stock and transition to in_progress. Destructive.
+- `delete_work_order` (`manage_stock`). Delete a draft or cancelled work order. Destructive.
 
 Catalog (write):
 
