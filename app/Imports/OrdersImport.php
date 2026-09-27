@@ -34,7 +34,8 @@ use Throwable;
  * shipped_at, delivered_at, notes) are read from the first non-blank value
  * among the order's rows, so they may be repeated on every line or given only
  * once. Line columns: product_sku and/or variant_sku, quantity, unit_price
- * (blank = the variant's or product's current price), line_tax. The
+ * (blank = the variant's or product's current price), line_tax, unit_cost
+ * (see below). The
  * line-items order export uses the same column names, so its file can be
  * imported elsewhere once external_reference is filled in.
  *
@@ -68,6 +69,14 @@ use Throwable;
  *    track orders or stock should hear about them). $notifyIntegrations =
  *    false turns this off, e.g. when migrating live-but-already-synced
  *    orders.
+ *
+ * Unit cost (order_items.unit_cost, which margin and turnover reports use):
+ *  - An optional unit_cost column is recorded as-is and is not an estimate.
+ *  - Without it, the line gets the cost OrderService captures (the variant's
+ *    or product's current purchase price). On a HISTORICAL import that cost
+ *    is marked as an estimate (unit_cost_backfilled_at), because the goods
+ *    were sold at some earlier, unknown cost. On a stock-adjusting import it
+ *    is not: the order behaves like one entered by hand today.
  *
  * Customers are matched to an existing customer of this organization by
  * email (case-insensitive); otherwise a customer record is created (named by
@@ -206,6 +215,7 @@ final class OrdersImport implements ToCollection, WithHeadingRow
 
         $ok = true;
         $items = [];
+        $costs = [];
 
         foreach ($lines as $index => $line) {
             // Order-level rules are checked on the first row with the resolved
@@ -219,6 +229,7 @@ final class OrdersImport implements ToCollection, WithHeadingRow
                     $messages[] = $message;
                 } else {
                     $items[] = $item;
+                    $costs[] = ($data['unit_cost'] ?? null) === null ? null : round((float) $data['unit_cost'], 2);
                 }
             }
 
@@ -239,6 +250,7 @@ final class OrdersImport implements ToCollection, WithHeadingRow
             'row' => $lines[0]['row'],
             'header' => $header,
             'items' => $items,
+            'costs' => $costs,
         ];
     }
 
@@ -254,6 +266,7 @@ final class OrdersImport implements ToCollection, WithHeadingRow
             'quantity' => 'required|integer|min:1',
             'unit_price' => 'nullable|numeric|min:0',
             'line_tax' => 'nullable|numeric|min:0',
+            'unit_cost' => 'nullable|numeric|min:0',
         ];
 
         if ($withOrderRules) {
@@ -359,7 +372,7 @@ final class OrdersImport implements ToCollection, WithHeadingRow
                     $header['customer_email'] ?? null,
                 );
 
-                app(OrderService::class)->create([
+                $created = app(OrderService::class)->create([
                     'external_reference' => $order['reference'],
                     'customer_id' => $customerId,
                     'customer_name' => $customerName,
@@ -375,6 +388,8 @@ final class OrdersImport implements ToCollection, WithHeadingRow
                     'warehouse_id' => $this->defaultWarehouseId(),
                     'items' => $order['items'],
                 ], $this->importer, 'import', $adjustStock, $this->announcesOrders());
+
+                $this->applyUnitCosts($created, $order['costs']);
 
                 $this->imported++;
             });
@@ -397,6 +412,32 @@ final class OrdersImport implements ToCollection, WithHeadingRow
             }
 
             $this->error($order['row'], "Order '{$order['reference']}' was not imported: {$message}");
+        }
+    }
+
+    /**
+     * Record each line's unit cost: the file's value when given (as-is, not an
+     * estimate), otherwise keep the cost OrderService captured and, on a
+     * historical import, mark it as an estimate. Lines are matched to the
+     * file's rows by creation order (OrderService inserts them in order).
+     *
+     * @param  array<int, float|null>  $costs
+     */
+    private function applyUnitCosts(Order $order, array $costs): void
+    {
+        $items = $order->items()->orderBy('id')->get(['id', 'unit_cost']);
+
+        foreach ($items as $index => $item) {
+            $cost = $costs[$index] ?? null;
+
+            if ($cost !== null) {
+                $item->newQuery()->whereKey($item->id)->update([
+                    'unit_cost' => $cost,
+                    'unit_cost_backfilled_at' => null,
+                ]);
+            } elseif ($this->historical && $item->unit_cost !== null) {
+                $item->newQuery()->whereKey($item->id)->update(['unit_cost_backfilled_at' => now()]);
+            }
         }
     }
 
