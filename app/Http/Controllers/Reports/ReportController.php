@@ -10,6 +10,7 @@ use App\Models\Inventory\StockAdjustment;
 use App\Models\Order\Order;
 use App\Models\Order\OrderItem;
 use App\Models\SavedReport;
+use App\Services\ReorderService;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -266,13 +267,17 @@ class ReportController extends Controller
     {
         $organizationId = $request->user()->organization_id;
 
+        $reorder = app(ReorderService::class);
+
         $products = Product::forOrganization($organizationId)
-            ->with(['category', 'location'])
+            ->with(array_merge(['category', 'location'], ReorderService::primarySupplierEagerLoad()))
             ->where('is_active', true)
             ->whereRaw('stock <= min_stock')
             ->orderBy('stock', 'asc')
             ->get()
-            ->map(function ($product) {
+            ->map(function ($product) use ($reorder) {
+                $primarySupplier = $reorder->primarySupplier($product);
+
                 return [
                     'id' => $product->id,
                     'name' => $product->name,
@@ -285,6 +290,9 @@ class ReportController extends Controller
                     'deficit' => max(0, $product->min_stock - $product->stock),
                     'status' => $product->stock <= 0 ? 'out_of_stock' : 'low_stock',
                     'price' => $product->price,
+                    'supplier' => $primarySupplier?->name,
+                    'supplier_id' => $primarySupplier?->id,
+                    'suggested_quantity' => $reorder->suggestedQuantity($product, $primarySupplier),
                     // Reorder up to max_stock; fall back to reorder_point /
                     // min_stock when it's null, and never let a null or
                     // already-satisfied target produce a negative cost.

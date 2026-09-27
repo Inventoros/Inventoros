@@ -13,6 +13,7 @@ use App\Models\Inventory\ProductLocation;
 use App\Models\Inventory\StockAdjustment;
 use App\Models\Order\Order;
 use App\Models\User;
+use App\Services\ReorderService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -160,16 +161,15 @@ class DashboardController extends Controller
             });
 
         // Get reorder suggestions (products below reorder point)
+        $reorder = app(ReorderService::class);
         $reorderSuggestions = ! $canViewProducts ? collect() : Product::where('organization_id', $user->organization_id)
             ->needsReorder()
-            ->with(['category', 'suppliers' => function ($query) {
-                $query->wherePivot('is_primary', true);
-            }])
+            ->with(array_merge(['category'], ReorderService::primarySupplierEagerLoad()))
             ->orderBy('stock', 'asc')
             ->limit(10)
             ->get()
-            ->map(function ($product) {
-                $primarySupplier = $product->suppliers->first();
+            ->map(function ($product) use ($reorder) {
+                $primarySupplier = $reorder->primarySupplier($product);
 
                 return [
                     'id' => $product->id,
@@ -178,8 +178,10 @@ class DashboardController extends Controller
                     'stock' => $product->stock,
                     'reorder_point' => $product->reorder_point,
                     'reorder_quantity' => $product->reorder_quantity,
+                    'suggested_quantity' => $reorder->suggestedQuantity($product, $primarySupplier),
                     'category' => $product->category?->name,
                     'supplier' => $primarySupplier?->name,
+                    'supplier_id' => $primarySupplier?->id,
                 ];
             });
 

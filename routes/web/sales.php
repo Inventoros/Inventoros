@@ -9,6 +9,7 @@ use App\Http\Controllers\Order\OrderController;
 use App\Http\Controllers\Order\ReturnOrderController;
 use App\Http\Controllers\Purchasing\PurchaseOrderController;
 use App\Http\Controllers\Purchasing\PurchaseOrderInvoiceController;
+use App\Http\Controllers\Purchasing\QuickReorderController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -40,6 +41,7 @@ Route::delete('/customers/{customer}', [CustomerController::class, 'destroy'])->
 Route::get('/purchase-orders', [PurchaseOrderController::class, 'index'])->name('purchase-orders.index')->middleware('permission:view_purchase_orders');
 Route::get('/purchase-orders/create', [PurchaseOrderController::class, 'create'])->name('purchase-orders.create')->middleware('permission:create_purchase_orders');
 Route::post('/purchase-orders', [PurchaseOrderController::class, 'store'])->name('purchase-orders.store')->middleware('permission:create_purchase_orders');
+Route::post('/purchase-orders/quick-reorder', [QuickReorderController::class, 'store'])->name('purchase-orders.quick-reorder')->middleware('permission:create_purchase_orders');
 Route::get('/purchase-orders/{purchaseOrder}', [PurchaseOrderController::class, 'show'])->name('purchase-orders.show')->middleware('permission:view_purchase_orders');
 Route::get('/purchase-orders/{purchaseOrder}/edit', [PurchaseOrderController::class, 'edit'])->name('purchase-orders.edit')->middleware('permission:edit_purchase_orders');
 Route::put('/purchase-orders/{purchaseOrder}', [PurchaseOrderController::class, 'update'])->name('purchase-orders.update')->middleware('permission:edit_purchase_orders');
