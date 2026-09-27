@@ -210,10 +210,7 @@ class InertiaApiShapeConsistencyTest extends TestCase
     {
         $captured = null;
 
-        // A browser session is the `web` guard. Named explicitly because
-        // Sanctum::actingAs() above switches the default guard to `sanctum`,
-        // and staff pages only accept `auth:web`.
-        $this->actingAs($this->admin, 'web')
+        $this->actingAs($this->admin)
             ->get($url)
             ->assertInertia(function (AssertableInertia $page) use ($prop, &$captured) {
                 $captured = $page->toArray()['props'][$prop];
