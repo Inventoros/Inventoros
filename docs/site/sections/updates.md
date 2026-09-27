@@ -48,11 +48,25 @@ This prints a public key (for `INVENTOROS_UPDATE_PUBLIC_KEY`) and a secret key. 
 
 The Sodium PHP extension must be enabled for signature verification to work.
 
-### Backups before you update
+### Automatic backups
 
-Always back up before applying an update. At minimum, capture two things:
+The updater takes a backup before it touches anything, and you can take one yourself from Admin then Update (or with `php artisan app:update --backup`). Backups are ZIP files in `storage/app/backups` holding the application files and the database. The database is captured the best way available:
 
-- The database. For MySQL or MariaDB: `mysqldump -u USER -p DBNAME > inventoros-backup.sql`.
+| Database | Method |
+|---|---|
+| MySQL / MariaDB | `mysqldump`, or the built-in PHP dump when `exec()` is disabled or `mysqldump` is missing |
+| PostgreSQL | `pg_dump`, or the built-in PHP dump |
+| SQLite | a consistent snapshot of the database file |
+
+The built-in PHP dump includes the table structure as well as the rows, so restoring it after a failed migration puts the previous schema back. The method used is shown after each backup and written to the log.
+
+If no method can back up the database, the backup fails and the updater stops without changing anything. To accept a files-only backup (for example when you back up the database some other way), set `INVENTOROS_UPDATE_ALLOW_NO_DB_BACKUP=true`.
+
+### Manual backups
+
+For your own backups, capture at least two things:
+
+- The database. For MySQL or MariaDB: `mysqldump -u USER -p DBNAME > inventoros-backup.sql`. For PostgreSQL: `pg_dump -U USER DBNAME > inventoros-backup.sql`.
 - The application files, especially `.env` and the `storage/` directory (uploaded files and logs).
 
 A quick file snapshot on a VPS:
@@ -66,7 +80,10 @@ tar -czf inventoros-files-backup.tar.gz /var/www/inventoros/.env /var/www/invent
 To restore after a failed update, put back your file snapshot and reload the database dump:
 
 ```bash
-mysql -u USER -p DBNAME < inventoros-backup.sql
+mysql -u USER -p DBNAME < inventoros-backup.sql        # MySQL / MariaDB
+psql -U USER -d DBNAME -f inventoros-backup.sql        # PostgreSQL
 ```
+
+Backups made by the updater are restored from Admin then Update, which replays the database the same way it was captured.
 
 Then re-cache configuration, routes, and views as shown above. Because migrations run forward during an update, restoring the matching database dump alongside the matching code version keeps the two consistent.
