@@ -1024,7 +1024,39 @@
     "activate": "Activate",
     "deactivate": "Deactivate",
     "noPlugins": "No plugins installed",
-    "getStarted": "Get started by uploading your first plugin above."
+    "getStarted": "Get started by uploading your first plugin above.",
+    "tabs": {
+      "installed": "Installed",
+      "marketplace": "Marketplace"
+    },
+    "marketplace": {
+      "intro": "Plugins from the Inventoros marketplace are signed. Each download is checked against the marketplace key before it is installed, even when ZIP uploads are turned off.",
+      "notConfigured": "Marketplace installs are off because no marketplace signing key is configured. Set INVENTOROS_MARKETPLACE_PUBLIC_KEY to turn them on.",
+      "unavailable": "The marketplace could not be loaded.",
+      "empty": "No plugins are available from the marketplace yet.",
+      "account": "inventoros.com account",
+      "connectedAs": "Connected as {name} ({email})",
+      "connectHint": "Paid plugins you own are installable once you connect your account. Create a marketplace connection token on your inventoros.com account page and paste it here.",
+      "tokenLabel": "Marketplace connection token",
+      "connect": "Connect",
+      "connecting": "Connecting...",
+      "disconnect": "Disconnect",
+      "confirmDisconnect": "Disconnect this workspace from inventoros.com? Installed plugins keep working.",
+      "free": "Free",
+      "perMonth": "{price} per month",
+      "perYear": "{price} per year",
+      "latest": "Latest {version}",
+      "installedVersion": "Installed {version}",
+      "install": "Install",
+      "installAndActivate": "Install and activate",
+      "update": "Update to {version}",
+      "upToDate": "Up to date",
+      "working": "Working...",
+      "needsPurchase": "Paid plugin. Get it on inventoros.com, then connect your account to install it.",
+      "notOwned": "Your connected account does not own this plugin yet.",
+      "viewOnMarketplace": "View on inventoros.com",
+      "readOnly": "You can browse the marketplace. Installing plugins needs the Manage Plugins permission."
+    }
   },
   "settings": {
     "title": "Settings",
