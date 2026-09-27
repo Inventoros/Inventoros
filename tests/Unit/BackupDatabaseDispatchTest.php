@@ -6,6 +6,7 @@ namespace Tests\Unit;
 
 use App\Services\Update\BackupService;
 use App\Services\Update\DatabaseBackupFailedException;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
 use Tests\TestCase;
 use ZipArchive;
@@ -52,6 +53,7 @@ final class BackupDatabaseDispatchTest extends TestCase
                 'database' => 'inventoros',
             ],
         ]);
+        DB::purge(config('database.default'));
     }
 
     private function useMysql(): void
@@ -67,6 +69,7 @@ final class BackupDatabaseDispatchTest extends TestCase
                 'database' => 'inventoros',
             ],
         ]);
+        DB::purge(config('database.default'));
     }
 
     /**

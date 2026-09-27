@@ -62,3 +62,84 @@ jobs:
       # Plain ES modules with no dependencies, so no npm install is needed.
       - name: Run JS unit tests
         run: npm run test:js
+
+  # The docs promise MySQL and PostgreSQL support, so run the whole suite
+  # against real servers too. phpunit.<db>.xml force DB_CONNECTION and
+  # DB_DATABASE (phpunit.xml's sqlite values would otherwise win over the job
+  # env); host, port and credentials come from the env below.
+  phpunit-database:
+    name: phpunit (${{ matrix.database }})
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - database: mysql
+            port: 3306
+            username: root
+          - database: pgsql
+            port: 5432
+            username: inventoros
+
+    services:
+      mysql:
+        image: ${{ matrix.database == 'mysql' && 'mysql:8.0' || '' }}
+        env:
+          MYSQL_ROOT_PASSWORD: secret
+          MYSQL_DATABASE: inventoros_test
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -psecret"
+          --health-interval=5s --health-timeout=5s --health-retries=20
+      postgres:
+        image: ${{ matrix.database == 'pgsql' && 'postgres:16' || '' }}
+        env:
+          POSTGRES_USER: inventoros
+          POSTGRES_PASSWORD: secret
+          POSTGRES_DB: inventoros_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd="pg_isready -U inventoros"
+          --health-interval=5s --health-timeout=5s --health-retries=20
+
+    env:
+      DB_HOST: 127.0.0.1
+      DB_PORT: ${{ matrix.port }}
+      DB_USERNAME: ${{ matrix.username }}
+      DB_PASSWORD: secret
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: mbstring, xml, ctype, iconv, intl, pdo_sqlite, sqlite3, pdo_mysql, pdo_pgsql, dom, filter, gd, json, libxml, openssl, pcre, phar, tokenizer, zip, bcmath
+          coverage: none
+
+      - name: Get Composer Cache Directory
+        id: composer-cache
+        run: echo "dir=$(composer config cache-files-dir)" >> $GITHUB_OUTPUT
+
+      - name: Cache Composer dependencies
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.composer-cache.outputs.dir }}
+          key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
+          restore-keys: ${{ runner.os }}-composer-
+
+      - name: Install Composer dependencies
+        run: composer install --no-interaction --prefer-dist --optimize-autoloader
+
+      - name: Setup environment
+        run: |
+          cp .env.example .env
+          php artisan key:generate
+
+      - name: Run PHPUnit tests
+        run: php artisan test --ansi --configuration=phpunit.${{ matrix.database }}.xml
