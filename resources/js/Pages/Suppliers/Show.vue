@@ -5,6 +5,7 @@ import PageHeader from '@/Components/ui/PageHeader.vue';
 import Card from '@/Components/ui/Card.vue';
 import Button from '@/Components/ui/Button.vue';
 import Badge from '@/Components/ui/Badge.vue';
+import SupplierRating from '@/Components/SupplierRating.vue';
 import { Head, Link, router } from '@inertiajs/vue3';
 import { useI18n } from 'vue-i18n';
 import { Pencil, ArrowLeft, Trash2, PackageOpen } from 'lucide-vue-next';
@@ -142,13 +143,16 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium text-text-secondary';
                                 <tbody>
                                     <tr v-for="product in supplier.products" :key="product.id" class="border-b border-border-subtle transition-colors last:border-b-0 hover:bg-surface-overlay">
                                         <td class="px-4 py-3">
-                                            <Link :href="route('products.show', product.id)" class="text-sm font-medium text-brand hover:underline">
-                                                {{ product.name }}
-                                            </Link>
+                                            <div class="flex items-center gap-2">
+                                                <Link :href="route('products.show', product.id)" class="text-sm font-medium text-brand hover:underline">
+                                                    {{ product.name }}
+                                                </Link>
+                                                <Badge v-if="product.pivot?.is_primary" variant="brand" size="sm">{{ t('productSuppliers.primary') }}</Badge>
+                                            </div>
                                         </td>
                                         <td class="px-4 py-3 text-sm text-text-tertiary">{{ product.sku }}</td>
                                         <td class="px-4 py-3 text-sm text-text-tertiary">{{ product.pivot?.supplier_sku || '-' }}</td>
-                                        <td class="px-4 py-3 text-right text-sm tabular-nums text-text-secondary">{{ formatCurrency(product.pivot?.cost_price) }}</td>
+                                        <td class="px-4 py-3 text-right text-sm tabular-nums text-text-secondary">{{ product.pivot?.cost_price != null ? formatCurrency(product.pivot.cost_price) : '-' }}</td>
                                     </tr>
                                 </tbody>
                             </table>
@@ -168,6 +172,10 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium text-text-secondary';
                     <div class="px-5 pt-5"><h3 class="text-sm font-semibold text-text-primary">Business Details</h3></div>
                     <div class="p-5">
                         <dl class="space-y-3">
+                            <div>
+                                <dt class="text-xs text-text-tertiary">{{ t('suppliers.rating.label') }}</dt>
+                                <dd class="mt-1"><SupplierRating :model-value="supplier.rating" /></dd>
+                            </div>
                             <div>
                                 <dt class="text-xs text-text-tertiary">Supplier Code</dt>
                                 <dd class="mt-1 text-sm text-text-primary">{{ supplier.code || '-' }}</dd>

@@ -89,6 +89,30 @@ class SupplierType extends GraphQLType
                 'type' => Type::nonNull(Type::boolean()),
                 'description' => 'Whether the supplier is active',
             ],
+            'rating' => [
+                'type' => Type::int(),
+                'description' => 'Supplier rating from 1 to 5, if rated',
+            ],
+            'supplier_sku' => [
+                'type' => Type::string(),
+                'description' => "The supplier's SKU for the product (only when reached through a product)",
+                'resolve' => fn (Supplier $supplier) => $supplier->pivot?->supplier_sku,
+            ],
+            'cost_price' => [
+                'type' => Type::float(),
+                'description' => 'What the supplier charges for the product (only when reached through a product)',
+                'resolve' => fn (Supplier $supplier) => $supplier->pivot?->cost_price !== null ? (float) $supplier->pivot->cost_price : null,
+            ],
+            'lead_time_days' => [
+                'type' => Type::int(),
+                'description' => 'Supplier lead time in days for the product (only when reached through a product)',
+                'resolve' => fn (Supplier $supplier) => $supplier->pivot?->lead_time_days,
+            ],
+            'is_primary' => [
+                'type' => Type::boolean(),
+                'description' => "Whether this is the product's primary supplier (only when reached through a product)",
+                'resolve' => fn (Supplier $supplier) => $supplier->pivot ? (bool) $supplier->pivot->is_primary : null,
+            ],
             'products' => [
                 'type' => Type::listOf(GraphQL::type('Product')),
                 'description' => 'Products supplied',

@@ -4,6 +4,7 @@ import PageHeader from '@/Components/ui/PageHeader.vue';
 import Card from '@/Components/ui/Card.vue';
 import Button from '@/Components/ui/Button.vue';
 import PluginSlot from '@/Components/PluginSlot.vue';
+import SupplierRating from '@/Components/SupplierRating.vue';
 import { Head, Link, useForm } from '@inertiajs/vue3';
 import { useI18n } from 'vue-i18n';
 import { ArrowLeft } from 'lucide-vue-next';
@@ -30,6 +31,7 @@ const form = useForm({
     currency: 'USD',
     notes: '',
     is_active: true,
+    rating: null,
 });
 
 const submit = () => {
@@ -172,6 +174,13 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                                 <option value="AUD">{{ t('purchaseOrders.currencies.aud') }}</option>
                             </select>
                             <p v-if="form.errors.currency" :class="fieldError">{{ form.errors.currency }}</p>
+                        </div>
+
+                        <div class="md:col-span-2">
+                            <span :class="fieldLabel">{{ t('suppliers.rating.label') }}</span>
+                            <SupplierRating v-model="form.rating" editable />
+                            <p class="mt-1 text-xs text-text-tertiary">{{ t('suppliers.rating.hint') }}</p>
+                            <p v-if="form.errors.rating" :class="fieldError">{{ form.errors.rating }}</p>
                         </div>
 
                         <div class="md:col-span-2">

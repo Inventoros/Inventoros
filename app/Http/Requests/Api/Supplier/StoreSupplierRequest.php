@@ -37,6 +37,7 @@ final class StoreSupplierRequest extends FormRequest
             'notes' => ['nullable', 'string'],
             'metadata' => ['nullable', 'array'],
             'is_active' => ['nullable', 'boolean'],
+            'rating' => ['nullable', 'integer', 'between:1,5'],
         ];
     }
 }

@@ -5,6 +5,7 @@ import PageHeader from '@/Components/ui/PageHeader.vue';
 import Card from '@/Components/ui/Card.vue';
 import Button from '@/Components/ui/Button.vue';
 import Badge from '@/Components/ui/Badge.vue';
+import SupplierRating from '@/Components/SupplierRating.vue';
 import { Head, Link, router } from '@inertiajs/vue3';
 import { ref } from 'vue';
 import { useI18n } from 'vue-i18n';
@@ -107,13 +108,14 @@ const thClass =
                         <th :class="thClass">{{ t('common.email') }}</th>
                         <th :class="thClass">{{ t('common.phone') }}</th>
                         <th :class="thClass">{{ t('common.products') }}</th>
+                        <th :class="thClass">{{ t('suppliers.rating.label') }}</th>
                         <th :class="thClass">{{ t('common.status') }}</th>
                         <th :class="[thClass, 'text-right']">{{ t('common.actions') }}</th>
                     </tr>
                 </thead>
                 <tbody>
                     <tr v-if="suppliers.data.length === 0">
-                        <td colspan="7" class="px-4 py-12 text-center">
+                        <td colspan="8" class="px-4 py-12 text-center">
                             <div class="flex flex-col items-center gap-3">
                                 <Truck :size="22" class="text-text-tertiary" />
                                 <p class="text-sm font-medium text-text-primary">{{ t('suppliers.noSuppliersFound') }}</p>
@@ -142,6 +144,9 @@ const thClass =
                         </td>
                         <td class="px-4 py-3 text-text-primary">
                             <span class="tabular-nums text-text-secondary">{{ supplier.products_count || 0 }}</span>
+                        </td>
+                        <td class="px-4 py-3">
+                            <SupplierRating :model-value="supplier.rating" />
                         </td>
                         <td class="px-4 py-3">
                             <Badge :variant="supplier.is_active ? 'success' : 'neutral'" size="sm">

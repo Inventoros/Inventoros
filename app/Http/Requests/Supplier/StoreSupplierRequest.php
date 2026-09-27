@@ -38,6 +38,7 @@ final class StoreSupplierRequest extends FormRequest
             'currency' => ['nullable', 'string', 'max:3'],
             'notes' => ['nullable', 'string'],
             'is_active' => ['nullable', 'boolean'],
+            'rating' => ['nullable', 'integer', 'between:1,5'],
         ];
     }
 }
