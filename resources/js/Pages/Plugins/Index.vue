@@ -13,6 +13,7 @@ import { usePermissions } from '@/composables/usePermissions';
 
 const props = defineProps({
     plugins: Array,
+    uploadsEnabled: { type: Boolean, default: false },
     activeTab: { type: String, default: 'installed' },
     marketplace: { type: Object, default: null },
 });
@@ -209,7 +210,7 @@ const deletePlugin = (slug, name) => {
             <!-- Catalog -->
             <div class="mt-4 space-y-4">
                 <Card v-for="item in marketplace.plugins" :key="item.slug">
-                    <div class="flex items-start justify-between gap-4">
+                    <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                         <div class="flex min-w-0 flex-1 gap-3">
                             <img v-if="item.icon" :src="item.icon" alt="" class="h-10 w-10 shrink-0 rounded-md border border-border-subtle object-cover" />
                             <div v-else class="flex h-10 w-10 shrink-0 items-center justify-center rounded-md border border-border-subtle bg-surface-canvas">
@@ -224,7 +225,7 @@ const deletePlugin = (slug, name) => {
                                     </Badge>
                                 </div>
                                 <p class="mb-2 text-sm text-text-secondary">{{ item.summary }}</p>
-                                <div class="flex flex-wrap gap-4 text-xs text-text-tertiary">
+                                <div class="flex flex-wrap gap-x-4 gap-y-1 text-xs text-text-tertiary">
                                     <span>{{ t('plugins.marketplace.latest', { version: item.version }) }}</span>
                                     <span v-if="item.installed_version">{{ t('plugins.marketplace.installedVersion', { version: item.installed_version }) }}</span>
                                     <span v-if="item.requires">{{ t('plugins.requires') }}: {{ item.requires }}</span>
@@ -277,8 +278,18 @@ const deletePlugin = (slug, name) => {
         </div>
 
         <div v-else>
+        <Card v-if="!uploadsEnabled" class="mt-6">
+            <div class="flex items-start gap-2 text-sm text-text-secondary">
+                <UploadCloud :size="16" class="mt-0.5 shrink-0 text-text-tertiary" />
+                <p>
+                    {{ t('plugins.uploadsDisabled') }}
+                    <Link :href="route('plugins.marketplace')" class="ds-focus-ring font-medium text-brand hover:text-brand-hover">{{ t('plugins.browseMarketplace') }}</Link>
+                </p>
+            </div>
+        </Card>
+
         <!-- Upload Section -->
-        <Card class="mt-6">
+        <Card v-else class="mt-6">
             <h3 class="text-sm font-semibold text-text-primary">Upload New Plugin</h3>
             <div
                 @dragover.prevent="isDragging = true"
@@ -322,7 +333,7 @@ const deletePlugin = (slug, name) => {
         <!-- Plugins List -->
         <div class="mt-6 space-y-4">
             <Card v-for="plugin in plugins" :key="plugin.slug">
-                <div class="flex items-start justify-between gap-4">
+                <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                     <div class="min-w-0 flex-1">
                         <div class="mb-2 flex items-center gap-3">
                             <h3 class="text-base font-semibold text-text-primary">
@@ -335,7 +346,7 @@ const deletePlugin = (slug, name) => {
                         <p class="mb-3 text-sm text-text-secondary">
                             {{ plugin.description }}
                         </p>
-                        <div class="flex flex-wrap gap-4 text-xs text-text-tertiary">
+                        <div class="flex flex-wrap gap-x-4 gap-y-1 text-xs text-text-tertiary">
                             <span>Version: {{ plugin.version }}</span>
                             <span class="inline-flex items-center gap-1">Author:
                                 <a
@@ -352,7 +363,7 @@ const deletePlugin = (slug, name) => {
                             <span>Requires: {{ plugin.requires }}</span>
                         </div>
                     </div>
-                    <div class="flex shrink-0 gap-2">
+                    <div class="flex shrink-0 flex-wrap gap-2">
                         <Button
                             v-if="!plugin.is_active"
                             variant="default"
