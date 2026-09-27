@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Http\Controllers\Reports\AnalyticsReportController;
 use App\Http\Controllers\Reports\ReportBuilderController;
 use App\Http\Controllers\Reports\ReportController;
+use App\Http\Controllers\Reports\ReportScheduleController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -45,5 +46,10 @@ Route::prefix('reports')->name('reports.')->middleware('permission:view_reports'
         Route::put('/{saved_report}', [ReportBuilderController::class, 'update'])->name('update');
         Route::delete('/{saved_report}', [ReportBuilderController::class, 'destroy'])->name('destroy');
         Route::get('/{saved_report}/export', [ReportBuilderController::class, 'export'])->name('export');
+
+        // Scheduled email delivery (report owner only; see ReportScheduleController).
+        Route::post('/{saved_report}/schedules', [ReportScheduleController::class, 'store'])->name('schedules.store');
+        Route::put('/{saved_report}/schedules/{schedule}', [ReportScheduleController::class, 'update'])->name('schedules.update');
+        Route::delete('/{saved_report}/schedules/{schedule}', [ReportScheduleController::class, 'destroy'])->name('schedules.destroy');
     });
 });

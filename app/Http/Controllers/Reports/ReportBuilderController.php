@@ -5,7 +5,10 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Reports;
 
 use App\Http\Controllers\Controller;
+use App\Models\Auth\Organization;
+use App\Models\ReportSchedule;
 use App\Models\SavedReport;
+use App\Models\User;
 use App\Services\ReportDataService;
 use App\Services\Reports\ReportExporter;
 use App\Services\Reports\SavedReportRenderer;
@@ -189,7 +192,52 @@ class ReportBuilderController extends Controller
             'data' => $data,
             'columnLabels' => $columnLabels,
             'dataSources' => $dataSources,
-        ]);
+        ] + $this->scheduleProps($savedReport, $user));
+    }
+
+    /**
+     * Delivery schedules and the pickable recipients, for the report's owner
+     * only (they are the only one who can manage them). Other viewers get
+     * empty lists, so organization member emails never reach them here.
+     *
+     * @return array<string, mixed>
+     */
+    private function scheduleProps(SavedReport $savedReport, User $user): array
+    {
+        $isOwner = $savedReport->created_by === $user->id;
+
+        $timezone = (string) (Organization::query()->withoutGlobalScopes()->whereKey($savedReport->organization_id)->value('timezone') ?: 'UTC');
+
+        return [
+            'schedules' => ! $isOwner ? [] : $savedReport->schedules()
+                ->orderBy('id')
+                ->get()
+                ->map(fn (ReportSchedule $s) => [
+                    'id' => $s->id,
+                    'frequency' => $s->frequency,
+                    'day_of_week' => $s->day_of_week,
+                    'day_of_month' => $s->day_of_month,
+                    'time_of_day' => $s->time_of_day,
+                    'format' => $s->format,
+                    'recipients' => $s->recipients,
+                    'is_active' => $s->is_active,
+                    'next_run_at' => $s->next_run_at?->toISOString(),
+                    'last_run_at' => $s->last_run_at?->toISOString(),
+                    'last_status' => $s->last_status,
+                ])
+                ->all(),
+            'recipientOptions' => ! $isOwner ? [] : User::query()
+                ->where('organization_id', $savedReport->organization_id)
+                ->orderBy('name')
+                ->get(['id', 'name', 'email'])
+                ->map(fn (User $u) => ['id' => $u->id, 'name' => $u->name, 'email' => $u->email])
+                ->all(),
+            'scheduleOptions' => [
+                'timezone' => $timezone,
+                'frequencies' => ReportSchedule::FREQUENCIES,
+                'formats' => ReportExporter::FORMATS,
+            ],
+        ];
     }
 
     /**
