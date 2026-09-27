@@ -23,6 +23,7 @@ use App\GraphQL\Queries\SupplierQuery;
 use App\GraphQL\Queries\SuppliersQuery;
 use App\GraphQL\Types\LocationType;
 use App\GraphQL\Types\OrderItemInputType;
+use App\GraphQL\Types\ProductSupplierInputType;
 use App\GraphQL\Types\OrderItemType;
 use App\GraphQL\Types\OrderType;
 use App\GraphQL\Types\ProductCategoryType;
@@ -142,6 +143,7 @@ return [
         'StockAdjustment' => StockAdjustmentType::class,
         'Location' => LocationType::class,
         'OrderItemInput' => OrderItemInputType::class,
+        'ProductSupplierInput' => ProductSupplierInputType::class,
     ],
 
     // The types will be loaded on demand. Default is to load all types on each request

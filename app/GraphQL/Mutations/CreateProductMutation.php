@@ -6,6 +6,7 @@ namespace App\GraphQL\Mutations;
 
 use App\Models\Inventory\ProductCategory;
 use App\Models\Inventory\ProductLocation;
+use App\Http\Requests\Concerns\ValidatesProductSuppliers;
 use App\Services\ProductService;
 use Closure;
 use GraphQL\Error\Error;
@@ -17,6 +18,8 @@ use Rebing\GraphQL\Support\Mutation;
 
 class CreateProductMutation extends Mutation
 {
+    use ValidatesProductSuppliers;
+
     protected $attributes = [
         'name' => 'createProduct',
         'description' => 'Create a new product',
@@ -110,7 +113,23 @@ class CreateProductMutation extends Mutation
                 'description' => 'Tracking type: none, batch, or serial',
                 'rules' => ['nullable', 'string', 'in:none,batch,serial'],
             ],
+            'suppliers' => [
+                'type' => Type::listOf(Type::nonNull(GraphQL::type('ProductSupplierInput'))),
+                'description' => 'Supplier links. When sent, replaces the product\'s links (an empty list removes them); omit to leave them unchanged.',
+            ],
         ];
+    }
+
+    /**
+     * The same suppliers[] rules as the web and REST product surfaces:
+     * org-scoped supplier ids, at most one primary, no duplicates.
+     *
+     * @param  array<string, mixed>  $args
+     * @return array<string, mixed>
+     */
+    protected function rules(array $args = []): array
+    {
+        return $this->productSupplierRules((int) auth()->user()?->organization_id);
     }
 
     public function resolve($root, array $args, $context, ResolveInfo $resolveInfo, Closure $getSelectFields)
