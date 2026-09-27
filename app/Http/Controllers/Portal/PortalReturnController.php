@@ -118,8 +118,9 @@ class PortalReturnController extends PortalController
             'restock' => $item['condition'] !== 'damaged',
         ], $validated['items']);
 
-        // The order has already been matched to this contact's customer above.
-        $returnOrder = $returns->create((int) $contact->organization_id, $validated + ['order_id' => $record->id]);
+        // The order has already been matched to this contact's customer
+        // above. There is no staff actor, so no staff warehouse restriction.
+        $returnOrder = $returns->create((int) $contact->organization_id, null, $validated + ['order_id' => $record->id]);
 
         $this->recordRequest($request, $returnOrder, $record);
         NotificationService::createPortalReturnRequestedNotification($returnOrder, $record, $contact);

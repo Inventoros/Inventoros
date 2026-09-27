@@ -100,9 +100,14 @@ final class ReturnOrderService
      *
      * @param  array{order_id: int, type: string, reason: string, notes?: string|null, items: array<int, array{order_item_id: int, quantity: int, condition: string, restock: bool}>}  $data
      *
+     * @param  User|null  $actor  The staff user raising it, whose warehouse access is enforced;
+     *                           null for a customer's own request from the customer portal,
+     *                           which staff warehouse restrictions do not apply to (staff
+     *                           still need access to approve and receive it).
+     *
      * @throws ValidationException when a line exceeds its returnable quantity
      */
-    public function create(int $organizationId, User $actor, array $data): ReturnOrder
+    public function create(int $organizationId, ?User $actor, array $data): ReturnOrder
     {
         // Verify the order belongs to this organization
         $order = Order::forOrganization($organizationId)->findOrFail($data['order_id']);
@@ -112,7 +117,7 @@ final class ReturnOrderService
         // so a restricted user may only raise returns into their warehouses.
         foreach ($data['items'] as $item) {
             $orderItem = $order->items->firstWhere('id', $item['order_item_id']);
-            if ($orderItem !== null) {
+            if ($orderItem !== null && $actor !== null) {
                 $this->warehouseAccess->authorizeLocation($actor, $orderItem->product?->location_id);
             }
         }
