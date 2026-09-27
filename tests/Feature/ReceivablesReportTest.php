@@ -134,17 +134,6 @@ class ReceivablesReportTest extends TestCase
             ->get(route('reports.receivables'))->assertOk();
     }
 
-    public function test_the_reports_index_links_it_only_for_users_who_can_open_it(): void
-    {
-        $this->actingAs($this->userWith(['view_reports'], 'reports-idx'))
-            ->get(route('reports.index'))
-            ->assertInertia(fn (Assert $page) => $page->where('canViewReceivables', false)->etc());
-
-        $this->actingAs($this->admin)
-            ->get(route('reports.index'))
-            ->assertInertia(fn (Assert $page) => $page->where('canViewReceivables', true)->etc());
-    }
-
     public function test_sales_analysis_breaks_orders_down_by_payment_status_for_payment_viewers(): void
     {
         $this->order('ORD-P1', '2026-09-20 10:00:00', 100, 100);

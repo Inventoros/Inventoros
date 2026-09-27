@@ -52,7 +52,6 @@ class ReportController extends Controller
 
         return Inertia::render('Reports/Index', [
             'savedReports' => $savedReports,
-            'canViewReceivables' => $user->hasPermission(Permission::VIEW_PAYMENTS),
         ]);
     }
 
