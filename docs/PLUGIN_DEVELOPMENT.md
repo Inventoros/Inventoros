@@ -9,16 +9,18 @@ Everything in this guide is backed by code and tests: the hook tables are checke
 1. [Plugin structure](#plugin-structure)
 2. [The manifest (plugin.json)](#the-manifest-pluginjson)
 3. [Installing, activating and removing](#installing-activating-and-removing)
-4. [Actions and filters](#actions-and-filters)
-5. [Lifecycle files](#lifecycle-files)
-6. [Action reference](#action-reference)
-7. [Filter reference](#filter-reference)
-8. [Plugin UI](#plugin-ui)
-9. [Building and packaging a plugin](#building-and-packaging-a-plugin)
-10. [Examples](#examples)
-11. [Best practices](#best-practices)
-12. [Security notes](#security-notes)
-13. [Debugging](#debugging)
+4. [Installing from the marketplace](#installing-from-the-marketplace)
+5. [Actions and filters](#actions-and-filters)
+6. [Lifecycle files](#lifecycle-files)
+7. [Action reference](#action-reference)
+8. [Filter reference](#filter-reference)
+9. [Plugin UI](#plugin-ui)
+10. [Building and packaging a plugin](#building-and-packaging-a-plugin)
+11. [Publishing to the marketplace](#publishing-to-the-marketplace)
+12. [Examples](#examples)
+13. [Best practices](#best-practices)
+14. [Security notes](#security-notes)
+15. [Debugging](#debugging)
 
 ## Plugin structure
 
@@ -73,7 +75,7 @@ Versions may be written `1.2`, `1.2.3`, `v1.2.3` or `1.2.3-beta`. A value that i
 
 ## Installing, activating and removing
 
-- **Install** by copying the folder into `/plugins`, or upload a ZIP from **Admin > Plugins**. Uploads are off by default (see [Security notes](#security-notes)). The ZIP must contain exactly one top-level folder, which becomes the slug.
+- **Install** from **Plugins > Marketplace** (see [Installing from the marketplace](#installing-from-the-marketplace)), by copying the folder into `/plugins`, or by uploading a ZIP from **Admin > Plugins**. Uploads are off by default (see [Security notes](#security-notes)). The ZIP must contain exactly one top-level folder, which becomes the slug.
 - **Activate** from the Plugins page. In order, Inventoros:
   1. checks `requires` and `requires_php`,
   2. validates the `ui` block,
@@ -88,6 +90,37 @@ Versions may be written `1.2`, `1.2.3`, `v1.2.3` or `1.2.3-beta`. A value that i
   Over SSH the same lifecycle runs with `php artisan plugin:activate {slug}` and `php artisan plugin:deactivate {slug}`.
 - **Deactivate**: fires `plugin_deactivated` and `plugin_deactivated_{slug}`, runs `hooks/deactivate.php`, marks the plugin inactive and removes `public/plugins/{slug}/`. The plugin is deactivated even if its own code throws; the page then shows a warning.
 - **Delete**: fires `plugin_uninstalling` and `plugin_uninstalling_{slug}`, deactivates the plugin, runs `hooks/uninstall.php` (whether or not the plugin was active), then removes its published files, its database record and its folder. The files are removed even if the plugin's cleanup throws; the page then shows a warning.
+
+## Installing from the marketplace
+
+Admins with the **Manage Plugins** permission can install plugins from the Inventoros marketplace at [inventoros.com/marketplace](https://inventoros.com/marketplace) without handling a ZIP: open **Plugins > Marketplace**, then choose **Install** or **Install and activate**.
+
+What happens on install:
+
+1. The app downloads the plugin's latest published package from the marketplace, server side.
+2. It verifies the package's detached Ed25519 signature against the marketplace public key in `config/marketplace.php` (`INVENTOROS_MARKETPLACE_PUBLIC_KEY`). It never trusts a key the marketplace advertises.
+3. It checks the package's sha256 against the download and the catalog listing.
+4. It installs the package through the same path as a manual upload: the same path-traversal, entry-count and size checks, the single top-level folder (which must match the plugin's slug) and the `requires` / `requires_php` checks.
+5. With **Install and activate**, it then runs the normal activation lifecycle.
+
+Because every package is signed, marketplace installs work even when manual ZIP uploads are disabled. If no marketplace public key is configured, marketplace installs are refused.
+
+**Updates.** The Marketplace tab shows the installed and latest version of each plugin. **Update** downloads and verifies the new version first, then deactivates the plugin (running `hooks/deactivate.php`), swaps its files and activates it again. The plugin's database record and its own data are kept, and `hooks/uninstall.php` is not run. If the new version fails to activate, the previous files are restored and re-activated.
+
+**Paid plugins.** Free plugins install without an account. To install a paid plugin you own, create a marketplace connection token on your inventoros.com account page and paste it into **Plugins > Marketplace**. The token is stored encrypted for your organization and can be disconnected at any time.
+
+**Configuration** (all optional):
+
+```bash
+INVENTOROS_MARKETPLACE_URL=https://inventoros.com   # must be a bare https origin
+INVENTOROS_MARKETPLACE_PUBLIC_KEY=base64-ed25519-public-key
+INVENTOROS_MARKETPLACE_CACHE_SECONDS=300
+INVENTOROS_MARKETPLACE_MAX_DOWNLOAD_BYTES=52428800
+```
+
+The app only ever requests the configured origin over https, and never follows redirects.
+
+**Maintainers: the marketplace signing key.** The key pair is generated on the marketplace site with `php artisan marketplace:keygen`. The secret goes only into the site's production environment as `MARKETPLACE_SIGNING_SECRET_KEY`. The public key is then committed as the default of `public_key` in this repository's `config/marketplace.php` (public keys are safe to publish), so every release trusts it out of the box.
 
 ## Actions and filters
 
@@ -490,6 +523,19 @@ Installs that build the frontend themselves also pick up `plugins/{slug}/resourc
 
 Every Inventoros release attaches `hello-world-plugin.zip`, built exactly this way.
 
+## Publishing to the marketplace
+
+Anyone can publish a plugin on [inventoros.com/marketplace](https://inventoros.com/marketplace):
+
+1. Create an inventoros.com account and apply to become a developer from your account page. An Inventoros admin approves developer accounts.
+2. Package your plugin as described in [Building and packaging a plugin](#building-and-packaging-a-plugin): a ZIP with a single top-level folder named after the slug, containing `plugin.json`.
+3. Submit it at [inventoros.com/developer](https://inventoros.com/developer) with its listing details and the ZIP. The marketplace checks that it is a valid ZIP within the size limit, that `plugin.json` matches the slug and version you entered, and that it has no path traversal, symlinks or PHP outside the expected places.
+4. The submission waits in a review queue. When it is approved, the marketplace signs the package with its key and publishes it; if it is rejected you get an email with the reason.
+
+**Versioning.** To release a new version, bump `version` in `plugin.json` (use semantic versions such as `1.4.0`), rebuild and re-zip, and submit it as a new version of your plugin. Installs see it as an available update once it is approved. Raise `requires` when the plugin starts depending on a newer Inventoros.
+
+**Pricing.** Third-party plugins are listed as free for now. Selling third-party plugins (and developer payouts) is not supported yet.
+
 ## Examples
 
 ### Low-stock notifier
@@ -639,6 +685,7 @@ Schema::dropIfExists('plugin_analytics_views');
 A plugin runs PHP inside the application with full access to the database and filesystem. Install only plugins you trust.
 
 - Uploads are disabled until `INVENTOROS_ALLOW_PLUGIN_UPLOADS=true` is set, because an admin who can upload a plugin can run code on the server.
+- Marketplace installs are allowed with uploads off because every marketplace package must carry a valid Ed25519 signature from the marketplace key configured in `config/marketplace.php`, and match the sha256 in the catalog. With no key configured they are refused.
 - `INVENTOROS_PLUGIN_SIGNATURE_REQUIRED=true` with `INVENTOROS_PLUGIN_PUBLIC_KEY` accepts only ZIPs signed with your key.
 - Uploaded ZIPs are checked for path traversal, entry count and size before extraction.
 - Query filters (`product_list_query`, `supplier_list_query`) have the organization scope re-applied after they run, and `product_search_query` only sees the search group.

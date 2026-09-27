@@ -2,7 +2,7 @@ Inventoros has a WordPress-style plugin system for extending the application wit
 
 This is a condensed overview. The full guide, with every available action and filter, lives in the repository: https://github.com/Inventoros/Inventoros/blob/main/docs/PLUGIN_DEVELOPMENT.md
 
-Each release also attaches `hello-world-plugin.zip`, a small working example you can upload and read.
+Each release also attaches `hello-world-plugin.zip`, a small working example you can upload and read. It is also listed on the [marketplace](https://inventoros.com/marketplace), so you can install it from **Plugins > Marketplace**.
 
 ### Key concepts
 
@@ -99,6 +99,23 @@ Every placement, menu item, widget and page accepts a `permission`. It is checke
 
 Activate or deactivate a plugin over SSH with `php artisan plugin:activate my-plugin` and `php artisan plugin:deactivate my-plugin`.
 
+### Installing from the marketplace
+
+Admins with the Manage Plugins permission can install plugins from [inventoros.com/marketplace](https://inventoros.com/marketplace) in one click: open **Plugins > Marketplace** and choose **Install** or **Install and activate**.
+
+Inventoros downloads the plugin on the server, checks its Ed25519 signature against the marketplace public key and its sha256 against the catalog, then installs it with the same safety and version checks as a manual upload. Because marketplace packages are signed, this works even when ZIP uploads are disabled.
+
+The tab shows the installed and latest version of each plugin. **Update** verifies the new version, deactivates the plugin, replaces its files and activates it again, keeping the plugin's data. If the new version fails to activate, the previous one is restored.
+
+Free plugins need no account. For paid plugins you own, create a marketplace connection token on your inventoros.com account page and paste it into the Marketplace tab; it is stored encrypted for your organization.
+
+```bash
+INVENTOROS_MARKETPLACE_URL=https://inventoros.com
+INVENTOROS_MARKETPLACE_PUBLIC_KEY=base64-ed25519-public-key
+```
+
+Inventoros only talks to the configured https origin and never follows redirects. If no marketplace public key is configured, marketplace installs are refused.
+
 ### Enabling plugin uploads
 
 Plugin uploads are disabled by default. Enabling them lets any admin user upload a ZIP that is loaded into the application process, which means an admin compromise becomes remote code execution. Review the security notes before turning this on.
@@ -127,3 +144,12 @@ Sign a plugin with `php artisan update:sign my-plugin.zip`. For production deplo
 3. Test all functionality thoroughly.
 4. Check `storage/logs/laravel.log` and the browser console for errors.
 5. Deactivate and verify cleanup, then delete and verify complete removal.
+
+### Publishing to the marketplace
+
+1. Create an inventoros.com account and apply to become a developer from your account page; an Inventoros admin approves developer accounts.
+2. Package the plugin as a ZIP with a single top-level folder named after its slug, containing `plugin.json` (see the full guide for building the UI bundle).
+3. Submit it at [inventoros.com/developer](https://inventoros.com/developer). The marketplace validates the ZIP (size, `plugin.json` slug and version, no path traversal or symlinks) and queues it for review.
+4. Once approved it is signed with the marketplace key and published. A rejection is emailed to you with the reason.
+
+To release a new version, bump `version` in `plugin.json`, rebuild and re-zip, and submit it as a new version; installs then offer it as an update. Third-party plugins are listed as free for now: paid third-party plugins and developer payouts are not supported yet.

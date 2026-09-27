@@ -345,7 +345,7 @@ jobs:
 
             ### Example plugin
 
-            **Download:** `hello-world-plugin.zip`, a free example plugin (hooks, lifecycle files and a runtime UI bundle). Upload it from Admin > Plugins with `INVENTOROS_ALLOW_PLUGIN_UPLOADS=true`.
+            **Download:** `hello-world-plugin.zip`, a free example plugin (hooks, lifecycle files and a runtime UI bundle). Install it from Plugins > Marketplace once the marketplace lists this version (no upload flag needed, the marketplace copy is signed), or upload this ZIP from Admin > Plugins with `INVENTOROS_ALLOW_PLUGIN_UPLOADS=true`.
           draft: false
           prerelease: false
         env:
