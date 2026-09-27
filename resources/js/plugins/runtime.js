@@ -3,7 +3,7 @@
  *
  * Plugins can ship a pre-built ES module (their own Vite library build, with
  * Vue left external). While a plugin is active the server publishes it under
- * /plugins/{slug}/ and lists it in the shared `pluginAssets` prop; this module
+ * /plugin-assets/{slug}/ and lists it in the shared `pluginAssets` prop; this module
  * imports each bundle once and gives it a small SDK so it can register Vue
  * components without bundling its own copy of Vue.
  *

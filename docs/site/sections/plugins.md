@@ -91,7 +91,7 @@ export default function setup(plugin) {
 }
 ```
 
-While the plugin is active, Inventoros copies `dist/` to `public/plugins/my-plugin/` and the browser imports the bundle. No npm build of Inventoros is needed, so this works on cPanel and for uploaded plugins.
+While the plugin is active, Inventoros copies `dist/` to `public/plugin-assets/my-plugin/` and the browser imports the bundle. No npm build of Inventoros is needed, so this works on cPanel and for uploaded plugins.
 
 A plugin can also add a page of its own with `register_page()`, which the bundle supplies with `plugin.registerPage()`, and a dashboard card with `register_dashboard_widget()`. Bundles get the app's layout, Inertia helpers and core UI components from `window.Inventoros`, so plugin pages look like the rest of the app.
 

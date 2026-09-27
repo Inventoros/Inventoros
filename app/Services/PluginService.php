@@ -39,7 +39,7 @@ final class PluginService
     public function __construct()
     {
         $this->pluginsPath = base_path('plugins');
-        $this->assets = new PluginAssetPublisher($this->pluginsPath, public_path('plugins'));
+        $this->assets = new PluginAssetPublisher($this->pluginsPath, public_path(PluginAssetPublisher::PUBLIC_DIRECTORY));
 
         // Ensure plugins directory exists
         if (! File::exists($this->pluginsPath)) {
@@ -348,7 +348,7 @@ final class PluginService
             }
 
             $version = rawurlencode($this->versionOf($manifest));
-            $url = fn (string $path) => url("plugins/{$slug}/{$path}").'?v='.$version;
+            $url = fn (string $path) => url(PluginAssetPublisher::PUBLIC_DIRECTORY."/{$slug}/{$path}").'?v='.$version;
 
             $assets[] = [
                 'slug' => $slug,

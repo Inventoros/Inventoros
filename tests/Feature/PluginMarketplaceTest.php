@@ -278,7 +278,7 @@ final class PluginMarketplaceTest extends TestCase
         $this->install($slug, activate: true)->assertSessionHas('success');
 
         $this->assertTrue((bool) Plugin::where('slug', $slug)->value('is_active'));
-        $this->assertFileExists(public_path("plugins/{$slug}/plugin.js"));
+        $this->assertFileExists(public_path("plugin-assets/{$slug}/plugin.js"));
     }
 
     public function test_an_invalid_signature_is_rejected_before_anything_is_written(): void

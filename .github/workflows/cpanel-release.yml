@@ -148,7 +148,7 @@ jobs:
           $app = require_once $laravelPath . '/bootstrap/app.php';
 
           // public_html is the web root: Vite's manifest and published plugin
-          // UI bundles (public/plugins/{slug}) must resolve here.
+          // UI bundles (public/plugin-assets/{slug}) must resolve here.
           $app->usePublicPath(__DIR__);
 
           $app->handleRequest(Request::capture());

@@ -81,14 +81,14 @@ Versions may be written `1.2`, `1.2.3`, `v1.2.3` or `1.2.3-beta`. A value that i
   2. validates the `ui` block,
   3. loads `main_file`,
   4. runs `hooks/activate.php`,
-  5. publishes `dist/` to `public/plugins/{slug}/`,
+  5. publishes `dist/` to `public/plugin-assets/{slug}/`,
   6. fires `plugin_activated` and `plugin_activated_{slug}`,
   7. marks the plugin active.
 
   If any step throws, the plugin stays inactive, its published files are removed and the Plugins page shows the error.
 
   Over SSH the same lifecycle runs with `php artisan plugin:activate {slug}` and `php artisan plugin:deactivate {slug}`.
-- **Deactivate**: fires `plugin_deactivated` and `plugin_deactivated_{slug}`, runs `hooks/deactivate.php`, marks the plugin inactive and removes `public/plugins/{slug}/`. The plugin is deactivated even if its own code throws; the page then shows a warning.
+- **Deactivate**: fires `plugin_deactivated` and `plugin_deactivated_{slug}`, runs `hooks/deactivate.php`, marks the plugin inactive and removes `public/plugin-assets/{slug}/`. The plugin is deactivated even if its own code throws; the page then shows a warning.
 - **Delete**: fires `plugin_uninstalling` and `plugin_uninstalling_{slug}`, deactivates the plugin, runs `hooks/uninstall.php` (whether or not the plugin was active), then removes its published files, its database record and its folder. The files are removed even if the plugin's cleanup throws; the page then shows a warning.
 
 ## Installing from the marketplace
@@ -413,7 +413,7 @@ If you cache routes (`php artisan route:cache`), rebuild the cache after activat
 
 The cPanel release and ZIP-uploaded plugins never run `npm`, so a plugin ships its UI already built. The bundle is an ES module built with Vite in library mode, with Vue left out: the app exposes its own Vue as `window.Inventoros.Vue`, and components must use that copy to share the app's reactivity.
 
-While the plugin is active, Inventoros copies `dist/` to `public/plugins/{slug}/` and lists the bundle in the `pluginAssets` page prop. When the manifest `version` changes, the copy is refreshed on the next page load. The browser imports the bundle once, from the same origin, which the app's Content Security Policy allows through `script-src 'self'`, and adds its stylesheets. This works on a full page load and after client-side navigation. Only static web files are published: `.js`, `.mjs`, `.css`, `.map`, `.json`, images, fonts and `.txt`. PHP files, dotfiles such as `.htaccess`, and symlinks are skipped, and `ui.entry`/`ui.styles` must point inside `dist/`.
+While the plugin is active, Inventoros copies `dist/` to `public/plugin-assets/{slug}/` and lists the bundle in the `pluginAssets` page prop. When the manifest `version` changes, the copy is refreshed on the next page load. The browser imports the bundle once, from the same origin, which the app's Content Security Policy allows through `script-src 'self'`, and adds its stylesheets. This works on a full page load and after client-side navigation. Only static web files are published: `.js`, `.mjs`, `.css`, `.map`, `.json`, images, fonts and `.txt`. PHP files, dotfiles such as `.htaccess`, and symlinks are skipped, and `ui.entry`/`ui.styles` must point inside `dist/`.
 
 The bundle's default export is called with an SDK scoped to the plugin:
 
