@@ -445,7 +445,7 @@ class PurchaseOrderApiTest extends TestCase
         $response = $this->postJson("/api/v1/purchase-orders/{$po->id}/send");
 
         $response->assertStatus(200)
-            ->assertJsonPath('message', 'Purchase order marked as sent');
+            ->assertJsonPath('message', 'Purchase order sent');
 
         $this->assertDatabaseHas('purchase_orders', [
             'id' => $po->id,
