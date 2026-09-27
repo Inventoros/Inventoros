@@ -8,12 +8,15 @@ This guide installs Inventoros from source on a VPS with full root access. Examp
 sudo apt update && sudo apt upgrade -y
 ```
 
-2. Install the required packages:
+2. Install the required packages. Ubuntu's own repositories do not ship PHP 8.4, so add the `ondrej/php` PPA first:
 
 ```bash
-sudo apt install -y php8.2 php8.2-cli php8.2-fpm php8.2-mysql \
-    php8.2-mbstring php8.2-xml php8.2-bcmath php8.2-curl \
-    php8.2-zip php8.2-gd php8.2-intl nginx mysql-server \
+sudo apt install -y software-properties-common
+sudo add-apt-repository -y ppa:ondrej/php
+sudo apt update
+sudo apt install -y php8.4 php8.4-cli php8.4-fpm php8.4-mysql \
+    php8.4-mbstring php8.4-xml php8.4-bcmath php8.4-curl \
+    php8.4-zip php8.4-gd php8.4-intl nginx mysql-server \
     git curl unzip
 ```
 
@@ -28,7 +31,7 @@ sudo chmod +x /usr/local/bin/composer
 4. Install Node.js and npm:
 
 ```bash
-curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
+curl -fsSL https://deb.nodesource.com/setup_22.x | sudo -E bash -
 sudo apt install -y nodejs
 ```
 
@@ -99,7 +102,7 @@ server {
     error_page 404 /index.php;
 
     location ~ \.php$ {
-        fastcgi_pass unix:/var/run/php/php8.2-fpm.sock;
+        fastcgi_pass unix:/var/run/php/php8.4-fpm.sock;
         fastcgi_param SCRIPT_FILENAME $realpath_root$fastcgi_script_name;
         include fastcgi_params;
     }
@@ -134,11 +137,11 @@ sudo dnf install -y epel-release
 sudo dnf install -y https://rpms.remirepo.net/enterprise/remi-release-8.rpm
 ```
 
-2. Install PHP 8.2:
+2. Install PHP 8.4:
 
 ```bash
 sudo dnf module reset php
-sudo dnf module enable php:remi-8.2
+sudo dnf module enable php:remi-8.4
 sudo dnf install -y php php-cli php-fpm php-mysqlnd php-mbstring \
     php-xml php-bcmath php-curl php-zip php-gd php-intl
 ```
@@ -161,7 +164,7 @@ sudo chmod +x /usr/local/bin/composer
 5. Install Node.js and npm:
 
 ```bash
-curl -fsSL https://rpm.nodesource.com/setup_20.x | sudo bash -
+curl -fsSL https://rpm.nodesource.com/setup_22.x | sudo bash -
 sudo dnf install -y nodejs
 ```
 
@@ -224,7 +227,7 @@ sudo firewall-cmd --reload
 sudo apt update && sudo apt upgrade -y
 ```
 
-2. Add the PHP repository (for PHP 8.2):
+2. Add the PHP repository (for PHP 8.4):
 
 ```bash
 sudo apt install -y lsb-release apt-transport-https ca-certificates curl
@@ -236,9 +239,9 @@ sudo apt update
 3. Install the required packages:
 
 ```bash
-sudo apt install -y php8.2 php8.2-cli php8.2-fpm php8.2-mysql \
-    php8.2-mbstring php8.2-xml php8.2-bcmath php8.2-curl \
-    php8.2-zip php8.2-gd php8.2-intl nginx mariadb-server \
+sudo apt install -y php8.4 php8.4-cli php8.4-fpm php8.4-mysql \
+    php8.4-mbstring php8.4-xml php8.4-bcmath php8.4-curl \
+    php8.4-zip php8.4-gd php8.4-intl nginx mariadb-server \
     git curl unzip
 ```
 
@@ -253,7 +256,7 @@ sudo chmod +x /usr/local/bin/composer
 5. Install Node.js and npm:
 
 ```bash
-curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
+curl -fsSL https://deb.nodesource.com/setup_22.x | sudo -E bash -
 sudo apt install -y nodejs
 ```
 

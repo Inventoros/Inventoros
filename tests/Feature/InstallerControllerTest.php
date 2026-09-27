@@ -32,4 +32,17 @@ class InstallerControllerTest extends TestCase
         $this->assertDatabaseMissing('organizations', ['name' => 'Hijack Org']);
     }
 
+    public function test_installer_php_requirement_matches_composer_json(): void
+    {
+        // The wizard used to advertise PHP 8.2 while the locked dependencies
+        // need far newer; the stated minimum must be composer.json's.
+        $composer = json_decode((string) file_get_contents(base_path('composer.json')), true);
+        $minimum = ltrim((string) $composer['require']['php'], '^~>=');
+
+        $response = $this->get('/install/requirements');
+
+        $response->assertOk();
+        $php = collect($response->viewData('page')['props']['requirements'])->firstWhere('name', 'PHP Version');
+        $this->assertSame($minimum, $php['required']);
+    }
 }

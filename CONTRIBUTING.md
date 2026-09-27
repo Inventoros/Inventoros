@@ -39,7 +39,7 @@ What actually happened.
 
 **Environment**
 - OS: [e.g., macOS 13.0]
-- PHP Version: [e.g., 8.2.10]
+- PHP Version: [e.g., 8.4.12]
 - Laravel Version: [e.g., 12.0]
 - Database: [e.g., MySQL 8.0.33]
 
@@ -73,9 +73,9 @@ We actively welcome your pull requests! Here's the process:
 
 ### Prerequisites
 
-- PHP 8.2 or higher
+- PHP 8.4 (8.4.1 or newer)
 - Composer
-- Node.js 18+ and npm
+- Node.js 20.19+ or 22.12+ and npm (Vite 7)
 - MySQL 8.0+ or PostgreSQL 13+
 - Git
 

@@ -337,9 +337,10 @@ class InstallerController extends Controller
         return [
             [
                 'name' => 'PHP Version',
-                'required' => '8.2.0',
+                // Keep in step with composer.json's "php" constraint.
+                'required' => '8.4.1',
                 'current' => PHP_VERSION,
-                'met' => version_compare(PHP_VERSION, '8.2.0', '>='),
+                'met' => version_compare(PHP_VERSION, '8.4.1', '>='),
             ],
             [
                 'name' => 'PDO Extension',

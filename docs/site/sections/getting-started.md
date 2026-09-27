@@ -17,16 +17,16 @@ Download the latest release: https://github.com/Inventoros/Inventoros/releases/l
 
 - [Install on cPanel](#installation-cpanel). Perfect for shared hosting environments with cPanel access. Uses a pre-built release package, no npm required on the server.
 - [Install on a VPS](#installation-vps). Full control on Ubuntu, Debian, or CentOS / RHEL with Nginx, PHP-FPM, and MySQL or MariaDB.
-- [Install with Docker](#installation-docker). Containerized deployment. Official images are in progress; a do-it-yourself Dockerfile and Compose template are provided in the meantime.
+- [Install with Docker](#installation-docker). The official production image from GHCR, with a Compose file for the app, queue worker, scheduler and PostgreSQL.
 
 ### System requirements
 
 Server requirements:
 
-- PHP 8.2 or higher
+- PHP 8.4 (8.4.1 or newer; PHP 8.5 is not supported yet because a spreadsheet dependency caps at 8.4)
 - MySQL 8.0+ or PostgreSQL 13+
 - Composer 2.0+
-- Node.js 18+ and npm (only needed when building from source; the cPanel release ships pre-compiled assets)
+- Node.js 20.19+ or 22.12+ and npm (required by Vite 7; only needed when building from source; the cPanel release ships pre-compiled assets)
 
 Required PHP extensions:
 
