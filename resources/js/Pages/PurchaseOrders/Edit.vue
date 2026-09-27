@@ -29,6 +29,7 @@ const form = useForm({
     items: props.purchaseOrder.items?.map(item => ({
         id: item.id,
         product_id: item.product_id,
+        product_variant_id: item.product_variant_id ?? null,
         product_name: item.product_name,
         sku: item.sku,
         quantity: item.quantity_ordered,
@@ -38,6 +39,8 @@ const form = useForm({
 });
 
 const selectedProductId = ref('');
+const selectedVariantId = ref(null);
+const variantError = ref('');
 const quantity = ref(1);
 const unitCost = ref(0);
 const supplierSku = ref('');
@@ -50,13 +53,43 @@ const total = computed(() => {
     return subtotal.value + (parseFloat(form.tax) || 0) + (parseFloat(form.shipping) || 0);
 });
 
+const productFor = (productId) => props.products.find(p => p.id == productId) ?? null;
+
+const chosenProduct = computed(() => productFor(selectedProductId.value));
+
+const chosenVariants = computed(() =>
+    chosenProduct.value?.has_variants ? chosenProduct.value.variants.filter(v => v.is_active) : []
+);
+
+// The variants a line can switch between: the active ones plus the one the
+// line already buys (kept in the list even if since deactivated).
+const lineVariants = (item) => {
+    const product = productFor(item.product_id);
+    if (!product?.has_variants) return [];
+    return product.variants.filter(v => v.is_active || v.id === item.product_variant_id);
+};
+
+const onLineVariantChange = (index) => {
+    const item = form.items[index];
+    const variant = productFor(item.product_id)?.variants.find(v => v.id === item.product_variant_id);
+    item.sku = variant?.sku || productFor(item.product_id)?.sku || item.sku;
+};
+
 const addItem = () => {
-    if (!selectedProductId.value || quantity.value < 1) return;
+    const product = chosenProduct.value;
+    if (!product || quantity.value < 1) return;
 
-    const product = props.products.find(p => p.id == selectedProductId.value);
-    if (!product) return;
+    let variant = null;
+    if (product.has_variants) {
+        variant = product.variants.find(v => v.id === selectedVariantId.value) ?? null;
+        if (!variant) {
+            variantError.value = t('orders.create.variantRequired');
+            return;
+        }
+    }
+    const variantId = variant?.id ?? null;
 
-    const existingIndex = form.items.findIndex(item => item.product_id == selectedProductId.value);
+    const existingIndex = form.items.findIndex(item => item.product_id == product.id && (item.product_variant_id ?? null) === variantId);
     if (existingIndex >= 0) {
         form.items[existingIndex].quantity += quantity.value;
         form.items[existingIndex].unit_cost = unitCost.value;
@@ -64,15 +97,18 @@ const addItem = () => {
         form.items.push({
             id: null,
             product_id: product.id,
+            product_variant_id: variantId,
             product_name: product.name,
-            sku: product.sku,
+            sku: variant?.sku || product.sku,
             quantity: quantity.value,
-            unit_cost: unitCost.value || product.purchase_price || product.price || 0,
+            unit_cost: unitCost.value || variant?.purchase_price || product.purchase_price || product.price || 0,
             supplier_sku: supplierSku.value,
         });
     }
 
     selectedProductId.value = '';
+    selectedVariantId.value = null;
+    variantError.value = '';
     quantity.value = 1;
     unitCost.value = 0;
     supplierSku.value = '';
@@ -93,9 +129,19 @@ const updateItemCost = (index, newCost) => {
 };
 
 const onProductSelected = () => {
-    const product = props.products.find(p => p.id == selectedProductId.value);
+    selectedVariantId.value = null;
+    variantError.value = '';
+    const product = chosenProduct.value;
     if (product) {
         unitCost.value = product.purchase_price || product.price || 0;
+    }
+};
+
+const onVariantSelected = () => {
+    variantError.value = '';
+    const variant = chosenProduct.value?.variants.find(v => v.id === selectedVariantId.value);
+    if (variant?.purchase_price) {
+        unitCost.value = parseFloat(variant.purchase_price) || 0;
     }
 };
 
@@ -205,7 +251,7 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                 </div>
                 <div class="space-y-4 p-5">
                     <div class="rounded-lg border border-border-subtle bg-surface-canvas p-4">
-                        <div class="grid grid-cols-1 gap-3 md:grid-cols-6">
+                        <div class="grid grid-cols-1 gap-3" :class="chosenProduct?.has_variants ? 'md:grid-cols-8' : 'md:grid-cols-6'">
                             <div class="md:col-span-2">
                                 <label for="product" :class="fieldLabel">Product</label>
                                 <select id="product" v-model="selectedProductId" @change="onProductSelected" :class="fieldInput">
@@ -214,6 +260,17 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                                         {{ product.name }} ({{ product.sku || 'No SKU' }})
                                     </option>
                                 </select>
+                            </div>
+
+                            <div v-if="chosenProduct?.has_variants" class="md:col-span-2">
+                                <label for="variant" :class="fieldLabel">{{ t('orders.create.variant') }}</label>
+                                <select id="variant" v-model="selectedVariantId" @change="onVariantSelected" :class="fieldInput">
+                                    <option :value="null">{{ t('orders.create.chooseVariant') }}</option>
+                                    <option v-for="variant in chosenVariants" :key="variant.id" :value="variant.id">
+                                        {{ variant.title }}<template v-if="variant.sku"> ({{ variant.sku }})</template> - {{ t('orders.create.stockCount', { count: variant.stock }) }}
+                                    </option>
+                                </select>
+                                <p v-if="variantError" :class="fieldError">{{ variantError }}</p>
                             </div>
 
                             <div>
@@ -259,6 +316,16 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                                 <p class="text-sm font-medium text-text-primary">{{ item.product_name }}</p>
                                 <p class="text-xs text-text-tertiary">SKU: {{ item.sku || '-' }}</p>
                                 <p class="text-xs text-text-tertiary">Supplier SKU: {{ item.supplier_sku || '-' }}</p>
+                                <template v-if="productFor(item.product_id)?.has_variants">
+                                    <label :for="`line-variant-${index}`" class="mb-1 mt-2 block text-[11px] text-text-tertiary">{{ t('orders.create.variant') }}</label>
+                                    <select :id="`line-variant-${index}`" v-model="item.product_variant_id" @change="onLineVariantChange(index)" :class="fieldInput" required>
+                                        <option :value="null">{{ t('orders.create.chooseVariant') }}</option>
+                                        <option v-for="variant in lineVariants(item)" :key="variant.id" :value="variant.id">
+                                            {{ variant.title }}<template v-if="variant.sku"> ({{ variant.sku }})</template>
+                                        </option>
+                                    </select>
+                                </template>
+                                <p v-if="form.errors[`items.${index}.product_variant_id`]" :class="fieldError">{{ form.errors[`items.${index}.product_variant_id`] }}</p>
                             </div>
 
                             <div class="md:col-span-2">

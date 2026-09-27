@@ -25,6 +25,8 @@ const form = useForm({
     items: props.purchaseOrder.items?.map(item => ({
         id: item.id,
         product_id: item.product_id,
+        product_variant_id: item.product_variant_id ?? null,
+        variant_title: item.variant?.title ?? null,
         product_name: item.product_name,
         sku: item.sku,
         quantity_ordered: item.quantity_ordered,
@@ -58,9 +60,13 @@ const clearAll = () => {
     });
 };
 
-const onProductFound = (product) => {
-    // Find the item in the list and increment its receive quantity
-    const itemIndex = form.items.findIndex(item => item.product_id === product.id);
+const onProductFound = (product, variant = null) => {
+    // Find the item in the list and increment its receive quantity. A scanned
+    // variant barcode matches that variant's line; a product code matches the
+    // first line for the product that still has units to receive.
+    const itemIndex = variant
+        ? form.items.findIndex(item => item.product_variant_id === variant.id)
+        : form.items.findIndex(item => item.product_id === product.id && item.quantity_to_receive < item.remaining);
     if (itemIndex >= 0) {
         const item = form.items[itemIndex];
         if (item.quantity_to_receive < item.remaining) {
@@ -195,6 +201,7 @@ const thClassCenter = 'px-4 py-2.5 text-center text-xs font-medium tracking-tigh
                                 >
                                     <td class="px-4 py-3 text-sm text-text-primary">
                                         {{ item.product_name }}
+                                        <span v-if="item.variant_title" class="block text-xs text-text-secondary">{{ t('orders.create.variant') }}: {{ item.variant_title }}</span>
                                     </td>
                                     <td class="px-4 py-3 text-sm text-text-tertiary">
                                         {{ item.sku || '-' }}
