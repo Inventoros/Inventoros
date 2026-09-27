@@ -6,8 +6,10 @@ namespace App\Http\Controllers\Import;
 
 use App\Exports\ExportFactory;
 use App\Http\Controllers\Controller;
+use App\Imports\OrdersImport;
 use App\Imports\ProductsImport;
 use App\Jobs\GenerateDataExportJob;
+use App\Jobs\ProcessOrderImportJob;
 use App\Jobs\ProcessProductImportJob;
 use App\Models\DataExport;
 use App\Models\Inventory\ProductCategory;
@@ -32,6 +34,11 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
  */
 class ImportExportController extends Controller
 {
+    /**
+     * Upload rule shared by every import endpoint.
+     */
+    private const IMPORT_FILE_RULE = 'required|file|mimes:csv,txt,xlsx,xls|mimetypes:text/csv,text/plain,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel|max:10240'; // 10MB max
+
     /**
      * Display the import/export page.
      *
@@ -156,7 +163,7 @@ class ImportExportController extends Controller
     public function importProducts(Request $request)
     {
         $request->validate([
-            'file' => 'required|file|mimes:csv,txt,xlsx,xls|mimetypes:text/csv,text/plain,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel|max:10240', // 10MB max
+            'file' => self::IMPORT_FILE_RULE,
         ]);
 
         try {
@@ -190,6 +197,89 @@ class ImportExportController extends Controller
                 'user_id' => $request->user()->id,
                 'organization_id' => $request->user()->organization_id,
                 'file' => $request->file('file')?->getClientOriginalName(),
+                'error' => $e->getMessage(),
+            ]);
+
+            return redirect()->route('import-export.index')
+                ->with('error', 'Import failed: '.$e->getMessage());
+        }
+    }
+
+    /**
+     * Download the order import template.
+     *
+     * One row per order line; rows sharing an external_reference are one
+     * order. See OrdersImport for the full format.
+     */
+    public function downloadOrderTemplate(): StreamedResponse
+    {
+        $headers = [
+            'external_reference', 'order_date', 'status', 'customer_name', 'customer_email',
+            'product_sku', 'variant_sku', 'quantity', 'unit_price', 'line_tax',
+            'order_tax', 'order_shipping', 'currency', 'shipped_at', 'delivered_at', 'notes',
+        ];
+
+        $examples = [
+            ['SHOP-1001', '2026-01-15', 'delivered', 'Example Customer', 'customer@example.com', 'SKU-001', '', '2', '19.99', '', '4.00', '5.00', 'USD', '2026-01-16', '2026-01-18', 'Imported from old shop'],
+            ['SHOP-1001', '', '', '', '', '', 'SKU-002-L', '1', '29.99', '', '', '', '', '', '', ''],
+            ['SHOP-1002', '2026-01-16', 'pending', 'Another Customer', '', 'SKU-001', '', '1', '', '', '', '', '', '', '', ''],
+        ];
+
+        return response()->stream(function () use ($headers, $examples) {
+            $file = fopen('php://output', 'w');
+            fputcsv($file, $headers, escape: '');
+            foreach ($examples as $row) {
+                fputcsv($file, $row, escape: '');
+            }
+            fclose($file);
+        }, 200, [
+            'Content-Type' => 'text/csv',
+            'Content-Disposition' => 'attachment; filename="order_import_template.csv"',
+        ]);
+    }
+
+    /**
+     * Import orders from a CSV/Excel file (one row per order line).
+     *
+     * `historical` records the orders without adjusting stock. Large files are
+     * queued like the product import.
+     */
+    public function importOrders(Request $request): RedirectResponse
+    {
+        $request->validate([
+            'file' => self::IMPORT_FILE_RULE,
+            'historical' => 'nullable|boolean',
+        ]);
+
+        $user = $request->user();
+        $historical = $request->boolean('historical');
+        $file = $request->file('file');
+
+        try {
+            if ($file->getSize() > config('imports.sync_max_kb') * 1024) {
+                $disk = config('imports.disk');
+                $path = $file->store('imports/'.$user->organization_id, $disk);
+
+                ProcessOrderImportJob::dispatch($user->organization_id, $user->id, $disk, $path, $historical);
+
+                return redirect()->route('import-export.index')
+                    ->with('success', "Your order import is being processed. You'll be notified when it's complete.");
+            }
+
+            $import = new OrdersImport($user, $historical);
+            Excel::import($import, $file);
+            $stats = $import->getStats();
+
+            return $this->redirectWithImportResult(
+                'orders',
+                $stats,
+                'Orders imported successfully! Created: '.$stats['imported'].', Skipped (already imported): '.$stats['skipped'],
+            );
+        } catch (\Exception $e) {
+            Log::error('Order import failed', [
+                'user_id' => $user->id,
+                'organization_id' => $user->organization_id,
+                'file' => $file?->getClientOriginalName(),
                 'error' => $e->getMessage(),
             ]);
 
