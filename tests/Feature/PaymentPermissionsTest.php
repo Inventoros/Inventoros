@@ -79,7 +79,7 @@ class PaymentPermissionsTest extends TestCase
             'permissions' => ['view_orders', 'edit_orders'],
         ]);
 
-        $migration = require database_path('migrations/2026_09_28_000012_grant_payment_permissions_to_system_manager.php');
+        $migration = require database_path('migrations/2026_09_30_000003_grant_payment_permissions_to_system_manager.php');
         $migration->up();
         $migration->up(); // idempotent
 
@@ -101,7 +101,7 @@ class PaymentPermissionsTest extends TestCase
         $viewer = $make('reports-viewer');
         $staff = $make('warehouse-staff');
 
-        $migration = require database_path('migrations/2026_09_28_000012_grant_payment_permissions_to_system_manager.php');
+        $migration = require database_path('migrations/2026_09_30_000003_grant_payment_permissions_to_system_manager.php');
         $migration->up();
 
         $this->assertSame(['view_orders', 'view_payments', 'record_payments'], $processor->fresh()->permissions);
