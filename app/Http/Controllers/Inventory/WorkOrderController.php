@@ -27,6 +27,11 @@ use Inertia\Response;
 class WorkOrderController extends Controller
 {
     /**
+     * Statuses in which a work order has not moved any stock and can be deleted.
+     */
+    private const DELETABLE_STATUSES = ['draft', 'cancelled'];
+
+    /**
      * Display a listing of work orders.
      *
      * @param  Request  $request  The incoming HTTP request
@@ -396,6 +401,46 @@ class WorkOrderController extends Controller
 
         return redirect()->route('work-orders.show', $workOrder)
             ->with('success', 'Work order has been cancelled.');
+    }
+
+    /**
+     * Delete a work order.
+     *
+     * Only draft and cancelled work orders can be deleted: neither has moved
+     * stock (a cancelled in-progress order has already had its consumed
+     * components restored). Pending, in-progress and completed orders are
+     * part of the stock history and must be cancelled instead.
+     *
+     * @param  Request  $request  The incoming HTTP request
+     * @param  WorkOrder  $workOrder  The work order to delete
+     * @return RedirectResponse
+     */
+    public function destroy(Request $request, WorkOrder $workOrder)
+    {
+        $this->authorizeWorkOrder($request, $workOrder);
+
+        $deleted = DB::transaction(function () use ($workOrder) {
+            // Lock and re-check so a concurrent start cannot slip in between
+            // the guard and the delete.
+            $locked = WorkOrder::whereKey($workOrder->getKey())->lockForUpdate()->firstOrFail();
+
+            if (! in_array($locked->status, self::DELETABLE_STATUSES, true)) {
+                return false;
+            }
+
+            $locked->items()->delete();
+            $locked->delete();
+
+            return true;
+        });
+
+        if (! $deleted) {
+            return redirect()->route('work-orders.show', $workOrder)
+                ->with('error', 'Only draft or cancelled work orders can be deleted.');
+        }
+
+        return redirect()->route('work-orders.index')
+            ->with('success', "Work order {$workOrder->work_order_number} deleted.");
     }
 
     /**

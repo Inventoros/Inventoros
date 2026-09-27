@@ -581,4 +581,92 @@ class WorkOrderControllerTest extends TestCase
 
         $response->assertStatus(403);
     }
+
+    // ==================== DESTROY TESTS ====================
+
+    protected function makeWorkOrder(string $status, ?int $organizationId = null): WorkOrder
+    {
+        $data = $this->createAssemblyWithComponents();
+        $organizationId ??= $this->organization->id;
+
+        $workOrder = WorkOrder::create([
+            'organization_id' => $organizationId,
+            'product_id' => $data['assembly']->id,
+            'created_by' => $this->admin->id,
+            'work_order_number' => WorkOrder::generateWorkOrderNumber($organizationId),
+            'quantity' => 2,
+            'status' => $status,
+        ]);
+
+        WorkOrderItem::create([
+            'work_order_id' => $workOrder->id,
+            'product_id' => $data['compA']->id,
+            'quantity_required' => 4,
+            'quantity_consumed' => 0,
+        ]);
+
+        return $workOrder;
+    }
+
+    public function test_can_delete_a_draft_work_order(): void
+    {
+        $workOrder = $this->makeWorkOrder('draft');
+
+        $response = $this->actingAs($this->admin)
+            ->delete(route('work-orders.destroy', $workOrder));
+
+        $response->assertRedirect(route('work-orders.index'));
+        $response->assertSessionHas('success');
+        $this->assertDatabaseMissing('work_orders', ['id' => $workOrder->id]);
+        $this->assertDatabaseMissing('work_order_items', ['work_order_id' => $workOrder->id]);
+    }
+
+    public function test_can_delete_a_cancelled_work_order(): void
+    {
+        $workOrder = $this->makeWorkOrder('cancelled');
+
+        $this->actingAs($this->admin)
+            ->delete(route('work-orders.destroy', $workOrder))
+            ->assertRedirect(route('work-orders.index'));
+
+        $this->assertDatabaseMissing('work_orders', ['id' => $workOrder->id]);
+    }
+
+    public function test_cannot_delete_a_work_order_that_has_moved_stock(): void
+    {
+        foreach (['pending', 'in_progress', 'completed'] as $status) {
+            $workOrder = $this->makeWorkOrder($status);
+
+            $response = $this->actingAs($this->admin)
+                ->delete(route('work-orders.destroy', $workOrder));
+
+            $response->assertRedirect(route('work-orders.show', $workOrder));
+            $response->assertSessionHas('error');
+            $this->assertDatabaseHas('work_orders', ['id' => $workOrder->id]);
+        }
+    }
+
+    public function test_cannot_delete_another_organizations_work_order(): void
+    {
+        $other = Organization::create(['name' => 'Other Org', 'email' => 'other@org.com']);
+        $workOrder = $this->makeWorkOrder('draft');
+        $workOrder->forceFill(['organization_id' => $other->id])->saveQuietly();
+
+        $this->actingAs($this->admin)
+            ->delete(route('work-orders.destroy', $workOrder))
+            ->assertStatus(403);
+
+        $this->assertDatabaseHas('work_orders', ['id' => $workOrder->id]);
+    }
+
+    public function test_user_without_manage_stock_cannot_delete_a_work_order(): void
+    {
+        $workOrder = $this->makeWorkOrder('draft');
+
+        $this->actingAs($this->viewer)
+            ->delete(route('work-orders.destroy', $workOrder))
+            ->assertStatus(403);
+
+        $this->assertDatabaseHas('work_orders', ['id' => $workOrder->id]);
+    }
 }

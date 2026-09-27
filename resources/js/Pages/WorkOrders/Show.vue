@@ -8,7 +8,7 @@ import StatTile from '@/Components/ui/StatTile.vue';
 import { Head, Link, router } from '@inertiajs/vue3';
 import { ref } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { ArrowLeft, Play, CheckCircle2, X, Boxes, PackageCheck, Check, AlertTriangle } from 'lucide-vue-next';
+import { ArrowLeft, Play, CheckCircle2, X, Boxes, PackageCheck, Check, AlertTriangle, Trash2 } from 'lucide-vue-next';
 
 const { t } = useI18n();
 
@@ -84,6 +84,8 @@ const canStart = ['draft', 'pending'].includes(props.workOrder.status);
 const canComplete = props.workOrder.status === 'in_progress';
 const canCancel = ['draft', 'pending', 'in_progress'].includes(props.workOrder.status);
 const isReadOnly = ['completed', 'cancelled'].includes(props.workOrder.status);
+// Only orders that never moved stock can be deleted (mirrors WorkOrderController::destroy).
+const canDelete = ['draft', 'cancelled'].includes(props.workOrder.status);
 
 const startProduction = () => {
     if (!confirm('Start production for this work order? Components will be reserved.')) return;
@@ -107,6 +109,14 @@ const cancelWorkOrder = () => {
     if (!confirm('Cancel this work order? Any reserved components will be released.')) return;
     processing.value = true;
     router.post(route('work-orders.cancel', props.workOrder.id), {}, {
+        onFinish: () => { processing.value = false; },
+    });
+};
+
+const deleteWorkOrder = () => {
+    if (!confirm('Delete this work order? This cannot be undone.')) return;
+    processing.value = true;
+    router.delete(route('work-orders.destroy', props.workOrder.id), {
         onFinish: () => { processing.value = false; },
     });
 };
@@ -151,6 +161,16 @@ const fieldInput = 'h-9 w-full rounded-md border border-border-subtle bg-surface
                 >
                     <X :size="14" />
                     Cancel Work Order
+                </Button>
+                <Button
+                    v-if="canDelete"
+                    variant="danger"
+                    size="sm"
+                    :disabled="processing"
+                    @click="deleteWorkOrder"
+                >
+                    <Trash2 :size="14" />
+                    Delete
                 </Button>
                 <Button variant="secondary" size="sm" as="Link" :href="route('work-orders.index')">
                     <ArrowLeft :size="14" />
