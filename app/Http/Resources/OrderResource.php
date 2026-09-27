@@ -23,6 +23,10 @@ class OrderResource extends JsonResource
         return [
             'id' => $this->id,
             'order_number' => $this->order_number,
+            'invoice_number' => $this->invoice_number,
+            'invoice_issued_at' => $this->invoice_issued_at?->toIso8601String(),
+            'invoice_sent_at' => $this->invoice_sent_at?->toIso8601String(),
+            'invoice_sent_to' => $this->invoice_sent_to,
             'source' => $this->source,
             'external_id' => $this->external_id,
             'customer_name' => $this->customer_name,
