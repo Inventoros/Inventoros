@@ -12,6 +12,7 @@ use App\Jobs\ProcessProductImportJob;
 use App\Models\DataExport;
 use App\Models\Inventory\ProductCategory;
 use App\Models\Inventory\ProductLocation;
+use App\Support\ProductCurrencyColumns;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -103,9 +104,15 @@ class ImportExportController extends Controller
             'supplier_cost',
         ];
 
+        // One price column per additional currency the organization uses.
+        $currencies = ProductCurrencyColumns::currenciesFor($request->user()->organization_id);
+        foreach ($currencies as $code) {
+            $headers[] = 'price_'.$code;
+        }
+
         $filename = 'product_import_template.csv';
 
-        $callback = function () use ($headers) {
+        $callback = function () use ($headers, $currencies) {
             $file = fopen('php://output', 'w');
             fputcsv($file, $headers, escape: '');
 
@@ -128,6 +135,7 @@ class ImportExportController extends Controller
                 'Example Supplier',
                 'EX-SUP-001',
                 '45.00',
+                ...array_fill(0, count($currencies), ''),
             ], escape: '');
 
             fclose($file);
@@ -172,16 +180,11 @@ class ImportExportController extends Controller
 
             $stats = $import->getStats();
 
-            if (count($stats['errors']) > 0) {
-                return redirect()->route('import-export.index')
-                    ->with('warning', [
-                        'message' => 'Import completed with some errors',
-                        'stats' => $stats,
-                    ]);
-            }
-
-            return redirect()->route('import-export.index')
-                ->with('success', 'Products imported successfully! Created: '.$stats['imported'].', Updated: '.$stats['updated']);
+            return $this->redirectWithImportResult(
+                'products',
+                $stats,
+                'Products imported successfully! Created: '.$stats['imported'].', Updated: '.$stats['updated'],
+            );
         } catch (\Exception $e) {
             Log::error('Product import failed', [
                 'user_id' => $request->user()->id,
@@ -193,6 +196,35 @@ class ImportExportController extends Controller
             return redirect()->route('import-export.index')
                 ->with('error', 'Import failed: '.$e->getMessage());
         }
+    }
+
+    /**
+     * Redirect back to the import page with an import's outcome.
+     *
+     * A clean import flashes a plain success string (rendered globally). An
+     * import with row errors OR warnings flashes a structured payload instead,
+     * which the Import/Export page renders row by row: warnings such as
+     * duplicate-SKU skips are not failures, but the user still needs to see
+     * them rather than have them silently dropped.
+     *
+     * @param  array<string, mixed>  $stats
+     */
+    private function redirectWithImportResult(string $type, array $stats, string $successMessage): RedirectResponse
+    {
+        $errors = count($stats['errors'] ?? []);
+        $warnings = count($stats['warnings'] ?? []);
+
+        $redirect = redirect()->route('import-export.index');
+
+        if ($errors === 0 && $warnings === 0) {
+            return $redirect->with('success', $successMessage);
+        }
+
+        return $redirect->with('warning', [
+            'type' => $type,
+            'message' => $errors > 0 ? 'Import completed with some errors' : 'Import completed with warnings',
+            'stats' => $stats,
+        ]);
     }
 
     /**
