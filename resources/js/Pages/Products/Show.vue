@@ -463,6 +463,7 @@ const fieldInput = 'h-9 w-full rounded-md border border-border-subtle bg-surface
                                         <th :class="supplierThClass">{{ t('productSuppliers.supplierSku') }}</th>
                                         <th :class="[supplierThClass, 'text-right']">{{ t('productSuppliers.costPrice') }}</th>
                                         <th :class="[supplierThClass, 'text-right']">{{ t('productSuppliers.leadTimeDays') }}</th>
+                                        <th :class="[supplierThClass, 'text-right']">{{ t('productSuppliers.minimumOrderQuantity') }}</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -476,6 +477,7 @@ const fieldInput = 'h-9 w-full rounded-md border border-border-subtle bg-surface
                                         <td class="px-4 py-3 font-mono text-xs text-text-secondary">{{ supplier.pivot?.supplier_sku || '-' }}</td>
                                         <td class="px-4 py-3 text-right tabular-nums text-text-primary">{{ supplier.pivot?.cost_price != null ? formatCurrency(supplier.pivot.cost_price) : '-' }}</td>
                                         <td class="px-4 py-3 text-right tabular-nums text-text-secondary">{{ supplier.pivot?.lead_time_days ?? '-' }}</td>
+                                        <td class="px-4 py-3 text-right tabular-nums text-text-secondary">{{ supplier.pivot?.minimum_order_quantity ?? '-' }}</td>
                                     </tr>
                                 </tbody>
                             </table>

@@ -423,6 +423,8 @@
     "supplierSku": "Supplier SKU",
     "costPrice": "Cost price",
     "leadTimeDays": "Lead time (days)",
+    "minimumOrderQuantity": "Min order qty",
+    "minimumOrderPlaceholder": "None",
     "primary": "Primary",
     "remove": "Remove supplier",
     "empty": "No suppliers linked yet.",

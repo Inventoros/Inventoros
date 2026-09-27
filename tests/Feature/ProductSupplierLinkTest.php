@@ -162,6 +162,29 @@ class ProductSupplierLinkTest extends TestCase
         $this->assertTrue((bool) $linked->first()->pivot->is_primary);
     }
 
+    public function test_web_update_saves_and_validates_the_minimum_order_quantity(): void
+    {
+        $product = $this->makeProduct();
+        $payload = fn ($moq) => [
+            'name' => 'Existing', 'sku' => 'EX-1', 'price' => 10, 'stock' => 3, 'min_stock' => 1,
+            'suppliers' => [['supplier_id' => $this->acme->id, 'minimum_order_quantity' => $moq, 'is_primary' => true]],
+        ];
+
+        $this->actingAs($this->admin)->put(route('products.update', $product), $payload(0))
+            ->assertSessionHasErrors('suppliers.0.minimum_order_quantity');
+        $this->actingAs($this->admin)->put(route('products.update', $product), $payload(2.5))
+            ->assertSessionHasErrors('suppliers.0.minimum_order_quantity');
+
+        $this->actingAs($this->admin)->put(route('products.update', $product), $payload(12))
+            ->assertSessionHasNoErrors();
+        $this->assertSame(12, $product->suppliers()->sole()->pivot->minimum_order_quantity);
+
+        // Blank clears it.
+        $this->actingAs($this->admin)->put(route('products.update', $product), $payload(null))
+            ->assertSessionHasNoErrors();
+        $this->assertNull($product->suppliers()->sole()->pivot->minimum_order_quantity);
+    }
+
     public function test_web_update_with_an_empty_supplier_list_unlinks_all(): void
     {
         $product = $this->makeProduct();

@@ -6,8 +6,8 @@ import Button from '@/Components/ui/Button.vue';
 import { Plus, Trash2, Truck } from 'lucide-vue-next';
 
 /**
- * Edits a product's supplier links: supplier, supplier SKU, cost, lead time
- * and exactly one primary supplier. v-model is the `suppliers` array the
+ * Edits a product's supplier links: supplier, supplier SKU, cost, lead time,
+ * minimum order quantity and exactly one primary supplier. v-model is the `suppliers` array the
  * product form submits; `errors` is the Inertia form's error bag.
  */
 const props = defineProps({
@@ -50,6 +50,7 @@ const addRow = () => {
             supplier_sku: '',
             cost_price: '',
             lead_time_days: '',
+            minimum_order_quantity: '',
             is_primary: rows.value.length === 0,
         },
     ]);
@@ -87,7 +88,7 @@ const fieldError = 'mt-1 text-xs text-status-danger';
             class="rounded-lg border border-border-subtle bg-surface-sunken/40 p-3"
         >
             <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-12">
-                <div class="sm:col-span-2 lg:col-span-4">
+                <div class="sm:col-span-2 lg:col-span-3">
                     <label :for="`supplier-${index}`" :class="fieldLabel">{{ t('productSuppliers.supplier') }}</label>
                     <select
                         :id="`supplier-${index}`"
@@ -108,7 +109,7 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                     <p v-if="error(index, 'supplier_id')" :class="fieldError">{{ error(index, 'supplier_id') }}</p>
                 </div>
 
-                <div class="lg:col-span-3">
+                <div class="lg:col-span-2">
                     <label :for="`supplier-sku-${index}`" :class="fieldLabel">{{ t('productSuppliers.supplierSku') }}</label>
                     <input
                         :id="`supplier-sku-${index}`"
@@ -152,6 +153,21 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                         @input="setField(index, 'lead_time_days', $event.target.value)"
                     />
                     <p v-if="error(index, 'lead_time_days')" :class="fieldError">{{ error(index, 'lead_time_days') }}</p>
+                </div>
+
+                <div class="lg:col-span-2">
+                    <label :for="`supplier-moq-${index}`" :class="fieldLabel">{{ t('productSuppliers.minimumOrderQuantity') }}</label>
+                    <input
+                        :id="`supplier-moq-${index}`"
+                        :value="row.minimum_order_quantity"
+                        type="number"
+                        min="1"
+                        step="1"
+                        :class="fieldInput"
+                        :placeholder="t('productSuppliers.minimumOrderPlaceholder')"
+                        @input="setField(index, 'minimum_order_quantity', $event.target.value)"
+                    />
+                    <p v-if="error(index, 'minimum_order_quantity')" :class="fieldError">{{ error(index, 'minimum_order_quantity') }}</p>
                 </div>
 
                 <div class="flex items-end justify-between gap-2 sm:col-span-2 lg:col-span-1 lg:flex-col lg:items-end lg:justify-end">
