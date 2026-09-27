@@ -19,6 +19,10 @@ Schedule::command('inventory:run-cycle-counts')->hourly()->withoutOverlapping();
 // last one and claims it, so overlapping runs never double-send.
 Schedule::command('reports:send-scheduled')->everyFifteenMinutes()->withoutOverlapping();
 
+// Carrier tracking poll for in-transit shipments (backstop for the EasyPost
+// webhook). Rate-limited per organization inside the command.
+Schedule::command('shipping:track')->everyThirtyMinutes()->withoutOverlapping();
+
 // Retention pruning — see PruneActivityLogsCommand and
 // PruneWebhookDeliveriesCommand for the rationale (PII, table-size
 // runaway). Run nightly at off-peak times. Defaults are conservative:
