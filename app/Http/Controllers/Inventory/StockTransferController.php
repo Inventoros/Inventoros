@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Inventory;
 
-use App\Exceptions\ApprovalException;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StockTransfer\StoreStockTransferRequest;
 use App\Http\Requests\StockTransfer\UpdateStockTransferRequest;
@@ -114,9 +113,6 @@ class StockTransferController extends Controller
 
         $transfer = $transfers->create($request->user()->organization_id, $request->user(), $request->validated());
 
-        // Held for approval when the organization requires it (no-op otherwise).
-        app(ApprovalService::class)->holdTransferIfRequired($transfer, $request->user());
-
         return redirect()->route('stock-transfers.show', $transfer)
             ->with('success', $transfer->approval_status === StockTransfer::APPROVAL_PENDING
                 ? 'Stock transfer created. It needs approval before it can ship or be completed.'
@@ -157,10 +153,6 @@ class StockTransferController extends Controller
     {
         $this->authorizeTransfer($request, $stockTransfer);
 
-        if ($blocked = $this->approvalBlock($stockTransfer)) {
-            return $blocked;
-        }
-
         $validated = $request->validated();
 
         // Handle status change to in_transit
@@ -184,10 +176,6 @@ class StockTransferController extends Controller
     {
         $this->authorizeTransfer($request, $stockTransfer);
 
-        if ($blocked = $this->approvalBlock($stockTransfer)) {
-            return $blocked;
-        }
-
         return $this->transition(
             $stockTransfer,
             fn () => $transfers->complete($stockTransfer, $request->user()),
@@ -209,21 +197,6 @@ class StockTransferController extends Controller
             fn () => $transfers->cancel($stockTransfer, $request->user()),
             'Stock transfer has been cancelled.',
         );
-    }
-
-    /**
-     * Redirect back with the reason when approval still blocks this transfer
-     * from shipping or completing; null when it may proceed.
-     */
-    private function approvalBlock(StockTransfer $stockTransfer): ?RedirectResponse
-    {
-        try {
-            app(ApprovalService::class)->assertTransferMayProceed($stockTransfer);
-        } catch (ApprovalException $e) {
-            return redirect()->route('stock-transfers.show', $stockTransfer)->with('error', $e->getMessage());
-        }
-
-        return null;
     }
 
     private function authorizeTransfer(Request $request, StockTransfer $stockTransfer): void

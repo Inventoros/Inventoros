@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Api\Concerns;
 
+use App\Exceptions\ApprovalException;
 use App\Exceptions\InvalidStateException;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Exceptions\HttpResponseException;
@@ -47,7 +48,11 @@ trait HandlesApiResponses
     {
         return response()->json([
             'message' => $e->getMessage(),
-            'error' => $e instanceof InvalidStateException ? $e->errorCode : $fallbackCode,
+            'error' => match (true) {
+                $e instanceof InvalidStateException => $e->errorCode,
+                $e instanceof ApprovalException => $e->reason,
+                default => $fallbackCode,
+            },
         ], 422);
     }
 }

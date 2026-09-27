@@ -30,6 +30,7 @@ final class StockTransferService
     public function __construct(
         private readonly ProductLocationStockService $locationStock,
         private readonly WarehouseAccessService $warehouseAccess,
+        private readonly ApprovalService $approvals,
     ) {}
 
     /**
@@ -57,7 +58,7 @@ final class StockTransferService
         $toWarehouseId = $toLocation->warehouse_id;
         $isInterWarehouse = $fromWarehouseId && $toWarehouseId && $fromWarehouseId !== $toWarehouseId;
 
-        return DB::transaction(function () use ($data, $organizationId, $actor, $isInterWarehouse, $fromWarehouseId, $toWarehouseId) {
+        $transfer = DB::transaction(function () use ($data, $organizationId, $actor, $isInterWarehouse, $fromWarehouseId, $toWarehouseId) {
             $transferData = [
                 'organization_id' => $organizationId,
                 'transfer_number' => StockTransfer::generateTransferNumber($organizationId),
@@ -95,6 +96,9 @@ final class StockTransferService
 
             return $transfer;
         });
+
+        // Held for approval when the organization requires it (no-op otherwise).
+        return $this->approvals->holdTransferIfRequired($transfer, $actor);
     }
 
     /**
@@ -109,6 +113,9 @@ final class StockTransferService
         if ($transfer->status !== 'pending') {
             throw new InvalidStateException('Only pending transfers can be marked as in transit.', 'invalid_status');
         }
+
+        // A transfer held for approval (or rejected) may not ship.
+        $this->approvals->assertTransferMayProceed($transfer);
 
         $updateData = [
             'status' => 'in_transit',
@@ -137,6 +144,9 @@ final class StockTransferService
         if (! in_array($stockTransfer->status, ['pending', 'in_transit'], true)) {
             throw new InvalidStateException('Only pending or in-transit transfers can be completed.', 'invalid_status');
         }
+
+        // A transfer held for approval (or rejected) may not complete.
+        $this->approvals->assertTransferMayProceed($stockTransfer);
 
         DB::transaction(function () use ($stockTransfer, $actor) {
             // Re-read under a row lock so two concurrent completions serialize
