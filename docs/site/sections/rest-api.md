@@ -246,6 +246,7 @@ Subscribe a URL to any of these events under **Settings > Webhooks** or with `PO
 | --- | --- |
 | Product | `product.created`, `product.updated`, `product.deleted`, `product.low_stock`, `product.out_of_stock` |
 | Order | `order.created`, `order.updated`, `order.status_changed`, `order.approved`, `order.rejected` |
+| Payment | `payment.recorded`, `payment.voided` (a refund is a recorded payment of type `refund`) |
 | Stock | `stock.adjusted` |
 | Purchase order | `purchase_order.created`, `purchase_order.received`, `purchase_order.cancelled` |
 | Customer | `customer.created`, `customer.updated`, `customer.deleted` |
