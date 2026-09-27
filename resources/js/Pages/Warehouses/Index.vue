@@ -8,7 +8,7 @@ import { Head, Link, router } from '@inertiajs/vue3';
 import { ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { usePermissions } from '@/composables/usePermissions';
-import { Plus, Search, Eye, Pencil, Trash2, Warehouse } from 'lucide-vue-next';
+import { Plus, Search, Eye, Pencil, Trash2, Warehouse, Star } from 'lucide-vue-next';
 
 const { t } = useI18n();
 const { hasPermission } = usePermissions();
@@ -16,7 +16,16 @@ const { hasPermission } = usePermissions();
 const props = defineProps({
     warehouses: Object,
     filters: Object,
+    restrictToAssigned: { type: Boolean, default: false },
 });
+
+const updateAccessPolicy = (event) => {
+    router.post(route('warehouses.access-policy'), {
+        restrict_to_assigned: event.target.checked,
+    }, {
+        preserveScroll: true,
+    });
+};
 
 const search = ref(props.filters?.search || '');
 
@@ -32,6 +41,12 @@ const searchWarehouses = () => {
 const clearFilters = () => {
     search.value = '';
     searchWarehouses();
+};
+
+const makeDefault = (warehouse) => {
+    if (confirm(t('warehouses.default.confirm', { name: warehouse.name }))) {
+        router.post(route('warehouses.set-default', warehouse.id), {}, { preserveScroll: true });
+    }
 };
 
 const deleteWarehouse = (warehouse) => {
@@ -65,8 +80,25 @@ const thClass =
             </template>
         </PageHeader>
 
+        <!-- Access policy -->
+        <Card v-if="hasPermission('manage_warehouse_users')" class="mt-6">
+            <h3 class="text-sm font-semibold text-text-primary">{{ t('warehouses.access.title') }}</h3>
+            <label class="mt-3 flex items-start gap-3">
+                <input
+                    type="checkbox"
+                    :checked="restrictToAssigned"
+                    @change="updateAccessPolicy"
+                    class="mt-0.5 rounded border-border-subtle bg-surface-canvas text-brand ds-focus-ring"
+                />
+                <span>
+                    <span class="block text-sm font-medium text-text-primary">{{ t('warehouses.access.restrictLabel') }}</span>
+                    <span class="mt-1 block text-xs text-text-tertiary">{{ t('warehouses.access.restrictHint') }}</span>
+                </span>
+            </label>
+        </Card>
+
         <!-- Filters -->
-        <Card class="mt-6">
+        <Card class="mt-4">
             <form @submit.prevent="searchWarehouses" class="space-y-4">
                 <div class="grid grid-cols-1 gap-4 md:grid-cols-4">
                     <div class="md:col-span-2">
@@ -152,6 +184,16 @@ const thClass =
                             <div class="flex items-center justify-end gap-1">
                                 <Link :href="route('warehouses.show', warehouse.id)" class="rounded-md p-1.5 text-text-tertiary transition-colors hover:bg-surface-overlay hover:text-brand" title="View"><Eye :size="16" /></Link>
                                 <Link v-if="hasPermission('edit_warehouses')" :href="route('warehouses.edit', warehouse.id)" class="rounded-md p-1.5 text-text-tertiary transition-colors hover:bg-surface-overlay hover:text-status-success" title="Edit"><Pencil :size="16" /></Link>
+                                <button
+                                    v-if="hasPermission('edit_warehouses') && !warehouse.is_default"
+                                    type="button"
+                                    @click="makeDefault(warehouse)"
+                                    class="rounded-md p-1.5 text-text-tertiary transition-colors hover:bg-surface-overlay hover:text-brand"
+                                    :title="t('warehouses.default.makeDefault')"
+                                    :aria-label="t('warehouses.default.makeDefault')"
+                                >
+                                    <Star :size="16" />
+                                </button>
                                 <button
                                     v-if="hasPermission('delete_warehouses')"
                                     @click="deleteWarehouse(warehouse)"

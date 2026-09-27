@@ -6,6 +6,7 @@ namespace App\Mcp\Concerns;
 
 use App\Http\Middleware\CheckApiPermission;
 use App\Models\User;
+use App\Services\WarehouseAccessService;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Auth\AuthenticationException;
 use Illuminate\Support\Facades\Auth;
@@ -32,6 +33,14 @@ trait AuthenticatesMcpRequest
         }
 
         return (int) $orgId;
+    }
+
+    /**
+     * Warehouse-level access for the acting user (same rule as web/REST).
+     */
+    protected function warehouseAccess(): WarehouseAccessService
+    {
+        return app(WarehouseAccessService::class);
     }
 
     /**

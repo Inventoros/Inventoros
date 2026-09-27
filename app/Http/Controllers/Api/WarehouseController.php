@@ -8,6 +8,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\Warehouse\StoreWarehouseRequest;
 use App\Http\Requests\Api\Warehouse\UpdateWarehouseRequest;
 use App\Models\Warehouse;
+use App\Services\WarehouseAccessService;
 use Dedoc\Scramble\Attributes\QueryParameter;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -31,6 +32,7 @@ class WarehouseController extends Controller
 
         $query = Warehouse::forOrganization($organizationId)
             ->withCount(['locations', 'users'])
+            ->tap(fn ($q) => app(WarehouseAccessService::class)->scopeWarehouses($q, $request->user()))
             ->when($request->input('search'), function ($query, $search) {
                 $query->where(function ($q) use ($search) {
                     $q->where('name', 'like', "%{$search}%")
@@ -98,6 +100,8 @@ class WarehouseController extends Controller
             ], 404);
         }
 
+        app(WarehouseAccessService::class)->authorizeWarehouse($request->user(), $warehouse->id);
+
         $warehouse->load(['locations', 'users:id,name,email']);
         $warehouse->loadCount(['locations', 'users']);
 
@@ -120,6 +124,8 @@ class WarehouseController extends Controller
                 'error' => 'not_found',
             ], 404);
         }
+
+        app(WarehouseAccessService::class)->authorizeWarehouse($request->user(), $warehouse->id);
 
         $validated = $request->validated();
 
@@ -146,6 +152,8 @@ class WarehouseController extends Controller
                 'error' => 'not_found',
             ], 404);
         }
+
+        app(WarehouseAccessService::class)->authorizeWarehouse($request->user(), $warehouse->id);
 
         if ($warehouse->is_default) {
             return response()->json([

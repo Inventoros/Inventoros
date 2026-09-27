@@ -81,6 +81,7 @@ enum Permission: string
     case EDIT_WAREHOUSES = 'edit_warehouses';
     case DELETE_WAREHOUSES = 'delete_warehouses';
     case MANAGE_WAREHOUSE_USERS = 'manage_warehouse_users';
+    case ACCESS_ALL_WAREHOUSES = 'access_all_warehouses';
 
     // Returns Management
     case MANAGE_RETURNS = 'manage_returns';
@@ -156,6 +157,7 @@ enum Permission: string
             self::EDIT_WAREHOUSES => 'Edit Warehouses',
             self::DELETE_WAREHOUSES => 'Delete Warehouses',
             self::MANAGE_WAREHOUSE_USERS => 'Manage Warehouse Users',
+            self::ACCESS_ALL_WAREHOUSES => 'Access All Warehouses',
 
             self::MANAGE_RETURNS => 'Manage Returns',
 
@@ -231,6 +233,7 @@ enum Permission: string
             self::EDIT_WAREHOUSES => 'Can edit warehouse settings',
             self::DELETE_WAREHOUSES => 'Can delete warehouses',
             self::MANAGE_WAREHOUSE_USERS => 'Can assign and remove users from warehouses',
+            self::ACCESS_ALL_WAREHOUSES => 'Can view and act on stock in every warehouse, even when assigned to specific ones',
 
             self::MANAGE_RETURNS => 'Can create and manage returns and exchanges',
 
@@ -261,7 +264,7 @@ enum Permission: string
             self::VIEW_ORDERS, self::CREATE_ORDERS, self::EDIT_ORDERS, self::DELETE_ORDERS,
             self::APPROVE_ORDERS => 'Order Management',
             self::VIEW_WAREHOUSES, self::CREATE_WAREHOUSES, self::EDIT_WAREHOUSES,
-            self::DELETE_WAREHOUSES, self::MANAGE_WAREHOUSE_USERS => 'Warehouse Management',
+            self::DELETE_WAREHOUSES, self::MANAGE_WAREHOUSE_USERS, self::ACCESS_ALL_WAREHOUSES => 'Warehouse Management',
             self::MANAGE_RETURNS => 'Returns Management',
             self::VIEW_SETTINGS, self::EDIT_SETTINGS, self::MANAGE_ORGANIZATION => 'Settings',
             self::VIEW_PLUGINS, self::MANAGE_PLUGINS => 'Plugins',

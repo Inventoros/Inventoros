@@ -196,6 +196,7 @@ class PermissionSet extends Model
                     Permission::DELETE_PRODUCTS->value,
                     Permission::MANAGE_CATEGORIES->value,
                     Permission::MANAGE_LOCATIONS->value,
+                    Permission::ACCESS_ALL_WAREHOUSES->value,
                     Permission::VIEW_REPORTS->value,
                     Permission::EXPORT_DATA->value,
                     Permission::IMPORT_DATA->value,
@@ -262,6 +263,7 @@ class PermissionSet extends Model
                     Permission::VIEW_SETTINGS->value,
                     Permission::VIEW_REPORTS->value,
                     Permission::VIEW_ACTIVITY_LOG->value,
+                    Permission::ACCESS_ALL_WAREHOUSES->value,
                 ],
             ],
             [

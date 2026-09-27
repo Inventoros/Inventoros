@@ -15,6 +15,7 @@ use App\Models\Inventory\ProductLocation;
 use App\Models\Inventory\Supplier;
 use App\Models\Inventory\SupplierPriceHistory;
 use App\Services\ProductLocationStockService;
+use App\Services\WarehouseStockLevelService;
 use App\Services\ProductService;
 use App\Support\PluginQueryGuard;
 use Illuminate\Http\RedirectResponse;
@@ -255,7 +256,10 @@ class ProductController extends Controller
             'priceHistory' => $priceHistory,
             // Per-location on-hand breakdown (location name + quantity), richest
             // bin first. Empty for products that hold no binned stock.
-            'locationBreakdown' => app(ProductLocationStockService::class)->breakdown($product),
+            // Restricted to the bins in warehouses the viewer can access.
+            'locationBreakdown' => app(ProductLocationStockService::class)->breakdown($product, auth()->user()),
+            // On-hand and thresholds per warehouse the viewer can access.
+            'warehouseStockLevels' => app(WarehouseStockLevelService::class)->levelsForProduct($product, auth()->user()),
             'pluginComponents' => [
                 'header' => get_page_components('products.show', 'header'),
                 'sidebar' => get_page_components('products.show', 'sidebar'),

@@ -12,6 +12,7 @@ use App\Http\Controllers\Inventory\ProductCategoryController;
 use App\Http\Controllers\Inventory\ProductComponentController;
 use App\Http\Controllers\Inventory\ProductController;
 use App\Http\Controllers\Inventory\ProductLocationController;
+use App\Http\Controllers\Inventory\ProductWarehouseLevelController;
 use App\Http\Controllers\Inventory\QrCodeController;
 use App\Http\Controllers\Inventory\SKUController;
 use App\Http\Controllers\Inventory\StockAdjustmentController;
@@ -36,6 +37,7 @@ Route::put('/products/{product}', [ProductController::class, 'update'])->name('p
 Route::patch('/products/{product}', [ProductController::class, 'update'])->middleware('permission:edit_products');
 Route::delete('/products/{product}', [ProductController::class, 'destroy'])->name('products.destroy')->middleware('permission:delete_products');
 Route::post('/products/{product}/duplicate', [ProductController::class, 'duplicate'])->name('products.duplicate')->middleware('permission:create_products');
+Route::put('/products/{product}/warehouse-levels', [ProductWarehouseLevelController::class, 'update'])->name('products.warehouse-levels.update')->middleware('permission:edit_products');
 
 // Bulk Product Operations
 Route::prefix('products/bulk')->name('products.bulk.')->middleware('permission:edit_products')->group(function () {
@@ -120,6 +122,7 @@ Route::resource('locations', ProductLocationController::class)
 
 // Warehouses - Permission based
 Route::resource('warehouses', WarehouseController::class)->middleware('permission:view_warehouses');
+Route::post('warehouses/access-policy', [WarehouseController::class, 'updateAccessPolicy'])->name('warehouses.access-policy')->middleware('permission:manage_warehouse_users');
 Route::post('warehouses/{warehouse}/users', [WarehouseController::class, 'updateUsers'])->name('warehouses.users.update')->middleware('permission:manage_warehouse_users');
 Route::post('warehouses/{warehouse}/set-default', [WarehouseController::class, 'setDefault'])->name('warehouses.set-default')->middleware('permission:edit_warehouses');
 Route::post('/set-warehouse', [WarehouseController::class, 'setActiveWarehouse'])->name('warehouses.set-active');

@@ -181,6 +181,16 @@ class Product extends Model
     }
 
     /**
+     * Per-warehouse stock thresholds for this product.
+     *
+     * @return HasMany<WarehouseReorderPoint, $this>
+     */
+    public function warehouseReorderPoints(): HasMany
+    {
+        return $this->hasMany(WarehouseReorderPoint::class);
+    }
+
+    /**
      * Get all stock adjustments for this product.
      *
      * @return HasMany<StockAdjustment, $this>

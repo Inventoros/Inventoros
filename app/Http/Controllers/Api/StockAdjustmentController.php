@@ -10,6 +10,7 @@ use App\Http\Requests\Api\StockAdjustment\StoreStockAdjustmentRequest;
 use App\Http\Resources\StockAdjustmentResource;
 use App\Models\Inventory\Product;
 use App\Models\Inventory\StockAdjustment;
+use App\Services\WarehouseAccessService;
 use Dedoc\Scramble\Attributes\QueryParameter;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -36,6 +37,7 @@ class StockAdjustmentController extends Controller
 
         $query = StockAdjustment::with(['product', 'user'])
             ->forOrganization($organizationId)
+            ->tap(fn ($q) => app(WarehouseAccessService::class)->scopeByLocation($q, $request->user(), 'stock_adjustments.location_id'))
             ->when($request->input('product_id'), function ($query, $productId) {
                 $query->forProduct($productId);
             })
@@ -84,6 +86,9 @@ class StockAdjustmentController extends Controller
             ], 404);
         }
 
+        // A restricted user may only adjust a bin in one of their warehouses.
+        app(WarehouseAccessService::class)->authorizeLocation($request->user(), $validated['location_id'] ?? null);
+
         // Create the stock adjustment
         try {
             $adjustment = StockAdjustment::adjust(
@@ -124,6 +129,8 @@ class StockAdjustmentController extends Controller
                 'error' => 'not_found',
             ], 404);
         }
+
+        app(WarehouseAccessService::class)->authorizeLocation($request->user(), $stockAdjustment->location_id);
 
         $stockAdjustment->load(['product', 'user']);
 

@@ -21,9 +21,15 @@ use Illuminate\Support\Collection;
  * Shared by the scheduled `inventory:check-reorder-points` command and the
  * "Create PO" quick action on the dashboard reorder suggestions and the
  * low-stock report, so both suggest the same quantity at the same cost.
+ *
+ * Per-warehouse reorder points (warehouse_reorder_points) take part here:
+ * when a product is short in one or more warehouses that track it on their
+ * own, the suggestion is what those warehouses need.
  */
 final class ReorderService
 {
+    public function __construct(private readonly WarehouseStockLevelService $warehouseLevels) {}
+
     /**
      * Eager-load constraint that loads only a product's primary supplier link.
      *
@@ -31,9 +37,25 @@ final class ReorderService
      */
     public static function primarySupplierEagerLoad(): array
     {
-        return ['suppliers' => function ($query): void {
-            $query->wherePivot('is_primary', true);
-        }];
+        return [
+            'suppliers' => function ($query): void {
+                $query->wherePivot('is_primary', true);
+            },
+            // Per-warehouse thresholds, read by suggestedQuantity().
+            'warehouseReorderPoints.warehouse:id,name,priority',
+        ];
+    }
+
+    /**
+     * Warehouses where the product is at or below its per-warehouse reorder
+     * point, each with the quantity it needs. Empty when the product has no
+     * per-warehouse thresholds or none is due.
+     *
+     * @return array<int, array{warehouse_id: int, warehouse_name: string, on_hand: int, reorder_point: int, suggested_quantity: int}>
+     */
+    public function warehouseShortfalls(Product $product): array
+    {
+        return $this->warehouseLevels->shortfalls($product);
     }
 
     /**
@@ -52,13 +74,19 @@ final class ReorderService
     /**
      * How many units to order.
      *
-     * The product's configured reorder quantity when it has one; otherwise the
-     * gap up to max_stock (falling back to reorder_point, then min_stock). At
-     * least one unit, and never below the primary supplier's minimum order.
+     * When the product is short in warehouses that have their own reorder
+     * points, the sum of what those warehouses need. Otherwise the product's
+     * configured reorder quantity when it has one, else the gap up to
+     * max_stock (falling back to reorder_point, then min_stock). At least one
+     * unit, and never below the primary supplier's minimum order.
      */
     public function suggestedQuantity(Product $product, ?Supplier $primary = null): int
     {
-        if ($product->reorder_quantity !== null && $product->reorder_quantity > 0) {
+        $shortfalls = $this->warehouseShortfalls($product);
+
+        if ($shortfalls !== []) {
+            $quantity = array_sum(array_column($shortfalls, 'suggested_quantity'));
+        } elseif ($product->reorder_quantity !== null && $product->reorder_quantity > 0) {
             $quantity = (int) $product->reorder_quantity;
         } else {
             $target = $product->max_stock ?? $product->reorder_point ?? $product->min_stock ?? 0;

@@ -7,11 +7,13 @@ namespace App\Providers;
 use App\Listeners\SecurityEventSubscriber;
 use App\Listeners\WebhookEventSubscriber;
 use App\Models\Inventory\Product;
+use App\Models\Inventory\ProductLocationStock;
 use App\Models\Order\Order;
 use App\Models\Purchasing\PurchaseOrder;
 use App\Models\Role;
 use App\Models\User;
 use App\Observers\OrderObserver;
+use App\Observers\ProductLocationStockObserver;
 use App\Observers\ProductObserver;
 use App\Observers\PurchaseOrderObserver;
 use App\Observers\RoleSecurityObserver;
@@ -63,6 +65,7 @@ class AppServiceProvider extends ServiceProvider
 
         // Register observers
         Product::observe(ProductObserver::class);
+        ProductLocationStock::observe(ProductLocationStockObserver::class);
         Order::observe(OrderObserver::class);
         PurchaseOrder::observe(PurchaseOrderObserver::class);
 

@@ -14,6 +14,7 @@ use App\Models\Inventory\Product;
 use App\Models\Notification;
 use App\Models\Order\Order;
 use App\Models\User;
+use App\Models\Warehouse;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
@@ -212,6 +213,56 @@ final class NotificationService
             self::sendEmailNotification($user, 'low_stock', [
                 'product' => $product,
                 'notification_url' => route('products.show', $product->id),
+            ]);
+        }
+    }
+
+    /**
+     * Notify stock managers that a product has fallen to or below its minimum
+     * in one warehouse (per-warehouse thresholds). Only users who can access
+     * that warehouse are notified; in-app only, since the low-stock email
+     * reports the product total.
+     */
+    public static function createWarehouseLowStockNotification(Product $product, Warehouse $warehouse, int $onHand, int $minimum): void
+    {
+        $cooldownKey = "warehouse_low_stock_alerted:{$product->id}:{$warehouse->id}";
+        if (Cache::has($cooldownKey)) {
+            return;
+        }
+        Cache::put($cooldownKey, true, now()->addMinutes(
+            (int) config('notifications.low_stock_cooldown_minutes', 1440)
+        ));
+
+        $access = app(WarehouseAccessService::class);
+
+        $users = User::where('organization_id', $product->organization_id)
+            ->whereHas('roles', function ($query) {
+                $query->whereJsonContains('permissions', 'manage_stock');
+            })
+            ->get();
+
+        foreach ($users as $user) {
+            if (! self::shouldNotifyUser($user, 'low_stock') || ! $access->canAccessWarehouse($user, $warehouse->id)) {
+                continue;
+            }
+
+            Notification::create([
+                'organization_id' => $product->organization_id,
+                'user_id' => $user->id,
+                'type' => 'warehouse_low_stock',
+                'title' => 'Low Stock in '.$warehouse->name,
+                'message' => "Product '{$product->name}' (SKU: {$product->sku}) is running low in {$warehouse->name}. On hand there: {$onHand}, Minimum: {$minimum}",
+                'data' => [
+                    'product_id' => $product->id,
+                    'product_name' => $product->name,
+                    'sku' => $product->sku,
+                    'warehouse_id' => $warehouse->id,
+                    'warehouse_name' => $warehouse->name,
+                    'on_hand' => $onHand,
+                    'min_stock' => $minimum,
+                ],
+                'action_url' => route('products.show', $product->id),
+                'priority' => $onHand <= 0 ? 'urgent' : 'high',
             ]);
         }
     }

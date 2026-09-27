@@ -592,7 +592,12 @@
     "codePlaceholder": "e.g., WH-A",
     "descPlaceholder": "Optional description...",
     "printQrLabel": "Print QR label",
-    "printAllQrLabels": "Print QR Labels"
+    "printAllQrLabels": "Print QR Labels",
+    "warehouse": "Warehouse",
+    "noWarehouse": "No warehouse",
+    "capacity": "Capacity (units)",
+    "capacityHint": "Optional. Used to show how full the location is.",
+    "capacityValue": "Capacity: {capacity} units"
   },
   "reports": {
     "title": "Reports & Analytics",
@@ -1423,7 +1428,8 @@
       "locations": "Locations",
       "status": "Status",
       "default": "Default",
-      "actions": "Actions"
+      "actions": "Actions",
+      "onHand": "On hand"
     },
     "fields": {
       "name": "Warehouse Name",
@@ -1442,6 +1448,8 @@
       "currency": "Currency",
       "priority": "Priority",
       "priorityHint": "Higher priority warehouses are used first for fulfillment.",
+      "capacity": "Capacity (units)",
+      "capacityHint": "Optional. Leave blank to use the total capacity of this warehouse's locations.",
       "isActive": "Active"
     },
     "sections": {
@@ -1457,6 +1465,51 @@
       "addressLine1": "Street address",
       "addressLine2": "Suite, unit, building, floor, etc.",
       "postalCode": "e.g., M5V 2T6"
+    },
+    "access": {
+      "title": "Warehouse access",
+      "restrictLabel": "Restrict users to their assigned warehouses",
+      "restrictHint": "Users assigned to warehouses only see and move stock in those warehouses. Turn this on to also hide all warehouse stock from users with no assignment. Admins and roles with Access All Warehouses are never restricted."
+    },
+    "users": {
+      "title": "User access",
+      "hint": "Users you assign here can only see and move stock in the warehouses they are assigned to. Admins and roles with Access All Warehouses always see every warehouse.",
+      "searchPlaceholder": "Search users...",
+      "noUsers": "No users found.",
+      "selected": "{count} user(s) selected",
+      "save": "Save user access",
+      "allWarehouses": "All warehouses",
+      "assigned": "Assigned users ({count})",
+      "noneAssigned": "No users assigned to this warehouse.",
+      "manage": "Manage user access"
+    },
+    "default": {
+      "badge": "Default warehouse",
+      "makeDefault": "Make default",
+      "confirm": "Make \"{name}\" the default warehouse?",
+      "hint": "The default warehouse is preselected for new orders."
+    },
+    "capacity": {
+      "utilisation": "Utilisation",
+      "ofCapacity": "{onHand} of {capacity} units",
+      "noCapacity": "No capacity set",
+      "onHand": "Units on hand",
+      "column": "Capacity"
+    },
+    "stockLevels": {
+      "title": "Stock by warehouse",
+      "hint": "On hand is the stock in each warehouse's locations. Set thresholds to track a warehouse on its own; blank fields use the product's values, and a warehouse left blank is covered by the product totals.",
+      "noWarehouses": "No warehouses yet.",
+      "warehouse": "Warehouse",
+      "onHand": "On hand",
+      "min_stock": "Min stock",
+      "reorder_point": "Reorder point",
+      "reorder_quantity": "Reorder qty",
+      "max_stock": "Max stock",
+      "low": "Low",
+      "reorder": "Reorder",
+      "shortIn": "Short in {names}",
+      "save": "Save warehouse levels"
     }
   },
   "workOrders": {

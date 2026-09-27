@@ -35,6 +35,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property bool $is_default
  * @property bool $is_active
  * @property int $priority
+ * @property int|null $capacity
  */
 class Warehouse extends Model
 {
@@ -59,6 +60,7 @@ class Warehouse extends Model
         'is_default',
         'is_active',
         'priority',
+        'capacity',
     ];
 
     protected function casts(): array
@@ -67,6 +69,7 @@ class Warehouse extends Model
             'is_default' => 'boolean',
             'is_active' => 'boolean',
             'priority' => 'integer',
+            'capacity' => 'integer',
         ];
     }
 

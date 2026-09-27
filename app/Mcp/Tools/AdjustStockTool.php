@@ -6,6 +6,7 @@ namespace App\Mcp\Tools;
 
 use App\Mcp\Concerns\AuthenticatesMcpRequest;
 use App\Models\Inventory\Product;
+use App\Models\Inventory\ProductLocation;
 use App\Models\Inventory\StockAdjustment;
 use Illuminate\Contracts\JsonSchema\JsonSchema;
 use Illuminate\Support\Facades\DB;
@@ -29,6 +30,7 @@ class AdjustStockTool extends Tool
             'type' => $schema->string()->required()->enum(['manual', 'count', 'damage', 'return', 'transfer'])->description('Reason category.'),
             'reason' => $schema->string()->description('Short human label (e.g. "Cycle count Q2", max 255 chars).'),
             'notes' => $schema->string()->description('Free-text notes for the audit log.'),
+            'location_id' => $schema->integer()->description('Location bin to apply the delta to. Required when the user is restricted to assigned warehouses.'),
         ];
     }
 
@@ -42,6 +44,7 @@ class AdjustStockTool extends Tool
             'type' => ['required', 'string', 'in:manual,count,damage,return,transfer'],
             'reason' => ['nullable', 'string', 'max:255'],
             'notes' => ['nullable', 'string', 'max:5000'],
+            'location_id' => ['nullable', 'integer'],
         ]);
 
         $product = Product::query()
@@ -51,6 +54,15 @@ class AdjustStockTool extends Tool
         if (! $product) {
             return Response::error('Product not found in this organization.');
         }
+
+        $locationId = isset($validated['location_id']) ? (int) $validated['location_id'] : null;
+
+        if ($locationId !== null && ! ProductLocation::query()->where('organization_id', $this->organizationId())->whereKey($locationId)->exists()) {
+            return Response::error('Location not found in this organization.');
+        }
+
+        // A restricted user may only adjust a bin in one of their warehouses.
+        $this->warehouseAccess()->authorizeLocation($this->user(), $locationId);
 
         if ($validated['quantity'] < 0 && abs($validated['quantity']) > $product->stock) {
             return Response::error("Cannot remove {$validated['quantity']} units; only {$product->stock} on hand.");
@@ -62,6 +74,7 @@ class AdjustStockTool extends Tool
             $validated['type'],
             $validated['reason'] ?? null,
             $validated['notes'] ?? null,
+            locationId: $locationId,
         ));
 
         $product->refresh();

@@ -93,7 +93,7 @@ Restart the client. The Inventoros tools will appear in the tool picker.
 | Tool | Permissions | Purpose |
 |---|---|---|
 | `list_low_stock` | `view_products` or `manage_products` | Products at or below `min_stock`, sorted by shortage. |
-| `adjust_stock` | `manage_stock` | Apply a signed delta with reason (`manual`, `count`, `damage`, `return`, `transfer`). Marked **destructive**. |
+| `adjust_stock` | `manage_stock` | Apply a signed delta with reason (`manual`, `count`, `damage`, `return`, `transfer`), optionally at a `location_id` bin (required for users restricted to assigned warehouses). Marked **destructive**. |
 
 ### Sales
 

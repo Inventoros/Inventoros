@@ -7,6 +7,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\StockAuditResource;
 use App\Models\Inventory\StockAudit;
+use App\Services\WarehouseAccessService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
@@ -32,6 +33,7 @@ class StockAuditController extends Controller
         $query = StockAudit::with(['warehouseLocation', 'creator'])
             ->withCount('items')
             ->forOrganization($organizationId)
+            ->tap(fn ($q) => app(WarehouseAccessService::class)->scopeByLocation($q, $request->user(), 'warehouse_location_id'))
             ->when($request->input('status'), function ($query, $status) {
                 $query->byStatus($status);
             })
@@ -66,6 +68,8 @@ class StockAuditController extends Controller
                 'error' => 'not_found',
             ], 404);
         }
+
+        app(WarehouseAccessService::class)->authorizeLocation($request->user(), $stockAudit->warehouse_location_id);
 
         $stockAudit->load([
             'warehouseLocation',

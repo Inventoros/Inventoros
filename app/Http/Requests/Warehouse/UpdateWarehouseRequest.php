@@ -48,6 +48,7 @@ final class UpdateWarehouseRequest extends FormRequest
             'currency' => ['nullable', 'string', 'max:3'],
             'is_active' => ['boolean'],
             'priority' => ['nullable', 'integer', 'min:0'],
+            'capacity' => ['nullable', 'integer', 'min:0', 'max:2147483647'],
         ];
     }
 }

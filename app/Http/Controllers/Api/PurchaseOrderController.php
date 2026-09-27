@@ -14,6 +14,7 @@ use App\Http\Resources\PurchaseOrderResource;
 use App\Models\Inventory\Product;
 use App\Models\Purchasing\PurchaseOrder;
 use App\Models\Purchasing\PurchaseOrderItem;
+use App\Services\WarehouseAccessService;
 use App\Services\PurchaseOrderEmailService;
 use App\Support\Money;
 use Dedoc\Scramble\Attributes\QueryParameter;
@@ -297,6 +298,10 @@ class PurchaseOrderController extends Controller
         }
 
         $validated = $request->validated();
+
+        // Goods land in each product's primary location; a restricted user
+        // can only book them into their own warehouses.
+        app(WarehouseAccessService::class)->authorizeReceiving($request->user(), $purchaseOrder, $validated['items']);
 
         $receivedCount = 0;
 

@@ -44,6 +44,10 @@ class RoleSeeder extends Seeder
                     Permission::MANAGE_CATEGORIES->value,
                     Permission::MANAGE_LOCATIONS->value,
 
+                    // Managers oversee the whole organization's stock, so a
+                    // warehouse assignment never narrows what they see.
+                    Permission::ACCESS_ALL_WAREHOUSES->value,
+
                     Permission::VIEW_ORDERS->value,
                     Permission::CREATE_ORDERS->value,
                     Permission::EDIT_ORDERS->value,

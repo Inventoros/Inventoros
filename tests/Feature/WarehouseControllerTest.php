@@ -301,14 +301,31 @@ class WarehouseControllerTest extends TestCase
     public function test_non_admin_cannot_set_warehouse_they_lack_access_to(): void
     {
         $warehouse = $this->createWarehouse(['is_active' => true]);
+        $otherWarehouse = $this->createWarehouse(['is_active' => true]);
 
-        // Member is not assigned to this warehouse and is not admin
+        // Member is assigned to a different warehouse only, so their access
+        // is restricted to that one.
+        $otherWarehouse->users()->attach($this->member->id);
+
         $response = $this->actingAs($this->member)
             ->post(route('warehouses.set-active'), [
                 'warehouse_id' => $warehouse->id,
             ]);
 
         $response->assertStatus(403);
+    }
+
+    public function test_unassigned_non_admin_can_switch_to_any_warehouse(): void
+    {
+        $warehouse = $this->createWarehouse(['is_active' => true]);
+
+        // No assignments and the org does not restrict unassigned users, so the
+        // member keeps access to every warehouse.
+        $this->actingAs($this->member)
+            ->post(route('warehouses.set-active'), [
+                'warehouse_id' => $warehouse->id,
+            ])
+            ->assertRedirect();
     }
 
     public function test_non_admin_can_set_warehouse_they_are_assigned_to(): void

@@ -10,6 +10,7 @@ use App\Http\Requests\ProductLocation\UpdateProductLocationRequest;
 use App\Models\Inventory\ProductLocation;
 use App\Models\Inventory\ProductLocationStock;
 use App\Models\Warehouse;
+use App\Services\WarehouseAccessService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -24,6 +25,8 @@ use Inertia\Response;
  */
 class ProductLocationController extends Controller
 {
+    public function __construct(private readonly WarehouseAccessService $warehouseAccess) {}
+
     /**
      * Display a listing of locations.
      *
@@ -37,6 +40,7 @@ class ProductLocationController extends Controller
         $locations = ProductLocation::forOrganization($organizationId)
             ->with('warehouse:id,name,code')
             ->withCount('products')
+            ->tap(fn ($q) => $this->warehouseAccess->scopeLocations($q, $request->user()))
             ->when($activeWarehouseId, function ($query, $warehouseId) {
                 $query->where('warehouse_id', $warehouseId);
             })
@@ -53,6 +57,7 @@ class ProductLocationController extends Controller
 
         $warehouses = Warehouse::forOrganization($organizationId)
             ->active()
+            ->tap(fn ($q) => $this->warehouseAccess->scopeWarehouses($q, $request->user()))
             ->orderBy('name')
             ->get(['id', 'name', 'code']);
 
@@ -79,6 +84,9 @@ class ProductLocationController extends Controller
     public function store(StoreProductLocationRequest $request)
     {
         $validated = $request->validated();
+
+        // A restricted user can only add locations to their own warehouses.
+        $this->warehouseAccess->authorizeWarehouse($request->user(), isset($validated['warehouse_id']) ? (int) $validated['warehouse_id'] : null);
 
         $validated['organization_id'] = $request->user()->organization_id;
         $validated['is_active'] = $validated['is_active'] ?? true;
@@ -112,7 +120,14 @@ class ProductLocationController extends Controller
             abort(403, 'Unauthorized action.');
         }
 
+        $this->warehouseAccess->authorizeLocation($request->user(), $location);
+
         $validated = $request->validated();
+
+        // ...and cannot move a location into a warehouse they cannot access.
+        if (array_key_exists('warehouse_id', $validated)) {
+            $this->warehouseAccess->authorizeWarehouse($request->user(), $validated['warehouse_id'] !== null ? (int) $validated['warehouse_id'] : null);
+        }
 
         $location->update($validated);
 
@@ -133,6 +148,8 @@ class ProductLocationController extends Controller
         if ($location->organization_id !== $request->user()->organization_id) {
             abort(403, 'Unauthorized action.');
         }
+
+        $this->warehouseAccess->authorizeLocation($request->user(), $location);
 
         // Check if location has products (as their primary location)
         if ($location->products()->count() > 0) {

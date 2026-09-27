@@ -8,7 +8,7 @@ import StatTile from '@/Components/ui/StatTile.vue';
 import { Head, Link, router } from '@inertiajs/vue3';
 import { useI18n } from 'vue-i18n';
 import { usePermissions } from '@/composables/usePermissions';
-import { Pencil, ArrowLeft, MapPin, Boxes, Users, Trash2 } from 'lucide-vue-next';
+import { Pencil, ArrowLeft, MapPin, Boxes, Users, Trash2, Star, Gauge } from 'lucide-vue-next';
 
 const { t } = useI18n();
 const { hasPermission } = usePermissions();
@@ -19,6 +19,12 @@ const props = defineProps({
     assignedUsers: Array,
     stats: Object,
 });
+
+const makeDefault = () => {
+    if (confirm(t('warehouses.default.confirm', { name: props.warehouse.name }))) {
+        router.post(route('warehouses.set-default', props.warehouse.id), {}, { preserveScroll: true });
+    }
+};
 
 const deleteWarehouse = () => {
     if (confirm(`Are you sure you want to delete "${props.warehouse.name}"? This action cannot be undone.`)) {
@@ -69,7 +75,7 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-t
         </PageHeader>
 
         <!-- Key metrics -->
-        <section class="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
+        <section class="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
             <StatTile
                 label="Total Locations"
                 :value="stats?.locations_count || 0"
@@ -90,6 +96,16 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-t
                 icon-tone="violet"
             >
                 <template #icon><Users :size="18" /></template>
+            </StatTile>
+            <StatTile
+                :label="t('warehouses.capacity.utilisation')"
+                :value="stats?.utilisation != null ? `${stats.utilisation}%` : '-'"
+                :hint="stats?.capacity != null
+                    ? t('warehouses.capacity.ofCapacity', { onHand: stats.on_hand ?? 0, capacity: stats.capacity })
+                    : t('warehouses.capacity.noCapacity')"
+                :icon-tone="stats?.utilisation >= 90 ? 'warning' : 'brand'"
+            >
+                <template #icon><Gauge :size="18" /></template>
             </StatTile>
         </section>
 
@@ -169,6 +185,8 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-t
                                         <th :class="thClass">Name</th>
                                         <th :class="thClass">Code</th>
                                         <th :class="thClass">Products</th>
+                                        <th :class="thClass">{{ t('warehouses.columns.onHand') }}</th>
+                                        <th :class="thClass">{{ t('warehouses.capacity.column') }}</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -187,6 +205,16 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-t
                                         </td>
                                         <td class="px-4 py-3 text-sm tabular-nums text-text-secondary">
                                             {{ location.products_count || 0 }}
+                                        </td>
+                                        <td class="px-4 py-3 text-sm tabular-nums text-text-secondary">
+                                            {{ location.on_hand || 0 }}
+                                        </td>
+                                        <td class="px-4 py-3 text-sm tabular-nums text-text-secondary">
+                                            <template v-if="location.capacity != null">
+                                                {{ location.capacity }}
+                                                <span class="text-text-tertiary">({{ location.utilisation }}%)</span>
+                                            </template>
+                                            <span v-else class="text-text-tertiary">-</span>
                                         </td>
                                     </tr>
                                 </tbody>
@@ -221,7 +249,18 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-t
                                 </div>
                             </div>
                         </div>
-                        <p v-else class="text-sm text-text-tertiary">No users assigned to this warehouse.</p>
+                        <p v-else class="text-sm text-text-tertiary">{{ t('warehouses.users.noneAssigned') }}</p>
+                        <Button
+                            v-if="hasPermission('manage_warehouse_users')"
+                            variant="secondary"
+                            size="sm"
+                            class="mt-4 w-full"
+                            as="Link"
+                            :href="`${route('warehouses.edit', warehouse.id)}#user-access`"
+                        >
+                            <Users :size="14" />
+                            {{ t('warehouses.users.manage') }}
+                        </Button>
                     </div>
                 </Card>
 
@@ -239,6 +278,13 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-t
                             <Pencil :size="16" />
                             Edit Warehouse
                         </Button>
+                        <template v-if="hasPermission('edit_warehouses') && !warehouse.is_default">
+                            <Button variant="secondary" class="w-full" @click="makeDefault">
+                                <Star :size="16" />
+                                {{ t('warehouses.default.makeDefault') }}
+                            </Button>
+                            <p class="text-xs text-text-tertiary">{{ t('warehouses.default.hint') }}</p>
+                        </template>
                     </div>
                 </Card>
 

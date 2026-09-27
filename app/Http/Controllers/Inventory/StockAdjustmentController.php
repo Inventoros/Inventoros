@@ -12,6 +12,7 @@ use App\Models\Inventory\ProductVariant;
 use App\Models\Inventory\ProductLocation;
 use App\Models\Inventory\StockAdjustment;
 use App\Models\User;
+use App\Services\WarehouseAccessService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -25,6 +26,8 @@ use Inertia\Response;
  */
 class StockAdjustmentController extends Controller
 {
+    public function __construct(private readonly WarehouseAccessService $warehouseAccess) {}
+
     /**
      * Display a listing of stock adjustments.
      *
@@ -36,6 +39,7 @@ class StockAdjustmentController extends Controller
 
         $query = StockAdjustment::with(['product', 'user'])
             ->forOrganization($organizationId)
+            ->tap(fn ($q) => $this->warehouseAccess->scopeByLocation($q, $request->user(), 'stock_adjustments.location_id'))
             ->when($request->input('search'), function ($query, $search) {
                 $query->whereHas('product', function ($q) use ($search) {
                     $q->where('name', 'like', "%{$search}%")
@@ -125,6 +129,7 @@ class StockAdjustmentController extends Controller
 
         $locations = ProductLocation::forOrganization($organizationId)
             ->active()
+            ->tap(fn ($q) => $this->warehouseAccess->scopeLocations($q, $request->user()))
             ->orderBy('name')
             ->get(['id', 'name', 'code']);
 
@@ -158,6 +163,10 @@ class StockAdjustmentController extends Controller
         $product = Product::where('id', $validated['product_id'])
             ->forOrganization($request->user()->organization_id)
             ->firstOrFail();
+
+        // A restricted user may only move stock in a bin of one of their
+        // warehouses; an adjustment without a bin changes the org-wide total.
+        $this->warehouseAccess->authorizeLocation($request->user(), $validated['location_id'] ?? null);
 
         // Create the adjustment
         try {
@@ -212,7 +221,9 @@ class StockAdjustmentController extends Controller
             abort(403, 'Unauthorized action.');
         }
 
-        $stockAdjustment->load(['product', 'user', 'reference']);
+        $this->warehouseAccess->authorizeLocation($request->user(), $stockAdjustment->location_id);
+
+        $stockAdjustment->load(['product', 'user', 'reference', 'location']);
 
         return Inertia::render('StockAdjustments/Show', [
             'adjustment' => $stockAdjustment,

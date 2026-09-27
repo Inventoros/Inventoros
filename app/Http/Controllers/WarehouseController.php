@@ -6,8 +6,11 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\Warehouse\StoreWarehouseRequest;
 use App\Http\Requests\Warehouse\UpdateWarehouseRequest;
+use App\Enums\Permission;
+use App\Models\Inventory\ProductLocationStock;
 use App\Models\User;
 use App\Models\Warehouse;
+use App\Services\WarehouseAccessService;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
@@ -21,6 +24,8 @@ use Inertia\Response;
  */
 class WarehouseController extends Controller
 {
+    public function __construct(private readonly WarehouseAccessService $warehouseAccess) {}
+
     /**
      * Display a listing of warehouses.
      */
@@ -30,6 +35,7 @@ class WarehouseController extends Controller
 
         $warehouses = Warehouse::forOrganization($organizationId)
             ->withCount(['locations', 'users'])
+            ->tap(fn ($q) => $this->warehouseAccess->scopeWarehouses($q, $request->user()))
             ->when($request->input('search'), function ($query, $search) {
                 $query->where(function ($q) use ($search) {
                     $q->where('name', 'like', "%{$search}%")
@@ -38,7 +44,7 @@ class WarehouseController extends Controller
                 });
             })
             ->orderByDesc('is_default')
-            ->orderBy('priority')
+            ->orderByDesc('priority') // higher priority is used first for fulfilment
             ->latest()
             ->paginate(15)
             ->withQueryString();
@@ -48,7 +54,27 @@ class WarehouseController extends Controller
             'filters' => [
                 'search' => $request->input('search', ''),
             ],
+            'restrictToAssigned' => $this->warehouseAccess->organizationRestrictsToAssigned((int) $organizationId),
         ]);
+    }
+
+    /**
+     * Turn the organization's "restrict users to assigned warehouses" policy
+     * on or off. When on, users with no warehouse assignment (and without
+     * access_all_warehouses) see no warehouse-bound stock at all.
+     */
+    public function updateAccessPolicy(Request $request)
+    {
+        $validated = $request->validate([
+            'restrict_to_assigned' => ['required', 'boolean'],
+        ]);
+
+        $this->warehouseAccess->setOrganizationRestrictsToAssigned(
+            (int) $request->user()->organization_id,
+            (bool) $validated['restrict_to_assigned'],
+        );
+
+        return redirect()->back()->with('success', 'Warehouse access policy updated.');
     }
 
     /**
@@ -100,12 +126,67 @@ class WarehouseController extends Controller
             abort(403, 'Unauthorized action.');
         }
 
-        $warehouse->load(['locations', 'users']);
-        $warehouse->loadCount(['locations', 'users']);
+        $this->warehouseAccess->authorizeWarehouse($request->user(), $warehouse->id);
+
+        // On-hand per location = the sum of the product bins held there.
+        $onHandByLocation = ProductLocationStock::query()
+            ->whereIn('location_id', $warehouse->locations()->pluck('id'))
+            ->groupBy('location_id')
+            ->selectRaw('location_id, SUM(quantity) as on_hand')
+            ->pluck('on_hand', 'location_id');
+
+        $locations = $warehouse->locations()
+            ->withCount('products')
+            ->orderBy('name')
+            ->get()
+            ->map(function ($location) use ($onHandByLocation) {
+                $location->on_hand = (int) ($onHandByLocation[$location->id] ?? 0);
+                $location->utilisation = $this->utilisation($location->on_hand, $location->capacity);
+
+                return $location;
+            });
+
+        // The warehouse's own capacity, else the sum of its locations'
+        // capacities when any are set. Null means utilisation is unknown.
+        $onHand = (int) $onHandByLocation->sum();
+        $capacity = $warehouse->capacity
+            ?? ($locations->contains(fn ($location) => $location->capacity !== null)
+                ? (int) $locations->sum(fn ($location) => (int) $location->capacity)
+                : null);
+
+        $assignedUsers = $warehouse->users()
+            ->select(['users.id', 'users.name', 'users.email'])
+            ->orderBy('users.name')
+            ->get();
 
         return Inertia::render('Warehouses/Show', [
             'warehouse' => $warehouse,
+            'locations' => $locations,
+            'assignedUsers' => $assignedUsers,
+            'stats' => [
+                'locations_count' => $locations->count(),
+                'products_count' => ProductLocationStock::query()
+                    ->whereIn('location_id', $locations->pluck('id'))
+                    ->where('quantity', '>', 0)
+                    ->distinct()
+                    ->count('product_id'),
+                'on_hand' => $onHand,
+                'capacity' => $capacity,
+                'utilisation' => $this->utilisation($onHand, $capacity),
+            ],
         ]);
+    }
+
+    /**
+     * Percentage of capacity in use, rounded; null when there is no capacity.
+     */
+    private function utilisation(int $onHand, ?int $capacity): ?int
+    {
+        if ($capacity === null || $capacity <= 0) {
+            return null;
+        }
+
+        return (int) round($onHand / $capacity * 100);
     }
 
     /**
@@ -117,17 +198,26 @@ class WarehouseController extends Controller
             abort(403, 'Unauthorized action.');
         }
 
-        $warehouse->load(['users']);
+        $this->warehouseAccess->authorizeWarehouse($request->user(), $warehouse->id);
 
-        // Get all org users for assignment dropdown
-        $orgUsers = User::where('organization_id', $request->user()->organization_id)
-            ->select(['id', 'name', 'email'])
+        // Every org user, flagged when an assignment would not restrict them
+        // (admins and access_all_warehouses holders see every warehouse).
+        $users = User::where('organization_id', $request->user()->organization_id)
+            ->with('roles')
             ->orderBy('name')
-            ->get();
+            ->get(['id', 'name', 'email', 'role'])
+            ->map(fn (User $user) => [
+                'id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
+                'has_all_warehouse_access' => $user->isAdmin() || $user->hasPermission(Permission::ACCESS_ALL_WAREHOUSES),
+            ])
+            ->values();
 
         return Inertia::render('Warehouses/Edit', [
             'warehouse' => $warehouse,
-            'orgUsers' => $orgUsers,
+            'users' => $users,
+            'assignedUserIds' => $warehouse->users()->pluck('users.id')->map(fn ($id) => (int) $id)->values(),
         ]);
     }
 
@@ -139,6 +229,8 @@ class WarehouseController extends Controller
         if ($warehouse->organization_id !== $request->user()->organization_id) {
             abort(403, 'Unauthorized action.');
         }
+
+        $this->warehouseAccess->authorizeWarehouse($request->user(), $warehouse->id);
 
         $validated = $request->validated();
 
@@ -156,6 +248,8 @@ class WarehouseController extends Controller
         if ($warehouse->organization_id !== $request->user()->organization_id) {
             abort(403, 'Unauthorized action.');
         }
+
+        $this->warehouseAccess->authorizeWarehouse($request->user(), $warehouse->id);
 
         if ($warehouse->is_default) {
             return redirect()->back()
@@ -183,8 +277,11 @@ class WarehouseController extends Controller
             abort(403, 'Unauthorized action.');
         }
 
+        $this->warehouseAccess->authorizeWarehouse($request->user(), $warehouse->id);
+
+        // 'present' (not 'required') so an empty list clears every assignment.
         $validated = $request->validate([
-            'user_ids' => ['required', 'array'],
+            'user_ids' => ['present', 'array'],
             'user_ids.*' => ['integer', Rule::exists('users', 'id')->where('organization_id', $request->user()->organization_id)],
         ]);
 
@@ -202,6 +299,8 @@ class WarehouseController extends Controller
         if ($warehouse->organization_id !== $request->user()->organization_id) {
             abort(403, 'Unauthorized action.');
         }
+
+        $this->warehouseAccess->authorizeWarehouse($request->user(), $warehouse->id);
 
         $organizationId = $request->user()->organization_id;
 
