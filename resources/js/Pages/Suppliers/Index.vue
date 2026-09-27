@@ -96,7 +96,7 @@ const thClass =
             </form>
         </Card>
 
-        <PluginSlot slot="beforeTable" :components="pluginComponents?.beforeTable" />
+        <PluginSlot slot="before-table" :components="pluginComponents?.beforeTable" />
 
         <!-- Suppliers table -->
         <div class="mt-4 w-full overflow-x-auto rounded-lg border border-border-subtle bg-surface-raised">

@@ -1,0 +1,13 @@
+{
+    "name": "inventoros-plugin-hello-world-ui",
+    "private": true,
+    "type": "module",
+    "scripts": {
+        "build": "vite build"
+    },
+    "devDependencies": {
+        "@vitejs/plugin-vue": "^6.0.5",
+        "vite": "^7.0.7",
+        "vue": "^3.4.0"
+    }
+}

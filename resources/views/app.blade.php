@@ -20,7 +20,8 @@
 
         <!-- Scripts -->
         @routes(nonce: \Illuminate\Support\Facades\Vite::cspNonce())
-        @vite(['resources/js/app.js', "resources/js/Pages/{$page['component']}.vue"])
+        {{-- Plugin pages (Plugin::slug/Page) are not in the app's Vite manifest. --}}
+        @vite(str_starts_with($page['component'], 'Plugin::') ? ['resources/js/app.js'] : ['resources/js/app.js', "resources/js/Pages/{$page['component']}.vue"])
         @inertiaHead
     </head>
     <body class="font-sans antialiased">

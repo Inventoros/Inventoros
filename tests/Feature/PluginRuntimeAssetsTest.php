@@ -9,6 +9,8 @@ use App\Models\Plugin;
 use App\Models\System\SystemSetting;
 use App\Models\User;
 use App\Services\PluginService;
+use App\Services\Plugins\PluginAssetPublisher;
+use App\Services\Plugins\PluginRequirements;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\File;
 use Tests\Feature\Concerns\InteractsWithFixturePlugins;
@@ -171,6 +173,23 @@ final class PluginRuntimeAssetsTest extends TestCase
         $this->get(route('login'))
             ->assertOk()
             ->assertInertia(fn ($page) => $page->where('pluginAssets', []));
+    }
+
+    public function test_the_shipped_hello_world_bundle_is_valid_and_uses_the_host_vue(): void
+    {
+        $manifest = json_decode(File::get(base_path('plugins/hello-world/plugin.json')), true);
+
+        PluginRequirements::assertMet($manifest, 'Hello World');
+        $ui = PluginAssetPublisher::make()->uiFor('hello-world', $manifest);
+
+        $this->assertSame('plugin.js', $ui['entry']);
+        $bundle = File::get(base_path('plugins/hello-world/dist/plugin.js'));
+
+        // A bare "vue" import cannot resolve in the browser; the build must
+        // read the app's copy from window.Inventoros instead of bundling one.
+        $this->assertDoesNotMatchRegularExpression('/from\s*["\']vue["\']/', $bundle);
+        $this->assertStringContainsString('window.Inventoros.Vue', $bundle);
+        $this->assertStringContainsString('HelloWorldBanner', $bundle);
     }
 
     public function test_csp_lets_the_browser_import_same_origin_plugin_modules(): void
