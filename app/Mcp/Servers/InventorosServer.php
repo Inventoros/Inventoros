@@ -15,6 +15,7 @@ use App\Mcp\Tools\CreatePurchaseOrderTool;
 use App\Mcp\Tools\DecideApprovalTool;
 use App\Mcp\Tools\DeleteWorkOrderTool;
 use App\Mcp\Tools\EmailOrderInvoiceTool;
+use App\Mcp\Tools\CreateShipmentTool;
 use App\Mcp\Tools\GetOrderTool;
 use App\Mcp\Tools\GetProductTool;
 use App\Mcp\Tools\GetPurchaseOrderTool;
@@ -25,6 +26,7 @@ use App\Mcp\Tools\ListOrdersTool;
 use App\Mcp\Tools\ListPendingApprovalsTool;
 use App\Mcp\Tools\ListProductsTool;
 use App\Mcp\Tools\ListPurchaseOrdersTool;
+use App\Mcp\Tools\ListShipmentsTool;
 use App\Mcp\Tools\ListSuppliersTool;
 use App\Mcp\Tools\ListWarehousesTool;
 use App\Mcp\Tools\ListWorkOrdersTool;
@@ -52,10 +54,10 @@ class InventorosServer extends Server
 
         ## Capabilities
 
-        - **Read** products, low-stock items, orders, suppliers, purchase orders,
-          warehouses, locations, categories, and work orders.
-        - **Write** stock adjustments, new products, new orders, and new purchase
-          orders.
+        - **Read** products, low-stock items, orders, shipments, suppliers,
+          purchase orders, warehouses, locations, categories, and work orders.
+        - **Write** stock adjustments, new products, new orders, new purchase
+          orders, and shipments with manual tracking.
         - **Transition** purchase orders (send, receive) and work orders (start).
 
         ## Conventions
@@ -93,6 +95,10 @@ class InventorosServer extends Server
         CreateOrderTool::class,
         EmailOrderInvoiceTool::class,
         RecordPaymentTool::class,
+
+        // Shipping
+        ListShipmentsTool::class,
+        CreateShipmentTool::class,
 
         // Purchasing
         ListSuppliersTool::class,

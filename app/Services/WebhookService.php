@@ -107,6 +107,10 @@ final class WebhookService
             'payment.recorded',
             'payment.voided',
 
+            // Shipment events
+            'shipment.created',
+            'shipment.delivered',
+
             // Stock events
             'stock.adjusted',
 
@@ -161,6 +165,10 @@ final class WebhookService
             'Payment' => [
                 'payment.recorded' => 'When a payment or refund is recorded against an order',
                 'payment.voided' => 'When a payment or refund is voided',
+            ],
+            'Shipment' => [
+                'shipment.created' => 'When a shipment is created for an order',
+                'shipment.delivered' => 'When the carrier reports a shipment delivered',
             ],
             'Stock' => [
                 'stock.adjusted' => 'When stock is manually adjusted',
