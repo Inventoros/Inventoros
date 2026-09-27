@@ -55,6 +55,9 @@ jobs:
       - name: Build frontend assets
         run: npm run build
 
+      - name: Rebuild the hello-world plugin UI bundle
+        run: npm run build:plugin:hello-world
+
       - name: Determine version
         id: version
         run: |
@@ -143,6 +146,10 @@ jobs:
           // Bootstrap Laravel and handle the request...
           /** @var Application $app */
           $app = require_once $laravelPath . '/bootstrap/app.php';
+
+          // public_html is the web root: Vite's manifest and published plugin
+          // UI bundles (public/plugins/{slug}) must resolve here.
+          $app->usePublicPath(__DIR__);
 
           $app->handleRequest(Request::capture());
           EOF
@@ -275,6 +282,12 @@ jobs:
           cd cpanel-release
           zip -r ../inventoros-cpanel-${{ steps.version.outputs.version }}.zip .
 
+      - name: Package the hello-world example plugin
+        run: |
+          # Single top-level hello-world/ folder, as the plugin uploader expects.
+          (cd plugins && zip -r ../hello-world-plugin.zip hello-world -x 'hello-world/ui/node_modules/*')
+          unzip -l hello-world-plugin.zip
+
       - name: Sign release zip
         env:
           INVENTOROS_UPDATE_SECRET_KEY: ${{ secrets.INVENTOROS_UPDATE_SECRET_KEY }}
@@ -286,6 +299,8 @@ jobs:
             # expects. Done with raw libsodium (no Laravel boot needed in CI).
             php -r '$s = base64_decode(trim(getenv("INVENTOROS_UPDATE_SECRET_KEY")), true); if ($s === false || strlen($s) !== SODIUM_CRYPTO_SIGN_SECRETKEYBYTES) { fwrite(STDERR, "Invalid INVENTOROS_UPDATE_SECRET_KEY\n"); exit(1); } $f = getenv("RELEASE_ZIP"); $sig = sodium_crypto_sign_detached(file_get_contents($f), $s); file_put_contents($f . ".sig", base64_encode($sig));'
             echo "Signed $RELEASE_ZIP -> $RELEASE_ZIP.sig"
+            RELEASE_ZIP=hello-world-plugin.zip php -r '$s = base64_decode(trim(getenv("INVENTOROS_UPDATE_SECRET_KEY")), true); $f = getenv("RELEASE_ZIP"); file_put_contents($f . ".sig", base64_encode(sodium_crypto_sign_detached(file_get_contents($f), $s)));'
+            echo "Signed hello-world-plugin.zip -> hello-world-plugin.zip.sig"
           else
             echo "::warning::INVENTOROS_UPDATE_SECRET_KEY is not set; release will be unsigned and in-app updates with signature verification enabled will reject it."
           fi
@@ -297,6 +312,8 @@ jobs:
           path: |
             inventoros-cpanel-${{ steps.version.outputs.version }}.zip
             inventoros-cpanel-${{ steps.version.outputs.version }}.zip.sig
+            hello-world-plugin.zip
+            hello-world-plugin.zip.sig
           retention-days: 30
           if-no-files-found: ignore
 
@@ -305,7 +322,9 @@ jobs:
         uses: softprops/action-gh-release@v1
         with:
           tag_name: ${{ steps.version.outputs.tag_name }}
-          files: inventoros-cpanel-${{ steps.version.outputs.version }}.zip*
+          files: |
+            inventoros-cpanel-${{ steps.version.outputs.version }}.zip*
+            hello-world-plugin.zip*
           name: Release ${{ steps.version.outputs.tag_name }}
           body: |
             ## Inventoros ${{ steps.version.outputs.tag_name }}
@@ -323,6 +342,10 @@ jobs:
             - Production-optimized Composer dependencies
             - cPanel-compatible directory structure
             - Modified index.php for split directory setup
+
+            ### Example plugin
+
+            **Download:** `hello-world-plugin.zip`, a free example plugin (hooks, lifecycle files and a runtime UI bundle). Upload it from Admin > Plugins with `INVENTOROS_ALLOW_PLUGIN_UPLOADS=true`.
           draft: false
           prerelease: false
         env:
