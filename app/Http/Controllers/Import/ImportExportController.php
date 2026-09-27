@@ -237,7 +237,11 @@ class ImportExportController extends Controller
     {
         $filters = $request->only(['status', 'date_from', 'date_to', 'customer_id']);
 
-        return $this->streamOrQueueExport($request, 'orders', $filters);
+        // mode=lines exports one row per order line (see OrderLinesExport);
+        // the default stays one row per order.
+        $type = $request->query('mode') === 'lines' ? 'order_lines' : 'orders';
+
+        return $this->streamOrQueueExport($request, $type, $filters);
     }
 
     /**
