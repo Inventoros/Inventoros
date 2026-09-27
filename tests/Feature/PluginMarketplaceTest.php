@@ -11,9 +11,9 @@ use App\Models\System\SystemSetting;
 use App\Models\User;
 use App\Services\Marketplace\MarketplaceClient;
 use App\Services\Marketplace\MarketplaceException;
+use App\Services\PluginService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Client\Request;
-use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Http;
 use Tests\Feature\Concerns\InteractsWithFixturePlugins;
 use Tests\TestCase;
@@ -419,8 +419,8 @@ final class PluginMarketplaceTest extends TestCase
             'hooks/deactivate.php' => $this->recordingHook('deactivate'),
             'old-only.txt' => 'old',
         ], $slug);
-        app(\App\Services\PluginService::class)->activatePlugin($slug);
-        $activatedAt = Plugin::where('slug', $slug)->value('id');
+        app(PluginService::class)->activatePlugin($slug);
+        $pluginId = Plugin::where('slug', $slug)->value('id');
 
         $bytes = $this->zipBytes($slug, ['version' => '2.0.0'], ['hooks/activate.php' => $this->recordingHook('activate-v2')]);
         $this->fakeMarketplace($this->entry($slug, $bytes, ['version' => '2.0.0']), $bytes);
@@ -433,7 +433,7 @@ final class PluginMarketplaceTest extends TestCase
         $this->assertSame('2.0.0', $manifest['version']);
         $this->assertFileDoesNotExist(base_path("plugins/{$slug}/old-only.txt"));
         $this->assertTrue((bool) Plugin::where('slug', $slug)->value('is_active'));
-        $this->assertSame($activatedAt, Plugin::where('slug', $slug)->value('id'));
+        $this->assertSame($pluginId, Plugin::where('slug', $slug)->value('id'));
         $this->assertSame(['deactivate', 'activate-v2'], $this->fixtureCalls());
     }
 
@@ -441,7 +441,7 @@ final class PluginMarketplaceTest extends TestCase
     {
         $slug = $this->slug();
         $this->makeFixturePlugin(['version' => '1.0.0'], [], $slug);
-        app(\App\Services\PluginService::class)->activatePlugin($slug);
+        app(PluginService::class)->activatePlugin($slug);
 
         $bytes = $this->zipBytes($slug, ['version' => '2.0.0'], ['hooks/activate.php' => $this->recordingHook('activate-v2', throws: true)]);
         $this->fakeMarketplace($this->entry($slug, $bytes, ['version' => '2.0.0']), $bytes);
