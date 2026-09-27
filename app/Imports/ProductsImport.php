@@ -136,7 +136,7 @@ final class ProductsImport implements SkipsOnFailure, ToCollection, WithChunkRea
                 if (isset($this->seenSkus[$sku])) {
                     $this->warnings[] = [
                         'row' => $rowNumber,
-                        'warnings' => ["Duplicate SKU '{$sku}' in this file — row skipped (first occurrence kept)."],
+                        'warnings' => ["Duplicate SKU '{$sku}' in this file; row skipped (first occurrence kept)."],
                     ];
 
                     continue;

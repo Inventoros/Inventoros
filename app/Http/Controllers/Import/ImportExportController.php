@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Import;
 
+use App\Enums\OrderStatus;
 use App\Exports\ExportFactory;
 use App\Http\Controllers\Controller;
 use App\Imports\OrdersImport;
@@ -68,6 +69,12 @@ class ImportExportController extends Controller
             'categories' => $categories,
             'locations' => $locations,
             'exports' => $exports,
+            // The per-currency price columns the product CSV carries.
+            'currencyColumns' => array_map(
+                fn (string $code) => 'price_'.$code,
+                ProductCurrencyColumns::currenciesFor($organizationId),
+            ),
+            'orderStatuses' => OrderStatus::values(),
         ]);
     }
 
