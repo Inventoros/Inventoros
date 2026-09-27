@@ -13,7 +13,7 @@ const props = defineProps({
 
 
 const { t } = useI18n();
-const emit = defineEmits(['close', 'product-found', 'error']);
+const emit = defineEmits(['close', 'product-found', 'location-found', 'error']);
 
 const manualCode = ref('');
 const isLoading = ref(false);
@@ -23,6 +23,7 @@ const foundProduct = ref(null);
 // Set when the scanned code is a variant's barcode/SKU; emitted alongside
 // the product so a form can pick that variant directly.
 const foundVariant = ref(null);
+const foundLocation = ref(null);
 const scannerMode = ref('camera'); // 'camera' or 'manual'
 
 watch(() => props.show, (newVal) => {
@@ -31,6 +32,7 @@ watch(() => props.show, (newVal) => {
         errorMessage.value = '';
         foundProduct.value = null;
         foundVariant.value = null;
+        foundLocation.value = null;
         manualCode.value = '';
     } else {
         scannerEnabled.value = false;
@@ -44,11 +46,16 @@ const lookupBarcode = async (code) => {
     errorMessage.value = '';
     foundProduct.value = null;
     foundVariant.value = null;
+    foundLocation.value = null;
 
     try {
         const response = await axios.get(route('barcode.lookup'), { params: { code } });
 
-        if (response.data.found) {
+        // Location QR labels resolve to a storage location, not a product.
+        if (response.data.found && response.data.type === 'location') {
+            foundLocation.value = response.data.location;
+            emit('location-found', response.data.location);
+        } else if (response.data.found) {
             foundProduct.value = response.data.product;
             foundVariant.value = response.data.variant ?? null;
             emit('product-found', response.data.product, foundVariant.value);
@@ -94,6 +101,7 @@ const toggleMode = () => {
     errorMessage.value = '';
     foundProduct.value = null;
     foundVariant.value = null;
+    foundLocation.value = null;
 };
 
 const close = () => {
@@ -244,8 +252,25 @@ const selectProduct = () => {
                             </button>
                         </div>
 
+                        <!-- Found Location -->
+                        <div v-if="foundLocation" class="rounded-md border border-status-info/20 bg-status-info-soft p-4">
+                            <h4 class="mb-2 font-medium text-status-info">{{ t('components.barcodeScanner.locationFound') }}</h4>
+                            <p class="text-sm font-medium text-text-primary">{{ foundLocation.name }}</p>
+                            <p v-if="foundLocation.code" class="font-mono text-xs text-text-secondary">{{ foundLocation.code }}</p>
+                            <p class="mt-1 text-xs text-text-tertiary">
+                                {{ [foundLocation.warehouse, foundLocation.aisle && `Aisle ${foundLocation.aisle}`, foundLocation.shelf && `Shelf ${foundLocation.shelf}`, foundLocation.bin && `Bin ${foundLocation.bin}`].filter(Boolean).join(' / ') }}
+                            </p>
+                            <p class="mt-1 text-xs text-text-secondary">{{ t('components.barcodeScanner.productsHere', { count: foundLocation.product_count }) }}</p>
+                            <a
+                                :href="foundLocation.products_url"
+                                class="mt-3 inline-flex w-full items-center justify-center rounded-md bg-brand px-4 py-2 text-xs font-semibold text-brand-foreground hover:bg-brand-hover ds-focus-ring"
+                            >
+                                {{ t('components.barcodeScanner.viewProductsHere') }}
+                            </a>
+                        </div>
+
                         <!-- Instructions -->
-                        <p v-if="scannerMode === 'camera' && !errorMessage && !foundProduct && !isLoading" class="text-center text-sm text-gray-500 dark:text-gray-400">
+                        <p v-if="scannerMode === 'camera' && !errorMessage && !foundProduct && !foundLocation && !isLoading" class="text-center text-sm text-gray-500 dark:text-gray-400">
                             Point your camera at a barcode to scan
                         </p>
                     </div>

@@ -160,6 +160,7 @@
     "noProductsFound": "No products found",
     "addFirstProduct": "Add Your First Product",
     "printBarcodes": "Print Barcodes",
+    "printQrLabels": "Print QR Labels",
     "scanBarcode": "Scan Barcode (Ctrl+B)",
     "confirmDelete": "Are you sure you want to delete \"{name}\"?",
     "create": {
@@ -206,6 +207,11 @@
       "generateBarcode": "Generate Barcode",
       "generateNewRandom": "Generate New Random",
       "generateFromSku": "Generate from SKU",
+      "qrCode": "QR Code",
+      "qrModeSku": "SKU",
+      "qrModeUrl": "Product link",
+      "qrModeHint": "SKU works with any scanner. A product link opens this page from a phone camera.",
+      "printQrLabel": "Print QR Label",
       "uncategorized": "Uncategorized",
       "noLocation": "No location",
       "stockByLocation": "Stock by location",
@@ -584,7 +590,9 @@
     "namePlaceholder": "e.g., Warehouse A",
     "locationCode": "Location Code",
     "codePlaceholder": "e.g., WH-A",
-    "descPlaceholder": "Optional description..."
+    "descPlaceholder": "Optional description...",
+    "printQrLabel": "Print QR label",
+    "printAllQrLabels": "Print QR Labels"
   },
   "reports": {
     "title": "Reports & Analytics",
@@ -1367,7 +1375,10 @@
       "authRequired": "Authentication required",
       "productFound": "Product Found",
       "selectProduct": "Select Product",
-      "cameraHint": "Point your camera at a barcode to scan"
+      "cameraHint": "Point your camera at a barcode to scan",
+      "locationFound": "Location Found",
+      "productsHere": "{count} products here",
+      "viewProductsHere": "View Products Here"
     },
     "activityTimeline": {
       "noActivity": "No activity recorded yet",

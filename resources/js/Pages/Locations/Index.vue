@@ -7,7 +7,7 @@ import Button from '@/Components/ui/Button.vue';
 import Badge from '@/Components/ui/Badge.vue';
 import { Head, Link, router } from '@inertiajs/vue3';
 import { ref } from 'vue';
-import { Plus, Search, Pencil, Trash2, MapPin, X } from 'lucide-vue-next';
+import { Plus, Search, Pencil, Trash2, MapPin, X, QrCode } from 'lucide-vue-next';
 
 import { useI18n } from 'vue-i18n';
 const props = defineProps({
@@ -99,6 +99,10 @@ const labelClass = 'mb-1 block text-xs font-medium text-text-secondary';
 
         <PageHeader title="Warehouse Locations" description="Physical places where your stock lives.">
             <template #actions>
+                <Button v-if="locations.data.length > 0" variant="secondary" size="sm" as="a" :href="route('locations.qr.bulk-print')" target="_blank">
+                    <QrCode :size="14" />
+                    {{ t('locations.printAllQrLabels') }}
+                </Button>
                 <Button variant="default" size="sm" @click="openCreateModal">
                     <Plus :size="14" />
                     {{ t('locations.addLocation') }}
@@ -157,6 +161,15 @@ const labelClass = 'mb-1 block text-xs font-medium text-text-secondary';
                 </div>
 
                 <div class="mt-4 flex items-center gap-1 border-t border-border-subtle pt-4">
+                    <a
+                        :href="route('locations.qr.print', location.id)"
+                        target="_blank"
+                        class="rounded-md p-1.5 text-text-tertiary transition-colors hover:bg-surface-overlay hover:text-text-primary ds-focus-ring"
+                        :aria-label="t('locations.printQrLabel')"
+                        :title="t('locations.printQrLabel')"
+                    >
+                        <QrCode :size="16" />
+                    </a>
                     <button
                         @click="openEditModal(location)"
                         class="rounded-md p-1.5 text-text-tertiary transition-colors hover:bg-surface-overlay hover:text-status-success"
