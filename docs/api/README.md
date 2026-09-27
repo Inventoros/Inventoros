@@ -78,7 +78,7 @@ Every record carries an `organization_id` and is scoped to the authenticated use
 Almost every route is guarded by the `api.permission:` middleware (alias of `App\Http\Middleware\CheckApiPermission`) which checks the authenticated user against one or more permission strings. The middleware accepts `|`-separated permissions and grants access when the user holds **any** of them (the default), e.g.:
 
 ```
-api.permission:view_products|manage_products
+api.permission:view_products
 ```
 
 Every permission string is a case of `App\Enums\Permission` (a test fails if a route names anything else), one per verb: for example `view_customers`, `create_customers`, `edit_customers`, `delete_customers`, `approve_orders`, `manage_returns`, `transfer_stock`, `create_stock_audits`, `manage_stock_audits`, `view_users`, `create_users`, `edit_users`, `manage_organization` (webhooks). The OpenAPI spec lists the permission for each route.
@@ -193,7 +193,7 @@ All paths are relative to `/api/v1`.
 | Stock Audits          | `GET/POST /stock-audits`, `GET /stock-audits/{id}`, `POST /stock-audits/{id}/{start,complete}`, `POST /stock-audits/{id}/items/{item}/count` |
 | Suppliers             | `GET/POST /suppliers`, `GET/PUT/DELETE /suppliers/{id}`                                          |
 | Purchase Orders       | `GET/POST /purchase-orders`, `GET/PUT/DELETE /purchase-orders/{id}`, `POST /purchase-orders/{id}/{receive,send,cancel}` |
-| Work Orders           | `GET/POST /work-orders`, `GET /work-orders/{id}`, `POST /work-orders/{id}/{start,complete,cancel}` |
+| Work Orders           | `GET/POST /work-orders`, `GET/DELETE /work-orders/{id}`, `POST /work-orders/{id}/{start,complete,cancel}` |
 | Barcode Lookup        | `GET /barcode/{code}`                                                                            |
 | Permission Sets       | `GET/POST /permission-sets`, `GET /permission-sets/categories`, `GET/PUT/DELETE /permission-sets/{id}` |
 | Saved Reports         | `GET/POST /reports`, `GET/PUT/DELETE /reports/{id}`, `GET /reports/{id}/export` (CSV)            |

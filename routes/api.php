@@ -133,11 +133,11 @@ Route::prefix('v1')->as('api.')->middleware('throttle:api')->group(function () {
 
         // Product Categories
         Route::apiResource('categories', ProductCategoryController::class)
-            ->middleware('api.permission:view_categories|manage_categories');
+            ->middleware('api.permission:manage_categories');
 
         // Product Locations
         Route::apiResource('locations', ProductLocationController::class)
-            ->middleware('api.permission:view_locations|manage_locations');
+            ->middleware('api.permission:manage_locations');
 
         // Orders
         Route::apiResource('orders', OrderController::class)->only(['index', 'show'])
@@ -157,7 +157,7 @@ Route::prefix('v1')->as('api.')->middleware('throttle:api')->group(function () {
         // Stock Adjustments
         Route::apiResource('stock-adjustments', StockAdjustmentController::class)
             ->only(['index', 'show'])
-            ->middleware('api.permission:view_stock_adjustments|manage_stock');
+            ->middleware('api.permission:manage_stock');
         Route::apiResource('stock-adjustments', StockAdjustmentController::class)
             ->only(['store'])
             ->middleware('api.permission:manage_stock');

@@ -99,7 +99,7 @@ class StockAdjustmentApiTest extends TestCase
                 'name' => 'Administrator',
                 'is_system' => true,
                 'permissions' => [
-                    'view_stock_adjustments',
+                    'view_products',
                     'manage_stock',
                     'view_products',
                 ],
@@ -111,7 +111,7 @@ class StockAdjustmentApiTest extends TestCase
             [
                 'name' => 'Viewer',
                 'is_system' => true,
-                'permissions' => ['view_stock_adjustments'],
+                'permissions' => ['view_products'],
             ]
         );
 

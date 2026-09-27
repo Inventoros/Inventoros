@@ -47,6 +47,7 @@ Every record carries an `organization_id`, and the API automatically scopes requ
 Routes are guarded by `api.permission:` middleware, one permission per verb (read, create, edit, delete). The token's user must hold the permission, and when the token was created with a list of abilities the token must include it too, so a read-only token stays read-only even for an admin. Permissions by resource:
 
 - Products: `view_products`, `create_products`, `edit_products`, `delete_products`; stock moves `manage_stock`
+- Categories: `manage_categories`; locations: `manage_locations`; stock adjustments and work orders: `manage_stock`
 - Customers: `view_customers`, `create_customers`, `edit_customers`, `delete_customers` (a customer's orders also need `view_orders`)
 - Orders: `view_orders`, `create_orders`, `edit_orders` (also emailing the invoice), `delete_orders`, `approve_orders`
 - Returns: `manage_returns`
@@ -113,7 +114,7 @@ All paths are relative to `/api/v1`. See the OpenAPI spec for full schemas:
 - Stock Audits: list, show, create, `start`, `items/{item}/count`, `complete` (books recount adjustments)
 - Suppliers: CRUD
 - Purchase Orders: CRUD plus `send`, `receive`, `cancel`
-- Work Orders: read plus `start`, `complete`, `cancel`
+- Work Orders: read plus `start`, `complete`, `cancel`, and delete while draft or cancelled
 - Webhooks: CRUD, `regenerate-secret` and `deliveries`. The signing secret is returned only on create and regenerate
 - Users: list, show, create and update, with the same role-assignment guards as the web app
 - Barcode lookup: `GET /barcode/{code}`
