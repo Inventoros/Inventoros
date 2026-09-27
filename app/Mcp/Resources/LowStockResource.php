@@ -22,7 +22,7 @@ class LowStockResource extends Resource
 
     public function handle(Request $request): Response
     {
-        $this->authorize(['view_products', 'manage_products']);
+        $this->authorize(['view_products']);
 
         $rows = Product::query()
             ->forOrganization($this->organizationId())

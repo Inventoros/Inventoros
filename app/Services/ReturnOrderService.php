@@ -13,6 +13,8 @@ use App\Models\Order\ReturnOrderItem;
 use App\Models\User;
 use App\Support\Money;
 use App\Support\SequenceNumberRetry;
+use Illuminate\Auth\Access\AuthorizationException;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
@@ -25,10 +27,58 @@ use Illuminate\Validation\ValidationException;
  * caps, locking and restock behaviour cannot drift between surfaces. State
  * violations throw InvalidStateException; per-line quantity violations throw
  * a ValidationException keyed by `items.{index}.*`.
+ *
+ * Warehouse access: a return belongs to the warehouses its goods go back to,
+ * i.e. the primary location of each line's product (where receive() books
+ * the restock). A restricted user sees and acts on a return when any line
+ * comes back to their warehouses, and may only raise a return, or receive
+ * one, when every line it restocks lands in their warehouses. The origin
+ * order is not used: orders carry no location, and the restock location is
+ * what the stock movement actually touches.
  */
 final class ReturnOrderService
 {
-    public function __construct(private readonly TrackedStockAllocationService $trackedStock) {}
+    public function __construct(
+        private readonly TrackedStockAllocationService $trackedStock,
+        private readonly WarehouseAccessService $warehouseAccess,
+    ) {}
+
+    /**
+     * Narrow a return_orders query to returns with at least one line coming
+     * back to a warehouse the user can access. A no-op when unrestricted.
+     *
+     * @template TBuilder of Builder
+     *
+     * @param  TBuilder  $query
+     * @return TBuilder
+     */
+    public function scopeForUser($query, User $user)
+    {
+        if (! $this->warehouseAccess->isRestricted($user)) {
+            return $query;
+        }
+
+        return $query->whereHas('items.product', function ($products) use ($user) {
+            $this->warehouseAccess->scopeByLocation($products, $user, 'products.location_id');
+        });
+    }
+
+    /**
+     * @throws AuthorizationException when none of the return's lines comes back to the user's warehouses
+     */
+    public function authorizeView(ReturnOrder $returnOrder, User $user): void
+    {
+        if (! $this->warehouseAccess->isRestricted($user)) {
+            return;
+        }
+
+        $returnOrder->loadMissing('items.product');
+
+        $this->warehouseAccess->authorizeAnyLocation(
+            $user,
+            $returnOrder->items->map(fn ($item) => $item->product?->location_id)->all(),
+        );
+    }
 
     /**
      * Quantities already returned per order item (excluding rejected returns).
@@ -52,11 +102,20 @@ final class ReturnOrderService
      *
      * @throws ValidationException when a line exceeds its returnable quantity
      */
-    public function create(int $organizationId, array $data): ReturnOrder
+    public function create(int $organizationId, User $actor, array $data): ReturnOrder
     {
         // Verify the order belongs to this organization
         $order = Order::forOrganization($organizationId)->findOrFail($data['order_id']);
-        $order->load('items');
+        $order->load('items.product');
+
+        // Every returned line restocks into its product's primary location,
+        // so a restricted user may only raise returns into their warehouses.
+        foreach ($data['items'] as $item) {
+            $orderItem = $order->items->firstWhere('id', $item['order_item_id']);
+            if ($orderItem !== null) {
+                $this->warehouseAccess->authorizeLocation($actor, $orderItem->product?->location_id);
+            }
+        }
 
         // Retry on a return_number unique collision: two returns for
         // different orders in the same org/second read the same MAX and
@@ -144,6 +203,8 @@ final class ReturnOrderService
      */
     public function approve(ReturnOrder $returnOrder, User $actor): ReturnOrder
     {
+        $this->authorizeView($returnOrder, $actor);
+
         if ($returnOrder->status !== 'pending') {
             throw new InvalidStateException('Only pending returns can be approved.', 'invalid_status');
         }
@@ -161,6 +222,17 @@ final class ReturnOrderService
      */
     public function receive(ReturnOrder $returnOrder, User $actor): ReturnOrder
     {
+        $this->authorizeView($returnOrder, $actor);
+
+        // Receiving books stock into each restocked line's location, so every
+        // one of them must be in the actor's warehouses.
+        $returnOrder->loadMissing('items.product');
+        foreach ($returnOrder->items as $item) {
+            if ($item->restock) {
+                $this->warehouseAccess->authorizeLocation($actor, $item->product?->location_id);
+            }
+        }
+
         if ($returnOrder->status !== 'approved') {
             throw new InvalidStateException('Only approved returns can be received.', 'invalid_status');
         }
@@ -224,6 +296,8 @@ final class ReturnOrderService
      */
     public function complete(ReturnOrder $returnOrder, User $actor): ReturnOrder
     {
+        $this->authorizeView($returnOrder, $actor);
+
         if ($returnOrder->status !== 'received') {
             throw new InvalidStateException('Only received returns can be completed.', 'invalid_status');
         }
@@ -242,6 +316,8 @@ final class ReturnOrderService
      */
     public function reject(ReturnOrder $returnOrder, User $actor, ?string $reason = null): ReturnOrder
     {
+        $this->authorizeView($returnOrder, $actor);
+
         if ($returnOrder->status !== 'pending') {
             throw new InvalidStateException('Only pending returns can be rejected.', 'invalid_status');
         }

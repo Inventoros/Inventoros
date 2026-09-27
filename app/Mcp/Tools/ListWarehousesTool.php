@@ -28,7 +28,7 @@ class ListWarehousesTool extends Tool
 
     public function handle(Request $request): Response
     {
-        $this->authorize(['view_warehouses', 'manage_warehouses', 'view_products', 'manage_products']);
+        $this->authorize(['view_warehouses', 'view_products']);
 
         $limit = min((int) ($request->get('limit') ?? 100), 500);
 

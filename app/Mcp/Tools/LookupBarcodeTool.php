@@ -28,7 +28,7 @@ class LookupBarcodeTool extends Tool
 
     public function handle(Request $request): Response
     {
-        $this->authorize(['view_products', 'manage_products']);
+        $this->authorize(['view_products']);
 
         $request->validate(['code' => ['required', 'string', 'min:1', 'max:2048']]);
 

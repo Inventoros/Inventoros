@@ -34,6 +34,7 @@ class ReturnOrderController extends Controller
 
         $returns = ReturnOrder::with(['order', 'items', 'processor'])
             ->forOrganization($organizationId)
+            ->tap(fn ($q) => app(ReturnOrderService::class)->scopeForUser($q, $request->user()))
             ->when($request->input('search'), function ($query, $search) {
                 $query->where(function ($q) use ($search) {
                     $q->where('return_number', 'like', "%{$search}%")
@@ -86,7 +87,7 @@ class ReturnOrderController extends Controller
     public function store(StoreReturnOrderRequest $request, ReturnOrderService $returns)
     {
         try {
-            $returnOrder = $returns->create($request->user()->organization_id, $request->validated());
+            $returnOrder = $returns->create($request->user()->organization_id, $request->user(), $request->validated());
 
             return redirect()->route('returns.show', $returnOrder)
                 ->with('success', 'Return request created successfully.');
@@ -107,6 +108,8 @@ class ReturnOrderController extends Controller
         if ($returnOrder->organization_id !== auth()->user()->organization_id) {
             abort(403, 'Unauthorized action.');
         }
+
+        app(ReturnOrderService::class)->authorizeView($returnOrder, auth()->user());
 
         $returnOrder->load(['order.items.product', 'items.product', 'items.orderItem', 'processor']);
 

@@ -80,40 +80,40 @@ Restart the client. The Inventoros tools will appear in the tool picker.
 
 | Tool | Permissions | Purpose |
 |---|---|---|
-| `list_products` | `view_products` or `manage_products` | Paginated product list with search, category, warehouse, low-stock filters. |
-| `search_products` | `view_products` or `manage_products` | Lightweight substring search returning up to 25 matches. |
-| `get_product` | `view_products` or `manage_products` | Single product with category, location, suppliers, options, active variants. |
-| `lookup_barcode` | `view_products` or `manage_products` | Exact match on barcode/SKU across products and variants. |
-| `list_categories` | `view_categories` or `view_products` | Category list. |
-| `list_locations` | `view_locations` or `view_products` | Storage locations, optionally filtered by warehouse. |
+| `list_products` | `view_products` | Paginated product list with search, category, warehouse, low-stock filters. |
+| `search_products` | `view_products` | Lightweight substring search returning up to 25 matches. |
+| `get_product` | `view_products` | Single product with category, location, suppliers, options, active variants. |
+| `lookup_barcode` | `view_products` | Exact match on barcode/SKU across products and variants. |
+| `list_categories` | `manage_categories` or `view_products` | Category list. |
+| `list_locations` | `manage_locations` or `view_products` | Storage locations, optionally filtered by warehouse. |
 | `list_warehouses` | `view_warehouses` or `view_products` | Warehouse list. |
 
 ### Stock
 
 | Tool | Permissions | Purpose |
 |---|---|---|
-| `list_low_stock` | `view_products` or `manage_products` | Products at or below `min_stock`, sorted by shortage. |
+| `list_low_stock` | `view_products` | Products at or below `min_stock`, sorted by shortage. |
 | `adjust_stock` | `manage_stock` | Apply a signed delta with reason (`manual`, `count`, `damage`, `return`, `transfer`), optionally at a `location_id` bin (required for users restricted to assigned warehouses). Marked **destructive**. |
 
 ### Sales
 
 | Tool | Permissions | Purpose |
 |---|---|---|
-| `list_orders` | `view_orders` or `manage_orders` | Paginated orders with filters for status, source, warehouse, date range. |
-| `get_order` | `view_orders` or `manage_orders` | Single order with line items. |
-| `create_order` | `manage_orders` | Create order; decrements stock per item; fails if any line is short. Marked **destructive**. |
+| `list_orders` | `view_orders` | Paginated orders with filters for status, source, warehouse, date range. |
+| `get_order` | `view_orders` | Single order with line items. |
+| `create_order` | `create_orders` | Create order; decrements stock per item; fails if any line is short. Marked **destructive**. |
 | `email_order_invoice` | `edit_orders` | Email the order's invoice PDF to the customer (or `to`), with optional CC and message. Assigns the invoice number on first use. Marked **destructive**. |
 
 ### Purchasing
 
 | Tool | Permissions | Purpose |
 |---|---|---|
-| `list_suppliers` | `view_suppliers` or `manage_suppliers` | Supplier list with search and active filter. |
-| `list_purchase_orders` | `view_purchase_orders` or `manage_purchase_orders` | Paginated POs with status / supplier filters. |
-| `get_purchase_order` | `view_purchase_orders` or `manage_purchase_orders` | Single PO with supplier and line items. |
-| `create_purchase_order` | `manage_purchase_orders` | Create draft PO. Does not affect stock. Marked **destructive**. |
-| `send_purchase_order` | `edit_purchase_orders` or `manage_purchase_orders` | Transition draft → sent. Marked **destructive** + **idempotent**. |
-| `receive_purchase_order` | `receive_purchase_orders` or `manage_purchase_orders` | Receive items; writes stock; transitions to partial/received. Marked **destructive**. |
+| `list_suppliers` | `view_suppliers` | Supplier list with search and active filter. |
+| `list_purchase_orders` | `view_purchase_orders` | Paginated POs with status / supplier filters. |
+| `get_purchase_order` | `view_purchase_orders` | Single PO with supplier and line items. |
+| `create_purchase_order` | `create_purchase_orders` | Create draft PO. Does not affect stock. Marked **destructive**. |
+| `send_purchase_order` | `edit_purchase_orders` | Transition draft → sent. Marked **destructive** + **idempotent**. |
+| `receive_purchase_order` | `receive_purchase_orders` | Receive items; writes stock; transitions to partial/received. Marked **destructive**. |
 
 ### Manufacturing
 
@@ -127,7 +127,7 @@ Restart the client. The Inventoros tools will appear in the tool picker.
 
 | Tool | Permissions | Purpose |
 |---|---|---|
-| `create_product` | `manage_products` | Create a new product. Marked **destructive**. |
+| `create_product` | `create_products` | Create a new product. Marked **destructive**. |
 
 ---
 

@@ -28,7 +28,7 @@ class ListCategoriesTool extends Tool
 
     public function handle(Request $request): Response
     {
-        $this->authorize(['manage_categories', 'view_products', 'manage_products']);
+        $this->authorize(['manage_categories', 'view_products']);
 
         $limit = min((int) ($request->get('limit') ?? 100), 500);
 

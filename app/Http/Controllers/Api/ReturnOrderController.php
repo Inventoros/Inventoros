@@ -41,6 +41,7 @@ class ReturnOrderController extends Controller
         $returns = ReturnOrder::with(['order', 'processor'])
             ->withCount('items')
             ->forOrganization($request->user()->organization_id)
+            ->tap(fn ($q) => $this->returns->scopeForUser($q, $request->user()))
             ->when($request->input('search'), function ($query, $search) {
                 $query->where(function ($q) use ($search) {
                     $q->where('return_number', 'like', "%{$search}%")
@@ -69,7 +70,7 @@ class ReturnOrderController extends Controller
      */
     public function store(StoreReturnOrderRequest $request): JsonResponse
     {
-        $returnOrder = $this->returns->create($request->user()->organization_id, $request->validated());
+        $returnOrder = $this->returns->create($request->user()->organization_id, $request->user(), $request->validated());
 
         return response()->json([
             'message' => 'Return created successfully',
@@ -83,6 +84,7 @@ class ReturnOrderController extends Controller
     public function show(Request $request, ReturnOrder $returnOrder): JsonResponse
     {
         $this->ensureOwned($request, $returnOrder, 'Return');
+        $this->returns->authorizeView($returnOrder, $request->user());
 
         return response()->json(['data' => new ReturnOrderResource($this->loaded($returnOrder))]);
     }

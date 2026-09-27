@@ -56,7 +56,7 @@ class CreateReturnOrderMutation extends Mutation
 
     public function resolve($root, array $args)
     {
-        $returnOrder = $this->attempt(fn () => app(ReturnOrderService::class)->create($this->organizationId(), $args));
+        $returnOrder = $this->attempt(fn () => app(ReturnOrderService::class)->create($this->organizationId(), $this->actor(), $args));
 
         return $returnOrder->load(['order', 'items.product']);
     }

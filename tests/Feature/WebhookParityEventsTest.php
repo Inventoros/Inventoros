@@ -137,7 +137,7 @@ final class WebhookParityEventsTest extends TestCase
         ], $this->admin);
 
         $returns = app(ReturnOrderService::class);
-        $return = $returns->create($this->org->id, [
+        $return = $returns->create($this->org->id, $this->admin, [
             'order_id' => $order->id, 'type' => 'return', 'reason' => 'Broken',
             'items' => [['order_item_id' => $order->items()->first()->id, 'quantity' => 1, 'condition' => 'damaged', 'restock' => false]],
         ]);
