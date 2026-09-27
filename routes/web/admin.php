@@ -94,7 +94,8 @@ Route::prefix('settings')->name('settings.')->group(function () {
 
 // Webhooks
 Route::middleware('permission:manage_organization')->group(function () {
-    Route::resource('webhooks', WebhookController::class);
+    // Create and edit are modals on the index and show pages.
+    Route::resource('webhooks', WebhookController::class)->except(['create', 'edit']);
     Route::post('webhooks/{webhook}/regenerate-secret', [WebhookController::class, 'regenerateSecret'])->name('webhooks.regenerate-secret');
     Route::post('webhooks/{webhook}/test', [WebhookController::class, 'test'])->name('webhooks.test');
     Route::post('webhook-deliveries/{delivery}/retry', [WebhookController::class, 'retryDelivery'])->name('webhook-deliveries.retry');
