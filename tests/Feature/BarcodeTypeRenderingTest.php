@@ -100,6 +100,20 @@ class BarcodeTypeRenderingTest extends TestCase
         $this->assertStringContainsString($service->generateSVG('96385074', 3, 80, BarcodeType::CODE_128), $override);
     }
 
+    public function test_single_print_page_button_label_is_clean(): void
+    {
+        $product = $this->product(['barcode' => 'CLEAN-1']);
+
+        $html = $this->actingAs($this->admin)
+            ->get(route('products.barcode.print', $product))
+            ->assertOk()
+            ->getContent();
+
+        $this->assertMatchesRegularExpression('/<svg[^>]*aria-hidden="true"[\s\S]*?<\/svg>\s*Print Barcode\s*<\/button>/', $html);
+        $this->assertStringNotContainsString("\u{FFFD}", $html);
+        $this->assertDoesNotMatchRegularExpression('/[\x00-\x08\x0B\x0C\x0E-\x1F]/', $html);
+    }
+
     public function test_print_rejects_a_type_the_value_is_not_valid_for(): void
     {
         $product = $this->product(['barcode' => 'abc-lower']);
