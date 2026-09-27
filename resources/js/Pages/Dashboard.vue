@@ -7,9 +7,9 @@ import Card from '@/Components/ui/Card.vue';
 import CardHeader from '@/Components/ui/CardHeader.vue';
 import Badge from '@/Components/ui/Badge.vue';
 import Button from '@/Components/ui/Button.vue';
-import DataTable from '@/Components/ui/DataTable.vue';
 import { Head, Link } from '@inertiajs/vue3';
-import { ref, reactive } from 'vue';
+import { ref, reactive, computed } from 'vue';
+import { useQuickReorder } from '@/composables/useQuickReorder';
 import { useI18n } from 'vue-i18n';
 import axios from 'axios';
 import {
@@ -24,6 +24,7 @@ import {
     Activity,
     CheckCircle2,
     X,
+    ClipboardList,
 } from 'lucide-vue-next';
 
 const { t } = useI18n();
@@ -96,13 +97,9 @@ const orderStatusVariant = (status) =>
         cancelled: 'danger',
     }[status] || 'neutral');
 
-const reorderColumns = [
-    { key: 'name', label: 'Product' },
-    { key: 'supplier', label: 'Supplier' },
-    { key: 'stock', label: 'Stock', align: 'right' },
-    { key: 'reorder_point', label: 'Reorder at', align: 'right' },
-    { key: 'reorder_quantity', label: 'Order qty', align: 'right' },
-];
+const quickReorder = useQuickReorder(computed(() => props.reorderSuggestions || []));
+
+const reorderThClass = 'px-3 py-2 text-left text-xs font-medium tracking-tight text-text-secondary';
 
 // Secondary stat tiles (revenue_chart widget)
 const secondaryStats = () => [
@@ -340,7 +337,7 @@ const secondaryStats = () => [
         <section v-if="reorderSuggestions && reorderSuggestions.length > 0" class="mt-4">
             <Card :padded="false">
                 <div class="px-5 pt-5">
-                    <CardHeader title="Reorder suggestions" subtitle="Below reorder point. Suggested quantity comes from product config.">
+                    <CardHeader title="Reorder suggestions" subtitle="Below reorder point. Suggested quantity comes from product config and the supplier minimum order.">
                         <template #actions>
                             <Badge variant="warning" size="sm">{{ reorderSuggestions.length }}</Badge>
                             <Link :href="route('products.index', { low_stock: true })" class="text-xs text-text-tertiary transition-colors hover:text-text-primary">
@@ -350,33 +347,90 @@ const secondaryStats = () => [
                     </CardHeader>
                 </div>
                 <div class="px-2 pb-2 pt-1">
-                    <DataTable :columns="reorderColumns" :rows="reorderSuggestions" :row-href="(p) => route('products.edit', p.id)" dense class="border-0">
-                        <template #cell-name="{ row }">
-                            <div class="flex flex-col">
-                                <span class="font-medium text-text-primary">{{ row.name }}</span>
-                                <span class="text-xs text-text-tertiary">{{ row.sku }}<span v-if="row.category"> · {{ row.category }}</span></span>
-                            </div>
-                        </template>
-                        <template #cell-supplier="{ row }">
-                            <span v-if="row.supplier" class="text-text-secondary">{{ row.supplier }}</span>
-                            <span v-else class="text-xs italic text-status-danger">No supplier</span>
-                        </template>
-                        <template #cell-stock="{ row }">
-                            <Badge :variant="row.stock === 0 ? 'danger' : 'warning'" size="sm" dot>{{ row.stock }}</Badge>
-                        </template>
-                        <template #cell-reorder_point="{ row }">
-                            <span class="tabular-nums text-text-secondary">{{ row.reorder_point }}</span>
-                        </template>
-                        <template #cell-reorder_quantity="{ row }">
-                            <span class="font-medium tabular-nums text-text-primary">{{ row.reorder_quantity ?? '—' }}</span>
-                        </template>
-                        <template #empty>
-                            <div class="flex flex-col items-center gap-2 py-6">
-                                <PackageX :size="20" class="text-text-tertiary" />
-                                <p class="text-sm text-text-tertiary">No items below reorder point.</p>
-                            </div>
-                        </template>
-                    </DataTable>
+                    <div class="w-full overflow-x-auto rounded-lg bg-surface-raised">
+                        <table class="w-full text-sm">
+                            <thead>
+                                <tr class="border-b border-border-subtle">
+                                    <th v-if="quickReorder.canCreatePo.value" class="w-8 px-3 py-2">
+                                        <input
+                                            type="checkbox"
+                                            class="rounded border-border-subtle text-brand ds-focus-ring"
+                                            :checked="quickReorder.allSelected.value"
+                                            :disabled="quickReorder.orderable.value.length === 0"
+                                            :aria-label="t('quickReorder.selectAll')"
+                                            @change="quickReorder.toggleAll()"
+                                        />
+                                    </th>
+                                    <th :class="reorderThClass">Product</th>
+                                    <th :class="reorderThClass">Supplier</th>
+                                    <th :class="[reorderThClass, 'text-right']">Stock</th>
+                                    <th :class="[reorderThClass, 'text-right']">Reorder at</th>
+                                    <th :class="[reorderThClass, 'text-right']">{{ t('quickReorder.suggestedQty') }}</th>
+                                    <th v-if="quickReorder.canCreatePo.value" :class="[reorderThClass, 'text-right']"><span class="sr-only">{{ t('common.actions') }}</span></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr
+                                    v-for="row in reorderSuggestions"
+                                    :key="row.id"
+                                    class="border-b border-border-subtle transition-colors last:border-b-0 hover:bg-surface-overlay/60"
+                                >
+                                    <td v-if="quickReorder.canCreatePo.value" class="px-3 py-2">
+                                        <input
+                                            type="checkbox"
+                                            class="rounded border-border-subtle text-brand ds-focus-ring disabled:opacity-40"
+                                            :checked="quickReorder.isSelected(row.id)"
+                                            :disabled="!row.supplier_id"
+                                            :aria-label="t('quickReorder.selectForReorder', { name: row.name })"
+                                            @change="quickReorder.toggle(row.id)"
+                                        />
+                                    </td>
+                                    <td class="px-3 py-2">
+                                        <Link :href="route('products.show', row.id)" class="flex flex-col">
+                                            <span class="font-medium text-text-primary hover:underline">{{ row.name }}</span>
+                                            <span class="text-xs text-text-tertiary">{{ row.sku }}<span v-if="row.category"> · {{ row.category }}</span></span>
+                                        </Link>
+                                    </td>
+                                    <td class="px-3 py-2">
+                                        <span v-if="row.supplier" class="text-text-secondary">{{ row.supplier }}</span>
+                                        <span v-else class="flex flex-col">
+                                            <span class="text-xs italic text-status-danger">{{ t('quickReorder.noSupplier') }}</span>
+                                            <Link :href="route('products.edit', row.id)" class="text-xs font-medium text-brand hover:underline">{{ t('quickReorder.addSupplier') }}</Link>
+                                        </span>
+                                    </td>
+                                    <td class="px-3 py-2 text-right">
+                                        <Badge :variant="row.stock === 0 ? 'danger' : 'warning'" size="sm" dot>{{ row.stock }}</Badge>
+                                    </td>
+                                    <td class="px-3 py-2 text-right tabular-nums text-text-secondary">{{ row.reorder_point }}</td>
+                                    <td class="px-3 py-2 text-right font-medium tabular-nums text-text-primary">{{ row.suggested_quantity }}</td>
+                                    <td v-if="quickReorder.canCreatePo.value" class="px-3 py-2 text-right">
+                                        <Button
+                                            v-if="row.supplier_id"
+                                            variant="ghost"
+                                            size="xs"
+                                            :disabled="quickReorder.submitting.value"
+                                            @click="quickReorder.createPurchaseOrders([row.id])"
+                                        >
+                                            <ClipboardList :size="12" />
+                                            {{ t('quickReorder.createPo') }}
+                                        </Button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div v-if="quickReorder.canCreatePo.value" class="flex flex-col gap-2 px-3 pb-2 pt-3 sm:flex-row sm:items-center sm:justify-between">
+                        <p class="text-xs text-text-tertiary">{{ t('quickReorder.hint') }}</p>
+                        <Button
+                            size="sm"
+                            :disabled="quickReorder.selected.value.length === 0 || quickReorder.submitting.value"
+                            :loading="quickReorder.submitting.value"
+                            @click="quickReorder.createPurchaseOrders()"
+                        >
+                            <ClipboardList :size="14" />
+                            {{ t('quickReorder.createPos', { count: quickReorder.selected.value.length }) }}
+                        </Button>
+                    </div>
                 </div>
             </Card>
         </section>
