@@ -122,7 +122,7 @@ class PurchaseOrderController extends Controller
 
         foreach ($validated['items'] as $item) {
             $product = Product::forOrganization($organizationId)->findOrFail($item['product_id']);
-            $variant = $this->lineVariant($item, $product);
+            $variant = PurchaseOrderItem::resolveVariant($product, $item['product_variant_id'] ?? null);
             $itemSubtotal = Money::multiply($item['unit_cost'], $item['quantity']);
             $subtotal = Money::add($subtotal, $itemSubtotal);
 
@@ -276,7 +276,7 @@ class PurchaseOrderController extends Controller
 
         foreach ($validated['items'] as $itemData) {
             $product = Product::forOrganization($organizationId)->findOrFail($itemData['product_id']);
-            $variant = $this->lineVariant($itemData, $product);
+            $variant = PurchaseOrderItem::resolveVariant($product, $itemData['product_variant_id'] ?? null);
             $itemSubtotal = Money::multiply($itemData['unit_cost'], $itemData['quantity']);
             $subtotal = Money::add($subtotal, $itemSubtotal);
 
@@ -555,20 +555,5 @@ class PurchaseOrderController extends Controller
             ])
             ->values()
             ->all();
-    }
-
-    /**
-     * Resolve a validated line's variant (the request already checked it
-     * belongs to the line's product and organization).
-     */
-    private function lineVariant(array $item, Product $product): ?ProductVariant
-    {
-        if (empty($item['product_variant_id'])) {
-            return null;
-        }
-
-        return ProductVariant::where('organization_id', $product->organization_id)
-            ->where('product_id', $product->id)
-            ->findOrFail($item['product_variant_id']);
     }
 }

@@ -4,20 +4,16 @@ declare(strict_types=1);
 
 namespace App\Http\Requests\Concerns;
 
-use App\Models\Inventory\Product;
-use App\Models\Inventory\ProductVariant;
+use App\Support\VariantLineValidator;
 use Illuminate\Validation\Validator;
 
 /**
- * Cross-field checks for line items that may name a product variant.
+ * Adds the variant pairing checks from VariantLineValidator to a form
+ * request's `items` array, reported as items.N.product_variant_id errors
+ * (instead of letting the service throw a flash error after the fact).
  *
- * The per-field rules already confirm product_id and product_variant_id each
- * exist in the user's organization; they cannot see each other. This adds the
- * pairing rules as field errors (instead of letting the service throw a flash
- * error after the fact):
- *
- *  - a chosen variant must belong to the line's product, and
- *  - a product that is sold by variant needs a variant on every line.
+ * Requests serving existing API clients override requiresVariantForVariantProducts()
+ * to keep the variant optional there.
  */
 trait ValidatesVariantLines
 {
@@ -28,65 +24,26 @@ trait ValidatesVariantLines
     {
         return [
             function (Validator $validator): void {
-                $this->validateVariantLines($validator);
+                $items = $this->input('items');
+                if (! is_array($items)) {
+                    return;
+                }
+
+                $errors = VariantLineValidator::errors(
+                    $items,
+                    (int) $this->user()->organization_id,
+                    $this->requiresVariantForVariantProducts(),
+                );
+
+                foreach ($errors as $index => $message) {
+                    $validator->errors()->add("items.{$index}.product_variant_id", $message);
+                }
             },
         ];
     }
 
-    protected function validateVariantLines(Validator $validator): void
+    protected function requiresVariantForVariantProducts(): bool
     {
-        $items = $this->input('items');
-        if (! is_array($items) || $items === []) {
-            return;
-        }
-
-        $organizationId = $this->user()->organization_id;
-
-        $productIds = collect($items)->pluck('product_id')->filter(fn ($id) => is_numeric($id))->unique();
-        $variantIds = collect($items)->pluck('product_variant_id')->filter(fn ($id) => is_numeric($id))->unique();
-
-        $products = Product::where('organization_id', $organizationId)
-            ->whereIn('id', $productIds)
-            ->get(['id', 'has_variants'])
-            ->keyBy('id');
-
-        $variants = $variantIds->isEmpty()
-            ? collect()
-            : ProductVariant::where('organization_id', $organizationId)
-                ->whereIn('id', $variantIds)
-                ->get(['id', 'product_id'])
-                ->keyBy('id');
-
-        foreach ($items as $index => $item) {
-            if (! is_array($item)) {
-                continue;
-            }
-
-            $product = $products->get($item['product_id'] ?? null);
-            if ($product === null) {
-                continue; // the product_id rule already reports this line
-            }
-
-            $variantId = $item['product_variant_id'] ?? null;
-
-            if ($variantId === null || $variantId === '') {
-                if ($product->has_variants) {
-                    $validator->errors()->add(
-                        "items.{$index}.product_variant_id",
-                        'Choose a variant for this product.'
-                    );
-                }
-
-                continue;
-            }
-
-            $variant = $variants->get($variantId);
-            if ($variant !== null && (int) $variant->product_id !== (int) $product->id) {
-                $validator->errors()->add(
-                    "items.{$index}.product_variant_id",
-                    'The selected variant does not belong to this product.'
-                );
-            }
-        }
+        return true;
     }
 }

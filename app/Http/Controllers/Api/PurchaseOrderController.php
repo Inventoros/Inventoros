@@ -80,13 +80,15 @@ class PurchaseOrderController extends Controller
 
         foreach ($validated['items'] as $item) {
             $product = Product::forOrganization($organizationId)->findOrFail($item['product_id']);
+            $variant = PurchaseOrderItem::resolveVariant($product, $item['product_variant_id'] ?? null);
             $itemSubtotal = Money::multiply($item['unit_cost'], $item['quantity']);
             $subtotal = Money::add($subtotal, $itemSubtotal);
 
             $orderItems[] = [
                 'product_id' => $item['product_id'],
+                'product_variant_id' => $variant?->id,
                 'product_name' => $product->name,
-                'sku' => $product->sku,
+                'sku' => $variant?->sku ?? $product->sku,
                 'supplier_sku' => $item['supplier_sku'] ?? null,
                 'quantity_ordered' => $item['quantity'],
                 'quantity_received' => 0,
@@ -186,6 +188,7 @@ class PurchaseOrderController extends Controller
 
             foreach ($validated['items'] as $itemData) {
                 $product = Product::forOrganization($organizationId)->findOrFail($itemData['product_id']);
+                $variant = PurchaseOrderItem::resolveVariant($product, $itemData['product_variant_id'] ?? null);
                 $itemSubtotal = Money::multiply($itemData['unit_cost'], $itemData['quantity']);
                 $subtotal = Money::add($subtotal, $itemSubtotal);
 
@@ -193,8 +196,9 @@ class PurchaseOrderController extends Controller
                     $existingItem = $existingItems->get($itemData['id']);
                     $existingItem->update([
                         'product_id' => $itemData['product_id'],
+                        'product_variant_id' => $variant?->id,
                         'product_name' => $product->name,
-                        'sku' => $product->sku,
+                        'sku' => $variant?->sku ?? $product->sku,
                         'supplier_sku' => $itemData['supplier_sku'] ?? null,
                         'quantity_ordered' => $itemData['quantity'],
                         'unit_cost' => $itemData['unit_cost'],
@@ -205,8 +209,9 @@ class PurchaseOrderController extends Controller
                 } else {
                     $newItems[] = [
                         'product_id' => $itemData['product_id'],
+                        'product_variant_id' => $variant?->id,
                         'product_name' => $product->name,
-                        'sku' => $product->sku,
+                        'sku' => $variant?->sku ?? $product->sku,
                         'supplier_sku' => $itemData['supplier_sku'] ?? null,
                         'quantity_ordered' => $itemData['quantity'],
                         'quantity_received' => 0,

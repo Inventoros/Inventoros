@@ -98,6 +98,21 @@ class PurchaseOrderItem extends Model
     }
 
     /**
+     * Resolve the variant a validated line names, scoped to its product (and
+     * so its organization). Null when the line names none.
+     */
+    public static function resolveVariant(Product $product, mixed $variantId): ?ProductVariant
+    {
+        if ($variantId === null || $variantId === '') {
+            return null;
+        }
+
+        return ProductVariant::where('organization_id', $product->organization_id)
+            ->where('product_id', $product->id)
+            ->findOrFail($variantId);
+    }
+
+    /**
      * Calculate and set totals based on quantity and unit cost.
      */
     public function calculateTotals(): void
