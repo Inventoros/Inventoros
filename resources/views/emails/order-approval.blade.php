@@ -2,19 +2,19 @@
 
 @section('content')
     @php
-        $isApproved = $order->approval_status === 'approved';
+        $isApproved = ($approvalStatusValue ?? 'pending') === 'approved';
         $icon = $isApproved ? '✅' : '❌';
         $statusColor = $isApproved ? '#10b981' : '#ef4444';
         $statusBgColor = $isApproved ? '#d1fae5' : '#fee2e2';
     @endphp
 
     <h2 style="margin: 0 0 20px 0; color: #111827; font-size: 22px; font-weight: 600;">
-        {{ $icon }} Order {{ ucfirst($order->approval_status ?? 'pending') }}
+        {{ $icon }} Order {{ ucfirst($approvalStatusValue ?? 'pending') }}
     </h2>
 
     <p style="margin: 0 0 20px 0; color: #374151; font-size: 16px; line-height: 1.6;">
         Your order <strong>#{{ $order->order_number ?? 'N/A' }}</strong> has been
-        <strong style="color: {{ $statusColor }};">{{ $order->approval_status ?? 'pending' }}</strong>
+        <strong style="color: {{ $statusColor }};">{{ $approvalStatusValue ?? 'pending' }}</strong>
         by {{ optional($order->approver)->name ?? 'System' }}.
     </p>
 
@@ -23,7 +23,7 @@
         <tr>
             <td style="padding: 20px;">
                 <strong style="color: {{ $statusColor }}; font-size: 16px; display: block; margin-bottom: 10px;">
-                    Status: {{ ucfirst($order->approval_status ?? 'pending') }}
+                    Status: {{ ucfirst($approvalStatusValue ?? 'pending') }}
                 </strong>
 
                 @if($order->approval_notes ?? '')

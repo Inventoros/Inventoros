@@ -4,14 +4,17 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Purchasing;
 
+use App\Exceptions\DocumentEmailException;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\PurchaseOrder\ProcessReceivingRequest;
 use App\Http\Requests\PurchaseOrder\StorePurchaseOrderRequest;
 use App\Http\Requests\PurchaseOrder\UpdatePurchaseOrderRequest;
+use App\Http\Requests\SendDocumentEmailRequest;
 use App\Models\Inventory\Product;
 use App\Models\Inventory\Supplier;
 use App\Models\Purchasing\PurchaseOrder;
 use App\Models\Purchasing\PurchaseOrderItem;
+use App\Services\PurchaseOrderEmailService;
 use App\Support\Money;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -457,28 +460,36 @@ class PurchaseOrderController extends Controller
     }
 
     /**
-     * Mark a purchase order as sent to supplier.
+     * Email a purchase order to its supplier (PDF attached) and mark it sent.
      *
-     * @param  Request  $request  The incoming HTTP request
-     * @param  PurchaseOrder  $purchaseOrder  The purchase order to mark as sent
+     * Also used to re-send an order that is already with the supplier.
+     *
+     * @param  SendDocumentEmailRequest  $request  Optional recipient override, CC list and message
+     * @param  PurchaseOrder  $purchaseOrder  The purchase order to send
      * @return RedirectResponse
      */
-    public function sendToSupplier(Request $request, PurchaseOrder $purchaseOrder)
+    public function sendToSupplier(SendDocumentEmailRequest $request, PurchaseOrder $purchaseOrder, PurchaseOrderEmailService $emails)
     {
         // Ensure user can only send POs from their organization
         if ($purchaseOrder->organization_id !== $request->user()->organization_id) {
             abort(403, 'Unauthorized action.');
         }
 
-        if (! $purchaseOrder->canBeSent()) {
+        try {
+            $purchaseOrder = $emails->send(
+                $purchaseOrder,
+                $request->user(),
+                $request->recipient(),
+                $request->ccList(),
+                $request->customMessage(),
+            );
+        } catch (DocumentEmailException $e) {
             return redirect()->route('purchase-orders.show', $purchaseOrder)
-                ->with('error', 'This purchase order cannot be sent.');
+                ->with('error', $e->getMessage());
         }
 
-        $purchaseOrder->markAsSent();
-
         return redirect()->route('purchase-orders.show', $purchaseOrder)
-            ->with('success', 'Purchase order marked as sent.');
+            ->with('success', "Purchase order emailed to {$purchaseOrder->sent_to}.");
     }
 
     /**

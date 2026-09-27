@@ -29,6 +29,8 @@ class PurchaseOrderResource extends JsonResource
             'order_date' => $this->order_date?->format('Y-m-d'),
             'expected_date' => $this->expected_date?->format('Y-m-d'),
             'received_date' => $this->received_date?->format('Y-m-d'),
+            'sent_at' => $this->sent_at?->toIso8601String(),
+            'sent_to' => $this->sent_to,
             'subtotal' => $this->subtotal,
             'tax' => $this->tax,
             'shipping' => $this->shipping,

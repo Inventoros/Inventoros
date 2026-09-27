@@ -34,6 +34,8 @@ use Illuminate\Support\Facades\DB;
  * @property Carbon|null $order_date
  * @property Carbon|null $expected_date
  * @property Carbon|null $received_date
+ * @property Carbon|null $sent_at
+ * @property string|null $sent_to
  * @property string $subtotal
  * @property string $tax
  * @property string $shipping
@@ -65,6 +67,8 @@ class PurchaseOrder extends Model
         'order_date',
         'expected_date',
         'received_date',
+        'sent_at',
+        'sent_to',
         'subtotal',
         'tax',
         'shipping',
@@ -78,6 +82,7 @@ class PurchaseOrder extends Model
         'order_date' => 'date',
         'expected_date' => 'date',
         'received_date' => 'date',
+        'sent_at' => 'datetime',
         'subtotal' => 'decimal:2',
         'tax' => 'decimal:2',
         'shipping' => 'decimal:2',
@@ -282,6 +287,12 @@ class PurchaseOrder extends Model
      */
     public function canBeSent(): bool
     {
+        // A draft with items is sent for the first time; a PO already with the
+        // supplier (sent, or partly received) may be re-sent.
+        if (in_array($this->status, [self::STATUS_SENT, self::STATUS_PARTIAL], true)) {
+            return true;
+        }
+
         return $this->status === self::STATUS_DRAFT && $this->items()->count() > 0;
     }
 

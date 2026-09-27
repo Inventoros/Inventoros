@@ -69,6 +69,7 @@ Route::post('/orders/{order}/reject', [OrderController::class, 'reject'])->name(
 // Order Invoice PDF
 Route::get('/orders/{order}/invoice/download', [InvoiceController::class, 'download'])->name('orders.invoice.download')->middleware('permission:view_orders');
 Route::get('/orders/{order}/invoice/preview', [InvoiceController::class, 'preview'])->name('orders.invoice.preview')->middleware('permission:view_orders');
+Route::post('/orders/{order}/invoice/email', [InvoiceController::class, 'email'])->name('orders.invoice.email')->middleware('permission:edit_orders');
 
 // Return Orders (RMA) - Permission based
 Route::get('/returns', [ReturnOrderController::class, 'index'])->name('returns.index')->middleware('permission:manage_returns');

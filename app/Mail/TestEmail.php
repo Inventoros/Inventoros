@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Mail;
 
+use App\Mail\Concerns\UsesOrganizationBranding;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
 use Illuminate\Queue\SerializesModels;
@@ -15,7 +16,7 @@ use Illuminate\Queue\SerializesModels;
  */
 class TestEmail extends Mailable
 {
-    use Queueable, SerializesModels;
+    use Queueable, SerializesModels, UsesOrganizationBranding;
 
     /**
      * Create a new message instance.
@@ -33,8 +34,11 @@ class TestEmail extends Mailable
      */
     public function build()
     {
-        return $this->subject('Test Email - Inventoros')
+        $branding = $this->organizationBranding();
+
+        return $this->subject('Test Email - '.$branding['brandName'])
             ->view('emails.test-email')
-            ->with($this->data);
+            ->text('emails.text.test-email')
+            ->with($this->data + $branding);
     }
 }

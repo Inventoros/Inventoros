@@ -6,75 +6,47 @@ namespace App\Http\Controllers\Purchasing;
 
 use App\Http\Controllers\Controller;
 use App\Models\Purchasing\PurchaseOrder;
-use Barryvdh\DomPDF\Facade\Pdf;
+use App\Services\Documents\DocumentPdfService;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Symfony\Component\HttpKernel\Exception\HttpException;
 
 /**
  * Controller for generating purchase order invoice PDFs.
  *
- * Handles PDF generation, download, and preview for purchase order invoices.
+ * Handles PDF download and preview; the PDF itself comes from
+ * DocumentPdfService, which the supplier email attaches too.
  */
 class PurchaseOrderInvoiceController extends Controller
 {
+    public function __construct(private readonly DocumentPdfService $pdfs) {}
+
     /**
      * Download the invoice PDF for a purchase order.
-     *
-     * @param Request $request
-     * @param PurchaseOrder $purchaseOrder
-     * @return Response
      */
     public function download(Request $request, PurchaseOrder $purchaseOrder): Response
     {
         $this->authorizePurchaseOrder($request, $purchaseOrder);
 
-        $purchaseOrder->load(['items', 'organization', 'supplier']);
-
-        $pdf = Pdf::loadView('pdf.purchase-order-invoice', [
-            'purchaseOrder' => $purchaseOrder,
-            'organization' => $purchaseOrder->organization,
-            'supplier' => $purchaseOrder->supplier,
-            'generatedDate' => now()->format('F j, Y'),
-        ]);
-
-        $filename = $purchaseOrder->po_number . '.pdf';
-
-        return $pdf->download($filename);
+        return $this->pdfs->purchaseOrder($purchaseOrder)
+            ->download($this->pdfs->purchaseOrderFilename($purchaseOrder));
     }
 
     /**
      * Preview the invoice PDF for a purchase order in the browser.
-     *
-     * @param Request $request
-     * @param PurchaseOrder $purchaseOrder
-     * @return Response
      */
     public function preview(Request $request, PurchaseOrder $purchaseOrder): Response
     {
         $this->authorizePurchaseOrder($request, $purchaseOrder);
 
-        $purchaseOrder->load(['items', 'organization', 'supplier']);
-
-        $pdf = Pdf::loadView('pdf.purchase-order-invoice', [
-            'purchaseOrder' => $purchaseOrder,
-            'organization' => $purchaseOrder->organization,
-            'supplier' => $purchaseOrder->supplier,
-            'generatedDate' => now()->format('F j, Y'),
-        ]);
-
-        $filename = $purchaseOrder->po_number . '.pdf';
-
-        return $pdf->stream($filename);
+        return $this->pdfs->purchaseOrder($purchaseOrder)
+            ->stream($this->pdfs->purchaseOrderFilename($purchaseOrder));
     }
 
     /**
      * Authorize that the user can access this purchase order's invoice.
      *
-     * @param Request $request
-     * @param PurchaseOrder $purchaseOrder
-     * @return void
-     *
-     * @throws \Symfony\Component\HttpKernel\Exception\HttpException
+     * @throws HttpException
      */
     private function authorizePurchaseOrder(Request $request, PurchaseOrder $purchaseOrder): void
     {

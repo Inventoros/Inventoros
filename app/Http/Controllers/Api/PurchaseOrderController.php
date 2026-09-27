@@ -4,14 +4,17 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Api;
 
+use App\Exceptions\DocumentEmailException;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\PurchaseOrder\ReceivePurchaseOrderRequest;
 use App\Http\Requests\Api\PurchaseOrder\StorePurchaseOrderRequest;
 use App\Http\Requests\Api\PurchaseOrder\UpdatePurchaseOrderRequest;
+use App\Http\Requests\SendDocumentEmailRequest;
 use App\Http\Resources\PurchaseOrderResource;
 use App\Models\Inventory\Product;
 use App\Models\Purchasing\PurchaseOrder;
 use App\Models\Purchasing\PurchaseOrderItem;
+use App\Services\PurchaseOrderEmailService;
 use App\Support\Money;
 use Dedoc\Scramble\Attributes\QueryParameter;
 use Illuminate\Http\JsonResponse;
@@ -342,12 +345,18 @@ class PurchaseOrderController extends Controller
     }
 
     /**
-     * Mark a purchase order as sent.
+     * Email a purchase order to its supplier and mark it sent.
      *
-     * @param  Request  $request  The incoming HTTP request
-     * @param  PurchaseOrder  $purchaseOrder  The purchase order to mark as sent
+     * Queues an email to the supplier (or `to`, when given) with the PO PDF
+     * attached. A draft moves to `sent`; an order already sent (or partly
+     * received) can be re-sent and keeps its status. Fails with 422
+     * `missing_recipient` when there is no valid recipient, in which case the
+     * status is left unchanged.
+     *
+     * @param  SendDocumentEmailRequest  $request  Optional `to`, `cc` (array or comma separated) and `message`
+     * @param  PurchaseOrder  $purchaseOrder  The purchase order to send
      */
-    public function send(Request $request, PurchaseOrder $purchaseOrder): JsonResponse
+    public function send(SendDocumentEmailRequest $request, PurchaseOrder $purchaseOrder, PurchaseOrderEmailService $emails): JsonResponse
     {
         if ($purchaseOrder->organization_id !== $request->user()->organization_id) {
             return response()->json([
@@ -356,17 +365,23 @@ class PurchaseOrderController extends Controller
             ], 404);
         }
 
-        if (! $purchaseOrder->canBeSent()) {
+        try {
+            $purchaseOrder = $emails->send(
+                $purchaseOrder,
+                $request->user(),
+                $request->recipient(),
+                $request->ccList(),
+                $request->customMessage(),
+            );
+        } catch (DocumentEmailException $e) {
             return response()->json([
-                'message' => 'This purchase order cannot be sent',
-                'error' => 'cannot_send',
+                'message' => $e->getMessage(),
+                'error' => $e->reason,
             ], 422);
         }
 
-        $purchaseOrder->markAsSent();
-
         return response()->json([
-            'message' => 'Purchase order marked as sent',
+            'message' => 'Purchase order sent',
             'data' => new PurchaseOrderResource($purchaseOrder),
         ]);
     }

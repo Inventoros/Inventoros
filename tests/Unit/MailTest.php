@@ -143,7 +143,8 @@ class MailTest extends TestCase
         $mail = new TestEmail(['message' => 'Hello']);
         $mail->build();
 
-        $this->assertSame('Test Email - Inventoros', $mail->subject);
+        // With no organization in the payload the app name brands the subject.
+        $this->assertSame('Test Email - '.config('app.name'), $mail->subject);
     }
 
     public function test_test_email_uses_correct_view(): void

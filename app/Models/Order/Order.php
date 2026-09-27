@@ -28,6 +28,10 @@ use Illuminate\Support\Carbon;
  * @property int $organization_id
  * @property int|null $created_by
  * @property string $order_number
+ * @property string|null $invoice_number
+ * @property \Illuminate\Support\Carbon|null $invoice_issued_at
+ * @property \Illuminate\Support\Carbon|null $invoice_sent_at
+ * @property string|null $invoice_sent_to
  * @property string|null $source
  * @property string|null $external_id
  * @property string|null $customer_name
@@ -81,6 +85,10 @@ class Order extends Model
         'customer_id',
         'created_by',
         'order_number',
+        'invoice_number',
+        'invoice_issued_at',
+        'invoice_sent_at',
+        'invoice_sent_to',
         'source',
         'external_id',
         'customer_name',
@@ -121,6 +129,8 @@ class Order extends Model
             'shipped_at' => 'datetime',
             'delivered_at' => 'datetime',
             'approved_at' => 'datetime',
+            'invoice_issued_at' => 'datetime',
+            'invoice_sent_at' => 'datetime',
             'metadata' => 'array',
         ];
     }

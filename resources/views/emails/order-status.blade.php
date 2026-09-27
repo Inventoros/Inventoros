@@ -20,7 +20,7 @@
                                 Previous Status
                             </span>
                             <span style="display: inline-block; padding: 6px 12px; background-color: #e5e7eb; color: #374151; border-radius: 4px; font-size: 14px; font-weight: 500;">
-                                {{ ucfirst($old_status ?? 'unknown') }}
+                                {{ ucfirst($oldStatusValue ?? 'unknown') }}
                             </span>
                         </td>
                     </tr>
@@ -35,7 +35,7 @@
                                 New Status
                             </span>
                             <span style="display: inline-block; padding: 6px 12px; background-color: #d1fae5; color: #065f46; border-radius: 4px; font-size: 14px; font-weight: 600;">
-                                {{ ucfirst($order->status ?? 'unknown') }}
+                                {{ ucfirst($statusValue ?? 'unknown') }}
                             </span>
                         </td>
                     </tr>

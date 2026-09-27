@@ -5,7 +5,9 @@ import PageHeader from '@/Components/ui/PageHeader.vue';
 import Card from '@/Components/ui/Card.vue';
 import Button from '@/Components/ui/Button.vue';
 import Badge from '@/Components/ui/Badge.vue';
+import SendDocumentModal from '@/Components/SendDocumentModal.vue';
 import { Head, Link, router } from '@inertiajs/vue3';
+import { computed, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { ArrowLeft, Pencil, Download, Eye, Send, PackageCheck, Ban, Trash2 } from 'lucide-vue-next';
 
@@ -49,11 +51,17 @@ const statusLabels = {
     cancelled: 'Cancelled',
 };
 
-const sendToSupplier = () => {
-    if (confirm('Mark this purchase order as sent to supplier?')) {
-        router.post(route('purchase-orders.send', props.purchaseOrder.id));
-    }
-};
+const showSendModal = ref(false);
+
+// Drafts are sent for the first time; orders already with the supplier can be re-sent.
+const canSend = computed(() => ['draft', 'sent', 'partial'].includes(props.purchaseOrder.status));
+const isResend = computed(() => props.purchaseOrder.status !== 'draft');
+
+const sentSummary = computed(() =>
+    props.purchaseOrder.sent_at
+        ? t('documentEmail.sentOn', { to: props.purchaseOrder.sent_to, date: formatDate(props.purchaseOrder.sent_at) })
+        : null,
+);
 
 const cancelPO = () => {
     if (confirm('Are you sure you want to cancel this purchase order?')) {
@@ -274,6 +282,7 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-t
                         <Badge :variant="statusVariant(purchaseOrder.status)" size="md" dot>
                             {{ statusLabels[purchaseOrder.status] || purchaseOrder.status }}
                         </Badge>
+                        <p v-if="sentSummary" class="mt-3 text-xs text-text-secondary">{{ sentSummary }}</p>
                     </div>
                 </Card>
 
@@ -312,13 +321,13 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-t
                     <div class="px-5 pt-5"><h3 class="text-sm font-semibold text-text-primary">Actions</h3></div>
                     <div class="space-y-3 p-5">
                         <Button
-                            v-if="purchaseOrder.status === 'draft'"
-                            variant="default"
+                            v-if="canSend"
+                            :variant="isResend ? 'secondary' : 'default'"
                             class="w-full"
-                            @click="sendToSupplier"
+                            @click="showSendModal = true"
                         >
                             <Send :size="16" />
-                            Send to Supplier
+                            {{ isResend ? t('documentEmail.resendPo') : t('documentEmail.sendPo') }}
                         </Button>
                         <Button
                             v-if="purchaseOrder.status === 'sent' || purchaseOrder.status === 'partial'"
@@ -370,5 +379,16 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-t
 
         <!-- Plugin Slot: Footer -->
         <PluginSlot slot="footer" :components="pluginComponents?.footer" />
+
+        <SendDocumentModal
+            :show="showSendModal"
+            :title="t('documentEmail.sendPoTitle')"
+            :description="t('documentEmail.sendPoDescription', { number: purchaseOrder.po_number })"
+            :action="route('purchase-orders.send', purchaseOrder.id)"
+            :default-to="purchaseOrder.supplier?.email || ''"
+            :attachment-name="`${purchaseOrder.po_number}.pdf`"
+            :submit-label="isResend ? t('documentEmail.resendPo') : t('documentEmail.sendPo')"
+            @close="showSendModal = false"
+        />
     </AppLayout>
 </template>

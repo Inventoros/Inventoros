@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace App\Mail;
 
 use App\Mail\Concerns\AppliesOrganizationMailConfig;
+use App\Mail\Concerns\UsesOrganizationBranding;
+use BackedEnum;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
 use Illuminate\Queue\SerializesModels;
@@ -16,7 +18,7 @@ use Illuminate\Queue\SerializesModels;
  */
 class OrderStatusEmail extends Mailable
 {
-    use AppliesOrganizationMailConfig, Queueable, SerializesModels;
+    use AppliesOrganizationMailConfig, Queueable, SerializesModels, UsesOrganizationBranding;
 
     /**
      * Create a new message instance.
@@ -36,6 +38,16 @@ class OrderStatusEmail extends Mailable
 
         return $this->subject('Order Status Updated - #'.($this->data['order']?->order_number ?? 'N/A'))
             ->view('emails.order-status')
-            ->with($this->data);
+            ->text('emails.text.order-status')
+            ->with($this->data + $this->organizationBranding() + [
+                // Order status is an enum; the templates want the plain value.
+                'statusValue' => self::plain($this->data['order']?->status ?? null),
+                'oldStatusValue' => self::plain($this->data['old_status'] ?? null),
+            ]);
+    }
+
+    private static function plain(mixed $status): ?string
+    {
+        return $status instanceof BackedEnum ? (string) $status->value : ($status === null ? null : (string) $status);
     }
 }
