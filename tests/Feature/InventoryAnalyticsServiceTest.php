@@ -110,7 +110,12 @@ class InventoryAnalyticsServiceTest extends TestCase
     }
 
     /**
-     * @param  array<int, array{0: int|null, 1: int, 2: float}>  $lines  [product_id, qty, unit price]
+     * Lines are [product_id, qty, unit price] with an optional 4th element,
+     * the unit cost recorded at sale (defaults to the product's purchase
+     * price, as OrderService captures it), and an optional 5th, true when that
+     * cost was estimated by the backfill.
+     *
+     * @param  array<int, array<int, mixed>>  $lines
      */
     private function order(CarbonImmutable $date, array $lines, string $status = 'delivered', ?int $orgId = null, ?int $warehouseId = null): int
     {
@@ -123,10 +128,15 @@ class InventoryAnalyticsServiceTest extends TestCase
             'subtotal' => $subtotal, 'tax' => 0, 'total' => $subtotal * 1.1, 'currency' => 'USD',
             'order_date' => $date, 'created_at' => $date, 'updated_at' => $date,
         ]);
-        foreach ($lines as [$productId, $qty, $price]) {
+        foreach ($lines as $line) {
+            [$productId, $qty, $price] = $line;
+            $unitCost = array_key_exists(3, $line)
+                ? $line[3]
+                : DB::table('products')->where('id', $productId)->value('purchase_price');
             DB::table('order_items')->insert([
                 'order_id' => $orderId, 'product_id' => $productId, 'product_name' => "Line {$productId}",
                 'sku' => "SKU-{$productId}", 'quantity' => $qty, 'unit_price' => $price,
+                'unit_cost' => $unitCost, 'unit_cost_backfilled_at' => ($line[4] ?? false) ? $date : null,
                 'subtotal' => $qty * $price, 'tax' => 0, 'total' => $qty * $price * 1.1,
                 'created_at' => $date, 'updated_at' => $date,
             ]);
@@ -221,7 +231,8 @@ class InventoryAnalyticsServiceTest extends TestCase
         $this->adjustment($p, 10, CarbonImmutable::parse('2026-06-06 10:00'));
         // After the period: +20.
         $this->adjustment($p, 20, CarbonImmutable::parse('2026-06-20 10:00'));
-        $this->order(CarbonImmutable::parse('2026-06-05 10:00'), [[$p, 20, 5]]);
+        // Sold at a recorded cost of 3; today's purchase price (2) values the stock.
+        $this->order(CarbonImmutable::parse('2026-06-05 10:00'), [[$p, 20, 5, 3.0]]);
 
         // Another org's sale of a same-named SKU must not leak in.
         $bProduct = $this->product('TURN-B', ['organization_id' => $this->otherOrgId]);
@@ -234,18 +245,18 @@ class InventoryAnalyticsServiceTest extends TestCase
         $this->assertSame(20.0, $row['opening_units']);
         $this->assertSame(10.0, $row['closing_units']);
         $this->assertSame(30.0, $row['average_value']); // 15 units x cost 2
-        $this->assertSame(40.0, $row['cogs']);          // 20 sold x cost 2
-        $this->assertSame(1.33, $row['turnover']);
-        $this->assertSame(7.5, $row['days_of_inventory']); // 10 days / 1.333
+        $this->assertSame(60.0, $row['cogs']);          // 20 sold x cost at sale 3
+        $this->assertSame(2.0, $row['turnover']);
+        $this->assertSame(5.0, $row['days_of_inventory']); // 10 days / 2
 
         $this->assertNull(collect($result['products'])->firstWhere('sku', 'TURN-B'));
 
         $category = collect($result['categories'])->firstWhere('category', 'Tools');
-        $this->assertSame(40.0, $category['cogs']);
+        $this->assertSame(60.0, $category['cogs']);
         $this->assertSame(30.0, $category['average_value']);
-        $this->assertSame(1.33, $category['turnover']);
+        $this->assertSame(2.0, $category['turnover']);
 
-        $this->assertSame(40.0, $result['summary']['cogs']);
+        $this->assertSame(60.0, $result['summary']['cogs']);
         $this->assertSame(10, $result['summary']['period_days']);
     }
 
@@ -263,37 +274,46 @@ class InventoryAnalyticsServiceTest extends TestCase
 
     // ------------------------------------------------------------ profit margin
 
-    public function test_profit_margin_uses_current_cost_and_flags_missing_cost(): void
+    public function test_profit_margin_uses_the_cost_recorded_at_sale(): void
     {
         $cat = $this->category('Gadgets');
         $a = $this->product('MA', ['purchase_price' => 6, 'category_id' => $cat]);
         $b = $this->product('MB', ['purchase_price' => null, 'category_id' => $cat]);
         $period = ReportPeriod::fromDates('2026-06-01', '2026-06-30');
 
-        $this->order(CarbonImmutable::parse('2026-06-10'), [[$a, 2, 10], [$b, 1, 5]]);
+        $this->order(CarbonImmutable::parse('2026-06-10'), [[$a, 2, 10, 5.0], [$b, 1, 5, null]]);
+        // A pre-existing line whose cost the migration estimated from current cost.
+        $this->order(CarbonImmutable::parse('2026-06-12'), [[$a, 1, 10, 6.0, true]]);
         $this->order(CarbonImmutable::parse('2026-06-11'), [[$a, 100, 10]], 'cancelled');
         $this->order(CarbonImmutable::parse('2026-05-01'), [[$a, 100, 10]]); // outside period
+
+        // Today's cost is irrelevant once the sale recorded its own.
+        DB::table('products')->where('id', $a)->update(['purchase_price' => 9]);
 
         $result = $this->service->profitMargin($this->orgId, $period);
 
         $rowA = collect($result['products'])->firstWhere('sku', 'MA');
-        $this->assertSame(20.0, $rowA['revenue']);   // subtotal, excludes tax
-        $this->assertSame(12.0, $rowA['cogs']);
-        $this->assertSame(8.0, $rowA['margin']);
-        $this->assertSame(40.0, $rowA['margin_pct']);
+        $this->assertSame(30.0, $rowA['revenue']);   // subtotal, excludes tax
+        $this->assertSame(16.0, $rowA['cogs']);      // 2 x 5 + 1 x 6
+        $this->assertSame(14.0, $rowA['margin']);
+        $this->assertSame(46.67, $rowA['margin_pct']);
         $this->assertFalse($rowA['cost_missing']);
+        $this->assertSame(1, $rowA['units_estimated_cost']);
+        $this->assertTrue($rowA['cost_estimated']);
 
         $rowB = collect($result['products'])->firstWhere('sku', 'MB');
         $this->assertTrue($rowB['cost_missing']);
+        $this->assertFalse($rowB['cost_estimated']);
 
         $cat = collect($result['categories'])->firstWhere('category', 'Gadgets');
-        $this->assertSame(25.0, $cat['revenue']);
-        $this->assertSame(12.0, $cat['cogs']);
+        $this->assertSame(35.0, $cat['revenue']);
+        $this->assertSame(16.0, $cat['cogs']);
 
-        $this->assertSame(25.0, $result['summary']['revenue']);
-        $this->assertSame(13.0, $result['summary']['margin']);
+        $this->assertSame(35.0, $result['summary']['revenue']);
+        $this->assertSame(19.0, $result['summary']['margin']);
         $this->assertSame(1, $result['summary']['units_without_cost']);
-        $this->assertSame('current_purchase_price', $result['cost_basis']);
+        $this->assertSame(1, $result['summary']['units_estimated_cost']);
+        $this->assertSame('cost_at_sale', $result['cost_basis']);
     }
 
     // --------------------------------------------------------- sales by location

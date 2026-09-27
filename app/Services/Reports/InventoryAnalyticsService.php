@@ -37,13 +37,23 @@ class InventoryAnalyticsService
     public const ABC_B_THRESHOLD = 95.0;
 
     /**
-     * order_items stores no cost column, so the cost of goods sold is the
-     * CURRENT purchase price of the product (or of the sold variant when it
-     * overrides the product's cost), not the cost at the time of sale. Pages
-     * and exports surface this basis so nobody mistakes it for historical
-     * cost.
+     * Cost of goods sold uses order_items.unit_cost, the unit cost recorded
+     * when the line was sold (see OrderItem::costAtSale). Lines that predate
+     * that column were backfilled from the then-current cost and carry
+     * unit_cost_backfilled_at; the reports count those units separately so
+     * the pages can flag them as estimates. Lines with no recorded cost count
+     * as zero cost and are flagged as missing.
      */
-    public const COST_BASIS = 'current_purchase_price';
+    public const COST_BASIS = 'cost_at_sale';
+
+    /**
+     * Per-line cost aggregates shared by the margin and turnover queries.
+     */
+    private const LINE_COST_AGGREGATES = '
+        COALESCE(SUM(order_items.quantity * COALESCE(order_items.unit_cost, 0)), 0) as cogs,
+        COALESCE(SUM(CASE WHEN order_items.unit_cost IS NULL THEN order_items.quantity ELSE 0 END), 0) as units_without_cost,
+        COALESCE(SUM(CASE WHEN order_items.unit_cost_backfilled_at IS NOT NULL THEN order_items.quantity ELSE 0 END), 0) as units_estimated_cost
+    ';
 
     public function maxRows(): int
     {
@@ -185,12 +195,13 @@ class InventoryAnalyticsService
      * every stock adjustment recorded after the period; units at the START
      * are that closing figure minus the net of adjustments inside the period.
      * Average units = (opening + closing) / 2, each clamped at zero, valued at
-     * the current purchase price. Stock changes that bypassed the adjustment
-     * ledger are not reflected, and variant-level adjustments are ignored
-     * because they move variant stock, not the product's own.
+     * the current purchase price (the value of stock on hand). Stock changes
+     * that bypassed the adjustment ledger are not reflected, and
+     * variant-level adjustments are ignored because they move variant stock,
+     * not the product's own.
      *
-     * COGS = units sold in the period x current purchase price (see
-     * COST_BASIS).
+     * COGS = the sum of each sold line's quantity x its unit cost recorded at
+     * sale (see COST_BASIS).
      *
      * @return array{products: array<int, array<string, mixed>>, categories: array<int, array<string, mixed>>, summary: array<string, mixed>, truncated: bool}
      */
@@ -199,7 +210,7 @@ class InventoryAnalyticsService
         $sold = $this->salesLines($organizationId, $period->from, $period->to)
             ->whereNotNull('order_items.product_id')
             ->groupBy('order_items.product_id')
-            ->selectRaw('order_items.product_id as product_id, SUM(order_items.quantity) as units_sold');
+            ->selectRaw('order_items.product_id as product_id, SUM(order_items.quantity) as units_sold, '.self::LINE_COST_AGGREGATES);
 
         $adjustments = DB::table('stock_adjustments')
             ->where('organization_id', $organizationId)
@@ -239,7 +250,9 @@ class InventoryAnalyticsService
                 {$openingClamped} as opening_units,
                 {$closingClamped} as closing_units,
                 ((({$openingClamped}) + ({$closingClamped})) / 2.0) * {$cost} as average_value,
-                COALESCE(sold.units_sold, 0) * {$cost} as cogs
+                COALESCE(sold.cogs, 0) as cogs,
+                COALESCE(sold.units_without_cost, 0) as units_without_cost,
+                COALESCE(sold.units_estimated_cost, 0) as units_estimated_cost
             ");
 
         $days = $period->days();
@@ -277,7 +290,8 @@ class InventoryAnalyticsService
 
         $totals = DB::query()
             ->fromSub(clone $base, 't')
-            ->selectRaw('COUNT(*) as products, COALESCE(SUM(cogs), 0) as cogs, COALESCE(SUM(average_value), 0) as average_value')
+            ->selectRaw('COUNT(*) as products, COALESCE(SUM(cogs), 0) as cogs, COALESCE(SUM(average_value), 0) as average_value,
+                COALESCE(SUM(units_without_cost), 0) as units_without_cost, COALESCE(SUM(units_estimated_cost), 0) as units_estimated_cost')
             ->first();
 
         return [
@@ -286,8 +300,11 @@ class InventoryAnalyticsService
             'summary' => [
                 'products' => (int) $totals->products,
                 'period_days' => $days,
+                'units_without_cost' => (int) $totals->units_without_cost,
+                'units_estimated_cost' => (int) $totals->units_estimated_cost,
             ] + $this->turnoverFigures((float) $totals->cogs, (float) $totals->average_value, $days),
             'truncated' => (int) $totals->products > count($products),
+            'cost_basis' => self::COST_BASIS,
         ];
     }
 
@@ -309,22 +326,19 @@ class InventoryAnalyticsService
     // ----------------------------------------------------------------------
 
     /**
-     * Revenue (order line subtotals, i.e. before tax), COGS at current cost
-     * (see COST_BASIS), gross margin and margin % per product and per
-     * category. Lines whose product/variant has no purchase price count as
-     * zero cost and are flagged.
+     * Revenue (order line subtotals, i.e. before tax), COGS at the unit cost
+     * recorded at sale (see COST_BASIS), gross margin and margin % per product
+     * and per category. Lines with no recorded cost count as zero cost and are
+     * flagged; backfilled (estimated) costs are counted and flagged too.
      *
      * @return array{products: array<int, array<string, mixed>>, categories: array<int, array<string, mixed>>, summary: array<string, mixed>, cost_basis: string, truncated: bool}
      */
     public function profitMargin(int $organizationId, ReportPeriod $period): array
     {
-        $unitCost = 'COALESCE(product_variants.purchase_price, products.purchase_price)';
-        $aggregates = "
+        $aggregates = '
             SUM(order_items.quantity) as units,
             COALESCE(SUM(order_items.subtotal), 0) as revenue,
-            COALESCE(SUM(order_items.quantity * COALESCE({$unitCost}, 0)), 0) as cogs,
-            COALESCE(SUM(CASE WHEN {$unitCost} IS NULL THEN order_items.quantity ELSE 0 END), 0) as units_without_cost
-        ";
+        '.self::LINE_COST_AGGREGATES;
 
         $lines = fn () => $this->costedSalesLines($organizationId, $period);
 
@@ -373,7 +387,7 @@ class InventoryAnalyticsService
         ];
     }
 
-    /** @return array{units: int, revenue: float, cogs: float, margin: float, margin_pct: float|null, units_without_cost: int, cost_missing: bool} */
+    /** @return array{units: int, revenue: float, cogs: float, margin: float, margin_pct: float|null, units_without_cost: int, cost_missing: bool, units_estimated_cost: int, cost_estimated: bool} */
     private function marginFigures(object $row): array
     {
         $revenue = (float) $row->revenue;
@@ -389,6 +403,8 @@ class InventoryAnalyticsService
             'margin_pct' => $revenue > 0 ? round($margin / $revenue * 100, 2) : null,
             'units_without_cost' => $missing,
             'cost_missing' => $missing > 0,
+            'units_estimated_cost' => (int) $row->units_estimated_cost,
+            'cost_estimated' => (int) $row->units_estimated_cost > 0,
         ];
     }
 
@@ -398,10 +414,6 @@ class InventoryAnalyticsService
             ->leftJoin('products', function (JoinClause $join) use ($organizationId) {
                 $join->on('products.id', '=', 'order_items.product_id')
                     ->where('products.organization_id', '=', $organizationId);
-            })
-            ->leftJoin('product_variants', function (JoinClause $join) {
-                $join->on('product_variants.id', '=', 'order_items.product_variant_id')
-                    ->on('product_variants.product_id', '=', 'products.id');
             })
             ->leftJoin('product_categories', 'product_categories.id', '=', 'products.category_id');
     }

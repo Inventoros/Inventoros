@@ -59,7 +59,8 @@ class AnalyticsReportControllerTest extends TestCase
         ]);
         DB::table('order_items')->insert([
             'order_id' => $orderId, 'product_id' => $productId, 'product_name' => "{$prefix} product", 'sku' => "{$prefix}-1",
-            'quantity' => 2, 'unit_price' => 10, 'subtotal' => 20, 'tax' => 0, 'total' => 20,
+            'quantity' => 2, 'unit_price' => 10, 'unit_cost' => 4, 'subtotal' => 20, 'tax' => 0, 'total' => 20,
+            'unit_cost_backfilled_at' => now(),
             'created_at' => now()->subDays(3), 'updated_at' => now()->subDays(3),
         ]);
         unset($idle);
@@ -164,9 +165,10 @@ class AnalyticsReportControllerTest extends TestCase
         $this->actingAs($this->analyst())
             ->get(route('reports.profit-margin'))
             ->assertInertia(fn (Assert $page) => $page
-                ->where('costBasis', 'current_purchase_price')
+                ->where('costBasis', 'cost_at_sale')
                 ->where('summary.revenue', 20)
                 ->where('summary.cogs', 8)
+                ->where('summary.units_estimated_cost', 2)
             );
     }
 

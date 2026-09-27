@@ -11,7 +11,7 @@ import PeriodFilter from '@/Components/Reports/PeriodFilter.vue';
 import { formatCurrency, formatNumber, formatPercent } from '@/lib/reportFormat';
 import { Head, Link } from '@inertiajs/vue3';
 import { useI18n } from 'vue-i18n';
-import { ArrowLeft, DollarSign, Receipt, TrendingUp, Percent, AlertTriangle } from 'lucide-vue-next';
+import { ArrowLeft, DollarSign, Receipt, TrendingUp, Percent, Info } from 'lucide-vue-next';
 
 const { t } = useI18n();
 
@@ -59,10 +59,13 @@ const thRightClass = 'px-4 py-2.5 text-right text-xs font-medium tracking-tight 
 
         <Card class="mt-4">
             <div class="flex items-start gap-3">
-                <AlertTriangle :size="16" class="mt-0.5 shrink-0 text-status-warning" />
+                <Info :size="16" class="mt-0.5 shrink-0 text-status-info" />
                 <div class="space-y-1 text-xs text-text-secondary">
                     <p class="font-medium text-text-primary">{{ t('reports.profitMargin.costBasisTitle') }}</p>
-                    <p v-if="costBasis === 'current_purchase_price'">{{ t('reports.profitMargin.costBasis') }}</p>
+                    <p>{{ t('reports.profitMargin.costBasis') }}</p>
+                    <p v-if="summary.units_estimated_cost > 0" class="text-status-warning">
+                        {{ t('reports.profitMargin.estimatedCost', { count: summary.units_estimated_cost }) }}
+                    </p>
                     <p v-if="summary.units_without_cost > 0" class="text-status-warning">
                         {{ t('reports.profitMargin.missingCost', { count: summary.units_without_cost }) }}
                     </p>
@@ -158,6 +161,7 @@ const thRightClass = 'px-4 py-2.5 text-right text-xs font-medium tracking-tight 
                                         <p class="font-medium text-text-primary">
                                             {{ row.name }}
                                             <Badge v-if="row.cost_missing" variant="warning" size="sm" class="ml-1">{{ t('reports.common.costMissing') }}</Badge>
+                                            <Badge v-if="row.cost_estimated" variant="neutral" size="sm" class="ml-1">{{ t('reports.profitMargin.estimatedBadge') }}</Badge>
                                         </p>
                                         <p class="font-mono text-xs text-text-tertiary">{{ row.sku }}</p>
                                     </td>

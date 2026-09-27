@@ -62,6 +62,9 @@ const thRightClass = 'px-4 py-2.5 text-right text-xs font-medium tracking-tight 
                     <p class="font-medium text-text-primary">{{ t('reports.inventoryTurnover.methodTitle') }}</p>
                     <p>{{ t('reports.inventoryTurnover.method') }}</p>
                     <p>{{ t('reports.inventoryTurnover.cogsNote') }}</p>
+                    <p v-if="summary.units_estimated_cost > 0" class="text-status-warning">
+                        {{ t('reports.inventoryTurnover.estimatedCost', { count: summary.units_estimated_cost }) }}
+                    </p>
                 </div>
             </div>
         </Card>

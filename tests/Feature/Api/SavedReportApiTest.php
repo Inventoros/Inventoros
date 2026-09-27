@@ -3,12 +3,15 @@
 namespace Tests\Feature\Api;
 
 use App\Models\Auth\Organization;
+use App\Models\Inventory\Product;
 use App\Models\Role;
 use App\Models\SavedReport;
 use App\Models\System\SystemSetting;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Laravel\Sanctum\Sanctum;
+use PhpOffice\PhpSpreadsheet\Cell\DataType;
+use PhpOffice\PhpSpreadsheet\IOFactory;
 use Tests\TestCase;
 
 class SavedReportApiTest extends TestCase
@@ -239,7 +242,7 @@ class SavedReportApiTest extends TestCase
     {
         Sanctum::actingAs($this->admin);
 
-        \App\Models\Inventory\Product::create([
+        Product::create([
             'organization_id' => $this->organization->id, 'name' => '=HYPERLINK("x")', 'sku' => 'API-X',
             'price' => 5, 'currency' => 'USD', 'stock' => 7,
         ]);
@@ -251,10 +254,10 @@ class SavedReportApiTest extends TestCase
 
         $path = tempnam(sys_get_temp_dir(), 'api').'.xlsx';
         file_put_contents($path, $xlsx->streamedContent());
-        $sheet = \PhpOffice\PhpSpreadsheet\IOFactory::load($path)->getActiveSheet();
+        $sheet = IOFactory::load($path)->getActiveSheet();
         @unlink($path);
         $this->assertSame("'=HYPERLINK(\"x\")", $sheet->getCell('A2')->getValue());
-        $this->assertSame(\PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_NUMERIC, $sheet->getCell('C2')->getDataType());
+        $this->assertSame(DataType::TYPE_NUMERIC, $sheet->getCell('C2')->getDataType());
 
         $pdf = $this->get("/api/v1/reports/{$report->id}/export?format=pdf");
         $pdf->assertStatus(200)->assertHeader('content-type', 'application/pdf');

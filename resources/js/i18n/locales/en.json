@@ -739,7 +739,8 @@
       "notAvailable": "n/a",
       "methodTitle": "How this is calculated",
       "method": "Average inventory is the mean of opening and closing on-hand units, reconstructed from current stock and the stock adjustment history, valued at the current purchase price. Stock changes not recorded as adjustments are not reflected.",
-      "cogsNote": "COGS is units sold in the period at the current purchase price."
+      "cogsNote": "COGS is units sold in the period at the unit cost recorded when each was sold.",
+      "estimatedCost": "{count} units were sold before costs were recorded, so their cost is an estimate (the purchase price at that point)."
     },
     "profitMargin": {
       "title": "Profit Margin",
@@ -752,7 +753,9 @@
       "byCategory": "By Category",
       "byProduct": "By Product",
       "costBasisTitle": "Cost basis",
-      "costBasis": "Order lines do not store cost at the time of sale, so COGS uses each product's current purchase price. Margins for past periods change when costs change.",
+      "costBasis": "COGS uses the unit cost recorded when each line was sold, so later cost changes do not rewrite past margins.",
+      "estimatedCost": "{count} units were sold before costs were recorded, so their cost is an estimate (the purchase price at that point). Rows marked Estimated cost include them.",
+      "estimatedBadge": "Estimated cost",
       "missingCost": "{count} units sold have no purchase price and are counted at zero cost."
     },
     "salesByLocation": {

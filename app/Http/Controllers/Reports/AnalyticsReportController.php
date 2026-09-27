@@ -76,8 +76,11 @@ class AnalyticsReportController extends Controller
             $notes = [
                 'Period: '.$period->label().' ('.$period->days().' days).',
                 'Average inventory = (opening + closing on-hand) / 2, reconstructed from current stock and the stock adjustment history, valued at current purchase price.',
-                'COGS = units sold x current purchase price.',
+                'COGS = units sold x the unit cost recorded at the time of sale.',
             ];
+            if ($result['summary']['units_estimated_cost'] > 0) {
+                $notes[] = $result['summary']['units_estimated_cost'].' units sold before costs were recorded use an estimated cost (the purchase price when costs started being recorded).';
+            }
             $figures = fn (array $r) => [$r['average_value'], $r['cogs'], $r['turnover'], $r['days_of_inventory']];
 
             if ($request->query('group') === 'category') {
@@ -114,15 +117,18 @@ class AnalyticsReportController extends Controller
         if ($format = ReportExporter::requestedFormat($request)) {
             $notes = [
                 'Period: '.$period->label().'. Revenue is order line subtotals before tax, cancelled orders excluded.',
-                'COGS uses the CURRENT purchase price: order lines do not store cost at the time of sale.',
+                'COGS uses the unit cost recorded at the time of sale.',
             ];
-            $figures = fn (array $r) => [$r['units'], $r['revenue'], $r['cogs'], $r['margin'], $r['margin_pct'], $r['units_without_cost']];
+            if ($result['summary']['units_estimated_cost'] > 0) {
+                $notes[] = $result['summary']['units_estimated_cost'].' units sold before costs were recorded use an estimated cost (the purchase price when costs started being recorded).';
+            }
+            $figures = fn (array $r) => [$r['units'], $r['revenue'], $r['cogs'], $r['margin'], $r['margin_pct'], $r['units_without_cost'], $r['units_estimated_cost']];
 
             if ($request->query('group') === 'category') {
                 return $this->exporter->download(
                     $format,
                     'Profit Margin by Category',
-                    ['Category', 'Units', 'Revenue', 'COGS', 'Gross margin', 'Margin %', 'Units without cost'],
+                    ['Category', 'Units', 'Revenue', 'COGS', 'Gross margin', 'Margin %', 'Units without cost', 'Estimated-cost units'],
                     array_map(fn (array $r) => [$r['category'] ?? 'Uncategorized', ...$figures($r)], $result['categories']),
                     $notes
                 );
@@ -131,7 +137,7 @@ class AnalyticsReportController extends Controller
             return $this->exporter->download(
                 $format,
                 'Profit Margin',
-                ['Product', 'SKU', 'Category', 'Units', 'Revenue', 'COGS', 'Gross margin', 'Margin %', 'Units without cost'],
+                ['Product', 'SKU', 'Category', 'Units', 'Revenue', 'COGS', 'Gross margin', 'Margin %', 'Units without cost', 'Estimated-cost units'],
                 array_map(fn (array $r) => [$r['name'], $r['sku'], $r['category'], ...$figures($r)], $result['products']),
                 $notes
             );
