@@ -241,4 +241,39 @@ class AnalyticsReportControllerTest extends TestCase
             ->get(route('reports.profit-margin', ['export' => 'csv']))
             ->assertForbidden();
     }
+
+    public function test_a_warehouse_restricted_user_only_sees_their_warehouses_in_location_breakdowns(): void
+    {
+        $north = DB::table('warehouses')->insertGetId(['organization_id' => $this->org->id, 'name' => 'North', 'created_at' => now(), 'updated_at' => now()]);
+        $south = DB::table('warehouses')->insertGetId(['organization_id' => $this->org->id, 'name' => 'South', 'created_at' => now(), 'updated_at' => now()]);
+        foreach (['North' => $north, 'South' => $south] as $name => $warehouseId) {
+            $orderId = DB::table('orders')->insertGetId([
+                'organization_id' => $this->org->id, 'warehouse_id' => $warehouseId, 'order_number' => "WH-{$name}", 'status' => 'delivered',
+                'subtotal' => 5, 'tax' => 0, 'total' => 5, 'currency' => 'USD',
+                'order_date' => now()->subDay(), 'created_at' => now(), 'updated_at' => now(),
+            ]);
+            DB::table('order_items')->insert([
+                'order_id' => $orderId, 'product_id' => null, 'product_name' => 'X', 'quantity' => 1, 'unit_price' => 5,
+                'subtotal' => 5, 'tax' => 0, 'total' => 5, 'created_at' => now(), 'updated_at' => now(),
+            ]);
+        }
+
+        $user = $this->analyst();
+        DB::table('warehouse_user')->insert(['warehouse_id' => $north, 'user_id' => $user->id, 'created_at' => now(), 'updated_at' => now()]);
+
+        $this->actingAs($user)
+            ->get(route('reports.sales-by-location'))
+            ->assertInertia(fn (Assert $page) => $page
+                ->has('byWarehouse', 1)
+                ->where('byWarehouse.0.name', 'North')
+            );
+
+        $body = $this->actingAs($user)->get(route('reports.sales-by-location', ['export' => 'csv']))->streamedContent();
+        $this->assertStringContainsString('North', $body);
+        $this->assertStringNotContainsString('South', $body);
+
+        $this->actingAs($user)
+            ->get(route('reports.inventory-valuation'))
+            ->assertInertia(fn (Assert $page) => $page->where('byLocation', []));
+    }
 }

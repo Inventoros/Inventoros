@@ -14,6 +14,7 @@ use App\Services\ReorderService;
 use App\Services\Reports\InventoryAnalyticsService;
 use App\Services\Reports\ReportExporter;
 use App\Services\Reports\ReportPeriod;
+use App\Services\WarehouseAccessService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
@@ -142,7 +143,11 @@ class ReportController extends Controller
             ])
             ->values();
 
-        $byLocation = $this->analytics->valuationByLocation($organizationId);
+        // Per-location stock follows warehouse access (#224).
+        $byLocation = $this->analytics->valuationByLocation(
+            $organizationId,
+            app(WarehouseAccessService::class)->accessibleWarehouseIds($request->user())
+        );
 
         if ($format = ReportExporter::requestedFormat($request)) {
             return match ($request->query('group')) {

@@ -375,6 +375,48 @@ class InventoryAnalyticsServiceTest extends TestCase
         $this->assertSame(6.0, $unallocated['cost_value']);
     }
 
+    // -------------------------------------------------- warehouse access (#224)
+
+    public function test_location_breakdowns_can_be_limited_to_accessible_warehouses(): void
+    {
+        $north = $this->warehouse('North');
+        $south = $this->warehouse('South');
+        $ln = $this->location('North Bin', $north);
+        $ls = $this->location('South Bin', $south);
+        $pn = $this->product('PN', ['stock' => 5, 'location_id' => $ln]);
+        $ps = $this->product('PS', ['stock' => 9, 'location_id' => $ls]);
+        $this->product('PX', ['stock' => 2]); // unallocated
+        foreach ([[$pn, $ln, 5], [$ps, $ls, 9]] as [$product, $location, $qty]) {
+            DB::table('product_location_stocks')->insert([
+                'organization_id' => $this->orgId, 'product_id' => $product, 'location_id' => $location,
+                'quantity' => $qty, 'created_at' => $this->now, 'updated_at' => $this->now,
+            ]);
+        }
+        $period = ReportPeriod::fromDates('2026-06-11', '2026-06-20');
+        $this->order(CarbonImmutable::parse('2026-06-15'), [[$pn, 1, 10]], 'delivered', null, $north);
+        $this->order(CarbonImmutable::parse('2026-06-15'), [[$ps, 1, 10]], 'delivered', null, $south);
+        $this->order(CarbonImmutable::parse('2026-06-15'), [[$pn, 1, 10]]); // no warehouse
+
+        // Unrestricted (null) sees everything, including unassigned groups.
+        $this->assertCount(3, $this->service->valuationByLocation($this->orgId));
+        $this->assertCount(3, $this->service->salesByLocation($this->orgId, $period)['byWarehouse']);
+
+        // Restricted to North: only North's locations and orders; groups that
+        // belong to no warehouse are hidden, as #224 does for locations.
+        $valuation = $this->service->valuationByLocation($this->orgId, [$north]);
+        $this->assertSame(['North Bin'], array_column($valuation, 'location'));
+
+        $sales = $this->service->salesByLocation($this->orgId, $period, [$north]);
+        $this->assertSame(['North'], array_column($sales['byWarehouse'], 'name'));
+        $this->assertSame(['North Bin'], array_column($sales['byLocation'], 'name'));
+        // By product location: both PN sales count, whatever the order's warehouse.
+        $this->assertSame(2, $sales['byLocation'][0]['units']);
+
+        // Assigned to nothing (org restricts to assignments): sees nothing.
+        $this->assertSame([], $this->service->valuationByLocation($this->orgId, []));
+        $this->assertSame([], $this->service->salesByLocation($this->orgId, $period, [])['byWarehouse']);
+    }
+
     // -------------------------------------------------------------------- ABC
 
     public function test_abc_classes_split_revenue_80_15_5(): void

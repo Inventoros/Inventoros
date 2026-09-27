@@ -8,6 +8,7 @@ use App\Http\Controllers\Controller;
 use App\Services\Reports\InventoryAnalyticsService;
 use App\Services\Reports\ReportExporter;
 use App\Services\Reports\ReportPeriod;
+use App\Services\WarehouseAccessService;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -156,7 +157,11 @@ class AnalyticsReportController extends Controller
     public function salesByLocation(Request $request): Response|HttpResponse
     {
         $period = ReportPeriod::fromRequest($request);
-        $result = $this->analytics->salesByLocation($request->user()->organization_id, $period);
+        $result = $this->analytics->salesByLocation(
+            $request->user()->organization_id,
+            $period,
+            app(WarehouseAccessService::class)->accessibleWarehouseIds($request->user())
+        );
 
         if ($format = ReportExporter::requestedFormat($request)) {
             $notes = [

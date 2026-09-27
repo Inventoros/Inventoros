@@ -427,9 +427,13 @@ class InventoryAnalyticsService
      * warehouse, and units + line totals by the sold product's assigned
      * location, each with the previous equal-length period and its delta %.
      *
+     * @param  array<int, int>|null  $warehouseIds  The viewer's accessible warehouses
+     *                                              (WarehouseAccessService::accessibleWarehouseIds); null = unrestricted.
+     *                                              A restricted viewer sees only those warehouses and their locations,
+     *                                              never the "no warehouse" groups.
      * @return array{byWarehouse: array<int, array<string, mixed>>, byLocation: array<int, array<string, mixed>>, previousPeriod: array{date_from: string, date_to: string}}
      */
-    public function salesByLocation(int $organizationId, ReportPeriod $period): array
+    public function salesByLocation(int $organizationId, ReportPeriod $period, ?array $warehouseIds = null): array
     {
         $previous = $period->previous();
 
@@ -438,6 +442,7 @@ class InventoryAnalyticsService
                 $join->on('warehouses.id', '=', 'orders.warehouse_id')
                     ->where('warehouses.organization_id', '=', $organizationId);
             })
+            ->when($warehouseIds !== null, fn (Builder $q) => $q->whereIn('orders.warehouse_id', $warehouseIds))
             ->groupBy('orders.warehouse_id', 'warehouses.name')
             ->selectRaw('orders.warehouse_id as id, warehouses.name as name, COUNT(*) as orders, COALESCE(SUM(orders.total), 0) as revenue')
             ->orderByDesc('revenue')
@@ -457,6 +462,7 @@ class InventoryAnalyticsService
                 $join->on('warehouses.id', '=', 'product_locations.warehouse_id')
                     ->where('warehouses.organization_id', '=', $organizationId);
             })
+            ->when($warehouseIds !== null, fn (Builder $q) => $q->whereIn('product_locations.warehouse_id', $warehouseIds))
             ->groupBy('product_locations.id', 'product_locations.name', 'warehouses.name')
             ->selectRaw('product_locations.id as id, product_locations.name as name, warehouses.name as warehouse, COUNT(DISTINCT orders.id) as orders, COALESCE(SUM(order_items.quantity), 0) as units, COALESCE(SUM(order_items.total), 0) as revenue')
             ->orderByDesc('revenue')
@@ -568,9 +574,12 @@ class InventoryAnalyticsService
      * per-location stock table. Units a product holds beyond its per-location
      * allocations are reported as one unallocated row (location_id null).
      *
+     * @param  array<int, int>|null  $warehouseIds  The viewer's accessible warehouses; null = unrestricted.
+     *                                              A restricted viewer sees only locations in those
+     *                                              warehouses and no unallocated row.
      * @return array<int, array<string, mixed>>
      */
-    public function valuationByLocation(int $organizationId): array
+    public function valuationByLocation(int $organizationId, ?array $warehouseIds = null): array
     {
         $rows = DB::table('product_location_stocks')
             ->join('products', function (JoinClause $join) use ($organizationId) {
@@ -588,6 +597,7 @@ class InventoryAnalyticsService
             ->where('product_location_stocks.organization_id', $organizationId)
             ->whereNull('products.deleted_at')
             ->where('products.is_active', true)
+            ->when($warehouseIds !== null, fn (Builder $q) => $q->whereIn('product_locations.warehouse_id', $warehouseIds))
             ->groupBy('product_locations.id', 'product_locations.name', 'warehouses.name')
             ->selectRaw('
                 product_locations.id as location_id,
@@ -611,6 +621,10 @@ class InventoryAnalyticsService
                 'retail_value' => round((float) $row->retail_value, 2),
             ])
             ->all();
+
+        if ($warehouseIds !== null) {
+            return $rows;
+        }
 
         $allocated = DB::table('product_location_stocks')
             ->where('organization_id', $organizationId)
