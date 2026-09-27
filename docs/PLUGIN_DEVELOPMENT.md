@@ -198,6 +198,15 @@ Schema::dropIfExists('my_plugin_notes');
 | `purchase_order_created` | `$purchase_order`, `$user` | A purchase order is created. |
 | `purchase_order_received` | `$purchase_order`, `$user` | A purchase order becomes fully received. |
 | `purchase_order_cancelled` | `$purchase_order`, `$user` | A purchase order is cancelled. |
+| `customer_created` | `$customer`, `$user` | A customer is created on any surface. |
+| `customer_updated` | `$customer`, `$user` | A customer is updated on any surface. |
+| `customer_deleted` | `$customer`, `$user` | A customer is deleted on any surface. |
+| `return_created` | `$return_order`, `$user` | A return is created. |
+| `return_received` | `$return_order`, `$user` | A return is marked received. |
+| `transfer_created` | `$transfer`, `$user` | A stock transfer is created. |
+| `transfer_completed` | `$transfer`, `$user` | A stock transfer is completed. |
+| `stock_audit_completed` | `$stock_audit`, `$user` | A stock audit is completed. |
+| `work_order_completed` | `$work_order`, `$user` | A work order is completed. |
 | `supplier_created` | `$supplier`, `$user` | A supplier is created from the web UI. |
 | `supplier_updated` | `$supplier`, `$user` | A supplier is updated from the web UI. |
 | `supplier_before_delete` | `$supplier`, `$user` | Before a supplier is deleted from the web UI. |

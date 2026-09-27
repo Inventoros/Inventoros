@@ -194,6 +194,63 @@ final class HookRegistry
             ],
 
             // ========================================
+            // CUSTOMER HOOKS
+            // ========================================
+            'customer_created' => [
+                'description' => 'Fired after a customer is created on any surface',
+                'parameters' => ['$customer', '$user'],
+                'example' => "add_action('customer_created', function (\$customer, \$user) { /* ... */ });",
+            ],
+            'customer_updated' => [
+                'description' => 'Fired after a customer is updated on any surface',
+                'parameters' => ['$customer', '$user'],
+                'example' => "add_action('customer_updated', function (\$customer, \$user) { /* ... */ });",
+            ],
+            'customer_deleted' => [
+                'description' => 'Fired after a customer is deleted on any surface',
+                'parameters' => ['$customer', '$user'],
+                'example' => "add_action('customer_deleted', function (\$customer, \$user) { /* ... */ });",
+            ],
+
+            // ========================================
+            // RETURN HOOKS
+            // ========================================
+            'return_created' => [
+                'description' => 'Fired after a return is created',
+                'parameters' => ['$return_order', '$user'],
+                'example' => "add_action('return_created', function (\$return_order, \$user) { /* ... */ });",
+            ],
+            'return_received' => [
+                'description' => 'Fired when a return is marked received',
+                'parameters' => ['$return_order', '$user'],
+                'example' => "add_action('return_received', function (\$return_order, \$user) { /* ... */ });",
+            ],
+
+            // ========================================
+            // TRANSFER, AUDIT AND WORK ORDER HOOKS
+            // ========================================
+            'transfer_created' => [
+                'description' => 'Fired after a stock transfer is created',
+                'parameters' => ['$transfer', '$user'],
+                'example' => "add_action('transfer_created', function (\$transfer, \$user) { /* ... */ });",
+            ],
+            'transfer_completed' => [
+                'description' => 'Fired when a stock transfer is completed',
+                'parameters' => ['$transfer', '$user'],
+                'example' => "add_action('transfer_completed', function (\$transfer, \$user) { /* ... */ });",
+            ],
+            'stock_audit_completed' => [
+                'description' => 'Fired when a stock audit is completed',
+                'parameters' => ['$stock_audit', '$user'],
+                'example' => "add_action('stock_audit_completed', function (\$stock_audit, \$user) { /* ... */ });",
+            ],
+            'work_order_completed' => [
+                'description' => 'Fired when a work order is completed',
+                'parameters' => ['$work_order', '$user'],
+                'example' => "add_action('work_order_completed', function (\$work_order, \$user) { /* ... */ });",
+            ],
+
+            // ========================================
             // SUPPLIER HOOKS
             // ========================================
             'supplier_created' => [
