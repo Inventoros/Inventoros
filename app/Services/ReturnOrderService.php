@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Services;
 
 use App\Exceptions\InvalidStateException;
+use App\Models\ActivityLog;
 use App\Models\Inventory\StockAdjustment;
 use App\Models\Order\Order;
 use App\Models\Order\OrderItem;
@@ -21,7 +22,8 @@ use Illuminate\Validation\ValidationException;
 
 /**
  * The single implementation of the return (RMA) lifecycle: create, approve,
- * receive (restock), complete and reject.
+ * adjust lines (restock and condition), receive (restock), complete and
+ * reject.
  *
  * Shared by the web ReturnOrderController and the REST API so the quantity
  * caps, locking and restock behaviour cannot drift between surfaces. State
@@ -220,6 +222,91 @@ final class ReturnOrderService
         ]);
 
         return $returnOrder;
+    }
+
+    /**
+     * Change the restock flag and/or condition of lines on a pending or
+     * approved return, before it is received. Receiving is what books the
+     * stock, so this is the last point at which the decision can change.
+     *
+     * Every line being changed must restock into one of the actor's
+     * warehouses (the same rule receive() applies). Lines not on this return
+     * are a validation error keyed `items.{index}.id`. The change is written
+     * to the activity log with each line's old and new values.
+     *
+     * @param  array<int, array{id: int|string, restock?: bool|int|string|null, condition?: string|null}>  $lines
+     *
+     * @throws InvalidStateException when the return is no longer pending or approved
+     * @throws ValidationException when a line is not on this return
+     * @throws AuthorizationException when a changed line restocks outside the actor's warehouses
+     */
+    public function updateLines(ReturnOrder $returnOrder, User $actor, array $lines): ReturnOrder
+    {
+        $this->authorizeView($returnOrder, $actor);
+
+        return DB::transaction(function () use ($returnOrder, $actor, $lines) {
+            // Lock and re-check the status so a concurrent receive cannot
+            // restock with half-applied line changes.
+            $locked = ReturnOrder::whereKey($returnOrder->getKey())->lockForUpdate()->firstOrFail();
+
+            if (! in_array($locked->status, ['pending', 'approved'], true)) {
+                throw new InvalidStateException('Lines can only be changed on pending or approved returns.', 'invalid_status');
+            }
+
+            $locked->load('items.product');
+
+            $errors = [];
+            foreach ($lines as $index => $line) {
+                if (! $locked->items->contains('id', (int) $line['id'])) {
+                    $errors["items.{$index}.id"] = 'This line is not on the return.';
+                }
+            }
+            if ($errors !== []) {
+                throw ValidationException::withMessages($errors);
+            }
+
+            $changes = [];
+            foreach ($lines as $line) {
+                $item = $locked->items->firstWhere('id', (int) $line['id']);
+
+                $this->warehouseAccess->authorizeLocation($actor, $item->product?->location_id);
+
+                $diff = [];
+                if (array_key_exists('restock', $line) && $line['restock'] !== null) {
+                    $restock = filter_var($line['restock'], FILTER_VALIDATE_BOOLEAN);
+                    if ($restock !== (bool) $item->restock) {
+                        $diff['restock'] = ['old' => (bool) $item->restock, 'new' => $restock];
+                        $item->restock = $restock;
+                    }
+                }
+                if (array_key_exists('condition', $line) && $line['condition'] !== null && $line['condition'] !== $item->condition) {
+                    $diff['condition'] = ['old' => $item->condition, 'new' => $line['condition']];
+                    $item->condition = $line['condition'];
+                }
+
+                if ($diff !== []) {
+                    $item->save();
+                    $changes[$item->id] = $diff;
+                }
+            }
+
+            if ($changes !== []) {
+                ActivityLog::create([
+                    'organization_id' => $locked->organization_id,
+                    'user_id' => $actor->id,
+                    'category' => ActivityLog::CATEGORY_AUDIT,
+                    'subject_type' => ReturnOrder::class,
+                    'subject_id' => $locked->id,
+                    'action' => 'return.lines_updated',
+                    'description' => "Changed restock or condition on return {$locked->return_number}",
+                    'properties' => ['lines' => $changes],
+                    'ip_address' => request()?->ip(),
+                    'user_agent' => request() ? substr((string) request()->userAgent(), 0, 1000) : null,
+                ]);
+            }
+
+            return $locked;
+        });
     }
 
     /**

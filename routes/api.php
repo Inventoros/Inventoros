@@ -309,6 +309,7 @@ Route::prefix('v1')->as('api.')->middleware('throttle:api')->group(function () {
                 Route::apiResource('returns', ReturnOrderController::class)
                     ->only(['index', 'show', 'store'])
                     ->parameters(['returns' => 'returnOrder']);
+                Route::patch('returns/{returnOrder}/items', [ReturnOrderController::class, 'updateLines']);
                 Route::post('returns/{returnOrder}/approve', [ReturnOrderController::class, 'approve']);
                 Route::post('returns/{returnOrder}/receive', [ReturnOrderController::class, 'receive']);
                 Route::post('returns/{returnOrder}/complete', [ReturnOrderController::class, 'complete']);

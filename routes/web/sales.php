@@ -100,6 +100,7 @@ Route::get('/returns', [ReturnOrderController::class, 'index'])->name('returns.i
 Route::get('/returns/create', [ReturnOrderController::class, 'create'])->name('returns.create')->middleware('permission:manage_returns');
 Route::post('/returns', [ReturnOrderController::class, 'store'])->name('returns.store')->middleware('permission:manage_returns');
 Route::get('/returns/{returnOrder}', [ReturnOrderController::class, 'show'])->name('returns.show')->middleware('permission:manage_returns');
+Route::patch('/returns/{returnOrder}/items', [ReturnOrderController::class, 'updateLines'])->name('returns.items.update')->middleware('permission:manage_returns');
 Route::post('/returns/{returnOrder}/approve', [ReturnOrderController::class, 'approve'])->name('returns.approve')->middleware('permission:manage_returns');
 Route::post('/returns/{returnOrder}/receive', [ReturnOrderController::class, 'receive'])->name('returns.receive')->middleware('permission:manage_returns');
 Route::post('/returns/{returnOrder}/complete', [ReturnOrderController::class, 'complete'])->name('returns.complete')->middleware('permission:manage_returns');
