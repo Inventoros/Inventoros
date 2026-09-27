@@ -10,6 +10,7 @@ import { Head, Link, useForm } from '@inertiajs/vue3';
 import { ref, computed, defineAsyncComponent } from 'vue';
 import { useBarcodeWedge, useBarcodeLookup } from '@/composables/useBarcodeWedge';
 import { useI18n } from 'vue-i18n';
+import { todayIsoDate } from '@/lib/dates';
 import { ArrowLeft, Plus, Trash2, PackageOpen, ScanLine } from 'lucide-vue-next';
 
 const BarcodeScannerModal = defineAsyncComponent(() => import('@/Components/BarcodeScannerModal.vue'));
@@ -26,7 +27,7 @@ const form = useForm({
     customer_email: '',
     customer_address: '',
     status: 'pending',
-    order_date: new Date().toISOString().split('T')[0],
+    order_date: todayIsoDate(),
     shipping: 0,
     tax: 0,
     discount_type: '',

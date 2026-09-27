@@ -9,6 +9,7 @@ import DataTable from '@/Components/ui/DataTable.vue';
 import { Head, Link, router } from '@inertiajs/vue3';
 import { ref } from 'vue';
 import { useI18n } from 'vue-i18n';
+import { formatCalendarDate } from '@/lib/dates';
 import { Plus, Search, Eye, Pencil, Trash2, PackageCheck, ClipboardList } from 'lucide-vue-next';
 
 const { t } = useI18n();
@@ -56,14 +57,9 @@ const formatCurrency = (value, currency = 'USD') => {
     }).format(value || 0);
 };
 
-const formatDate = (dateString) => {
-    if (!dateString) return '-';
-    return new Date(dateString).toLocaleDateString('en-US', {
-        year: 'numeric',
-        month: 'short',
-        day: 'numeric',
-    });
-};
+// order_date and expected_date are calendar days (date columns).
+const formatDate = (dateString) =>
+    formatCalendarDate(dateString, { year: 'numeric', month: 'short', day: 'numeric' }, 'en-US');
 
 const statusVariant = (s) =>
     ({ draft: 'neutral', sent: 'info', partial: 'warning', received: 'success', cancelled: 'danger' }[s] || 'neutral');

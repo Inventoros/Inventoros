@@ -9,6 +9,7 @@ import DataTable from '@/Components/ui/DataTable.vue';
 import { Head, Link, router } from '@inertiajs/vue3';
 import { ref } from 'vue';
 import { useI18n } from 'vue-i18n';
+import { formatCalendarDate } from '@/lib/dates';
 import { Plus, Search, Eye, Pencil, Trash2, ShoppingCart } from 'lucide-vue-next';
 
 const { t } = useI18n();
@@ -179,7 +180,7 @@ const selectClass =
                     <Badge variant="neutral" size="sm">{{ row.source }}</Badge>
                 </template>
                 <template #cell-order_date="{ row }">
-                    <span class="text-text-secondary">{{ new Date(row.order_date).toLocaleDateString() }}</span>
+                    <span class="text-text-secondary">{{ formatCalendarDate(row.order_date) }}</span>
                 </template>
                 <template #cell-actions="{ row }">
                     <div class="flex items-center justify-end gap-1">

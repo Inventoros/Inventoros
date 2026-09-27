@@ -8,6 +8,7 @@ import Badge from '@/Components/ui/Badge.vue';
 import StatTile from '@/Components/ui/StatTile.vue';
 import { Head, Link } from '@inertiajs/vue3';
 import { useI18n } from 'vue-i18n';
+import { formatCalendarDate } from '@/lib/dates';
 import { ArrowLeft, Download, Wallet, ShoppingCart, Users, CircleCheck } from 'lucide-vue-next';
 
 const { t } = useI18n();
@@ -51,11 +52,6 @@ const share = (amount) => {
     const total = parseFloat(props.summary.total_outstanding) || 0;
     return total > 0 ? Math.round(((parseFloat(amount) || 0) / total) * 100) : 0;
 };
-
-// order_date arrives as a plain YYYY-MM-DD; read it as a local calendar day
-// (new Date('YYYY-MM-DD') would treat it as UTC midnight and show the day
-// before west of UTC).
-const formatDay = (day) => (day ? new Date(`${day}T00:00:00`).toLocaleDateString() : '-');
 
 const exportReport = () => window.print();
 
@@ -183,7 +179,7 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-t
                                     <Link :href="route('orders.show', order.id)" class="font-mono text-xs font-medium text-text-primary hover:text-brand">{{ order.order_number }}</Link>
                                 </td>
                                 <td class="px-4 py-3 text-text-primary">{{ order.customer || '-' }}</td>
-                                <td class="px-4 py-3 whitespace-nowrap text-text-secondary">{{ formatDay(order.order_date) }}</td>
+                                <td class="px-4 py-3 whitespace-nowrap text-text-secondary">{{ formatCalendarDate(order.order_date) }}</td>
                                 <td class="px-4 py-3 whitespace-nowrap">
                                     <Badge :variant="bucketVariant(order.bucket)" size="sm">{{ t('receivables.days', order.age_days) }}</Badge>
                                 </td>

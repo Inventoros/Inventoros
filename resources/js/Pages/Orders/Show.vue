@@ -9,6 +9,7 @@ import SendDocumentModal from '@/Components/SendDocumentModal.vue';
 import { Head, Link, router, useForm } from '@inertiajs/vue3';
 import { computed, ref } from 'vue';
 import { usePermissions } from '@/composables/usePermissions';
+import { formatCalendarDate, todayIsoDate } from '@/lib/dates';
 import { useI18n } from 'vue-i18n';
 import { ArrowLeft, Pencil, Download, Eye, Undo2, Trash2, X, AlertTriangle, PackageOpen, Mail, Plus, RotateCcw, Wallet } from 'lucide-vue-next';
 
@@ -36,7 +37,7 @@ const paymentForm = useForm({
     amount: '',
     method: 'card',
     reference: '',
-    paid_at: new Date().toISOString().split('T')[0],
+    paid_at: todayIsoDate(),
     notes: '',
     allow_overpayment: false,
 });
@@ -158,6 +159,7 @@ const formatDate = (date) => {
     });
 };
 
+// For instants (payments, timestamps) the viewer's timezone applies.
 const formatDateShort = (date) => {
     if (!date) return '-';
     return new Date(date).toLocaleDateString('en-US', {
@@ -166,6 +168,11 @@ const formatDateShort = (date) => {
         day: 'numeric'
     });
 };
+
+// order_date names a calendar day; formatting it as an instant showed the
+// day before for anyone west of UTC.
+const formatOrderDate = (date, long = false) =>
+    formatCalendarDate(date, { year: 'numeric', month: long ? 'long' : 'short', day: 'numeric' }, 'en-US');
 </script>
 
 <template>
@@ -184,7 +191,7 @@ const formatDateShort = (date) => {
 
         <PageHeader
             :title="`Order #${order.order_number}`"
-            :description="`Created on ${formatDateShort(order.order_date)}`"
+            :description="`Created on ${formatOrderDate(order.order_date)}`"
         >
             <template #actions>
                 <Badge :variant="statusVariant(order.status)" size="sm" dot>{{ order.status }}</Badge>
@@ -412,7 +419,7 @@ const formatDateShort = (date) => {
                                 <div class="mt-2 h-2 w-2 flex-shrink-0 rounded-full bg-status-success"></div>
                                 <div class="flex-1">
                                     <p class="text-sm font-medium text-text-primary">{{ t('orders.show.orderCreated') }}</p>
-                                    <p class="text-xs text-text-tertiary">{{ formatDate(order.order_date) }}</p>
+                                    <p class="text-xs text-text-tertiary">{{ formatOrderDate(order.order_date, true) }}</p>
                                 </div>
                             </div>
 
@@ -528,7 +535,7 @@ const formatDateShort = (date) => {
 
                             <div>
                                 <dt class="text-xs text-text-tertiary">{{ t('purchaseOrders.orderDate') }}</dt>
-                                <dd class="mt-1 text-sm text-text-primary">{{ formatDateShort(order.order_date) }}</dd>
+                                <dd class="mt-1 text-sm text-text-primary">{{ formatOrderDate(order.order_date) }}</dd>
                             </div>
 
                             <div v-if="order.currency">

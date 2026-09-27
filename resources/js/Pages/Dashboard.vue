@@ -11,6 +11,7 @@ import { Head, Link } from '@inertiajs/vue3';
 import { ref, reactive, computed } from 'vue';
 import { useQuickReorder } from '@/composables/useQuickReorder';
 import { useI18n } from 'vue-i18n';
+import { formatCalendarDate } from '@/lib/dates';
 import axios from 'axios';
 import {
     Boxes,
@@ -255,7 +256,7 @@ const secondaryStats = () => [
                                 </div>
                                 <div class="shrink-0 text-right">
                                     <p class="text-sm font-semibold tabular-nums text-text-primary">{{ formatCurrency(order.total) }}</p>
-                                    <p class="text-[11px] text-text-tertiary">{{ new Date(order.order_date).toLocaleDateString() }}</p>
+                                    <p class="text-[11px] text-text-tertiary">{{ formatCalendarDate(order.order_date) }}</p>
                                 </div>
                             </Link>
                         </li>

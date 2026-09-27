@@ -10,6 +10,7 @@ import ApprovalPanel from '@/Components/ApprovalPanel.vue';
 import { Head, Link, router } from '@inertiajs/vue3';
 import { computed, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
+import { formatCalendarDate } from '@/lib/dates';
 import { ArrowLeft, Pencil, Download, Eye, Send, PackageCheck, Ban, Trash2 } from 'lucide-vue-next';
 
 const { t } = useI18n();
@@ -36,6 +37,7 @@ const formatCurrency = (value) => {
     }).format(value || 0);
 };
 
+// sent_at is an instant, shown in the viewer's timezone.
 const formatDate = (dateString) => {
     if (!dateString) return '-';
     return new Date(dateString).toLocaleDateString('en-US', {
@@ -44,6 +46,10 @@ const formatDate = (dateString) => {
         day: 'numeric',
     });
 };
+
+// order_date, expected_date and received_date are calendar days (date columns).
+const formatDay = (dateString) =>
+    formatCalendarDate(dateString, { year: 'numeric', month: 'long', day: 'numeric' }, 'en-US');
 
 const statusVariant = (status) =>
     ({
@@ -105,7 +111,7 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-t
 
         <PageHeader
             :title="purchaseOrder.po_number"
-            :description="`Order date ${formatDate(purchaseOrder.order_date)}`"
+            :description="`Order date ${formatDay(purchaseOrder.order_date)}`"
         >
             <template #actions>
                 <Badge :variant="statusVariant(purchaseOrder.status)" size="sm" dot>
@@ -198,15 +204,15 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-t
                             </div>
                             <div>
                                 <dt class="text-xs text-text-tertiary">Order Date</dt>
-                                <dd class="mt-1 text-sm text-text-primary">{{ formatDate(purchaseOrder.order_date) }}</dd>
+                                <dd class="mt-1 text-sm text-text-primary">{{ formatDay(purchaseOrder.order_date) }}</dd>
                             </div>
                             <div>
                                 <dt class="text-xs text-text-tertiary">Expected Delivery</dt>
-                                <dd class="mt-1 text-sm text-text-primary">{{ formatDate(purchaseOrder.expected_date) }}</dd>
+                                <dd class="mt-1 text-sm text-text-primary">{{ formatDay(purchaseOrder.expected_date) }}</dd>
                             </div>
                             <div v-if="purchaseOrder.received_date">
                                 <dt class="text-xs text-text-tertiary">Received Date</dt>
-                                <dd class="mt-1 text-sm text-text-primary">{{ formatDate(purchaseOrder.received_date) }}</dd>
+                                <dd class="mt-1 text-sm text-text-primary">{{ formatDay(purchaseOrder.received_date) }}</dd>
                             </div>
                             <div>
                                 <dt class="text-xs text-text-tertiary">Currency</dt>
