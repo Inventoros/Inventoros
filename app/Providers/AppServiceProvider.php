@@ -115,9 +115,15 @@ class AppServiceProvider extends ServiceProvider
             );
         });
 
-        // Gate for viewing API docs in production
-        Gate::define('viewApiDocs', function ($user = null) {
-            return true;
+        // The interactive API docs describe every endpoint and permission, so
+        // outside local development they require a signed-in user unless the
+        // operator opts in with API_DOCS_PUBLIC=true.
+        Gate::define('viewApiDocs', function (?User $user = null): bool {
+            if (app()->environment('local') || config('scramble.public_docs')) {
+                return true;
+            }
+
+            return $user !== null;
         });
     }
 }
