@@ -72,7 +72,10 @@ All paths are relative to `/api/v1` and need a Sanctum token.
 | `GET /shipments` | `view_shipments` | Paginated shipments; filter by `status`, `order_id`, `carrier` |
 | `GET /shipments/{id}` | `view_shipments` | One shipment |
 | `GET /orders/{id}/shipments` | `view_shipments` | An order's shipments |
-| `POST /orders/{id}/shipments` | `create_shipments` | Create a shipment with manual tracking |
+| `POST /orders/{id}/shipments` | `create_shipments` | Create a shipment (`carrier`: `manual` or `easypost`) |
+| `POST /shipments/{id}/rates` | `create_shipments` | Quote carrier rates, cheapest first |
+| `POST /shipments/{id}/buy-label` | `create_shipments` | Buy the label for a quoted `rate_id` |
+| `POST /shipments/{id}/void-label` | `create_shipments` | Void the label (carrier refund) and cancel the shipment |
 | `POST /shipments/{id}/ship` | `create_shipments` | Mark a shipment shipped |
 
 ```bash
@@ -81,7 +84,9 @@ curl -X POST "${APP_URL}/api/v1/orders/42/shipments" \
   -d '{"carrier_name":"UPS","tracking_number":"1Z999AA10123456784","items":[{"order_item_id":101,"quantity":2}],"mark_shipped":true}'
 ```
 
-Omit `items` to ship every unit not yet in a shipment. Refusals (over-shipping, a cancelled order) return `422` with `"error": "shipping_error"` and a readable `message`. Buying EasyPost labels is done from the order page, where rates can be compared.
+Omit `items` to ship every unit not yet in a shipment. Refusals (over-shipping, a cancelled order, carrier errors) return `422` with `"error": "shipping_error"` and a readable `message`.
+
+To buy a label over the API, create the shipment with `"carrier": "easypost"` (and `weight_oz`), call `rates`, then `buy-label` with one of the returned rate ids. The label file is downloaded from the order page.
 
 ### MCP tools
 

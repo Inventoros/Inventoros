@@ -111,7 +111,7 @@ All paths are relative to `/api/v1`. See the OpenAPI spec for full schemas:
 - Customers: CRUD plus `GET /customers/{id}/orders`
 - Returns (RMA): list, show, create, then `approve`, `receive` (restocks), `complete` or `reject`
 - Stock Transfers: list, show, create, then `ship`, `complete` (moves stock between location bins) or `cancel`
-- Shipments: list and read, create with manual tracking, mark shipped (see Shipping & Carriers)
+- Shipments: list and read, create (manual or EasyPost), `rates`, `buy-label`, `void-label`, `ship` (see Shipping & Carriers)
 - Stock Adjustments: record signed deltas with a reason
 - Stock Audits: list, show, create, `start`, `items/{item}/count`, `complete` (books recount adjustments)
 - Suppliers: CRUD

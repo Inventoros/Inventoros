@@ -172,6 +172,12 @@ Route::prefix('v1')->as('api.')->middleware('throttle:api')->group(function () {
             ->middleware('api.permission:view_shipments');
         Route::post('shipments/{shipment}/ship', [ShipmentController::class, 'ship'])
             ->middleware('api.permission:create_shipments');
+        Route::post('shipments/{shipment}/rates', [ShipmentController::class, 'rates'])
+            ->middleware('api.permission:create_shipments');
+        Route::post('shipments/{shipment}/buy-label', [ShipmentController::class, 'buyLabel'])
+            ->middleware('api.permission:create_shipments');
+        Route::post('shipments/{shipment}/void-label', [ShipmentController::class, 'voidLabel'])
+            ->middleware('api.permission:create_shipments');
 
         // Stock Audits
         Route::apiResource('stock-audits', ApiStockAuditController::class)

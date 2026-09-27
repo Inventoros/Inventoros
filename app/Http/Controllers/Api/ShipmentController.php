@@ -9,7 +9,9 @@ use App\Exceptions\ShippingException;
 use App\Http\Controllers\Controller;
 use App\Models\Order\Order;
 use App\Models\Shipping\Shipment;
+use App\Services\Shipping\CarrierManager;
 use App\Services\Shipping\ShipmentService;
+use App\Services\Shipping\ShippingRate;
 use Dedoc\Scramble\Attributes\QueryParameter;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -17,15 +19,18 @@ use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Validation\Rule;
 
 /**
- * Shipments over REST. Creation records manual tracking (a label bought
- * elsewhere, or a local courier); buying EasyPost labels is done from the
- * order page, where rates can be compared.
+ * Shipments over REST: manual tracking, or the carrier label flow (create
+ * with carrier=easypost, then rates, buy-label, void-label) through the same
+ * ShipmentService as the order page.
  *
  * @tags Shipments
  */
 class ShipmentController extends Controller
 {
-    public function __construct(private readonly ShipmentService $shipments) {}
+    public function __construct(
+        private readonly ShipmentService $shipments,
+        private readonly CarrierManager $carriers,
+    ) {}
 
     /**
      * List shipments.
@@ -72,10 +77,12 @@ class ShipmentController extends Controller
     }
 
     /**
-     * Create a shipment with manual tracking.
+     * Create a shipment.
      *
-     * Omit `items` to ship every unit not yet in a shipment. Set
-     * `mark_shipped` to hand it to the carrier in the same call.
+     * `carrier` is `manual` (default; enter tracking yourself) or `easypost`
+     * when it is configured (then quote rates and buy a label). Omit `items`
+     * to ship every unit not yet in a shipment. Set `mark_shipped` to hand a
+     * manual shipment to the carrier in the same call.
      */
     public function store(Request $request, Order $order): JsonResponse
     {
@@ -83,6 +90,9 @@ class ShipmentController extends Controller
         $organizationId = (int) $request->user()->organization_id;
 
         $validated = $request->validate([
+            'carrier' => ['nullable', 'string', Rule::in($this->carriers->available($organizationId))],
+            'to_address' => ['nullable', 'array'],
+            'to_address.*' => ['nullable', 'string', 'max:255'],
             'carrier_name' => ['nullable', 'string', 'max:100'],
             'service' => ['nullable', 'string', 'max:100'],
             'tracking_number' => ['nullable', 'string', 'max:100'],
@@ -102,7 +112,15 @@ class ShipmentController extends Controller
         ]);
 
         try {
-            $shipment = $this->shipments->create($order, ['carrier' => 'manual'] + $validated, $request->user());
+            $validated['carrier'] ??= 'manual';
+
+            // mark_shipped only applies to manual tracking; a carrier shipment
+            // is shipped after its label is bought.
+            if ($validated['carrier'] !== 'manual' && $request->boolean('mark_shipped')) {
+                throw new ShippingException('Buy a label before marking a carrier shipment shipped.');
+            }
+
+            $shipment = $this->shipments->create($order, $validated, $request->user());
 
             if ($request->boolean('mark_shipped')) {
                 $shipment = $this->shipments->markShipped($shipment, $request->user());
@@ -126,6 +144,72 @@ class ShipmentController extends Controller
 
         try {
             $shipment = $this->shipments->markShipped($shipment, $request->user());
+        } catch (ShippingException $e) {
+            return $this->refused($e);
+        }
+
+        return response()->json(['data' => $shipment->fresh()->toPublicArray()]);
+    }
+
+    /**
+     * Quote carrier rates for a pending carrier shipment.
+     *
+     * The quoted rates are remembered on the shipment; buy-label only accepts
+     * one of them.
+     */
+    public function rates(Request $request, Shipment $shipment): JsonResponse
+    {
+        $this->assertOwned($request, $shipment->organization_id);
+
+        try {
+            $rates = $this->shipments->fetchRates($shipment);
+        } catch (ShippingException $e) {
+            return $this->refused($e);
+        }
+
+        return response()->json([
+            'data' => array_map(fn (ShippingRate $rate) => [
+                'id' => $rate->id,
+                'carrier' => $rate->carrier,
+                'service' => $rate->service,
+                'amount' => $rate->amount,
+                'currency' => $rate->currency,
+                'delivery_days' => $rate->deliveryDays,
+            ], $rates),
+        ]);
+    }
+
+    /**
+     * Buy the label for one of the shipment's quoted rates.
+     */
+    public function buyLabel(Request $request, Shipment $shipment): JsonResponse
+    {
+        $this->assertOwned($request, $shipment->organization_id);
+
+        $validated = $request->validate([
+            'rate_id' => ['required', 'string', 'max:100'],
+        ]);
+
+        try {
+            $shipment = $this->shipments->buyLabel($shipment, $validated['rate_id']);
+        } catch (ShippingException $e) {
+            return $this->refused($e);
+        }
+
+        return response()->json(['data' => $shipment->toPublicArray()]);
+    }
+
+    /**
+     * Void a shipment's label (asking the carrier for a refund) and cancel the
+     * shipment, freeing its units to ship again. Refused once it has shipped;
+     * if the carrier refuses the refund nothing changes.
+     */
+    public function voidLabel(Request $request, Shipment $shipment): JsonResponse
+    {
+        $this->assertOwned($request, $shipment->organization_id);
+
+        try {
+            $shipment = $this->shipments->cancel($shipment);
         } catch (ShippingException $e) {
             return $this->refused($e);
         }
