@@ -139,6 +139,11 @@ final class HookRegistry
                 'parameters' => ['$product'],
                 'example' => "add_action('out_of_stock_alert', function (\$product) { /* ... */ });",
             ],
+            'warehouse_low_stock_alert' => [
+                'description' => 'Fired when a product\'s on-hand quantity in one warehouse drops to or below its minimum stock level for that warehouse',
+                'parameters' => ['$product', '$warehouse', '$on_hand'],
+                'example' => "add_action('warehouse_low_stock_alert', function (\$product, \$warehouse, \$on_hand) { /* ... */ });",
+            ],
 
             // ========================================
             // ORDER HOOKS
