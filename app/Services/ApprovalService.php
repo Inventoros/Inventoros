@@ -14,6 +14,7 @@ use App\Models\Inventory\StockAdjustment;
 use App\Models\Inventory\StockAdjustmentRequest;
 use App\Models\Inventory\StockTransfer;
 use App\Models\Purchasing\PurchaseOrder;
+use App\Models\Scopes\OrganizationScope;
 use App\Models\User;
 use App\Support\ApprovalSettings;
 use Illuminate\Database\Eloquent\Model;
@@ -71,7 +72,7 @@ final class ApprovalService
         $this->assertSameOrganization($purchaseOrder, $user);
 
         $purchaseOrder = DB::transaction(function () use ($purchaseOrder, $user) {
-            $po = PurchaseOrder::withoutGlobalScopes()->whereKey($purchaseOrder->getKey())->lockForUpdate()->firstOrFail();
+            $po = PurchaseOrder::withoutGlobalScope(OrganizationScope::class)->whereKey($purchaseOrder->getKey())->lockForUpdate()->firstOrFail();
 
             if ($po->status === PurchaseOrder::STATUS_DRAFT && ! $po->needsApproval()) {
                 throw ApprovalException::notRequired("Purchase order {$po->po_number} does not need approval and can be sent as it is.");
@@ -282,7 +283,7 @@ final class ApprovalService
 
         $decided = DB::transaction(function () use ($user, $type, $subject, $approve, $notes, $status) {
             /** @var PurchaseOrder|StockTransfer|StockAdjustmentRequest $locked */
-            $locked = $subject::withoutGlobalScopes()->whereKey($subject->getKey())->lockForUpdate()->firstOrFail();
+            $locked = $subject::withoutGlobalScope(OrganizationScope::class)->whereKey($subject->getKey())->lockForUpdate()->firstOrFail();
 
             if ($this->approvalStatus($type, $locked) !== 'pending') {
                 throw ApprovalException::invalidState('This request has already been decided.');
@@ -333,9 +334,9 @@ final class ApprovalService
      */
     private function applyHeldAdjustment(StockAdjustmentRequest $request): StockAdjustment
     {
-        $product = Product::withoutGlobalScopes()->findOrFail($request->product_id);
+        $product = Product::withoutGlobalScope(OrganizationScope::class)->findOrFail($request->product_id);
         $variant = $request->product_variant_id
-            ? ProductVariant::withoutGlobalScopes()->findOrFail($request->product_variant_id)
+            ? ProductVariant::withoutGlobalScope(OrganizationScope::class)->findOrFail($request->product_variant_id)
             : null;
 
         try {
@@ -456,7 +457,7 @@ final class ApprovalService
             default => throw ApprovalException::notFound("Unknown approval type '{$type}'."),
         };
 
-        $subject = $model::withoutGlobalScopes()
+        $subject = $model::withoutGlobalScope(OrganizationScope::class)
             ->where('organization_id', $user->organization_id)
             ->find($id);
 
@@ -503,13 +504,13 @@ final class ApprovalService
     {
         $orgId = $user->organization_id;
 
-        $pos = PurchaseOrder::withoutGlobalScopes()->with(['supplier', 'approvalRequester', 'approver'])
+        $pos = PurchaseOrder::withoutGlobalScope(OrganizationScope::class)->with(['supplier', 'approvalRequester', 'approver'])
             ->where('organization_id', $orgId)->where('approval_requested_by', $user->id)
             ->whereNotNull('approval_status')->latest('approval_requested_at')->limit($limit)->get();
-        $transfers = StockTransfer::withoutGlobalScopes()->with(['fromLocation', 'toLocation', 'transferredBy', 'approver'])->withCount('items')
+        $transfers = StockTransfer::withoutGlobalScope(OrganizationScope::class)->with(['fromLocation', 'toLocation', 'transferredBy', 'approver'])->withCount('items')
             ->where('organization_id', $orgId)->where('approval_requested_by', $user->id)
             ->whereNotNull('approval_status')->latest('approval_requested_at')->limit($limit)->get();
-        $adjustments = StockAdjustmentRequest::withoutGlobalScopes()->with(['product', 'variant', 'requester', 'approver'])
+        $adjustments = StockAdjustmentRequest::withoutGlobalScope(OrganizationScope::class)->with(['product', 'variant', 'requester', 'approver'])
             ->where('organization_id', $orgId)->where('requested_by', $user->id)
             ->latest()->limit($limit)->get();
 
@@ -527,14 +528,14 @@ final class ApprovalService
     private function pendingQuery(string $type, int $organizationId)
     {
         return match ($type) {
-            self::PURCHASE_ORDER => PurchaseOrder::withoutGlobalScopes()->with(['supplier', 'approvalRequester', 'creator'])
+            self::PURCHASE_ORDER => PurchaseOrder::withoutGlobalScope(OrganizationScope::class)->with(['supplier', 'approvalRequester', 'creator'])
                 ->where('organization_id', $organizationId)
                 ->where('status', PurchaseOrder::STATUS_DRAFT)
                 ->where('approval_status', PurchaseOrder::APPROVAL_PENDING),
-            self::STOCK_TRANSFER => StockTransfer::withoutGlobalScopes()->with(['fromLocation', 'toLocation', 'transferredBy'])->withCount('items')
+            self::STOCK_TRANSFER => StockTransfer::withoutGlobalScope(OrganizationScope::class)->with(['fromLocation', 'toLocation', 'transferredBy'])->withCount('items')
                 ->where('organization_id', $organizationId)
                 ->where('approval_status', StockTransfer::APPROVAL_PENDING),
-            self::STOCK_ADJUSTMENT => StockAdjustmentRequest::withoutGlobalScopes()->with(['product', 'variant', 'requester', 'location'])
+            self::STOCK_ADJUSTMENT => StockAdjustmentRequest::withoutGlobalScope(OrganizationScope::class)->with(['product', 'variant', 'requester', 'location'])
                 ->where('organization_id', $organizationId)
                 ->where('status', StockAdjustmentRequest::STATUS_PENDING),
         };
