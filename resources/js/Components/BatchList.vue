@@ -1,7 +1,7 @@
 <script setup>
 import { ref } from 'vue';
 import axios from 'axios';
-import { isBeforeToday } from '@/lib/dates';
+import { formatCalendarDate, isBeforeToday } from '@/lib/dates';
 
 const props = defineProps({
     productId: Number,
@@ -67,8 +67,8 @@ const createBatch = async () => {
 };
 
 // Batches seeded from the page props are serialized models (ISO datetimes);
-// batches returned by the endpoint are plain dates. Show both as YYYY-MM-DD.
-const formatDate = (value) => (value ? String(value).slice(0, 10) : '-');
+// batches returned by the endpoint are plain dates. Both are calendar days.
+const formatDate = (value) => formatCalendarDate(value);
 
 // An expiry date is a calendar day: a batch expiring today is not expired
 // yet, in any timezone.

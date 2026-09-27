@@ -7,6 +7,7 @@ import PluginSlot from '@/Components/PluginSlot.vue';
 import { Head, Link, useForm } from '@inertiajs/vue3';
 import { ref, computed } from 'vue';
 import { useI18n } from 'vue-i18n';
+import { toIsoDate } from '@/lib/dates';
 import { ArrowLeft, Plus, Trash2 } from 'lucide-vue-next';
 
 const { t } = useI18n();
@@ -20,8 +21,8 @@ const props = defineProps({
 
 const form = useForm({
     supplier_id: props.purchaseOrder.supplier_id,
-    order_date: props.purchaseOrder.order_date?.split('T')[0] || '',
-    expected_date: props.purchaseOrder.expected_date?.split('T')[0] || '',
+    order_date: toIsoDate(props.purchaseOrder.order_date),
+    expected_date: toIsoDate(props.purchaseOrder.expected_date),
     currency: props.purchaseOrder.currency || 'USD',
     shipping: props.purchaseOrder.shipping || 0,
     tax: props.purchaseOrder.tax || 0,

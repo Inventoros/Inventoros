@@ -8,12 +8,18 @@
  * for everyone west of UTC. These helpers read the YYYY-MM-DD the server
  * wrote and build that day in the viewer's local time instead.
  *
- * Real instants (created_at, shipped_at, paid_at) should keep using
- * `new Date(value)`; they are meant to shift into the viewer's timezone.
+ * Real instants (created_at, shipped_at, paid_at) are meant to shift into the
+ * viewer's timezone. Eloquent serializes them with a zone, but raw query
+ * results (MAX(created_at), report builder rows) arrive zone-less, as
+ * `YYYY-MM-DD HH:MM:SS` in the app timezone (UTC); `new Date()` would read
+ * those as local time. Use toInstant()/formatInstantDate() for them.
  */
 
 const DATE_PREFIX = /^(\d{4})-(\d{2})-(\d{2})/;
 const DATE_ONLY = /^\d{4}-\d{2}-\d{2}$/;
+// A date and time with no Z or offset: the server's own (UTC) wall time.
+const ZONELESS_DATETIME = /^(\d{4}-\d{2}-\d{2})[ T](\d{2}:\d{2}(?::\d{2}(?:\.\d+)?)?)$/;
+const ZONELESS_MIDNIGHT = /^\d{4}-\d{2}-\d{2}[ T]00:00(?::00(?:\.0+)?)?$/;
 
 /**
  * The calendar day a value names, as a local-midnight Date, or null.
@@ -50,9 +56,61 @@ export function formatCalendarDate(value, options = undefined, locale = undefine
 }
 
 /**
- * Format a value that may be either a date-only string or a full timestamp
- * (report columns mix both): date-only strings as calendar days, anything
- * with a time as an instant.
+ * The instant a timestamp names, or null. A zone-less server timestamp is
+ * read as UTC (the app timezone); one with a Z or offset keeps it.
+ *
+ * @param {string|Date|null|undefined} value
+ * @returns {Date|null}
+ */
+export function toInstant(value) {
+    if (!value) return null;
+
+    if (value instanceof Date) {
+        return Number.isNaN(value.getTime()) ? null : value;
+    }
+
+    const text = String(value).trim();
+    const zoneless = ZONELESS_DATETIME.exec(text);
+    // JS Dates keep milliseconds; trim longer fractions (PHP sends micros).
+    const date = zoneless
+        ? new Date(`${zoneless[1]}T${zoneless[2].replace(/(\.\d{3})\d+$/, '$1')}Z`)
+        : new Date(text);
+
+    return Number.isNaN(date.getTime()) ? null : date;
+}
+
+/**
+ * Format the viewer's calendar day of a timestamp. Returns '-' when empty.
+ *
+ * @param {string|Date|null|undefined} value
+ * @param {Intl.DateTimeFormatOptions} [options]
+ * @param {string|string[]} [locale]
+ */
+export function formatInstantDate(value, options = undefined, locale = undefined) {
+    const date = toInstant(value);
+
+    return date ? date.toLocaleDateString(locale, options) : '-';
+}
+
+/**
+ * The YYYY-MM-DD a date input needs, from a serialized calendar date (the
+ * day the server wrote, never shifted by the viewer's timezone).
+ *
+ * @param {string|null|undefined} value
+ */
+export function toIsoDate(value) {
+    const match = value ? DATE_PREFIX.exec(String(value)) : null;
+
+    return match ? `${match[1]}-${match[2]}-${match[3]}` : '';
+}
+
+/**
+ * Format a value that may be either a calendar date or a timestamp (report
+ * columns mix both):
+ *  - a date-only string, or a zone-less server value at exactly midnight
+ *    (how date columns and the order_date timestamp come out of a raw query),
+ *    is a calendar day;
+ *  - anything else is an instant (zone-less means UTC).
  *
  * @param {string|Date|null|undefined} value
  * @param {Intl.DateTimeFormatOptions} [options]
@@ -61,13 +119,11 @@ export function formatCalendarDate(value, options = undefined, locale = undefine
 export function formatDateValue(value, options = undefined, locale = undefined) {
     if (!value) return '-';
 
-    if (typeof value === 'string' && DATE_ONLY.test(value)) {
+    if (typeof value === 'string' && (DATE_ONLY.test(value.trim()) || ZONELESS_MIDNIGHT.test(value.trim()))) {
         return formatCalendarDate(value, options, locale);
     }
 
-    const date = value instanceof Date ? value : new Date(value);
-
-    return Number.isNaN(date.getTime()) ? '-' : date.toLocaleDateString(locale, options);
+    return formatInstantDate(value, options, locale);
 }
 
 /**
