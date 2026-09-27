@@ -36,7 +36,7 @@ Route::get('/', function () {
 });
 
 Route::get('/dashboard', [DashboardController::class, 'index'])
-    ->middleware(['auth', 'verified'])
+    ->middleware(['auth:web', 'verified'])
     ->name('dashboard');
 
 // EasyPost tracking webhooks. Public (EasyPost cannot log in), so the route
@@ -49,8 +49,10 @@ Route::post('/webhooks/easypost/{token}', EasyPostWebhookController::class)
     ->name('webhooks.easypost');
 
 // Authenticated application routes, split by module. Each file declares its
-// routes with Route:: and is required inside this group, inheriting `auth`.
-Route::middleware('auth')->group(function () {
+// routes with Route:: and is required inside this group, inheriting `auth:web`.
+// The guard is named explicitly so a customer portal session (the `customer`
+// guard) can never satisfy a staff route, whatever the default guard is.
+Route::middleware('auth:web')->group(function () {
     require __DIR__.'/web/account.php';
     require __DIR__.'/web/inventory.php';
     require __DIR__.'/web/sales.php';

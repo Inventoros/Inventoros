@@ -35,6 +35,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property string|null $date_format
  * @property string|null $time_format
  * @property bool $is_active
+ * @property bool $portal_enabled
  * @property array|null $settings
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
@@ -72,6 +73,7 @@ class Organization extends Model
         'date_format',
         'time_format',
         'is_active',
+        'portal_enabled',
         'settings',
     ];
 
@@ -84,6 +86,7 @@ class Organization extends Model
     {
         return [
             'is_active' => 'boolean',
+            'portal_enabled' => 'boolean',
             'settings' => 'array',
         ];
     }

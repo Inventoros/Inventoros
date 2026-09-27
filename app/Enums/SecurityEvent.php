@@ -33,6 +33,10 @@ enum SecurityEvent: string
     case ROLE_CREATED = 'role.created';
     case ROLE_UPDATED = 'role.updated';
     case ROLE_DELETED = 'role.deleted';
+    case PORTAL_LOGIN = 'portal.login';
+    case PORTAL_LOGIN_FAILED = 'portal.failed';
+    case PORTAL_INVITE_SENT = 'portal.invite_sent';
+    case PORTAL_ACCESS_REVOKED = 'portal.access_revoked';
 
     /**
      * Human-readable label for display.
@@ -58,6 +62,10 @@ enum SecurityEvent: string
             self::ROLE_CREATED => 'Role created',
             self::ROLE_UPDATED => 'Role updated',
             self::ROLE_DELETED => 'Role deleted',
+            self::PORTAL_LOGIN => 'Customer portal sign-in',
+            self::PORTAL_LOGIN_FAILED => 'Failed customer portal sign-in',
+            self::PORTAL_INVITE_SENT => 'Customer portal invitation sent',
+            self::PORTAL_ACCESS_REVOKED => 'Customer portal access revoked',
         };
     }
 

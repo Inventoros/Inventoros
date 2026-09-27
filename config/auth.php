@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\CustomerContact;
 use App\Models\User;
 
 return [
@@ -62,6 +63,14 @@ return [
             'driver' => 'sanctum',
             'provider' => 'users',
         ],
+
+        // Customer portal contacts. A separate guard and provider, so a
+        // contact's session key never satisfies a staff route (`auth:web`)
+        // and a staff session never satisfies a portal route.
+        'customer' => [
+            'driver' => 'session',
+            'provider' => 'customer_contacts',
+        ],
     ],
 
     /*
@@ -85,6 +94,11 @@ return [
         'users' => [
             'driver' => 'eloquent',
             'model' => env('AUTH_MODEL', User::class),
+        ],
+
+        'customer_contacts' => [
+            'driver' => 'eloquent',
+            'model' => CustomerContact::class,
         ],
 
         // 'users' => [
@@ -116,6 +130,13 @@ return [
         'users' => [
             'provider' => 'users',
             'table' => env('AUTH_PASSWORD_RESET_TOKEN_TABLE', 'password_reset_tokens'),
+            'expire' => 60,
+            'throttle' => 60,
+        ],
+
+        'customer_contacts' => [
+            'provider' => 'customer_contacts',
+            'table' => 'customer_contact_password_reset_tokens',
             'expire' => 60,
             'throttle' => 60,
         ],
