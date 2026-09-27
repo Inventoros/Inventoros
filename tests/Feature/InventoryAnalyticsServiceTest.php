@@ -10,6 +10,7 @@ use App\Services\Reports\InventoryAnalyticsService;
 use App\Services\Reports\ReportPeriod;
 use Carbon\CarbonImmutable;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
 
@@ -41,7 +42,7 @@ class InventoryAnalyticsServiceTest extends TestCase
 
         $this->now = CarbonImmutable::parse('2026-06-30 12:00:00');
         CarbonImmutable::setTestNow($this->now);
-        \Illuminate\Support\Carbon::setTestNow($this->now);
+        Carbon::setTestNow($this->now);
 
         $this->service = app(InventoryAnalyticsService::class);
 
@@ -52,7 +53,7 @@ class InventoryAnalyticsServiceTest extends TestCase
     protected function tearDown(): void
     {
         CarbonImmutable::setTestNow();
-        \Illuminate\Support\Carbon::setTestNow();
+        Carbon::setTestNow();
 
         parent::tearDown();
     }

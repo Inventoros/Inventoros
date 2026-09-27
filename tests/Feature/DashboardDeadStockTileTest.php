@@ -11,6 +11,7 @@ use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Inertia\Testing\AssertableInertia as Assert;
+use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\TestCase;
 
 /**
@@ -86,7 +87,7 @@ class DashboardDeadStockTileTest extends TestCase
     }
 
     /** @param array<int, string> $permissions */
-    #[\PHPUnit\Framework\Attributes\DataProvider('withheld')]
+    #[DataProvider('withheld')]
     public function test_the_figure_is_absent_without_the_reports_permissions(array $permissions): void
     {
         $this->actingAs($this->userWith($permissions))

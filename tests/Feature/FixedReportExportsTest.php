@@ -10,6 +10,7 @@ use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Inertia\Testing\AssertableInertia as Assert;
+use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\TestCase;
 
 /**
@@ -131,7 +132,7 @@ class FixedReportExportsTest extends TestCase
     }
 
     /** @param array<string, string> $params */
-    #[\PHPUnit\Framework\Attributes\DataProvider('exportRoutes')]
+    #[DataProvider('exportRoutes')]
     public function test_fixed_reports_export_in_every_format(string $route, array $params): void
     {
         foreach ([

@@ -8,6 +8,7 @@ use Carbon\CarbonImmutable;
 use Carbon\CarbonInterface;
 use Illuminate\Database\Query\Builder;
 use Illuminate\Database\Query\JoinClause;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -500,8 +501,8 @@ class InventoryAnalyticsService
     }
 
     /**
-     * @param  \Illuminate\Support\Collection<int, object>  $current
-     * @param  \Illuminate\Support\Collection<int, object>  $previous
+     * @param  Collection<int, object>  $current
+     * @param  Collection<int, object>  $previous
      * @return array<int, array<string, mixed>>
      */
     private function mergeWithPrevious($current, $previous, string $idKey, bool $withUnits): array

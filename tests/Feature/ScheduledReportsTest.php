@@ -10,15 +10,18 @@ use App\Models\Inventory\Product;
 use App\Models\ReportSchedule;
 use App\Models\Role;
 use App\Models\SavedReport;
+use App\Models\Setting;
 use App\Models\System\SystemSetting;
 use App\Models\User;
 use App\Services\Reports\ScheduledReportRunner;
 use Carbon\CarbonImmutable;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Inertia\Testing\AssertableInertia as Assert;
+use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\TestCase;
 
 /**
@@ -47,7 +50,7 @@ class ScheduledReportsTest extends TestCase
 
         SystemSetting::set('installed', true, 'boolean');
         CarbonImmutable::setTestNow('2026-06-30 12:00:00');
-        \Illuminate\Support\Carbon::setTestNow('2026-06-30 12:00:00');
+        Carbon::setTestNow('2026-06-30 12:00:00');
 
         [$this->org, $this->owner, $this->ownerRole, $this->colleague, $this->report] = $this->seedOrg('acme', 'ACME-WIDGET');
     }
@@ -55,7 +58,7 @@ class ScheduledReportsTest extends TestCase
     protected function tearDown(): void
     {
         CarbonImmutable::setTestNow();
-        \Illuminate\Support\Carbon::setTestNow();
+        Carbon::setTestNow();
 
         parent::tearDown();
     }
@@ -163,7 +166,7 @@ class ScheduledReportsTest extends TestCase
         ];
     }
 
-    #[\PHPUnit\Framework\Attributes\DataProvider('formats')]
+    #[DataProvider('formats')]
     public function test_a_due_schedule_queues_the_report_with_its_attachment(string $format, string $mime, string $magic): void
     {
         Mail::fake();
@@ -305,8 +308,8 @@ class ScheduledReportsTest extends TestCase
 
     public function test_the_mailable_applies_org_mail_config_and_has_a_text_part(): void
     {
-        \App\Models\Setting::create(['organization_id' => $this->org->id, 'key' => 'email.provider', 'value' => 'smtp', 'encrypted' => false]);
-        \App\Models\Setting::create(['organization_id' => $this->org->id, 'key' => 'email.from_address', 'value' => 'reports@acme.test', 'encrypted' => false]);
+        Setting::create(['organization_id' => $this->org->id, 'key' => 'email.provider', 'value' => 'smtp', 'encrypted' => false]);
+        Setting::create(['organization_id' => $this->org->id, 'key' => 'email.from_address', 'value' => 'reports@acme.test', 'encrypted' => false]);
         config(['mail.from.address' => 'default@system.test']);
 
         $mail = new ScheduledReportEmail($this->org->id, 'Stock acme', 'weekly', 'stock.csv', 'text/csv; charset=UTF-8', base64_encode("a,b\n"));
@@ -318,7 +321,7 @@ class ScheduledReportsTest extends TestCase
     public function test_the_mailable_is_branded_with_a_plain_text_part_and_the_attachment(): void
     {
         // Rendering resolves the org's mailer; use one that needs no host.
-        \App\Models\Setting::create(['organization_id' => $this->org->id, 'key' => 'email.provider', 'value' => 'array', 'encrypted' => false]);
+        Setting::create(['organization_id' => $this->org->id, 'key' => 'email.provider', 'value' => 'array', 'encrypted' => false]);
 
         $mail = new ScheduledReportEmail($this->org->id, 'Stock acme', 'weekly', 'stock.csv', 'text/csv; charset=UTF-8', base64_encode("a,b\n"));
         $mail->build();

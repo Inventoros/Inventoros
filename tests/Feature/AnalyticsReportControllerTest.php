@@ -11,6 +11,7 @@ use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Inertia\Testing\AssertableInertia as Assert;
+use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\TestCase;
 
 /**
@@ -96,7 +97,7 @@ class AnalyticsReportControllerTest extends TestCase
         ];
     }
 
-    #[\PHPUnit\Framework\Attributes\DataProvider('reportRoutes')]
+    #[DataProvider('reportRoutes')]
     public function test_each_report_renders_for_an_analyst(string $route, string $component): void
     {
         $this->actingAs($this->analyst())
@@ -105,7 +106,7 @@ class AnalyticsReportControllerTest extends TestCase
             ->assertInertia(fn (Assert $page) => $page->component($component)->has('filters'));
     }
 
-    #[\PHPUnit\Framework\Attributes\DataProvider('reportRoutes')]
+    #[DataProvider('reportRoutes')]
     public function test_each_report_requires_view_reports(string $route): void
     {
         $this->actingAs($this->userWith(['view_products', 'view_orders']))
@@ -127,7 +128,7 @@ class AnalyticsReportControllerTest extends TestCase
     }
 
     /** @param array<int, string> $permissions */
-    #[\PHPUnit\Framework\Attributes\DataProvider('sourcePermissionGaps')]
+    #[DataProvider('sourcePermissionGaps')]
     public function test_each_report_requires_its_source_permissions(string $route, array $permissions): void
     {
         $this->actingAs($this->userWith($permissions))
@@ -204,7 +205,7 @@ class AnalyticsReportControllerTest extends TestCase
         ];
     }
 
-    #[\PHPUnit\Framework\Attributes\DataProvider('exportFormats')]
+    #[DataProvider('exportFormats')]
     public function test_every_analytics_report_exports_in_each_format(string $format, string $mime): void
     {
         $user = $this->analyst();
