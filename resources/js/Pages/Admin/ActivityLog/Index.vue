@@ -69,7 +69,7 @@ const exportUrl = (format) => {
 const securityLabels = Object.fromEntries(props.securityEvents.map((e) => [e.value, e.label]));
 
 // Security events that signal a problem rather than routine account activity.
-const securityWarnings = ['auth.failed', 'auth.lockout', 'two_factor.failed', 'two_factor.disabled', 'authz.denied'];
+const securityWarnings = ['auth.failed', 'auth.lockout', 'two_factor.failed', 'two_factor.disabled', 'authz.denied', 'portal.failed'];
 
 const actionLabel = (actionType) =>
     securityLabels[actionType] || (actionType ? actionType.charAt(0).toUpperCase() + actionType.slice(1) : '');

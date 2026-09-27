@@ -3,9 +3,10 @@ import AppLayout from '@/Layouts/AppLayout.vue';
 import PageHeader from '@/Components/ui/PageHeader.vue';
 import Card from '@/Components/ui/Card.vue';
 import Button from '@/Components/ui/Button.vue';
-import { Head, Link, useForm } from '@inertiajs/vue3';
+import Badge from '@/Components/ui/Badge.vue';
+import { Head, Link, router, useForm } from '@inertiajs/vue3';
 import { ref } from 'vue';
-import { Users } from 'lucide-vue-next';
+import { ExternalLink, Users } from 'lucide-vue-next';
 
 import { useI18n } from 'vue-i18n';
 const props = defineProps({
@@ -13,6 +14,7 @@ const props = defineProps({
     user: Object,
     approvalSettings: { type: Object, default: () => ({}) },
     canManageOrganization: { type: Boolean, default: false },
+    portal: { type: Object, default: () => ({ enabled: false, login_url: null }) },
 });
 
 
@@ -52,6 +54,16 @@ const submitRegional = () => {
 };
 
 const isAdmin = props.user.is_admin;
+
+// Customer portal on/off
+const portalSaving = ref(false);
+const setPortalEnabled = (enabled) => {
+    router.patch(route('settings.organization.update.portal'), { portal_enabled: enabled }, {
+        preserveScroll: true,
+        onStart: () => { portalSaving.value = true; },
+        onFinish: () => { portalSaving.value = false; },
+    });
+};
 
 // Approval workflows. All off by default; a blank threshold means every
 // request of that kind needs approval once the workflow is on.
@@ -153,6 +165,17 @@ const tabs = [
                     ]"
                 >
                     User Management
+                </button>
+                <button
+                    @click="activeTab = 'portal'"
+                    :class="[
+                        'border-b-2 px-1 py-3 text-sm font-medium transition-colors',
+                        activeTab === 'portal'
+                            ? 'border-brand text-brand'
+                            : 'border-transparent text-text-tertiary hover:border-border-strong hover:text-text-secondary'
+                    ]"
+                >
+                    {{ t('portal.settings.tab') }}
                 </button>
             </nav>
         </div>
@@ -409,6 +432,52 @@ const tabs = [
                         </div>
                     </div>
                 </form>
+            </Card>
+        </div>
+
+        <!-- Customer Portal Tab -->
+        <div v-show="activeTab === 'portal'" class="mt-6">
+            <Card :padded="false">
+                <div class="flex items-start justify-between gap-4 px-5 pt-5">
+                    <div>
+                        <h3 class="text-sm font-semibold text-text-primary">{{ t('portal.settings.title') }}</h3>
+                        <p class="mt-0.5 text-sm text-text-secondary">{{ t('portal.settings.description') }}</p>
+                    </div>
+                    <Badge :variant="portal.enabled ? 'success' : 'neutral'" size="sm" dot>
+                        {{ portal.enabled ? t('common.active') : t('common.inactive') }}
+                    </Badge>
+                </div>
+                <div class="space-y-4 p-5">
+                    <p class="text-sm text-text-primary">
+                        {{ portal.enabled ? t('portal.settings.enabled') : t('portal.settings.disabled') }}
+                    </p>
+                    <div v-if="portal.login_url" class="rounded-md border border-border-subtle bg-surface-overlay px-3 py-2">
+                        <p class="text-xs text-text-tertiary">{{ t('portal.settings.loginUrl') }}</p>
+                        <a
+                            v-if="portal.enabled"
+                            :href="portal.login_url"
+                            target="_blank"
+                            rel="noopener"
+                            class="mt-0.5 inline-flex items-center gap-1 break-all text-sm text-brand hover:underline"
+                        >
+                            {{ portal.login_url }}
+                            <ExternalLink :size="12" class="shrink-0" />
+                        </a>
+                        <p v-else class="mt-0.5 break-all text-sm text-text-secondary">{{ portal.login_url }}</p>
+                    </div>
+                    <p class="text-xs text-text-tertiary">{{ t('portal.settings.hint') }}</p>
+
+                    <div v-if="isAdmin" class="flex justify-end">
+                        <Button
+                            :variant="portal.enabled ? 'secondary' : 'default'"
+                            :loading="portalSaving"
+                            :disabled="portalSaving"
+                            @click="setPortalEnabled(!portal.enabled)"
+                        >
+                            {{ portal.enabled ? t('portal.settings.turnOff') : t('portal.settings.turnOn') }}
+                        </Button>
+                    </div>
+                </div>
             </Card>
         </div>
 
