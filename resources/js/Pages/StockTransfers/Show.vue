@@ -4,6 +4,7 @@ import PageHeader from '@/Components/ui/PageHeader.vue';
 import Card from '@/Components/ui/Card.vue';
 import Button from '@/Components/ui/Button.vue';
 import Badge from '@/Components/ui/Badge.vue';
+import ApprovalPanel from '@/Components/ApprovalPanel.vue';
 import { Head, Link, router } from '@inertiajs/vue3';
 import { computed, defineAsyncComponent, ref } from 'vue';
 import { useBarcodeWedge, useBarcodeLookup } from '@/composables/useBarcodeWedge';
@@ -16,7 +17,11 @@ const { t } = useI18n();
 
 const props = defineProps({
     transfer: Object,
+    approval: { type: Object, default: () => ({}) },
 });
+
+// A transfer held for approval (or rejected) cannot ship or complete.
+const awaitingApproval = ['pending', 'rejected'].includes(props.transfer.approval_status);
 
 const processing = ref(false);
 
@@ -49,7 +54,7 @@ const formatDate = (dateStr) => {
     });
 };
 
-const canComplete = ['pending', 'in_transit'].includes(props.transfer.status);
+const canComplete = ['pending', 'in_transit'].includes(props.transfer.status) && !awaitingApproval;
 const canCancel = ['pending', 'in_transit'].includes(props.transfer.status);
 
 const completeTransfer = () => {
@@ -160,6 +165,16 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-t
         </PageHeader>
 
         <div class="mt-6 space-y-4">
+            <ApprovalPanel
+                type="stock_transfer"
+                :id="transfer.id"
+                :status="transfer.approval_status"
+                :requester="transfer.transferred_by?.name || null"
+                :approver="transfer.approver?.name || null"
+                :approved-at="transfer.approved_at"
+                :notes="transfer.approval_notes"
+                :can-decide="!!approval.can_decide"
+            />
             <!-- Transfer Info -->
             <Card :padded="false">
                 <div class="flex items-center justify-between px-5 pt-5">

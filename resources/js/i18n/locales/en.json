@@ -1742,5 +1742,68 @@
     "verifiedOne": "{name}: {scanned} of {expected}",
     "overScanned": "{name}: {scanned} scanned, only {expected} expected",
     "notOnTransfer": "{name} is not on this transfer."
+  },
+  "approvals": {
+    "title": "Approvals",
+    "description": "Purchase orders, stock adjustments and stock transfers waiting for a decision.",
+    "tabs": {
+      "pending": "Waiting for me",
+      "mine": "My requests"
+    },
+    "emptyPending": "Nothing is waiting for your approval.",
+    "emptyPendingHint": "New requests show up here, and you get a notification when one arrives.",
+    "emptyMine": "You have no approval requests.",
+    "emptyMineHint": "Requests you raise that need approval are listed here with their outcome.",
+    "types": {
+      "purchase_order": "Purchase order",
+      "stock_adjustment": "Stock adjustment",
+      "stock_transfer": "Stock transfer"
+    },
+    "status": {
+      "pending": "Pending approval",
+      "approved": "Approved",
+      "rejected": "Rejected",
+      "required": "Approval required"
+    },
+    "requestedBy": "Requested by {name}",
+    "decidedBy": {
+      "approved": "Approved by {name}",
+      "rejected": "Rejected by {name}"
+    },
+    "open": "Open",
+    "approve": "Approve",
+    "reject": "Reject",
+    "approveNote": "Note for the requester (optional)",
+    "rejectReason": "Reason for rejecting (required)",
+    "confirmApprove": "Confirm approval",
+    "confirmReject": "Confirm rejection",
+    "submit": "Submit for approval",
+    "poSendBlocked": "This purchase order needs approval before it can be sent.",
+    "panel": {
+      "title": "Approval",
+      "needed": "This needs approval before it can go ahead. Submit it when it is ready.",
+      "pending": "Waiting for an approver. It cannot be changed or sent until then.",
+      "approved": "Approved by {name}.",
+      "rejected": "Rejected by {name}."
+    },
+    "settings": {
+      "tab": "Approvals",
+      "title": "Approval workflows",
+      "description": "Choose which requests need sign-off from someone with the matching approve permission. All are off by default.",
+      "purchaseOrders": "Purchase orders need approval before they are sent",
+      "purchaseOrdersHelp": "Drafts must be submitted and approved before they can be emailed to the supplier or received.",
+      "poThreshold": "Only at or above this total",
+      "everyOne": "Every purchase order",
+      "stockAdjustments": "Manual stock adjustments need approval",
+      "stockAdjustmentsHelp": "The adjustment is held and stock only changes when it is approved.",
+      "quantityThreshold": "Only above this quantity",
+      "valueThreshold": "Only above this value",
+      "noLimit": "No limit",
+      "thresholdHelp": "An adjustment needs approval when it is over either limit. Leave both blank to require approval for every manual adjustment.",
+      "stockTransfers": "Stock transfers need approval before they ship",
+      "stockTransfersHelp": "New transfers wait for approval before they can be marked in transit or completed.",
+      "adminsSelfApprove": "Admins can approve their own requests",
+      "adminsSelfApproveHelp": "Nobody else can approve a request they raised. Turn this off to hold admins to the same rule."
+    }
   }
 }
