@@ -92,6 +92,7 @@ tags:
   - name: Stock Transfers
   - name: Webhooks
   - name: Users
+  - name: Approvals
 
 paths:
   /login:
@@ -1038,6 +1039,74 @@ paths:
       responses:
         '200': { description: Cancelled }
         '422': { description: Cannot cancel in current status }
+
+  /purchase-orders/{purchaseOrder}/submit-for-approval:
+    parameters:
+      - { name: purchaseOrder, in: path, required: true, schema: { type: integer } }
+    post:
+      tags: [Purchase Orders]
+      summary: Submit a draft purchase order for approval
+      description: "Requires `edit_purchase_orders`. Only needed when the organization requires approval for this PO; approvers are notified."
+      responses:
+        '200': { description: Submitted }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '422': { description: "Approval not required or not a draft" }
+
+  /approvals:
+    get:
+      tags: [Approvals]
+      summary: List the requests waiting for the current user's decision
+      responses: { '200': { description: Pending approval requests } }
+
+  /approvals/mine:
+    get:
+      tags: [Approvals]
+      summary: List the current user's own approval requests
+      responses: { '200': { description: The user's approval requests } }
+
+  /approvals/{type}/{id}/approve:
+    parameters:
+      - { name: type, in: path, required: true, schema: { type: string, enum: [purchase_order, stock_adjustment, stock_transfer] } }
+      - { name: id, in: path, required: true, schema: { type: integer } }
+    post:
+      tags: [Approvals]
+      summary: Approve a pending request
+      description: "Requires the approve permission for the type: `approve_purchase_orders`, `approve_stock_adjustments` or `approve_stock_transfers`. You cannot approve your own request."
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                notes: { type: string }
+      responses:
+        '200': { description: Approved }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '422': { description: "Not pending" }
+
+  /approvals/{type}/{id}/reject:
+    parameters:
+      - { name: type, in: path, required: true, schema: { type: string, enum: [purchase_order, stock_adjustment, stock_transfer] } }
+      - { name: id, in: path, required: true, schema: { type: integer } }
+    post:
+      tags: [Approvals]
+      summary: Reject a pending request (a reason is required)
+      description: "Requires the approve permission for the type."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [notes]
+              properties:
+                notes: { type: string }
+      responses:
+        '200': { description: Rejected }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '422': { $ref: '#/components/responses/ValidationError' }
 
   /work-orders:
     get:
