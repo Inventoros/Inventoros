@@ -4,6 +4,8 @@ import PageHeader from '@/Components/ui/PageHeader.vue';
 import Card from '@/Components/ui/Card.vue';
 import Button from '@/Components/ui/Button.vue';
 import CustomerPicker from '@/Components/CustomerPicker.vue';
+import DiscountInput from '@/Components/DiscountInput.vue';
+import { useOrderTotals, lineNetCents } from '@/composables/useOrderTotals';
 import { Head, Link, useForm } from '@inertiajs/vue3';
 import { ref, computed, defineAsyncComponent } from 'vue';
 import { useBarcodeWedge, useBarcodeLookup } from '@/composables/useBarcodeWedge';
@@ -27,6 +29,8 @@ const form = useForm({
     order_date: new Date().toISOString().split('T')[0],
     shipping: 0,
     tax: 0,
+    discount_type: '',
+    discount_value: null,
     notes: '',
     items: [],
 });
@@ -94,6 +98,8 @@ const addItem = () => {
             quantity: quantity.value,
             // Default to the variant's own price when it has one.
             unit_price: parseFloat(variant?.price ?? product.price) || 0,
+            discount_type: '',
+            discount_value: null,
         });
     }
     selectedProduct.value = null;
@@ -199,8 +205,8 @@ const updateItemPrice = (index, newPrice) => {
     form.items[index].unit_price = parseFloat(newPrice) || 0;
 };
 
-const subtotal = computed(() => form.items.reduce((sum, item) => sum + (item.quantity * item.unit_price), 0));
-const total = computed(() => subtotal.value + parseFloat(form.tax || 0) + parseFloat(form.shipping || 0));
+// Preview only: the server recomputes every total on save.
+const totals = useOrderTotals(form);
 
 const submit = () => {
     if (form.items.length === 0) {
@@ -336,7 +342,8 @@ const fieldError = 'mt-1 text-xs text-status-danger';
 
                             <!-- Items list -->
                             <div v-if="form.items.length > 0" class="space-y-3">
-                                <div v-for="(item, index) in form.items" :key="index" class="flex flex-wrap items-center gap-4 rounded-lg border border-border-subtle bg-surface-canvas p-4">
+                                <div v-for="(item, index) in form.items" :key="index" class="rounded-lg border border-border-subtle bg-surface-canvas p-4">
+                                <div class="flex flex-wrap items-center gap-4">
                                     <div class="min-w-0 flex-1 basis-full sm:basis-0">
                                         <p class="font-medium text-text-primary">{{ item.product_name }}</p>
                                         <p v-if="item.variant_title" class="text-xs text-text-secondary">{{ t('orders.create.variant') }}: {{ item.variant_title }}</p>
@@ -353,9 +360,20 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                                     </div>
                                     <div class="w-24 text-right">
                                         <label class="mb-1 block text-[11px] text-text-tertiary">{{ t('common.total') }}</label>
-                                        <p class="font-semibold tabular-nums text-text-primary">${{ (item.quantity * item.unit_price).toFixed(2) }}</p>
+                                        <p class="font-semibold tabular-nums text-text-primary">${{ (lineNetCents(item) / 100).toFixed(2) }}</p>
                                     </div>
                                     <button type="button" @click="removeItem(index)" class="mt-4 rounded-md p-1.5 text-text-tertiary transition-colors hover:bg-surface-sunken hover:text-status-danger"><Trash2 :size="16" /></button>
+                                </div>
+                                <div class="mt-3 md:w-1/2">
+                                    <DiscountInput
+                                        :id="`item_${index}_discount`"
+                                        v-model:type="item.discount_type"
+                                        v-model:value="item.discount_value"
+                                        :label="t('discounts.lineDiscount')"
+                                        :error="form.errors[`items.${index}.discount_value`] || form.errors[`items.${index}.discount_type`]"
+                                        compact
+                                    />
+                                </div>
                                 </div>
                             </div>
                             <div v-else class="flex flex-col items-center gap-2 py-8 text-center">
@@ -401,7 +419,25 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                         <div class="space-y-3 p-5">
                             <div class="flex justify-between text-sm">
                                 <span class="text-text-secondary">{{ t('common.subtotal') }}</span>
-                                <span class="font-medium tabular-nums text-text-primary">${{ subtotal.toFixed(2) }}</span>
+                                <span class="font-medium tabular-nums text-text-primary">${{ totals.subtotal.toFixed(2) }}</span>
+                            </div>
+                            <div v-if="totals.lineDiscounts > 0" class="flex justify-between text-sm">
+                                <span class="text-text-secondary">{{ t('discounts.lineDiscounts') }}</span>
+                                <span class="font-medium tabular-nums text-text-primary">-${{ totals.lineDiscounts.toFixed(2) }}</span>
+                            </div>
+                            <div>
+                                <DiscountInput
+                                    id="order_discount"
+                                    v-model:type="form.discount_type"
+                                    v-model:value="form.discount_value"
+                                    :label="t('discounts.orderDiscount')"
+                                    :error="form.errors.discount_value || form.errors.discount_type"
+                                />
+                                <p class="mt-1 text-xs text-text-tertiary">{{ t('discounts.appliedBeforeTax') }}</p>
+                            </div>
+                            <div v-if="totals.orderDiscount > 0" class="flex justify-between text-sm">
+                                <span class="text-text-secondary">{{ t('discounts.orderDiscount') }}</span>
+                                <span class="font-medium tabular-nums text-text-primary">-${{ totals.orderDiscount.toFixed(2) }}</span>
                             </div>
                             <div>
                                 <label for="tax" class="mb-1 block text-sm text-text-secondary">{{ t('common.tax') }}</label>
@@ -415,8 +451,10 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                             </div>
                             <div class="flex items-center justify-between border-t border-border-subtle pt-3">
                                 <span class="text-sm font-semibold text-text-primary">{{ t('common.total') }}</span>
-                                <span class="text-xl font-bold text-brand">${{ total.toFixed(2) }}</span>
+                                <span class="text-xl font-bold text-brand">${{ totals.total.toFixed(2) }}</span>
                             </div>
+                            <p v-if="form.errors.total" :class="fieldError">{{ form.errors.total }}</p>
+                            <p class="text-xs text-text-tertiary">{{ t('discounts.totalsComputedOnSave') }}</p>
                         </div>
                     </Card>
 

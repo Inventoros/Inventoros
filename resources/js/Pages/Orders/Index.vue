@@ -18,12 +18,15 @@ const props = defineProps({
     filters: Object,
     statuses: Array,
     sources: Array,
+    canViewPayments: Boolean,
+    paymentStatuses: { type: Array, default: () => [] },
     pluginComponents: Object,
 });
 
 const search = ref(props.filters?.search || '');
 const status = ref(props.filters?.status || '');
 const source = ref(props.filters?.source || '');
+const paymentStatus = ref(props.filters?.payment_status || '');
 
 const formatCurrency = (value) =>
     new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(value);
@@ -33,6 +36,7 @@ const searchOrders = () => {
         search: search.value,
         status: status.value,
         source: source.value,
+        ...(props.canViewPayments ? { payment_status: paymentStatus.value } : {}),
     }, { preserveState: true, preserveScroll: true });
 };
 
@@ -40,6 +44,7 @@ const clearFilters = () => {
     search.value = '';
     status.value = '';
     source.value = '';
+    paymentStatus.value = '';
     searchOrders();
 };
 
@@ -52,12 +57,17 @@ const deleteOrder = (order) => {
 const statusVariant = (s) =>
     ({ pending: 'warning', processing: 'info', shipped: 'brand', delivered: 'success', cancelled: 'danger' }[s] || 'neutral');
 
+const paymentStatusVariant = (s) =>
+    ({ unpaid: 'warning', partial: 'info', paid: 'success', overpaid: 'brand', refunded: 'neutral' }[s] || 'neutral');
+
 const columns = [
     { key: 'order_number', label: t('orders.orderCol') },
     { key: 'customer_name', label: t('orders.customer') },
     { key: 'items', label: t('common.items'), align: 'right' },
     { key: 'total', label: t('common.total'), align: 'right' },
     { key: 'status', label: t('common.status') },
+    // Only for users who may see payments; the rows carry no payment data otherwise.
+    ...(props.canViewPayments ? [{ key: 'payment_status', label: t('payments.paymentStatus') }] : []),
     { key: 'source', label: t('orders.source') },
     { key: 'order_date', label: t('common.date') },
     { key: 'actions', label: t('common.actions'), align: 'right' },
@@ -93,7 +103,7 @@ const selectClass =
         <!-- Filters -->
         <Card class="mt-6">
             <form @submit.prevent="searchOrders" class="space-y-4">
-                <div class="grid grid-cols-1 gap-4 md:grid-cols-4">
+                <div :class="['grid grid-cols-1 gap-4', canViewPayments ? 'md:grid-cols-5' : 'md:grid-cols-4']">
                     <div class="md:col-span-2">
                         <label for="search" class="mb-1 block text-xs font-medium text-text-secondary">{{ t('orders.searchOrders') }}</label>
                         <div class="relative">
@@ -119,6 +129,13 @@ const selectClass =
                         <select id="source" v-model="source" :class="selectClass">
                             <option value="">{{ t('orders.allSources') }}</option>
                             <option v-for="src in sources" :key="src" :value="src">{{ src.charAt(0).toUpperCase() + src.slice(1) }}</option>
+                        </select>
+                    </div>
+                    <div v-if="canViewPayments">
+                        <label for="payment_status" class="mb-1 block text-xs font-medium text-text-secondary">{{ t('payments.paymentStatus') }}</label>
+                        <select id="payment_status" v-model="paymentStatus" :class="selectClass">
+                            <option value="">{{ t('payments.allPaymentStatuses') }}</option>
+                            <option v-for="ps in paymentStatuses" :key="ps" :value="ps">{{ t(`payments.status.${ps}`) }}</option>
                         </select>
                     </div>
                 </div>
@@ -154,6 +171,9 @@ const selectClass =
                 </template>
                 <template #cell-status="{ row }">
                     <Badge :variant="statusVariant(row.status)" size="sm" dot>{{ row.status }}</Badge>
+                </template>
+                <template #cell-payment_status="{ row }">
+                    <Badge v-if="row.payment_status" :variant="paymentStatusVariant(row.payment_status)" size="sm" dot>{{ t(`payments.status.${row.payment_status}`) }}</Badge>
                 </template>
                 <template #cell-source="{ row }">
                     <Badge variant="neutral" size="sm">{{ row.source }}</Badge>

@@ -109,6 +109,7 @@ const secondaryStats = () => [
     { key: 'totalValue', label: t('dashboard.inventoryValue'), value: formatCompactCurrency(props.stats?.totalValue), href: null, tone: 'text-status-success' },
     { key: 'revenueThisMonth', label: t('dashboard.revenueThisMonth'), value: formatCompactCurrency(props.stats?.revenueThisMonth), href: null, tone: 'text-brand' },
     { key: 'deadStockValue', label: t('dashboard.deadStockValue'), value: formatCompactCurrency(props.stats?.deadStockValue), href: route('reports.dead-stock'), tone: 'text-status-warning' },
+    { key: 'outstandingReceivables', label: t('dashboard.outstandingReceivables'), value: formatCompactCurrency(props.stats?.outstandingReceivables), href: route('reports.receivables'), tone: 'text-status-warning' },
 // A withheld figure is absent from `stats`, not zeroed, so filtering on
 // presence also drops the link that went with it -- several point at index
 // routes the same user would be refused.
@@ -192,7 +193,7 @@ const secondaryStats = () => [
         </section>
 
         <!-- Secondary stats -->
-        <section v-if="widgets.revenue_chart" class="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+        <section v-if="widgets.revenue_chart" class="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
             <component
                 :is="stat.href ? Link : 'div'"
                 v-for="stat in secondaryStats()"
