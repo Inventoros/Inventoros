@@ -195,6 +195,8 @@ Schema::dropIfExists('my_plugin_notes');
 | `order_status_changed` | `$order`, `$old_status`, `$new_status`, `$user` | An order's status changes. |
 | `order_approved` | `$order`, `$user` | An order is approved. |
 | `order_rejected` | `$order`, `$user` | An order is rejected. |
+| `payment_recorded` | `$payment`, `$order`, `$user` | A payment or refund is recorded against an order (after commit). |
+| `payment_voided` | `$payment`, `$order`, `$user` | A payment or refund is voided (after commit). |
 | `purchase_order_created` | `$purchase_order`, `$user` | A purchase order is created. |
 | `purchase_order_received` | `$purchase_order`, `$user` | A purchase order becomes fully received. |
 | `purchase_order_cancelled` | `$purchase_order`, `$user` | A purchase order is cancelled. |
@@ -238,7 +240,7 @@ A filter callback receives the value first, then the listed context, and must re
 | `product_store_response` | `$response`, `$product`, `$request` | The response after a product is created from the web form. |
 | `product_update_validation_rules` | `$rules`, `$product`, `$request` | Validation rules of the web product edit form. |
 | `product_update_data` | `$validated_data`, `$product`, `$request` | Validated data before a product is updated from the web form. |
-| `order_total_calculation` | `$total`, `$order` | The computed order total when an order is created or edited, after line items, discounts, tax and shipping. Return a non-negative number. |
+| `order_total_calculation` | `$total`, `$order` | The order total, each time `OrderService` computes it (on create and on every edit, from every surface), after line and order discounts, tax and shipping. `$total` is a 2-decimal string (`subtotal - discount_amount + tax + shipping`); `$order` already holds those parts and, on create, has no `id` yet. Return a number or numeric string. A negative total, or one below what the customer has already paid, is rejected with a validation error. Changing it breaks the `subtotal - discount + tax + shipping = total` identity on the stored order, so prefer adjusting the inputs where you can. |
 | `supplier_list_query` | `$query`, `$request` | The supplier list query. The organization scope is re-applied afterwards. |
 | `supplier_list_data` | `$suppliers`, `$request` | The paginated suppliers before the list page renders. |
 | `supplier_list_page_data` | `$data`, `$request` | All props of the supplier list page. |
@@ -534,9 +536,10 @@ add_action('product_before_update', function ($product, $data) {
     }
 });
 
-// Add a handling fee to every order total.
+// Add a handling fee to every order total. $total is a 2-decimal string;
+// Money keeps the arithmetic exact.
 add_filter('order_total_calculation', function ($total, $order) {
-    return round((float) $total + 2.50, 2);
+    return \App\Support\Money::add($total, '2.50');
 });
 ```
 

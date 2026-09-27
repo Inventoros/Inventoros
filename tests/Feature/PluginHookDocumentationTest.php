@@ -21,18 +21,6 @@ use Tests\TestCase;
  */
 final class PluginHookDocumentationTest extends TestCase
 {
-    /**
-     * Documented hooks whose call site lands in a separate change set. Each
-     * entry must be removed once the hook fires on main.
-     *
-     * `order_total_calculation` is applied inside OrderService's total
-     * computation by the order payments and discounts work; adding it here as
-     * well would apply the filter twice.
-     *
-     * @var array<int, string>
-     */
-    private const PENDING_CALL_SITES = ['order_total_calculation'];
-
     /** @var array<int, string> */
     private const GUIDES = [
         'docs/PLUGIN_DEVELOPMENT.md',
@@ -57,9 +45,11 @@ final class PluginHookDocumentationTest extends TestCase
                 continue;
             }
 
+            $contents = $file->getContents();
+
             preg_match_all(
                 '/\b(?:do_action|apply_filters)\(\s*([\'"])([^\'"]+)\1/',
-                $file->getContents(),
+                $contents,
                 $matches
             );
 
@@ -68,6 +58,18 @@ final class PluginHookDocumentationTest extends TestCase
                     continue;
                 }
                 $hooks[] = $this->normalise($name);
+            }
+
+            // Hook names held in a class constant: apply_filters(self::TOTAL_FILTER, ...)
+            // with `const TOTAL_FILTER = 'order_total_calculation';` in the same file.
+            preg_match_all('/\b(?:do_action|apply_filters)\(\s*(?:self|static)::([A-Z0-9_]+)/', $contents, $constants);
+
+            foreach ($constants[1] as $constant) {
+                if (preg_match('/const\s+'.$constant.'\s*=\s*([\'"])([^\'"]+)\1/', $contents, $value) === 1) {
+                    $hooks[] = $this->normalise($value[2]);
+                } else {
+                    $this->fail("{$file->getRelativePathname()} fires a hook named by {$constant}, which is not a string constant in that file.");
+                }
             }
         }
 
@@ -93,7 +95,7 @@ final class PluginHookDocumentationTest extends TestCase
     public function test_every_registered_hook_is_fired_by_the_application(): void
     {
         $fired = $this->firedHooks();
-        $expected = array_diff($this->registeredHooks(), self::PENDING_CALL_SITES);
+        $expected = $this->registeredHooks();
 
         $this->assertSame([], array_values(array_diff($expected, $fired)),
             'HookRegistry lists hooks that nothing under app/ fires.');

@@ -173,6 +173,16 @@ final class HookRegistry
                 'parameters' => ['$order', '$user'],
                 'example' => "add_action('order_rejected', function (\$order, \$user) { /* ... */ });",
             ],
+            'payment_recorded' => [
+                'description' => 'Fired after a payment or refund is recorded against an order (after commit)',
+                'parameters' => ['$payment', '$order', '$user'],
+                'example' => "add_action('payment_recorded', function (\$payment, \$order, \$user) { /* ... */ });",
+            ],
+            'payment_voided' => [
+                'description' => 'Fired after a payment or refund is voided (after commit)',
+                'parameters' => ['$payment', '$order', '$user'],
+                'example' => "add_action('payment_voided', function (\$payment, \$order, \$user) { /* ... */ });",
+            ],
 
             // ========================================
             // PURCHASE ORDER HOOKS
@@ -405,9 +415,9 @@ final class HookRegistry
             // ORDER FILTERS
             // ========================================
             'order_total_calculation' => [
-                'description' => 'Modify the computed order total when an order is created or edited',
+                'description' => 'Modify the order total each time OrderService computes it (create and every edit, from every surface), after discounts, tax and shipping. $total is a 2-dp decimal string; return a non-negative number',
                 'parameters' => ['$total', '$order'],
-                'example' => "add_filter('order_total_calculation', function (\$total, \$order) { return \$total; });",
+                'example' => "add_filter('order_total_calculation', function (\$total, \$order) { return \\App\\Support\\Money::add(\$total, '2.50'); });",
             ],
 
             // ========================================
