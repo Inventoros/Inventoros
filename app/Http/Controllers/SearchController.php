@@ -9,6 +9,7 @@ use App\Models\Inventory\Product;
 use App\Models\Inventory\Supplier;
 use App\Models\Order\Order;
 use App\Models\Purchasing\PurchaseOrder;
+use App\Support\ProductSearch;
 use App\Support\Search;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -42,13 +43,15 @@ class SearchController extends Controller
             ->where(function ($q) use ($query, $variantMatch) {
                 Search::apply($q, ['name', 'sku', 'barcode'], $query)
                     ->orWhereHas('variants', $variantMatch);
+
+                ProductSearch::applyPluginFilter($q, $query);
             })
             ->with(['variants' => fn ($relation) => $variantMatch($relation->getQuery())])
             ->limit($limit)
             ->get()
             ->map(fn (Product $product) => [
                 'id' => $product->id,
-                'title' => $product->name,
+                'title' => $product->display_name,
                 'subtitle' => $this->productSubtitle($product),
                 'url' => route('products.show', $product->id),
                 'type' => 'product',

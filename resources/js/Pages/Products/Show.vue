@@ -282,7 +282,7 @@ const fieldInput = 'h-9 w-full rounded-md border border-border-subtle bg-surface
 </script>
 
 <template>
-    <Head :title="product.name" />
+    <Head :title="product.display_name ?? product.name" />
 
     <AppLayout>
         <template #header>
@@ -291,11 +291,11 @@ const fieldInput = 'h-9 w-full rounded-md border border-border-subtle bg-surface
                 <span class="text-text-tertiary">/</span>
                 <Link :href="route('products.index')" class="text-text-tertiary hover:text-text-primary">{{ t('products.title') }}</Link>
                 <span class="text-text-tertiary">/</span>
-                <span class="font-medium text-text-primary">{{ product.name }}</span>
+                <span class="font-medium text-text-primary">{{ product.display_name ?? product.name }}</span>
             </div>
         </template>
 
-        <PageHeader :title="product.name" :description="`SKU: ${product.sku}`">
+        <PageHeader :title="product.display_name ?? product.name" :description="`SKU: ${product.sku}`">
             <template #actions>
                 <Button variant="secondary" size="sm" @click="duplicateProduct">
                     <Copy :size="14" />
@@ -327,7 +327,7 @@ const fieldInput = 'h-9 w-full rounded-md border border-border-subtle bg-surface
             </StatTile>
             <StatTile
                 :label="t('products.show.sellingPrice')"
-                :value="formatCurrency(product.price)"
+                :value="formatCurrency(product.display_price ?? product.price)"
                 :hint="product.currency || 'USD'"
                 icon-tone="success"
             >
@@ -351,7 +351,7 @@ const fieldInput = 'h-9 w-full rounded-md border border-border-subtle bg-surface
                     <div class="p-5">
                         <div class="flex items-start justify-between gap-4">
                             <div class="min-w-0">
-                                <h3 class="text-lg font-semibold text-text-primary">{{ product.name }}</h3>
+                                <h3 class="text-lg font-semibold text-text-primary">{{ product.display_name ?? product.name }}</h3>
                                 <div v-if="product.type && product.type !== 'standard'" class="mt-1">
                                     <Badge :variant="product.type === 'kit' ? 'info' : 'brand'" size="sm">
                                         {{ product.type === 'kit' ? 'Kit' : 'Assembly' }}
@@ -414,7 +414,7 @@ const fieldInput = 'h-9 w-full rounded-md border border-border-subtle bg-surface
                             <div>
                                 <h4 class="mb-1 text-sm font-medium text-text-tertiary">{{ t('products.show.sellingPrice') }}</h4>
                                 <p class="text-2xl font-bold tabular-nums text-text-primary">
-                                    {{ formatCurrency(product.price) }}
+                                    {{ formatCurrency(product.display_price ?? product.price) }}
                                 </p>
                                 <p v-if="product.currency" class="mt-1 text-xs text-text-tertiary">
                                     Currency: {{ product.currency }}

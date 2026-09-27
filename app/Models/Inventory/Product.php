@@ -10,6 +10,7 @@ use App\Models\Auth\Organization;
 use App\Models\Concerns\BelongsToOrganization;
 use App\Models\Inventory\Concerns\ActsAsAssembly;
 use App\Models\Inventory\Concerns\CalculatesProductProfit;
+use App\Models\Inventory\Concerns\HasPluginDisplayValues;
 use App\Models\Inventory\Concerns\HasProductVariants;
 use App\Models\Inventory\Concerns\TracksStockLevels;
 use App\Traits\LogsActivity;
@@ -56,6 +57,8 @@ use Illuminate\Support\Carbon;
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  * @property Carbon|null $deleted_at
+ * @property-read string $display_name
+ * @property-read mixed $display_price
  * @property-read int $total_stock
  * @property-read array{min: string, max: string} $price_range
  * @property-read float $profit
@@ -72,7 +75,7 @@ use Illuminate\Support\Carbon;
  */
 class Product extends Model
 {
-    use ActsAsAssembly, BelongsToOrganization, CalculatesProductProfit, HasFactory, HasProductVariants, LogsActivity, SoftDeletes, TracksStockLevels;
+    use ActsAsAssembly, BelongsToOrganization, CalculatesProductProfit, HasFactory, HasPluginDisplayValues, HasProductVariants, LogsActivity, SoftDeletes, TracksStockLevels;
 
     protected static function newFactory(): ProductFactory
     {

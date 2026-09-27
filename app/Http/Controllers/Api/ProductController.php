@@ -10,6 +10,7 @@ use App\Http\Requests\Api\Product\UpdateProductRequest;
 use App\Http\Resources\ProductResource;
 use App\Models\Inventory\Product;
 use App\Services\ProductService;
+use App\Support\ProductSearch;
 use Dedoc\Scramble\Attributes\QueryParameter;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -50,6 +51,8 @@ class ProductController extends Controller
                     $q->where('name', 'like', "%{$search}%")
                         ->orWhere('sku', 'like', "%{$search}%")
                         ->orWhere('barcode', 'like', "%{$search}%");
+
+                    ProductSearch::applyPluginFilter($q, (string) $search);
                 });
             })
             ->when($request->input('category_id'), function ($query, $categoryId) {

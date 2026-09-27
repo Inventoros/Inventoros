@@ -310,7 +310,7 @@ const thClass =
                             <input type="checkbox" :checked="isSelected(product.id)" @change="toggleSelect(product.id)" class="rounded border-border-strong bg-surface-canvas text-brand focus:ring-brand" />
                         </td>
                         <td class="px-4 py-3">
-                            <Link :href="route('products.show', product.id)" class="font-medium text-text-primary hover:text-brand">{{ product.name }}</Link>
+                            <Link :href="route('products.show', product.id)" class="font-medium text-text-primary hover:text-brand">{{ product.display_name ?? product.name }}</Link>
                             <p v-if="product.description" class="max-w-xs truncate text-xs text-text-tertiary">{{ product.description }}</p>
                         </td>
                         <td class="px-4 py-3">
@@ -326,7 +326,7 @@ const thClass =
                             </div>
                             <p class="text-[11px] text-text-tertiary">Min: {{ product.min_stock }}</p>
                         </td>
-                        <td class="px-4 py-3 font-medium tabular-nums text-text-primary">{{ formatCurrency(product.price) }}</td>
+                        <td class="px-4 py-3 font-medium tabular-nums text-text-primary">{{ formatCurrency(product.display_price ?? product.price) }}</td>
                         <td class="px-4 py-3">
                             <div class="flex items-center justify-end gap-1">
                                 <Link :href="route('products.show', product.id)" class="rounded-md p-1.5 text-text-tertiary transition-colors hover:bg-surface-sunken hover:text-brand" title="View"><Eye :size="16" /></Link>
