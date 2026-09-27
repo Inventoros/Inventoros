@@ -152,7 +152,7 @@ final class PluginService
             $this->runLifecycleFile($slug, 'activate');
 
             if ($ui !== null) {
-                $this->assets->publish($slug);
+                $this->assets->publish($slug, $this->versionOf($manifest));
             }
 
             do_action('plugin_activated', $slug);
@@ -338,8 +338,8 @@ final class PluginService
                     continue;
                 }
 
-                if (! $this->assets->isPublished($slug, $ui['entry'])) {
-                    $this->assets->publish($slug);
+                if (! $this->assets->isPublished($slug, $ui['entry'], $this->versionOf($manifest))) {
+                    $this->assets->publish($slug, $this->versionOf($manifest));
                 }
             } catch (\Throwable $e) {
                 Log::warning('Skipping plugin runtime UI', ['slug' => $slug, 'error' => $e->getMessage()]);
@@ -347,7 +347,7 @@ final class PluginService
                 continue;
             }
 
-            $version = rawurlencode(is_string($manifest['version'] ?? null) ? $manifest['version'] : '0');
+            $version = rawurlencode($this->versionOf($manifest));
             $url = fn (string $path) => url("plugins/{$slug}/{$path}").'?v='.$version;
 
             $assets[] = [
@@ -358,6 +358,14 @@ final class PluginService
         }
 
         return $assets;
+    }
+
+    /**
+     * @param  array<string, mixed>  $manifest
+     */
+    private function versionOf(array $manifest): string
+    {
+        return is_string($manifest['version'] ?? null) ? $manifest['version'] : '0';
     }
 
     /**

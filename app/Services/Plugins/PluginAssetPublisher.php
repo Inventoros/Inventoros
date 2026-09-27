@@ -25,6 +25,12 @@ final class PluginAssetPublisher
     public const SOURCE_DIRECTORY = 'dist';
 
     /**
+     * Marker written next to the published files, holding the plugin version
+     * they came from, so a plugin replaced in place is republished.
+     */
+    private const VERSION_MARKER = '.published-version';
+
+    /**
      * File types that may be served from public/plugins.
      *
      * @var array<int, string>
@@ -87,7 +93,7 @@ final class PluginAssetPublisher
     /**
      * Copy dist/ to public/plugins/{slug}/, replacing any previous copy.
      */
-    public function publish(string $slug): void
+    public function publish(string $slug, string $version = ''): void
     {
         $source = realpath($this->pluginsPath.'/'.$slug.'/'.self::SOURCE_DIRECTORY);
         if ($source === false || ! is_dir($source)) {
@@ -100,6 +106,8 @@ final class PluginAssetPublisher
         File::ensureDirectoryExists($destination);
 
         $this->copyDirectory($source, $destination);
+
+        File::put($destination.DIRECTORY_SEPARATOR.self::VERSION_MARKER, $version);
     }
 
     /**
@@ -114,9 +122,17 @@ final class PluginAssetPublisher
         }
     }
 
-    public function isPublished(string $slug, string $entry): bool
+    /**
+     * Whether the entry is published and came from this plugin version.
+     */
+    public function isPublished(string $slug, string $entry, string $version = ''): bool
     {
-        return is_file($this->destination($slug).'/'.$entry);
+        $destination = $this->destination($slug);
+        $marker = $destination.DIRECTORY_SEPARATOR.self::VERSION_MARKER;
+
+        return is_file($destination.'/'.$entry)
+            && is_file($marker)
+            && File::get($marker) === $version;
     }
 
     private function destination(string $slug): string

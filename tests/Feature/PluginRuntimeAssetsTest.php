@@ -164,6 +164,23 @@ final class PluginRuntimeAssetsTest extends TestCase
         $this->assertFileExists(public_path("plugins/{$slug}/plugin.js"));
     }
 
+    public function test_an_updated_plugin_version_republishes_its_assets(): void
+    {
+        $user = $this->actingUser();
+        $slug = $this->makeRuntimePlugin();
+        app(PluginService::class)->activatePlugin($slug);
+
+        // The plugin folder is replaced in place with a newer build.
+        File::put(base_path("plugins/{$slug}/dist/plugin.js"), "export default 2;\n");
+        $manifestPath = base_path("plugins/{$slug}/plugin.json");
+        File::put($manifestPath, json_encode(array_merge(json_decode(File::get($manifestPath), true), ['version' => '1.3.0'])));
+
+        $this->actingAs($user)->get(route('dashboard'))
+            ->assertInertia(fn ($page) => $page->where('pluginAssets.0.entry', url("plugins/{$slug}/plugin.js").'?v=1.3.0'));
+
+        $this->assertSame("export default 2;\n", File::get(public_path("plugins/{$slug}/plugin.js")));
+    }
+
     public function test_guests_receive_no_plugin_assets(): void
     {
         $this->actingUser();
