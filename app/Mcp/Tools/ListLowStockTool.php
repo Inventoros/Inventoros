@@ -29,7 +29,7 @@ class ListLowStockTool extends Tool
 
     public function handle(Request $request): Response
     {
-        $this->authorize(['view_products', 'manage_products']);
+        $this->authorize(['view_products']);
 
         $request->validate([
             'warehouse_id' => ['nullable', 'integer'],

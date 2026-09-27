@@ -36,7 +36,7 @@ class ListProductsTool extends Tool
 
     public function handle(Request $request): Response
     {
-        $this->authorize(['view_products', 'manage_products']);
+        $this->authorize(['view_products']);
 
         $orgId = $this->organizationId();
 

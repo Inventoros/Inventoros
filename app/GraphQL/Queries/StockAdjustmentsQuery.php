@@ -24,7 +24,7 @@ class StockAdjustmentsQuery extends Query
      */
     protected function permissions(): array
     {
-        return ['view_stock_adjustments', 'manage_stock'];
+        return ['manage_stock'];
     }
 
     protected $attributes = [
@@ -76,7 +76,7 @@ class StockAdjustmentsQuery extends Query
         // Read authorization: mirror the REST route's permission gate.
         // GraphQL previously enforced none, so any authenticated user could
         // read data their role is denied over REST.
-        if (! auth()->user()?->hasAnyPermission(['view_stock_adjustments', 'manage_stock'])) {
+        if (! auth()->user()?->hasAnyPermission(['manage_stock'])) {
             throw new AuthorizationException('Unauthorized');
         }
 

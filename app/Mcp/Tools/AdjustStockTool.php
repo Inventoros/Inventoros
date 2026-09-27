@@ -37,7 +37,7 @@ class AdjustStockTool extends Tool
 
     public function handle(Request $request): Response
     {
-        $this->authorize(['manage_stock', 'view_stock_adjustments']);
+        $this->authorize(['manage_stock']);
 
         $validated = $request->validate([
             'product_id' => ['required', 'integer'],

@@ -29,7 +29,7 @@ class ListLocationsTool extends Tool
 
     public function handle(Request $request): Response
     {
-        $this->authorize(['view_locations', 'manage_locations', 'view_products', 'manage_products']);
+        $this->authorize(['manage_locations', 'view_products']);
 
         $limit = min((int) ($request->get('limit') ?? 100), 500);
 

@@ -24,7 +24,7 @@ class LocationsQuery extends Query
      */
     protected function permissions(): array
     {
-        return ['view_locations', 'manage_locations'];
+        return ['manage_locations'];
     }
 
     protected $attributes = [
@@ -60,7 +60,7 @@ class LocationsQuery extends Query
         // Read authorization: mirror the REST route's permission gate.
         // GraphQL previously enforced none, so any authenticated user could
         // read data their role is denied over REST.
-        if (! auth()->user()?->hasAnyPermission(['view_locations', 'manage_locations'])) {
+        if (! auth()->user()?->hasAnyPermission(['manage_locations'])) {
             throw new AuthorizationException('Unauthorized');
         }
 

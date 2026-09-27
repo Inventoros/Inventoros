@@ -43,7 +43,7 @@ class CreateProductTool extends Tool
 
     public function handle(Request $request): Response
     {
-        $this->authorize(['manage_products']);
+        $this->authorize(['create_products']);
 
         $orgId = $this->organizationId();
 

@@ -30,7 +30,7 @@ class ListSuppliersTool extends Tool
 
     public function handle(Request $request): Response
     {
-        $this->authorize(['view_suppliers', 'manage_suppliers']);
+        $this->authorize(['view_suppliers']);
 
         $request->validate([
             'limit' => ['nullable', 'integer', 'min:1', 'max:200'],
