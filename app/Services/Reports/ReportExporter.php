@@ -7,6 +7,7 @@ namespace App\Services\Reports;
 use App\Exports\ReportSheetExport;
 use App\Support\SpreadsheetSafety;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Maatwebsite\Excel\DefaultValueBinder;
 use Maatwebsite\Excel\Excel as ExcelWriter;
@@ -35,6 +36,17 @@ class ReportExporter
     public static function isValidFormat(?string $format): bool
     {
         return $format !== null && in_array($format, self::FORMATS, true);
+    }
+
+    /**
+     * The format a report page was asked to export in (?export=csv|xlsx|pdf),
+     * or null to render the page.
+     */
+    public static function requestedFormat(Request $request): ?string
+    {
+        $format = $request->query('export');
+
+        return is_string($format) && self::isValidFormat($format) ? $format : null;
     }
 
     /**

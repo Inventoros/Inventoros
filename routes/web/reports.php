@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Http\Controllers\Reports\AnalyticsReportController;
 use App\Http\Controllers\Reports\ReportBuilderController;
 use App\Http\Controllers\Reports\ReportController;
 use Illuminate\Support\Facades\Route;
@@ -18,6 +19,20 @@ Route::prefix('reports')->name('reports.')->middleware('permission:view_reports'
     Route::get('/sales-analysis', [ReportController::class, 'salesAnalysis'])->name('sales-analysis');
     Route::get('/low-stock', [ReportController::class, 'lowStock'])->name('low-stock');
     Route::get('/category-performance', [ReportController::class, 'categoryPerformance'])->name('category-performance');
+
+    // Analytics reports. Each also needs the view permission of every data
+    // source it reads (the report builder's per-source rule): products for
+    // stock and cost, orders for sales. ?export=csv|xlsx|pdf downloads.
+    Route::get('/dead-stock', [AnalyticsReportController::class, 'deadStock'])
+        ->middleware('permission:view_products|view_orders,all')->name('dead-stock');
+    Route::get('/inventory-turnover', [AnalyticsReportController::class, 'inventoryTurnover'])
+        ->middleware('permission:view_products|view_orders,all')->name('inventory-turnover');
+    Route::get('/profit-margin', [AnalyticsReportController::class, 'profitMargin'])
+        ->middleware('permission:view_products|view_orders,all')->name('profit-margin');
+    Route::get('/sales-by-location', [AnalyticsReportController::class, 'salesByLocation'])
+        ->middleware('permission:view_orders')->name('sales-by-location');
+    Route::get('/abc-analysis', [AnalyticsReportController::class, 'abcAnalysis'])
+        ->middleware('permission:view_orders')->name('abc-analysis');
 
     // Custom Report Builder
     Route::prefix('builder')->name('builder.')->group(function () {

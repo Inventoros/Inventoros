@@ -5,7 +5,9 @@ import Card from '@/Components/ui/Card.vue';
 import Button from '@/Components/ui/Button.vue';
 import Badge from '@/Components/ui/Badge.vue';
 import { Head, Link } from '@inertiajs/vue3';
+import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
+import { usePermissions } from '@/composables/usePermissions';
 import {
     DollarSign,
     ArrowLeftRight,
@@ -15,9 +17,15 @@ import {
     Wrench,
     ChevronRight,
     Plus,
+    PackageX,
+    RefreshCw,
+    Percent,
+    MapPin,
+    BarChart3,
 } from 'lucide-vue-next';
 
 const { t } = useI18n();
+const { hasAllPermissions } = usePermissions();
 
 const props = defineProps({
     savedReports: {
@@ -57,6 +65,43 @@ const reportCards = [
         title: t('reports.categoryPerformance.title'),
         description: t('reports.categoryPerformance.description'),
     },
+    // Analytics reports also need the view permission of each data source
+    // they read; cards the user cannot open are hidden rather than 403ing.
+    {
+        href: route('reports.dead-stock'),
+        icon: PackageX,
+        title: t('reports.deadStock.title'),
+        description: t('reports.deadStock.description'),
+        requires: ['view_products', 'view_orders'],
+    },
+    {
+        href: route('reports.inventory-turnover'),
+        icon: RefreshCw,
+        title: t('reports.inventoryTurnover.title'),
+        description: t('reports.inventoryTurnover.description'),
+        requires: ['view_products', 'view_orders'],
+    },
+    {
+        href: route('reports.profit-margin'),
+        icon: Percent,
+        title: t('reports.profitMargin.title'),
+        description: t('reports.profitMargin.description'),
+        requires: ['view_products', 'view_orders'],
+    },
+    {
+        href: route('reports.sales-by-location'),
+        icon: MapPin,
+        title: t('reports.salesByLocation.title'),
+        description: t('reports.salesByLocation.description'),
+        requires: ['view_orders'],
+    },
+    {
+        href: route('reports.abc-analysis'),
+        icon: BarChart3,
+        title: t('reports.abcAnalysis.title'),
+        description: t('reports.abcAnalysis.description'),
+        requires: ['view_orders'],
+    },
     {
         href: route('reports.builder.index'),
         icon: Wrench,
@@ -64,6 +109,10 @@ const reportCards = [
         description: t('reports.customReports.description'),
     },
 ];
+
+const visibleReportCards = computed(() =>
+    reportCards.filter((card) => !card.requires || hasAllPermissions(card.requires))
+);
 </script>
 
 <template>
@@ -82,7 +131,7 @@ const reportCards = [
 
         <!-- Report cards -->
         <div class="mt-6 grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
-            <Link v-for="report in reportCards" :key="report.href" :href="report.href">
+            <Link v-for="report in visibleReportCards" :key="report.href" :href="report.href">
                 <Card hoverable>
                     <div class="flex items-start gap-4">
                         <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-brand-soft text-brand">
