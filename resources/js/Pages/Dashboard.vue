@@ -389,6 +389,7 @@ const secondaryStats = () => [
                                         <Link :href="route('products.show', row.id)" class="flex flex-col">
                                             <span class="font-medium text-text-primary hover:underline">{{ row.name }}</span>
                                             <span class="text-xs text-text-tertiary">{{ row.sku }}<span v-if="row.category"> · {{ row.category }}</span></span>
+                                            <span v-if="row.warehouses?.length" class="text-xs text-status-warning">{{ t('warehouses.stockLevels.shortIn', { names: row.warehouses.join(', ') }) }}</span>
                                         </Link>
                                     </td>
                                     <td class="px-3 py-2">

@@ -179,6 +179,8 @@ class DashboardController extends Controller
                     'reorder_point' => $product->reorder_point,
                     'reorder_quantity' => $product->reorder_quantity,
                     'suggested_quantity' => $reorder->suggestedQuantity($product, $primarySupplier),
+                    // Warehouses whose own reorder point triggered this.
+                    'warehouses' => array_column($reorder->warehouseShortfalls($product), 'warehouse_name'),
                     'category' => $product->category?->name,
                     'supplier' => $primarySupplier?->name,
                     'supplier_id' => $primarySupplier?->id,

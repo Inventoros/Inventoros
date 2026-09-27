@@ -1481,6 +1481,21 @@
       "makeDefault": "Make default",
       "confirm": "Make \"{name}\" the default warehouse?",
       "hint": "The default warehouse is preselected for new orders."
+    },
+    "stockLevels": {
+      "title": "Stock by warehouse",
+      "hint": "On hand is the stock in each warehouse's locations. Set thresholds to track a warehouse on its own; blank fields use the product's values, and a warehouse left blank is covered by the product totals.",
+      "noWarehouses": "No warehouses yet.",
+      "warehouse": "Warehouse",
+      "onHand": "On hand",
+      "min_stock": "Min stock",
+      "reorder_point": "Reorder point",
+      "reorder_quantity": "Reorder qty",
+      "max_stock": "Max stock",
+      "low": "Low",
+      "reorder": "Reorder",
+      "shortIn": "Short in {names}",
+      "save": "Save warehouse levels"
     }
   },
   "workOrders": {

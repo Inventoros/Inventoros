@@ -272,7 +272,8 @@ class ReportController extends Controller
         $products = Product::forOrganization($organizationId)
             ->with(array_merge(['category', 'location'], ReorderService::primarySupplierEagerLoad()))
             ->where('is_active', true)
-            ->whereRaw('stock <= min_stock')
+            // Low in total, or low in a warehouse with its own minimum.
+            ->lowStock()
             ->orderBy('stock', 'asc')
             ->get()
             ->map(function ($product) use ($reorder) {

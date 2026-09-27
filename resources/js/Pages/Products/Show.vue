@@ -10,6 +10,7 @@ import ActivityTimeline from '@/Components/ActivityTimeline.vue';
 import VariantsTable from '@/Components/VariantsTable.vue';
 import BatchList from '@/Components/BatchList.vue';
 import SerialList from '@/Components/SerialList.vue';
+import WarehouseStockLevels from '@/Components/WarehouseStockLevels.vue';
 import { Head, Link, router } from '@inertiajs/vue3';
 import { ref, onMounted, computed, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
@@ -39,6 +40,7 @@ const props = defineProps({
     product: Object,
     activities: Array,
     locationBreakdown: { type: Array, default: () => [] },
+    warehouseStockLevels: { type: Array, default: () => [] },
     priceHistory: { type: Array, default: () => [] },
     pluginComponents: Object,
 });
@@ -469,6 +471,20 @@ const fieldInput = 'h-9 w-full rounded-md border border-border-subtle bg-surface
                         </div>
                     </div>
                 </Card>
+
+                <!-- Per-warehouse stock and thresholds -->
+                <WarehouseStockLevels
+                    v-if="warehouseStockLevels.length"
+                    :product-id="product.id"
+                    :levels="warehouseStockLevels"
+                    :can-edit="hasPermission('edit_products')"
+                    :product-levels="{
+                        min_stock: product.min_stock,
+                        reorder_point: product.reorder_point,
+                        reorder_quantity: product.reorder_quantity,
+                        max_stock: product.max_stock,
+                    }"
+                />
 
                 <!-- Suppliers -->
                 <Card :padded="false">
