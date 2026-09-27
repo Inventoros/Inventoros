@@ -250,7 +250,9 @@ class InvoiceControllerTest extends TestCase
         $response->assertStatus(200);
         $response->assertHeader('content-type', 'application/pdf');
         $this->assertStringContainsString('attachment', $response->headers->get('content-disposition'));
-        $this->assertStringContainsString('INV-' . $order->order_number, $response->headers->get('content-disposition'));
+        // The first generation assigns the order its invoice number.
+        $this->assertStringContainsString($order->fresh()->invoice_number, $response->headers->get('content-disposition'));
+        $this->assertStringStartsWith('INV-', $order->fresh()->invoice_number);
     }
 
     public function test_viewer_can_download_order_invoice(): void

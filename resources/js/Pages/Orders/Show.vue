@@ -5,11 +5,12 @@ import PageHeader from '@/Components/ui/PageHeader.vue';
 import Card from '@/Components/ui/Card.vue';
 import Button from '@/Components/ui/Button.vue';
 import Badge from '@/Components/ui/Badge.vue';
+import SendDocumentModal from '@/Components/SendDocumentModal.vue';
 import { Head, Link, router, useForm } from '@inertiajs/vue3';
-import { ref } from 'vue';
+import { computed, ref } from 'vue';
 import { usePermissions } from '@/composables/usePermissions';
 import { useI18n } from 'vue-i18n';
-import { ArrowLeft, Pencil, Download, Eye, Undo2, Trash2, X, AlertTriangle, PackageOpen } from 'lucide-vue-next';
+import { ArrowLeft, Pencil, Download, Eye, Undo2, Trash2, X, AlertTriangle, PackageOpen, Mail } from 'lucide-vue-next';
 
 const { t } = useI18n();
 
@@ -22,6 +23,14 @@ const props = defineProps({
 });
 
 const showDeleteModal = ref(false);
+
+// Invoice emailing
+const showInvoiceModal = ref(false);
+const invoiceStatus = computed(() => {
+    if (props.order.invoice_sent_at) return { label: t('documentEmail.invoiceSent'), variant: 'success' };
+    if (props.order.invoice_number) return { label: t('documentEmail.invoiceIssued'), variant: 'info' };
+    return null;
+});
 const deleting = ref(false);
 
 // Approval functionality
@@ -138,6 +147,15 @@ const formatDateShort = (date) => {
                 >
                     <Eye :size="14" />
                     Preview Invoice
+                </Button>
+                <Button
+                    v-if="hasPermission('edit_orders')"
+                    variant="secondary"
+                    size="sm"
+                    @click="showInvoiceModal = true"
+                >
+                    <Mail :size="14" />
+                    {{ t('documentEmail.emailInvoice') }}
                 </Button>
                 <Button
                     v-if="hasPermission('manage_returns')"
@@ -360,6 +378,26 @@ const formatDateShort = (date) => {
                     </div>
                 </Card>
 
+                <!-- Invoice -->
+                <Card :padded="false">
+                    <div class="flex items-center justify-between px-5 pt-5">
+                        <h3 class="text-sm font-semibold text-text-primary">{{ t('documentEmail.invoice') }}</h3>
+                        <Badge v-if="invoiceStatus" :variant="invoiceStatus.variant" size="sm" dot>{{ invoiceStatus.label }}</Badge>
+                    </div>
+                    <div class="p-5">
+                        <dl v-if="order.invoice_number" class="space-y-4">
+                            <div>
+                                <dt class="text-xs text-text-tertiary">{{ t('documentEmail.invoiceNumber') }}</dt>
+                                <dd class="mt-1 text-sm font-medium text-text-primary">{{ order.invoice_number }}</dd>
+                            </div>
+                        </dl>
+                        <p v-if="order.invoice_sent_at" class="mt-3 text-xs text-text-secondary">
+                            {{ t('documentEmail.sentOn', { to: order.invoice_sent_to, date: formatDate(order.invoice_sent_at) }) }}
+                        </p>
+                        <p v-else class="text-xs text-text-tertiary">{{ t('documentEmail.invoiceNotIssued') }}</p>
+                    </div>
+                </Card>
+
                 <!-- Approval Status -->
                 <Card v-if="order.approval_status" :padded="false">
                     <div class="px-5 pt-5"><h3 class="text-sm font-semibold text-text-primary">{{ t('orders.show.approvalStatus') }}</h3></div>
@@ -422,6 +460,17 @@ const formatDateShort = (date) => {
 
         <!-- Plugin Slot: Footer -->
         <PluginSlot slot="footer" :components="pluginComponents?.footer" />
+
+        <SendDocumentModal
+            :show="showInvoiceModal"
+            :title="t('documentEmail.emailInvoiceTitle')"
+            :description="t('documentEmail.emailInvoiceDescription', { number: order.order_number })"
+            :action="route('orders.invoice.email', order.id)"
+            :default-to="order.customer_email || ''"
+            :attachment-name="order.invoice_number ? `${order.invoice_number}.pdf` : ''"
+            :submit-label="t('documentEmail.emailInvoice')"
+            @close="showInvoiceModal = false"
+        />
 
         <!-- Delete Confirmation Modal -->
         <Teleport to="body">
