@@ -7,6 +7,7 @@ namespace App\Services\Shipping;
 use App\Enums\OrderStatus;
 use App\Enums\ShipmentStatus;
 use App\Exceptions\ShippingException;
+use App\Mail\ShipmentShippedEmail;
 use App\Models\Order\Order;
 use App\Models\Order\OrderItem;
 use App\Models\Shipping\Shipment;
@@ -20,6 +21,7 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
 
 /**
@@ -571,7 +573,33 @@ final class ShipmentService
      */
     private function notifyCustomer(Shipment $shipment): void
     {
-        // Filled in with the shipment email.
+        if (! $shipment->notify_customer || $shipment->customer_notified_at !== null) {
+            return;
+        }
+
+        $email = Order::withoutGlobalScopes()->whereKey($shipment->order_id)->value('customer_email');
+
+        if (blank($email) || ! filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            return;
+        }
+
+        // Claim the notification atomically so a webhook and a poll racing on
+        // the same shipment cannot both send it.
+        $claimed = Shipment::withoutGlobalScopes()
+            ->whereKey($shipment->getKey())
+            ->whereNull('customer_notified_at')
+            ->update(['customer_notified_at' => now()]);
+
+        if ($claimed === 0) {
+            return;
+        }
+
+        try {
+            Mail::to($email)->queue(new ShipmentShippedEmail($shipment->fresh()));
+        } catch (\Throwable $e) {
+            Log::warning('Could not queue the shipment email', ['shipment_id' => $shipment->id, 'error' => $e->getMessage()]);
+            Shipment::withoutGlobalScopes()->whereKey($shipment->getKey())->update(['customer_notified_at' => null]);
+        }
     }
 
     /**
