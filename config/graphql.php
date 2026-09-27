@@ -48,6 +48,7 @@ use App\GraphQL\Types\CustomerType;
 use App\GraphQL\Types\LocationType;
 use App\GraphQL\Types\OrderItemInputType;
 use App\GraphQL\Types\OrderItemType;
+use App\GraphQL\Types\OrderPaymentType;
 use App\GraphQL\Types\OrderType;
 use App\GraphQL\Types\ProductCategoryType;
 use App\GraphQL\Types\ProductSupplierInputType;
@@ -194,6 +195,7 @@ return [
         'ProductVariant' => ProductVariantType::class,
         'Order' => OrderType::class,
         'OrderItem' => OrderItemType::class,
+        'OrderPayment' => OrderPaymentType::class,
         'Supplier' => SupplierType::class,
         'PurchaseOrder' => PurchaseOrderType::class,
         'PurchaseOrderItem' => PurchaseOrderItemType::class,

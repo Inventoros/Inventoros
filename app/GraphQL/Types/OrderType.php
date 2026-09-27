@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\GraphQL\Types;
 
 use App\Models\Order\Order;
+use App\Support\PaymentVisibility;
 use GraphQL\Type\Definition\Type;
 use Rebing\GraphQL\Support\Facades\GraphQL;
 use Rebing\GraphQL\Support\Type as GraphQLType;
@@ -78,6 +79,19 @@ class OrderType extends GraphQLType
                 'type' => Type::float(),
                 'description' => 'Subtotal amount',
             ],
+            'discount_type' => [
+                'type' => Type::string(),
+                'description' => 'Order-level discount type: percent or fixed (null when none)',
+                'resolve' => fn (Order $order) => $order->discount_type?->value,
+            ],
+            'discount_value' => [
+                'type' => Type::float(),
+                'description' => 'Order-level discount as entered (a percentage or an amount)',
+            ],
+            'discount_amount' => [
+                'type' => Type::float(),
+                'description' => 'Total discount (line discounts plus the order discount); subtotal - discount_amount + tax + shipping = total',
+            ],
             'tax' => [
                 'type' => Type::float(),
                 'description' => 'Tax amount',
@@ -89,6 +103,26 @@ class OrderType extends GraphQLType
             'total' => [
                 'type' => Type::float(),
                 'description' => 'Total amount',
+            ],
+            'amount_paid' => [
+                'type' => Type::float(),
+                'description' => 'Net amount paid (payments minus refunds). Null without view_payments.',
+                'resolve' => fn (Order $order) => self::canViewPayments() ? (float) $order->amount_paid : null,
+            ],
+            'balance_due' => [
+                'type' => Type::float(),
+                'description' => 'Amount still owed. Null without view_payments.',
+                'resolve' => fn (Order $order) => self::canViewPayments() ? (float) $order->balanceDue() : null,
+            ],
+            'payment_status' => [
+                'type' => Type::string(),
+                'description' => 'unpaid, partial, paid, overpaid or refunded. Null without view_payments.',
+                'resolve' => fn (Order $order) => self::canViewPayments() ? $order->payment_status?->value : null,
+            ],
+            'payments' => [
+                'type' => Type::listOf(GraphQL::type('OrderPayment')),
+                'description' => 'Payments and refunds, voided ones included. Null without view_payments.',
+                'resolve' => fn (Order $order) => self::canViewPayments() ? $order->payments()->orderBy('paid_at')->orderBy('id')->get() : null,
             ],
             'currency' => [
                 'type' => Type::string(),
@@ -134,5 +168,11 @@ class OrderType extends GraphQLType
                 'resolve' => fn (Order $order) => $order->updated_at?->toIso8601String(),
             ],
         ];
+    }
+
+    private static function canViewPayments(): bool
+    {
+        // Role AND token abilities, like the REST view_payments routes.
+        return PaymentVisibility::allows(auth()->user());
     }
 }

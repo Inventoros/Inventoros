@@ -11,6 +11,7 @@ import { formatDelta, deltaTone } from '@/lib/reportFormat';
 import { Head, Link, router } from '@inertiajs/vue3';
 import { computed, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
+import { formatCalendarDate } from '@/lib/dates';
 import {
     ArrowLeft,
     ShoppingCart,
@@ -27,6 +28,8 @@ const props = defineProps({
     topProducts: Array,
     dailySales: Array,
     comparison: Object,
+    // Present only for users with view_payments.
+    byPaymentStatus: { type: Array, default: null },
     filters: Object,
 });
 
@@ -36,6 +39,9 @@ const delta = (key) => {
     return value === null || value === undefined ? null : `${formatDelta(value)} ${t('reports.salesComparison.vsPrevious')}`;
 };
 const tone = (key) => deltaTone(props.comparison?.delta?.[key]);
+
+const paymentStatusVariant = (s) =>
+    ({ unpaid: 'warning', partial: 'info', paid: 'success', overpaid: 'brand', refunded: 'neutral' }[s] || 'neutral');
 
 const dateFrom = ref(props.filters?.date_from || '');
 const dateTo = ref(props.filters?.date_to || '');
@@ -217,6 +223,50 @@ const thClass =
             </Card>
         </div>
 
+        <!-- Payment status (view_payments only) -->
+        <section v-if="byPaymentStatus" class="mt-4">
+            <Card :padded="false">
+                <div class="flex flex-wrap items-center justify-between gap-2 px-5 pt-5">
+                    <CardHeader :title="t('payments.byPaymentStatus')" />
+                    <Link
+                        v-if="summary.total_outstanding > 0"
+                        :href="route('reports.receivables')"
+                        class="text-sm text-brand transition-colors hover:text-brand-hover"
+                    >
+                        {{ t('payments.outstanding') }}: {{ formatCurrency(summary.total_outstanding) }}
+                    </Link>
+                </div>
+                <div class="mt-4 w-full overflow-x-auto">
+                    <table class="w-full text-sm">
+                        <thead>
+                            <tr class="border-b border-border-subtle">
+                                <th :class="thClass">{{ t('payments.paymentStatus') }}</th>
+                                <th :class="[thClass, 'text-right']">{{ t('nav.orders') }}</th>
+                                <th :class="[thClass, 'text-right']">{{ t('common.total') }}</th>
+                                <th :class="[thClass, 'text-right']">{{ t('payments.amountPaid') }}</th>
+                                <th :class="[thClass, 'text-right']">{{ t('payments.balanceDue') }}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr
+                                v-for="row in byPaymentStatus"
+                                :key="row.payment_status"
+                                class="border-b border-border-subtle transition-colors last:border-b-0 hover:bg-surface-overlay"
+                            >
+                                <td class="px-4 py-3">
+                                    <Badge :variant="paymentStatusVariant(row.payment_status)" size="sm" dot>{{ t(`payments.status.${row.payment_status}`) }}</Badge>
+                                </td>
+                                <td class="px-4 py-3 text-right tabular-nums text-text-secondary">{{ row.count }}</td>
+                                <td class="px-4 py-3 text-right tabular-nums text-text-secondary">{{ formatCurrency(row.total) }}</td>
+                                <td class="px-4 py-3 text-right tabular-nums text-text-secondary">{{ formatCurrency(row.amount_paid) }}</td>
+                                <td class="px-4 py-3 text-right font-medium tabular-nums text-text-primary">{{ formatCurrency(row.balance_due) }}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </Card>
+        </section>
+
         <!-- Daily sales trend -->
         <section class="mt-4">
             <Card :padded="false">
@@ -238,7 +288,7 @@ const thClass =
                                 :key="day.date"
                                 class="border-b border-border-subtle transition-colors last:border-b-0 hover:bg-surface-overlay"
                             >
-                                <td class="px-4 py-3 text-text-primary">{{ new Date(day.date).toLocaleDateString() }}</td>
+                                <td class="px-4 py-3 text-text-primary">{{ formatCalendarDate(day.date) }}</td>
                                 <td class="px-4 py-3 text-right tabular-nums text-text-secondary">{{ day.orders }}</td>
                                 <td class="px-4 py-3 text-right font-medium tabular-nums text-status-success">{{ formatCurrency(day.revenue) }}</td>
                             </tr>

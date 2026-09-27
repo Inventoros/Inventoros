@@ -51,4 +51,38 @@ class MoneyTest extends TestCase
         $this->assertSame('10.50', Money::of('10.5'));
         $this->assertSame('0.00', Money::of(null));
     }
+
+    public function test_subtract_is_exact_and_may_go_negative(): void
+    {
+        $this->assertSame('0.10', Money::subtract('0.30', '0.20'));
+        $this->assertSame('-5.00', Money::subtract('10', '15'));
+        $this->assertSame('7.50', Money::subtract('10.00', '1.25', '1.25'));
+    }
+
+    public function test_percent_of_rounds_half_up_to_the_cent(): void
+    {
+        // 15% of 10.05 = 1.5075 -> 1.51 (bcmath alone would truncate to 1.50).
+        $this->assertSame('1.51', Money::percentOf('10.05', '15'));
+        $this->assertSame('3.33', Money::percentOf('33.33', '10'));
+        $this->assertSame('100.00', Money::percentOf('100.00', '100'));
+        $this->assertSame('0.00', Money::percentOf('100.00', '0'));
+        // 12.5% of 0.20 = 0.025 -> 0.03
+        $this->assertSame('0.03', Money::percentOf('0.20', '12.5'));
+    }
+
+    public function test_compare(): void
+    {
+        $this->assertSame(0, Money::compare('10', '10.00'));
+        $this->assertSame(1, Money::compare('10.01', '10'));
+        $this->assertSame(-1, Money::compare('-0.01', 0));
+        $this->assertTrue(Money::isNegative('-0.01'));
+        $this->assertFalse(Money::isNegative('0.00'));
+        $this->assertTrue(Money::isZero('0'));
+    }
+
+    public function test_max_and_min(): void
+    {
+        $this->assertSame('5.00', Money::max('5', '-3'));
+        $this->assertSame('-3.00', Money::min('5', '-3'));
+    }
 }

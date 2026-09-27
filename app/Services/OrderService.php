@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace App\Services;
 
+use App\Enums\DiscountType;
 use App\Enums\OrderStatus;
+use App\Enums\PaymentStatus;
 use App\Exceptions\InsufficientStockException;
 use App\Exceptions\InvalidOrderItemException;
 use App\Exceptions\InvalidStateException;
@@ -17,7 +19,9 @@ use App\Models\User;
 use App\Support\Money;
 use App\Support\SequenceNumberRetry;
 use Illuminate\Database\QueryException;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 
 /**
  * Single home for sales-order creation.
@@ -44,6 +48,20 @@ use Illuminate\Support\Facades\DB;
  */
 final class OrderService
 {
+    /**
+     * Plugin filter applied to every computed order total (see applyTotals()).
+     */
+    public const TOTAL_FILTER = 'order_total_calculation';
+
+    /**
+     * Money columns the server always computes. Anything a caller sends for
+     * them is discarded, so a client can never set its own total.
+     */
+    private const COMPUTED_COLUMNS = [
+        'subtotal', 'discount_type', 'discount_value', 'discount_amount',
+        'tax', 'shipping', 'total', 'amount_paid', 'payment_status',
+    ];
+
     /**
      * Create an order with its line items and stock movements.
      *
@@ -107,7 +125,7 @@ final class OrderService
             // is chosen (validating ownership), otherwise the product itself.
             // A variant-tracked product requires a variant on every new line.
             $lines = [];
-            foreach ($data['items'] as $item) {
+            foreach (array_values($data['items']) as $index => $item) {
                 $pid = $item['product_id'];
                 if (! $products->has($pid)) {
                     throw new \Exception("Product not found: {$pid}");
@@ -135,7 +153,7 @@ final class OrderService
                     $key = "p{$pid}";
                 }
 
-                $lines[] = compact('item', 'product', 'variant', 'target', 'key')
+                $lines[] = compact('item', 'product', 'variant', 'target', 'key', 'index')
                     + ['qty' => (int) $item['quantity']];
             }
 
@@ -157,8 +175,6 @@ final class OrderService
             // Build order-item rows + stock-adjustment rows. quantity_before and
             // quantity_after thread the running stock so the ledger is faithful
             // when the order touches the same target twice.
-            $subtotal = '0';
-            $itemTaxTotal = '0';
             $orderItemRows = [];
             $now = now();
             $adjustmentRows = [];
@@ -182,12 +198,8 @@ final class OrderService
                     ?? $product->selling_price
                     ?? $product->price
                     ?? 0;
-                $itemTax = $item['tax'] ?? 0;
-
-                $itemSubtotal = Money::multiply($unitPrice, $qty);
-                $subtotal = Money::add($subtotal, $itemSubtotal);
-                $itemTaxTotal = Money::add($itemTaxTotal, $itemTax);
-
+                // Price the line and validate its discount before anything is
+                // written, so a bad discount rejects the whole order cleanly.
                 $orderItemRows[] = [
                     'product_id' => $product->id,
                     'product_variant_id' => $variant?->id,
@@ -197,10 +209,7 @@ final class OrderService
                     'unit_price' => $unitPrice,
                     // Cost at the time of sale, for margin and turnover reports.
                     'unit_cost' => OrderItem::costAtSale($product, $variant),
-                    'subtotal' => $itemSubtotal,
-                    'tax' => $itemTax,
-                    'total' => Money::add($itemSubtotal, $itemTax),
-                ];
+                ] + $this->priceLine($unitPrice, $qty, $item, $line['index']);
 
                 $perTargetQty[$key] = ($perTargetQty[$key] ?? 0) + $qty;
                 $beforeForEntry = $threadStock[$key] ?? (int) $line['target']->stock;
@@ -229,12 +238,19 @@ final class OrderService
             // taxes (API). Exactly one side is non-zero per surface today, so
             // this preserves both: web keeps its order-level tax with zero line
             // tax; API keeps its summed line tax with no order-level tax.
-            $data['subtotal'] = $subtotal;
-            $data['tax'] = Money::add($data['tax'] ?? 0, $itemTaxTotal);
-            $data['shipping'] = Money::of($data['shipping'] ?? 0);
-            $data['total'] = Money::add($subtotal, $data['tax'], $data['shipping']);
+            // Totals are computed here from the priced lines; whatever money
+            // figures the caller sent are discarded.
+            $totals = $this->computeTotals(
+                $orderItemRows,
+                $data['discount_type'] ?? null,
+                $data['discount_value'] ?? null,
+                $data['tax'] ?? 0,
+                $data['shipping'] ?? 0,
+            );
 
-            $order = Order::create($data);
+            $order = new Order(Arr::except($data, self::COMPUTED_COLUMNS));
+            $this->applyTotals($order, $totals);
+            $order->save();
 
             // Fill in the order_id-dependent fields and bulk-insert.
             foreach ($orderItemRows as &$row) {
@@ -526,8 +542,11 @@ final class OrderService
      *
      * Must run inside the caller's transaction, which holds the order lock.
      *
-     * @param  array<int, array{product_id:int, product_variant_id?:int|null, quantity:int, unit_price?:mixed}>  $items
-     * @return string the recomputed subtotal (Money string)
+     * Line discounts are priced and validated here too; the order's totals
+     * are left to recalculateTotals(), which the caller runs afterwards.
+     *
+     * @param  array<int, array{product_id:int, product_variant_id?:int|null, quantity:int, unit_price?:mixed, discount_type?:string|null, discount_value?:mixed}>  $items
+     * @return string the recomputed gross subtotal (Money string)
      */
     public function replaceItems(Order $order, array $items): string
     {
@@ -578,7 +597,7 @@ final class OrderService
         //    availability across all lines against a running balance.
         $resolved = [];
         $running = [];
-        foreach ($items as $item) {
+        foreach (array_values($items) as $index => $item) {
             $product = $products->get($item['product_id']);
             if (! $product) {
                 throw new InvalidOrderItemException("Product not found: {$item['product_id']}");
@@ -609,7 +628,15 @@ final class OrderService
                 );
             }
 
-            $resolved[] = compact('item', 'product', 'variant', 'qty');
+            // Price (and validate the discount on) every line before anything
+            // is written, so a bad discount cannot leave a half-edited order.
+            $unitPrice = $item['unit_price'] ?? $variant?->price ?? $product->selling_price ?? $product->price ?? 0;
+            $priced = $this->priceLine($unitPrice, $qty, [
+                'discount_type' => $item['discount_type'] ?? null,
+                'discount_value' => $item['discount_value'] ?? null,
+            ], $index);
+
+            $resolved[] = compact('item', 'product', 'variant', 'qty', 'unitPrice', 'priced');
         }
 
         // 4. Fulfil each line: create the item, then decrement the right target —
@@ -624,9 +651,7 @@ final class OrderService
             $variant = $line['variant'];
             $qty = $line['qty'];
 
-            $unitPrice = $item['unit_price'] ?? $variant?->price ?? $product->selling_price ?? $product->price ?? 0;
-            $itemSubtotal = Money::multiply($unitPrice, $qty);
-            $subtotal = Money::add($subtotal, $itemSubtotal);
+            $subtotal = Money::add($subtotal, $line['priced']['subtotal']);
 
             $orderItem = $order->items()->create([
                 'product_id' => $product->id,
@@ -634,11 +659,8 @@ final class OrderService
                 'product_name' => $product->name,
                 'sku' => $variant?->sku ?? $product->sku,
                 'quantity' => $qty,
-                'unit_price' => $unitPrice,
-                'subtotal' => $itemSubtotal,
-                'tax' => 0,
-                'total' => $itemSubtotal,
-            ] + ($originalCosts[$product->id.':'.($variant?->id ?? '')] ?? [
+                'unit_price' => $line['unitPrice'],
+            ] + $line['priced'] + ($originalCosts[$product->id.':'.($variant?->id ?? '')] ?? [
                 'unit_cost' => OrderItem::costAtSale($product, $variant),
                 'unit_cost_backfilled_at' => null,
             ]));
@@ -661,6 +683,234 @@ final class OrderService
         }
 
         return $subtotal;
+    }
+
+    /**
+     * Recompute an existing order's totals from its stored line items.
+     *
+     * Used after an edit (lines replaced, or the order discount, tax or
+     * shipping changed). Sets the computed columns on the model without
+     * saving it; the caller saves as part of its own update. Must run inside
+     * the caller's transaction with the order row locked, because it checks
+     * the new total against what has already been paid.
+     *
+     * @param  mixed  $orderTax  order-level tax only; per-line taxes are added from the items
+     *
+     * @throws ValidationException
+     */
+    public function recalculateTotals(
+        Order $order,
+        DiscountType|string|null $discountType,
+        mixed $discountValue,
+        mixed $orderTax,
+        mixed $shipping,
+    ): void {
+        $lines = $order->items()->get(['subtotal', 'discount_amount', 'tax'])
+            ->map(fn (OrderItem $item) => [
+                'subtotal' => $item->subtotal,
+                'discount_amount' => $item->discount_amount,
+                'tax' => $item->tax,
+            ])
+            ->all();
+
+        $totals = $this->computeTotals($lines, $discountType, $discountValue, $orderTax, $shipping);
+
+        $this->applyTotals($order, $totals);
+    }
+
+    /**
+     * Change only the order-level discount of an existing order, keeping its
+     * lines, tax and shipping, and recompute the totals under the order's row
+     * lock. Used by the REST and GraphQL order updates, which do not edit
+     * lines.
+     *
+     * @throws ValidationException
+     */
+    public function changeOrderDiscount(Order $order, DiscountType|string|null $type, mixed $value): Order
+    {
+        return DB::transaction(function () use ($order, $type, $value) {
+            $locked = Order::whereKey($order->getKey())->lockForUpdate()->firstOrFail();
+
+            $this->recalculateTotals($locked, $type, $value, $this->orderLevelTax($locked), $locked->shipping);
+            $locked->save();
+
+            return $locked;
+        });
+    }
+
+    /**
+     * The part of an order's tax that was entered at order level: the stored
+     * tax minus the per-line taxes it already includes.
+     */
+    public function orderLevelTax(Order $order): string
+    {
+        return Money::max(
+            Money::subtract($order->tax, Money::add(...$order->items()->pluck('tax')->all())),
+            0,
+        );
+    }
+
+    /**
+     * Price one line: gross subtotal, its resolved discount, tax and total.
+     *
+     * @param  array<string, mixed>  $item  may carry discount_type, discount_value, tax
+     * @return array{subtotal: string, discount_type: string|null, discount_value: string|null, discount_amount: string, tax: string, total: string}
+     *
+     * @throws ValidationException when the discount is invalid for this line
+     */
+    private function priceLine(mixed $unitPrice, int $quantity, array $item, int $index): array
+    {
+        $gross = Money::multiply($unitPrice, $quantity);
+
+        [$type, $value, $discount] = $this->resolveDiscount(
+            $gross,
+            $item['discount_type'] ?? null,
+            $item['discount_value'] ?? null,
+            "items.{$index}",
+        );
+
+        $tax = Money::of($item['tax'] ?? 0);
+
+        return [
+            'subtotal' => $gross,
+            'discount_type' => $type,
+            'discount_value' => $value,
+            'discount_amount' => $discount,
+            'tax' => $tax,
+            'total' => Money::add(Money::subtract($gross, $discount), $tax),
+        ];
+    }
+
+    /**
+     * Order totals from priced lines.
+     *
+     * Tax base rule: discounts come off merchandise only, before tax. The
+     * order-level discount applies to the merchandise net of line discounts
+     * (never to tax or shipping); tax is an amount supplied on those
+     * discounted figures; shipping is added last. The stored discount_amount
+     * is the whole discount (lines + order), so
+     * subtotal - discount_amount + tax + shipping = total.
+     *
+     * @param  array<int, array{subtotal: mixed, discount_amount?: mixed, tax?: mixed}>  $lines
+     * @return array<string, string|null>
+     */
+    private function computeTotals(array $lines, DiscountType|string|null $discountType, mixed $discountValue, mixed $orderTax, mixed $shipping): array
+    {
+        $subtotal = Money::add(...array_map(fn (array $l) => $l['subtotal'] ?? 0, $lines));
+        $lineDiscounts = Money::add(...array_map(fn (array $l) => $l['discount_amount'] ?? 0, $lines));
+        $lineTax = Money::add(...array_map(fn (array $l) => $l['tax'] ?? 0, $lines));
+
+        $net = Money::subtract($subtotal, $lineDiscounts);
+        [$type, $value, $orderDiscount] = $this->resolveDiscount($net, $discountType, $discountValue, null);
+
+        $discount = Money::add($lineDiscounts, $orderDiscount);
+        $tax = Money::add($orderTax, $lineTax);
+        $shipping = Money::of($shipping);
+
+        return [
+            'subtotal' => $subtotal,
+            'discount_type' => $type,
+            'discount_value' => $value,
+            'discount_amount' => $discount,
+            'tax' => $tax,
+            'shipping' => $shipping,
+            'total' => Money::add(Money::subtract($subtotal, $discount), $tax, $shipping),
+        ];
+    }
+
+    /**
+     * Set computed totals on the order. This is the single choke point every
+     * create and edit goes through, and so the one place the documented
+     * `order_total_calculation` plugin filter runs. On create the order it
+     * receives is not saved yet (it has no id).
+     *
+     * Rejects a total below zero, and a total below what the customer has
+     * already paid (void or refund payments before cutting the order down).
+     * Re-derives the payment status against the new total.
+     *
+     * @param  array<string, string|null>  $totals
+     *
+     * @throws ValidationException
+     */
+    private function applyTotals(Order $order, array $totals): void
+    {
+        $order->fill(Arr::except($totals, ['total']));
+
+        $total = apply_filters(self::TOTAL_FILTER, $totals['total'], $order);
+
+        if (! is_numeric($total) || Money::isNegative((string) $total)) {
+            throw ValidationException::withMessages([
+                'total' => 'The order total cannot be negative.',
+            ]);
+        }
+
+        $order->total = Money::of((string) $total);
+
+        if (! $order->exists) {
+            $order->amount_paid = '0.00';
+            $order->payment_status = PaymentStatus::derive($order->total, '0', '0');
+
+            return;
+        }
+
+        $order->syncPaymentState();
+
+        if (Money::compare($order->total, $order->amount_paid) < 0) {
+            throw ValidationException::withMessages([
+                'total' => "The order total ({$order->total}) cannot be less than the {$order->amount_paid} already paid. Void or refund payments first.",
+            ]);
+        }
+    }
+
+    /**
+     * Resolve a discount against the amount it applies to.
+     *
+     * @param  string|null  $prefix  error-key prefix ("items.0"), or null for the order
+     * @return array{0: string|null, 1: string|null, 2: string} [type, entered value, money amount]
+     *
+     * @throws ValidationException
+     */
+    private function resolveDiscount(string $base, DiscountType|string|null $type, mixed $value, ?string $prefix): array
+    {
+        $key = fn (string $field): string => $prefix === null ? $field : "{$prefix}.{$field}";
+
+        if ($type === null || $type === '' || $value === null || $value === '') {
+            return [null, null, '0.00'];
+        }
+
+        $type = $type instanceof DiscountType ? $type : DiscountType::tryFrom((string) $type);
+        if ($type === null) {
+            throw ValidationException::withMessages([
+                $key('discount_type') => 'The discount type must be percent or fixed.',
+            ]);
+        }
+
+        if (! is_numeric($value) || (float) $value < 0) {
+            throw ValidationException::withMessages([
+                $key('discount_value') => 'The discount cannot be negative.',
+            ]);
+        }
+
+        // Normalise scientific notation or long floats before bcmath sees it.
+        $value = Money::of(number_format((float) $value, 2, '.', ''));
+
+        if ($type === DiscountType::PERCENT) {
+            if (Money::compare($value, 100) > 0) {
+                throw ValidationException::withMessages([
+                    $key('discount_value') => 'A percentage discount cannot exceed 100%.',
+                ]);
+            }
+
+            return [$type->value, $value, Money::percentOf($base, $value)];
+        }
+
+        if (Money::compare($value, $base) > 0) {
+            throw ValidationException::withMessages([
+                $key('discount_value') => "The discount ({$value}) cannot exceed the amount it applies to ({$base}).",
+            ]);
+        }
+
+        return [$type->value, $value, $value];
     }
 
     /**

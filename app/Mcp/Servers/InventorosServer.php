@@ -9,6 +9,7 @@ use App\Mcp\Resources\LowStockResource;
 use App\Mcp\Resources\RecentOrdersResource;
 use App\Mcp\Tools\AdjustStockTool;
 use App\Mcp\Tools\CreateOrderTool;
+use App\Mcp\Tools\RecordPaymentTool;
 use App\Mcp\Tools\CreateProductTool;
 use App\Mcp\Tools\CreatePurchaseOrderTool;
 use App\Mcp\Tools\DecideApprovalTool;
@@ -91,6 +92,7 @@ class InventorosServer extends Server
         GetOrderTool::class,
         CreateOrderTool::class,
         EmailOrderInvoiceTool::class,
+        RecordPaymentTool::class,
 
         // Purchasing
         ListSuppliersTool::class,

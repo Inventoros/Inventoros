@@ -5,6 +5,9 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Order;
 
 use App\Enums\OrderStatus;
+use App\Enums\PaymentMethod;
+use App\Enums\PaymentStatus;
+use App\Enums\Permission;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Order\StoreOrderRequest;
 use App\Http\Requests\Order\UpdateOrderRequest;
@@ -23,6 +26,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -46,6 +50,7 @@ class OrderController extends Controller
     public function index(Request $request): Response
     {
         $organizationId = $request->user()->organization_id;
+        $canViewPayments = $request->user()->hasPermission(Permission::VIEW_PAYMENTS);
 
         $activeWarehouseId = session('active_warehouse_id');
 
@@ -67,6 +72,11 @@ class OrderController extends Controller
             ->when($request->input('source'), function ($query, $source) {
                 $query->bySource($source);
             })
+            // Filtering by payment status would reveal which orders are paid,
+            // so it only applies for users who may see payments.
+            ->when($canViewPayments && in_array($request->input('payment_status'), PaymentStatus::values(), true), function ($query) use ($request) {
+                $query->where('payment_status', $request->input('payment_status'));
+            })
             ->latest('order_date')
             ->paginate(config('limits.pagination.default'))
             ->withQueryString();
@@ -83,8 +93,10 @@ class OrderController extends Controller
 
         return Inertia::render('Orders/Index', [
             'orders' => $orders,
-            'filters' => $request->only(['search', 'status', 'source']),
+            'filters' => $request->only($canViewPayments ? ['search', 'status', 'source', 'payment_status'] : ['search', 'status', 'source']),
             'statuses' => ['pending', 'processing', 'shipped', 'delivered', 'cancelled'],
+            'canViewPayments' => $canViewPayments,
+            'paymentStatuses' => $canViewPayments ? PaymentStatus::values() : [],
             'sources' => ['manual', 'ebay', 'shopify', 'amazon'],
             'activeWarehouse' => $activeWarehouse,
             'pluginComponents' => [
@@ -146,6 +158,10 @@ class OrderController extends Controller
 
             return redirect()->route('orders.index')
                 ->with('success', 'Order created successfully.');
+        } catch (ValidationException $e) {
+            // Discount problems found while pricing the order are field
+            // errors; let Laravel send them back to the form.
+            throw $e;
         } catch (QueryException $e) {
             // Database errors carry SQL/table/column details in the
             // message that we don't want to render in an end-user flash
@@ -186,6 +202,11 @@ class OrderController extends Controller
             abort(403, 'Unauthorized action.');
         }
 
+        $canViewPayments = auth()->user()->hasPermission(Permission::VIEW_PAYMENTS);
+        if ($canViewPayments) {
+            $order->load(['payments' => fn ($query) => $query->with(['user', 'voider'])->orderBy('paid_at')->orderBy('id')]);
+        }
+
         // Check if user can approve orders
         $canApprove = auth()->user()->hasPermission('approve_orders');
 
@@ -194,6 +215,10 @@ class OrderController extends Controller
             // endpoint expose the same order shape (P2-15).
             'order' => (new OrderResource($order))->resolve(request()),
             'canApprove' => $canApprove,
+            'canRecordPayments' => $canViewPayments && auth()->user()->hasPermission(Permission::RECORD_PAYMENTS),
+            'paymentMethods' => $canViewPayments
+                ? array_map(fn (PaymentMethod $method) => ['value' => $method->value, 'label' => $method->label()], PaymentMethod::cases())
+                : [],
             'pluginComponents' => [
                 'header' => get_page_components('orders.show', 'header'),
                 'sidebar' => get_page_components('orders.show', 'sidebar'),
@@ -290,7 +315,6 @@ class OrderController extends Controller
                         $this->orderService->restockItem($item, "Order {$order->order_number} cancelled", $order);
                     }
 
-                    $subtotal = (float) $order->subtotal;
                 } else {
                     // Any other edit replaces the lines wholesale through the
                     // audited fulfilment paths (bin consume + serial/batch
@@ -299,17 +323,25 @@ class OrderController extends Controller
                     // or the tracked records the way a hand-rolled per-line adjust
                     // did. InsufficientStock / InvalidOrderItem both extend
                     // RuntimeException and are flashed by the catch below.
-                    $subtotal = (float) $this->orderService->replaceItems(
+                    $this->orderService->replaceItems(
                         $order,
                         $validated['items'],
                     );
                 }
 
-                // Update order totals and metadata
-                $validated['subtotal'] = $subtotal;
-                $validated['tax'] = $validated['tax'] ?? 0;
-                $validated['shipping'] = $validated['shipping'] ?? 0;
-                $validated['total'] = $subtotal + $validated['tax'] + $validated['shipping'];
+                // Recompute every total on the server from the stored lines
+                // (discounts, tax, shipping). A bad discount, or a total cut
+                // below what has already been paid, throws a
+                // ValidationException that rolls the edit back and returns
+                // the field errors to the form.
+                $this->orderService->recalculateTotals(
+                    $order,
+                    $validated['discount_type'] ?? null,
+                    $validated['discount_value'] ?? null,
+                    $validated['tax'] ?? 0,
+                    $validated['shipping'] ?? 0,
+                );
+                unset($validated['discount_type'], $validated['discount_value'], $validated['tax'], $validated['shipping']);
 
                 // Update order timestamps based on status
                 if ($validated['status'] === 'shipped' && ! $order->shipped_at) {

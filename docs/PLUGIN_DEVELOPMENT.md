@@ -358,22 +358,20 @@ add_filter('product_search_query', function ($query, $searchTerm) {
 ### Order Filters
 
 #### `order_total_calculation`
-Modify order total calculation.
+Modify the order total. Runs once each time `OrderService` computes an order's totals (on create and on every edit, from every surface), after line and order discounts, tax and shipping have been applied.
 
 ```php
 add_filter('order_total_calculation', function ($total, $order) {
-    // Add fees
-    // Apply discounts
-    // Custom tax calculation
-    return $total;
+    // Add a fee: return a 2-dp decimal string (or number).
+    return \App\Support\Money::add($total, '2.50');
 }, 10);
 ```
 
 **Parameters:**
-- `$total` (float): Calculated total
-- `$order` (Order): Order model
+- `$total` (string): The computed total as a 2-dp decimal string: `subtotal - discount_amount + tax + shipping`
+- `$order` (Order): The order, with its subtotal, discount, tax and shipping already set. On create it is not saved yet, so it has no `id`.
 
-**Returns:** Modified total (float)
+**Returns:** Modified total (numeric). A negative total, or one below what the customer has already paid, is rejected with a validation error. A plugin that changes the total also breaks the `subtotal - discount + tax + shipping = total` identity on the stored row, so prefer adjusting inputs where you can.
 
 ## Best Practices
 

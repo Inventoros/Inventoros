@@ -79,6 +79,7 @@ tags:
   - name: Locations
   - name: Warehouses
   - name: Orders
+  - name: Order Payments
   - name: Stock Adjustments
   - name: Stock Audits
   - name: Suppliers
@@ -773,6 +774,7 @@ paths:
       parameters:
         - { name: search, in: query, schema: { type: string } }
         - { name: status, in: query, schema: { type: string, enum: [pending, processing, shipped, delivered, cancelled] } }
+        - { name: payment_status, in: query, description: "Applied only with `view_payments`; ignored otherwise.", schema: { type: string, enum: [unpaid, partial, paid, overpaid, refunded] } }
         - { name: source, in: query, schema: { type: string } }
         - { name: warehouse_id, in: query, schema: { type: integer } }
         - { name: date_from, in: query, schema: { type: string, format: date } }
@@ -836,8 +838,11 @@ paths:
                 status: { type: string, enum: [pending, processing, shipped, delivered, cancelled] }
                 notes: { type: string }
                 metadata: { type: object, additionalProperties: true }
+                discount_type: { type: string, enum: [percent, fixed], nullable: true }
+                discount_value: { type: number, minimum: 0, nullable: true }
       responses:
         '200': { description: Updated }
+        '422': { description: "Invalid discount, or the new total would fall below what has already been paid (`total`)" }
     delete:
       tags: [Orders]
       summary: Delete an order (restores product stock)
@@ -1251,6 +1256,67 @@ paths:
         '200': { description: Invoice emailed, content: { application/json: { schema: { type: object, properties: { data: { $ref: '#/components/schemas/Order' } } } } } }
         '404': { $ref: '#/components/responses/NotFound' }
         '422': { description: "No customer email and no `to` (`missing_recipient`), or validation error" }
+
+  /orders/{order}/payments:
+    parameters:
+      - { name: order, in: path, required: true, schema: { type: integer } }
+    get:
+      tags: [Order Payments]
+      summary: List an order's payments and refunds, voided ones included
+      description: "Requires `view_payments`."
+      responses:
+        '200': { description: Payments, content: { application/json: { schema: { type: object, properties: { data: { type: array, items: { $ref: '#/components/schemas/OrderPayment' } } } } } } }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    post:
+      tags: [Order Payments]
+      summary: Record a payment against an order
+      description: "Requires `record_payments`. Partial payments are fine. The order row is locked and what has been paid is re-summed inside the transaction. A payment above the balance due is rejected unless `allow_overpayment` is true (the order then becomes `overpaid`). Cancelled orders take no payments."
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: '#/components/schemas/OrderPaymentInput' } } }
+      responses:
+        '201': { description: Recorded, content: { application/json: { schema: { $ref: '#/components/schemas/OrderPaymentResult' } } } }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '422': { description: "Validation error: `amount` above the balance due without `allow_overpayment`, or `order` cancelled" }
+
+  /orders/{order}/refunds:
+    parameters:
+      - { name: order, in: path, required: true, schema: { type: integer } }
+    post:
+      tags: [Order Payments]
+      summary: Record a refund given back to the customer
+      description: "Requires `record_payments`. A refund cannot exceed what is currently paid. Refunds are allowed on cancelled orders."
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: '#/components/schemas/OrderPaymentInput' } } }
+      responses:
+        '201': { description: Recorded, content: { application/json: { schema: { $ref: '#/components/schemas/OrderPaymentResult' } } } }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '422': { description: "Validation error: `amount` above what was paid" }
+
+  /orders/{order}/payments/{payment}/void:
+    parameters:
+      - { name: order, in: path, required: true, schema: { type: integer } }
+      - { name: payment, in: path, required: true, schema: { type: integer } }
+    post:
+      tags: [Order Payments]
+      summary: Void a payment or refund
+      description: "Requires `record_payments`. The row is kept, marked voided, and stops counting toward what was paid. A payment cannot be voided while refunds against it still stand."
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                reason: { type: string, maxLength: 255 }
+      responses:
+        '200': { description: Voided, content: { application/json: { schema: { $ref: '#/components/schemas/OrderPaymentResult' } } } }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '422': { description: "Validation error: already voided, or refunds would exceed what was paid (`payment`)" }
 
   /customers:
     get:
@@ -2037,10 +2103,18 @@ components:
         customer_email: { type: string, format: email, nullable: true }
         customer_address: { type: string, nullable: true }
         status: { type: string, enum: [pending, processing, shipped, delivered, cancelled] }
-        subtotal: { type: number }
+        subtotal: { type: number, description: "Gross merchandise: the sum of quantity x unit price." }
+        discount_type: { type: string, enum: [percent, fixed], nullable: true, description: "Order-level discount type." }
+        discount_value: { type: number, nullable: true, description: "Order-level discount as entered." }
+        discount_amount: { type: number, description: "Whole discount (line discounts plus the order discount): subtotal - discount_amount + tax + shipping = total." }
+        line_discount_total: { type: number, description: "Present when items are loaded." }
+        order_discount_amount: { type: number, description: "Present when items are loaded." }
         tax: { type: number }
         shipping: { type: number }
-        total: { type: number }
+        total: { type: number, description: "Computed on the server, never taken from the client." }
+        amount_paid: { type: number, description: "Present only with `view_payments` (role and token)." }
+        balance_due: { type: number, description: "Present only with `view_payments`." }
+        payment_status: { type: string, enum: [unpaid, partial, paid, overpaid, refunded], description: "Present only with `view_payments`." }
         currency: { type: string }
         order_date: { type: string, format: date-time, nullable: true }
         shipped_at: { type: string, format: date-time, nullable: true }
@@ -2064,10 +2138,56 @@ components:
         sku: { type: string, nullable: true }
         quantity: { type: integer }
         unit_price: { type: number }
-        subtotal: { type: number }
+        subtotal: { type: number, description: "Gross: quantity x unit price, before the line discount." }
+        discount_type: { type: string, enum: [percent, fixed], nullable: true }
+        discount_value: { type: number, nullable: true }
+        discount_amount: { type: number }
         tax: { type: number }
-        total: { type: number }
+        total: { type: number, description: "subtotal - discount_amount + tax" }
         metadata: { type: object, additionalProperties: true, nullable: true }
+
+    OrderPayment:
+      type: object
+      properties:
+        id: { type: integer }
+        order_id: { type: integer }
+        type: { type: string, enum: [payment, refund] }
+        amount: { type: string, description: "Positive decimal; `type` says which way the money moved." }
+        method: { type: string, enum: [cash, card, bank_transfer, cheque, other] }
+        method_label: { type: string }
+        reference: { type: string, nullable: true }
+        paid_at: { type: string, format: date-time }
+        notes: { type: string, nullable: true }
+        recorded_by: { type: object, nullable: true, properties: { id: { type: integer }, name: { type: string } } }
+        voided_at: { type: string, format: date-time, nullable: true }
+        void_reason: { type: string, nullable: true }
+        voided_by: { type: object, nullable: true, properties: { id: { type: integer }, name: { type: string } } }
+        created_at: { type: string, format: date-time }
+
+    OrderPaymentInput:
+      type: object
+      required: [amount, method]
+      properties:
+        amount: { type: number, exclusiveMinimum: 0 }
+        method: { type: string, enum: [cash, card, bank_transfer, cheque, other] }
+        reference: { type: string, maxLength: 255 }
+        paid_at: { type: string, description: "Date (YYYY-MM-DD, stored at midday UTC) or date-time. Defaults to now." }
+        notes: { type: string, maxLength: 2000 }
+        allow_overpayment: { type: boolean, default: false, description: "Payments only." }
+
+    OrderPaymentResult:
+      type: object
+      properties:
+        message: { type: string }
+        data: { $ref: '#/components/schemas/OrderPayment' }
+        order:
+          type: object
+          properties:
+            id: { type: integer }
+            total: { type: string }
+            amount_paid: { type: string }
+            balance_due: { type: string }
+            payment_status: { type: string, enum: [unpaid, partial, paid, overpaid, refunded] }
 
     OrderInput:
       type: object
@@ -2083,6 +2203,8 @@ components:
         order_date: { type: string, format: date-time }
         notes: { type: string }
         metadata: { type: object, additionalProperties: true }
+        discount_type: { type: string, enum: [percent, fixed], description: "Order-level discount, applied to the merchandise net of line discounts and before tax and shipping." }
+        discount_value: { type: number, minimum: 0, description: "A percentage (0-100) or an amount up to the discounted merchandise." }
         items:
           type: array
           minItems: 1
@@ -2094,6 +2216,8 @@ components:
               quantity: { type: integer, minimum: 1 }
               unit_price: { type: number, minimum: 0, description: "Defaults to product.selling_price (or price)." }
               tax: { type: number, minimum: 0 }
+              discount_type: { type: string, enum: [percent, fixed] }
+              discount_value: { type: number, minimum: 0, description: "A percentage (0-100) or an amount up to quantity x unit price." }
 
     Supplier:
       type: object
@@ -2368,7 +2492,7 @@ components:
           minItems: 1
           items:
             type: string
-            enum: [product.created, product.updated, product.deleted, product.low_stock, product.out_of_stock, order.created, order.updated, order.status_changed, order.approved, order.rejected, stock.adjusted, purchase_order.created, purchase_order.received, purchase_order.cancelled, customer.created, customer.updated, customer.deleted, return.created, return.received, transfer.created, transfer.completed, work_order.completed, stock_audit.completed]
+            enum: [product.created, product.updated, product.deleted, product.low_stock, product.out_of_stock, order.created, order.updated, order.status_changed, order.approved, order.rejected, stock.adjusted, purchase_order.created, purchase_order.received, purchase_order.cancelled, customer.created, customer.updated, customer.deleted, return.created, return.received, transfer.created, transfer.completed, work_order.completed, stock_audit.completed, payment.recorded, payment.voided]
         is_active: { type: boolean }
 
     User:

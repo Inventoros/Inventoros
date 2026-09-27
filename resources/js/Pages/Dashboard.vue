@@ -11,6 +11,7 @@ import { Head, Link } from '@inertiajs/vue3';
 import { ref, reactive, computed } from 'vue';
 import { useQuickReorder } from '@/composables/useQuickReorder';
 import { useI18n } from 'vue-i18n';
+import { formatCalendarDate } from '@/lib/dates';
 import axios from 'axios';
 import {
     Boxes,
@@ -109,6 +110,7 @@ const secondaryStats = () => [
     { key: 'totalValue', label: t('dashboard.inventoryValue'), value: formatCompactCurrency(props.stats?.totalValue), href: null, tone: 'text-status-success' },
     { key: 'revenueThisMonth', label: t('dashboard.revenueThisMonth'), value: formatCompactCurrency(props.stats?.revenueThisMonth), href: null, tone: 'text-brand' },
     { key: 'deadStockValue', label: t('dashboard.deadStockValue'), value: formatCompactCurrency(props.stats?.deadStockValue), href: route('reports.dead-stock'), tone: 'text-status-warning' },
+    { key: 'outstandingReceivables', label: t('dashboard.outstandingReceivables'), value: formatCompactCurrency(props.stats?.outstandingReceivables), href: route('reports.receivables'), tone: 'text-status-warning' },
 // A withheld figure is absent from `stats`, not zeroed, so filtering on
 // presence also drops the link that went with it -- several point at index
 // routes the same user would be refused.
@@ -192,7 +194,7 @@ const secondaryStats = () => [
         </section>
 
         <!-- Secondary stats -->
-        <section v-if="widgets.revenue_chart" class="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+        <section v-if="widgets.revenue_chart" class="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
             <component
                 :is="stat.href ? Link : 'div'"
                 v-for="stat in secondaryStats()"
@@ -254,7 +256,7 @@ const secondaryStats = () => [
                                 </div>
                                 <div class="shrink-0 text-right">
                                     <p class="text-sm font-semibold tabular-nums text-text-primary">{{ formatCurrency(order.total) }}</p>
-                                    <p class="text-[11px] text-text-tertiary">{{ new Date(order.order_date).toLocaleDateString() }}</p>
+                                    <p class="text-[11px] text-text-tertiary">{{ formatCalendarDate(order.order_date) }}</p>
                                 </div>
                             </Link>
                         </li>

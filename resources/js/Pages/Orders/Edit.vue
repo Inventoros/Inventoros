@@ -4,8 +4,10 @@ import PageHeader from '@/Components/ui/PageHeader.vue';
 import Card from '@/Components/ui/Card.vue';
 import Button from '@/Components/ui/Button.vue';
 import CustomerPicker from '@/Components/CustomerPicker.vue';
+import DiscountInput from '@/Components/DiscountInput.vue';
+import { useOrderTotals, lineNetCents } from '@/composables/useOrderTotals';
 import { Head, Link, useForm } from '@inertiajs/vue3';
-import { computed, ref } from 'vue';
+import { ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { ArrowLeft, Plus, Trash2, PackageOpen } from 'lucide-vue-next';
 
@@ -25,6 +27,8 @@ const form = useForm({
     order_date: props.order.order_date ? props.order.order_date.split('T')[0] : '',
     shipping: props.order.shipping || 0,
     tax: props.order.tax || 0,
+    discount_type: props.order.discount_type ?? '',
+    discount_value: props.order.discount_value != null ? parseFloat(props.order.discount_value) : null,
     notes: props.order.notes || '',
     items: props.order.items.map(item => ({
         id: item.id,
@@ -32,6 +36,8 @@ const form = useForm({
         product_variant_id: item.product_variant_id ?? null,
         quantity: item.quantity,
         unit_price: parseFloat(item.unit_price),
+        discount_type: item.discount_type ?? '',
+        discount_value: item.discount_value != null ? parseFloat(item.discount_value) : null,
     })),
 });
 
@@ -68,15 +74,8 @@ const submit = () => {
     });
 };
 
-const subtotal = computed(() => {
-    return form.items.reduce((sum, item) => {
-        return sum + (parseFloat(item.quantity || 0) * parseFloat(item.unit_price || 0));
-    }, 0);
-});
-
-const total = computed(() => {
-    return subtotal.value + parseFloat(form.tax || 0) + parseFloat(form.shipping || 0);
-});
+// Preview only: the server recomputes every total on save.
+const totals = useOrderTotals(form);
 
 const addItem = () => {
     form.items.push({
@@ -85,6 +84,8 @@ const addItem = () => {
         product_variant_id: null,
         quantity: 1,
         unit_price: 0,
+        discount_type: '',
+        discount_value: null,
     });
 };
 
@@ -272,7 +273,7 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                                             <label :class="fieldLabel">{{ t('common.subtotal') }}</label>
                                             <div class="flex h-9 items-center rounded-md border border-border-subtle bg-surface-sunken px-3">
                                                 <span class="text-sm font-semibold tabular-nums text-text-primary">
-                                                    ${{ ((item.quantity || 0) * (item.unit_price || 0)).toFixed(2) }}
+                                                    ${{ (lineNetCents(item) / 100).toFixed(2) }}
                                                 </span>
                                             </div>
                                         </div>
@@ -288,6 +289,16 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                                                 <Trash2 :size="16" />
                                             </button>
                                         </div>
+                                    </div>
+                                    <div class="mt-3 md:w-1/2">
+                                        <DiscountInput
+                                            :id="`item_${index}_discount`"
+                                            v-model:type="item.discount_type"
+                                            v-model:value="item.discount_value"
+                                            :label="t('discounts.lineDiscount')"
+                                            :error="form.errors[`items.${index}.discount_value`] || form.errors[`items.${index}.discount_type`]"
+                                            compact
+                                        />
                                     </div>
                                 </div>
                             </div>
@@ -342,7 +353,25 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                         <div class="space-y-3 p-5">
                             <div class="flex justify-between text-sm">
                                 <span class="text-text-secondary">{{ t('common.subtotal') }}</span>
-                                <span class="font-medium tabular-nums text-text-primary">${{ subtotal.toFixed(2) }}</span>
+                                <span class="font-medium tabular-nums text-text-primary">${{ totals.subtotal.toFixed(2) }}</span>
+                            </div>
+                            <div v-if="totals.lineDiscounts > 0" class="flex justify-between text-sm">
+                                <span class="text-text-secondary">{{ t('discounts.lineDiscounts') }}</span>
+                                <span class="font-medium tabular-nums text-text-primary">-${{ totals.lineDiscounts.toFixed(2) }}</span>
+                            </div>
+                            <div>
+                                <DiscountInput
+                                    id="order_discount"
+                                    v-model:type="form.discount_type"
+                                    v-model:value="form.discount_value"
+                                    :label="t('discounts.orderDiscount')"
+                                    :error="form.errors.discount_value || form.errors.discount_type"
+                                />
+                                <p class="mt-1 text-xs text-text-tertiary">{{ t('discounts.appliedBeforeTax') }}</p>
+                            </div>
+                            <div v-if="totals.orderDiscount > 0" class="flex justify-between text-sm">
+                                <span class="text-text-secondary">{{ t('discounts.orderDiscount') }}</span>
+                                <span class="font-medium tabular-nums text-text-primary">-${{ totals.orderDiscount.toFixed(2) }}</span>
                             </div>
                             <div>
                                 <label for="tax" class="mb-1 block text-sm text-text-secondary">{{ t('common.tax') }}</label>
@@ -356,8 +385,10 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                             </div>
                             <div class="flex items-center justify-between border-t border-border-subtle pt-3">
                                 <span class="text-sm font-semibold text-text-primary">{{ t('common.total') }}</span>
-                                <span class="text-xl font-bold text-brand">${{ total.toFixed(2) }}</span>
+                                <span class="text-xl font-bold text-brand">${{ totals.total.toFixed(2) }}</span>
                             </div>
+                            <p v-if="form.errors.total" :class="fieldError">{{ form.errors.total }}</p>
+                            <p class="text-xs text-text-tertiary">{{ t('discounts.totalsComputedOnSave') }}</p>
                         </div>
                     </Card>
 

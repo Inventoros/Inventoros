@@ -9,6 +9,7 @@ import ExportMenu from '@/Components/Reports/ExportMenu.vue';
 import ReportSchedules from '@/Components/Reports/ReportSchedules.vue';
 import { Head, Link, router } from '@inertiajs/vue3';
 import { useI18n } from 'vue-i18n';
+import { formatDateValue } from '@/lib/dates';
 import { ArrowLeft, Pencil, Trash2, Database, Columns3, Rows3, FileSpreadsheet } from 'lucide-vue-next';
 
 const { t } = useI18n();
@@ -44,7 +45,8 @@ const formatValue = (value, col) => {
         return value ? 'Yes' : 'No';
     }
     if (sourceConfig.type === 'date' && value) {
-        return new Date(value).toLocaleDateString();
+        // Date-only values are calendar days; timestamps are instants.
+        return formatDateValue(value);
     }
     return value;
 };

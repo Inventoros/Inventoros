@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Models\Order;
 
+use App\Enums\DiscountType;
 use App\Models\Inventory\Product;
 use App\Models\Inventory\ProductVariant;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -23,7 +24,10 @@ use Illuminate\Support\Carbon;
  * @property string $unit_price
  * @property string|null $unit_cost Unit cost at the time of sale (null when unknown)
  * @property Carbon|null $unit_cost_backfilled_at Set when unit_cost was estimated from current cost by the backfill
- * @property string $subtotal
+ * @property string $subtotal Gross: quantity x unit_price, before the line discount
+ * @property DiscountType|null $discount_type
+ * @property string|null $discount_value
+ * @property string $discount_amount
  * @property string $tax
  * @property string $total
  * @property array|null $metadata
@@ -52,6 +56,9 @@ class OrderItem extends Model
         'unit_cost',
         'unit_cost_backfilled_at',
         'subtotal',
+        'discount_type',
+        'discount_value',
+        'discount_amount',
         'tax',
         'total',
         'metadata',
@@ -71,6 +78,9 @@ class OrderItem extends Model
             'unit_cost' => 'decimal:2',
             'unit_cost_backfilled_at' => 'datetime',
             'subtotal' => 'decimal:2',
+            'discount_type' => DiscountType::class,
+            'discount_value' => 'decimal:2',
+            'discount_amount' => 'decimal:2',
             'tax' => 'decimal:2',
             'total' => 'decimal:2',
             'metadata' => 'array',

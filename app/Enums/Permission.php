@@ -9,7 +9,7 @@ namespace App\Enums;
  *
  * Permissions are organized into categories: User Management, Role Management,
  * Inventory Management, Customer Management, Supplier Management,
- * Purchase Order Management, Order Management, Settings, Plugins, and Reports & Data.
+ * Purchase Order Management, Order Management, Payments, Settings, Plugins, and Reports & Data.
  */
 enum Permission: string
 {
@@ -61,6 +61,10 @@ enum Permission: string
     case EDIT_ORDERS = 'edit_orders';
     case DELETE_ORDERS = 'delete_orders';
     case APPROVE_ORDERS = 'approve_orders';
+
+    // Payments
+    case VIEW_PAYMENTS = 'view_payments';
+    case RECORD_PAYMENTS = 'record_payments';
 
     // Settings
     case VIEW_SETTINGS = 'view_settings';
@@ -147,6 +151,9 @@ enum Permission: string
             self::DELETE_ORDERS => 'Delete Orders',
             self::APPROVE_ORDERS => 'Approve Orders',
 
+            self::VIEW_PAYMENTS => 'View Payments',
+            self::RECORD_PAYMENTS => 'Record Payments',
+
             self::VIEW_STOCK_AUDITS => 'View Stock Audits',
             self::CREATE_STOCK_AUDITS => 'Create Stock Audits',
             self::MANAGE_STOCK_AUDITS => 'Manage Stock Audits',
@@ -226,6 +233,9 @@ enum Permission: string
             self::DELETE_ORDERS => 'Can delete orders',
             self::APPROVE_ORDERS => 'Can approve or reject orders',
 
+            self::VIEW_PAYMENTS => 'Can view order payments, balances due, and receivables',
+            self::RECORD_PAYMENTS => 'Can record, void, and refund order payments',
+
             self::VIEW_STOCK_AUDITS => 'Can view stock audits and cycle counts',
             self::CREATE_STOCK_AUDITS => 'Can create new stock audits',
             self::MANAGE_STOCK_AUDITS => 'Can manage stock audits, start, complete, and adjust counts',
@@ -276,6 +286,7 @@ enum Permission: string
             self::APPROVE_PURCHASE_ORDERS => 'Purchase Order Management',
             self::VIEW_ORDERS, self::CREATE_ORDERS, self::EDIT_ORDERS, self::DELETE_ORDERS,
             self::APPROVE_ORDERS => 'Order Management',
+            self::VIEW_PAYMENTS, self::RECORD_PAYMENTS => 'Payments',
             self::VIEW_WAREHOUSES, self::CREATE_WAREHOUSES, self::EDIT_WAREHOUSES,
             self::DELETE_WAREHOUSES, self::MANAGE_WAREHOUSE_USERS, self::ACCESS_ALL_WAREHOUSES => 'Warehouse Management',
             self::MANAGE_RETURNS => 'Returns Management',

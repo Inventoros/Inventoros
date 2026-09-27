@@ -10,6 +10,7 @@ import { ArrowLeft, Plus, Trash2, ScanLine } from 'lucide-vue-next';
 
 const BarcodeScannerModal = defineAsyncComponent(() => import('@/Components/BarcodeScannerModal.vue'));
 import { useI18n } from 'vue-i18n';
+import { todayIsoDate } from '@/lib/dates';
 
 const { t } = useI18n();
 
@@ -21,7 +22,7 @@ const props = defineProps({
 
 const form = useForm({
     supplier_id: '',
-    order_date: new Date().toISOString().split('T')[0],
+    order_date: todayIsoDate(),
     expected_date: '',
     currency: 'USD',
     shipping: 0,

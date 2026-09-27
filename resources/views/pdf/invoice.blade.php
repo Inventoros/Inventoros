@@ -157,6 +157,15 @@
         .total-row td:last-child {
             color: #1e40af;
         }
+        .payment-row td {
+            font-size: 11px;
+            color: #6b7280;
+        }
+        .balance-row td {
+            border-top: 1px solid #e5e7eb;
+            padding-top: 8px;
+            font-weight: bold;
+        }
         /* Footer */
         .footer {
             border-top: 1px solid #e5e7eb;
@@ -229,7 +238,7 @@
                         <th style="width: 45%;">Item</th>
                         <th style="width: 15%;">Qty</th>
                         <th style="width: 20%;">Unit Price</th>
-                        <th style="width: 20%;">Subtotal</th>
+                        <th style="width: 20%;">Amount</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -238,6 +247,9 @@
                         <td>
                             <div class="item-name">{{ $item->product_name }}</div>
                             @if($item->sku)<div class="item-sku">SKU: {{ $item->sku }}</div>@endif
+                            @if((float) $item->discount_amount > 0)
+                                <div class="item-sku">Discount{{ $item->discount_type?->value === 'percent' ? ' ('.rtrim(rtrim((string) $item->discount_value, '0'), '.').'%)' : '' }}: -{{ $order->currency ?? 'USD' }} {{ number_format((float) $item->discount_amount, 2) }}</div>
+                            @endif
                         </td>
                         <td>{{ $item->quantity }}</td>
                         <td>{{ $order->currency ?? 'USD' }} {{ number_format((float) $item->unit_price, 2) }}</td>
@@ -255,6 +267,18 @@
                     <td>Subtotal</td>
                     <td>{{ $order->currency ?? 'USD' }} {{ number_format((float) $order->subtotal, 2) }}</td>
                 </tr>
+                @if((float) $lineDiscountTotal > 0)
+                <tr>
+                    <td>Line discounts</td>
+                    <td>-{{ $order->currency ?? 'USD' }} {{ number_format((float) $lineDiscountTotal, 2) }}</td>
+                </tr>
+                @endif
+                @if((float) $orderDiscountAmount > 0)
+                <tr>
+                    <td>Order discount{{ $order->discount_type?->value === 'percent' ? ' ('.rtrim(rtrim((string) $order->discount_value, '0'), '.').'%)' : '' }}</td>
+                    <td>-{{ $order->currency ?? 'USD' }} {{ number_format((float) $orderDiscountAmount, 2) }}</td>
+                </tr>
+                @endif
                 @if((float) $order->tax > 0)
                 <tr>
                     <td>Tax</td>
@@ -270,6 +294,24 @@
                 <tr class="total-row">
                     <td>Total</td>
                     <td>{{ $order->currency ?? 'USD' }} {{ number_format((float) $order->total, 2) }}</td>
+                </tr>
+                @foreach($payments as $payment)
+                <tr class="payment-row">
+                    <td>
+                        {{ $payment->isRefund() ? 'Refund' : 'Payment' }}, {{ $payment->method->label() }}, {{ $payment->paid_at->format('M j, Y') }}@if($payment->reference) ({{ $payment->reference }})@endif
+                    </td>
+                    <td>{{ $payment->isRefund() ? '+' : '-' }}{{ $order->currency ?? 'USD' }} {{ number_format((float) $payment->amount, 2) }}</td>
+                </tr>
+                @endforeach
+                @if($payments->isNotEmpty())
+                <tr>
+                    <td>Amount paid</td>
+                    <td>{{ $order->currency ?? 'USD' }} {{ number_format((float) $order->amount_paid, 2) }}</td>
+                </tr>
+                @endif
+                <tr class="balance-row">
+                    <td>Balance due</td>
+                    <td>{{ $order->currency ?? 'USD' }} {{ number_format((float) $balanceDue, 2) }}</td>
                 </tr>
             </table>
         </div>

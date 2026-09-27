@@ -4,13 +4,16 @@ declare(strict_types=1);
 
 namespace App\Models\Order;
 
+use App\Enums\DiscountType;
 use App\Enums\OrderApprovalStatus;
 use App\Enums\OrderStatus;
+use App\Enums\PaymentStatus;
 use App\Models\Auth\Organization;
 use App\Models\Concerns\BelongsToOrganization;
 use App\Models\Customer;
 use App\Models\User;
 use App\Models\Warehouse;
+use App\Support\Money;
 use App\Traits\LogsActivity;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
@@ -44,9 +47,14 @@ use Illuminate\Support\Carbon;
  * @property Carbon|null $approved_at
  * @property string|null $approval_notes
  * @property string $subtotal
+ * @property DiscountType|null $discount_type
+ * @property string|null $discount_value
+ * @property string $discount_amount Total discount: line discounts + order-level discount
  * @property string $tax
  * @property string $shipping
  * @property string $total
+ * @property string $amount_paid Net of non-voided payments minus refunds
+ * @property PaymentStatus $payment_status
  * @property string|null $currency
  * @property Carbon|null $order_date
  * @property Carbon|null $shipped_at
@@ -102,9 +110,14 @@ class Order extends Model
         'approved_at',
         'approval_notes',
         'subtotal',
+        'discount_type',
+        'discount_value',
+        'discount_amount',
         'tax',
         'shipping',
         'total',
+        'amount_paid',
+        'payment_status',
         'currency',
         'order_date',
         'shipped_at',
@@ -124,9 +137,14 @@ class Order extends Model
             'status' => OrderStatus::class,
             'approval_status' => OrderApprovalStatus::class,
             'subtotal' => 'decimal:2',
+            'discount_type' => DiscountType::class,
+            'discount_value' => 'decimal:2',
+            'discount_amount' => 'decimal:2',
             'tax' => 'decimal:2',
             'shipping' => 'decimal:2',
             'total' => 'decimal:2',
+            'amount_paid' => 'decimal:2',
+            'payment_status' => PaymentStatus::class,
             'order_date' => 'datetime',
             'shipped_at' => 'datetime',
             'delivered_at' => 'datetime',
@@ -185,6 +203,68 @@ class Order extends Model
     public function items(): HasMany
     {
         return $this->hasMany(OrderItem::class);
+    }
+
+    /**
+     * Payments and refunds recorded against the order, voided ones included.
+     *
+     * @return HasMany<OrderPayment, $this>
+     */
+    public function payments(): HasMany
+    {
+        return $this->hasMany(OrderPayment::class);
+    }
+
+    /**
+     * Recompute amount_paid and payment_status from the non-voided payment
+     * rows (without saving). Summed in PHP with Money rather than SQL SUM,
+     * which returns a float on some drivers and would drift.
+     *
+     * Callers that write must hold the order's row lock, so a concurrent
+     * payment cannot slip in between the sum and the save.
+     */
+    public function syncPaymentState(): void
+    {
+        $paid = '0.00';
+        $refunded = '0.00';
+
+        foreach ($this->payments()->withoutGlobalScopes()->active()->get(['type', 'amount']) as $payment) {
+            if ($payment->isRefund()) {
+                $refunded = Money::add($refunded, $payment->amount);
+            } else {
+                $paid = Money::add($paid, $payment->amount);
+            }
+        }
+
+        $this->amount_paid = Money::subtract($paid, $refunded);
+        $this->payment_status = PaymentStatus::derive(Money::of($this->total), $this->amount_paid, $refunded);
+    }
+
+    /**
+     * What the customer still owes: total minus what has been paid, never
+     * below zero (an overpaid order owes nothing; its status says overpaid).
+     */
+    public function balanceDue(): string
+    {
+        return Money::max(Money::subtract($this->total, $this->amount_paid), 0);
+    }
+
+    /**
+     * The sum of the line discounts. The order-level discount is the rest of
+     * discount_amount.
+     */
+    public function lineDiscountTotal(): string
+    {
+        return Money::add(...$this->items->pluck('discount_amount')->all());
+    }
+
+    /**
+     * The order-level discount alone (discount_amount minus the line
+     * discounts).
+     */
+    public function orderDiscountAmount(): string
+    {
+        return Money::subtract($this->discount_amount, $this->lineDiscountTotal());
     }
 
     /**

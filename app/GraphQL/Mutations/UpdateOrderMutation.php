@@ -69,6 +69,16 @@ class UpdateOrderMutation extends Mutation
                 'description' => 'Order notes',
                 'rules' => ['nullable', 'string', 'max:5000'],
             ],
+            'discount_type' => [
+                'type' => Type::string(),
+                'description' => 'Order-level discount type: percent or fixed (send null with discount_value null to remove it)',
+                'rules' => ['nullable', 'string', 'in:percent,fixed'],
+            ],
+            'discount_value' => [
+                'type' => Type::float(),
+                'description' => 'Order-level discount value; totals are recomputed on the server',
+                'rules' => ['nullable', 'numeric', 'min:0'],
+            ],
         ];
     }
 
@@ -90,7 +100,21 @@ class UpdateOrderMutation extends Mutation
             throw new Error('Order not found');
         }
 
-        $updateData = collect($args)->except(['id'])->toArray();
+        $updateData = collect($args)->except(['id', 'discount_type', 'discount_value'])->toArray();
+
+        // Order-level discount change: recomputed under the order's row lock
+        // by the same service the web and REST surfaces use.
+        if (array_key_exists('discount_type', $args) || array_key_exists('discount_value', $args)) {
+            try {
+                $order = app(\App\Services\OrderService::class)->changeOrderDiscount(
+                    $order,
+                    $args['discount_type'] ?? null,
+                    $args['discount_value'] ?? null,
+                );
+            } catch (\Illuminate\Validation\ValidationException $e) {
+                throw new Error(collect($e->errors())->flatten()->first() ?? $e->getMessage());
+            }
+        }
 
         // Detect a cancel transition: the status-only change that must restock.
         // Route it through OrderService::cancel() so the web, REST, and GraphQL

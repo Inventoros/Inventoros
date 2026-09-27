@@ -22,6 +22,7 @@ import {
     Percent,
     MapPin,
     BarChart3,
+    Wallet,
 } from 'lucide-vue-next';
 
 const { t } = useI18n();
@@ -101,6 +102,14 @@ const reportCards = [
         title: t('reports.abcAnalysis.title'),
         description: t('reports.abcAnalysis.description'),
         requires: ['view_orders'],
+    },
+    // Built from payments, so it also needs view_payments.
+    {
+        href: route('reports.receivables'),
+        icon: Wallet,
+        title: t('receivables.title'),
+        description: t('receivables.description'),
+        requires: ['view_payments'],
     },
     {
         href: route('reports.builder.index'),

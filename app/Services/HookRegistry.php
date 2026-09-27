@@ -147,6 +147,17 @@ final class HookRegistry
                 'example' => "add_action('order_status_changed', function(\$order, \$old, \$new, \$user) { /* ... */ });",
             ],
 
+            'payment_recorded' => [
+                'description' => 'Fired after a payment or refund is recorded against an order (after commit)',
+                'parameters' => ['$payment', '$order', '$user'],
+                'example' => "add_action('payment_recorded', function(\$payment, \$order, \$user) { /* ... */ });",
+            ],
+            'payment_voided' => [
+                'description' => 'Fired after a payment or refund is voided (after commit)',
+                'parameters' => ['$payment', '$order', '$user'],
+                'example' => "add_action('payment_voided', function(\$payment, \$order, \$user) { /* ... */ });",
+            ],
+
             // ========================================
             // CATEGORY HOOKS
             // ========================================

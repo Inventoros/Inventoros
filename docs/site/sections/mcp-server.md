@@ -78,7 +78,7 @@ Add an entry to `~/.cursor/mcp.json` (or the workspace-level `.cursor/mcp.json`)
 
 ### Tool catalog
 
-22 tools across 7 surfaces. Tools marked destructive mutate state and should be confirmed before invocation.
+23 tools across 7 surfaces. Tools marked destructive mutate state and should be confirmed before invocation.
 
 Identity:
 
@@ -103,8 +103,9 @@ Sales:
 
 - `list_orders` (`view_orders` or `manage_orders`). Paginated orders with status, source, warehouse, and date filters.
 - `get_order` (`view_orders` or `manage_orders`). Single order with line items.
-- `create_order` (`manage_orders`). Create an order; decrements stock; fails if any line is short. Destructive.
+- `create_order` (`manage_orders`). Create an order; decrements stock; fails if any line is short. Accepts optional line and order discounts (applied before tax). Destructive.
 - `email_order_invoice` (`edit_orders`). Email the order's invoice PDF to the customer, or to `to`, with optional CC and message. Destructive.
+- `record_payment` (`record_payments`). Record a payment against an order. Partial payments are fine; a payment above the balance due needs `allow_overpayment`; cancelled orders are refused. Destructive.
 
 Purchasing:
 

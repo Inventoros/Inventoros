@@ -106,7 +106,8 @@ All paths are relative to `/api/v1`. See the OpenAPI spec for full schemas:
 - Auth: login / logout / user / token CRUD
 - Products: CRUD, plus nested options, variants, components, batches, serials
 - Categories, Locations, Warehouses: CRUD
-- Orders: CRUD with line items; auto-decrements stock. Plus `approve`, `reject` and `invoice/email`
+- Orders: CRUD with line items; auto-decrements stock. Plus `approve`, `reject` and `invoice/email`. Optional line and order discounts; totals are always computed on the server
+- Order payments: `GET /orders/{id}/payments` (`view_payments`), `POST /orders/{id}/payments`, `POST /orders/{id}/refunds` and `POST /orders/{id}/payments/{payment}/void` (`record_payments`)
 - Customers: CRUD plus `GET /customers/{id}/orders`
 - Returns (RMA): list, show, create, then `approve`, `receive` (restocks), `complete` or `reject`
 - Stock Transfers: list, show, create, then `ship`, `complete` (moves stock between location bins) or `cancel`
@@ -149,6 +150,19 @@ curl -X POST "${APP_URL}/api/v1/orders" \
     ]
   }'
 ```
+
+Discounts are optional. Each line may carry `discount_type` (`percent` or `fixed`) and `discount_value`, and so may the order. A line discount comes off that line's quantity times unit price; the order discount then comes off the merchandise net of line discounts. Discounts are applied before tax and never reduce tax or shipping, so the tax you send should be computed on the discounted amounts. The response's `discount_amount` is the whole discount, so `subtotal - discount_amount + tax + shipping = total`. A discount larger than the amount it applies to, or a percentage over 100, is a `422`.
+
+Record a payment (partial payments are fine; a payment above the balance due is rejected unless `allow_overpayment` is `true`, and cancelled orders take no payments):
+
+```bash
+curl -X POST "${APP_URL}/api/v1/orders/1234/payments" \
+  -H "Authorization: Bearer ${TOKEN}" \
+  -H "Content-Type: application/json" \
+  -d '{ "amount": 50.00, "method": "card", "reference": "ch_123" }'
+```
+
+`method` is one of `cash`, `card`, `bank_transfer`, `cheque`, `other`. The order then reports `amount_paid`, `balance_due` and `payment_status` (`unpaid`, `partial`, `paid`, `overpaid`, `refunded`), visible to tokens with `view_payments`. Refunds cannot exceed what was paid. Payments are never edited or deleted, only voided, and each change fires a `payment.recorded` or `payment.voided` webhook.
 
 Adjust stock:
 
@@ -232,6 +246,7 @@ Subscribe a URL to any of these events under **Settings > Webhooks** or with `PO
 | --- | --- |
 | Product | `product.created`, `product.updated`, `product.deleted`, `product.low_stock`, `product.out_of_stock` |
 | Order | `order.created`, `order.updated`, `order.status_changed`, `order.approved`, `order.rejected` |
+| Payment | `payment.recorded`, `payment.voided` (a refund is a recorded payment of type `refund`) |
 | Stock | `stock.adjusted` |
 | Purchase order | `purchase_order.created`, `purchase_order.received`, `purchase_order.cancelled` |
 | Customer | `customer.created`, `customer.updated`, `customer.deleted` |

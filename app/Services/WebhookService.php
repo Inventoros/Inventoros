@@ -103,6 +103,10 @@ final class WebhookService
             'order.approved',
             'order.rejected',
 
+            // Payment events
+            'payment.recorded',
+            'payment.voided',
+
             // Stock events
             'stock.adjusted',
 
@@ -153,6 +157,10 @@ final class WebhookService
                 'order.status_changed' => 'When order status changes',
                 'order.approved' => 'When an order is approved',
                 'order.rejected' => 'When an order is rejected',
+            ],
+            'Payment' => [
+                'payment.recorded' => 'When a payment or refund is recorded against an order',
+                'payment.voided' => 'When a payment or refund is voided',
             ],
             'Stock' => [
                 'stock.adjusted' => 'When stock is manually adjusted',

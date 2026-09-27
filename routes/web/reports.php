@@ -20,6 +20,9 @@ Route::prefix('reports')->name('reports.')->middleware('permission:view_reports'
     Route::get('/sales-analysis', [ReportController::class, 'salesAnalysis'])->name('sales-analysis');
     Route::get('/low-stock', [ReportController::class, 'lowStock'])->name('low-stock');
     Route::get('/category-performance', [ReportController::class, 'categoryPerformance'])->name('category-performance');
+    // Outstanding balances: a report (view_reports, from the group) built
+    // from payments, so it also needs view_payments.
+    Route::get('/receivables', [ReportController::class, 'receivables'])->name('receivables')->middleware('permission:view_payments');
 
     // Analytics reports. Each also needs the view permission of every data
     // source it reads (the report builder's per-source rule): products for

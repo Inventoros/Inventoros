@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Api;
 
+use App\Enums\DiscountType;
 use App\Enums\OrderStatus;
+use App\Enums\PaymentStatus;
 use App\Exceptions\DocumentEmailException;
 use App\Exceptions\InsufficientStockException;
 use App\Exceptions\InvalidOrderItemException;
@@ -17,6 +19,7 @@ use App\Http\Resources\OrderResource;
 use App\Models\Order\Order;
 use App\Services\OrderInvoiceEmailService;
 use App\Services\OrderService;
+use App\Support\PaymentVisibility;
 use Dedoc\Scramble\Attributes\QueryParameter;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -40,6 +43,7 @@ class OrderController extends Controller
     #[QueryParameter('search', description: 'Search by order number, customer name, or email', type: 'string')]
     #[QueryParameter('status', description: 'Filter by status', type: 'string', enum: ['pending', 'processing', 'shipped', 'delivered', 'cancelled'])]
     #[QueryParameter('source', description: 'Filter by order source', type: 'string')]
+    #[QueryParameter('payment_status', description: 'Filter by payment status (requires view_payments)', type: 'string', enum: ['unpaid', 'partial', 'paid', 'overpaid', 'refunded'])]
     #[QueryParameter('warehouse_id', description: 'Filter by warehouse ID', type: 'integer')]
     #[QueryParameter('date_from', description: 'Filter orders from this date (YYYY-MM-DD)', type: 'string', example: '2025-01-01')]
     #[QueryParameter('date_to', description: 'Filter orders until this date (YYYY-MM-DD)', type: 'string', example: '2025-12-31')]
@@ -73,7 +77,13 @@ class OrderController extends Controller
             })
             ->when($request->input('date_to'), function ($query, $dateTo) {
                 $query->where('order_date', '<=', $dateTo);
-            });
+            })
+            // Only for callers who may see payments; otherwise ignored.
+            ->when(
+                PaymentVisibility::allows($request->user())
+                    && in_array($request->input('payment_status'), PaymentStatus::values(), true),
+                fn ($query) => $query->where('payment_status', $request->input('payment_status'))
+            );
 
         // Sorting (allowlist to prevent SQL injection)
         $allowedSortColumns = ['created_at', 'updated_at', 'order_number', 'customer_name', 'total', 'status', 'order_date'];
@@ -113,6 +123,10 @@ class OrderController extends Controller
             'items.*.quantity' => ['required', 'integer', 'min:1'],
             'items.*.unit_price' => ['nullable', 'numeric', 'min:0'],
             'items.*.tax' => ['nullable', 'numeric', 'min:0'],
+            'items.*.discount_type' => ['nullable', Rule::in(DiscountType::values())],
+            'items.*.discount_value' => ['nullable', 'numeric', 'min:0', 'max:99999999'],
+            'discount_type' => ['nullable', Rule::in(DiscountType::values())],
+            'discount_value' => ['nullable', 'numeric', 'min:0', 'max:99999999'],
         ]);
 
         // API-specific defaults; the OrderService owns the create invariant
@@ -186,7 +200,15 @@ class OrderController extends Controller
             'status' => ['nullable', 'string', 'in:pending,processing,shipped,delivered,cancelled'],
             'notes' => ['nullable', 'string'],
             'metadata' => ['nullable', 'array'],
+            // Order-level discount; the totals are recomputed on the server.
+            'discount_type' => ['sometimes', 'nullable', Rule::in(DiscountType::values())],
+            'discount_value' => ['sometimes', 'nullable', 'numeric', 'min:0', 'max:99999999'],
         ]);
+
+        $discountChanged = array_key_exists('discount_type', $validated) || array_key_exists('discount_value', $validated);
+        $discountType = $validated['discount_type'] ?? null;
+        $discountValue = $validated['discount_value'] ?? null;
+        unset($validated['discount_type'], $validated['discount_value']);
 
         $cancelTransition = isset($validated['status'])
             && $validated['status'] === 'cancelled'
@@ -229,6 +251,10 @@ class OrderController extends Controller
         // guard re-checked under a row lock).
         if ($cancelTransition) {
             unset($validated['status']);
+        }
+
+        if ($discountChanged) {
+            $order = $this->orderService->changeOrderDiscount($order, $discountType, $discountValue);
         }
 
         if ($validated !== []) {

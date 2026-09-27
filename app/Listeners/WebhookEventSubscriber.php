@@ -11,6 +11,7 @@ use App\Models\Inventory\StockAudit;
 use App\Models\Inventory\StockTransfer;
 use App\Models\Inventory\WorkOrder;
 use App\Models\Order\Order;
+use App\Models\Order\OrderPayment;
 use App\Models\Order\ReturnOrder;
 use App\Models\Purchasing\PurchaseOrder;
 use App\Models\User;
@@ -48,6 +49,10 @@ final class WebhookEventSubscriber
         add_action('order_status_changed', [static::class, 'onOrderStatusChanged'], 100);
         add_action('order_approved', [static::class, 'onOrderApproved'], 100);
         add_action('order_rejected', [static::class, 'onOrderRejected'], 100);
+
+        // Payment events (refunds are recorded payments of type "refund")
+        add_action('payment_recorded', [static::class, 'onPaymentRecorded'], 100);
+        add_action('payment_voided', [static::class, 'onPaymentVoided'], 100);
 
         // Purchase order events
         add_action('purchase_order_created', [static::class, 'onPurchaseOrderCreated'], 100);
@@ -685,6 +690,56 @@ final class WebhookEventSubscriber
      * @param User|null $user
      * @return array
      */
+    /**
+     * Handle a payment (or refund) recorded against an order.
+     */
+    public static function onPaymentRecorded(OrderPayment $payment, Order $order, ?User $user = null): void
+    {
+        self::dispatchPayment('payment.recorded', $payment, $order, $user);
+    }
+
+    /**
+     * Handle a payment (or refund) being voided.
+     */
+    public static function onPaymentVoided(OrderPayment $payment, Order $order, ?User $user = null): void
+    {
+        self::dispatchPayment('payment.voided', $payment, $order, $user);
+    }
+
+    private static function dispatchPayment(string $event, OrderPayment $payment, Order $order, ?User $user): void
+    {
+        try {
+            WebhookService::dispatch($event, [
+                'payment' => [
+                    'id' => $payment->id,
+                    'type' => $payment->type->value,
+                    'amount' => (string) $payment->amount,
+                    'method' => $payment->method->value,
+                    'reference' => $payment->reference,
+                    'paid_at' => $payment->paid_at?->toIso8601String(),
+                    'notes' => $payment->notes,
+                    'voided_at' => $payment->voided_at?->toIso8601String(),
+                    'void_reason' => $payment->void_reason,
+                ],
+                'order' => [
+                    'id' => $order->id,
+                    'order_number' => $order->order_number,
+                    'currency' => $order->currency,
+                    'total' => (string) $order->total,
+                    'amount_paid' => (string) $order->amount_paid,
+                    'balance_due' => $order->balanceDue(),
+                    'payment_status' => $order->payment_status?->value,
+                ],
+                'user' => $user ? ['id' => $user->id, 'name' => $user->name, 'email' => $user->email] : null,
+            ], $order->organization_id);
+        } catch (\Exception $e) {
+            Log::error("Failed to dispatch {$event} webhook", [
+                'payment_id' => $payment->id,
+                'error' => $e->getMessage(),
+            ]);
+        }
+    }
+
     private static function formatOrderData(Order $order, ?User $user = null): array
     {
         $order->loadMissing('items');

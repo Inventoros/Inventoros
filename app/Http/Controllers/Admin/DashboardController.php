@@ -53,6 +53,9 @@ class DashboardController extends Controller
         $canViewOrders = $user->hasPermission(Permission::VIEW_ORDERS);
         $canViewReports = $user->hasPermission(Permission::VIEW_REPORTS);
         $canViewActivity = $user->hasPermission(Permission::VIEW_ACTIVITY_LOG);
+        // Receivables are a money aggregate (view_reports, like the others)
+        // built from payments (view_payments, like reports.receivables).
+        $canViewReceivables = $canViewReports && $user->hasPermission(Permission::VIEW_PAYMENTS);
 
         // Consolidate the five product-level aggregates (count, active stock
         // value, low-stock count) into one selectRaw round-trip and the three
@@ -111,6 +114,15 @@ class DashboardController extends Controller
             $deadStock = app(InventoryAnalyticsService::class)->deadStockSummary($orgId, 90, now());
             $stats['deadStockValue'] = $deadStock['total_value'];
             $stats['deadStockCount'] = $deadStock['product_count'];
+        }
+
+        if ($canViewReceivables) {
+            // What customers still owe on live orders. Overpaid orders owe
+            // nothing (they don't offset others) and cancelled orders are out.
+            $stats['outstandingReceivables'] = (float) Order::where('organization_id', $orgId)
+                ->where('status', '!=', 'cancelled')
+                ->whereColumn('total', '>', 'amount_paid')
+                ->sum(DB::raw('total - amount_paid'));
         }
 
         // Hook: Allow plugins to modify stats

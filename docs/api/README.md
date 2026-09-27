@@ -385,6 +385,7 @@ Events are fired by model observers after the database transaction commits, so t
 | --- | --- |
 | Product | `product.created`, `product.updated`, `product.deleted`, `product.low_stock`, `product.out_of_stock` |
 | Order | `order.created`, `order.updated`, `order.status_changed`, `order.approved`, `order.rejected` |
+| Payment | `payment.recorded`, `payment.voided` (a refund is a recorded payment of type `refund`) |
 | Stock | `stock.adjusted` |
 | Purchase order | `purchase_order.created`, `purchase_order.received`, `purchase_order.cancelled` |
 | Customer | `customer.created`, `customer.updated`, `customer.deleted` |

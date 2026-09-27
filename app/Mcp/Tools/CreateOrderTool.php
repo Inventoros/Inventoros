@@ -31,7 +31,9 @@ class CreateOrderTool extends Tool
             'status' => $schema->string()->enum(['pending', 'processing', 'shipped', 'delivered', 'cancelled'])->description('Initial status, default pending.'),
             'order_date' => $schema->string()->description('ISO date, default today.'),
             'notes' => $schema->string()->description('Internal notes.'),
-            'items' => $schema->array()->required()->description('Line items: [{product_id, product_variant_id?, quantity, unit_price?, tax?}]. product_variant_id is required for variant-tracked products. Must be non-empty.'),
+            'items' => $schema->array()->required()->description('Line items: [{product_id, product_variant_id?, quantity, unit_price?, tax?, discount_type?, discount_value?}]. product_variant_id is required for variant-tracked products. discount_type is percent or fixed. Must be non-empty.'),
+            'discount_type' => $schema->string()->enum(['percent', 'fixed'])->description('Order-level discount type (optional).'),
+            'discount_value' => $schema->number()->description('Order-level discount: a percentage (0-100) or an amount, applied after line discounts and before tax.'),
         ];
     }
 
@@ -56,6 +58,10 @@ class CreateOrderTool extends Tool
             'items.*.quantity' => ['required', 'integer', 'min:1'],
             'items.*.unit_price' => ['nullable', 'numeric', 'min:0'],
             'items.*.tax' => ['nullable', 'numeric', 'min:0'],
+            'items.*.discount_type' => ['nullable', 'string', 'in:percent,fixed'],
+            'items.*.discount_value' => ['nullable', 'numeric', 'min:0'],
+            'discount_type' => ['nullable', 'string', 'in:percent,fixed'],
+            'discount_value' => ['nullable', 'numeric', 'min:0'],
         ]);
 
         $validated['status'] ??= 'pending';
@@ -82,6 +88,8 @@ class CreateOrderTool extends Tool
                 'order_number' => $result->order_number,
                 'status' => $result->status,
                 'currency' => $result->currency,
+                'subtotal' => $result->subtotal,
+                'discount_amount' => $result->discount_amount,
                 'total' => $result->total,
                 'item_count' => $result->items->count(),
             ],

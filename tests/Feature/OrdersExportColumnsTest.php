@@ -10,7 +10,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
 /**
- * The orders export carried a "Discount" column and read $order->discount to
+ * History: the orders export carried a "Discount" column and read $order->discount to
  * fill it. There is no discount column on orders, in any migration, and no
  * such accessor on the model -- Eloquent returns null for an unknown
  * attribute, so the cell was silently blank in every export ever produced.
@@ -96,12 +96,66 @@ class OrdersExportColumnsTest extends TestCase
         );
     }
 
-    public function test_the_phantom_discount_column_is_gone(): void
+    public function test_the_discount_column_is_real_and_the_row_reconciles(): void
     {
-        $export = new OrdersExport($this->organization->id, []);
+        // Orders now carry real discounts, so the Discount column is back and
+        // backed by a stored value. It holds the whole discount (lines plus
+        // order level) so the row still adds up on its own.
+        $order = Order::create([
+            'organization_id' => $this->organization->id,
+            'order_number' => 'ORD-EXPORT-4',
+            'status' => 'pending',
+            'subtotal' => 100.00,
+            'discount_type' => 'percent',
+            'discount_value' => 10,
+            'discount_amount' => 12.50,
+            'tax' => 8.75,
+            'shipping' => 5.00,
+            'total' => 101.25,
+            'currency' => 'USD',
+            'order_date' => now(),
+        ]);
 
-        $this->assertNotContains('Discount', $export->headings());
+        $export = new OrdersExport($this->organization->id, []);
+        $row = array_combine($export->headings(), $export->map($order->fresh('items')));
+
         $this->assertContains('Shipping', $export->headings());
+        $this->assertSame('12.50', $row['Discount']);
+        $this->assertSame(
+            $row['Total'],
+            \App\Support\Money::add(\App\Support\Money::subtract($row['Subtotal'], $row['Discount']), $row['Tax'], $row['Shipping']),
+            'Subtotal - Discount + Tax + Shipping must equal Total.',
+        );
+    }
+
+    public function test_an_order_created_with_discounts_exports_a_reconciling_row(): void
+    {
+        $admin = \App\Models\User::create([
+            'name' => 'Exporter', 'email' => 'exporter@organization.com', 'password' => bcrypt('password'),
+            'organization_id' => $this->organization->id, 'role' => 'admin',
+        ]);
+        $product = \App\Models\Inventory\Product::create([
+            'organization_id' => $this->organization->id, 'sku' => 'EXP-1', 'name' => 'Exported',
+            'price' => 12.34, 'currency' => 'USD', 'stock' => 50, 'min_stock' => 0, 'is_active' => true,
+        ]);
+
+        $order = app(\App\Services\OrderService::class)->create([
+            'customer_name' => 'Acme', 'status' => 'pending', 'order_date' => now(),
+            'tax' => 1.11, 'shipping' => 2.22,
+            'discount_type' => 'percent', 'discount_value' => 7,
+            'items' => [
+                ['product_id' => $product->id, 'quantity' => 3, 'unit_price' => 12.34, 'discount_type' => 'percent', 'discount_value' => 15],
+                ['product_id' => $product->id, 'quantity' => 1, 'unit_price' => 9.99, 'discount_type' => 'fixed', 'discount_value' => 0.99],
+            ],
+        ], $admin);
+
+        $export = new OrdersExport($this->organization->id, []);
+        $row = array_combine($export->headings(), $export->map($order->fresh('items')));
+
+        $this->assertSame(
+            $row['Total'],
+            \App\Support\Money::add(\App\Support\Money::subtract($row['Subtotal'], $row['Discount']), $row['Tax'], $row['Shipping']),
+        );
     }
 
     public function test_headings_and_mapped_cells_stay_the_same_length(): void

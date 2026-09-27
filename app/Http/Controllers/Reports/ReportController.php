@@ -4,12 +4,15 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Reports;
 
+use App\Enums\PaymentStatus;
+use App\Enums\Permission;
 use App\Http\Controllers\Controller;
 use App\Models\Inventory\Product;
 use App\Models\Inventory\StockAdjustment;
 use App\Models\Order\Order;
 use App\Models\Order\OrderItem;
 use App\Models\SavedReport;
+use App\Services\ReceivablesAgingService;
 use App\Services\ReorderService;
 use App\Services\Reports\InventoryAnalyticsService;
 use App\Services\Reports\ReportExporter;
@@ -307,6 +310,32 @@ class ReportController extends Controller
             'average_order_value' => $totalOrders > 0 ? $totalRevenue / $totalOrders : 0,
         ];
 
+        // Payment position of the window's orders, only for users who may see
+        // payments (absent, not zeroed, for everyone else).
+        $byPaymentStatus = null;
+        if ($request->user()->hasPermission(Permission::VIEW_PAYMENTS)) {
+            $rows = Order::forOrganization($organizationId)
+                ->whereBetween('order_date', [$fromTimestamp, $toTimestamp])
+                ->where('status', '!=', 'cancelled')
+                ->selectRaw('payment_status, COUNT(*) as count, COALESCE(SUM(total), 0) as total, COALESCE(SUM(amount_paid), 0) as amount_paid, COALESCE(SUM(CASE WHEN total > amount_paid THEN total - amount_paid ELSE 0 END), 0) as balance_due')
+                ->groupBy('payment_status')
+                ->get()
+                ->keyBy(fn ($row) => $row->payment_status instanceof PaymentStatus ? $row->payment_status->value : (string) $row->payment_status);
+
+            $byPaymentStatus = collect(PaymentStatus::cases())
+                ->filter(fn (PaymentStatus $status) => $rows->has($status->value))
+                ->map(fn (PaymentStatus $status) => [
+                    'payment_status' => $status->value,
+                    'count' => (int) $rows[$status->value]->count,
+                    'total' => round((float) $rows[$status->value]->total, 2),
+                    'amount_paid' => round((float) $rows[$status->value]->amount_paid, 2),
+                    'balance_due' => round((float) $rows[$status->value]->balance_due, 2),
+                ])
+                ->values();
+
+            $summary['total_outstanding'] = round((float) $byPaymentStatus->sum('balance_due'), 2);
+        }
+
         // Sales by status
         $byStatus = Order::forOrganization($organizationId)
             ->whereBetween('order_date', [$fromTimestamp, $toTimestamp])
@@ -404,9 +433,10 @@ class ReportController extends Controller
             };
         }
 
-        return Inertia::render('Reports/SalesAnalysis', [
+        return Inertia::render('Reports/SalesAnalysis', array_filter([
             'summary' => $summary,
             'byStatus' => $byStatus,
+            'byPaymentStatus' => $byPaymentStatus,
             'topProducts' => $topProducts,
             'dailySales' => $dailySales,
             'comparison' => $comparison,
@@ -414,6 +444,18 @@ class ReportController extends Controller
                 'date_from' => $dateFrom,
                 'date_to' => $dateTo,
             ],
+        ], fn ($value) => $value !== null));
+    }
+
+    /**
+     * Outstanding balances (accounts receivable aging).
+     *
+     * Route-gated by view_reports and view_payments.
+     */
+    public function receivables(Request $request, ReceivablesAgingService $aging): Response
+    {
+        return Inertia::render('Reports/Receivables', $aging->build($request->user()->organization_id) + [
+            'currency' => $request->user()->organization?->currency ?? 'USD',
         ]);
     }
 
