@@ -4,9 +4,12 @@ import PageHeader from '@/Components/ui/PageHeader.vue';
 import Card from '@/Components/ui/Card.vue';
 import Button from '@/Components/ui/Button.vue';
 import { Head, Link, useForm } from '@inertiajs/vue3';
-import { computed } from 'vue';
+import { computed, defineAsyncComponent, ref } from 'vue';
+import { useBarcodeWedge, useBarcodeLookup } from '@/composables/useBarcodeWedge';
 import { useI18n } from 'vue-i18n';
-import { ArrowLeft, ArrowRight, Plus, Trash2 } from 'lucide-vue-next';
+import { ArrowLeft, ArrowRight, Plus, Trash2, ScanLine } from 'lucide-vue-next';
+
+const BarcodeScannerModal = defineAsyncComponent(() => import('@/Components/BarcodeScannerModal.vue'));
 
 const { t } = useI18n();
 
@@ -57,6 +60,57 @@ const totalItems = computed(() => {
 const hasValidItems = computed(() => {
     return form.items.some(item => item.product_id && item.quantity > 0);
 });
+
+// --- Scanning ---------------------------------------------------------
+// Scan (camera modal or keyboard-wedge scanner) to add a product line, or
+// bump the quantity when the product is already on the transfer. Transfers
+// move whole products, so a variant barcode resolves to its product.
+const showScanner = ref(false);
+const scanMessage = ref('');
+const scanMessageTone = ref('info');
+const { lookup } = useBarcodeLookup();
+
+const addScannedProduct = (product) => {
+    showScanner.value = false;
+    const known = props.products.find(p => p.id === product.id);
+    if (!known) {
+        scanMessage.value = t('scanning.notTransferable', { name: product.name });
+        scanMessageTone.value = 'warning';
+        return;
+    }
+    const existing = form.items.find(item => parseInt(item.product_id) === known.id);
+    if (existing) {
+        existing.quantity = (parseInt(existing.quantity) || 0) + 1;
+    } else {
+        const blank = form.items.find(item => !item.product_id);
+        if (blank) {
+            blank.product_id = known.id;
+            blank.quantity = 1;
+        } else {
+            form.items.push({ product_id: known.id, quantity: 1, notes: '' });
+        }
+    }
+    const line = form.items.find(item => parseInt(item.product_id) === known.id);
+    scanMessage.value = t('scanning.addedToLine', { name: known.name, quantity: line.quantity });
+    scanMessageTone.value = 'success';
+};
+
+const onScannedCode = async (code) => {
+    try {
+        const found = await lookup(code);
+        if (!found) {
+            scanMessage.value = t('scanning.notFound', { code });
+            scanMessageTone.value = 'danger';
+            return;
+        }
+        addScannedProduct(found.product);
+    } catch (error) {
+        scanMessage.value = t('scanning.lookupFailed');
+        scanMessageTone.value = 'danger';
+    }
+};
+
+useBarcodeWedge(onScannedCode, { enabled: () => !showScanner.value });
 
 const submit = () => {
     form.post(route('stock-transfers.store'), {
@@ -163,12 +217,34 @@ const fieldError = 'mt-1 text-xs text-status-danger';
 
             <!-- Transfer Items -->
             <Card :padded="false">
-                <div class="flex items-center justify-between px-5 pt-5">
+                <div class="flex flex-wrap items-center justify-between gap-2 px-5 pt-5">
                     <h3 class="text-sm font-semibold text-text-primary">Transfer Items</h3>
-                    <Button type="button" variant="default" size="sm" @click="addItem">
-                        <Plus :size="14" />
-                        Add Item
-                    </Button>
+                    <div class="flex flex-wrap gap-2">
+                        <Button type="button" variant="secondary" size="lg" class="min-h-11" @click="showScanner = true">
+                            <ScanLine :size="16" />
+                            {{ t('scanning.scan') }}
+                        </Button>
+                        <Button type="button" variant="default" size="lg" class="min-h-11" @click="addItem">
+                            <Plus :size="14" />
+                            Add Item
+                        </Button>
+                    </div>
+                </div>
+                <div class="px-5 pt-2">
+                    <p class="text-xs text-text-tertiary">{{ t('scanning.transferCreateHint') }}</p>
+                    <p
+                        v-if="scanMessage"
+                        class="mt-1 text-sm font-medium"
+                        :class="{
+                            'text-status-success': scanMessageTone === 'success',
+                            'text-status-warning': scanMessageTone === 'warning',
+                            'text-status-danger': scanMessageTone === 'danger',
+                        }"
+                        role="status"
+                        aria-live="polite"
+                    >
+                        {{ scanMessage }}
+                    </p>
                 </div>
                 <div class="p-5">
                     <p v-if="form.errors.items" :class="fieldError" class="mb-4">
@@ -179,10 +255,10 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                         <div
                             v-for="(item, index) in form.items"
                             :key="index"
-                            class="flex items-start gap-4 rounded-lg border border-border-subtle bg-surface-canvas p-4"
+                            class="flex flex-wrap items-start gap-4 rounded-lg border border-border-subtle bg-surface-canvas p-4"
                         >
                             <!-- Product -->
-                            <div class="min-w-[200px] flex-1">
+                            <div class="min-w-0 flex-1 basis-full sm:basis-auto sm:min-w-[200px]">
                                 <label :class="fieldLabel">Product <span class="text-status-danger">*</span></label>
                                 <select
                                     v-model="item.product_id"
@@ -218,7 +294,7 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                             </div>
 
                             <!-- Notes -->
-                            <div class="min-w-[150px] flex-1">
+                            <div class="min-w-0 flex-1 sm:min-w-[150px]">
                                 <label :class="fieldLabel">Notes</label>
                                 <input
                                     v-model="item.notes"
@@ -269,5 +345,12 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                 </Button>
             </div>
         </form>
+
+        <!-- Barcode Scanner Modal -->
+        <BarcodeScannerModal
+            :show="showScanner"
+            @close="showScanner = false"
+            @product-found="addScannedProduct"
+        />
     </AppLayout>
 </template>

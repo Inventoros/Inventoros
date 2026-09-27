@@ -5,9 +5,12 @@ import Card from '@/Components/ui/Card.vue';
 import Button from '@/Components/ui/Button.vue';
 import Badge from '@/Components/ui/Badge.vue';
 import { Head, Link, router } from '@inertiajs/vue3';
-import { ref } from 'vue';
+import { computed, defineAsyncComponent, ref } from 'vue';
+import { useBarcodeWedge, useBarcodeLookup } from '@/composables/useBarcodeWedge';
 import { useI18n } from 'vue-i18n';
-import { ArrowLeft, CheckCircle2, XCircle } from 'lucide-vue-next';
+import { ArrowLeft, CheckCircle2, XCircle, ScanLine, RotateCcw } from 'lucide-vue-next';
+
+const BarcodeScannerModal = defineAsyncComponent(() => import('@/Components/BarcodeScannerModal.vue'));
 
 const { t } = useI18n();
 
@@ -64,6 +67,70 @@ const cancelTransfer = () => {
         onFinish: () => { processing.value = false; },
     });
 };
+
+// --- Scan to verify ---------------------------------------------------
+// A frontend-only checklist: scanning a product counts one unit against its
+// line so the person receiving can confirm the shipment before completing.
+// Nothing is saved; completing the transfer works exactly as before.
+const verifying = ref(false);
+const showScanner = ref(false);
+const scanned = ref({});
+const scanMessage = ref('');
+const scanMessageTone = ref('info');
+const { lookup } = useBarcodeLookup();
+
+const scannedFor = (item) => scanned.value[item.id] || 0;
+const lineState = (item) => {
+    const count = scannedFor(item);
+    if (count === item.quantity) return 'match';
+    if (count > item.quantity) return 'over';
+    return 'short';
+};
+const allLinesMatch = computed(() =>
+    (props.transfer.items || []).length > 0
+    && props.transfer.items.every(item => scannedFor(item) === item.quantity)
+);
+
+const onVerifyProduct = (product) => {
+    showScanner.value = false;
+    const items = props.transfer.items || [];
+    // Prefer a line that still needs units, so duplicate lines fill in order.
+    const item = items.find(i => i.product_id === product.id && scannedFor(i) < i.quantity)
+        || items.find(i => i.product_id === product.id);
+    if (!item) {
+        scanMessage.value = t('scanning.notOnTransfer', { name: product.name });
+        scanMessageTone.value = 'warning';
+        return;
+    }
+    scanned.value = { ...scanned.value, [item.id]: scannedFor(item) + 1 };
+    const over = scannedFor(item) > item.quantity;
+    scanMessage.value = over
+        ? t('scanning.overScanned', { name: item.product?.name || product.name, scanned: scannedFor(item), expected: item.quantity })
+        : t('scanning.verifiedOne', { name: item.product?.name || product.name, scanned: scannedFor(item), expected: item.quantity });
+    scanMessageTone.value = over ? 'warning' : 'success';
+};
+
+const onVerifyCode = async (code) => {
+    try {
+        const found = await lookup(code);
+        if (!found) {
+            scanMessage.value = t('scanning.notFound', { code });
+            scanMessageTone.value = 'danger';
+            return;
+        }
+        onVerifyProduct(found.product);
+    } catch (error) {
+        scanMessage.value = t('scanning.lookupFailed');
+        scanMessageTone.value = 'danger';
+    }
+};
+
+const resetVerification = () => {
+    scanned.value = {};
+    scanMessage.value = '';
+};
+
+useBarcodeWedge(onVerifyCode, { enabled: () => verifying.value && canComplete && !showScanner.value });
 
 const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-text-secondary';
 </script>
@@ -184,6 +251,78 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-t
                 </div>
             </Card>
 
+            <!-- Scan to verify (frontend-only checklist) -->
+            <Card v-if="canComplete" :padded="false">
+                <div class="flex flex-wrap items-center justify-between gap-2 px-5 pt-5">
+                    <h3 class="text-sm font-semibold text-text-primary">{{ t('scanning.verifyTitle') }}</h3>
+                    <Badge v-if="verifying" :variant="allLinesMatch ? 'success' : 'warning'" size="md" dot>
+                        {{ allLinesMatch ? t('scanning.allMatch') : t('scanning.notYetMatched') }}
+                    </Badge>
+                </div>
+                <div class="p-5">
+                    <p class="text-xs text-text-tertiary">{{ t('scanning.verifyHint') }}</p>
+                    <div class="mt-3 flex flex-wrap gap-2">
+                        <Button
+                            v-if="!verifying"
+                            variant="secondary"
+                            size="lg"
+                            class="min-h-11"
+                            @click="verifying = true"
+                        >
+                            <ScanLine :size="16" />
+                            {{ t('scanning.startVerify') }}
+                        </Button>
+                        <template v-else>
+                            <Button size="lg" class="min-h-11" @click="showScanner = true">
+                                <ScanLine :size="16" />
+                                {{ t('scanning.scan') }}
+                            </Button>
+                            <Button variant="secondary" size="lg" class="min-h-11" @click="resetVerification">
+                                <RotateCcw :size="16" />
+                                {{ t('scanning.reset') }}
+                            </Button>
+                        </template>
+                    </div>
+
+                    <p
+                        v-if="scanMessage"
+                        class="mt-3 text-sm font-medium"
+                        :class="{
+                            'text-status-success': scanMessageTone === 'success',
+                            'text-status-warning': scanMessageTone === 'warning',
+                            'text-status-danger': scanMessageTone === 'danger',
+                        }"
+                        role="status"
+                        aria-live="polite"
+                    >
+                        {{ scanMessage }}
+                    </p>
+
+                    <ul v-if="verifying" class="mt-4 divide-y divide-border-subtle rounded-lg border border-border-subtle">
+                        <li
+                            v-for="item in transfer.items"
+                            :key="`verify-${item.id}`"
+                            class="flex min-h-11 flex-wrap items-center justify-between gap-2 px-4 py-2"
+                            :class="{
+                                'bg-status-success-soft': lineState(item) === 'match',
+                                'bg-status-warning-soft': lineState(item) === 'over',
+                            }"
+                        >
+                            <span class="min-w-0 text-sm font-medium text-text-primary">
+                                {{ item.product?.name || '-' }}
+                                <span class="block text-xs font-normal text-text-tertiary">{{ item.product?.sku || '' }}</span>
+                            </span>
+                            <span class="flex items-center gap-2 text-sm tabular-nums">
+                                <span :class="lineState(item) === 'match' ? 'text-status-success' : lineState(item) === 'over' ? 'text-status-warning' : 'text-text-secondary'">
+                                    {{ t('scanning.scannedOfExpected', { scanned: scannedFor(item), expected: item.quantity }) }}
+                                </span>
+                                <CheckCircle2 v-if="lineState(item) === 'match'" :size="16" class="text-status-success" />
+                            </span>
+                        </li>
+                    </ul>
+                </div>
+            </Card>
+
             <!-- Actions -->
             <Card v-if="canComplete || canCancel" :padded="false">
                 <div class="px-5 pt-5"><h3 class="text-sm font-semibold text-text-primary">Actions</h3></div>
@@ -216,5 +355,12 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-t
                 </div>
             </Card>
         </div>
+
+        <!-- Barcode Scanner Modal (scan to verify) -->
+        <BarcodeScannerModal
+            :show="showScanner"
+            @close="showScanner = false"
+            @product-found="onVerifyProduct"
+        />
     </AppLayout>
 </template>
