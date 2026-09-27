@@ -1,69 +1,93 @@
 <script setup>
-import { ref, onMounted, onUnmounted } from 'vue'
-import { useI18n } from 'vue-i18n'
-import { availableLocales, setLocale } from '@/i18n'
+/**
+ * Language picker for the top strip.
+ *
+ * Switches vue-i18n immediately and writes the `locale` cookie (via
+ * setLocale). For a signed-in user it also saves the choice as their
+ * language preference, because SetLocale prefers the saved preference over
+ * the cookie: without saving, the next page load would switch back.
+ */
+import { computed, ref, onMounted, onUnmounted } from 'vue';
+import { router, usePage } from '@inertiajs/vue3';
+import { useI18n } from 'vue-i18n';
+import { Languages, Check } from 'lucide-vue-next';
+import { availableLocales, setLocale } from '@/i18n';
 
-const { locale } = useI18n()
-const isOpen = ref(false)
-const dropdownRef = ref(null)
+const { locale } = useI18n();
+const page = usePage();
+const isOpen = ref(false);
+const dropdownRef = ref(null);
 
-const currentLocale = () => {
-    return availableLocales.find(l => l.code === locale.value) || availableLocales[0]
-}
+const current = computed(() => availableLocales.find((l) => l.code === locale.value) || availableLocales[0]);
 
 const switchLocale = (code) => {
-    setLocale(code)
-    isOpen.value = false
-}
+    isOpen.value = false;
+    if (code === locale.value) return;
+
+    setLocale(code);
+
+    if (page.props.auth?.user) {
+        router.patch(route('settings.account.update.locale'), { locale: code }, {
+            preserveScroll: true,
+            preserveState: true,
+        });
+    }
+};
 
 const handleClickOutside = (event) => {
     if (dropdownRef.value && !dropdownRef.value.contains(event.target)) {
-        isOpen.value = false
+        isOpen.value = false;
     }
-}
+};
 
-onMounted(() => document.addEventListener('click', handleClickOutside))
-onUnmounted(() => document.removeEventListener('click', handleClickOutside))
+onMounted(() => document.addEventListener('click', handleClickOutside));
+onUnmounted(() => document.removeEventListener('click', handleClickOutside));
 </script>
 
 <template>
     <div ref="dropdownRef" class="relative">
         <button
+            type="button"
             @click="isOpen = !isOpen"
-            class="flex items-center gap-2 px-3 py-2 text-sm text-gray-400 hover:text-gray-200 rounded-lg hover:bg-surface-canvas/50 transition"
+            class="flex items-center gap-1.5 h-8 px-2 rounded-md text-xs text-text-secondary hover:text-text-primary hover:bg-surface-overlay transition-colors ds-focus-ring"
+            :aria-expanded="isOpen"
+            aria-haspopup="listbox"
+            :aria-label="`Language: ${current.name}`"
         >
-            <span class="text-base">{{ currentLocale().flag }}</span>
-            <span class="hidden sm:inline">{{ currentLocale().name }}</span>
-            <svg class="w-4 h-4" :class="{ 'rotate-180': isOpen }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-            </svg>
+            <Languages :size="15" />
+            <span class="hidden sm:inline uppercase">{{ current.code }}</span>
         </button>
 
         <Transition
-            enter-active-class="transition ease-out duration-200"
-            enter-from-class="opacity-0 translate-y-1"
+            enter-active-class="transition ease-out duration-150"
+            enter-from-class="opacity-0 -translate-y-1"
             enter-to-class="opacity-100 translate-y-0"
-            leave-active-class="transition ease-in duration-150"
+            leave-active-class="transition ease-in duration-100"
             leave-from-class="opacity-100 translate-y-0"
-            leave-to-class="opacity-0 translate-y-1"
+            leave-to-class="opacity-0 -translate-y-1"
         >
             <div
                 v-if="isOpen"
-                class="absolute right-0 bottom-full mb-2 w-48 bg-surface-raised border border-border-subtle rounded-lg shadow-xl overflow-hidden z-50 max-h-80 overflow-y-auto"
+                role="listbox"
+                class="absolute right-0 top-full mt-2 w-48 bg-surface-raised border border-border-subtle rounded-lg shadow-xl overflow-hidden z-50 max-h-80 overflow-y-auto ds-scroll"
             >
                 <button
                     v-for="loc in availableLocales"
                     :key="loc.code"
+                    type="button"
+                    role="option"
+                    :aria-selected="locale === loc.code"
+                    :lang="loc.code"
                     @click="switchLocale(loc.code)"
                     :class="[
-                        'w-full flex items-center gap-3 px-4 py-2.5 text-sm transition',
+                        'w-full flex items-center gap-3 px-3 py-2 text-sm transition-colors',
                         locale === loc.code
                             ? 'bg-brand/10 text-brand'
-                            : 'text-gray-400 hover:text-gray-200 hover:bg-surface-canvas/50'
+                            : 'text-text-secondary hover:text-text-primary hover:bg-surface-overlay'
                     ]"
                 >
-                    <span class="text-base">{{ loc.flag }}</span>
-                    <span>{{ loc.name }}</span>
+                    <span class="flex-1 text-left">{{ loc.name }}</span>
+                    <Check v-if="locale === loc.code" :size="14" />
                 </button>
             </div>
         </Transition>

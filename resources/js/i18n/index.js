@@ -15,11 +15,12 @@ import nl from './locales/nl.json'
 import tr from './locales/tr.json'
 import pl from './locales/pl.json'
 
-const savedLocale = localStorage.getItem('locale')
-
+// The server resolves the locale (the signed-in user's saved language, then
+// the `locale` cookie, then the app default) and renders it into <html lang>,
+// so that wins. localStorage is only a fallback for a page with no lang.
 const i18n = createI18n({
     legacy: false,
-    locale: savedLocale || document.documentElement.lang || 'en',
+    locale: document.documentElement.lang || localStorage.getItem('locale') || 'en',
     fallbackLocale: 'en',
     messages: {
         en,
@@ -55,6 +56,18 @@ export const availableLocales = [
     { code: 'tr', name: 'T\u00fcrk\u00e7e', flag: '\uD83C\uDDF9\uD83C\uDDF7' },
     { code: 'pl', name: 'Polski', flag: '\uD83C\uDDF5\uD83C\uDDF1' },
 ]
+
+/**
+ * Apply a locale resolved by the server (the shared `locale` prop) without
+ * rewriting the cookie. Unknown codes are ignored so a bad value cannot blank
+ * the UI.
+ */
+export function applyServerLocale(locale) {
+    if (!locale || !availableLocales.some((l) => l.code === locale)) return
+    if (i18n.global.locale.value === locale) return
+    i18n.global.locale.value = locale
+    document.documentElement.lang = locale
+}
 
 export function setLocale(locale) {
     i18n.global.locale.value = locale

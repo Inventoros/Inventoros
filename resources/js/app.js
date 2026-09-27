@@ -1,11 +1,11 @@
 import '../css/app.css';
 import './bootstrap';
 
-import { createInertiaApp } from '@inertiajs/vue3';
+import { createInertiaApp, router } from '@inertiajs/vue3';
 import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
 import { createApp, h } from 'vue';
 import { ZiggyVue } from 'ziggy-js';
-import i18n from './i18n';
+import i18n, { applyServerLocale } from './i18n';
 
 const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
 
@@ -38,6 +38,11 @@ createInertiaApp({
         );
     },
     setup({ el, App, props, plugin }) {
+        // Keep vue-i18n on the locale the server resolved, including after a
+        // visit that changed it (saving the language preference).
+        applyServerLocale(props.initialPage?.props?.locale);
+        router.on('navigate', (event) => applyServerLocale(event.detail.page.props.locale));
+
         return createApp({ render: () => h(App, props) })
             .use(plugin)
             .use(ZiggyVue)

@@ -3,9 +3,10 @@ import AppLayout from '@/Layouts/AppLayout.vue';
 import PageHeader from '@/Components/ui/PageHeader.vue';
 import Card from '@/Components/ui/Card.vue';
 import Button from '@/Components/ui/Button.vue';
-import { Head, Link, useForm } from '@inertiajs/vue3';
+import { Head, Link, useForm, usePage } from '@inertiajs/vue3';
 import { ref } from 'vue';
 import { useI18n } from 'vue-i18n';
+import { availableLocales } from '@/i18n';
 
 const { t } = useI18n();
 
@@ -13,7 +14,10 @@ const props = defineProps({
     user: Object,
 });
 
-const activeTab = ref('profile');
+// Deep-linkable tabs (e.g. the settings hub links to ?tab=notifications).
+const tabs = ['profile', 'password', 'notifications', 'preferences'];
+const requestedTab = new URLSearchParams(window.location.search).get('tab');
+const activeTab = ref(tabs.includes(requestedTab) ? requestedTab : 'profile');
 
 // Profile form
 const profileForm = useForm({
@@ -62,7 +66,7 @@ const submitNotifications = () => {
 const userPrefs = notificationPrefs.preferences || {};
 const preferencesForm = useForm({
     theme: userPrefs.theme || 'dark',
-    language: userPrefs.language || 'en',
+    language: userPrefs.language || usePage().props.locale || 'en',
     items_per_page: userPrefs.items_per_page || 25,
 });
 
@@ -92,7 +96,7 @@ const toggles = [
             <div class="flex items-center gap-2 text-xs">
                 <Link :href="route('settings.account.index')" class="text-text-tertiary hover:text-text-primary">Workspace</Link>
                 <span class="text-text-tertiary">/</span>
-                <Link :href="route('settings.account.index')" class="text-text-tertiary hover:text-text-primary">Settings</Link>
+                <Link :href="route('settings.index')" class="text-text-tertiary hover:text-text-primary">Settings</Link>
                 <span class="text-text-tertiary">/</span>
                 <span class="font-medium text-text-primary">Account</span>
             </div>
@@ -330,9 +334,7 @@ const toggles = [
                                     v-model="preferencesForm.language"
                                     :class="fieldInput"
                                 >
-                                    <option value="en">English</option>
-                                    <option value="es">Spanish</option>
-                                    <option value="fr">French</option>
+                                    <option v-for="loc in availableLocales" :key="loc.code" :value="loc.code">{{ loc.name }}</option>
                                 </select>
                                 <p v-if="preferencesForm.errors.language" :class="fieldError">{{ preferencesForm.errors.language }}</p>
                             </div>

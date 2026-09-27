@@ -81,6 +81,7 @@ Route::prefix('settings')->name('settings.')->group(function () {
         Route::patch('/password', [AccountSettingsController::class, 'updatePassword'])->name('update.password');
         Route::patch('/notifications', [AccountSettingsController::class, 'updateNotifications'])->name('update.notifications');
         Route::patch('/preferences', [AccountSettingsController::class, 'updatePreferences'])->name('update.preferences');
+        Route::patch('/locale', [AccountSettingsController::class, 'updateLocale'])->name('update.locale');
     });
 
     // Email Settings (admin only)
