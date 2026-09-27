@@ -131,6 +131,9 @@ class DashboardController extends Controller
         // Action: Stats calculated
         do_action('dashboard_stats_calculated', $stats, $user);
 
+        // Alias kept for plugins written against the name the guide used.
+        do_action('dashboard_stats', $stats, $user);
+
         // Get recent products
         $recentProducts = ! $canViewProducts ? collect() : Product::where('organization_id', $user->organization_id)
             ->with(['category', 'location'])
