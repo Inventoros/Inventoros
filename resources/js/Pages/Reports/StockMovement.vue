@@ -5,6 +5,7 @@ import StatTile from '@/Components/ui/StatTile.vue';
 import Card from '@/Components/ui/Card.vue';
 import Button from '@/Components/ui/Button.vue';
 import Badge from '@/Components/ui/Badge.vue';
+import ExportMenu from '@/Components/Reports/ExportMenu.vue';
 import { Head, Link, router } from '@inertiajs/vue3';
 import { ref } from 'vue';
 import { useI18n } from 'vue-i18n';
@@ -83,6 +84,7 @@ const thClass =
 
         <PageHeader :title="t('reports.stockMovement.title')" :description="t('reports.stockMovement.description')">
             <template #actions>
+                <ExportMenu route-name="reports.stock-movement" :params="filters || {}" />
                 <Button variant="secondary" size="sm" as="Link" :href="route('reports.index')">
                     <ArrowLeft :size="14" />
                     {{ t('reports.backToReports') }}

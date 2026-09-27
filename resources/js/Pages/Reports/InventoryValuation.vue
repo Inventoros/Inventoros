@@ -5,6 +5,7 @@ import Card from '@/Components/ui/Card.vue';
 import CardHeader from '@/Components/ui/CardHeader.vue';
 import StatTile from '@/Components/ui/StatTile.vue';
 import Button from '@/Components/ui/Button.vue';
+import ExportMenu from '@/Components/Reports/ExportMenu.vue';
 import { Head, Link } from '@inertiajs/vue3';
 import { useI18n } from 'vue-i18n';
 import {
@@ -12,7 +13,6 @@ import {
     Layers,
     DollarSign,
     TrendingUp,
-    Download,
     ArrowLeft,
 } from 'lucide-vue-next';
 
@@ -22,6 +22,8 @@ const props = defineProps({
     products: Array,
     summary: Object,
     byCategory: Array,
+    byLocation: { type: Array, default: () => [] },
+    truncated: Boolean,
 });
 
 const formatCurrency = (value) => {
@@ -29,38 +31,6 @@ const formatCurrency = (value) => {
         style: 'currency',
         currency: 'USD',
     }).format(value);
-};
-
-const exportCsv = () => {
-    const headers = [
-        t('common.product'),
-        'SKU',
-        t('products.category'),
-        t('products.stock'),
-        t('common.price'),
-        t('reports.inventoryValuation.stockValue'),
-        t('reports.inventoryValuation.profitPotential'),
-    ];
-    const escape = (val) => `"${String(val ?? '').replace(/"/g, '""')}"`;
-    const rows = props.products.map((p) => [
-        p.name,
-        p.sku,
-        p.category || t('reports.inventoryValuation.uncategorized'),
-        p.stock,
-        p.price,
-        p.stock_value,
-        p.profit_potential,
-    ]);
-    const csv = [headers, ...rows].map((row) => row.map(escape).join(',')).join('\n');
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = 'inventory-valuation.csv';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
 };
 
 const thClass =
@@ -88,10 +58,7 @@ const thRightClass =
             :description="t('reports.inventoryValuation.description')"
         >
             <template #actions>
-                <Button variant="secondary" size="sm" @click="exportCsv">
-                    <Download :size="14" />
-                    {{ t('reportBuilder.actions.export') }}
-                </Button>
+                <ExportMenu route-name="reports.inventory-valuation" />
                 <Button variant="secondary" size="sm" as="Link" :href="route('reports.index')">
                     <ArrowLeft :size="14" />
                     {{ t('reports.backToReports') }}
@@ -139,12 +106,16 @@ const thRightClass =
         <section class="mt-4">
             <Card :padded="false">
                 <div class="px-5 pt-5">
-                    <CardHeader :title="t('reports.inventoryValuation.valueByCategory')" />
+                    <CardHeader :title="t('reports.inventoryValuation.valueByCategory')">
+                        <template #actions>
+                            <ExportMenu route-name="reports.inventory-valuation" group="category" />
+                        </template>
+                    </CardHeader>
                 </div>
                 <div class="grid grid-cols-1 gap-3 p-5 sm:grid-cols-2 lg:grid-cols-3">
                     <div
                         v-for="cat in byCategory"
-                        :key="cat.category"
+                        :key="cat.category_id ?? cat.category"
                         class="rounded-lg border border-border-subtle bg-surface-canvas p-4 transition-colors hover:border-border-strong"
                     >
                         <p class="text-sm font-medium text-text-primary">{{ cat.category }}</p>
@@ -167,6 +138,53 @@ const thRightClass =
             </Card>
         </section>
 
+        <!-- By location -->
+        <section class="mt-4">
+            <Card :padded="false">
+                <div class="px-5 pt-5">
+                    <CardHeader :title="t('reports.valuationByLocation.title')">
+                        <template #actions>
+                            <ExportMenu route-name="reports.inventory-valuation" group="location" />
+                        </template>
+                    </CardHeader>
+                </div>
+                <div class="w-full overflow-x-auto p-3">
+                    <table class="w-full text-sm">
+                        <thead>
+                            <tr class="border-b border-border-subtle">
+                                <th :class="thClass">{{ t('reports.common.location') }}</th>
+                                <th :class="thClass">{{ t('reports.common.warehouse') }}</th>
+                                <th :class="thRightClass">{{ t('reports.valuationByLocation.products') }}</th>
+                                <th :class="thRightClass">{{ t('common.quantity') }}</th>
+                                <th :class="thRightClass">{{ t('reports.valuationByLocation.costValue') }}</th>
+                                <th :class="thRightClass">{{ t('reports.valuationByLocation.retailValue') }}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr
+                                v-for="loc in byLocation"
+                                :key="loc.location_id ?? 'unallocated'"
+                                class="border-b border-border-subtle transition-colors last:border-b-0 hover:bg-surface-overlay"
+                            >
+                                <td class="px-4 py-3">
+                                    <p class="font-medium text-text-primary">{{ loc.location || t('reports.valuationByLocation.unallocated') }}</p>
+                                    <p v-if="!loc.location_id" class="text-xs text-text-tertiary">{{ t('reports.valuationByLocation.unallocatedHint') }}</p>
+                                </td>
+                                <td class="px-4 py-3 text-text-secondary">{{ loc.warehouse || '-' }}</td>
+                                <td class="px-4 py-3 text-right tabular-nums text-text-secondary">{{ loc.products }}</td>
+                                <td class="px-4 py-3 text-right tabular-nums text-text-primary">{{ loc.quantity }}</td>
+                                <td class="px-4 py-3 text-right tabular-nums text-text-secondary">{{ formatCurrency(loc.cost_value) }}</td>
+                                <td class="px-4 py-3 text-right font-semibold tabular-nums text-status-success">{{ formatCurrency(loc.retail_value) }}</td>
+                            </tr>
+                            <tr v-if="byLocation.length === 0">
+                                <td colspan="6" class="px-4 py-8 text-center text-sm text-text-tertiary">{{ t('reports.common.noData') }}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </Card>
+        </section>
+
         <!-- Product details -->
         <section class="mt-4">
             <Card :padded="false">
@@ -174,6 +192,7 @@ const thRightClass =
                     <CardHeader :title="t('reports.inventoryValuation.productDetails')" />
                 </div>
                 <div class="p-3">
+                    <p v-if="truncated" class="px-2 pb-2 text-xs text-status-warning">{{ t('reports.common.truncated', { count: products.length }) }}</p>
                     <div class="w-full overflow-x-auto">
                         <table class="w-full text-sm">
                             <thead>

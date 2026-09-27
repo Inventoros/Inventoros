@@ -6,6 +6,7 @@ import CardHeader from '@/Components/ui/CardHeader.vue';
 import Button from '@/Components/ui/Button.vue';
 import Badge from '@/Components/ui/Badge.vue';
 import StatTile from '@/Components/ui/StatTile.vue';
+import ExportMenu from '@/Components/Reports/ExportMenu.vue';
 import { Head, Link } from '@inertiajs/vue3';
 import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
@@ -14,7 +15,6 @@ import {
     Boxes,
     DollarSign,
     ArrowLeft,
-    Download,
 } from 'lucide-vue-next';
 
 const { t } = useI18n();
@@ -67,10 +67,7 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-t
                     <ArrowLeft :size="14" />
                     {{ t('reports.backToReports') }}
                 </Button>
-                <Button variant="default" size="sm" as="a" :href="route('reports.category-performance', { export: 'csv' })">
-                    <Download :size="14" />
-                    {{ t('common.export') }}
-                </Button>
+                <ExportMenu route-name="reports.category-performance" />
             </template>
         </PageHeader>
 
@@ -103,7 +100,7 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-t
         <section v-if="categories.length > 0" class="mt-6 grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
             <div
                 v-for="category in categories"
-                :key="category.category_id"
+                :key="category.category_id ?? 'none'"
                 class="rounded-lg border border-border-subtle bg-surface-raised p-4 transition-colors hover:border-border-strong"
             >
                 <div class="flex items-start justify-between gap-2">
@@ -166,7 +163,7 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-t
                         <tbody>
                             <tr
                                 v-for="category in categories"
-                                :key="category.category_id"
+                                :key="category.category_id ?? 'none'"
                                 class="border-b border-border-subtle transition-colors last:border-b-0 hover:bg-surface-overlay"
                             >
                                 <td class="px-4 py-3 font-medium text-text-primary">{{ category.category_name }}</td>

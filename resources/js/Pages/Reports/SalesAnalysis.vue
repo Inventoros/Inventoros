@@ -6,12 +6,13 @@ import CardHeader from '@/Components/ui/CardHeader.vue';
 import Button from '@/Components/ui/Button.vue';
 import Badge from '@/Components/ui/Badge.vue';
 import StatTile from '@/Components/ui/StatTile.vue';
+import ExportMenu from '@/Components/Reports/ExportMenu.vue';
+import { formatDelta, deltaTone } from '@/lib/reportFormat';
 import { Head, Link, router } from '@inertiajs/vue3';
 import { computed, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import {
     ArrowLeft,
-    Download,
     ShoppingCart,
     DollarSign,
     Boxes,
@@ -25,8 +26,16 @@ const props = defineProps({
     byStatus: Array,
     topProducts: Array,
     dailySales: Array,
+    comparison: Object,
     filters: Object,
 });
+
+// Change against the previous equal-length period, shown on each tile.
+const delta = (key) => {
+    const value = props.comparison?.delta?.[key];
+    return value === null || value === undefined ? null : `${formatDelta(value)} ${t('reports.salesComparison.vsPrevious')}`;
+};
+const tone = (key) => deltaTone(props.comparison?.delta?.[key]);
 
 const dateFrom = ref(props.filters?.date_from || '');
 const dateTo = ref(props.filters?.date_to || '');
@@ -46,10 +55,6 @@ const formatCurrency = (value) => {
         style: 'currency',
         currency: 'USD',
     }).format(value);
-};
-
-const exportReport = () => {
-    window.print();
 };
 
 const statusVariant = (status) =>
@@ -97,10 +102,7 @@ const thClass =
                     <ArrowLeft :size="14" />
                     {{ t('reports.backToReports') }}
                 </Button>
-                <Button variant="default" size="sm" @click="exportReport">
-                    <Download :size="14" />
-                    {{ t('common.export') }}
-                </Button>
+                <ExportMenu route-name="reports.sales-analysis" :params="filters" />
             </template>
         </PageHeader>
 
@@ -123,11 +125,17 @@ const thClass =
             </form>
         </Card>
 
+        <p v-if="comparison?.previousPeriod" class="mt-3 text-xs text-text-tertiary">
+            {{ t('reports.salesComparison.previousPeriod', { from: comparison.previousPeriod.date_from, to: comparison.previousPeriod.date_to }) }}
+        </p>
+
         <!-- Summary metrics -->
         <section class="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
             <StatTile
                 :label="t('reports.salesAnalysis.totalOrders')"
                 :value="summary.total_orders"
+                :delta="delta('total_orders')"
+                :delta-tone="tone('total_orders')"
                 icon-tone="brand"
             >
                 <template #icon><ShoppingCart :size="18" /></template>
@@ -135,6 +143,8 @@ const thClass =
             <StatTile
                 :label="t('reports.salesAnalysis.totalRevenue')"
                 :value="formatCurrency(summary.total_revenue)"
+                :delta="delta('total_revenue')"
+                :delta-tone="tone('total_revenue')"
                 icon-tone="success"
             >
                 <template #icon><DollarSign :size="18" /></template>
@@ -142,6 +152,8 @@ const thClass =
             <StatTile
                 :label="t('reports.salesAnalysis.itemsSold')"
                 :value="summary.total_items_sold"
+                :delta="delta('total_items_sold')"
+                :delta-tone="tone('total_items_sold')"
                 icon-tone="brand"
             >
                 <template #icon><Boxes :size="18" /></template>
@@ -149,6 +161,8 @@ const thClass =
             <StatTile
                 :label="t('reports.salesAnalysis.avgOrderValue')"
                 :value="formatCurrency(summary.average_order_value)"
+                :delta="delta('average_order_value')"
+                :delta-tone="tone('average_order_value')"
                 icon-tone="success"
             >
                 <template #icon><TrendingUp :size="18" /></template>
