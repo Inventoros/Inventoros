@@ -8,6 +8,7 @@ use App\Exceptions\InsufficientStockException;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StockAdjustment\StoreStockAdjustmentRequest;
 use App\Models\Inventory\Product;
+use App\Models\Inventory\ProductVariant;
 use App\Models\Inventory\ProductLocation;
 use App\Models\Inventory\StockAdjustment;
 use App\Models\User;
@@ -98,10 +99,29 @@ class StockAdjustmentController extends Controller
     {
         $organizationId = $request->user()->organization_id;
 
+        // Each product carries its active variants so the page can adjust a
+        // variant, picked by hand or resolved from a scanned variant barcode.
         $products = Product::forOrganization($organizationId)
             ->active()
+            ->with('activeVariants')
             ->orderBy('name')
-            ->get(['id', 'name', 'sku', 'stock']);
+            ->get(['id', 'name', 'sku', 'stock', 'has_variants'])
+            ->map(fn (Product $product) => [
+                'id' => $product->id,
+                'name' => $product->name,
+                'sku' => $product->sku,
+                'stock' => (int) $product->stock,
+                'has_variants' => (bool) $product->has_variants,
+                'variants' => $product->has_variants
+                    ? $product->activeVariants->map(fn (ProductVariant $variant) => [
+                        'id' => $variant->id,
+                        'title' => $variant->title,
+                        'sku' => $variant->sku,
+                        'stock' => (int) $variant->stock,
+                    ])->values()->all()
+                    : [],
+            ])
+            ->values();
 
         $locations = ProductLocation::forOrganization($organizationId)
             ->active()
@@ -141,6 +161,25 @@ class StockAdjustmentController extends Controller
 
         // Create the adjustment
         try {
+            if (! empty($validated['product_variant_id'])) {
+                // The request confirmed the variant belongs to this product;
+                // variant stock moves through the variant ledger path.
+                $variant = ProductVariant::where('product_id', $product->id)
+                    ->findOrFail($validated['product_variant_id']);
+
+                StockAdjustment::adjustVariant(
+                    variant: $variant,
+                    quantity: $validated['adjustment_quantity'],
+                    type: $validated['type'],
+                    reason: $validated['reason'],
+                    notes: $validated['notes'] ?? null,
+                    allowNegative: false,
+                );
+
+                return redirect()->route('stock-adjustments.index')
+                    ->with('success', 'Stock adjustment created successfully.');
+            }
+
             StockAdjustment::adjust(
                 product: $product,
                 quantity: $validated['adjustment_quantity'],

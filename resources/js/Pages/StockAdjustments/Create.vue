@@ -20,6 +20,7 @@ const props = defineProps({
 
 const form = useForm({
     product_id: '',
+    product_variant_id: null,
     type: 'manual',
     adjustment_quantity: 0,
     location_id: null,
@@ -38,8 +39,11 @@ const closeScanner = () => {
     showScannerModal.value = false;
 };
 
-const handleProductFound = (product) => {
+// A scanned variant barcode arrives with its variant, so the adjustment
+// targets that variant directly; a product code leaves the variant to pick.
+const handleProductFound = (product, variant = null) => {
     form.product_id = product.id;
+    form.product_variant_id = variant?.id ?? null;
     closeScanner();
 
     // Focus next field (adjustment quantity)
@@ -53,9 +57,35 @@ const selectedProduct = computed(() => {
     return props.products.find(p => p.id === form.product_id);
 });
 
+const selectedVariant = computed(() =>
+    selectedProduct.value?.variants?.find(v => v.id === form.product_variant_id) ?? null
+);
+
+// Picking a different product clears a variant that belonged to the old one.
+watch(() => form.product_id, () => {
+    if (form.product_variant_id && !selectedVariant.value) {
+        form.product_variant_id = null;
+    }
+});
+
+// Variant stock is not tracked by location, so a variant clears the location.
+watch(() => form.product_variant_id, (variantId) => {
+    if (variantId) {
+        form.location_id = null;
+    }
+});
+
+// The count being adjusted: the variant's when one is chosen. A product sold
+// by variant has no count of its own until a variant is picked.
+const currentStock = computed(() => {
+    if (selectedVariant.value) return selectedVariant.value.stock;
+    if (selectedProduct.value?.has_variants) return null;
+    return selectedProduct.value?.stock ?? null;
+});
+
 const newStock = computed(() => {
-    if (!selectedProduct.value) return 0;
-    return selectedProduct.value.stock + parseInt(form.adjustment_quantity || 0);
+    if (currentStock.value === null) return 0;
+    return currentStock.value + parseInt(form.adjustment_quantity || 0);
 });
 
 const adjustmentType = computed(() => {
@@ -144,12 +174,33 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                             </p>
                         </div>
 
+                        <!-- Variant (products sold by variant) -->
+                        <div v-if="selectedProduct?.has_variants">
+                            <label for="product_variant_id" :class="fieldLabel">
+                                {{ t('orders.create.variant') }} <span class="text-status-danger">*</span>
+                            </label>
+                            <select
+                                id="product_variant_id"
+                                v-model="form.product_variant_id"
+                                required
+                                :class="[fieldInput, { 'border-status-danger': form.errors.product_variant_id }]"
+                            >
+                                <option :value="null">{{ t('orders.create.chooseVariant') }}</option>
+                                <option v-for="variant in selectedProduct.variants" :key="variant.id" :value="variant.id">
+                                    {{ variant.title }}<template v-if="variant.sku"> ({{ variant.sku }})</template> - Current Stock: {{ variant.stock }}
+                                </option>
+                            </select>
+                            <p v-if="form.errors.product_variant_id" :class="fieldError">
+                                {{ form.errors.product_variant_id }}
+                            </p>
+                        </div>
+
                         <!-- Current Stock Display -->
-                        <div v-if="selectedProduct" class="rounded-lg border border-status-info/20 bg-status-info-soft p-4">
+                        <div v-if="currentStock !== null" class="rounded-lg border border-status-info/20 bg-status-info-soft p-4">
                             <div class="grid grid-cols-3 gap-4 text-center">
                                 <div>
                                     <p class="mb-1 text-sm text-text-secondary">Current Stock</p>
-                                    <p class="text-2xl font-bold text-text-primary">{{ selectedProduct.stock }}</p>
+                                    <p class="text-2xl font-bold text-text-primary">{{ currentStock }}</p>
                                 </div>
                                 <div>
                                     <p class="mb-1 text-sm text-text-secondary">Adjustment</p>
@@ -186,7 +237,7 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                         </div>
 
                         <!-- Location (optional) -->
-                        <div v-if="locations.length">
+                        <div v-if="locations.length && !form.product_variant_id">
                             <label :class="fieldLabel">Location (Optional)</label>
                             <select
                                 v-model="form.location_id"
@@ -261,7 +312,7 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                         </div>
 
                         <!-- Warning for negative adjustments -->
-                        <div v-if="form.adjustment_quantity < 0 && selectedProduct && newStock < 0" class="rounded-lg border border-status-danger/20 bg-status-danger-soft p-4">
+                        <div v-if="form.adjustment_quantity < 0 && currentStock !== null && newStock < 0" class="rounded-lg border border-status-danger/20 bg-status-danger-soft p-4">
                             <div class="flex gap-3">
                                 <AlertTriangle :size="20" class="shrink-0 text-status-danger" />
                                 <div>
@@ -283,7 +334,7 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                             type="submit"
                             variant="default"
                             :loading="form.processing"
-                            :disabled="form.processing || !form.product_id || form.adjustment_quantity === 0"
+                            :disabled="form.processing || !form.product_id || (selectedProduct?.has_variants && !form.product_variant_id) || form.adjustment_quantity === 0"
                         >
                             {{ form.processing ? 'Creating...' : 'Create Adjustment' }}
                         </Button>
