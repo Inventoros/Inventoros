@@ -45,6 +45,8 @@ class PluginController extends Controller
         return Inertia::render('Plugins/Index', [
             'plugins' => $plugins,
             'uploadsEnabled' => $this->pluginService->uploadsEnabled(),
+            'activeTab' => 'installed',
+            'marketplace' => null,
         ]);
     }
 

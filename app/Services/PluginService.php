@@ -39,7 +39,7 @@ final class PluginService
     public function __construct()
     {
         $this->pluginsPath = base_path('plugins');
-        $this->assets = new PluginAssetPublisher($this->pluginsPath, public_path('plugins'));
+        $this->assets = new PluginAssetPublisher($this->pluginsPath, public_path(PluginAssetPublisher::PUBLIC_DIRECTORY));
 
         // Ensure plugins directory exists
         if (! File::exists($this->pluginsPath)) {
@@ -348,7 +348,7 @@ final class PluginService
             }
 
             $version = rawurlencode($this->versionOf($manifest));
-            $url = fn (string $path) => url("plugins/{$slug}/{$path}").'?v='.$version;
+            $url = fn (string $path) => url(PluginAssetPublisher::PUBLIC_DIRECTORY."/{$slug}/{$path}").'?v='.$version;
 
             $assets[] = [
                 'slug' => $slug,
@@ -519,31 +519,163 @@ final class PluginService
         // must not leave the temp file behind or touch the plugins directory.
         $this->verifyPluginSignature($tempPath, $signature);
 
-        $zip = new ZipArchive;
-        if ($zip->open($tempPath) !== true) {
+        try {
+            $result = $this->installFromZip($tempPath);
+        } finally {
             @unlink($tempPath);
+        }
+
+        return ['slug' => $result['slug'], 'path' => $result['path']];
+    }
+
+    /**
+     * Install a plugin from a ZIP archive already on disk.
+     *
+     * This is the one install path shared by manual uploads and marketplace
+     * installs. It does NOT decide whether the archive may be installed at
+     * all: uploadPlugin() gates on the uploads flag and optional signature,
+     * the marketplace installer on its Ed25519 signature and checksum. Every
+     * archive, whatever its source, gets the same zip-slip / zip-bomb checks,
+     * the single-root-folder rule, the manifest check and `requires`
+     * enforcement before it is kept.
+     *
+     * @param  string  $zipPath  Path to the ZIP on disk (left in place).
+     * @param  string|null  $expectedSlug  When set, the archive's root folder must match.
+     * @return array{slug: string, path: string, manifest: array<string, mixed>}
+     *
+     * @throws \RuntimeException When the archive is invalid, unsafe, already installed or unsupported.
+     */
+    public function installFromZip(string $zipPath, ?string $expectedSlug = null): array
+    {
+        return $this->extractPluginArchive($zipPath, $this->pluginsPath, $expectedSlug);
+    }
+
+    /**
+     * Replace an installed plugin's files with a newer package, keeping its
+     * database row (and so its settings and data). The uninstall hook is NOT
+     * run.
+     *
+     * The package is fully validated in a staging directory first. Then an
+     * active plugin is deactivated, its files are swapped for the new ones
+     * and it is activated again. If re-activation fails the previous files
+     * are restored and re-activated, and the failure is rethrown.
+     *
+     * @return array{slug: string, path: string, manifest: array<string, mixed>, warning: string|null}
+     *
+     * @throws \RuntimeException When the package is invalid or the update was rolled back.
+     */
+    public function replaceFromZip(string $zipPath, string $slug): array
+    {
+        $this->assertSafeSlug($slug);
+
+        $live = $this->pluginsPath.'/'.$slug;
+        if (! File::isDirectory($live)) {
+            throw new \RuntimeException("Plugin \"{$slug}\" is not installed.");
+        }
+
+        $staging = storage_path('app/plugin-staging/'.bin2hex(random_bytes(8)));
+        File::ensureDirectoryExists($staging);
+
+        try {
+            $staged = $this->extractPluginArchive($zipPath, $staging, $slug);
+
+            $wasActive = (bool) Plugin::where('slug', $slug)->value('is_active');
+            $warning = null;
+
+            if ($wasActive) {
+                try {
+                    $this->deactivatePlugin($slug);
+                } catch (PluginHookFailed $e) {
+                    $warning = $e->getMessage();
+                }
+            }
+
+            $backup = $staging.'/__previous';
+            if (! File::moveDirectory($live, $backup)) {
+                $this->reactivateQuietly($slug, $wasActive);
+                throw new \RuntimeException('Could not move the installed plugin aside to update it.');
+            }
+
+            if (! File::moveDirectory($staged['path'], $live)) {
+                File::moveDirectory($backup, $live);
+                $this->reactivateQuietly($slug, $wasActive);
+                throw new \RuntimeException('Could not move the new plugin version into place.');
+            }
+
+            if ($wasActive) {
+                try {
+                    $this->activatePlugin($slug);
+                } catch (\Throwable $e) {
+                    File::deleteDirectory($live);
+                    File::moveDirectory($backup, $live);
+                    $this->reactivateQuietly($slug, true);
+
+                    throw new \RuntimeException("The update was rolled back to the previous version: {$e->getMessage()}", 0, $e);
+                }
+            }
+
+            return [
+                'slug' => $slug,
+                'path' => $live,
+                'manifest' => $staged['manifest'],
+                'warning' => $warning,
+            ];
+        } finally {
+            File::deleteDirectory($staging);
+        }
+    }
+
+    private function reactivateQuietly(string $slug, bool $wasActive): void
+    {
+        if (! $wasActive) {
+            return;
+        }
+
+        try {
+            $this->activatePlugin($slug);
+        } catch (\Throwable $e) {
+            Log::error('Could not re-activate plugin after a failed update', ['slug' => $slug, 'error' => $e->getMessage()]);
+        }
+    }
+
+    /**
+     * Validate a plugin archive and extract it under $targetRoot.
+     *
+     * @return array{slug: string, path: string, manifest: array<string, mixed>}
+     */
+    private function extractPluginArchive(string $zipPath, string $targetRoot, ?string $expectedSlug): array
+    {
+        $zip = new ZipArchive;
+        if ($zip->open($zipPath) !== true) {
             throw new \RuntimeException('Failed to open ZIP file');
         }
 
         try {
             // Validate every entry BEFORE writing anything to disk.
-            $rootFolder = $this->validateZipArchive($zip);
+            $rootFolder = $this->validateZipArchive($zip, $targetRoot);
 
-            $extractPath = $this->pluginsPath.'/'.$rootFolder;
+            if (! $this->isSafeSlug($rootFolder)) {
+                throw new \RuntimeException("Invalid plugin structure: \"{$rootFolder}\" is not a valid plugin folder name");
+            }
+
+            if ($expectedSlug !== null && $rootFolder !== $expectedSlug) {
+                throw new \RuntimeException("The package contains the plugin \"{$rootFolder}\", not \"{$expectedSlug}\"");
+            }
+
+            $extractPath = $targetRoot.'/'.$rootFolder;
             if (File::exists($extractPath)) {
                 throw new \RuntimeException('Plugin already exists');
             }
 
-            $zip->extractTo($this->pluginsPath);
+            $zip->extractTo($targetRoot);
         } finally {
             $zip->close();
-            @unlink($tempPath);
         }
 
-        // Verify the extracted root is still inside our plugins directory.
-        $pluginsRoot = realpath($this->pluginsPath);
+        // Verify the extracted root is still inside the target directory.
+        $root = realpath($targetRoot);
         $extractedRoot = realpath($extractPath);
-        if (! $pluginsRoot || ! $extractedRoot || ! str_starts_with($extractedRoot.DIRECTORY_SEPARATOR, $pluginsRoot.DIRECTORY_SEPARATOR)) {
+        if (! $root || ! $extractedRoot || ! str_starts_with($extractedRoot.DIRECTORY_SEPARATOR, $root.DIRECTORY_SEPARATOR)) {
             if ($extractedRoot && is_dir($extractedRoot)) {
                 File::deleteDirectory($extractedRoot);
             }
@@ -572,6 +704,7 @@ final class PluginService
         return [
             'slug' => $rootFolder,
             'path' => $extractedRoot,
+            'manifest' => $manifest,
         ];
     }
 
@@ -582,11 +715,11 @@ final class PluginService
      *
      * @throws \RuntimeException When the archive is invalid or unsafe.
      */
-    protected function validateZipArchive(ZipArchive $zip): string
+    protected function validateZipArchive(ZipArchive $zip, ?string $destination = null): string
     {
         // Generic zip-slip / zip-bomb checks: path traversal, entry-count
         // cap, uncompressed-size cap. Shared with the in-app updater.
-        SafeZipExtractor::validate($zip, $this->pluginsPath, [
+        SafeZipExtractor::validate($zip, $destination ?? $this->pluginsPath, [
             'max_entries' => (int) config('plugins.max_entry_count', 2000),
             'max_bytes' => (int) config('plugins.max_extracted_bytes', 50 * 1024 * 1024),
         ]);

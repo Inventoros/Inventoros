@@ -10,7 +10,9 @@ use SplFileInfo;
 
 /**
  * Publishes a plugin's pre-built runtime UI (its `dist/` directory) to
- * `public/plugins/{slug}/` so the browser can import() it, and removes it again.
+ * `public/plugin-assets/{slug}/` so the browser can import() it, and removes it
+ * again. (Not public/plugins: a directory there would be served by the web
+ * server instead of the /plugins page.)
  *
  * The plugin declares its bundle in plugin.json:
  *
@@ -25,13 +27,24 @@ final class PluginAssetPublisher
     public const SOURCE_DIRECTORY = 'dist';
 
     /**
+     * Directory under public/ that holds published bundles.
+     */
+    public const PUBLIC_DIRECTORY = 'plugin-assets';
+
+    /**
+     * Where bundles were published before; a leftover directory there shadows
+     * the /plugins route, so any copy found is removed.
+     */
+    private const LEGACY_PUBLIC_DIRECTORY = 'plugins';
+
+    /**
      * Marker written next to the published files, holding the plugin version
      * they came from, so a plugin replaced in place is republished.
      */
     private const VERSION_MARKER = '.published-version';
 
     /**
-     * File types that may be served from public/plugins.
+     * File types that may be served from public/plugin-assets.
      *
      * @var array<int, string>
      */
@@ -48,7 +61,7 @@ final class PluginAssetPublisher
 
     public static function make(): self
     {
-        return new self(base_path('plugins'), public_path('plugins'));
+        return new self(base_path('plugins'), public_path(self::PUBLIC_DIRECTORY));
     }
 
     /**
@@ -91,7 +104,7 @@ final class PluginAssetPublisher
     }
 
     /**
-     * Copy dist/ to public/plugins/{slug}/, replacing any previous copy.
+     * Copy dist/ to public/plugin-assets/{slug}/, replacing any previous copy.
      */
     public function publish(string $slug, string $version = ''): void
     {
@@ -111,7 +124,8 @@ final class PluginAssetPublisher
     }
 
     /**
-     * Remove public/plugins/{slug}/ if present.
+     * Remove public/plugin-assets/{slug}/ (and any copy left in the old
+     * public/plugins/{slug}/) if present.
      */
     public function remove(string $slug): void
     {
@@ -119,6 +133,30 @@ final class PluginAssetPublisher
 
         if (is_dir($destination)) {
             File::deleteDirectory($destination);
+        }
+
+        $this->removeLegacyCopy($slug);
+    }
+
+    /**
+     * Delete public/plugins/{slug}/ from older releases, and public/plugins
+     * itself once it is empty, so it cannot shadow the /plugins page.
+     */
+    private function removeLegacyCopy(string $slug): void
+    {
+        $legacyRoot = dirname($this->publicRoot).DIRECTORY_SEPARATOR.self::LEGACY_PUBLIC_DIRECTORY;
+
+        if (! is_dir($legacyRoot) || realpath($legacyRoot) === realpath($this->publicRoot)) {
+            return;
+        }
+
+        $legacy = $legacyRoot.DIRECTORY_SEPARATOR.$slug;
+        if (is_dir($legacy) && ! is_link($legacy)) {
+            File::deleteDirectory($legacy);
+        }
+
+        if (File::isEmptyDirectory($legacyRoot)) {
+            @rmdir($legacyRoot);
         }
     }
 

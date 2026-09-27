@@ -61,9 +61,9 @@ final class PluginRuntimeAssetsTest extends TestCase
 
         app(PluginService::class)->activatePlugin($slug);
 
-        $this->assertFileExists(public_path("plugins/{$slug}/plugin.js"));
-        $this->assertFileExists(public_path("plugins/{$slug}/plugin.css"));
-        $this->assertFileExists(public_path("plugins/{$slug}/chunks/extra.js"));
+        $this->assertFileExists(public_path("plugin-assets/{$slug}/plugin.js"));
+        $this->assertFileExists(public_path("plugin-assets/{$slug}/plugin.css"));
+        $this->assertFileExists(public_path("plugin-assets/{$slug}/chunks/extra.js"));
     }
 
     public function test_only_static_web_assets_are_published(): void
@@ -76,10 +76,10 @@ final class PluginRuntimeAssetsTest extends TestCase
 
         app(PluginService::class)->activatePlugin($slug);
 
-        $this->assertFileExists(public_path("plugins/{$slug}/plugin.js"));
-        $this->assertFileDoesNotExist(public_path("plugins/{$slug}/shell.php"));
-        $this->assertFileDoesNotExist(public_path("plugins/{$slug}/.htaccess"));
-        $this->assertFileDoesNotExist(public_path("plugins/{$slug}/notes.phtml"));
+        $this->assertFileExists(public_path("plugin-assets/{$slug}/plugin.js"));
+        $this->assertFileDoesNotExist(public_path("plugin-assets/{$slug}/shell.php"));
+        $this->assertFileDoesNotExist(public_path("plugin-assets/{$slug}/.htaccess"));
+        $this->assertFileDoesNotExist(public_path("plugin-assets/{$slug}/notes.phtml"));
     }
 
     public function test_deactivation_removes_the_published_assets(): void
@@ -89,7 +89,34 @@ final class PluginRuntimeAssetsTest extends TestCase
 
         app(PluginService::class)->deactivatePlugin($slug);
 
+        $this->assertDirectoryDoesNotExist(public_path("plugin-assets/{$slug}"));
+    }
+
+    public function test_published_assets_never_shadow_the_plugins_page(): void
+    {
+        // A public/plugins directory would be served by Apache, nginx and
+        // `php -S` instead of the /plugins route, breaking the Plugins page as
+        // soon as one plugin with a UI is active.
+        $slug = $this->makeRuntimePlugin();
+
+        app(PluginService::class)->activatePlugin($slug);
+
+        $this->assertFileExists(public_path("plugin-assets/{$slug}/plugin.js"));
         $this->assertDirectoryDoesNotExist(public_path("plugins/{$slug}"));
+    }
+
+    public function test_publishing_clears_a_copy_left_in_the_old_public_plugins_directory(): void
+    {
+        $slug = $this->makeRuntimePlugin();
+        File::ensureDirectoryExists(public_path("plugins/{$slug}"));
+        File::put(public_path("plugins/{$slug}/plugin.js"), 'old');
+
+        app(PluginService::class)->activatePlugin($slug);
+
+        $this->assertDirectoryDoesNotExist(public_path("plugins/{$slug}"));
+        if (is_dir(public_path('plugins'))) {
+            $this->assertNotEmpty(File::allFiles(public_path('plugins')), 'An empty public/plugins directory must be removed.');
+        }
     }
 
     public function test_deletion_removes_the_published_assets(): void
@@ -99,7 +126,7 @@ final class PluginRuntimeAssetsTest extends TestCase
 
         app(PluginService::class)->deletePlugin($slug);
 
-        $this->assertDirectoryDoesNotExist(public_path("plugins/{$slug}"));
+        $this->assertDirectoryDoesNotExist(public_path("plugin-assets/{$slug}"));
     }
 
     public function test_an_entry_that_escapes_dist_is_rejected_and_the_plugin_stays_inactive(): void
@@ -115,7 +142,7 @@ final class PluginRuntimeAssetsTest extends TestCase
             }
 
             $this->assertFalse((bool) Plugin::where('slug', $slug)->value('is_active'));
-            $this->assertDirectoryDoesNotExist(public_path("plugins/{$slug}"));
+            $this->assertDirectoryDoesNotExist(public_path("plugin-assets/{$slug}"));
         }
     }
 
@@ -143,8 +170,8 @@ final class PluginRuntimeAssetsTest extends TestCase
             ->assertInertia(fn ($page) => $page
                 ->has('pluginAssets', 1)
                 ->where('pluginAssets.0.slug', $active)
-                ->where('pluginAssets.0.entry', url("plugins/{$active}/plugin.js").'?v=1.2.3')
-                ->where('pluginAssets.0.styles', [url("plugins/{$active}/plugin.css").'?v=1.2.3']));
+                ->where('pluginAssets.0.entry', url("plugin-assets/{$active}/plugin.js").'?v=1.2.3')
+                ->where('pluginAssets.0.styles', [url("plugin-assets/{$active}/plugin.css").'?v=1.2.3']));
 
         $this->assertNotSame($inactive, $active);
     }
@@ -156,12 +183,12 @@ final class PluginRuntimeAssetsTest extends TestCase
         app(PluginService::class)->activatePlugin($slug);
 
         // An in-place update can replace public/ and drop published plugin files.
-        File::deleteDirectory(public_path("plugins/{$slug}"));
+        File::deleteDirectory(public_path("plugin-assets/{$slug}"));
 
         $this->actingAs($user)->get(route('dashboard'))
             ->assertInertia(fn ($page) => $page->has('pluginAssets', 1));
 
-        $this->assertFileExists(public_path("plugins/{$slug}/plugin.js"));
+        $this->assertFileExists(public_path("plugin-assets/{$slug}/plugin.js"));
     }
 
     public function test_an_updated_plugin_version_republishes_its_assets(): void
@@ -176,9 +203,9 @@ final class PluginRuntimeAssetsTest extends TestCase
         File::put($manifestPath, json_encode(array_merge(json_decode(File::get($manifestPath), true), ['version' => '1.3.0'])));
 
         $this->actingAs($user)->get(route('dashboard'))
-            ->assertInertia(fn ($page) => $page->where('pluginAssets.0.entry', url("plugins/{$slug}/plugin.js").'?v=1.3.0'));
+            ->assertInertia(fn ($page) => $page->where('pluginAssets.0.entry', url("plugin-assets/{$slug}/plugin.js").'?v=1.3.0'));
 
-        $this->assertSame("export default 2;\n", File::get(public_path("plugins/{$slug}/plugin.js")));
+        $this->assertSame("export default 2;\n", File::get(public_path("plugin-assets/{$slug}/plugin.js")));
     }
 
     public function test_guests_receive_no_plugin_assets(): void

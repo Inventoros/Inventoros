@@ -22,6 +22,7 @@ trait InteractsWithFixturePlugins
     {
         foreach ($this->fixturePluginSlugs as $slug) {
             File::deleteDirectory(base_path('plugins/'.$slug));
+            File::deleteDirectory(public_path('plugin-assets/'.$slug));
             File::deleteDirectory(public_path('plugins/'.$slug));
         }
 
