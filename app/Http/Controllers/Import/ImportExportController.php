@@ -8,6 +8,7 @@ use App\Exports\ExportFactory;
 use App\Http\Controllers\Controller;
 use App\Imports\OrdersImport;
 use App\Imports\ProductsImport;
+use App\Imports\UsersImport;
 use App\Jobs\GenerateDataExportJob;
 use App\Jobs\ProcessOrderImportJob;
 use App\Jobs\ProcessProductImportJob;
@@ -197,6 +198,62 @@ class ImportExportController extends Controller
                 'user_id' => $request->user()->id,
                 'organization_id' => $request->user()->organization_id,
                 'file' => $request->file('file')?->getClientOriginalName(),
+                'error' => $e->getMessage(),
+            ]);
+
+            return redirect()->route('import-export.index')
+                ->with('error', 'Import failed: '.$e->getMessage());
+        }
+    }
+
+    /**
+     * Download the user import template. There is deliberately no password
+     * column: imported users set their own password via an emailed link.
+     */
+    public function downloadUserTemplate(): StreamedResponse
+    {
+        return response()->stream(function () {
+            $file = fopen('php://output', 'w');
+            fputcsv($file, ['name', 'email', 'role', 'roles'], escape: '');
+            fputcsv($file, ['Example Member', 'member@example.com', 'member', 'Picker; Packer'], escape: '');
+            fputcsv($file, ['Example Manager', 'manager@example.com', 'manager', ''], escape: '');
+            fclose($file);
+        }, 200, [
+            'Content-Type' => 'text/csv',
+            'Content-Disposition' => 'attachment; filename="user_import_template.csv"',
+        ]);
+    }
+
+    /**
+     * Import users into the current organization.
+     *
+     * `send_invites` (default on) emails each new user a set-password link;
+     * off leaves the invitation pending (they use "Forgot your password?").
+     * Role assignment goes through the same escalation guard as the user form.
+     */
+    public function importUsers(Request $request): RedirectResponse
+    {
+        $request->validate([
+            'file' => self::IMPORT_FILE_RULE,
+            'send_invites' => 'nullable|boolean',
+        ]);
+
+        $user = $request->user();
+
+        try {
+            $import = new UsersImport($user, $request->boolean('send_invites', true));
+            Excel::import($import, $request->file('file'));
+            $stats = $import->getStats();
+
+            return $this->redirectWithImportResult(
+                'users',
+                $stats,
+                'Users imported successfully! Created: '.$stats['imported'],
+            );
+        } catch (\Exception $e) {
+            Log::error('User import failed', [
+                'user_id' => $user->id,
+                'organization_id' => $user->organization_id,
                 'error' => $e->getMessage(),
             ]);
 

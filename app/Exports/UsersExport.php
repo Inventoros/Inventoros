@@ -81,6 +81,9 @@ final class UsersExport implements FromQuery, WithHeadings, WithMapping, WithSty
             'Email Verified',
             'Created At',
             'Last Login',
+            // Base role (member/manager/admin). With Name, Email and Roles this
+            // makes the export re-importable. Passwords are never exported.
+            'Role',
         ];
     }
 
@@ -98,6 +101,7 @@ final class UsersExport implements FromQuery, WithHeadings, WithMapping, WithSty
             $user->email_verified_at ? 'Yes' : 'No',
             $user->created_at->format('Y-m-d H:i:s'),
             $user->last_login_at ? $user->last_login_at->format('Y-m-d H:i:s') : 'Never',
+            $user->role,
         ]);
     }
 

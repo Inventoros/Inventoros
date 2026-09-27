@@ -53,4 +53,7 @@ Route::prefix('import-export')->name('import-export.')->group(function () {
     // Order import creates orders (and customers), so it needs create_orders too.
     Route::get('/download-order-template', [ImportExportController::class, 'downloadOrderTemplate'])->middleware(['permission:import_data', 'permission:create_orders'])->name('download-order-template');
     Route::post('/import-orders', [ImportExportController::class, 'importOrders'])->middleware(['permission:import_data', 'permission:create_orders'])->name('import-orders');
+    // User import creates accounts, so it needs create_users too.
+    Route::get('/download-user-template', [ImportExportController::class, 'downloadUserTemplate'])->middleware(['permission:import_data', 'permission:create_users'])->name('download-user-template');
+    Route::post('/import-users', [ImportExportController::class, 'importUsers'])->middleware(['permission:import_data', 'permission:create_users'])->name('import-users');
 });
