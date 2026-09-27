@@ -56,6 +56,24 @@ class OrderType extends GraphQLType
                 'type' => Type::string(),
                 'description' => 'Approval status',
             ],
+            'invoice_number' => [
+                'type' => Type::string(),
+                'description' => 'Invoice number, assigned the first time the invoice is generated',
+            ],
+            'invoice_issued_at' => [
+                'type' => Type::string(),
+                'description' => 'When the invoice number was assigned',
+                'resolve' => fn (Order $order) => $order->invoice_issued_at?->toIso8601String(),
+            ],
+            'invoice_sent_at' => [
+                'type' => Type::string(),
+                'description' => 'When the invoice was last emailed to the customer',
+                'resolve' => fn (Order $order) => $order->invoice_sent_at?->toIso8601String(),
+            ],
+            'invoice_sent_to' => [
+                'type' => Type::string(),
+                'description' => 'Address the invoice was last emailed to',
+            ],
             'subtotal' => [
                 'type' => Type::float(),
                 'description' => 'Subtotal amount',
