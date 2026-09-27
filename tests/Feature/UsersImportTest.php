@@ -296,6 +296,47 @@ final class UsersImportTest extends TestCase
         $this->assertNotContains($this->admin->password, $row);
     }
 
+    public function test_the_user_export_requires_view_users_as_well_as_export_data(): void
+    {
+        $exportOnly = $this->delegatedManager(['export_data']);
+
+        $this->actingAs($exportOnly)->get(route('import-export.export-users'))->assertForbidden();
+
+        $exportOnly->roles()->first()->update(['permissions' => ['export_data', 'view_users']]);
+        $this->actingAs($exportOnly->fresh())->get(route('import-export.export-users'))->assertOk();
+
+        $viewOnly = User::create([
+            'name' => 'Viewer', 'email' => 'viewer@org.com', 'password' => bcrypt('x'),
+            'organization_id' => $this->org->id, 'role' => 'member',
+        ]);
+        $viewOnly->roles()->attach(Role::create([
+            'name' => 'Viewer', 'slug' => 'viewer', 'organization_id' => $this->org->id,
+            'permissions' => ['view_users'],
+        ])->id);
+        $this->actingAs($viewOnly->fresh())->get(route('import-export.export-users'))->assertForbidden();
+    }
+
+    public function test_a_queued_user_export_cannot_be_downloaded_without_view_users(): void
+    {
+        $record = \App\Models\DataExport::create([
+            'organization_id' => $this->org->id,
+            'user_id' => $this->admin->id,
+            'type' => 'users',
+            'filename' => 'users.xlsx',
+            'disk' => 'local',
+            'path' => 'exports/users.xlsx',
+            'status' => 'completed',
+            'completed_at' => now(),
+        ]);
+        \Illuminate\Support\Facades\Storage::fake('local');
+        \Illuminate\Support\Facades\Storage::disk('local')->put('exports/users.xlsx', 'x');
+
+        $exportOnly = $this->delegatedManager(['export_data']);
+        $this->actingAs($exportOnly)->get(route('import-export.download', $record))->assertForbidden();
+
+        $this->actingAs($this->admin)->get(route('import-export.download', $record))->assertOk();
+    }
+
     public function test_the_endpoint_requires_import_data_and_create_users(): void
     {
         $importOnly = $this->delegatedManager(['import_data']);

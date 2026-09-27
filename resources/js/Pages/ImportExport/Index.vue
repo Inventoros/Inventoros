@@ -41,6 +41,7 @@ const page = usePage();
 const { hasPermission } = usePermissions();
 
 const canExport = computed(() => hasPermission('export_data'));
+const canExportUsers = computed(() => canExport.value && hasPermission('view_users'));
 const canImport = computed(() => hasPermission('import_data'));
 const canImportOrders = computed(() => canImport.value && hasPermission('create_orders'));
 const canImportUsers = computed(() => canImport.value && hasPermission('create_users'));
@@ -50,7 +51,7 @@ const canImportUsers = computed(() => canImport.value && hasPermission('create_u
 const tabs = computed(() => [
     { key: 'products', label: t('importExport.tabs.products'), visible: true },
     { key: 'orders', label: t('importExport.tabs.orders'), visible: canExport.value || canImportOrders.value },
-    { key: 'users', label: t('importExport.tabs.users'), visible: canExport.value || canImportUsers.value },
+    { key: 'users', label: t('importExport.tabs.users'), visible: canExportUsers.value || canImportUsers.value },
 ].filter((tab) => tab.visible));
 
 const tabKeys = computed(() => tabs.value.map((tab) => tab.key));
@@ -592,7 +593,7 @@ const code = 'rounded bg-surface-overlay px-1 py-0.5 font-mono text-xs text-text
             <!-- ============================== USERS ============================= -->
             <div v-show="activeTab === 'users'">
                 <div class="mt-6 grid grid-cols-1 gap-4 lg:grid-cols-2">
-                    <Card v-if="canExport">
+                    <Card v-if="canExportUsers">
                         <div class="mb-4 flex items-center gap-3">
                             <span class="flex h-10 w-10 items-center justify-center rounded-lg bg-brand-soft text-brand">
                                 <Download :size="18" />

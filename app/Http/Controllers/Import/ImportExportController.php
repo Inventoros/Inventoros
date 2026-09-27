@@ -469,6 +469,13 @@ class ImportExportController extends Controller
         // cross-tenant id already 404s; guard the file state explicitly.
         abort_unless($dataExport->isDownloadable(), 404);
 
+        // A user export needs view_users to create (see the route), so the
+        // stored file needs it to download too.
+        abort_if(
+            $dataExport->type === 'users' && ! $request->user()->hasPermission('view_users'),
+            403,
+        );
+
         return Storage::disk($dataExport->disk)->download($dataExport->path, $dataExport->filename);
     }
 }

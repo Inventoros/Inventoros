@@ -1,8 +1,9 @@
 # Import / Export
 
 **Workspace > Import / Export** has a tab each for products, orders and users.
-Exporting needs `export_data`. Importing needs `import_data`; orders also need
-`create_orders`, and users also need `create_users`.
+Exporting needs `export_data` (users also need `view_users`). Importing needs
+`import_data`; orders also need `create_orders`, and users also need
+`create_users`.
 
 Files can be CSV, XLSX or XLS, up to 10 MB. Product and order files over
 `IMPORT_SYNC_MAX_KB` (512 KB by default) are processed on the queue, and you
