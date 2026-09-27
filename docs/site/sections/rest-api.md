@@ -108,6 +108,8 @@ All paths are relative to `/api/v1`. See the OpenAPI spec for full schemas:
 - Suppliers: CRUD
 - Purchase Orders: CRUD plus `send`, `receive`, `cancel`
 - Work Orders: read plus `start`, `complete`, `cancel`
+
+Users assigned to specific warehouses only see and act on locations, stock adjustments, stock audits and purchase order receiving in those warehouses; anything else returns `403`. Admins and roles with `access_all_warehouses` are never restricted.
 - Barcode lookup: `GET /barcode/{code}`
 - Permission Sets, Saved Reports: admin surfaces
 
