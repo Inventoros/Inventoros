@@ -55,6 +55,10 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
+        // PostgreSQL connections compile LIKE as ILIKE so searches are
+        // case-insensitive there too, as they already are on MySQL/SQLite.
+        \Illuminate\Database\Connection::resolverFor('pgsql', fn ($connection, $database, $prefix, $config) => new \App\Database\PostgresConnection($connection, $database, $prefix, $config));
+
         // Register PluginUIService as singleton
         $this->app->singleton(PluginUIService::class, function ($app) {
             return new PluginUIService();
