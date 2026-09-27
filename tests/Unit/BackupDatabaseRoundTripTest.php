@@ -119,6 +119,13 @@ final class BackupDatabaseRoundTripTest extends TestCase
                 return [];
             }
 
+            protected function dumpIsComplete(): bool
+            {
+                // Only the scratch SQLite file holds nothing but the probe
+                // tables; on MySQL/PostgreSQL the dump is limited to them.
+                return DB::connection($this->connectionName())->getDriverName() === 'sqlite';
+            }
+
             protected function canExec(): bool
             {
                 // Only the PHP dump / SQLite snapshot paths are under test here.
@@ -230,6 +237,45 @@ final class BackupDatabaseRoundTripTest extends TestCase
             // can promise the database is untouched after a failed restore.
             DB::purge($this->connection);
             $this->assertSame($vandalised, $this->snapshot());
+        }
+    }
+
+    public function test_php_dump_restore_after_a_failed_migration_returns_the_old_schema(): void
+    {
+        $service = $this->service();
+        $service->forcePhp = true;
+        $extract = $this->extract($service->createBackup());
+        $before = $this->snapshot();
+
+        // What a half-applied migration might leave behind.
+        $schema = Schema::connection($this->connection);
+        $schema->table('backup_probe_parents', function (Blueprint $table) {
+            $table->string('added_by_failed_migration')->nullable();
+            $table->dropIndex(['name']);
+        });
+        $schema->create('backup_probe_new_table', function (Blueprint $table) {
+            $table->id();
+        });
+
+        try {
+            $service->restoreDatabase($extract);
+
+            DB::purge($this->connection);
+            $schema = Schema::connection($this->connection);
+            $this->assertFalse($schema->hasColumn('backup_probe_parents', 'added_by_failed_migration'));
+            $this->assertContains(
+                ['name'],
+                array_map(fn ($index) => $index['columns'], $schema->getIndexes('backup_probe_parents')),
+                'the index dropped by the failed migration is back'
+            );
+            $this->assertSame($before, $this->snapshot());
+
+            if (DB::connection($this->connection)->getDriverName() === 'sqlite') {
+                // A complete dump also removes tables the failed migration created.
+                $this->assertFalse($schema->hasTable('backup_probe_new_table'));
+            }
+        } finally {
+            Schema::connection($this->connection)->dropIfExists('backup_probe_new_table');
         }
     }
 

@@ -589,7 +589,17 @@ class BackupService
     {
         $connection = DB::connection($this->connectionName());
 
-        (new PhpDatabaseDump($connection))->dump($this->tableNames($connection), $outputPath);
+        (new PhpDatabaseDump($connection))->dump($this->tableNames($connection), $outputPath, $this->dumpIsComplete());
+    }
+
+    /**
+     * Whether tableNames() covers the whole schema. A complete dump also
+     * drops, on restore, tables created after the backup (for example by
+     * the migration that failed), so the schema comes back exactly.
+     */
+    protected function dumpIsComplete(): bool
+    {
+        return true;
     }
 
     protected function phpRestore(string $sqlPath): void
