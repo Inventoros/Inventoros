@@ -11,6 +11,7 @@ use App\Http\Requests\PurchaseOrder\StorePurchaseOrderRequest;
 use App\Http\Requests\PurchaseOrder\UpdatePurchaseOrderRequest;
 use App\Http\Requests\SendDocumentEmailRequest;
 use App\Models\Inventory\Product;
+use App\Models\Inventory\ProductVariant;
 use App\Models\Inventory\Supplier;
 use App\Models\Purchasing\PurchaseOrder;
 use App\Models\Purchasing\PurchaseOrderItem;
@@ -91,10 +92,7 @@ class PurchaseOrderController extends Controller
             ->where('is_active', true)
             ->get(['id', 'name', 'currency', 'payment_terms']);
 
-        $products = Product::forOrganization($organizationId)
-            ->active()
-            ->with(['category', 'location', 'suppliers'])
-            ->get(['id', 'name', 'sku', 'price', 'purchase_price', 'stock', 'category_id', 'location_id']);
+        $products = $this->formProducts($organizationId);
 
         return Inertia::render('PurchaseOrders/Create', [
             'suppliers' => $suppliers,
@@ -127,13 +125,15 @@ class PurchaseOrderController extends Controller
 
         foreach ($validated['items'] as $item) {
             $product = Product::forOrganization($organizationId)->findOrFail($item['product_id']);
+            $variant = PurchaseOrderItem::resolveVariant($product, $item['product_variant_id'] ?? null);
             $itemSubtotal = Money::multiply($item['unit_cost'], $item['quantity']);
             $subtotal = Money::add($subtotal, $itemSubtotal);
 
             $orderItems[] = [
                 'product_id' => $item['product_id'],
+                'product_variant_id' => $variant?->id,
                 'product_name' => $product->name,
-                'sku' => $product->sku,
+                'sku' => $variant?->sku ?? $product->sku,
                 'supplier_sku' => $item['supplier_sku'] ?? null,
                 'quantity_ordered' => $item['quantity'],
                 'quantity_received' => 0,
@@ -186,7 +186,7 @@ class PurchaseOrderController extends Controller
             abort(403, 'Unauthorized action.');
         }
 
-        $purchaseOrder->load(['supplier', 'creator', 'items.product']);
+        $purchaseOrder->load(['supplier', 'creator', 'items.product', 'items.variant']);
 
         return Inertia::render('PurchaseOrders/Show', [
             'purchaseOrder' => $purchaseOrder,
@@ -224,12 +224,12 @@ class PurchaseOrderController extends Controller
             ->where('is_active', true)
             ->get(['id', 'name', 'currency', 'payment_terms']);
 
-        $products = Product::forOrganization($organizationId)
-            ->active()
-            ->with(['category', 'location', 'suppliers'])
-            ->get(['id', 'name', 'sku', 'price', 'purchase_price', 'stock', 'category_id', 'location_id']);
+        $purchaseOrder->load('items.variant');
 
-        $purchaseOrder->load('items');
+        $products = $this->formProducts(
+            $organizationId,
+            $purchaseOrder->items->pluck('product_variant_id')->filter()->all(),
+        );
 
         return Inertia::render('PurchaseOrders/Edit', [
             'purchaseOrder' => $purchaseOrder,
@@ -279,6 +279,7 @@ class PurchaseOrderController extends Controller
 
         foreach ($validated['items'] as $itemData) {
             $product = Product::forOrganization($organizationId)->findOrFail($itemData['product_id']);
+            $variant = PurchaseOrderItem::resolveVariant($product, $itemData['product_variant_id'] ?? null);
             $itemSubtotal = Money::multiply($itemData['unit_cost'], $itemData['quantity']);
             $subtotal = Money::add($subtotal, $itemSubtotal);
 
@@ -287,8 +288,9 @@ class PurchaseOrderController extends Controller
                 $existingItem = $existingItems->get($itemData['id']);
                 $existingItem->update([
                     'product_id' => $itemData['product_id'],
+                    'product_variant_id' => $variant?->id,
                     'product_name' => $product->name,
-                    'sku' => $product->sku,
+                    'sku' => $variant?->sku ?? $product->sku,
                     'supplier_sku' => $itemData['supplier_sku'] ?? null,
                     'quantity_ordered' => $itemData['quantity'],
                     'unit_cost' => $itemData['unit_cost'],
@@ -300,8 +302,9 @@ class PurchaseOrderController extends Controller
                 // New item
                 $newItems[] = [
                     'product_id' => $itemData['product_id'],
+                    'product_variant_id' => $variant?->id,
                     'product_name' => $product->name,
-                    'sku' => $product->sku,
+                    'sku' => $variant?->sku ?? $product->sku,
                     'supplier_sku' => $itemData['supplier_sku'] ?? null,
                     'quantity_ordered' => $itemData['quantity'],
                     'quantity_received' => 0,
@@ -386,7 +389,7 @@ class PurchaseOrderController extends Controller
                 ->with('error', 'This purchase order cannot receive items.');
         }
 
-        $purchaseOrder->load(['supplier', 'items.product']);
+        $purchaseOrder->load(['supplier', 'items.product', 'items.variant']);
 
         return Inertia::render('PurchaseOrders/Receive', [
             'purchaseOrder' => $purchaseOrder,
@@ -515,5 +518,53 @@ class PurchaseOrderController extends Controller
 
         return redirect()->route('purchase-orders.show', $purchaseOrder)
             ->with('success', 'Purchase order cancelled.');
+    }
+
+    /**
+     * The purchasable products for the PO form, each with its active variants
+     * so a variant-tracked product can be bought variant by variant.
+     *
+     * @param  array<int, int>  $keepVariantIds  inactive variants to include anyway (lines already on the PO)
+     * @return array<int, array<string, mixed>>
+     */
+    private function formProducts(int $organizationId, array $keepVariantIds = []): array
+    {
+        return Product::forOrganization($organizationId)
+            ->active()
+            ->with([
+                'suppliers',
+                'variants' => fn ($query) => $query->where(function ($q) use ($keepVariantIds) {
+                    $q->where('is_active', true);
+                    if ($keepVariantIds !== []) {
+                        $q->orWhereIn('id', $keepVariantIds);
+                    }
+                }),
+            ])
+            ->orderBy('name')
+            ->get(['id', 'name', 'sku', 'barcode', 'price', 'purchase_price', 'stock', 'has_variants', 'category_id', 'location_id'])
+            ->map(fn (Product $product) => [
+                'id' => $product->id,
+                'name' => $product->name,
+                'sku' => $product->sku,
+                'barcode' => $product->barcode,
+                'price' => $product->price,
+                'purchase_price' => $product->purchase_price,
+                'stock' => (int) $product->stock,
+                'suppliers' => $product->suppliers,
+                'has_variants' => (bool) $product->has_variants,
+                'variants' => $product->has_variants
+                    ? $product->variants->map(fn (ProductVariant $variant) => [
+                        'id' => $variant->id,
+                        'title' => $variant->title,
+                        'sku' => $variant->sku,
+                        'barcode' => $variant->barcode,
+                        'stock' => (int) $variant->stock,
+                        'purchase_price' => $variant->purchase_price ?? $product->purchase_price,
+                        'is_active' => (bool) $variant->is_active,
+                    ])->values()->all()
+                    : [],
+            ])
+            ->values()
+            ->all();
     }
 }

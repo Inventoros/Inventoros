@@ -3,6 +3,7 @@ import AppLayout from '@/Layouts/AppLayout.vue';
 import PageHeader from '@/Components/ui/PageHeader.vue';
 import Card from '@/Components/ui/Card.vue';
 import Button from '@/Components/ui/Button.vue';
+import CustomerPicker from '@/Components/CustomerPicker.vue';
 import { Head, Link, useForm } from '@inertiajs/vue3';
 import { ref, computed } from 'vue';
 import { useI18n } from 'vue-i18n';
@@ -15,6 +16,7 @@ const props = defineProps({
 });
 
 const form = useForm({
+    customer_id: null,
     customer_name: '',
     customer_email: '',
     customer_address: '',
@@ -26,26 +28,74 @@ const form = useForm({
     items: [],
 });
 
+const selectedCustomer = ref(null);
+
+const selectCustomer = (customer) => {
+    selectedCustomer.value = customer;
+    form.customer_id = customer.id;
+    form.customer_name = customer.name;
+    form.customer_email = customer.email ?? '';
+    form.customer_address = customer.shipping_address || customer.billing_address || '';
+};
+
+// Back to a one-off customer: unlink, but keep what was typed so it can be edited.
+const clearCustomer = () => {
+    selectedCustomer.value = null;
+    form.customer_id = null;
+};
+
 const selectedProduct = ref(null);
+const selectedVariant = ref(null);
 const quantity = ref(1);
+const variantError = ref('');
+
+const chosenProduct = computed(() => props.products.find(p => p.id === selectedProduct.value) ?? null);
+
+// A variant-tracked product is sold by variant, so its own stock is not the
+// sellable count; only variants with stock can be picked.
+const availableVariants = computed(() =>
+    chosenProduct.value?.has_variants
+        ? chosenProduct.value.variants.filter(v => v.is_active && v.stock > 0)
+        : []
+);
+
+const onProductChange = () => {
+    selectedVariant.value = null;
+    variantError.value = '';
+};
 
 const addItem = () => {
-    if (!selectedProduct.value || quantity.value < 1) return;
-    const product = props.products.find(p => p.id === selectedProduct.value);
-    if (!product) return;
-    const existingIndex = form.items.findIndex(item => item.product_id === product.id);
+    const product = chosenProduct.value;
+    if (!product || quantity.value < 1) return;
+
+    let variant = null;
+    if (product.has_variants) {
+        variant = product.variants.find(v => v.id === selectedVariant.value) ?? null;
+        if (!variant) {
+            variantError.value = t('orders.create.variantRequired');
+            return;
+        }
+    }
+
+    const variantId = variant?.id ?? null;
+    const existingIndex = form.items.findIndex(item => item.product_id === product.id && item.product_variant_id === variantId);
     if (existingIndex >= 0) {
         form.items[existingIndex].quantity += quantity.value;
     } else {
         form.items.push({
             product_id: product.id,
+            product_variant_id: variantId,
             product_name: product.name,
-            sku: product.sku,
+            variant_title: variant?.title ?? null,
+            sku: variant?.sku || product.sku,
             quantity: quantity.value,
-            unit_price: parseFloat(product.price),
+            // Default to the variant's own price when it has one.
+            unit_price: parseFloat(variant?.price ?? product.price) || 0,
         });
     }
     selectedProduct.value = null;
+    selectedVariant.value = null;
+    variantError.value = '';
     quantity.value = 1;
 };
 
@@ -78,7 +128,7 @@ const submit = () => {
 
 const availableProducts = computed(() =>
     [...props.products]
-        .filter(p => p.stock > 0)
+        .filter(p => (p.has_variants ? p.variants.some(v => v.is_active && v.stock > 0) : p.stock > 0))
         .sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: 'base' }))
 );
 
@@ -119,6 +169,8 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                     <Card :padded="false">
                         <div class="px-5 pt-5"><h3 class="text-sm font-semibold text-text-primary">{{ t('orders.create.customerInfo') }}</h3></div>
                         <div class="space-y-4 p-5">
+                            <CustomerPicker :selected="selectedCustomer" @select="selectCustomer" @clear="clearCustomer" />
+                            <p v-if="form.errors.customer_id" :class="fieldError">{{ form.errors.customer_id }}</p>
                             <div>
                                 <label for="customer_name" :class="fieldLabel">{{ t('orders.create.customerName') }}</label>
                                 <input id="customer_name" v-model="form.customer_name" type="text" :class="fieldInput" required />
@@ -144,14 +196,25 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                             <!-- Add item -->
                             <div class="mb-5 rounded-lg border border-border-subtle bg-surface-canvas p-4">
                                 <div class="grid grid-cols-1 gap-3 md:grid-cols-12">
-                                    <div class="md:col-span-7">
-                                        <label :class="fieldLabel">{{ t('orders.create.selectProduct') }}</label>
-                                        <select v-model="selectedProduct" :class="fieldInput">
+                                    <div :class="chosenProduct?.has_variants ? 'md:col-span-4' : 'md:col-span-7'">
+                                        <label for="add_product" :class="fieldLabel">{{ t('orders.create.selectProduct') }}</label>
+                                        <select id="add_product" v-model="selectedProduct" :class="fieldInput" @change="onProductChange">
                                             <option :value="null">{{ t('orders.create.chooseProduct') }}</option>
                                             <option v-for="product in availableProducts" :key="product.id" :value="product.id">
-                                                {{ product.name }} ({{ product.sku }}) - Stock: {{ product.stock }} - ${{ product.price }}
+                                                <template v-if="product.has_variants">{{ product.name }} ({{ product.sku }})</template>
+                                                <template v-else>{{ product.name }} ({{ product.sku }}) - {{ t('orders.create.stockCount', { count: product.stock }) }} - ${{ product.price }}</template>
                                             </option>
                                         </select>
+                                    </div>
+                                    <div v-if="chosenProduct?.has_variants" class="md:col-span-3">
+                                        <label for="add_variant" :class="fieldLabel">{{ t('orders.create.variant') }}</label>
+                                        <select id="add_variant" v-model="selectedVariant" :class="fieldInput" @change="variantError = ''">
+                                            <option :value="null">{{ t('orders.create.chooseVariant') }}</option>
+                                            <option v-for="variant in availableVariants" :key="variant.id" :value="variant.id">
+                                                {{ variant.title }}<template v-if="variant.sku"> ({{ variant.sku }})</template> - {{ t('orders.create.stockCount', { count: variant.stock }) }} - ${{ variant.price }}
+                                            </option>
+                                        </select>
+                                        <p v-if="variantError" :class="fieldError">{{ variantError }}</p>
                                     </div>
                                     <div class="md:col-span-3">
                                         <label :class="fieldLabel">{{ t('common.quantity') }}</label>
@@ -170,7 +233,9 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                                 <div v-for="(item, index) in form.items" :key="index" class="flex items-center gap-4 rounded-lg border border-border-subtle bg-surface-canvas p-4">
                                     <div class="flex-1 min-w-0">
                                         <p class="font-medium text-text-primary">{{ item.product_name }}</p>
+                                        <p v-if="item.variant_title" class="text-xs text-text-secondary">{{ t('orders.create.variant') }}: {{ item.variant_title }}</p>
                                         <p class="text-xs text-text-tertiary">SKU: {{ item.sku }}</p>
+                                        <p v-if="form.errors[`items.${index}.product_variant_id`]" :class="fieldError">{{ form.errors[`items.${index}.product_variant_id`] }}</p>
                                     </div>
                                     <div class="w-20">
                                         <label class="mb-1 block text-[11px] text-text-tertiary">{{ t('orders.edit.qty') }}</label>

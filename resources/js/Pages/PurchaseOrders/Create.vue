@@ -32,6 +32,8 @@ const form = useForm({
 
 const showScanner = ref(false);
 const selectedProductId = ref('');
+const selectedVariantId = ref(null);
+const variantError = ref('');
 const quantity = ref(1);
 const unitCost = ref(0);
 const supplierSku = ref('');
@@ -54,30 +56,50 @@ const total = computed(() => {
     return subtotal.value + (parseFloat(form.tax) || 0) + (parseFloat(form.shipping) || 0);
 });
 
+const chosenProduct = computed(() => props.products.find(p => p.id == selectedProductId.value) ?? null);
+
+const chosenVariants = computed(() =>
+    chosenProduct.value?.has_variants ? chosenProduct.value.variants.filter(v => v.is_active) : []
+);
+
 const addItem = () => {
-    if (!selectedProductId.value || quantity.value < 1) return;
+    const product = chosenProduct.value;
+    if (!product || quantity.value < 1) return;
 
-    const product = props.products.find(p => p.id == selectedProductId.value);
-    if (!product) return;
+    // A product bought by variant needs one, so receiving credits that
+    // variant's stock rather than the parent's.
+    let variant = null;
+    if (product.has_variants) {
+        variant = product.variants.find(v => v.id === selectedVariantId.value) ?? null;
+        if (!variant) {
+            variantError.value = t('orders.create.variantRequired');
+            return;
+        }
+    }
+    const variantId = variant?.id ?? null;
 
-    // Check if product already exists in items
-    const existingIndex = form.items.findIndex(item => item.product_id == selectedProductId.value);
+    // Check if this product (and variant) already exists in items
+    const existingIndex = form.items.findIndex(item => item.product_id == product.id && item.product_variant_id === variantId);
     if (existingIndex >= 0) {
         form.items[existingIndex].quantity += quantity.value;
         form.items[existingIndex].unit_cost = unitCost.value;
     } else {
         form.items.push({
             product_id: product.id,
+            product_variant_id: variantId,
             product_name: product.name,
-            sku: product.sku,
+            variant_title: variant?.title ?? null,
+            sku: variant?.sku || product.sku,
             quantity: quantity.value,
-            unit_cost: unitCost.value || product.purchase_price || product.price || 0,
+            unit_cost: unitCost.value || variant?.purchase_price || product.purchase_price || product.price || 0,
             supplier_sku: supplierSku.value,
         });
     }
 
     // Reset inputs
     selectedProductId.value = '';
+    selectedVariantId.value = null;
+    variantError.value = '';
     quantity.value = 1;
     unitCost.value = 0;
     supplierSku.value = '';
@@ -98,17 +120,34 @@ const updateItemCost = (index, newCost) => {
 };
 
 const onProductSelected = () => {
-    const product = props.products.find(p => p.id == selectedProductId.value);
+    selectedVariantId.value = null;
+    variantError.value = '';
+    const product = chosenProduct.value;
     if (product) {
         unitCost.value = product.purchase_price || product.price || 0;
     }
 };
 
-const onProductFound = (product) => {
-    // Add product from barcode scanner
+const onVariantSelected = () => {
+    variantError.value = '';
+    const variant = chosenProduct.value?.variants.find(v => v.id === selectedVariantId.value);
+    if (variant?.purchase_price) {
+        unitCost.value = parseFloat(variant.purchase_price) || 0;
+    }
+};
+
+const onProductFound = (product, variant = null) => {
+    // Add product from barcode scanner. A variant barcode resolves to its
+    // variant; a variant product scanned by its own code waits for a pick.
     selectedProductId.value = product.id;
-    unitCost.value = product.purchase_price || product.price || 0;
+    onProductSelected();
     showScanner.value = false;
+    if (variant) {
+        selectedVariantId.value = variant.id;
+        onVariantSelected();
+    } else if (chosenProduct.value?.has_variants) {
+        return;
+    }
     addItem();
 };
 
@@ -216,7 +255,7 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                 </div>
                 <div class="p-5">
                     <div class="rounded-lg border border-border-subtle bg-surface-canvas p-4">
-                        <div class="grid grid-cols-1 gap-3 md:grid-cols-6">
+                        <div class="grid grid-cols-1 gap-3" :class="chosenProduct?.has_variants ? 'md:grid-cols-8' : 'md:grid-cols-6'">
                             <div class="md:col-span-2">
                                 <label for="product" :class="fieldLabel">{{ t('common.product') }}</label>
                                 <select id="product" v-model="selectedProductId" @change="onProductSelected" :class="fieldInput">
@@ -225,6 +264,17 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                                         {{ product.name }} ({{ product.sku || 'No SKU' }})
                                     </option>
                                 </select>
+                            </div>
+
+                            <div v-if="chosenProduct?.has_variants" class="md:col-span-2">
+                                <label for="variant" :class="fieldLabel">{{ t('orders.create.variant') }}</label>
+                                <select id="variant" v-model="selectedVariantId" @change="onVariantSelected" :class="fieldInput">
+                                    <option :value="null">{{ t('orders.create.chooseVariant') }}</option>
+                                    <option v-for="variant in chosenVariants" :key="variant.id" :value="variant.id">
+                                        {{ variant.title }}<template v-if="variant.sku"> ({{ variant.sku }})</template> - {{ t('orders.create.stockCount', { count: variant.stock }) }}
+                                    </option>
+                                </select>
+                                <p v-if="variantError" :class="fieldError">{{ variantError }}</p>
                             </div>
 
                             <div>
@@ -262,10 +312,12 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                         <div v-for="(item, index) in form.items" :key="index" class="flex items-center gap-4 rounded-lg border border-border-subtle bg-surface-canvas p-4">
                             <div class="min-w-0 flex-1">
                                 <p class="font-medium text-text-primary">{{ item.product_name }}</p>
+                                <p v-if="item.variant_title" class="text-xs text-text-secondary">{{ t('orders.create.variant') }}: {{ item.variant_title }}</p>
                                 <p class="text-xs text-text-tertiary">
                                     SKU: {{ item.sku || '-' }}
                                     <span v-if="item.supplier_sku"> &middot; {{ t('purchaseOrders.create.supplierSku') }}: {{ item.supplier_sku }}</span>
                                 </p>
+                                <p v-if="form.errors[`items.${index}.product_variant_id`]" :class="fieldError">{{ form.errors[`items.${index}.product_variant_id`] }}</p>
                             </div>
                             <div class="w-20">
                                 <label class="mb-1 block text-[11px] text-text-tertiary">{{ t('common.quantity') }}</label>

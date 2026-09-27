@@ -9,12 +9,16 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Order\StoreOrderRequest;
 use App\Http\Requests\Order\UpdateOrderRequest;
 use App\Http\Resources\OrderResource;
+use App\Models\Customer;
 use App\Models\Inventory\Product;
+use App\Models\Inventory\ProductVariant;
 use App\Models\Order\Order;
 use App\Models\Warehouse;
 use App\Services\NotificationService;
 use App\Services\OrderService;
+use App\Support\Search;
 use Illuminate\Database\QueryException;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -101,10 +105,7 @@ class OrderController extends Controller
     {
         $organizationId = $request->user()->organization_id;
 
-        $products = Product::forOrganization($organizationId)
-            ->active()
-            ->with(['category', 'location'])
-            ->get(['id', 'name', 'sku', 'price', 'stock', 'category_id', 'location_id']);
+        $products = $this->formProducts($organizationId);
 
         $warehouses = Warehouse::forOrganization($organizationId)
             ->active()
@@ -218,15 +219,17 @@ class OrderController extends Controller
 
         $organizationId = $request->user()->organization_id;
 
-        $products = Product::forOrganization($organizationId)
-            ->active()
-            ->with(['category', 'location'])
-            ->get(['id', 'name', 'sku', 'price', 'stock', 'category_id', 'location_id']);
+        // Load each line's variant (so the form can show and round-trip it)
+        // and the linked customer (so the customer picker starts on it).
+        $order->load(['items.variant', 'customer']);
 
-        // Load each line's variant so the edit form can show and preserve
-        // variant lines (the web form can't pick a variant, but it must round-
-        // trip an existing one rather than dropping it and breaking the edit).
-        $order->load('items.variant');
+        // Keep the variants the order already uses selectable even if they
+        // have since been deactivated, so editing the order doesn't force a
+        // switch away from them.
+        $products = $this->formProducts(
+            $organizationId,
+            $order->items->pluck('product_variant_id')->filter()->all(),
+        );
 
         return Inertia::render('Orders/Edit', [
             'order' => $order,
@@ -445,5 +448,74 @@ class OrderController extends Controller
         NotificationService::createOrderApprovalNotification($order);
 
         return redirect()->back()->with('success', 'Order rejected.');
+    }
+
+    /**
+     * Search the organization's active customers for the order form's
+     * customer picker. Returns the fields the form copies onto the order.
+     */
+    public function customerLookup(Request $request): JsonResponse
+    {
+        $term = trim((string) $request->input('q', ''));
+
+        $customers = Customer::forOrganization($request->user()->organization_id)
+            ->active()
+            ->when($term !== '', fn ($query) => Search::apply($query, ['name', 'code', 'email', 'company_name', 'contact_name'], $term))
+            ->orderBy('name')
+            ->limit(20)
+            ->get()
+            ->map(fn (Customer $customer) => [
+                'id' => $customer->id,
+                'name' => $customer->name,
+                'code' => $customer->code,
+                'company_name' => $customer->company_name,
+                'email' => $customer->email,
+                'shipping_address' => $customer->full_shipping_address,
+                'billing_address' => $customer->full_billing_address,
+            ]);
+
+        return response()->json(['customers' => $customers->values()]);
+    }
+
+    /**
+     * The sellable products for the order form, each with its active
+     * variants so a variant-tracked product can be sold line by line.
+     *
+     * @param  array<int, int>  $keepVariantIds  inactive variants to include anyway (lines already on the order)
+     * @return array<int, array<string, mixed>>
+     */
+    private function formProducts(int $organizationId, array $keepVariantIds = []): array
+    {
+        return Product::forOrganization($organizationId)
+            ->active()
+            ->with(['variants' => fn ($query) => $query->where(function ($q) use ($keepVariantIds) {
+                $q->where('is_active', true);
+                if ($keepVariantIds !== []) {
+                    $q->orWhereIn('id', $keepVariantIds);
+                }
+            })])
+            ->orderBy('name')
+            ->get(['id', 'name', 'sku', 'price', 'stock', 'has_variants', 'category_id', 'location_id'])
+            ->map(fn (Product $product) => [
+                'id' => $product->id,
+                'name' => $product->name,
+                'sku' => $product->sku,
+                'price' => $product->price,
+                'stock' => (int) $product->stock,
+                'has_variants' => (bool) $product->has_variants,
+                'variants' => $product->has_variants
+                    ? $product->variants->map(fn (ProductVariant $variant) => [
+                        'id' => $variant->id,
+                        'title' => $variant->title,
+                        'sku' => $variant->sku,
+                        'barcode' => $variant->barcode,
+                        'stock' => (int) $variant->stock,
+                        'price' => $variant->price ?? $product->price,
+                        'is_active' => (bool) $variant->is_active,
+                    ])->values()->all()
+                    : [],
+            ])
+            ->values()
+            ->all();
     }
 }

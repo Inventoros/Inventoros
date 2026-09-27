@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Requests\Order;
 
+use App\Http\Requests\Concerns\ValidatesVariantLines;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -17,6 +18,8 @@ use Illuminate\Validation\Rule;
  */
 final class UpdateOrderRequest extends FormRequest
 {
+    use ValidatesVariantLines;
+
     /**
      * @return array<string, ValidationRule|array<mixed>|string>
      */
@@ -25,6 +28,7 @@ final class UpdateOrderRequest extends FormRequest
         $organizationId = $this->user()->organization_id;
 
         return [
+            'customer_id' => ['nullable', 'integer', Rule::exists('customers', 'id')->where('organization_id', $organizationId)->whereNull('deleted_at')],
             'customer_name' => 'required|string|max:255',
             'customer_email' => 'nullable|email|max:255',
             'customer_address' => 'nullable|string',

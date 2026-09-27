@@ -7,9 +7,12 @@ namespace App\Mcp\Tools;
 use App\Mcp\Concerns\AuthenticatesMcpRequest;
 use App\Models\Inventory\Product;
 use App\Models\Purchasing\PurchaseOrder;
+use App\Models\Purchasing\PurchaseOrderItem;
 use App\Support\Money;
+use App\Support\VariantLineValidator;
 use Illuminate\Contracts\JsonSchema\JsonSchema;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 use Laravel\Mcp\Request;
 use Laravel\Mcp\Response;
 use Laravel\Mcp\Server\Tool;
@@ -32,7 +35,7 @@ class CreatePurchaseOrderTool extends Tool
             'shipping' => $schema->number()->description('Shipping cost (default 0).'),
             'tax' => $schema->number()->description('Tax total (default 0).'),
             'notes' => $schema->string()->description('Internal notes.'),
-            'items' => $schema->array()->required()->description('Line items: [{product_id, quantity, unit_cost, supplier_sku?}].'),
+            'items' => $schema->array()->required()->description('Line items: [{product_id, product_variant_id?, quantity, unit_cost, supplier_sku?}]. product_variant_id is optional; when given it must be a variant of that product, and receiving the line credits the variant\'s stock.'),
         ];
     }
 
@@ -52,22 +55,34 @@ class CreatePurchaseOrderTool extends Tool
             'notes' => ['nullable', 'string', 'max:5000'],
             'items' => ['required', 'array', 'min:1', 'max:200'],
             'items.*.product_id' => ['required', 'integer', Rule::exists('products', 'id')->where('organization_id', $orgId)],
+            'items.*.product_variant_id' => ['nullable', 'integer', Rule::exists('product_variants', 'id')->where('organization_id', $orgId)->whereNull('deleted_at')],
             'items.*.quantity' => ['required', 'integer', 'min:1'],
             'items.*.unit_cost' => ['required', 'numeric', 'min:0'],
             'items.*.supplier_sku' => ['nullable', 'string', 'max:255'],
         ]);
+
+        // The variant is optional here (as on the REST API), but a variant
+        // that is sent must belong to the line's product.
+        $variantErrors = VariantLineValidator::errors($validated['items'], $orgId, requireVariant: false);
+        if ($variantErrors !== []) {
+            throw ValidationException::withMessages(collect($variantErrors)
+                ->mapWithKeys(fn (string $message, $index) => ["items.{$index}.product_variant_id" => $message])
+                ->all());
+        }
 
         $po = PurchaseOrder::createWithNumber($orgId, function (string $poNumber) use ($validated, $orgId) {
             $subtotal = '0';
             $rows = [];
             foreach ($validated['items'] as $item) {
                 $product = Product::forOrganization($orgId)->find($item['product_id']);
+                $variant = PurchaseOrderItem::resolveVariant($product, $item['product_variant_id'] ?? null);
                 $itemSubtotal = Money::multiply($item['unit_cost'], $item['quantity']);
                 $subtotal = Money::add($subtotal, $itemSubtotal);
                 $rows[] = [
                     'product_id' => $product->id,
+                    'product_variant_id' => $variant?->id,
                     'product_name' => $product->name,
-                    'sku' => $product->sku,
+                    'sku' => $variant?->sku ?? $product->sku,
                     'supplier_sku' => $item['supplier_sku'] ?? null,
                     'quantity_ordered' => $item['quantity'],
                     'quantity_received' => 0,

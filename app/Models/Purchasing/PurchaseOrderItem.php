@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Models\Purchasing;
 
 use App\Models\Inventory\Product;
+use App\Models\Inventory\ProductVariant;
 use App\Models\Inventory\StockAdjustment;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -16,6 +17,7 @@ use Illuminate\Support\Carbon;
  * @property int $id
  * @property int $purchase_order_id
  * @property int|null $product_id
+ * @property int|null $product_variant_id
  * @property string $product_name
  * @property string|null $sku
  * @property string|null $supplier_sku
@@ -32,12 +34,14 @@ use Illuminate\Support\Carbon;
  * @property-read int $remaining_quantity
  * @property-read PurchaseOrder $purchaseOrder
  * @property-read Product|null $product
+ * @property-read ProductVariant|null $variant
  */
 class PurchaseOrderItem extends Model
 {
     protected $fillable = [
         'purchase_order_id',
         'product_id',
+        'product_variant_id',
         'product_name',
         'sku',
         'supplier_sku',
@@ -84,6 +88,31 @@ class PurchaseOrderItem extends Model
     }
 
     /**
+     * Get the product variant this line buys, when it buys one.
+     *
+     * @return BelongsTo<ProductVariant, $this>
+     */
+    public function variant(): BelongsTo
+    {
+        return $this->belongsTo(ProductVariant::class, 'product_variant_id');
+    }
+
+    /**
+     * Resolve the variant a validated line names, scoped to its product (and
+     * so its organization). Null when the line names none.
+     */
+    public static function resolveVariant(Product $product, mixed $variantId): ?ProductVariant
+    {
+        if ($variantId === null || $variantId === '') {
+            return null;
+        }
+
+        return ProductVariant::where('organization_id', $product->organization_id)
+            ->where('product_id', $product->id)
+            ->findOrFail($variantId);
+    }
+
+    /**
      * Calculate and set totals based on quantity and unit cost.
      */
     public function calculateTotals(): void
@@ -111,7 +140,8 @@ class PurchaseOrderItem extends Model
     /**
      * Receive a quantity of this item.
      *
-     * Creates a stock adjustment and updates product stock.
+     * Creates a stock adjustment and updates the stock of what the line buys:
+     * the variant when the line names one, otherwise the product.
      *
      * @param  int  $quantity  The quantity to receive
      */
@@ -136,12 +166,38 @@ class PurchaseOrderItem extends Model
             return null;
         }
 
+        // Same for a variant line whose variant has since been deleted:
+        // crediting the parent instead would put the goods on the wrong count.
+        if ($this->product_variant_id !== null && ! $this->variant) {
+            return null;
+        }
+
         // Update received quantity
         $this->quantity_received += $quantityToReceive;
         $this->save();
 
-        // Create stock adjustment and update product stock
         $purchaseOrder = $this->purchaseOrder;
+
+        if ($this->variant !== null) {
+            // A variant line credits the variant's own stock, through the same
+            // ledger path order fulfilment and restocks use. Variant stock has
+            // no per-location breakdown, so there is no bin to book into.
+            $adjustment = StockAdjustment::adjustVariant(
+                variant: $this->variant,
+                quantity: $quantityToReceive,
+                type: 'purchase',
+                reason: "PO {$purchaseOrder->po_number} received",
+                notes: $this->notes,
+                reference: $purchaseOrder,
+            );
+
+            $purchaseOrder->refresh();
+            $purchaseOrder->updateReceivingStatus();
+
+            return $adjustment;
+        }
+
+        // Create stock adjustment and update product stock
         $adjustment = StockAdjustment::adjust(
             product: $this->product,
             quantity: $quantityToReceive,

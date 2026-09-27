@@ -20,6 +20,9 @@ const isLoading = ref(false);
 const scannerEnabled = ref(false);
 const errorMessage = ref('');
 const foundProduct = ref(null);
+// Set when the scanned code is a variant's barcode/SKU; emitted alongside
+// the product so a form can pick that variant directly.
+const foundVariant = ref(null);
 const scannerMode = ref('camera'); // 'camera' or 'manual'
 
 watch(() => props.show, (newVal) => {
@@ -27,6 +30,7 @@ watch(() => props.show, (newVal) => {
         scannerEnabled.value = scannerMode.value === 'camera';
         errorMessage.value = '';
         foundProduct.value = null;
+        foundVariant.value = null;
         manualCode.value = '';
     } else {
         scannerEnabled.value = false;
@@ -39,13 +43,15 @@ const lookupBarcode = async (code) => {
     isLoading.value = true;
     errorMessage.value = '';
     foundProduct.value = null;
+    foundVariant.value = null;
 
     try {
         const response = await axios.get(route('barcode.lookup'), { params: { code } });
 
         if (response.data.found) {
             foundProduct.value = response.data.product;
-            emit('product-found', response.data.product);
+            foundVariant.value = response.data.variant ?? null;
+            emit('product-found', response.data.product, foundVariant.value);
         } else {
             errorMessage.value = 'Product not found';
         }
@@ -87,6 +93,7 @@ const toggleMode = () => {
     }
     errorMessage.value = '';
     foundProduct.value = null;
+    foundVariant.value = null;
 };
 
 const close = () => {
@@ -96,7 +103,7 @@ const close = () => {
 
 const selectProduct = () => {
     if (foundProduct.value) {
-        emit('product-found', foundProduct.value);
+        emit('product-found', foundProduct.value, foundVariant.value);
         close();
     }
 };
@@ -216,13 +223,17 @@ const selectProduct = () => {
                                     <dt class="text-gray-600 dark:text-gray-400">Name:</dt>
                                     <dd class="text-gray-900 dark:text-gray-100 font-medium">{{ foundProduct.name }}</dd>
                                 </div>
+                                <div v-if="foundVariant" class="flex justify-between">
+                                    <dt class="text-gray-600 dark:text-gray-400">{{ t('orders.create.variant') }}:</dt>
+                                    <dd class="text-gray-900 dark:text-gray-100 font-medium">{{ foundVariant.title || '-' }}</dd>
+                                </div>
                                 <div class="flex justify-between">
                                     <dt class="text-gray-600 dark:text-gray-400">SKU:</dt>
-                                    <dd class="text-gray-900 dark:text-gray-100">{{ foundProduct.sku || '-' }}</dd>
+                                    <dd class="text-gray-900 dark:text-gray-100">{{ (foundVariant ? foundVariant.sku : foundProduct.sku) || '-' }}</dd>
                                 </div>
                                 <div class="flex justify-between">
                                     <dt class="text-gray-600 dark:text-gray-400">Stock:</dt>
-                                    <dd class="text-gray-900 dark:text-gray-100">{{ foundProduct.stock }}</dd>
+                                    <dd class="text-gray-900 dark:text-gray-100">{{ foundVariant ? foundVariant.stock : foundProduct.stock }}</dd>
                                 </div>
                             </dl>
                             <button

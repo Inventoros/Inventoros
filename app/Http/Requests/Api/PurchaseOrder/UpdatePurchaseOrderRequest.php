@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Requests\Api\PurchaseOrder;
 
+use App\Http\Requests\Concerns\ValidatesVariantLines;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -13,6 +14,8 @@ use Illuminate\Validation\Rule;
  */
 final class UpdatePurchaseOrderRequest extends FormRequest
 {
+    use ValidatesVariantLines;
+
     /**
      * @return array<string, mixed>
      */
@@ -32,9 +35,19 @@ final class UpdatePurchaseOrderRequest extends FormRequest
             // parent purchase_order is already org-scoped via route-model binding
             'items.*.id' => ['nullable', 'exists:purchase_order_items,id'],
             'items.*.product_id' => ['required_with:items', Rule::exists('products', 'id')->where('organization_id', $organizationId)],
+            'items.*.product_variant_id' => ['nullable', 'integer', Rule::exists('product_variants', 'id')->where('organization_id', $organizationId)->whereNull('deleted_at')],
             'items.*.quantity' => ['required_with:items', 'integer', 'min:1'],
             'items.*.unit_cost' => ['required_with:items', 'numeric', 'min:0'],
             'items.*.supplier_sku' => ['nullable', 'string', 'max:255'],
         ];
+    }
+
+    /**
+     * The variant stays optional on the REST API so existing clients that
+     * send product-only lines keep working; when sent it must still match.
+     */
+    protected function requiresVariantForVariantProducts(): bool
+    {
+        return false;
     }
 }

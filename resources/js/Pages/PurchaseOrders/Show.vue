@@ -217,6 +217,7 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-t
                                                 {{ item.product_name }}
                                             </Link>
                                             <span v-else>{{ item.product_name }}</span>
+                                            <span v-if="item.variant" class="block text-xs text-text-secondary">{{ t('orders.create.variant') }}: {{ item.variant.title }}</span>
                                         </td>
                                         <td class="px-4 py-3 text-sm text-text-tertiary">
                                             {{ item.sku || '-' }}

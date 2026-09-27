@@ -94,7 +94,8 @@ class CustomerController extends Controller
             abort(404);
         }
 
-        $customer->load('orders');
+        // Newest first: the page lists the most recent orders.
+        $customer->load(['orders' => fn ($query) => $query->latest('order_date')->latest('id')]);
 
         return Inertia::render('Customers/Show', [
             'customer' => $customer,

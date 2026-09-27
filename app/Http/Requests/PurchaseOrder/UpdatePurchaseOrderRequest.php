@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Requests\PurchaseOrder;
 
+use App\Http\Requests\Concerns\ValidatesVariantLines;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -15,6 +16,8 @@ use Illuminate\Validation\Rule;
  */
 final class UpdatePurchaseOrderRequest extends FormRequest
 {
+    use ValidatesVariantLines;
+
     /**
      * @return array<string, mixed>
      */
@@ -33,6 +36,7 @@ final class UpdatePurchaseOrderRequest extends FormRequest
             'items' => 'required|array|min:1',
             'items.*.id' => 'nullable|exists:purchase_order_items,id',
             'items.*.product_id' => ['required', Rule::exists('products', 'id')->where('organization_id', $organizationId)],
+            'items.*.product_variant_id' => ['nullable', 'integer', Rule::exists('product_variants', 'id')->where('organization_id', $organizationId)->whereNull('deleted_at')],
             'items.*.quantity' => 'required|integer|min:1',
             'items.*.unit_cost' => 'required|numeric|min:0',
             'items.*.supplier_sku' => 'nullable|string|max:255',

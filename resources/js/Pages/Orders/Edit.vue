@@ -3,8 +3,9 @@ import AppLayout from '@/Layouts/AppLayout.vue';
 import PageHeader from '@/Components/ui/PageHeader.vue';
 import Card from '@/Components/ui/Card.vue';
 import Button from '@/Components/ui/Button.vue';
+import CustomerPicker from '@/Components/CustomerPicker.vue';
 import { Head, Link, useForm } from '@inertiajs/vue3';
-import { computed } from 'vue';
+import { computed, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { ArrowLeft, Plus, Trash2, PackageOpen } from 'lucide-vue-next';
 
@@ -16,6 +17,7 @@ const props = defineProps({
 });
 
 const form = useForm({
+    customer_id: props.order.customer_id ?? null,
     customer_name: props.order.customer_name,
     customer_email: props.order.customer_email,
     customer_address: props.order.customer_address,
@@ -27,21 +29,37 @@ const form = useForm({
     items: props.order.items.map(item => ({
         id: item.id,
         product_id: item.product_id,
-        // Preserve variant lines through the edit. The web form can't pick a
-        // variant, but dropping it would make the backend reject the line
-        // (a variant-tracked product needs a variant).
         product_variant_id: item.product_variant_id ?? null,
         quantity: item.quantity,
         unit_price: parseFloat(item.unit_price),
     })),
 });
 
-// The variant title for an existing line (null for new lines and non-variant
-// lines), used to show and lock variant rows.
-const variantTitleFor = (formItem) => {
-    if (!formItem.id) return null;
-    const original = props.order.items.find(i => i.id === formItem.id);
-    return original?.variant?.title ?? null;
+const selectedCustomer = ref(props.order.customer ?? null);
+
+const selectCustomer = (customer) => {
+    selectedCustomer.value = customer;
+    form.customer_id = customer.id;
+    form.customer_name = customer.name;
+    form.customer_email = customer.email ?? '';
+    form.customer_address = customer.shipping_address || customer.billing_address || '';
+};
+
+// Back to a one-off customer: unlink, but keep the typed details editable.
+const clearCustomer = () => {
+    selectedCustomer.value = null;
+    form.customer_id = null;
+};
+
+const productFor = (productId) => props.products.find(p => p.id === productId) ?? null;
+
+// The variants a line can pick from: the product's active variants, plus the
+// one the line already holds (the backend keeps it in the list even if it has
+// since been deactivated).
+const variantsFor = (item) => {
+    const product = productFor(item.product_id);
+    if (!product?.has_variants) return [];
+    return product.variants.filter(v => v.is_active || v.id === item.product_variant_id);
 };
 
 const submit = () => {
@@ -74,19 +92,23 @@ const removeItem = (index) => {
     form.items.splice(index, 1);
 };
 
-const updateItemPrice = (index) => {
+// A new product choice resets the line's variant; the price defaults to the
+// product's (or, once a variant is picked, the variant's) price.
+const onProductChange = (index) => {
     const item = form.items[index];
-    if (item.product_id) {
-        const product = props.products.find(p => p.id === item.product_id);
-        if (product) {
-            item.unit_price = parseFloat(product.price);
-        }
+    item.product_variant_id = null;
+    const product = productFor(item.product_id);
+    if (product && !product.has_variants) {
+        item.unit_price = parseFloat(product.price) || 0;
     }
 };
 
-const getProductStock = (productId) => {
-    const product = props.products.find(p => p.id === productId);
-    return product ? product.stock : 0;
+const onVariantChange = (index) => {
+    const item = form.items[index];
+    const variant = productFor(item.product_id)?.variants.find(v => v.id === item.product_variant_id);
+    if (variant) {
+        item.unit_price = parseFloat(variant.price) || 0;
+    }
 };
 
 const fieldLabel = 'mb-1 block text-sm font-medium text-text-secondary';
@@ -126,6 +148,8 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                     <Card :padded="false">
                         <div class="px-5 pt-5"><h3 class="text-sm font-semibold text-text-primary">{{ t('orders.create.customerInfo') }}</h3></div>
                         <div class="space-y-4 p-5">
+                            <CustomerPicker :selected="selectedCustomer" @select="selectCustomer" @clear="clearCustomer" />
+                            <p v-if="form.errors.customer_id" :class="fieldError">{{ form.errors.customer_id }}</p>
                             <div>
                                 <label for="customer_name" :class="fieldLabel">{{ t('orders.create.customerName') }}</label>
                                 <input id="customer_name" v-model="form.customer_name" type="text" :class="fieldInput" required />
@@ -176,21 +200,36 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                                             <select
                                                 :id="`product-${index}`"
                                                 v-model="item.product_id"
-                                                @change="updateItemPrice(index)"
+                                                @change="onProductChange(index)"
                                                 :class="fieldInput"
-                                                :disabled="!!variantTitleFor(item)"
                                                 required
                                             >
                                                 <option value="">{{ t('orders.edit.selectProduct') }}</option>
                                                 <option v-for="product in products" :key="product.id" :value="product.id">
-                                                    {{ product.name }} ({{ product.sku }}) - Stock: {{ product.stock }}
+                                                    <template v-if="product.has_variants">{{ product.name }} ({{ product.sku }})</template>
+                                                    <template v-else>{{ product.name }} ({{ product.sku }}) - {{ t('orders.create.stockCount', { count: product.stock }) }}</template>
                                                 </option>
                                             </select>
-                                            <p v-if="variantTitleFor(item)" class="mt-1 text-xs text-text-tertiary">
-                                                {{ t('orders.edit.variant') }}: {{ variantTitleFor(item) }}
-                                            </p>
                                             <p v-if="form.errors[`items.${index}.product_id`]" :class="fieldError">
                                                 {{ form.errors[`items.${index}.product_id`] }}
+                                            </p>
+                                            <template v-if="productFor(item.product_id)?.has_variants">
+                                                <label :for="`variant-${index}`" class="mb-1 mt-3 block text-sm font-medium text-text-secondary">{{ t('orders.edit.variant') }}</label>
+                                                <select
+                                                    :id="`variant-${index}`"
+                                                    v-model="item.product_variant_id"
+                                                    @change="onVariantChange(index)"
+                                                    :class="fieldInput"
+                                                    required
+                                                >
+                                                    <option :value="null">{{ t('orders.create.chooseVariant') }}</option>
+                                                    <option v-for="variant in variantsFor(item)" :key="variant.id" :value="variant.id">
+                                                        {{ variant.title }}<template v-if="variant.sku"> ({{ variant.sku }})</template> - {{ t('orders.create.stockCount', { count: variant.stock }) }} - ${{ variant.price }}
+                                                    </option>
+                                                </select>
+                                            </template>
+                                            <p v-if="form.errors[`items.${index}.product_variant_id`]" :class="fieldError">
+                                                {{ form.errors[`items.${index}.product_variant_id`] }}
                                             </p>
                                         </div>
 
