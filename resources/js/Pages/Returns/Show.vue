@@ -5,7 +5,7 @@ import Card from '@/Components/ui/Card.vue';
 import Button from '@/Components/ui/Button.vue';
 import Badge from '@/Components/ui/Badge.vue';
 import { Head, Link, router } from '@inertiajs/vue3';
-import { ref } from 'vue';
+import { computed, reactive, ref } from 'vue';
 import { usePermissions } from '@/composables/usePermissions';
 import { useI18n } from 'vue-i18n';
 import { ArrowLeft, Check, PackageCheck, CheckCircle2, X, PackageOpen } from 'lucide-vue-next';
@@ -73,6 +73,33 @@ const submitReject = () => {
         },
     });
 };
+
+// Restock and condition stay editable until the return is received.
+const canEditLines = computed(() =>
+    ['pending', 'approved'].includes(props.returnOrder.status) && hasPermission('manage_returns')
+);
+const editingLines = ref(false);
+const lineEdits = reactive({});
+
+const startEditingLines = () => {
+    (props.returnOrder.items || []).forEach((item) => {
+        lineEdits[item.id] = { restock: !!item.restock, condition: item.condition };
+    });
+    editingLines.value = true;
+};
+
+const saveLines = () => {
+    processing.value = true;
+    router.patch(route('returns.items.update', props.returnOrder.id), {
+        items: Object.entries(lineEdits).map(([id, line]) => ({ id: Number(id), restock: line.restock, condition: line.condition })),
+    }, {
+        preserveScroll: true,
+        onSuccess: () => { editingLines.value = false; },
+        onFinish: () => { processing.value = false; },
+    });
+};
+
+const selectClass = 'h-8 rounded-md border border-border-subtle bg-surface-canvas px-2 text-xs text-text-primary ds-focus-ring';
 
 const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-text-secondary';
 </script>
@@ -151,7 +178,17 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-t
             <div class="space-y-4 lg:col-span-2">
                 <!-- Return Items -->
                 <Card :padded="false">
-                    <div class="px-5 pt-5"><h3 class="text-sm font-semibold text-text-primary">Return Items</h3></div>
+                    <div class="flex items-center justify-between gap-2 px-5 pt-5">
+                        <h3 class="text-sm font-semibold text-text-primary">Return Items</h3>
+                        <div v-if="canEditLines" class="flex gap-2">
+                            <template v-if="editingLines">
+                                <Button variant="ghost" size="xs" :disabled="processing" @click="editingLines = false">{{ t('returns.lines.cancel') }}</Button>
+                                <Button size="xs" :loading="processing" :disabled="processing" @click="saveLines">{{ t('returns.lines.save') }}</Button>
+                            </template>
+                            <Button v-else variant="secondary" size="xs" @click="startEditingLines">{{ t('returns.lines.edit') }}</Button>
+                        </div>
+                    </div>
+                    <p v-if="editingLines" class="px-5 pt-1 text-xs text-text-tertiary">{{ t('returns.lines.hint') }}</p>
                     <div class="p-5">
                         <div v-if="returnOrder.items && returnOrder.items.length > 0" class="w-full overflow-x-auto rounded-lg border border-border-subtle">
                             <table class="min-w-full">
@@ -180,13 +217,32 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-t
                                             {{ item.quantity }}
                                         </td>
                                         <td class="px-4 py-3 text-center">
-                                            <Badge :variant="conditionVariant(item.condition)" size="sm">
+                                            <select
+                                                v-if="editingLines && lineEdits[item.id]"
+                                                v-model="lineEdits[item.id].condition"
+                                                :aria-label="`Condition ${item.product?.name || ''}`"
+                                                :class="selectClass"
+                                            >
+                                                <option value="new">{{ getConditionLabel('new') }}</option>
+                                                <option value="used">{{ getConditionLabel('used') }}</option>
+                                                <option value="damaged">{{ getConditionLabel('damaged') }}</option>
+                                            </select>
+                                            <Badge v-else :variant="conditionVariant(item.condition)" size="sm">
                                                 {{ getConditionLabel(item.condition) }}
                                             </Badge>
                                         </td>
                                         <td class="px-4 py-3 text-center">
-                                            <Badge v-if="item.restock" variant="success" size="sm">Yes</Badge>
-                                            <Badge v-else variant="neutral" size="sm">No</Badge>
+                                            <input
+                                                v-if="editingLines && lineEdits[item.id]"
+                                                v-model="lineEdits[item.id].restock"
+                                                type="checkbox"
+                                                :aria-label="`Restock ${item.product?.name || ''}`"
+                                                class="h-4 w-4 rounded border-border-strong text-brand ds-focus-ring"
+                                            />
+                                            <template v-else>
+                                                <Badge v-if="item.restock" variant="success" size="sm">Yes</Badge>
+                                                <Badge v-else variant="neutral" size="sm">No</Badge>
+                                            </template>
                                         </td>
                                     </tr>
                                 </tbody>

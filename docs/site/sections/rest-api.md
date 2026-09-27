@@ -239,6 +239,15 @@ curl -X POST "${APP_URL}/api/v1/returns/17/approve" -H "Authorization: Bearer ${
 curl -X POST "${APP_URL}/api/v1/returns/17/receive" -H "Authorization: Bearer ${TOKEN}"
 ```
 
+Until a return is received you can change each line's restock flag and condition. Send only the fields you want to change; a line that is not on the return is a validation error, and a received, completed or rejected return answers 422 with `invalid_status`:
+
+```bash
+curl -X PATCH "${APP_URL}/api/v1/returns/17/items" \
+  -H "Authorization: Bearer ${TOKEN}" \
+  -H "Content-Type: application/json" \
+  -d '{"items": [{ "id": 88, "restock": true, "condition": "used" }]}'
+```
+
 ### Webhook events
 
 Subscribe a URL to any of these events under **Settings > Webhooks** or with `POST /api/v1/webhooks`. Each delivery is signed with HMAC-SHA256 using the webhook's secret, and fires only after the change is committed.

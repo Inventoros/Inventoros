@@ -35,7 +35,7 @@ Once signed in, a contact sees only records that belong to their own customer in
 
 ### Handling portal returns
 
-A portal return request is created as a pending return, exactly like one entered by staff, and appears under Returns. Everyone in the organization with the Manage Returns permission (and administrators) gets a notification linking to it. Nothing changes in stock until staff approve and receive the return, and staff decide whether items are restocked. Items the customer marks as damaged are set not to restock by default.
+A portal return request is created as a pending return, exactly like one entered by staff, and appears under Returns. Everyone in the organization with the Manage Returns permission (and administrators) gets a notification linking to it. Nothing changes in stock until staff approve and receive the return, and staff decide whether items are restocked. Items the customer marks as damaged are set not to restock by default. Until the return is received, staff can change each line's restock flag and condition with Edit lines on the return page (or `PATCH /api/v1/returns/{id}/items`); the change is recorded in the activity log.
 
 ### Security model
 
