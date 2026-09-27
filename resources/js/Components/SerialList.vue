@@ -53,7 +53,7 @@ const createSerial = async () => {
         };
         if (form.value.notes) payload.notes = form.value.notes;
 
-        const response = await axios.post(`/api/v1/products/${props.productId}/serials`, payload);
+        const response = await axios.post(route('products.serials.store', props.productId), payload);
         localSerials.value.unshift(response.data.data);
         emit('serial-created', response.data.data);
         resetForm();
@@ -71,7 +71,7 @@ const createSerial = async () => {
 
 const updateStatus = async (serial, newStatus) => {
     try {
-        const response = await axios.put(`/api/v1/products/${props.productId}/serials/${serial.id}`, {
+        const response = await axios.put(route('products.serials.update', [props.productId, serial.id]), {
             status: newStatus,
         });
         const index = localSerials.value.findIndex(s => s.id === serial.id);
