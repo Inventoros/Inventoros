@@ -17,6 +17,8 @@ class ListOrdersTool extends Tool
 {
     use AuthenticatesMcpRequest;
 
+    protected string $name = 'list_orders';
+
     protected string $description = 'List sales orders with optional filters (status, source, warehouse, date range, free-text customer search). Returns paginated results.';
 
     public function schema(JsonSchema $schema): array

@@ -18,6 +18,8 @@ class GetProductTool extends Tool
 {
     use AuthenticatesMcpRequest;
 
+    protected string $name = 'get_product';
+
     protected string $description = 'Fetch a single product by id with category, location, suppliers, options, and active variants. Returns 404-style error if the product is not in the caller\'s organization.';
 
     public function schema(JsonSchema $schema): array

@@ -19,6 +19,8 @@ class DecideApprovalTool extends Tool
 {
     use AuthenticatesMcpRequest;
 
+    protected string $name = 'decide_approval';
+
     protected string $description = 'Approve or reject a pending request. WARNING: approving a stock adjustment changes stock; rejecting a transfer cancels it. Always confirm with the user first. A reason (notes) is required to reject. You cannot decide on your own request unless you are an admin and the organization allows it.';
 
     public function schema(JsonSchema $schema): array

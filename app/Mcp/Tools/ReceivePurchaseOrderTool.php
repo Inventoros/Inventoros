@@ -20,6 +20,8 @@ class ReceivePurchaseOrderTool extends Tool
 {
     use AuthenticatesMcpRequest;
 
+    protected string $name = 'receive_purchase_order';
+
     protected string $description = 'Receive items against a sent purchase order. WARNING: this writes stock for every received line. Pass an explicit list of items with quantity_to_receive — partial receipts are allowed and the PO transitions to "partial" or "received" automatically.';
 
     public function schema(JsonSchema $schema): array

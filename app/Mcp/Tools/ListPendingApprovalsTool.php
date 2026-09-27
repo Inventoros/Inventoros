@@ -17,6 +17,8 @@ class ListPendingApprovalsTool extends Tool
 {
     use AuthenticatesMcpRequest;
 
+    protected string $name = 'list_pending_approvals';
+
     protected string $description = 'List the purchase orders, stock adjustment requests and stock transfers waiting for the caller\'s approval. Each item has a type (purchase_order, stock_adjustment, stock_transfer) and id to pass to decide_approval. Requests the caller raised themselves are left out unless they may approve their own.';
 
     public function schema(JsonSchema $schema): array

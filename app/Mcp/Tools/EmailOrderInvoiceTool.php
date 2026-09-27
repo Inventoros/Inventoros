@@ -20,6 +20,8 @@ class EmailOrderInvoiceTool extends Tool
 {
     use AuthenticatesMcpRequest;
 
+    protected string $name = 'email_order_invoice';
+
     protected string $description = 'Email an order\'s invoice to the customer with the invoice PDF attached. Assigns the invoice number on first use. Can be re-sent. Fails when the order has no customer email address and no "to" is given.';
 
     public function schema(JsonSchema $schema): array

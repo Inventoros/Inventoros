@@ -17,6 +17,8 @@ class ListCategoriesTool extends Tool
 {
     use AuthenticatesMcpRequest;
 
+    protected string $name = 'list_categories';
+
     protected string $description = 'List product categories for the authenticated organization. Used by the agent before creating products or filtering lists.';
 
     public function schema(JsonSchema $schema): array

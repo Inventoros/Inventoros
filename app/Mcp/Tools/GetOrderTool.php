@@ -18,6 +18,8 @@ class GetOrderTool extends Tool
 {
     use AuthenticatesMcpRequest;
 
+    protected string $name = 'get_order';
+
     protected string $description = 'Fetch a single order with all line items.';
 
     public function schema(JsonSchema $schema): array

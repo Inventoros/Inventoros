@@ -17,6 +17,8 @@ class ListWarehousesTool extends Tool
 {
     use AuthenticatesMcpRequest;
 
+    protected string $name = 'list_warehouses';
+
     protected string $description = 'List warehouses for the authenticated organization.';
 
     public function schema(JsonSchema $schema): array

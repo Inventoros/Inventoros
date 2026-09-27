@@ -17,6 +17,8 @@ class ListLocationsTool extends Tool
 {
     use AuthenticatesMcpRequest;
 
+    protected string $name = 'list_locations';
+
     protected string $description = 'List storage locations (bins, shelves, zones) for the authenticated organization. Filterable by warehouse.';
 
     public function schema(JsonSchema $schema): array

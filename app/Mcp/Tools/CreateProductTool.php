@@ -18,6 +18,8 @@ class CreateProductTool extends Tool
 {
     use AuthenticatesMcpRequest;
 
+    protected string $name = 'create_product';
+
     protected string $description = 'Create a new product in the catalog. Always confirm SKU, name, and starting stock with the user before invoking.';
 
     public function schema(JsonSchema $schema): array

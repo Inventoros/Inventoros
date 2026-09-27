@@ -17,6 +17,8 @@ class StartWorkOrderTool extends Tool
 {
     use AuthenticatesMcpRequest;
 
+    protected string $name = 'start_work_order';
+
     protected string $description = 'Move a draft or pending work order into "in_progress". Validates that all components have sufficient stock before starting; fails fast otherwise.';
 
     public function schema(JsonSchema $schema): array

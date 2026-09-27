@@ -17,6 +17,8 @@ class ListWorkOrdersTool extends Tool
 {
     use AuthenticatesMcpRequest;
 
+    protected string $name = 'list_work_orders';
+
     protected string $description = 'List manufacturing work orders. Filter by status or search by WO number / product.';
 
     public function schema(JsonSchema $schema): array

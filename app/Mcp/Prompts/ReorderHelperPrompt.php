@@ -11,6 +11,8 @@ use Laravel\Mcp\Server\Prompts\Argument;
 
 class ReorderHelperPrompt extends Prompt
 {
+    protected string $name = 'reorder_helper';
+
     protected string $description = 'Walk the user through identifying low-stock products, picking suppliers, and drafting purchase orders.';
 
     public function arguments(): array

@@ -21,6 +21,8 @@ class RecordPaymentTool extends Tool
 {
     use AuthenticatesMcpRequest;
 
+    protected string $name = 'record_payment';
+
     protected string $description = 'Record a payment received against a sales order. Partial payments are fine. A payment larger than the balance due is rejected unless allow_overpayment is true. Payments cannot be recorded against cancelled orders. Confirm the order, amount and method with the user first.';
 
     public function schema(JsonSchema $schema): array

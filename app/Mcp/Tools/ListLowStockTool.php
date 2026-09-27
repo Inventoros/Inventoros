@@ -17,6 +17,8 @@ class ListLowStockTool extends Tool
 {
     use AuthenticatesMcpRequest;
 
+    protected string $name = 'list_low_stock';
+
     protected string $description = 'List products at or below their min_stock threshold for the authenticated organization. The agent uses this to suggest reorders.';
 
     public function schema(JsonSchema $schema): array
