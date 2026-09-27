@@ -6,8 +6,10 @@ namespace App\GraphQL\Mutations;
 
 use App\Exceptions\InsufficientStockException;
 use App\Models\Inventory\Product;
+use App\Models\Inventory\ProductLocation;
 use App\Models\Inventory\ProductVariant;
 use App\Services\ApprovalService;
+use App\Services\WarehouseAccessService;
 use Closure;
 use GraphQL\Error\Error;
 use GraphQL\Type\Definition\ResolveInfo;
@@ -45,6 +47,11 @@ class RequestStockAdjustmentApprovalMutation extends Mutation
             ],
             'reason' => ['type' => Type::string(), 'rules' => ['nullable', 'string', 'max:255']],
             'notes' => ['type' => Type::string(), 'rules' => ['nullable', 'string', 'max:5000']],
+            'location_id' => [
+                'type' => Type::int(),
+                'description' => 'Location bin the adjustment applies to once approved. Required for users restricted to assigned warehouses.',
+                'rules' => ['nullable', 'integer'],
+            ],
         ];
     }
 
@@ -64,11 +71,24 @@ class RequestStockAdjustmentApprovalMutation extends Mutation
                 ?? throw new Error('Variant not found');
         }
 
+        $locationId = $args['location_id'] ?? null;
+
+        if ($locationId !== null && ! ProductLocation::where('id', $locationId)->where('organization_id', $user->organization_id)->exists()) {
+            throw new Error('Location not found');
+        }
+
+        if ($locationId !== null && $variant) {
+            throw new Error('Variant stock is not tracked by location. Leave the location empty for a variant.');
+        }
+
+        // A restricted user may only adjust a bin in one of their warehouses.
+        app(WarehouseAccessService::class)->authorizeLocation($user, $locationId);
+
         $approvals = app(ApprovalService::class);
 
         try {
             $request = $approvals->requestStockAdjustment(
-                $user, $product, $variant, (int) $args['quantity'], $args['type'], $args['reason'] ?? null, $args['notes'] ?? null,
+                $user, $product, $variant, (int) $args['quantity'], $args['type'], $args['reason'] ?? null, $args['notes'] ?? null, $locationId,
             );
         } catch (InsufficientStockException $e) {
             throw new Error($e->getMessage());

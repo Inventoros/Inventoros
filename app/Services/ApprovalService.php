@@ -55,6 +55,8 @@ final class ApprovalService
         self::STOCK_TRANSFER => Permission::APPROVE_STOCK_TRANSFERS,
     ];
 
+    public function __construct(private readonly WarehouseAccessService $warehouseAccess) {}
+
     public static function permissionFor(string $type): Permission
     {
         return self::PERMISSIONS[$type] ?? throw ApprovalException::notFound("Unknown approval type '{$type}'.");
@@ -402,6 +404,10 @@ final class ApprovalService
             throw ApprovalException::forbidden();
         }
 
+        if (! $this->canAccessWarehouseOf($user, $type, $subject)) {
+            throw ApprovalException::forbidden('You do not have access to the warehouse this request is for.');
+        }
+
         if (in_array($user->id, $this->requesterIds($type, $subject), true)) {
             $allowed = $user->isAdmin()
                 && ApprovalSettings::forOrganization($subject->getAttribute('organization_id'))->adminsCanSelfApprove;
@@ -427,6 +433,21 @@ final class ApprovalService
         };
 
         return array_values(array_map('intval', array_filter($ids)));
+    }
+
+    /**
+     * Warehouse access (same rules as everywhere else): an adjustment is
+     * tied to its bin, a transfer to either end, a purchase order to no
+     * warehouse.
+     */
+    private function canAccessWarehouseOf(User $user, string $type, Model $subject): bool
+    {
+        return match ($type) {
+            self::STOCK_ADJUSTMENT => $this->warehouseAccess->canAccessLocation($user, $subject->location_id),
+            self::STOCK_TRANSFER => $this->warehouseAccess->canAccessLocation($user, $subject->from_location_id)
+                || $this->warehouseAccess->canAccessLocation($user, $subject->to_location_id),
+            default => true,
+        };
     }
 
     private function requesterId(string $type, Model $subject): ?int
@@ -603,7 +624,7 @@ final class ApprovalService
             ->where('organization_id', $subject->getAttribute('organization_id'))
             ->whereKeyNot($requester->id)
             ->get()
-            ->filter(fn (User $u) => $u->hasPermission($permission))
+            ->filter(fn (User $u) => $u->hasPermission($permission) && $this->canAccessWarehouseOf($u, $type, $subject))
             ->values();
 
         NotificationService::createApprovalRequestedNotifications($this->describe($type, $subject->fresh() ?? $subject), $approvers, $requester);
