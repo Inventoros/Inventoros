@@ -42,16 +42,32 @@ class DocumentPdfService
      */
     public function orderInvoice(Order $order): DomPdf
     {
+        return Pdf::loadView('pdf.invoice', $this->orderInvoiceViewData($order));
+    }
+
+    /**
+     * The data the invoice view renders: the order with its lines, the
+     * payments and refunds that still stand (voided ones are left off the
+     * customer's document), and the discount and balance figures.
+     *
+     * @return array<string, mixed>
+     */
+    public function orderInvoiceViewData(Order $order): array
+    {
         $this->invoiceNumbers->ensureAssigned($order);
 
         $order->loadMissing(['items', 'organization']);
 
-        return Pdf::loadView('pdf.invoice', [
+        return [
             'order' => $order,
             'organization' => $order->organization,
             'invoiceNumber' => $order->invoice_number,
             'generatedDate' => now()->format('F j, Y'),
-        ]);
+            'lineDiscountTotal' => $order->lineDiscountTotal(),
+            'orderDiscountAmount' => $order->orderDiscountAmount(),
+            'payments' => $order->payments()->withoutGlobalScopes()->active()->orderBy('paid_at')->orderBy('id')->get(),
+            'balanceDue' => $order->balanceDue(),
+        ];
     }
 
     public function orderInvoiceFilename(Order $order): string
