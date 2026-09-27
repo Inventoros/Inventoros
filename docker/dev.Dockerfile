@@ -1,10 +1,13 @@
 # syntax=docker/dockerfile:1.7
 
-# Single-image dev runtime for Inventoros: FrankenPHP (Caddy + PHP-FPM in one binary)
+# Single-image DEV runtime for Inventoros: FrankenPHP (Caddy + PHP-FPM in one binary)
 # + Node for asset builds. SQLite works out of the box; Postgres works via the
 # postgres profile in docker-compose.yml.
 #
-# Build:   docker build -t inventoros .
+# Dev image only (bind mounts, APP_DEBUG=true). The production image is the
+# multi-stage Dockerfile at the repo root.
+#
+# Build:   docker build -f docker/dev.Dockerfile -t inventoros:dev .
 # Run:     docker compose up
 # See:     docker/README.md
 
