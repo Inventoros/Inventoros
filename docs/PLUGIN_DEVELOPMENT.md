@@ -302,16 +302,33 @@ Pages and slots that render plugin components:
 |------|-------|
 | `dashboard` | `header`, `before-stats`, `after-stats`, `before-content`, `widgets`, `after-content`, `footer` |
 | `products.index` | `header`, `before-table`, `footer` |
-| `products.show` | `header`, `sidebar`, `footer` |
+| `products.show` | `header`, `sidebar`, `tabs`, `footer` |
 | `products.create`, `products.edit` | `header`, `before-form`, `after-form` |
 | `orders.index` | `header`, `before-table`, `footer` |
-| `orders.show` | `header`, `sidebar`, `footer` |
+| `orders.show` | `header`, `sidebar`, `tabs`, `footer` |
 | `purchase-orders.index` | `header`, `before-table`, `footer` |
 | `purchase-orders.show` | `header`, `sidebar`, `footer` |
 | `purchase-orders.create`, `purchase-orders.edit`, `purchase-orders.receive` | `header`, `footer` |
 | `suppliers.index` | `header`, `before-table`, `footer` |
 | `suppliers.show`, `suppliers.create`, `suppliers.edit` | `header`, `footer` |
 | `categories.index`, `locations.index` | `header`, `footer` |
+
+### Tabs on detail pages
+
+The product and order detail pages take plugin tabs. A placement in their `tabs` slot adds a tab, with the page's own content kept as the first tab, "Overview". The tab bar appears only when at least one plugin tab is present for the current user, so the pages look exactly as before without plugins.
+
+```php
+add_page_component('products.show', 'tabs', [
+    'plugin' => 'my-plugin',
+    'component' => 'SupplierHistory',
+    'label' => 'Supplier history',             // the tab's label
+    'permission' => 'view_purchase_orders',    // users without it see no tab
+    'data' => fn ($user) => ['productId' => request()->route('product')?->id],
+    'position' => 10,                          // tab order
+]);
+```
+
+The tab's component is only mounted while its tab is selected. The Overview content stays mounted, so switching back keeps its state. Tabs follow the ARIA tabs pattern and the left and right arrow keys move between them.
 
 ### Dashboard widgets
 
@@ -396,7 +413,7 @@ export default function setup(plugin) {
 | `plugin.ui` | Core building blocks: `PageHeader`, `Card`, `CardHeader`, `Button`, `Badge`. |
 | `plugin.registerComponent(name, component)` | Provide the component for a server placement (`add_page_component()`) or a dashboard widget. |
 | `plugin.registerPage(page, component)` | Provide the page component rendered by `register_page(..., 'Plugin::{slug}/{page}')`. |
-| `plugin.registerSlotComponent(slot, component, { position, props })` | Render a component in a slot without a server placement. `slot` is `"<page>:<slot>"`, for example `"products.show:sidebar"`. |
+| `plugin.registerSlotComponent(slot, component, { position, props, label })` | Render a component in a slot without a server placement. `slot` is `"<page>:<slot>"`, for example `"products.show:sidebar"`. For a `tabs` slot, `label` is the tab label. |
 
 The same members are available globally on `window.Inventoros`, where the register functions take the slug explicitly: `registerComponent(slug, name, component)`, `registerSlotComponent(slot, component, options)` and `registerPage('Plugin::slug/Page', component)`. `window.Inventoros.plugin(slug)` returns the scoped SDK.
 

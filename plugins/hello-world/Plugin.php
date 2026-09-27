@@ -28,8 +28,18 @@ add_page_component('dashboard', 'header', [
     'component' => 'HelloWorldBanner',
     'position' => 1,
     'data' => [
-        'version' => '1.2.0',
+        'version' => '1.3.0',
     ],
+]);
+
+// A "Hello" tab on the product detail page, next to the core Overview tab.
+// The tab bar only appears on pages that have at least one plugin tab.
+add_page_component('products.show', 'tabs', [
+    'plugin' => 'hello-world',
+    'component' => 'HelloWorldTab',
+    'label' => 'Hello',
+    'permission' => 'view_products',
+    'data' => fn ($user) => ['sku' => request()->route('product')?->sku],
 ]);
 
 // A page of its own at /hello-world. The component comes from the bundle

@@ -72,6 +72,27 @@ test.describe('Runtime plugin UI', () => {
         expect(problems).toEqual([]);
     });
 
+    test('a plugin tab appears on the product page next to the core overview', async ({ page }) => {
+        const problems = await watchForProblems(page);
+
+        // Seeded by E2ETestSeeder (TEST_PRODUCT_SKU).
+        await page.goto('/products?search=E2E-PRODUCT-1');
+        await page.getByRole('link', { name: 'E2E Test Product' }).first().click();
+        await expect(page).toHaveURL(/\/products\/\d+$/);
+
+        const overview = page.getByRole('tab', { name: 'Overview' });
+        const hello = page.getByRole('tab', { name: 'Hello' });
+        await expect(overview).toHaveAttribute('aria-selected', 'true');
+
+        await hello.click();
+        await expect(hello).toHaveAttribute('aria-selected', 'true');
+        await expect(page.getByText('Hello, E2E-PRODUCT-1')).toBeVisible();
+
+        await overview.click();
+        await expect(page.getByText('Hello, E2E-PRODUCT-1')).toBeHidden();
+        expect(problems).toEqual([]);
+    });
+
     test('a registered plugin page renders after client-side navigation', async ({ page }) => {
         const problems = await watchForProblems(page);
 

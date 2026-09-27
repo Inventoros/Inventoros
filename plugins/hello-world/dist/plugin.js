@@ -1,16 +1,16 @@
-const w = window.Inventoros.Vue, { BaseTransition: D, BaseTransitionPropsValidators: A, Comment: N, DeprecationTypes: O, EffectScope: $, ErrorCodes: z, ErrorTypeStrings: U, Fragment: v, KeepAlive: F, ReactiveEffect: L, Static: K, Suspense: j, Teleport: q, Text: G, TrackOpTypes: Q, Transition: Y, TransitionGroup: J, TriggerOpTypes: X, VueElement: Z, __esModule: ee, assertNumber: te, callWithAsyncErrorHandling: oe, callWithErrorHandling: ne, camelize: re, capitalize: se, cloneVNode: le, compatUtils: ie, compile: ae, computed: de, createApp: ue, createBlock: ce, createCommentVNode: f, createElementBlock: c, createElementVNode: e, createHydrationRenderer: pe, createPropsRestProxy: he, createRenderer: fe, createSSRApp: ge, createSlots: me, createStaticVNode: we, createTextVNode: s, createVNode: i, customRef: ve, defineAsyncComponent: ye, defineComponent: _e, defineCustomElement: Ce, defineEmits: Se, defineExpose: Re, defineModel: be, defineOptions: ke, defineProps: He, defineSSRCustomElement: Te, defineSlots: xe, devtools: Pe, effect: We, effectScope: Ee, getCurrentInstance: Me, getCurrentScope: Ie, getCurrentWatcher: Ve, getTransitionRawChildren: Be, guardReactiveProps: De, h: Ae, handleError: Ne, hasInjectionContext: Oe, hydrate: $e, hydrateOnIdle: ze, hydrateOnInteraction: Ue, hydrateOnMediaQuery: Fe, hydrateOnVisible: Le, initCustomFormatter: Ke, initDirectivesForSSR: je, inject: qe, isMemoSame: Ge, isProxy: Qe, isReactive: Ye, isReadonly: Je, isRef: Xe, isRuntimeOnly: Ze, isShallow: et, isVNode: tt, markRaw: ot, mergeDefaults: nt, mergeModels: rt, mergeProps: st, nextTick: lt, normalizeClass: it, normalizeProps: at, normalizeStyle: dt, onActivated: ut, onBeforeMount: ct, onBeforeUnmount: pt, onBeforeUpdate: ht, onDeactivated: ft, onErrorCaptured: gt, onMounted: mt, onRenderTracked: wt, onRenderTriggered: vt, onScopeDispose: yt, onServerPrefetch: _t, onUnmounted: Ct, onUpdated: St, onWatcherCleanup: Rt, openBlock: p, popScopeId: bt, provide: kt, proxyRefs: Ht, pushScopeId: Tt, queuePostFlushCb: xt, reactive: Pt, readonly: Wt, ref: y, registerRuntimeCompiler: Et, render: Mt, renderList: It, renderSlot: Vt, resolveComponent: Bt, resolveDirective: Dt, resolveDynamicComponent: At, resolveFilter: Nt, resolveTransitionHooks: Ot, setBlockTracking: $t, setDevtoolsHook: zt, setTransitionHooks: Ut, shallowReactive: Ft, shallowReadonly: Lt, shallowRef: Kt, ssrContextKey: jt, ssrUtils: qt, stop: Gt, toDisplayString: u, toHandlerKey: Qt, toHandlers: Yt, toRaw: Jt, toRef: Xt, toRefs: Zt, toValue: eo, transformVNodeArgs: to, triggerRef: oo, unref: a, useAttrs: no, useCssModule: ro, useCssVars: so, useHost: lo, useId: io, useModel: ao, useSSRContext: uo, useShadowRoot: co, useSlots: po, useTemplateRef: ho, useTransitionState: fo, vModelCheckbox: go, vModelDynamic: mo, vModelRadio: wo, vModelSelect: vo, vModelText: yo, vShow: _o, version: Co, warn: So, watch: Ro, watchEffect: bo, watchPostEffect: ko, watchSyncEffect: Ho, withAsyncContext: To, withCtx: d, withDefaults: xo, withDirectives: Po, withKeys: Wo, withMemo: Eo, withModifiers: Mo, withScopeId: Io } = w, g = (t, n) => {
-  const l = t.__vccOpts || t;
-  for (const [o, h] of n)
-    l[o] = h;
-  return l;
-}, _ = {
+const w = window.Inventoros.Vue, { BaseTransition: $, BaseTransitionPropsValidators: z, Comment: U, DeprecationTypes: F, EffectScope: L, ErrorCodes: K, ErrorTypeStrings: j, Fragment: v, KeepAlive: q, ReactiveEffect: G, Static: Q, Suspense: Y, Teleport: J, Text: X, TrackOpTypes: Z, Transition: ee, TransitionGroup: te, TriggerOpTypes: oe, VueElement: ne, __esModule: re, assertNumber: se, callWithAsyncErrorHandling: le, callWithErrorHandling: ae, camelize: ie, capitalize: de, cloneVNode: ue, compatUtils: ce, compile: pe, computed: he, createApp: me, createBlock: fe, createCommentVNode: f, createElementBlock: u, createElementVNode: e, createHydrationRenderer: ge, createPropsRestProxy: we, createRenderer: ve, createSSRApp: _e, createSlots: ye, createStaticVNode: be, createTextVNode: n, createVNode: a, customRef: Ce, defineAsyncComponent: Se, defineComponent: He, defineCustomElement: Re, defineEmits: Te, defineExpose: ke, defineModel: xe, defineOptions: We, defineProps: Pe, defineSSRCustomElement: Ee, defineSlots: Ie, devtools: Me, effect: Ve, effectScope: Be, getCurrentInstance: De, getCurrentScope: Ae, getCurrentWatcher: Ne, getTransitionRawChildren: Oe, guardReactiveProps: $e, h: ze, handleError: Ue, hasInjectionContext: Fe, hydrate: Le, hydrateOnIdle: Ke, hydrateOnInteraction: je, hydrateOnMediaQuery: qe, hydrateOnVisible: Ge, initCustomFormatter: Qe, initDirectivesForSSR: Ye, inject: Je, isMemoSame: Xe, isProxy: Ze, isReactive: et, isReadonly: tt, isRef: ot, isRuntimeOnly: nt, isShallow: rt, isVNode: st, markRaw: lt, mergeDefaults: at, mergeModels: it, mergeProps: dt, nextTick: ut, normalizeClass: ct, normalizeProps: pt, normalizeStyle: ht, onActivated: mt, onBeforeMount: ft, onBeforeUnmount: gt, onBeforeUpdate: wt, onDeactivated: vt, onErrorCaptured: _t, onMounted: yt, onRenderTracked: bt, onRenderTriggered: Ct, onScopeDispose: St, onServerPrefetch: Ht, onUnmounted: Rt, onUpdated: Tt, onWatcherCleanup: kt, openBlock: c, popScopeId: xt, provide: Wt, proxyRefs: Pt, pushScopeId: Et, queuePostFlushCb: It, reactive: Mt, readonly: Vt, ref: _, registerRuntimeCompiler: Bt, render: Dt, renderList: At, renderSlot: Nt, resolveComponent: Ot, resolveDirective: $t, resolveDynamicComponent: zt, resolveFilter: Ut, resolveTransitionHooks: Ft, setBlockTracking: Lt, setDevtoolsHook: Kt, setTransitionHooks: jt, shallowReactive: qt, shallowReadonly: Gt, shallowRef: Qt, ssrContextKey: Yt, ssrUtils: Jt, stop: Xt, toDisplayString: d, toHandlerKey: Zt, toHandlers: eo, toRaw: to, toRef: oo, toRefs: no, toValue: ro, transformVNodeArgs: so, triggerRef: lo, unref: i, useAttrs: ao, useCssModule: io, useCssVars: uo, useHost: co, useId: po, useModel: ho, useSSRContext: mo, useShadowRoot: fo, useSlots: go, useTemplateRef: wo, useTransitionState: vo, vModelCheckbox: _o, vModelDynamic: yo, vModelRadio: bo, vModelSelect: Co, vModelText: So, vShow: Ho, version: Ro, warn: To, watch: ko, watchEffect: xo, watchPostEffect: Wo, watchSyncEffect: Po, withAsyncContext: Eo, withCtx: p, withDefaults: Io, withDirectives: Mo, withKeys: Vo, withMemo: Bo, withModifiers: Do, withScopeId: Ao } = w, m = (t, r) => {
+  const s = t.__vccOpts || t;
+  for (const [o, h] of r)
+    s[o] = h;
+  return s;
+}, y = {
   key: 0,
   class: "hw-banner",
   role: "status"
-}, C = { class: "hw-banner__body" }, S = {
+}, b = { class: "hw-banner__body" }, C = {
   key: 0,
   class: "hw-banner__meta"
-}, R = {
+}, S = {
   __name: "HelloWorldBanner",
   props: {
     version: {
@@ -19,25 +19,25 @@ const w = window.Inventoros.Vue, { BaseTransition: D, BaseTransitionPropsValidat
     }
   },
   setup(t) {
-    const n = y(!1);
-    return (l, o) => n.value ? f("", !0) : (p(), c("div", _, [
-      e("div", C, [
+    const r = _(!1);
+    return (s, o) => r.value ? f("", !0) : (c(), u("div", y, [
+      e("div", b, [
         o[1] || (o[1] = e("p", { class: "hw-banner__title" }, [
-          s(" Hello from the Hello World plugin "),
+          n(" Hello from the Hello World plugin "),
           e("span", { class: "hw-banner__badge" }, "Plugin active")
         ], -1)),
         o[2] || (o[2] = e("p", { class: "hw-banner__text" }, [
-          s(" This banner was loaded at runtime from the plugin's own pre-built bundle, so it works on installs that never run npm. Turn it off on the "),
+          n(" This banner was loaded at runtime from the plugin's own pre-built bundle, so it works on installs that never run npm. Turn it off on the "),
           e("a", { href: "/plugins" }, "Plugins page"),
-          s(". ")
+          n(". ")
         ], -1)),
-        t.version ? (p(), c("p", S, "Version " + u(t.version), 1)) : f("", !0)
+        t.version ? (c(), u("p", C, "Version " + d(t.version), 1)) : f("", !0)
       ]),
       e("button", {
         type: "button",
         class: "hw-banner__dismiss",
         "aria-label": "Dismiss",
-        onClick: o[0] || (o[0] = (h) => n.value = !0)
+        onClick: o[0] || (o[0] = (h) => r.value = !0)
       }, [...o[3] || (o[3] = [
         e("svg", {
           viewBox: "0 0 24 24",
@@ -57,10 +57,10 @@ const w = window.Inventoros.Vue, { BaseTransition: D, BaseTransitionPropsValidat
       ])])
     ]));
   }
-}, b = /* @__PURE__ */ g(R, [["__scopeId", "data-v-5a7f86dc"]]), k = { class: "hw-crumbs" }, H = { class: "hw-page-lead" }, T = {
+}, H = /* @__PURE__ */ m(S, [["__scopeId", "data-v-5a7f86dc"]]), R = { class: "hw-crumbs" }, T = { class: "hw-page-lead" }, k = {
   key: 0,
   class: "hw-page-text"
-}, x = { class: "hw-page-text" }, P = {
+}, x = { class: "hw-page-text" }, W = {
   __name: "HelloWorldPage",
   props: {
     title: { type: String, default: "Hello World" },
@@ -69,41 +69,41 @@ const w = window.Inventoros.Vue, { BaseTransition: D, BaseTransitionPropsValidat
   },
   setup(t) {
     const {
-      layouts: { AppLayout: n },
-      ui: { PageHeader: l, Card: o },
-      Inertia: { Head: h, Link: m }
+      layouts: { AppLayout: r },
+      ui: { PageHeader: s, Card: o },
+      Inertia: { Head: h, Link: g }
     } = window.Inventoros;
-    return (B, r) => (p(), c(v, null, [
-      i(a(h), { title: t.title }, null, 8, ["title"]),
-      i(a(n), null, {
-        header: d(() => [
-          e("div", k, [
-            r[0] || (r[0] = e("span", null, "Plugins", -1)),
-            r[1] || (r[1] = e("span", null, "/", -1)),
-            e("strong", null, u(t.title), 1)
+    return (O, l) => (c(), u(v, null, [
+      a(i(h), { title: t.title }, null, 8, ["title"]),
+      a(i(r), null, {
+        header: p(() => [
+          e("div", R, [
+            l[0] || (l[0] = e("span", null, "Plugins", -1)),
+            l[1] || (l[1] = e("span", null, "/", -1)),
+            e("strong", null, d(t.title), 1)
           ])
         ]),
-        default: d(() => [
+        default: p(() => [
           e("div", null, [
-            i(a(l), {
+            a(i(s), {
               title: t.title,
               description: "A page rendered from the Hello World plugin's runtime bundle."
             }, null, 8, ["title"]),
-            i(a(o), { class: "hw-page-card" }, {
-              default: d(() => [
-                e("p", H, "Hello, " + u(t.name || "there") + ".", 1),
-                r[3] || (r[3] = e("p", { class: "hw-page-text" }, [
-                  s(" This route was registered with "),
+            a(i(o), { class: "hw-page-card" }, {
+              default: p(() => [
+                e("p", T, "Hello, " + d(t.name || "there") + ".", 1),
+                l[3] || (l[3] = e("p", { class: "hw-page-text" }, [
+                  n(" This route was registered with "),
                   e("code", null, "register_page()"),
-                  s(" in the plugin's PHP, and this page was registered with "),
+                  n(" in the plugin's PHP, and this page was registered with "),
                   e("code", null, "plugin.registerPage()"),
-                  s(" in its pre-built bundle. ")
+                  n(" in its pre-built bundle. ")
                 ], -1)),
-                t.productCount !== null ? (p(), c("p", T, " Your organization has " + u(t.productCount) + " products. ", 1)) : f("", !0),
+                t.productCount !== null ? (c(), u("p", k, " Your organization has " + d(t.productCount) + " products. ", 1)) : f("", !0),
                 e("p", x, [
-                  i(a(m), { href: "/dashboard" }, {
-                    default: d(() => [...r[2] || (r[2] = [
-                      s("Back to the dashboard", -1)
+                  a(i(g), { href: "/dashboard" }, {
+                    default: p(() => [...l[2] || (l[2] = [
+                      n("Back to the dashboard", -1)
                     ])]),
                     _: 1
                   })
@@ -117,33 +117,48 @@ const w = window.Inventoros.Vue, { BaseTransition: D, BaseTransitionPropsValidat
       })
     ], 64));
   }
-}, W = /* @__PURE__ */ g(P, [["__scopeId", "data-v-4d8c67c4"]]), E = { class: "hw-widget" }, M = { class: "hw-widget__value" }, I = {
+}, P = /* @__PURE__ */ m(W, [["__scopeId", "data-v-4d8c67c4"]]), E = { class: "hw-tab" }, I = { class: "hw-tab__title" }, M = {
+  __name: "HelloWorldTab",
+  props: {
+    sku: { type: String, default: "" }
+  },
+  setup(t) {
+    return (r, s) => (c(), u("div", E, [
+      e("p", I, "Hello, " + d(t.sku || "product"), 1),
+      s[0] || (s[0] = e("p", { class: "hw-tab__text" }, [
+        n(" This tab comes from the Hello World plugin. It appears because the plugin placed a component in the product page's "),
+        e("code", null, "tabs"),
+        n(" slot; the product details stay on the Overview tab. ")
+      ], -1))
+    ]));
+  }
+}, V = /* @__PURE__ */ m(M, [["__scopeId", "data-v-05413abb"]]), B = { class: "hw-widget" }, D = { class: "hw-widget__value" }, A = {
   __name: "HelloWorldWidget",
   props: {
     productCount: { type: Number, default: 0 }
   },
   setup(t) {
     const {
-      Inertia: { Link: n }
+      Inertia: { Link: r }
     } = window.Inventoros;
-    return (l, o) => (p(), c("div", E, [
-      e("p", M, u(t.productCount), 1),
+    return (s, o) => (c(), u("div", B, [
+      e("p", D, d(t.productCount), 1),
       o[1] || (o[1] = e("p", { class: "hw-widget__label" }, "products say hello", -1)),
-      i(a(n), {
+      a(i(r), {
         href: "/hello-world",
         class: "hw-widget__link"
       }, {
-        default: d(() => [...o[0] || (o[0] = [
-          s("Open the Hello World page", -1)
+        default: p(() => [...o[0] || (o[0] = [
+          n("Open the Hello World page", -1)
         ])]),
         _: 1
       })
     ]));
   }
-}, V = /* @__PURE__ */ g(I, [["__scopeId", "data-v-84a7263b"]]);
-function Vo(t) {
-  t.registerComponent("HelloWorldBanner", b), t.registerComponent("HelloWorldWidget", V), t.registerPage("Hello", W);
+}, N = /* @__PURE__ */ m(A, [["__scopeId", "data-v-84a7263b"]]);
+function No(t) {
+  t.registerComponent("HelloWorldBanner", H), t.registerComponent("HelloWorldWidget", N), t.registerComponent("HelloWorldTab", V), t.registerPage("Hello", P);
 }
 export {
-  Vo as default
+  No as default
 };

@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use App\Models\Auth\Organization;
+use App\Models\Inventory\Product;
 use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
@@ -17,6 +18,7 @@ class E2ETestSeeder extends Seeder
     public const TEST_PASSWORD = 'E2ETestPassword123!';
     public const TEST_NAME = 'E2E Test User';
     public const TEST_ORG_NAME = 'E2E Test Organization';
+    public const TEST_PRODUCT_SKU = 'E2E-PRODUCT-1';
 
     /**
      * Run the database seeds.
@@ -59,6 +61,19 @@ class E2ETestSeeder extends Seeder
 
         // Assign system administrator role
         $user->assignRole('system-administrator');
+
+        // A known product for specs that open a product detail page.
+        Product::withoutGlobalScopes()->updateOrCreate(
+            ['organization_id' => $organization->id, 'sku' => self::TEST_PRODUCT_SKU],
+            [
+                'name' => 'E2E Test Product',
+                'price' => 10,
+                'currency' => 'USD',
+                'stock' => 5,
+                'min_stock' => 0,
+                'is_active' => true,
+            ]
+        );
 
         $this->command->info('E2E test user created successfully.');
         $this->command->info('Email: ' . self::TEST_EMAIL);

@@ -1,9 +1,9 @@
 # Hello World plugin
 
 An example Inventoros plugin. It does nothing useful: while active it shows a
-dismissible banner at the top of the dashboard, a small dashboard widget for
-users who can view products, and a page at `/hello-world` linked from the
-sidebar. It writes a line to the log on activation, deactivation and deletion.
+dismissible banner at the top of the dashboard, a small dashboard widget and a
+"Hello" tab on product pages for users who can view products, and a page at
+`/hello-world` linked from the sidebar. It writes a line to the log on activation, deactivation and deletion.
 Delete it whenever you like.
 
 It is also the reference for how a plugin is put together, including a UI that
@@ -25,6 +25,7 @@ hello-world/
     src/HelloWorldBanner.vue
     src/HelloWorldWidget.vue
     src/HelloWorldPage.vue
+    src/HelloWorldTab.vue
     vite.config.js     Library build; maps "vue" to the app's copy
     package.json       For building outside the Inventoros repository
   dist/
