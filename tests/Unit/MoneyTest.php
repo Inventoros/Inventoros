@@ -35,6 +35,41 @@ class MoneyTest extends TestCase
         $this->assertSame('0.30', Money::multiply('0.10', 3));
     }
 
+    public function test_multiply_rounds_half_up_to_the_cent_instead_of_truncating(): void
+    {
+        // 0.125 * 3 = 0.375: bcmath at scale 2 truncated this to 0.37.
+        $this->assertSame('0.38', Money::multiply('0.125', 3));
+        $this->assertSame('10.00', Money::multiply('19.99', '0.5'));
+        $this->assertSame('0.33', Money::multiply('0.333', 1));
+        $this->assertSame('-0.38', Money::multiply('-0.125', 3));
+        $this->assertSame('0.00', Money::multiply('0.004', 1));
+    }
+
+    public function test_of_rounds_half_up_to_the_cent_instead_of_truncating(): void
+    {
+        $this->assertSame('0.13', Money::of('0.125'));
+        $this->assertSame('0.12', Money::of('0.1249'));
+        $this->assertSame('-0.13', Money::of('-0.125'));
+        $this->assertSame('1.01', Money::of(1.005));
+        $this->assertSame('19.99', Money::of(19.99));
+    }
+
+    public function test_add_and_subtract_round_rather_than_truncate_each_input(): void
+    {
+        // Each 0.005 used to be truncated to 0.00 before summing.
+        $this->assertSame('0.01', Money::add('0.005', '0.005'));
+        $this->assertSame('0.13', Money::add('0.125'));
+        $this->assertSame('9.99', Money::subtract('10', '0.005', '0.005'));
+    }
+
+    public function test_floats_in_scientific_notation_are_accepted(): void
+    {
+        // (string) 1.0E-5 is "1.0E-5", which bcmath rejects outright.
+        $this->assertSame('0.00', Money::of(0.00001));
+        $this->assertSame('0.00', Money::multiply(0.00001, 2));
+        $this->assertSame('100000000000000000000.00', Money::of(1.0E20));
+    }
+
     public function test_summing_many_cents_does_not_drift(): void
     {
         // 10 * 0.01 must be exactly 0.10, not 0.099999...
