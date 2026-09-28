@@ -1,8 +1,10 @@
 <script setup>
 import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { router, usePage } from '@inertiajs/vue3';
+import { useI18n } from 'vue-i18n';
 
 const page = usePage();
+const { t } = useI18n();
 
 const warehouses = computed(() => page.props.warehouses || []);
 const activeWarehouseId = computed(() => page.props.activeWarehouseId || null);
@@ -11,6 +13,8 @@ const activeWarehouse = computed(() => {
     if (!activeWarehouseId.value) return null;
     return warehouses.value.find(w => w.id === activeWarehouseId.value) || null;
 });
+
+const buttonLabel = computed(() => (activeWarehouse.value ? activeWarehouse.value.name : t('warehouses.allWarehouses')));
 
 const isOpen = ref(false);
 const dropdownRef = ref(null);
@@ -44,15 +48,19 @@ onUnmounted(() => {
 </script>
 
 <template>
-    <div v-if="warehouses.length > 0" class="relative" ref="dropdownRef">
+    <div v-if="warehouses.length > 0" class="sm:relative" ref="dropdownRef">
+        <!-- Below sm the menu anchors to the (sticky, positioned) top strip and
+             spans it, so it cannot open off the left edge of a phone screen. -->
         <button
             @click="toggleDropdown"
-            class="flex items-center gap-2 px-3 py-2 text-sm text-gray-600 dark:text-gray-300 hover:text-brand hover:bg-gray-100 dark:hover:text-brand dark:hover:bg-surface-raised rounded-lg transition"
+            :aria-label="buttonLabel"
+            :title="buttonLabel"
+            class="flex items-center gap-1 lg:gap-2 px-2 lg:px-3 py-2 text-sm text-gray-600 dark:text-gray-300 hover:text-brand hover:bg-gray-100 dark:hover:text-brand dark:hover:bg-surface-raised rounded-lg transition"
         >
             <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 14v3m4-3v3m4-3v3M3 21h18M3 10h18M3 7l9-4 9 4M4 10h16v11H4V10z" />
             </svg>
-            <span class="max-w-[140px] truncate">{{ activeWarehouse ? activeWarehouse.name : $t('warehouses.allWarehouses') }}</span>
+            <span class="hidden lg:inline max-w-[140px] truncate">{{ buttonLabel }}</span>
             <svg class="w-4 h-4 flex-shrink-0 transition-transform duration-200" :class="isOpen ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
             </svg>
@@ -61,7 +69,7 @@ onUnmounted(() => {
         <!-- Dropdown -->
         <div
             v-show="isOpen"
-            class="absolute right-0 mt-2 w-64 bg-white dark:bg-surface-raised border border-gray-200 dark:border-border-subtle rounded-lg shadow-xl z-50 overflow-hidden"
+            class="absolute inset-x-4 top-full mt-1 sm:inset-x-auto sm:right-0 sm:top-auto sm:mt-2 sm:w-64 bg-white dark:bg-surface-raised border border-gray-200 dark:border-border-subtle rounded-lg shadow-xl z-50 overflow-hidden"
         >
             <div class="py-1">
                 <!-- All Warehouses option -->

@@ -337,7 +337,7 @@ const isActive = (item) => item.active.some((pattern) => route().current(pattern
         <div class="md:pl-60 pt-12 md:pt-0">
             <!-- Top strip — sticky, thin -->
             <div class="sticky top-0 z-30 h-11 flex items-center justify-between gap-3 px-4 md:px-6 bg-surface-canvas/80 backdrop-blur border-b border-border-subtle">
-                <div class="flex-1 min-w-0">
+                <div class="app-breadcrumb flex-1 min-w-0">
                     <slot name="header">
                         <span class="text-xs text-text-tertiary">{{ workspaceName }}</span>
                     </slot>
