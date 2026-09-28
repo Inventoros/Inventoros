@@ -136,7 +136,7 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-t
                 <div class="mt-4 flex items-center justify-between border-t border-border-subtle pt-3">
                     <span class="text-xs text-text-tertiary">{{ t('reports.categoryPerformance.avgPerProduct') }}</span>
                     <span class="text-xs font-medium tabular-nums text-text-secondary">
-                        {{ formatCurrency(category.total_value / category.product_count) }}
+                        {{ formatCurrency(category.product_count > 0 ? category.total_value / category.product_count : 0) }}
                     </span>
                 </div>
             </div>
@@ -173,7 +173,7 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-t
                                 <td class="px-4 py-3 text-right tabular-nums text-text-secondary">{{ formatCurrency(category.total_value / category.product_count) }}</td>
                                 <td class="px-4 py-3 text-right">
                                     <Badge v-if="category.low_stock_items > 0" variant="danger" size="sm">{{ category.low_stock_items }}</Badge>
-                                    <span v-else class="text-xs text-text-tertiary">—</span>
+                                    <span v-else class="text-xs tabular-nums text-text-tertiary">0</span>
                                 </td>
                             </tr>
                         </tbody>
