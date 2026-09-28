@@ -305,7 +305,9 @@ final class OrderService
             $allocator = app(TrackedStockAllocationService::class);
             foreach ($adjustStock ? $order->items : [] as $orderItem) {
                 $product = $products->get($orderItem->product_id);
-                if ($product !== null) {
+                // A variant line draws on the variant's stock, never the
+                // parent's serials/batches (replaceItems skips them too).
+                if ($product !== null && $orderItem->product_variant_id === null) {
                     $allocator->allocateForOrderItem($product, (int) $orderItem->quantity, $orderItem);
                 }
             }
