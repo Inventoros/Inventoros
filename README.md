@@ -157,7 +157,7 @@ Inventoros is an open-source Inventory and Warehouse Management System (WMS) bui
 
 ## Requirements
 
-- PHP 8.4 (8.4.1 or newer; PHP 8.5 is not supported yet)
+- PHP 8.4.1 or newer (8.4 and 8.5)
 - Composer 2.x
 - Node.js 20.19+ or 22.12+ and npm (Vite 7)
 - MySQL 8.0+ or PostgreSQL 13+ (SQLite for development)

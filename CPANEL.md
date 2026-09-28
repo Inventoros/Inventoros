@@ -5,7 +5,7 @@ This guide explains how to deploy Inventoros on shared hosting using cPanel.
 ## Prerequisites
 
 Before deploying, ensure your hosting provider supports:
-- PHP 8.4 (8.4.1 or newer; PHP 8.5 is not supported yet)
+- PHP 8.4.1 or newer (8.4 and 8.5)
 - MySQL 8.0+ or PostgreSQL 13+
 - Composer (or SSH access to run it)
 - Node.js 20.19+ or 22.12+ (for building assets, can be done locally)

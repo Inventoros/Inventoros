@@ -1,4 +1,4 @@
-This guide installs Inventoros from source on a VPS with full root access. Examples cover Ubuntu 22.04+, CentOS / RHEL, and Debian, then the scheduler and queue worker, SSL and firewall setup. Inventoros needs PHP 8.4.1 or newer (PHP 8.5 is not supported yet) and Node.js 20.19+ or 22.12+ to build the frontend.
+This guide installs Inventoros from source on a VPS with full root access. Examples cover Ubuntu 22.04+, CentOS / RHEL, and Debian, then the scheduler and queue worker, SSL and firewall setup. Inventoros needs PHP 8.4.1 or newer (8.4 and 8.5) and Node.js 20.19+ or 22.12+ to build the frontend.
 
 ### Ubuntu 22.04+
 

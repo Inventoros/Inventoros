@@ -23,7 +23,7 @@ Download the latest release: https://github.com/Inventoros/Inventoros/releases/l
 
 Server requirements:
 
-- PHP 8.4 (8.4.1 or newer; PHP 8.5 is not supported yet because a spreadsheet dependency caps at 8.4)
+- PHP 8.4.1 or newer (8.4 and 8.5)
 - MySQL 8.0+ or PostgreSQL 13+
 - Composer 2.0+
 - Node.js 20.19+ or 22.12+ and npm (required by Vite 7; only needed when building from source; the cPanel release ships pre-compiled assets)
