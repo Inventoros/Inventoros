@@ -117,6 +117,18 @@ class Product extends Model
         'metadata',
     ];
 
+    protected static function booted(): void
+    {
+        // A product created without a currency is priced in its
+        // organization's currency, not the column default (USD). Runs after
+        // BelongsToOrganization has stamped organization_id.
+        static::creating(function (Product $product): void {
+            $product->currency = filled($product->currency)
+                ? strtoupper(trim((string) $product->currency))
+                : Organization::currencyFor($product->organization_id === null ? null : (int) $product->organization_id);
+        });
+    }
+
     /**
      * The attributes that should be cast.
      *

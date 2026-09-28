@@ -252,7 +252,9 @@ final class ProductsImport implements SkipsOnFailure, ToCollection, WithChunkRea
                     'category_id' => $categoryId,
                     'location_id' => $locationId,
                     'price' => $row['price'],
-                    'currency' => $row['currency'] ?? 'USD',
+                    // Blank keeps an existing product's currency; a new product gets
+                    // the organization's (Product::booted).
+                    'currency' => $row['currency'] ?? $product?->currency,
                     'purchase_price' => $row['purchase_price'] ?? null,
                     'stock' => $row['stock'],
                     'min_stock' => $row['min_stock'] ?? 0,

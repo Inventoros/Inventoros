@@ -31,7 +31,7 @@ class CreateProductTool extends Tool
             'price' => $schema->number()->description('Display/list price.'),
             'selling_price' => $schema->number()->description('Sell price (defaults to price).'),
             'purchase_price' => $schema->number()->description('Default purchase cost.'),
-            'currency' => $schema->string()->description('ISO 4217 currency, default USD.'),
+            'currency' => $schema->string()->description('ISO 4217 currency; defaults to the organization currency.'),
             'stock' => $schema->integer()->description('Starting on-hand units (default 0).'),
             'min_stock' => $schema->integer()->description('Reorder warning threshold.'),
             'max_stock' => $schema->integer()->description('Maximum desired stock.'),
