@@ -16,6 +16,8 @@ use App\Models\Shipping\ShippingSetting;
 use App\Models\User;
 use App\Models\Warehouse;
 use App\Services\OrderService;
+use App\Services\WarehouseAccessService;
+use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
@@ -54,6 +56,7 @@ final class ShipmentService
     public function __construct(
         private readonly OrderService $orders,
         private readonly CarrierManager $carriers,
+        private readonly WarehouseAccessService $warehouseAccess,
     ) {}
 
     /**
@@ -68,6 +71,7 @@ final class ShipmentService
      *                                      means every unit not yet allocated.
      *
      * @throws ShippingException
+     * @throws AuthorizationException when a warehouse-restricted user ships from a warehouse they were not given
      */
     public function create(Order $order, array $data, ?User $user = null): Shipment
     {
@@ -85,6 +89,12 @@ final class ShipmentService
 
             $lines = $this->resolveLines($locked, $data['items'] ?? []);
             $warehouseId = $this->resolveWarehouse($locked, $data['warehouse_id'] ?? null, $settings);
+
+            // The goods leave from this warehouse and its address goes on the
+            // label: a warehouse-restricted user may only ship from their own.
+            if ($user !== null) {
+                $this->warehouseAccess->authorizeWarehouse($user, $warehouseId);
+            }
             $parcel = $settings->default_parcel ?? [];
 
             $trackingNumber = $this->clean($data['tracking_number'] ?? null);
