@@ -231,7 +231,10 @@
     "edit": {
       "title": "Edytuj produkt",
       "backToInventory": "Wróć do magazynu",
-      "updateProduct": "Zaktualizuj produkt"
+      "updateProduct": "Zaktualizuj produkt",
+      "stockReadOnlyHint": "Stan magazynowy zmienia się poprzez korekty stanu, dzięki czemu każda zmiana jest rejestrowana.",
+      "adjustStockLink": "Skoryguj stan",
+      "variantStockReadOnlyHint": "Zmień stan zapisanego wariantu za pomocą korekty stanu."
     },
     "show": {
       "title": "Szczegóły produktu",
@@ -1652,7 +1655,8 @@
       "reasonPlaceholder": "np. Uzupełnienie, Uszkodzone towary",
       "apply": "Zastosuj",
       "out": "Brak",
-      "low": "Niski"
+      "low": "Niski",
+      "pendingApproval": "Przesłano do zatwierdzenia. Stan zmieni się po zatwierdzeniu."
     },
     "barcodeScanner": {
       "title": "Skanuj kod kreskowy",

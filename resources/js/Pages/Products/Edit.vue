@@ -12,11 +12,13 @@ import SKUGeneratorModal from '@/Components/SKUGeneratorModal.vue';
 import { Head, Link, useForm, router } from '@inertiajs/vue3';
 import { ref, computed } from 'vue';
 import { useI18n } from 'vue-i18n';
+import { usePermissions } from '@/composables/usePermissions';
 import axios from 'axios';
 import ImageUploader from '@/Components/ImageUploader.vue';
 import { ArrowLeft, Eye, Zap, ChevronDown, Layers, Info, X, Trash2 } from 'lucide-vue-next';
 
 const { t } = useI18n();
+const { hasPermission } = usePermissions();
 
 const props = defineProps({
     product: Object,
@@ -75,7 +77,7 @@ const form = useForm({
     sku: props.product.sku,
     price: props.product.price,
     purchase_price: props.product.purchase_price || '',
-    stock: props.product.stock,
+    // No `stock`: on-hand changes only through stock adjustments.
     min_stock: props.product.min_stock,
     reorder_point: props.product.reorder_point || '',
     reorder_quantity: props.product.reorder_quantity || '',
@@ -361,13 +363,20 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                             </div>
                         </div>
 
-                        <!-- Stock Quantity -->
+                        <!-- Stock Quantity (read-only: changed through stock adjustments) -->
                         <div>
                             <label for="stock" :class="fieldLabel">
-                                {{ t('products.create.currentStock') }} <span class="text-status-danger">*</span>
+                                {{ t('products.create.currentStock') }}
                             </label>
-                            <input id="stock" v-model="form.stock" type="number" min="0" :class="fieldInput" required />
-                            <p v-if="form.errors.stock" :class="fieldError">{{ form.errors.stock }}</p>
+                            <input id="stock" :value="product.stock" type="number" :class="[fieldInput, 'cursor-not-allowed text-text-secondary']" readonly aria-describedby="stock-hint" />
+                            <p id="stock-hint" class="mt-1 text-xs text-text-tertiary">
+                                {{ t('products.edit.stockReadOnlyHint') }}
+                                <Link
+                                    v-if="hasPermission('manage_stock')"
+                                    :href="route('stock-adjustments.create', { product_id: product.id })"
+                                    class="font-medium text-brand hover:underline ds-focus-ring"
+                                >{{ t('products.edit.adjustStockLink') }}</Link>
+                            </p>
                         </div>
 
                         <!-- Minimum Stock -->
@@ -510,6 +519,7 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                             :product-price="form.price"
                             :product-purchase-price="form.purchase_price"
                             :currency-symbol="getCurrencySymbol(product.currency || defaultCurrency)"
+                            lock-existing-stock
                         />
                     </div>
                 </Card>

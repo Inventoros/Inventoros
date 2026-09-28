@@ -231,7 +231,10 @@
     "edit": {
       "title": "编辑产品",
       "backToInventory": "返回库存",
-      "updateProduct": "更新产品"
+      "updateProduct": "更新产品",
+      "stockReadOnlyHint": "库存通过库存调整变更，因此每次变更都会被记录。",
+      "adjustStockLink": "调整库存",
+      "variantStockReadOnlyHint": "请通过库存调整来更改已保存变体的库存。"
     },
     "show": {
       "title": "产品详情",
@@ -1652,7 +1655,8 @@
       "reasonPlaceholder": "例如：补货、损坏商品",
       "apply": "应用",
       "out": "缺货",
-      "low": "不足"
+      "low": "不足",
+      "pendingApproval": "已提交审批。审批通过后库存才会变更。"
     },
     "barcodeScanner": {
       "title": "扫描条形码",

@@ -7,11 +7,16 @@ namespace App\Imports;
 use App\Models\Inventory\Product;
 use App\Models\Inventory\ProductCategory;
 use App\Models\Inventory\ProductLocation;
+use App\Models\Inventory\StockAdjustment;
 use App\Models\Inventory\Supplier;
+use App\Models\User;
+use App\Services\ProductLocationStockService;
 use App\Services\ProductService;
 use App\Support\ProductCurrencyColumns;
 use App\Support\SpreadsheetSafety;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Maatwebsite\Excel\Concerns\SkipsFailures;
 use Maatwebsite\Excel\Concerns\SkipsOnFailure;
@@ -88,7 +93,11 @@ final class ProductsImport implements SkipsOnFailure, ToCollection, WithChunkRea
      *
      * @param  int  $organizationId  The organization to import products into
      */
-    public function __construct($organizationId)
+    /**
+     * @param  User|null  $actor  who the stock ledger rows are attributed to
+     *                            (the importing user; falls back to the signed-in user)
+     */
+    public function __construct($organizationId, private readonly ?User $actor = null)
     {
         $this->organizationId = $organizationId;
     }
@@ -96,6 +105,49 @@ final class ProductsImport implements SkipsOnFailure, ToCollection, WithChunkRea
     /**
      * Process each row in the collection
      */
+    /**
+     * Set an existing product's on-hand to the imported figure through the
+     * stock ledger: a `recount` adjustment for the difference, under the
+     * product row lock, with the location bins moved in step. A sheet
+     * exported before a sale and re-imported after it therefore shows up as
+     * an audited recount rather than silently overwriting the count.
+     */
+    private function bookImportedStock(Product $product, int $target): void
+    {
+        DB::transaction(function () use ($product, $target) {
+            $locked = Product::withoutGlobalScopes()->whereKey($product->id)->lockForUpdate()->firstOrFail();
+            $delta = $target - (int) $locked->stock;
+
+            if ($delta === 0) {
+                return;
+            }
+
+            $bins = app(ProductLocationStockService::class);
+
+            // Draw bins down before the total falls (the lazy seed reads the
+            // pre-change stock); book them up after it rises.
+            if ($delta < 0) {
+                $bins->consume($locked, -$delta);
+            }
+
+            StockAdjustment::adjust(
+                $locked,
+                $delta,
+                'recount',
+                'Product import',
+                "Stock set to {$target} by import",
+                actor: $this->actor,
+            );
+
+            if ($delta > 0) {
+                $bins->receive($locked, $delta);
+            }
+
+            $product->setRawAttributes(array_merge($product->getAttributes(), ['stock' => $target]));
+            $product->syncOriginal();
+        });
+    }
+
     public function collection(Collection $rows)
     {
         foreach ($rows as $index => $row) {
@@ -223,11 +275,19 @@ final class ProductsImport implements SkipsOnFailure, ToCollection, WithChunkRea
                     if ($product->trashed()) {
                         $product->restore();
                     }
-                    $product->update($productData);
+                    // The sheet's stock is booked as a ledgered recount
+                    // (locked, audited, binned), never written to the row.
+                    $product->update(Arr::except($productData, ['stock']));
+                    $this->bookImportedStock($product, (int) $row['stock']);
                     $this->updated++;
                 } else {
-                    // Create new product
-                    $product = Product::create($productData);
+                    // Create new product; its stock is an opening ledger row.
+                    $product = DB::transaction(function () use ($productData) {
+                        $created = Product::create($productData);
+                        app(ProductService::class)->recordOpeningStock($created, $this->actor);
+
+                        return $created;
+                    });
                     $this->imported++;
                 }
 

@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\Mcp\Tools;
 
 use App\Mcp\Concerns\AuthenticatesMcpRequest;
-use App\Models\Inventory\Product;
+use App\Services\ProductService;
 use Illuminate\Contracts\JsonSchema\JsonSchema;
 use Illuminate\Validation\Rule;
 use Laravel\Mcp\Request;
@@ -72,7 +72,9 @@ class CreateProductTool extends Tool
         $validated['stock'] = $validated['stock'] ?? 0;
         $validated['tracking_type'] = $validated['tracking_type'] ?? 'none';
 
-        $product = Product::create($validated);
+        // Through the shared ProductService so the starting stock is booked as
+        // an opening ledger row with its bin, like every other surface.
+        $product = app(ProductService::class)->create($validated);
 
         return Response::json([
             'message' => 'Product created.',

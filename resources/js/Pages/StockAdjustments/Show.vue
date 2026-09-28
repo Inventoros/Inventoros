@@ -35,6 +35,7 @@ const typeLabels = {
     'return': 'Return',
     'correction': 'Correction',
     'order': 'Order',
+    'opening_stock': 'Opening Stock',
 };
 
 const isIncrease = computed(() => props.adjustment.adjustment_quantity > 0);

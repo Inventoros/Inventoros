@@ -12,6 +12,7 @@ use App\Models\Inventory\StockTransfer;
 use App\Models\Inventory\StockTransferItem;
 use App\Models\User;
 use Illuminate\Auth\Access\AuthorizationException;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -94,11 +95,13 @@ final class StockTransferService
                 ]);
             }
 
-            return $transfer;
+            // Held for approval when the organization requires it (no-op
+            // otherwise), inside the creating transaction: a transfer is
+            // never visible, and so never completable, before its hold.
+            return $this->approvals->holdTransferIfRequired($transfer, $actor);
         });
 
-        // Held for approval when the organization requires it (no-op otherwise).
-        return $this->approvals->holdTransferIfRequired($transfer, $actor);
+        return $transfer;
     }
 
     /**
@@ -158,16 +161,29 @@ final class StockTransferService
                 throw new InvalidStateException('Only pending or in-transit transfers can be completed.', 'invalid_status');
             }
 
+            // The pre-transaction approval check read an unlocked instance; a
+            // hold (or rejection) that landed since must still stop the move.
+            $this->approvals->assertTransferMayProceed($locked);
+
             $stockTransfer->load('items', 'fromLocation', 'toLocation');
 
+            // Lock every product row up front in ascending id order (products
+            // before bins, the convention every stock path follows), so two
+            // transfers sharing products cannot deadlock by locking them in
+            // opposite line orders. Held for the whole transaction so no
+            // concurrent movement can pass the stock check on the same
+            // pre-image.
+            $products = Product::query()
+                ->whereIn('id', $stockTransfer->items->pluck('product_id')->unique()->sort()->values()->all())
+                ->where('organization_id', $stockTransfer->organization_id)
+                ->orderBy('id')
+                ->lockForUpdate()
+                ->get()
+                ->keyBy('id');
+
             foreach ($stockTransfer->items as $item) {
-                // Lock the product row for the duration of this transaction so two
-                // concurrent transfers cannot pass the stock check based on the
-                // same pre-image.
-                $product = Product::where('id', $item->product_id)
-                    ->where('organization_id', $stockTransfer->organization_id)
-                    ->lockForUpdate()
-                    ->firstOrFail();
+                $product = $products->get($item->product_id)
+                    ?? throw (new ModelNotFoundException)->setModel(Product::class, [$item->product_id]);
 
                 if ($product->stock < $item->quantity) {
                     throw new \RuntimeException(

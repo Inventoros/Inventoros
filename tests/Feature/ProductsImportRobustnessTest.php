@@ -8,6 +8,7 @@ use App\Imports\ProductsImport;
 use App\Models\Auth\Organization;
 use App\Models\Inventory\Product;
 use App\Models\System\SystemSetting;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Collection;
 use Tests\TestCase;
@@ -36,7 +37,9 @@ class ProductsImportRobustnessTest extends TestCase
         ]);
         $product->delete(); // soft delete
 
-        $import = new ProductsImport($this->org->id);
+        // The importing user owns the recount the stock change is booked as.
+        $importer = User::factory()->admin()->forOrganization($this->org->id)->create();
+        $import = new ProductsImport($this->org->id, $importer);
         $import->collection(new Collection([
             collect(['sku' => 'REIMP-1', 'name' => 'Restored', 'price' => 10, 'stock' => 20]),
         ]));
@@ -44,6 +47,7 @@ class ProductsImportRobustnessTest extends TestCase
         $fresh = Product::withTrashed()->where('sku', 'REIMP-1')->first();
         $this->assertNull($fresh->deleted_at, 'The soft-deleted product should be restored.');
         $this->assertSame('Restored', $fresh->name);
+        $this->assertSame(20, (int) $fresh->stock);
         $this->assertSame(1, $import->getStats()['updated']);
         // No opaque unique-constraint error from trying to re-create the SKU.
         $this->assertSame([], $import->getStats()['errors']);

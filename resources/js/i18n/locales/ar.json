@@ -231,7 +231,10 @@
     "edit": {
       "title": "تعديل المنتج",
       "backToInventory": "العودة إلى المخزون",
-      "updateProduct": "تحديث المنتج"
+      "updateProduct": "تحديث المنتج",
+      "stockReadOnlyHint": "يتغير المخزون من خلال تعديلات المخزون، لذلك يُسجَّل كل تغيير.",
+      "adjustStockLink": "تعديل المخزون",
+      "variantStockReadOnlyHint": "غيّر مخزون المتغير المحفوظ من خلال تعديل مخزون."
     },
     "show": {
       "title": "تفاصيل المنتج",
@@ -1652,7 +1655,8 @@
       "reasonPlaceholder": "مثال: إعادة تزويد، بضائع تالفة",
       "apply": "تطبيق",
       "out": "نفد",
-      "low": "منخفض"
+      "low": "منخفض",
+      "pendingApproval": "أُرسل للموافقة. يتغير المخزون بعد الموافقة عليه."
     },
     "barcodeScanner": {
       "title": "مسح الباركود",

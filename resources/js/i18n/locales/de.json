@@ -231,7 +231,10 @@
     "edit": {
       "title": "Produkt bearbeiten",
       "backToInventory": "Zurück zum Bestand",
-      "updateProduct": "Produkt aktualisieren"
+      "updateProduct": "Produkt aktualisieren",
+      "stockReadOnlyHint": "Der Bestand ändert sich über Bestandskorrekturen, damit jede Änderung protokolliert wird.",
+      "adjustStockLink": "Bestand korrigieren",
+      "variantStockReadOnlyHint": "Ändern Sie den Bestand einer gespeicherten Variante über eine Bestandskorrektur."
     },
     "show": {
       "title": "Produktdetails",
@@ -1652,7 +1655,8 @@
       "reasonPlaceholder": "z. B. Nachlieferung, Beschädigte Ware",
       "apply": "Anwenden",
       "out": "Leer",
-      "low": "Niedrig"
+      "low": "Niedrig",
+      "pendingApproval": "Zur Genehmigung eingereicht. Der Bestand ändert sich nach der Genehmigung."
     },
     "barcodeScanner": {
       "title": "Barcode scannen",

@@ -231,7 +231,10 @@
     "edit": {
       "title": "Editar producto",
       "backToInventory": "Volver al inventario",
-      "updateProduct": "Actualizar producto"
+      "updateProduct": "Actualizar producto",
+      "stockReadOnlyHint": "El stock cambia mediante ajustes de stock, así cada cambio queda registrado.",
+      "adjustStockLink": "Ajustar stock",
+      "variantStockReadOnlyHint": "Cambia el stock de una variante guardada con un ajuste de stock."
     },
     "show": {
       "title": "Detalles del producto",
@@ -1652,7 +1655,8 @@
       "reasonPlaceholder": "Ej., Reabastecimiento, Mercanc\u00eda da\u00f1ada",
       "apply": "Aplicar",
       "out": "Agotado",
-      "low": "Bajo"
+      "low": "Bajo",
+      "pendingApproval": "Enviado para aprobación. El stock cambia una vez aprobado."
     },
     "barcodeScanner": {
       "title": "Escanear c\u00f3digo de barras",

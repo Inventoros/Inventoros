@@ -167,6 +167,12 @@ final class ProductLocationStockService
      * location by default), lazily creating it. Keeps SUM(bins) in step with a
      * rising products.stock. No-op when there is no location to receive into.
      *
+     * Callers raise products.stock first (StockAdjustment::adjust) and then
+     * book the units here, so a product that has never been binned is seeded
+     * with its PRE-receipt on-hand (current total minus $quantity) before the
+     * units are added. Without that seed the bin would hold only the received
+     * units and the rest of the on-hand would drop into "unassigned".
+     *
      * Must run inside the caller's product-locked transaction.
      */
     public function receive(Product $product, int $quantity, ?int $locationId = null): void
@@ -180,6 +186,9 @@ final class ProductLocationStockService
         if ($locationId === null) {
             return;
         }
+
+        $onHand = (int) Product::withoutGlobalScopes()->whereKey($product->id)->value('stock');
+        $this->ensureBinned($product, max(0, $onHand - $quantity));
 
         ProductLocationStock::firstOrCreate(
             ['product_id' => $product->id, 'location_id' => $locationId],
@@ -225,8 +234,12 @@ final class ProductLocationStockService
      * Seed a product's full current stock at its assigned location if it has
      * no per-location rows yet. No-op once the product is binned, or if it has
      * no assigned location to seed from.
+     *
+     * $seedQuantity overrides the seeded amount for callers that have already
+     * moved products.stock (receive(), opening stock); by default the
+     * product's current stock is seeded.
      */
-    private function ensureBinned(Product $product): void
+    public function ensureBinned(Product $product, ?int $seedQuantity = null): void
     {
         if ($product->location_id === null) {
             return;
@@ -247,7 +260,7 @@ final class ProductLocationStockService
         // is defence in depth.
         ProductLocationStock::firstOrCreate(
             ['product_id' => $product->id, 'location_id' => $product->location_id],
-            ['organization_id' => $product->organization_id, 'quantity' => (int) $product->stock],
+            ['organization_id' => $product->organization_id, 'quantity' => $seedQuantity ?? (int) $product->stock],
         );
     }
 

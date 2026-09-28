@@ -24,6 +24,9 @@ const quantity = ref(1);
 const reason = ref('');
 const loading = ref(false);
 const error = ref('');
+// Set when the organization's approval rules held the adjustment: stock is
+// unchanged until an approver accepts it.
+const pendingNotice = ref('');
 
 const adjustTypes = [
     { value: 'increase', label: 'Increase', icon: '+' },
@@ -48,6 +51,7 @@ const openPopover = (type) => {
     quantity.value = 1;
     reason.value = '';
     error.value = '';
+    pendingNotice.value = '';
     showPopover.value = true;
 };
 
@@ -93,6 +97,7 @@ const adjustStock = async () => {
             }
         );
 
+        pendingNotice.value = response.status === 202 ? t('components.stockAdjuster.pendingApproval') : '';
         emit('updated', response.data.data);
         closePopover();
     } catch (err) {
@@ -108,6 +113,16 @@ const adjustStock = async () => {
         <!-- Stock Display -->
         <span class="font-medium text-gray-900 dark:text-gray-100 min-w-[3rem] text-center">
             {{ variant.stock }}
+        </span>
+
+        <!-- Held for approval -->
+        <span
+            v-if="pendingNotice"
+            class="px-1.5 py-0.5 text-xs font-medium rounded bg-status-info-soft text-status-info"
+            :title="pendingNotice"
+            role="status"
+        >
+            {{ pendingNotice }}
         </span>
 
         <!-- Status Badge -->
