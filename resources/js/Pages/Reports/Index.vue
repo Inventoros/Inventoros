@@ -139,7 +139,7 @@ const visibleReportCards = computed(() =>
         <PageHeader :title="t('reports.title')" :description="t('reports.subtitle')" />
 
         <!-- Report cards -->
-        <div class="mt-6 grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+        <div class="mt-6 grid grid-cols-1 gap-4 lg:grid-cols-2 xl:grid-cols-3">
             <Link v-for="report in visibleReportCards" :key="report.href" :href="report.href">
                 <Card hoverable>
                     <div class="flex items-start gap-4">

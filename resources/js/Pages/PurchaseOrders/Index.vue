@@ -113,7 +113,7 @@ const selectClass =
         <!-- Filters -->
         <Card class="mt-6">
             <form @submit.prevent="searchPOs" class="space-y-4">
-                <div class="grid grid-cols-1 gap-4 md:grid-cols-4">
+                <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
                     <div>
                         <label for="search" class="mb-1 block text-xs font-medium text-text-secondary">{{ t('common.search') }}</label>
                         <div class="relative">

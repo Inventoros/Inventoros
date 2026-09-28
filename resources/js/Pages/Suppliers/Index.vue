@@ -71,8 +71,8 @@ const thClass =
         <!-- Filters -->
         <Card class="mt-6">
             <form @submit.prevent="searchSuppliers" class="space-y-4">
-                <div class="grid grid-cols-1 gap-4 md:grid-cols-4">
-                    <div class="md:col-span-2">
+                <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                    <div class="sm:col-span-2">
                         <label for="search" class="mb-1 block text-xs font-medium text-text-secondary">{{ t('common.search') }} {{ t('suppliers.title') }}</label>
                         <div class="relative">
                             <Search :size="15" class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-text-tertiary" />
