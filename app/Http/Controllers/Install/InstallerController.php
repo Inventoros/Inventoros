@@ -24,6 +24,44 @@ use Inertia\Inertia;
 class InstallerController extends Controller
 {
     /**
+     * Lowest supported PHP version. Keep in step with composer.json's "php" constraint.
+     */
+    public const PHP_MIN = '8.4.1';
+
+    /**
+     * First PHP version that is NOT supported, or null for no ceiling.
+     * phpoffice/phpspreadsheet (via maatwebsite/excel) is locked to a release
+     * that requires PHP below 8.5; drop this once the lock allows 8.5.
+     */
+    public const PHP_MAX_EXCLUSIVE = '8.5.0';
+
+    /**
+     * Whether the given PHP version can run this release.
+     */
+    public static function phpVersionSupported(string $version): bool
+    {
+        if (version_compare($version, self::PHP_MIN, '<')) {
+            return false;
+        }
+
+        return self::PHP_MAX_EXCLUSIVE === null || version_compare($version, self::PHP_MAX_EXCLUSIVE, '<');
+    }
+
+    /**
+     * The PHP requirement as shown on the requirements step.
+     */
+    private static function phpRequirementLabel(): string
+    {
+        if (self::PHP_MAX_EXCLUSIVE === null) {
+            return self::PHP_MIN;
+        }
+
+        $ceiling = implode('.', array_slice(explode('.', self::PHP_MAX_EXCLUSIVE), 0, 2));
+
+        return self::PHP_MIN.' or newer, below '.$ceiling;
+    }
+
+    /**
      * Show the installer welcome page.
      *
      * @return \Inertia\Response|\Illuminate\Http\RedirectResponse
@@ -337,10 +375,9 @@ class InstallerController extends Controller
         return [
             [
                 'name' => 'PHP Version',
-                // Keep in step with composer.json's "php" constraint.
-                'required' => '8.4.1',
+                'required' => self::phpRequirementLabel(),
                 'current' => PHP_VERSION,
-                'met' => version_compare(PHP_VERSION, '8.4.1', '>='),
+                'met' => self::phpVersionSupported(PHP_VERSION),
             ],
             [
                 'name' => 'PDO Extension',

@@ -43,7 +43,43 @@ class InstallerControllerTest extends TestCase
 
         $response->assertOk();
         $php = collect($response->viewData('page')['props']['requirements'])->firstWhere('name', 'PHP Version');
-        $this->assertSame($minimum, $php['required']);
+        $this->assertStringStartsWith($minimum, $php['required']);
+    }
+
+    public function test_installer_accepts_php_8_4_1_up_to_but_not_including_8_5(): void
+    {
+        $supported = fn (string $version) => \App\Http\Controllers\Install\InstallerController::phpVersionSupported($version);
+
+        $this->assertFalse($supported('8.3.20'));
+        $this->assertFalse($supported('8.4.0'));
+        $this->assertTrue($supported('8.4.1'));
+        $this->assertTrue($supported('8.4.13'));
+        // phpoffice/phpspreadsheet (via maatwebsite/excel) does not install on 8.5 yet.
+        $this->assertFalse($supported('8.5.0'));
+        $this->assertFalse($supported('8.5.4'));
+    }
+
+    public function test_installer_php_ceiling_follows_the_locked_phpspreadsheet(): void
+    {
+        // When phpspreadsheet is bumped to a release that supports PHP 8.5,
+        // this fails until the installer's upper bound is dropped (or moved).
+        $lock = json_decode((string) file_get_contents(base_path('composer.lock')), true);
+        $package = collect($lock['packages'])->firstWhere('name', 'phpoffice/phpspreadsheet');
+        $this->assertNotNull($package);
+
+        preg_match('/<\s*([0-9.]+)/', (string) ($package['require']['php'] ?? ''), $m);
+        $lockCeiling = $m[1] ?? null;
+
+        $this->assertSame($lockCeiling, \App\Http\Controllers\Install\InstallerController::PHP_MAX_EXCLUSIVE);
+    }
+
+    public function test_requirements_page_states_the_upper_bound(): void
+    {
+        $response = $this->get('/install/requirements');
+
+        $php = collect($response->viewData('page')['props']['requirements'])->firstWhere('name', 'PHP Version');
+        $this->assertSame('8.4.1 or newer, below 8.5', $php['required']);
+        $this->assertSame(\App\Http\Controllers\Install\InstallerController::phpVersionSupported(PHP_VERSION), $php['met']);
     }
 
     public function test_database_step_accepts_the_numeric_port_the_wizard_sends(): void
