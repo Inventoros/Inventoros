@@ -10,6 +10,7 @@ use App\Models\Inventory\StockAdjustment;
 use App\Models\Inventory\Supplier;
 use App\Models\User;
 use App\Support\ApprovalSettings;
+use App\Support\SequenceNumber;
 use App\Support\SequenceNumberRetry;
 use App\Traits\LogsActivity;
 use Closure;
@@ -295,24 +296,7 @@ class PurchaseOrder extends Model
      */
     public static function generatePONumber(int $organizationId): string
     {
-        $date = now()->format('Ymd');
-        $prefix = "PO-{$date}-";
-
-        // Get the highest number for today. Include soft-deleted rows: the
-        // unique index still counts them, so ignoring a trashed highest-of-the-
-        // day number would regenerate a colliding value no retry can escape.
-        $lastPO = self::withTrashed()->where('po_number', 'like', "{$prefix}%")
-            ->orderBy('po_number', 'desc')
-            ->first();
-
-        if ($lastPO) {
-            $lastNumber = (int) substr($lastPO->po_number, -4);
-            $newNumber = $lastNumber + 1;
-        } else {
-            $newNumber = 1;
-        }
-
-        return $prefix.str_pad((string) $newNumber, 4, '0', STR_PAD_LEFT);
+        return SequenceNumber::next(static::class, 'po_number', 'PO-'.now()->format('Ymd').'-', $organizationId);
     }
 
     /**

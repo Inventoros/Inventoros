@@ -6,6 +6,7 @@ namespace App\Models\Order;
 
 use App\Models\Auth\Organization;
 use App\Models\User;
+use App\Support\SequenceNumber;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -138,22 +139,6 @@ class ReturnOrder extends Model
      */
     public static function generateReturnNumber(?int $organizationId = null): string
     {
-        $prefix = 'RMA-';
-        $date = now()->format('Ymd');
-
-        $query = static::where('return_number', 'like', $prefix . $date . '%');
-        if ($organizationId !== null) {
-            $query->where('organization_id', $organizationId);
-        }
-        $lastReturn = $query->orderBy('return_number', 'desc')->first();
-
-        if ($lastReturn) {
-            $lastNumber = (int) substr($lastReturn->return_number, -4);
-            $newNumber = str_pad((string) ($lastNumber + 1), 4, '0', STR_PAD_LEFT);
-        } else {
-            $newNumber = '0001';
-        }
-
-        return $prefix . $date . '-' . $newNumber;
+        return SequenceNumber::next(static::class, 'return_number', 'RMA-'.now()->format('Ymd').'-', $organizationId);
     }
 }

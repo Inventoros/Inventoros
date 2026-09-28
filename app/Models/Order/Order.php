@@ -15,6 +15,7 @@ use App\Models\Customer;
 use App\Models\User;
 use App\Models\Warehouse;
 use App\Support\Money;
+use App\Support\SequenceNumber;
 use App\Traits\LogsActivity;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
@@ -466,27 +467,6 @@ class Order extends Model
      */
     public static function generateOrderNumber(?int $organizationId = null): string
     {
-        $prefix = 'ORD-';
-        $date = now()->format('Ymd');
-
-        // Get the last order number for today, scoped by organization. Include
-        // soft-deleted rows: the unique index still counts them, so ignoring a
-        // trashed highest-of-the-day number would regenerate a colliding value
-        // that no retry can escape.
-        $query = static::withTrashed()->where('order_number', 'like', $prefix.$date.'%');
-        if ($organizationId !== null) {
-            $query->where('organization_id', $organizationId);
-        }
-        $lastOrder = $query->orderBy('order_number', 'desc')
-            ->first();
-
-        if ($lastOrder) {
-            $lastNumber = (int) substr($lastOrder->order_number, -4);
-            $newNumber = str_pad((string) ($lastNumber + 1), 4, '0', STR_PAD_LEFT);
-        } else {
-            $newNumber = '0001';
-        }
-
-        return $prefix.$date.'-'.$newNumber;
+        return SequenceNumber::next(static::class, 'order_number', 'ORD-'.now()->format('Ymd').'-', $organizationId);
     }
 }

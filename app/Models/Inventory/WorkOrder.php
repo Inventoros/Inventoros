@@ -6,6 +6,7 @@ namespace App\Models\Inventory;
 
 use App\Models\Auth\Organization;
 use App\Models\User;
+use App\Support\SequenceNumber;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -152,21 +153,6 @@ class WorkOrder extends Model
      */
     public static function generateWorkOrderNumber(int $organizationId): string
     {
-        $today = Carbon::today()->format('Ymd');
-        $prefix = "WO-{$today}-";
-
-        $lastOrder = static::where('organization_id', $organizationId)
-            ->where('work_order_number', 'like', "{$prefix}%")
-            ->orderByDesc('work_order_number')
-            ->first();
-
-        if ($lastOrder) {
-            $lastNumber = (int) substr($lastOrder->work_order_number, strlen($prefix));
-            $nextNumber = $lastNumber + 1;
-        } else {
-            $nextNumber = 1;
-        }
-
-        return $prefix . str_pad((string) $nextNumber, 4, '0', STR_PAD_LEFT);
+        return SequenceNumber::next(static::class, 'work_order_number', 'WO-'.Carbon::today()->format('Ymd').'-', $organizationId);
     }
 }

@@ -7,6 +7,7 @@ namespace App\Models\Inventory;
 use App\Models\Auth\Organization;
 use App\Models\User;
 use App\Models\Warehouse;
+use App\Support\SequenceNumber;
 use App\Traits\LogsActivity;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -191,22 +192,6 @@ class StockTransfer extends Model
      */
     public static function generateTransferNumber(?int $organizationId = null): string
     {
-        $prefix = 'ST-';
-        $date = now()->format('Ymd');
-
-        $query = static::where('transfer_number', 'like', $prefix . $date . '%');
-        if ($organizationId !== null) {
-            $query->where('organization_id', $organizationId);
-        }
-        $lastTransfer = $query->orderBy('transfer_number', 'desc')->first();
-
-        if ($lastTransfer) {
-            $lastNumber = (int) substr($lastTransfer->transfer_number, -4);
-            $newNumber = str_pad((string) ($lastNumber + 1), 4, '0', STR_PAD_LEFT);
-        } else {
-            $newNumber = '0001';
-        }
-
-        return $prefix . $date . '-' . $newNumber;
+        return SequenceNumber::next(static::class, 'transfer_number', 'ST-'.now()->format('Ymd').'-', $organizationId);
     }
 }
