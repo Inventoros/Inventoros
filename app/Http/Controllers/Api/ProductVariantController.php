@@ -154,6 +154,15 @@ class ProductVariantController extends Controller
             return response()->json(['message' => 'Variant not found', 'error' => 'not_found'], 404);
         }
 
+        // A variant with stock or history keeps its row: deleting it would
+        // strand the stock and orphan the lines that point at it.
+        if (app(ProductService::class)->variantIdsInUse([$variant->id]) !== []) {
+            return response()->json([
+                'message' => ProductService::VARIANT_IN_USE_MESSAGE,
+                'error' => 'variant_in_use',
+            ], 422);
+        }
+
         DB::transaction(function () use ($product, $variant) {
             $variant->delete();
 

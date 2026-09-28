@@ -11,6 +11,7 @@ use App\Models\Inventory\StockAdjustment;
 use App\Models\Inventory\Supplier;
 use App\Models\Inventory\SupplierPriceHistory;
 use App\Models\User;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use InvalidArgumentException;
@@ -498,7 +499,7 @@ final class ProductService
      */
     private function syncVariants(Product $product, array $variants): void
     {
-        /** @var \Illuminate\Support\Collection<int, ProductVariant> $unclaimed */
+        /** @var Collection<int, ProductVariant> $unclaimed */
         $unclaimed = $product->variants()->get()->keyBy('id');
         $existingVariantIds = $unclaimed->keys()->all();
         $incomingVariantIds = [];
@@ -549,7 +550,7 @@ final class ProductService
      * one with the same SKU, else the one with exactly the same option
      * combination (same option names, same values, order ignored).
      *
-     * @param  \Illuminate\Support\Collection<int, ProductVariant>  $unclaimed
+     * @param  Collection<int, ProductVariant>  $unclaimed
      * @param  array<string, mixed>  $variantData
      */
     private function matchExistingVariant($unclaimed, array $variantData): ?ProductVariant
@@ -586,6 +587,35 @@ final class ProductService
     }
 
     /**
+     * Why a variant cannot be deleted.
+     */
+    public const VARIANT_IN_USE_MESSAGE = 'This variant holds stock or is referenced by orders, purchase orders, returns or a pending stock adjustment, so it cannot be deleted. Deactivate it instead (set is_active to false).';
+
+    /**
+     * Of the given variants, those that must not be deleted: ones holding
+     * stock (positive or negative), or referenced by an order, purchase order
+     * or return line or a pending stock adjustment request.
+     *
+     * @param  array<int, int>  $variantIds
+     * @return array<int, int>
+     */
+    public function variantIdsInUse(array $variantIds): array
+    {
+        if ($variantIds === []) {
+            return [];
+        }
+
+        $referenced = collect(['order_items', 'purchase_order_items', 'return_order_items', 'stock_adjustment_requests'])
+            ->flatMap(fn (string $table) => DB::table($table)->whereIn('product_variant_id', $variantIds)->distinct()->pluck('product_variant_id'))
+            ->map(fn ($id) => (int) $id)
+            ->all();
+
+        $stocked = ProductVariant::withTrashed()->whereIn('id', $variantIds)->where('stock', '!=', 0)->pluck('id')->map(fn ($id) => (int) $id)->all();
+
+        return array_values(array_unique(array_merge($referenced, $stocked)));
+    }
+
+    /**
      * Remove variants from a product without losing what depends on them. A
      * variant that holds stock, or is referenced by an order, purchase order
      * or return line or a pending stock adjustment request, is deactivated
@@ -600,14 +630,7 @@ final class ProductService
             return;
         }
 
-        $referenced = collect(['order_items', 'purchase_order_items', 'return_order_items', 'stock_adjustment_requests'])
-            ->flatMap(fn (string $table) => DB::table($table)->whereIn('product_variant_id', $variantIds)->distinct()->pluck('product_variant_id'))
-            ->map(fn ($id) => (int) $id)
-            ->all();
-
-        $stocked = ProductVariant::query()->whereIn('id', $variantIds)->where('stock', '!=', 0)->pluck('id')->map(fn ($id) => (int) $id)->all();
-
-        $keep = array_values(array_unique(array_merge($referenced, $stocked)));
+        $keep = $this->variantIdsInUse($variantIds);
         $delete = array_values(array_diff($variantIds, $keep));
 
         if ($keep !== []) {

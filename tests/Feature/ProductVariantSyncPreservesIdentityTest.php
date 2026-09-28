@@ -190,4 +190,38 @@ final class ProductVariantSyncPreservesIdentityTest extends TestCase
         $this->assertSame(10, (int) ProductVariant::find($this->small->id)->stock);
         $this->assertTrue((bool) ProductVariant::find($this->medium->id)->is_active);
     }
+
+    // ==================== REST variant destroy ====================
+
+    public function test_destroying_a_variant_that_holds_stock_is_refused(): void
+    {
+        $response = $this->deleteJson("/api/v1/products/{$this->product->id}/variants/{$this->medium->id}")
+            ->assertStatus(422)
+            ->assertJsonPath('error', 'variant_in_use');
+        $this->assertStringContainsString('is_active', $response->json('message'));
+
+        $this->assertNull(ProductVariant::withTrashed()->find($this->medium->id)->deleted_at);
+    }
+
+    public function test_destroying_a_variant_referenced_by_an_order_line_is_refused(): void
+    {
+        $line = $this->sellSmall(10); // S: 10 -> 0, but the order line points at it
+        $this->assertSame(0, (int) $this->small->fresh()->stock);
+
+        $this->deleteJson("/api/v1/products/{$this->product->id}/variants/{$this->small->id}")
+            ->assertStatus(422)
+            ->assertJsonPath('error', 'variant_in_use');
+
+        $this->assertNull(ProductVariant::withTrashed()->find($this->small->id)->deleted_at);
+        $this->assertSame($this->small->id, (int) $line->fresh()->product_variant_id);
+    }
+
+    public function test_an_unused_empty_variant_can_still_be_destroyed(): void
+    {
+        $empty = $this->variant('TEE-XL', ['Size' => 'XL'], 0, 2);
+
+        $this->deleteJson("/api/v1/products/{$this->product->id}/variants/{$empty->id}")->assertOk();
+
+        $this->assertNotNull(ProductVariant::withTrashed()->find($empty->id)->deleted_at);
+    }
 }
