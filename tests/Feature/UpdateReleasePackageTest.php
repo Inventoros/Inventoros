@@ -90,6 +90,10 @@ final class UpdateReleasePackageTest extends TestCase
             $this->base.'/vendor/autoload.php' => '<?php // old vendor',
             $this->base.'/vendor/old/package.php' => '<?php // old package',
             $this->base.'/config/app.php' => '<?php return ["old" => true];',
+            // The default SQLite database lives inside an app-owned directory.
+            $this->base.'/database/database.sqlite' => 'LIVE SQLITE DATA',
+            $this->base.'/database/database.sqlite-wal' => 'LIVE WAL',
+            $this->base.'/database/migrations/2020_01_01_000000_removed.php' => '<?php // gone in 2.0',
             $this->base.'/bootstrap/app.php' => '<?php // old bootstrap',
             $this->base.'/bootstrap/cache/packages.php' => '<?php return [];',
             $this->base.'/storage/app/uploads/invoice.pdf' => 'USER UPLOAD',
@@ -133,6 +137,7 @@ final class UpdateReleasePackageTest extends TestCase
             'inventoros/app/NewService.php' => '<?php // added in 2.0',
             'inventoros/vendor/autoload.php' => '<?php // new vendor',
             'inventoros/config/app.php' => '<?php return ["new" => true];',
+            'inventoros/database/migrations/2026_01_01_000000_added.php' => '<?php // new in 2.0',
             'inventoros/bootstrap/app.php' => '<?php // new bootstrap',
             'inventoros/bootstrap/cache/.gitkeep' => '',
             'inventoros/storage/app/.gitkeep' => '',
@@ -237,6 +242,13 @@ final class UpdateReleasePackageTest extends TestCase
         $this->assertSame('<?php // new bootstrap', File::get($this->base.'/bootstrap/app.php'));
         $this->assertSame('<?php // new artisan', File::get($this->base.'/artisan'));
         $this->assertSame(self::VERSION, trim(File::get($this->base.'/VERSION')));
+
+        // The database directory is replaced, but a SQLite database in it
+        // is carried over.
+        $this->assertFileExists($this->base.'/database/migrations/2026_01_01_000000_added.php');
+        $this->assertFileDoesNotExist($this->base.'/database/migrations/2020_01_01_000000_removed.php');
+        $this->assertSame('LIVE SQLITE DATA', File::get($this->base.'/database/database.sqlite'));
+        $this->assertSame('LIVE WAL', File::get($this->base.'/database/database.sqlite-wal'));
 
         // User data and runtime state are untouched.
         // .env keeps its values and learns where the web root is, so CLI

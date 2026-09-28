@@ -604,6 +604,14 @@ class FileUpdateService
             $destDir = "{$basePath}/{$dir}";
 
             if (File::exists($sourceDir)) {
+                if ($dir === 'database') {
+                    // Leave a live SQLite database alone: restoreDatabase()
+                    // puts back the consistent snapshot taken for the backup.
+                    $this->replaceDirectoryContents($sourceDir, $destDir, fn (string $name): bool => preg_match('/\.sqlite3?(-wal|-shm|-journal)?$/', $name) === 1);
+
+                    continue;
+                }
+
                 if (File::exists($destDir)) {
                     File::deleteDirectory($destDir);
                 }
@@ -712,10 +720,55 @@ class FileUpdateService
      */
     protected function installEntry(string $from, string $to): void
     {
-        if (is_dir($from)) {
-            $this->replaceDirectory($from, $to);
-        } else {
+        if (! is_dir($from)) {
             $this->copyFile($from, $to);
+
+            return;
+        }
+
+        if (basename($to) === 'database') {
+            // The default SQLite database (database/database.sqlite, plus its
+            // -wal/-shm/-journal files) lives here and is open while the
+            // update runs, so this directory is never moved: its other
+            // contents are replaced in place around the database files.
+            $this->replaceDirectoryContents($from, $to, fn (string $name): bool => preg_match('/\.sqlite3?(-wal|-shm|-journal)?$/', $name) === 1);
+
+            return;
+        }
+
+        $this->replaceDirectory($from, $to);
+    }
+
+    /**
+     * Replace a directory's contents in place, keeping the top-level entries
+     * $keep accepts.
+     *
+     * @param  callable(string): bool  $keep
+     *
+     * @throws \RuntimeException
+     */
+    protected function replaceDirectoryContents(string $from, string $to, callable $keep): void
+    {
+        File::ensureDirectoryExists($to);
+
+        foreach ($this->entries($to) as $name) {
+            if ($keep($name)) {
+                continue;
+            }
+
+            $path = "{$to}/{$name}";
+            is_dir($path) && ! is_link($path) ? File::deleteDirectory($path) : File::delete($path);
+        }
+
+        foreach ($this->entries($from) as $name) {
+            if ($keep($name)) {
+                continue;
+            }
+
+            $source = "{$from}/{$name}";
+            if (is_dir($source) ? ! File::copyDirectory($source, "{$to}/{$name}") : ! File::copy($source, "{$to}/{$name}")) {
+                throw new \RuntimeException("Failed to copy '".basename($to)."/{$name}' during the update");
+            }
         }
     }
 
