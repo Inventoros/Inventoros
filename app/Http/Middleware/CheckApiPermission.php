@@ -83,12 +83,29 @@ final class CheckApiPermission
      */
     public static function tokenAllows(mixed $token): callable
     {
-        $abilities = $token instanceof PersonalAccessToken ? $token->abilities : null;
+        $abilities = self::declaredAbilities($token);
 
-        if (! is_array($abilities) || $abilities === [] || in_array('*', $abilities, true)) {
+        if ($abilities === null) {
             return fn (string $p): bool => true;
         }
 
         return fn (string $p): bool => in_array($p, $abilities, true);
+    }
+
+    /**
+     * The specific abilities the acting token is restricted to, or null when
+     * it is unrestricted (see tokenAllows()).
+     *
+     * @return array<int, string>|null
+     */
+    public static function declaredAbilities(mixed $token): ?array
+    {
+        $abilities = $token instanceof PersonalAccessToken ? $token->abilities : null;
+
+        if (! is_array($abilities) || $abilities === [] || in_array('*', $abilities, true)) {
+            return null;
+        }
+
+        return array_values($abilities);
     }
 }

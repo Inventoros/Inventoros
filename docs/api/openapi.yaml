@@ -193,7 +193,7 @@ paths:
                 name: { type: string, maxLength: 255 }
                 abilities:
                   type: array
-                  description: "Optional list of token ability strings (defaults to ['*'])."
+                  description: "Optional list of token ability strings. Must be within what the calling token and the user's permissions allow; `*` only for an admin calling with an unrestricted token. Defaults to everything the caller may grant (['*'] for an unrestricted admin, otherwise an explicit list)."
                   items: { type: string }
       responses:
         '201':
