@@ -5,21 +5,34 @@ declare(strict_types=1);
 namespace App\GraphQL\Mutations;
 
 use App\Exceptions\ApprovalException;
+use App\GraphQL\Concerns\RequiresPermissions;
+use App\Http\Middleware\CheckApiPermission;
 use App\Services\ApprovalService;
 use Closure;
 use GraphQL\Error\Error;
 use GraphQL\Type\Definition\ResolveInfo;
 use GraphQL\Type\Definition\Type;
-use Illuminate\Auth\Access\AuthorizationException;
+use Rebing\GraphQL\Error\AuthorizationError;
 use Rebing\GraphQL\Support\Facades\GraphQL;
 use Rebing\GraphQL\Support\Mutation;
 
 class DecideApprovalMutation extends Mutation
 {
+    use RequiresPermissions;
+
     protected $attributes = [
         'name' => 'decideApproval',
         'description' => 'Approve or reject a pending purchase order, stock adjustment request or stock transfer',
     ];
+
+    /**
+     * Any approve_* permission reaches the resolver; the one for the
+     * specific type is checked there (role in ApprovalService, token here).
+     */
+    protected function permissions(): array
+    {
+        return ['approve_purchase_orders', 'approve_stock_adjustments', 'approve_stock_transfers'];
+    }
 
     public function type(): Type
     {
@@ -54,8 +67,15 @@ class DecideApprovalMutation extends Mutation
 
     public function resolve($root, array $args, $context, ResolveInfo $resolveInfo, Closure $getSelectFields)
     {
-        $user = auth()->user() ?? throw new AuthorizationException('Unauthorized');
+        $user = $this->actor();
         $approvals = app(ApprovalService::class);
+
+        // A scoped token must carry the ability for this particular type,
+        // not just any approve_* ability (same rule as the REST endpoint).
+        $tokenAllows = CheckApiPermission::tokenAllows($user->currentAccessToken());
+        if (! $tokenAllows(ApprovalService::permissionFor($args['type'])->value)) {
+            throw new AuthorizationError('This token cannot approve this kind of request.');
+        }
 
         try {
             $subject = $args['decision'] === 'approve'
