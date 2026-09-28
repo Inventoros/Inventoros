@@ -431,18 +431,21 @@ class UpdateService
             $arguments[] = $value === true ? $name : "{$name}={$value}";
         }
         $arguments[] = '--no-interaction';
+        $arguments[] = '--no-ansi';
 
         $process = new Process($arguments, $this->fileService->basePath(), null, null, (float) config('update.artisan_timeout', 900));
         $process->run();
 
         if (! $process->isSuccessful()) {
-            $output = trim($process->getErrorOutput()."\n".$process->getOutput());
+            // The reason comes last (artisan prints the exception after the
+            // progress lines), so keep the tail.
+            $output = trim($process->getOutput()."\n".$process->getErrorOutput());
 
             throw new \RuntimeException(sprintf(
                 'php artisan %s failed (exit %s): %s',
                 $command,
                 (string) $process->getExitCode(),
-                mb_substr($output, -2000)
+                mb_substr($output, -1500)
             ));
         }
     }

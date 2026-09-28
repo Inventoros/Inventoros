@@ -72,8 +72,8 @@ PHP);
 
         $calls = file($this->base.'/calls.log', FILE_IGNORE_NEW_LINES);
         $this->assertSame([
-            realpath($this->base).'|optimize:clear --no-interaction',
-            realpath($this->base).'|optimize --no-interaction',
+            realpath($this->base).'|optimize:clear --no-interaction --no-ansi',
+            realpath($this->base).'|optimize --no-interaction --no-ansi',
         ], array_map(
             fn (string $line) => str_replace('/', DIRECTORY_SEPARATOR, $line),
             $calls
