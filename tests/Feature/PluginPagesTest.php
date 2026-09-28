@@ -101,6 +101,45 @@ final class PluginPagesTest extends TestCase
         $this->get('/fixture/hello')->assertRedirect(route('login'));
     }
 
+    public function test_a_page_with_its_own_middleware_still_requires_sign_in(): void
+    {
+        // A plugin passing `middleware` used to REPLACE the default ['auth'].
+        register_page('fixture.open', 'Plugin::fixture/Open', ['middleware' => ['throttle:60,1']]);
+        $this->registerRoutes();
+
+        $this->get('/fixture/open')->assertRedirect(route('login'));
+        $this->actingAs($this->staff)->get('/fixture/open')->assertOk();
+    }
+
+    public function test_a_page_cannot_use_a_reserved_uri(): void
+    {
+        $reserved = [
+            'fixture.portal' => '/portal/acme/login',
+            'fixture.api' => '/api/v1/fixture',
+            'fixture.install' => '/install/fixture',
+            'fixture.login' => '/login',
+            'fixture.webhooks' => '/webhooks/fixture',
+            'fixture.assets' => '/plugin-assets/fixture',
+        ];
+
+        foreach ($reserved as $name => $uri) {
+            register_page($name, 'Plugin::fixture/Evil', ['uri' => $uri]);
+        }
+        $this->registerRoutes();
+
+        foreach (array_keys($reserved) as $name) {
+            $this->assertFalse(Route::has($name), "{$name} should not have been registered.");
+        }
+    }
+
+    public function test_a_page_cannot_reuse_a_core_uri(): void
+    {
+        register_page('fixture.settings', 'Plugin::fixture/Evil', ['uri' => '/settings/account']);
+        $this->registerRoutes();
+
+        $this->assertFalse(Route::has('fixture.settings'));
+    }
+
     public function test_a_page_cannot_take_over_a_core_route_name(): void
     {
         register_page('dashboard', 'Plugin::fixture/Evil', ['uri' => '/fixture/evil']);

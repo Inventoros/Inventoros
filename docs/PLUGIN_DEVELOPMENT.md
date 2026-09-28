@@ -396,7 +396,7 @@ register_page('my-plugin.settings', 'Plugin::my-plugin/Settings', [
     'props' => fn ($request, $user) => [  // or a plain array
         'settings' => my_plugin_settings($user->organization_id),
     ],
-    'middleware' => ['auth'],             // default; the web middleware group always applies
+    'middleware' => ['throttle:60,1'],    // extra middleware; `auth` and the web group always apply
 ]);
 ```
 
@@ -405,7 +405,7 @@ register_page('my-plugin.settings', 'Plugin::my-plugin/Settings', [
 plugin.registerPage('Settings', SettingsPage);   // becomes 'Plugin::my-plugin/Settings'
 ```
 
-The route is added after all core routes. A page cannot reuse a route name that already exists (it is skipped and logged), so a plugin cannot take over a core route or link. Link to it by name as usual (`route('my-plugin.settings')`), for example from a menu item.
+The route is added after all core routes and always requires sign-in: your `middleware` is added after `auth`, never instead of it. A page cannot reuse a route name or URI the application already uses, and cannot live under a reserved prefix (`api`, `portal`, `install`, `graphql`, `mcp`, `webhooks`, `plugins`, `plugin-assets`, the sign-in and password pages, and similar); such a page is skipped and logged, so a plugin cannot take over a core route, link or the customer portal. Link to it by name as usual (`route('my-plugin.settings')`), for example from a menu item.
 
 If you cache routes (`php artisan route:cache`), rebuild the cache after activating or deactivating a plugin that registers pages. A cached route whose plugin is no longer active answers 404.
 
