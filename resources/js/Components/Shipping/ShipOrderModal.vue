@@ -1,4 +1,5 @@
 <script setup>
+import { formatMoney as formatAppMoney } from '@/lib/money';
 import Button from '@/Components/ui/Button.vue';
 import { router } from '@inertiajs/vue3';
 import { computed, reactive, ref, watch } from 'vue';
@@ -200,13 +201,7 @@ const close = () => {
     }
 };
 
-const formatMoney = (amount, currency) => {
-    try {
-        return new Intl.NumberFormat(undefined, { style: 'currency', currency: currency || 'USD' }).format(Number(amount));
-    } catch {
-        return `${amount} ${currency || ''}`;
-    }
-};
+const formatMoney = (amount, currency) => formatAppMoney(amount, currency);
 
 const inputClass =
     'h-9 w-full rounded-md border border-border-subtle bg-surface-canvas px-3 text-sm text-text-primary ' +

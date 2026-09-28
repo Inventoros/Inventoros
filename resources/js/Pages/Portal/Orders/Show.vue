@@ -162,7 +162,7 @@ const thClass = 'px-3 sm:px-4 py-2.5 text-left text-xs font-medium tracking-tigh
                                         <p class="text-sm font-medium text-text-primary">
                                             {{ t('portal.order.shipment', { number: index + 1 }) }}
                                             <span v-if="shipment.carrier_name" class="font-normal text-text-secondary">
-                                                · {{ shipment.carrier_name }}<span v-if="shipment.service"> {{ shipment.service }}</span>
+                                                · {{ [shipment.carrier_name, shipment.service].filter(Boolean).join(' ') }}
                                             </span>
                                         </p>
                                         <p v-if="shipment.tracking_number" class="break-all text-xs text-text-tertiary">

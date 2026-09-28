@@ -12,6 +12,7 @@ import { Head, Link, router, useForm } from '@inertiajs/vue3';
 import { computed, ref } from 'vue';
 import { usePermissions } from '@/composables/usePermissions';
 import { formatCalendarDate, todayIsoDate } from '@/lib/dates';
+import { formatMoney } from '@/lib/money';
 import { approvalStatusLabel, approvalStatusVariant, orderSourceLabel, orderStatusLabel, orderStatusVariant } from '@/lib/orderLabels';
 import { useI18n } from 'vue-i18n';
 import { ArrowLeft, Pencil, Download, Eye, Undo2, Trash2, X, AlertTriangle, PackageOpen, Mail, Plus, RotateCcw, Wallet } from 'lucide-vue-next';
@@ -36,7 +37,8 @@ const props = defineProps({
     shipping: { type: Object, default: null },
 });
 
-const money = (value) => `$${(parseFloat(value) || 0).toFixed(2)}`;
+// Order amounts in the order's currency, grouped (see lib/money).
+const money = (value) => formatMoney(value, props.order.currency);
 
 const paymentStatusVariant = (s) =>
     ({ unpaid: 'warning', partial: 'info', paid: 'success', overpaid: 'brand', refunded: 'neutral' }[s] || 'neutral');
@@ -304,13 +306,13 @@ const formatOrderDate = (date, long = false) =>
 
                                     <div class="text-right">
                                         <p class="text-xs text-text-tertiary">{{ t('orders.show.unitPrice') }}</p>
-                                        <p class="font-medium tabular-nums text-text-primary">${{ parseFloat(item.unit_price).toFixed(2) }}</p>
+                                        <p class="font-medium tabular-nums text-text-primary">{{ money(item.unit_price) }}</p>
                                     </div>
 
                                     <div class="min-w-[100px] text-right">
                                         <p class="text-xs text-text-tertiary">{{ t('common.total') }}</p>
                                         <p class="font-semibold tabular-nums text-text-primary">
-                                            ${{ parseFloat(item.total || item.subtotal || (item.quantity * item.unit_price)).toFixed(2) }}
+                                            {{ money(item.total || item.subtotal || (item.quantity * item.unit_price)) }}
                                         </p>
                                     </div>
                                 </div>
@@ -479,7 +481,7 @@ const formatOrderDate = (date, long = false) =>
                             <dl class="space-y-3">
                                 <div class="flex justify-between text-sm">
                                     <dt class="text-text-secondary">{{ t('common.subtotal') }}</dt>
-                                    <dd class="font-medium tabular-nums text-text-primary">${{ parseFloat(order.subtotal).toFixed(2) }}</dd>
+                                    <dd class="font-medium tabular-nums text-text-primary">{{ money(order.subtotal) }}</dd>
                                 </div>
 
                                 <div v-if="parseFloat(order.line_discount_total) > 0" class="flex justify-between text-sm">
@@ -496,18 +498,18 @@ const formatOrderDate = (date, long = false) =>
 
                                 <div class="flex justify-between text-sm">
                                     <dt class="text-text-secondary">{{ t('common.tax') }}</dt>
-                                    <dd class="font-medium tabular-nums text-text-primary">${{ parseFloat(order.tax || 0).toFixed(2) }}</dd>
+                                    <dd class="font-medium tabular-nums text-text-primary">{{ money(order.tax || 0) }}</dd>
                                 </div>
 
                                 <div class="flex justify-between text-sm">
                                     <dt class="text-text-secondary">{{ t('common.shipping') }}</dt>
-                                    <dd class="font-medium tabular-nums text-text-primary">${{ parseFloat(order.shipping || 0).toFixed(2) }}</dd>
+                                    <dd class="font-medium tabular-nums text-text-primary">{{ money(order.shipping || 0) }}</dd>
                                 </div>
 
                                 <div class="border-t border-border-subtle pt-3">
                                     <div class="flex items-center justify-between">
                                         <dt class="text-sm font-semibold text-text-primary">{{ t('common.total') }}</dt>
-                                        <dd class="text-xl font-bold tabular-nums text-brand">${{ parseFloat(order.total).toFixed(2) }}</dd>
+                                        <dd class="text-xl font-bold tabular-nums text-brand">{{ money(order.total) }}</dd>
                                     </div>
                                 </div>
 

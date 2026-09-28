@@ -2,14 +2,8 @@
 
 import { formatCalendarDate, formatInstantDate } from './dates.js';
 
-export function formatMoney(value, currency = 'USD') {
-    const amount = Number(value ?? 0);
-    try {
-        return new Intl.NumberFormat(undefined, { style: 'currency', currency: currency || 'USD' }).format(amount);
-    } catch {
-        return `${amount.toFixed(2)} ${currency || ''}`.trim();
-    }
-}
+// Money uses the app-wide formatter so the portal matches staff pages.
+export { formatMoney } from './money.js';
 
 const DATE_FORMAT = { year: 'numeric', month: 'short', day: 'numeric' };
 
