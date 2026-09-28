@@ -144,6 +144,14 @@
   },
   "dashboard": {
     "title": "Dashboard",
+    "systemHealth": {
+      "title": "Background tasks need attention",
+      "schedulerNeverRan": "The scheduler has not run yet, so emails, webhooks, reorder alerts and scheduled reports are not being processed.",
+      "schedulerStale": "The scheduler last ran at {date}. Emails, webhooks, reorder alerts and scheduled reports are waiting.",
+      "queueBacklog": "Queued jobs waiting more than 15 minutes: {count}. Emails and webhooks are not going out.",
+      "failedJobs": "Background jobs that failed in the last 24 hours: {count}.",
+      "help": "Check that the cron job runs php artisan schedule:run every minute. See the cPanel guide for details."
+    },
     "totalProducts": "Total Products",
     "totalValue": "Total Value",
     "lowStock": "Low Stock",

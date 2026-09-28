@@ -42,7 +42,20 @@ const props = defineProps({
     pluginComponents: Object,
     pluginWidgets: { type: Array, default: () => [] },
     can: { type: Object, default: () => ({}) },
+    // Admin-only scheduler / queue health warnings (SchedulerHealth).
+    systemWarnings: { type: Array, default: () => [] },
 });
+
+const systemWarningMessage = (warning) => {
+    if (warning.type === 'scheduler_stale') {
+        return warning.last_run
+            ? t('dashboard.systemHealth.schedulerStale', { date: new Date(warning.last_run).toLocaleString() })
+            : t('dashboard.systemHealth.schedulerNeverRan');
+    }
+    if (warning.type === 'queue_backlog') return t('dashboard.systemHealth.queueBacklog', { count: warning.count });
+    if (warning.type === 'failed_jobs') return t('dashboard.systemHealth.failedJobs', { count: warning.count });
+    return null;
+};
 
 const showCustomizeModal = ref(false);
 const saving = ref(false);
@@ -149,6 +162,22 @@ const secondaryStats = () => [
                 </Button>
             </template>
         </PageHeader>
+
+        <!-- Scheduler / queue health (admins only) -->
+        <div
+            v-if="systemWarnings.length"
+            role="alert"
+            class="mt-6 rounded-lg border border-status-warning/20 bg-status-warning-soft p-4 text-status-warning"
+        >
+            <div class="flex items-start gap-3">
+                <AlertTriangle :size="16" class="mt-0.5 shrink-0" />
+                <div class="space-y-1 text-sm">
+                    <p class="font-semibold">{{ t('dashboard.systemHealth.title') }}</p>
+                    <p v-for="warning in systemWarnings" :key="warning.type">{{ systemWarningMessage(warning) }}</p>
+                    <p class="text-xs">{{ t('dashboard.systemHealth.help') }}</p>
+                </div>
+            </div>
+        </div>
 
         <!-- Plugin Slot: Before Stats -->
         <PluginSlot slot="before-stats" :components="pluginComponents?.beforeStats" />
