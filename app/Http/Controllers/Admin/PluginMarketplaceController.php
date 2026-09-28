@@ -9,6 +9,7 @@ use App\Services\Marketplace\MarketplaceClient;
 use App\Services\Marketplace\MarketplaceException;
 use App\Services\Marketplace\MarketplaceInstaller;
 use App\Services\PluginService;
+use App\Support\PluginAdministration;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -74,6 +75,7 @@ class PluginMarketplaceController extends Controller
             'plugins' => $this->plugins->getAllPlugins(),
             'uploadsEnabled' => $this->plugins->uploadsEnabled(),
             'activeTab' => 'marketplace',
+            'canAdministerPlugins' => PluginAdministration::isAdministratorOrganization($request->user()),
             'marketplace' => [
                 'url' => $origin,
                 'configured' => MarketplaceInstaller::publicKeyConfigured(),

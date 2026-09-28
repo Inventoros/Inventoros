@@ -15,6 +15,7 @@ use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\ShippingSettingsController;
 use App\Http\Controllers\WebhookController;
+use App\Http\Middleware\EnsurePluginAdministrator;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -42,15 +43,18 @@ Route::put('/roles/{role}', [RoleController::class, 'update'])->name('roles.upda
 Route::patch('/roles/{role}', [RoleController::class, 'update'])->middleware('permission:edit_roles');
 Route::delete('/roles/{role}', [RoleController::class, 'destroy'])->name('roles.destroy')->middleware('permission:delete_roles');
 
-// Plugins - Permission based
+// Plugins - Permission based. Plugins are installation-wide, so every change
+// also needs the plugin administrator organization (see PluginAdministration).
 Route::prefix('plugins')->name('plugins.')->middleware('permission:view_plugins')->group(function () {
     Route::get('/', [PluginController::class, 'index'])->name('index');
-    Route::post('/upload', [PluginController::class, 'upload'])->middleware('permission:manage_plugins')->name('upload');
 
     // Marketplace: browse inventoros.com and install signed plugins in one click.
-    Route::prefix('marketplace')->name('marketplace')->group(function () {
-        Route::get('/', [PluginMarketplaceController::class, 'index']);
-        Route::middleware('permission:manage_plugins')->group(function () {
+    Route::get('/marketplace', [PluginMarketplaceController::class, 'index'])->name('marketplace');
+
+    Route::middleware(['permission:manage_plugins', EnsurePluginAdministrator::class])->group(function () {
+        Route::post('/upload', [PluginController::class, 'upload'])->name('upload');
+
+        Route::prefix('marketplace')->name('marketplace')->group(function () {
             Route::post('/connect', [PluginMarketplaceController::class, 'connect'])->middleware('throttle:10,1')->name('.connect');
             Route::delete('/connect', [PluginMarketplaceController::class, 'disconnect'])->name('.disconnect');
             Route::post('/{slug}/install', [PluginMarketplaceController::class, 'install'])
@@ -58,10 +62,11 @@ Route::prefix('plugins')->name('plugins.')->middleware('permission:view_plugins'
             Route::post('/{slug}/update', [PluginMarketplaceController::class, 'update'])
                 ->where('slug', '[A-Za-z0-9][A-Za-z0-9_-]*')->middleware('throttle:10,1')->name('.update');
         });
+
+        Route::post('/{plugin}/activate', [PluginController::class, 'activate'])->name('activate');
+        Route::post('/{plugin}/deactivate', [PluginController::class, 'deactivate'])->name('deactivate');
+        Route::delete('/{plugin}', [PluginController::class, 'destroy'])->name('destroy');
     });
-    Route::post('/{plugin}/activate', [PluginController::class, 'activate'])->middleware('permission:manage_plugins')->name('activate');
-    Route::post('/{plugin}/deactivate', [PluginController::class, 'deactivate'])->middleware('permission:manage_plugins')->name('deactivate');
-    Route::delete('/{plugin}', [PluginController::class, 'destroy'])->middleware('permission:manage_plugins')->name('destroy');
 });
 
 // Settings - Permission based

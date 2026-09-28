@@ -685,6 +685,7 @@ Schema::dropIfExists('plugin_analytics_views');
 A plugin runs PHP inside the application with full access to the database and filesystem. Install only plugins you trust.
 
 - Uploads are disabled until `INVENTOROS_ALLOW_PLUGIN_UPLOADS=true` is set, because an admin who can upload a plugin can run code on the server.
+- Plugins are shared by every organization on an installation, so only users with Manage Plugins in the plugin administrator organization can install, update, upload, activate, deactivate or delete them. That is the organization set in `INVENTOROS_PLUGIN_ADMIN_ORG`, or the first organization (the one the installer created) when it is unset. Admins of other organizations can browse plugins only.
 - Marketplace installs are allowed with uploads off because every marketplace package must carry a valid Ed25519 signature from the marketplace key configured in `config/marketplace.php`, and match the sha256 in the catalog. The signature covers the plugin's slug, version and sha256 together, the package's `plugin.json` must declare that signed version, and an update must be newer than the installed version, so an older signed package cannot be replayed as an update. With no key configured they are refused.
 - `INVENTOROS_PLUGIN_SIGNATURE_REQUIRED=true` with `INVENTOROS_PLUGIN_PUBLIC_KEY` accepts only ZIPs signed with your key.
 - Uploaded ZIPs are checked for path traversal, entry count and size before extraction.
