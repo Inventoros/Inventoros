@@ -5,10 +5,11 @@ import Card from '@/Components/ui/Card.vue';
 import Button from '@/Components/ui/Button.vue';
 import Badge from '@/Components/ui/Badge.vue';
 import { Head, Link, router } from '@inertiajs/vue3';
-import { ref } from 'vue';
+import { computed, ref } from 'vue';
 import { Search, Download, User, ChevronRight, FileText, Plus, Pencil, Trash2, Eye, ShieldAlert } from 'lucide-vue-next';
 
 import { useI18n } from 'vue-i18n';
+import { actionLabel as labelForAction, subjectLabel } from '@/lib/activityLabels';
 const props = defineProps({
     activities: Object,
     filters: Object,
@@ -20,7 +21,7 @@ const props = defineProps({
 });
 
 
-const { t } = useI18n();
+const { t, te } = useI18n();
 const search = ref(props.filters.search || '');
 const user_id = ref(props.filters.user_id || '');
 const category = ref(props.filters.category || '');
@@ -71,8 +72,19 @@ const securityLabels = Object.fromEntries(props.securityEvents.map((e) => [e.val
 // Security events that signal a problem rather than routine account activity.
 const securityWarnings = ['auth.failed', 'auth.lockout', 'two_factor.failed', 'two_factor.disabled', 'authz.denied', 'portal.failed'];
 
-const actionLabel = (actionType) =>
-    securityLabels[actionType] || (actionType ? actionType.charAt(0).toUpperCase() + actionType.slice(1) : '');
+// Human labels for raw action keys and model class names: security events
+// use the server's labels, core actions the locale file, anything else a
+// humanized form (never the raw key).
+const actionLabel = (actionType) => labelForAction(actionType, { t, te, overrides: securityLabels });
+const subjectTypeLabel = (type) => subjectLabel(type, { t, te });
+
+const byLabel = (a, b) => a.label.localeCompare(b.label);
+const actionOptions = computed(() =>
+    (props.actions || []).map((value) => ({ value, label: actionLabel(value) })).sort(byLabel)
+);
+const subjectOptions = computed(() =>
+    (props.subjectTypes || []).map((type) => ({ value: type.value, label: subjectTypeLabel(type.value) })).sort(byLabel)
+);
 
 const actionVariant = (actionType) => {
     if (securityWarnings.includes(actionType)) return 'warning';
@@ -218,19 +230,19 @@ const selectClass =
 
                     <!-- Action Filter -->
                     <div>
-                        <label for="action" class="mb-1 block text-xs font-medium text-text-secondary">Action</label>
+                        <label for="action" class="mb-1 block text-xs font-medium text-text-secondary">{{ t('admin.activityLog.action') }}</label>
                         <select id="action" v-model="action" :class="selectClass">
-                            <option value="">All Actions</option>
-                            <option v-for="act in actions" :key="act" :value="act">{{ actionLabel(act) }}</option>
+                            <option value="">{{ t('admin.activityLog.allActions') }}</option>
+                            <option v-for="act in actionOptions" :key="act.value" :value="act.value">{{ act.label }}</option>
                         </select>
                     </div>
 
                     <!-- Subject Type Filter -->
                     <div>
-                        <label for="subject_type" class="mb-1 block text-xs font-medium text-text-secondary">Subject Type</label>
+                        <label for="subject_type" class="mb-1 block text-xs font-medium text-text-secondary">{{ t('admin.activityLog.subjectType') }}</label>
                         <select id="subject_type" v-model="subject_type" :class="selectClass">
                             <option value="">{{ t('common.allTypes') }}</option>
-                            <option v-for="type in subjectTypes" :key="type.value" :value="type.value">{{ type.label }}</option>
+                            <option v-for="type in subjectOptions" :key="type.value" :value="type.value">{{ type.label }}</option>
                         </select>
                     </div>
 
@@ -296,7 +308,7 @@ const selectClass =
                                             <Badge variant="neutral" size="sm">{{ t('admin.activityLog.securityBadge') }}</Badge>
                                         </template>
                                         <span>&middot;</span>
-                                        <span>{{ activity.subject_type.split('\\').pop() }}</span>
+                                        <span>{{ subjectTypeLabel(activity.subject_type) }}</span>
                                         <span v-if="activity.ip_address">&middot;</span>
                                         <span v-if="activity.ip_address" class="font-mono">{{ activity.ip_address }}</span>
                                     </div>
