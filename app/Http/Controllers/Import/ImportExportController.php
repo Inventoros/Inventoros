@@ -338,8 +338,7 @@ class ImportExportController extends Controller
                     ->with('success', "Your order import is being processed. You'll be notified when it's complete.");
             }
 
-            $import = new OrdersImport($user, $historical, $notifyIntegrations);
-            Excel::import($import, $file, null, $readerType);
+            $import = (new OrdersImport($user, $historical, $notifyIntegrations))->importFile($file, null, $readerType);
             $stats = $import->getStats();
 
             return $this->redirectWithImportResult(

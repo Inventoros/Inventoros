@@ -13,7 +13,6 @@ use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Storage;
-use Maatwebsite\Excel\Facades\Excel;
 use Throwable;
 
 /**
@@ -58,8 +57,8 @@ final class ProcessOrderImportJob implements ShouldQueue
     {
         $importer = User::where('organization_id', $this->organizationId)->findOrFail($this->userId);
 
-        $import = new OrdersImport($importer, $this->historical, $this->notifyIntegrations);
-        Excel::import($import, $this->path, $this->disk, $this->readerType);
+        $import = (new OrdersImport($importer, $this->historical, $this->notifyIntegrations))
+            ->importFile($this->path, $this->disk, $this->readerType);
 
         NotificationService::createImportCompleteNotification(
             $this->organizationId,
