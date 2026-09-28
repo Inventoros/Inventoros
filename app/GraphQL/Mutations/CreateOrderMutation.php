@@ -75,7 +75,7 @@ class CreateOrderMutation extends Mutation
             ],
             'currency' => [
                 'type' => Type::string(),
-                'description' => 'Currency code',
+                'description' => 'Currency code (ISO 4217); defaults to the organization currency',
                 'rules' => ['nullable', 'string', 'max:3'],
             ],
             'order_date' => [
@@ -115,7 +115,7 @@ class CreateOrderMutation extends Mutation
 
         $args['status'] ??= 'pending';
         $args['order_date'] ??= now();
-        $args['currency'] ??= 'USD';
+        // No currency: OrderService uses the organization's currency.
 
         try {
             // OrderService owns the create invariant (lock → validate → ledger

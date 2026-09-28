@@ -134,7 +134,7 @@ class OrderController extends Controller
         // shared with the web/GraphQL/MCP surfaces.
         $validated['status'] ??= 'pending';
         $validated['order_date'] ??= now();
-        $validated['currency'] ??= 'USD';
+        // No currency: OrderService uses the organization's currency.
 
         try {
             $order = $this->orderService->create(

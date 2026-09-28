@@ -34,7 +34,7 @@ use Throwable;
  * shipped_at, delivered_at, notes) are read from the first non-blank value
  * among the order's rows, so they may be repeated on every line or given only
  * once. Line columns: product_sku and/or variant_sku, quantity, unit_price
- * (blank = the variant's or product's current price), line_tax, unit_cost
+ * (blank = the product's price in the order currency), line_tax, unit_cost
  * (see below). The
  * line-items order export uses the same column names, so its file can be
  * imported elsewhere once external_reference is filled in.

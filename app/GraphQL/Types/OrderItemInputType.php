@@ -34,7 +34,7 @@ class OrderItemInputType extends InputType
             ],
             'unit_price' => [
                 'type' => Type::float(),
-                'description' => 'Unit price override (uses product price if not provided)',
+                'description' => 'Unit price; when omitted, the product price in the order currency (an error if the product has none)',
                 'rules' => ['nullable', 'numeric', 'decimal:0,2', 'min:0'],
             ],
             'discount_type' => [
