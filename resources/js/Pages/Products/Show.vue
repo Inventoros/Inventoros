@@ -588,6 +588,7 @@ const fieldInput = 'h-9 w-full rounded-md border border-border-subtle bg-surface
                                 :variants="variants"
                                 :product-id="product.id"
                                 :currency-symbol="getCurrencySymbol()"
+                                :product-price="product.price"
                                 :show-stock-adjust="true"
                                 @variant-updated="onVariantUpdated"
                             />

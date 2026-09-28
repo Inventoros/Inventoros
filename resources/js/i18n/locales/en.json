@@ -245,6 +245,7 @@
       "variantStockReadOnlyHint": "Change a saved variant's stock with a stock adjustment."
     },
     "show": {
+      "usesProductPrice": "No variant price set: sells at the product price",
       "title": "Product Details",
       "backToInventory": "Back to Inventory",
       "sku": "SKU",
