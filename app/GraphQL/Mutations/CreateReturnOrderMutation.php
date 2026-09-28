@@ -49,7 +49,7 @@ class CreateReturnOrderMutation extends Mutation
             'reason' => ['required', 'string', 'max:1000'],
             'notes' => ['nullable', 'string', 'max:2000'],
             'items' => ['required', 'array', 'min:1', 'max:500'],
-            'items.*.order_item_id' => ['required', 'integer', Rule::exists('order_items', 'id')->where('order_id', (int) ($args['order_id'] ?? 0))],
+            'items.*.order_item_id' => ['required', 'integer', 'distinct', Rule::exists('order_items', 'id')->where('order_id', (int) ($args['order_id'] ?? 0))],
             'items.*.restock' => ['required', 'boolean'],
         ];
     }

@@ -106,7 +106,7 @@ class PortalReturnController extends PortalController
             'reason' => ['required', 'string', 'max:1000'],
             'notes' => ['nullable', 'string', 'max:2000'],
             'items' => ['required', 'array', 'min:1', 'max:200'],
-            'items.*.order_item_id' => ['required', 'integer'],
+            'items.*.order_item_id' => ['required', 'integer', 'distinct'],
             'items.*.quantity' => ['required', 'integer', 'min:1', 'max:1000000'],
             'items.*.condition' => ['required', 'in:new,used,damaged'],
         ]);

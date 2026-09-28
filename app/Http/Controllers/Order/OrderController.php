@@ -301,27 +301,12 @@ class OrderController extends Controller
                     && $order->status !== OrderStatus::CANCELLED;
 
                 if ($isCancelling) {
-                    // Reject cancelling an order that already left the warehouse —
-                    // restocking would lie about inventory that physically isn't
-                    // here. Matches the REST/GraphQL guard. Thrown to the
-                    // try/catch below, which flashes the error instead of 500ing.
-                    if (in_array($order->status, [OrderStatus::SHIPPED, OrderStatus::DELIVERED], true)) {
-                        throw new \RuntimeException(
-                            "Cannot cancel an order that has already been {$order->status->value}."
-                        );
-                    }
-
-                    // Partially shipped orders are still processing but some
-                    // goods have left; restocking them would invent inventory.
-                    $this->orderService->assertNoShippedGoods($order, 'cancel');
-
-                    // Release the order's stock (serials/batches/bins included)
-                    // but keep the line items as a historical record.
-                    $order->load('items.product', 'items.variant');
-                    foreach ($order->items as $item) {
-                        $this->orderService->restockItem($item, "Order {$order->order_number} cancelled", $order);
-                    }
-
+                    // The same cancel REST and GraphQL use: refuses an order
+                    // whose goods have left or that has an open return, closes
+                    // its open shipments, and gives back only the stock the
+                    // order still holds. The line items stay as a record.
+                    // Refusals are RuntimeExceptions, flashed by the catch below.
+                    $order = $this->orderService->cancel($order);
                 } else {
                     // Any other edit replaces the lines wholesale through the
                     // audited fulfilment paths (bin consume + serial/batch

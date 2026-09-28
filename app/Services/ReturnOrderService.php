@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services;
 
+use App\Enums\OrderStatus;
 use App\Exceptions\InvalidStateException;
 use App\Models\ActivityLog;
 use App\Models\Inventory\StockAdjustment;
@@ -11,6 +12,7 @@ use App\Models\Order\Order;
 use App\Models\Order\OrderItem;
 use App\Models\Order\ReturnOrder;
 use App\Models\Order\ReturnOrderItem;
+use App\Models\Shipping\Shipment;
 use App\Models\User;
 use App\Support\Money;
 use App\Support\SequenceNumberRetry;
@@ -139,10 +141,19 @@ final class ReturnOrderService
             // some engines. Locking the parent Order forces sequential
             // return submissions against the same order on every
             // supported driver.
-            Order::where('id', $order->id)->lockForUpdate()->first();
+            $lockedOrder = Order::where('id', $order->id)->lockForUpdate()->first();
+
+            // Only goods that left can come back. A return against an order
+            // that never shipped (its stock is still held and goes back on
+            // cancel) or one already cancelled (its stock already went back)
+            // would restock the same units twice.
+            $this->assertReturnable($lockedOrder ?? $order);
 
             $returnedQuantities = $this->returnedQuantities($order);
 
+            // Sum what this request asks for per order line, so repeating a
+            // line cannot slip each copy past the cap on its own.
+            $requested = [];
             $errors = [];
             foreach ($data['items'] as $index => $item) {
                 $orderItem = $order->items->firstWhere('id', $item['order_item_id']);
@@ -152,10 +163,12 @@ final class ReturnOrderService
                     continue;
                 }
 
-                $alreadyReturned = $returnedQuantities->get($item['order_item_id'], 0);
+                $requested[$orderItem->id] = ($requested[$orderItem->id] ?? 0) + (int) $item['quantity'];
+
+                $alreadyReturned = (int) $returnedQuantities->get($item['order_item_id'], 0);
                 $maxReturnable = $orderItem->quantity - $alreadyReturned;
 
-                if ($item['quantity'] > $maxReturnable) {
+                if ($requested[$orderItem->id] > $maxReturnable) {
                     $errors["items.{$index}.quantity"] = "Cannot return more than {$maxReturnable} units (ordered: {$orderItem->quantity}, already returned: {$alreadyReturned}).";
                 }
             }
@@ -344,6 +357,8 @@ final class ReturnOrderService
 
             $locked->load('items.product');
 
+            $this->assertReceivable($locked);
+
             foreach ($locked->items as $item) {
                 if ($item->restock && $item->product) {
                     StockAdjustment::adjust(
@@ -381,6 +396,84 @@ final class ReturnOrderService
 
             return $locked;
         });
+    }
+
+    /**
+     * Refuse a return against an order whose goods have not left: one that
+     * is cancelled, or one neither marked shipped/delivered nor with a
+     * shipment that has left the warehouse.
+     *
+     * @throws ValidationException
+     */
+    private function assertReturnable(Order $order): void
+    {
+        if ($order->status === OrderStatus::CANCELLED) {
+            throw ValidationException::withMessages([
+                'order_id' => 'Returns cannot be raised against a cancelled order.',
+            ]);
+        }
+
+        if (in_array($order->status, [OrderStatus::SHIPPED, OrderStatus::DELIVERED], true)) {
+            return;
+        }
+
+        $anyLeft = Shipment::withoutGlobalScopes()
+            ->where('order_id', $order->getKey())
+            ->leftWarehouse()
+            ->exists();
+
+        if (! $anyLeft) {
+            throw ValidationException::withMessages([
+                'order_id' => 'Returns can only be raised once the order has shipped.',
+            ]);
+        }
+    }
+
+    /**
+     * Re-check a return under its lock before it restocks anything: its
+     * order must not have been cancelled since (cancelling gave the stock
+     * back already), and no order line may come back more times than it was
+     * sold across this and earlier received returns.
+     *
+     * @throws InvalidStateException when the order has been cancelled
+     * @throws ValidationException when a line would exceed its sold quantity
+     */
+    private function assertReceivable(ReturnOrder $locked): void
+    {
+        $order = Order::withoutGlobalScopes()->with('items')->find($locked->order_id);
+
+        if ($order === null || $order->status === OrderStatus::CANCELLED) {
+            throw new InvalidStateException('This return\'s order has been cancelled, so it cannot be received.', 'invalid_status');
+        }
+
+        $alreadyReceived = ReturnOrderItem::query()
+            ->whereHas('returnOrder', fn ($query) => $query->withoutGlobalScopes()
+                ->where('order_id', $order->getKey())
+                ->whereKeyNot($locked->getKey())
+                ->whereIn('status', ['received', 'completed']))
+            ->selectRaw('order_item_id, SUM(quantity) as total_returned')
+            ->groupBy('order_item_id')
+            ->pluck('total_returned', 'order_item_id');
+
+        $incoming = [];
+        $errors = [];
+        foreach ($locked->items->values() as $index => $item) {
+            $orderItem = $order->items->firstWhere('id', $item->order_item_id);
+            if ($orderItem === null) {
+                continue;
+            }
+
+            $incoming[$orderItem->id] = ($incoming[$orderItem->id] ?? 0) + (int) $item->quantity;
+            $received = (int) ($alreadyReceived[$orderItem->id] ?? 0);
+
+            if ($received + $incoming[$orderItem->id] > (int) $orderItem->quantity) {
+                $errors["items.{$index}.quantity"] = "Cannot receive more than {$orderItem->quantity} units of {$orderItem->product_name} against this order ({$received} already returned).";
+            }
+        }
+
+        if ($errors !== []) {
+            throw ValidationException::withMessages($errors);
+        }
     }
 
     /**

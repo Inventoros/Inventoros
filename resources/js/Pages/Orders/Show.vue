@@ -609,7 +609,7 @@ const formatOrderDate = (date, long = false) =>
                             </dl>
 
                             <!-- Approval Actions -->
-                            <div v-if="canApprove && order.approval_status === 'pending'" class="mt-4 space-y-2 border-t border-border-subtle pt-4">
+                            <div v-if="canApprove && order.approval_status === 'pending' && order.status !== 'cancelled'" class="mt-4 space-y-2 border-t border-border-subtle pt-4">
                                 <Button variant="default" class="w-full" @click="openApprovalModal('approve')">
                                     {{ t('orders.show.approveOrder') }}
                                 </Button>

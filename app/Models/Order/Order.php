@@ -46,6 +46,7 @@ use Illuminate\Support\Carbon;
  * @property int|null $approved_by
  * @property Carbon|null $approved_at
  * @property string|null $approval_notes
+ * @property bool $stock_committed Whether creating the order took its lines out of stock (false for historical imports)
  * @property string $subtotal
  * @property DiscountType|null $discount_type
  * @property string|null $discount_value
@@ -136,6 +137,7 @@ class Order extends Model
         return [
             'status' => OrderStatus::class,
             'approval_status' => OrderApprovalStatus::class,
+            'stock_committed' => 'boolean',
             'subtotal' => 'decimal:2',
             'discount_type' => DiscountType::class,
             'discount_value' => 'decimal:2',
@@ -343,15 +345,20 @@ class Order extends Model
      */
     public function scopeNeedsApproval($query)
     {
-        return $query->where('approval_status', 'pending');
+        return $query->where('approval_status', 'pending')
+            ->where('status', '!=', OrderStatus::CANCELLED->value);
     }
 
     /**
-     * Check if the order is pending approval.
+     * Check if the order is waiting for an approval decision. A cancelled
+     * order is not: cancelling already released its stock, so approving or
+     * rejecting it afterwards has nothing left to decide (and a reject would
+     * restock it a second time).
      */
     public function isPendingApproval(): bool
     {
-        return $this->approval_status === OrderApprovalStatus::PENDING;
+        return $this->approval_status === OrderApprovalStatus::PENDING
+            && $this->status !== OrderStatus::CANCELLED;
     }
 
     /**
