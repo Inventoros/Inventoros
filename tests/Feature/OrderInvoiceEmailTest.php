@@ -200,6 +200,19 @@ class OrderInvoiceEmailTest extends TestCase
         $this->assertSame('casey@customer.test', $log->properties['to']);
     }
 
+    public function test_invoice_emails_are_throttled_per_user(): void
+    {
+        Mail::fake();
+        Config::set('limits.document_emails.per_user_per_minute', 1);
+        $order = $this->order();
+
+        $this->actingAs($this->editor)->post(route('orders.invoice.email', $order))->assertSessionHas('success');
+        $this->actingAs($this->editor)->post(route('orders.invoice.email', $order))
+            ->assertSessionHas('error', fn ($msg) => str_contains($msg, 'Too many'));
+
+        Mail::assertQueued(OrderInvoiceEmail::class, 1);
+    }
+
     public function test_emailing_without_a_customer_email_fails_and_records_nothing(): void
     {
         Mail::fake();

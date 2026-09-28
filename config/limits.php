@@ -67,6 +67,18 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Document Emails
+    |--------------------------------------------------------------------------
+    | Emailing purchase orders and invoices (web, REST and MCP) is rate
+    | limited so it cannot be used to relay mail to arbitrary addresses.
+    */
+    'document_emails' => [
+        'per_user_per_minute' => (int) env('DOCUMENT_EMAILS_PER_USER_PER_MINUTE', 10),
+        'per_organization_per_day' => (int) env('DOCUMENT_EMAILS_PER_ORGANIZATION_PER_DAY', 500),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Validation Limits
     |--------------------------------------------------------------------------
     */

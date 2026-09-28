@@ -1035,6 +1035,7 @@ paths:
       responses:
         '200': { description: Marked sent }
         '422': { description: Cannot send in current status }
+        '429': { description: "Document email rate limit reached (`rate_limited`)" }
 
   /purchase-orders/{purchaseOrder}/cancel:
     parameters:
@@ -1257,6 +1258,7 @@ paths:
         '200': { description: Invoice emailed, content: { application/json: { schema: { type: object, properties: { data: { $ref: '#/components/schemas/Order' } } } } } }
         '404': { $ref: '#/components/responses/NotFound' }
         '422': { description: "No customer email and no `to` (`missing_recipient`), or validation error" }
+        '429': { description: "Document email rate limit reached (`rate_limited`)" }
 
   /orders/{order}/payments:
     parameters:

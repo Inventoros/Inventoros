@@ -347,6 +347,59 @@ class PurchaseOrderEmailTest extends TestCase
         $this->assertSame(PurchaseOrder::STATUS_DRAFT, $po->fresh()->status);
     }
 
+    // ==================== THROTTLING ====================
+
+    public function test_a_user_is_throttled_after_too_many_document_emails_in_a_minute(): void
+    {
+        Mail::fake();
+        Config::set('limits.document_emails.per_user_per_minute', 2);
+        Sanctum::actingAs($this->admin);
+        $po = $this->draftPo();
+
+        $this->postJson("/api/v1/purchase-orders/{$po->id}/send")->assertOk();
+        $this->postJson("/api/v1/purchase-orders/{$po->id}/send")->assertOk();
+        $this->postJson("/api/v1/purchase-orders/{$po->id}/send")
+            ->assertStatus(429)
+            ->assertJsonPath('error', DocumentEmailException::RATE_LIMITED);
+
+        Mail::assertQueued(PurchaseOrderEmail::class, 2);
+        $this->assertSame(2, ActivityLog::where('subject_type', PurchaseOrder::class)->where('action', 'emailed')->count());
+
+        // The web UI and MCP share the same budget.
+        $this->actingAs($this->admin)->post(route('purchase-orders.send', $po))
+            ->assertSessionHas('error', fn ($msg) => str_contains($msg, 'Too many'));
+        InventorosServer::actingAs($this->admin)
+            ->tool(SendPurchaseOrderTool::class, ['id' => $po->id])
+            ->assertHasErrors();
+        Mail::assertQueued(PurchaseOrderEmail::class, 2);
+    }
+
+    public function test_an_organization_has_a_daily_cap_on_document_emails(): void
+    {
+        Mail::fake();
+        Config::set('limits.document_emails.per_user_per_minute', 100);
+        Config::set('limits.document_emails.per_organization_per_day', 2);
+        $po = $this->draftPo();
+        $colleague = User::create([
+            'name' => 'Col', 'email' => 'col@acme.test', 'password' => bcrypt('x'),
+            'organization_id' => $this->org->id, 'role' => 'member',
+        ]);
+        $colleague->roles()->syncWithoutDetaching(Role::where('slug', 'po-admin')->pluck('id'));
+
+        $service = app(PurchaseOrderEmailService::class);
+        $service->send($po, $this->admin);
+        $service->send($po, $colleague);
+
+        try {
+            $service->send($po, $colleague);
+            $this->fail('The daily cap was not enforced.');
+        } catch (DocumentEmailException $e) {
+            $this->assertSame(DocumentEmailException::RATE_LIMITED, $e->reason);
+        }
+
+        Mail::assertQueued(PurchaseOrderEmail::class, 2);
+    }
+
     // ==================== MCP ====================
 
     public function test_mcp_send_emails_the_supplier(): void

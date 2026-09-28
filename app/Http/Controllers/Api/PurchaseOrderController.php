@@ -238,7 +238,7 @@ class PurchaseOrderController extends Controller
             return response()->json([
                 'message' => $e->getMessage(),
                 'error' => $e->reason,
-            ], 422);
+            ], $e->status());
         }
 
         return response()->json([
