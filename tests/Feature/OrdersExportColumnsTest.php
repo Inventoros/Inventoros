@@ -177,4 +177,30 @@ class OrdersExportColumnsTest extends TestCase
             'A row with a different width than the header shifts every column after the gap.',
         );
     }
+
+    public function test_the_status_cell_is_the_plain_status_value_and_the_file_renders(): void
+    {
+        $order = Order::create([
+            'organization_id' => $this->organization->id,
+            'order_number' => 'ORD-EXPORT-STATUS',
+            'status' => 'pending',
+            'subtotal' => 10.00,
+            'tax' => 0,
+            'shipping' => 0,
+            'total' => 10.00,
+            'currency' => 'USD',
+            'order_date' => now(),
+        ]);
+
+        $export = new OrdersExport($this->organization->id, []);
+        $row = array_combine($export->headings(), $export->map($order->fresh('items')));
+
+        // Order::status is cast to an enum; writing the enum object into a
+        // spreadsheet cell threw and the orders export returned a 500.
+        $this->assertSame('pending', $row['Status']);
+
+        $csv = \Maatwebsite\Excel\Facades\Excel::raw($export, \Maatwebsite\Excel\Excel::CSV);
+        $this->assertStringContainsString('ORD-EXPORT-STATUS', $csv);
+        $this->assertStringContainsString('"pending"', $csv);
+    }
 }

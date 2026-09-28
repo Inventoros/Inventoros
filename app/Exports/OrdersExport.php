@@ -107,7 +107,7 @@ final class OrdersExport implements FromQuery, WithHeadings, WithMapping, WithSt
             $order->order_number,
             $order->customer ? $order->customer->name : ($order->customer_name ?? 'N/A'),
             $order->customer ? $order->customer->email : ($order->customer_email ?? ''),
-            $order->status,
+            $order->status instanceof \BackedEnum ? $order->status->value : (string) $order->status,
             $order->subtotal,
             // The whole discount (line + order level), so each row reconciles:
             // Subtotal - Discount + Tax + Shipping = Total.
