@@ -111,11 +111,12 @@ All paths are relative to `/api/v1`. See the OpenAPI spec for full schemas:
 - Customers: CRUD plus `GET /customers/{id}/orders`
 - Returns (RMA): list, show, create, then `approve`, `receive` (restocks), `complete` or `reject`
 - Stock Transfers: list, show, create, then `ship`, `complete` (moves stock between location bins) or `cancel`
-- Shipments: list and read, create (manual or EasyPost), `rates`, `buy-label`, `void-label`, `ship` (see Shipping & Carriers)
+- Shipments: `GET /shipments`, `GET /orders/{id}/shipments`, create with `POST /orders/{id}/shipments` (manual or EasyPost), then `rates`, `buy-label`, `void-label`, `ship` (`view_shipments` / `create_shipments`; see Shipping & Carriers)
 - Stock Adjustments: record signed deltas with a reason
 - Stock Audits: list, show, create, `start`, `items/{item}/count`, `complete` (books recount adjustments)
 - Suppliers: CRUD
-- Purchase Orders: CRUD plus `send`, `receive`, `cancel`
+- Purchase Orders: CRUD plus `send`, `receive`, `cancel` and `submit-for-approval`
+- Approvals: `GET /approvals` (what the caller may decide), `GET /approvals/mine` (the caller's own requests), and `POST /approvals/{type}/{id}/approve` or `/reject` for a `purchase_order`, `stock_adjustment` or `stock_transfer` (needs the matching `approve_*` permission; rejecting needs notes)
 - Work Orders: read plus `start`, `complete`, `cancel`, and delete while draft or cancelled
 - Webhooks: CRUD, `regenerate-secret` and `deliveries`. The signing secret is returned only on create and regenerate
 - Users: list, show, create and update, with the same role-assignment guards as the web app
@@ -257,6 +258,7 @@ Subscribe a URL to any of these events under **Settings > Webhooks** or with `PO
 | Product | `product.created`, `product.updated`, `product.deleted`, `product.low_stock`, `product.out_of_stock` |
 | Order | `order.created`, `order.updated`, `order.status_changed`, `order.approved`, `order.rejected` |
 | Payment | `payment.recorded`, `payment.voided` (a refund is a recorded payment of type `refund`) |
+| Shipment | `shipment.created`, `shipment.delivered` |
 | Stock | `stock.adjusted` |
 | Purchase order | `purchase_order.created`, `purchase_order.received`, `purchase_order.cancelled` |
 | Customer | `customer.created`, `customer.updated`, `customer.deleted` |
@@ -269,9 +271,11 @@ Subscribe a URL to any of these events under **Settings > Webhooks** or with `PO
 
 The same data is available via GraphQL at `POST /graphql`, powered by `rebing/graphql-laravel`. Authentication is the same Sanctum bearer token. Use any GraphQL client (Apollo, urql, graphql-request, and so on).
 
-Queries: `products`, `product`, `orders`, `order`, `suppliers`, `supplier`, `purchaseOrders`, `purchaseOrder`, `stockAdjustments`, `locations`, `categories`, `customers`, `customer`, `returnOrders`, `returnOrder`, `stockTransfers`, `stockTransfer`, `users`, `user` (read-only) and `productVariants`.
+Queries: `products`, `product`, `orders`, `order`, `suppliers`, `supplier`, `purchaseOrders`, `purchaseOrder`, `stockAdjustments`, `locations`, `categories`, `customers`, `customer`, `returnOrders`, `returnOrder`, `stockTransfers`, `stockTransfer`, `users`, `user` (read-only), `productVariants`, `shipments` and `pendingApprovals`.
 
-Mutations: `createProduct`, `updateProduct`, `deleteProduct`, `createOrder`, `updateOrder`, `createStockAdjustment`, `createSupplier`, `updateSupplier`, `createCustomer`, `updateCustomer`, `createReturnOrder`, `approveReturnOrder`, `receiveReturnOrder`, `createStockTransfer`, `completeStockTransfer`, `createPurchaseOrder`, `updatePurchaseOrder` and `receivePurchaseOrder`.
+Orders carry their `shipments`, and their `payments`, `amount_paid`, `balance_due` and `payment_status` when the user and token hold `view_payments`.
+
+Mutations: `createProduct`, `updateProduct`, `deleteProduct`, `createOrder`, `updateOrder`, `createStockAdjustment`, `requestStockAdjustmentApproval`, `createSupplier`, `updateSupplier`, `createCustomer`, `updateCustomer`, `createReturnOrder`, `approveReturnOrder`, `receiveReturnOrder`, `createStockTransfer`, `completeStockTransfer`, `createPurchaseOrder`, `updatePurchaseOrder`, `receivePurchaseOrder` and `decideApproval`.
 
 Every field is gated like the matching REST route: the user must hold the permission and the token must allow it, so a scoped token is enforced the same way over GraphQL. Mutations call the same services as the web app and REST API, so a return received or a transfer completed over GraphQL restocks and moves bins exactly as it would anywhere else. List queries accept `limit` (default 50, max 100). The endpoint shares the REST rate limit of 60 requests per minute.
 
