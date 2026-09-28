@@ -966,7 +966,7 @@
       },
       "edit": {
         "title": "Modifier le rôle",
-        "systemHint": "Rôle système — le nom et la description ne peuvent pas être modifiés",
+        "systemHint": "Rôle système : le nom et la description ne peuvent pas être modifiés",
         "backToRoles": "Retour aux rôles",
         "systemNameHint": "Les noms des rôles système ne peuvent pas être modifiés",
         "systemDescHint": "Les descriptions des rôles système ne peuvent pas être modifiées",

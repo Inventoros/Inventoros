@@ -966,7 +966,7 @@
       },
       "edit": {
         "title": "Rolle bearbeiten",
-        "systemHint": "Systemrolle — Name und Beschreibung können nicht geändert werden",
+        "systemHint": "Systemrolle: Name und Beschreibung können nicht geändert werden",
         "backToRoles": "Zurück zu Rollen",
         "systemNameHint": "Systemrollennamen können nicht geändert werden",
         "systemDescHint": "Systemrollenbeschreibungen können nicht geändert werden",

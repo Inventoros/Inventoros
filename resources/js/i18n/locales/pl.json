@@ -966,7 +966,7 @@
       },
       "edit": {
         "title": "Edytuj rolę",
-        "systemHint": "Rola systemowa — nazwy i opisu nie można zmienić",
+        "systemHint": "Rola systemowa: nazwy i opisu nie można zmienić",
         "backToRoles": "Wróć do ról",
         "systemNameHint": "Nazw ról systemowych nie można zmieniać",
         "systemDescHint": "Opisów ról systemowych nie można zmieniać",
