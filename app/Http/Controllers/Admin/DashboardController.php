@@ -119,9 +119,11 @@ class DashboardController extends Controller
 
         if ($canViewReceivables) {
             // What customers still owe on live orders. Overpaid orders owe
-            // nothing (they don't offset others) and cancelled orders are out.
+            // nothing (they don't offset others) and cancelled orders are out,
+            // as are untracked orders from before payment tracking.
             $stats['outstandingReceivables'] = (float) Order::where('organization_id', $orgId)
                 ->where('status', '!=', 'cancelled')
+                ->where('payment_status', '!=', 'untracked')
                 ->whereColumn('total', '>', 'amount_paid')
                 ->sum(DB::raw('total - amount_paid'));
         }

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Services;
 
 use App\Enums\OrderStatus;
+use App\Enums\PaymentStatus;
 use App\Models\Order\Order;
 use App\Support\Money;
 use Illuminate\Support\Carbon;
@@ -16,7 +17,8 @@ use Illuminate\Support\Carbon;
  * Orders carry no due date, so age is counted in calendar days from the order
  * date to today: "current" is an order placed today (or dated ahead), then
  * 1-30, 31-60, 61-90 and over 90 days. Overpaid orders owe nothing and are
- * left out rather than netted against other orders.
+ * left out rather than netted against other orders, and so are untracked
+ * orders (placed before payment tracking, so nothing is known to be owed).
  *
  * Money is summed with Money (exact decimals), not SQL SUM, so the buckets
  * reconcile to the cent with the total.
@@ -56,6 +58,8 @@ final class ReceivablesAgingService
         $query = Order::query()
             ->where('organization_id', $organizationId)
             ->where('status', '!=', OrderStatus::CANCELLED->value)
+            // Orders from before payment tracking are not known to be owed.
+            ->where('payment_status', '!=', PaymentStatus::UNTRACKED->value)
             ->whereColumn('total', '>', 'amount_paid')
             ->orderBy('order_date')
             ->orderBy('id')

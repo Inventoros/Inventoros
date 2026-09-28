@@ -227,6 +227,15 @@ class Order extends Model
      */
     public function syncPaymentState(): void
     {
+        // An order from before payment tracking stays untracked until the
+        // first payment row (voided or not) is recorded against it.
+        if ($this->payment_status === PaymentStatus::UNTRACKED
+            && ! $this->payments()->withoutGlobalScopes()->exists()) {
+            $this->amount_paid = '0.00';
+
+            return;
+        }
+
         $paid = '0.00';
         $refunded = '0.00';
 
@@ -245,10 +254,34 @@ class Order extends Model
     /**
      * What the customer still owes: total minus what has been paid, never
      * below zero (an overpaid order owes nothing; its status says overpaid).
+     * An untracked order (from before payment tracking) owes nothing either:
+     * nothing is known about its payment, so it is never reported as owed.
      */
     public function balanceDue(): string
     {
-        return Money::max(Money::subtract($this->total, $this->amount_paid), 0);
+        if (! $this->isPaymentTracked()) {
+            return '0.00';
+        }
+
+        return $this->unpaidAmount();
+    }
+
+    /**
+     * Total minus what has been paid, never below zero, whether or not the
+     * order's payments are tracked. What a first payment is checked against.
+     */
+    public function unpaidAmount(): string
+    {
+        return Money::max(Money::subtract($this->total, $this->amount_paid ?? '0'), 0);
+    }
+
+    /**
+     * False for an order that predates payment tracking and has had no
+     * payment recorded since.
+     */
+    public function isPaymentTracked(): bool
+    {
+        return $this->payment_status !== PaymentStatus::UNTRACKED;
     }
 
     /**

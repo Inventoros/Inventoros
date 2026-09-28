@@ -318,7 +318,7 @@ class ReportController extends Controller
             $rows = Order::forOrganization($organizationId)
                 ->whereBetween('order_date', [$fromTimestamp, $toTimestamp])
                 ->where('status', '!=', 'cancelled')
-                ->selectRaw('payment_status, COUNT(*) as count, COALESCE(SUM(total), 0) as total, COALESCE(SUM(amount_paid), 0) as amount_paid, COALESCE(SUM(CASE WHEN total > amount_paid THEN total - amount_paid ELSE 0 END), 0) as balance_due')
+                ->selectRaw('payment_status, COUNT(*) as count, COALESCE(SUM(total), 0) as total, COALESCE(SUM(amount_paid), 0) as amount_paid, COALESCE(SUM(CASE WHEN total > amount_paid AND payment_status <> ? THEN total - amount_paid ELSE 0 END), 0) as balance_due', [PaymentStatus::UNTRACKED->value])
                 ->groupBy('payment_status')
                 ->get()
                 ->keyBy(fn ($row) => $row->payment_status instanceof PaymentStatus ? $row->payment_status->value : (string) $row->payment_status);

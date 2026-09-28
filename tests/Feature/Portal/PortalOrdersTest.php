@@ -122,6 +122,26 @@ class PortalOrdersTest extends TestCase
                 ->missing('order.payments.0.reference'));
     }
 
+    public function test_an_untracked_order_shows_no_balance_due(): void
+    {
+        $org = $this->makeOrganization('Acme Wholesale');
+        $customer = $this->makeCustomer($org, 'Buyer A');
+        $contact = $this->makeContact($customer, 'a@buyer.test');
+        $product = $this->makeProduct($org, 'SKU-1');
+        $order = $this->makeOrder($customer, 'ORD-A-1', OrderStatus::DELIVERED, [
+            ['product' => $product, 'quantity' => 2, 'unit_price' => 10],
+        ]);
+        // An order from before payment tracking: nothing is known about payment.
+        $order->forceFill(['amount_paid' => 0, 'payment_status' => 'untracked'])->save();
+
+        $this->actingAs($contact, 'customer')
+            ->get($this->portalUrl($org, 'orders/'.$order->id))
+            ->assertOk()
+            ->assertInertia(fn ($page) => $page
+                ->where('order.payment_status', 'untracked')
+                ->where('order.balance_due', null));
+    }
+
     public function test_another_customers_order_is_not_found(): void
     {
         $org = $this->makeOrganization('Acme Wholesale');
