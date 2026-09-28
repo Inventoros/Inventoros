@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace App\Mcp\Tools;
 
+use App\Exceptions\InvalidStateException;
 use App\Mcp\Concerns\AuthenticatesMcpRequest;
 use App\Models\Purchasing\PurchaseOrder;
-use App\Models\Purchasing\PurchaseOrderItem;
+use App\Services\PurchaseOrderService;
 use Illuminate\Contracts\JsonSchema\JsonSchema;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Laravel\Mcp\Request;
 use Laravel\Mcp\Response;
@@ -61,29 +61,15 @@ class ReceivePurchaseOrderTool extends Tool
             'items.*.quantity_to_receive' => ['required', 'integer', 'min:0'],
         ]);
 
-        // Goods land in each product's primary location; a restricted user
-        // can only book them into their own warehouses.
-        $this->warehouseAccess()->authorizeReceiving($this->user(), $po, $validated['items']);
-
-        $received = 0;
-
-        DB::transaction(function () use ($validated, $po, &$received) {
-            foreach ($validated['items'] as $itemData) {
-                if ($itemData['quantity_to_receive'] <= 0) {
-                    continue;
-                }
-
-                $item = PurchaseOrderItem::query()
-                    ->where('id', $itemData['id'])
-                    ->where('purchase_order_id', $po->id)
-                    ->first();
-
-                if ($item && $item->remaining_quantity > 0) {
-                    $item->receive((int) $itemData['quantity_to_receive']);
-                    $received++;
-                }
-            }
-        });
+        // The same receive the web, REST and GraphQL surfaces use: warehouse
+        // access, then the PO and each line re-read under a row lock with the
+        // status re-checked, so a retried or concurrent call cannot book the
+        // same goods twice.
+        try {
+            $received = app(PurchaseOrderService::class)->receive($po, $this->user(), $validated['items']);
+        } catch (InvalidStateException $e) {
+            return Response::error("Purchase order in status [{$po->fresh()?->status}] cannot receive items.");
+        }
 
         if ($received === 0) {
             return Response::error('No items were received (all quantities zero or already fully received).');
