@@ -11,7 +11,10 @@ use App\Http\Requests\Api\ProductVariant\UpdateProductVariantRequest;
 use App\Http\Resources\ProductVariantResource;
 use App\Models\Inventory\Product;
 use App\Models\Inventory\ProductVariant;
-use App\Models\Inventory\StockAdjustment;
+use App\Models\Inventory\StockAdjustmentRequest;
+use App\Services\ApprovalService;
+use App\Services\ProductService;
+use App\Services\WarehouseAccessService;
 use Dedoc\Scramble\Attributes\QueryParameter;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -69,6 +72,7 @@ class ProductVariantController extends Controller
 
         $variant = DB::transaction(function () use ($product, $validated) {
             $variant = ProductVariant::create($validated);
+            app(ProductService::class)->recordOpeningVariantStock($variant);
 
             // Mark product as having variants
             if (! $product->has_variants) {
@@ -171,7 +175,7 @@ class ProductVariantController extends Controller
      * @param  Product  $product  The parent product
      * @param  ProductVariant  $variant  The variant to adjust stock for
      */
-    public function adjustStock(Request $request, Product $product, ProductVariant $variant): JsonResponse
+    public function adjustStock(Request $request, Product $product, ProductVariant $variant, ApprovalService $approvals): JsonResponse
     {
         if ($product->organization_id !== $request->user()->organization_id) {
             return response()->json(['message' => 'Product not found', 'error' => 'not_found'], 404);
@@ -188,20 +192,38 @@ class ProductVariantController extends Controller
             'notes' => ['nullable', 'string'],
         ]);
 
+        // A variant's stock sits at its parent's location, so a restricted
+        // user may only adjust variants of products in their warehouses (the
+        // same rule the stock adjustment surfaces apply to a bin).
+        app(WarehouseAccessService::class)->authorizeLocation($request->user(), $product->location_id);
+
+        // Applied now, or held for approval (202) when the organization's
+        // approval rules cover it: the same path every other manual
+        // adjustment surface takes.
         try {
-            $adjustment = StockAdjustment::adjustVariant(
-                $variant,
-                $validated['quantity'],
-                $validated['type'],
-                $validated['reason'] ?? null,
-                $validated['notes'] ?? null,
-                allowNegative: false
+            $adjustment = $approvals->submitStockAdjustment(
+                user: $request->user(),
+                product: $product,
+                variant: $variant,
+                quantity: (int) $validated['quantity'],
+                type: $validated['type'],
+                reason: $validated['reason'] ?? null,
+                notes: $validated['notes'] ?? null,
             );
         } catch (InsufficientStockException $e) {
             return response()->json([
                 'message' => $e->getMessage(),
                 'errors' => ['quantity' => [$e->getMessage()]],
             ], 422);
+        }
+
+        if ($adjustment instanceof StockAdjustmentRequest) {
+            return response()->json([
+                'message' => 'Stock adjustment submitted for approval; stock changes once it is approved',
+                'status' => 'pending_approval',
+                'data' => new ProductVariantResource($variant->refresh()),
+                'request' => $approvals->describe(ApprovalService::STOCK_ADJUSTMENT, $adjustment->load(['product', 'variant', 'requester'])),
+            ], 202);
         }
 
         $variant->refresh();
@@ -252,7 +274,9 @@ class ProductVariantController extends Controller
                 $variantData['is_active'] = $variantData['is_active'] ?? true;
                 $variantData['position'] = $position++;
 
-                $created[] = ProductVariant::create($variantData);
+                $variant = ProductVariant::create($variantData);
+                app(ProductService::class)->recordOpeningVariantStock($variant);
+                $created[] = $variant;
             }
 
             if (! $product->has_variants) {
