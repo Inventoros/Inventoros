@@ -100,4 +100,61 @@ class MobileLayoutMarkupTest extends TestCase
 
         $this->assertSame([], $offenders, 'Tables with no horizontal scroll container: '.implode(', ', $offenders));
     }
+
+    /**
+     * PageHeader's action row used to be `shrink-0` with no wrap, so a detail
+     * page with six buttons was 995px wide on a 375px phone, and on desktop
+     * the title was squeezed to one word per line beside it. The actions must
+     * wrap, and the title must keep a minimum width before they do.
+     */
+    public function test_page_header_actions_wrap_instead_of_widening_the_page(): void
+    {
+        $header = $this->source('Components/ui/PageHeader.vue');
+
+        $this->assertStringContainsString('<header class="flex flex-wrap', $header);
+        $this->assertStringContainsString('flex-[1_1_16rem]', $header);
+        $this->assertMatchesRegularExpression('/v-if="\$slots\.actions" class="[^"]*\bflex-wrap\b/', $header);
+        $this->assertDoesNotMatchRegularExpression('/v-if="\$slots\.actions" class="[^"]*\bshrink-0\b/', $header);
+    }
+
+    /**
+     * Underlined tab bars scroll sideways (.ds-tabs) rather than widening the
+     * page; the settings tab bars overflowed a phone by 17-22px.
+     */
+    public function test_tab_bars_scroll_rather_than_overflow(): void
+    {
+        $this->assertStringContainsString('.ds-tabs', (string) file_get_contents(base_path('resources/css/app.css')));
+
+        foreach (['Pages/Settings/Organization/Index.vue', 'Pages/Settings/Account/Index.vue', 'Pages/Settings/Email.vue', 'Pages/ImportExport/Index.vue'] as $path) {
+            $source = $this->source($path);
+
+            $this->assertStringNotContainsString('<nav class="-mb-px flex gap-8"', $source, "{$path} has a tab bar that cannot scroll.");
+            $this->assertStringContainsString('<nav class="ds-tabs', $source, "{$path} has a tab bar that cannot scroll.");
+        }
+    }
+
+    /**
+     * The top strip: the breadcrumb truncates (and shows only the current page
+     * on a phone) and the warehouse switcher collapses to its icon, so the two
+     * no longer overlap.
+     */
+    public function test_top_strip_breadcrumb_and_warehouse_switcher_share_the_row(): void
+    {
+        $this->assertStringContainsString('class="app-breadcrumb flex-1 min-w-0"', $this->source('Layouts/AppLayout.vue'));
+        $this->assertStringContainsString('.app-breadcrumb', (string) file_get_contents(base_path('resources/css/app.css')));
+        $this->assertStringContainsString('<span class="hidden lg:inline', $this->source('Components/WarehouseSwitcher.vue'));
+    }
+
+    /**
+     * An .sr-only label in the last column of a wide table is positioned
+     * against the page, not the table's scroll wrapper, and stretched the
+     * whole page sideways (portal orders list, low stock report).
+     */
+    public function test_sr_only_labels_cannot_stretch_the_page(): void
+    {
+        $this->assertMatchesRegularExpression(
+            '/\.sr-only\s*\{\s*left:\s*0;\s*\}/',
+            (string) file_get_contents(base_path('resources/css/app.css')),
+        );
+    }
 }
