@@ -157,6 +157,7 @@
     "totalOrders": "Bestellungen gesamt",
     "revenueThisMonth": "Umsatz diesen Monat",
     "outstandingReceivables": "Offene Forderungen",
+    "plusOtherCurrencies": "Zusätzlich {amounts}",
     "pendingOrders": "Offene Bestellungen",
     "locations": "Lagerorte",
     "inventoryValue": "Bestandswert",
@@ -2442,6 +2443,8 @@
     "paid": "Bezahlt",
     "balance": "Saldo",
     "agingNote": "Das Alter wird in Tagen ab dem Bestelldatum gezählt. Stornierte und überzahlte Bestellungen sind nicht enthalten.",
+    "byCurrency": "Salden nach Währung",
+    "currencyNote": "Jede Währung wird für sich summiert. Beträge in verschiedenen Währungen werden nie addiert.",
     "truncated": "Die ältesten {count} Bestellungen werden angezeigt. Die Summen oben umfassen alle Bestellungen.",
     "empty": "Nichts offen. Jede aktive Bestellung ist vollständig bezahlt."
   },

@@ -157,6 +157,7 @@
     "totalOrders": "注文総数",
     "revenueThisMonth": "今月の売上",
     "outstandingReceivables": "未回収の売掛金",
+    "plusOtherCurrencies": "ほかに {amounts}",
     "pendingOrders": "保留中の注文",
     "locations": "ロケーション",
     "inventoryValue": "在庫金額",
@@ -2442,6 +2443,8 @@
     "paid": "支払い済み",
     "balance": "残高",
     "agingNote": "経過日数は注文日から数えます。キャンセル済みおよび過払いの注文は含まれません。",
+    "byCurrency": "通貨別の残高",
+    "currencyNote": "通貨ごとに個別に合計します。異なる通貨の金額を合算することはありません。",
     "truncated": "古い順に{count}件の注文を表示しています。上の合計はすべての注文を対象としています。",
     "empty": "未回収はありません。有効な注文はすべて全額支払い済みです。"
   },

@@ -157,6 +157,7 @@
     "totalOrders": "Totaal bestellingen",
     "revenueThisMonth": "Omzet deze maand",
     "outstandingReceivables": "Openstaande vorderingen",
+    "plusOtherCurrencies": "Plus {amounts}",
     "pendingOrders": "Openstaande bestellingen",
     "locations": "Locaties",
     "inventoryValue": "Voorraadwaarde",
@@ -2442,6 +2443,8 @@
     "paid": "Betaald",
     "balance": "Saldo",
     "agingNote": "De ouderdom wordt geteld in dagen vanaf de besteldatum. Geannuleerde en te veel betaalde bestellingen worden niet meegenomen.",
+    "byCurrency": "Saldi per valuta",
+    "currencyNote": "Elke valuta wordt apart opgeteld. Bedragen in verschillende valuta worden nooit bij elkaar opgeteld.",
     "truncated": "De {count} oudste bestellingen worden getoond. De totalen hierboven omvatten alle bestellingen.",
     "empty": "Niets openstaand. Elke lopende bestelling is volledig betaald."
   },

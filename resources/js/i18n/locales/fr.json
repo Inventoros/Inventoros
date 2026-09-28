@@ -157,6 +157,7 @@
     "totalOrders": "Total des commandes",
     "revenueThisMonth": "Chiffre d'affaires ce mois",
     "outstandingReceivables": "Créances en cours",
+    "plusOtherCurrencies": "Plus {amounts}",
     "pendingOrders": "Commandes en attente",
     "locations": "Emplacements",
     "inventoryValue": "Valeur de l'inventaire",
@@ -2442,6 +2443,8 @@
     "paid": "Payé",
     "balance": "Solde",
     "agingNote": "L'ancienneté est comptée en jours à partir de la date de commande. Les commandes annulées et en trop-perçu ne sont pas incluses.",
+    "byCurrency": "Soldes par devise",
+    "currencyNote": "Chaque devise est totalisée séparément. Les montants dans des devises différentes ne sont jamais additionnés.",
     "truncated": "Affichage des {count} commandes les plus anciennes. Les totaux ci-dessus couvrent toutes les commandes.",
     "empty": "Aucun impayé. Toutes les commandes en cours sont entièrement payées."
   },

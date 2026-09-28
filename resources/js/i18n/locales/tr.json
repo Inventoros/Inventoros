@@ -157,6 +157,7 @@
     "totalOrders": "Toplam Sipariş",
     "revenueThisMonth": "Bu Ayın Geliri",
     "outstandingReceivables": "Açık alacaklar",
+    "plusOtherCurrencies": "Ayrıca {amounts}",
     "pendingOrders": "Bekleyen Siparişler",
     "locations": "Konumlar",
     "inventoryValue": "Envanter Değeri",
@@ -2442,6 +2443,8 @@
     "paid": "Ödenen",
     "balance": "Bakiye",
     "agingNote": "Yaş, sipariş tarihinden itibaren gün olarak hesaplanır. İptal edilen ve fazla ödenen siparişler dahil değildir.",
+    "byCurrency": "Para birimine göre bakiyeler",
+    "currencyNote": "Her para birimi ayrı toplanır. Farklı para birimlerindeki tutarlar asla birbirine eklenmez.",
     "truncated": "En eski {count} sipariş gösteriliyor. Yukarıdaki toplamlar tüm siparişleri kapsar.",
     "empty": "Açık bakiye yok. Tüm aktif siparişler tamamen ödendi."
   },
