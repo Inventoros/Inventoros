@@ -150,7 +150,18 @@ class NavigationWiringTest extends TestCase
         $layout = $this->source('Layouts/AppLayout.vue');
 
         $this->assertStringContainsString('pluginMenuItems', $layout);
-        $this->assertMatchesRegularExpression("/label:\s*'Plugins'/", $layout);
+        $this->assertMatchesRegularExpression("/label:\s*t\('nav\.sections\.plugins'\),\s*items:\s*pluginNavItems\.value/", $layout);
+    }
+
+    public function test_sidebar_labels_are_translated_not_hard_coded(): void
+    {
+        $layout = $this->source('Layouts/AppLayout.vue');
+
+        // Every section label and built-in nav item reads from nav.* in the
+        // locale files; a quoted English literal would render untranslated.
+        $this->assertDoesNotMatchRegularExpression("/(label|name):\s*'[A-Z]/", $layout);
+        $this->assertGreaterThanOrEqual(22, preg_match_all("/name:\s*t\('nav\./", $layout));
+        $this->assertSame(6, preg_match_all("/label:\s*t\('nav\.sections\./", $layout));
     }
 
     public function test_the_language_switcher_is_mounted(): void
