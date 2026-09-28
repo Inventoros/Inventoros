@@ -4,9 +4,11 @@ namespace Tests\Feature\Security;
 
 use App\Mail\UserActivityAlertEmail;
 use App\Models\Auth\Organization;
+use App\Models\Role;
 use App\Models\System\SystemSetting;
 use App\Models\User;
 use App\Services\UserActivityAlertService;
+use App\Services\UserManagementService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Mail;
 use Tests\TestCase;
@@ -83,6 +85,46 @@ class UserActivityAlertsTest extends TestCase
                 && $mail->data['type'] === UserActivityAlertService::TYPE_PROMOTED_TO_ADMIN;
         });
         Mail::assertQueuedCount(1);
+    }
+
+    public function test_holders_of_the_administrator_role_receive_alerts(): void
+    {
+        Mail::fake();
+        $roleAdmin = User::factory()->forOrganization($this->organization->id)->create([
+            'email' => 'role-admin@example.com',
+            'notification_preferences' => ['user_activity_alerts' => true],
+        ]);
+        $roleAdmin->roles()->attach($this->systemAdministratorRole()->id);
+
+        $this->actingAs($this->actingAdmin);
+        User::factory()->forOrganization($this->organization->id)->create(['name' => 'New Hire']);
+
+        Mail::assertQueued(UserActivityAlertEmail::class, fn (UserActivityAlertEmail $mail) => $mail->hasTo('role-admin@example.com'));
+    }
+
+    public function test_promotion_through_the_administrator_role_alerts_admins(): void
+    {
+        Mail::fake();
+        $member = User::factory()->forOrganization($this->organization->id)->create(['role' => 'member']);
+
+        app(UserManagementService::class)->update($this->actingAdmin, $member, [
+            'name' => $member->name,
+            'email' => $member->email,
+            'role' => 'member',
+            'role_ids' => [$this->systemAdministratorRole()->id],
+        ]);
+
+        $this->assertTrue($member->fresh()->isAdmin());
+        Mail::assertQueued(UserActivityAlertEmail::class, fn (UserActivityAlertEmail $mail) => $mail->hasTo('watcher@example.com')
+            && $mail->data['type'] === UserActivityAlertService::TYPE_PROMOTED_TO_ADMIN
+            && $mail->data['subject_email'] === $member->email);
+    }
+
+    private function systemAdministratorRole(): Role
+    {
+        return Role::firstOrCreate(['slug' => 'system-administrator'], [
+            'name' => 'Administrator', 'is_system' => true, 'permissions' => [],
+        ]);
     }
 
     public function test_five_failed_logins_in_fifteen_minutes_alert_once(): void
