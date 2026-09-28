@@ -1071,6 +1071,7 @@
     "getStarted": "위에서 첫 플러그인을 업로드하여 시작하세요.",
     "uploadsDisabled": "이 인스턴스에서는 ZIP 업로드가 꺼져 있습니다. 서명된 플러그인은 마켓플레이스에서 계속 설치할 수 있습니다.",
     "browseMarketplace": "마켓플레이스 둘러보기",
+    "managedElsewhere": "플러그인은 이 설치의 모든 조직이 공유하므로 플러그인 관리자 조직만 설치, 업데이트 또는 제거할 수 있습니다.",
     "tabs": {
       "installed": "설치됨",
       "marketplace": "마켓플레이스"

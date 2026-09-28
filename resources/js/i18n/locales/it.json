@@ -1071,6 +1071,7 @@
     "getStarted": "Inizia caricando il tuo primo plugin qui sopra.",
     "uploadsDisabled": "I caricamenti ZIP sono disattivati su questa istanza. I plugin firmati possono comunque essere installati dal marketplace.",
     "browseMarketplace": "Sfoglia il marketplace",
+    "managedElsewhere": "I plugin sono condivisi da tutte le organizzazioni di questa installazione, quindi solo l'organizzazione amministratrice dei plugin può installarli, aggiornarli o rimuoverli.",
     "tabs": {
       "installed": "Installati",
       "marketplace": "Marketplace"

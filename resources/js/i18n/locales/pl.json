@@ -1071,6 +1071,7 @@
     "getStarted": "Zacznij od przesłania pierwszej wtyczki powyżej.",
     "uploadsDisabled": "Przesyłanie plików ZIP jest wyłączone w tej instancji. Podpisane wtyczki można nadal instalować z marketplace.",
     "browseMarketplace": "Przeglądaj marketplace",
+    "managedElsewhere": "Wtyczki są wspólne dla wszystkich organizacji w tej instalacji, więc tylko organizacja administrująca wtyczkami może je instalować, aktualizować lub usuwać.",
     "tabs": {
       "installed": "Zainstalowane",
       "marketplace": "Marketplace"

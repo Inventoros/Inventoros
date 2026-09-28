@@ -1071,6 +1071,7 @@
     "getStarted": "Comienza subiendo tu primer plugin arriba.",
     "uploadsDisabled": "La carga de archivos ZIP est\u00e1 desactivada en esta instancia. Los plugins firmados a\u00fan se pueden instalar desde el marketplace.",
     "browseMarketplace": "Explorar el marketplace",
+    "managedElsewhere": "Los plugins se comparten entre todas las organizaciones de esta instalación, así que solo la organización administradora de plugins puede instalarlos, actualizarlos o eliminarlos.",
     "tabs": {
       "installed": "Instalados",
       "marketplace": "Marketplace"
