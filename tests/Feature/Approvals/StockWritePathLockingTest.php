@@ -34,6 +34,16 @@ final class StockWritePathLockingTest extends TestCase
         $this->setUpApprovalWorld();
     }
 
+    /**
+     * SQL with identifier quoting removed, so query matching works on every
+     * grammar: SQLite and PostgreSQL quote with "double quotes", MySQL with
+     * `backticks`.
+     */
+    private function unquoted(string $sql): string
+    {
+        return str_replace(['"', '`'], '', $sql);
+    }
+
     public function test_mcp_receive_rechecks_the_purchase_order_under_the_lock(): void
     {
         $po = $this->draftPo();
@@ -46,7 +56,7 @@ final class StockWritePathLockingTest extends TestCase
         // and refuses; the hand-rolled MCP loop trusted the early read.
         $cancelled = false;
         DB::listen(function (QueryExecuted $query) use (&$cancelled, $po) {
-            if (! $cancelled && str_contains($query->sql, 'from "purchase_order_items"')) {
+            if (! $cancelled && str_contains($this->unquoted($query->sql), 'from purchase_order_items')) {
                 $cancelled = true;
                 DB::table('purchase_orders')->where('id', $po->id)->update(['status' => PurchaseOrder::STATUS_CANCELLED]);
             }
@@ -128,7 +138,7 @@ final class StockWritePathLockingTest extends TestCase
         $productIds = [$this->product->id, $second->id];
         $touched = [];
         DB::listen(function (QueryExecuted $query) use (&$touched, $productIds) {
-            if (! preg_match('/from "products" where/i', $query->sql)) {
+            if (! preg_match('/from products where/i', $this->unquoted($query->sql))) {
                 return;
             }
             foreach ($query->bindings as $binding) {
