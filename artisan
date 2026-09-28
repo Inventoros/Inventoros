@@ -4,6 +4,15 @@
 use Illuminate\Foundation\Application;
 use Symfony\Component\Console\Input\ArgvInput;
 
+// Refuse an unsupported PHP with a plain message before Composer's platform
+// check (or newer syntax) fails cryptically. Keep this block PHP 5 safe and
+// in step with composer.json's "php" requirement.
+if (version_compare(PHP_VERSION, '8.4.1', '<')) {
+    fwrite(STDERR, 'Inventoros requires PHP 8.4.1 or newer. This server runs PHP '.PHP_VERSION.'.'.PHP_EOL
+        .'Run artisan with a newer PHP binary (on cPanel e.g. /opt/cpanel/ea-php84/root/usr/bin/php).'.PHP_EOL);
+    exit(1);
+}
+
 define('LARAVEL_START', microtime(true));
 
 // Register the Composer autoloader...
