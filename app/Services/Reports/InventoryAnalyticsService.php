@@ -116,6 +116,23 @@ class InventoryAnalyticsService
         return $this->deadStockSummaryFrom($this->deadStockBase($organizationId, $days, 'both', $asOf));
     }
 
+    /**
+     * Dead-stock value (the dashboard tile's 90-day "both" basis) per product
+     * currency, so amounts in different currencies are not added together.
+     *
+     * @return array<string, float> currency code => tied-up value
+     */
+    public function deadStockValueByCurrency(int $organizationId, int $days, CarbonInterface $asOf): array
+    {
+        return DB::query()
+            ->fromSub($this->deadStockBase($organizationId, $days, 'both', $asOf), 'dead')
+            ->groupBy('currency')
+            ->selectRaw('currency, COALESCE(SUM(tied_up_value), 0) as total_value')
+            ->pluck('total_value', 'currency')
+            ->map(fn ($value) => round((float) $value, 2))
+            ->all();
+    }
+
     private function deadStockBase(int $organizationId, int $days, string $basis, CarbonInterface $asOf): Builder
     {
         $asOf = CarbonImmutable::instance($asOf);
@@ -151,6 +168,7 @@ class InventoryAnalyticsService
                 product_locations.name as location,
                 products.stock,
                 products.purchase_price,
+                products.currency,
                 (products.stock * COALESCE(products.purchase_price, 0)) as tied_up_value,
                 ls.last_sale_at,
                 lo.last_outbound_at

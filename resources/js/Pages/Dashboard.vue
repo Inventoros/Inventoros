@@ -35,6 +35,8 @@ const { t, te } = useI18n();
 
 const props = defineProps({
     stats: Object,
+    // The organization's currency: the one the headline money figures are in.
+    currency: { type: String, default: 'USD' },
     recentProducts: Array,
     lowStockProducts: Array,
     reorderSuggestions: Array,
@@ -92,8 +94,8 @@ const saveWidgetPreferences = async () => {
     }
 };
 
-// Amounts in the organization's currency (see lib/money).
-const formatCurrency = (value) => formatMoney(value, props.currency);
+// Amounts in the organization's currency unless another is given (see lib/money).
+const formatCurrency = (value, currency = props.currency) => formatMoney(value, currency);
 
 const formatNumber = (value) => {
     const v = Number(value ?? 0);
@@ -102,7 +104,16 @@ const formatNumber = (value) => {
     return v.toString();
 };
 
-const formatCompactCurrency = (value) => formatCompactMoney(value, props.currency);
+const formatCompactCurrency = (value, currency = props.currency) => formatCompactMoney(value, currency);
+
+// Amounts in currencies other than the organization's, listed under a money
+// tile rather than added into it (stats.byCurrency comes from the server).
+const otherCurrencies = (key) => {
+    const others = (props.stats?.byCurrency?.[key] || [])
+        .filter((row) => row.currency !== props.currency && Number(row.amount) !== 0)
+        .map((row) => formatCompactCurrency(row.amount, row.currency));
+    return others.length ? t('dashboard.plusOtherCurrencies', { amounts: others.join(', ') }) : null;
+};
 
 const quickReorder = useQuickReorder(computed(() => props.reorderSuggestions || []));
 
@@ -113,9 +124,9 @@ const secondaryStats = () => [
     { key: 'pendingOrders', label: t('dashboard.pendingOrders'), value: formatNumber(props.stats?.pendingOrders), href: route('orders.index', { status: 'pending' }), tone: 'text-status-warning' },
     { key: 'categories', label: t('dashboard.categories'), value: props.stats?.categories, href: route('categories.index'), tone: 'text-brand' },
     { key: 'locations', label: t('dashboard.locations'), value: props.stats?.locations, href: route('locations.index'), tone: 'text-brand' },
-    { key: 'revenueThisMonth', label: t('dashboard.revenueThisMonth'), value: formatCompactCurrency(props.stats?.revenueThisMonth), href: null, tone: 'text-brand' },
-    { key: 'deadStockValue', label: t('dashboard.deadStockValue'), value: formatCompactCurrency(props.stats?.deadStockValue), href: route('reports.dead-stock'), tone: 'text-status-warning' },
-    { key: 'outstandingReceivables', label: t('dashboard.outstandingReceivables'), value: formatCompactCurrency(props.stats?.outstandingReceivables), href: route('reports.receivables'), tone: 'text-status-warning' },
+    { key: 'revenueThisMonth', label: t('dashboard.revenueThisMonth'), value: formatCompactCurrency(props.stats?.revenueThisMonth), extra: otherCurrencies('revenueThisMonth'), href: null, tone: 'text-brand' },
+    { key: 'deadStockValue', label: t('dashboard.deadStockValue'), value: formatCompactCurrency(props.stats?.deadStockValue), extra: otherCurrencies('deadStockValue'), href: route('reports.dead-stock'), tone: 'text-status-warning' },
+    { key: 'outstandingReceivables', label: t('dashboard.outstandingReceivables'), value: formatCompactCurrency(props.stats?.outstandingReceivables), extra: otherCurrencies('outstandingReceivables'), href: route('reports.receivables'), tone: 'text-status-warning' },
 // A withheld figure is absent from `stats`, not zeroed, so filtering on
 // presence also drops the link that went with it -- several point at index
 // routes the same user would be refused.
@@ -187,7 +198,7 @@ const secondaryStats = () => [
                 v-if="stats.totalValue !== undefined"
                 :label="t('dashboard.inventoryValue')"
                 :value="formatCompactCurrency(stats.totalValue)"
-                :hint="t('dashboard.atSellingPrice')"
+                :hint="otherCurrencies('totalValue') || t('dashboard.atSellingPrice')"
                 icon-tone="success"
             >
                 <template #icon><DollarSign :size="20" :stroke-width="1.5" /></template>
@@ -228,6 +239,7 @@ const secondaryStats = () => [
             >
                 <p class="text-[11px] font-medium uppercase tracking-wider text-text-tertiary">{{ stat.label }}</p>
                 <p :class="['mt-1 text-xl font-semibold tabular-nums', stat.tone]">{{ stat.value }}</p>
+                <p v-if="stat.extra" class="mt-0.5 text-xs tabular-nums text-text-tertiary">{{ stat.extra }}</p>
             </component>
         </section>
 
@@ -276,7 +288,7 @@ const secondaryStats = () => [
                                     </p>
                                 </div>
                                 <div class="shrink-0 text-right">
-                                    <p class="text-sm font-semibold tabular-nums text-text-primary">{{ formatCurrency(order.total) }}</p>
+                                    <p class="text-sm font-semibold tabular-nums text-text-primary">{{ formatCurrency(order.total, order.currency) }}</p>
                                     <p class="text-[11px] text-text-tertiary">{{ formatCalendarDate(order.order_date) }}</p>
                                 </div>
                             </Link>
@@ -348,7 +360,7 @@ const secondaryStats = () => [
                                 </p>
                             </div>
                             <div class="shrink-0 text-right">
-                                <p class="text-sm font-semibold tabular-nums text-text-primary">{{ formatCurrency(product.price) }}</p>
+                                <p class="text-sm font-semibold tabular-nums text-text-primary">{{ formatCurrency(product.price, product.currency) }}</p>
                                 <p class="text-[11px] text-text-tertiary">{{ t('dashboard.qty', { count: product.stock }) }}</p>
                             </div>
                         </li>

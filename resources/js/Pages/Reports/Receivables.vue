@@ -10,6 +10,7 @@ import ExportMenu from '@/Components/Reports/ExportMenu.vue';
 import { Head, Link } from '@inertiajs/vue3';
 import { useI18n } from 'vue-i18n';
 import { formatCalendarDate } from '@/lib/dates';
+import { formatMoney } from '@/lib/money';
 import { ArrowLeft, Wallet, ShoppingCart, Users, CircleCheck } from 'lucide-vue-next';
 
 const { t } = useI18n();
@@ -19,7 +20,10 @@ const props = defineProps({
     buckets: Array,
     customers: Array,
     orders: Array,
+    // The currency this report is in; every figure below is in it alone.
     currency: { type: String, default: 'USD' },
+    // Every currency with a balance: {currency, total_outstanding, order_count}.
+    currencies: { type: Array, default: () => [] },
 });
 
 // Bucket keys come from the server; labels live here.
@@ -46,8 +50,8 @@ const bucketTone = (key) =>
 const bucketVariant = (key) =>
     ({ current: 'neutral', '1_30': 'info', '31_60': 'warning', '61_90': 'warning', over_90: 'danger' }[key] ?? 'neutral');
 
-const formatCurrency = (value) =>
-    new Intl.NumberFormat('en-US', { style: 'currency', currency: props.currency || 'USD' }).format(parseFloat(value) || 0);
+// One shared money formatter, in this report's currency unless told otherwise.
+const formatCurrency = (value, currency = props.currency) => formatMoney(value, currency);
 
 const share = (amount) => {
     const total = parseFloat(props.summary.total_outstanding) || 0;
@@ -77,9 +81,31 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-t
                     <ArrowLeft :size="14" />
                     {{ t('reports.backToReports') }}
                 </Button>
-                <ExportMenu route-name="reports.receivables" />
+                <ExportMenu route-name="reports.receivables" :params="{ currency }" />
             </template>
         </PageHeader>
+
+        <!-- One currency at a time: pick which, with each currency's own total -->
+        <Card v-if="currencies.length > 1 || (currencies.length === 1 && currencies[0].currency !== currency)" class="mt-6">
+            <p class="text-[11px] font-medium uppercase tracking-wider text-text-tertiary">{{ t('receivables.byCurrency') }}</p>
+            <div class="mt-2 flex flex-wrap gap-2">
+                <Link
+                    v-for="row in currencies"
+                    :key="row.currency"
+                    :href="route('reports.receivables', { currency: row.currency })"
+                    :aria-current="row.currency === currency ? 'true' : undefined"
+                    :class="[
+                        'ds-focus-ring rounded-md border px-3 py-1.5 text-sm tabular-nums transition-colors',
+                        row.currency === currency
+                            ? 'border-brand bg-surface-overlay font-semibold text-text-primary'
+                            : 'border-border-subtle text-text-secondary hover:border-border-strong hover:text-text-primary',
+                    ]"
+                >
+                    {{ row.currency }} {{ formatCurrency(row.total_outstanding, row.currency) }}
+                </Link>
+            </div>
+            <p class="mt-2 text-xs text-text-tertiary">{{ t('receivables.currencyNote') }}</p>
+        </Card>
 
         <!-- Summary -->
         <section class="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-3">
@@ -156,7 +182,7 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-t
                 <div class="px-5 pt-5">
                     <CardHeader :title="t('receivables.byOrder')">
                         <template #actions>
-                            <ExportMenu route-name="reports.receivables" group="orders" />
+                            <ExportMenu route-name="reports.receivables" group="orders" :params="{ currency }" />
                         </template>
                     </CardHeader>
                 </div>

@@ -7,6 +7,7 @@ namespace App\Http\Controllers\Admin;
 use App\Enums\Permission;
 use App\Http\Controllers\Controller;
 use App\Models\ActivityLog;
+use App\Models\Auth\Organization;
 use App\Models\Inventory\Product;
 use App\Models\Inventory\ProductCategory;
 use App\Models\Inventory\ProductLocation;
@@ -74,7 +75,6 @@ class DashboardController extends Controller
             ? Product::where('organization_id', $orgId)
                 ->selectRaw('
                     COUNT(*) as total_count,
-                    COALESCE(SUM(CASE WHEN is_active THEN price * stock ELSE 0 END), 0) as total_value,
                     SUM(CASE WHEN stock <= min_stock THEN 1 ELSE 0 END) as low_stock_count
                 ')
                 ->first()
@@ -84,9 +84,8 @@ class DashboardController extends Controller
             ? Order::where('organization_id', $orgId)
                 ->selectRaw('
                     COUNT(*) as total_count,
-                    SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) as pending_count,
-                    COALESCE(SUM(CASE WHEN order_date >= ? AND order_date <= ? THEN total ELSE 0 END), 0) as month_revenue
-                ', ['pending', $monthStart, $monthEnd])
+                    SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) as pending_count
+                ', ['pending'])
                 ->first()
             : null;
 
@@ -104,9 +103,30 @@ class DashboardController extends Controller
             $stats['pendingOrders'] = (int) ($orderAgg->pending_count ?? 0);
         }
 
+        // Money tiles never add up amounts in different currencies. Each
+        // headline figure is the organization's currency only; the per-
+        // currency breakdown (that currency first, then any other with an
+        // amount) travels in stats.byCurrency for the tile to list.
+        $currency = Organization::currencyFor($orgId);
+        $byCurrency = [];
+        $money = function (string $key, iterable $amounts) use (&$stats, &$byCurrency, $currency): void {
+            $byCurrency[$key] = $this->perCurrency($amounts, $currency);
+            $stats[$key] = $byCurrency[$key][0]['amount'];
+        };
+
         if ($canViewReports) {
-            $stats['totalValue'] = (float) ($productAgg->total_value ?? 0);
-            $stats['revenueThisMonth'] = (float) ($orderAgg->month_revenue ?? 0);
+            $money('totalValue', Product::where('organization_id', $orgId)
+                ->where('is_active', true)
+                ->groupBy('currency')
+                ->selectRaw('currency, COALESCE(SUM(price * stock), 0) as amount')
+                ->pluck('amount', 'currency'));
+
+            $money('revenueThisMonth', Order::where('organization_id', $orgId)
+                ->where('order_date', '>=', $monthStart)
+                ->where('order_date', '<=', $monthEnd)
+                ->groupBy('currency')
+                ->selectRaw('currency, COALESCE(SUM(total), 0) as amount')
+                ->pluck('amount', 'currency'));
         }
 
         // Stock idle for 90 days (no sale and no outbound movement), at cost.
@@ -114,7 +134,7 @@ class DashboardController extends Controller
         // permissions; one aggregate query, skipped entirely otherwise.
         if ($canViewReports && $canViewProducts && $canViewOrders) {
             $deadStock = app(InventoryAnalyticsService::class)->deadStockSummary($orgId, 90, now());
-            $stats['deadStockValue'] = $deadStock['total_value'];
+            $money('deadStockValue', app(InventoryAnalyticsService::class)->deadStockValueByCurrency($orgId, 90, now()));
             $stats['deadStockCount'] = $deadStock['product_count'];
         }
 
@@ -122,11 +142,17 @@ class DashboardController extends Controller
             // What customers still owe on live orders. Overpaid orders owe
             // nothing (they don't offset others) and cancelled orders are out,
             // as are untracked orders from before payment tracking.
-            $stats['outstandingReceivables'] = (float) Order::where('organization_id', $orgId)
+            $money('outstandingReceivables', Order::where('organization_id', $orgId)
                 ->where('status', '!=', 'cancelled')
                 ->where('payment_status', '!=', 'untracked')
                 ->whereColumn('total', '>', 'amount_paid')
-                ->sum(DB::raw('total - amount_paid'));
+                ->groupBy('currency')
+                ->selectRaw('currency, SUM(total - amount_paid) as amount')
+                ->pluck('amount', 'currency'));
+        }
+
+        if ($byCurrency !== []) {
+            $stats['byCurrency'] = $byCurrency;
         }
 
         // Hook: Allow plugins to modify stats
@@ -278,6 +304,8 @@ class DashboardController extends Controller
 
         $data = [
             'stats' => $stats,
+            // The organization's currency: what the headline money figures are in.
+            'currency' => $currency,
             'recentProducts' => $recentProducts,
             'lowStockProducts' => $lowStockProducts,
             'reorderSuggestions' => $reorderSuggestions,
@@ -308,9 +336,6 @@ class DashboardController extends Controller
             ],
         ];
 
-        // Stat tiles and order totals are shown in the organization's currency.
-        $data['currency'] = $user->organization?->currency ?: 'USD';
-
         // Hook: Allow plugins to modify all dashboard data
         $data = apply_filters('dashboard_page_data', $data, $user);
 
@@ -318,6 +343,35 @@ class DashboardController extends Controller
         do_action('dashboard_viewed', $user);
 
         return Inertia::render('Dashboard', $data);
+    }
+
+    /**
+     * Amounts keyed by currency code as a list of {currency, amount}: the
+     * base currency first (always present), then every other currency with a
+     * non-zero amount, alphabetically. Codes are upper-cased and merged.
+     *
+     * @param  iterable<string|null, mixed>  $amounts
+     * @return array<int, array{currency: string, amount: float}>
+     */
+    private function perCurrency(iterable $amounts, string $base): array
+    {
+        $totals = [$base => 0.0];
+
+        foreach ($amounts as $code => $amount) {
+            $code = filled($code) ? strtoupper(trim((string) $code)) : $base;
+            $totals[$code] = round(($totals[$code] ?? 0.0) + (float) $amount, 2);
+        }
+
+        uksort($totals, fn (string $a, string $b) => [$a !== $base, $a] <=> [$b !== $base, $b]);
+
+        $rows = [];
+        foreach ($totals as $code => $amount) {
+            if ($code === $base || $amount != 0.0) {
+                $rows[] = ['currency' => $code, 'amount' => $amount];
+            }
+        }
+
+        return $rows;
     }
 
     /**

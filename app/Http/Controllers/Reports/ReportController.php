@@ -455,12 +455,20 @@ class ReportController extends Controller
      */
     public function receivables(Request $request, ReceivablesAgingService $aging): Response|HttpResponse
     {
-        $report = $aging->build($request->user()->organization_id);
-        $currency = $request->user()->organization?->currency ?? 'USD';
+        // One currency at a time (the organization's unless ?currency= names
+        // another); balances in different currencies are never added up.
+        $requested = $request->query('currency');
+        $requested = is_string($requested) && preg_match('/^[A-Za-z]{3}$/', $requested) ? $requested : null;
+        $report = $aging->build($request->user()->organization_id, currency: $requested);
+        $currency = $report['currency'];
 
         if ($format = ReportExporter::requestedFormat($request)) {
             $notes = [
-                'As of '.$report['summary']['as_of'].'. Amounts in '.$currency.'.',
+                'As of '.$report['summary']['as_of'].'. Amounts in '.$currency.' only; other currencies are exported separately (?currency=).',
+                'Outstanding per currency: '.implode(', ', array_map(
+                    fn (array $c) => $c['currency'].' '.$c['total_outstanding'],
+                    $report['currencies'],
+                )).'.',
                 'Age is counted in days from the order date.',
             ];
             $buckets = array_keys(ReceivablesAgingService::BUCKETS);
@@ -494,9 +502,7 @@ class ReportController extends Controller
             );
         }
 
-        return Inertia::render('Reports/Receivables', $report + [
-            'currency' => $currency,
-        ]);
+        return Inertia::render('Reports/Receivables', $report);
     }
 
     /**
