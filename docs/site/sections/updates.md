@@ -1,5 +1,9 @@
 Inventoros has a built-in updater so you can apply new releases from the admin panel, and it verifies that each release is signed before installing it. This section covers updating, the signature model, and backups.
 
+### Upgrading from 1.0.x to 2.0.0
+
+The updater in 1.0.x cannot apply 2.0.0. Upgrade by hand: back up, replace the files from the release package (or check out the tag), run migrations, and add the scheduler and queue worker. The steps are in `UPGRADE.md` in the Inventoros repository.
+
 ### Updating from the admin panel
 
 To update an existing installation, sign in as an admin and open Admin then Update. The updater checks for the latest published release, shows you the current and available versions, and applies the update in place. After the new code is extracted, database migrations run automatically so your schema stays in sync.
