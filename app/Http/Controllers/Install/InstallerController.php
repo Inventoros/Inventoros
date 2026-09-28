@@ -31,10 +31,10 @@ class InstallerController extends Controller
 
     /**
      * First PHP version that is NOT supported, or null for no ceiling.
-     * phpoffice/phpspreadsheet (via maatwebsite/excel) is locked to a release
-     * that requires PHP below 8.5; drop this once the lock allows 8.5.
+     * Must match the lowest upper bound in composer.lock (phpoffice/phpspreadsheet
+     * 1.x capped PHP below 8.5; 5.x has no ceiling).
      */
-    public const PHP_MAX_EXCLUSIVE = '8.5.0';
+    public const PHP_MAX_EXCLUSIVE = null;
 
     /**
      * Whether the given PHP version can run this release.
@@ -54,7 +54,7 @@ class InstallerController extends Controller
     private static function phpRequirementLabel(): string
     {
         if (self::PHP_MAX_EXCLUSIVE === null) {
-            return self::PHP_MIN;
+            return self::PHP_MIN.' or newer';
         }
 
         $ceiling = implode('.', array_slice(explode('.', self::PHP_MAX_EXCLUSIVE), 0, 2));

@@ -46,7 +46,7 @@ class InstallerControllerTest extends TestCase
         $this->assertStringStartsWith($minimum, $php['required']);
     }
 
-    public function test_installer_accepts_php_8_4_1_up_to_but_not_including_8_5(): void
+    public function test_installer_accepts_php_8_4_1_and_newer_including_8_5(): void
     {
         $supported = fn (string $version) => \App\Http\Controllers\Install\InstallerController::phpVersionSupported($version);
 
@@ -54,15 +54,15 @@ class InstallerControllerTest extends TestCase
         $this->assertFalse($supported('8.4.0'));
         $this->assertTrue($supported('8.4.1'));
         $this->assertTrue($supported('8.4.13'));
-        // phpoffice/phpspreadsheet (via maatwebsite/excel) does not install on 8.5 yet.
-        $this->assertFalse($supported('8.5.0'));
-        $this->assertFalse($supported('8.5.4'));
+        // phpoffice/phpspreadsheet 5.x (Laravel Excel 4) installs on PHP 8.5.
+        $this->assertTrue($supported('8.5.0'));
+        $this->assertTrue($supported('8.5.4'));
     }
 
     public function test_installer_php_ceiling_follows_the_locked_phpspreadsheet(): void
     {
-        // When phpspreadsheet is bumped to a release that supports PHP 8.5,
-        // this fails until the installer's upper bound is dropped (or moved).
+        // If phpspreadsheet is ever locked to a release with a PHP upper bound
+        // again, this fails until the installer's ceiling matches it.
         $lock = json_decode((string) file_get_contents(base_path('composer.lock')), true);
         $package = collect($lock['packages'])->firstWhere('name', 'phpoffice/phpspreadsheet');
         $this->assertNotNull($package);
@@ -78,7 +78,7 @@ class InstallerControllerTest extends TestCase
         $response = $this->get('/install/requirements');
 
         $php = collect($response->viewData('page')['props']['requirements'])->firstWhere('name', 'PHP Version');
-        $this->assertSame('8.4.1 or newer, below 8.5', $php['required']);
+        $this->assertSame('8.4.1 or newer', $php['required']);
         $this->assertSame(\App\Http\Controllers\Install\InstallerController::phpVersionSupported(PHP_VERSION), $php['met']);
     }
 
