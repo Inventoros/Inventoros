@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Services\Reports;
 
+use App\Models\Auth\Organization;
+use App\Support\CurrencyTotals;
 use Carbon\CarbonImmutable;
 use Carbon\CarbonInterface;
 use Illuminate\Database\Query\Builder;
@@ -76,7 +78,8 @@ class InventoryAnalyticsService
     public function deadStock(int $organizationId, int $days, string $basis, CarbonInterface $asOf): array
     {
         $base = $this->deadStockBase($organizationId, $days, $basis, $asOf);
-        $summary = $this->deadStockSummaryFrom($base);
+        $summary = $this->deadStockSummaryFrom($base, $organizationId);
+        $baseCurrency = $summary['currency'];
 
         $rows = (clone $base)
             ->orderByDesc('tied_up_value')
@@ -93,6 +96,8 @@ class InventoryAnalyticsService
                 'unit_cost' => $row->purchase_price === null ? null : (float) $row->purchase_price,
                 'cost_missing' => $row->purchase_price === null,
                 'tied_up_value' => round((float) $row->tied_up_value, 2),
+                // Unit cost and value are in the product's currency.
+                'currency' => filled($row->currency) ? strtoupper(trim((string) $row->currency)) : $baseCurrency,
                 'last_sale_at' => $row->last_sale_at,
                 'last_outbound_at' => $row->last_outbound_at,
             ])
@@ -109,28 +114,11 @@ class InventoryAnalyticsService
      * Headline dead-stock figures only (one aggregate query), for the
      * dashboard tile.
      *
-     * @return array{product_count: int, total_units: int, total_value: float}
+     * @return array{product_count: int, total_units: int, currency: string, total_value: float, values_by_currency: array<int, array{currency: string, amount: float}>}
      */
     public function deadStockSummary(int $organizationId, int $days, CarbonInterface $asOf): array
     {
-        return $this->deadStockSummaryFrom($this->deadStockBase($organizationId, $days, 'both', $asOf));
-    }
-
-    /**
-     * Dead-stock value (the dashboard tile's 90-day "both" basis) per product
-     * currency, so amounts in different currencies are not added together.
-     *
-     * @return array<string, float> currency code => tied-up value
-     */
-    public function deadStockValueByCurrency(int $organizationId, int $days, CarbonInterface $asOf): array
-    {
-        return DB::query()
-            ->fromSub($this->deadStockBase($organizationId, $days, 'both', $asOf), 'dead')
-            ->groupBy('currency')
-            ->selectRaw('currency, COALESCE(SUM(tied_up_value), 0) as total_value')
-            ->pluck('total_value', 'currency')
-            ->map(fn ($value) => round((float) $value, 2))
-            ->all();
+        return $this->deadStockSummaryFrom($this->deadStockBase($organizationId, $days, 'both', $asOf), $organizationId);
     }
 
     private function deadStockBase(int $organizationId, int $days, string $basis, CarbonInterface $asOf): Builder
@@ -185,18 +173,31 @@ class InventoryAnalyticsService
         return $query;
     }
 
-    /** @return array{product_count: int, total_units: int, total_value: float} */
-    private function deadStockSummaryFrom(Builder $base): array
+    /**
+     * Counts across every product, value per product currency: total_value
+     * is the organization's currency only and values_by_currency lists each
+     * currency's own total (that currency first), so amounts in different
+     * currencies are never added together.
+     *
+     * @return array{product_count: int, total_units: int, currency: string, total_value: float, values_by_currency: array<int, array{currency: string, amount: float}>}
+     */
+    private function deadStockSummaryFrom(Builder $base, int $organizationId): array
     {
-        $totals = DB::query()
+        $groups = DB::query()
             ->fromSub(clone $base, 'dead')
-            ->selectRaw('COUNT(*) as product_count, COALESCE(SUM(stock), 0) as total_units, COALESCE(SUM(tied_up_value), 0) as total_value')
-            ->first();
+            ->groupBy('currency')
+            ->selectRaw('currency, COUNT(*) as product_count, COALESCE(SUM(stock), 0) as total_units, COALESCE(SUM(tied_up_value), 0) as total_value')
+            ->get();
+
+        $currency = Organization::currencyFor($organizationId);
+        $values = CurrencyTotals::list($groups->pluck('total_value', 'currency'), $currency);
 
         return [
-            'product_count' => (int) $totals->product_count,
-            'total_units' => (int) $totals->total_units,
-            'total_value' => round((float) $totals->total_value, 2),
+            'product_count' => (int) $groups->sum('product_count'),
+            'total_units' => (int) $groups->sum('total_units'),
+            'currency' => $currency,
+            'total_value' => $values[0]['amount'],
+            'values_by_currency' => $values,
         ];
     }
 

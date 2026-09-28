@@ -17,6 +17,7 @@ use App\Models\User;
 use App\Services\PluginUIService;
 use App\Services\ReorderService;
 use App\Services\Reports\InventoryAnalyticsService;
+use App\Support\CurrencyTotals;
 use App\Support\SchedulerHealth;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -110,7 +111,7 @@ class DashboardController extends Controller
         $currency = Organization::currencyFor($orgId);
         $byCurrency = [];
         $money = function (string $key, iterable $amounts) use (&$stats, &$byCurrency, $currency): void {
-            $byCurrency[$key] = $this->perCurrency($amounts, $currency);
+            $byCurrency[$key] = CurrencyTotals::list($amounts, $currency);
             $stats[$key] = $byCurrency[$key][0]['amount'];
         };
 
@@ -134,7 +135,7 @@ class DashboardController extends Controller
         // permissions; one aggregate query, skipped entirely otherwise.
         if ($canViewReports && $canViewProducts && $canViewOrders) {
             $deadStock = app(InventoryAnalyticsService::class)->deadStockSummary($orgId, 90, now());
-            $money('deadStockValue', app(InventoryAnalyticsService::class)->deadStockValueByCurrency($orgId, 90, now()));
+            $money('deadStockValue', array_column($deadStock['values_by_currency'], 'amount', 'currency'));
             $stats['deadStockCount'] = $deadStock['product_count'];
         }
 
@@ -193,9 +194,25 @@ class DashboardController extends Controller
                 $join->on('products.category_id', '=', 'product_categories.id')
                     ->where('products.is_active', true);
             })
-            ->selectRaw('product_categories.name, product_categories.id, COALESCE(SUM(products.price * products.stock), 0) as value, COUNT(products.id) as count')
-            ->groupBy('product_categories.id', 'product_categories.name')
-            ->get();
+            ->selectRaw('product_categories.name, product_categories.id, products.currency, COALESCE(SUM(products.price * products.stock), 0) as value, COUNT(products.id) as count')
+            ->groupBy('product_categories.id', 'product_categories.name', 'products.currency')
+            ->get()
+            // One card per category. Its value is in the organization's
+            // currency; `values` lists every currency's own total (the
+            // organization's first) rather than adding them together.
+            ->groupBy('id')
+            ->map(function ($rows) use ($currency) {
+                $values = CurrencyTotals::list($rows->pluck('value', 'currency'), $currency);
+
+                return [
+                    'id' => $rows->first()->id,
+                    'name' => $rows->first()->name,
+                    'value' => $values[0]['amount'],
+                    'values' => $values,
+                    'count' => (int) $rows->sum('count'),
+                ];
+            })
+            ->values();
 
         // Get recent activity logs
         $recentActivity = ! $canViewActivity ? collect() : ActivityLog::where('organization_id', $user->organization_id)
@@ -343,35 +360,6 @@ class DashboardController extends Controller
         do_action('dashboard_viewed', $user);
 
         return Inertia::render('Dashboard', $data);
-    }
-
-    /**
-     * Amounts keyed by currency code as a list of {currency, amount}: the
-     * base currency first (always present), then every other currency with a
-     * non-zero amount, alphabetically. Codes are upper-cased and merged.
-     *
-     * @param  iterable<string|null, mixed>  $amounts
-     * @return array<int, array{currency: string, amount: float}>
-     */
-    private function perCurrency(iterable $amounts, string $base): array
-    {
-        $totals = [$base => 0.0];
-
-        foreach ($amounts as $code => $amount) {
-            $code = filled($code) ? strtoupper(trim((string) $code)) : $base;
-            $totals[$code] = round(($totals[$code] ?? 0.0) + (float) $amount, 2);
-        }
-
-        uksort($totals, fn (string $a, string $b) => [$a !== $base, $a] <=> [$b !== $base, $b]);
-
-        $rows = [];
-        foreach ($totals as $code => $amount) {
-            if ($code === $base || $amount != 0.0) {
-                $rows[] = ['currency' => $code, 'amount' => $amount];
-            }
-        }
-
-        return $rows;
     }
 
     /**

@@ -107,13 +107,15 @@ const formatNumber = (value) => {
 const formatCompactCurrency = (value, currency = props.currency) => formatCompactMoney(value, currency);
 
 // Amounts in currencies other than the organization's, listed under a money
-// tile rather than added into it (stats.byCurrency comes from the server).
-const otherCurrencies = (key) => {
-    const others = (props.stats?.byCurrency?.[key] || [])
+// figure rather than added into it (the server sends them per currency).
+const plusOthers = (values) => {
+    const others = (values || [])
         .filter((row) => row.currency !== props.currency && Number(row.amount) !== 0)
         .map((row) => formatCompactCurrency(row.amount, row.currency));
     return others.length ? t('dashboard.plusOtherCurrencies', { amounts: others.join(', ') }) : null;
 };
+const otherCurrencies = (key) => plusOthers(props.stats?.byCurrency?.[key]);
+const otherCategoryCurrencies = (category) => plusOthers(category.values);
 
 const quickReorder = useQuickReorder(computed(() => props.reorderSuggestions || []));
 
@@ -494,6 +496,7 @@ const secondaryStats = () => [
                     >
                         <p class="text-sm font-medium text-text-secondary">{{ category.name }}</p>
                         <p class="mt-1 text-xl font-semibold tabular-nums text-text-primary">{{ formatCompactCurrency(category.value) }}</p>
+                        <p v-if="otherCategoryCurrencies(category)" class="mt-0.5 text-xs tabular-nums text-text-tertiary">{{ otherCategoryCurrencies(category) }}</p>
                         <p class="mt-0.5 text-xs text-text-tertiary">{{ formatNumber(category.count) }} {{ t('common.products') }}</p>
                     </div>
                 </div>
