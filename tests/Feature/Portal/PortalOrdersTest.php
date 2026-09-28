@@ -166,6 +166,24 @@ class PortalOrdersTest extends TestCase
         $this->assertSame('INV-000001', $order->fresh()->invoice_number);
     }
 
+    public function test_the_portal_renders_the_customer_variant_of_the_invoice(): void
+    {
+        $org = $this->makeOrganization('Acme Wholesale');
+        $customer = $this->makeCustomer($org, 'Buyer A');
+        $contact = $this->makeContact($customer, 'a@buyer.test');
+        $order = $this->makeOrder($customer, 'ORD-A-1', OrderStatus::SHIPPED, [['product' => $this->makeProduct($org, 'SKU-1'), 'quantity' => 1]]);
+
+        $pdf = \Mockery::mock(\Barryvdh\DomPDF\PDF::class);
+        $pdf->shouldReceive('download')->andReturn(response('pdf'));
+        \Barryvdh\DomPDF\Facade\Pdf::shouldReceive('loadView')->once()
+            ->withArgs(fn (string $view, array $data) => $view === 'pdf.invoice' && $data['showPaymentReferences'] === false)
+            ->andReturn($pdf);
+
+        $this->actingAs($contact, 'customer')
+            ->get($this->portalUrl($org, 'orders/'.$order->id.'/invoice'))
+            ->assertOk();
+    }
+
     public function test_invoice_is_not_available_for_pending_or_cancelled_orders(): void
     {
         $org = $this->makeOrganization('Acme Wholesale');
