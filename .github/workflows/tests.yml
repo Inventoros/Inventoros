@@ -88,8 +88,13 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '22'
+          cache: 'npm'
 
-      # Plain ES modules with no dependencies, so no npm install is needed.
+      # The locale parity test compiles every message with
+      # @intlify/message-compiler, so dependencies must be installed.
+      - name: Install dependencies
+        run: npm ci
+
       - name: Run JS unit tests
         run: npm run test:js
 

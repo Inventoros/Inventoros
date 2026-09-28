@@ -77,7 +77,7 @@ const fieldHelp = 'mt-1 text-xs text-text-tertiary';
     <AppLayout>
         <template #header>
             <div class="flex items-center gap-2 text-xs">
-                <Link :href="route('settings.index')" class="text-text-tertiary hover:text-text-primary">Workspace</Link>
+                <Link :href="route('settings.index')" class="text-text-tertiary hover:text-text-primary">{{ t('nav.sections.workspace') }}</Link>
                 <span class="text-text-tertiary">/</span>
                 <Link :href="route('settings.index')" class="text-text-tertiary hover:text-text-primary">{{ t('settings.title') }}</Link>
                 <span class="text-text-tertiary">/</span>

@@ -52,9 +52,9 @@ const deleteRole = () => {
     <AppLayout>
         <template #header>
             <div class="flex items-center gap-2 text-xs">
-                <Link :href="route('roles.index')" class="text-text-tertiary hover:text-text-primary">Workspace</Link>
+                <Link :href="route('roles.index')" class="text-text-tertiary hover:text-text-primary">{{ t('nav.sections.workspace') }}</Link>
                 <span class="text-text-tertiary">/</span>
-                <Link :href="route('roles.index')" class="text-text-tertiary hover:text-text-primary">Roles</Link>
+                <Link :href="route('roles.index')" class="text-text-tertiary hover:text-text-primary">{{ t('nav.roles') }}</Link>
                 <span class="text-text-tertiary">/</span>
                 <span class="font-medium text-text-primary">{{ role.name }}</span>
             </div>

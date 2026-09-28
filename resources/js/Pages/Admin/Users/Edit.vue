@@ -40,11 +40,11 @@ const fieldError = 'mt-1 text-xs text-status-danger';
     <AppLayout>
         <template #header>
             <div class="flex items-center gap-2 text-xs">
-                <Link :href="route('users.index')" class="text-text-tertiary hover:text-text-primary">Workspace</Link>
+                <Link :href="route('users.index')" class="text-text-tertiary hover:text-text-primary">{{ t('nav.sections.workspace') }}</Link>
                 <span class="text-text-tertiary">/</span>
-                <Link :href="route('users.index')" class="text-text-tertiary hover:text-text-primary">Users</Link>
+                <Link :href="route('users.index')" class="text-text-tertiary hover:text-text-primary">{{ t('nav.users') }}</Link>
                 <span class="text-text-tertiary">/</span>
-                <span class="font-medium text-text-primary">Edit {{ user.name }}</span>
+                <span class="font-medium text-text-primary">{{ t('common.editWithName', { name: user.name }) }}</span>
             </div>
         </template>
 

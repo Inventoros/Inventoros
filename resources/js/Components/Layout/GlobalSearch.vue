@@ -25,11 +25,11 @@ const MAX_RECENT = 5;
 const flatResults = computed(() => {
     const items = [];
     const categories = [
-        { key: 'products', label: 'Products', icon: 'M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4' },
-        { key: 'orders', label: 'Orders', icon: 'M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z' },
-        { key: 'customers', label: 'Customers', icon: 'M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z' },
-        { key: 'suppliers', label: 'Suppliers', icon: 'M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4' },
-        { key: 'purchase_orders', label: 'Purchase Orders', icon: 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01' },
+        { key: 'products', label: 'common.products', icon: 'M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4' },
+        { key: 'orders', label: 'nav.orders', icon: 'M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z' },
+        { key: 'customers', label: 'nav.customers', icon: 'M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z' },
+        { key: 'suppliers', label: 'nav.suppliers', icon: 'M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4' },
+        { key: 'purchase_orders', label: 'nav.purchaseOrders', icon: 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01' },
     ];
 
     for (const cat of categories) {
@@ -238,7 +238,7 @@ defineExpose({ open });
                             ref="searchInput"
                             v-model="query"
                             type="text"
-                            placeholder="Search products, orders, customers..."
+                            :placeholder="$t('nav.globalSearch.placeholder')"
                             class="flex-1 px-3 py-4 bg-transparent border-0 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:ring-0 focus:outline-none text-sm"
                         />
                         <div class="flex items-center gap-2">
@@ -259,7 +259,7 @@ defineExpose({ open });
                         <!-- Recent Searches -->
                         <div v-if="showRecent && !hasQuery && recentSearches.length > 0" class="py-2">
                             <div class="px-4 py-1.5">
-                                <p class="text-[11px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Recent</p>
+                                <p class="text-[11px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider">{{ $t('nav.globalSearch.recent') }}</p>
                             </div>
                             <button
                                 v-for="item in recentSearches"
@@ -282,7 +282,7 @@ defineExpose({ open });
                             <template v-for="(item, index) in flatResults" :key="index">
                                 <!-- Category Header -->
                                 <div v-if="item.type === 'header'" class="px-4 py-1.5 mt-1 first:mt-0">
-                                    <p class="text-[11px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider">{{ item.label }}</p>
+                                    <p class="text-[11px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider">{{ $t(item.label) }}</p>
                                 </div>
 
                                 <!-- Result Item -->
@@ -322,8 +322,8 @@ defineExpose({ open });
                             <svg class="w-10 h-10 mx-auto text-gray-300 dark:text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                             </svg>
-                            <p class="mt-2 text-sm text-gray-500 dark:text-gray-400">No results found for "{{ query }}"</p>
-                            <p class="mt-1 text-xs text-gray-400 dark:text-gray-500">Try a different search term</p>
+                            <p class="mt-2 text-sm text-gray-500 dark:text-gray-400">{{ $t('nav.globalSearch.noResults', { query }) }}</p>
+                            <p class="mt-1 text-xs text-gray-400 dark:text-gray-500">{{ $t('nav.globalSearch.tryDifferent') }}</p>
                         </div>
 
                         <!-- Empty State -->
@@ -331,8 +331,8 @@ defineExpose({ open });
                             <svg class="w-10 h-10 mx-auto text-gray-300 dark:text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                             </svg>
-                            <p class="mt-2 text-sm text-gray-500 dark:text-gray-400">Start typing to search</p>
-                            <p class="mt-1 text-xs text-gray-400 dark:text-gray-500">Search products, orders, customers, and more</p>
+                            <p class="mt-2 text-sm text-gray-500 dark:text-gray-400">{{ $t('nav.globalSearch.startTyping') }}</p>
+                            <p class="mt-1 text-xs text-gray-400 dark:text-gray-500">{{ $t('nav.globalSearch.hint') }}</p>
                         </div>
                     </div>
 
@@ -342,15 +342,15 @@ defineExpose({ open });
                             <span class="inline-flex items-center gap-1">
                                 <kbd class="px-1 py-0.5 bg-gray-100 dark:bg-gray-700 rounded text-[10px] border border-gray-200 dark:border-gray-600">↑</kbd>
                                 <kbd class="px-1 py-0.5 bg-gray-100 dark:bg-gray-700 rounded text-[10px] border border-gray-200 dark:border-gray-600">↓</kbd>
-                                navigate
+                                {{ $t('nav.globalSearch.navigate') }}
                             </span>
                             <span class="inline-flex items-center gap-1">
                                 <kbd class="px-1 py-0.5 bg-gray-100 dark:bg-gray-700 rounded text-[10px] border border-gray-200 dark:border-gray-600">↵</kbd>
-                                open
+                                {{ $t('nav.globalSearch.open') }}
                             </span>
                             <span class="inline-flex items-center gap-1">
                                 <kbd class="px-1 py-0.5 bg-gray-100 dark:bg-gray-700 rounded text-[10px] border border-gray-200 dark:border-gray-600">esc</kbd>
-                                close
+                                {{ $t('nav.globalSearch.close') }}
                             </span>
                         </div>
                     </div>

@@ -118,13 +118,13 @@ const thClassCenter = 'px-4 py-2.5 text-center text-xs font-medium tracking-tigh
     <AppLayout>
         <template #header>
             <div class="flex items-center gap-2 text-xs">
-                <Link :href="route('purchase-orders.index')" class="text-text-tertiary hover:text-text-primary">Workspace</Link>
+                <Link :href="route('purchase-orders.index')" class="text-text-tertiary hover:text-text-primary">{{ t('nav.sections.workspace') }}</Link>
                 <span class="text-text-tertiary">/</span>
                 <Link :href="route('purchase-orders.index')" class="text-text-tertiary hover:text-text-primary">{{ t('purchaseOrders.title') }}</Link>
                 <span class="text-text-tertiary">/</span>
                 <Link :href="route('purchase-orders.show', purchaseOrder.id)" class="text-text-tertiary hover:text-text-primary">{{ purchaseOrder.po_number }}</Link>
                 <span class="text-text-tertiary">/</span>
-                <span class="font-medium text-text-primary">Receive</span>
+                <span class="font-medium text-text-primary">{{ t('nav.receive') }}</span>
             </div>
         </template>
 

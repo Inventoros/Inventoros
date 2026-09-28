@@ -50,7 +50,7 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-t
     <AppLayout>
         <template #header>
             <div class="flex items-center gap-2 text-xs">
-                <span class="text-text-tertiary">Workspace</span>
+                <span class="text-text-tertiary">{{ t('nav.sections.workspace') }}</span>
                 <span class="text-text-tertiary">/</span>
                 <Link :href="route('reports.index')" class="text-text-tertiary transition-colors hover:text-text-primary">{{ t('reports.title') }}</Link>
                 <span class="text-text-tertiary">/</span>
