@@ -9,6 +9,7 @@ use App\Mail\ScheduledReportEmail;
 use App\Models\ReportSchedule;
 use App\Models\Scopes\OrganizationScope;
 use App\Models\User;
+use App\Services\ReportDataService;
 use Carbon\CarbonInterface;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Support\Facades\DB;
@@ -28,7 +29,8 @@ use Illuminate\Support\Facades\Mail;
  * view_reports; the data source's own view permission is re-checked by
  * ReportDataService::executeReport. If any check fails the delivery is skipped
  * and logged. Recipients are re-filtered to current members of the
- * organization, so someone who has left stops receiving it.
+ * organization who may still see the report, so someone who has left or lost
+ * access stops receiving it.
  */
 class ScheduledReportRunner
 {
@@ -100,7 +102,7 @@ class ScheduledReportRunner
             return $this->skip($schedule, 'permission_revoked', ['permission' => Permission::VIEW_REPORTS->value]);
         }
 
-        $recipients = $this->currentRecipients($schedule);
+        $recipients = $this->currentRecipients($schedule, $report->data_source);
         if ($recipients === []) {
             return $this->skip($schedule, 'no_recipients');
         }
@@ -135,13 +137,18 @@ class ScheduledReportRunner
     }
 
     /**
-     * The schedule's recipients that are still users of its organization,
-     * matched case-insensitively and returned as the stored user email.
+     * The schedule's recipients that are still users of its organization and
+     * may themselves see the report (view_reports plus the data source's view
+     * permission), matched case-insensitively and returned as the stored
+     * user email. The report is generated with the owner's access, so without
+     * this an owner could mail data to colleagues who may not see it.
      *
      * @return array<int, string>
      */
-    private function currentRecipients(ReportSchedule $schedule): array
+    private function currentRecipients(ReportSchedule $schedule, string $dataSource): array
     {
+        $required = ReportDataService::viewPermissionsFor($dataSource);
+
         $wanted = array_values(array_unique(array_map(
             fn ($email) => mb_strtolower(trim((string) $email)),
             $schedule->recipients ?? []
@@ -155,6 +162,8 @@ class ScheduledReportRunner
             ->where('organization_id', $schedule->organization_id)
             ->whereIn(DB::raw('LOWER(email)'), $wanted)
             ->orderBy('id')
+            ->get()
+            ->filter(fn (User $user): bool => $user->hasAllPermissions($required))
             ->pluck('email')
             ->unique()
             ->values()

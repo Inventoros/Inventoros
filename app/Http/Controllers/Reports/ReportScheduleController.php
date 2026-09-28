@@ -8,6 +8,7 @@ use App\Http\Controllers\Controller;
 use App\Models\ReportSchedule;
 use App\Models\SavedReport;
 use App\Models\User;
+use App\Services\ReportDataService;
 use App\Services\Reports\ReportExporter;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -20,7 +21,8 @@ use Illuminate\Validation\ValidationException;
  *
  * Only the report's owner may manage its schedules: the report is sent with
  * the owner's permissions, so nobody else may point it at recipients.
- * Recipients must be users of the same organization.
+ * Recipients must be users of the same organization who may view the report
+ * themselves (view_reports plus the data source's view permission).
  */
 class ReportScheduleController extends Controller
 {
@@ -28,7 +30,7 @@ class ReportScheduleController extends Controller
     {
         $this->authorizeOwner($request, $savedReport);
 
-        $validated = $this->validated($request);
+        $validated = $this->validated($request, $savedReport);
 
         $schedule = new ReportSchedule($validated + [
             'organization_id' => $savedReport->organization_id,
@@ -47,7 +49,7 @@ class ReportScheduleController extends Controller
         $this->authorizeOwner($request, $savedReport);
         $this->ensureBelongs($savedReport, $schedule);
 
-        $validated = $this->validated($request) + [
+        $validated = $this->validated($request, $savedReport) + [
             'is_active' => $request->boolean('is_active', $schedule->is_active),
         ];
 
@@ -93,7 +95,7 @@ class ReportScheduleController extends Controller
      *
      * @throws ValidationException
      */
-    private function validated(Request $request): array
+    private function validated(Request $request, SavedReport $savedReport): array
     {
         $validated = $request->validate([
             'frequency' => ['required', 'string', Rule::in(ReportSchedule::FREQUENCIES)],
@@ -113,14 +115,26 @@ class ReportScheduleController extends Controller
         $members = User::query()
             ->where('organization_id', $request->user()->organization_id)
             ->whereIn(DB::raw('LOWER(email)'), $recipients)
-            ->pluck('email')
-            ->map(fn ($email) => mb_strtolower((string) $email))
-            ->all();
+            ->get();
 
-        $outsiders = array_diff($recipients, $members);
+        $outsiders = array_diff($recipients, $members->map(fn (User $u) => mb_strtolower((string) $u->email))->all());
         if ($outsiders !== []) {
             throw ValidationException::withMessages([
                 'recipients' => 'Recipients must be members of your organization: '.implode(', ', $outsiders),
+            ]);
+        }
+
+        // The report is sent with the owner's access, so each recipient must
+        // be allowed to see it themselves (re-checked at send time too).
+        $required = ReportDataService::viewPermissionsFor((string) $savedReport->data_source);
+        $withoutAccess = $members
+            ->reject(fn (User $u): bool => $u->hasAllPermissions($required))
+            ->map(fn (User $u) => mb_strtolower((string) $u->email))
+            ->values()
+            ->all();
+        if ($withoutAccess !== []) {
+            throw ValidationException::withMessages([
+                'recipients' => 'Recipients must be able to view this report ('.implode(', ', $required).'): '.implode(', ', $withoutAccess),
             ]);
         }
 

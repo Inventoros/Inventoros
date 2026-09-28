@@ -228,9 +228,13 @@ class ReportBuilderController extends Controller
                 ->all(),
             'recipientOptions' => ! $isOwner ? [] : User::query()
                 ->where('organization_id', $savedReport->organization_id)
+                ->with('roles')
                 ->orderBy('name')
-                ->get(['id', 'name', 'email'])
+                ->get()
+                // Only people who may see the report themselves can receive it.
+                ->filter(fn (User $u): bool => $u->hasAllPermissions(ReportDataService::viewPermissionsFor((string) $savedReport->data_source)))
                 ->map(fn (User $u) => ['id' => $u->id, 'name' => $u->name, 'email' => $u->email])
+                ->values()
                 ->all(),
             'scheduleOptions' => [
                 'timezone' => $timezone,

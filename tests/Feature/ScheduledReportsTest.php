@@ -82,6 +82,12 @@ class ScheduledReportsTest extends TestCase
             'name' => "Colleague {$slug}", 'email' => "colleague@{$slug}.test", 'password' => bcrypt('x'),
             'organization_id' => $org->id, 'role' => 'member',
         ]);
+        // Recipients must themselves be able to see the report's data.
+        $readerRole = Role::create([
+            'name' => "Reader {$slug}", 'slug' => "reader-{$slug}", 'is_system' => false,
+            'permissions' => ['view_reports', 'view_products'],
+        ]);
+        $colleague->roles()->syncWithoutDetaching([$readerRole->id]);
 
         Product::create([
             'organization_id' => $org->id, 'name' => "Product {$sku}", 'sku' => $sku,
@@ -254,15 +260,39 @@ class ScheduledReportsTest extends TestCase
         $this->assertSame('skipped', $schedule->refresh()->last_status);
     }
 
-    public function test_the_report_runs_with_the_owners_permissions_not_the_recipients(): void
+    public function test_a_recipient_who_cannot_view_the_report_data_is_not_sent_it(): void
     {
-        // The colleague holds no permissions at all, yet receives the owner's
-        // report: the owner chose to send it and the owner's access is what is
-        // re-checked.
+        // The report is generated with the OWNER's access, so each recipient
+        // must also hold view_reports and the data source's view permission;
+        // otherwise a report owner could mail data to anyone in the org.
         Mail::fake();
-        $this->schedule();
+        $noAccess = User::create([
+            'name' => 'No Access', 'email' => 'noaccess@acme.test', 'password' => bcrypt('x'),
+            'organization_id' => $this->org->id, 'role' => 'member',
+        ]);
+        $reportsOnly = User::create([
+            'name' => 'Reports Only', 'email' => 'reportsonly@acme.test', 'password' => bcrypt('x'),
+            'organization_id' => $this->org->id, 'role' => 'member',
+        ]);
+        $reportsOnly->roles()->syncWithoutDetaching([Role::create([
+            'name' => 'Reports only', 'slug' => 'reports-only', 'is_system' => false, 'permissions' => ['view_reports'],
+        ])->id]);
+        $this->schedule(['recipients' => [$this->colleague->email, $noAccess->email, $reportsOnly->email]]);
 
         $this->assertSame(1, $this->runner()->runDue(now())['sent']);
+
+        Mail::assertQueued(ScheduledReportEmail::class, 1);
+        Mail::assertQueued(ScheduledReportEmail::class, fn ($m) => $m->hasTo('colleague@acme.test'));
+    }
+
+    public function test_a_schedule_whose_recipients_all_lost_access_is_skipped(): void
+    {
+        Mail::fake();
+        $this->colleague->roles()->detach();
+        $this->schedule();
+
+        $this->assertSame(1, $this->runner()->runDue(now())['skipped']);
+        Mail::assertNothingQueued();
     }
 
     public function test_recipients_who_are_no_longer_in_the_organization_are_dropped(): void
@@ -370,6 +400,23 @@ class ScheduledReportsTest extends TestCase
         $this->assertSame(0, ReportSchedule::withoutGlobalScopes()->count());
     }
 
+    public function test_recipients_without_access_to_the_report_data_are_rejected(): void
+    {
+        $viewer = User::create([
+            'name' => 'Viewer', 'email' => 'viewer@acme.test', 'password' => bcrypt('x'),
+            'organization_id' => $this->org->id, 'role' => 'member',
+        ]);
+
+        $this->actingAs($this->owner)
+            ->post(route('reports.builder.schedules.store', $this->report), [
+                'frequency' => 'daily', 'time_of_day' => '08:00', 'format' => 'csv',
+                'recipients' => [$this->colleague->email, $viewer->email],
+            ])
+            ->assertSessionHasErrors('recipients');
+
+        $this->assertSame(0, ReportSchedule::withoutGlobalScopes()->count());
+    }
+
     public function test_only_the_report_owner_manages_its_schedules(): void
     {
         $this->report->update(['is_shared' => true]);
@@ -416,6 +463,22 @@ class ScheduledReportsTest extends TestCase
             ->delete(route('reports.builder.schedules.destroy', [$this->report, $schedule]))
             ->assertRedirect();
         $this->assertNull(ReportSchedule::withoutGlobalScopes()->find($schedule->id));
+    }
+
+    public function test_the_recipient_picker_only_offers_people_who_may_see_the_report(): void
+    {
+        User::create([
+            'name' => 'No Access', 'email' => 'noaccess@acme.test', 'password' => bcrypt('x'),
+            'organization_id' => $this->org->id, 'role' => 'member',
+        ]);
+
+        $this->actingAs($this->owner)
+            ->get(route('reports.builder.show', $this->report))
+            ->assertInertia(fn (Assert $page) => $page
+                ->has('recipientOptions', 2)
+                ->where('recipientOptions.0.email', 'colleague@acme.test')
+                ->where('recipientOptions.1.email', 'owner@acme.test')
+            );
     }
 
     public function test_the_show_page_lists_schedules_for_the_owner_only(): void

@@ -180,6 +180,17 @@ class ReportDataService
     ];
 
     /**
+     * Every permission needed to see a report over this data source:
+     * view_reports plus the source's own view permission, if it has one.
+     *
+     * @return array<int, string>
+     */
+    public static function viewPermissionsFor(string $dataSource): array
+    {
+        return array_values(array_filter(['view_reports', self::SOURCE_PERMISSION[$dataSource] ?? null]));
+    }
+
+    /**
      * Hard row cap applied to every report query, so a report over a huge
      * tenant can't materialise an unbounded result set into memory (OOM) or
      * time out. Configurable via reports.max_rows.
