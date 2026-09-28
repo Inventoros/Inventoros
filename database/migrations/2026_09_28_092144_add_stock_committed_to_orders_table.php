@@ -2,7 +2,6 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 /**
@@ -14,10 +13,10 @@ use Illuminate\Support\Facades\Schema;
  * cancelling, rejecting, deleting or editing one "restocked" units that were
  * never taken. Every restock path now reads this flag.
  *
- * Backfill: an order committed stock exactly when order creation wrote its
- * order_fulfillment ledger rows, so an order with lines but no such row was
- * recorded without touching stock and is marked false. Everything else stays
- * true (the column default).
+ * Backfill: every existing order is marked true (the column default). The
+ * historical import is new in this release, so no existing order can be one.
+ * The ledger cannot be used to tell: orders created before order_fulfillment
+ * ledger rows existed did take stock but have no such rows.
  */
 return new class extends Migration
 {
@@ -26,21 +25,6 @@ return new class extends Migration
         Schema::table('orders', function (Blueprint $table) {
             $table->boolean('stock_committed')->default(true)->after('approval_notes');
         });
-
-        DB::table('orders')
-            ->whereExists(function ($query) {
-                $query->select(DB::raw(1))
-                    ->from('order_items')
-                    ->whereColumn('order_items.order_id', 'orders.id');
-            })
-            ->whereNotExists(function ($query) {
-                $query->select(DB::raw(1))
-                    ->from('stock_adjustments')
-                    ->whereColumn('stock_adjustments.reference_id', 'orders.id')
-                    ->where('stock_adjustments.reference_type', 'App\\Models\\Order\\Order')
-                    ->where('stock_adjustments.type', 'order_fulfillment');
-            })
-            ->update(['stock_committed' => false]);
     }
 
     public function down(): void

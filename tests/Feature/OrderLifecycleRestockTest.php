@@ -741,23 +741,32 @@ final class OrderLifecycleRestockTest extends TestCase
     // The central calculation.
     // ------------------------------------------------------------------
 
-    public function test_the_migration_backfills_stock_committed_from_the_ledger(): void
+    public function test_the_migration_marks_every_existing_order_as_having_committed_stock(): void
     {
         $product = $this->product(20);
-        $committed = $this->order($product, 2);
-        $historical = $this->order($product, 3, 'delivered', adjustStock: false);
-        $edited = $this->order($product, 1);
-        DB::transaction(fn () => $this->orders()->replaceItems($edited->fresh(), [
-            ['product_id' => $product->id, 'quantity' => 2, 'unit_price' => 10.00],
-        ]));
+        $recent = $this->order($product, 2);
+        // An order from before order_fulfillment ledger rows existed (v1.0.0
+        // to v1.0.2): it took stock, but the ledger has no row saying so.
+        $legacy = $this->order($product, 3);
+        \App\Models\Inventory\StockAdjustment::withoutGlobalScopes()
+            ->where('reference_type', Order::class)
+            ->where('reference_id', $legacy->id)
+            ->delete();
 
         $migration = require database_path('migrations/2026_09_28_092144_add_stock_committed_to_orders_table.php');
         $migration->down();
         $migration->up();
 
-        $this->assertTrue((bool) $committed->fresh()->stock_committed);
-        $this->assertFalse((bool) $historical->fresh()->stock_committed);
-        $this->assertTrue((bool) $edited->fresh()->stock_committed);
+        $this->assertTrue((bool) $recent->fresh()->stock_committed);
+        $this->assertTrue((bool) $legacy->fresh()->stock_committed);
+
+        // So cancelling the old order still gives its 3 units back.
+        $this->orders()->cancel($legacy->fresh());
+
+        $this->assertSame(18, (int) $product->fresh()->stock);
+        $this->assertSame(18, $this->binQty($product));
+        $this->assertBinnedStockBalanced();
+        $this->assertSame(1, $this->ledgerRows($product, 'order_cancellation'));
     }
 
     public function test_restockable_quantities_net_off_received_returns_and_honour_the_commit_flag(): void
