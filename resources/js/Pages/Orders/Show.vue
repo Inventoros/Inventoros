@@ -347,6 +347,7 @@ const formatOrderDate = (date, long = false) =>
                         </div>
                         <div class="p-5">
                             <p v-if="order.status === 'cancelled' && canRecordPayments" class="mb-3 text-xs text-text-tertiary">{{ t('payments.cancelledNotice') }}</p>
+                            <p v-if="order.payment_status === 'untracked'" class="mb-3 text-xs text-text-tertiary">{{ t('payments.untrackedNotice') }}</p>
 
                             <ul v-if="order.payments.length > 0" class="divide-y divide-border-subtle rounded-lg border border-border-subtle">
                                 <li
@@ -504,7 +505,7 @@ const formatOrderDate = (date, long = false) =>
                                     </div>
                                 </div>
 
-                                <template v-if="order.amount_paid !== undefined">
+                                <template v-if="order.amount_paid !== undefined && order.payment_status !== 'untracked'">
                                     <div class="flex justify-between text-sm">
                                         <dt class="text-text-secondary">{{ t('payments.amountPaid') }}</dt>
                                         <dd class="font-medium tabular-nums text-text-primary">{{ money(order.amount_paid) }}</dd>

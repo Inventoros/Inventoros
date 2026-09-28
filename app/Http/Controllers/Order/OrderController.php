@@ -98,6 +98,13 @@ class OrderController extends Controller
             'statuses' => ['pending', 'processing', 'shipped', 'delivered', 'cancelled'],
             'canViewPayments' => $canViewPayments,
             'paymentStatuses' => $canViewPayments ? PaymentStatus::values() : [],
+            'canRecordPayments' => $request->user()->hasPermission(Permission::RECORD_PAYMENTS),
+            // Orders from before payment tracking, offered a bulk "mark paid".
+            'untrackedOrderCount' => $canViewPayments
+                ? Order::where('organization_id', $request->user()->organization_id)
+                    ->where('payment_status', PaymentStatus::UNTRACKED->value)
+                    ->count()
+                : 0,
             'sources' => ['manual', 'ebay', 'shopify', 'amazon'],
             'activeWarehouse' => $activeWarehouse,
             'pluginComponents' => [

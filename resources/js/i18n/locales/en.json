@@ -2283,7 +2283,16 @@
       "partial": "Partially paid",
       "paid": "Paid",
       "overpaid": "Overpaid",
-      "refunded": "Refunded"
+      "refunded": "Refunded",
+      "untracked": "Not tracked"
+    },
+    "untrackedNotice": "This order was placed before payment tracking, so nothing is known about its payment. Recording a payment starts tracking it.",
+    "markPreTracking": {
+      "button": "Mark older orders paid",
+      "title": "Mark older orders as paid",
+      "description": "{n} order was placed before payment tracking. Orders placed before the date below are marked paid with a payment of method Other for their full total, dated on the order date. Cancelled orders are left as they are. | {n} orders were placed before payment tracking. Orders placed before the date below are marked paid with a payment of method Other for their full total, dated on the order date. Cancelled orders are left as they are.",
+      "before": "Placed before",
+      "submit": "Mark as paid"
     },
     "amountPaid": "Amount paid",
     "balanceDue": "Balance due",
@@ -2485,7 +2494,8 @@
         "partial": "Partly paid",
         "paid": "Paid",
         "overpaid": "Overpaid",
-        "refunded": "Refunded"
+        "refunded": "Refunded",
+        "untracked": "Not tracked"
       }
     },
     "returns": {
