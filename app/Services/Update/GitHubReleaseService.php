@@ -49,12 +49,15 @@ class GitHubReleaseService
             if ($response->successful()) {
                 $release = $response->json();
 
+                $asset = $this->findPackageAsset($release);
+
                 return [
                     'version' => $release['tag_name'] ?? null,
                     'name' => $release['name'] ?? null,
                     'body' => $release['body'] ?? null,
                     'published_at' => $release['published_at'] ?? null,
-                    'download_url' => $this->getZipDownloadUrl($release),
+                    'download_url' => $asset['url'] ?? null,
+                    'asset_name' => $asset['name'] ?? null,
                     'html_url' => $release['html_url'] ?? null,
                 ];
             }
@@ -91,24 +94,40 @@ class GitHubReleaseService
     }
 
     /**
-     * Get ZIP download URL from release data.
+     * The file name of the cPanel package attached to a release.
      *
-     * @param array $release The release data from GitHub API
-     * @return string|null The download URL for the ZIP file, or null if not found
+     * Only this exact asset is ever installed: every release also carries
+     * other ZIPs (the example plugin), and the source zipball has neither
+     * vendor/ nor built assets, so "the first .zip" or a zipball fallback
+     * would install the wrong thing.
      */
-    protected function getZipDownloadUrl(array $release): ?string
+    public static function packageName(string $version): string
     {
-        // Try to find a release asset ZIP file
-        if (isset($release['assets']) && is_array($release['assets'])) {
-            foreach ($release['assets'] as $asset) {
-                if (isset($asset['name']) && str_ends_with($asset['name'], '.zip')) {
-                    return $asset['browser_download_url'] ?? null;
-                }
+        return 'inventoros-cpanel-'.ltrim($version, 'v').'.zip';
+    }
+
+    /**
+     * Find the cPanel package asset for the release's own version.
+     *
+     * @param  array<string, mixed>  $release  The release data from the GitHub API
+     * @return array{name: string, url: string}|null Null when the release has no such asset
+     */
+    protected function findPackageAsset(array $release): ?array
+    {
+        $tag = (string) ($release['tag_name'] ?? '');
+        if ($tag === '' || ! isset($release['assets']) || ! is_array($release['assets'])) {
+            return null;
+        }
+
+        $expected = self::packageName($tag);
+
+        foreach ($release['assets'] as $asset) {
+            if (($asset['name'] ?? null) === $expected && ! empty($asset['browser_download_url'])) {
+                return ['name' => $expected, 'url' => (string) $asset['browser_download_url']];
             }
         }
 
-        // Fallback to zipball URL
-        return $release['zipball_url'] ?? null;
+        return null;
     }
 
     /**

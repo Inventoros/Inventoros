@@ -36,7 +36,8 @@ final class UpdateServiceRollbackTest extends TestCase
         $files->shouldReceive('downloadRelease')->once()->andReturn('/tmp/update.zip');
         $files->shouldReceive('verifyArchiveSignature')->once();
         $files->shouldReceive('extractZip')->once()->andReturn('/tmp/extracted');
-        $files->shouldReceive('replaceFiles')->once()->andThrow(new \RuntimeException('disk full'));
+        $files->shouldReceive('validateRelease')->once()->andReturn(['version' => '9.9.9', 'layout' => 'cpanel-v1']);
+        $files->shouldReceive('installRelease')->once()->andThrow(new \RuntimeException('disk full'));
 
         $service = Mockery::mock(UpdateService::class, [$github, $backups, $files])
             ->makePartial()
@@ -71,7 +72,9 @@ final class UpdateServiceRollbackTest extends TestCase
         $files->shouldReceive('downloadRelease')->once()->andReturn('/tmp/update.zip');
         $files->shouldReceive('verifyArchiveSignature')->once();
         $files->shouldReceive('extractZip')->once()->andReturn('/tmp/extracted');
-        $files->shouldReceive('replaceFiles')->once(); // files replace fine; migration is what fails
+        $files->shouldReceive('validateRelease')->once()->andReturn(['version' => '9.9.9', 'layout' => 'cpanel-v1']);
+        $files->shouldReceive('installRelease')->once(); // files install fine; migration is what fails
+        $files->shouldReceive('writeVersion')->never();
         $files->shouldReceive('cleanup')->never();     // must not clean up after a failed apply
 
         $service = Mockery::mock(UpdateService::class, [$github, $backups, $files])

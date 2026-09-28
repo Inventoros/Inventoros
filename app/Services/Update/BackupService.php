@@ -38,6 +38,12 @@ class BackupService
     public const MANIFEST = 'backup-manifest.json';
 
     /**
+     * Manifest marker: the archive's public/ folder is a copy of the web root
+     * (public_path(), e.g. ~/public_html on cPanel), not <app>/public.
+     */
+    public const PUBLIC_WEB_ROOT = 'web-root';
+
+    /**
      * @var string Path to the backup storage directory
      */
     protected string $backupPath;
@@ -68,22 +74,39 @@ class BackupService
     }
 
     /**
+     * The web root, which an update also rewrites (on cPanel it lives
+     * outside the application directory). Overridable for tests.
+     */
+    protected function publicPath(): string
+    {
+        return public_path();
+    }
+
+    /**
      * The top-level files and directories included in a backup.
      *
      * @return array<int, string>
      */
     protected function itemsToBackup(): array
     {
+        // Everything an update replaces must be here, or a failed update
+        // cannot be rolled back: vendor/ and the top-level files included.
+        // The web root is added separately (see createBackup()).
         return [
             '.env',
             'app',
+            'artisan',
             'bootstrap',
+            'composer.json',
+            'composer.lock',
             'config',
             'database',
-            'public',
+            'lang',
             'resources',
             'routes',
             'storage',
+            'vendor',
+            'VERSION',
         ];
     }
 
@@ -147,6 +170,12 @@ class BackupService
             }
         }
 
+        // The web root goes in under public/, wherever it lives.
+        $webRoot = $this->publicPath();
+        if (File::isDirectory($webRoot) && realpath($webRoot) !== realpath($basePath)) {
+            $this->addDirectoryToZip($zip, $webRoot, 'public', $excludePaths);
+        }
+
         // Fold the database dump INTO the archive, with a manifest saying how
         // it was made so a restore can replay it the matching way.
         if ($database !== null) {
@@ -156,6 +185,7 @@ class BackupService
         $zip->addFromString(self::MANIFEST, (string) json_encode([
             'format' => 1,
             'created_at' => now()->toIso8601String(),
+            'public' => self::PUBLIC_WEB_ROOT,
             'database' => $database === null ? null : [
                 'driver' => $database['driver'],
                 'method' => $database['method'],
@@ -281,7 +311,9 @@ class BackupService
                 continue;
             }
 
-            $relativePath = $zipPath.'/'.$file->getRelativePathname();
+            // Zip entry names always use '/': a Windows separator in an
+            // entry name is rejected as unsafe on restore.
+            $relativePath = $zipPath.'/'.str_replace('\\', '/', $file->getRelativePathname());
             $zip->addFile($filePath, $relativePath);
         }
     }

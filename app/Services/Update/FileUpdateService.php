@@ -16,22 +16,74 @@ use ZipArchive;
 /**
  * Service for handling file operations during updates.
  *
- * Downloads release archives, extracts them, and replaces
- * application files with new versions.
+ * Downloads release archives, checks their release.json manifest, and
+ * installs the cPanel package layout (`inventoros/` into the application
+ * directory, `public_html/` into the web root). Also restores the files of
+ * a pre-update backup.
  */
 class FileUpdateService
 {
+    /** The only package layout this updater knows how to install. */
+    public const LAYOUT = 'cpanel-v1';
+
+    public const MANIFEST = 'release.json';
+
+    /**
+     * Top-level entries of the package's `inventoros/` folder that are never
+     * copied over an install: they hold the operator's configuration,
+     * uploads, logs, sessions and installed plugins. The version marker is
+     * written separately, only after the migrations succeed.
+     */
+    private const APP_SKIP = ['storage', 'plugins', 'VERSION', '.env', 'node_modules', '.git'];
+
+    /**
+     * Web root entries that are runtime state (published plugin UI bundles,
+     * the storage symlink, the Vite dev marker) and are never replaced.
+     */
+    private const WEB_SKIP = ['plugin-assets', 'plugins', 'storage', 'hot'];
+
+    /**
+     * Web root files the operator may have customised: only written when
+     * they do not exist yet.
+     */
+    private const WEB_KEEP_IF_PRESENT = ['.htaccess', '.user.ini', 'web.config', 'robots.txt'];
+
+    /** Matches the line of the cPanel front controller that locates the app. */
+    private const LARAVEL_PATH_LINE = '/^([ \t]*)\$laravelPath\s*=\s*[^;]+;/m';
+
     /**
      * @var string Path to temporary storage directory for update files
      */
     protected string $tempPath;
 
     /**
-     * Initialize the service and set up temp path.
+     * @param  string|null  $basePath  The application directory to install into
+     *                                 (defaults to base_path()).
+     * @param  string|null  $publicPath  The web root to install into (defaults
+     *                                   to public_path(), which honours
+     *                                   APP_PUBLIC_PATH on split installs).
      */
-    public function __construct()
-    {
+    public function __construct(
+        protected ?string $basePath = null,
+        protected ?string $publicPath = null,
+    ) {
         $this->tempPath = storage_path('app/temp');
+    }
+
+    /**
+     * The application directory updates are installed into.
+     */
+    public function basePath(): string
+    {
+        return rtrim($this->basePath ?? base_path(), '/\\');
+    }
+
+    /**
+     * The web root updates are installed into.
+     */
+    public function publicPath(): string
+    {
+        return rtrim($this->publicPath ?? public_path(), '/\\');
     }
 
     /**
@@ -362,24 +414,161 @@ class FileUpdateService
     }
 
     /**
-     * Replace application files with new ones.
+     * Check an extracted release package before anything on the live install
+     * is touched.
      *
-     * Copies directories and key files from source to base path.
+     * The package must carry a release.json manifest for the expected
+     * version and the cPanel layout, this server's PHP must be inside the
+     * manifest's supported range, the package must contain the files the
+     * installer relies on, and the web root must be locatable.
      *
-     * @param  string  $sourcePath  Path to the extracted update files
+     * @param  string|null  $expectedVersion  The version being installed, or
+     *                                        null to accept the manifest's own.
+     * @return array{version: string, layout: string, min_php?: string|null, max_php?: string|null}
+     *
+     * @throws Exception When the package must not be installed.
+     */
+    public function validateRelease(string $extractPath, ?string $expectedVersion): array
+    {
+        $manifestPath = $extractPath.'/'.self::MANIFEST;
+
+        if (! is_file($manifestPath)) {
+            throw new Exception(
+                'The downloaded archive is not an Inventoros release package: it has no '.self::MANIFEST.' manifest.'
+            );
+        }
+
+        $manifest = json_decode((string) file_get_contents($manifestPath), true);
+        if (! is_array($manifest)) {
+            throw new Exception('The release package manifest ('.self::MANIFEST.') is not valid JSON.');
+        }
+
+        $version = ltrim(trim((string) ($manifest['version'] ?? '')), 'v');
+        if ($version === '') {
+            throw new Exception('The release package manifest does not name a version.');
+        }
+
+        $layout = (string) ($manifest['layout'] ?? '');
+        if ($layout !== self::LAYOUT) {
+            throw new Exception("Unsupported release package layout '{$layout}' (this updater installs '".self::LAYOUT."').");
+        }
+
+        if ($expectedVersion !== null && $version !== ltrim($expectedVersion, 'v')) {
+            throw new Exception("The release package is for version {$version}, not ".ltrim($expectedVersion, 'v').'.');
+        }
+
+        $minPhp = trim((string) ($manifest['min_php'] ?? ''));
+        if ($minPhp !== '' && version_compare($this->phpVersion(), $minPhp, '<')) {
+            throw new Exception(
+                "Inventoros {$version} requires PHP {$minPhp} or newer, but this server runs PHP {$this->phpVersion()}. "
+                .'Upgrade PHP first (in cPanel: MultiPHP Manager), then run the update again.'
+            );
+        }
+
+        $maxPhp = trim((string) ($manifest['max_php'] ?? ''));
+        if ($maxPhp !== '' && ! $this->phpAtMost($maxPhp)) {
+            throw new Exception(
+                "Inventoros {$version} supports PHP up to {$maxPhp}, but this server runs PHP {$this->phpVersion()}."
+            );
+        }
+
+        foreach (['inventoros/vendor/autoload.php', 'inventoros/bootstrap/app.php', 'inventoros/artisan', 'public_html/index.php'] as $required) {
+            if (! is_file($extractPath.'/'.$required)) {
+                throw new Exception("The release package is incomplete: {$required} is missing.");
+            }
+        }
+
+        if (! preg_match(self::LARAVEL_PATH_LINE, (string) file_get_contents($extractPath.'/public_html/index.php'))) {
+            throw new Exception('The release package front controller (public_html/index.php) does not define $laravelPath.');
+        }
+
+        $webRoot = $this->publicPath();
+        if (! is_file($webRoot.'/index.php')) {
+            throw new Exception(
+                "Could not find the web root (no index.php in {$webRoot}). On a split install set APP_PUBLIC_PATH "
+                .'in .env to your public_html directory, or run the update from Admin > Updates.'
+            );
+        }
+
+        $manifest['version'] = $version;
+
+        return $manifest;
+    }
+
+    /**
+     * Install an extracted cPanel package over the live application.
+     *
+     * - `inventoros/` goes into the application directory. Code directories
+     *   (app, config, database, resources, routes, vendor, ...) are replaced
+     *   whole, so files dropped from the release disappear. storage/,
+     *   plugins/, .env and bootstrap/cache are never touched.
+     * - `public_html/` goes into the web root. build/ is replaced whole;
+     *   index.php is rewritten to point at the real application directory;
+     *   other files are overwritten; plugin-assets/ and the storage link are
+     *   runtime state and left alone; .htaccess, .user.ini, web.config and
+     *   robots.txt are only written when missing. Nothing else in the web
+     *   root is deleted.
+     *
+     * @throws \RuntimeException When a file cannot be copied.
+     */
+    public function installRelease(string $extractPath): void
+    {
+        $source = $extractPath.'/inventoros';
+        $base = $this->basePath();
+
+        foreach ($this->entries($source) as $name) {
+            if (in_array($name, self::APP_SKIP, true) || $this->isEnvFile($name)) {
+                continue;
+            }
+
+            $from = "{$source}/{$name}";
+            $to = "{$base}/{$name}";
+
+            if ($name === 'bootstrap' && is_dir($from)) {
+                // bootstrap/cache holds compiled caches; optimize:clear
+                // empties it and optimize rebuilds it after the swap.
+                foreach ($this->entries($from) as $child) {
+                    if ($child !== 'cache') {
+                        $this->installEntry("{$from}/{$child}", "{$to}/{$child}");
+                    }
+                }
+                File::ensureDirectoryExists("{$to}/cache");
+
+                continue;
+            }
+
+            $this->installEntry($from, $to);
+        }
+
+        $this->installWebRoot($extractPath.'/public_html', $this->publicPath(), restoring: false);
+    }
+
+    /**
+     * Record the installed version.
+     */
+    public function writeVersion(string $version): void
+    {
+        File::put($this->basePath().'/VERSION', $version);
+    }
+
+    /**
+     * Restore application files from an extracted pre-update backup.
+     *
+     * @param  string  $sourcePath  Path to the extracted backup
      */
     public function replaceFiles(string $sourcePath): void
     {
-        $basePath = base_path();
+        $basePath = $this->basePath();
 
         $directoriesToUpdate = [
             'app',
             'bootstrap',
             'config',
             'database',
-            'public',
+            'lang',
             'resources',
             'routes',
+            'vendor',
         ];
 
         foreach ($directoriesToUpdate as $dir) {
@@ -397,21 +586,267 @@ class FileUpdateService
             }
         }
 
-        // Update composer files
-        $composerFiles = ['composer.json', 'composer.lock'];
-        foreach ($composerFiles as $file) {
-            if (File::exists("{$sourcePath}/{$file}")) {
-                File::copy("{$sourcePath}/{$file}", "{$basePath}/{$file}");
+        // Backups taken by this version hold the web root (wherever it
+        // lives) under public/; older ones hold <app>/public.
+        if (File::exists("{$sourcePath}/public")) {
+            if ($this->backupHoldsWebRoot($sourcePath)) {
+                $this->installWebRoot("{$sourcePath}/public", $this->publicPath(), restoring: true);
+            } else {
+                File::deleteDirectory("{$basePath}/public");
+                if (! File::copyDirectory("{$sourcePath}/public", "{$basePath}/public")) {
+                    throw new \RuntimeException("Failed to copy 'public' during file replacement");
+                }
             }
         }
 
-        // Update package files
-        $packageFiles = ['package.json', 'package-lock.json', 'vite.config.js', 'tailwind.config.js'];
-        foreach ($packageFiles as $file) {
+        foreach (['composer.json', 'composer.lock', 'artisan', 'VERSION'] as $file) {
             if (File::exists("{$sourcePath}/{$file}")) {
                 File::copy("{$sourcePath}/{$file}", "{$basePath}/{$file}");
             }
         }
+    }
+
+    /**
+     * Copy a web root tree into the live web root (see installRelease()).
+     */
+    protected function installWebRoot(string $source, string $webRoot, bool $restoring): void
+    {
+        File::ensureDirectoryExists($webRoot);
+
+        foreach ($this->entries($source) as $name) {
+            if (in_array($name, self::WEB_SKIP, true)) {
+                continue;
+            }
+
+            $from = "{$source}/{$name}";
+            $to = "{$webRoot}/{$name}";
+
+            if (! $restoring && in_array($name, self::WEB_KEEP_IF_PRESENT, true) && file_exists($to)) {
+                continue;
+            }
+
+            if ($name === 'index.php' && ! $restoring) {
+                $this->putFile($to, $this->pointFrontControllerAtApp((string) file_get_contents($from)));
+
+                continue;
+            }
+
+            if (is_dir($from)) {
+                if ($name === 'build') {
+                    $this->replaceDirectory($from, $to);
+                } elseif (! File::copyDirectory($from, $to)) {
+                    throw new \RuntimeException("Failed to copy '{$name}' into the web root");
+                }
+
+                continue;
+            }
+
+            $this->copyFile($from, $to);
+        }
+    }
+
+    /**
+     * Point the packaged front controller at this install's application
+     * directory, which need not be ../inventoros.
+     */
+    protected function pointFrontControllerAtApp(string $contents): string
+    {
+        $expression = $this->laravelPathExpression();
+
+        return (string) preg_replace_callback(
+            self::LARAVEL_PATH_LINE,
+            fn (array $m) => $m[1].'$laravelPath = '.$expression.';',
+            $contents,
+            1
+        );
+    }
+
+    /**
+     * A PHP expression for the application directory as seen from the web
+     * root: relative to __DIR__ when possible, so the install survives a
+     * home directory rename, otherwise absolute.
+     */
+    protected function laravelPathExpression(): string
+    {
+        $from = $this->normalizePath(realpath($this->publicPath()) ?: $this->publicPath());
+        $to = $this->normalizePath(realpath($this->basePath()) ?: $this->basePath());
+
+        $relative = $this->relativePath($from, $to);
+        if ($relative === null) {
+            return var_export($to, true);
+        }
+
+        return $relative === '' ? '__DIR__' : "__DIR__.'/{$relative}'";
+    }
+
+    /**
+     * The relative path from one absolute directory to another, or null when
+     * they share no root (e.g. different Windows drives).
+     */
+    protected function relativePath(string $from, string $to): ?string
+    {
+        $fromParts = explode('/', trim($from, '/'));
+        $toParts = explode('/', trim($to, '/'));
+
+        $caseInsensitive = PHP_OS_FAMILY === 'Windows';
+        $same = fn (string $a, string $b): bool => $caseInsensitive ? strcasecmp($a, $b) === 0 : $a === $b;
+
+        if (! $same($fromParts[0] ?? '', $toParts[0] ?? '') && (str_contains($fromParts[0] ?? '', ':') || str_contains($toParts[0] ?? '', ':'))) {
+            return null;
+        }
+
+        $common = 0;
+        while (isset($fromParts[$common], $toParts[$common]) && $same($fromParts[$common], $toParts[$common])) {
+            $common++;
+        }
+
+        $up = array_fill(0, count($fromParts) - $common, '..');
+        $down = array_slice($toParts, $common);
+
+        return implode('/', array_merge($up, $down));
+    }
+
+    private function normalizePath(string $path): string
+    {
+        return rtrim(str_replace('\\', '/', $path), '/');
+    }
+
+    /**
+     * Install one file or directory, replacing a directory whole.
+     */
+    protected function installEntry(string $from, string $to): void
+    {
+        if (is_dir($from)) {
+            $this->replaceDirectory($from, $to);
+        } else {
+            $this->copyFile($from, $to);
+        }
+    }
+
+    /**
+     * Replace a directory with a copy of another.
+     *
+     * The copy is staged next to the destination first and swapped in with
+     * renames, so the window in which the directory is missing or half
+     * written is as short as the filesystem allows.
+     *
+     * @throws \RuntimeException
+     */
+    protected function replaceDirectory(string $from, string $to): void
+    {
+        $suffix = bin2hex(random_bytes(4));
+        $staged = "{$to}.incoming-{$suffix}";
+        $outgoing = "{$to}.outgoing-{$suffix}";
+
+        if (! File::copyDirectory($from, $staged)) {
+            File::deleteDirectory($staged);
+            throw new \RuntimeException("Failed to copy '".basename($to)."' during the update");
+        }
+
+        $hadOld = is_dir($to);
+        if ($hadOld && ! @rename($to, $outgoing)) {
+            // Cannot move the old tree aside (e.g. a locked file on Windows):
+            // fall back to replacing it in place.
+            File::deleteDirectory($staged);
+            File::deleteDirectory($to);
+            if (! File::copyDirectory($from, $to)) {
+                throw new \RuntimeException("Failed to copy '".basename($to)."' during the update");
+            }
+
+            return;
+        }
+
+        if (! @rename($staged, $to)) {
+            if ($hadOld) {
+                @rename($outgoing, $to);
+            }
+            File::deleteDirectory($staged);
+            throw new \RuntimeException("Failed to move the new '".basename($to)."' into place");
+        }
+
+        if ($hadOld) {
+            File::deleteDirectory($outgoing);
+        }
+    }
+
+    /**
+     * @throws \RuntimeException
+     */
+    protected function copyFile(string $from, string $to): void
+    {
+        File::ensureDirectoryExists(dirname($to));
+
+        if (! File::copy($from, $to)) {
+            throw new \RuntimeException("Failed to copy '".basename($to)."' during the update");
+        }
+    }
+
+    /**
+     * @throws \RuntimeException
+     */
+    protected function putFile(string $path, string $contents): void
+    {
+        File::ensureDirectoryExists(dirname($path));
+
+        if (File::put($path, $contents) === false) {
+            throw new \RuntimeException("Failed to write '".basename($path)."' during the update");
+        }
+    }
+
+    /**
+     * Names in a directory (including dotfiles), sorted.
+     *
+     * @return array<int, string>
+     */
+    protected function entries(string $directory): array
+    {
+        if (! is_dir($directory)) {
+            return [];
+        }
+
+        $names = array_values(array_diff(scandir($directory) ?: [], ['.', '..']));
+        sort($names);
+
+        return $names;
+    }
+
+    private function isEnvFile(string $name): bool
+    {
+        return $name !== '.env.example' && preg_match('/^\.env(\..+)?$/', $name) === 1;
+    }
+
+    /**
+     * Whether a backup's public/ folder is a copy of the web root (backups
+     * made by this version record that in their manifest).
+     */
+    protected function backupHoldsWebRoot(string $sourcePath): bool
+    {
+        $manifest = $sourcePath.'/'.BackupService::MANIFEST;
+        if (! is_file($manifest)) {
+            return false;
+        }
+
+        $data = json_decode((string) file_get_contents($manifest), true);
+
+        return is_array($data) && ($data['public'] ?? null) === BackupService::PUBLIC_WEB_ROOT;
+    }
+
+    protected function phpVersion(): string
+    {
+        return PHP_VERSION;
+    }
+
+    /**
+     * Whether this PHP is within a maximum. "8.5" means any 8.5.x;
+     * "8.5.3" is an exact ceiling.
+     */
+    protected function phpAtMost(string $max): bool
+    {
+        if (preg_match('/^\d+\.\d+$/', $max) === 1) {
+            return version_compare(PHP_MAJOR_VERSION.'.'.PHP_MINOR_VERSION, $max, '<=');
+        }
+
+        return version_compare($this->phpVersion(), $max, '<=');
     }
 
     /**

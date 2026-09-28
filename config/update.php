@@ -78,6 +78,11 @@ return [
 
     'max_extracted_bytes' => (int) env('INVENTOROS_UPDATE_MAX_BYTES', 300 * 1024 * 1024),
 
+    // Restoring a pre-update backup: backups also hold vendor/ and storage/.
+    'restore_max_entry_count' => (int) env('INVENTOROS_RESTORE_MAX_ENTRIES', 500000),
+
+    'restore_max_extracted_bytes' => (int) env('INVENTOROS_RESTORE_MAX_BYTES', 4 * 1024 * 1024 * 1024),
+
     /*
     |--------------------------------------------------------------------------
     | Release signature verification
