@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Feature;
 
 use App\Models\Auth\Organization;
+use App\Models\Customer;
 use App\Models\Order\Order;
 use App\Models\Role;
 use App\Models\System\SystemSetting;
@@ -162,5 +163,66 @@ class ReceivablesReportTest extends TestCase
                 ->missing('summary.total_outstanding')
                 ->etc()
             );
+    }
+
+    private function customer(string $name): Customer
+    {
+        return Customer::create(['organization_id' => $this->organization->id, 'name' => $name, 'is_active' => true]);
+    }
+
+    public function test_a_free_text_name_matching_a_linked_customer_is_one_row(): void
+    {
+        $acme = $this->customer('Acme Supplies');
+        $this->order('ORD-L', '2026-09-20 10:00:00', 100, 0, 'Acme Supplies')->forceFill(['customer_id' => $acme->id])->save();
+        // Same customer typed by hand on another order: different case and spacing.
+        $this->order('ORD-F', '2026-09-21 10:00:00', 40, 0, '  acme   SUPPLIES ');
+        $this->order('ORD-Z', '2026-09-22 10:00:00', 5, 0, 'Walk-in');
+
+        $this->actingAs($this->admin)->get(route('reports.receivables'))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('summary.customer_count', 2)
+                ->has('customers', 2)
+                ->where('customers.0.customer', 'Acme Supplies')
+                ->where('customers.0.customer_id', $acme->id)
+                ->where('customers.0.orders', 2)
+                ->where('customers.0.total', '140.00')
+                ->where('customers.1.customer', 'Walk-in')
+                ->where('customers.1.customer_id', null)
+            );
+    }
+
+    public function test_a_free_text_name_shared_by_two_customers_is_not_guessed(): void
+    {
+        $first = $this->customer('Shared Name');
+        $this->customer('Shared Name');
+        $this->order('ORD-1', '2026-09-20 10:00:00', 10, 0, 'Shared Name')->forceFill(['customer_id' => $first->id])->save();
+        $this->order('ORD-2', '2026-09-20 10:00:00', 10, 0, 'shared name');
+
+        $this->actingAs($this->admin)->get(route('reports.receivables'))
+            ->assertInertia(fn (Assert $page) => $page->has('customers', 2));
+    }
+
+    public function test_it_exports_customers_and_orders_in_every_format(): void
+    {
+        $this->order('ORD-A', '2026-09-27 08:00:00', 100, 0);
+        $this->order('ORD-B', '2026-08-01 08:00:00', 20, 5, 'Beta');
+
+        foreach (['csv' => 'text/csv; charset=UTF-8', 'xlsx' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'pdf' => 'application/pdf'] as $format => $mime) {
+            foreach ([[], ['group' => 'orders']] as $params) {
+                $response = $this->actingAs($this->admin)->get(route('reports.receivables', $params + ['export' => $format]));
+                $response->assertOk();
+                $this->assertSame($mime, $response->headers->get('Content-Type'));
+            }
+        }
+
+        $customers = $this->actingAs($this->admin)->get(route('reports.receivables', ['export' => 'csv']))->streamedContent();
+        $this->assertStringContainsString('Customer', $customers);
+        $this->assertStringContainsString('Acme', $customers);
+        $this->assertStringContainsString('100', $customers);
+
+        $orders = $this->actingAs($this->admin)->get(route('reports.receivables', ['export' => 'csv', 'group' => 'orders']))->streamedContent();
+        $this->assertStringContainsString('ORD-B', $orders);
+        $this->assertStringContainsString('15', $orders);
     }
 }

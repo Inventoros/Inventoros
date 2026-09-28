@@ -453,12 +453,62 @@ class ReportController extends Controller
      *
      * Route-gated by view_reports and view_payments.
      */
-    public function receivables(Request $request, ReceivablesAgingService $aging): Response
+    public function receivables(Request $request, ReceivablesAgingService $aging): Response|HttpResponse
     {
-        return Inertia::render('Reports/Receivables', $aging->build($request->user()->organization_id) + [
-            'currency' => $request->user()->organization?->currency ?? 'USD',
+        $report = $aging->build($request->user()->organization_id);
+        $currency = $request->user()->organization?->currency ?? 'USD';
+
+        if ($format = ReportExporter::requestedFormat($request)) {
+            $notes = [
+                'As of '.$report['summary']['as_of'].'. Amounts in '.$currency.'.',
+                'Age is counted in days from the order date.',
+            ];
+            $buckets = array_keys(ReceivablesAgingService::BUCKETS);
+
+            if ($request->query('group') === 'orders') {
+                return $this->exporter->download(
+                    $format,
+                    'Receivables by Order',
+                    ['Order', 'Customer', 'Order date', 'Status', 'Payment status', 'Total', 'Paid', 'Balance due', 'Age (days)', 'Bucket'],
+                    array_map(fn (array $o) => [
+                        $o['order_number'], $o['customer'], $o['order_date'], $o['status'], $o['payment_status'],
+                        (float) $o['total'], (float) $o['amount_paid'], (float) $o['balance_due'], (int) $o['age_days'],
+                        self::RECEIVABLES_BUCKET_LABELS[$o['bucket']] ?? $o['bucket'],
+                    ], $report['orders']),
+                    $report['summary']['orders_truncated']
+                        ? array_merge($notes, ['Only the '.ReceivablesAgingService::ORDER_LIST_LIMIT.' oldest orders are listed.'])
+                        : $notes,
+                );
+            }
+
+            return $this->exporter->download(
+                $format,
+                'Receivables Aging',
+                array_merge(['Customer', 'Orders'], array_map(fn (string $b) => self::RECEIVABLES_BUCKET_LABELS[$b], $buckets), ['Total']),
+                array_map(fn (array $c) => array_merge(
+                    [$c['customer'], (int) $c['orders']],
+                    array_map(fn (string $b) => (float) $c[$b], $buckets),
+                    [(float) $c['total']],
+                ), $report['customers']),
+                $notes,
+            );
+        }
+
+        return Inertia::render('Reports/Receivables', $report + [
+            'currency' => $currency,
         ]);
     }
+
+    /**
+     * Column labels for the receivables aging buckets in exports.
+     */
+    private const RECEIVABLES_BUCKET_LABELS = [
+        'current' => 'Current',
+        '1_30' => '1-30 days',
+        '31_60' => '31-60 days',
+        '61_90' => '61-90 days',
+        'over_90' => 'Over 90 days',
+    ];
 
     /**
      * Low Stock Report.

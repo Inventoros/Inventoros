@@ -6,6 +6,7 @@ namespace App\Services;
 
 use App\Enums\OrderStatus;
 use App\Enums\PaymentStatus;
+use App\Models\Customer;
 use App\Models\Order\Order;
 use App\Support\Money;
 use Illuminate\Support\Carbon;
@@ -65,6 +66,32 @@ final class ReceivablesAgingService
             ->orderBy('id')
             ->select(['id', 'order_number', 'customer_id', 'customer_name', 'customer_email', 'order_date', 'status', 'total', 'amount_paid', 'payment_status', 'currency']);
 
+        // An order typed with a free-text customer name that exactly matches
+        // one customer record (ignoring case and spacing) is that customer's
+        // debt: group it with their linked orders instead of listing the same
+        // customer twice. A name shared by several customers is left alone.
+        $customerNames = [];
+        $ambiguous = [];
+        Customer::withoutGlobalScopes()
+            ->where('organization_id', $organizationId)
+            ->whereNull('deleted_at')
+            ->select(['id', 'name'])
+            ->orderBy('id')
+            ->each(function (Customer $customer) use (&$customerNames, &$ambiguous) {
+                $key = self::normaliseName($customer->name);
+                if ($key === '') {
+                    return;
+                }
+                if (isset($customerNames[$key])) {
+                    $ambiguous[$key] = true;
+                }
+                $customerNames[$key] ??= ['id' => $customer->id, 'name' => $customer->name];
+            });
+        $byId = [];
+        foreach ($customerNames as $entry) {
+            $byId[$entry['id']] = $entry['name'];
+        }
+
         foreach ($query->cursor() as $order) {
             $balance = Money::subtract($order->total, $order->amount_paid);
             $age = $order->order_date
@@ -77,11 +104,19 @@ final class ReceivablesAgingService
             $total = Money::add($total, $balance);
             $count++;
 
-            $customerKey = $order->customer_id !== null
-                ? 'id:'.$order->customer_id
-                : 'name:'.mb_strtolower(trim((string) $order->customer_name));
+            $nameKey = self::normaliseName($order->customer_name);
+            $customerId = $order->customer_id;
+            if ($customerId === null && isset($customerNames[$nameKey]) && ! isset($ambiguous[$nameKey])) {
+                $customerId = $customerNames[$nameKey]['id'];
+            }
+            $customerKey = $customerId !== null ? 'id:'.$customerId : 'name:'.$nameKey;
             $customers[$customerKey] ??= array_merge(
-                ['customer' => $order->customer_name ?: 'Unknown customer', 'customer_id' => $order->customer_id, 'orders' => 0, 'total' => '0.00'],
+                [
+                    'customer' => ($customerId !== null ? ($byId[$customerId] ?? null) : null) ?: ($order->customer_name ?: 'Unknown customer'),
+                    'customer_id' => $customerId,
+                    'orders' => 0,
+                    'total' => '0.00',
+                ],
                 array_fill_keys(array_keys(self::BUCKETS), '0.00'),
             );
             $customers[$customerKey]['orders']++;
@@ -124,6 +159,14 @@ final class ReceivablesAgingService
             'customers' => $customerRows,
             'orders' => $orders,
         ];
+    }
+
+    /**
+     * Case- and whitespace-insensitive key for a customer name.
+     */
+    private static function normaliseName(?string $name): string
+    {
+        return mb_strtolower(trim((string) preg_replace('/\s+/u', ' ', (string) $name)));
     }
 
     private function bucketFor(int $ageDays): string
