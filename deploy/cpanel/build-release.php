@@ -101,6 +101,42 @@ function minimumPhp(string $root): string
     return $m[1];
 }
 
+/**
+ * The newest PHP minor every locked package accepts (e.g. "8.4" when a
+ * package requires "<8.5.0"), or null when nothing caps it. Override with
+ * INVENTOROS_MAX_PHP=X.Y, or INVENTOROS_MAX_PHP=none for no ceiling.
+ */
+function maximumPhp(string $root): ?string
+{
+    $override = getenv('INVENTOROS_MAX_PHP');
+    if (is_string($override) && $override !== '') {
+        return strtolower($override) === 'none' ? null : $override;
+    }
+
+    $lock = json_decode((string) @file_get_contents($root.'/composer.lock'), true);
+    $ceiling = null;
+
+    foreach ($lock['packages'] ?? [] as $package) {
+        $constraint = (string) ($package['require']['php'] ?? '');
+        // Only "<X.Y" / "<X.Y.0" upper bounds translate to a whole minor.
+        if (preg_match_all('/<\s*(\d+)\.(\d+)(?:\.0)?(?![\d.])/', $constraint, $matches, PREG_SET_ORDER) === 0) {
+            continue;
+        }
+        foreach ($matches as $m) {
+            [$major, $minor] = [(int) $m[1], (int) $m[2]];
+            if ($minor === 0) {
+                continue;
+            }
+            $candidate = $major.'.'.($minor - 1);
+            if ($ceiling === null || version_compare($candidate, $ceiling, '<')) {
+                $ceiling = $candidate;
+            }
+        }
+    }
+
+    return $ceiling;
+}
+
 function removeTree(string $path): void
 {
     if (is_link($path) || is_file($path)) {
@@ -221,7 +257,7 @@ function build(string $root, string $version, string $out): string
         'version' => $version,
         'layout' => LAYOUT,
         'min_php' => minimumPhp($root),
-        'max_php' => getenv('INVENTOROS_MAX_PHP') ?: null,
+        'max_php' => maximumPhp($root),
         'commit' => $commit !== '' ? $commit : null,
         'built_at' => gmdate('Y-m-d\TH:i:s\Z'),
     ], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES)."\n");
