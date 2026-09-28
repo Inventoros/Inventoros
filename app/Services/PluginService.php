@@ -29,7 +29,7 @@ final class PluginService
     protected string $pluginsPath;
 
     /**
-     * Publishes and removes plugins' runtime UI bundles under public/plugins.
+     * Publishes and removes plugins' runtime UI bundles under public/plugin-assets.
      */
     protected PluginAssetPublisher $assets;
 

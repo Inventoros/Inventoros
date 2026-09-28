@@ -2,14 +2,15 @@
 
 ## Supported Versions
 
-Inventoros is currently in early development. Security updates will be applied to the following versions:
+Security fixes are released for the latest 2.x version. Upgrade to the newest 2.x release to receive them.
 
 | Version | Supported          |
 | ------- | ------------------ |
-| main    | :white_check_mark: |
+| 2.x     | :white_check_mark: |
+| 1.0.x   | :x:                |
 | < 1.0   | :x:                |
 
-**Note**: Until version 1.0 is released, only the `main` branch receives security updates. We recommend always running the latest version from the main branch.
+See [UPGRADE.md](UPGRADE.md) for moving from 1.0.x to 2.0.0.
 
 ## Reporting a Vulnerability
 

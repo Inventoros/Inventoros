@@ -341,14 +341,14 @@ class ProductManagementTest extends TestCase
 - Update README.md if you change functionality
 - Document all public APIs and methods
 - Add inline comments for complex logic
-- Update CHANGELOG.md following Keep a Changelog format
+- Add user-facing changes to the Unreleased section of [CHANGELOG.md](CHANGELOG.md)
 - Create or update relevant docs in the `/docs` directory
 
 ## Plugin Development
 
 If you're developing a plugin for Inventoros:
 
-1. Follow the plugin API conventions (documentation coming soon)
+1. Follow the plugin guide in [docs/PLUGIN_DEVELOPMENT.md](docs/PLUGIN_DEVELOPMENT.md)
 2. Include a `plugin.json` manifest file
 3. Provide clear installation instructions
 4. Write tests for your plugin
