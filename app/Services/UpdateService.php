@@ -7,14 +7,13 @@ namespace App\Services;
 use App\Services\Update\BackupService;
 use App\Services\Update\FileUpdateService;
 use App\Services\Update\GitHubReleaseService;
+use App\Support\ArtisanProcess;
 use App\Support\SafeZipExtractor;
 use Exception;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Log;
-use Symfony\Component\Process\PhpExecutableFinder;
-use Symfony\Component\Process\Process;
 
 /**
  * Service for managing application updates from GitHub releases.
@@ -412,68 +411,18 @@ class UpdateService
      */
     protected function artisan(string $command, array $parameters = []): void
     {
-        $php = $this->phpBinary();
+        $processes = app(ArtisanProcess::class);
 
-        if ($php === null) {
-            $status = Artisan::call($command, $parameters);
-            if ($status !== 0) {
-                throw new \RuntimeException("php artisan {$command} failed (exit {$status}): ".trim(Artisan::output()));
-            }
+        if ($processes->available()) {
+            $processes->run($command, $parameters, $this->fileService->basePath());
 
             return;
         }
 
-        $arguments = [$php, 'artisan', $command];
-        foreach ($parameters as $name => $value) {
-            if ($value === false || $value === null) {
-                continue;
-            }
-            $arguments[] = $value === true ? $name : "{$name}={$value}";
+        $status = Artisan::call($command, $parameters);
+        if ($status !== 0) {
+            throw new \RuntimeException("php artisan {$command} failed (exit {$status}): ".trim(Artisan::output()));
         }
-        $arguments[] = '--no-interaction';
-        $arguments[] = '--no-ansi';
-
-        $process = new Process($arguments, $this->fileService->basePath(), null, null, (float) config('update.artisan_timeout', 900));
-        $process->run();
-
-        if (! $process->isSuccessful()) {
-            // The reason comes last (artisan prints the exception after the
-            // progress lines), so keep the tail.
-            $output = trim($process->getOutput()."\n".$process->getErrorOutput());
-
-            throw new \RuntimeException(sprintf(
-                'php artisan %s failed (exit %s): %s',
-                $command,
-                (string) $process->getExitCode(),
-                mb_substr($output, -1500)
-            ));
-        }
-    }
-
-    /**
-     * The PHP CLI binary for artisan subprocesses, or null to run in-process.
-     */
-    protected function phpBinary(): ?string
-    {
-        if (! config('update.run_artisan_in_subprocess', true)) {
-            return null;
-        }
-
-        $disabled = array_map('trim', explode(',', (string) ini_get('disable_functions')));
-        if (! function_exists('proc_open') || in_array('proc_open', $disabled, true)) {
-            return null;
-        }
-
-        $configured = (string) config('update.php_binary', '');
-        if ($configured !== '') {
-            return $configured;
-        }
-
-        // Under PHP-FPM, PHP_BINARY is the FPM daemon; the finder looks for
-        // the CLI binary next to it (e.g. /opt/cpanel/ea-php84/root/usr/bin/php).
-        $found = (new PhpExecutableFinder)->find(false);
-
-        return is_string($found) && $found !== '' ? $found : null;
     }
 
     /**
