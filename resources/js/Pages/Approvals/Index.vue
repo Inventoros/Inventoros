@@ -68,6 +68,14 @@ const decide = (item) => {
     <Head :title="t('approvals.title')" />
 
     <AppLayout>
+        <template #header>
+            <div class="flex items-center gap-2 text-xs">
+                <span class="text-text-tertiary">Workspace</span>
+                <span class="text-text-tertiary">/</span>
+                <span class="font-medium text-text-primary">{{ t('approvals.title') }}</span>
+            </div>
+        </template>
+
         <PageHeader :title="t('approvals.title')" :description="t('approvals.description')" />
 
         <div class="mt-6 flex gap-2 border-b border-border-subtle" role="tablist">

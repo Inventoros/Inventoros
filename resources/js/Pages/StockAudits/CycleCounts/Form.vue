@@ -3,7 +3,7 @@ import AppLayout from '@/Layouts/AppLayout.vue';
 import PageHeader from '@/Components/ui/PageHeader.vue';
 import Card from '@/Components/ui/Card.vue';
 import Button from '@/Components/ui/Button.vue';
-import { Head, useForm } from '@inertiajs/vue3';
+import { Head, Link, useForm } from '@inertiajs/vue3';
 import { computed, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { ArrowLeft } from 'lucide-vue-next';
@@ -62,6 +62,18 @@ const fieldError = 'mt-1 text-xs text-status-danger';
     <Head :title="editing ? t('cycleCounts.edit') : t('cycleCounts.new')" />
 
     <AppLayout>
+        <template #header>
+            <div class="flex items-center gap-2 text-xs">
+                <span class="text-text-tertiary">Workspace</span>
+                <span class="text-text-tertiary">/</span>
+                <Link :href="route('stock-audits.index')" class="text-text-tertiary hover:text-text-primary">Stock Audits</Link>
+                <span class="text-text-tertiary">/</span>
+                <Link :href="route('cycle-counts.index')" class="text-text-tertiary hover:text-text-primary">{{ t('cycleCounts.title') }}</Link>
+                <span class="text-text-tertiary">/</span>
+                <span class="font-medium text-text-primary">{{ editing ? t('cycleCounts.edit') : t('cycleCounts.new') }}</span>
+            </div>
+        </template>
+
         <PageHeader :title="editing ? t('cycleCounts.edit') : t('cycleCounts.new')" :description="t('cycleCounts.formHint')">
             <template #actions>
                 <Button variant="secondary" size="sm" as="Link" :href="route('cycle-counts.index')">
