@@ -111,6 +111,26 @@ class PortalReturnsTest extends TestCase
         $this->assertSame(1, ReturnOrder::count());
     }
 
+    public function test_a_line_cannot_be_repeated_to_return_more_than_was_ordered(): void
+    {
+        $org = $this->makeOrganization('Acme Wholesale');
+        $customer = $this->makeCustomer($org, 'Buyer A');
+        $contact = $this->makeContact($customer, 'a@buyer.test');
+        $product = $this->makeProduct($org, 'SKU-1');
+        $order = $this->makeOrder($customer, 'ORD-A-1', OrderStatus::DELIVERED, [['product' => $product, 'quantity' => 2]]);
+        $row = ['order_item_id' => $order->items()->first()->id, 'quantity' => 2, 'condition' => 'new'];
+
+        $this->actingAs($contact, 'customer')
+            ->post($this->portalUrl($org, 'orders/'.$order->id.'/return'), [
+                'type' => 'return',
+                'reason' => 'Not needed',
+                'items' => [$row, $row, $row],
+            ])
+            ->assertSessionHasErrors('items.1.order_item_id');
+
+        $this->assertSame(0, ReturnOrder::count());
+    }
+
     public function test_returns_are_only_for_delivered_orders(): void
     {
         $org = $this->makeOrganization('Acme Wholesale');

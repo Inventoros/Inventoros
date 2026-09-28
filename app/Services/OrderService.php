@@ -7,6 +7,7 @@ namespace App\Services;
 use App\Enums\DiscountType;
 use App\Enums\OrderStatus;
 use App\Enums\PaymentStatus;
+use App\Enums\ShipmentStatus;
 use App\Exceptions\InsufficientStockException;
 use App\Exceptions\InvalidOrderItemException;
 use App\Exceptions\InvalidStateException;
@@ -15,6 +16,8 @@ use App\Models\Inventory\ProductVariant;
 use App\Models\Inventory\StockAdjustment;
 use App\Models\Order\Order;
 use App\Models\Order\OrderItem;
+use App\Models\Order\ReturnOrder;
+use App\Models\Order\ReturnOrderItem;
 use App\Models\Shipping\Shipment;
 use App\Models\User;
 use App\Support\Money;
@@ -250,6 +253,9 @@ final class OrderService
             );
 
             $order = new Order(Arr::except($data, self::COMPUTED_COLUMNS));
+            // Record whether this order took its lines out of stock, so no
+            // later cancel/reject/delete/edit gives back units it never took.
+            $order->stock_committed = $adjustStock;
             $this->applyTotals($order, $totals);
             $order->save();
 
@@ -343,15 +349,7 @@ final class OrderService
                 );
             }
 
-            // A partially shipped order is still pending/processing, but some
-            // of its goods have left: restocking every line would invent them.
-            $this->assertNoShippedGoods($locked, 'cancel');
-
-            $locked->load('items.product', 'items.variant');
-
-            foreach ($locked->items as $item) {
-                $this->restockItem($item, "Order {$locked->order_number} cancelled", $locked);
-            }
+            $this->releaseStock($locked, 'cancel', "Order {$locked->order_number} cancelled");
 
             $locked->update(['status' => OrderStatus::CANCELLED]);
 
@@ -406,18 +404,31 @@ final class OrderService
         $rejected = DB::transaction(function () use ($order, $approver, $notes) {
             $locked = Order::whereKey($order->getKey())->lockForUpdate()->firstOrFail();
 
+            // isPendingApproval() is false for a cancelled order, whose stock
+            // cancel() already gave back: rejecting it would restock twice.
             if (! $locked->isPendingApproval()) {
                 throw new InvalidStateException('Order has already been processed.', 'already_processed');
+            }
+
+            if (in_array($locked->status, [OrderStatus::SHIPPED, OrderStatus::DELIVERED], true)) {
+                throw new InvalidStateException(
+                    "Cannot reject an order that has already been {$locked->status->value}.",
+                    'invalid_state_transition'
+                );
             }
 
             // Stock was decremented when the order was created. Rejection has
             // to restore it through the ledger so the inventory count and
             // audit trail line up with what's physically available — without
             // this the rejected order holds phantom reserved stock forever
-            // and the reorder logic over-purchases.
-            $locked->load('items.product', 'items.variant');
-            foreach ($locked->items as $item) {
-                $this->restockItem($item, "Order {$locked->order_number} rejected", $locked);
+            // and the reorder logic over-purchases. Refused, like cancel,
+            // once any of its goods have left the warehouse.
+            try {
+                $this->releaseStock($locked, 'reject', "Order {$locked->order_number} rejected");
+            } catch (InvalidStateException $e) {
+                throw $e;
+            } catch (\RuntimeException $e) {
+                throw new InvalidStateException($e->getMessage(), 'invalid_state_transition');
             }
 
             $locked->update([
@@ -459,6 +470,14 @@ final class OrderService
         DB::transaction(function () use ($order) {
             $locked = Order::whereKey($order->getKey())->lockForUpdate()->firstOrFail();
 
+            // Returns are recorded against the order's lines and are the
+            // audit trail of goods coming back; the order has to stay.
+            if (ReturnOrder::withoutGlobalScopes()->where('order_id', $locked->getKey())->exists()) {
+                throw new \RuntimeException(
+                    'Cannot delete this order: it has returns recorded against it. Cancel it instead.'
+                );
+            }
+
             // Goods already gone (shipped/delivered) or already returned
             // (cancelled) → deletion must not re-inject phantom stock.
             if (in_array($locked->status, [OrderStatus::SHIPPED, OrderStatus::DELIVERED, OrderStatus::CANCELLED], true)) {
@@ -466,14 +485,8 @@ final class OrderService
             }
 
             // Partially shipped: restocking every line would re-inject the
-            // units that already left, so refuse rather than guess.
-            $this->assertNoShippedGoods($locked, 'delete');
-
-            $locked->load('items.product', 'items.variant');
-
-            foreach ($locked->items as $item) {
-                $this->restockItem($item, "Order {$locked->order_number} deleted", $locked);
-            }
+            // units that already left, so releaseStock() refuses.
+            $this->releaseStock($locked, 'delete', "Order {$locked->order_number} deleted");
         });
     }
 
@@ -483,12 +496,18 @@ final class OrderService
      * product. Crediting the parent product for a variant line would leave the
      * variant permanently depleted while inflating the parent's on-hand count.
      *
-     * Public so the web order controller's hand-rolled edit/reject restock
-     * loops share the same variant-aware logic. The caller must have loaded the
-     * item's `product` (and `variant` for variant lines).
+     * $quantity is how many units go back. Callers pass the line's figure
+     * from restockableQuantities(), so a line the order never took out of
+     * stock (a historical import) or one already returned restocks nothing.
+     * The caller must have loaded the item's `product` (and `variant` for
+     * variant lines).
      */
-    public function restockItem(OrderItem $item, string $reason, Order $order): void
+    private function restockItem(OrderItem $item, string $reason, Order $order, int $quantity): void
     {
+        if ($quantity <= 0) {
+            return;
+        }
+
         // Lock the product row FIRST, before releasing tracked records or
         // adjusting stock. create() locks the product then allocates serials/
         // batches and bins; this restock path releases them then adjusts, so
@@ -503,12 +522,12 @@ final class OrderService
         // Return any serials this line consumed to available before restocking
         // the count, so the serial records track the goods coming back. No-op
         // for untracked lines and best-effort skips.
-        app(TrackedStockAllocationService::class)->releaseForOrderItem($item);
+        app(TrackedStockAllocationService::class)->releaseForOrderItem($item, $quantity);
 
         if ($item->product_variant_id !== null && $item->variant !== null) {
             StockAdjustment::adjustVariant(
                 $item->variant,
-                $item->quantity,
+                $quantity,
                 'order_cancellation',
                 $reason,
                 null,
@@ -521,7 +540,7 @@ final class OrderService
         if ($item->product !== null) {
             StockAdjustment::adjust(
                 $item->product,
-                $item->quantity,
+                $quantity,
                 'order_cancellation',
                 $reason,
                 null,
@@ -532,7 +551,104 @@ final class OrderService
             // breakdown rises with the restored total. (Units are restored to
             // the primary location rather than the exact bins they were drawn
             // from — a deliberate simplification; totals stay correct.)
-            app(ProductLocationStockService::class)->receive($item->product, $item->quantity);
+            app(ProductLocationStockService::class)->receive($item->product, $quantity);
+        }
+    }
+
+    /**
+     * How many units of each line can go back to stock when the order is
+     * cancelled, rejected, deleted or has its lines replaced: what creating
+     * the order took out of stock, less what received returns have already
+     * brought back (restocked or written off). Every order restock path goes
+     * through this one figure.
+     *
+     * An order recorded without touching stock (stock_committed false: a
+     * historical import) took nothing, so every line is 0.
+     *
+     * @return array<int, int> order_item_id => units
+     */
+    public function restockableQuantities(Order $order): array
+    {
+        $order->loadMissing('items');
+
+        if (! $order->stock_committed) {
+            return $order->items->mapWithKeys(fn (OrderItem $item) => [$item->id => 0])->all();
+        }
+
+        $returned = ReturnOrderItem::query()
+            ->whereHas('returnOrder', fn ($query) => $query->withoutGlobalScopes()
+                ->where('order_id', $order->getKey())
+                ->whereIn('status', ['received', 'completed']))
+            ->selectRaw('order_item_id, SUM(quantity) as total_returned')
+            ->groupBy('order_item_id')
+            ->pluck('total_returned', 'order_item_id');
+
+        return $order->items->mapWithKeys(fn (OrderItem $item) => [
+            $item->id => max(0, (int) $item->quantity - (int) ($returned[$item->id] ?? 0)),
+        ])->all();
+    }
+
+    /**
+     * Give a locked order's stock back as it is cancelled, rejected or
+     * deleted: refuse when goods have left or a return is still open, close
+     * its open shipments, then restock each line's restockable quantity.
+     * Runs inside the caller's transaction, which holds the order lock.
+     *
+     * @throws \RuntimeException
+     */
+    private function releaseStock(Order $locked, string $action, string $reason): void
+    {
+        // A partially shipped order is still pending/processing, but some of
+        // its goods have left: restocking every line would invent them.
+        $this->assertNoShippedGoods($locked, $action);
+
+        // An open return would restock the same units again when received.
+        $openReturn = ReturnOrder::withoutGlobalScopes()
+            ->where('order_id', $locked->getKey())
+            ->whereIn('status', ['pending', 'approved'])
+            ->exists();
+
+        if ($openReturn) {
+            throw new \RuntimeException(
+                "Cannot {$action} this order: it has an open return. Receive or reject the return first."
+            );
+        }
+
+        $this->closeOpenShipments($locked, $action);
+
+        $locked->load('items.product', 'items.variant');
+        $restockable = $this->restockableQuantities($locked);
+
+        foreach ($locked->items as $item) {
+            $this->restockItem($item, $reason, $locked, $restockable[$item->id] ?? 0);
+        }
+    }
+
+    /**
+     * Cancel the order's shipments that have not left, so none of them can be
+     * marked shipped after its stock went back. A shipment with a bought
+     * label is refused instead: the label has to be voided with the carrier,
+     * which cancelling that shipment does.
+     *
+     * @throws \RuntimeException
+     */
+    private function closeOpenShipments(Order $locked, string $action): void
+    {
+        $open = Shipment::withoutGlobalScopes()
+            ->where('order_id', $locked->getKey())
+            ->whereIn('status', [ShipmentStatus::PENDING->value, ShipmentStatus::LABEL_CREATED->value])
+            ->orderBy('id')
+            ->lockForUpdate()
+            ->get();
+
+        if ($open->contains(fn (Shipment $shipment) => $shipment->status === ShipmentStatus::LABEL_CREATED)) {
+            throw new \RuntimeException(
+                "Cannot {$action} this order: one of its shipments has a bought label. Cancel that shipment first so the label is voided."
+            );
+        }
+
+        foreach ($open as $shipment) {
+            $shipment->forceFill(['status' => ShipmentStatus::CANCELLED])->save();
         }
     }
 
@@ -559,26 +675,41 @@ final class OrderService
      */
     public function replaceItems(Order $order, array $items): string
     {
-        // Shipments point at the order's line rows. Once any are open the lines
-        // are frozen: resubmitting them unchanged (an edit that only touches
-        // the header) is a no-op, anything else is refused so a shipment never
-        // loses the lines it packed.
-        if (Shipment::withoutGlobalScopes()->where('order_id', $order->getKey())->active()->exists()) {
-            $order->load('items');
+        $order->load('items.product', 'items.variant');
 
-            if (! $this->linesUnchanged($order, $items)) {
-                throw new InvalidOrderItemException(
-                    'Line items cannot be changed once the order has shipments. Cancel its open shipments first.'
-                );
-            }
-
+        // Resubmitting the lines unchanged (an edit that only touches the
+        // header) is a no-op. Recreating them would move stock between
+        // locations and drop the rows returns and shipments point at.
+        if ($this->linesUnchanged($order, $items)) {
             return Money::add('0', ...$order->items->pluck('subtotal')->all());
         }
 
-        // 1. Release the existing lines completely, then drop them. restockItem
-        //    locks the product first, releases serials/batches, restocks the
-        //    count, and re-bins — returning inventory to its pre-order state.
-        $order->load('items.product', 'items.variant');
+        // A cancelled order already gave its stock back; new lines would take
+        // stock again for an order that will never ship.
+        if ($order->status === OrderStatus::CANCELLED) {
+            throw new InvalidOrderItemException('A cancelled order\'s line items cannot be changed.');
+        }
+
+        // Shipments point at the order's line rows. Once any are open the
+        // lines are frozen, so a shipment never loses the lines it packed.
+        if (Shipment::withoutGlobalScopes()->where('order_id', $order->getKey())->active()->exists()) {
+            throw new InvalidOrderItemException(
+                'Line items cannot be changed once the order has shipments. Cancel its open shipments first.'
+            );
+        }
+
+        // Returns are recorded against the lines and cap what can come back.
+        if (ReturnOrder::withoutGlobalScopes()->where('order_id', $order->getKey())->exists()) {
+            throw new InvalidOrderItemException('Line items cannot be changed once the order has returns.');
+        }
+
+        // 1. Release the existing lines, then drop them. restockItem locks the
+        //    product first, releases serials/batches, restocks the count, and
+        //    re-bins — returning inventory to its pre-order state. An order
+        //    that never took stock (a historical import) gives nothing back
+        //    here and takes nothing below.
+        $commitsStock = (bool) $order->stock_committed;
+        $restockable = $this->restockableQuantities($order);
 
         // Remember what each product/variant cost when it was originally sold,
         // so an edit does not re-price lines that were already on the order
@@ -596,7 +727,7 @@ final class OrderService
         }
 
         foreach ($order->items as $existing) {
-            $this->restockItem($existing, "Order {$order->order_number} edited", $order);
+            $this->restockItem($existing, "Order {$order->order_number} edited", $order, $restockable[$existing->id] ?? 0);
             $existing->delete();
         }
 
@@ -647,7 +778,7 @@ final class OrderService
 
             $qty = (int) $item['quantity'];
             $running[$key] = ($running[$key] ?? (int) $target->stock) - $qty;
-            if ($running[$key] < 0) {
+            if ($commitsStock && $running[$key] < 0) {
                 throw new InsufficientStockException(
                     "Insufficient stock for {$product->name}. Available: {$target->stock}, requested: {$qty}"
                 );
@@ -689,6 +820,10 @@ final class OrderService
                 'unit_cost' => OrderItem::costAtSale($product, $variant),
                 'unit_cost_backfilled_at' => null,
             ]));
+
+            if (! $commitsStock) {
+                continue;
+            }
 
             if ($variant !== null) {
                 StockAdjustment::adjustVariant(
@@ -828,8 +963,8 @@ final class OrderService
 
     /**
      * Whether a submitted line set matches the order's current lines: same
-     * product, variant and quantity, and (when submitted) the same unit price
-     * and line discount.
+     * product, variant, quantity and line discount, and (when submitted) the
+     * same unit price.
      *
      * @param  array<int, array<string, mixed>>  $items
      */
@@ -859,10 +994,18 @@ final class OrderService
                 if (array_key_exists('unit_price', $submitted) && $money($submitted['unit_price']) !== $line['unit_price']) {
                     continue;
                 }
-                if (array_key_exists('discount_type', $submitted) && (($submitted['discount_type'] ?: null) !== $line['discount_type'])) {
+                // A line submitted without a discount means no discount (the
+                // same way priceLine() reads it), so dropping a discount is a
+                // change, not an unchanged resubmission.
+                $submittedType = ($submitted['discount_type'] ?? null) ?: null;
+                $submittedValue = $money($submitted['discount_value'] ?? null);
+                if ($submittedType === null || $submittedValue === null) {
+                    $submittedType = null;
+                }
+                if ($submittedType !== $line['discount_type']) {
                     continue;
                 }
-                if (array_key_exists('discount_value', $submitted) && $line['discount_type'] !== null && $money($submitted['discount_value']) !== $line['discount_value']) {
+                if ($line['discount_type'] !== null && $submittedValue !== $line['discount_value']) {
                     continue;
                 }
 
