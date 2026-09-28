@@ -5,8 +5,9 @@ import Card from '@/Components/ui/Card.vue';
 import Button from '@/Components/ui/Button.vue';
 import PluginSlot from '@/Components/PluginSlot.vue';
 import { Head, Link, useForm } from '@inertiajs/vue3';
-import { ref, computed } from 'vue';
+import { ref, computed, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
+import { defaultSupplierSku, defaultUnitCost } from '@/lib/purchaseOrderLine';
 import { toIsoDate } from '@/lib/dates';
 import { ArrowLeft, Plus, Trash2 } from 'lucide-vue-next';
 
@@ -102,7 +103,7 @@ const addItem = () => {
             product_name: product.name,
             sku: variant?.sku || product.sku,
             quantity: quantity.value,
-            unit_cost: unitCost.value || variant?.purchase_price || product.purchase_price || product.price || 0,
+            unit_cost: unitCost.value || defaultUnitCost(product, variant, form.supplier_id),
             supplier_sku: supplierSku.value,
         });
     }
@@ -129,22 +130,28 @@ const updateItemCost = (index, newCost) => {
     form.items[index].unit_cost = parseFloat(newCost) || 0;
 };
 
+// Prefill the pending line from the chosen supplier's linked cost and SKU
+// when the product has one, else from the product's purchase price.
+const prefillLine = () => {
+    const product = chosenProduct.value;
+    if (!product) return;
+    const variant = product.variants?.find(v => v.id === selectedVariantId.value) ?? null;
+    unitCost.value = defaultUnitCost(product, variant, form.supplier_id);
+    supplierSku.value = defaultSupplierSku(product, form.supplier_id);
+};
+
 const onProductSelected = () => {
     selectedVariantId.value = null;
     variantError.value = '';
-    const product = chosenProduct.value;
-    if (product) {
-        unitCost.value = product.purchase_price || product.price || 0;
-    }
+    prefillLine();
 };
 
 const onVariantSelected = () => {
     variantError.value = '';
-    const variant = chosenProduct.value?.variants.find(v => v.id === selectedVariantId.value);
-    if (variant?.purchase_price) {
-        unitCost.value = parseFloat(variant.purchase_price) || 0;
-    }
+    prefillLine();
 };
+
+watch(() => form.supplier_id, () => prefillLine());
 
 const submit = () => {
     form.put(route('purchase-orders.update', props.purchaseOrder.id));

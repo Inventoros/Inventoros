@@ -429,7 +429,15 @@ class PurchaseOrderController extends Controller
                 'price' => $product->price,
                 'purchase_price' => $product->purchase_price,
                 'stock' => (int) $product->stock,
-                'suppliers' => $product->suppliers,
+                // What each linked supplier charges for this product and
+                // calls it, so a new PO line is priced at the chosen
+                // supplier's cost rather than the generic purchase price.
+                'supplier_costs' => $product->suppliers
+                    ->map(fn ($supplier) => [
+                        'supplier_id' => $supplier->id,
+                        'cost_price' => $supplier->pivot->cost_price,
+                        'supplier_sku' => $supplier->pivot->supplier_sku,
+                    ])->values()->all(),
                 'has_variants' => (bool) $product->has_variants,
                 'variants' => $product->has_variants
                     ? $product->variants->map(fn (ProductVariant $variant) => [

@@ -134,6 +134,26 @@ final class PurchaseOrderVariantTest extends TestCase
             );
     }
 
+    public function test_create_form_exposes_each_linked_supplier_cost_and_sku(): void
+    {
+        $this->plain->suppliers()->attach($this->supplier->id, ['cost_price' => 2.4, 'supplier_sku' => 'MILL-MUG']);
+
+        $this->actingAs($this->admin)
+            ->get(route('purchase-orders.create'))
+            ->assertOk()
+            ->assertInertia(fn ($page) => $page
+                ->where('products', function ($products) {
+                    $mug = collect($products)->firstWhere('sku', 'MUG');
+                    $link = collect($mug['supplier_costs'])->firstWhere('supplier_id', $this->supplier->id);
+
+                    return $link !== null
+                        && (float) $link['cost_price'] === 2.4
+                        && $link['supplier_sku'] === 'MILL-MUG'
+                        && collect($products)->firstWhere('sku', 'SHIRT')['supplier_costs'] === [];
+                })
+            );
+    }
+
     public function test_store_persists_the_variant_on_the_line(): void
     {
         $this->actingAs($this->admin)
