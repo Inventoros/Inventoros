@@ -2,7 +2,7 @@ Inventoros has a built-in updater so you can apply new releases from the admin p
 
 ### Upgrading from 1.0.x to 2.0.0
 
-The updater in 1.0.x cannot apply 2.0.0. Upgrade by hand: back up, replace the files from the release package (or check out the tag), run migrations, and add the scheduler and queue worker. The steps are in `UPGRADE.md` in the Inventoros repository.
+Every 1.0.x install must be upgraded by hand once. The updater in 1.0.8 and earlier cannot install any release, because GitHub serves release downloads through a redirect that it refuses. Back up (and check the database backup), replace the files from the release package or check out the tag, run `php artisan optimize:clear`, preview with `php artisan migrate --pretend` on MySQL or PostgreSQL, migrate, and add the scheduler cron entry. The full steps are in `UPGRADE.md` in the Inventoros repository. From 2.0.0 on, the updater below installs new releases again.
 
 ### Updating from the admin panel
 

@@ -140,21 +140,15 @@ php artisan view:cache
 
 Inventoros needs two background tasks. Without them, low-stock alerts, cycle counts, scheduled report emails, shipment tracking, webhook deliveries and queued emails (purchase orders, invoices, approvals, shipment notices) never go out.
 
-In cPanel, open Cron Jobs and add the scheduler. It runs every minute and decides which commands are due:
+In cPanel, open Cron Jobs and add the scheduler. It is required. It runs every minute, decides which commands are due, and also works through the database queue, so this one entry is all a shared host needs:
 
 ```text
 * * * * * cd /home/username/inventoros && php artisan schedule:run >> /dev/null 2>&1
 ```
 
-Then add a queue worker. Most shared hosts do not allow long-running processes, so add a second cron entry that starts a short-lived worker every minute and exits when the queue is empty:
+Replace `/home/username/inventoros` with the folder that contains `artisan`, and keep `QUEUE_CONNECTION=database` in `.env`. If your host does not allow cron at all, set `QUEUE_CONNECTION=sync` so jobs run inside the web request instead; pages that send email or webhooks will be slower, and scheduled reports, cycle counts and shipment tracking will not run.
 
-```text
-* * * * * cd /home/username/inventoros && php artisan queue:work --stop-when-empty --tries=3 --max-time=55 >> /dev/null 2>&1
-```
-
-Replace `/home/username/inventoros` with the folder that contains `artisan`. Keep `QUEUE_CONNECTION=database` in `.env`. If your host allows neither cron entry, set `QUEUE_CONNECTION=sync` so jobs run inside the web request instead; pages that send email or webhooks will be slower.
-
-When the app reports that an email was sent, it has been queued. It is delivered the next time the worker runs.
+When the app reports that an email was sent, it has been queued. It is delivered the next time the queue is processed, within about a minute.
 
 ### Step 8: Enable HTTPS
 

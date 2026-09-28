@@ -147,12 +147,17 @@ Inventoros relies on background processing for two things:
 Replace `/home/username/inventoros` with your actual project path (the folder
 containing `artisan`, not the `public` document root).
 
-#### Queue worker — pick ONE of the two options below
+#### Queue worker
+
+In 2.0.0 the scheduler also works through the database queue every minute, so
+the `schedule:run` cron above is enough on shared hosting and no separate worker
+is required. The options below are only for hosts that want jobs processed
+sooner, or that cannot run cron at all.
 
 cPanel hosts vary in whether they allow long-running daemons. Choose based on
 what your host permits:
 
-**Option A — `database` queue + a worker cron (recommended if your host allows it).**
+**Option A — `database` queue + a worker cron (optional, for faster delivery).**
 Keep `QUEUE_CONNECTION=database` in `.env` and add a second cron entry that keeps
 a short-lived worker alive. `--stop-when-empty` lets the process exit cleanly so
 overlapping cron runs don't stack up:
@@ -178,7 +183,7 @@ QUEUE_CONNECTION=sync
 Jobs then execute immediately inside the web request that dispatches them. This
 needs no worker, but webhook deliveries and emails run synchronously, so a slow
 or failing endpoint will slow down the request that triggered it. Acceptable for
-low-volume single-tenant installs; prefer Option A otherwise.
+low-volume single-tenant installs, and only needed when the host allows no cron at all.
 
 > **Other deploy types.** The Docker stack (`docker-compose.prod.yml`) runs its own
 > `worker` and `scheduler` containers, so it needs neither cron entry. A VPS install

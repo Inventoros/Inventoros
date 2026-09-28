@@ -4,6 +4,8 @@
 
 v2.0.0 is a major release: MCP tool names, the plugin asset path, access to `/docs/api` and the license all change. Read this whole section before you start. The full list of changes is in [CHANGELOG.md](CHANGELOG.md).
 
+> **Every 1.0.x install must be upgraded by hand this time.** The in-app updater in 1.0.8 and earlier cannot install any release: GitHub serves release downloads through a redirect, and the 1.0.x updater refuses redirects. Follow the [upgrade steps](#upgrade-steps) below. From 2.0.0 on, the in-app updater (Admin > Update) installs later releases again.
+
 ### Contents
 
 - [Requirements](#requirements)
@@ -26,31 +28,37 @@ v2.0.0 is a major release: MCP tool names, the plugin asset path, access to `/do
 
 ### Upgrade steps
 
-**Do not use the in-app updater (Admin > Update) to move from 1.0.x to 2.0.0.** The 1.0.x updater cannot apply this release. Upgrade by hand as described below. Later 2.x releases will say whether the updater can apply them.
+**Do not use the in-app updater (Admin > Update) to move from 1.0.x to 2.0.0.** It cannot install any release. Upgrade by hand as described below.
+
+Before you start, on every install:
+
+- **Take a database backup you have checked.** Restore it somewhere, or at least open the dump and confirm it contains your tables. `php artisan app:update --backup` makes a files-and-database backup; keep your host's own backup as well.
+- **On MySQL or PostgreSQL, preview the migrations first** with `php artisan migrate --pretend` (run it after replacing the files, before migrating). Installs that were patched by hand, or that have been upgraded many times, can have a schema that differs from a fresh one. If the preview shows something that will fail, stop and restore rather than migrate halfway.
+- **Clear the old caches before migrating.** Cached 1.0.x config and routes do not know about 2.0.0's customer portal guard, so the app fails with `Auth guard [customer] is not defined` until `php artisan optimize:clear` runs.
 
 #### cPanel (release package)
 
-1. **Back up.** From the application folder (the one that contains `artisan`), run `php artisan app:update --backup`, and also export the database from phpMyAdmin or your host's backup tool. Keep a copy of `.env`.
-2. **Put the site in maintenance mode:** `php artisan down`.
+1. **Back up** the database and the files (see above). Keep a copy of `.env`.
+2. **Put the site in maintenance mode:** `php artisan down` from the application folder (the one that contains `artisan`).
 3. **Download** `inventoros-cpanel-2.0.0.zip` from [the v2.0.0 release](https://github.com/Inventoros/Inventoros/releases/tag/v2.0.0) and extract it on your computer.
 4. **Replace the application folder.** Rename the current folder (for example `~/inventoros` to `~/inventoros-1.0`), upload the new `inventoros/` folder in its place, then copy these across from the old folder:
    - `.env`
    - `storage/` (uploaded files, logs, backups)
    - any plugins you installed yourself under `plugins/` (the bundled `hello-world` plugin is in the new package)
-5. **Replace the web root files.** Upload the contents of the package's `public_html/` over your `public_html/`. `index.php` must be replaced: the 2.0.0 version calls `usePublicPath()` so plugin assets resolve. Keep your `public_html/storage` link. If your application folder is not `../inventoros`, edit `$laravelPath` in the new `index.php` as you did before.
-6. **Migrate and rebuild caches:**
+5. **Replace the web root files.** From the package's `public_html/`, upload `index.php` and the `build/` folder over the ones in your `public_html/` (replace `build/` completely). `index.php` must be replaced: the 2.0.0 version calls `usePublicPath()` so plugin assets resolve. Keep `public_html/storage` and, if it exists, `public_html/plugin-assets/`. If your application folder is not `../inventoros`, edit `$laravelPath` in the new `index.php` as you did before.
+6. **Clear caches, migrate, and rebuild caches:**
 
    ```bash
    cd ~/inventoros
-   php artisan migrate --force
    php artisan optimize:clear
+   php artisan migrate --pretend    # MySQL / PostgreSQL: review the SQL first
+   php artisan migrate --force
    php artisan optimize
-   php artisan queue:restart
    php artisan up
    ```
 
-7. **Add the cron entries** in [Scheduler and queue worker](#scheduler-and-queue-worker) if you do not have them.
-8. **Grant the new permissions** your custom roles need (see [New permissions](#new-permissions)).
+7. **Add the scheduler cron entry** in [Scheduler and queue worker](#scheduler-and-queue-worker) if you do not have it. It is required.
+8. **Review warehouse access and grant the new permissions** your roles need (see [New permissions](#new-permissions)).
 
 When everything works, delete the old folder.
 
@@ -64,8 +72,9 @@ git fetch --tags
 git checkout v2.0.0
 composer install --no-dev --optimize-autoloader
 npm ci && npm run build
-php artisan migrate --force
 php artisan optimize:clear
+php artisan migrate --pretend    # MySQL / PostgreSQL: review the SQL first
+php artisan migrate --force
 php artisan optimize
 php artisan queue:restart
 php artisan up
@@ -81,11 +90,11 @@ Pull the `2.0.0` image and recreate the containers. With `RUN_MIGRATIONS=true` o
 
 This release adds many migrations. Existing `order_items` rows get an estimated `unit_cost` (the product's current cost), which reports flag as estimated. Existing copies of the system roles and permission set templates receive the new permissions listed below.
 
+**Payment status on older orders.** Payments were not recorded before 2.0.0, so orders created before the upgrade show the payment status **Not tracked** rather than Unpaid. If those orders were paid, an admin can mark them paid in bulk.
+
 ### Scheduler and queue worker
 
-2.0.0 adds scheduled work and sends more email through the queue, so both must run.
-
-**Scheduler.** Add one cron entry that runs every minute:
+**The scheduler cron entry is required.** Without it, queued email is never sent and cycle counts, scheduled reports, shipment tracking and reorder checks never run. Add one entry that runs every minute:
 
 ```text
 * * * * * cd /path/to/inventoros && php artisan schedule:run >> /dev/null 2>&1
@@ -93,16 +102,10 @@ This release adds many migrations. Existing `order_items` rows get an estimated 
 
 It runs `inventory:run-cycle-counts` (hourly), `reports:send-scheduled` (every 15 minutes), `shipping:track` (every 30 minutes), `inventory:check-reorder-points` (daily) and the nightly `activity-logs:prune` and `webhooks:prune`.
 
-**Queue worker.** Purchase order and invoice emails, scheduled reports, approval, shipment and user activity alerts, webhook deliveries and import jobs go through the queue. When the app says an email was sent, it has been queued; it is delivered when the worker runs.
+**The queue.** Purchase order and invoice emails, scheduled reports, approval, shipment and user activity alerts, webhook deliveries and import jobs go through the database queue. When the app says an email was sent, it has been queued; it goes out when the queue is next processed.
 
-- **VPS:** install the systemd units in `deploy/systemd/` (`inventoros-worker.service`, plus `inventoros-scheduler.timer` if you prefer it to cron). See [installation-vps.md](docs/site/sections/installation-vps.md#scheduler-and-queue-worker).
-- **cPanel:** most shared hosts do not allow long-running processes. Add a second cron entry that starts a short-lived worker every minute and exits when the queue is empty:
-
-  ```text
-  * * * * * cd /path/to/inventoros && php artisan queue:work --stop-when-empty --tries=3 --max-time=55 >> /dev/null 2>&1
-  ```
-
-  If your host allows neither cron entry, set `QUEUE_CONNECTION=sync` so jobs run inside the web request (slower page loads when email or webhooks are sent).
+- **cPanel and other shared hosting:** in 2.0.0 the scheduler also works through the database queue every minute, so the `schedule:run` entry above is all you need. No separate worker is required.
+- **VPS:** run a dedicated worker so jobs are processed as soon as they are queued. Install the systemd units in `deploy/systemd/` (`inventoros-worker.service`, plus `inventoros-scheduler.timer` if you prefer it to cron). See [installation-vps.md](docs/site/sections/installation-vps.md#scheduler-and-queue-worker). Run `php artisan queue:restart` after each deploy.
 - **Docker:** `docker-compose.prod.yml` already runs `worker` and `scheduler` containers.
 
 ### New environment variables
@@ -140,7 +143,7 @@ Administrators hold every permission. The upgrade migrations grant the new permi
 
 Things to check after upgrading:
 
-- **Warehouse access is enforced.** A user with warehouse assignments and without `access_all_warehouses` now sees only those warehouses. Users with no assignments are unaffected unless the organization setting "Restrict users to their assigned warehouses" is on.
+- **Warehouse access is enforced.** A user who has warehouse assignments and whose role lacks `access_all_warehouses` now sees and acts on only the assigned warehouses. The Manager role gets the permission on upgrade, but **Member and custom roles do not**, so staff on those roles who were assigned warehouses (for example just to set the header switcher) lose sight of the others. To keep a role organisation-wide, open Roles, edit the role and tick "Access All Warehouses", or remove the user's warehouse assignments. Users with no assignments are unaffected unless the organization setting "Restrict users to their assigned warehouses" is on.
 - **Payments are hidden without `view_payments`.** Order payloads omit payment fields unless both the role and the API token allow it.
 - **Approvals are off by default.** Turn them on per organization; make sure someone holds the matching `approve_*` permission first.
 - **The dashboard** hides figures the user's permissions do not cover.

@@ -8,7 +8,9 @@ Full release notes, with the pull request behind each change, are on [GitHub Rel
 
 ## [2.0.0]
 
-Upgrading from 1.0.x: read [UPGRADE.md](UPGRADE.md) first. The in-app updater in 1.0.x cannot apply this release.
+Upgrading from 1.0.x: read [UPGRADE.md](UPGRADE.md) first. Every 1.0.x install must be upgraded by hand once: the in-app updater in 1.0.8 and earlier refuses the redirect GitHub uses for release downloads, so it cannot install any release. From 2.0.0 on, the updater works.
+
+Before upgrading: take a database backup you have checked, run `php artisan optimize:clear` before migrating (stale 1.0.x caches fail with `Auth guard [customer] is not defined`), and on MySQL or PostgreSQL preview with `php artisan migrate --pretend`.
 
 ### Breaking
 
@@ -17,7 +19,10 @@ Upgrading from 1.0.x: read [UPGRADE.md](UPGRADE.md) first. The in-app updater in
 - The API reference at `/docs/api` requires a signed-in user outside the `local` environment. Set `API_DOCS_PUBLIC=true` to make it public.
 - `/api/v1` accepts bearer tokens only; browser sessions are no longer accepted there.
 - Inventoros is licensed under AGPL-3.0-only. Releases up to and including 1.0.8 remain MIT.
-- PHP 8.4.1 or newer is required and PHP 8.5 is not supported yet. Building assets needs Node.js 20.19+ or 22.12+.
+- PHP 8.4.1 or newer is required and PHP 8.5 is not supported yet. The 1.0.8 package already needed 8.4.1, so most hosts are unaffected. Building assets needs Node.js 20.19+ or 22.12+.
+- The `schedule:run` cron entry is required. It also processes the database queue every minute, so shared hosting needs no separate worker; VPS and Docker installs should run one.
+- Users with warehouse assignments on Member or custom roles are limited to those warehouses unless the role has the new `access_all_warehouses` permission.
+- Orders created before 2.0.0 show the payment status "Not tracked"; admins can mark them paid in bulk.
 
 ### Added
 

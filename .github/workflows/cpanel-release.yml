@@ -263,17 +263,17 @@ jobs:
              php artisan view:cache
              ```
 
-          8. **Scheduler and Queue Worker (required)**
-             In cPanel > Cron Jobs, add both entries (adjust the path):
+          8. **Scheduler (required)**
+             In cPanel > Cron Jobs, add this entry (adjust the path):
              ```
              * * * * * cd ~/inventoros && php artisan schedule:run >> /dev/null 2>&1
-             * * * * * cd ~/inventoros && php artisan queue:work --stop-when-empty --tries=3 --max-time=55 >> /dev/null 2>&1
              ```
-             Without them, emails, webhooks, scheduled reports, cycle counts
-             and shipment tracking never run.
+             It also processes the queue every minute. Without it, emails,
+             webhooks, scheduled reports, cycle counts and shipment tracking
+             never run.
 
-          Upgrading from 1.0.x? Follow UPGRADE.md in the repository; the
-          1.0.x in-app updater cannot apply 2.0.0.
+          Upgrading from 1.0.x? The 1.0.x in-app updater cannot install
+          releases, so upgrade by hand: see UPGRADE.md in the repository.
 
           ## Troubleshooting
 

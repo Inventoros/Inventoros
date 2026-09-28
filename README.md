@@ -165,6 +165,8 @@ Inventoros is an open-source Inventory and Warehouse Management System (WMS) bui
 
 ## Installation
 
+> **Upgrading from 1.0.x?** The in-app updater in 1.0.x cannot install 2.0.0 (or any release), so upgrade by hand once by following [UPGRADE.md](UPGRADE.md). From 2.0.0 on, the updater works again.
+
 ### Quick Start
 
 ```bash
@@ -205,7 +207,7 @@ php artisan queue:work  # Queue worker
 
 3. Run `npm run build` for production assets
 
-4. Run the scheduler (`* * * * * php artisan schedule:run` in cron) and a queue worker (`php artisan queue:work`). Scheduled reports, cycle counts, shipment tracking, emails and webhooks depend on them. See the [cPanel](docs/site/sections/installation-cpanel.md) and [VPS](docs/site/sections/installation-vps.md) guides.
+4. Run the scheduler (`* * * * * php artisan schedule:run` in cron); it is required. It also processes the queue every minute, which is enough on shared hosting; on a VPS run a worker (`php artisan queue:work`) as well. Scheduled reports, cycle counts, shipment tracking, emails and webhooks depend on them. See the [cPanel](docs/site/sections/installation-cpanel.md) and [VPS](docs/site/sections/installation-vps.md) guides.
 
 ## Testing
 
