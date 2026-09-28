@@ -157,7 +157,7 @@ class PurchaseOrderController extends Controller
      * @param  PurchaseOrder  $purchaseOrder  The purchase order to edit
      * @return Response|RedirectResponse
      */
-    public function edit(Request $request, PurchaseOrder $purchaseOrder): Response
+    public function edit(Request $request, PurchaseOrder $purchaseOrder): Response|RedirectResponse
     {
         // Ensure user can only edit POs from their organization
         if ($purchaseOrder->organization_id !== $request->user()->organization_id) {
@@ -265,7 +265,7 @@ class PurchaseOrderController extends Controller
      * @param  PurchaseOrder  $purchaseOrder  The purchase order to receive items for
      * @return Response|RedirectResponse
      */
-    public function receive(Request $request, PurchaseOrder $purchaseOrder): Response
+    public function receive(Request $request, PurchaseOrder $purchaseOrder): Response|RedirectResponse
     {
         // Ensure user can only receive POs from their organization
         if ($purchaseOrder->organization_id !== $request->user()->organization_id) {

@@ -118,6 +118,26 @@ final class PurchaseOrderVariantTest extends TestCase
         return [$po, $item];
     }
 
+    public function test_the_receive_page_of_a_draft_po_redirects_instead_of_failing(): void
+    {
+        $po = PurchaseOrder::create([
+            'organization_id' => $this->org->id, 'supplier_id' => $this->supplier->id,
+            'created_by' => $this->admin->id, 'po_number' => 'PO-DRAFT-1', 'status' => PurchaseOrder::STATUS_DRAFT,
+            'order_date' => now()->toDateString(), 'subtotal' => 0, 'tax' => 0, 'total' => 0, 'currency' => 'USD',
+        ]);
+
+        $this->actingAs($this->admin)
+            ->get(route('purchase-orders.receive', $po))
+            ->assertRedirect(route('purchase-orders.show', $po))
+            ->assertSessionHas('error');
+        // Same for editing a PO that can no longer be edited.
+        $po->forceFill(['status' => PurchaseOrder::STATUS_SENT])->save();
+        $this->actingAs($this->admin)
+            ->get(route('purchase-orders.edit', $po))
+            ->assertRedirect(route('purchase-orders.show', $po))
+            ->assertSessionHas('error');
+    }
+
     public function test_create_form_exposes_product_variants(): void
     {
         $this->actingAs($this->admin)
