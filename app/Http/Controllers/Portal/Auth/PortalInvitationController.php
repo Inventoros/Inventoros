@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Portal\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Http\Middleware\Portal\AuthenticatePortalContact;
 use App\Models\CustomerContact;
 use App\Services\Portal\PortalInvitationService;
 use App\Services\SecurityEventLogger;
@@ -65,6 +66,7 @@ class PortalInvitationController extends Controller
 
         Auth::guard('customer')->login($record);
         $request->session()->regenerate();
+        AuthenticatePortalContact::rememberPassword($request, $record);
         PortalLoginController::recordLogin($this->security, $record, 'invitation');
 
         return redirect()
