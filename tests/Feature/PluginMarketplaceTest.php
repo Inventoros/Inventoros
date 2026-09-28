@@ -11,6 +11,7 @@ use App\Models\System\SystemSetting;
 use App\Models\User;
 use App\Services\Marketplace\MarketplaceClient;
 use App\Services\Marketplace\MarketplaceException;
+use App\Services\Marketplace\PackageSignature;
 use App\Services\PluginService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Client\Request;
@@ -128,9 +129,15 @@ final class PluginMarketplaceTest extends TestCase
         return $bytes;
     }
 
-    private function sign(string $bytes): string
+    /**
+     * What the marketplace signs for a published version: the slug, version
+     * and sha256 together, not just the ZIP bytes.
+     */
+    private function signPackage(string $slug, string $version, string $bytes): string
     {
-        return base64_encode(sodium_crypto_sign_detached($bytes, $this->secretKey));
+        $message = PackageSignature::message($slug, $version, hash('sha256', $bytes));
+
+        return base64_encode(sodium_crypto_sign_detached($message, $this->secretKey));
     }
 
     /**
@@ -171,7 +178,7 @@ final class PluginMarketplaceTest extends TestCase
     {
         $headers ??= [
             'Content-Type' => 'application/zip',
-            'X-Marketplace-Signature' => $this->sign($bytes),
+            'X-Marketplace-Signature' => $this->signPackage((string) $entry['slug'], (string) $entry['version'], $bytes),
             'X-Marketplace-Checksum' => hash('sha256', $bytes),
             'X-Marketplace-Version' => $entry['version'],
         ];
@@ -312,10 +319,12 @@ final class PluginMarketplaceTest extends TestCase
     {
         $slug = $this->slug();
         $bytes = $this->zipBytes($slug);
-        $forged = base64_encode(sodium_crypto_sign_detached($bytes, sodium_crypto_sign_secretkey(sodium_crypto_sign_keypair())));
+        $message = PackageSignature::message($slug, '1.0.0', hash('sha256', $bytes));
+        $forged = base64_encode(sodium_crypto_sign_detached($message, sodium_crypto_sign_secretkey(sodium_crypto_sign_keypair())));
         $this->fakeMarketplace($this->entry($slug, $bytes), $bytes, [
             'X-Marketplace-Signature' => $forged,
             'X-Marketplace-Checksum' => hash('sha256', $bytes),
+            'X-Marketplace-Version' => '1.0.0',
         ]);
 
         $this->install($slug)->assertSessionHas('error', fn ($e) => str_contains($e, 'signature'));
@@ -352,8 +361,9 @@ final class PluginMarketplaceTest extends TestCase
         $slug = $this->slug();
         $bytes = $this->zipBytes($slug);
         $this->fakeMarketplace($this->entry($slug, $bytes), $bytes, [
-            'X-Marketplace-Signature' => $this->sign($bytes),
+            'X-Marketplace-Signature' => $this->signPackage($slug, '1.0.0', $bytes),
             'X-Marketplace-Checksum' => str_repeat('b', 64),
+            'X-Marketplace-Version' => '1.0.0',
         ]);
 
         $this->install($slug)->assertSessionHas('error', fn ($e) => str_contains($e, 'checksum'));
@@ -491,6 +501,7 @@ final class PluginMarketplaceTest extends TestCase
         $this->fakeMarketplace($this->entry($slug, $bytes, ['version' => '2.0.0']), $bytes, [
             'X-Marketplace-Signature' => base64_encode(str_repeat("\0", 64)),
             'X-Marketplace-Checksum' => hash('sha256', $bytes),
+            'X-Marketplace-Version' => '2.0.0',
         ]);
 
         $this->actingAs($this->admin)
@@ -513,6 +524,111 @@ final class PluginMarketplaceTest extends TestCase
             ->assertSessionHas('error', fn ($e) => str_contains($e, 'up to date'));
 
         Http::assertNotSent(fn (Request $r) => str_ends_with($r->url(), '/download'));
+    }
+
+    // ---------------------------------------------------------------- signed manifest (downgrade / substitution)
+
+    public function test_an_older_signed_package_cannot_be_replayed_as_an_update(): void
+    {
+        $slug = $this->slug();
+        $this->makeFixturePlugin(['version' => '2.0.0'], [], $slug);
+
+        // A genuine, marketplace-signed 1.0.0 package from an earlier release,
+        // served while the (unsigned) catalog claims 3.0.0.
+        $old = $this->zipBytes($slug, ['version' => '1.0.0']);
+        $this->fakeMarketplace($this->entry($slug, $old, ['version' => '3.0.0']), $old, [
+            'X-Marketplace-Signature' => $this->signPackage($slug, '1.0.0', $old),
+            'X-Marketplace-Checksum' => hash('sha256', $old),
+            'X-Marketplace-Version' => '3.0.0',
+        ]);
+
+        $this->actingAs($this->admin)
+            ->post(route('plugins.marketplace.update', $slug))
+            ->assertSessionHas('error');
+
+        $manifest = json_decode((string) file_get_contents(base_path("plugins/{$slug}/plugin.json")), true);
+        $this->assertSame('2.0.0', $manifest['version']);
+    }
+
+    public function test_an_update_whose_signed_version_is_not_newer_is_refused(): void
+    {
+        $slug = $this->slug();
+        $this->makeFixturePlugin(['version' => '2.0.0'], [], $slug);
+
+        // Everything is consistent and genuinely signed, but it is 1.0.0: the
+        // listing is what lies about being newer.
+        $old = $this->zipBytes($slug, ['version' => '1.0.0']);
+        $this->fakeMarketplace($this->entry($slug, $old, ['version' => '3.0.0']), $old, [
+            'X-Marketplace-Signature' => $this->signPackage($slug, '1.0.0', $old),
+            'X-Marketplace-Checksum' => hash('sha256', $old),
+            'X-Marketplace-Version' => '1.0.0',
+        ]);
+
+        $this->actingAs($this->admin)
+            ->post(route('plugins.marketplace.update', $slug))
+            ->assertSessionHas('error', fn ($e) => str_contains($e, 'version'));
+
+        $manifest = json_decode((string) file_get_contents(base_path("plugins/{$slug}/plugin.json")), true);
+        $this->assertSame('2.0.0', $manifest['version']);
+    }
+
+    public function test_a_package_whose_plugin_json_version_differs_from_the_signed_version_is_refused(): void
+    {
+        $slug = $this->slug();
+        $bytes = $this->zipBytes($slug, ['version' => '0.9.0']);
+        $this->fakeMarketplace($this->entry($slug, $bytes, ['version' => '1.0.0']), $bytes, [
+            'X-Marketplace-Signature' => $this->signPackage($slug, '1.0.0', $bytes),
+            'X-Marketplace-Checksum' => hash('sha256', $bytes),
+            'X-Marketplace-Version' => '1.0.0',
+        ]);
+
+        $this->install($slug)->assertSessionHas('error', fn ($e) => str_contains($e, '0.9.0'));
+
+        $this->assertDirectoryDoesNotExist(base_path("plugins/{$slug}"));
+    }
+
+    public function test_a_signature_made_for_another_plugin_is_refused(): void
+    {
+        $slug = $this->slug();
+        $bytes = $this->zipBytes($slug);
+        $this->fakeMarketplace($this->entry($slug, $bytes), $bytes, [
+            'X-Marketplace-Signature' => $this->signPackage('some-other-plugin', '1.0.0', $bytes),
+            'X-Marketplace-Checksum' => hash('sha256', $bytes),
+            'X-Marketplace-Version' => '1.0.0',
+        ]);
+
+        $this->install($slug)->assertSessionHas('error', fn ($e) => str_contains($e, 'signature'));
+
+        $this->assertDirectoryDoesNotExist(base_path("plugins/{$slug}"));
+    }
+
+    public function test_a_bare_zip_signature_is_no_longer_accepted(): void
+    {
+        $slug = $this->slug();
+        $bytes = $this->zipBytes($slug);
+        $this->fakeMarketplace($this->entry($slug, $bytes), $bytes, [
+            'X-Marketplace-Signature' => base64_encode(sodium_crypto_sign_detached($bytes, $this->secretKey)),
+            'X-Marketplace-Checksum' => hash('sha256', $bytes),
+            'X-Marketplace-Version' => '1.0.0',
+        ]);
+
+        $this->install($slug)->assertSessionHas('error', fn ($e) => str_contains($e, 'signature'));
+
+        $this->assertDirectoryDoesNotExist(base_path("plugins/{$slug}"));
+    }
+
+    public function test_a_download_without_a_version_header_is_refused(): void
+    {
+        $slug = $this->slug();
+        $bytes = $this->zipBytes($slug);
+        $this->fakeMarketplace($this->entry($slug, $bytes), $bytes, [
+            'X-Marketplace-Signature' => $this->signPackage($slug, '1.0.0', $bytes),
+            'X-Marketplace-Checksum' => hash('sha256', $bytes),
+        ]);
+
+        $this->install($slug)->assertSessionHas('error');
+
+        $this->assertDirectoryDoesNotExist(base_path("plugins/{$slug}"));
     }
 
     // ---------------------------------------------------------------- account

@@ -42,6 +42,41 @@ final class ReleaseSignatureVerifier
      */
     public static function verify(string $archivePath, string $signatureB64, string $publicKeyB64): void
     {
+        if (! is_file($archivePath) || ! is_readable($archivePath)) {
+            throw new RuntimeException("Cannot read archive for signature verification: {$archivePath}");
+        }
+
+        $contents = file_get_contents($archivePath);
+        if ($contents === false) {
+            throw new RuntimeException("Failed to read archive for signature verification: {$archivePath}");
+        }
+
+        if (! self::isValid($contents, $signatureB64, $publicKeyB64)) {
+            throw new RuntimeException(
+                'Update archive failed signature verification. The download may be corrupt or tampered with; '
+                .'aborting before any files are replaced.'
+            );
+        }
+    }
+
+    /**
+     * Verify a detached Ed25519 signature over an in-memory message (for
+     * example a signed statement about an archive rather than its bytes).
+     *
+     * @throws RuntimeException When the key/signature are malformed or the signature does not match.
+     */
+    public static function verifyMessage(string $message, string $signatureB64, string $publicKeyB64): void
+    {
+        if (! self::isValid($message, $signatureB64, $publicKeyB64)) {
+            throw new RuntimeException('The signature does not match. The data may be corrupt or tampered with.');
+        }
+    }
+
+    /**
+     * @throws RuntimeException When libsodium is missing or the key/signature are malformed.
+     */
+    private static function isValid(string $message, string $signatureB64, string $publicKeyB64): bool
+    {
         if (! function_exists('sodium_crypto_sign_verify_detached')) {
             throw new RuntimeException('libsodium is required to verify update signatures but is not available.');
         }
@@ -57,21 +92,7 @@ final class ReleaseSignatureVerifier
             throw new RuntimeException('Update signature has an invalid length.');
         }
 
-        if (! is_file($archivePath) || ! is_readable($archivePath)) {
-            throw new RuntimeException("Cannot read archive for signature verification: {$archivePath}");
-        }
-
-        $contents = file_get_contents($archivePath);
-        if ($contents === false) {
-            throw new RuntimeException("Failed to read archive for signature verification: {$archivePath}");
-        }
-
-        if (! sodium_crypto_sign_verify_detached($signature, $contents, $publicKey)) {
-            throw new RuntimeException(
-                'Update archive failed signature verification. The download may be corrupt or tampered with; '
-                .'aborting before any files are replaced.'
-            );
-        }
+        return sodium_crypto_sign_verify_detached($signature, $message, $publicKey);
     }
 
     /**
