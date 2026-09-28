@@ -12,6 +12,11 @@ use Symfony\Component\HttpFoundation\Response;
 class SecurityHeaders
 {
     /**
+     * The Stoplight Elements build Scramble's docs view loads.
+     */
+    public const API_DOCS_VIEWER = 'https://unpkg.com/@stoplight/elements@8.4.2/';
+
+    /**
      * Handle an incoming request.
      */
     public function handle(Request $request, Closure $next): Response
@@ -38,11 +43,16 @@ class SecurityHeaders
 
         if (! $viteDevServer) {
             $nonce = Vite::cspNonce();
+            // The API docs page (Scramble) renders the Stoplight Elements
+            // viewer from unpkg. Allow exactly that pinned package, on that
+            // page only; its inline scripts carry the nonce (see the
+            // resources/views/vendor/scramble/docs.blade.php override).
+            $docsViewer = $request->is('docs/api') ? ' '.self::API_DOCS_VIEWER : '';
             $response->headers->set(
                 'Content-Security-Policy',
                 "default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'self'; "
-                ."script-src 'self' 'nonce-{$nonce}'; "
-                ."style-src 'self' 'unsafe-inline' https://fonts.bunny.net; "
+                ."script-src 'self' 'nonce-{$nonce}'{$docsViewer}; "
+                ."style-src 'self' 'unsafe-inline' https://fonts.bunny.net{$docsViewer}; "
                 ."img-src 'self' data: blob:; font-src 'self' data: https://fonts.bunny.net; "
                 ."connect-src 'self'; worker-src 'self' blob:; form-action 'self'"
             );
