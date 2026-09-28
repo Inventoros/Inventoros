@@ -131,6 +131,7 @@ abstract class PortalController extends Controller
         return [
             'id' => $item->id,
             'product_name' => $item->product_name,
+            'variant_title' => $item->product_variant_id !== null ? $item->variant?->title : null,
             'sku' => $item->sku,
             'quantity' => (int) $item->quantity,
             'unit_price' => $item->unit_price,

@@ -270,7 +270,7 @@ const sectionTitle = 'text-xs font-semibold uppercase tracking-wide text-text-te
                         <div class="mt-2 divide-y divide-border-subtle rounded-lg border border-border-subtle">
                             <div v-for="line in shipping.lines" :key="line.order_item_id" class="flex items-center gap-3 px-3 py-2.5">
                                 <div class="min-w-0 flex-1">
-                                    <p class="truncate text-sm font-medium text-text-primary">{{ line.product_name }}</p>
+                                    <p class="truncate text-sm font-medium text-text-primary">{{ line.product_name }}<span v-if="line.variant_title" class="font-normal text-text-secondary"> ({{ line.variant_title }})</span></p>
                                     <p class="text-xs text-text-tertiary">{{ line.sku }} · {{ t('shipping.remaining', { count: line.remaining }) }}</p>
                                 </div>
                                 <label class="sr-only" :for="`qty-${line.order_item_id}`">{{ t('shipping.quantity') }}</label>

@@ -80,7 +80,7 @@ class PortalReturnController extends PortalController
             return $this->notReturnable($record);
         }
 
-        $record->load('items');
+        $record->load('items.variant');
         $returned = $returns->returnedQuantities($record);
         $paidNets = $returns->paidLineNets($record);
 

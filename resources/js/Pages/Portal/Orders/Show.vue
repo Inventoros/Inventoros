@@ -107,6 +107,7 @@ const thClass = 'px-3 sm:px-4 py-2.5 text-left text-xs font-medium tracking-tigh
                                     <tr v-for="item in order.items" :key="item.id" class="border-b border-border-subtle last:border-b-0">
                                         <td class="px-3 py-3 sm:px-4">
                                             <div class="font-medium text-text-primary">{{ item.product_name }}</div>
+                                            <div v-if="item.variant_title" class="text-xs text-text-secondary">{{ item.variant_title }}</div>
                                             <div class="text-xs tabular-nums text-text-secondary sm:hidden">{{ t('portal.order.unitPrice') }}: <span class="whitespace-nowrap">{{ money(item.unit_price) }}</span></div>
                                             <div class="text-xs text-text-tertiary">
                                                 {{ t('portal.order.sku') }} {{ item.sku }}
@@ -192,7 +193,7 @@ const thClass = 'px-3 sm:px-4 py-2.5 text-left text-xs font-medium tracking-tigh
                             </div>
                             <ul v-if="shipment.items.length" class="ml-6 space-y-0.5 text-xs text-text-secondary">
                                 <li v-for="(line, lineIndex) in shipment.items" :key="lineIndex">
-                                    {{ line.quantity }} x {{ line.product_name }} <span class="text-text-tertiary">({{ line.sku }})</span>
+                                    {{ line.quantity }} x {{ line.product_name }}<template v-if="line.variant_title"> ({{ line.variant_title }})</template> <span class="text-text-tertiary">({{ line.sku }})</span>
                                 </li>
                             </ul>
                         </li>

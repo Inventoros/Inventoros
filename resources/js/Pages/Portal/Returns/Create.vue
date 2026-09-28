@@ -95,6 +95,7 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-t
                                 <tr v-for="item in returnable" :key="item.id" class="border-b border-border-subtle align-top last:border-b-0">
                                     <td class="px-4 py-3">
                                         <div class="font-medium text-text-primary">{{ item.product_name }}</div>
+                                        <div v-if="item.variant_title" class="text-xs text-text-secondary">{{ item.variant_title }}</div>
                                         <div class="text-xs text-text-tertiary">
                                             {{ t('portal.order.sku') }} {{ item.sku }} · {{ t('portal.returnForm.available', { count: item.returnable_quantity }) }}
                                         </div>

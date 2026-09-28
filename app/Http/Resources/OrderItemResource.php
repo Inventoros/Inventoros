@@ -25,6 +25,13 @@ class OrderItemResource extends JsonResource
             'order_id' => $this->order_id,
             'product_id' => $this->product_id,
             'product_name' => $this->product_name,
+            'product_variant_id' => $this->product_variant_id,
+            // The variant's title ("Large") when the line sold a variant and
+            // the relation was loaded.
+            'variant_title' => $this->when(
+                $this->resource->relationLoaded('variant'),
+                fn () => $this->variant?->title,
+            ),
             'sku' => $this->sku,
             'quantity' => $this->quantity,
             'unit_price' => $this->unit_price,

@@ -223,6 +223,7 @@ class Shipment extends Model
             'items' => $this->items->map(fn (ShipmentItem $item) => [
                 'order_item_id' => $item->order_item_id,
                 'product_name' => $item->orderItem?->product_name,
+                'variant_title' => $item->orderItem?->variant?->title,
                 'sku' => $item->orderItem?->sku,
                 'quantity' => $item->quantity,
             ])->values()->all(),
