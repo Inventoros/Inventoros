@@ -10,6 +10,7 @@ use Exception;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Psr\Http\Message\StreamInterface;
 use ZipArchive;
 
 /**
@@ -47,21 +48,168 @@ class FileUpdateService
 
         $this->ensureTempDirectoryExists();
 
-        $zipPath = "{$this->tempPath}/update_".time().'.zip';
+        $zipPath = "{$this->tempPath}/update_".time().'_'.bin2hex(random_bytes(4)).'.zip';
 
-        // Disable redirect following so a 302 from an allowlisted host
-        // cannot smuggle us off to an arbitrary URL.
-        $response = Http::withOptions(['allow_redirects' => false])
-            ->timeout(config('limits.timeouts.file_download'))
-            ->get($url);
-
-        if (! $response->successful()) {
-            throw new Exception('Failed to download release');
-        }
-
-        File::put($zipPath, $response->body());
+        $this->fetch($url, $zipPath, (int) config('update.max_download_bytes', 200 * 1024 * 1024), 'release');
 
         return $zipPath;
+    }
+
+    /**
+     * GET a URL, following redirects by hand, and stream the body to disk.
+     *
+     * GitHub answers every release asset with a 302 to a short-lived signed
+     * storage URL, so redirects must be followed. Guzzle's automatic
+     * following would accept any Location, so each hop is taken one at a time
+     * instead: it must be https, its host must be in update.download_hosts
+     * (or be the host of the allowlisted starting URL), and at most
+     * update.max_redirects hops are allowed. The body is written in chunks
+     * and the transfer is abandoned (and the partial file removed) as soon as
+     * it passes $maxBytes, whatever Content-Length claimed.
+     *
+     * @throws Exception When a hop is refused, the chain is too long, the
+     *                   server answers with an error, or the body is too big.
+     */
+    protected function fetch(string $url, string $destination, int $maxBytes, string $what): void
+    {
+        $maxRedirects = max(0, (int) config('update.max_redirects', 5));
+        $startHost = strtolower((string) parse_url($url, PHP_URL_HOST));
+        $current = $url;
+
+        for ($hop = 0; ; $hop++) {
+            $this->assertAllowedHop($current, $startHost);
+
+            $response = Http::withOptions(['allow_redirects' => false, 'stream' => true])
+                ->timeout(config('limits.timeouts.file_download'))
+                ->get($current);
+
+            if ($response->redirect()) {
+                if ($hop >= $maxRedirects) {
+                    throw new Exception("Too many redirects while downloading the {$what} (more than {$maxRedirects}).");
+                }
+
+                $location = trim((string) $response->header('Location'));
+                if ($location === '') {
+                    throw new Exception("The {$what} download redirected without a Location header.");
+                }
+
+                $current = $this->resolveLocation($current, $location);
+
+                continue;
+            }
+
+            if (! $response->successful()) {
+                throw new Exception("Failed to download the {$what} (HTTP {$response->status()}).");
+            }
+
+            $declared = $response->header('Content-Length');
+            if ($declared !== '' && is_numeric($declared) && (int) $declared > $maxBytes) {
+                throw new Exception("The {$what} download exceeds the size limit of {$maxBytes} bytes.");
+            }
+
+            $this->streamBody($response->toPsrResponse()->getBody(), $destination, $maxBytes, $what);
+
+            return;
+        }
+    }
+
+    /**
+     * Copy a response body to disk in chunks, enforcing the size cap.
+     *
+     * @throws Exception
+     */
+    private function streamBody(StreamInterface $body, string $destination, int $maxBytes, string $what): void
+    {
+        $handle = @fopen($destination, 'wb');
+        if ($handle === false) {
+            throw new Exception("Could not write the {$what} download to {$destination}.");
+        }
+
+        $written = 0;
+        $complete = false;
+
+        try {
+            while (! $body->eof()) {
+                $chunk = $body->read(1024 * 1024);
+                if ($chunk === '') {
+                    continue;
+                }
+
+                $written += strlen($chunk);
+                if ($written > $maxBytes) {
+                    throw new Exception("The {$what} download exceeds the size limit of {$maxBytes} bytes.");
+                }
+
+                if (fwrite($handle, $chunk) === false) {
+                    throw new Exception("Could not write the {$what} download to disk.");
+                }
+            }
+
+            $complete = true;
+        } finally {
+            fclose($handle);
+            $body->close();
+
+            if (! $complete) {
+                @unlink($destination);
+            }
+        }
+    }
+
+    /**
+     * Every hop of a download must be https and go to an allowlisted host.
+     *
+     * @throws Exception
+     */
+    protected function assertAllowedHop(string $url, string $startHost): void
+    {
+        $scheme = strtolower((string) parse_url($url, PHP_URL_SCHEME));
+        $host = strtolower((string) parse_url($url, PHP_URL_HOST));
+
+        if ($scheme !== 'https') {
+            throw new Exception("Refusing to download over '{$scheme}': update downloads must use https.");
+        }
+
+        $allowed = array_map('strtolower', (array) config('update.download_hosts', []));
+        $allowed[] = $startHost;
+
+        if ($host === '' || ! in_array($host, $allowed, true)) {
+            throw new Exception(
+                "Refusing to follow a redirect to {$host}: the host is not in the update download allowlist "
+                .'(INVENTOROS_UPDATE_HOSTS).'
+            );
+        }
+    }
+
+    /**
+     * Resolve a Location header (absolute, scheme-relative or path-relative)
+     * against the URL that returned it.
+     */
+    protected function resolveLocation(string $base, string $location): string
+    {
+        if (preg_match('#^[a-z][a-z0-9+.-]*://#i', $location)) {
+            return $location;
+        }
+
+        $parts = parse_url($base);
+        $scheme = $parts['scheme'] ?? 'https';
+        $authority = $parts['host'] ?? '';
+        if (isset($parts['port'])) {
+            $authority .= ':'.$parts['port'];
+        }
+
+        if (str_starts_with($location, '//')) {
+            return $scheme.':'.$location;
+        }
+
+        if (str_starts_with($location, '/')) {
+            return "{$scheme}://{$authority}{$location}";
+        }
+
+        $path = $parts['path'] ?? '/';
+        $directory = substr($path, 0, (int) strrpos($path, '/') + 1);
+
+        return "{$scheme}://{$authority}{$directory}{$location}";
     }
 
     /**
@@ -148,18 +296,23 @@ class FileUpdateService
 
         $this->assertAllowedDownloadUrl($signatureUrl);
 
-        $response = Http::withOptions(['allow_redirects' => false])
-            ->timeout(config('limits.timeouts.file_download'))
-            ->get($signatureUrl);
+        $this->ensureTempDirectoryExists();
+        $path = "{$this->tempPath}/signature_".bin2hex(random_bytes(6)).'.sig';
 
-        if (! $response->successful()) {
+        try {
+            $this->fetch($signatureUrl, $path, 64 * 1024, 'signature');
+
+            return trim((string) File::get($path));
+        } catch (Exception $e) {
             throw new Exception(
                 'Update signature could not be downloaded. The release must ship a detached '
-                ."signature at {$suffix} alongside the archive."
+                ."signature at {$suffix} alongside the archive. ({$e->getMessage()})",
+                0,
+                $e
             );
+        } finally {
+            @unlink($path);
         }
-
-        return trim($response->body());
     }
 
     /**

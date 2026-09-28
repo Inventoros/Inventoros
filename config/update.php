@@ -28,13 +28,40 @@ return [
             ',',
             (string) env(
                 'INVENTOROS_UPDATE_PREFIXES',
-                'https://github.com/Inventoros/Inventoros/releases/download/,'
-                .'https://github.com/Inventoros/Inventoros/archive/,'
-                .'https://api.github.com/repos/Inventoros/Inventoros/zipball/,'
-                .'https://api.github.com/repos/Inventoros/Inventoros/tarball/'
+                'https://github.com/Inventoros/Inventoros/releases/download/'
             )
         )
     ))),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Redirect hosts and download limits
+    |--------------------------------------------------------------------------
+    |
+    | GitHub answers a release asset download with a 302 to short-lived
+    | storage. Redirects are followed one hop at a time: every hop must be
+    | https and go to one of these hosts (or to the host of the allowlisted
+    | starting URL), and at most `max_redirects` hops are taken. Override the
+    | hosts with INVENTOROS_UPDATE_HOSTS (comma-separated) for a mirror.
+    |
+    | `max_download_bytes` caps the archive while it streams to disk.
+    |
+    */
+
+    'download_hosts' => array_values(array_filter(array_map(
+        'trim',
+        explode(
+            ',',
+            (string) env(
+                'INVENTOROS_UPDATE_HOSTS',
+                'github.com,objects.githubusercontent.com,release-assets.githubusercontent.com,codeload.github.com'
+            )
+        )
+    ))),
+
+    'max_redirects' => (int) env('INVENTOROS_UPDATE_MAX_REDIRECTS', 5),
+
+    'max_download_bytes' => (int) env('INVENTOROS_UPDATE_MAX_DOWNLOAD_BYTES', 200 * 1024 * 1024),
 
     /*
     |--------------------------------------------------------------------------
