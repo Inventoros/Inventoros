@@ -60,9 +60,9 @@ const formatTime = (date) =>
     <AppLayout>
         <template #header>
             <div class="flex items-center gap-2 text-xs">
-                <Link :href="route('stock-adjustments.index')" class="text-text-tertiary hover:text-text-primary">Workspace</Link>
+                <Link :href="route('stock-adjustments.index')" class="text-text-tertiary hover:text-text-primary">{{ t('nav.sections.workspace') }}</Link>
                 <span class="text-text-tertiary">/</span>
-                <Link :href="route('stock-adjustments.index')" class="text-text-tertiary hover:text-text-primary">Stock Adjustments</Link>
+                <Link :href="route('stock-adjustments.index')" class="text-text-tertiary hover:text-text-primary">{{ t('nav.stockAdjustments') }}</Link>
                 <span class="text-text-tertiary">/</span>
                 <span class="font-medium text-text-primary">#{{ adjustment.id }}</span>
             </div>

@@ -41,9 +41,9 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-t
     <AppLayout>
         <template #header>
             <div class="flex items-center gap-2 text-xs">
-                <Link :href="route('warehouses.index')" class="text-text-tertiary hover:text-text-primary">Workspace</Link>
+                <Link :href="route('warehouses.index')" class="text-text-tertiary hover:text-text-primary">{{ t('nav.sections.workspace') }}</Link>
                 <span class="text-text-tertiary">/</span>
-                <Link :href="route('warehouses.index')" class="text-text-tertiary hover:text-text-primary">Warehouses</Link>
+                <Link :href="route('warehouses.index')" class="text-text-tertiary hover:text-text-primary">{{ t('nav.warehouses') }}</Link>
                 <span class="text-text-tertiary">/</span>
                 <span class="font-medium text-text-primary">{{ warehouse.name }}</span>
             </div>

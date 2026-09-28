@@ -102,61 +102,67 @@ const pendingApprovalsCount = computed(() => Number(page.props.pendingApprovalsC
 const workspaceName = computed(() => page.props.auth?.organization?.name || 'Inventoros');
 
 /**
- * Nav schema. Each section is { label, items: [{ icon, name, href, active, perm? }] }.
+ * Nav schema. Each section is { id, label, items: [{ icon, name, href, active, perm? }] }.
  * Render is data-driven so adding a section is one line.
  */
 const sections = computed(() => [
     {
-        label: 'Workspace',
+        id: 'workspace',
+        label: t('nav.sections.workspace'),
         items: [
-            { icon: LayoutGrid, name: 'Dashboard', href: route('dashboard'), active: ['dashboard'] },
-            { icon: Boxes, name: 'Inventory', href: route('products.index'), active: ['products.*'], perm: 'view_products' },
-            { icon: ShoppingCart, name: 'Orders', href: route('orders.index'), active: ['orders.*'], perm: 'view_orders' },
-            { icon: Contact, name: 'Customers', href: route('customers.index'), active: ['customers.*'], perm: 'view_customers' },
-            { icon: Undo2, name: 'Returns', href: route('returns.index'), active: ['returns.*'], perm: 'manage_returns' },
-            { icon: ClipboardList, name: 'Purchase Orders', href: route('purchase-orders.index'), active: ['purchase-orders.*'], perm: 'view_purchase_orders' },
-            { icon: Truck, name: 'Suppliers', href: route('suppliers.index'), active: ['suppliers.*'], perm: 'view_suppliers' },
-            { icon: BadgeCheck, name: 'Approvals', href: route('approvals.index'), active: ['approvals.*'], perm: ['approve_purchase_orders', 'approve_stock_adjustments', 'approve_stock_transfers'], badge: pendingApprovalsCount.value },
+            { icon: LayoutGrid, name: t('nav.dashboard'), href: route('dashboard'), active: ['dashboard'] },
+            { icon: Boxes, name: t('nav.inventory'), href: route('products.index'), active: ['products.*'], perm: 'view_products' },
+            { icon: ShoppingCart, name: t('nav.orders'), href: route('orders.index'), active: ['orders.*'], perm: 'view_orders' },
+            { icon: Contact, name: t('nav.customers'), href: route('customers.index'), active: ['customers.*'], perm: 'view_customers' },
+            { icon: Undo2, name: t('nav.returns'), href: route('returns.index'), active: ['returns.*'], perm: 'manage_returns' },
+            { icon: ClipboardList, name: t('nav.purchaseOrders'), href: route('purchase-orders.index'), active: ['purchase-orders.*'], perm: 'view_purchase_orders' },
+            { icon: Truck, name: t('nav.suppliers'), href: route('suppliers.index'), active: ['suppliers.*'], perm: 'view_suppliers' },
+            { icon: BadgeCheck, name: t('nav.approvals'), href: route('approvals.index'), active: ['approvals.*'], perm: ['approve_purchase_orders', 'approve_stock_adjustments', 'approve_stock_transfers'], badge: pendingApprovalsCount.value },
         ],
     },
     {
-        label: 'Catalog',
+        id: 'catalog',
+        label: t('nav.sections.catalog'),
         items: [
-            { icon: Tag, name: 'Categories', href: route('categories.index'), active: ['categories.*'], perm: 'manage_categories' },
-            { icon: MapPin, name: 'Locations', href: route('locations.index'), active: ['locations.*'], perm: 'manage_locations' },
-            { icon: Warehouse, name: 'Warehouses', href: route('warehouses.index'), active: ['warehouses.*'], perm: 'view_warehouses' },
+            { icon: Tag, name: t('nav.categories'), href: route('categories.index'), active: ['categories.*'], perm: 'manage_categories' },
+            { icon: MapPin, name: t('nav.locations'), href: route('locations.index'), active: ['locations.*'], perm: 'manage_locations' },
+            { icon: Warehouse, name: t('nav.warehouses'), href: route('warehouses.index'), active: ['warehouses.*'], perm: 'view_warehouses' },
         ],
     },
     {
-        label: 'Stock',
+        id: 'stock',
+        label: t('nav.sections.stock'),
         items: [
-            { icon: SlidersHorizontal, name: 'Stock Adjustments', href: route('stock-adjustments.index'), active: ['stock-adjustments.*'], perm: 'manage_stock' },
-            { icon: ArrowLeftRight, name: 'Stock Transfers', href: route('stock-transfers.index'), active: ['stock-transfers.*'], perm: 'transfer_stock' },
-            { icon: ScanLine, name: 'Stock Audits', href: route('stock-audits.index'), active: ['stock-audits.*'], perm: 'view_stock_audits' },
-            { icon: Hammer, name: 'Work Orders', href: route('work-orders.index'), active: ['work-orders.*'], perm: 'manage_stock' },
+            { icon: SlidersHorizontal, name: t('nav.stockAdjustments'), href: route('stock-adjustments.index'), active: ['stock-adjustments.*'], perm: 'manage_stock' },
+            { icon: ArrowLeftRight, name: t('nav.stockTransfers'), href: route('stock-transfers.index'), active: ['stock-transfers.*'], perm: 'transfer_stock' },
+            { icon: ScanLine, name: t('nav.stockAudits'), href: route('stock-audits.index'), active: ['stock-audits.*'], perm: 'view_stock_audits' },
+            { icon: Hammer, name: t('nav.workOrders'), href: route('work-orders.index'), active: ['work-orders.*'], perm: 'manage_stock' },
         ],
     },
     {
-        label: 'Insights',
+        id: 'insights',
+        label: t('nav.sections.insights'),
         items: [
-            { icon: FileSpreadsheet, name: 'Import / Export', href: route('import-export.index'), active: ['import-export.*'], perm: ['export_data', 'import_data'] },
-            { icon: BarChart3, name: 'Reports', href: route('reports.index'), active: ['reports.*'], perm: 'view_reports' },
-            { icon: History, name: 'Activity Log', href: route('activity-log.index'), active: ['activity-log.*'], perm: 'view_activity_log' },
+            { icon: FileSpreadsheet, name: t('nav.importExport'), href: route('import-export.index'), active: ['import-export.*'], perm: ['export_data', 'import_data'] },
+            { icon: BarChart3, name: t('nav.reports'), href: route('reports.index'), active: ['reports.*'], perm: 'view_reports' },
+            { icon: History, name: t('nav.activityLog'), href: route('activity-log.index'), active: ['activity-log.*'], perm: 'view_activity_log' },
         ],
     },
     {
-        label: 'Plugins',
+        id: 'plugins',
+        label: t('nav.sections.plugins'),
         items: pluginNavItems.value,
     },
     {
-        label: 'Admin',
+        id: 'admin',
+        label: t('nav.sections.admin'),
         items: [
-            { icon: Users, name: 'Users', href: route('users.index'), active: ['users.*'], perm: 'view_users' },
-            { icon: ShieldCheck, name: 'Roles', href: route('roles.index'), active: ['roles.*'], perm: 'view_roles' },
-            { icon: Puzzle, name: 'Plugins', href: route('plugins.index'), active: ['plugins.*'], perm: 'view_plugins' },
+            { icon: Users, name: t('nav.users'), href: route('users.index'), active: ['users.*'], perm: 'view_users' },
+            { icon: ShieldCheck, name: t('nav.roles'), href: route('roles.index'), active: ['roles.*'], perm: 'view_roles' },
+            { icon: Puzzle, name: t('nav.plugins'), href: route('plugins.index'), active: ['plugins.*'], perm: 'view_plugins' },
             {
                 icon: Settings2,
-                name: 'Settings',
+                name: t('nav.settings'),
                 href: route('settings.index'),
                 active: ['settings.*', 'webhooks.*', 'two-factor.setup', 'admin.update.*'],
             },
@@ -216,7 +222,7 @@ const isActive = (item) => item.active.some((pattern) => route().current(pattern
             <button
                 @click="mobileOpen = !mobileOpen"
                 class="p-1.5 rounded-md text-text-secondary hover:bg-surface-overlay ds-focus-ring"
-                aria-label="Toggle navigation"
+                :aria-label="t('nav.toggleNavigation')"
             >
                 <Menu v-if="!mobileOpen" :size="18" />
                 <X v-else :size="18" />
@@ -264,7 +270,7 @@ const isActive = (item) => item.active.some((pattern) => route().current(pattern
                            transition-colors ds-focus-ring"
                 >
                     <Search :size="13" />
-                    <span class="flex-1 text-left">Search…</span>
+                    <span class="flex-1 text-left">{{ t('nav.search') }}</span>
                     <kbd class="hidden md:inline px-1.5 py-0.5 rounded bg-surface-overlay text-[10px] font-mono text-text-secondary border border-border-subtle">
                         ⌘K
                     </kbd>
@@ -273,7 +279,7 @@ const isActive = (item) => item.active.some((pattern) => route().current(pattern
 
             <!-- Nav -->
             <nav class="flex-1 mt-4 overflow-y-auto ds-scroll px-3 pb-4">
-                <div v-for="section in visibleSections" :key="section.label" class="mb-5">
+                <div v-for="section in visibleSections" :key="section.id" class="mb-5">
                     <p class="px-2 mb-1 text-[10px] font-medium uppercase tracking-wider text-text-tertiary">
                         {{ section.label }}
                     </p>
@@ -300,7 +306,7 @@ const isActive = (item) => item.active.some((pattern) => route().current(pattern
                             <span
                                 v-if="item.badge"
                                 class="ml-auto inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-status-warning-soft px-1.5 text-[11px] font-semibold tabular-nums text-status-warning"
-                                :aria-label="`${item.badge} waiting`"
+                                :aria-label="t('nav.waitingCount', { count: item.badge })"
                             >
                                 {{ item.badge > 99 ? '99+' : item.badge }}
                             </span>

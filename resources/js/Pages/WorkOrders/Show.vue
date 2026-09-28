@@ -131,9 +131,9 @@ const fieldInput = 'h-9 w-full rounded-md border border-border-subtle bg-surface
     <AppLayout>
         <template #header>
             <div class="flex items-center gap-2 text-xs">
-                <Link :href="route('work-orders.index')" class="text-text-tertiary hover:text-text-primary">Workspace</Link>
+                <Link :href="route('work-orders.index')" class="text-text-tertiary hover:text-text-primary">{{ t('nav.sections.workspace') }}</Link>
                 <span class="text-text-tertiary">/</span>
-                <Link :href="route('work-orders.index')" class="text-text-tertiary hover:text-text-primary">Work Orders</Link>
+                <Link :href="route('work-orders.index')" class="text-text-tertiary hover:text-text-primary">{{ t('nav.workOrders') }}</Link>
                 <span class="text-text-tertiary">/</span>
                 <span class="font-medium text-text-primary">{{ workOrder.wo_number }}</span>
             </div>

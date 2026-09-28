@@ -22,7 +22,7 @@ const { t } = useI18n();
     <AppLayout>
         <template #header>
             <div class="flex items-center gap-2 text-xs">
-                <span class="text-text-tertiary">Workspace</span>
+                <span class="text-text-tertiary">{{ t('nav.sections.workspace') }}</span>
                 <span class="text-text-tertiary">/</span>
                 <span class="font-medium text-text-primary">{{ t('nav.roles') }}</span>
             </div>

@@ -73,11 +73,11 @@ const fieldCheckbox = 'rounded border-border-subtle bg-surface-canvas text-brand
     <AppLayout>
         <template #header>
             <div class="flex items-center gap-2 text-xs">
-                <Link :href="route('stock-audits.index')" class="text-text-tertiary hover:text-text-primary">Workspace</Link>
+                <Link :href="route('stock-audits.index')" class="text-text-tertiary hover:text-text-primary">{{ t('nav.sections.workspace') }}</Link>
                 <span class="text-text-tertiary">/</span>
-                <Link :href="route('stock-audits.index')" class="text-text-tertiary hover:text-text-primary">Stock Audits</Link>
+                <Link :href="route('stock-audits.index')" class="text-text-tertiary hover:text-text-primary">{{ t('nav.stockAudits') }}</Link>
                 <span class="text-text-tertiary">/</span>
-                <span class="font-medium text-text-primary">New</span>
+                <span class="font-medium text-text-primary">{{ t('common.new') }}</span>
             </div>
         </template>
 

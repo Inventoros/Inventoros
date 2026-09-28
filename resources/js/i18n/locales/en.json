@@ -80,7 +80,9 @@
     "creating": "Creating...",
     "updating": "Updating...",
     "add": "Add",
-    "export": "Export"
+    "export": "Export",
+    "new": "New",
+    "editWithName": "Edit: {name}"
   },
   "nav": {
     "dashboard": "Dashboard",
@@ -107,7 +109,38 @@
     "account": "Account",
     "profile": "Profile",
     "logOut": "Log Out",
-    "notifications": "Notifications"
+    "notifications": "Notifications",
+    "returns": "Returns",
+    "approvals": "Approvals",
+    "stockAdjustments": "Stock Adjustments",
+    "stockTransfers": "Stock Transfers",
+    "stockAudits": "Stock Audits",
+    "activityLog": "Activity Log",
+    "updates": "Updates",
+    "twoFactor": "Two-Factor",
+    "receive": "Receive",
+    "search": "Search…",
+    "toggleNavigation": "Toggle navigation",
+    "waitingCount": "{count} waiting",
+    "sections": {
+      "workspace": "Workspace",
+      "catalog": "Catalog",
+      "stock": "Stock",
+      "insights": "Insights",
+      "plugins": "Plugins",
+      "admin": "Admin"
+    },
+    "globalSearch": {
+      "placeholder": "Search products, orders, customers...",
+      "recent": "Recent",
+      "noResults": "No results found for \"{query}\"",
+      "tryDifferent": "Try a different search term",
+      "startTyping": "Start typing to search",
+      "hint": "Search products, orders, customers, and more",
+      "navigate": "navigate",
+      "open": "open",
+      "close": "close"
+    }
   },
   "dashboard": {
     "title": "Dashboard",
@@ -2543,5 +2576,9 @@
       "loginUrl": "Sign-in page",
       "hint": "Invite contacts from a customer's page. Each contact only sees their own company's orders, invoices and returns."
     }
+  },
+  "legal": {
+    "licensedUnder": "Licensed under the {license}",
+    "sourceCode": "Source code"
   }
 }
