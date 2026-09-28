@@ -1,4 +1,8 @@
 {
+  "stockAudits": {
+    "completeConfirm": "이 실사를 완료할까요? 차이가 있는 항목마다 재고 조정이 생성됩니다.",
+    "completeUncountedConfirm": "{total}개 중 {uncounted}개 품목을 세지 않았습니다. 그래도 실사를 완료할까요? 세지 않은 품목은 현재 재고를 유지하며, 센 품목만 조정됩니다."
+  },
   "common": {
     "save": "저장",
     "saveChanges": "변경사항 저장",
@@ -143,6 +147,8 @@
     }
   },
   "dashboard": {
+    "atSellingPrice": "판매가 기준",
+    "itemsCount": "{count}개 품목 | {count}개 품목",
     "title": "대시보드",
     "totalProducts": "전체 제품 수",
     "totalValue": "총 가치",
@@ -245,6 +251,7 @@
       "variantStockReadOnlyHint": "저장된 옵션의 재고는 재고 조정으로 변경하세요."
     },
     "show": {
+      "usesProductPrice": "옵션 가격이 없어 상품 가격으로 판매됩니다",
       "title": "제품 상세",
       "backToInventory": "재고로 돌아가기",
       "sku": "SKU",
@@ -298,6 +305,27 @@
     }
   },
   "orders": {
+    "itemsCol": "품목",
+    "sources": {
+      "manual": "수동",
+      "api": "API",
+      "graphql": "GraphQL",
+      "mcp": "MCP",
+      "import": "가져오기",
+      "ebay": "eBay",
+      "shopify": "Shopify",
+      "amazon": "Amazon",
+      "woocommerce": "WooCommerce"
+    },
+    "approval": {
+      "label": "승인",
+      "not_required": "승인 필요 없음",
+      "pending": "승인 대기",
+      "approved": "승인됨",
+      "rejected": "거부됨",
+      "blocksShipping": "이 주문은 승인을 기다리고 있습니다. 처리는 할 수 있지만 누군가 승인하기 전에는 배송하거나 배달할 수 없습니다.",
+      "statusBlocked": "배송됨과 배달됨은 주문이 승인되면 선택할 수 있습니다."
+    },
     "title": "주문",
     "createOrder": "주문 생성",
     "searchOrders": "주문 검색",
@@ -1382,6 +1410,44 @@
       }
     },
     "activityLog": {
+      "action": "작업",
+      "actions": {
+        "created": "생성됨",
+        "updated": "업데이트됨",
+        "deleted": "삭제됨",
+        "viewed": "조회됨",
+        "approval_requested": "승인 요청됨",
+        "approved": "승인됨",
+        "rejected": "거부됨",
+        "payment_recorded": "결제 기록됨",
+        "payment_refunded": "결제 환불됨",
+        "payment_voided": "결제 취소됨",
+        "invoice_emailed": "청구서 이메일 발송",
+        "emailed": "이메일 발송",
+        "auto_reorder": "자동 재주문",
+        "quick_reorder": "빠른 재주문",
+        "return_lines_updated": "반품 품목 업데이트됨",
+        "portal_return_requested": "포털에서 반품 요청됨"
+      },
+      "subjects": {
+        "Customer": "고객",
+        "CycleCountSchedule": "순환 실사 일정",
+        "Order": "주문",
+        "Product": "상품",
+        "ProductCategory": "카테고리",
+        "ProductLocation": "위치",
+        "ProductVariant": "상품 옵션",
+        "PurchaseOrder": "구매 주문",
+        "ReturnOrder": "반품",
+        "Role": "역할",
+        "Setting": "설정",
+        "StockAdjustmentRequest": "재고 조정 요청",
+        "StockAudit": "재고 실사",
+        "StockTransfer": "재고 이동",
+        "Supplier": "공급업체",
+        "User": "사용자",
+        "Warehouse": "창고"
+      },
       "title": "활동 로그",
       "searchPlaceholder": "활동 설명 검색...",
       "allUsers": "모든 사용자",
@@ -2230,6 +2296,8 @@
       "rejected": "{name}님이 거부했습니다."
     },
     "settings": {
+      "orders": "판매 주문은 배송 전에 승인이 필요합니다",
+      "ordersHelp": "새 주문은 승인을 기다립니다. 처리는 할 수 있지만 주문 승인 권한이 있는 사람이 승인하기 전에는 배송하거나 배달할 수 없습니다. 꺼져 있으면 주문은 승인을 기다리지 않습니다.",
       "tab": "승인",
       "title": "승인 워크플로",
       "description": "해당 승인 권한이 있는 사람의 결재가 필요한 요청을 선택하세요. 기본적으로 모두 꺼져 있습니다.",

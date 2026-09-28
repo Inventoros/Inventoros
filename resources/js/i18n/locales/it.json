@@ -1,4 +1,8 @@
 {
+  "stockAudits": {
+    "completeConfirm": "Completare questo inventario? Verranno create rettifiche di scorte per ogni discrepanza.",
+    "completeUncountedConfirm": "{uncounted} articoli su {total} non sono stati contati. Completare comunque l'inventario? Gli articoli non contati mantengono le scorte attuali; vengono rettificati solo quelli contati."
+  },
   "common": {
     "save": "Salva",
     "saveChanges": "Salva modifiche",
@@ -143,6 +147,8 @@
     }
   },
   "dashboard": {
+    "atSellingPrice": "al prezzo di vendita",
+    "itemsCount": "{count} articolo | {count} articoli",
     "title": "Dashboard",
     "totalProducts": "Prodotti totali",
     "totalValue": "Valore totale",
@@ -245,6 +251,7 @@
       "variantStockReadOnlyHint": "Modifica le giacenze di una variante salvata con una rettifica di magazzino."
     },
     "show": {
+      "usesProductPrice": "Nessun prezzo di variante: venduta al prezzo del prodotto",
       "title": "Dettagli prodotto",
       "backToInventory": "Torna all'inventario",
       "sku": "SKU",
@@ -298,6 +305,27 @@
     }
   },
   "orders": {
+    "itemsCol": "Articoli",
+    "sources": {
+      "manual": "Manuale",
+      "api": "API",
+      "graphql": "GraphQL",
+      "mcp": "MCP",
+      "import": "Importazione",
+      "ebay": "eBay",
+      "shopify": "Shopify",
+      "amazon": "Amazon",
+      "woocommerce": "WooCommerce"
+    },
+    "approval": {
+      "label": "Approvazione",
+      "not_required": "Nessuna approvazione necessaria",
+      "pending": "In attesa di approvazione",
+      "approved": "Approvato",
+      "rejected": "Rifiutato",
+      "blocksShipping": "Questo ordine è in attesa di approvazione. Può essere elaborato, ma non spedito né consegnato finché qualcuno non lo approva.",
+      "statusBlocked": "Spedito e Consegnato sono disponibili dopo l'approvazione dell'ordine."
+    },
     "title": "Ordini",
     "createOrder": "Crea ordine",
     "searchOrders": "Cerca ordini",
@@ -1382,6 +1410,44 @@
       }
     },
     "activityLog": {
+      "action": "Azione",
+      "actions": {
+        "created": "Creato",
+        "updated": "Aggiornato",
+        "deleted": "Eliminato",
+        "viewed": "Visualizzato",
+        "approval_requested": "Approvazione richiesta",
+        "approved": "Approvato",
+        "rejected": "Rifiutato",
+        "payment_recorded": "Pagamento registrato",
+        "payment_refunded": "Pagamento rimborsato",
+        "payment_voided": "Pagamento annullato",
+        "invoice_emailed": "Fattura inviata via email",
+        "emailed": "Inviato via email",
+        "auto_reorder": "Riordino automatico",
+        "quick_reorder": "Riordino rapido",
+        "return_lines_updated": "Righe del reso aggiornate",
+        "portal_return_requested": "Reso richiesto dal portale"
+      },
+      "subjects": {
+        "Customer": "Cliente",
+        "CycleCountSchedule": "Pianificazione conteggio ciclico",
+        "Order": "Ordine",
+        "Product": "Prodotto",
+        "ProductCategory": "Categoria",
+        "ProductLocation": "Ubicazione",
+        "ProductVariant": "Variante di prodotto",
+        "PurchaseOrder": "Ordine d'acquisto",
+        "ReturnOrder": "Reso",
+        "Role": "Ruolo",
+        "Setting": "Impostazione",
+        "StockAdjustmentRequest": "Richiesta di rettifica scorte",
+        "StockAudit": "Inventario",
+        "StockTransfer": "Trasferimento di scorte",
+        "Supplier": "Fornitore",
+        "User": "Utente",
+        "Warehouse": "Magazzino"
+      },
       "title": "Registro attività",
       "searchPlaceholder": "Cerca nelle descrizioni delle attività...",
       "allUsers": "Tutti gli utenti",
@@ -2230,6 +2296,8 @@
       "rejected": "Rifiutato da {name}."
     },
     "settings": {
+      "orders": "Gli ordini di vendita richiedono l'approvazione prima della spedizione",
+      "ordersHelp": "I nuovi ordini attendono l'approvazione. Possono essere elaborati, ma non spediti né consegnati finché qualcuno con il permesso di approvare gli ordini non li approva. Se disattivato, gli ordini non attendono mai l'approvazione.",
       "tab": "Approvazioni",
       "title": "Flussi di approvazione",
       "description": "Scegli quali richieste necessitano del via libera di qualcuno con il permesso di approvazione corrispondente. Sono tutti disattivati per impostazione predefinita.",

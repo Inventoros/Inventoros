@@ -1,4 +1,8 @@
 {
+  "stockAudits": {
+    "completeConfirm": "Deze telling afronden? Voor elke afwijking worden voorraadcorrecties aangemaakt.",
+    "completeUncountedConfirm": "{uncounted} van {total} artikelen zijn niet geteld. De telling toch afronden? Niet-getelde artikelen houden hun huidige voorraad; alleen getelde artikelen worden gecorrigeerd."
+  },
   "common": {
     "save": "Opslaan",
     "saveChanges": "Wijzigingen opslaan",
@@ -143,6 +147,8 @@
     }
   },
   "dashboard": {
+    "atSellingPrice": "tegen verkoopprijs",
+    "itemsCount": "{count} artikel | {count} artikelen",
     "title": "Dashboard",
     "totalProducts": "Totaal producten",
     "totalValue": "Totale waarde",
@@ -245,6 +251,7 @@
       "variantStockReadOnlyHint": "Wijzig de voorraad van een opgeslagen variant met een voorraadcorrectie."
     },
     "show": {
+      "usesProductPrice": "Geen variantprijs ingesteld: wordt verkocht tegen de productprijs",
       "title": "Productdetails",
       "backToInventory": "Terug naar voorraad",
       "sku": "SKU",
@@ -298,6 +305,27 @@
     }
   },
   "orders": {
+    "itemsCol": "Artikelen",
+    "sources": {
+      "manual": "Handmatig",
+      "api": "API",
+      "graphql": "GraphQL",
+      "mcp": "MCP",
+      "import": "Import",
+      "ebay": "eBay",
+      "shopify": "Shopify",
+      "amazon": "Amazon",
+      "woocommerce": "WooCommerce"
+    },
+    "approval": {
+      "label": "Goedkeuring",
+      "not_required": "Geen goedkeuring nodig",
+      "pending": "Wacht op goedkeuring",
+      "approved": "Goedgekeurd",
+      "rejected": "Afgewezen",
+      "blocksShipping": "Deze bestelling wacht op goedkeuring. Ze kan worden verwerkt, maar niet verzonden of geleverd totdat iemand haar goedkeurt.",
+      "statusBlocked": "Verzonden en Geleverd zijn beschikbaar zodra de bestelling is goedgekeurd."
+    },
     "title": "Bestellingen",
     "createOrder": "Bestelling aanmaken",
     "searchOrders": "Bestellingen zoeken",
@@ -1382,6 +1410,44 @@
       }
     },
     "activityLog": {
+      "action": "Actie",
+      "actions": {
+        "created": "Aangemaakt",
+        "updated": "Bijgewerkt",
+        "deleted": "Verwijderd",
+        "viewed": "Bekeken",
+        "approval_requested": "Goedkeuring aangevraagd",
+        "approved": "Goedgekeurd",
+        "rejected": "Afgewezen",
+        "payment_recorded": "Betaling geregistreerd",
+        "payment_refunded": "Betaling terugbetaald",
+        "payment_voided": "Betaling geannuleerd",
+        "invoice_emailed": "Factuur gemaild",
+        "emailed": "Gemaild",
+        "auto_reorder": "Automatisch nabestellen",
+        "quick_reorder": "Snel nabestellen",
+        "return_lines_updated": "Retourregels bijgewerkt",
+        "portal_return_requested": "Retour aangevraagd via portaal"
+      },
+      "subjects": {
+        "Customer": "Klant",
+        "CycleCountSchedule": "Cyclustellingsschema",
+        "Order": "Bestelling",
+        "Product": "Product",
+        "ProductCategory": "Categorie",
+        "ProductLocation": "Locatie",
+        "ProductVariant": "Productvariant",
+        "PurchaseOrder": "Inkooporder",
+        "ReturnOrder": "Retour",
+        "Role": "Rol",
+        "Setting": "Instelling",
+        "StockAdjustmentRequest": "Verzoek voorraadcorrectie",
+        "StockAudit": "Voorraadtelling",
+        "StockTransfer": "Voorraadoverdracht",
+        "Supplier": "Leverancier",
+        "User": "Gebruiker",
+        "Warehouse": "Magazijn"
+      },
       "title": "Activiteitenlogboek",
       "searchPlaceholder": "Activiteitsbeschrijvingen zoeken...",
       "allUsers": "Alle gebruikers",
@@ -2230,6 +2296,8 @@
       "rejected": "Afgewezen door {name}."
     },
     "settings": {
+      "orders": "Verkooporders moeten worden goedgekeurd voordat ze worden verzonden",
+      "ordersHelp": "Nieuwe bestellingen wachten op goedkeuring. Ze kunnen worden verwerkt, maar niet verzonden of geleverd totdat iemand met de machtiging om orders goed te keuren ze goedkeurt. Staat dit uit, dan wachten bestellingen nooit op goedkeuring.",
       "tab": "Goedkeuringen",
       "title": "Goedkeuringsworkflows",
       "description": "Kies welke aanvragen moeten worden goedgekeurd door iemand met de bijbehorende goedkeuringsrechten. Alle staan standaard uit.",

@@ -64,9 +64,9 @@ const fieldError = 'mt-1 text-xs text-status-danger';
     <AppLayout>
         <template #header>
             <div class="flex items-center gap-2 text-xs">
-                <span class="text-text-tertiary">Workspace</span>
+                <span class="text-text-tertiary">{{ t('nav.sections.workspace') }}</span>
                 <span class="text-text-tertiary">/</span>
-                <Link :href="route('stock-audits.index')" class="text-text-tertiary hover:text-text-primary">Stock Audits</Link>
+                <Link :href="route('stock-audits.index')" class="text-text-tertiary hover:text-text-primary">{{ t('nav.stockAudits') }}</Link>
                 <span class="text-text-tertiary">/</span>
                 <Link :href="route('cycle-counts.index')" class="text-text-tertiary hover:text-text-primary">{{ t('cycleCounts.title') }}</Link>
                 <span class="text-text-tertiary">/</span>
