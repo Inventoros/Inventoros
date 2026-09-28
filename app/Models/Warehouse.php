@@ -73,6 +73,23 @@ class Warehouse extends Model
         ];
     }
 
+    /**
+     * A warehouse created without a currency or timezone (web form left
+     * blank, REST, import) takes the organization's regional settings.
+     */
+    protected static function booted(): void
+    {
+        static::creating(function (Warehouse $warehouse) {
+            if (($warehouse->currency ?? '') !== '' && ($warehouse->timezone ?? '') !== '') {
+                return;
+            }
+
+            $organization = Organization::query()->find($warehouse->organization_id);
+            $warehouse->currency = $warehouse->currency ?: ($organization?->currency ?: 'CAD');
+            $warehouse->timezone = $warehouse->timezone ?: ($organization?->timezone ?: 'America/Toronto');
+        });
+    }
+
     public function organization(): BelongsTo
     {
         return $this->belongsTo(Organization::class);

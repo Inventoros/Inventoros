@@ -9,6 +9,11 @@ import { ArrowLeft } from 'lucide-vue-next';
 
 const { t } = useI18n();
 
+const props = defineProps({
+    // The organization's regional settings (currency, timezone, country).
+    defaults: { type: Object, default: () => ({}) },
+});
+
 const form = useForm({
     name: '',
     code: '',
@@ -18,32 +23,37 @@ const form = useForm({
     city: '',
     province: '',
     postal_code: '',
-    country: 'Canada',
+    country: props.defaults.country || 'Canada',
     phone: '',
     email: '',
     manager_name: '',
-    timezone: 'America/Toronto',
-    currency: 'CAD',
+    timezone: props.defaults.timezone || 'America/Toronto',
+    currency: props.defaults.currency || 'CAD',
     priority: 0,
     capacity: null,
     is_active: true,
 });
 
-const timezones = [
+// Keep the organization's own timezone / currency selectable even when it is
+// not one of the common choices below.
+const withDefault = (options, value) =>
+    value && !options.some((option) => option.value === value) ? [{ value, label: value }, ...options] : options;
+
+const timezones = withDefault([
     { value: 'America/St_Johns', label: "Newfoundland (St. John's)" },
     { value: 'America/Halifax', label: 'Atlantic (Halifax)' },
     { value: 'America/Toronto', label: 'Eastern (Toronto)' },
     { value: 'America/Winnipeg', label: 'Central (Winnipeg)' },
     { value: 'America/Edmonton', label: 'Mountain (Edmonton)' },
     { value: 'America/Vancouver', label: 'Pacific (Vancouver)' },
-];
+], props.defaults.timezone);
 
-const currencies = [
+const currencies = withDefault([
     { value: 'CAD', label: 'CAD - Canadian Dollar' },
     { value: 'USD', label: 'USD - US Dollar' },
     { value: 'EUR', label: 'EUR - Euro' },
     { value: 'GBP', label: 'GBP - British Pound' },
-];
+], props.defaults.currency);
 
 const submit = () => {
     form.post(route('warehouses.store'));

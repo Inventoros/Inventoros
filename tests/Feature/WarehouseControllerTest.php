@@ -117,6 +117,28 @@ class WarehouseControllerTest extends TestCase
         $response->assertStatus(200);
     }
 
+    public function test_new_warehouses_default_to_the_organization_currency_and_timezone(): void
+    {
+        $this->organization->forceFill(['currency' => 'EUR', 'timezone' => 'Europe/Paris', 'country' => 'France'])->save();
+
+        $this->actingAs($this->admin)
+            ->get(route('warehouses.create'))
+            ->assertOk()
+            ->assertInertia(fn ($page) => $page
+                ->where('defaults.currency', 'EUR')
+                ->where('defaults.timezone', 'Europe/Paris')
+                ->where('defaults.country', 'France'));
+
+        // A warehouse created without them (API, import) inherits them too.
+        $this->actingAs($this->admin)
+            ->post(route('warehouses.store'), ['name' => 'Paris DC', 'code' => 'WH-PAR'])
+            ->assertRedirect();
+
+        $warehouse = \App\Models\Warehouse::where('code', 'WH-PAR')->firstOrFail();
+        $this->assertSame('EUR', $warehouse->currency);
+        $this->assertSame('Europe/Paris', $warehouse->timezone);
+    }
+
     public function test_admin_can_create_warehouse(): void
     {
         $data = [
