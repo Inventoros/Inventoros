@@ -9,6 +9,20 @@ The GitHub Actions workflow at `.github/workflows/cpanel-release.yml` automatica
 1. **Tagged releases** - Push a tag like `v1.0.0` to trigger a release build
 2. **Manual trigger** - Use "Actions" tab → "Build cPanel Release" → "Run workflow"
 
+The package is built by `build-release.php` in this folder, which CI and a
+developer machine run the same way (after `composer install --no-dev` and
+`npm run build`):
+
+```bash
+php deploy/cpanel/build-release.php --version=2.0.0 --out=dist
+php deploy/cpanel/build-release.php --verify=dist/inventoros-cpanel-2.0.0.zip --version=2.0.0
+```
+
+It writes `release.json` (version, layout `cpanel-v1`, `min_php` from
+composer.json, `max_php` from the locked dependencies) for the in-app updater,
+and fails if the zip holds `.env` files, tests, dev dependencies, runtime
+state or is missing a required file. On Windows use a short `--out` path.
+
 ## Directory Structure
 
 The release package creates this structure:
@@ -43,5 +57,7 @@ If you need to deploy manually without the GitHub release:
 
 ## Files in this Directory
 
-- `index.php` - Modified entry point that references `../inventoros`
+- `index.php` - Modified entry point that references `../inventoros` (the updater rewrites `$laravelPath` to the real folder)
 - `.htaccess` - Apache rewrite rules for Laravel
+- `INSTALL.md` - The installation guide shipped in the package
+- `build-release.php` - Builds and verifies the package

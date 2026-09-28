@@ -45,6 +45,8 @@ Before you start, on every install:
    - `.env`
    - `storage/` (uploaded files, logs, backups)
    - any plugins you installed yourself under `plugins/` (the bundled `hello-world` plugin is in the new package)
+
+   Then add `APP_PUBLIC_PATH=../public_html` to `.env` (adjust if your web root is elsewhere). Command-line tasks such as plugin activation and `php artisan update` use it to write to the web root the site serves.
 5. **Replace the web root files.** From the package's `public_html/`, upload `index.php` and the `build/` folder over the ones in your `public_html/` (replace `build/` completely). `index.php` must be replaced: the 2.0.0 version calls `usePublicPath()` so plugin assets resolve. Keep `public_html/storage` and, if it exists, `public_html/plugin-assets/`. If your application folder is not `../inventoros`, edit `$laravelPath` in the new `index.php` as you did before.
 6. **Clear caches, migrate, and rebuild caches:**
 
@@ -61,6 +63,8 @@ Before you start, on every install:
 8. **Review warehouse access and grant the new permissions** your roles need (see [New permissions](#new-permissions)).
 
 When everything works, delete the old folder.
+
+**Later updates (2.0.0 onwards).** Admin > Update installs new releases. It downloads `inventoros-cpanel-<version>.zip` and its signature, checks the package's `release.json` (version, package layout, supported PHP range) before touching anything, backs up the files (including `vendor/` and the web root) and the database, then installs `inventoros/` into the application folder and `public_html/` into the web root. Code folders (`app`, `config`, `database`, `resources`, `routes`, `vendor`, ...) are replaced whole, so files removed from a release disappear. Never touched: `.env`, `storage/`, `plugins/`, `bootstrap/cache`, a SQLite database in `database/`, `public_html/plugin-assets/`, the storage link, and an existing `.htaccess`, `.user.ini`, `web.config` or `robots.txt`. Other files in the web root are left in place. `index.php` is rewritten to point at your application folder. Caches are cleared before migrating and rebuilt after, in a separate `php artisan` process; if any step fails, the backup (files and database) is restored.
 
 #### VPS (git checkout)
 
@@ -90,7 +94,7 @@ Pull the `2.0.0` image and recreate the containers. With `RUN_MIGRATIONS=true` o
 
 This release adds many migrations. Existing `order_items` rows get an estimated `unit_cost` (the product's current cost), which reports flag as estimated. Existing copies of the system roles and permission set templates receive the new permissions listed below.
 
-**Payment status on older orders.** Payments were not recorded before 2.0.0, so orders created before the upgrade show the payment status **Not tracked** rather than Unpaid. If those orders were paid, an admin can mark them paid in bulk.
+**Payment status on older orders.** Payments were not recorded before 2.0.0, so orders created before the upgrade show the payment status **Not tracked** rather than Unpaid. They are left out of the Outstanding Balances report, the dashboard receivables figure, the customer portal balance and the invoice balance line. Recording a payment on one starts tracking it. If those orders were paid, a user with `record_payments` can use **Mark older orders paid** on the Orders page: every Not tracked, non-cancelled order placed before the chosen date gets a payment of method Other for its full total, dated on the order date, with the reference "Marked paid (pre-tracking)", and the change is logged.
 
 ### Scheduler and queue worker
 
@@ -102,11 +106,13 @@ This release adds many migrations. Existing `order_items` rows get an estimated 
 
 It runs `inventory:run-cycle-counts` (hourly), `reports:send-scheduled` (every 15 minutes), `shipping:track` (every 30 minutes), `inventory:check-reorder-points` (daily) and the nightly `activity-logs:prune` and `webhooks:prune`.
 
-**The queue.** Purchase order and invoice emails, scheduled reports, approval, shipment and user activity alerts, webhook deliveries and import jobs go through the database queue. When the app says an email was sent, it has been queued; it goes out when the queue is next processed.
+**The queue.** Purchase order and invoice emails, scheduled reports, approval, shipment and user activity alerts, webhook deliveries and import jobs go through the database queue. A purchase order, invoice or shipment email shows **Queued** until the mail is actually delivered, then Sent.
 
-- **cPanel and other shared hosting:** in 2.0.0 the scheduler also works through the database queue every minute, so the `schedule:run` entry above is all you need. No separate worker is required.
+The admin dashboard warns when the scheduler has not run for 10 minutes, when queued jobs have waited more than 15 minutes, or when jobs failed in the last 24 hours.
+
+- **cPanel and other shared hosting:** with `QUEUE_CONNECTION=database` the scheduler also works through the queue every minute (`queue:work --stop-when-empty --max-time=50`), so the `schedule:run` entry above is all you need. No separate worker is required. `QUEUE_RUN_VIA_SCHEDULER` turns this off or on.
 - **VPS:** run a dedicated worker so jobs are processed as soon as they are queued. Install the systemd units in `deploy/systemd/` (`inventoros-worker.service`, plus `inventoros-scheduler.timer` if you prefer it to cron). See [installation-vps.md](docs/site/sections/installation-vps.md#scheduler-and-queue-worker). Run `php artisan queue:restart` after each deploy.
-- **Docker:** `docker-compose.prod.yml` already runs `worker` and `scheduler` containers.
+- **Docker:** `docker-compose.prod.yml` already runs `worker` and `scheduler` containers (and sets `QUEUE_RUN_VIA_SCHEDULER=false`).
 
 ### New environment variables
 
@@ -115,6 +121,8 @@ All are optional. `.env.example` lists each one with its default.
 | Variable | Default | Purpose |
 |---|---|---|
 | `API_DOCS_PUBLIC` | `false` | Make `/docs/api` public outside `local`. |
+| `APP_PUBLIC_PATH` | unset | Web root of a split (cPanel) install, e.g. `../public_html`. Set by the installer and the updater. |
+| `QUEUE_RUN_VIA_SCHEDULER` | `true` with the database queue | Let `schedule:run` work the queue every minute. Set `false` when a dedicated worker runs. |
 | `INVENTOROS_MARKETPLACE_URL` | `https://inventoros.com` | Marketplace the app installs plugins from. |
 | `INVENTOROS_MARKETPLACE_PUBLIC_KEY` | see [Plugin marketplace](#plugin-marketplace) | Ed25519 public key marketplace packages are verified against. |
 | `INVENTOROS_MARKETPLACE_CACHE_SECONDS` | `300` | How long the catalog is cached. |
@@ -122,6 +130,11 @@ All are optional. `.env.example` lists each one with its default.
 | `INVENTOROS_MARKETPLACE_MAX_DOWNLOAD_BYTES` | 50 MB | Largest plugin package the app downloads. |
 | `INVENTOROS_UPDATE_ALLOW_NO_DB_BACKUP` | `false` | Let the updater continue when no database backup method works. |
 | `INVENTOROS_UPDATE_MAX_ENTRIES`, `INVENTOROS_UPDATE_MAX_BYTES` | 50000, 300 MB | Update archive limits. |
+| `INVENTOROS_UPDATE_HOSTS` | GitHub's download hosts | Hosts the updater follows download redirects to. |
+| `INVENTOROS_UPDATE_MAX_REDIRECTS`, `INVENTOROS_UPDATE_MAX_DOWNLOAD_BYTES` | 5, 200 MB | Download redirect and size limits. |
+| `INVENTOROS_RESTORE_MAX_ENTRIES`, `INVENTOROS_RESTORE_MAX_BYTES` | 500000, 4 GB | Limits when restoring a pre-update backup. |
+| `INVENTOROS_UPDATE_PHP_BINARY` | found automatically | PHP CLI binary the updater runs `php artisan` with. |
+| `INVENTOROS_UPDATE_ARTISAN_SUBPROCESS`, `INVENTOROS_UPDATE_ARTISAN_TIMEOUT` | `true`, 900 | Run post-update commands in a separate process, and its timeout in seconds. |
 | `INVENTOROS_PLUGIN_MAX_ENTRIES`, `INVENTOROS_PLUGIN_MAX_BYTES` | 2000, 50 MB | Plugin package limits. |
 | `LOW_STOCK_ALERT_COOLDOWN_MINUTES` | `1440` | Minimum gap between low-stock alerts for one product. |
 | `REPORTS_MAX_ROWS` | `10000` | Row cap for any report. |
@@ -200,6 +213,8 @@ Plugins > Marketplace installs and updates plugins from inventoros.com. Every pa
 
 - `/api/v1` accepts bearer tokens only. Browser sessions are not accepted there.
 - `POST /api/v1/purchase-orders/{id}/send` emails the supplier and returns `Purchase order sent`.
+- **Queued and sent emails.** Sending a purchase order, invoice or shipment email records `queued_at` (`invoice_queued_at`, `customer_notification_queued_at`); `sent_at` (`invoice_sent_at`, `customer_notified_at`) is set only when the mail is delivered, so it is empty until the queue runs. The MCP send tools say the email was queued and return `queued_at`. A purchase order still moves from draft to sent when it is queued.
+- **Plugins and the route cache.** Activating, deactivating or deleting a plugin rebuilds a cached route table (`php artisan route:cache`) so the plugin's pages appear or disappear straight away. If the rebuild fails, routes are left uncached.
 - Invoice PDFs are named after the invoice number (`INV-000001.pdf`).
 - REST reads of categories, locations and stock adjustments require `manage_categories`, `manage_locations` and `manage_stock`.
 - The MCP `create_product` tool requires `create_products`.
