@@ -1,6 +1,6 @@
 # Inventoros MCP Server
 
-Inventoros ships with a built-in [Model Context Protocol](https://modelcontextprotocol.io/) server so AI clients (Claude Desktop, Claude Code, Cursor, ChatGPT, custom agents, etc.) can read inventory state and act on it on a user's behalf.
+Inventoros ships with a built-in [Model Context Protocol](https://modelcontextprotocol.io/) server so AI clients (Claude Desktop, Claude Code, Cursor, custom agents, etc.) can read inventory state and act on it on a user's behalf.
 
 The server is built on the official [`laravel/mcp`](https://github.com/laravel/mcp) package. Every request authenticates with the same Sanctum bearer token used by the REST API; the agent inherits the user's organization scope and permission set.
 
@@ -46,15 +46,55 @@ Every tool, resource, and prompt scopes its queries to the authenticated user's 
 
 ---
 
-## Connecting from Claude Desktop / Claude Code
+## Connecting a client
 
-Add an entry to your client's MCP config. For Claude Desktop on macOS (`~/Library/Application Support/Claude/claude_desktop_config.json`) or Claude Code (`~/.claude/mcp.json`):
+Inventoros is a remote MCP server: streamable HTTP with a bearer token. The token goes in an `Authorization` header.
+
+### Claude Code
+
+Add the server from a terminal:
+
+```bash
+claude mcp add --transport http inventoros https://inventoros.example.com/mcp \
+  --header "Authorization: Bearer 1|paste-your-token-here"
+```
+
+Add `--scope user` to make it available in every project, or `--scope project` to write it to a shared `.mcp.json` in the current project (keep the token out of version control). Run `claude mcp list` to check the connection, or `/mcp` inside a session.
+
+### Claude Desktop
+
+Claude Desktop's config file (`claude_desktop_config.json`, opened from Settings > Developer > Edit Config) starts local servers. Bridge to the remote endpoint with [`mcp-remote`](https://www.npmjs.com/package/mcp-remote), which needs Node.js:
 
 ```json
 {
   "mcpServers": {
     "inventoros": {
-      "type": "http",
+      "command": "npx",
+      "args": [
+        "-y",
+        "mcp-remote",
+        "https://inventoros.example.com/mcp",
+        "--header",
+        "Authorization:${INVENTOROS_AUTH}"
+      ],
+      "env": {
+        "INVENTOROS_AUTH": "Bearer 1|paste-your-token-here"
+      }
+    }
+  }
+}
+```
+
+The header value is passed through an environment variable because some platforms split arguments on the space in `Bearer <token>`. Restart Claude Desktop afterwards.
+
+### Cursor and other clients
+
+Clients that support remote servers with custom headers take the URL and header directly. For Cursor, add this to `~/.cursor/mcp.json` (or a workspace `.cursor/mcp.json`):
+
+```json
+{
+  "mcpServers": {
+    "inventoros": {
       "url": "https://inventoros.example.com/mcp",
       "headers": {
         "Authorization": "Bearer 1|paste-your-token-here"
@@ -64,17 +104,19 @@ Add an entry to your client's MCP config. For Claude Desktop on macOS (`~/Librar
 }
 ```
 
-Restart the client. The Inventoros tools will appear in the tool picker.
+Call `who_am_i` first to confirm the token works.
 
 ---
 
 ## Tool catalog
 
+30 tools across 9 groups. Tools marked **destructive** change data; clients should confirm before calling them.
+
 ### Identity
 
-| Tool | Purpose |
-|---|---|
-| `who_am_i` | Returns the authenticated user, organization id, role, and admin/manager flags. Run this first to confirm the token is wired up. |
+| Tool | Permissions | Purpose |
+|---|---|---|
+| `who_am_i` | none | Returns the authenticated user, organization, role, and the permissions this token holds. Run this first to confirm the token is wired up. |
 
 ### Catalog (read)
 
@@ -93,7 +135,7 @@ Restart the client. The Inventoros tools will appear in the tool picker.
 | Tool | Permissions | Purpose |
 |---|---|---|
 | `list_low_stock` | `view_products` | Products at or below `min_stock`, sorted by shortage. |
-| `adjust_stock` | `manage_stock` | Apply a signed delta with reason (`manual`, `count`, `damage`, `return`, `transfer`), optionally at a `location_id` bin (required for users restricted to assigned warehouses). Marked **destructive**. |
+| `adjust_stock` | `manage_stock` | Apply a signed delta with reason (`manual`, `count`, `damage`, `return`, `transfer`), optionally at a `location_id` bin (required for users restricted to assigned warehouses). **Destructive**. |
 
 ### Sales
 
@@ -101,8 +143,16 @@ Restart the client. The Inventoros tools will appear in the tool picker.
 |---|---|---|
 | `list_orders` | `view_orders` | Paginated orders with filters for status, source, warehouse, date range. |
 | `get_order` | `view_orders` | Single order with line items. |
-| `create_order` | `create_orders` | Create order; decrements stock per item; fails if any line is short. Marked **destructive**. |
-| `email_order_invoice` | `edit_orders` | Email the order's invoice PDF to the customer (or `to`), with optional CC and message. Assigns the invoice number on first use. Marked **destructive**. |
+| `create_order` | `create_orders` | Create an order; decrements stock per item; fails if any line is short. Accepts optional line and order discounts (applied before tax). **Destructive**. |
+| `email_order_invoice` | `edit_orders` | Email the order's invoice PDF to the customer (or `to`), with optional CC and message. Assigns the invoice number on first use. **Destructive**. |
+| `record_payment` | `record_payments` | Record a payment against an order. Partial payments are fine; a payment above the balance due needs `allow_overpayment`; cancelled orders are refused. **Destructive**. |
+
+### Shipping
+
+| Tool | Permissions | Purpose |
+|---|---|---|
+| `list_shipments` | `view_shipments` | Paginated shipments with carrier, tracking and status; filter by order or status. |
+| `create_shipment` | `create_shipments` | Record a shipment with manual tracking, optionally marking it shipped. **Destructive**. |
 
 ### Purchasing
 
@@ -111,23 +161,33 @@ Restart the client. The Inventoros tools will appear in the tool picker.
 | `list_suppliers` | `view_suppliers` | Supplier list with search and active filter. |
 | `list_purchase_orders` | `view_purchase_orders` | Paginated POs with status / supplier filters. |
 | `get_purchase_order` | `view_purchase_orders` | Single PO with supplier and line items. |
-| `create_purchase_order` | `create_purchase_orders` | Create draft PO. Does not affect stock. Marked **destructive**. |
-| `send_purchase_order` | `edit_purchase_orders` | Transition draft → sent. Marked **destructive** + **idempotent**. |
-| `receive_purchase_order` | `receive_purchase_orders` | Receive items; writes stock; transitions to partial/received. Marked **destructive**. |
+| `create_purchase_order` | `create_purchase_orders` | Create a draft PO. Does not affect stock. **Destructive**. |
+| `send_purchase_order` | `edit_purchase_orders` | Transition draft to sent. **Destructive** and idempotent. |
+| `receive_purchase_order` | `receive_purchase_orders` | Receive items; writes stock; transitions to partial/received. **Destructive**. |
+| `submit_purchase_order_for_approval` | `edit_purchase_orders` | Put a draft PO in front of the approvers when the organization requires approval. **Destructive**. |
+
+### Approvals
+
+| Tool | Permissions | Purpose |
+|---|---|---|
+| `list_pending_approvals` | no single permission | Returns only the purchase orders, stock adjustment requests and stock transfers the caller may decide. Each item carries the `type` and `id` to pass to `decide_approval`. |
+| `decide_approval` | `approve_purchase_orders`, `approve_stock_adjustments` or `approve_stock_transfers`, by `type` | Approve or reject a pending request; rejecting needs notes. **Destructive**. |
 
 ### Manufacturing
 
 | Tool | Permissions | Purpose |
 |---|---|---|
 | `list_work_orders` | `manage_stock` | Paginated work orders with status filter. |
-| `start_work_order` | `manage_stock` | Validate component stock and transition to in_progress. Marked **destructive**. |
-| `delete_work_order` | `manage_stock` | Delete a draft or cancelled work order. Marked **destructive**. |
+| `start_work_order` | `manage_stock` | Validate component stock and transition to in_progress. **Destructive**. |
+| `delete_work_order` | `manage_stock` | Delete a draft or cancelled work order. **Destructive**. |
 
 ### Catalog (write)
 
 | Tool | Permissions | Purpose |
 |---|---|---|
-| `create_product` | `create_products` | Create a new product. Marked **destructive**. |
+| `create_product` | `create_products` | Create a new product. **Destructive**. |
+
+Tool names changed in v2.0.0 from the kebab-case class names (`list-orders-tool`) to the snake_case names above. See `UPGRADE.md` for the full mapping.
 
 ---
 
@@ -153,7 +213,7 @@ Resources are browsable read-only data the agent can fetch without arguments.
 Tools that mutate state carry the standard MCP `annotations`:
 
 - `IsReadOnly` — safe to call with no side effects (every list/get/lookup tool).
-- `IsDestructive` — the agent should ask for confirmation before invoking. Used on stock adjustments, order creation, PO creation, PO send, PO receive, work-order start, and product create.
+- `IsDestructive` — the agent should ask for confirmation before invoking. Used on every tool marked **destructive** in the catalog above.
 - `IsIdempotent` — re-running with the same arguments has the same effect (PO send).
 
 Compliant clients use these to shape their UI (e.g. surface a confirmation prompt before invoking destructive tools).

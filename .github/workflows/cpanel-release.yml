@@ -49,6 +49,12 @@ jobs:
       - name: Install Composer dependencies (production)
         run: composer install --no-dev --optimize-autoloader --no-interaction --prefer-dist
 
+      # /mcp is served by laravel/mcp; a dev-only dependency would silently
+      # drop the MCP server from the release ZIP.
+      - name: Verify the MCP server ships without dev dependencies
+        run: |
+          php -r 'require "vendor/autoload.php"; foreach (["Laravel\\Mcp\\Server", "Laravel\\Mcp\\Facades\\Mcp", "App\\Mcp\\Servers\\InventorosServer"] as $c) { if (! class_exists($c)) { fwrite(STDERR, "$c is missing from the --no-dev install\n"); exit(1); } } echo "MCP server classes present\n";'
+
       - name: Install NPM dependencies
         run: npm ci
 
@@ -256,6 +262,18 @@ jobs:
              php artisan route:cache
              php artisan view:cache
              ```
+
+          8. **Scheduler (required)**
+             In cPanel > Cron Jobs, add this entry (adjust the path):
+             ```
+             * * * * * cd ~/inventoros && php artisan schedule:run >> /dev/null 2>&1
+             ```
+             It also processes the queue every minute. Without it, emails,
+             webhooks, scheduled reports, cycle counts and shipment tracking
+             never run.
+
+          Upgrading from 1.0.x? The 1.0.x in-app updater cannot install
+          releases, so upgrade by hand: see UPGRADE.md in the repository.
 
           ## Troubleshooting
 

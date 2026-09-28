@@ -28,36 +28,54 @@ Every MCP request authenticates with the same Sanctum bearer token used by the R
 
 Destructive tools carry the standard MCP `IsDestructive` annotation so well-behaved clients prompt for confirmation before invoking. `send_purchase_order` is also `IsIdempotent`. Requests without a valid token return HTTP 401. Lacking the right permission returns an MCP error response with `isError: true`.
 
-### Quick start: Claude Desktop / Claude Code
+### Quick start: get a token
 
-1. Get a token from your Inventoros install:
+Create a token in Settings > API tokens, or from the REST API:
 
 ```bash
 curl -X POST "${APP_URL}/api/v1/login" \
   -H 'Content-Type: application/json' \
-  -d '{"email":"you@example.com","password":"...","device_name":"Claude Desktop"}'
+  -d '{"email":"you@example.com","password":"...","device_name":"MCP client"}'
 ```
 
 Copy the `token` value from the response.
 
-2. Add Inventoros to your client's MCP config. For Claude Desktop on macOS, edit `~/Library/Application Support/Claude/claude_desktop_config.json` (Claude Code uses `~/.claude/mcp.json`):
+### Quick start: Claude Code
+
+Add the server from a terminal:
+
+```bash
+claude mcp add --transport http inventoros https://inventoros.example.com/mcp \
+  --header "Authorization: Bearer 1|paste-your-token-here"
+```
+
+Add `--scope user` to use it in every project. Run `claude mcp list` to check the connection, then try `who_am_i`.
+
+### Quick start: Claude Desktop
+
+Claude Desktop's config file (`claude_desktop_config.json`, opened from Settings > Developer > Edit Config) starts local servers, so bridge to the remote endpoint with `mcp-remote` (needs Node.js):
 
 ```json
 {
   "mcpServers": {
     "inventoros": {
-      "type": "http",
-      "url": "https://inventoros.example.com/mcp",
-      "headers": {
-        "Authorization": "Bearer 1|paste-your-token-here"
+      "command": "npx",
+      "args": [
+        "-y",
+        "mcp-remote",
+        "https://inventoros.example.com/mcp",
+        "--header",
+        "Authorization:${INVENTOROS_AUTH}"
+      ],
+      "env": {
+        "INVENTOROS_AUTH": "Bearer 1|paste-your-token-here"
       }
     }
   }
 }
 ```
 
-3. Restart the client. The Inventoros tools appear in the tool picker.
-4. Try `who_am_i` first to confirm the token round-trips.
+Restart Claude Desktop. The Inventoros tools appear in the tool picker. Try `who_am_i` first to confirm the token round-trips.
 
 ### Quick start: Cursor
 
@@ -167,6 +185,10 @@ Tools live in `app/Mcp/Tools/` in the Inventoros codebase. To add one:
 4. Annotate destructive tools with `#[IsDestructive]`.
 5. Register the class in `app/Mcp/Servers/InventorosServer.php`'s `$tools` array.
 6. Add a test in `tests/Feature/Mcp/InventorosMcpServerTest.php`.
+
+### Tool names in v2.0.0
+
+Before v2.0.0 the tools were exposed under kebab-case class names such as `list-orders-tool`. They now carry the snake_case names listed above. Update any client configuration or allow-list that names tools; the full mapping is in `UPGRADE.md`.
 
 ### Versioning
 

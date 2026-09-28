@@ -68,7 +68,7 @@ class InventorosServer extends Server
           encourages the AI client to confirm before invocation.
         - Errors return `isError: true` with a human-readable message.
 
-        Start with `whoami` if you want to inspect the active token's identity and
+        Start with `who_am_i` if you want to inspect the active token's identity and
         permissions.
         MARKDOWN;
 

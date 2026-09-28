@@ -37,7 +37,7 @@ my-plugin/
     "version": "1.0.0",
     "author": "Your Name",
     "author_url": "https://example.com",
-    "requires": "1.0.8",
+    "requires": "2.0.0",
     "requires_php": "8.2",
     "main_file": "Plugin.php",
     "ui": { "entry": "plugin.js", "styles": ["plugin.css"] }

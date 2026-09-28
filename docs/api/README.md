@@ -186,13 +186,16 @@ All paths are relative to `/api/v1`.
 | Locations             | `GET/POST /locations`, `GET/PUT/DELETE /locations/{id}`                                          |
 | Warehouses            | `GET/POST /warehouses`, `GET/PUT/DELETE /warehouses/{id}`                                        |
 | Orders                | `GET/POST /orders`, `GET/PUT/DELETE /orders/{id}`, `POST /orders/{id}/{approve,reject}`, `POST /orders/{id}/invoice/email` |
+| Order Payments        | `GET/POST /orders/{id}/payments`, `POST /orders/{id}/refunds`, `POST /orders/{id}/payments/{payment}/void` |
+| Shipments             | `GET/POST /orders/{id}/shipments`, `GET /shipments`, `GET /shipments/{id}`, `POST /shipments/{id}/{rates,buy-label,void-label,ship}` |
 | Customers             | `GET/POST /customers`, `GET/PUT/DELETE /customers/{id}`, `GET /customers/{id}/orders`            |
 | Returns (RMA)         | `GET/POST /returns`, `GET /returns/{id}`, `PATCH /returns/{id}/items`, `POST /returns/{id}/{approve,receive,complete,reject}` |
 | Stock Transfers       | `GET/POST /stock-transfers`, `GET /stock-transfers/{id}`, `POST /stock-transfers/{id}/{ship,complete,cancel}` |
 | Stock Adjustments     | `GET/POST /stock-adjustments`, `GET /stock-adjustments/{id}`                                     |
 | Stock Audits          | `GET/POST /stock-audits`, `GET /stock-audits/{id}`, `POST /stock-audits/{id}/{start,complete}`, `POST /stock-audits/{id}/items/{item}/count` |
 | Suppliers             | `GET/POST /suppliers`, `GET/PUT/DELETE /suppliers/{id}`                                          |
-| Purchase Orders       | `GET/POST /purchase-orders`, `GET/PUT/DELETE /purchase-orders/{id}`, `POST /purchase-orders/{id}/{receive,send,cancel}` |
+| Purchase Orders       | `GET/POST /purchase-orders`, `GET/PUT/DELETE /purchase-orders/{id}`, `POST /purchase-orders/{id}/{receive,send,cancel,submit-for-approval}` |
+| Approvals             | `GET /approvals`, `GET /approvals/mine`, `POST /approvals/{type}/{id}/{approve,reject}` (`type` is `purchase_order`, `stock_adjustment` or `stock_transfer`) |
 | Work Orders           | `GET/POST /work-orders`, `GET/DELETE /work-orders/{id}`, `POST /work-orders/{id}/{start,complete,cancel}` |
 | Barcode Lookup        | `GET /barcode/{code}`                                                                            |
 | Permission Sets       | `GET/POST /permission-sets`, `GET /permission-sets/categories`, `GET/PUT/DELETE /permission-sets/{id}` |
@@ -386,6 +389,7 @@ Events are fired by model observers after the database transaction commits, so t
 | Product | `product.created`, `product.updated`, `product.deleted`, `product.low_stock`, `product.out_of_stock` |
 | Order | `order.created`, `order.updated`, `order.status_changed`, `order.approved`, `order.rejected` |
 | Payment | `payment.recorded`, `payment.voided` (a refund is a recorded payment of type `refund`) |
+| Shipment | `shipment.created`, `shipment.delivered` |
 | Stock | `stock.adjusted` |
 | Purchase order | `purchase_order.created`, `purchase_order.received`, `purchase_order.cancelled` |
 | Customer | `customer.created`, `customer.updated`, `customer.deleted` |
@@ -398,9 +402,11 @@ Events are fired by model observers after the database transaction commits, so t
 
 `POST /graphql` (Sanctum bearer token, same 60/min limiter as REST).
 
-Queries: `products`, `product`, `orders`, `order`, `suppliers`, `supplier`, `purchaseOrders`, `purchaseOrder`, `stockAdjustments`, `locations`, `categories`, `customers`, `customer`, `returnOrders`, `returnOrder`, `stockTransfers`, `stockTransfer`, `users`, `user` (read-only) and `productVariants`.
+Queries: `products`, `product`, `orders`, `order`, `suppliers`, `supplier`, `purchaseOrders`, `purchaseOrder`, `stockAdjustments`, `locations`, `categories`, `customers`, `customer`, `returnOrders`, `returnOrder`, `stockTransfers`, `stockTransfer`, `users`, `user` (read-only), `productVariants`, `shipments` and `pendingApprovals`.
 
-Mutations: `createProduct`, `updateProduct`, `deleteProduct`, `createOrder`, `updateOrder`, `createStockAdjustment`, `createSupplier`, `updateSupplier`, `createCustomer`, `updateCustomer`, `createReturnOrder`, `approveReturnOrder`, `receiveReturnOrder`, `createStockTransfer`, `completeStockTransfer`, `createPurchaseOrder`, `updatePurchaseOrder` and `receivePurchaseOrder`.
+Orders carry their `shipments`, and their `payments`, `amount_paid`, `balance_due` and `payment_status` when the user and token hold `view_payments`.
+
+Mutations: `createProduct`, `updateProduct`, `deleteProduct`, `createOrder`, `updateOrder`, `createStockAdjustment`, `requestStockAdjustmentApproval`, `createSupplier`, `updateSupplier`, `createCustomer`, `updateCustomer`, `createReturnOrder`, `approveReturnOrder`, `receiveReturnOrder`, `createStockTransfer`, `completeStockTransfer`, `createPurchaseOrder`, `updatePurchaseOrder`, `receivePurchaseOrder` and `decideApproval`.
 
 Every field is gated like the matching REST route: the user must hold the permission and the token must allow it, so a scoped token is enforced the same way over GraphQL. Mutations call the same services as the web app and REST API, so a return received or a transfer completed over GraphQL restocks and moves bins exactly as it would anywhere else. List queries accept `limit` (default 50, max 100). The endpoint shares the REST rate limit of 60 requests per minute.
 

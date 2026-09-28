@@ -1,5 +1,9 @@
 Inventoros has a built-in updater so you can apply new releases from the admin panel, and it verifies that each release is signed before installing it. This section covers updating, the signature model, and backups.
 
+### Upgrading from 1.0.x to 2.0.0
+
+Every 1.0.x install must be upgraded by hand once. The updater in 1.0.8 and earlier cannot install any release, because GitHub serves release downloads through a redirect that it refuses. Back up (and check the database backup), replace the files from the release package or check out the tag, run `php artisan optimize:clear`, preview with `php artisan migrate --pretend` on MySQL or PostgreSQL, migrate, and add the scheduler cron entry. The full steps are in `UPGRADE.md` in the Inventoros repository. From 2.0.0 on, the updater below installs new releases again.
+
 ### Updating from the admin panel
 
 To update an existing installation, sign in as an admin and open Admin then Update. The updater checks for the latest published release, shows you the current and available versions, and applies the update in place. After the new code is extracted, database migrations run automatically so your schema stays in sync.

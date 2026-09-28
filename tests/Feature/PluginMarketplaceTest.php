@@ -218,6 +218,33 @@ final class PluginMarketplaceTest extends TestCase
             );
     }
 
+    public function test_without_a_signing_key_the_marketplace_tab_tells_admins_installs_are_off(): void
+    {
+        config(['marketplace.public_key' => '']);
+        $slug = $this->slug();
+        $bytes = $this->zipBytes($slug);
+        $this->fakeMarketplace($this->entry($slug, $bytes), $bytes);
+
+        // The catalog still lists, but the page is told installs are off so it
+        // shows the notice (plugins.marketplace.notConfigured) instead of
+        // install buttons that could only fail.
+        $this->actingAs($this->admin)
+            ->get(route('plugins.marketplace'))
+            ->assertOk()
+            ->assertInertia(fn ($page) => $page
+                ->where('marketplace.configured', false)
+                ->where('marketplace.plugins.0.slug', $slug)
+            );
+
+        $messages = json_decode((string) file_get_contents(resource_path('js/i18n/locales/en.json')), true);
+        $this->assertStringContainsString('INVENTOROS_MARKETPLACE_PUBLIC_KEY', $messages['plugins']['marketplace']['notConfigured']);
+
+        $page = (string) file_get_contents(resource_path('js/Pages/Plugins/Index.vue'));
+        $this->assertStringContainsString("v-if=\"!marketplace.configured\"", $page);
+        $this->assertStringContainsString("t('plugins.marketplace.notConfigured')", $page);
+        $this->assertStringContainsString('marketplace.configured && item.has_access', $page);
+    }
+
     public function test_an_unreachable_marketplace_shows_an_error_instead_of_failing(): void
     {
         Http::fake([self::BASE.'/plugins' => Http::response('down', 500)]);

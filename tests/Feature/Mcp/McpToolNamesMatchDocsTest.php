@@ -104,6 +104,43 @@ class McpToolNamesMatchDocsTest extends TestCase
         $this->assertSame(count($this->registeredToolNames()), (int) ($m[1] ?? 0));
     }
 
+    /**
+     * docs/mcp/README.md is the developer-facing copy of the catalog; it
+     * drifted to 24 of the 30 tools once, so hold it to the same contract.
+     *
+     * @return array{0: string, 1: array<int, string>}
+     */
+    private function developerReadmeCatalog(): array
+    {
+        $markdown = (string) file_get_contents(base_path('docs/mcp/README.md'));
+
+        $this->assertMatchesRegularExpression('/^## Tool catalog\s*$/m', $markdown, 'docs/mcp/README.md needs a "## Tool catalog" section.');
+
+        $section = preg_split('/^## /m', preg_split('/^## Tool catalog\s*$/m', $markdown)[1])[0];
+        preg_match_all('/^\| `([a-z0-9_]+)` \|/m', $section, $matches);
+
+        return [$section, $matches[1]];
+    }
+
+    public function test_the_developer_readme_lists_exactly_the_registered_tools(): void
+    {
+        [, $documented] = $this->developerReadmeCatalog();
+        $registered = array_values($this->registeredToolNames());
+
+        $this->assertSame([], array_values(array_diff($registered, $documented)), 'Registered tools missing from docs/mcp/README.md');
+        $this->assertSame([], array_values(array_diff($documented, $registered)), 'docs/mcp/README.md documents tools that are not registered');
+        $this->assertSame(count($documented), count(array_unique($documented)), 'A tool is documented twice in docs/mcp/README.md');
+    }
+
+    public function test_the_developer_readme_states_the_tool_count(): void
+    {
+        [$section] = $this->developerReadmeCatalog();
+
+        preg_match('/(\d+) tools across/', $section, $m);
+
+        $this->assertSame(count($this->registeredToolNames()), (int) ($m[1] ?? 0));
+    }
+
     public function test_tools_list_over_http_returns_exactly_the_documented_names(): void
     {
         SystemSetting::set('installed', true, 'boolean');

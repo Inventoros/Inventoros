@@ -1,272 +1,213 @@
 # Upgrade Guide
 
-## Upgrading from v1.1 to v2.0
+## Upgrading from v1.0.x to v2.0.0
 
-Inventoros v2.0 upgrades the core framework stack and adds three major features. This guide covers everything you need to do to upgrade an existing v1.1 installation.
+v2.0.0 is a major release: MCP tool names, the plugin asset path, access to `/docs/api` and the license all change. Read this whole section before you start. The full list of changes is in [CHANGELOG.md](CHANGELOG.md).
+
+> **Every 1.0.x install must be upgraded by hand this time.** The in-app updater in 1.0.8 and earlier cannot install any release: GitHub serves release downloads through a redirect, and the 1.0.x updater refuses redirects. Follow the [upgrade steps](#upgrade-steps) below. From 2.0.0 on, the in-app updater (Admin > Update) installs later releases again.
+
+### Contents
+
+- [Requirements](#requirements)
+- [Upgrade steps](#upgrade-steps)
+- [Scheduler and queue worker](#scheduler-and-queue-worker)
+- [New environment variables](#new-environment-variables)
+- [New permissions](#new-permissions)
+- [MCP tool names](#mcp-tool-names)
+- [Plugin assets](#plugin-assets)
+- [API reference access](#api-reference-access)
+- [Plugin marketplace](#plugin-marketplace)
+- [Other behaviour changes](#other-behaviour-changes)
+- [License](#license)
 
 ### Requirements
 
-- **PHP 8.3+** (unchanged)
-- **Node.js 18+** (unchanged)
-- **Composer 2.x**
+- **PHP 8.4.1 or newer. PHP 8.5 is not supported yet** (`phpoffice/phpspreadsheet` does not install on it). The 1.0.8 release package already needed PHP 8.4.1, so most 1.0.8 installs meet this.
+- **Node.js 20.19+ or 22.12+**, only if you build the frontend yourself. The cPanel release package and the Docker image ship pre-built assets.
+- MySQL 8.0+ or PostgreSQL 13+ (SQLite for development), as before.
 
-### Framework Changes
+### Upgrade steps
 
-| Package | v1.1 | v2.0 |
-|---------|------|------|
-| Laravel | 12.x | **13.x** |
-| Inertia (PHP) | 2.x | **3.x** |
-| Inertia (Vue) | 2.x | **3.x** |
-| Tinker | 2.x | **3.x** |
-| google2fa-laravel | 2.x | **3.x** |
+**Do not use the in-app updater (Admin > Update) to move from 1.0.x to 2.0.0.** It cannot install any release. Upgrade by hand as described below.
 
-### Step-by-Step Upgrade
+Before you start, on every install:
 
-#### 1. Back Up Your Database
+- **Take a database backup you have checked.** Restore it somewhere, or at least open the dump and confirm it contains your tables. `php artisan app:update --backup` makes a files-and-database backup; keep your host's own backup as well.
+- **On MySQL or PostgreSQL, preview the migrations first** with `php artisan migrate --pretend` (run it after replacing the files, before migrating). Installs that were patched by hand, or that have been upgraded many times, can have a schema that differs from a fresh one. If the preview shows something that will fail, stop and restore rather than migrate halfway.
+- **Clear the old caches before migrating.** Cached 1.0.x config and routes do not know about 2.0.0's customer portal guard, so the app fails with `Auth guard [customer] is not defined` until `php artisan optimize:clear` runs.
 
-```bash
-# If using the built-in backup system
-php artisan app:update --backup
+#### cPanel (release package)
 
-# Or manually
-cp database/database.sqlite database/database.sqlite.backup
-# For MySQL/PostgreSQL, use mysqldump or pg_dump
-```
+1. **Back up** the database and the files (see above). Keep a copy of `.env`.
+2. **Put the site in maintenance mode:** `php artisan down` from the application folder (the one that contains `artisan`).
+3. **Download** `inventoros-cpanel-2.0.0.zip` from [the v2.0.0 release](https://github.com/Inventoros/Inventoros/releases/tag/v2.0.0) and extract it on your computer.
+4. **Replace the application folder.** Rename the current folder (for example `~/inventoros` to `~/inventoros-1.0`), upload the new `inventoros/` folder in its place, then copy these across from the old folder:
+   - `.env`
+   - `storage/` (uploaded files, logs, backups)
+   - any plugins you installed yourself under `plugins/` (the bundled `hello-world` plugin is in the new package)
+5. **Replace the web root files.** From the package's `public_html/`, upload `index.php` and the `build/` folder over the ones in your `public_html/` (replace `build/` completely). `index.php` must be replaced: the 2.0.0 version calls `usePublicPath()` so plugin assets resolve. Keep `public_html/storage` and, if it exists, `public_html/plugin-assets/`. If your application folder is not `../inventoros`, edit `$laravelPath` in the new `index.php` as you did before.
+6. **Clear caches, migrate, and rebuild caches:**
 
-#### 2. Drain Queues
+   ```bash
+   cd ~/inventoros
+   php artisan optimize:clear
+   php artisan migrate --pretend    # MySQL / PostgreSQL: review the SQL first
+   php artisan migrate --force
+   php artisan optimize
+   php artisan up
+   ```
 
-Laravel 13 changed the job serialization format. Jobs queued by v1.1 will fail on the v2.0 worker. **Process all pending jobs before upgrading.**
+7. **Add the scheduler cron entry** in [Scheduler and queue worker](#scheduler-and-queue-worker) if you do not have it. It is required.
+8. **Review warehouse access and grant the new permissions** your roles need (see [New permissions](#new-permissions)).
 
-```bash
-php artisan queue:work --stop-when-empty
-```
+When everything works, delete the old folder.
 
-Wait until all jobs are processed before continuing.
-
-#### 3. Pull the Latest Code
-
-```bash
-git pull origin main
-```
-
-#### 4. Update PHP Dependencies
+#### VPS (git checkout)
 
 ```bash
-composer update
+cd /var/www/inventoros
+php artisan app:update --backup    # and your own database dump
+php artisan down
+git fetch --tags
+git checkout v2.0.0
+composer install --no-dev --optimize-autoloader
+npm ci && npm run build
+php artisan optimize:clear
+php artisan migrate --pretend    # MySQL / PostgreSQL: review the SQL first
+php artisan migrate --force
+php artisan optimize
+php artisan queue:restart
+php artisan up
 ```
 
-If you encounter conflicts, ensure your `composer.json` has:
+Then set up the scheduler and queue worker below if they are not already running.
 
-```json
-{
-    "require": {
-        "laravel/framework": "^13.0",
-        "inertiajs/inertia-laravel": "^3.0",
-        "laravel/tinker": "^3.0",
-        "pragmarx/google2fa-laravel": "^3.0"
-    }
-}
+#### Docker
+
+Pull the `2.0.0` image and recreate the containers. With `RUN_MIGRATIONS=true` on the `app` service, migrations run on start. See [installation-docker.md](docs/site/sections/installation-docker.md#updating). Back up the database volume first.
+
+#### Database changes
+
+This release adds many migrations. Existing `order_items` rows get an estimated `unit_cost` (the product's current cost), which reports flag as estimated. Existing copies of the system roles and permission set templates receive the new permissions listed below.
+
+**Payment status on older orders.** Payments were not recorded before 2.0.0, so orders created before the upgrade show the payment status **Not tracked** rather than Unpaid. If those orders were paid, an admin can mark them paid in bulk.
+
+### Scheduler and queue worker
+
+**The scheduler cron entry is required.** Without it, queued email is never sent and cycle counts, scheduled reports, shipment tracking and reorder checks never run. Add one entry that runs every minute:
+
+```text
+* * * * * cd /path/to/inventoros && php artisan schedule:run >> /dev/null 2>&1
 ```
 
-#### 5. Update JavaScript Dependencies
+It runs `inventory:run-cycle-counts` (hourly), `reports:send-scheduled` (every 15 minutes), `shipping:track` (every 30 minutes), `inventory:check-reorder-points` (daily) and the nightly `activity-logs:prune` and `webhooks:prune`.
 
-```bash
-npm install
-npm run build
-```
+**The queue.** Purchase order and invoice emails, scheduled reports, approval, shipment and user activity alerts, webhook deliveries and import jobs go through the database queue. When the app says an email was sent, it has been queued; it goes out when the queue is next processed.
 
-Your `package.json` should have:
+- **cPanel and other shared hosting:** in 2.0.0 the scheduler also works through the database queue every minute, so the `schedule:run` entry above is all you need. No separate worker is required.
+- **VPS:** run a dedicated worker so jobs are processed as soon as they are queued. Install the systemd units in `deploy/systemd/` (`inventoros-worker.service`, plus `inventoros-scheduler.timer` if you prefer it to cron). See [installation-vps.md](docs/site/sections/installation-vps.md#scheduler-and-queue-worker). Run `php artisan queue:restart` after each deploy.
+- **Docker:** `docker-compose.prod.yml` already runs `worker` and `scheduler` containers.
 
-```json
-{
-    "devDependencies": {
-        "@inertiajs/vue3": "^3.0.0"
-    }
-}
-```
+### New environment variables
 
-#### 6. Run Database Migrations
+All are optional. `.env.example` lists each one with its default.
 
-v2.0 adds several new tables and columns:
+| Variable | Default | Purpose |
+|---|---|---|
+| `API_DOCS_PUBLIC` | `false` | Make `/docs/api` public outside `local`. |
+| `INVENTOROS_MARKETPLACE_URL` | `https://inventoros.com` | Marketplace the app installs plugins from. |
+| `INVENTOROS_MARKETPLACE_PUBLIC_KEY` | see [Plugin marketplace](#plugin-marketplace) | Ed25519 public key marketplace packages are verified against. |
+| `INVENTOROS_MARKETPLACE_CACHE_SECONDS` | `300` | How long the catalog is cached. |
+| `INVENTOROS_MARKETPLACE_TIMEOUT` | `20` | Marketplace request timeout, in seconds. |
+| `INVENTOROS_MARKETPLACE_MAX_DOWNLOAD_BYTES` | 50 MB | Largest plugin package the app downloads. |
+| `INVENTOROS_UPDATE_ALLOW_NO_DB_BACKUP` | `false` | Let the updater continue when no database backup method works. |
+| `INVENTOROS_UPDATE_MAX_ENTRIES`, `INVENTOROS_UPDATE_MAX_BYTES` | 50000, 300 MB | Update archive limits. |
+| `INVENTOROS_PLUGIN_MAX_ENTRIES`, `INVENTOROS_PLUGIN_MAX_BYTES` | 2000, 50 MB | Plugin package limits. |
+| `LOW_STOCK_ALERT_COOLDOWN_MINUTES` | `1440` | Minimum gap between low-stock alerts for one product. |
+| `REPORTS_MAX_ROWS` | `10000` | Row cap for any report. |
+| `REPORTS_PDF_MAX_ROWS` | `1000` | Row cap for report PDFs; CSV and Excel carry the full set. |
+| `RUN_MIGRATIONS` | `false` | Docker image only: migrate on container start. |
 
-```bash
-php artisan migrate
-```
+EasyPost API keys are entered in Settings > Shipping and stored encrypted, not in `.env`.
 
-**New tables created:**
-- `warehouses` — Multi-warehouse support
-- `warehouse_user` — User-warehouse access pivot
-- `product_components` — Kit/assembly bill of materials
-- `work_orders` — Assembly production tracking
-- `work_order_items` — Work order component consumption
-- `saved_reports` — Custom report builder templates
+### New permissions
 
-**Columns added to existing tables:**
-- `products.type` — Product type (standard, kit, assembly)
-- `products.warehouse_id` — Warehouse assignment
-- `product_locations.warehouse_id` — Location-warehouse relationship
-- `orders.warehouse_id` — Order fulfillment warehouse
-- `orders.customer_id` — Customer foreign key
-- `stock_transfers.from_warehouse_id` — Source warehouse
-- `stock_transfers.to_warehouse_id` — Destination warehouse
-- `stock_transfers.is_inter_warehouse` — Inter-warehouse flag
-- `stock_transfers.shipping_method` — Shipping details
-- `stock_transfers.tracking_number` — Tracking info
-- `stock_transfers.shipped_at` — Ship timestamp
-- `stock_transfers.estimated_arrival` — ETA
+Administrators hold every permission. The upgrade migrations grant the new permissions to the built-in roles and permission set templates as shown; **custom roles get nothing automatically**, so grant what they need in Roles.
 
-#### 7. Update Blade Template (Required)
+| Permission | Built-in roles | Permission set templates |
+|---|---|---|
+| `view_shipments`, `create_shipments` | Administrator, Manager | Order Processor and Warehouse Staff get both; Read-Only Auditor gets view |
+| `view_payments`, `record_payments` | Manager | Order Processor gets both; Read-Only Auditor and Reports Viewer get view |
+| `access_all_warehouses` | Manager | Inventory Manager, Read-Only Auditor |
+| `approve_purchase_orders`, `approve_stock_adjustments`, `approve_stock_transfers` | Administrator, Manager | New "Approver" template (added when your install has the default templates) |
 
-If you have customized `resources/views/app.blade.php`, update the title tag:
+Things to check after upgrading:
 
-```blade
-<!-- Before (v1.1) -->
-<title inertia>{{ config('app.name', 'Laravel') }}</title>
+- **Warehouse access is enforced.** A user who has warehouse assignments and whose role lacks `access_all_warehouses` now sees and acts on only the assigned warehouses. The Manager role gets the permission on upgrade, but **Member and custom roles do not**, so staff on those roles who were assigned warehouses (for example just to set the header switcher) lose sight of the others. To keep a role organisation-wide, open Roles, edit the role and tick "Access All Warehouses", or remove the user's warehouse assignments. Users with no assignments are unaffected unless the organization setting "Restrict users to their assigned warehouses" is on.
+- **Payments are hidden without `view_payments`.** Order payloads omit payment fields unless both the role and the API token allow it.
+- **Approvals are off by default.** Turn them on per organization; make sure someone holds the matching `approve_*` permission first.
+- **The dashboard** hides figures the user's permissions do not cover.
 
-<!-- After (v2.0) -->
-<title data-inertia>{{ config('app.name', 'Laravel') }}</title>
-```
+### MCP tool names
 
-This is required by Inertia v3. The `inertia` attribute was renamed to `data-inertia`.
+MCP tools used to be exposed under kebab-case names derived from their class names. They now have explicit snake_case names. Update any MCP client configuration, allow-list or prompt that names a tool. Resource URIs are unchanged.
 
-#### 8. Clear Caches
+| 1.0.x name | 2.0.0 name |
+|---|---|
+| `who-am-i-tool` | `who_am_i` |
+| `list-products-tool` | `list_products` |
+| `search-products-tool` | `search_products` |
+| `get-product-tool` | `get_product` |
+| `lookup-barcode-tool` | `lookup_barcode` |
+| `list-categories-tool` | `list_categories` |
+| `list-locations-tool` | `list_locations` |
+| `list-warehouses-tool` | `list_warehouses` |
+| `list-low-stock-tool` | `list_low_stock` |
+| `adjust-stock-tool` | `adjust_stock` |
+| `list-orders-tool` | `list_orders` |
+| `get-order-tool` | `get_order` |
+| `create-order-tool` | `create_order` |
+| `list-suppliers-tool` | `list_suppliers` |
+| `list-purchase-orders-tool` | `list_purchase_orders` |
+| `get-purchase-order-tool` | `get_purchase_order` |
+| `create-purchase-order-tool` | `create_purchase_order` |
+| `send-purchase-order-tool` | `send_purchase_order` |
+| `receive-purchase-order-tool` | `receive_purchase_order` |
+| `list-work-orders-tool` | `list_work_orders` |
+| `start-work-order-tool` | `start_work_order` |
+| `create-product-tool` | `create_product` |
+| `reorder-helper-prompt` (prompt) | `reorder_helper` |
 
-```bash
-php artisan config:clear
-php artisan cache:clear
-php artisan view:clear
-php artisan route:clear
-```
+New in 2.0.0: `email_order_invoice`, `record_payment`, `list_shipments`, `create_shipment`, `submit_purchase_order_for_approval`, `list_pending_approvals`, `decide_approval` and `delete_work_order`. The catalog is in [docs/mcp/README.md](docs/mcp/README.md). `laravel/mcp` is now a production dependency, so the MCP server is included in the release package and the Docker image.
 
-#### 9. Rebuild Frontend Assets
+### Plugin assets
 
-```bash
-npm run build
-```
+Plugin UI bundles are published to `public/plugin-assets/{slug}` instead of `public/plugins/{slug}`. The app republishes active plugins' bundles and removes the old copies itself. On cPanel, the new `public_html/index.php` from the release package is required (step 5 above).
 
-#### 10. Verify the Upgrade
+Plugins now declare the minimum Inventoros version in `requires`, and it is enforced. The bundled `hello-world` plugin requires 2.0.0. Build-time plugins that imported the removed components `DropdownLink`, `NavLink`, `ResponsiveNavLink`, `SidebarNavItem` or `SidebarUserProfile` must be updated. See [docs/PLUGIN_DEVELOPMENT.md](docs/PLUGIN_DEVELOPMENT.md).
 
-```bash
-# Check Laravel version
-php artisan --version
-# Should show: Laravel Framework 13.x.x
+### API reference access
 
-# Run the test suite (optional)
-php artisan test
-```
+The interactive API reference at `/docs/api` now requires a signed-in user outside the `local` environment. Set `API_DOCS_PUBLIC=true` to make it public again. The OpenAPI file is also in the repository at `docs/api/openapi.yaml`.
 
-### Breaking Changes
+### Plugin marketplace
 
-#### Laravel 13
+Plugins > Marketplace installs and updates plugins from inventoros.com. Every package is verified against the marketplace signing public key configured in `config/marketplace.php` (override it with `INVENTOROS_MARKETPLACE_PUBLIC_KEY`); the app never trusts a key the marketplace advertises. If the Marketplace tab says installs are off, no key is configured. Paid plugins need an inventoros.com account connected on the same tab.
 
-- **Default pagination changed from 15 to 25 items per page.** Inventoros explicitly sets page sizes in all controllers, so this should not affect you. If you have custom controllers using bare `->paginate()`, add an explicit count: `->paginate(15)`.
+### Other behaviour changes
 
-- **Cache/session prefix format changed.** If upgrading a production system, set these in your `.env` to preserve existing sessions:
-  ```env
-  CACHE_PREFIX=your_existing_prefix
-  SESSION_COOKIE=your_existing_cookie_name
-  ```
+- `/api/v1` accepts bearer tokens only. Browser sessions are not accepted there.
+- `POST /api/v1/purchase-orders/{id}/send` emails the supplier and returns `Purchase order sent`.
+- Invoice PDFs are named after the invoice number (`INV-000001.pdf`).
+- REST reads of categories, locations and stock adjustments require `manage_categories`, `manage_locations` and `manage_stock`.
+- The MCP `create_product` tool requires `create_products`.
+- `settings.organization.users.*` redirects to `/users`, and the webhook `create` and `edit` routes were removed.
 
-- **Password reset email subject changed** from "Reset Password Notification" to "Reset your password". If you have email filters or tests checking this subject line, update them.
+### License
 
-#### Inertia v3
+Inventoros 2.0.0 and later are licensed under the [GNU Affero General Public License v3.0 only](LICENSE) (AGPL-3.0-only). Releases up to and including 1.0.8 remain under MIT. If you modify Inventoros and let others use it over a network, the AGPL requires you to offer them the source of your modified version.
 
-- **`Inertia::lazy()` removed.** Use `Inertia::optional()` instead. Inventoros does not use `lazy()`, so no action needed unless you added custom controllers.
-
-- **Global router events renamed.** If you added custom JavaScript event handlers:
-  - `'invalid'` is now `'httpException'`
-  - `'exception'` is now `'networkError'`
-
-- **`router.cancel()` renamed to `router.cancelAll()`.** Update any custom JavaScript calling `router.cancel()`.
-
-- **Axios no longer bundled with Inertia.** Inventoros includes Axios as a direct dependency, so this should not affect you. If you import Axios from Inertia's internals, update your imports.
-
-#### google2fa-laravel v3
-
-- No API changes. This is a compatibility release for Laravel 13.
-
-### New Features in v2.0
-
-After upgrading, you'll have access to three new feature areas:
-
-#### Multi-Warehouse Support
-- Create and manage multiple warehouses with addresses and settings
-- Assign users to specific warehouses (access control)
-- Global warehouse switcher in the header to filter all views
-- Inter-warehouse stock transfers with shipping/tracking
-- Default warehouse per organization
-
-#### Kitting, Bundling & Assembly
-- Products now have a `type` field: standard, kit, or assembly
-- Kits: virtual products with auto-calculated stock from components
-- Assemblies: production work orders that consume components and produce finished goods
-- Bill of Materials (BOM) management on product pages
-- Work Orders section in sidebar navigation
-
-#### Custom Report Builder
-- Create custom reports from 6 data sources (products, orders, stock adjustments, customers, suppliers, purchase orders)
-- Select columns, add filters, configure sorting
-- Save reports as templates, share with team
-- Export reports as CSV
-- Live preview while building
-
-#### New API Endpoints
-
-All new features have full REST API support:
-
-```
-GET/POST       /api/v1/warehouses
-GET/PUT/DELETE /api/v1/warehouses/{id}
-
-GET/POST       /api/v1/work-orders
-GET            /api/v1/work-orders/{id}
-POST           /api/v1/work-orders/{id}/start
-POST           /api/v1/work-orders/{id}/complete
-POST           /api/v1/work-orders/{id}/cancel
-
-GET/POST       /api/v1/products/{id}/components
-PUT/DELETE     /api/v1/products/{id}/components/{id}
-
-GET/POST       /api/v1/reports
-GET/PUT/DELETE /api/v1/reports/{id}
-GET            /api/v1/reports/{id}/export
-```
-
-#### New Permissions
-
-Add these to your custom roles as needed:
-
-- `view_warehouses` — View warehouse list
-- `create_warehouses` — Create warehouses
-- `edit_warehouses` — Edit warehouse settings
-- `delete_warehouses` — Delete warehouses
-- `manage_warehouse_users` — Assign users to warehouses
-- `manage_returns` — Manage returns and exchanges
-
-### Plugin Compatibility
-
-If you have custom plugins, check for:
-
-1. **Laravel 13 namespace changes**: `VerifyCsrfToken` middleware is now `PreventRequestForgery` (the old name still works as an alias).
-2. **Inertia v3 testing**: If your plugin tests use `assertInertia()`, they should continue to work unchanged.
-3. **New product type field**: Queries on the `products` table should account for the new `type` column if filtering.
-
-### Rollback
-
-If you need to roll back:
-
-```bash
-# Restore from backup
-php artisan app:update --restore
-
-# Or revert to v1.1 tag
-git checkout v1.1
-composer install
-npm install && npm run build
-php artisan migrate:rollback --step=4
-```
-
-### Getting Help
+### Getting help
 
 - [GitHub Issues](https://github.com/Inventoros/Inventoros/issues)
 - [Contributing Guide](CONTRIBUTING.md)

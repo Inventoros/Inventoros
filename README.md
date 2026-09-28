@@ -67,9 +67,10 @@ Inventoros is an open-source Inventory and Warehouse Management System (WMS) bui
 - **Assembly & work orders** -- production workflow that consumes components and produces finished goods
 - **Batch tracking** with lot numbers, expiry dates, and manufacturing dates
 - **Serial number tracking** with individual status management
-- Barcode generation (UPC/EAN/Code128), bulk printing, and camera-based scanning
+- Barcodes in Code 128, EAN-13, UPC-A, EAN-8 and Code 39, QR codes for products and locations, bulk printing, and keyboard-wedge or camera scanning
 - Configurable SKU patterns with auto-generation
-- CSV import/export for bulk operations
+- CSV import/export for products, orders and users, with row-by-row results
+- Scheduled cycle counts and stock audits
 
 ### Multi-Warehouse Management
 - **Multiple warehouses** with addresses, contacts, and per-warehouse settings
@@ -77,22 +78,36 @@ Inventoros is an open-source Inventory and Warehouse Management System (WMS) bui
 - **Global warehouse switcher** in the header to filter all views
 - **Inter-warehouse stock transfers** with shipping method, tracking number, and transit status
 - Default warehouse per organization with manual override on orders
+- Per-warehouse reorder points, warehouse and location capacity, and fulfilment priority
 - Locations nested within warehouses (Warehouse > Aisle > Shelf > Bin)
 
 ### Order & Supply Chain
 - Full order lifecycle with automatic inventory adjustments and row locking
 - Order approval workflow (pending, approved, rejected)
+- **Line and order discounts, payments and refunds**, order payment status, and an accounts-receivable aging report
+- **Invoices** with per-organization numbering, emailed to the customer as a PDF
 - **Returns & exchanges (RMA)** -- full return lifecycle with automatic stock restoration
-- Purchase orders with item receiving workflow and invoice generation
+- Purchase orders emailed to suppliers with the PDF, item receiving, supplier price history and ratings
 - Customer management with order history
 - Automated reorder points with supplier-grouped PO generation
 
-### Custom Report Builder
-- **Build custom reports** from 6 data sources (products, orders, stock adjustments, customers, suppliers, purchase orders)
-- Select columns, add filters (10+ operators), configure sorting
-- Save reports as reusable templates, share with team
-- Export reports as CSV
-- Live preview while building
+### Shipping & Fulfilment
+- **Shipments** per order, including partial shipments; orders move to shipped and delivered as they go
+- **EasyPost** rates, label purchase, tracking and voids, or manual shipments with your own tracking
+- Tracking updates by webhook with a polling backstop, and an optional shipment email to the customer
+
+### Customer Portal
+- A B2B portal per organization at `/portal/{org-slug}` for invited customer contacts
+- Customers see their orders, shipments, payments, balance and invoice PDFs, and request returns
+
+### Approval Workflows
+- Optional approval for purchase orders, manual stock adjustments and stock transfers, with thresholds
+- A Pending approvals page with a sidebar count; all workflows are off by default
+
+### Reports & Analytics
+- Valuation, stock movement, sales analysis, low stock, dead stock, inventory turnover, profit margin, sales by location and ABC analysis
+- **Custom report builder** over 6 data sources with columns, filters, sorting and shared templates
+- Export any report to CSV, Excel or PDF, and email saved reports on a daily, weekly or monthly schedule
 
 ### User & Access Management
 - Role-based access control with 30+ granular permissions
@@ -101,15 +116,16 @@ Inventoros is an open-source Inventory and Warehouse Management System (WMS) bui
 - API token management (create, list, revoke)
 
 ### REST & GraphQL APIs
-- **REST API v1** with full CRUD for all resources (products, orders, warehouses, work orders, reports, and more)
+- **REST API v1** covering products, orders, payments, shipments, approvals, customers, returns, transfers, users and more
 - **GraphQL API** with queries and mutations, permission checks, and query depth/complexity limits
-- Auto-generated **OpenAPI 3.1 docs** via Scramble at `/docs/api`
-- Sanctum token authentication
+- **MCP server** at `/mcp` so AI clients can read and act on inventory with a user's token ([docs/mcp/README.md](docs/mcp/README.md))
+- OpenAPI spec in [docs/api/openapi.yaml](docs/api/openapi.yaml), also served by a running install at `/docs/api`
+- Sanctum token authentication with scoped abilities
 
 ### Plugin System
 - WordPress-style hooks and filters
-- Extensible UI with plugin slots
-- Database-driven plugin activation
+- Runtime plugin UI: pages, dashboard widgets, menu items and tabs, loaded without rebuilding the app
+- **Plugin marketplace**: install and update signed plugins from inventoros.com
 - Sample plugin with documentation
 
 ### Notifications & Integrations
@@ -141,13 +157,15 @@ Inventoros is an open-source Inventory and Warehouse Management System (WMS) bui
 
 ## Requirements
 
-- PHP 8.4 (8.4.1 or newer)
+- PHP 8.4 (8.4.1 or newer; PHP 8.5 is not supported yet)
 - Composer 2.x
 - Node.js 20.19+ or 22.12+ and npm (Vite 7)
 - MySQL 8.0+ or PostgreSQL 13+ (SQLite for development)
 - Redis (optional, recommended for production queues)
 
 ## Installation
+
+> **Upgrading from 1.0.x?** The in-app updater in 1.0.x cannot install 2.0.0 (or any release), so upgrade by hand once by following [UPGRADE.md](UPGRADE.md). From 2.0.0 on, the updater works again.
 
 ### Quick Start
 
@@ -188,6 +206,8 @@ php artisan queue:work  # Queue worker
 2. Run `php artisan migrate` to create the database schema
 
 3. Run `npm run build` for production assets
+
+4. Run the scheduler (`* * * * * php artisan schedule:run` in cron); it is required. It also processes the queue every minute, which is enough on shared hosting; on a VPS run a worker (`php artisan queue:work`) as well. Scheduled reports, cycle counts, shipment tracking, emails and webhooks depend on them. See the [cPanel](docs/site/sections/installation-cpanel.md) and [VPS](docs/site/sections/installation-vps.md) guides.
 
 ## Testing
 
@@ -231,28 +251,38 @@ The REST API is available at `/api/v1/` with Sanctum token authentication.
 | Categories | `GET`, `POST`, `GET/{id}`, `PUT/{id}`, `DELETE/{id}` |
 | Locations | `GET`, `POST`, `GET/{id}`, `PUT/{id}`, `DELETE/{id}` |
 | Warehouses | `GET`, `POST`, `GET/{id}`, `PUT/{id}`, `DELETE/{id}` |
-| Orders | `GET`, `POST`, `GET/{id}`, `PUT/{id}`, `DELETE/{id}` |
+| Orders | `GET`, `POST`, `GET/{id}`, `PUT/{id}`, `DELETE/{id}`, `POST/approve`, `POST/reject`, `POST/invoice/email` |
+| Order Payments | Nested under orders: `GET/payments`, `POST/payments`, `POST/refunds`, `POST/payments/{id}/void` |
+| Shipments | `GET`, `GET/{id}`, nested under orders: `GET`, `POST`; `POST/rates`, `POST/buy-label`, `POST/void-label`, `POST/ship` |
+| Approvals | `GET`, `GET/mine`, `POST/{type}/{id}/approve`, `POST/{type}/{id}/reject` |
+| Customers | `GET`, `POST`, `GET/{id}`, `PUT/{id}`, `DELETE/{id}`, `GET/{id}/orders` |
+| Returns (RMA) | `GET`, `POST`, `GET/{id}`, `PATCH/{id}/items`, `POST/approve`, `POST/receive`, `POST/complete`, `POST/reject` |
+| Stock Transfers | `GET`, `POST`, `GET/{id}`, `POST/ship`, `POST/complete`, `POST/cancel` |
 | Stock Adjustments | `GET`, `POST`, `GET/{id}` |
-| Stock Audits | `GET`, `GET/{id}` |
+| Stock Audits | `GET`, `POST`, `GET/{id}`, `POST/start`, `POST/items/{item}/count`, `POST/complete` |
 | Suppliers | `GET`, `POST`, `GET/{id}`, `PUT/{id}`, `DELETE/{id}` |
-| Purchase Orders | `GET`, `POST`, `GET/{id}`, `PUT/{id}`, `DELETE/{id}`, `POST/receive`, `POST/send`, `POST/cancel` |
-| Work Orders | `GET`, `POST`, `GET/{id}`, `POST/start`, `POST/complete`, `POST/cancel` |
+| Purchase Orders | `GET`, `POST`, `GET/{id}`, `PUT/{id}`, `DELETE/{id}`, `POST/receive`, `POST/send`, `POST/cancel`, `POST/submit-for-approval` |
+| Work Orders | `GET`, `POST`, `GET/{id}`, `DELETE/{id}`, `POST/start`, `POST/complete`, `POST/cancel` |
+| Webhooks | `GET`, `POST`, `GET/{id}`, `PUT/{id}`, `DELETE/{id}`, `POST/regenerate-secret`, `GET/deliveries` |
+| Users | `GET`, `POST`, `GET/{id}`, `PUT/{id}` |
 | Saved Reports | `GET`, `POST`, `GET/{id}`, `PUT/{id}`, `DELETE/{id}`, `GET/{id}/export` |
 | Permission Sets | `GET`, `POST`, `GET/{id}`, `PUT/{id}`, `DELETE/{id}`, `GET/categories` |
 | Barcode Lookup | `GET/{code}` |
 
 </details>
 
-The **GraphQL API** is available at `/graphql` with Sanctum bearer token authentication. Interactive API documentation is auto-generated at `/docs/api`.
+The **GraphQL API** is available at `/graphql` with Sanctum bearer token authentication. The [API guide](docs/api/README.md) covers authentication, permissions, webhooks and GraphQL, and [docs/api/openapi.yaml](docs/api/openapi.yaml) is the full spec. A running install also serves an interactive reference at `/docs/api` on its own domain; outside `local` it requires a signed-in user unless `API_DOCS_PUBLIC=true`. Guides are also published at [inventoros.com/docs](https://inventoros.com/docs).
 
 ## Documentation
 
-- [Upgrade Guide](UPGRADE.md) -- Upgrading from v1.1 to v2.0
+- [Upgrade Guide](UPGRADE.md) -- Upgrading from v1.0.x to v2.0.0
+- [Changelog](CHANGELOG.md) -- What changed in each release
 - [cPanel Deployment](CPANEL.md) -- Deploy on shared hosting
 - [Plugin Development](docs/PLUGIN_DEVELOPMENT.md) -- Creating plugins with hooks and filters
 - [Email Notifications](docs/features/email-notifications.md) -- Configuration and usage
 - [Barcode Scanning](docs/features/barcode-scanning.md) -- Camera-based scanning integration
-- [API Documentation](/docs/api) -- Interactive OpenAPI docs (available when running)
+- [API Guide](docs/api/README.md) -- REST, GraphQL and webhooks ([OpenAPI spec](docs/api/openapi.yaml); a running install serves it at `/docs/api`)
+- [MCP Server](docs/mcp/README.md) -- Connecting AI clients
 
 ## Contributing
 
