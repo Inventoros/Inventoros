@@ -355,12 +355,31 @@ final class ReturnOrderService
                 throw new InvalidStateException('Only approved returns can be received.', 'invalid_status');
             }
 
-            $locked->load('items.product');
+            $locked->load('items.product', 'items.variant', 'items.orderItem.variant');
 
             $this->assertReceivable($locked);
 
             foreach ($locked->items as $item) {
-                if ($item->restock && $item->product) {
+                // A line sold as a variant decremented the variant, so the
+                // return credits the variant back (lines raised before the
+                // column existed fall back to their order line's variant).
+                // Variant stock has no location bins.
+                $variant = $item->variant ?? $item->orderItem?->variant;
+
+                if ($item->restock && $item->product && $variant !== null) {
+                    StockAdjustment::adjustVariant(
+                        $variant,
+                        $item->quantity,
+                        'return',
+                        'Return restock',
+                        "Restocked from return {$locked->return_number}",
+                        $locked,
+                    );
+
+                    if ($item->orderItem !== null) {
+                        $this->trackedStock->releaseForOrderItem($item->orderItem, (int) $item->quantity);
+                    }
+                } elseif ($item->restock && $item->product) {
                     StockAdjustment::adjust(
                         $item->product,
                         $item->quantity,
