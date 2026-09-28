@@ -177,7 +177,15 @@
     "viewInventory": "Vedi inventario",
     "browseAllItems": "Sfoglia tutti gli articoli",
     "viewOrders": "Vedi ordini",
-    "allOrders": "Tutti gli ordini"
+    "allOrders": "Tutti gli ordini",
+    "systemHealth": {
+      "title": "Le attività in background richiedono attenzione",
+      "schedulerNeverRan": "Lo scheduler non è ancora stato eseguito, quindi email, webhook, avvisi di riordino e report pianificati non vengono elaborati.",
+      "schedulerStale": "Lo scheduler è stato eseguito l'ultima volta il {date}. Email, webhook, avvisi di riordino e report pianificati sono in attesa.",
+      "queueBacklog": "Job in coda in attesa da più di 15 minuti: {count}. Email e webhook non vengono inviati.",
+      "failedJobs": "Job in background non riusciti nelle ultime 24 ore: {count}.",
+      "help": "Verifica che il cron job esegua php artisan schedule:run ogni minuto. Consulta la guida cPanel per i dettagli."
+    }
   },
   "products": {
     "title": "Inventario",
@@ -2140,7 +2148,9 @@
     "invoiceNotIssued": "Non ancora emessa. Un numero viene assegnato la prima volta che la fattura viene generata.",
     "invoiceIssued": "Emessa",
     "invoiceSent": "Inviata",
-    "send": "Invia"
+    "send": "Invia",
+    "queuedOn": "In coda per {to} il {date}. Verrà inviata alla prossima esecuzione della coda email.",
+    "invoiceQueued": "In coda"
   },
   "scanning": {
     "scan": "Scansiona",
@@ -2283,7 +2293,8 @@
       "partial": "Pagato parzialmente",
       "paid": "Pagato",
       "overpaid": "Pagato in eccesso",
-      "refunded": "Rimborsato"
+      "refunded": "Rimborsato",
+      "untracked": "Non tracciato"
     },
     "amountPaid": "Importo pagato",
     "balanceDue": "Saldo dovuto",
@@ -2310,7 +2321,15 @@
     "save": "Salva",
     "byPaymentStatus": "Ordini per stato di pagamento",
     "outstanding": "Da incassare",
-    "ordersCount": "{n} ordine | {n} ordini"
+    "ordersCount": "{n} ordine | {n} ordini",
+    "untrackedNotice": "Questo ordine è stato effettuato prima del tracciamento dei pagamenti, quindi non si sa nulla del suo pagamento. Registrando un pagamento inizia il tracciamento.",
+    "markPreTracking": {
+      "button": "Segna ordini precedenti come pagati",
+      "title": "Segna gli ordini precedenti come pagati",
+      "description": "{n} ordine è stato effettuato prima del tracciamento dei pagamenti. Gli ordini effettuati prima della data indicata vengono segnati come pagati con un pagamento di metodo Altro per l'intero totale, con la data dell'ordine. Gli ordini annullati restano invariati. | {n} ordini sono stati effettuati prima del tracciamento dei pagamenti. Gli ordini effettuati prima della data indicata vengono segnati come pagati con un pagamento di metodo Altro per l'intero totale, con la data dell'ordine. Gli ordini annullati restano invariati.",
+      "before": "Effettuati prima del",
+      "submit": "Segna come pagati"
+    }
   },
   "discounts": {
     "discount": "Sconto",
@@ -2485,7 +2504,8 @@
         "partial": "Pagato in parte",
         "paid": "Pagato",
         "overpaid": "Pagato in eccesso",
-        "refunded": "Rimborsato"
+        "refunded": "Rimborsato",
+        "untracked": "Non tracciato"
       }
     },
     "returns": {

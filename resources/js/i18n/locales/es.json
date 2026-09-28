@@ -177,7 +177,15 @@
     "viewInventory": "Ver inventario",
     "browseAllItems": "Explorar todos los art\u00edculos",
     "viewOrders": "Ver pedidos",
-    "allOrders": "Todos los pedidos"
+    "allOrders": "Todos los pedidos",
+    "systemHealth": {
+      "title": "Las tareas en segundo plano requieren atención",
+      "schedulerNeverRan": "El programador aún no se ha ejecutado, por lo que no se procesan correos, webhooks, alertas de reposición ni informes programados.",
+      "schedulerStale": "El programador se ejecutó por última vez el {date}. Los correos, webhooks, alertas de reposición e informes programados están en espera.",
+      "queueBacklog": "Trabajos en cola esperando más de 15 minutos: {count}. Los correos y webhooks no se están enviando.",
+      "failedJobs": "Trabajos en segundo plano que fallaron en las últimas 24 horas: {count}.",
+      "help": "Compruebe que la tarea cron ejecuta php artisan schedule:run cada minuto. Consulte la guía de cPanel para más detalles."
+    }
   },
   "products": {
     "title": "Inventario",
@@ -2140,7 +2148,9 @@
     "invoiceNotIssued": "A\u00fan no emitida. Se asigna un n\u00famero la primera vez que se genera la factura.",
     "invoiceIssued": "Emitida",
     "invoiceSent": "Enviada",
-    "send": "Enviar"
+    "send": "Enviar",
+    "queuedOn": "En cola para {to} el {date}. Se enviará la próxima vez que se procese la cola de correo.",
+    "invoiceQueued": "En cola"
   },
   "scanning": {
     "scan": "Escanear",
@@ -2283,7 +2293,8 @@
       "partial": "Pagado parcialmente",
       "paid": "Pagado",
       "overpaid": "Sobrepagado",
-      "refunded": "Reembolsado"
+      "refunded": "Reembolsado",
+      "untracked": "Sin seguimiento"
     },
     "amountPaid": "Monto pagado",
     "balanceDue": "Saldo pendiente",
@@ -2310,7 +2321,15 @@
     "save": "Guardar",
     "byPaymentStatus": "Pedidos por estado de pago",
     "outstanding": "Pendiente",
-    "ordersCount": "{n} pedido | {n} pedidos"
+    "ordersCount": "{n} pedido | {n} pedidos",
+    "untrackedNotice": "Este pedido se realizó antes del seguimiento de pagos, por lo que no se sabe nada de su pago. Registrar un pago inicia su seguimiento.",
+    "markPreTracking": {
+      "button": "Marcar pedidos antiguos como pagados",
+      "title": "Marcar pedidos antiguos como pagados",
+      "description": "{n} pedido se realizó antes del seguimiento de pagos. Los pedidos realizados antes de la fecha indicada se marcan como pagados con un pago de método Otro por su total, con la fecha del pedido. Los pedidos cancelados no cambian. | {n} pedidos se realizaron antes del seguimiento de pagos. Los pedidos realizados antes de la fecha indicada se marcan como pagados con un pago de método Otro por su total, con la fecha del pedido. Los pedidos cancelados no cambian.",
+      "before": "Realizados antes del",
+      "submit": "Marcar como pagados"
+    }
   },
   "discounts": {
     "discount": "Descuento",
@@ -2485,7 +2504,8 @@
         "partial": "Pagado parcialmente",
         "paid": "Pagado",
         "overpaid": "Sobrepagado",
-        "refunded": "Reembolsado"
+        "refunded": "Reembolsado",
+        "untracked": "Sin seguimiento"
       }
     },
     "returns": {

@@ -177,7 +177,15 @@
     "viewInventory": "Ver Estoque",
     "browseAllItems": "Navegar por todos os itens",
     "viewOrders": "Ver Pedidos",
-    "allOrders": "Todos os pedidos"
+    "allOrders": "Todos os pedidos",
+    "systemHealth": {
+      "title": "Tarefas em segundo plano precisam de atenção",
+      "schedulerNeverRan": "O agendador ainda não foi executado, então e-mails, webhooks, alertas de reposição e relatórios agendados não estão sendo processados.",
+      "schedulerStale": "O agendador foi executado pela última vez em {date}. E-mails, webhooks, alertas de reposição e relatórios agendados estão aguardando.",
+      "queueBacklog": "Tarefas na fila aguardando há mais de 15 minutos: {count}. E-mails e webhooks não estão sendo enviados.",
+      "failedJobs": "Tarefas em segundo plano que falharam nas últimas 24 horas: {count}.",
+      "help": "Verifique se o cron executa php artisan schedule:run a cada minuto. Consulte o guia do cPanel para detalhes."
+    }
   },
   "products": {
     "title": "Estoque",
@@ -2140,7 +2148,9 @@
     "invoiceNotIssued": "Ainda não emitida. Um número é atribuído na primeira vez que a fatura é gerada.",
     "invoiceIssued": "Emitida",
     "invoiceSent": "Enviada",
-    "send": "Enviar"
+    "send": "Enviar",
+    "queuedOn": "Na fila para {to} em {date}. Será enviado na próxima execução da fila de e-mails.",
+    "invoiceQueued": "Na fila"
   },
   "scanning": {
     "scan": "Escanear",
@@ -2283,7 +2293,8 @@
       "partial": "Parcialmente pago",
       "paid": "Pago",
       "overpaid": "Pago a maior",
-      "refunded": "Reembolsado"
+      "refunded": "Reembolsado",
+      "untracked": "Não rastreado"
     },
     "amountPaid": "Valor pago",
     "balanceDue": "Saldo devedor",
@@ -2310,7 +2321,15 @@
     "save": "Salvar",
     "byPaymentStatus": "Pedidos por status de pagamento",
     "outstanding": "Em aberto",
-    "ordersCount": "{n} pedido | {n} pedidos"
+    "ordersCount": "{n} pedido | {n} pedidos",
+    "untrackedNotice": "Este pedido foi feito antes do rastreamento de pagamentos, então nada se sabe sobre o pagamento. Registrar um pagamento inicia o rastreamento.",
+    "markPreTracking": {
+      "button": "Marcar pedidos antigos como pagos",
+      "title": "Marcar pedidos antigos como pagos",
+      "description": "{n} pedido foi feito antes do rastreamento de pagamentos. Pedidos feitos antes da data abaixo são marcados como pagos com um pagamento do método Outro pelo total, com a data do pedido. Pedidos cancelados não mudam. | {n} pedidos foram feitos antes do rastreamento de pagamentos. Pedidos feitos antes da data abaixo são marcados como pagos com um pagamento do método Outro pelo total, com a data do pedido. Pedidos cancelados não mudam.",
+      "before": "Feitos antes de",
+      "submit": "Marcar como pagos"
+    }
   },
   "discounts": {
     "discount": "Desconto",
@@ -2485,7 +2504,8 @@
         "partial": "Parcialmente pago",
         "paid": "Pago",
         "overpaid": "Pago a maior",
-        "refunded": "Reembolsado"
+        "refunded": "Reembolsado",
+        "untracked": "Não rastreado"
       }
     },
     "returns": {

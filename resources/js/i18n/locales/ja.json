@@ -177,7 +177,15 @@
     "viewInventory": "在庫を表示",
     "browseAllItems": "すべてのアイテムを閲覧",
     "viewOrders": "注文を表示",
-    "allOrders": "すべての注文"
+    "allOrders": "すべての注文",
+    "systemHealth": {
+      "title": "バックグラウンドタスクの確認が必要です",
+      "schedulerNeverRan": "スケジューラーがまだ実行されていないため、メール、Webhook、再発注アラート、定期レポートが処理されていません。",
+      "schedulerStale": "スケジューラーの最終実行は {date} です。メール、Webhook、再発注アラート、定期レポートが待機しています。",
+      "queueBacklog": "15分以上待機しているキューのジョブ: {count}。メールとWebhookが送信されていません。",
+      "failedJobs": "過去24時間に失敗したバックグラウンドジョブ: {count}。",
+      "help": "cronジョブが毎分 php artisan schedule:run を実行しているか確認してください。詳しくはcPanelガイドを参照してください。"
+    }
   },
   "products": {
     "title": "在庫",
@@ -2140,7 +2148,9 @@
     "invoiceNotIssued": "未発行です。請求書を初めて生成したときに番号が割り当てられます。",
     "invoiceIssued": "発行済み",
     "invoiceSent": "送信済み",
-    "send": "送信"
+    "send": "送信",
+    "queuedOn": "{date} に {to} 宛てでキューに追加されました。次回メールキューが処理されるときに送信されます。",
+    "invoiceQueued": "キュー待ち"
   },
   "scanning": {
     "scan": "スキャン",
@@ -2283,7 +2293,8 @@
       "partial": "一部支払い済み",
       "paid": "支払い済み",
       "overpaid": "過払い",
-      "refunded": "返金済み"
+      "refunded": "返金済み",
+      "untracked": "未追跡"
     },
     "amountPaid": "支払額",
     "balanceDue": "未払残高",
@@ -2310,7 +2321,15 @@
     "save": "保存",
     "byPaymentStatus": "支払いステータス別の注文",
     "outstanding": "未回収",
-    "ordersCount": "{n}件の注文 | {n}件の注文"
+    "ordersCount": "{n}件の注文 | {n}件の注文",
+    "untrackedNotice": "この注文は支払い追跡の開始前に作成されたため、支払い状況は不明です。支払いを記録すると追跡が始まります。",
+    "markPreTracking": {
+      "button": "古い注文を支払い済みにする",
+      "title": "古い注文を支払い済みにする",
+      "description": "支払い追跡の開始前に作成された注文: {n}件。下の日付より前の注文は、注文日付で合計金額を「その他」の方法で支払ったものとして支払い済みになります。キャンセルされた注文は変更されません。 | 支払い追跡の開始前に作成された注文: {n}件。下の日付より前の注文は、注文日付で合計金額を「その他」の方法で支払ったものとして支払い済みになります。キャンセルされた注文は変更されません。",
+      "before": "この日付より前",
+      "submit": "支払い済みにする"
+    }
   },
   "discounts": {
     "discount": "割引",
@@ -2485,7 +2504,8 @@
         "partial": "一部支払い済み",
         "paid": "支払い済み",
         "overpaid": "過払い",
-        "refunded": "返金済み"
+        "refunded": "返金済み",
+        "untracked": "未追跡"
       }
     },
     "returns": {

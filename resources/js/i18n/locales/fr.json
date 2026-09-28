@@ -177,7 +177,15 @@
     "viewInventory": "Voir l'inventaire",
     "browseAllItems": "Parcourir tous les articles",
     "viewOrders": "Voir les commandes",
-    "allOrders": "Toutes les commandes"
+    "allOrders": "Toutes les commandes",
+    "systemHealth": {
+      "title": "Des tâches en arrière-plan demandent votre attention",
+      "schedulerNeverRan": "Le planificateur n'a pas encore été exécuté : les e-mails, webhooks, alertes de réapprovisionnement et rapports planifiés ne sont pas traités.",
+      "schedulerStale": "Le planificateur a été exécuté pour la dernière fois le {date}. Les e-mails, webhooks, alertes de réapprovisionnement et rapports planifiés sont en attente.",
+      "queueBacklog": "Tâches en file d'attente depuis plus de 15 minutes : {count}. Les e-mails et webhooks ne partent pas.",
+      "failedJobs": "Tâches en arrière-plan en échec au cours des dernières 24 heures : {count}.",
+      "help": "Vérifiez que la tâche cron exécute php artisan schedule:run chaque minute. Consultez le guide cPanel pour plus de détails."
+    }
   },
   "products": {
     "title": "Inventaire",
@@ -2140,7 +2148,9 @@
     "invoiceNotIssued": "Pas encore émise. Un numéro est attribué lors de la première génération de la facture.",
     "invoiceIssued": "Émise",
     "invoiceSent": "Envoyée",
-    "send": "Envoyer"
+    "send": "Envoyer",
+    "queuedOn": "Mis en file d'attente pour {to} le {date}. Il partira au prochain passage de la file d'envoi.",
+    "invoiceQueued": "En file d'attente"
   },
   "scanning": {
     "scan": "Scanner",
@@ -2283,7 +2293,8 @@
       "partial": "Partiellement payée",
       "paid": "Payée",
       "overpaid": "Trop-perçu",
-      "refunded": "Remboursée"
+      "refunded": "Remboursée",
+      "untracked": "Non suivi"
     },
     "amountPaid": "Montant payé",
     "balanceDue": "Solde dû",
@@ -2310,7 +2321,15 @@
     "save": "Enregistrer",
     "byPaymentStatus": "Commandes par statut de paiement",
     "outstanding": "Impayé",
-    "ordersCount": "{n} commande | {n} commandes"
+    "ordersCount": "{n} commande | {n} commandes",
+    "untrackedNotice": "Cette commande a été passée avant le suivi des paiements : rien n'est connu de son paiement. Enregistrer un paiement démarre son suivi.",
+    "markPreTracking": {
+      "button": "Marquer les anciennes commandes comme payées",
+      "title": "Marquer les anciennes commandes comme payées",
+      "description": "{n} commande a été passée avant le suivi des paiements. Les commandes passées avant la date ci-dessous sont marquées payées avec un paiement de méthode Autre pour leur total, daté du jour de la commande. Les commandes annulées ne changent pas. | {n} commandes ont été passées avant le suivi des paiements. Les commandes passées avant la date ci-dessous sont marquées payées avec un paiement de méthode Autre pour leur total, daté du jour de la commande. Les commandes annulées ne changent pas.",
+      "before": "Passées avant le",
+      "submit": "Marquer comme payées"
+    }
   },
   "discounts": {
     "discount": "Remise",
@@ -2485,7 +2504,8 @@
         "partial": "Partiellement payée",
         "paid": "Payée",
         "overpaid": "Trop-perçu",
-        "refunded": "Remboursée"
+        "refunded": "Remboursée",
+        "untracked": "Non suivi"
       }
     },
     "returns": {

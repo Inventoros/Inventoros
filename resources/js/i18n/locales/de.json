@@ -177,7 +177,15 @@
     "viewInventory": "Bestand ansehen",
     "browseAllItems": "Alle Artikel durchsuchen",
     "viewOrders": "Bestellungen ansehen",
-    "allOrders": "Alle Bestellungen"
+    "allOrders": "Alle Bestellungen",
+    "systemHealth": {
+      "title": "Hintergrundaufgaben benötigen Aufmerksamkeit",
+      "schedulerNeverRan": "Der Scheduler ist noch nicht gelaufen, daher werden E-Mails, Webhooks, Nachbestellwarnungen und geplante Berichte nicht verarbeitet.",
+      "schedulerStale": "Der Scheduler ist zuletzt am {date} gelaufen. E-Mails, Webhooks, Nachbestellwarnungen und geplante Berichte warten.",
+      "queueBacklog": "Jobs in der Warteschlange, die länger als 15 Minuten warten: {count}. E-Mails und Webhooks werden nicht versendet.",
+      "failedJobs": "Hintergrundjobs, die in den letzten 24 Stunden fehlgeschlagen sind: {count}.",
+      "help": "Prüfen Sie, dass der Cronjob php artisan schedule:run jede Minute ausführt. Details finden Sie in der cPanel-Anleitung."
+    }
   },
   "products": {
     "title": "Bestand",
@@ -2140,7 +2148,9 @@
     "invoiceNotIssued": "Noch nicht ausgestellt. Eine Nummer wird vergeben, wenn die Rechnung zum ersten Mal erstellt wird.",
     "invoiceIssued": "Ausgestellt",
     "invoiceSent": "Gesendet",
-    "send": "Senden"
+    "send": "Senden",
+    "queuedOn": "Für {to} am {date} in die Warteschlange gestellt. Die E-Mail wird versendet, sobald die Mail-Warteschlange das nächste Mal läuft.",
+    "invoiceQueued": "In Warteschlange"
   },
   "scanning": {
     "scan": "Scannen",
@@ -2283,7 +2293,8 @@
       "partial": "Teilweise bezahlt",
       "paid": "Bezahlt",
       "overpaid": "Überzahlt",
-      "refunded": "Erstattet"
+      "refunded": "Erstattet",
+      "untracked": "Nicht erfasst"
     },
     "amountPaid": "Bezahlter Betrag",
     "balanceDue": "Offener Betrag",
@@ -2310,7 +2321,15 @@
     "save": "Speichern",
     "byPaymentStatus": "Bestellungen nach Zahlungsstatus",
     "outstanding": "Offen",
-    "ordersCount": "{n} Bestellung | {n} Bestellungen"
+    "ordersCount": "{n} Bestellung | {n} Bestellungen",
+    "untrackedNotice": "Diese Bestellung wurde vor der Zahlungserfassung aufgegeben, daher ist über ihre Zahlung nichts bekannt. Wenn Sie eine Zahlung erfassen, beginnt die Erfassung.",
+    "markPreTracking": {
+      "button": "Ältere Bestellungen als bezahlt markieren",
+      "title": "Ältere Bestellungen als bezahlt markieren",
+      "description": "{n} Bestellung wurde vor der Zahlungserfassung aufgegeben. Bestellungen vor dem unten angegebenen Datum werden mit einer Zahlung der Methode Sonstige über den vollen Betrag, datiert auf das Bestelldatum, als bezahlt markiert. Stornierte Bestellungen bleiben unverändert. | {n} Bestellungen wurden vor der Zahlungserfassung aufgegeben. Bestellungen vor dem unten angegebenen Datum werden mit einer Zahlung der Methode Sonstige über den vollen Betrag, datiert auf das Bestelldatum, als bezahlt markiert. Stornierte Bestellungen bleiben unverändert.",
+      "before": "Aufgegeben vor",
+      "submit": "Als bezahlt markieren"
+    }
   },
   "discounts": {
     "discount": "Rabatt",
@@ -2485,7 +2504,8 @@
         "partial": "Teilweise bezahlt",
         "paid": "Bezahlt",
         "overpaid": "Überzahlt",
-        "refunded": "Erstattet"
+        "refunded": "Erstattet",
+        "untracked": "Nicht erfasst"
       }
     },
     "returns": {
