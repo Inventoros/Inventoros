@@ -281,9 +281,9 @@ const formatOrderDate = (date, long = false) =>
                                 <div
                                     v-for="(item, index) in order.items"
                                     :key="index"
-                                    class="flex items-center gap-4 rounded-lg border border-border-subtle bg-surface-canvas p-4"
+                                    class="flex flex-wrap items-center gap-x-4 gap-y-3 rounded-lg border border-border-subtle bg-surface-canvas p-4"
                                 >
-                                    <div class="flex-1 min-w-0">
+                                    <div class="min-w-0 basis-full xl:flex-1 xl:basis-0">
                                         <p class="font-medium text-text-primary">{{ item.product_name }}</p>
                                         <p class="text-xs text-text-tertiary">SKU: {{ item.sku }}</p>
                                         <p v-if="parseFloat(item.discount_amount) > 0" class="text-xs text-text-secondary">
@@ -298,7 +298,7 @@ const formatOrderDate = (date, long = false) =>
                                         </Link>
                                     </div>
 
-                                    <div class="text-right">
+                                    <div class="ml-auto text-right">
                                         <p class="text-xs text-text-tertiary">{{ t('common.quantity') }}</p>
                                         <p class="font-medium tabular-nums text-text-primary">{{ item.quantity }}</p>
                                     </div>
