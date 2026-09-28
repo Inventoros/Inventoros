@@ -255,9 +255,15 @@ class UpdateService
                 $this->fileService->cleanup($zipPath, $extractPath);
 
             } finally {
-                // Always bring the application back up
+                // Always bring the application back up. A failure here must not
+                // replace the exception that explains why the update failed.
                 $this->log($progressCallback, 'Disabling maintenance mode...');
-                Artisan::call('up');
+                try {
+                    Artisan::call('up');
+                } catch (\Throwable $upError) {
+                    Log::error('Failed to bring the application up after the update', ['error' => $upError->getMessage()]);
+                    $this->log($progressCallback, 'Could not disable maintenance mode: run php artisan up.');
+                }
             }
 
             $this->log($progressCallback, 'Update completed successfully!');
