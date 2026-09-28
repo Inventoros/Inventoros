@@ -37,7 +37,7 @@ class PurchaseOrderItemInputType extends InputType
             'unit_cost' => [
                 'type' => Type::nonNull(Type::float()),
                 'description' => 'Unit cost',
-                'rules' => ['required', 'numeric', 'min:0'],
+                'rules' => ['required', 'numeric', 'decimal:0,2', 'min:0'],
             ],
             'supplier_sku' => [
                 'type' => Type::string(),
