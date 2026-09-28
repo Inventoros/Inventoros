@@ -23,7 +23,7 @@ final class StoreReturnOrderRequest extends FormRequest
             'reason' => 'required|string|max:1000',
             'notes' => 'nullable|string|max:2000',
             'items' => 'required|array|min:1',
-            'items.*.order_item_id' => 'required|exists:order_items,id',
+            'items.*.order_item_id' => 'required|distinct|exists:order_items,id',
             'items.*.product_id' => 'required|exists:products,id',
             'items.*.quantity' => 'required|integer|min:1',
             'items.*.condition' => 'required|in:new,used,damaged',
