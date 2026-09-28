@@ -4,6 +4,13 @@ on:
   push:
     tags:
       - 'v*'
+  pull_request:
+    # Build and check the package whenever the packaging changes, so a
+    # broken package is caught before a tag is pushed.
+    paths:
+      - 'deploy/cpanel/**'
+      - '.github/workflows/cpanel-release.yml'
+      - 'app/Services/Update/**'
   workflow_dispatch:
     inputs:
       version:
@@ -78,227 +85,19 @@ jobs:
             echo "tag_name=dev" >> $GITHUB_OUTPUT
           fi
 
-      - name: Create cPanel directory structure
+      - name: Build the cPanel package
+        # deploy/cpanel/build-release.php lays out inventoros/ + public_html/,
+        # writes release.json (version, layout, min_php) for the in-app
+        # updater, zips it and verifies the result.
+        run: php deploy/cpanel/build-release.php --version="${{ steps.version.outputs.version }}" --out=.
+
+      - name: Check the package contents
+        # Fails on forbidden paths (.env files, tests, e2e, screenshots,
+        # docker, dev dependencies, runtime state) or missing pieces.
         run: |
-          mkdir -p cpanel-release/inventoros
-          mkdir -p cpanel-release/public_html
-
-          # Copy all Laravel files to inventoros (excluding public, node_modules, tests, etc.)
-          rsync -av --progress . cpanel-release/inventoros/ \
-            --exclude='cpanel-release' \
-            --exclude='node_modules' \
-            --exclude='.git' \
-            --exclude='.github' \
-            --exclude='tests' \
-            --exclude='phpunit.xml' \
-            --exclude='.env' \
-            --exclude='.env.example' \
-            --exclude='public' \
-            --exclude='*.md' \
-            --exclude='todo.txt' \
-            --exclude='.editorconfig' \
-            --exclude='.gitattributes' \
-            --exclude='.gitignore'
-
-          # Copy public folder contents to public_html
-          cp -r public/* cpanel-release/public_html/
-
-          # Copy .env.example to inventoros
-          cp .env.example cpanel-release/inventoros/.env.example
-
-          # Create storage directories with proper structure
-          mkdir -p cpanel-release/inventoros/storage/app/public
-          mkdir -p cpanel-release/inventoros/storage/framework/cache/data
-          mkdir -p cpanel-release/inventoros/storage/framework/sessions
-          mkdir -p cpanel-release/inventoros/storage/framework/views
-          mkdir -p cpanel-release/inventoros/storage/logs
-
-          # Create .gitkeep files for empty directories
-          touch cpanel-release/inventoros/storage/app/.gitkeep
-          touch cpanel-release/inventoros/storage/app/public/.gitkeep
-          touch cpanel-release/inventoros/storage/framework/.gitkeep
-          touch cpanel-release/inventoros/storage/framework/cache/.gitkeep
-          touch cpanel-release/inventoros/storage/framework/cache/data/.gitkeep
-          touch cpanel-release/inventoros/storage/framework/sessions/.gitkeep
-          touch cpanel-release/inventoros/storage/framework/views/.gitkeep
-          touch cpanel-release/inventoros/storage/logs/.gitkeep
-
-          # Create bootstrap/cache directory
-          mkdir -p cpanel-release/inventoros/bootstrap/cache
-          touch cpanel-release/inventoros/bootstrap/cache/.gitkeep
-
-      - name: Create cPanel-compatible index.php
-        run: |
-          cat > cpanel-release/public_html/index.php << 'EOF'
-          <?php
-
-          use Illuminate\Foundation\Application;
-          use Illuminate\Http\Request;
-
-          define('LARAVEL_START', microtime(true));
-
-          // Path to the Laravel installation directory
-          // Adjust this path based on your cPanel directory structure
-          $laravelPath = __DIR__ . '/../inventoros';
-
-          // Determine if the application is in maintenance mode...
-          if (file_exists($maintenance = $laravelPath . '/storage/framework/maintenance.php')) {
-              require $maintenance;
-          }
-
-          // Register the Composer autoloader...
-          require $laravelPath . '/vendor/autoload.php';
-
-          // Bootstrap Laravel and handle the request...
-          /** @var Application $app */
-          $app = require_once $laravelPath . '/bootstrap/app.php';
-
-          // public_html is the web root: Vite's manifest and published plugin
-          // UI bundles (public/plugin-assets/{slug}) must resolve here.
-          $app->usePublicPath(__DIR__);
-
-          $app->handleRequest(Request::capture());
-          EOF
-
-      - name: Create .htaccess for public_html
-        run: |
-          cat > cpanel-release/public_html/.htaccess << 'EOF'
-          <IfModule mod_rewrite.c>
-              <IfModule mod_negotiation.c>
-                  Options -MultiViews -Indexes
-              </IfModule>
-
-              RewriteEngine On
-
-              # Handle Authorization Header
-              RewriteCond %{HTTP:Authorization} .
-              RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
-
-              # Redirect Trailing Slashes If Not A Folder...
-              RewriteCond %{REQUEST_FILENAME} !-d
-              RewriteCond %{REQUEST_URI} (.+)/$
-              RewriteRule ^ %1 [L,R=301]
-
-              # Send Requests To Front Controller...
-              RewriteCond %{REQUEST_FILENAME} !-d
-              RewriteCond %{REQUEST_FILENAME} !-f
-              RewriteRule ^ index.php [L]
-          </IfModule>
-          EOF
-
-      - name: Create installation README
-        run: |
-          cat > cpanel-release/INSTALL.md << 'EOF'
-          # Inventoros - cPanel Installation Guide
-
-          This package is specifically built for cPanel shared hosting environments.
-
-          ## Directory Structure
-
-          ```
-          /home/username/
-          ├── inventoros/          <- Laravel application files
-          │   ├── app/
-          │   ├── bootstrap/
-          │   ├── config/
-          │   ├── database/
-          │   ├── resources/
-          │   ├── routes/
-          │   ├── storage/
-          │   ├── vendor/
-          │   └── ...
-          └── public_html/         <- Web-accessible files
-              ├── index.php        <- Modified to point to ../inventoros
-              ├── build/           <- Compiled frontend assets
-              ├── .htaccess
-              └── ...
-          ```
-
-          ## Installation Steps
-
-          1. **Upload Files**
-             - Upload the `inventoros` folder to your home directory (e.g., `/home/username/inventoros`)
-             - Upload the contents of `public_html` to your `public_html` directory
-
-          2. **Set Permissions**
-             ```bash
-             chmod -R 755 ~/inventoros
-             chmod -R 775 ~/inventoros/storage
-             chmod -R 775 ~/inventoros/bootstrap/cache
-             ```
-
-          3. **Configure Environment**
-             - Copy `.env.example` to `.env` in the inventoros directory
-             - Edit `.env` with your database credentials and app settings
-             ```bash
-             cd ~/inventoros
-             cp .env.example .env
-             nano .env
-             ```
-
-          4. **Generate Application Key**
-             ```bash
-             cd ~/inventoros
-             php artisan key:generate
-             ```
-
-          5. **Run Migrations**
-             ```bash
-             cd ~/inventoros
-             php artisan migrate
-             ```
-
-          6. **Create Storage Link**
-             Since the standard storage:link won't work with this structure,
-             create a symbolic link manually:
-             ```bash
-             ln -s ~/inventoros/storage/app/public ~/public_html/storage
-             ```
-
-          7. **Clear Caches**
-             ```bash
-             cd ~/inventoros
-             php artisan config:cache
-             php artisan route:cache
-             php artisan view:cache
-             ```
-
-          8. **Scheduler (required)**
-             In cPanel > Cron Jobs, add this entry (adjust the path):
-             ```
-             * * * * * cd ~/inventoros && php artisan schedule:run >> /dev/null 2>&1
-             ```
-             It also processes the queue every minute. Without it, emails,
-             webhooks, scheduled reports, cycle counts and shipment tracking
-             never run.
-
-          Upgrading from 1.0.x? The 1.0.x in-app updater cannot install
-          releases, so upgrade by hand: see UPGRADE.md in the repository.
-
-          ## Troubleshooting
-
-          ### 500 Internal Server Error
-          - Check file permissions on storage and bootstrap/cache
-          - Verify .env file exists and has correct database settings
-          - Check ~/inventoros/storage/logs/laravel.log for errors
-
-          ### Assets Not Loading
-          - Ensure the `build` folder was uploaded to public_html
-          - Check that .htaccess is present in public_html
-
-          ### Database Connection Issues
-          - Verify database credentials in .env
-          - Ensure database exists and user has proper permissions
-
-          ## Support
-
-          For issues, please visit: https://github.com/Inventoros/Inventoros/issues
-          EOF
-
-      - name: Create release zip
-        run: |
-          cd cpanel-release
-          zip -r ../inventoros-cpanel-${{ steps.version.outputs.version }}.zip .
+          unzip -l "inventoros-cpanel-${{ steps.version.outputs.version }}.zip" | tail -n 3
+          unzip -p "inventoros-cpanel-${{ steps.version.outputs.version }}.zip" release.json
+          php deploy/cpanel/build-release.php --verify="inventoros-cpanel-${{ steps.version.outputs.version }}.zip" --version="${{ steps.version.outputs.version }}"
 
       - name: Package the hello-world example plugin
         run: |
@@ -317,8 +116,10 @@ jobs:
             # expects. Done with raw libsodium (no Laravel boot needed in CI).
             php -r '$s = base64_decode(trim(getenv("INVENTOROS_UPDATE_SECRET_KEY")), true); if ($s === false || strlen($s) !== SODIUM_CRYPTO_SIGN_SECRETKEYBYTES) { fwrite(STDERR, "Invalid INVENTOROS_UPDATE_SECRET_KEY\n"); exit(1); } $f = getenv("RELEASE_ZIP"); $sig = sodium_crypto_sign_detached(file_get_contents($f), $s); file_put_contents($f . ".sig", base64_encode($sig));'
             echo "Signed $RELEASE_ZIP -> $RELEASE_ZIP.sig"
-            RELEASE_ZIP=hello-world-plugin.zip php -r '$s = base64_decode(trim(getenv("INVENTOROS_UPDATE_SECRET_KEY")), true); $f = getenv("RELEASE_ZIP"); file_put_contents($f . ".sig", base64_encode(sodium_crypto_sign_detached(file_get_contents($f), $s)));'
-            echo "Signed hello-world-plugin.zip -> hello-world-plugin.zip.sig"
+            # Only the core package is signed with the update key. The example
+            # plugin is NOT: anything signed with this key passes the core
+            # updater's signature check. The marketplace signs the plugin with
+            # its own key when it imports it (marketplace:import-release-asset).
           else
             echo "::warning::INVENTOROS_UPDATE_SECRET_KEY is not set; release will be unsigned and in-app updates with signature verification enabled will reject it."
           fi
@@ -331,7 +132,6 @@ jobs:
             inventoros-cpanel-${{ steps.version.outputs.version }}.zip
             inventoros-cpanel-${{ steps.version.outputs.version }}.zip.sig
             hello-world-plugin.zip
-            hello-world-plugin.zip.sig
           retention-days: 30
           if-no-files-found: ignore
 
@@ -341,8 +141,9 @@ jobs:
         with:
           tag_name: ${{ steps.version.outputs.tag_name }}
           files: |
-            inventoros-cpanel-${{ steps.version.outputs.version }}.zip*
-            hello-world-plugin.zip*
+            inventoros-cpanel-${{ steps.version.outputs.version }}.zip
+            inventoros-cpanel-${{ steps.version.outputs.version }}.zip.sig
+            hello-world-plugin.zip
           name: Release ${{ steps.version.outputs.tag_name }}
           body: |
             ## Inventoros ${{ steps.version.outputs.tag_name }}
@@ -354,6 +155,8 @@ jobs:
             **Download:** `inventoros-cpanel-${{ steps.version.outputs.version }}.zip`
 
             See `INSTALL.md` inside the zip for installation instructions.
+
+            In-app updates (Admin > Updates) install this exact file and check its `release.json` manifest. Coming from 1.0.x? Its updater cannot follow GitHub's download redirect, so upgrade by hand once: see UPGRADE.md.
 
             ### What's Included
             - Pre-compiled frontend assets (no npm required on server)
