@@ -125,7 +125,7 @@
     "sections": {
       "workspace": "Werkruimte",
       "catalog": "Catalogus",
-      "stock": "Voorraad",
+      "stock": "Voorraadbeheer",
       "insights": "Inzichten",
       "plugins": "Plugins",
       "admin": "Beheer"

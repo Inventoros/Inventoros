@@ -125,7 +125,7 @@
     "sections": {
       "workspace": "워크스페이스",
       "catalog": "카탈로그",
-      "stock": "재고",
+      "stock": "재고 관리",
       "insights": "인사이트",
       "plugins": "플러그인",
       "admin": "관리"

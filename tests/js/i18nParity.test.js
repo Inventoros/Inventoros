@@ -80,6 +80,10 @@ for (const file of ['en.json', ...locales]) {
         }
         const clashes = Object.entries(seen).filter(([, keys]) => keys.length > 1);
         assert.deepEqual(clashes, []);
+
+        // The Stock section heading must not read the same as the Inventory
+        // item above it, or the sidebar shows one word twice.
+        assert.notEqual(nav.sections.stock.toLowerCase(), nav.inventory.toLowerCase());
     });
 
     test(`${file} messages all compile`, () => {

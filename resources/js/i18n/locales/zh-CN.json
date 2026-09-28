@@ -125,7 +125,7 @@
     "sections": {
       "workspace": "工作区",
       "catalog": "目录",
-      "stock": "库存",
+      "stock": "库存管理",
       "insights": "洞察",
       "plugins": "插件",
       "admin": "管理"

@@ -125,7 +125,7 @@
     "sections": {
       "workspace": "Arbeitsbereich",
       "catalog": "Katalog",
-      "stock": "Bestand",
+      "stock": "Lagerverwaltung",
       "insights": "Analysen",
       "plugins": "Plugins",
       "admin": "Verwaltung"

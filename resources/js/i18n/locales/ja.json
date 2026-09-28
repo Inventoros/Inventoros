@@ -125,7 +125,7 @@
     "sections": {
       "workspace": "ワークスペース",
       "catalog": "カタログ",
-      "stock": "在庫",
+      "stock": "在庫管理",
       "insights": "インサイト",
       "plugins": "プラグイン",
       "admin": "管理"
