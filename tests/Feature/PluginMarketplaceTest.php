@@ -617,6 +617,16 @@ final class PluginMarketplaceTest extends TestCase
         $this->assertDirectoryDoesNotExist(base_path("plugins/{$slug}"));
     }
 
+    public function test_the_signed_statement_format_matches_the_marketplace(): void
+    {
+        // inventoros.com signs these exact bytes (tests/Pest.php isSignedPackage
+        // on the site spells out the same literal). Changing it breaks installs.
+        $this->assertSame(
+            "inventoros-marketplace-package-v1\nhello-world\n1.3.0\n".str_repeat('ab', 32)."\n",
+            PackageSignature::message('hello-world', '1.3.0', str_repeat('AB', 32)),
+        );
+    }
+
     public function test_a_download_without_a_version_header_is_refused(): void
     {
         $slug = $this->slug();
