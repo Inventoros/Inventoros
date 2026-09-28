@@ -121,12 +121,12 @@ class OrderController extends Controller
             'items.*.product_id' => ['required', 'integer', Rule::exists('products', 'id')->where('organization_id', $organizationId)],
             'items.*.product_variant_id' => ['nullable', 'integer', Rule::exists('product_variants', 'id')->where('organization_id', $organizationId)],
             'items.*.quantity' => ['required', 'integer', 'min:1'],
-            'items.*.unit_price' => ['nullable', 'numeric', 'min:0'],
-            'items.*.tax' => ['nullable', 'numeric', 'min:0'],
+            'items.*.unit_price' => ['nullable', 'numeric', 'decimal:0,2', 'min:0'],
+            'items.*.tax' => ['nullable', 'numeric', 'decimal:0,2', 'min:0'],
             'items.*.discount_type' => ['nullable', Rule::in(DiscountType::values())],
-            'items.*.discount_value' => ['nullable', 'numeric', 'min:0', 'max:99999999'],
+            'items.*.discount_value' => ['nullable', 'numeric', 'decimal:0,2', 'min:0', 'max:99999999'],
             'discount_type' => ['nullable', Rule::in(DiscountType::values())],
-            'discount_value' => ['nullable', 'numeric', 'min:0', 'max:99999999'],
+            'discount_value' => ['nullable', 'numeric', 'decimal:0,2', 'min:0', 'max:99999999'],
         ]);
 
         // API-specific defaults; the OrderService owns the create invariant
@@ -202,7 +202,7 @@ class OrderController extends Controller
             'metadata' => ['nullable', 'array'],
             // Order-level discount; the totals are recomputed on the server.
             'discount_type' => ['sometimes', 'nullable', Rule::in(DiscountType::values())],
-            'discount_value' => ['sometimes', 'nullable', 'numeric', 'min:0', 'max:99999999'],
+            'discount_value' => ['sometimes', 'nullable', 'numeric', 'decimal:0,2', 'min:0', 'max:99999999'],
         ]);
 
         $discountChanged = array_key_exists('discount_type', $validated) || array_key_exists('discount_value', $validated);

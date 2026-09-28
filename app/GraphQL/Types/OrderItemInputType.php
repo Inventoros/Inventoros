@@ -35,7 +35,7 @@ class OrderItemInputType extends InputType
             'unit_price' => [
                 'type' => Type::float(),
                 'description' => 'Unit price override (uses product price if not provided)',
-                'rules' => ['nullable', 'numeric', 'min:0'],
+                'rules' => ['nullable', 'numeric', 'decimal:0,2', 'min:0'],
             ],
             'discount_type' => [
                 'type' => Type::string(),
@@ -45,12 +45,12 @@ class OrderItemInputType extends InputType
             'discount_value' => [
                 'type' => Type::float(),
                 'description' => 'Line discount: a percentage (0-100) or an amount up to the line subtotal',
-                'rules' => ['nullable', 'numeric', 'min:0'],
+                'rules' => ['nullable', 'numeric', 'decimal:0,2', 'min:0'],
             ],
             'tax' => [
                 'type' => Type::float(),
                 'description' => 'Tax amount for this line item',
-                'rules' => ['nullable', 'numeric', 'min:0'],
+                'rules' => ['nullable', 'numeric', 'decimal:0,2', 'min:0'],
             ],
         ];
     }

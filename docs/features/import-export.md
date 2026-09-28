@@ -80,6 +80,10 @@ order line. The column names match the line-items export.
 | `order_tax`, `order_shipping` | no | Order-level amounts. |
 | `currency`, `shipped_at`, `delivered_at`, `notes` | no | |
 
+Money columns (`unit_price`, `line_tax`, `unit_cost`, `order_tax`,
+`order_shipping`) take at most two decimal places; a value with more fails
+that order rather than being rounded.
+
 Order-level columns (date, status, customer, order tax and shipping, currency,
 dates, notes) come from the first non-blank value among the order's rows. You
 can repeat them on every line or fill them in on one line only.

@@ -264,9 +264,9 @@ final class OrdersImport implements ToCollection, WithHeadingRow
             'product_sku' => 'nullable|string|max:255|required_without:variant_sku',
             'variant_sku' => 'nullable|string|max:255',
             'quantity' => 'required|integer|min:1',
-            'unit_price' => 'nullable|numeric|min:0',
-            'line_tax' => 'nullable|numeric|min:0',
-            'unit_cost' => 'nullable|numeric|min:0',
+            'unit_price' => 'nullable|numeric|decimal:0,2|min:0',
+            'line_tax' => 'nullable|numeric|decimal:0,2|min:0',
+            'unit_cost' => 'nullable|numeric|decimal:0,2|min:0',
         ];
 
         if ($withOrderRules) {
@@ -276,8 +276,8 @@ final class OrdersImport implements ToCollection, WithHeadingRow
                 'status' => ['nullable', Rule::in(OrderStatus::values())],
                 'customer_name' => 'nullable|string|max:255',
                 'customer_email' => 'nullable|email|max:255',
-                'order_tax' => 'nullable|numeric|min:0',
-                'order_shipping' => 'nullable|numeric|min:0',
+                'order_tax' => 'nullable|numeric|decimal:0,2|min:0',
+                'order_shipping' => 'nullable|numeric|decimal:0,2|min:0',
                 'currency' => ['nullable', 'string', Rule::in(array_keys(config('currencies.supported', [])))],
                 'shipped_at' => 'nullable|date',
                 'delivered_at' => 'nullable|date',

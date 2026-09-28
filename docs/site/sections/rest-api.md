@@ -155,6 +155,8 @@ curl -X POST "${APP_URL}/api/v1/orders" \
 
 Discounts are optional. Each line may carry `discount_type` (`percent` or `fixed`) and `discount_value`, and so may the order. A line discount comes off that line's quantity times unit price; the order discount then comes off the merchandise net of line discounts. Discounts are applied before tax and never reduce tax or shipping, so the tax you send should be computed on the discounted amounts. The response's `discount_amount` is the whole discount, so `subtotal - discount_amount + tax + shipping = total`. A discount larger than the amount it applies to, or a percentage over 100, is a `422`.
 
+Money is kept to the cent. Unit prices, taxes, shipping, discount values (fixed amounts and percentages alike, so `12.5` is fine and `12.345` is not) and payment amounts accept at most two decimal places; more is a `422` rather than a silent rounding. Computed figures (line totals, percentage discounts) are rounded half up to the cent.
+
 Record a payment (partial payments are fine; a payment above the balance due is rejected unless `allow_overpayment` is `true`, and cancelled orders take no payments):
 
 ```bash

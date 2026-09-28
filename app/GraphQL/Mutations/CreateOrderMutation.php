@@ -96,7 +96,7 @@ class CreateOrderMutation extends Mutation
             'discount_value' => [
                 'type' => Type::float(),
                 'description' => 'Order-level discount: a percentage (0-100) or an amount, applied to the merchandise after line discounts and before tax',
-                'rules' => ['nullable', 'numeric', 'min:0'],
+                'rules' => ['nullable', 'numeric', 'decimal:0,2', 'min:0'],
             ],
             'items' => [
                 'type' => Type::nonNull(Type::listOf(Type::nonNull(GraphQL::type('OrderItemInput')))),

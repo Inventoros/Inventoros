@@ -58,12 +58,12 @@ class CreateOrderTool extends Tool
             'items.*.product_id' => ['required', 'integer', Rule::exists('products', 'id')->where('organization_id', $orgId)],
             'items.*.product_variant_id' => ['nullable', 'integer', Rule::exists('product_variants', 'id')->where('organization_id', $orgId)],
             'items.*.quantity' => ['required', 'integer', 'min:1'],
-            'items.*.unit_price' => ['nullable', 'numeric', 'min:0'],
-            'items.*.tax' => ['nullable', 'numeric', 'min:0'],
+            'items.*.unit_price' => ['nullable', 'numeric', 'decimal:0,2', 'min:0'],
+            'items.*.tax' => ['nullable', 'numeric', 'decimal:0,2', 'min:0'],
             'items.*.discount_type' => ['nullable', 'string', 'in:percent,fixed'],
-            'items.*.discount_value' => ['nullable', 'numeric', 'min:0'],
+            'items.*.discount_value' => ['nullable', 'numeric', 'decimal:0,2', 'min:0'],
             'discount_type' => ['nullable', 'string', 'in:percent,fixed'],
-            'discount_value' => ['nullable', 'numeric', 'min:0'],
+            'discount_value' => ['nullable', 'numeric', 'decimal:0,2', 'min:0'],
         ]);
 
         $validated['status'] ??= 'pending';
