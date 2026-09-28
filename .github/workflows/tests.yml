@@ -47,6 +47,36 @@ jobs:
       - name: Run PHPUnit tests
         run: php artisan test --ansi
 
+  # Release ZIPs and the Docker image install with --no-dev. Prove the
+  # runtime still has everything it needs (the MCP server in particular)
+  # without the dev tools that used to pull laravel/mcp in.
+  production-install:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: mbstring, xml, ctype, iconv, intl, pdo_sqlite, sqlite3, dom, filter, gd, json, libxml, openssl, pcre, phar, tokenizer, zip, bcmath
+          coverage: none
+
+      - name: Install Composer dependencies (production)
+        run: composer install --no-dev --no-interaction --prefer-dist --optimize-autoloader
+
+      - name: Verify the MCP server classes load
+        run: |
+          php -r 'require "vendor/autoload.php"; foreach (["Laravel\\Mcp\\Server", "Laravel\\Mcp\\Facades\\Mcp", "App\\Mcp\\Servers\\InventorosServer"] as $c) { if (! class_exists($c)) { fwrite(STDERR, "$c is missing from the --no-dev install\n"); exit(1); } } echo "MCP server classes present\n";'
+
+      - name: Verify /mcp is routed
+        run: |
+          cp .env.example .env
+          php artisan key:generate
+          php artisan route:list --path=mcp | grep -q 'mcp'
+
   js-unit:
     runs-on: ubuntu-latest
 

@@ -15,6 +15,7 @@
         "dedoc/scramble": "^0.13.14",
         "inertiajs/inertia-laravel": "^3.0",
         "laravel/framework": "^13.0",
+        "laravel/mcp": "^0.7.0",
         "laravel/sanctum": "^4.0",
         "laravel/tinker": "^3.0",
         "maatwebsite/excel": "^3.1",
