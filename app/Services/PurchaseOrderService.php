@@ -67,7 +67,7 @@ final class PurchaseOrderService
      * Update an editable purchase order. Header fields present in $data are
      * applied; when `items` is present the line items are reconciled (lines
      * with a known `id` are updated, others created, missing ones deleted)
-     * and the totals recomputed.
+     * and the subtotal recomputed. The total is recomputed on every edit.
      *
      * @param  array<string, mixed>  $data
      *
@@ -118,10 +118,29 @@ final class PurchaseOrderService
                 }
 
                 $data['subtotal'] = $subtotal;
-                $data['total'] = Money::add($subtotal, $data['tax'] ?? $purchaseOrder->tax, $data['shipping'] ?? $purchaseOrder->shipping);
             }
 
-            unset($data['items']);
+            unset($data['items'], $data['total']);
+
+            // A cleared charge means none, not NULL (the columns are NOT NULL).
+            foreach (['tax', 'shipping'] as $charge) {
+                if (array_key_exists($charge, $data) && $data[$charge] === null) {
+                    $data[$charge] = 0;
+                }
+            }
+
+            // Always recompute the total from the final subtotal/tax/shipping,
+            // whichever of them this edit touched. The approval threshold is
+            // judged on the stored total, so a header-only edit (shipping or
+            // tax without lines) must move it too; otherwise a small PO could
+            // carry an arbitrary charge and still send without approval. A
+            // changed total also clears a previous approval (model hook).
+            $data['total'] = Money::add(
+                $data['subtotal'] ?? $purchaseOrder->subtotal,
+                $data['tax'] ?? $purchaseOrder->tax,
+                $data['shipping'] ?? $purchaseOrder->shipping,
+            );
+
             $purchaseOrder->update($data);
         });
 
