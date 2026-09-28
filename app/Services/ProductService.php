@@ -121,9 +121,11 @@ final class ProductService
             }
 
             if ($disablingVariants) {
-                // Variants explicitly turned off: clear options and variants.
+                // Variants explicitly turned off: clear the options and retire
+                // the variants (a variant with stock or history is kept,
+                // deactivated, rather than deleted).
                 $product->options()->delete();
-                $product->variants()->delete();
+                $this->retireVariants($product->variants()->pluck('id')->all());
 
                 return;
             }
@@ -475,35 +477,144 @@ final class ProductService
     }
 
     /**
+     * Sync a product's variants to the incoming rows without churning ids.
+     *
+     * Order, purchase order and return lines reference variants by id and a
+     * variant's stock lives on its row, so an existing variant must be
+     * updated in place, never recreated. Each incoming row resolves to an
+     * existing variant by, in order: its `id`; its SKU; its exact option
+     * combination. Only a row that matches nothing creates a variant (with an
+     * opening-stock ledger row). Stock is never written to an existing
+     * variant here: it moves only through the ledger.
+     *
+     * A row with an `id` replaces the variant's fields (the web form sends
+     * them all); a row matched by SKU or options only overwrites the fields
+     * it carries, so a partial API row cannot blank the SKU or price.
+     *
+     * Existing variants absent from the payload are retired: deactivated when
+     * they hold stock or are referenced, soft-deleted otherwise.
+     *
      * @param  array<int, array<string, mixed>>  $variants
      */
     private function syncVariants(Product $product, array $variants): void
     {
-        $existingVariantIds = $product->variants()->pluck('id')->toArray();
+        /** @var \Illuminate\Support\Collection<int, ProductVariant> $unclaimed */
+        $unclaimed = $product->variants()->get()->keyBy('id');
+        $existingVariantIds = $unclaimed->keys()->all();
         $incomingVariantIds = [];
 
         foreach ($variants as $index => $variantData) {
             $variantPayload = $this->variantPayload($product, $variantData, $index);
 
             if (! empty($variantData['id'])) {
-                $variant = ProductVariant::find($variantData['id']);
-                if ($variant && $variant->product_id === $product->id) {
+                $variant = $unclaimed->get((int) $variantData['id']);
+                if ($variant !== null) {
                     // An existing variant's stock moves only through the
                     // ledger (adjust-stock), never from the edit form.
                     unset($variantPayload['stock']);
                     $variant->update($variantPayload);
-                    $incomingVariantIds[] = $variantData['id'];
+                    $unclaimed->forget($variant->id);
+                    $incomingVariantIds[] = $variant->id;
                 }
-            } else {
-                $variant = ProductVariant::create($variantPayload);
-                $this->recordOpeningVariantStock($variant);
-                $incomingVariantIds[] = $variant->id;
+
+                continue;
+            }
+
+            $match = $this->matchExistingVariant($unclaimed, $variantData);
+
+            if ($match !== null) {
+                $fields = array_intersect_key($variantPayload, $variantData);
+                unset($fields['stock']);
+                $match->update($fields + [
+                    'option_values' => $variantPayload['option_values'],
+                    'title' => $variantPayload['title'],
+                    'position' => $variantPayload['position'],
+                ]);
+                $unclaimed->forget($match->id);
+                $incomingVariantIds[] = $match->id;
+
+                continue;
+            }
+
+            $variant = ProductVariant::create($variantPayload);
+            $this->recordOpeningVariantStock($variant);
+            $incomingVariantIds[] = $variant->id;
+        }
+
+        $this->retireVariants(array_values(array_diff($existingVariantIds, $incomingVariantIds)));
+    }
+
+    /**
+     * Find the not-yet-claimed existing variant an id-less row refers to: the
+     * one with the same SKU, else the one with exactly the same option
+     * combination (same option names, same values, order ignored).
+     *
+     * @param  \Illuminate\Support\Collection<int, ProductVariant>  $unclaimed
+     * @param  array<string, mixed>  $variantData
+     */
+    private function matchExistingVariant($unclaimed, array $variantData): ?ProductVariant
+    {
+        $sku = trim((string) ($variantData['sku'] ?? ''));
+        if ($sku !== '') {
+            $bySku = $unclaimed->first(fn (ProductVariant $v) => $v->sku !== null && strcasecmp(trim($v->sku), $sku) === 0);
+            if ($bySku !== null) {
+                return $bySku;
             }
         }
 
-        $variantsToDelete = array_diff($existingVariantIds, $incomingVariantIds);
-        if (! empty($variantsToDelete)) {
-            ProductVariant::whereIn('id', $variantsToDelete)->delete();
+        $wanted = $this->normaliseOptions($variantData['option_values'] ?? []);
+        if ($wanted === []) {
+            return null;
+        }
+
+        return $unclaimed->first(fn (ProductVariant $v) => $this->normaliseOptions($v->option_values ?? []) === $wanted);
+    }
+
+    /**
+     * @param  array<string, mixed>  $options
+     * @return array<string, string>
+     */
+    private function normaliseOptions(array $options): array
+    {
+        $normalised = [];
+        foreach ($options as $name => $value) {
+            $normalised[trim((string) $name)] = trim((string) $value);
+        }
+        ksort($normalised);
+
+        return $normalised;
+    }
+
+    /**
+     * Remove variants from a product without losing what depends on them. A
+     * variant that holds stock, or is referenced by an order, purchase order
+     * or return line or a pending stock adjustment request, is deactivated
+     * and kept, so its stock and history stay intact; any other variant is
+     * soft-deleted.
+     *
+     * @param  array<int, int>  $variantIds
+     */
+    private function retireVariants(array $variantIds): void
+    {
+        if ($variantIds === []) {
+            return;
+        }
+
+        $referenced = collect(['order_items', 'purchase_order_items', 'return_order_items', 'stock_adjustment_requests'])
+            ->flatMap(fn (string $table) => DB::table($table)->whereIn('product_variant_id', $variantIds)->distinct()->pluck('product_variant_id'))
+            ->map(fn ($id) => (int) $id)
+            ->all();
+
+        $stocked = ProductVariant::query()->whereIn('id', $variantIds)->where('stock', '!=', 0)->pluck('id')->map(fn ($id) => (int) $id)->all();
+
+        $keep = array_values(array_unique(array_merge($referenced, $stocked)));
+        $delete = array_values(array_diff($variantIds, $keep));
+
+        if ($keep !== []) {
+            ProductVariant::query()->whereIn('id', $keep)->update(['is_active' => false]);
+        }
+        if ($delete !== []) {
+            ProductVariant::query()->whereIn('id', $delete)->delete();
         }
     }
 
