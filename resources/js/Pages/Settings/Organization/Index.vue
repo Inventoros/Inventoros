@@ -5,7 +5,7 @@ import Card from '@/Components/ui/Card.vue';
 import Button from '@/Components/ui/Button.vue';
 import Badge from '@/Components/ui/Badge.vue';
 import { Head, Link, router, useForm } from '@inertiajs/vue3';
-import { ref } from 'vue';
+import { computed, ref } from 'vue';
 import { ExternalLink, Users } from 'lucide-vue-next';
 
 import { useI18n } from 'vue-i18n';
@@ -14,6 +14,7 @@ const props = defineProps({
     user: Object,
     approvalSettings: { type: Object, default: () => ({}) },
     canManageOrganization: { type: Boolean, default: false },
+    can: { type: Object, default: () => ({ manageOrganization: false, viewUsers: false }) },
     portal: { type: Object, default: () => ({ enabled: false, login_url: null }) },
 });
 
@@ -53,7 +54,10 @@ const submitRegional = () => {
     });
 };
 
-const isAdmin = props.user.is_admin;
+// Server-provided capability flags (never infer from user.is_admin, which is
+// an accessor the serialized user does not carry).
+const canManage = computed(() => !!(props.can?.manageOrganization ?? props.canManageOrganization));
+const canViewUsers = computed(() => !!props.can?.viewUsers);
 
 // Customer portal on/off
 const portalSaving = ref(false);
@@ -155,7 +159,7 @@ const tabs = [
                     {{ t('approvals.settings.tab') }}
                 </button>
                 <button
-                    v-if="isAdmin"
+                    v-if="canViewUsers"
                     @click="activeTab = 'users'"
                     :class="[
                         'border-b-2 px-1 py-3 text-sm font-medium transition-colors',
@@ -196,7 +200,7 @@ const tabs = [
                                     v-model="generalForm.name"
                                     type="text"
                                     :class="fieldInput"
-                                    :disabled="!isAdmin"
+                                    :disabled="!canManage"
                                 />
                                 <p v-if="generalForm.errors.name" :class="fieldError">{{ generalForm.errors.name }}</p>
                             </div>
@@ -207,7 +211,7 @@ const tabs = [
                                     v-model="generalForm.email"
                                     type="email"
                                     :class="fieldInput"
-                                    :disabled="!isAdmin"
+                                    :disabled="!canManage"
                                 />
                                 <p v-if="generalForm.errors.email" :class="fieldError">{{ generalForm.errors.email }}</p>
                             </div>
@@ -218,7 +222,7 @@ const tabs = [
                                     v-model="generalForm.phone"
                                     type="text"
                                     :class="fieldInput"
-                                    :disabled="!isAdmin"
+                                    :disabled="!canManage"
                                 />
                                 <p v-if="generalForm.errors.phone" :class="fieldError">{{ generalForm.errors.phone }}</p>
                             </div>
@@ -229,7 +233,7 @@ const tabs = [
                                     v-model="generalForm.address"
                                     type="text"
                                     :class="fieldInput"
-                                    :disabled="!isAdmin"
+                                    :disabled="!canManage"
                                 />
                                 <p v-if="generalForm.errors.address" :class="fieldError">{{ generalForm.errors.address }}</p>
                             </div>
@@ -240,7 +244,7 @@ const tabs = [
                                     v-model="generalForm.city"
                                     type="text"
                                     :class="fieldInput"
-                                    :disabled="!isAdmin"
+                                    :disabled="!canManage"
                                 />
                                 <p v-if="generalForm.errors.city" :class="fieldError">{{ generalForm.errors.city }}</p>
                             </div>
@@ -251,7 +255,7 @@ const tabs = [
                                     v-model="generalForm.state"
                                     type="text"
                                     :class="fieldInput"
-                                    :disabled="!isAdmin"
+                                    :disabled="!canManage"
                                 />
                                 <p v-if="generalForm.errors.state" :class="fieldError">{{ generalForm.errors.state }}</p>
                             </div>
@@ -262,7 +266,7 @@ const tabs = [
                                     v-model="generalForm.zip"
                                     type="text"
                                     :class="fieldInput"
-                                    :disabled="!isAdmin"
+                                    :disabled="!canManage"
                                 />
                                 <p v-if="generalForm.errors.zip" :class="fieldError">{{ generalForm.errors.zip }}</p>
                             </div>
@@ -273,13 +277,13 @@ const tabs = [
                                     v-model="generalForm.country"
                                     type="text"
                                     :class="fieldInput"
-                                    :disabled="!isAdmin"
+                                    :disabled="!canManage"
                                 />
                                 <p v-if="generalForm.errors.country" :class="fieldError">{{ generalForm.errors.country }}</p>
                             </div>
                         </div>
 
-                        <div v-if="isAdmin" class="mt-6 flex justify-end">
+                        <div v-if="canManage" class="mt-6 flex justify-end">
                             <Button type="submit" variant="default" :loading="generalForm.processing" :disabled="generalForm.processing">
                                 Save Changes
                             </Button>
@@ -305,7 +309,7 @@ const tabs = [
                                     v-model="regionalForm.currency"
                                     type="text"
                                     :class="fieldInput"
-                                    :disabled="!isAdmin"
+                                    :disabled="!canManage"
                                     placeholder="USD"
                                 />
                                 <p v-if="regionalForm.errors.currency" :class="fieldError">{{ regionalForm.errors.currency }}</p>
@@ -317,7 +321,7 @@ const tabs = [
                                     v-model="regionalForm.timezone"
                                     type="text"
                                     :class="fieldInput"
-                                    :disabled="!isAdmin"
+                                    :disabled="!canManage"
                                     placeholder="UTC"
                                 />
                                 <p v-if="regionalForm.errors.timezone" :class="fieldError">{{ regionalForm.errors.timezone }}</p>
@@ -329,7 +333,7 @@ const tabs = [
                                     v-model="regionalForm.date_format"
                                     type="text"
                                     :class="fieldInput"
-                                    :disabled="!isAdmin"
+                                    :disabled="!canManage"
                                     placeholder="Y-m-d"
                                 />
                                 <p v-if="regionalForm.errors.date_format" :class="fieldError">{{ regionalForm.errors.date_format }}</p>
@@ -341,14 +345,14 @@ const tabs = [
                                     v-model="regionalForm.time_format"
                                     type="text"
                                     :class="fieldInput"
-                                    :disabled="!isAdmin"
+                                    :disabled="!canManage"
                                     placeholder="H:i"
                                 />
                                 <p v-if="regionalForm.errors.time_format" :class="fieldError">{{ regionalForm.errors.time_format }}</p>
                             </div>
                         </div>
 
-                        <div v-if="isAdmin" class="mt-6 flex justify-end">
+                        <div v-if="canManage" class="mt-6 flex justify-end">
                             <Button type="submit" variant="default" :loading="regionalForm.processing" :disabled="regionalForm.processing">
                                 Save Changes
                             </Button>
@@ -467,7 +471,7 @@ const tabs = [
                     </div>
                     <p class="text-xs text-text-tertiary">{{ t('portal.settings.hint') }}</p>
 
-                    <div v-if="isAdmin" class="flex justify-end">
+                    <div v-if="canManage" class="flex justify-end">
                         <Button
                             :variant="portal.enabled ? 'secondary' : 'default'"
                             :loading="portalSaving"
@@ -482,7 +486,7 @@ const tabs = [
         </div>
 
         <!-- User Management Tab -->
-        <div v-show="activeTab === 'users' && isAdmin" class="mt-6">
+        <div v-show="activeTab === 'users' && canViewUsers" class="mt-6">
             <Card>
                 <div class="flex flex-col items-center gap-3 py-12 text-center">
                     <Users :size="40" class="text-text-tertiary" />
