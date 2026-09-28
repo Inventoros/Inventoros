@@ -2311,6 +2311,10 @@
       "adminsSelfApproveHelp": "Nobody else can approve a request they raised. Turn this off to hold admins to the same rule."
     }
   },
+  "stockAudits": {
+    "completeConfirm": "Complete this audit? Stock adjustments will be created for any discrepancies.",
+    "completeUncountedConfirm": "{uncounted} of {total} items have not been counted. Complete the audit anyway? Uncounted items keep their current stock; only counted items are adjusted."
+  },
   "cycleCounts": {
     "title": "Cycle count schedules",
     "description": "Recurring counts that create a draft cycle audit of the products counted least recently.",

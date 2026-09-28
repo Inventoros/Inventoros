@@ -156,9 +156,12 @@ class StockAuditController extends Controller
     public function complete(Request $request, StockAudit $stockAudit, StockAuditService $audits): JsonResponse
     {
         $this->ensureOwned($request, $stockAudit, 'Stock audit');
+        $request->validate(['allow_uncounted' => ['sometimes', 'boolean']]);
 
         try {
-            $adjustmentsCreated = $audits->complete($stockAudit, $request->user());
+            // allow_uncounted=true confirms completing with uncounted lines,
+            // which are left unchanged; without it they refuse (422).
+            $adjustmentsCreated = $audits->complete($stockAudit, $request->user(), $request->boolean('allow_uncounted'));
         } catch (\RuntimeException $e) {
             return $this->stateError($e);
         }

@@ -104,10 +104,19 @@ const startAudit = () => {
     });
 };
 
+// Lines nobody counted: completing with any left needs an explicit
+// confirmation, which the server also requires (allow_uncounted).
+const uncountedCount = computed(() => (props.audit.items || []).filter((item) => item.counted_quantity === null || item.counted_quantity === undefined).length);
+
 const completeAudit = () => {
-    if (!confirm('Are you sure you want to complete this audit? Stock adjustments will be created for any discrepancies.')) return;
+    const total = (props.audit.items || []).length;
+    const uncounted = uncountedCount.value;
+    const message = uncounted > 0
+        ? t('stockAudits.completeUncountedConfirm', { uncounted, total })
+        : t('stockAudits.completeConfirm');
+    if (!confirm(message)) return;
     processing.value = true;
-    router.post(route('stock-audits.complete', props.audit.id), {}, {
+    router.post(route('stock-audits.complete', props.audit.id), { allow_uncounted: uncounted > 0 }, {
         onFinish: () => { processing.value = false; },
     });
 };

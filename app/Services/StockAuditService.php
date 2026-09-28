@@ -142,9 +142,15 @@ final class StockAuditService
      * Complete an in-progress audit, booking a recount adjustment for every
      * counted item whose count differs from the system quantity.
      *
+     * Lines nobody counted never adjust stock. Completing while any are left
+     * is refused unless the caller confirms it with $allowUncounted, so an
+     * audit cannot be closed at 0% by accident.
+     *
      * @return int the number of stock adjustments created
+     *
+     * @throws InvalidStateException uncounted_items when lines are uncounted and not allowed
      */
-    public function complete(StockAudit $stockAudit, User $actor): int
+    public function complete(StockAudit $stockAudit, User $actor, bool $allowUncounted = false): int
     {
         $this->warehouseAccess->authorizeLocation($actor, $stockAudit->warehouse_location_id);
 
@@ -154,7 +160,7 @@ final class StockAuditService
 
         $adjustmentsCreated = 0;
 
-        DB::transaction(function () use ($stockAudit, &$adjustmentsCreated) {
+        DB::transaction(function () use ($stockAudit, $allowUncounted, &$adjustmentsCreated) {
             // Lock and re-read the audit so two concurrent completions
             // serialize on this row; the second waits, then sees the
             // 'completed' status and is rejected below — otherwise both
@@ -166,6 +172,14 @@ final class StockAuditService
             }
 
             $locked->load('items.product');
+
+            $uncounted = $locked->items->whereNull('counted_quantity')->count();
+            if ($uncounted > 0 && ! $allowUncounted) {
+                throw new InvalidStateException(
+                    "{$uncounted} of {$locked->items->count()} item(s) have not been counted. Count them, or confirm completing without them (uncounted items are left unchanged).",
+                    'uncounted_items',
+                );
+            }
 
             foreach ($locked->items as $item) {
                 // Skip items that haven't been counted
