@@ -13,6 +13,8 @@ use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Log;
+use Symfony\Component\Process\PhpExecutableFinder;
+use Symfony\Component\Process\Process;
 
 /**
  * Service for managing application updates from GitHub releases.
@@ -207,15 +209,15 @@ class UpdateService
                     // (config, routes, package manifest) before anything boots
                     // the new files.
                     $this->log($progressCallback, 'Clearing caches...');
-                    Artisan::call('optimize:clear');
+                    $this->artisan('optimize:clear');
 
                     // Step 8: Run migrations
                     $this->log($progressCallback, 'Running database migrations...');
-                    Artisan::call('migrate', ['--force' => true]);
+                    $this->artisan('migrate', ['--force' => true]);
 
                     // Step 9: Rebuild caches
                     $this->log($progressCallback, 'Rebuilding caches...');
-                    Artisan::call('optimize');
+                    $this->artisan('optimize');
 
                     // Step 10: Record the new version last, once everything
                     // above succeeded.
@@ -335,9 +337,10 @@ class UpdateService
             $databaseMethod = $this->backupService->restoreDatabase($extractPath);
             Log::info('Backup restore: database', ['method' => $databaseMethod ?? 'none (files-only backup)']);
 
-            // Clear caches
-            Artisan::call('optimize:clear');
-            Artisan::call('optimize');
+            // Clear caches (in a fresh process: this one may have loaded
+            // classes from the files that were just rolled back).
+            $this->artisan('optimize:clear');
+            $this->artisan('optimize');
 
             // Cleanup
             File::deleteDirectory($extractPath);
@@ -383,6 +386,85 @@ class UpdateService
         }
 
         return '1.0.0';
+    }
+
+    /**
+     * Run an artisan command for the update.
+     *
+     * Once the new files are in place this PHP process still holds the old
+     * classes, and config:cache boots a second application and re-points the
+     * facades at it: running cache and migration commands in-process mixes old
+     * and new code. They run as `php artisan ...` in a new process in the
+     * application directory instead, which sees only the files on disk. When
+     * processes cannot be started (proc_open disabled, no PHP CLI binary
+     * found, or update.run_artisan_in_subprocess off) it falls back to an
+     * in-process call.
+     *
+     * @param  array<string, mixed>  $parameters
+     *
+     * @throws \RuntimeException When the command fails.
+     */
+    protected function artisan(string $command, array $parameters = []): void
+    {
+        $php = $this->phpBinary();
+
+        if ($php === null) {
+            $status = Artisan::call($command, $parameters);
+            if ($status !== 0) {
+                throw new \RuntimeException("php artisan {$command} failed (exit {$status}): ".trim(Artisan::output()));
+            }
+
+            return;
+        }
+
+        $arguments = [$php, 'artisan', $command];
+        foreach ($parameters as $name => $value) {
+            if ($value === false || $value === null) {
+                continue;
+            }
+            $arguments[] = $value === true ? $name : "{$name}={$value}";
+        }
+        $arguments[] = '--no-interaction';
+
+        $process = new Process($arguments, $this->fileService->basePath(), null, null, (float) config('update.artisan_timeout', 900));
+        $process->run();
+
+        if (! $process->isSuccessful()) {
+            $output = trim($process->getErrorOutput()."\n".$process->getOutput());
+
+            throw new \RuntimeException(sprintf(
+                'php artisan %s failed (exit %s): %s',
+                $command,
+                (string) $process->getExitCode(),
+                mb_substr($output, -2000)
+            ));
+        }
+    }
+
+    /**
+     * The PHP CLI binary for artisan subprocesses, or null to run in-process.
+     */
+    protected function phpBinary(): ?string
+    {
+        if (! config('update.run_artisan_in_subprocess', true)) {
+            return null;
+        }
+
+        $disabled = array_map('trim', explode(',', (string) ini_get('disable_functions')));
+        if (! function_exists('proc_open') || in_array('proc_open', $disabled, true)) {
+            return null;
+        }
+
+        $configured = (string) config('update.php_binary', '');
+        if ($configured !== '') {
+            return $configured;
+        }
+
+        // Under PHP-FPM, PHP_BINARY is the FPM daemon; the finder looks for
+        // the CLI binary next to it (e.g. /opt/cpanel/ea-php84/root/usr/bin/php).
+        $found = (new PhpExecutableFinder)->find(false);
+
+        return is_string($found) && $found !== '' ? $found : null;
     }
 
     /**

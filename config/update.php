@@ -65,6 +65,29 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Post-install commands
+    |--------------------------------------------------------------------------
+    |
+    | After the new files are in place, optimize:clear, migrate and optimize
+    | run as `php artisan ...` in a new process so they execute only the new
+    | code. `php_binary` names the PHP CLI binary when it cannot be found next
+    | to the running PHP (e.g. /opt/cpanel/ea-php84/root/usr/bin/php). With
+    | proc_open disabled, or run_artisan_in_subprocess off, they run in the
+    | updating process instead.
+    |
+    */
+
+    'run_artisan_in_subprocess' => filter_var(
+        env('INVENTOROS_UPDATE_ARTISAN_SUBPROCESS', env('APP_ENV') !== 'testing'),
+        FILTER_VALIDATE_BOOL
+    ),
+
+    'php_binary' => (string) env('INVENTOROS_UPDATE_PHP_BINARY', ''),
+
+    'artisan_timeout' => (int) env('INVENTOROS_UPDATE_ARTISAN_TIMEOUT', 900),
+
+    /*
+    |--------------------------------------------------------------------------
     | Extraction limits
     |--------------------------------------------------------------------------
     |
