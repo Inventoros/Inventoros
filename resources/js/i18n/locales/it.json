@@ -231,7 +231,10 @@
     "edit": {
       "title": "Modifica prodotto",
       "backToInventory": "Torna all'inventario",
-      "updateProduct": "Aggiorna prodotto"
+      "updateProduct": "Aggiorna prodotto",
+      "stockReadOnlyHint": "Le giacenze cambiano tramite rettifiche di magazzino, così ogni modifica viene registrata.",
+      "adjustStockLink": "Rettifica giacenze",
+      "variantStockReadOnlyHint": "Modifica le giacenze di una variante salvata con una rettifica di magazzino."
     },
     "show": {
       "title": "Dettagli prodotto",
@@ -1652,7 +1655,8 @@
       "reasonPlaceholder": "es. Rifornimento, Merce danneggiata",
       "apply": "Applica",
       "out": "Esaurito",
-      "low": "Basso"
+      "low": "Basso",
+      "pendingApproval": "Inviato per approvazione. Le giacenze cambiano dopo l'approvazione."
     },
     "barcodeScanner": {
       "title": "Scansiona codice a barre",

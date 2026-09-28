@@ -231,7 +231,10 @@
     "edit": {
       "title": "Editar Produto",
       "backToInventory": "Voltar ao Estoque",
-      "updateProduct": "Atualizar Produto"
+      "updateProduct": "Atualizar Produto",
+      "stockReadOnlyHint": "O estoque muda por meio de ajustes de estoque, para que cada alteração seja registrada.",
+      "adjustStockLink": "Ajustar estoque",
+      "variantStockReadOnlyHint": "Altere o estoque de uma variante salva com um ajuste de estoque."
     },
     "show": {
       "title": "Detalhes do Produto",
@@ -1652,7 +1655,8 @@
       "reasonPlaceholder": "ex.: Reabastecimento, Produtos danificados",
       "apply": "Aplicar",
       "out": "Esgotado",
-      "low": "Baixo"
+      "low": "Baixo",
+      "pendingApproval": "Enviado para aprovação. O estoque muda assim que for aprovado."
     },
     "barcodeScanner": {
       "title": "Escanear Código de Barras",

@@ -231,7 +231,10 @@
     "edit": {
       "title": "Ürün Düzenle",
       "backToInventory": "Envantere Dön",
-      "updateProduct": "Ürünü Güncelle"
+      "updateProduct": "Ürünü Güncelle",
+      "stockReadOnlyHint": "Stok, stok düzeltmeleriyle değişir; böylece her değişiklik kayıt altına alınır.",
+      "adjustStockLink": "Stoku düzelt",
+      "variantStockReadOnlyHint": "Kayıtlı bir varyantın stokunu stok düzeltmesiyle değiştirin."
     },
     "show": {
       "title": "Ürün Detayları",
@@ -1652,7 +1655,8 @@
       "reasonPlaceholder": "ör. Yeniden stoklama, Hasarlı ürünler",
       "apply": "Uygula",
       "out": "Yok",
-      "low": "Düşük"
+      "low": "Düşük",
+      "pendingApproval": "Onaya gönderildi. Stok, onaylandıktan sonra değişir."
     },
     "barcodeScanner": {
       "title": "Barkod Tara",

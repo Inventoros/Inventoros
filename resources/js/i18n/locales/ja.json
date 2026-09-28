@@ -231,7 +231,10 @@
     "edit": {
       "title": "商品を編集",
       "backToInventory": "在庫に戻る",
-      "updateProduct": "商品を更新"
+      "updateProduct": "商品を更新",
+      "stockReadOnlyHint": "在庫は在庫調整によって変更されるため、すべての変更が記録されます。",
+      "adjustStockLink": "在庫を調整",
+      "variantStockReadOnlyHint": "保存済みバリエーションの在庫は在庫調整で変更してください。"
     },
     "show": {
       "title": "商品詳細",
@@ -1652,7 +1655,8 @@
       "reasonPlaceholder": "例: 補充、破損品",
       "apply": "適用",
       "out": "切れ",
-      "low": "不足"
+      "low": "不足",
+      "pendingApproval": "承認申請を送信しました。承認後に在庫が変更されます。"
     },
     "barcodeScanner": {
       "title": "バーコードをスキャン",

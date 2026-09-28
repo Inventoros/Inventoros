@@ -231,7 +231,10 @@
     "edit": {
       "title": "Product bewerken",
       "backToInventory": "Terug naar voorraad",
-      "updateProduct": "Product bijwerken"
+      "updateProduct": "Product bijwerken",
+      "stockReadOnlyHint": "Voorraad verandert via voorraadcorrecties, zodat elke wijziging wordt vastgelegd.",
+      "adjustStockLink": "Voorraad corrigeren",
+      "variantStockReadOnlyHint": "Wijzig de voorraad van een opgeslagen variant met een voorraadcorrectie."
     },
     "show": {
       "title": "Productdetails",
@@ -1652,7 +1655,8 @@
       "reasonPlaceholder": "bijv. Herbevoorrading, Beschadigde goederen",
       "apply": "Toepassen",
       "out": "Op",
-      "low": "Laag"
+      "low": "Laag",
+      "pendingApproval": "Ter goedkeuring ingediend. De voorraad verandert zodra deze is goedgekeurd."
     },
     "barcodeScanner": {
       "title": "Barcode scannen",
