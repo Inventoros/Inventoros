@@ -59,7 +59,7 @@ jobs:
             e2e/tests/dashboard.spec.ts \
             e2e/tests/products.spec.ts \
             e2e/tests/orders.spec.ts \
-            e2e/tests/plugins.spec.ts \
+            e2e/tests/plugins.spec.ts             e2e/tests/mobile-layout.spec.ts \
             --project=setup --project=chromium
         env:
           CI: true
