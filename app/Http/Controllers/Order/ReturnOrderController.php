@@ -74,11 +74,15 @@ class ReturnOrderController extends Controller
             ->forOrganization($organizationId)
             ->findOrFail($request->input('order_id'));
 
-        $returnedQuantities = app(ReturnOrderService::class)->returnedQuantities($order);
+        $returns = app(ReturnOrderService::class);
+        $returnedQuantities = $returns->returnedQuantities($order);
 
         return Inertia::render('Returns/Create', [
             'order' => $order,
             'returnedQuantities' => $returnedQuantities,
+            // Per line, what the customer paid after line and order
+            // discounts: the estimate matches the refund the service records.
+            'paidNets' => (object) $returns->paidLineNets($order),
         ]);
     }
 

@@ -82,11 +82,16 @@ class PortalReturnController extends PortalController
 
         $record->load('items');
         $returned = $returns->returnedQuantities($record);
+        $paidNets = $returns->paidLineNets($record);
 
         return Inertia::render('Portal/Returns/Create', [
             'order' => $this->orderSummary($record) + [
                 'items' => $record->items
-                    ->map(fn (OrderItem $item) => $this->lineSummary($item, (int) $returned->get($item->id, 0)))
+                    ->map(fn (OrderItem $item) => $this->lineSummary($item, (int) $returned->get($item->id, 0)) + [
+                        // What was paid for the whole line after discounts;
+                        // a return refunds its share of this.
+                        'paid_net' => $paidNets[$item->id] ?? null,
+                    ])
                     ->values(),
             ],
         ]);
