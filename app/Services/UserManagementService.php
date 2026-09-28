@@ -55,6 +55,11 @@ final class UserManagementService
      */
     public function update(User $actor, User $user, array $data): User
     {
+        // Check the TARGET before anything is written: the role check below
+        // only covers what is being assigned, so without this a delegated
+        // user administrator could reset an admin's password or email.
+        RoleAssignmentGuard::authorizeTarget($user, $actor);
+
         $this->assertCanAssignRoles($data['role_ids'] ?? [], $actor, $data['role']);
 
         // Don't allow removing admin from the last admin

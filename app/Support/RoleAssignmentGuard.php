@@ -63,6 +63,51 @@ final class RoleAssignmentGuard
     }
 
     /**
+     * The reason the actor may not manage (edit, reset the credentials of,
+     * or delete) this existing user, or null when allowed.
+     *
+     * Checking only the roles being assigned is not enough: a delegated user
+     * administrator could otherwise set a new password or email on an admin
+     * and sign in as them. A non-admin may only manage users who hold no
+     * more privilege than they do: never an admin or manager (base role or
+     * system role), and never someone with a permission the actor lacks.
+     */
+    public static function targetViolation(User $target, User $actor): ?string
+    {
+        if ($actor->isAdmin()) {
+            return null;
+        }
+
+        if ($target->isAdmin()) {
+            return 'You do not have permission to manage an administrator.';
+        }
+
+        if ($target->role === 'manager' || $target->hasRole('system-manager')) {
+            return 'You do not have permission to manage a manager.';
+        }
+
+        foreach ($target->getAllPermissions() as $permission) {
+            if (! $actor->hasPermission($permission)) {
+                return 'You cannot manage a user who holds permissions you do not.';
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Abort with 403 when the actor may not manage this existing user.
+     */
+    public static function authorizeTarget(User $target, User $actor): void
+    {
+        $violation = self::targetViolation($target, $actor);
+
+        if ($violation !== null) {
+            abort(403, $violation);
+        }
+    }
+
+    /**
      * Abort with 403 when the actor may not assign these roles.
      *
      * @param  array<int|string>  $roleIds
