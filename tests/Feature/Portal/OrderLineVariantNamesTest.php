@@ -55,5 +55,18 @@ class OrderLineVariantNamesTest extends TestCase
             ->assertInertia(fn ($page) => $page
                 ->where('order.items.0.variant_title', 'Large')
                 ->where('order.shipments.0.items.0.variant_title', 'Large'));
+
+        $return = \App\Models\Order\ReturnOrder::create([
+            'organization_id' => $org->id, 'order_id' => $order->id, 'return_number' => 'RET-V-1',
+            'type' => 'return', 'status' => 'pending', 'reason' => 'Too big', 'refund_amount' => 10,
+        ]);
+        \App\Models\Order\ReturnOrderItem::create([
+            'return_order_id' => $return->id, 'order_item_id' => $line->id, 'product_id' => $tee->id,
+            'quantity' => 1, 'condition' => 'new', 'restock' => true,
+        ]);
+
+        $this->get($this->portalUrl($org, 'returns/'.$return->id))
+            ->assertOk()
+            ->assertInertia(fn ($page) => $page->where('returnOrder.items.0.variant_title', 'Large'));
     }
 }

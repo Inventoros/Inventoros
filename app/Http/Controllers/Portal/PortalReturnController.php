@@ -63,6 +63,7 @@ class PortalReturnController extends PortalController
                 'items' => $record->items->map(fn (ReturnOrderItem $item) => [
                     'id' => $item->id,
                     'product_name' => $item->orderItem?->product_name,
+                    'variant_title' => $item->orderItem?->variant?->title,
                     'sku' => $item->orderItem?->sku,
                     'quantity' => (int) $item->quantity,
                     'condition' => $item->condition,
