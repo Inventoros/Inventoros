@@ -17,6 +17,7 @@ use App\Models\DataExport;
 use App\Models\Inventory\ProductCategory;
 use App\Models\Inventory\ProductLocation;
 use App\Support\ProductCurrencyColumns;
+use App\Support\SpreadsheetReaderType;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -39,7 +40,7 @@ class ImportExportController extends Controller
     /**
      * Upload rule shared by every import endpoint.
      */
-    private const IMPORT_FILE_RULE = 'required|file|mimes:csv,txt,xlsx,xls|mimetypes:text/csv,text/plain,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel|max:10240'; // 10MB max
+    private const IMPORT_FILE_RULE = 'required|file|extensions:csv,txt,xlsx,xls|mimes:csv,txt,xlsx,xls|mimetypes:text/csv,text/plain,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel|max:10240'; // 10MB max
 
     /**
      * Display the import/export page.
@@ -177,6 +178,7 @@ class ImportExportController extends Controller
         try {
             $organizationId = $request->user()->organization_id;
             $file = $request->file('file');
+            $readerType = SpreadsheetReaderType::forPath((string) $file->getRealPath());
 
             // Large uploads are processed off-request: store the file, queue the
             // import, and notify the user with stats when it finishes.
@@ -184,14 +186,14 @@ class ImportExportController extends Controller
                 $disk = config('imports.disk');
                 $path = $file->store('imports/'.$organizationId, $disk);
 
-                ProcessProductImportJob::dispatch($organizationId, $request->user()->id, $disk, $path);
+                ProcessProductImportJob::dispatch($organizationId, $request->user()->id, $disk, $path, $readerType);
 
                 return redirect()->route('import-export.index')
                     ->with('success', "Your import is being processed. You'll be notified when it's complete.");
             }
 
             $import = new ProductsImport($organizationId, $request->user());
-            Excel::import($import, $file);
+            Excel::import($import, $file, null, $readerType);
 
             $stats = $import->getStats();
 
@@ -249,7 +251,7 @@ class ImportExportController extends Controller
 
         try {
             $import = new UsersImport($user, $request->boolean('send_invites', true));
-            Excel::import($import, $request->file('file'));
+            Excel::import($import, $request->file('file'), null, SpreadsheetReaderType::forPath((string) $request->file('file')->getRealPath()));
             $stats = $import->getStats();
 
             return $this->redirectWithImportResult(
@@ -324,18 +326,20 @@ class ImportExportController extends Controller
         $file = $request->file('file');
 
         try {
+            $readerType = SpreadsheetReaderType::forPath((string) $file->getRealPath());
+
             if ($file->getSize() > config('imports.sync_max_kb') * 1024) {
                 $disk = config('imports.disk');
                 $path = $file->store('imports/'.$user->organization_id, $disk);
 
-                ProcessOrderImportJob::dispatch($user->organization_id, $user->id, $disk, $path, $historical, $notifyIntegrations);
+                ProcessOrderImportJob::dispatch($user->organization_id, $user->id, $disk, $path, $historical, $notifyIntegrations, $readerType);
 
                 return redirect()->route('import-export.index')
                     ->with('success', "Your order import is being processed. You'll be notified when it's complete.");
             }
 
             $import = new OrdersImport($user, $historical, $notifyIntegrations);
-            Excel::import($import, $file);
+            Excel::import($import, $file, null, $readerType);
             $stats = $import->getStats();
 
             return $this->redirectWithImportResult(

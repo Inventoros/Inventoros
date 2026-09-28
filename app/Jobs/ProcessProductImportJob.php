@@ -52,12 +52,15 @@ final class ProcessProductImportJob implements ShouldQueue
         public int $userId,
         public string $disk,
         public string $path,
+        // Chosen from the detected upload content by the controller; null for
+        // jobs queued before this was recorded (the reader then follows the name).
+        public ?string $readerType = null,
     ) {}
 
     public function handle(): void
     {
         $import = new ProductsImport($this->organizationId, User::withoutGlobalScopes()->find($this->userId));
-        Excel::import($import, $this->path, $this->disk);
+        Excel::import($import, $this->path, $this->disk, $this->readerType);
 
         NotificationService::createImportCompleteNotification(
             $this->organizationId,
