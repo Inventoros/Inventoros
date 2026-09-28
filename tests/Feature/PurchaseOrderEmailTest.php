@@ -280,6 +280,7 @@ class PurchaseOrderEmailTest extends TestCase
     public function test_the_mailable_applies_the_org_mail_config(): void
     {
         Setting::create(['organization_id' => $this->org->id, 'key' => 'email.provider', 'value' => 'smtp', 'encrypted' => false]);
+        Setting::create(['organization_id' => $this->org->id, 'key' => 'email.smtp.host', 'value' => 'smtp.acme.test', 'encrypted' => false]);
         Setting::create(['organization_id' => $this->org->id, 'key' => 'email.from_address', 'value' => 'buying@acme.test', 'encrypted' => false]);
         Setting::create(['organization_id' => $this->org->id, 'key' => 'email.from_name', 'value' => 'Acme Buying', 'encrypted' => false]);
         Config::set('mail.from.address', 'default@system.test');
@@ -288,8 +289,9 @@ class PurchaseOrderEmailTest extends TestCase
         $mail = new PurchaseOrderEmail($po, 'Please confirm by Friday.');
         $mail->build();
 
-        $this->assertSame('buying@acme.test', Config::get('mail.from.address'));
-        $this->assertSame('Acme Buying', Config::get('mail.from.name'));
+        // The org's From rides on its own mailer; the global config is untouched.
+        $this->assertSame(['address' => 'buying@acme.test', 'name' => 'Acme Buying'], Config::get("mail.mailers.{$mail->mailer}.from"));
+        $this->assertSame('default@system.test', Config::get('mail.from.address'));
     }
 
     public function test_the_mailable_is_branded_as_the_org_with_a_text_part(): void

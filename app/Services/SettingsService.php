@@ -7,7 +7,6 @@ namespace App\Services;
 use App\Models\Setting;
 use Illuminate\Contracts\Encryption\DecryptException;
 use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\Log;
 use RuntimeException;
@@ -140,53 +139,5 @@ final class SettingsService
                 'api_key' => self::get('email.sendgrid.api_key', null, $organizationId),
             ],
         ];
-    }
-
-    /**
-     * Apply email configuration to Laravel's mail config.
-     *
-     * Configures mail driver, from address, and provider-specific settings
-     * based on stored organization settings.
-     */
-    public static function applyEmailConfig(?int $organizationId = null): void
-    {
-        $config = self::getEmailConfig($organizationId);
-
-        $organizationId ??= auth()->user()?->organization_id;
-
-        // Validate critical configuration
-        if (empty($config['from_address'])) {
-            Log::warning('Email configuration missing critical field: from_address', [
-                'organization_id' => $organizationId,
-            ]);
-        }
-        if (empty($config['provider'])) {
-            Log::warning('Email configuration missing critical field: provider', [
-                'organization_id' => $organizationId,
-            ]);
-        }
-
-        Config::set('mail.default', $config['provider']);
-        Config::set('mail.from.address', $config['from_address']);
-        Config::set('mail.from.name', $config['from_name']);
-
-        switch ($config['provider']) {
-            case 'smtp':
-                Config::set('mail.mailers.smtp.host', $config['smtp']['host']);
-                Config::set('mail.mailers.smtp.port', $config['smtp']['port']);
-                Config::set('mail.mailers.smtp.username', $config['smtp']['username']);
-                Config::set('mail.mailers.smtp.password', $config['smtp']['password']);
-                Config::set('mail.mailers.smtp.encryption', $config['smtp']['encryption']);
-                break;
-
-            case 'mailgun':
-                Config::set('services.mailgun.domain', $config['mailgun']['domain']);
-                Config::set('services.mailgun.secret', $config['mailgun']['secret']);
-                break;
-
-            case 'sendgrid':
-                Config::set('services.sendgrid.api_key', $config['sendgrid']['api_key']);
-                break;
-        }
     }
 }

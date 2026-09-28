@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Mail\TestEmail;
+use App\Services\OrganizationMailer;
 use App\Services\SettingsService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
@@ -127,9 +128,11 @@ class SettingsController extends Controller
         ]);
 
         try {
-            SettingsService::applyEmailConfig();
+            // Send through this organization's own mailer without touching
+            // the global mail config (the system mailer when none is set).
+            $mailer = OrganizationMailer::for((int) auth()->user()->organization_id);
 
-            Mail::to($request->test_email)->send(new TestEmail([
+            Mail::mailer($mailer)->to($request->test_email)->send(new TestEmail([
                 'organization_id' => auth()->user()->organization_id,
                 'organization' => auth()->user()->organization->name,
                 'tested_by' => auth()->user()->name,

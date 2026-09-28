@@ -72,18 +72,22 @@ class QueuedEmailOrgConfigTest extends TestCase
         Mail::assertQueued(LowStockEmail::class, fn (LowStockEmail $m) => ($m->data['organization_id'] ?? null) === $this->org->id);
     }
 
-    public function test_the_mailable_applies_the_orgs_mail_config_at_build_time(): void
+    public function test_the_mailable_selects_the_orgs_mailer_at_build_time(): void
     {
         Setting::create(['organization_id' => $this->org->id, 'key' => 'email.provider', 'value' => 'smtp', 'encrypted' => false]);
+        Setting::create(['organization_id' => $this->org->id, 'key' => 'email.smtp.host', 'value' => 'smtp.acme.test', 'encrypted' => false]);
         Setting::create(['organization_id' => $this->org->id, 'key' => 'email.from_address', 'value' => 'store@acme.test', 'encrypted' => false]);
         Setting::create(['organization_id' => $this->org->id, 'key' => 'email.from_name', 'value' => 'Acme Store', 'encrypted' => false]);
 
         Config::set('mail.from.address', 'default@system.test');
 
-        // build() runs in the worker; it must pull the org's config with no auth.
-        (new LowStockEmail(['organization_id' => $this->org->id, 'product' => $this->product]))->build();
+        // build() runs in the worker; it must pull the org's config with no auth,
+        // onto the mailable's own mailer (never the global mail config).
+        $mailable = new LowStockEmail(['organization_id' => $this->org->id, 'product' => $this->product]);
+        $mailable->build();
 
-        $this->assertSame('store@acme.test', Config::get('mail.from.address'));
-        $this->assertSame('Acme Store', Config::get('mail.from.name'));
+        $this->assertSame('organization_'.$this->org->id, $mailable->mailer);
+        $this->assertSame(['address' => 'store@acme.test', 'name' => 'Acme Store'], Config::get("mail.mailers.{$mailable->mailer}.from"));
+        $this->assertSame('default@system.test', Config::get('mail.from.address'));
     }
 }

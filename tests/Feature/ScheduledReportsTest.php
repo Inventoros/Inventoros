@@ -309,13 +309,16 @@ class ScheduledReportsTest extends TestCase
     public function test_the_mailable_applies_org_mail_config_and_has_a_text_part(): void
     {
         Setting::create(['organization_id' => $this->org->id, 'key' => 'email.provider', 'value' => 'smtp', 'encrypted' => false]);
+        Setting::create(['organization_id' => $this->org->id, 'key' => 'email.smtp.host', 'value' => 'smtp.acme.test', 'encrypted' => false]);
         Setting::create(['organization_id' => $this->org->id, 'key' => 'email.from_address', 'value' => 'reports@acme.test', 'encrypted' => false]);
         config(['mail.from.address' => 'default@system.test']);
 
         $mail = new ScheduledReportEmail($this->org->id, 'Stock acme', 'weekly', 'stock.csv', 'text/csv; charset=UTF-8', base64_encode("a,b\n"));
         $mail->build();
 
-        $this->assertSame('reports@acme.test', config('mail.from.address'));
+        // The org's From rides on its own mailer; the global config is untouched.
+        $this->assertSame('reports@acme.test', config("mail.mailers.{$mail->mailer}.from.address"));
+        $this->assertSame('default@system.test', config('mail.from.address'));
     }
 
     public function test_the_mailable_is_branded_with_a_plain_text_part_and_the_attachment(): void

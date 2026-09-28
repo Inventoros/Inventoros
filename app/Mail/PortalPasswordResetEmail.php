@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Mail;
 
-use App\Mail\Concerns\AppliesOrganizationMailConfig;
 use App\Mail\Concerns\UsesOrganizationBranding;
 use App\Models\CustomerContact;
 use Illuminate\Bus\Queueable;
@@ -17,10 +16,10 @@ use Illuminate\Queue\SerializesModels;
  */
 class PortalPasswordResetEmail extends Mailable
 {
-    use AppliesOrganizationMailConfig, Queueable, SerializesModels, UsesOrganizationBranding;
+    use Queueable, SerializesModels, UsesOrganizationBranding;
 
     /**
-     * Carries the organization id for the mail-config and branding concerns.
+     * Carries the organization id for the branding concern.
      *
      * @var array{organization_id: int}
      */
@@ -44,7 +43,9 @@ class PortalPasswordResetEmail extends Mailable
      */
     public function build()
     {
-        $this->applyOrganizationMailConfig();
+        // Token-bearing: always the system mailer, never the organization's own
+        // transport, so a set-password link is only ever handed to the
+        // instance's mail provider.
 
         $branding = $this->organizationBranding();
 

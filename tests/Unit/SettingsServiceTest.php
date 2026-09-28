@@ -6,6 +6,7 @@ use App\Models\Auth\Organization;
 use App\Models\Setting;
 use App\Models\System\SystemSetting;
 use App\Models\User;
+use App\Services\OrganizationMailer;
 use App\Services\SettingsService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Cache;
@@ -243,7 +244,7 @@ class SettingsServiceTest extends TestCase
         $this->assertSame('Test App', $config['from_name']);
     }
 
-    public function test_apply_email_config_sets_smtp_config(): void
+    public function test_organization_mailer_is_built_from_smtp_settings_without_touching_global_config(): void
     {
         $this->actingAs($this->user);
 
@@ -253,43 +254,54 @@ class SettingsServiceTest extends TestCase
         SettingsService::set('email.smtp.host', 'mail.example.com');
         SettingsService::set('email.smtp.port', '465');
         Cache::flush();
+        $globalHost = Config::get('mail.mailers.smtp.host');
+        $globalDefault = Config::get('mail.default');
 
-        SettingsService::applyEmailConfig();
+        $name = OrganizationMailer::for($this->organization->id);
 
-        $this->assertSame('smtp', Config::get('mail.default'));
-        $this->assertSame('test@example.com', Config::get('mail.from.address'));
-        $this->assertSame('App', Config::get('mail.from.name'));
-        $this->assertSame('mail.example.com', Config::get('mail.mailers.smtp.host'));
-        $this->assertSame('465', Config::get('mail.mailers.smtp.port'));
+        $this->assertSame('organization_'.$this->organization->id, $name);
+        $this->assertSame('mail.example.com', Config::get("mail.mailers.{$name}.host"));
+        $this->assertSame(465, Config::get("mail.mailers.{$name}.port"));
+        $this->assertSame('smtps', Config::get("mail.mailers.{$name}.scheme"));
+        $this->assertSame(['address' => 'test@example.com', 'name' => 'App'], Config::get("mail.mailers.{$name}.from"));
+        $this->assertSame($globalHost, Config::get('mail.mailers.smtp.host'));
+        $this->assertSame($globalDefault, Config::get('mail.default'));
     }
 
-    public function test_apply_email_config_sets_mailgun_config(): void
+    public function test_organization_mailer_config_for_mailgun(): void
     {
-        $this->actingAs($this->user);
+        $config = OrganizationMailer::mailerConfig([
+            'provider' => 'mailgun', 'from_address' => null, 'from_name' => null,
+            'smtp' => [], 'mailgun' => ['domain' => 'mg.example.com', 'secret' => 'key-abc123'], 'sendgrid' => [],
+        ]);
 
-        SettingsService::set('email.provider', 'mailgun');
-        SettingsService::set('email.mailgun.domain', 'mg.example.com');
-        SettingsService::set('email.mailgun.secret', 'key-abc123');
-        Cache::flush();
-
-        SettingsService::applyEmailConfig();
-
-        $this->assertSame('mailgun', Config::get('mail.default'));
-        $this->assertSame('mg.example.com', Config::get('services.mailgun.domain'));
-        $this->assertSame('key-abc123', Config::get('services.mailgun.secret'));
+        if (class_exists(\Symfony\Component\Mailer\Bridge\Mailgun\Transport\MailgunTransportFactory::class)) {
+            $this->assertSame(['transport' => 'mailgun', 'domain' => 'mg.example.com', 'secret' => 'key-abc123'], $config);
+        } else {
+            // Without the Mailgun transport package the system mailer is used.
+            $this->assertNull($config);
+        }
     }
 
-    public function test_apply_email_config_sets_sendgrid_config(): void
+    public function test_organization_mailer_config_for_sendgrid_uses_the_smtp_relay(): void
     {
-        $this->actingAs($this->user);
+        $config = OrganizationMailer::mailerConfig([
+            'provider' => 'sendgrid', 'from_address' => 'a@b.test', 'from_name' => null,
+            'smtp' => [], 'mailgun' => [], 'sendgrid' => ['api_key' => 'SG.test123'],
+        ]);
 
-        SettingsService::set('email.provider', 'sendgrid');
-        SettingsService::set('email.sendgrid.api_key', 'SG.test123');
-        Cache::flush();
+        $this->assertSame('smtp.sendgrid.net', $config['host']);
+        $this->assertSame('apikey', $config['username']);
+        $this->assertSame('SG.test123', $config['password']);
+        $this->assertSame(['address' => 'a@b.test', 'name' => 'a@b.test'], $config['from']);
+    }
 
-        SettingsService::applyEmailConfig();
-
-        $this->assertSame('sendgrid', Config::get('mail.default'));
-        $this->assertSame('SG.test123', Config::get('services.sendgrid.api_key'));
+    public function test_organization_mailer_is_null_without_a_usable_transport(): void
+    {
+        $this->assertNull(OrganizationMailer::mailerConfig([
+            'provider' => 'smtp', 'from_address' => 'a@b.test', 'from_name' => null,
+            'smtp' => ['host' => null, 'port' => 587], 'mailgun' => [], 'sendgrid' => [],
+        ]));
+        $this->assertNull(OrganizationMailer::for($this->organization->id));
     }
 }

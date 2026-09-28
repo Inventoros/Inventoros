@@ -283,7 +283,7 @@ class SettingsWiringTest extends TestCase
 
     public function test_a_failed_test_email_returns_an_error_the_page_can_show(): void
     {
-        Mail::shouldReceive('to')->andThrow(new \RuntimeException('Connection refused by smtp.example.com'));
+        Mail::shouldReceive('mailer')->andThrow(new \RuntimeException('Connection refused by smtp.example.com'));
 
         $this->actingAs($this->admin)
             ->postJson(route('settings.email.test'), ['test_email' => 'to@example.com'])
