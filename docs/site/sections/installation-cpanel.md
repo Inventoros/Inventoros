@@ -12,7 +12,7 @@ The cPanel release packages are specially built and include:
 ### Prerequisites
 
 - Access to your cPanel control panel
-- PHP 8.4 enabled for your domain (8.4.1 or newer)
+- PHP 8.4 enabled for your domain (8.4.1 or newer; PHP 8.5 is not supported yet)
 - A MySQL database available
 - SSH access (recommended) or the cPanel Terminal
 - At least 512MB of disk space
@@ -136,7 +136,27 @@ php artisan route:cache
 php artisan view:cache
 ```
 
-### Step 7: Enable HTTPS
+### Step 7: Set up the scheduler and queue worker
+
+Inventoros needs two background tasks. Without them, low-stock alerts, cycle counts, scheduled report emails, shipment tracking, webhook deliveries and queued emails (purchase orders, invoices, approvals, shipment notices) never go out.
+
+In cPanel, open Cron Jobs and add the scheduler. It runs every minute and decides which commands are due:
+
+```text
+* * * * * cd /home/username/inventoros && php artisan schedule:run >> /dev/null 2>&1
+```
+
+Then add a queue worker. Most shared hosts do not allow long-running processes, so add a second cron entry that starts a short-lived worker every minute and exits when the queue is empty:
+
+```text
+* * * * * cd /home/username/inventoros && php artisan queue:work --stop-when-empty --tries=3 --max-time=55 >> /dev/null 2>&1
+```
+
+Replace `/home/username/inventoros` with the folder that contains `artisan`. Keep `QUEUE_CONNECTION=database` in `.env`. If your host allows neither cron entry, set `QUEUE_CONNECTION=sync` so jobs run inside the web request instead; pages that send email or webhooks will be slower.
+
+When the app reports that an email was sent, it has been queued. It is delivered the next time the worker runs.
+
+### Step 8: Enable HTTPS
 
 Secure your installation:
 
@@ -165,7 +185,7 @@ For addon domains, if your addon domain points to `~/yourdomain.com`:
 - 500 Internal Server Error. Check storage and bootstrap/cache permissions, verify `.env` exists, and check `~/inventoros/storage/logs/laravel.log` for errors.
 - Assets not loading (CSS / JS broken). Ensure the `build/` folder was uploaded to `public_html` and `.htaccess` is present. Check that `APP_URL` matches your domain.
 - Database connection failed. Verify the credentials in `.env`. Test the same credentials in phpMyAdmin. Ensure the database user has privileges.
-- PHP version issues. In cPanel, open MultiPHP Manager or Select PHP Version and ensure PHP 8.4 is selected for your domain.
+- PHP version issues. In cPanel, open MultiPHP Manager or Select PHP Version and ensure PHP 8.4 (8.4.1 or newer) is selected for your domain.
 - Storage link issues. If uploaded files are not accessible, verify the symlink with `ls -la ~/public_html/storage` and recreate it if needed.
 
 Report an issue: https://github.com/Inventoros/Inventoros/issues

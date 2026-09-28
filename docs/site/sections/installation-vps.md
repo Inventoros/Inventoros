@@ -1,4 +1,4 @@
-This guide installs Inventoros from source on a VPS with full root access. Examples cover Ubuntu 22.04+, CentOS / RHEL, and Debian, then SSL and firewall setup.
+This guide installs Inventoros from source on a VPS with full root access. Examples cover Ubuntu 22.04+, CentOS / RHEL, and Debian, then the scheduler and queue worker, SSL and firewall setup. Inventoros needs PHP 8.4.1 or newer (PHP 8.5 is not supported yet) and Node.js 20.19+ or 22.12+ to build the frontend.
 
 ### Ubuntu 22.04+
 
@@ -62,6 +62,8 @@ sudo php artisan key:generate
 sudo nano .env
 
 # Update these values:
+APP_ENV=production
+APP_DEBUG=false
 APP_URL=http://your-domain.com
 DB_DATABASE=inventoros
 DB_USERNAME=inventoros
@@ -178,7 +180,7 @@ sudo mysql -e "GRANT ALL PRIVILEGES ON inventoros.* TO 'inventoros'@'localhost';
 sudo mysql -e "FLUSH PRIVILEGES;"
 ```
 
-7. Clone and set up Inventoros (same as Ubuntu steps 6 and 7):
+7. Clone and set up Inventoros, then edit `.env` as in Ubuntu step 7 (including `APP_ENV=production` and `APP_DEBUG=false`):
 
 ```bash
 cd /var/www
@@ -281,6 +283,29 @@ sudo npm install && sudo npm run build
 sudo cp .env.example .env
 sudo php artisan key:generate
 ```
+
+### Scheduler and queue worker
+
+Every install needs the Laravel scheduler and a queue worker. The scheduler runs low-stock checks, scheduled cycle counts, scheduled report emails, shipment tracking and log pruning. The worker sends webhook deliveries and queued emails (purchase orders, invoices, approvals, shipment notices). Without them these jobs pile up and never run.
+
+The repository ships systemd units in `deploy/systemd/`. Edit `User`, `Group` and `WorkingDirectory` in each file to match your server (`nginx` instead of `www-data` on CentOS / RHEL), then install them:
+
+```bash
+sudo cp /var/www/inventoros/deploy/systemd/inventoros-worker.service /etc/systemd/system/
+sudo cp /var/www/inventoros/deploy/systemd/inventoros-scheduler.service /etc/systemd/system/
+sudo cp /var/www/inventoros/deploy/systemd/inventoros-scheduler.timer /etc/systemd/system/
+sudo systemctl daemon-reload
+sudo systemctl enable --now inventoros-worker
+sudo systemctl enable --now inventoros-scheduler.timer
+```
+
+If you prefer cron to the scheduler timer, add this to the web user's crontab (`sudo crontab -u www-data -e`) instead:
+
+```text
+* * * * * cd /var/www/inventoros && php artisan schedule:run >> /dev/null 2>&1
+```
+
+After each deploy, run `php artisan queue:restart` so the worker picks up the new code.
 
 ### SSL certificate
 

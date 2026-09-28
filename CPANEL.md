@@ -5,7 +5,7 @@ This guide explains how to deploy Inventoros on shared hosting using cPanel.
 ## Prerequisites
 
 Before deploying, ensure your hosting provider supports:
-- PHP 8.4 (8.4.1 or newer)
+- PHP 8.4 (8.4.1 or newer; PHP 8.5 is not supported yet)
 - MySQL 8.0+ or PostgreSQL 13+
 - Composer (or SSH access to run it)
 - Node.js 20.19+ or 22.12+ (for building assets, can be done locally)
@@ -125,10 +125,14 @@ In cPanel File Manager:
 
 Inventoros relies on background processing for two things:
 
-- **The scheduler** runs `inventory:check-reorder-points` (low-stock alerts) and
-  the nightly retention prune commands.
+- **The scheduler** runs `inventory:check-reorder-points` (low-stock alerts),
+  `inventory:run-cycle-counts` (scheduled cycle counts, hourly),
+  `reports:send-scheduled` (scheduled report emails, every 15 minutes),
+  `shipping:track` (shipment tracking, every 30 minutes) and the nightly
+  retention prune commands.
 - **The queue worker** drains the database queue: webhook deliveries
-  (`WebhookDeliveryJob`) and queued mail. Without it, these rows pile up in the
+  (`WebhookDeliveryJob`) and queued mail (purchase orders, invoices, scheduled
+  reports, approval, shipment and activity alerts) and import jobs. Without it, these rows pile up in the
   `jobs` and `webhook_deliveries` tables and **never fire**.
 
 #### Scheduler cron (always add this)
@@ -176,9 +180,11 @@ needs no worker, but webhook deliveries and emails run synchronously, so a slow
 or failing endpoint will slow down the request that triggered it. Acceptable for
 low-volume single-tenant installs; prefer Option A otherwise.
 
-> **Docker / VPS deploys** ship a dedicated `worker` and `scheduler` container
-> (`docker-compose.prod.yml`) and example systemd units (`deploy/systemd/`), so the
-> cron setup above is only needed on cPanel-style shared hosting.
+> **Other deploy types.** The Docker stack (`docker-compose.prod.yml`) runs its own
+> `worker` and `scheduler` containers, so it needs neither cron entry. A VPS install
+> has no containers: install the systemd units in `deploy/systemd/` (a worker
+> service plus a scheduler timer) or add the same two cron lines. See
+> `docs/site/sections/installation-vps.md`.
 
 ### 10. Enable SSL
 
