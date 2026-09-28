@@ -50,6 +50,7 @@ class PluginMarketplaceController extends Controller
 
         $plugins = array_map(function (array $entry) {
             $installed = $this->installer->installedVersion($entry['slug']);
+            $fromMarketplace = $installed !== null && MarketplaceInstaller::installedFromMarketplace($entry['slug']);
             $version = is_string($entry['version'] ?? null) ? $entry['version'] : '';
 
             return [
@@ -59,7 +60,8 @@ class PluginMarketplaceController extends Controller
                 'version' => $version,
                 'requires' => $entry['requires'] ?? null,
                 'author' => $entry['author'] ?? null,
-                'icon' => $this->safeUrl($entry['icon'] ?? null),
+                // Loaded by the browser as an image: https only, no mixed content.
+                'icon' => $this->safeUrl($entry['icon'] ?? null, httpsOnly: true),
                 'homepage' => $this->safeUrl($entry['homepage'] ?? null),
                 'pricing_type' => (string) ($entry['pricing_type'] ?? 'free'),
                 'price' => $entry['price'] ?? null,
@@ -67,7 +69,8 @@ class PluginMarketplaceController extends Controller
                 'is_free' => (bool) ($entry['is_free'] ?? false),
                 'has_access' => (bool) ($entry['has_access'] ?? false),
                 'installed_version' => $installed,
-                'update_available' => $installed !== null && MarketplaceInstaller::isNewer($version, $installed),
+                'installed_from_marketplace' => $fromMarketplace,
+                'update_available' => $fromMarketplace && MarketplaceInstaller::isNewer($version, $installed),
             ];
         }, $catalog);
 
@@ -158,10 +161,12 @@ class PluginMarketplaceController extends Controller
     }
 
     /**
-     * Only pass http(s) links from the marketplace through to the page.
+     * Only pass http(s) (or https-only) links from the marketplace through to the page.
      */
-    private function safeUrl(mixed $url): ?string
+    private function safeUrl(mixed $url, bool $httpsOnly = false): ?string
     {
-        return is_string($url) && preg_match('#^https?://#i', $url) === 1 ? $url : null;
+        $pattern = $httpsOnly ? '#^https://#i' : '#^https?://#i';
+
+        return is_string($url) && preg_match($pattern, $url) === 1 ? $url : null;
     }
 }

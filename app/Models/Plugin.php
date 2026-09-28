@@ -12,6 +12,7 @@ use Illuminate\Database\Eloquent\Model;
  * @property int $id
  * @property string $slug
  * @property bool $is_active
+ * @property string|null $source marketplace, or null for an uploaded / hand-copied plugin
  * @property \Illuminate\Support\Carbon|null $activated_at
  * @property \Illuminate\Support\Carbon|null $deactivated_at
  * @property \Illuminate\Support\Carbon|null $created_at
@@ -19,9 +20,13 @@ use Illuminate\Database\Eloquent\Model;
  */
 class Plugin extends Model
 {
+    /** Installed (and so updatable) by the inventoros.com marketplace. */
+    public const SOURCE_MARKETPLACE = 'marketplace';
+
     protected $fillable = [
         'slug',
         'is_active',
+        'source',
         'activated_at',
         'deactivated_at',
     ];

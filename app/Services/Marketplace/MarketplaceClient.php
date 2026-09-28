@@ -25,6 +25,8 @@ final class MarketplaceClient
 
     private const SLUG_PATTERN = '/^[a-z0-9][a-z0-9_-]{0,99}$/i';
 
+    private const TOO_LARGE = 'marketplace download exceeds the size limit';
+
     public static function isValidSlug(string $slug): bool
     {
         return preg_match(self::SLUG_PATTERN, $slug) === 1;
@@ -152,6 +154,11 @@ final class MarketplaceClient
      * Download a plugin's latest package to a temporary file. The caller
      * verifies it and must delete the file.
      *
+     * The body is streamed straight to the file and the transfer is aborted
+     * once it passes INVENTOROS_MARKETPLACE_MAX_DOWNLOAD_BYTES, whatever the
+     * Content-Length says (or whether it is sent at all), so a lying or
+     * endless response is never held in memory.
+     *
      * @return array{path: string, signature: string|null, checksum: string|null, version: string|null}
      *
      * @throws MarketplaceException
@@ -163,48 +170,51 @@ final class MarketplaceClient
         $max = (int) config('marketplace.max_download_bytes', 50 * 1024 * 1024);
         $tooLarge = fn () => new MarketplaceException('The plugin package is larger than the download size limit (INVENTOROS_MARKETPLACE_MAX_DOWNLOAD_BYTES).');
 
-        try {
-            $response = $this->request($token)
-                ->withOptions([
-                    'on_headers' => function (ResponseInterface $response) use ($max) {
-                        if ((int) $response->getHeaderLine('Content-Length') > $max) {
-                            throw new \RuntimeException('too large');
-                        }
-                    },
-                ])
-                ->get($this->origin().self::API_PATH.'/plugins/'.rawurlencode($slug).'/download');
-        } catch (MarketplaceException $e) {
-            throw $e;
-        } catch (\Throwable $e) {
-            if (str_contains($e->getMessage(), 'too large')) {
-                throw $tooLarge();
-            }
-
-            throw new MarketplaceException('Could not reach the marketplace to download this plugin. Try again later.', 0, $e);
-        }
-
-        match (true) {
-            $response->successful() => null,
-            $response->status() === 401 => throw new MarketplaceException($token
-                ? 'The marketplace rejected your connected account. Reconnect your inventoros.com account and try again.'
-                : 'This is a paid plugin. Connect your inventoros.com account on the Marketplace tab to install it.'),
-            $response->status() === 403 => throw new MarketplaceException(
-                'Your connected inventoros.com account does not own this plugin. Get it at '.$this->pageUrl($slug).'.'
-            ),
-            $response->status() === 404 => throw new MarketplaceException('This plugin is not available from the marketplace.'),
-            $response->status() === 429 => throw new MarketplaceException('The marketplace is limiting requests right now. Try again in a minute.'),
-            default => throw new MarketplaceException("The marketplace could not serve this plugin (HTTP {$response->status()})."),
-        };
-
-        $body = $response->body();
-        if (strlen($body) > $max) {
-            throw $tooLarge();
-        }
-
         $directory = storage_path('app/marketplace-downloads');
         File::ensureDirectoryExists($directory);
         $path = $directory.'/'.bin2hex(random_bytes(8)).'.zip';
-        File::put($path, $body);
+
+        try {
+            try {
+                $response = $this->request($token)
+                    ->withOptions($this->downloadOptions($path, $max))
+                    ->get($this->origin().self::API_PATH.'/plugins/'.rawurlencode($slug).'/download');
+            } catch (MarketplaceException $e) {
+                throw $e;
+            } catch (\Throwable $e) {
+                if (self::isTooLarge($e)) {
+                    throw $tooLarge();
+                }
+
+                throw new MarketplaceException('Could not reach the marketplace to download this plugin. Try again later.', 0, $e);
+            }
+
+            match (true) {
+                $response->successful() => null,
+                $response->status() === 401 => throw new MarketplaceException($token
+                    ? 'The marketplace rejected your connected account. Reconnect your inventoros.com account and try again.'
+                    : 'This is a paid plugin. Connect your inventoros.com account on the Marketplace tab to install it.'),
+                $response->status() === 403 => throw new MarketplaceException(
+                    'Your connected inventoros.com account does not own this plugin. Get it at '.$this->pageUrl($slug).'.'
+                ),
+                $response->status() === 404 => throw new MarketplaceException('This plugin is not available from the marketplace.'),
+                $response->status() === 429 => throw new MarketplaceException('The marketplace is limiting requests right now. Try again in a minute.'),
+                default => throw new MarketplaceException("The marketplace could not serve this plugin (HTTP {$response->status()})."),
+            };
+
+            if (! $this->writeBodyIfNotStreamed($response, $path, $max)) {
+                throw $tooLarge();
+            }
+
+            clearstatcache(true, $path);
+            if (! is_file($path) || filesize($path) > $max) {
+                throw $tooLarge();
+            }
+        } catch (\Throwable $e) {
+            @unlink($path);
+
+            throw $e;
+        }
 
         $header = fn (string $name) => ($value = trim($response->header($name))) === '' ? null : $value;
 
@@ -214,6 +224,83 @@ final class MarketplaceClient
             'checksum' => $header('X-Marketplace-Checksum'),
             'version' => $header('X-Marketplace-Version'),
         ];
+    }
+
+    /**
+     * Guzzle options for a capped download: the body is written to $sink and
+     * the transfer aborts past $max bytes, from the Content-Length header when
+     * one is sent and from the running byte count either way.
+     *
+     * @return array{sink: string, on_headers: callable, progress: callable}
+     */
+    public function downloadOptions(string $sink, int $max): array
+    {
+        return [
+            'sink' => $sink,
+            'on_headers' => function (ResponseInterface $response) use ($max) {
+                if ((int) $response->getHeaderLine('Content-Length') > $max) {
+                    throw new \RuntimeException(self::TOO_LARGE);
+                }
+            },
+            'progress' => function ($downloadTotal, $downloaded) use ($max) {
+                if ((int) $downloaded > $max) {
+                    throw new \RuntimeException(self::TOO_LARGE);
+                }
+            },
+        ];
+    }
+
+    /**
+     * A real transfer has already streamed the body into $path through the
+     * sink. A handler that ignores `sink` (the HTTP fake) leaves it empty; copy
+     * the body across in chunks under the same cap. False when it is too large.
+     */
+    private function writeBodyIfNotStreamed(Response $response, string $path, int $max): bool
+    {
+        clearstatcache(true, $path);
+        if (is_file($path) && filesize($path) > 0) {
+            return true;
+        }
+
+        $body = $response->toPsrResponse()->getBody();
+        if ($body->isSeekable()) {
+            $body->rewind();
+        }
+
+        $handle = fopen($path, 'wb');
+        if ($handle === false) {
+            throw new MarketplaceException('Could not save the downloaded plugin package.');
+        }
+
+        $written = 0;
+
+        try {
+            while (! $body->eof()) {
+                $chunk = $body->read(65536);
+                $written += strlen($chunk);
+
+                if ($written > $max) {
+                    return false;
+                }
+
+                fwrite($handle, $chunk);
+            }
+        } finally {
+            fclose($handle);
+        }
+
+        return true;
+    }
+
+    private static function isTooLarge(\Throwable $e): bool
+    {
+        for ($current = $e; $current !== null; $current = $current->getPrevious()) {
+            if (str_contains($current->getMessage(), self::TOO_LARGE)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private function assertSlug(string $slug): void

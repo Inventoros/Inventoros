@@ -81,7 +81,10 @@ final class PluginService
                     'description' => $manifest['description'] ?? '',
                     'version' => $manifest['version'] ?? '1.0.0',
                     'author' => $manifest['author'] ?? 'Unknown',
-                    'author_url' => $manifest['author_url'] ?? '',
+                    // Rendered as a link: only http(s), never javascript: or data:.
+                    'author_url' => is_string($manifest['author_url'] ?? null) && preg_match('#^https?://#i', $manifest['author_url']) === 1
+                        ? $manifest['author_url']
+                        : '',
                     'requires' => $manifest['requires'] ?? '1.0.0',
                     'requires_php' => $manifest['requires_php'] ?? null,
                     'has_runtime_ui' => is_array($manifest['ui'] ?? null),
@@ -532,6 +535,9 @@ final class PluginService
         } finally {
             @unlink($tempPath);
         }
+
+        // An uploaded plugin is local: the marketplace must never update it.
+        Plugin::where('slug', $result['slug'])->update(['source' => null]);
 
         return ['slug' => $result['slug'], 'path' => $result['path']];
     }

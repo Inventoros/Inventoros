@@ -195,6 +195,11 @@ final class PluginMarketplaceTest extends TestCase
         ]);
     }
 
+    private function markMarketplaceInstalled(string $slug): void
+    {
+        Plugin::updateOrCreate(['slug' => $slug], ['source' => Plugin::SOURCE_MARKETPLACE]);
+    }
+
     private function install(string $slug, bool $activate = false)
     {
         return $this->actingAs($this->admin)
@@ -210,6 +215,7 @@ final class PluginMarketplaceTest extends TestCase
         $bytes = $this->zipBytes($slug);
         $this->fakeMarketplace($this->entry($slug, $bytes, ['version' => '2.0.0']), $bytes);
         $this->makeFixturePlugin(['version' => '1.0.0'], [], $slug);
+        $this->markMarketplaceInstalled($slug);
 
         $this->actingAs($this->admin)
             ->get(route('plugins.marketplace'))
@@ -456,6 +462,7 @@ final class PluginMarketplaceTest extends TestCase
             'hooks/deactivate.php' => $this->recordingHook('deactivate'),
             'old-only.txt' => 'old',
         ], $slug);
+        $this->markMarketplaceInstalled($slug);
         app(PluginService::class)->activatePlugin($slug);
         $pluginId = Plugin::where('slug', $slug)->value('id');
 
@@ -478,6 +485,7 @@ final class PluginMarketplaceTest extends TestCase
     {
         $slug = $this->slug();
         $this->makeFixturePlugin(['version' => '1.0.0'], [], $slug);
+        $this->markMarketplaceInstalled($slug);
         app(PluginService::class)->activatePlugin($slug);
 
         $bytes = $this->zipBytes($slug, ['version' => '2.0.0'], ['hooks/activate.php' => $this->recordingHook('activate-v2', throws: true)]);
@@ -496,6 +504,7 @@ final class PluginMarketplaceTest extends TestCase
     {
         $slug = $this->slug();
         $this->makeFixturePlugin(['version' => '1.0.0'], [], $slug);
+        $this->markMarketplaceInstalled($slug);
 
         $bytes = $this->zipBytes($slug, ['version' => '2.0.0']);
         $this->fakeMarketplace($this->entry($slug, $bytes, ['version' => '2.0.0']), $bytes, [
@@ -516,6 +525,7 @@ final class PluginMarketplaceTest extends TestCase
     {
         $slug = $this->slug();
         $this->makeFixturePlugin(['version' => '1.0.0'], [], $slug);
+        $this->markMarketplaceInstalled($slug);
         $bytes = $this->zipBytes($slug);
         $this->fakeMarketplace($this->entry($slug, $bytes), $bytes);
 
@@ -526,12 +536,112 @@ final class PluginMarketplaceTest extends TestCase
         Http::assertNotSent(fn (Request $r) => str_ends_with($r->url(), '/download'));
     }
 
+    // ---------------------------------------------------------------- install source
+
+    public function test_install_records_that_the_plugin_came_from_the_marketplace(): void
+    {
+        $slug = $this->slug();
+        $bytes = $this->zipBytes($slug);
+        $this->fakeMarketplace($this->entry($slug, $bytes), $bytes);
+
+        $this->install($slug)->assertSessionHas('success');
+
+        $this->assertSame(Plugin::SOURCE_MARKETPLACE, Plugin::where('slug', $slug)->value('source'));
+    }
+
+    public function test_update_refuses_a_same_named_plugin_that_was_not_installed_from_the_marketplace(): void
+    {
+        $slug = $this->slug();
+        $this->makeFixturePlugin(['version' => '1.0.0'], ['local-only.txt' => 'mine'], $slug);
+
+        $bytes = $this->zipBytes($slug, ['version' => '2.0.0']);
+        $this->fakeMarketplace($this->entry($slug, $bytes, ['version' => '2.0.0']), $bytes);
+
+        $this->actingAs($this->admin)
+            ->post(route('plugins.marketplace.update', $slug))
+            ->assertSessionHas('error', fn ($e) => str_contains($e, 'not installed from the marketplace'));
+
+        $this->assertFileExists(base_path("plugins/{$slug}/local-only.txt"));
+        Http::assertNotSent(fn (Request $r) => str_ends_with($r->url(), '/download'));
+    }
+
+    public function test_the_marketplace_tab_does_not_offer_updates_for_local_plugins(): void
+    {
+        $slug = $this->slug();
+        $bytes = $this->zipBytes($slug);
+        $this->fakeMarketplace($this->entry($slug, $bytes, ['version' => '2.0.0']), $bytes);
+        $this->makeFixturePlugin(['version' => '1.0.0'], [], $slug);
+
+        $this->actingAs($this->admin)
+            ->get(route('plugins.marketplace'))
+            ->assertInertia(fn ($page) => $page
+                ->where('marketplace.plugins.0.installed_version', '1.0.0')
+                ->where('marketplace.plugins.0.update_available', false)
+                ->where('marketplace.plugins.0.installed_from_marketplace', false)
+            );
+    }
+
+    // ---------------------------------------------------------------- catalog links and download size
+
+    public function test_marketplace_icons_must_use_https(): void
+    {
+        $slug = $this->slug();
+        $bytes = $this->zipBytes($slug);
+        $this->fakeMarketplace($this->entry($slug, $bytes, ['icon' => 'http://cdn.example.com/icon.png']), $bytes);
+
+        $this->actingAs($this->admin)
+            ->get(route('plugins.marketplace'))
+            ->assertInertia(fn ($page) => $page->where('marketplace.plugins.0.icon', null));
+    }
+
+    public function test_an_https_marketplace_icon_is_kept(): void
+    {
+        $slug = $this->slug();
+        $bytes = $this->zipBytes($slug);
+        $this->fakeMarketplace($this->entry($slug, $bytes, ['icon' => 'https://cdn.example.com/icon.png']), $bytes);
+
+        $this->actingAs($this->admin)
+            ->get(route('plugins.marketplace'))
+            ->assertInertia(fn ($page) => $page->where('marketplace.plugins.0.icon', 'https://cdn.example.com/icon.png'));
+    }
+
+    public function test_an_oversized_download_without_a_content_length_is_refused_and_not_kept(): void
+    {
+        config(['marketplace.max_download_bytes' => 100]);
+        $slug = $this->slug();
+        $bytes = $this->zipBytes($slug);
+        $this->assertGreaterThan(100, strlen($bytes));
+        $this->fakeMarketplace($this->entry($slug, $bytes), $bytes);
+
+        $this->install($slug)->assertSessionHas('error', fn ($e) => str_contains($e, 'size limit'));
+
+        $this->assertDirectoryDoesNotExist(base_path("plugins/{$slug}"));
+        $this->assertSame([], glob(storage_path('app/marketplace-downloads/*')) ?: []);
+    }
+
+    public function test_the_download_is_streamed_to_disk_with_a_byte_cap(): void
+    {
+        // The body goes to a temp file (sink) and a progress callback aborts
+        // the transfer past the cap, so an endless or lying response is never
+        // buffered whole in memory.
+        $options = app(MarketplaceClient::class)->downloadOptions('/tmp/x.zip', 100);
+
+        $this->assertSame('/tmp/x.zip', $options['sink']);
+        $this->assertIsCallable($options['progress']);
+        $this->assertIsCallable($options['on_headers']);
+
+        $options['progress'](0, 100);
+        $this->expectException(\RuntimeException::class);
+        $options['progress'](0, 101);
+    }
+
     // ---------------------------------------------------------------- signed manifest (downgrade / substitution)
 
     public function test_an_older_signed_package_cannot_be_replayed_as_an_update(): void
     {
         $slug = $this->slug();
         $this->makeFixturePlugin(['version' => '2.0.0'], [], $slug);
+        $this->markMarketplaceInstalled($slug);
 
         // A genuine, marketplace-signed 1.0.0 package from an earlier release,
         // served while the (unsigned) catalog claims 3.0.0.
@@ -554,6 +664,7 @@ final class PluginMarketplaceTest extends TestCase
     {
         $slug = $this->slug();
         $this->makeFixturePlugin(['version' => '2.0.0'], [], $slug);
+        $this->markMarketplaceInstalled($slug);
 
         // Everything is consistent and genuinely signed, but it is 1.0.0: the
         // listing is what lies about being newer.

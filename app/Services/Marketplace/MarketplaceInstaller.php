@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Services\Marketplace;
 
 use App\Models\Auth\Organization;
+use App\Models\Plugin;
 use App\Services\PluginService;
 use App\Support\AppVersion;
 use App\Support\ReleaseSignatureVerifier;
@@ -56,6 +57,7 @@ final class MarketplaceInstaller
 
         try {
             $this->plugins->installFromZip($zip, $slug, $version);
+            Plugin::updateOrCreate(['slug' => $slug], ['source' => Plugin::SOURCE_MARKETPLACE]);
         } catch (\RuntimeException $e) {
             throw new MarketplaceException("{$name} could not be installed: {$e->getMessage()}", 0, $e);
         } finally {
@@ -95,6 +97,12 @@ final class MarketplaceInstaller
         $installed = $this->installedVersion($slug);
         if ($installed === null) {
             throw new MarketplaceException("{$name} is not installed. Use Install instead.");
+        }
+
+        // Never overwrite a plugin the marketplace did not install (an upload
+        // or a hand-copied plugin that happens to share this slug).
+        if (! self::installedFromMarketplace($slug)) {
+            throw new MarketplaceException("A plugin named \"{$slug}\" is installed on this server, but it was not installed from the marketplace, so the marketplace will not replace it. Delete it first to install the marketplace version.");
         }
 
         if (! self::isNewer((string) $entry['version'], $installed)) {
@@ -143,6 +151,11 @@ final class MarketplaceInstaller
         $data = json_decode((string) file_get_contents($manifest), true);
 
         return is_array($data) && is_string($data['version'] ?? null) ? $data['version'] : '0';
+    }
+
+    public static function installedFromMarketplace(string $slug): bool
+    {
+        return Plugin::where('slug', $slug)->value('source') === Plugin::SOURCE_MARKETPLACE;
     }
 
     public static function isNewer(string $available, string $installed): bool
