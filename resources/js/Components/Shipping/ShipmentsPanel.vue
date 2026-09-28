@@ -77,6 +77,9 @@ const formatMoney = (amount, currency) => {
         </div>
 
         <div class="p-5">
+            <p v-if="shipping.awaitingApproval" class="mb-3 rounded-md border border-status-warning/20 bg-status-warning-soft px-3 py-2 text-xs text-status-warning">
+                {{ t('orders.approval.blocksShipping') }}
+            </p>
             <div v-if="shipments.length" class="space-y-3">
                 <div
                     v-for="shipment in shipments"
@@ -111,7 +114,7 @@ const formatMoney = (amount, currency) => {
 
                     <ul class="mt-3 space-y-0.5 text-xs text-text-secondary">
                         <li v-for="item in shipment.items" :key="item.order_item_id">
-                            <span class="tabular-nums">{{ item.quantity }}</span> × {{ item.product_name }}
+                            <span class="tabular-nums">{{ item.quantity }}</span> × {{ item.product_name }}<template v-if="item.variant_title"> ({{ item.variant_title }})</template>
                         </li>
                     </ul>
 

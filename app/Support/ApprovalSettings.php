@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Support;
 
+use App\Enums\OrderApprovalStatus;
 use App\Models\Auth\Organization;
 
 /**
@@ -26,6 +27,7 @@ final class ApprovalSettings
         public readonly ?float $stockAdjustmentsValueThreshold = null,
         public readonly bool $stockTransfersEnabled = false,
         public readonly bool $adminsCanSelfApprove = true,
+        public readonly bool $ordersEnabled = false,
     ) {}
 
     public static function forOrganization(Organization|int|null $organization): self
@@ -54,6 +56,7 @@ final class ApprovalSettings
             stockAdjustmentsValueThreshold: self::float($raw['stock_adjustments_value_threshold'] ?? null),
             stockTransfersEnabled: (bool) ($raw['stock_transfers_enabled'] ?? false),
             adminsCanSelfApprove: (bool) ($raw['admins_can_self_approve'] ?? true),
+            ordersEnabled: (bool) ($raw['orders_enabled'] ?? false),
         );
     }
 
@@ -70,7 +73,17 @@ final class ApprovalSettings
             'stock_adjustments_value_threshold' => $this->stockAdjustmentsValueThreshold,
             'stock_transfers_enabled' => $this->stockTransfersEnabled,
             'admins_can_self_approve' => $this->adminsCanSelfApprove,
+            'orders_enabled' => $this->ordersEnabled,
         ];
+    }
+
+    /**
+     * The approval status a new sales order starts in: pending when the
+     * organization requires order approval, otherwise not required.
+     */
+    public function initialOrderApprovalStatus(): OrderApprovalStatus
+    {
+        return $this->ordersEnabled ? OrderApprovalStatus::PENDING : OrderApprovalStatus::NOT_REQUIRED;
     }
 
     /**

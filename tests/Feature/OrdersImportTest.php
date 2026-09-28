@@ -139,6 +139,20 @@ final class OrdersImportTest extends TestCase
         $this->assertSame(0, StockAdjustment::count());
     }
 
+    public function test_historical_orders_import_even_when_the_organization_requires_order_approval(): void
+    {
+        // Historical rows are past sales: they are not held for approval, so
+        // a delivered order imports as delivered.
+        $this->org->forceFill(['settings' => ['approvals' => ['orders_enabled' => true]]])->save();
+
+        $import = $this->import(['OLD-2,2024-06-01,delivered,Acme Ltd,,WID-1,,1,10,,,'], historical: true);
+
+        $this->assertSame([], $import->getStats()['errors']);
+        $order = Order::where('external_reference', 'OLD-2')->sole();
+        $this->assertSame('delivered', $order->status->value);
+        $this->assertSame('not_required', $order->approval_status->value);
+    }
+
     public function test_a_cancelled_order_never_moves_stock(): void
     {
         $this->import(['C-1,2026-01-05,cancelled,Acme,,WID-1,,4,10,,,']);

@@ -126,6 +126,11 @@ class UpdateOrderMutation extends Mutation
             unset($updateData['status']);
         }
 
+        // An order waiting for approval cannot ship or be delivered yet.
+        if (isset($updateData['status']) && $order->approvalBlocks($updateData['status'])) {
+            throw new Error(Order::APPROVAL_PENDING_MESSAGE);
+        }
+
         // Handle status change timestamps
         if (isset($updateData['status'])) {
             if ($updateData['status'] === 'shipped' && !$order->shipped_at) {

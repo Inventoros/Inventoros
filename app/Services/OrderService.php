@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Services;
 
 use App\Enums\DiscountType;
+use App\Enums\OrderApprovalStatus;
 use App\Enums\OrderStatus;
 use App\Enums\PaymentStatus;
 use App\Enums\ShipmentStatus;
@@ -20,6 +21,7 @@ use App\Models\Order\ReturnOrder;
 use App\Models\Order\ReturnOrderItem;
 use App\Models\Shipping\Shipment;
 use App\Models\User;
+use App\Support\ApprovalSettings;
 use App\Support\Money;
 use App\Support\OrderApprovalGate;
 use App\Support\SequenceNumberRetry;
@@ -99,7 +101,10 @@ final class OrderService
         $data['organization_id'] = $creator->organization_id;
         $data['created_by'] = $creator->id;
         $data['source'] = $source;
-        $data['approval_status'] ??= 'pending';
+        // Orders wait for approval only when the organization requires it.
+        $data['approval_status'] ??= ApprovalSettings::forOrganization((int) $creator->organization_id)
+            ->initialOrderApprovalStatus()->value;
+        $this->assertCreatableWhileAwaitingApproval($data);
 
         $order = SequenceNumberRetry::create(fn () => DB::transaction(function () use ($data, $creator, $adjustStock) {
             $orgId = $data['organization_id'];
@@ -930,6 +935,10 @@ final class OrderService
                 throw new \RuntimeException('A cancelled order cannot be reactivated. Create a new order instead.');
             }
 
+            if ($locked->approvalBlocks($to)) {
+                throw new InvalidStateException(Order::APPROVAL_PENDING_MESSAGE, 'approval_pending');
+            }
+
             $attributes = ['status' => $to];
 
             if (in_array($to, [OrderStatus::SHIPPED, OrderStatus::DELIVERED], true) && ! $locked->shipped_at) {
@@ -944,6 +953,27 @@ final class OrderService
 
             return $locked;
         });
+    }
+
+    /**
+     * An order created waiting for approval cannot start out shipped or
+     * delivered.
+     *
+     * @param  array<string, mixed>  $data
+     *
+     * @throws ValidationException
+     */
+    private function assertCreatableWhileAwaitingApproval(array $data): void
+    {
+        $approval = $data['approval_status'] instanceof OrderApprovalStatus
+            ? $data['approval_status']
+            : OrderApprovalStatus::tryFrom((string) $data['approval_status']);
+        $status = $data['status'] ?? null;
+        $status = $status instanceof OrderStatus ? $status : OrderStatus::tryFrom((string) $status);
+
+        if ($approval === OrderApprovalStatus::PENDING && in_array($status, Order::STATUSES_BLOCKED_BY_APPROVAL, true)) {
+            throw ValidationException::withMessages(['status' => Order::APPROVAL_PENDING_MESSAGE]);
+        }
     }
 
     /**

@@ -309,6 +309,27 @@
     "customer": "Customer",
     "noOrdersFound": "No orders found",
     "createFirstOrder": "Create Your First Order",
+    "itemsCol": "Items",
+    "sources": {
+      "manual": "Manual",
+      "api": "API",
+      "graphql": "GraphQL",
+      "mcp": "MCP",
+      "import": "Import",
+      "ebay": "eBay",
+      "shopify": "Shopify",
+      "amazon": "Amazon",
+      "woocommerce": "WooCommerce"
+    },
+    "approval": {
+      "label": "Approval",
+      "not_required": "No approval needed",
+      "pending": "Awaiting approval",
+      "approved": "Approved",
+      "rejected": "Rejected",
+      "blocksShipping": "This order is waiting for approval. It can be processed, but not shipped or delivered until someone approves it.",
+      "statusBlocked": "Shipped and delivered are available once the order is approved."
+    },
     "status": {
       "pending": "Pending",
       "processing": "Processing",
@@ -2284,6 +2305,8 @@
       "thresholdHelp": "An adjustment needs approval when it is over either limit. Leave both blank to require approval for every manual adjustment.",
       "stockTransfers": "Stock transfers need approval before they ship",
       "stockTransfersHelp": "New transfers wait for approval before they can be marked in transit or completed.",
+      "orders": "Sales orders need approval before they ship",
+      "ordersHelp": "New orders wait for approval. They can be processed, but not shipped or delivered, until someone with the approve orders permission approves them. When this is off, orders never wait for approval.",
       "adminsSelfApprove": "Admins can approve their own requests",
       "adminsSelfApproveHelp": "Nobody else can approve a request they raised. Turn this off to hold admins to the same rule."
     }

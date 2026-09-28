@@ -52,7 +52,7 @@ class ShipmentGraphQLTest extends TestCase
         $this->gql("{ order(id: {$order->id}) { status approval_status shipments { id carrier carrier_name service tracking_number tracking_url status cost shipped_at delivered_at items { order_item_id product_name quantity } } } }")
             ->assertJsonMissingPath('errors')
             ->assertJsonPath('data.order.status', 'shipped')
-            ->assertJsonPath('data.order.approval_status', 'pending')
+            ->assertJsonPath('data.order.approval_status', 'not_required')
             ->assertJsonPath('data.order.shipments.0.carrier', 'manual')
             ->assertJsonPath('data.order.shipments.0.carrier_name', 'UPS')
             ->assertJsonPath('data.order.shipments.0.tracking_number', '1Z999AA10123456784')

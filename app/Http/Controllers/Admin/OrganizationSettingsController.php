@@ -95,6 +95,7 @@ class OrganizationSettingsController extends Controller
             'stock_adjustments_value_threshold' => 'nullable|numeric|min:0|max:999999999',
             'stock_transfers_enabled' => 'boolean',
             'admins_can_self_approve' => 'boolean',
+            'orders_enabled' => 'boolean',
         ]);
 
         $organization = Organization::findOrFail($request->user()->organization_id);

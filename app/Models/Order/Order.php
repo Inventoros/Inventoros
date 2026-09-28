@@ -8,6 +8,7 @@ use App\Enums\DiscountType;
 use App\Enums\OrderApprovalStatus;
 use App\Enums\OrderStatus;
 use App\Enums\PaymentStatus;
+use App\Exceptions\InvalidStateException;
 use App\Models\Auth\Organization;
 use App\Models\Concerns\BelongsToOrganization;
 use App\Models\Customer;
@@ -362,6 +363,20 @@ class Order extends Model
     }
 
     /**
+     * Backstop for every surface (web, REST, GraphQL, MCP, imports, plugins):
+     * an order waiting for approval never saves as shipped or delivered.
+     * Surfaces check approvalBlocks() first to return their own error shape.
+     */
+    protected static function booted(): void
+    {
+        static::saving(function (Order $order) {
+            if ($order->isDirty('status') && $order->approvalBlocks($order->status)) {
+                throw new InvalidStateException(self::APPROVAL_PENDING_MESSAGE, 'approval_pending');
+            }
+        });
+    }
+
+    /**
      * Scope a query to filter by approval status.
      *
      * @param  Builder<static>  $query
@@ -405,6 +420,29 @@ class Order extends Model
     {
         return $this->approval_status === OrderApprovalStatus::PENDING
             && $this->status !== OrderStatus::CANCELLED;
+    }
+
+    /**
+     * Statuses an order cannot reach while it waits for approval: the goods
+     * would leave before anyone approved the sale. Processing is allowed.
+     */
+    public const STATUSES_BLOCKED_BY_APPROVAL = [OrderStatus::SHIPPED, OrderStatus::DELIVERED];
+
+    public const APPROVAL_PENDING_MESSAGE = 'This order is waiting for approval. Approve it before shipping or delivering it.';
+
+    /**
+     * Whether moving this order to $status is blocked because it is still
+     * waiting for an approval decision.
+     */
+    public function approvalBlocks(OrderStatus|string|null $status): bool
+    {
+        if ($status === null || ! $this->isPendingApproval()) {
+            return false;
+        }
+
+        $status = $status instanceof OrderStatus ? $status : OrderStatus::tryFrom($status);
+
+        return in_array($status, self::STATUSES_BLOCKED_BY_APPROVAL, true);
     }
 
     /**

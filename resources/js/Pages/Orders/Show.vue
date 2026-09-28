@@ -12,16 +12,23 @@ import { Head, Link, router, useForm } from '@inertiajs/vue3';
 import { computed, ref } from 'vue';
 import { usePermissions } from '@/composables/usePermissions';
 import { formatCalendarDate, todayIsoDate } from '@/lib/dates';
+import { approvalStatusLabel, approvalStatusVariant, orderSourceLabel, orderStatusLabel, orderStatusVariant } from '@/lib/orderLabels';
 import { useI18n } from 'vue-i18n';
 import { ArrowLeft, Pencil, Download, Eye, Undo2, Trash2, X, AlertTriangle, PackageOpen, Mail, Plus, RotateCcw, Wallet } from 'lucide-vue-next';
 
-const { t } = useI18n();
+const { t, te } = useI18n();
+const statusText = (status) => orderStatusLabel(status, { t, te });
+const sourceText = (source) => orderSourceLabel(source, { t, te });
+const approvalText = (status) => approvalStatusLabel(status, { t, te });
 
 const { hasPermission } = usePermissions();
 
 const props = defineProps({
     order: Object,
     canApprove: Boolean,
+    // False when the organization did not require approval for this order.
+    approvalRequired: { type: Boolean, default: true },
+    awaitingApproval: { type: Boolean, default: false },
     canRecordPayments: Boolean,
     paymentMethods: { type: Array, default: () => [] },
     pluginComponents: Object,
@@ -133,21 +140,7 @@ const submitApproval = () => {
     });
 };
 
-const statusVariant = (status) =>
-    ({
-        pending: 'warning',
-        processing: 'info',
-        shipped: 'brand',
-        delivered: 'success',
-        cancelled: 'danger',
-    }[status] || 'neutral');
-
-const approvalStatusVariant = (status) =>
-    ({
-        pending: 'warning',
-        approved: 'success',
-        rejected: 'danger',
-    }[status] || 'neutral');
+const statusVariant = orderStatusVariant;
 
 const deleteOrder = () => {
     deleting.value = true;
@@ -205,8 +198,8 @@ const formatOrderDate = (date, long = false) =>
             :description="`Created on ${formatOrderDate(order.order_date)}`"
         >
             <template #actions>
-                <Badge :variant="statusVariant(order.status)" size="sm" dot>{{ order.status }}</Badge>
-                <Badge v-if="order.approval_status" :variant="approvalStatusVariant(order.approval_status)" size="sm" dot>{{ order.approval_status }}</Badge>
+                <Badge :variant="statusVariant(order.status)" size="sm" dot>{{ statusText(order.status) }}</Badge>
+                <Badge v-if="approvalRequired && order.approval_status" :variant="approvalStatusVariant(order.approval_status)" size="sm" dot>{{ approvalText(order.approval_status) }}</Badge>
                 <Badge v-if="order.payment_status" :variant="paymentStatusVariant(order.payment_status)" size="sm" dot>{{ t(`payments.status.${order.payment_status}`) }}</Badge>
                 <Button
                     v-if="hasPermission('view_orders')"
@@ -268,6 +261,11 @@ const formatOrderDate = (date, long = false) =>
         <!-- Plugin Slot: Header -->
         <PluginSlot slot="header" :components="pluginComponents?.header" />
 
+        <div v-if="awaitingApproval" class="mt-4 flex items-start gap-2 rounded-lg border border-status-warning/20 bg-status-warning-soft p-3">
+            <AlertTriangle :size="16" class="mt-0.5 shrink-0 text-status-warning" />
+            <p class="text-sm text-status-warning">{{ t('orders.approval.blocksShipping') }}</p>
+        </div>
+
         <!-- Plugin tabs: none registered renders the core content unchanged -->
         <PluginTabs :components="pluginComponents?.tabs">
             <div class="mt-6 grid grid-cols-1 gap-4 lg:grid-cols-3">
@@ -285,6 +283,7 @@ const formatOrderDate = (date, long = false) =>
                                 >
                                     <div class="min-w-0 basis-full xl:flex-1 xl:basis-0">
                                         <p class="font-medium text-text-primary">{{ item.product_name }}</p>
+                                        <p v-if="item.variant_title" class="text-xs text-text-secondary">{{ t('orders.create.variant') }}: {{ item.variant_title }}</p>
                                         <p class="text-xs text-text-tertiary">SKU: {{ item.sku }}</p>
                                         <p v-if="parseFloat(item.discount_amount) > 0" class="text-xs text-text-secondary">
                                             {{ t('discounts.discount') }}<template v-if="item.discount_type === 'percent'"> ({{ parseFloat(item.discount_value) }}%)</template>: -{{ money(item.discount_amount) }}
@@ -539,14 +538,14 @@ const formatOrderDate = (date, long = false) =>
                                 <div>
                                     <dt class="text-xs text-text-tertiary">{{ t('orders.source') }}</dt>
                                     <dd class="mt-1">
-                                        <Badge variant="brand" size="sm" class="capitalize">{{ order.source }}</Badge>
+                                        <Badge variant="brand" size="sm">{{ sourceText(order.source) }}</Badge>
                                     </dd>
                                 </div>
 
                                 <div>
                                     <dt class="text-xs text-text-tertiary">{{ t('common.status') }}</dt>
                                     <dd class="mt-1">
-                                        <Badge :variant="statusVariant(order.status)" size="sm" dot class="capitalize">{{ order.status }}</Badge>
+                                        <Badge :variant="statusVariant(order.status)" size="sm" dot>{{ statusText(order.status) }}</Badge>
                                     </dd>
                                 </div>
 
@@ -587,14 +586,14 @@ const formatOrderDate = (date, long = false) =>
                     </Card>
 
                     <!-- Approval Status -->
-                    <Card v-if="order.approval_status" :padded="false">
+                    <Card v-if="approvalRequired && order.approval_status" :padded="false">
                         <div class="px-5 pt-5"><h3 class="text-sm font-semibold text-text-primary">{{ t('orders.show.approvalStatus') }}</h3></div>
                         <div class="p-5">
                             <dl class="space-y-3">
                                 <div>
                                     <dt class="text-xs text-text-tertiary">{{ t('common.status') }}</dt>
                                     <dd class="mt-1">
-                                        <Badge :variant="approvalStatusVariant(order.approval_status)" size="sm" dot class="capitalize">{{ order.approval_status }}</Badge>
+                                        <Badge :variant="approvalStatusVariant(order.approval_status)" size="sm" dot>{{ approvalText(order.approval_status) }}</Badge>
                                     </dd>
                                 </div>
 

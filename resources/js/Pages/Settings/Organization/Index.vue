@@ -79,6 +79,7 @@ const approvalsForm = useForm({
     stock_adjustments_value_threshold: props.approvalSettings.stock_adjustments_value_threshold ?? '',
     stock_transfers_enabled: !!props.approvalSettings.stock_transfers_enabled,
     admins_can_self_approve: props.approvalSettings.admins_can_self_approve ?? true,
+    orders_enabled: !!props.approvalSettings.orders_enabled,
 });
 
 const submitApprovals = () => {
@@ -374,7 +375,7 @@ const tabs = [
                         <!-- Purchase orders -->
                         <fieldset class="space-y-2">
                             <label :class="toggleRow">
-                                <input v-model="approvalsForm.purchase_orders_enabled" type="checkbox" :class="toggleBox" :disabled="!canManageOrganization" />
+                                <input v-model="approvalsForm.purchase_orders_enabled" type="checkbox" :class="toggleBox" :disabled="!canManage" />
                                 <span>
                                     <span class="block text-sm font-medium text-text-primary">{{ t('approvals.settings.purchaseOrders') }}</span>
                                     <span class="block text-xs text-text-tertiary">{{ t('approvals.settings.purchaseOrdersHelp') }}</span>
@@ -382,7 +383,7 @@ const tabs = [
                             </label>
                             <div v-if="approvalsForm.purchase_orders_enabled" class="pl-8 sm:max-w-xs">
                                 <label for="po_threshold" :class="fieldLabel">{{ t('approvals.settings.poThreshold') }}</label>
-                                <input id="po_threshold" v-model="approvalsForm.purchase_orders_threshold" type="number" min="0" step="0.01" inputmode="decimal" :class="fieldInput" :disabled="!canManageOrganization" :placeholder="t('approvals.settings.everyOne')" />
+                                <input id="po_threshold" v-model="approvalsForm.purchase_orders_threshold" type="number" min="0" step="0.01" inputmode="decimal" :class="fieldInput" :disabled="!canManage" :placeholder="t('approvals.settings.everyOne')" />
                                 <p v-if="approvalsForm.errors.purchase_orders_threshold" :class="fieldError">{{ approvalsForm.errors.purchase_orders_threshold }}</p>
                             </div>
                         </fieldset>
@@ -390,7 +391,7 @@ const tabs = [
                         <!-- Stock adjustments -->
                         <fieldset class="space-y-2">
                             <label :class="toggleRow">
-                                <input v-model="approvalsForm.stock_adjustments_enabled" type="checkbox" :class="toggleBox" :disabled="!canManageOrganization" />
+                                <input v-model="approvalsForm.stock_adjustments_enabled" type="checkbox" :class="toggleBox" :disabled="!canManage" />
                                 <span>
                                     <span class="block text-sm font-medium text-text-primary">{{ t('approvals.settings.stockAdjustments') }}</span>
                                     <span class="block text-xs text-text-tertiary">{{ t('approvals.settings.stockAdjustmentsHelp') }}</span>
@@ -399,12 +400,12 @@ const tabs = [
                             <div v-if="approvalsForm.stock_adjustments_enabled" class="grid grid-cols-1 gap-4 pl-8 sm:grid-cols-2">
                                 <div>
                                     <label for="adj_qty_threshold" :class="fieldLabel">{{ t('approvals.settings.quantityThreshold') }}</label>
-                                    <input id="adj_qty_threshold" v-model="approvalsForm.stock_adjustments_quantity_threshold" type="number" min="0" step="1" inputmode="numeric" :class="fieldInput" :disabled="!canManageOrganization" :placeholder="t('approvals.settings.noLimit')" />
+                                    <input id="adj_qty_threshold" v-model="approvalsForm.stock_adjustments_quantity_threshold" type="number" min="0" step="1" inputmode="numeric" :class="fieldInput" :disabled="!canManage" :placeholder="t('approvals.settings.noLimit')" />
                                     <p v-if="approvalsForm.errors.stock_adjustments_quantity_threshold" :class="fieldError">{{ approvalsForm.errors.stock_adjustments_quantity_threshold }}</p>
                                 </div>
                                 <div>
                                     <label for="adj_value_threshold" :class="fieldLabel">{{ t('approvals.settings.valueThreshold') }}</label>
-                                    <input id="adj_value_threshold" v-model="approvalsForm.stock_adjustments_value_threshold" type="number" min="0" step="0.01" inputmode="decimal" :class="fieldInput" :disabled="!canManageOrganization" :placeholder="t('approvals.settings.noLimit')" />
+                                    <input id="adj_value_threshold" v-model="approvalsForm.stock_adjustments_value_threshold" type="number" min="0" step="0.01" inputmode="decimal" :class="fieldInput" :disabled="!canManage" :placeholder="t('approvals.settings.noLimit')" />
                                     <p v-if="approvalsForm.errors.stock_adjustments_value_threshold" :class="fieldError">{{ approvalsForm.errors.stock_adjustments_value_threshold }}</p>
                                 </div>
                                 <p class="text-xs text-text-tertiary sm:col-span-2">{{ t('approvals.settings.thresholdHelp') }}</p>
@@ -413,23 +414,32 @@ const tabs = [
 
                         <!-- Stock transfers -->
                         <label :class="toggleRow">
-                            <input v-model="approvalsForm.stock_transfers_enabled" type="checkbox" :class="toggleBox" :disabled="!canManageOrganization" />
+                            <input v-model="approvalsForm.stock_transfers_enabled" type="checkbox" :class="toggleBox" :disabled="!canManage" />
                             <span>
                                 <span class="block text-sm font-medium text-text-primary">{{ t('approvals.settings.stockTransfers') }}</span>
                                 <span class="block text-xs text-text-tertiary">{{ t('approvals.settings.stockTransfersHelp') }}</span>
                             </span>
                         </label>
 
+                        <!-- Sales orders -->
+                        <label :class="toggleRow">
+                            <input v-model="approvalsForm.orders_enabled" type="checkbox" :class="toggleBox" :disabled="!canManage" />
+                            <span>
+                                <span class="block text-sm font-medium text-text-primary">{{ t('approvals.settings.orders') }}</span>
+                                <span class="block text-xs text-text-tertiary">{{ t('approvals.settings.ordersHelp') }}</span>
+                            </span>
+                        </label>
+
                         <!-- Self-approval -->
                         <label :class="[toggleRow, 'border-t border-border-subtle pt-4']">
-                            <input v-model="approvalsForm.admins_can_self_approve" type="checkbox" :class="toggleBox" :disabled="!canManageOrganization" />
+                            <input v-model="approvalsForm.admins_can_self_approve" type="checkbox" :class="toggleBox" :disabled="!canManage" />
                             <span>
                                 <span class="block text-sm font-medium text-text-primary">{{ t('approvals.settings.adminsSelfApprove') }}</span>
                                 <span class="block text-xs text-text-tertiary">{{ t('approvals.settings.adminsSelfApproveHelp') }}</span>
                             </span>
                         </label>
 
-                        <div v-if="canManageOrganization" class="flex justify-end">
+                        <div v-if="canManage" class="flex justify-end">
                             <Button type="submit" variant="default" :loading="approvalsForm.processing" :disabled="approvalsForm.processing">
                                 {{ t('common.saveChanges') }}
                             </Button>

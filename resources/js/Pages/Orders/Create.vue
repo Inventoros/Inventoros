@@ -18,6 +18,9 @@ const BarcodeScannerModal = defineAsyncComponent(() => import('@/Components/Barc
 const { t } = useI18n();
 
 const props = defineProps({
+    // The organization requires order approval: a new order waits for it
+    // and cannot start out shipped or delivered.
+    ordersNeedApproval: { type: Boolean, default: false },
     products: Array,
 });
 
@@ -401,10 +404,11 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                                 <select id="status" v-model="form.status" :class="fieldInput" required>
                                     <option value="pending">{{ t('orders.status.pending') }}</option>
                                     <option value="processing">{{ t('orders.status.processing') }}</option>
-                                    <option value="shipped">{{ t('orders.status.shipped') }}</option>
-                                    <option value="delivered">{{ t('orders.status.delivered') }}</option>
+                                    <option value="shipped" :disabled="ordersNeedApproval">{{ t('orders.status.shipped') }}</option>
+                                    <option value="delivered" :disabled="ordersNeedApproval">{{ t('orders.status.delivered') }}</option>
                                     <option value="cancelled">{{ t('orders.status.cancelled') }}</option>
                                 </select>
+                                <p v-if="ordersNeedApproval" class="mt-1 text-xs text-text-tertiary">{{ t('orders.approval.statusBlocked') }}</p>
                                 <p v-if="form.errors.status" :class="fieldError">{{ form.errors.status }}</p>
                             </div>
                             <div>

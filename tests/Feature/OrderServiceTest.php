@@ -81,7 +81,8 @@ class OrderServiceTest extends TestCase
         $this->assertSame($this->organization->id, $order->organization_id);
         $this->assertSame($this->creator->id, $order->created_by);
         $this->assertSame('manual', $order->source);
-        $this->assertSame('pending', $order->approval_status->value);
+        // Order approval is off unless the organization turns it on.
+        $this->assertSame('not_required', $order->approval_status->value);
         $this->assertNotEmpty($order->order_number);
         $this->assertSame('30.00', (string) $order->subtotal);
     }

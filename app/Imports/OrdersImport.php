@@ -378,6 +378,9 @@ final class OrdersImport implements ToCollection, WithHeadingRow
                     'customer_name' => $customerName,
                     'customer_email' => $customerEmail,
                     'status' => $status,
+                    // A historical order (stock untouched) records a sale that
+                    // already happened: there is nothing left to approve.
+                    'approval_status' => $adjustStock ? null : 'not_required',
                     'order_date' => $header['order_date'],
                     'shipped_at' => $header['shipped_at'] ?? null,
                     'delivered_at' => $header['delivered_at'] ?? null,

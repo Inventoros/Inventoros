@@ -87,6 +87,10 @@ final class ShipmentService
                 throw new ShippingException("Order {$locked->order_number} is {$locked->status->value} and cannot be shipped.");
             }
 
+            if ($locked->isPendingApproval()) {
+                throw new ShippingException("Order {$locked->order_number} is waiting for approval and cannot be shipped until it is approved.");
+            }
+
             $lines = $this->resolveLines($locked, $data['items'] ?? []);
             $warehouseId = $this->resolveWarehouse($locked, $data['warehouse_id'] ?? null, $settings);
 

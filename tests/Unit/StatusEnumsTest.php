@@ -20,7 +20,7 @@ class StatusEnumsTest extends TestCase
     public function test_order_approval_status_values_match_existing_column_shape(): void
     {
         $this->assertSame(
-            ['pending', 'approved', 'rejected'],
+            ['not_required', 'pending', 'approved', 'rejected'],
             OrderApprovalStatus::values()
         );
     }
