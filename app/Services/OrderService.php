@@ -21,6 +21,7 @@ use App\Models\Order\ReturnOrderItem;
 use App\Models\Shipping\Shipment;
 use App\Models\User;
 use App\Support\Money;
+use App\Support\OrderApprovalGate;
 use App\Support\SequenceNumberRetry;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Arr;
@@ -367,6 +368,8 @@ final class OrderService
      */
     public function approve(Order $order, User $approver, ?string $notes = null): Order
     {
+        OrderApprovalGate::assertMayApprove($order, $approver);
+
         $approved = DB::transaction(function () use ($order, $approver, $notes) {
             $locked = Order::whereKey($order->getKey())->lockForUpdate()->firstOrFail();
 
