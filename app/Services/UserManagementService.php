@@ -55,6 +55,11 @@ final class UserManagementService
      */
     public function update(User $actor, User $user, array $data): User
     {
+        // Check the TARGET before anything is written: the role check below
+        // only covers what is being assigned, so without this a delegated
+        // user administrator could reset an admin's password or email.
+        RoleAssignmentGuard::authorizeTarget($user, $actor);
+
         $this->assertCanAssignRoles($data['role_ids'] ?? [], $actor, $data['role']);
 
         // Don't allow removing admin from the last admin
@@ -110,6 +115,14 @@ final class UserManagementService
             'roles_added' => array_values(array_map(fn ($id) => $names[$id] ?? $id, $changes['attached'])),
             'roles_removed' => array_values(array_map(fn ($id) => $names[$id] ?? $id, $changes['detached'])),
         ]);
+
+        // Attaching the Administrator system role makes the user an admin
+        // just like the base role does, so admins are alerted the same way.
+        // A base-role promotion is alerted by UserSecurityObserver instead.
+        $grantsAdmin = Role::whereIn('id', $changes['attached'])->where('slug', 'system-administrator')->exists();
+        if ($grantsAdmin && $user->role !== 'admin') {
+            app(UserActivityAlertService::class)->notifyPromotedToAdmin($user, $actor);
+        }
     }
 
     /**

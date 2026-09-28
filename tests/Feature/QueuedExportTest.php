@@ -187,6 +187,44 @@ class QueuedExportTest extends TestCase
         $response->assertDownload('products_ready.xlsx');
     }
 
+    public function test_only_the_exporter_or_an_admin_can_download_an_export(): void
+    {
+        Storage::fake('local');
+        $path = 'exports/'.$this->organization->id.'/mine.xlsx';
+        Storage::disk('local')->put($path, 'fake-xlsx-bytes');
+
+        $owner = User::create([
+            'name' => 'Owner', 'email' => 'owner@org.com', 'password' => bcrypt('password'),
+            'organization_id' => $this->organization->id, 'role' => 'member',
+        ]);
+        $colleague = User::create([
+            'name' => 'Colleague', 'email' => 'colleague@org.com', 'password' => bcrypt('password'),
+            'organization_id' => $this->organization->id, 'role' => 'member',
+        ]);
+        $role = Role::where('slug', 'export-role')->first() ?? Role::create([
+            'slug' => 'export-role-member', 'name' => 'Exporter', 'is_system' => false,
+            'organization_id' => $this->organization->id, 'permissions' => ['export_data', 'view_products'],
+        ]);
+        $owner->roles()->syncWithoutDetaching([$role->id]);
+        $colleague->roles()->syncWithoutDetaching([$role->id]);
+
+        $export = DataExport::create([
+            'organization_id' => $this->organization->id,
+            'user_id' => $owner->id,
+            'type' => 'products',
+            'filename' => 'products_mine.xlsx',
+            'disk' => 'local',
+            'path' => $path,
+            'status' => 'completed',
+            'completed_at' => now(),
+        ]);
+
+        $this->actingAs($colleague)->get(route('import-export.download', $export))->assertNotFound();
+        $this->actingAs($owner)->get(route('import-export.download', $export))->assertOk();
+        // $this->exporter is an organization admin.
+        $this->actingAs($this->exporter)->get(route('import-export.download', $export))->assertOk();
+    }
+
     public function test_download_404_when_not_ready(): void
     {
         $export = DataExport::create([

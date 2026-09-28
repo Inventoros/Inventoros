@@ -126,6 +126,8 @@ All are optional. `.env.example` lists each one with its default.
 | `LOW_STOCK_ALERT_COOLDOWN_MINUTES` | `1440` | Minimum gap between low-stock alerts for one product. |
 | `REPORTS_MAX_ROWS` | `10000` | Row cap for any report. |
 | `REPORTS_PDF_MAX_ROWS` | `1000` | Row cap for report PDFs; CSV and Excel carry the full set. |
+| `DOCUMENT_EMAILS_PER_USER_PER_MINUTE` | `10` | Purchase order and invoice emails one user may send per minute. |
+| `DOCUMENT_EMAILS_PER_ORGANIZATION_PER_DAY` | `500` | Purchase order and invoice emails one organization may send per day. |
 | `RUN_MIGRATIONS` | `false` | Docker image only: migrate on container start. |
 
 EasyPost API keys are entered in Settings > Shipping and stored encrypted, not in `.env`.
@@ -202,6 +204,14 @@ Plugins > Marketplace installs and updates plugins from inventoros.com. Every pa
 - REST reads of categories, locations and stock adjustments require `manage_categories`, `manage_locations` and `manage_stock`.
 - The MCP `create_product` tool requires `create_products`.
 - `settings.organization.users.*` redirects to `/users`, and the webhook `create` and `edit` routes were removed.
+- **Organization email settings.** Each organization's provider is used only for its own mail and never changes the instance's mail config. Mail carrying a sign-in or set-password link (staff password resets and invitations, portal invitations and password resets) always uses the instance mailer, so configure `MAIL_*` in `.env`. An organization with no usable provider uses the instance mailer. SendGrid now sends through its SMTP relay (`smtp.sendgrid.net`, user `apikey`) and "PHP mail" through the sendmail transport (`MAIL_SENDMAIL_PATH`). Mailgun needs `composer require symfony/mailgun-mailer symfony/http-client`; without them the instance mailer is used and a warning is logged.
+- **Document email limits.** Sending purchase orders and invoices (web, REST, MCP) is limited to 10 per user per minute and 500 per organization per day by default. Over the limit REST returns `429` with `error: rate_limited`. Adjust with the `DOCUMENT_EMAILS_*` variables above.
+- **API token minting.** `POST /api/v1/tokens` never grants more than the calling token and the user's permissions. Without `abilities`, an admin using an unrestricted token still gets `*`; a non-admin gets the explicit list of permissions they hold (previously `[]`), and a non-admin holding none gets `422`. Requesting `*` or an ability the caller lacks is a `422`. Existing tokens are unchanged.
+- **Approvals and tokens.** GraphQL `decideApproval` and `requestStockAdjustmentApproval` check token abilities like REST, and the approval listings (REST, GraphQL, MCP) only show request types the token has an ability for.
+- **Order self-approval.** The user who created an order cannot approve it (REST `422`, `error: self_approval`) unless they are an admin and the organization's approvals setting "admins can self-approve" is on (the default).
+- **User management.** Users with `edit_users` or `delete_users` who are not admins get `403` when editing or deleting an admin, a manager, or anyone holding permissions they lack.
+- **Scheduled reports.** Recipients must hold `view_reports` and the view permission of the report's data source; others are rejected when saving and skipped when sending. Review existing schedules after upgrading.
+- **Exports.** A generated export can only be downloaded by the user who requested it, or by an admin.
 
 ### License
 

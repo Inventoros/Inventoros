@@ -476,6 +476,12 @@ class ImportExportController extends Controller
             403,
         );
 
+        // An export belongs to whoever requested it (it may hold data they
+        // filtered for themselves); only they or an admin may fetch it. 404
+        // rather than 403 so ids of colleagues' exports are not confirmed.
+        $user = $request->user();
+        abort_unless((int) $dataExport->user_id === (int) $user->id || $user->isAdmin(), 404);
+
         return Storage::disk($dataExport->disk)->download($dataExport->path, $dataExport->filename);
     }
 }

@@ -221,7 +221,8 @@ Route::prefix('v1')->as('api.')->middleware('throttle:api')->group(function () {
             ->middleware('api.permission:edit_purchase_orders');
 
         // Approvals. Listing is open to every user (it only shows what they
-        // may decide, or their own requests); deciding needs an approve_*
+        // may decide, or their own requests, limited to the kinds of request
+        // a scoped token has an ability for); deciding needs an approve_*
         // permission, checked per type by ApprovalService.
         Route::get('approvals', [ApprovalController::class, 'index']);
         Route::get('approvals/mine', [ApprovalController::class, 'mine']);

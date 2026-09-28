@@ -86,6 +86,7 @@ class PortalLoginController extends Controller
 
         /** @var CustomerContact $contact */
         $contact = Auth::guard('customer')->user();
+        AuthenticatePortalContact::rememberPassword($request, $contact);
         self::recordLogin($this->security, $contact);
 
         return redirect()->to($this->intended($request, $organization));

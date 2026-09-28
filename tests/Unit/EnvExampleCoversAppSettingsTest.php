@@ -15,7 +15,7 @@ class EnvExampleCoversAppSettingsTest extends TestCase
 {
     private const APP_PREFIXES = [
         'INVENTOROS_', 'INVENTORY_', 'REPORTS_', 'EXPORT_', 'IMPORT_',
-        'LOW_STOCK_', 'API_DOCS_', 'REGISTRATION_', 'DEFAULT_CURRENCY', 'ENABLE_GRAPHIQL',
+        'LOW_STOCK_', 'DOCUMENT_EMAILS_', 'API_DOCS_', 'REGISTRATION_', 'DEFAULT_CURRENCY', 'ENABLE_GRAPHIQL',
     ];
 
     public function test_every_app_setting_in_config_is_listed_in_env_example(): void

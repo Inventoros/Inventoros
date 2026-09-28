@@ -10,6 +10,7 @@ use App\Http\Requests\Admin\User\UpdateUserRequest;
 use App\Models\Role;
 use App\Models\User;
 use App\Services\UserManagementService;
+use App\Support\RoleAssignmentGuard;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -179,6 +180,10 @@ class UserController extends Controller
         if ($user->organization_id !== $currentUser->organization_id) {
             abort(403, 'You can only delete users in your organization.');
         }
+
+        // A delegated user administrator may not delete someone more
+        // privileged than themselves (for example an administrator).
+        RoleAssignmentGuard::authorizeTarget($user, $currentUser);
 
         // Don't allow deleting yourself
         if ($user->id === $currentUser->id) {

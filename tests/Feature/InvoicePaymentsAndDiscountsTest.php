@@ -53,6 +53,22 @@ class InvoicePaymentsAndDiscountsTest extends TestCase
         return view('pdf.invoice', $service->orderInvoiceViewData($order->fresh()))->render();
     }
 
+    public function test_the_customer_portal_invoice_hides_payment_references(): void
+    {
+        $order = app(OrderService::class)->create([
+            'customer_name' => 'Acme', 'status' => 'pending', 'order_date' => now()->toDateString(),
+            'items' => [['product_id' => $this->product->id, 'quantity' => 1, 'unit_price' => 50]],
+        ], $this->admin);
+        app(OrderPaymentService::class)->record($order, $this->admin, ['amount' => 30, 'method' => 'card', 'reference' => 'TX-77']);
+
+        $service = app(DocumentPdfService::class);
+        $portal = view('pdf.invoice', $service->orderInvoiceViewData($order->fresh(), forCustomerPortal: true))->render();
+
+        $this->assertStringNotContainsString('TX-77', $portal);
+        $this->assertStringContainsString('USD 30.00', $portal); // the payment itself is still listed
+        $this->assertStringContainsString('TX-77', $this->html($order)); // staff copy keeps it
+    }
+
     public function test_invoice_shows_discounts_payments_and_balance_due(): void
     {
         // 2 x 50 = 100 gross, 10% line discount (10), 5.00 order discount, 4.50 tax.

@@ -51,6 +51,40 @@ class PortalPasswordResetTest extends TestCase
         $this->assertTrue(Hash::check('brand-new-password-9', $contact->fresh()->password));
     }
 
+    public function test_a_password_reset_ends_the_contacts_other_portal_sessions(): void
+    {
+        $org = $this->makeOrganization('Acme Wholesale');
+        $contact = $this->makeContact($this->makeCustomer($org, 'Buyer A'), 'a@buyer.test');
+
+        // A session signed in before the reset (e.g. a lost laptop).
+        $this->post($this->portalUrl($org, 'login'), ['email' => 'a@buyer.test', 'password' => 'secret-password']);
+        $this->get($this->portalUrl($org))->assertOk();
+
+        // The password is reset elsewhere, exactly as the reset flow does it.
+        $contact->forceFill(['password' => Hash::make('brand-new-password-9'), 'remember_token' => 'rotated'])->save();
+        $this->app['auth']->forgetGuards(); // a new request reads the contact afresh
+
+        $this->get($this->portalUrl($org))->assertRedirect($this->portalUrl($org, 'login'));
+        $this->assertGuest('customer');
+    }
+
+    public function test_a_password_reset_does_not_end_a_staff_session_in_the_same_browser(): void
+    {
+        $org = $this->makeOrganization('Acme Wholesale');
+        $contact = $this->makeContact($this->makeCustomer($org, 'Buyer A'), 'a@buyer.test');
+        $staff = $this->makeStaff($org, 'staff@acme.test');
+
+        // A real staff sign-in, so it lives in the shared session.
+        $this->post('/login', ['email' => 'staff@acme.test', 'password' => 'password']);
+        $this->assertAuthenticatedAs($staff, 'web');
+        $this->post($this->portalUrl($org, 'login'), ['email' => 'a@buyer.test', 'password' => 'secret-password']);
+        $contact->forceFill(['password' => Hash::make('brand-new-password-9')])->save();
+        $this->app['auth']->guard('customer')->setUser($contact->fresh()); // as a new request would load it
+
+        $this->get($this->portalUrl($org))->assertRedirect($this->portalUrl($org, 'login'));
+        $this->assertTrue(session()->has(auth()->guard('web')->getName()), 'The staff sign-in must survive in the session.');
+    }
+
     public function test_unknown_revoked_or_uninvited_emails_get_the_same_answer_and_no_mail(): void
     {
         $org = $this->makeOrganization('Acme Wholesale');

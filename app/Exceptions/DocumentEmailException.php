@@ -20,9 +20,24 @@ class DocumentEmailException extends RuntimeException
 
     public const APPROVAL_REQUIRED = 'approval_required';
 
+    public const RATE_LIMITED = 'rate_limited';
+
     public function __construct(string $message, public readonly string $reason)
     {
         parent::__construct($message);
+    }
+
+    /**
+     * The HTTP status for API callers: 429 when throttled, otherwise 422.
+     */
+    public function status(): int
+    {
+        return $this->reason === self::RATE_LIMITED ? 429 : 422;
+    }
+
+    public static function rateLimited(string $message): self
+    {
+        return new self($message, self::RATE_LIMITED);
     }
 
     public static function missingRecipient(string $message): self

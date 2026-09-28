@@ -8,6 +8,7 @@ use App\Exceptions\DocumentEmailException;
 use App\Mail\OrderInvoiceEmail;
 use App\Models\Order\Order;
 use App\Models\User;
+use App\Services\Documents\DocumentEmailThrottle;
 use App\Services\Documents\DocumentRecipients;
 use App\Services\Documents\OrderInvoiceNumberService;
 use Illuminate\Support\Facades\DB;
@@ -46,6 +47,8 @@ class OrderInvoiceEmailService
         );
         $cc = DocumentRecipients::cc($cc, $recipient);
         $message = DocumentRecipients::message($message);
+
+        DocumentEmailThrottle::hit($actor, 'invoice');
 
         // Numbering is idempotent and happens once, outside the send: the
         // invoice keeps its number even if this particular send fails.

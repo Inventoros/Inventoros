@@ -8,6 +8,7 @@ use App\Exceptions\DocumentEmailException;
 use App\Mail\PurchaseOrderEmail;
 use App\Models\Purchasing\PurchaseOrder;
 use App\Models\User;
+use App\Services\Documents\DocumentEmailThrottle;
 use App\Services\Documents\DocumentRecipients;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -59,6 +60,8 @@ class PurchaseOrderEmailService
         );
         $cc = DocumentRecipients::cc($cc, $recipient);
         $message = DocumentRecipients::message($message);
+
+        DocumentEmailThrottle::hit($actor, 'purchase_order');
 
         $sentAt = now();
 

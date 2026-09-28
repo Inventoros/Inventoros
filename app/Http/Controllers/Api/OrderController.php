@@ -377,7 +377,7 @@ class OrderController extends Controller
                 $request->customMessage(),
             );
         } catch (DocumentEmailException $e) {
-            return response()->json(['message' => $e->getMessage(), 'error' => $e->reason], 422);
+            return response()->json(['message' => $e->getMessage(), 'error' => $e->reason], $e->status());
         }
 
         return response()->json([

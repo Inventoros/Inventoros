@@ -38,6 +38,10 @@ Only administrators can configure email settings for their organization.
 4. Click **Save Configuration**
 5. Test your configuration using the "Send Test Email" feature
 
+Your organization's provider sends its notifications and documents (alerts, order and shipment emails, purchase orders, invoices, scheduled reports). Mail that carries a sign-in or set-password link (staff password resets and invitations, customer portal invitations and password resets) always goes through the instance's own mailer, configured with the `MAIL_*` settings in `.env`, so make sure that one is set up too. If no provider is configured here, the instance's mailer is used for everything.
+
+Emailing purchase orders and invoices is rate limited per user and per organization; see `document_emails` in `config/limits.php`.
+
 ### Provider Options
 
 #### SMTP
@@ -92,6 +96,8 @@ Commercial email service with excellent deliverability.
 2. Verify your domain
 3. Copy your API key from the dashboard
 4. Enter the details in Inventoros
+
+**Note:** the Mailgun transport needs the `symfony/mailgun-mailer` and `symfony/http-client` packages installed on the server. Without them the instance's own mailer is used and a warning is logged.
 
 #### SendGrid
 

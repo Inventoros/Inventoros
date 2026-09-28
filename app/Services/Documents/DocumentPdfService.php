@@ -39,10 +39,14 @@ class DocumentPdfService
     /**
      * Render an order's invoice. The first time an invoice is generated for
      * an order it is assigned its invoice number, which it keeps from then on.
+     *
+     * The customer portal variant leaves payment references off: they are
+     * staff-entered (transaction ids, cheque or bank references) and not
+     * meant for the customer's self-service copy.
      */
-    public function orderInvoice(Order $order): DomPdf
+    public function orderInvoice(Order $order, bool $forCustomerPortal = false): DomPdf
     {
-        return Pdf::loadView('pdf.invoice', $this->orderInvoiceViewData($order));
+        return Pdf::loadView('pdf.invoice', $this->orderInvoiceViewData($order, $forCustomerPortal));
     }
 
     /**
@@ -52,7 +56,7 @@ class DocumentPdfService
      *
      * @return array<string, mixed>
      */
-    public function orderInvoiceViewData(Order $order): array
+    public function orderInvoiceViewData(Order $order, bool $forCustomerPortal = false): array
     {
         $this->invoiceNumbers->ensureAssigned($order);
 
@@ -67,6 +71,7 @@ class DocumentPdfService
             'orderDiscountAmount' => $order->orderDiscountAmount(),
             'payments' => $order->payments()->withoutGlobalScopes()->active()->orderBy('paid_at')->orderBy('id')->get(),
             'balanceDue' => $order->balanceDue(),
+            'showPaymentReferences' => ! $forCustomerPortal,
         ];
     }
 

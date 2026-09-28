@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\GraphQL\Mutations;
 
 use App\Exceptions\InsufficientStockException;
+use App\GraphQL\Concerns\RequiresPermissions;
 use App\Models\Inventory\Product;
 use App\Models\Inventory\ProductLocation;
 use App\Models\Inventory\ProductVariant;
@@ -14,7 +15,6 @@ use Closure;
 use GraphQL\Error\Error;
 use GraphQL\Type\Definition\ResolveInfo;
 use GraphQL\Type\Definition\Type;
-use Illuminate\Auth\Access\AuthorizationException;
 use Rebing\GraphQL\Support\Facades\GraphQL;
 use Rebing\GraphQL\Support\Mutation;
 
@@ -24,10 +24,17 @@ use Rebing\GraphQL\Support\Mutation;
  */
 class RequestStockAdjustmentApprovalMutation extends Mutation
 {
+    use RequiresPermissions;
+
     protected $attributes = [
         'name' => 'requestStockAdjustmentApproval',
         'description' => 'Submit a stock adjustment for approval; stock changes only once it is approved',
     ];
+
+    protected function permissions(): array
+    {
+        return ['manage_stock'];
+    }
 
     public function type(): Type
     {
@@ -57,10 +64,8 @@ class RequestStockAdjustmentApprovalMutation extends Mutation
 
     public function resolve($root, array $args, $context, ResolveInfo $resolveInfo, Closure $getSelectFields)
     {
-        $user = auth()->user();
-        if (! $user?->hasPermission('manage_stock')) {
-            throw new AuthorizationException('Unauthorized');
-        }
+        // Role and token ability are both enforced by RequiresPermissions.
+        $user = $this->actor();
 
         $product = Product::where('organization_id', $user->organization_id)->find($args['product_id'])
             ?? throw new Error('Product not found');

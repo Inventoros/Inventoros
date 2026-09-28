@@ -7,6 +7,7 @@ namespace App\Services;
 use App\Enums\Permission;
 use App\Exceptions\ApprovalException;
 use App\Exceptions\InsufficientStockException;
+use App\Http\Middleware\CheckApiPermission;
 use App\Models\ActivityLog;
 use App\Models\Inventory\Product;
 use App\Models\Inventory\ProductVariant;
@@ -53,6 +54,18 @@ final class ApprovalService
         self::PURCHASE_ORDER => Permission::APPROVE_PURCHASE_ORDERS,
         self::STOCK_ADJUSTMENT => Permission::APPROVE_STOCK_ADJUSTMENTS,
         self::STOCK_TRANSFER => Permission::APPROVE_STOCK_TRANSFERS,
+    ];
+
+    /**
+     * Token abilities that let an API token see its user's own requests of
+     * each type (any one of them): raising the request, or deciding it.
+     *
+     * @var array<string, array<int, string>>
+     */
+    private const REQUEST_ABILITIES = [
+        self::PURCHASE_ORDER => ['view_purchase_orders', 'edit_purchase_orders', 'approve_purchase_orders'],
+        self::STOCK_ADJUSTMENT => ['manage_stock', 'approve_stock_adjustments'],
+        self::STOCK_TRANSFER => ['transfer_stock', 'approve_stock_transfers'],
     ];
 
     public function __construct(private readonly WarehouseAccessService $warehouseAccess) {}
@@ -495,9 +508,13 @@ final class ApprovalService
     public function pendingFor(User $user): Collection
     {
         $items = collect();
+        // A scoped API token only sees the kinds of request it may decide.
+        $tokenAllows = CheckApiPermission::tokenAllows($user->currentAccessToken());
 
         foreach (self::TYPES as $type) {
-            if (! $user->hasPermission(self::permissionFor($type))) {
+            $permission = self::permissionFor($type);
+
+            if (! $user->hasPermission($permission) || ! $tokenAllows($permission->value)) {
                 continue;
             }
 
@@ -525,6 +542,11 @@ final class ApprovalService
     {
         $orgId = $user->organization_id;
 
+        // A scoped API token only sees the kinds of request it has an ability
+        // for (raising or deciding them); session auth sees all of its own.
+        $tokenAllows = CheckApiPermission::tokenAllows($user->currentAccessToken());
+        $visible = fn (string $type): bool => collect(self::REQUEST_ABILITIES[$type])->contains($tokenAllows);
+
         $pos = PurchaseOrder::withoutGlobalScope(OrganizationScope::class)->with(['supplier', 'approvalRequester', 'approver'])
             ->where('organization_id', $orgId)->where('approval_requested_by', $user->id)
             ->whereNotNull('approval_status')->latest('approval_requested_at')->limit($limit)->get();
@@ -538,6 +560,7 @@ final class ApprovalService
         return $pos->map(fn ($s) => $this->describe(self::PURCHASE_ORDER, $s))
             ->concat($transfers->map(fn ($s) => $this->describe(self::STOCK_TRANSFER, $s)))
             ->concat($adjustments->map(fn ($s) => $this->describe(self::STOCK_ADJUSTMENT, $s)))
+            ->filter(fn (array $item): bool => $visible($item['type']))
             ->sortBy([
                 fn ($a, $b) => ($a['status'] === 'pending' ? 0 : 1) <=> ($b['status'] === 'pending' ? 0 : 1),
                 fn ($a, $b) => strcmp((string) $b['requested_at'], (string) $a['requested_at']),

@@ -150,9 +150,12 @@ final class UserActivityAlertService
      */
     public function recipients(int $organizationId, array $excludeIds = []): Collection
     {
+        // Admins by base role or by the Administrator system role (the same
+        // two routes User::isAdmin() recognises).
         return User::query()
             ->where('organization_id', $organizationId)
-            ->where('role', 'admin')
+            ->where(fn ($q) => $q->where('role', 'admin')
+                ->orWhereHas('roles', fn ($r) => $r->where('slug', 'system-administrator')))
             ->whereNotIn('id', array_values(array_filter($excludeIds)))
             ->get()
             ->filter(fn (User $admin) => self::wantsAlerts($admin))

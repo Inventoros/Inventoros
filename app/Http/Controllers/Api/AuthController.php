@@ -8,6 +8,7 @@ use App\Enums\Permission;
 use App\Enums\SecurityEvent;
 use App\Http\Controllers\Auth\TwoFactorController;
 use App\Http\Controllers\Controller;
+use App\Http\Middleware\CheckApiPermission;
 use App\Models\User;
 use App\Services\SecurityEventLogger;
 use Illuminate\Auth\Events\Failed;
@@ -204,19 +205,48 @@ class AuthController extends Controller
             'abilities.*' => ['string', Rule::in($allowedAbilities)],
         ]);
 
-        // Default token ability resolution:
-        //   - admin and no abilities requested  → ['*'] (full god-mode token, current behaviour preserved for admin)
-        //   - non-admin and no abilities          → empty list (a useless token rather than a god-mode token)
-        //   - any caller and abilities requested → use those, except '*' is admin-only
+        // A minted token is never broader than the token minting it, nor than
+        // the user's own permissions. What the caller may grant:
+        //   - unrestricted caller (session, login `*` token): admin → ['*'],
+        //     non-admin → the permissions they hold
+        //   - scoped caller token → its declared abilities (for a non-admin,
+        //     only those they still hold)
+        // Never [] : CheckApiPermission treats a token without declared
+        // abilities as unrestricted (kept for tokens minted before this rule).
+        $declared = CheckApiPermission::declaredAbilities($user->currentAccessToken());
+        $held = $isAdmin ? null : $user->getAllPermissions();
+
+        if ($declared === null) {
+            $grantable = $isAdmin ? ['*'] : $held;
+        } else {
+            $grantable = $isAdmin ? $declared : array_values(array_intersect($declared, $held));
+        }
+
         if ($request->filled('abilities')) {
-            $abilities = $request->input('abilities');
-            if (in_array('*', $abilities, true) && !$isAdmin) {
+            $abilities = array_values(array_unique($request->input('abilities')));
+
+            if (in_array('*', $abilities, true) && $grantable !== ['*']) {
                 throw ValidationException::withMessages([
-                    'abilities' => ['Only admin users may issue wildcard (*) tokens.'],
+                    'abilities' => [$isAdmin
+                        ? 'A scoped token cannot issue wildcard (*) tokens.'
+                        : 'Only admin users may issue wildcard (*) tokens.'],
+                ]);
+            }
+
+            if ($grantable !== ['*'] && array_diff($abilities, $grantable) !== []) {
+                throw ValidationException::withMessages([
+                    'abilities' => ['You can only grant abilities your current token and permissions allow: '
+                        .implode(', ', array_diff($abilities, $grantable)).' is not allowed.'],
                 ]);
             }
         } else {
-            $abilities = $isAdmin ? ['*'] : [];
+            $abilities = $grantable;
+        }
+
+        if ($abilities === []) {
+            throw ValidationException::withMessages([
+                'abilities' => ['You hold no permissions that could be granted to a token.'],
+            ]);
         }
 
         $token = $user->createToken($request->name, $abilities);

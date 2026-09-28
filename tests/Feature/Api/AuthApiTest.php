@@ -363,7 +363,7 @@ class AuthApiTest extends TestCase
             ->assertJsonPath('abilities', ['*']);
     }
 
-    public function test_non_admin_default_token_has_no_abilities(): void
+    public function test_non_admin_without_permissions_gets_no_default_token(): void
     {
         $member = User::create([
             'name' => 'Member', 'email' => 'mb@test.com', 'password' => bcrypt('x'),
@@ -372,12 +372,14 @@ class AuthApiTest extends TestCase
 
         Sanctum::actingAs($member);
 
+        // A token with no declared abilities is unrestricted, so a member
+        // holding nothing gets a 422 rather than an empty-ability token.
         $response = $this->postJson('/api/v1/tokens', [
             'name' => 'Member Default Token',
         ]);
 
-        $response->assertStatus(201)
-            ->assertJsonPath('abilities', []);
+        $response->assertStatus(422)
+            ->assertJsonValidationErrors(['abilities']);
     }
 
     public function test_non_admin_cannot_request_wildcard_token(): void

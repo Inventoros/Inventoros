@@ -83,7 +83,9 @@ api.permission:view_products
 
 Every permission string is a case of `App\Enums\Permission` (a test fails if a route names anything else), one per verb: for example `view_customers`, `create_customers`, `edit_customers`, `delete_customers`, `approve_orders`, `manage_returns`, `transfer_stock`, `create_stock_audits`, `manage_stock_audits`, `view_users`, `create_users`, `edit_users`, `manage_organization` (webhooks). The OpenAPI spec lists the permission for each route.
 
-When a token was created with a list of abilities, the token must also include the permission, so a scoped token can never exceed its abilities even when its user holds more. Tokens without abilities or with `*` fall back to the user's permissions.
+When a token was created with a list of abilities, the token must also include the permission, so a scoped token can never exceed its abilities even when its user holds more. Tokens with `*` (and older tokens created without abilities) fall back to the user's permissions.
+
+`POST /api/v1/tokens` never mints a token broader than the one calling it: a scoped token can only mint tokens with a subset of its own abilities, only an admin calling with an unrestricted token can mint `*`, and a non-admin's token is always an explicit list of permissions they hold. Leaving `abilities` out grants everything the caller may grant.
 
 A request lacking the required permission returns `403 forbidden`.
 

@@ -280,6 +280,7 @@ class PurchaseOrderEmailTest extends TestCase
     public function test_the_mailable_applies_the_org_mail_config(): void
     {
         Setting::create(['organization_id' => $this->org->id, 'key' => 'email.provider', 'value' => 'smtp', 'encrypted' => false]);
+        Setting::create(['organization_id' => $this->org->id, 'key' => 'email.smtp.host', 'value' => 'smtp.acme.test', 'encrypted' => false]);
         Setting::create(['organization_id' => $this->org->id, 'key' => 'email.from_address', 'value' => 'buying@acme.test', 'encrypted' => false]);
         Setting::create(['organization_id' => $this->org->id, 'key' => 'email.from_name', 'value' => 'Acme Buying', 'encrypted' => false]);
         Config::set('mail.from.address', 'default@system.test');
@@ -288,8 +289,9 @@ class PurchaseOrderEmailTest extends TestCase
         $mail = new PurchaseOrderEmail($po, 'Please confirm by Friday.');
         $mail->build();
 
-        $this->assertSame('buying@acme.test', Config::get('mail.from.address'));
-        $this->assertSame('Acme Buying', Config::get('mail.from.name'));
+        // The org's From rides on its own mailer; the global config is untouched.
+        $this->assertSame(['address' => 'buying@acme.test', 'name' => 'Acme Buying'], Config::get("mail.mailers.{$mail->mailer}.from"));
+        $this->assertSame('default@system.test', Config::get('mail.from.address'));
     }
 
     public function test_the_mailable_is_branded_as_the_org_with_a_text_part(): void
@@ -343,6 +345,59 @@ class PurchaseOrderEmailTest extends TestCase
 
         Mail::assertNothingQueued();
         $this->assertSame(PurchaseOrder::STATUS_DRAFT, $po->fresh()->status);
+    }
+
+    // ==================== THROTTLING ====================
+
+    public function test_a_user_is_throttled_after_too_many_document_emails_in_a_minute(): void
+    {
+        Mail::fake();
+        Config::set('limits.document_emails.per_user_per_minute', 2);
+        Sanctum::actingAs($this->admin);
+        $po = $this->draftPo();
+
+        $this->postJson("/api/v1/purchase-orders/{$po->id}/send")->assertOk();
+        $this->postJson("/api/v1/purchase-orders/{$po->id}/send")->assertOk();
+        $this->postJson("/api/v1/purchase-orders/{$po->id}/send")
+            ->assertStatus(429)
+            ->assertJsonPath('error', DocumentEmailException::RATE_LIMITED);
+
+        Mail::assertQueued(PurchaseOrderEmail::class, 2);
+        $this->assertSame(2, ActivityLog::where('subject_type', PurchaseOrder::class)->where('action', 'emailed')->count());
+
+        // The web UI and MCP share the same budget.
+        $this->actingAs($this->admin)->post(route('purchase-orders.send', $po))
+            ->assertSessionHas('error', fn ($msg) => str_contains($msg, 'Too many'));
+        InventorosServer::actingAs($this->admin)
+            ->tool(SendPurchaseOrderTool::class, ['id' => $po->id])
+            ->assertHasErrors();
+        Mail::assertQueued(PurchaseOrderEmail::class, 2);
+    }
+
+    public function test_an_organization_has_a_daily_cap_on_document_emails(): void
+    {
+        Mail::fake();
+        Config::set('limits.document_emails.per_user_per_minute', 100);
+        Config::set('limits.document_emails.per_organization_per_day', 2);
+        $po = $this->draftPo();
+        $colleague = User::create([
+            'name' => 'Col', 'email' => 'col@acme.test', 'password' => bcrypt('x'),
+            'organization_id' => $this->org->id, 'role' => 'member',
+        ]);
+        $colleague->roles()->syncWithoutDetaching(Role::where('slug', 'po-admin')->pluck('id'));
+
+        $service = app(PurchaseOrderEmailService::class);
+        $service->send($po, $this->admin);
+        $service->send($po, $colleague);
+
+        try {
+            $service->send($po, $colleague);
+            $this->fail('The daily cap was not enforced.');
+        } catch (DocumentEmailException $e) {
+            $this->assertSame(DocumentEmailException::RATE_LIMITED, $e->reason);
+        }
+
+        Mail::assertQueued(PurchaseOrderEmail::class, 2);
     }
 
     // ==================== MCP ====================

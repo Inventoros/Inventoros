@@ -298,7 +298,7 @@
                 @foreach($payments as $payment)
                 <tr class="payment-row">
                     <td>
-                        {{ $payment->isRefund() ? 'Refund' : 'Payment' }}, {{ $payment->method->label() }}, {{ $payment->paid_at->format('M j, Y') }}@if($payment->reference) ({{ $payment->reference }})@endif
+                        {{ $payment->isRefund() ? 'Refund' : 'Payment' }}, {{ $payment->method->label() }}, {{ $payment->paid_at->format('M j, Y') }}@if($payment->reference && ($showPaymentReferences ?? true)) ({{ $payment->reference }})@endif
                     </td>
                     <td>{{ $payment->isRefund() ? '+' : '-' }}{{ $order->currency ?? 'USD' }} {{ number_format((float) $payment->amount, 2) }}</td>
                 </tr>

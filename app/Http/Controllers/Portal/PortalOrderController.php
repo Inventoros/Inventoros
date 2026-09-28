@@ -172,7 +172,7 @@ class PortalOrderController extends PortalController
 
         abort_unless($this->invoiceAvailable($order), 404);
 
-        $pdf = $pdfs->orderInvoice($order);
+        $pdf = $pdfs->orderInvoice($order, forCustomerPortal: true);
 
         return $pdf->download($pdfs->orderInvoiceFilename($order));
     }

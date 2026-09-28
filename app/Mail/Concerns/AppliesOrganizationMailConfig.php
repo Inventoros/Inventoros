@@ -4,16 +4,21 @@ declare(strict_types=1);
 
 namespace App\Mail\Concerns;
 
-use App\Services\SettingsService;
-use Illuminate\Support\Facades\Log;
+use App\Services\OrganizationMailer;
 
 /**
- * Applies the sending organization's stored mail configuration from inside the
- * mailable's build() — which runs in the queue WORKER, the process that
- * actually delivers the message. The org id travels in the mailable's $data
- * payload (serialized with the queued job), so no auth context is needed.
- * A settings failure degrades to the system default mailer rather than failing
- * the job.
+ * Sends the mailable through the sending organization's own mailer. Called
+ * from build(), which runs in the queue WORKER (the process that actually
+ * delivers the message); the org id travels in the mailable's $data payload,
+ * so no auth context is needed.
+ *
+ * Only the mailable's own mailer is selected: the global mail config is left
+ * alone, so one organization's settings can never leak into another's jobs
+ * in a long-lived worker. With no usable org transport (or a settings
+ * failure) the system mailer is used.
+ *
+ * Token-bearing mail (password resets, invitations) must NOT use this: it
+ * always goes through the system mailer.
  */
 trait AppliesOrganizationMailConfig
 {
@@ -25,13 +30,7 @@ trait AppliesOrganizationMailConfig
             return;
         }
 
-        try {
-            SettingsService::applyEmailConfig((int) $organizationId);
-        } catch (\Throwable $e) {
-            Log::warning('Could not apply organization mail config; using system default', [
-                'organization_id' => $organizationId,
-                'error' => $e->getMessage(),
-            ]);
-        }
+        // Always assign, even null, so a reused instance never keeps a stale mailer.
+        $this->mailer = OrganizationMailer::for((int) $organizationId);
     }
 }

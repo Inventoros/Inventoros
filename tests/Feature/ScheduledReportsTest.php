@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Feature;
 
+use App\Jobs\DeliverScheduledReportJob;
 use App\Mail\ScheduledReportEmail;
 use App\Models\Auth\Organization;
 use App\Models\Inventory\Product;
@@ -20,6 +21,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Queue;
 use Inertia\Testing\AssertableInertia as Assert;
 use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\TestCase;
@@ -82,6 +84,12 @@ class ScheduledReportsTest extends TestCase
             'name' => "Colleague {$slug}", 'email' => "colleague@{$slug}.test", 'password' => bcrypt('x'),
             'organization_id' => $org->id, 'role' => 'member',
         ]);
+        // Recipients must themselves be able to see the report's data.
+        $readerRole = Role::create([
+            'name' => "Reader {$slug}", 'slug' => "reader-{$slug}", 'is_system' => false,
+            'permissions' => ['view_reports', 'view_products'],
+        ]);
+        $colleague->roles()->syncWithoutDetaching([$readerRole->id]);
 
         Product::create([
             'organization_id' => $org->id, 'name' => "Product {$sku}", 'sku' => $sku,
@@ -167,7 +175,7 @@ class ScheduledReportsTest extends TestCase
     }
 
     #[DataProvider('formats')]
-    public function test_a_due_schedule_queues_the_report_with_its_attachment(string $format, string $mime, string $magic): void
+    public function test_a_due_schedule_sends_the_report_with_its_attachment(string $format, string $mime, string $magic): void
     {
         Mail::fake();
         $schedule = $this->schedule(['format' => $format]);
@@ -175,7 +183,7 @@ class ScheduledReportsTest extends TestCase
         $stats = $this->runner()->runDue(now());
 
         $this->assertSame(1, $stats['sent']);
-        Mail::assertQueued(ScheduledReportEmail::class, function (ScheduledReportEmail $mail) use ($format, $mime, $magic) {
+        Mail::assertSent(ScheduledReportEmail::class, function (ScheduledReportEmail $mail) use ($format, $mime, $magic) {
             $content = $mail->attachmentContent();
 
             return $mail->hasTo('colleague@acme.test')
@@ -190,6 +198,35 @@ class ScheduledReportsTest extends TestCase
         $this->assertSame('2026-07-01 08:00:00', $schedule->next_run_at->format('Y-m-d H:i:s'));
     }
 
+    public function test_the_queued_delivery_carries_no_report_data(): void
+    {
+        // Report contents must never be serialized into jobs/failed_jobs:
+        // the queued job holds ids and addresses and renders in the worker.
+        Queue::fake();
+        Mail::fake();
+        $this->schedule();
+
+        $this->assertSame(1, $this->runner()->runDue(now())['sent']);
+
+        Mail::assertNothingOutgoing();
+        Queue::assertPushed(DeliverScheduledReportJob::class, function (DeliverScheduledReportJob $job) {
+            $payload = serialize($job);
+
+            return $job->recipients === ['colleague@acme.test']
+                && ! str_contains($payload, 'ACME-WIDGET')
+                && ! str_contains($payload, 'Product ACME-WIDGET');
+        });
+    }
+
+    public function test_a_scheduled_report_email_refuses_to_be_queued(): void
+    {
+        $this->expectException(\LogicException::class);
+
+        (new ScheduledReportEmail($this->org->id, 'Stock acme', 'weekly', 'stock.csv', 'text/csv; charset=UTF-8', "a,b
+"))
+            ->queue(app('queue'));
+    }
+
     public function test_the_csv_attachment_holds_the_owners_org_data_only(): void
     {
         [, , , , $otherReport] = $this->seedOrg('globex', 'GLOBEX-GADGET');
@@ -200,10 +237,10 @@ class ScheduledReportsTest extends TestCase
         $stats = $this->runner()->runDue(now());
 
         $this->assertSame(2, $stats['sent']);
-        Mail::assertQueued(ScheduledReportEmail::class, fn (ScheduledReportEmail $m) => $m->hasTo('colleague@acme.test')
+        Mail::assertSent(ScheduledReportEmail::class, fn (ScheduledReportEmail $m) => $m->hasTo('colleague@acme.test')
             && str_contains($m->attachmentContent(), 'ACME-WIDGET')
             && ! str_contains($m->attachmentContent(), 'GLOBEX-GADGET'));
-        Mail::assertQueued(ScheduledReportEmail::class, fn (ScheduledReportEmail $m) => $m->hasTo('colleague@globex.test')
+        Mail::assertSent(ScheduledReportEmail::class, fn (ScheduledReportEmail $m) => $m->hasTo('colleague@globex.test')
             && str_contains($m->attachmentContent(), 'GLOBEX-GADGET')
             && ! str_contains($m->attachmentContent(), 'ACME-WIDGET'));
     }
@@ -217,7 +254,7 @@ class ScheduledReportsTest extends TestCase
         $stats = $this->runner()->runDue(now());
 
         $this->assertSame(0, $stats['sent']);
-        Mail::assertNothingQueued();
+        Mail::assertNothingOutgoing();
     }
 
     public function test_an_owner_who_lost_view_reports_is_skipped_and_logged(): void
@@ -230,7 +267,7 @@ class ScheduledReportsTest extends TestCase
         $stats = $this->runner()->runDue(now());
 
         $this->assertSame(1, $stats['skipped']);
-        Mail::assertNothingQueued();
+        Mail::assertNothingOutgoing();
         Log::shouldHaveReceived('warning')->withArgs(fn ($message, $context) => str_contains($message, 'Scheduled report skipped')
             && $context['reason'] === 'permission_revoked'
             && $context['schedule_id'] === $schedule->id);
@@ -250,19 +287,43 @@ class ScheduledReportsTest extends TestCase
         $stats = $this->runner()->runDue(now());
 
         $this->assertSame(1, $stats['skipped']);
-        Mail::assertNothingQueued();
+        Mail::assertNothingOutgoing();
         $this->assertSame('skipped', $schedule->refresh()->last_status);
     }
 
-    public function test_the_report_runs_with_the_owners_permissions_not_the_recipients(): void
+    public function test_a_recipient_who_cannot_view_the_report_data_is_not_sent_it(): void
     {
-        // The colleague holds no permissions at all, yet receives the owner's
-        // report: the owner chose to send it and the owner's access is what is
-        // re-checked.
+        // The report is generated with the OWNER's access, so each recipient
+        // must also hold view_reports and the data source's view permission;
+        // otherwise a report owner could mail data to anyone in the org.
         Mail::fake();
-        $this->schedule();
+        $noAccess = User::create([
+            'name' => 'No Access', 'email' => 'noaccess@acme.test', 'password' => bcrypt('x'),
+            'organization_id' => $this->org->id, 'role' => 'member',
+        ]);
+        $reportsOnly = User::create([
+            'name' => 'Reports Only', 'email' => 'reportsonly@acme.test', 'password' => bcrypt('x'),
+            'organization_id' => $this->org->id, 'role' => 'member',
+        ]);
+        $reportsOnly->roles()->syncWithoutDetaching([Role::create([
+            'name' => 'Reports only', 'slug' => 'reports-only', 'is_system' => false, 'permissions' => ['view_reports'],
+        ])->id]);
+        $this->schedule(['recipients' => [$this->colleague->email, $noAccess->email, $reportsOnly->email]]);
 
         $this->assertSame(1, $this->runner()->runDue(now())['sent']);
+
+        Mail::assertSent(ScheduledReportEmail::class, 1);
+        Mail::assertSent(ScheduledReportEmail::class, fn ($m) => $m->hasTo('colleague@acme.test'));
+    }
+
+    public function test_a_schedule_whose_recipients_all_lost_access_is_skipped(): void
+    {
+        Mail::fake();
+        $this->colleague->roles()->detach();
+        $this->schedule();
+
+        $this->assertSame(1, $this->runner()->runDue(now())['skipped']);
+        Mail::assertNothingOutgoing();
     }
 
     public function test_recipients_who_are_no_longer_in_the_organization_are_dropped(): void
@@ -273,10 +334,10 @@ class ScheduledReportsTest extends TestCase
 
         $this->runner()->runDue(now());
 
-        Mail::assertQueued(ScheduledReportEmail::class, 2);
-        Mail::assertQueued(ScheduledReportEmail::class, fn ($m) => $m->hasTo('colleague@acme.test'));
-        Mail::assertQueued(ScheduledReportEmail::class, fn ($m) => $m->hasTo('owner@acme.test'));
-        Mail::assertNotQueued(ScheduledReportEmail::class, fn ($m) => $m->hasTo($outsider->email) || $m->hasTo('gone@acme.test'));
+        Mail::assertSent(ScheduledReportEmail::class, 2);
+        Mail::assertSent(ScheduledReportEmail::class, fn ($m) => $m->hasTo('colleague@acme.test'));
+        Mail::assertSent(ScheduledReportEmail::class, fn ($m) => $m->hasTo('owner@acme.test'));
+        Mail::assertNotSent(ScheduledReportEmail::class, fn ($m) => $m->hasTo($outsider->email) || $m->hasTo('gone@acme.test'));
     }
 
     public function test_a_schedule_is_claimed_once_even_if_two_runs_overlap(): void
@@ -288,7 +349,7 @@ class ScheduledReportsTest extends TestCase
         $second = $this->runner()->runDue(now());
 
         $this->assertSame(0, $second['sent']);
-        Mail::assertQueued(ScheduledReportEmail::class, 1);
+        Mail::assertSent(ScheduledReportEmail::class, 1);
     }
 
     public function test_the_command_is_registered_and_sends_due_reports(): void
@@ -298,7 +359,7 @@ class ScheduledReportsTest extends TestCase
 
         $this->artisan('reports:send-scheduled')->assertSuccessful();
 
-        Mail::assertQueued(ScheduledReportEmail::class, 1);
+        Mail::assertSent(ScheduledReportEmail::class, 1);
 
         $commands = collect(app(Schedule::class)->events())->map(fn ($e) => $e->command)->implode(' ');
         $this->assertStringContainsString('reports:send-scheduled', $commands);
@@ -309,13 +370,16 @@ class ScheduledReportsTest extends TestCase
     public function test_the_mailable_applies_org_mail_config_and_has_a_text_part(): void
     {
         Setting::create(['organization_id' => $this->org->id, 'key' => 'email.provider', 'value' => 'smtp', 'encrypted' => false]);
+        Setting::create(['organization_id' => $this->org->id, 'key' => 'email.smtp.host', 'value' => 'smtp.acme.test', 'encrypted' => false]);
         Setting::create(['organization_id' => $this->org->id, 'key' => 'email.from_address', 'value' => 'reports@acme.test', 'encrypted' => false]);
         config(['mail.from.address' => 'default@system.test']);
 
-        $mail = new ScheduledReportEmail($this->org->id, 'Stock acme', 'weekly', 'stock.csv', 'text/csv; charset=UTF-8', base64_encode("a,b\n"));
+        $mail = new ScheduledReportEmail($this->org->id, 'Stock acme', 'weekly', 'stock.csv', 'text/csv; charset=UTF-8', "a,b\n");
         $mail->build();
 
-        $this->assertSame('reports@acme.test', config('mail.from.address'));
+        // The org's From rides on its own mailer; the global config is untouched.
+        $this->assertSame('reports@acme.test', config("mail.mailers.{$mail->mailer}.from.address"));
+        $this->assertSame('default@system.test', config('mail.from.address'));
     }
 
     public function test_the_mailable_is_branded_with_a_plain_text_part_and_the_attachment(): void
@@ -323,7 +387,7 @@ class ScheduledReportsTest extends TestCase
         // Rendering resolves the org's mailer; use one that needs no host.
         Setting::create(['organization_id' => $this->org->id, 'key' => 'email.provider', 'value' => 'array', 'encrypted' => false]);
 
-        $mail = new ScheduledReportEmail($this->org->id, 'Stock acme', 'weekly', 'stock.csv', 'text/csv; charset=UTF-8', base64_encode("a,b\n"));
+        $mail = new ScheduledReportEmail($this->org->id, 'Stock acme', 'weekly', 'stock.csv', 'text/csv; charset=UTF-8', "a,b\n");
         $mail->build();
 
         $this->assertNotNull($mail->textView);
@@ -361,6 +425,23 @@ class ScheduledReportsTest extends TestCase
             ->post(route('reports.builder.schedules.store', $this->report), [
                 'frequency' => 'daily', 'time_of_day' => '08:00', 'format' => 'csv',
                 'recipients' => [$outsider->email],
+            ])
+            ->assertSessionHasErrors('recipients');
+
+        $this->assertSame(0, ReportSchedule::withoutGlobalScopes()->count());
+    }
+
+    public function test_recipients_without_access_to_the_report_data_are_rejected(): void
+    {
+        $viewer = User::create([
+            'name' => 'Viewer', 'email' => 'viewer@acme.test', 'password' => bcrypt('x'),
+            'organization_id' => $this->org->id, 'role' => 'member',
+        ]);
+
+        $this->actingAs($this->owner)
+            ->post(route('reports.builder.schedules.store', $this->report), [
+                'frequency' => 'daily', 'time_of_day' => '08:00', 'format' => 'csv',
+                'recipients' => [$this->colleague->email, $viewer->email],
             ])
             ->assertSessionHasErrors('recipients');
 
@@ -413,6 +494,22 @@ class ScheduledReportsTest extends TestCase
             ->delete(route('reports.builder.schedules.destroy', [$this->report, $schedule]))
             ->assertRedirect();
         $this->assertNull(ReportSchedule::withoutGlobalScopes()->find($schedule->id));
+    }
+
+    public function test_the_recipient_picker_only_offers_people_who_may_see_the_report(): void
+    {
+        User::create([
+            'name' => 'No Access', 'email' => 'noaccess@acme.test', 'password' => bcrypt('x'),
+            'organization_id' => $this->org->id, 'role' => 'member',
+        ]);
+
+        $this->actingAs($this->owner)
+            ->get(route('reports.builder.show', $this->report))
+            ->assertInertia(fn (Assert $page) => $page
+                ->has('recipientOptions', 2)
+                ->where('recipientOptions.0.email', 'colleague@acme.test')
+                ->where('recipientOptions.1.email', 'owner@acme.test')
+            );
     }
 
     public function test_the_show_page_lists_schedules_for_the_owner_only(): void

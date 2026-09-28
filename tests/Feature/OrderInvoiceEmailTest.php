@@ -200,6 +200,19 @@ class OrderInvoiceEmailTest extends TestCase
         $this->assertSame('casey@customer.test', $log->properties['to']);
     }
 
+    public function test_invoice_emails_are_throttled_per_user(): void
+    {
+        Mail::fake();
+        Config::set('limits.document_emails.per_user_per_minute', 1);
+        $order = $this->order();
+
+        $this->actingAs($this->editor)->post(route('orders.invoice.email', $order))->assertSessionHas('success');
+        $this->actingAs($this->editor)->post(route('orders.invoice.email', $order))
+            ->assertSessionHas('error', fn ($msg) => str_contains($msg, 'Too many'));
+
+        Mail::assertQueued(OrderInvoiceEmail::class, 1);
+    }
+
     public function test_emailing_without_a_customer_email_fails_and_records_nothing(): void
     {
         Mail::fake();
@@ -253,7 +266,8 @@ class OrderInvoiceEmailTest extends TestCase
 
     public function test_the_invoice_mailable_attaches_the_pdf_and_applies_org_config(): void
     {
-        Setting::create(['organization_id' => $this->org->id, 'key' => 'email.provider', 'value' => 'array', 'encrypted' => false]);
+        Setting::create(['organization_id' => $this->org->id, 'key' => 'email.provider', 'value' => 'smtp', 'encrypted' => false]);
+        Setting::create(['organization_id' => $this->org->id, 'key' => 'email.smtp.host', 'value' => 'smtp.acme.test', 'encrypted' => false]);
         Setting::create(['organization_id' => $this->org->id, 'key' => 'email.from_address', 'value' => 'invoices@acme.test', 'encrypted' => false]);
         Config::set('mail.from.address', 'default@system.test');
 
@@ -261,7 +275,9 @@ class OrderInvoiceEmailTest extends TestCase
         $mail = new OrderInvoiceEmail($order, 'Thanks!');
         $mail->build();
 
-        $this->assertSame('invoices@acme.test', Config::get('mail.from.address'));
+        // The org's From rides on its own mailer; the global config is untouched.
+        $this->assertSame('invoices@acme.test', Config::get("mail.mailers.{$mail->mailer}.from.address"));
+        $this->assertSame('default@system.test', Config::get('mail.from.address'));
         $this->assertCount(1, $mail->rawAttachments);
         $this->assertSame('INV-000001.pdf', $mail->rawAttachments[0]['name']);
         $this->assertStringStartsWith('%PDF', $mail->rawAttachments[0]['data']);
