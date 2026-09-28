@@ -17,6 +17,25 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Run The Queue From The Scheduler
+    |--------------------------------------------------------------------------
+    |
+    | Shared hosting (cPanel) has no long-running queue worker, so the
+    | scheduler starts a short-lived one every minute (queue:work
+    | --stop-when-empty --max-time=50). The one `schedule:run` cron entry then
+    | covers both. On by default for the database queue; set
+    | QUEUE_RUN_VIA_SCHEDULER=false when a dedicated worker (Docker, systemd,
+    | Supervisor) already processes the queue.
+    |
+    */
+
+    'run_via_scheduler' => filter_var(
+        env('QUEUE_RUN_VIA_SCHEDULER', env('QUEUE_CONNECTION', 'database') === 'database'),
+        FILTER_VALIDATE_BOOL
+    ),
+
+    /*
+    |--------------------------------------------------------------------------
     | Queue Connections
     |--------------------------------------------------------------------------
     |

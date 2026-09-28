@@ -38,6 +38,8 @@ x-inventoros: &inventoros
     SESSION_SECURE_COOKIE: ${SESSION_SECURE_COOKIE:-true}
     CACHE_STORE: database
     QUEUE_CONNECTION: database
+    # The `worker` service processes the queue; the scheduler need not.
+    QUEUE_RUN_VIA_SCHEDULER: "false"
     MAIL_MAILER: ${MAIL_MAILER:-log}
     MAIL_HOST: ${MAIL_HOST:-}
     MAIL_PORT: ${MAIL_PORT:-587}

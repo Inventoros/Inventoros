@@ -8,6 +8,8 @@
 #   2. Edit User, Group, and WorkingDirectory to match your deploy.
 #   3. sudo systemctl daemon-reload
 #   4. sudo systemctl enable --now inventoros-worker
+#   5. Set QUEUE_RUN_VIA_SCHEDULER=false in .env: this worker replaces the
+#      short-lived one the scheduler otherwise starts every minute.
 #
 # Logs:  journalctl -u inventoros-worker -f
 

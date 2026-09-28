@@ -130,10 +130,12 @@ Inventoros relies on background processing for two things:
   `reports:send-scheduled` (scheduled report emails, every 15 minutes),
   `shipping:track` (shipment tracking, every 30 minutes) and the nightly
   retention prune commands.
-- **The queue worker** drains the database queue: webhook deliveries
-  (`WebhookDeliveryJob`) and queued mail (purchase orders, invoices, scheduled
-  reports, approval, shipment and activity alerts) and import jobs. Without it, these rows pile up in the
-  `jobs` and `webhook_deliveries` tables and **never fire**.
+- **The queue** holds webhook deliveries (`WebhookDeliveryJob`) and queued
+  mail. With `QUEUE_CONNECTION=database` (the default) the scheduler also works
+  the queue every minute, so the one cron entry below covers both. Without that
+  cron these rows pile up in the `jobs` and `webhook_deliveries` tables and
+  **never fire**; the admin dashboard warns when the scheduler has not run for
+  10 minutes or jobs have waited more than 15.
 
 #### Scheduler cron (always add this)
 
@@ -149,31 +151,20 @@ containing `artisan`, not the `public` document root).
 
 #### Queue worker
 
-In 2.0.0 the scheduler also works through the database queue every minute, so
-the `schedule:run` cron above is enough on shared hosting and no separate worker
-is required. The options below are only for hosts that want jobs processed
-sooner, or that cannot run cron at all.
+**Default: the scheduler runs it.** Keep `QUEUE_CONNECTION=database`. Each
+minute `schedule:run` starts `queue:work --stop-when-empty --max-time=50`,
+which exits when the queue is empty, so no second cron entry is needed. This is
+controlled by `QUEUE_RUN_VIA_SCHEDULER` (on by default for the database queue).
 
-cPanel hosts vary in whether they allow long-running daemons. Choose based on
-what your host permits:
-
-**Option A — `database` queue + a worker cron (optional, for faster delivery).**
-Keep `QUEUE_CONNECTION=database` in `.env` and add a second cron entry that keeps
-a short-lived worker alive. `--stop-when-empty` lets the process exit cleanly so
-overlapping cron runs don't stack up:
-
-```
-* * * * * cd /home/username/inventoros && php artisan queue:work --stop-when-empty --tries=3 --max-time=55 >> /dev/null 2>&1
-```
-
-If your host supports a persistent "daemon" process (some offer this via
-**Application Manager** or `cpsupervisor`), run a long-lived worker instead:
+**Option A: a persistent worker.** If your host supports a long-running
+"daemon" process (some offer this via **Application Manager** or
+`cpsupervisor`), run a worker there and set `QUEUE_RUN_VIA_SCHEDULER=false`:
 
 ```
 php artisan queue:work --tries=3 --max-time=3600
 ```
 
-**Option B — `sync` queue (simplest, no worker).**
+**Option B: `sync` queue (simplest, no worker).**
 If your host forbids extra cron/daemon processes, set the queue to run inline:
 
 ```env

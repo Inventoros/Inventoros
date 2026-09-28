@@ -1,5 +1,6 @@
 <?php
 
+use App\Support\SchedulerHealth;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Schedule;
@@ -9,6 +10,19 @@ Artisan::command('inspire', function () {
 })->purpose('Display an inspiring quote');
 
 Schedule::command('inventory:check-reorder-points')->dailyAt('06:00');
+
+// Drain the database queue (mail, webhooks) on hosts with no queue worker.
+// Each run exits once the queue is empty or after 50 seconds, so it never
+// outlives its minute. See config/queue.php `run_via_scheduler`.
+Schedule::command('queue:work --stop-when-empty --max-time=50')
+    ->everyMinute()
+    ->withoutOverlapping()
+    ->when(fn (): bool => (bool) config('queue.run_via_scheduler'));
+
+// Heartbeat for the dashboard's "scheduler is not running" warning.
+Schedule::call(fn () => app(SchedulerHealth::class)->beat())
+    ->everyMinute()
+    ->name(SchedulerHealth::HEARTBEAT_EVENT);
 
 // Scheduled cycle counts: turn every due schedule into a draft stock audit.
 // Hourly, so a schedule's run time is honoured to within the hour.
