@@ -55,6 +55,13 @@ Before upgrading: take a database backup you have checked, run `php artisan opti
 - Stored mail and EasyPost secrets are never sent to the browser.
 - XLSX exports cannot contain formulas.
 - Marketplace packages are verified against a pinned Ed25519 key and a sha256, with SSRF and zip-slip protection.
+- A user administrator who is not an admin can no longer edit, reset the password of, or delete an admin, a manager, or anyone holding permissions they lack.
+- Each organization's mail goes through its own mailer, so a queue worker never sends one organization's mail through another's SMTP. Password-reset and invitation mail always uses the instance mailer (`MAIL_*` in `.env`).
+- API tokens: `POST /api/v1/tokens` never mints a token broader than the calling token and the user's permissions. GraphQL approvals and every approval listing honour token abilities.
+- Scheduled reports only go to users who may view the report's data. Report files are no longer stored in the queue tables.
+- Emailing purchase orders and invoices is rate limited per user and per organization (`DOCUMENT_EMAILS_*`); over the limit the API returns 429 `rate_limited`.
+- Order creators cannot approve their own orders unless they are an admin and admins may self-approve (422 `self_approval`).
+- Export downloads are limited to the user who requested them and admins. A portal password change signs the contact out of their other portal sessions. The portal invoice no longer shows payment references.
 
 ## [1.0.x]
 
