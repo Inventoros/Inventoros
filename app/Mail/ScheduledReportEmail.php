@@ -7,16 +7,18 @@ namespace App\Mail;
 use App\Mail\Concerns\AppliesOrganizationMailConfig;
 use App\Mail\Concerns\UsesOrganizationBranding;
 use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\Factory as Queue;
 use Illuminate\Mail\Mailable;
 use Illuminate\Queue\SerializesModels;
 
 /**
  * A scheduled saved-report delivery with the rendered report attached.
  *
- * The report is rendered by the scheduler command (as the report owner, with
- * their permissions re-checked), then queued. The attachment travels base64
- * encoded because the queue payload is JSON and XLSX/PDF bytes are not valid
- * UTF-8. The org's mail configuration is applied in build(), in the worker.
+ * The report is rendered in DeliverScheduledReportJob (as the report owner,
+ * with their permissions re-checked) and this mailable is SENT from there,
+ * never queued: queuing would serialize the report into the jobs and
+ * failed_jobs tables, so queue() refuses. The org's mailer is selected in
+ * build().
  */
 class ScheduledReportEmail extends Mailable
 {
@@ -35,15 +37,23 @@ class ScheduledReportEmail extends Mailable
         public string $frequency,
         public string $filename,
         public string $mimeType,
-        public string $contentBase64,
+        public string $content,
     ) {
         $this->data = ['organization_id' => $organizationId];
     }
 
-    /** The decoded attachment bytes. */
+    /** The attachment bytes. */
     public function attachmentContent(): string
     {
-        return (string) base64_decode($this->contentBase64, true);
+        return $this->content;
+    }
+
+    /**
+     * Never queue this mailable: the payload would carry the report itself.
+     */
+    public function queue(Queue $queue): mixed
+    {
+        throw new \LogicException('Scheduled report emails carry report data and must be sent, not queued.');
     }
 
     /**

@@ -5,8 +5,10 @@ declare(strict_types=1);
 namespace App\Services\Reports;
 
 use App\Enums\Permission;
+use App\Jobs\DeliverScheduledReportJob;
 use App\Mail\ScheduledReportEmail;
 use App\Models\ReportSchedule;
+use App\Models\SavedReport;
 use App\Models\Scopes\OrganizationScope;
 use App\Models\User;
 use App\Services\ReportDataService;
@@ -26,11 +28,15 @@ use Illuminate\Support\Facades\Mail;
  *
  * The report is generated as the saved report's OWNER. At send time the owner
  * must still belong to the schedule's organization and still hold
- * view_reports; the data source's own view permission is re-checked by
- * ReportDataService::executeReport. If any check fails the delivery is skipped
- * and logged. Recipients are re-filtered to current members of the
- * organization who may still see the report, so someone who has left or lost
- * access stops receiving it.
+ * view_reports and the data source's own view permission (re-checked again
+ * by ReportDataService::executeReport when it renders). If any check fails
+ * the delivery is skipped and logged. Recipients are re-filtered to current
+ * members of the organization who may still see the report, so someone who
+ * has left or lost access stops receiving it.
+ *
+ * The report itself is generated inside DeliverScheduledReportJob and mailed
+ * from there, so its contents are never serialized into the jobs (or
+ * failed_jobs) table: the queued payload carries only ids and addresses.
  */
 class ScheduledReportRunner
 {
@@ -55,13 +61,7 @@ class ScheduledReportRunner
                     }
 
                     $stats['due']++;
-                    $status = $this->send($schedule);
-                    $stats[$status]++;
-
-                    ReportSchedule::query()
-                        ->withoutGlobalScope(OrganizationScope::class)
-                        ->whereKey($schedule->id)
-                        ->update(['last_status' => $status]);
+                    $stats[$this->send($schedule)]++;
                 }
             });
 
@@ -85,32 +85,54 @@ class ScheduledReportRunner
     }
 
     /**
+     * Check the schedule can go out and queue its delivery. 'sent' means the
+     * delivery job was queued; the job records 'failed' or 'skipped' itself
+     * if rendering or mailing then fails.
+     *
      * @return 'sent'|'skipped'|'failed'
      */
     public function send(ReportSchedule $schedule): string
     {
-        $report = $schedule->savedReport()->first();
-        $owner = $report !== null ? User::query()->find($report->created_by) : null;
-
-        if ($report === null || $owner === null
-            || (int) $report->organization_id !== (int) $schedule->organization_id
-            || (int) $owner->organization_id !== (int) $schedule->organization_id) {
-            return $this->skip($schedule, 'owner_unavailable');
-        }
-
-        if (! $owner->hasPermission(Permission::VIEW_REPORTS)) {
-            return $this->skip($schedule, 'permission_revoked', ['permission' => Permission::VIEW_REPORTS->value]);
+        [$report, $owner, $skip] = $this->resolveOwner($schedule);
+        if ($skip !== null) {
+            return $this->record($schedule, $skip);
         }
 
         $recipients = $this->currentRecipients($schedule, $report->data_source);
         if ($recipients === []) {
-            return $this->skip($schedule, 'no_recipients');
+            return $this->record($schedule, $this->skip($schedule, 'no_recipients'));
+        }
+
+        $this->record($schedule, 'sent');
+        DeliverScheduledReportJob::dispatch($schedule->id, $recipients);
+
+        return 'sent';
+    }
+
+    /**
+     * Generate the report and mail it to $recipients. Runs in the queue
+     * worker (DeliverScheduledReportJob); the rendered file only ever lives
+     * in memory here and in the synchronously sent mail.
+     *
+     * @param  array<int, string>  $recipients
+     * @return 'sent'|'skipped'|'failed'
+     */
+    public function deliver(int $scheduleId, array $recipients): string
+    {
+        $schedule = ReportSchedule::query()->withoutGlobalScope(OrganizationScope::class)->find($scheduleId);
+        if ($schedule === null) {
+            return 'skipped';
+        }
+
+        [$report, $owner, $skip] = $this->resolveOwner($schedule);
+        if ($skip !== null) {
+            return $this->record($schedule, $skip);
         }
 
         try {
             $rendered = $this->renderer->render($report, $owner, $schedule->format);
         } catch (AuthorizationException $e) {
-            return $this->skip($schedule, 'permission_revoked', ['data_source' => $report->data_source]);
+            return $this->record($schedule, $this->skip($schedule, 'permission_revoked', ['data_source' => $report->data_source]));
         } catch (\Throwable $e) {
             Log::error('Scheduled report failed to render', [
                 'schedule_id' => $schedule->id,
@@ -119,21 +141,74 @@ class ScheduledReportRunner
                 'error' => $e->getMessage(),
             ]);
 
-            return 'failed';
+            return $this->record($schedule, 'failed');
         }
 
+        $status = 'sent';
         foreach ($recipients as $email) {
-            Mail::to($email)->queue(new ScheduledReportEmail(
-                (int) $schedule->organization_id,
-                $report->name,
-                $schedule->frequency,
-                $rendered->filename,
-                $rendered->mimeType,
-                base64_encode($rendered->content),
-            ));
+            try {
+                // send(), not queue(): the attachment must not be serialized.
+                Mail::to($email)->send(new ScheduledReportEmail(
+                    (int) $schedule->organization_id,
+                    $report->name,
+                    $schedule->frequency,
+                    $rendered->filename,
+                    $rendered->mimeType,
+                    $rendered->content,
+                ));
+            } catch (\Throwable $e) {
+                $status = 'failed';
+                Log::error('Scheduled report could not be mailed', [
+                    'schedule_id' => $schedule->id,
+                    'organization_id' => $schedule->organization_id,
+                    'error' => $e->getMessage(),
+                ]);
+            }
         }
 
-        return 'sent';
+        return $this->record($schedule, $status);
+    }
+
+    /**
+     * The saved report and its owner, or the skip status when the owner can
+     * no longer run it.
+     *
+     * @return array{0: SavedReport|null, 1: User|null, 2: 'skipped'|null}
+     */
+    private function resolveOwner(ReportSchedule $schedule): array
+    {
+        $report = $schedule->savedReport()->withoutGlobalScope(OrganizationScope::class)->first();
+        $owner = $report !== null ? User::query()->find($report->created_by) : null;
+
+        if ($report === null || $owner === null
+            || (int) $report->organization_id !== (int) $schedule->organization_id
+            || (int) $owner->organization_id !== (int) $schedule->organization_id) {
+            return [$report, $owner, $this->skip($schedule, 'owner_unavailable')];
+        }
+
+        if (! $owner->hasPermission(Permission::VIEW_REPORTS)) {
+            return [$report, $owner, $this->skip($schedule, 'permission_revoked', ['permission' => Permission::VIEW_REPORTS->value])];
+        }
+
+        if (! $owner->hasAllPermissions(ReportDataService::viewPermissionsFor((string) $report->data_source))) {
+            return [$report, $owner, $this->skip($schedule, 'permission_revoked', ['data_source' => $report->data_source])];
+        }
+
+        return [$report, $owner, null];
+    }
+
+    /**
+     * @param  'sent'|'skipped'|'failed'  $status
+     * @return 'sent'|'skipped'|'failed'
+     */
+    private function record(ReportSchedule $schedule, string $status): string
+    {
+        ReportSchedule::query()
+            ->withoutGlobalScope(OrganizationScope::class)
+            ->whereKey($schedule->id)
+            ->update(['last_status' => $status]);
+
+        return $status;
     }
 
     /**
