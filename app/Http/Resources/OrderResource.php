@@ -28,6 +28,7 @@ class OrderResource extends JsonResource
             'invoice_issued_at' => $this->invoice_issued_at?->toIso8601String(),
             'invoice_sent_at' => $this->invoice_sent_at?->toIso8601String(),
             'invoice_sent_to' => $this->invoice_sent_to,
+            'invoice_queued_at' => $this->invoice_queued_at?->toIso8601String(),
             'source' => $this->source,
             'external_id' => $this->external_id,
             'customer_id' => $this->customer_id,

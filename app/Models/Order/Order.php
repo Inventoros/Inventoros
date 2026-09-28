@@ -34,6 +34,7 @@ use Illuminate\Support\Carbon;
  * @property string|null $invoice_number
  * @property \Illuminate\Support\Carbon|null $invoice_issued_at
  * @property \Illuminate\Support\Carbon|null $invoice_sent_at
+ * @property \Illuminate\Support\Carbon|null $invoice_queued_at
  * @property string|null $invoice_sent_to
  * @property string|null $source
  * @property string|null $external_id
@@ -99,6 +100,7 @@ class Order extends Model
         'invoice_issued_at',
         'invoice_sent_at',
         'invoice_sent_to',
+        'invoice_queued_at',
         'source',
         'external_id',
         'external_reference',
@@ -153,6 +155,7 @@ class Order extends Model
             'approved_at' => 'datetime',
             'invoice_issued_at' => 'datetime',
             'invoice_sent_at' => 'datetime',
+            'invoice_queued_at' => 'datetime',
             'metadata' => 'array',
         ];
     }
@@ -380,6 +383,16 @@ class Order extends Model
     {
         return $query->where('approval_status', 'pending')
             ->where('status', '!=', OrderStatus::CANCELLED->value);
+    }
+
+    /**
+     * Whether the latest invoice email is still waiting in the queue: queued
+     * and not delivered since (invoice_sent_at is stamped on delivery).
+     */
+    public function invoiceEmailIsQueued(): bool
+    {
+        return $this->invoice_queued_at !== null
+            && ($this->invoice_sent_at === null || $this->invoice_sent_at->lessThan($this->invoice_queued_at));
     }
 
     /**

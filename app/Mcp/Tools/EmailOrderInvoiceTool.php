@@ -67,11 +67,12 @@ class EmailOrderInvoiceTool extends Tool
         }
 
         return Response::json([
-            'message' => "Invoice {$order->invoice_number} emailed to {$order->invoice_sent_to}.",
+            'message' => "Invoice {$order->invoice_number} queued for {$order->invoice_sent_to}.",
             'id' => $order->id,
             'order_number' => $order->order_number,
             'invoice_number' => $order->invoice_number,
             'invoice_sent_to' => $order->invoice_sent_to,
+            'invoice_queued_at' => $order->invoice_queued_at?->toIso8601String(),
             'invoice_sent_at' => $order->invoice_sent_at?->toIso8601String(),
         ]);
     }

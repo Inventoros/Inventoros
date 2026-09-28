@@ -2127,6 +2127,7 @@
     "attachmentNote": "{file} will be attached as a PDF.",
     "sending": "Sending...",
     "sentOn": "Sent to {to} on {date}",
+    "queuedOn": "Queued for {to} on {date}. It goes out when the mail queue next runs.",
     "noRecipient": "No email address on file. Enter a recipient to send.",
     "sendPo": "Send to Supplier",
     "resendPo": "Resend to Supplier",
@@ -2140,6 +2141,7 @@
     "invoiceNotIssued": "Not issued yet. A number is assigned the first time the invoice is generated.",
     "invoiceIssued": "Issued",
     "invoiceSent": "Sent",
+    "invoiceQueued": "Queued",
     "send": "Send"
   },
   "scanning": {

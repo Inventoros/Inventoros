@@ -93,7 +93,14 @@ const showDeleteModal = ref(false);
 
 // Invoice emailing
 const showInvoiceModal = ref(false);
+// invoice_queued_at is stamped when the email is queued, invoice_sent_at when
+// it is delivered; a newer queued stamp means the latest send is still waiting.
+const invoiceQueued = computed(() => {
+    const { invoice_queued_at: queuedAt, invoice_sent_at: sentAt } = props.order;
+    return Boolean(queuedAt) && (!sentAt || new Date(sentAt) < new Date(queuedAt));
+});
 const invoiceStatus = computed(() => {
+    if (invoiceQueued.value) return { label: t('documentEmail.invoiceQueued'), variant: 'warning' };
     if (props.order.invoice_sent_at) return { label: t('documentEmail.invoiceSent'), variant: 'success' };
     if (props.order.invoice_number) return { label: t('documentEmail.invoiceIssued'), variant: 'info' };
     return null;
@@ -569,7 +576,10 @@ const formatOrderDate = (date, long = false) =>
                                     <dd class="mt-1 text-sm font-medium text-text-primary">{{ order.invoice_number }}</dd>
                                 </div>
                             </dl>
-                            <p v-if="order.invoice_sent_at" class="mt-3 text-xs text-text-secondary">
+                            <p v-if="invoiceQueued" class="mt-3 text-xs text-text-secondary">
+                                {{ t('documentEmail.queuedOn', { to: order.invoice_sent_to, date: formatDate(order.invoice_queued_at) }) }}
+                            </p>
+                            <p v-else-if="order.invoice_sent_at" class="mt-3 text-xs text-text-secondary">
                                 {{ t('documentEmail.sentOn', { to: order.invoice_sent_to, date: formatDate(order.invoice_sent_at) }) }}
                             </p>
                             <p v-else class="text-xs text-text-tertiary">{{ t('documentEmail.invoiceNotIssued') }}</p>

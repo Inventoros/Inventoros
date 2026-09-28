@@ -62,10 +62,11 @@ class OrderInvoiceEmailApiTest extends TestCase
         $this->postJson("/api/v1/orders/{$order->id}/invoice/email", ['cc' => ['books@acme.test'], 'message' => 'Thanks!'])
             ->assertOk()
             ->assertJsonPath('data.invoice_sent_to', 'casey@customer.test')
+            ->assertJsonPath('data.invoice_queued_at', fn ($v) => $v !== null)
             ->assertJsonPath('data.invoice_number', $order->fresh()->invoice_number);
 
         Mail::assertQueued(OrderInvoiceEmail::class, fn (OrderInvoiceEmail $m) => $m->hasTo('casey@customer.test') && $m->hasCc('books@acme.test'));
-        $this->assertNotNull($order->fresh()->invoice_sent_at);
+        $this->assertNotNull($order->fresh()->invoice_queued_at);
     }
 
     public function test_rest_without_a_recipient_is_a_422(): void

@@ -17,8 +17,10 @@ use Throwable;
 
 /**
  * Emails an order's invoice to the customer: makes sure the invoice has its
- * number, queues the email with the invoice PDF attached, stamps when and to
- * whom it went, and records the send in the activity log. Re-sending is
+ * number, queues the email with the invoice PDF attached, stamps when it was
+ * queued and to whom, and records the send in the activity log.
+ * invoice_sent_at is stamped when the email is actually delivered
+ * (DocumentEmailDelivered). Re-sending is
  * allowed; each send updates the stamp and adds a log entry.
  */
 class OrderInvoiceEmailService
@@ -59,7 +61,7 @@ class OrderInvoiceEmailService
         try {
             // Queue push last, so a failure to queue rolls back the stamp and the log.
             DB::transaction(function () use ($order, $actor, $recipient, $cc, $message, $sentAt, $invoiceNumber) {
-                $order->invoice_sent_at = $sentAt;
+                $order->invoice_queued_at = $sentAt;
                 $order->invoice_sent_to = $recipient;
                 $order->save();
 

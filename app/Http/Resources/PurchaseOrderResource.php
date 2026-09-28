@@ -31,6 +31,7 @@ class PurchaseOrderResource extends JsonResource
             'received_date' => $this->received_date?->format('Y-m-d'),
             'sent_at' => $this->sent_at?->toIso8601String(),
             'sent_to' => $this->sent_to,
+            'queued_at' => $this->queued_at?->toIso8601String(),
             'approval_status' => $this->approval_status,
             'approval_notes' => $this->approval_notes,
             'approval_requested_at' => $this->approval_requested_at?->toIso8601String(),
