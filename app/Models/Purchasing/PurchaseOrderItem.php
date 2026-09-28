@@ -212,6 +212,8 @@ class PurchaseOrderItem extends Model
                 reference: $purchaseOrder,
             );
 
+            $this->recordSupplierCost($purchaseOrder);
+
             $purchaseOrder->refresh();
             $purchaseOrder->updateReceivingStatus();
 
@@ -243,7 +245,8 @@ class PurchaseOrderItem extends Model
 
     /**
      * Log the unit cost this line was received at to the supplier price
-     * history. A line received in several partial deliveries is logged once.
+     * history, against the variant when the line names one. A line received
+     * in several partial deliveries is logged once.
      */
     protected function recordSupplierCost(PurchaseOrder $purchaseOrder): void
     {
@@ -254,6 +257,7 @@ class PurchaseOrderItem extends Model
         $alreadyRecorded = SupplierPriceHistory::withoutGlobalScopes()
             ->where('purchase_order_id', $purchaseOrder->id)
             ->where('product_id', $this->product_id)
+            ->where('product_variant_id', $this->product_variant_id)
             ->where('source', SupplierPriceHistory::SOURCE_PURCHASE_ORDER)
             ->where('cost_price', $this->unit_cost)
             ->exists();
@@ -265,6 +269,7 @@ class PurchaseOrderItem extends Model
                 $this->unit_cost,
                 SupplierPriceHistory::SOURCE_PURCHASE_ORDER,
                 $purchaseOrder->id,
+                $this->variant,
             );
         }
     }

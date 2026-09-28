@@ -6,6 +6,7 @@ namespace Tests\Feature;
 
 use App\Models\Auth\Organization;
 use App\Models\Inventory\Product;
+use App\Models\Inventory\ProductVariant;
 use App\Models\Inventory\Supplier;
 use App\Models\Inventory\SupplierPriceHistory;
 use App\Models\Purchasing\PurchaseOrder;
@@ -118,5 +119,35 @@ final class SupplierPriceHistoryTest extends TestCase
         $item->receive(5);
 
         $this->assertEquals(7.75, (float) SupplierPriceHistory::sole()->cost_price);
+    }
+
+    public function test_receiving_a_variant_line_records_its_unit_cost_against_the_variant(): void
+    {
+        $variant = ProductVariant::create([
+            'product_id' => $this->product->id, 'organization_id' => $this->org->id,
+            'sku' => 'P-1-L', 'title' => 'Large', 'option_values' => ['Size' => 'Large'],
+            'price' => 20, 'purchase_price' => 5, 'stock' => 0, 'min_stock' => 0,
+            'is_active' => true, 'position' => 0,
+        ]);
+        $item = $this->sentPurchaseOrder(6.4, 4);
+        $item->forceFill(['product_variant_id' => $variant->id, 'sku' => 'P-1-L'])->save();
+        $this->actingAs($this->admin);
+
+        $item->fresh()->receive(2);
+        $item->fresh()->receive(2);
+
+        $entry = SupplierPriceHistory::sole();
+        $this->assertSame($this->product->id, $entry->product_id);
+        $this->assertSame($variant->id, $entry->product_variant_id);
+        $this->assertSame($this->supplier->id, $entry->supplier_id);
+        $this->assertEquals(6.4, (float) $entry->cost_price);
+        $this->assertSame(4, (int) $variant->fresh()->stock);
+
+        // The product page names the variant the cost was for.
+        $this->get(route('products.show', $this->product))
+            ->assertOk()
+            ->assertInertia(fn ($page) => $page
+                ->where('priceHistory.0.variant_title', 'Large')
+            );
     }
 }
