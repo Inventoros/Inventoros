@@ -148,7 +148,7 @@ final class ProductsImport implements SkipsOnFailure, ToCollection, WithChunkRea
         });
     }
 
-    public function collection(Collection $rows)
+    public function collection(Collection $rows): void
     {
         foreach ($rows as $index => $row) {
             // Absolute row number across chunks (+2 for the header row and the
