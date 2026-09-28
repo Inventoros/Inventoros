@@ -152,6 +152,8 @@
       "failedJobs": "Background jobs that failed in the last 24 hours: {count}.",
       "help": "Check that the cron job runs php artisan schedule:run every minute. See the cPanel guide for details."
     },
+    "atSellingPrice": "at selling price",
+    "itemsCount": "{count} item | {count} items",
     "totalProducts": "Total Products",
     "totalValue": "Total Value",
     "lowStock": "Low Stock",

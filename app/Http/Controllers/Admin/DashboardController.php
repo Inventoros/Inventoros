@@ -308,6 +308,9 @@ class DashboardController extends Controller
             ],
         ];
 
+        // Stat tiles and order totals are shown in the organization's currency.
+        $data['currency'] = $user->organization?->currency ?: 'USD';
+
         // Hook: Allow plugins to modify all dashboard data
         $data = apply_filters('dashboard_page_data', $data, $user);
 

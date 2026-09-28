@@ -13,6 +13,8 @@ import { ref, reactive, computed } from 'vue';
 import { useQuickReorder } from '@/composables/useQuickReorder';
 import { useI18n } from 'vue-i18n';
 import { formatCalendarDate } from '@/lib/dates';
+import { formatCompactMoney, formatMoney } from '@/lib/money';
+import { orderStatusLabel, orderStatusVariant } from '@/lib/orderLabels';
 import axios from 'axios';
 import {
     Boxes,
@@ -29,7 +31,7 @@ import {
     ClipboardList,
 } from 'lucide-vue-next';
 
-const { t } = useI18n();
+const { t, te } = useI18n();
 
 const props = defineProps({
     stats: Object,
@@ -44,6 +46,7 @@ const props = defineProps({
     can: { type: Object, default: () => ({}) },
     // Admin-only scheduler / queue health warnings (SchedulerHealth).
     systemWarnings: { type: Array, default: () => [] },
+    currency: { type: String, default: 'USD' },
 });
 
 const systemWarningMessage = (warning) => {
@@ -89,8 +92,8 @@ const saveWidgetPreferences = async () => {
     }
 };
 
-const formatCurrency = (value) =>
-    new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(value ?? 0);
+// Amounts in the organization's currency (see lib/money).
+const formatCurrency = (value) => formatMoney(value, props.currency);
 
 const formatNumber = (value) => {
     const v = Number(value ?? 0);
@@ -99,19 +102,7 @@ const formatNumber = (value) => {
     return v.toString();
 };
 
-const formatCompactCurrency = (value) => {
-    const f = formatNumber(value);
-    return f.endsWith('K') || f.endsWith('M') ? '$' + f : formatCurrency(value);
-};
-
-const orderStatusVariant = (status) =>
-    ({
-        pending: 'warning',
-        processing: 'info',
-        shipped: 'brand',
-        delivered: 'success',
-        cancelled: 'danger',
-    }[status] || 'neutral');
+const formatCompactCurrency = (value) => formatCompactMoney(value, props.currency);
 
 const quickReorder = useQuickReorder(computed(() => props.reorderSuggestions || []));
 
@@ -122,7 +113,6 @@ const secondaryStats = () => [
     { key: 'pendingOrders', label: t('dashboard.pendingOrders'), value: formatNumber(props.stats?.pendingOrders), href: route('orders.index', { status: 'pending' }), tone: 'text-status-warning' },
     { key: 'categories', label: t('dashboard.categories'), value: props.stats?.categories, href: route('categories.index'), tone: 'text-brand' },
     { key: 'locations', label: t('dashboard.locations'), value: props.stats?.locations, href: route('locations.index'), tone: 'text-brand' },
-    { key: 'totalValue', label: t('dashboard.inventoryValue'), value: formatCompactCurrency(props.stats?.totalValue), href: null, tone: 'text-status-success' },
     { key: 'revenueThisMonth', label: t('dashboard.revenueThisMonth'), value: formatCompactCurrency(props.stats?.revenueThisMonth), href: null, tone: 'text-brand' },
     { key: 'deadStockValue', label: t('dashboard.deadStockValue'), value: formatCompactCurrency(props.stats?.deadStockValue), href: route('reports.dead-stock'), tone: 'text-status-warning' },
     { key: 'outstandingReceivables', label: t('dashboard.outstandingReceivables'), value: formatCompactCurrency(props.stats?.outstandingReceivables), href: route('reports.receivables'), tone: 'text-status-warning' },
@@ -195,9 +185,9 @@ const secondaryStats = () => [
             </StatTile>
             <StatTile
                 v-if="stats.totalValue !== undefined"
-                :label="t('dashboard.totalValue')"
+                :label="t('dashboard.inventoryValue')"
                 :value="formatCompactCurrency(stats.totalValue)"
-                hint="at cost"
+                :hint="t('dashboard.atSellingPrice')"
                 icon-tone="success"
             >
                 <template #icon><DollarSign :size="20" :stroke-width="1.5" /></template>
@@ -279,10 +269,10 @@ const secondaryStats = () => [
                                 <div class="min-w-0">
                                     <div class="flex items-center gap-2">
                                         <span class="font-mono text-xs font-medium text-text-primary">{{ order.order_number }}</span>
-                                        <Badge :variant="orderStatusVariant(order.status)" size="sm" dot>{{ order.status }}</Badge>
+                                        <Badge :variant="orderStatusVariant(order.status)" size="sm" dot>{{ orderStatusLabel(order.status, { t, te }) }}</Badge>
                                     </div>
                                     <p class="mt-0.5 truncate text-xs text-text-tertiary">
-                                        {{ order.customer_name }} · {{ order.items.length }} items
+                                        {{ order.customer_name }} · {{ t('dashboard.itemsCount', order.items.length) }}
                                     </p>
                                 </div>
                                 <div class="shrink-0 text-right">
