@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services\Update;
 
+use App\Support\PublicPath;
 use App\Support\ReleaseSignatureVerifier;
 use App\Support\SafeZipExtractor;
 use Exception;
@@ -541,6 +542,33 @@ class FileUpdateService
         }
 
         $this->installWebRoot($extractPath.'/public_html', $this->publicPath(), restoring: false);
+
+        $this->recordWebRoot();
+    }
+
+    /**
+     * Installs from before 2.0 never recorded their web root, so CLI commands
+     * on a split install wrote to <app>/public. Record it in .env (only when
+     * missing) so the next `php artisan` run sees the same web root.
+     */
+    protected function recordWebRoot(): void
+    {
+        $value = PublicPath::envValue($this->basePath(), $this->publicPath());
+        $envFile = $this->basePath().'/.env';
+
+        if ($value === null || ! is_file($envFile) || ! is_writable($envFile)) {
+            return;
+        }
+
+        $contents = (string) file_get_contents($envFile);
+        if (preg_match('/^\s*APP_PUBLIC_PATH\s*=/m', $contents) === 1) {
+            return;
+        }
+
+        $line = 'APP_PUBLIC_PATH="'.addcslashes($value, '"\\$').'"';
+        $separator = ($contents === '' || str_ends_with($contents, "\n")) ? '' : "\n";
+
+        file_put_contents($envFile, $contents.$separator.$line."\n");
     }
 
     /**
@@ -668,47 +696,15 @@ class FileUpdateService
      */
     protected function laravelPathExpression(): string
     {
-        $from = $this->normalizePath(realpath($this->publicPath()) ?: $this->publicPath());
-        $to = $this->normalizePath(realpath($this->basePath()) ?: $this->basePath());
+        $from = PublicPath::normalize(realpath($this->publicPath()) ?: $this->publicPath());
+        $to = PublicPath::normalize(realpath($this->basePath()) ?: $this->basePath());
 
-        $relative = $this->relativePath($from, $to);
+        $relative = PublicPath::relative($from, $to);
         if ($relative === null) {
             return var_export($to, true);
         }
 
         return $relative === '' ? '__DIR__' : "__DIR__.'/{$relative}'";
-    }
-
-    /**
-     * The relative path from one absolute directory to another, or null when
-     * they share no root (e.g. different Windows drives).
-     */
-    protected function relativePath(string $from, string $to): ?string
-    {
-        $fromParts = explode('/', trim($from, '/'));
-        $toParts = explode('/', trim($to, '/'));
-
-        $caseInsensitive = PHP_OS_FAMILY === 'Windows';
-        $same = fn (string $a, string $b): bool => $caseInsensitive ? strcasecmp($a, $b) === 0 : $a === $b;
-
-        if (! $same($fromParts[0] ?? '', $toParts[0] ?? '') && (str_contains($fromParts[0] ?? '', ':') || str_contains($toParts[0] ?? '', ':'))) {
-            return null;
-        }
-
-        $common = 0;
-        while (isset($fromParts[$common], $toParts[$common]) && $same($fromParts[$common], $toParts[$common])) {
-            $common++;
-        }
-
-        $up = array_fill(0, count($fromParts) - $common, '..');
-        $down = array_slice($toParts, $common);
-
-        return implode('/', array_merge($up, $down));
-    }
-
-    private function normalizePath(string $path): string
-    {
-        return rtrim(str_replace('\\', '/', $path), '/');
     }
 
     /**

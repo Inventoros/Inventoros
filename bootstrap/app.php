@@ -17,9 +17,11 @@ use App\Http\Middleware\Portal\ResolvePortalOrganization;
 use App\Http\Middleware\Portal\UsePortalGuard;
 use App\Http\Middleware\SecurityHeaders;
 use App\Http\Middleware\SetLocale;
+use App\Support\PublicPath;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Cookie\Middleware\EncryptCookies;
 use Illuminate\Foundation\Application;
+use Illuminate\Foundation\Bootstrap\LoadConfiguration;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Foundation\Http\Middleware\ValidateCsrfToken;
@@ -30,7 +32,7 @@ use Illuminate\Support\Facades\Route;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
 use Sentry\Laravel\Integration;
 
-return Application::configure(basePath: dirname(__DIR__))
+$app = Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
         web: __DIR__.'/../routes/web.php',
         api: __DIR__.'/../routes/api.php',
@@ -111,3 +113,11 @@ return Application::configure(basePath: dirname(__DIR__))
         // inert until an operator opts in.
         Integration::handles($exceptions);
     })->create();
+
+// Split (cPanel) installs keep the web root outside the app directory. The
+// web front controller says where it is; CLI commands learn it from
+// APP_PUBLIC_PATH (config app.public_path, so it also works with a cached
+// config). An explicit usePublicPath() from the entry point wins.
+$app->afterBootstrapping(LoadConfiguration::class, fn (Application $app) => PublicPath::apply($app));
+
+return $app;

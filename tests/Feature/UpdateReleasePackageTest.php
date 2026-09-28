@@ -239,7 +239,12 @@ final class UpdateReleasePackageTest extends TestCase
         $this->assertSame(self::VERSION, trim(File::get($this->base.'/VERSION')));
 
         // User data and runtime state are untouched.
-        $this->assertSame("APP_KEY=base64:keep-me\n", File::get($this->base.'/.env'));
+        // .env keeps its values and learns where the web root is, so CLI
+        // commands on this split install use it too.
+        $this->assertSame(
+            "APP_KEY=base64:keep-me\nAPP_PUBLIC_PATH=\"../public_html\"\n",
+            File::get($this->base.'/.env')
+        );
         $this->assertSame('USER UPLOAD', File::get($this->base.'/storage/app/uploads/invoice.pdf'));
         $this->assertFileExists($this->base.'/plugins/custom/plugin.json');
         $this->assertFileDoesNotExist($this->base.'/plugins/hello-world/plugin.json');
