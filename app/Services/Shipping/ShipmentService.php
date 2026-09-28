@@ -247,13 +247,22 @@ final class ShipmentService
             throw new ShippingException("A {$shipment->status->label()} shipment cannot be marked shipped.");
         }
 
-        return $this->applyTrackingStatus($shipment, ShipmentStatus::SHIPPED, null, $at);
+        $shipment = $this->applyTrackingStatus($shipment, ShipmentStatus::SHIPPED, null, $at);
+
+        // applyTrackingStatus() leaves the shipment where it was when, under
+        // its lock, the shipment or its order turned out to be cancelled.
+        if (! $shipment->status->hasLeft()) {
+            throw new ShippingException('This shipment can no longer ship: it or its order has been cancelled.');
+        }
+
+        return $shipment;
     }
 
     /**
      * Apply a status reported by the carrier (or the user). Moving from
      * pending/label_created straight to in_transit or delivered also stamps
-     * shipped_at. A delivered shipment stays delivered; a cancelled one ignores
+     * shipped_at. A delivered shipment stays delivered; a cancelled one, or
+     * one whose order was cancelled (its stock already went back), ignores
      * updates.
      */
     public function applyTrackingStatus(Shipment $shipment, ShipmentStatus $status, ?string $detail = null, ?Carbon $at = null): Shipment
@@ -261,6 +270,10 @@ final class ShipmentService
         $at ??= now();
 
         [$shipment, $wasLeft, $deliveredNow] = DB::transaction(function () use ($shipment, $status, $detail, $at) {
+            // Order before shipment, the same order OrderService::cancel()
+            // takes them in, so a concurrent cancel and ship cannot deadlock
+            // and cannot both win.
+            $order = Order::withoutGlobalScopes()->whereKey($shipment->order_id)->lockForUpdate()->first();
             $locked = Shipment::withoutGlobalScopes()->whereKey($shipment->getKey())->lockForUpdate()->firstOrFail();
             $wasLeft = $locked->status->hasLeft();
 
@@ -272,6 +285,7 @@ final class ShipmentService
 
             $ignore = $locked->status === ShipmentStatus::CANCELLED
                 || $locked->status === ShipmentStatus::DELIVERED
+                || ($order?->status === OrderStatus::CANCELLED && ! $locked->status->hasLeft())
                 || ! $status->hasLeft();
 
             $deliveredNow = false;
@@ -314,19 +328,27 @@ final class ShipmentService
      */
     public function cancel(Shipment $shipment): Shipment
     {
-        $shipment->refresh();
+        // Re-read and re-check under the same order-then-shipment locks
+        // applyTrackingStatus() takes, so a concurrent "mark shipped" cannot
+        // slip in between the check and the write.
+        return DB::transaction(function () use ($shipment) {
+            Order::withoutGlobalScopes()->whereKey($shipment->order_id)->lockForUpdate()->first();
+            $locked = Shipment::withoutGlobalScopes()->whereKey($shipment->getKey())->lockForUpdate()->firstOrFail();
 
-        if (! $shipment->status->isCancellable()) {
-            throw new ShippingException("A {$shipment->status->label()} shipment cannot be cancelled.");
-        }
+            if (! $locked->status->isCancellable()) {
+                throw new ShippingException("A {$locked->status->label()} shipment cannot be cancelled.");
+            }
 
-        if ($shipment->status === ShipmentStatus::LABEL_CREATED) {
-            $this->carriers->for($shipment->carrier, (int) $shipment->organization_id)->void($shipment);
-        }
+            if ($locked->status === ShipmentStatus::LABEL_CREATED) {
+                $this->carriers->for($locked->carrier, (int) $locked->organization_id)->void($locked);
+            }
 
-        $shipment->forceFill(['status' => ShipmentStatus::CANCELLED])->save();
+            $locked->forceFill(['status' => ShipmentStatus::CANCELLED])->save();
 
-        return $shipment;
+            $shipment->setRawAttributes($locked->getAttributes(), true);
+
+            return $shipment;
+        });
     }
 
     /**
