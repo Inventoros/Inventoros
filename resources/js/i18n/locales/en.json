@@ -231,7 +231,10 @@
     "edit": {
       "title": "Edit Product",
       "backToInventory": "Back to Inventory",
-      "updateProduct": "Update Product"
+      "updateProduct": "Update Product",
+      "stockReadOnlyHint": "Stock changes through stock adjustments, so every change is recorded.",
+      "adjustStockLink": "Adjust stock",
+      "variantStockReadOnlyHint": "Change a saved variant's stock with a stock adjustment."
     },
     "show": {
       "title": "Product Details",
@@ -1652,7 +1655,8 @@
       "reasonPlaceholder": "e.g., Restock, Damaged goods",
       "apply": "Apply",
       "out": "Out",
-      "low": "Low"
+      "low": "Low",
+      "pendingApproval": "Submitted for approval. Stock changes once it is approved."
     },
     "barcodeScanner": {
       "title": "Scan Barcode",

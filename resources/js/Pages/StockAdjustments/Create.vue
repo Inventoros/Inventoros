@@ -16,10 +16,11 @@ const props = defineProps({
     products: Array,
     types: Object,
     locations: { type: Array, default: () => [] },
+    preselectedProductId: { type: Number, default: null },
 });
 
 const form = useForm({
-    product_id: '',
+    product_id: props.products?.some(p => p.id === props.preselectedProductId) ? props.preselectedProductId : '',
     product_variant_id: null,
     type: 'manual',
     adjustment_quantity: 0,

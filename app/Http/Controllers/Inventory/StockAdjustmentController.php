@@ -85,6 +85,7 @@ class StockAdjustmentController extends Controller
             'loss' => 'Loss',
             'recount' => 'Recount',
             'correction' => 'Correction',
+            'opening_stock' => 'Opening Stock',
         ];
 
         return Inertia::render('StockAdjustments/Index', [
@@ -148,6 +149,8 @@ class StockAdjustmentController extends Controller
             'products' => $products,
             'types' => $types,
             'locations' => $locations,
+            // The product edit page links here to change a product's stock.
+            'preselectedProductId' => $request->integer('product_id') ?: null,
         ]);
     }
 

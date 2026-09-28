@@ -190,7 +190,7 @@ class ImportExportController extends Controller
                     ->with('success', "Your import is being processed. You'll be notified when it's complete.");
             }
 
-            $import = new ProductsImport($organizationId);
+            $import = new ProductsImport($organizationId, $request->user());
             Excel::import($import, $file);
 
             $stats = $import->getStats();

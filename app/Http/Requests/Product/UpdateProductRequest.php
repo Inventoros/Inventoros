@@ -40,7 +40,9 @@ final class UpdateProductRequest extends FormRequest
             'description' => 'nullable|string',
             'price' => 'required|numeric|min:0',
             'purchase_price' => 'nullable|numeric|min:0',
-            'stock' => 'required|integer|min:0',
+            // No `stock`: on-hand only moves through stock adjustments, so a
+            // stale edit form cannot put sold units back. A submitted value is
+            // dropped (ProductService::update ignores it too).
             'min_stock' => 'required|integer|min:0',
             'max_stock' => 'nullable|integer|min:0',
             'reorder_point' => 'nullable|integer|min:0',

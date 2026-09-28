@@ -7,8 +7,10 @@ namespace App\Services;
 use App\Models\Inventory\Product;
 use App\Models\Inventory\ProductOption;
 use App\Models\Inventory\ProductVariant;
+use App\Models\Inventory\StockAdjustment;
 use App\Models\Inventory\Supplier;
 use App\Models\Inventory\SupplierPriceHistory;
+use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use InvalidArgumentException;
@@ -24,6 +26,17 @@ use InvalidArgumentException;
  */
 final class ProductService
 {
+    /**
+     * Why a product or variant edit may not set on-hand stock.
+     */
+    public const STOCK_EDIT_MESSAGE = 'On-hand stock cannot be set by editing the product. Record a stock adjustment instead (POST /api/v1/stock-adjustments, or the variant\'s adjust-stock endpoint), so the change is locked, audited and kept in step with location bins and approvals.';
+
+    /**
+     * Ledger type of the row that records a new product's or variant's
+     * starting stock.
+     */
+    public const OPENING_STOCK_TYPE = 'opening_stock';
+
     /**
      * Create a product (plus its options/variants) from validated data.
      *
@@ -42,6 +55,7 @@ final class ProductService
 
         return DB::transaction(function () use ($data, $options, $variants, $syncSuppliers, $suppliers) {
             $product = Product::create($data);
+            $this->recordOpeningStock($product);
 
             if ($syncSuppliers) {
                 $this->syncSuppliers($product, $suppliers);
@@ -58,7 +72,7 @@ final class ProductService
                 }
 
                 foreach ($variants as $index => $variantData) {
-                    ProductVariant::create($this->variantPayload($product, $variantData, $index));
+                    $this->recordOpeningVariantStock(ProductVariant::create($this->variantPayload($product, $variantData, $index)));
                 }
             }
 
@@ -93,7 +107,11 @@ final class ProductService
         // that omits it leaves the links alone.
         $syncSuppliers = array_key_exists('suppliers', $data);
         $suppliers = $data['suppliers'] ?? [];
-        unset($data['options'], $data['variants'], $data['suppliers']);
+        // On-hand stock is never written by an edit: it moves only through
+        // the audited ledger (adjustments, orders, receipts, transfers). The
+        // request layers reject or drop it; this is the backstop for every
+        // surface, including plugin filters that add it back.
+        unset($data['options'], $data['variants'], $data['suppliers'], $data['stock']);
 
         DB::transaction(function () use ($product, $data, $options, $variants, $syncOptions, $syncVariants, $disablingVariants, $syncSuppliers, $suppliers) {
             $product->update($data);
@@ -122,6 +140,67 @@ final class ProductService
         });
 
         return $product;
+    }
+
+    /**
+     * Record a newly created product's starting stock as a ledger row
+     * (0 -> stock) and seed its primary location bin with it, so the opening
+     * quantity is audited and binned like every other movement. No-op for a
+     * product created with no stock.
+     *
+     * Call right after creating the product, inside the same transaction.
+     * The row is attributed to $actor, falling back to the signed-in user;
+     * with neither (a console seeder) only the bin is seeded.
+     */
+    public function recordOpeningStock(Product $product, ?User $actor = null): void
+    {
+        $quantity = (int) $product->stock;
+        if ($quantity <= 0) {
+            return;
+        }
+
+        $userId = $actor?->id ?? auth()->id();
+        if ($userId !== null) {
+            StockAdjustment::create([
+                'organization_id' => $product->organization_id,
+                'product_id' => $product->id,
+                'location_id' => $product->location_id,
+                'user_id' => $userId,
+                'type' => self::OPENING_STOCK_TYPE,
+                'quantity_before' => 0,
+                'quantity_after' => $quantity,
+                'adjustment_quantity' => $quantity,
+                'reason' => 'Opening stock',
+            ]);
+        }
+
+        app(ProductLocationStockService::class)->ensureBinned($product);
+    }
+
+    /**
+     * Record a newly created variant's starting stock as a ledger row
+     * (0 -> stock). Variant stock has no location bins. Same attribution
+     * rules as recordOpeningStock().
+     */
+    public function recordOpeningVariantStock(ProductVariant $variant, ?User $actor = null): void
+    {
+        $quantity = (int) $variant->stock;
+        $userId = $actor?->id ?? auth()->id();
+        if ($quantity <= 0 || $userId === null) {
+            return;
+        }
+
+        StockAdjustment::create([
+            'organization_id' => $variant->organization_id,
+            'product_id' => $variant->product_id,
+            'product_variant_id' => $variant->id,
+            'user_id' => $userId,
+            'type' => self::OPENING_STOCK_TYPE,
+            'quantity_before' => 0,
+            'quantity_after' => $quantity,
+            'adjustment_quantity' => $quantity,
+            'reason' => 'Opening stock',
+        ]);
     }
 
     /**
@@ -409,11 +488,15 @@ final class ProductService
             if (! empty($variantData['id'])) {
                 $variant = ProductVariant::find($variantData['id']);
                 if ($variant && $variant->product_id === $product->id) {
+                    // An existing variant's stock moves only through the
+                    // ledger (adjust-stock), never from the edit form.
+                    unset($variantPayload['stock']);
                     $variant->update($variantPayload);
                     $incomingVariantIds[] = $variantData['id'];
                 }
             } else {
                 $variant = ProductVariant::create($variantPayload);
+                $this->recordOpeningVariantStock($variant);
                 $incomingVariantIds[] = $variant->id;
             }
         }

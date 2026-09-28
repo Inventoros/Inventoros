@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Jobs;
 
 use App\Imports\ProductsImport;
+use App\Models\User;
 use App\Services\NotificationService;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -55,7 +56,7 @@ final class ProcessProductImportJob implements ShouldQueue
 
     public function handle(): void
     {
-        $import = new ProductsImport($this->organizationId);
+        $import = new ProductsImport($this->organizationId, User::withoutGlobalScopes()->find($this->userId));
         Excel::import($import, $this->path, $this->disk);
 
         NotificationService::createImportCompleteNotification(

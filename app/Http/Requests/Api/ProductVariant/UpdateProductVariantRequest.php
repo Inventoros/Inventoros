@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Requests\Api\ProductVariant;
 
+use App\Services\ProductService;
 use Illuminate\Foundation\Http\FormRequest;
 
 /**
@@ -25,7 +26,8 @@ final class UpdateProductVariantRequest extends FormRequest
             'price' => ['nullable', 'numeric', 'min:0'],
             'purchase_price' => ['nullable', 'numeric', 'min:0'],
             'compare_at_price' => ['nullable', 'numeric', 'min:0'],
-            'stock' => ['nullable', 'integer', 'min:0'],
+            // Variant stock moves only through the ledger (adjust-stock).
+            'stock' => ['prohibited'],
             'min_stock' => ['nullable', 'integer', 'min:0'],
             'image' => ['nullable', 'string', 'max:255'],
             'weight' => ['nullable', 'numeric', 'min:0'],
@@ -34,6 +36,16 @@ final class UpdateProductVariantRequest extends FormRequest
             'requires_shipping' => ['nullable', 'boolean'],
             'position' => ['nullable', 'integer', 'min:0'],
             'metadata' => ['nullable', 'array'],
+        ];
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    public function messages(): array
+    {
+        return [
+            'stock.prohibited' => ProductService::STOCK_EDIT_MESSAGE,
         ];
     }
 }

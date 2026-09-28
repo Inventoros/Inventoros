@@ -88,8 +88,8 @@ class UpdateProductMutation extends Mutation
             ],
             'stock' => [
                 'type' => Type::int(),
-                'description' => 'Stock quantity',
-                'rules' => ['nullable', 'integer', 'min:0'],
+                'description' => 'Not accepted: on-hand stock changes only through a stock adjustment (createStockAdjustment). Sending it is a validation error.',
+                'rules' => ['prohibited'],
             ],
             'min_stock' => [
                 'type' => Type::int(),
@@ -147,7 +147,16 @@ class UpdateProductMutation extends Mutation
      */
     protected function rules(array $args = []): array
     {
-        return $this->productSupplierRules((int) auth()->user()?->organization_id);
+        return ['stock' => ['prohibited']] + $this->productSupplierRules((int) auth()->user()?->organization_id);
+    }
+
+    /**
+     * @param  array<string, mixed>  $args
+     * @return array<string, string>
+     */
+    public function validationErrorMessages(array $args = []): array
+    {
+        return ['stock.prohibited' => ProductService::STOCK_EDIT_MESSAGE];
     }
 
     public function resolve($root, array $args, $context, ResolveInfo $resolveInfo, Closure $getSelectFields)

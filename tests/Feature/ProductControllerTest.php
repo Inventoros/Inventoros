@@ -570,7 +570,6 @@ class ProductControllerTest extends TestCase
                 'sku' => $product->sku,
                 'name' => 'Updated Name',
                 'price' => 199.99,
-                'stock' => 75,
                 'min_stock' => 15,
                 'is_active' => true,
             ]);
@@ -578,11 +577,12 @@ class ProductControllerTest extends TestCase
         $response->assertRedirect(route('products.index'));
         $response->assertSessionHas('success', 'Product updated successfully.');
 
+        // Stock is not an edit field: it only moves through adjustments.
         $this->assertDatabaseHas('products', [
             'id' => $product->id,
             'name' => 'Updated Name',
             'price' => 199.99,
-            'stock' => 75,
+            'stock' => $product->stock,
         ]);
     }
 
@@ -595,7 +595,6 @@ class ProductControllerTest extends TestCase
                 'sku' => $product->sku,
                 'name' => 'Member Updated',
                 'price' => 149.99,
-                'stock' => 50,
                 'min_stock' => 10,
             ]);
 
@@ -615,7 +614,6 @@ class ProductControllerTest extends TestCase
                 'sku' => $product->sku,
                 'name' => 'Should Not Update',
                 'price' => 99.99,
-                'stock' => 10,
                 'min_stock' => 1,
             ]);
 
@@ -648,7 +646,6 @@ class ProductControllerTest extends TestCase
                 'sku' => 'OTHER-SKU',
                 'name' => 'Hacked Product',
                 'price' => 0.01,
-                'stock' => 10,
                 'min_stock' => 1,
             ]);
 
@@ -671,7 +668,6 @@ class ProductControllerTest extends TestCase
                 'sku' => 'SKU-001', // Already exists
                 'name' => 'Updated Product',
                 'price' => 99.99,
-                'stock' => 10,
                 'min_stock' => 1,
             ]);
 
@@ -687,7 +683,6 @@ class ProductControllerTest extends TestCase
                 'sku' => 'SAME-SKU', // Same SKU
                 'name' => 'Updated Name',
                 'price' => 149.99,
-                'stock' => 50,
                 'min_stock' => 10,
             ]);
 
