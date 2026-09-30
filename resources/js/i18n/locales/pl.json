@@ -1,4 +1,7 @@
 {
+  "salesUnits": {
+    "sold": "{count} sprzedana jednostka | {count} sprzedanych jednostek"
+  },
   "stockTransferCompleter": {
     "completedBy": "Zakończone przez"
   },

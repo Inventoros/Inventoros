@@ -1,4 +1,7 @@
 {
+  "salesUnits": {
+    "sold": "已售 {count} 件 | 已售 {count} 件"
+  },
   "stockTransferCompleter": {
     "completedBy": "完成人"
   },

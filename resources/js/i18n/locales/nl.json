@@ -1,4 +1,7 @@
 {
+  "salesUnits": {
+    "sold": "{count} eenheid verkocht | {count} eenheden verkocht"
+  },
   "stockTransferCompleter": {
     "completedBy": "Voltooid door"
   },

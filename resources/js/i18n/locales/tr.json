@@ -1,4 +1,7 @@
 {
+  "salesUnits": {
+    "sold": "{count} birim satıldı | {count} birim satıldı"
+  },
   "stockTransferCompleter": {
     "completedBy": "Tamamlayan"
   },

@@ -224,7 +224,7 @@ const thClass =
                         >
                             <div class="min-w-0">
                                 <p class="truncate text-sm font-medium text-text-primary">{{ product.product_name }}</p>
-                                <p class="text-xs text-text-tertiary">{{ product.quantity_sold }} {{ t('reports.salesAnalysis.unitsSold') }}</p>
+                                <p class="text-xs text-text-tertiary">{{ t('salesUnits.sold', product.quantity_sold) }}</p>
                             </div>
                             <span class="shrink-0 text-sm font-semibold tabular-nums text-status-success">{{ formatCurrency(product.revenue, product.currency) }}</span>
                         </li>

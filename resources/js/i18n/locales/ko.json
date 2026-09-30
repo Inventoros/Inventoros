@@ -1,4 +1,7 @@
 {
+  "salesUnits": {
+    "sold": "{count}개 판매 | {count}개 판매"
+  },
   "stockTransferCompleter": {
     "completedBy": "완료한 사용자"
   },

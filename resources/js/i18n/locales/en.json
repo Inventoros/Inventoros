@@ -1,4 +1,7 @@
 {
+  "salesUnits": {
+    "sold": "{count} unit sold | {count} units sold"
+  },
   "stockTransferCompleter": {
     "completedBy": "Completed by"
   },

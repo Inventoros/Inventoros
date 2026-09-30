@@ -1,4 +1,7 @@
 {
+  "salesUnits": {
+    "sold": "بيعت {count} وحدة | بيعت {count} وحدات"
+  },
   "stockTransferCompleter": {
     "completedBy": "أكمله"
   },

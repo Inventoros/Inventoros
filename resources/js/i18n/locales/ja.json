@@ -1,4 +1,7 @@
 {
+  "salesUnits": {
+    "sold": "{count}個販売 | {count}個販売"
+  },
   "stockTransferCompleter": {
     "completedBy": "完了者"
   },
