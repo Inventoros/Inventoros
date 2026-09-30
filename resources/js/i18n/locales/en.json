@@ -1,4 +1,8 @@
 {
+  "orderCurrency": {
+    "label": "Currency",
+    "hint": "Line prices are filled in from the catalogue in this currency. Changing it re-prices the lines."
+  },
   "orderInvoice": {
     "notEmailed": "Generated, not emailed yet. Use Email Invoice to send it to the customer."
   },

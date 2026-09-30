@@ -12,6 +12,7 @@ import { useBarcodeWedge, useBarcodeLookup } from '@/composables/useBarcodeWedge
 import { useI18n } from 'vue-i18n';
 import { todayIsoDate } from '@/lib/dates';
 import { formatMoney } from '@/lib/money';
+import { linePrice } from '@/lib/orderLinePrice';
 import { ArrowLeft, Plus, Trash2, PackageOpen, ScanLine } from 'lucide-vue-next';
 
 const BarcodeScannerModal = defineAsyncComponent(() => import('@/Components/BarcodeScannerModal.vue'));
@@ -23,6 +24,9 @@ const props = defineProps({
     // and cannot start out shipped or delivered.
     ordersNeedApproval: { type: Boolean, default: false },
     products: Array,
+    // The organization's currency, and the currencies an order can be in.
+    defaultCurrency: { type: String, default: 'USD' },
+    currencies: { type: Array, default: () => [] },
 });
 
 const form = useForm({
@@ -30,6 +34,7 @@ const form = useForm({
     customer_name: '',
     customer_email: '',
     customer_address: '',
+    currency: props.defaultCurrency,
     status: 'pending',
     order_date: todayIsoDate(),
     shipping: 0,
@@ -48,6 +53,11 @@ const selectCustomer = (customer) => {
     form.customer_name = customer.name;
     form.customer_email = customer.email ?? '';
     form.customer_address = customer.shipping_address || customer.billing_address || '';
+    // A customer billed in their own currency gets orders in it.
+    if (customer.currency && customer.currency !== form.currency) {
+        form.currency = customer.currency;
+        repriceLines();
+    }
 };
 
 // Back to a one-off customer: unlink, but keep what was typed so it can be edited.
@@ -101,8 +111,9 @@ const addItem = () => {
             variant_title: variant?.title ?? null,
             sku: variant?.sku || product.sku,
             quantity: quantity.value,
-            // Default to the variant's own price when it has one.
-            unit_price: parseFloat(variant?.price ?? product.price) || 0,
+            // The catalogue price in the order's currency (the variant's own
+            // price in the product's currency); blank when there is none.
+            unit_price: linePrice(product, variant, form.currency) ?? '',
             discount_type: '',
             discount_value: null,
         });
@@ -141,7 +152,7 @@ const addScannedLine = (product, variant) => {
             variant_title: variant?.title ?? null,
             sku: variant?.sku || product.sku,
             quantity: 1,
-            unit_price: parseFloat(variant?.price ?? product.price) || 0,
+            unit_price: linePrice(product, variant, form.currency) ?? '',
         });
     }
     const line = form.items.find(item => item.product_id === product.id && item.product_variant_id === variantId);
@@ -212,6 +223,18 @@ const updateItemPrice = (index, newPrice) => {
 
 // Preview only: the server recomputes every total on save.
 const totals = useOrderTotals(form);
+
+const money = (value) => formatMoney(value, form.currency);
+
+// Changing the order's currency re-prices every line from the catalogue in
+// that currency; a line with no price in it is left blank to fill in.
+function repriceLines() {
+    for (const item of form.items) {
+        const product = props.products.find(p => p.id === item.product_id);
+        const variant = product?.variants?.find(v => v.id === item.product_variant_id) ?? null;
+        item.unit_price = product ? (linePrice(product, variant, form.currency) ?? '') : item.unit_price;
+    }
+}
 
 const submit = () => {
     if (form.items.length === 0) {
@@ -319,7 +342,7 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                                             <option :value="null">{{ t('orders.create.chooseProduct') }}</option>
                                             <option v-for="product in availableProducts" :key="product.id" :value="product.id">
                                                 <template v-if="product.has_variants">{{ product.name }} ({{ product.sku }})</template>
-                                                <template v-else>{{ product.name }} ({{ product.sku }}) - {{ t('orders.create.stockCount', { count: product.stock }) }} - {{ formatMoney(product.price) }}</template>
+                                                <template v-else>{{ product.name }} ({{ product.sku }}) - {{ t('orders.create.stockCount', { count: product.stock }) }} - {{ formatMoney(product.price, product.currency) }}</template>
                                             </option>
                                         </select>
                                     </div>
@@ -328,7 +351,7 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                                         <select id="add_variant" v-model="selectedVariant" :class="fieldInput" @change="variantError = ''">
                                             <option :value="null">{{ t('orders.create.chooseVariant') }}</option>
                                             <option v-for="variant in availableVariants" :key="variant.id" :value="variant.id">
-                                                {{ variant.title }}<template v-if="variant.sku"> ({{ variant.sku }})</template> - {{ t('orders.create.stockCount', { count: variant.stock }) }} - {{ formatMoney(variant.price) }}
+                                                {{ variant.title }}<template v-if="variant.sku"> ({{ variant.sku }})</template> - {{ t('orders.create.stockCount', { count: variant.stock }) }} - {{ formatMoney(variant.price, chosenProduct?.currency) }}
                                             </option>
                                         </select>
                                         <p v-if="variantError" :class="fieldError">{{ variantError }}</p>
@@ -354,6 +377,7 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                                         <p v-if="item.variant_title" class="text-xs text-text-secondary">{{ t('orders.create.variant') }}: {{ item.variant_title }}</p>
                                         <p class="text-xs text-text-tertiary">SKU: {{ item.sku }}</p>
                                         <p v-if="form.errors[`items.${index}.product_variant_id`]" :class="fieldError">{{ form.errors[`items.${index}.product_variant_id`] }}</p>
+                                        <p v-if="form.errors[`items.${index}.unit_price`]" :class="fieldError">{{ form.errors[`items.${index}.unit_price`] }}</p>
                                     </div>
                                     <div class="w-20">
                                         <label class="mb-1 block text-[11px] text-text-tertiary">{{ t('orders.edit.qty') }}</label>
@@ -365,7 +389,7 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                                     </div>
                                     <div class="w-24 text-right">
                                         <label class="mb-1 block text-[11px] text-text-tertiary">{{ t('common.total') }}</label>
-                                        <p class="font-semibold tabular-nums text-text-primary">{{ formatMoney(lineNetCents(item) / 100) }}</p>
+                                        <p class="font-semibold tabular-nums text-text-primary">{{ money(lineNetCents(item) / 100) }}</p>
                                     </div>
                                     <button type="button" @click="removeItem(index)" class="mt-4 rounded-md p-1.5 text-text-tertiary transition-colors hover:bg-surface-sunken hover:text-status-danger"><Trash2 :size="16" /></button>
                                 </div>
@@ -401,6 +425,14 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                                 <p v-if="form.errors.order_date" :class="fieldError">{{ form.errors.order_date }}</p>
                             </div>
                             <div>
+                                <label for="currency" :class="fieldLabel">{{ t('orderCurrency.label') }}</label>
+                                <select id="currency" v-model="form.currency" :class="fieldInput" @change="repriceLines">
+                                    <option v-for="currency in currencies" :key="currency.code" :value="currency.code">{{ currency.code }} - {{ currency.name }}</option>
+                                </select>
+                                <p class="mt-1 text-xs text-text-tertiary">{{ t('orderCurrency.hint') }}</p>
+                                <p v-if="form.errors.currency" :class="fieldError">{{ form.errors.currency }}</p>
+                            </div>
+                            <div>
                                 <label for="status" :class="fieldLabel">{{ t('orders.create.statusLabel') }}</label>
                                 <select id="status" v-model="form.status" :class="fieldInput" required>
                                     <option value="pending">{{ t('orders.status.pending') }}</option>
@@ -425,11 +457,11 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                         <div class="space-y-3 p-5">
                             <div class="flex justify-between text-sm">
                                 <span class="text-text-secondary">{{ t('common.subtotal') }}</span>
-                                <span class="font-medium tabular-nums text-text-primary">{{ formatMoney(totals.subtotal) }}</span>
+                                <span class="font-medium tabular-nums text-text-primary">{{ money(totals.subtotal) }}</span>
                             </div>
                             <div v-if="totals.lineDiscounts > 0" class="flex justify-between text-sm">
                                 <span class="text-text-secondary">{{ t('discounts.lineDiscounts') }}</span>
-                                <span class="font-medium tabular-nums text-text-primary">-{{ formatMoney(totals.lineDiscounts) }}</span>
+                                <span class="font-medium tabular-nums text-text-primary">-{{ money(totals.lineDiscounts) }}</span>
                             </div>
                             <div>
                                 <DiscountInput
@@ -443,7 +475,7 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                             </div>
                             <div v-if="totals.orderDiscount > 0" class="flex justify-between text-sm">
                                 <span class="text-text-secondary">{{ t('discounts.orderDiscount') }}</span>
-                                <span class="font-medium tabular-nums text-text-primary">-{{ formatMoney(totals.orderDiscount) }}</span>
+                                <span class="font-medium tabular-nums text-text-primary">-{{ money(totals.orderDiscount) }}</span>
                             </div>
                             <div>
                                 <label for="tax" class="mb-1 block text-sm text-text-secondary">{{ t('common.tax') }}</label>
@@ -457,7 +489,7 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                             </div>
                             <div class="flex items-center justify-between border-t border-border-subtle pt-3">
                                 <span class="text-sm font-semibold text-text-primary">{{ t('common.total') }}</span>
-                                <span class="text-xl font-bold text-brand">{{ formatMoney(totals.total) }}</span>
+                                <span class="text-xl font-bold text-brand">{{ money(totals.total) }}</span>
                             </div>
                             <p v-if="form.errors.total" :class="fieldError">{{ form.errors.total }}</p>
                             <p class="text-xs text-text-tertiary">{{ t('discounts.totalsComputedOnSave') }}</p>

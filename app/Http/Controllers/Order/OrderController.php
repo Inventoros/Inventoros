@@ -15,6 +15,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Order\StoreOrderRequest;
 use App\Http\Requests\Order\UpdateOrderRequest;
 use App\Http\Resources\OrderResource;
+use App\Models\Auth\Organization;
 use App\Models\Customer;
 use App\Models\Inventory\Product;
 use App\Models\Inventory\ProductVariant;
@@ -141,6 +142,13 @@ class OrderController extends Controller
             'products' => $products,
             'warehouses' => $warehouses,
             'defaultWarehouseId' => $defaultWarehouseId,
+            // The order's currency: the organization's unless the user picks
+            // another (the form switches to a chosen customer's currency).
+            'defaultCurrency' => Organization::currencyFor((int) $organizationId),
+            'currencies' => collect(StoreOrderRequest::currencyCodes((int) $organizationId))
+                ->map(fn (string $code) => ['code' => $code, 'name' => config("currencies.supported.{$code}.name") ?? $code])
+                ->values()
+                ->all(),
             // New orders wait for approval (and cannot start out shipped)
             // when the organization requires order approval.
             'ordersNeedApproval' => ApprovalSettings::forOrganization((int) $request->user()->organization_id)->ordersEnabled,
@@ -492,6 +500,7 @@ class OrderController extends Controller
                 'email' => $customer->email,
                 'shipping_address' => $customer->full_shipping_address,
                 'billing_address' => $customer->full_billing_address,
+                'currency' => filled($customer->currency) ? strtoupper(trim((string) $customer->currency)) : null,
             ]);
 
         return response()->json(['customers' => $customers->values()]);
@@ -515,12 +524,16 @@ class OrderController extends Controller
                 }
             })])
             ->orderBy('name')
-            ->get(['id', 'name', 'sku', 'price', 'stock', 'has_variants', 'category_id', 'location_id'])
+            ->get(['id', 'name', 'sku', 'price', 'currency', 'price_in_currencies', 'stock', 'has_variants', 'category_id', 'location_id'])
             ->map(fn (Product $product) => [
                 'id' => $product->id,
                 'name' => $product->name,
                 'sku' => $product->sku,
                 'price' => $product->price,
+                // A line in another currency is prefilled from these, as
+                // OrderService prices a line sent without a unit price.
+                'currency' => filled($product->currency) ? strtoupper(trim((string) $product->currency)) : Organization::currencyFor($organizationId),
+                'prices' => (object) array_change_key_case(array_filter((array) ($product->price_in_currencies ?? []), 'is_numeric'), CASE_UPPER),
                 'stock' => (int) $product->stock,
                 'has_variants' => (bool) $product->has_variants,
                 'variants' => $product->has_variants
@@ -531,6 +544,9 @@ class OrderController extends Controller
                         'barcode' => $variant->barcode,
                         'stock' => (int) $variant->stock,
                         'price' => $variant->price ?? $product->price,
+                        // Whether the variant has a price of its own (only
+                        // valid in the product's currency).
+                        'own_price' => $variant->price !== null,
                         'is_active' => (bool) $variant->is_active,
                     ])->values()->all()
                     : [],

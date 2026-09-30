@@ -1,4 +1,8 @@
 {
+  "orderCurrency": {
+    "label": "Moeda",
+    "hint": "Os preços dos itens vêm do catálogo nesta moeda. Alterá-la recalcula os preços dos itens."
+  },
   "orderInvoice": {
     "notEmailed": "Gerada, ainda não enviada por e-mail. Use Enviar fatura para mandá-la ao cliente."
   },

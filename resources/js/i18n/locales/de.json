@@ -1,4 +1,8 @@
 {
+  "orderCurrency": {
+    "label": "Währung",
+    "hint": "Positionspreise werden aus dem Katalog in dieser Währung übernommen. Eine Änderung berechnet die Positionen neu."
+  },
   "orderInvoice": {
     "notEmailed": "Erstellt, aber noch nicht per E-Mail gesendet. Mit Rechnung per E-Mail senden geht sie an den Kunden."
   },

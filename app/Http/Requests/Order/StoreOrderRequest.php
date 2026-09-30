@@ -6,6 +6,7 @@ namespace App\Http\Requests\Order;
 
 use App\Enums\DiscountType;
 use App\Http\Requests\Concerns\ValidatesVariantLines;
+use App\Models\Auth\Organization;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -22,6 +23,27 @@ final class StoreOrderRequest extends FormRequest
     use ValidatesVariantLines;
 
     /**
+     * The currencies an order can be placed in: the supported list plus the
+     * organization's own, whatever it is.
+     *
+     * @return array<int, string>
+     */
+    public static function currencyCodes(int $organizationId): array
+    {
+        return array_values(array_unique(array_merge(
+            [Organization::currencyFor($organizationId)],
+            array_keys((array) config('currencies.supported', [])),
+        )));
+    }
+
+    protected function prepareForValidation(): void
+    {
+        if (is_string($this->input('currency'))) {
+            $this->merge(['currency' => strtoupper(trim($this->input('currency')))]);
+        }
+    }
+
+    /**
      * @return array<string, ValidationRule|array<mixed>|string>
      */
     public function rules(): array
@@ -30,6 +52,8 @@ final class StoreOrderRequest extends FormRequest
 
         return [
             'customer_id' => ['nullable', 'integer', Rule::exists('customers', 'id')->where('organization_id', $organizationId)->whereNull('deleted_at')],
+            // Blank means the organization's currency (OrderService).
+            'currency' => ['nullable', 'string', Rule::in(self::currencyCodes((int) $organizationId))],
             'customer_name' => 'required|string|max:255',
             'customer_email' => 'nullable|email|max:255',
             'customer_address' => 'nullable|string',

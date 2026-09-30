@@ -1,4 +1,8 @@
 {
+  "orderCurrency": {
+    "label": "Valuta",
+    "hint": "Regelprijzen komen uit de catalogus in deze valuta. Wijzigen herprijst de regels."
+  },
   "orderInvoice": {
     "notEmailed": "Aangemaakt, nog niet gemaild. Gebruik Factuur e-mailen om hem naar de klant te sturen."
   },

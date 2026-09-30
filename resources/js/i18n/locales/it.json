@@ -1,4 +1,8 @@
 {
+  "orderCurrency": {
+    "label": "Valuta",
+    "hint": "I prezzi delle righe sono presi dal catalogo in questa valuta. Cambiarla ricalcola i prezzi delle righe."
+  },
   "orderInvoice": {
     "notEmailed": "Generata, non ancora inviata via email. Usa Invia fattura per mandarla al cliente."
   },

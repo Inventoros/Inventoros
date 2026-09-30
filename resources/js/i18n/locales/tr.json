@@ -1,4 +1,8 @@
 {
+  "orderCurrency": {
+    "label": "Para birimi",
+    "hint": "Satır fiyatları bu para biriminde katalogdan doldurulur. Değiştirmek satırları yeniden fiyatlandırır."
+  },
   "orderInvoice": {
     "notEmailed": "Oluşturuldu, henüz e-postayla gönderilmedi. Müşteriye göndermek için Faturayı e-postala'yı kullanın."
   },

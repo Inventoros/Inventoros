@@ -1,4 +1,8 @@
 {
+  "orderCurrency": {
+    "label": "Waluta",
+    "hint": "Ceny pozycji są pobierane z katalogu w tej walucie. Zmiana waluty przelicza ceny pozycji."
+  },
   "orderInvoice": {
     "notEmailed": "Wygenerowana, jeszcze niewysłana e-mailem. Użyj opcji Wyślij fakturę, aby wysłać ją klientowi."
   },

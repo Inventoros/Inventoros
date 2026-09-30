@@ -1,4 +1,8 @@
 {
+  "orderCurrency": {
+    "label": "Moneda",
+    "hint": "Los precios de las líneas se toman del catálogo en esta moneda. Cambiarla vuelve a calcular los precios de las líneas."
+  },
   "orderInvoice": {
     "notEmailed": "Generada, aún no enviada por correo. Use Enviar factura para mandarla al cliente."
   },

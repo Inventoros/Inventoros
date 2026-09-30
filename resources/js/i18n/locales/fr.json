@@ -1,4 +1,8 @@
 {
+  "orderCurrency": {
+    "label": "Devise",
+    "hint": "Les prix des lignes viennent du catalogue dans cette devise. La changer recalcule les prix des lignes."
+  },
   "orderInvoice": {
     "notEmailed": "Générée, pas encore envoyée par e-mail. Utilisez Envoyer la facture pour l'adresser au client."
   },
