@@ -1,0 +1,4 @@
+{
+    "(and :count more error)": "(他 :count 件のエラー)",
+    "(and :count more errors)": "(他 :count 件のエラー)"
+}

@@ -1,0 +1,4 @@
+{
+    "(and :count more error)": "(외 :count개의 오류)",
+    "(and :count more errors)": "(외 :count개의 오류)"
+}

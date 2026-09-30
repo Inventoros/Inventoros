@@ -1,0 +1,4 @@
+{
+    "(and :count more error)": "(و:count خطأ آخر)",
+    "(and :count more errors)": "(و:count أخطاء أخرى)|(وخطأ واحد آخر)|(وخطآن آخران)|(و:count أخطاء أخرى)|(و:count خطأً آخر)|(و:count خطأ آخر)"
+}
