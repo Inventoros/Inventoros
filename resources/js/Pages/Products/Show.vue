@@ -21,6 +21,7 @@ import ImageGallery from '@/Components/ImageGallery.vue';
 import { usePermissions } from '@/composables/usePermissions';
 import { formatMoney } from '@/lib/money';
 import { displayDate, displayDateTime } from '@/lib/dates';
+import { onHandStock, stockStatus as stockStatusOf, stockValue } from '@/lib/productStock';
 import {
     Boxes,
     DollarSign,
@@ -38,7 +39,7 @@ import {
 } from 'lucide-vue-next';
 
 const { t } = useI18n();
-const { hasPermission } = usePermissions();
+const { hasPermission, canVisit } = usePermissions();
 
 const props = defineProps({
     product: Object,
@@ -78,17 +79,17 @@ const formatCurrency = (value) => {
     return formatMoney(value, props.product.currency);
 };
 
-const getStockStatus = () => {
-    if (props.product.stock <= 0) {
-        return { text: t('products.show.outOfStock'), variant: 'danger' };
-    }
-    if (props.product.stock <= props.product.min_stock) {
-        return { text: t('products.show.lowStock'), variant: 'warning' };
-    }
-    return { text: t('products.show.inStock'), variant: 'success' };
-};
+// A product sold by variant keeps its stock on the variants: these read the
+// active variants (and follow edits made in the variant table).
+const onHand = computed(() => onHandStock(props.product, variants.value));
+const valueAtPrice = computed(() => stockValue(props.product, variants.value, 'price'));
+const valueAtCost = computed(() => stockValue(props.product, variants.value, 'purchase_price'));
 
-const stockStatus = getStockStatus();
+const stockStatus = computed(() => ({
+    out_of_stock: { text: t('products.show.outOfStock'), variant: 'danger' },
+    low_stock: { text: t('products.show.lowStock'), variant: 'warning' },
+    in_stock: { text: t('products.show.inStock'), variant: 'success' },
+}[stockStatusOf(props.product, variants.value)]));
 
 // Supplier links, primary first
 const productSuppliers = computed(() =>
@@ -302,7 +303,7 @@ const fieldInput = 'h-9 w-full rounded-md border border-border-subtle bg-surface
                     <Copy :size="14" />
                     {{ t('products.duplicate') }}
                 </Button>
-                <Button variant="default" size="sm" as="Link" :href="route('products.edit', product.id)">
+                <Button v-if="canVisit('products.edit')" variant="default" size="sm" as="Link" :href="route('products.edit', product.id)">
                     <Pencil :size="14" />
                     {{ t('common.edit') }}
                 </Button>
@@ -322,7 +323,7 @@ const fieldInput = 'h-9 w-full rounded-md border border-border-subtle bg-surface
             <section class="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
                 <StatTile
                     :label="t('products.show.currentStock')"
-                    :value="product.stock"
+                    :value="onHand"
                     :hint="t('products.show.minHint', { count: product.min_stock })"
                     icon-tone="brand"
                 >
@@ -338,7 +339,7 @@ const fieldInput = 'h-9 w-full rounded-md border border-border-subtle bg-surface
                 </StatTile>
                 <StatTile
                     :label="t('products.show.totalValue')"
-                    :value="formatCurrency(product.price * product.stock)"
+                    :value="formatCurrency(valueAtPrice)"
                     :hint="t('products.show.stockAtPrice')"
                     icon-tone="violet"
                 >
@@ -451,7 +452,7 @@ const fieldInput = 'h-9 w-full rounded-md border border-border-subtle bg-surface
                                 <div>
                                     <h4 class="mb-1 text-xs font-medium text-status-success">{{ t('products.show.totalProfitInStock') }}</h4>
                                     <p class="text-lg font-bold tabular-nums text-status-success">
-                                        {{ formatCurrency((product.price - product.purchase_price) * product.stock) }}
+                                        {{ formatCurrency(valueAtPrice - valueAtCost) }}
                                     </p>
                                 </div>
                             </div>
@@ -493,7 +494,7 @@ const fieldInput = 'h-9 w-full rounded-md border border-border-subtle bg-surface
                     <Card :padded="false">
                         <div class="flex items-center justify-between px-5 pt-5">
                             <h3 class="text-sm font-semibold text-text-primary">{{ t('productSuppliers.title') }}</h3>
-                            <Button v-if="hasPermission('edit_products')" variant="ghost" size="sm" as="Link" :href="route('products.edit', product.id)">
+                            <Button v-if="(hasPermission('edit_products')) && canVisit('products.edit')" variant="ghost" size="sm" as="Link" :href="route('products.edit', product.id)">
                                 <Pencil :size="14" />
                                 {{ t('common.edit') }}
                             </Button>
@@ -514,7 +515,8 @@ const fieldInput = 'h-9 w-full rounded-md border border-border-subtle bg-surface
                                         <tr v-for="supplier in productSuppliers" :key="supplier.id" class="border-b border-border-subtle last:border-b-0">
                                             <td class="px-4 py-3">
                                                 <div class="flex items-center gap-2">
-                                                    <Link :href="route('suppliers.show', supplier.id)" class="font-medium text-brand hover:underline">{{ supplier.name }}</Link>
+                                                    <Link v-if="canVisit('suppliers.show')" :href="route('suppliers.show', supplier.id)" class="font-medium text-brand hover:underline">{{ supplier.name }}</Link>
+                                                    <span v-else class="font-medium text-text-primary">{{ supplier.name }}</span>
                                                     <Badge v-if="supplier.pivot?.is_primary" variant="brand" size="sm">{{ t('productSuppliers.primary') }}</Badge>
                                                 </div>
                                             </td>
@@ -529,7 +531,7 @@ const fieldInput = 'h-9 w-full rounded-md border border-border-subtle bg-surface
                             <div v-else class="flex flex-col items-center gap-2 py-6 text-center">
                                 <Truck :size="20" class="text-text-tertiary" />
                                 <p class="text-sm text-text-tertiary">{{ t('productSuppliers.empty') }}</p>
-                                <Link v-if="hasPermission('edit_products')" :href="route('products.edit', product.id)" class="text-sm font-medium text-brand hover:underline">
+                                <Link v-if="(hasPermission('edit_products')) && canVisit('products.edit')" :href="route('products.edit', product.id)" class="text-sm font-medium text-brand hover:underline">
                                     {{ t('productSuppliers.add') }}
                                 </Link>
                             </div>
@@ -561,12 +563,13 @@ const fieldInput = 'h-9 w-full rounded-md border border-border-subtle bg-surface
                                             <td class="px-4 py-2.5 text-right tabular-nums text-text-primary">{{ formatCurrency(entry.cost_price) }}</td>
                                             <td class="px-4 py-2.5 text-text-secondary">
                                                 <Link
-                                                    v-if="entry.source === 'purchase_order' && entry.purchase_order_id"
+                                                    v-if="entry.source === 'purchase_order' && entry.purchase_order_id && canVisit('purchase-orders.show')"
                                                     :href="route('purchase-orders.show', entry.purchase_order_id)"
                                                     class="text-brand hover:underline"
                                                 >
                                                     {{ t('productSuppliers.sourcePurchaseOrder', { number: entry.po_number }) }}
                                                 </Link>
+                                                <span v-else-if="entry.source === 'purchase_order' && entry.purchase_order_id">{{ t('productSuppliers.sourcePurchaseOrder', { number: entry.po_number }) }}</span>
                                                 <span v-else>{{ t('productSuppliers.sourceLink') }}</span>
                                             </td>
                                             <td class="px-4 py-2.5 text-text-tertiary">{{ entry.user_name || '-' }}</td>
@@ -629,7 +632,7 @@ const fieldInput = 'h-9 w-full rounded-md border border-border-subtle bg-surface
 
                             <!-- Assembly: Create Work Order button -->
                             <div v-if="product.type === 'assembly' && components.length > 0" class="mb-4">
-                                <Button variant="default" size="md" as="Link" :href="route('work-orders.create', { product_id: product.id })">
+                                <Button v-if="canVisit('work-orders.create')" variant="default" size="md" as="Link" :href="route('work-orders.create', { product_id: product.id })">
                                     <Settings2 :size="16" />
                                     {{ t('workOrders.createWorkOrder') }}
                                 </Button>
@@ -873,9 +876,9 @@ const fieldInput = 'h-9 w-full rounded-md border border-border-subtle bg-surface
                                     <p class="mb-1 text-sm text-text-tertiary">{{ t('products.show.currentStock') }}</p>
                                     <p
                                         class="text-3xl font-bold tabular-nums"
-                                        :class="product.stock <= product.min_stock ? 'text-status-danger' : 'text-brand'"
+                                        :class="onHand <= product.min_stock ? 'text-status-danger' : 'text-brand'"
                                     >
-                                        {{ product.stock }}
+                                        {{ onHand }}
                                     </p>
                                 </div>
                                 <div class="grid grid-cols-2 gap-3">
@@ -895,7 +898,7 @@ const fieldInput = 'h-9 w-full rounded-md border border-border-subtle bg-surface
                                 <div class="rounded-lg border border-status-success/20 bg-status-success-soft p-3">
                                     <p class="mb-1 text-xs text-text-tertiary">{{ t('products.show.totalValue') }}</p>
                                     <p class="text-xl font-bold tabular-nums text-status-success">
-                                        {{ formatCurrency(product.price * product.stock) }}
+                                        {{ formatCurrency(valueAtPrice) }}
                                     </p>
                                 </div>
                             </div>

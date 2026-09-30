@@ -8,8 +8,14 @@ import { ref, computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { ArrowLeft, Trash2 } from 'lucide-vue-next';
 import { formatMoney } from '@/lib/money';
+import { usePermissions } from '@/composables/usePermissions';
+
+const { canVisit } = usePermissions();
 
 const { t } = useI18n();
+
+// Back to the order, or to the returns list for a user who cannot open orders.
+const backHref = computed(() => (canVisit('orders.show') ? route('orders.show', props.order.id) : route('returns.index')));
 
 const props = defineProps({
     order: Object,
@@ -28,7 +34,9 @@ const form = useForm({
         order_item_id: item.id,
         product_id: item.product_id,
         product_name: item.product_name,
-        sku: item.sku,
+        // A variant line shows its variant, as it was sold.
+        variant_title: item.variant?.title ?? null,
+        sku: item.variant?.sku || item.sku,
         ordered_quantity: item.quantity,
         already_returned: props.returnedQuantities?.[item.id] || 0,
         quantity: 0,
@@ -119,7 +127,7 @@ const fieldError = 'mt-1 text-xs text-status-danger';
 
         <PageHeader :title="t('returns.create.title')" :description="t('returns.create.fromOrder', { number: order.order_number })">
             <template #actions>
-                <Button variant="secondary" size="sm" as="Link" :href="route('orders.show', order.id)">
+                <Button variant="secondary" size="sm" as="Link" :href="backHref">
                     <ArrowLeft :size="14" />
                     {{ t('returns.create.backToOrder') }}
                 </Button>
@@ -189,7 +197,7 @@ const fieldError = 'mt-1 text-xs text-status-danger';
 
                                 <!-- Product Info -->
                                 <div class="flex-1 min-w-0">
-                                    <p class="font-medium text-text-primary">{{ item.product_name }}</p>
+                                    <p class="font-medium text-text-primary">{{ item.product_name }}<span v-if="item.variant_title" class="text-text-secondary"> ({{ item.variant_title }})</span></p>
                                     <p class="text-sm text-text-tertiary">SKU: {{ item.sku }}</p>
                                     <p class="text-xs text-text-tertiary mt-1">
                                         {{ t('returns.create.ordered', { count: item.ordered_quantity }) }}
@@ -264,7 +272,7 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                             </p>
                         </div>
                         <div class="flex gap-3">
-                            <Button variant="secondary" as="Link" :href="route('orders.show', order.id)">
+                            <Button variant="secondary" as="Link" :href="backHref">
                                 {{ t('common.cancel') }}
                             </Button>
                             <Button

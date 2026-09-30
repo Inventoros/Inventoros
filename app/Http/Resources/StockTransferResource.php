@@ -43,6 +43,10 @@ class StockTransferResource extends JsonResource
                 'id' => $this->transferredBy->id,
                 'name' => $this->transferredBy->name,
             ] : null),
+            'completed_by' => $this->whenLoaded('completer', fn () => $this->completer ? [
+                'id' => $this->completer->id,
+                'name' => $this->completer->name,
+            ] : null),
             'items' => StockTransferItemResource::collection($this->whenLoaded('items')),
             'items_count' => $this->whenCounted('items'),
             'created_at' => $this->created_at?->toIso8601String(),

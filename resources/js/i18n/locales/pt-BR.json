@@ -1,4 +1,36 @@
 {
+  "auditLabels": {
+    "notCounted": "Não contado",
+    "never": "Nunca"
+  },
+  "salesUnits": {
+    "sold": "{count} unidade vendida | {count} unidades vendidas"
+  },
+  "stockTransferCompleter": {
+    "completedBy": "Concluído por"
+  },
+  "orderCurrency": {
+    "label": "Moeda",
+    "hint": "Os preços dos itens vêm do catálogo nesta moeda. Alterá-la recalcula os preços dos itens."
+  },
+  "orderInvoice": {
+    "notEmailed": "Gerada, ainda não enviada por e-mail. Use Enviar fatura para mandá-la ao cliente."
+  },
+  "returnPicker": {
+    "title": "Nova devolução",
+    "description": "Escolha o pedido de onde a mercadoria está voltando. Só pedidos enviados ou entregues podem ser devolvidos.",
+    "back": "Voltar para devoluções",
+    "search": "Pesquisar",
+    "searchPlaceholder": "Pesquisar por número do pedido, nome ou e-mail do cliente...",
+    "order": "Pedido nº",
+    "customer": "Cliente",
+    "date": "Data do pedido",
+    "status": "Status",
+    "total": "Total",
+    "choose": "Iniciar devolução",
+    "empty": "Nenhum pedido enviado ou entregue corresponde.",
+    "showing": "Mostrando {from} a {to} de {total}"
+  },
   "stockAudits": {
     "completeConfirm": "Concluir esta auditoria? Serão criados ajustes de estoque para cada divergência.",
     "completeUncountedConfirm": "{uncounted} de {total} itens não foram contados. Concluir a auditoria mesmo assim? Itens não contados mantêm o estoque atual; apenas os contados são ajustados.",
@@ -1830,7 +1862,8 @@
         "auto_reorder": "Reposição automática",
         "quick_reorder": "Reposição rápida",
         "return_lines_updated": "Linhas da devolução atualizadas",
-        "portal_return_requested": "Devolução solicitada no portal"
+        "portal_return_requested": "Devolução solicitada no portal",
+        "pre_tracking_marked_paid": "Pedido antigo marcado como pago"
       },
       "subjects": {
         "Customer": "Cliente",

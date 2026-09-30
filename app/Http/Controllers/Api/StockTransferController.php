@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Api;
 
+use App\Exceptions\BusinessRuleException;
 use App\Http\Controllers\Api\Concerns\HandlesApiResponses;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\StockTransfer\ShipStockTransferRequest;
@@ -118,7 +119,7 @@ class StockTransferController extends Controller
 
         try {
             $updated = $action();
-        } catch (\RuntimeException $e) {
+        } catch (BusinessRuleException $e) {
             return $this->stateError($e, $fallbackCode);
         }
 
@@ -130,6 +131,6 @@ class StockTransferController extends Controller
 
     private function loaded(StockTransfer $transfer): StockTransfer
     {
-        return $transfer->load(['fromLocation', 'toLocation', 'transferredBy', 'items.product']);
+        return $transfer->load(['fromLocation', 'toLocation', 'transferredBy', 'completer', 'items.product']);
     }
 }

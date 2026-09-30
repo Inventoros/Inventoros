@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Api;
 
+use App\Exceptions\BusinessRuleException;
 use App\Exceptions\InsufficientStockException;
 use App\Exceptions\InvalidStateException;
 use App\Http\Controllers\Controller;
@@ -250,7 +251,7 @@ class WorkOrderController extends Controller
                 $locked = WorkOrder::whereKey($workOrder->getKey())->lockForUpdate()->firstOrFail();
 
                 if ($locked->status !== 'in_progress') {
-                    throw new \RuntimeException('Only in-progress work orders can be completed.');
+                    throw new InvalidStateException('Only in-progress work orders can be completed.', 'invalid_status');
                 }
 
                 $locked->load('items.product');
@@ -324,7 +325,7 @@ class WorkOrderController extends Controller
                 'message' => $e->getMessage(),
                 'error' => 'insufficient_stock',
             ], 422);
-        } catch (\RuntimeException $e) {
+        } catch (BusinessRuleException $e) {
             return response()->json([
                 'message' => $e->getMessage(),
                 'error' => 'invalid_status',
@@ -370,7 +371,7 @@ class WorkOrderController extends Controller
                 $locked = WorkOrder::whereKey($workOrder->getKey())->lockForUpdate()->firstOrFail();
 
                 if (! in_array($locked->status, ['draft', 'pending', 'in_progress'], true)) {
-                    throw new \RuntimeException('Only draft, pending, or in-progress work orders can be cancelled.');
+                    throw new InvalidStateException('Only draft, pending, or in-progress work orders can be cancelled.', 'invalid_status');
                 }
 
                 // If in_progress, restore any consumed component stock
@@ -400,7 +401,7 @@ class WorkOrderController extends Controller
 
                 $locked->update(['status' => 'cancelled']);
             });
-        } catch (\RuntimeException $e) {
+        } catch (BusinessRuleException $e) {
             return response()->json([
                 'message' => $e->getMessage(),
                 'error' => 'invalid_status',

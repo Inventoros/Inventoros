@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Inventory;
 
+use App\Exceptions\BusinessRuleException;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StockAudit\StoreStockAuditRequest;
 use App\Http\Requests\StockAudit\UpdateStockAuditRequest;
@@ -291,7 +292,7 @@ class StockAuditController extends Controller
 
         try {
             $audits->start($stockAudit, $request->user());
-        } catch (\RuntimeException $e) {
+        } catch (BusinessRuleException $e) {
             return redirect()->route('stock-audits.show', $stockAudit)
                 ->with('error', $e->getMessage());
         }
@@ -317,7 +318,7 @@ class StockAuditController extends Controller
             // allow_uncounted: the user confirmed completing with lines left
             // uncounted (they are left unchanged).
             $adjustmentsCreated = $audits->complete($stockAudit, $request->user(), $request->boolean('allow_uncounted'));
-        } catch (\RuntimeException $e) {
+        } catch (BusinessRuleException $e) {
             return redirect()->route('stock-audits.show', $stockAudit)
                 ->with('error', $e->getMessage());
         }
@@ -358,7 +359,7 @@ class StockAuditController extends Controller
 
         try {
             $audits->recordCount($stockAudit, $item, $request->user(), (int) $validated['counted_quantity'], $validated['notes'] ?? null);
-        } catch (\RuntimeException $e) {
+        } catch (BusinessRuleException $e) {
             return response()->json(['message' => $e->getMessage()], 422);
         }
 

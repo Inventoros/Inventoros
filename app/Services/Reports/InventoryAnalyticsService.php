@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Services\Reports;
 
 use App\Models\Auth\Organization;
+use App\Models\Inventory\Product;
 use App\Support\CurrencyTotals;
 use Carbon\CarbonImmutable;
 use Carbon\CarbonInterface;
@@ -146,7 +147,8 @@ class InventoryAnalyticsService
             ->where('products.organization_id', $organizationId)
             ->whereNull('products.deleted_at')
             ->where('products.is_active', true)
-            ->where('products.stock', '>', 0)
+            // A product sold by variant counts its active variants' stock.
+            ->whereRaw(Product::effectiveStockSql().' > 0')
             ->where('products.created_at', '<=', $cutoff)
             ->selectRaw('
                 products.id,
@@ -154,10 +156,10 @@ class InventoryAnalyticsService
                 products.sku,
                 product_categories.name as category,
                 product_locations.name as location,
-                products.stock,
+                '.Product::effectiveStockSql().' as stock,
                 products.purchase_price,
                 products.currency,
-                (products.stock * COALESCE(products.purchase_price, 0)) as tied_up_value,
+                '.Product::stockValueSql('purchase_price').' as tied_up_value,
                 ls.last_sale_at,
                 lo.last_outbound_at
             ');
@@ -501,13 +503,20 @@ class InventoryAnalyticsService
      *
      * @return array{total_orders: int, total_revenue: float, total_items_sold: int, average_order_value: float}
      */
-    public function salesSummary(int $organizationId, ReportPeriod $period): array
+    public function salesSummary(int $organizationId, ReportPeriod $period, ?string $currency = null): array
     {
         $orders = DB::table('orders')
             ->where('organization_id', $organizationId)
             ->whereNull('deleted_at')
             ->whereBetween('order_date', [$period->from, $period->to])
-            ->selectRaw('COUNT(*) as total_orders, COALESCE(SUM(total), 0) as total_revenue')
+            // Revenue (and the average) only in $currency when one is given:
+            // amounts in different currencies are never added together.
+            ->selectRaw(
+                $currency === null
+                    ? 'COUNT(*) as total_orders, COUNT(*) as currency_orders, COALESCE(SUM(total), 0) as total_revenue'
+                    : 'COUNT(*) as total_orders, SUM(CASE WHEN UPPER(COALESCE(currency, ?)) = ? THEN 1 ELSE 0 END) as currency_orders, COALESCE(SUM(CASE WHEN UPPER(COALESCE(currency, ?)) = ? THEN total ELSE 0 END), 0) as total_revenue',
+                $currency === null ? [] : [strtoupper($currency), strtoupper($currency), strtoupper($currency), strtoupper($currency)],
+            )
             ->first();
 
         $items = (int) DB::table('order_items')
@@ -518,13 +527,14 @@ class InventoryAnalyticsService
             ->sum('order_items.quantity');
 
         $count = (int) $orders->total_orders;
+        $currencyCount = (int) $orders->currency_orders;
         $revenue = (float) $orders->total_revenue;
 
         return [
             'total_orders' => $count,
             'total_revenue' => round($revenue, 2),
             'total_items_sold' => $items,
-            'average_order_value' => $count > 0 ? round($revenue / $count, 2) : 0.0,
+            'average_order_value' => $currencyCount > 0 ? round($revenue / $currencyCount, 2) : 0.0,
         ];
     }
 

@@ -8,6 +8,9 @@ import { Head, Link, router } from '@inertiajs/vue3';
 import { useI18n } from 'vue-i18n';
 import { displayDateTime } from '@/lib/dates';
 import { Plus, CalendarClock, Play, Pencil, Trash2, ArrowLeft } from 'lucide-vue-next';
+import { usePermissions } from '@/composables/usePermissions';
+
+const { canVisit } = usePermissions();
 
 const { t } = useI18n();
 
@@ -54,7 +57,7 @@ const destroy = (schedule) => {
                     <ArrowLeft :size="14" />
                     {{ t('cycleCounts.backToAudits') }}
                 </Button>
-                <Button v-if="canManage" size="sm" as="Link" :href="route('cycle-counts.create')">
+                <Button v-if="(canManage) && canVisit('cycle-counts.create')" size="sm" as="Link" :href="route('cycle-counts.create')">
                     <Plus :size="14" />
                     {{ t('cycleCounts.new') }}
                 </Button>
@@ -67,7 +70,7 @@ const destroy = (schedule) => {
                     <CalendarClock :size="32" class="text-text-tertiary" />
                     <p class="text-sm font-medium text-text-primary">{{ t('cycleCounts.empty') }}</p>
                     <p class="max-w-md text-xs text-text-tertiary">{{ t('cycleCounts.emptyHint') }}</p>
-                    <Button v-if="canManage" size="lg" class="mt-2 min-h-11" as="Link" :href="route('cycle-counts.create')">
+                    <Button v-if="(canManage) && canVisit('cycle-counts.create')" size="lg" class="mt-2 min-h-11" as="Link" :href="route('cycle-counts.create')">
                         <Plus :size="16" />
                         {{ t('cycleCounts.new') }}
                     </Button>
@@ -95,7 +98,7 @@ const destroy = (schedule) => {
                                     <Link v-if="schedule.last_audit" :href="route('stock-audits.show', schedule.last_audit.id)" class="text-brand hover:underline">
                                         {{ schedule.last_audit.audit_number }}
                                     </Link>
-                                    <span v-else>-</span>
+                                    <span v-else>{{ t('auditLabels.never') }}</span>
                                     <span v-if="schedule.last_run_at"> ({{ formatDate(schedule.last_run_at) }})</span>
                                 </dd>
                             </div>
@@ -107,7 +110,7 @@ const destroy = (schedule) => {
                             <Play :size="16" />
                             {{ t('cycleCounts.runNow') }}
                         </Button>
-                        <Button variant="secondary" size="lg" class="min-h-11" as="Link" :href="route('cycle-counts.edit', schedule.id)">
+                        <Button v-if="canVisit('cycle-counts.edit')" variant="secondary" size="lg" class="min-h-11" as="Link" :href="route('cycle-counts.edit', schedule.id)">
                             <Pencil :size="16" />
                             {{ t('common.edit') }}
                         </Button>

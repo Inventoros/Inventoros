@@ -61,6 +61,11 @@ Before upgrading: take a database backup you have checked, run `php artisan opti
 
 ### Fixed
 
+- A completed stock transfer showed "Transferred By: -". The transfer page shows who created it and who completed it; the new `stock_transfers.completed_by` column records the completer (REST `completed_by`), empty for transfers completed before upgrading.
+- Users without a permission no longer see buttons and links that only lead to a 403 (new order, add product, the categories and locations tiles, edit and delete icons on orders, products, purchase orders, customers and suppliers, supplier links, new audit and more). Pages check the same permissions as the routes (`resources/js/lib/routePermissions.js`, kept in step by a test).
+- The web order form had no currency choice. It has a Currency select (the organization's currency, or a chosen customer's), prefills line prices from the catalogue in that currency and shows totals in it.
+- Sales Analysis added orders in different currencies together (revenue, average order value, the daily and status rows, outstanding and the exports). Its figures are in the organization's currency with the others listed beside them, top products carry their currency, and the exports have a Currency column with one line per currency.
+- Products sold by variant showed 0 stock, "Out of Stock", a value of 0 and a low-stock alert while their variants held stock. Their stock is now the sum of their active variants' stock on the product list and page, the dashboard, the low stock, valuation, category and dead stock reports, reorder suggestions, the products export and the MCP `list_low_stock` tool; each variant is valued at its own price and cost.
 - About 288 success and error flash messages that never reached the page.
 - Sidebar items that were hidden from everyone, the discarded language cookie, and several routes that returned 500.
 - Fresh installs on MySQL and PostgreSQL, and the web installer's database step.
@@ -91,6 +96,8 @@ Before upgrading: take a database backup you have checked, run `php artisan opti
 - Marketplace downloads are streamed to disk and stopped at the size cap.
 - Laravel Excel 4.0.3 and PhpSpreadsheet 5.10.0 (CVE-2026-59933, CVE-2026-59932, CVE-2026-59931, CVE-2026-84374). Imports pick their reader from the detected file type.
 - Shipment creation checks access to the ship-from warehouse.
+- Creating, editing and deleting warehouses in the web app needs `create_warehouses`, `edit_warehouses` and `delete_warehouses`; `view_warehouses` alone used to allow all three.
+- Database errors are no longer shown to users. Receiving a purchase order, stock audits, transfers, work orders, order and return actions, imports and the REST and GraphQL equivalents used to put the raw SQL error in the message; they now show the standard error page (HTTP 500) and the error is logged. Business rule refusals (wrong status, not enough stock) are still shown as before.
 
 ## [1.0.x]
 

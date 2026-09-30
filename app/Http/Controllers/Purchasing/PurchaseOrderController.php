@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Purchasing;
 
 use App\Exceptions\ApprovalException;
+use App\Exceptions\BusinessRuleException;
 use App\Exceptions\DocumentEmailException;
 use App\Exceptions\InvalidStateException;
 use App\Http\Controllers\Controller;
@@ -54,6 +55,8 @@ class PurchaseOrderController extends Controller
                 $query->bySupplier($supplierId);
             })
             ->latest('order_date')
+            // order_date is a day: the newest order of the day first.
+            ->latest('id')
             ->paginate(15)
             ->withQueryString();
 
@@ -305,7 +308,7 @@ class PurchaseOrderController extends Controller
 
         try {
             $receivedCount = $purchaseOrders->receive($purchaseOrder, $request->user(), $request->validated()['items']);
-        } catch (\RuntimeException $e) {
+        } catch (BusinessRuleException $e) {
             return redirect()->route('purchase-orders.show', $purchaseOrder)
                 ->with('error', $e->getMessage());
         }

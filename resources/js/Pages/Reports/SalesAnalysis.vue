@@ -7,7 +7,7 @@ import Button from '@/Components/ui/Button.vue';
 import Badge from '@/Components/ui/Badge.vue';
 import StatTile from '@/Components/ui/StatTile.vue';
 import ExportMenu from '@/Components/Reports/ExportMenu.vue';
-import { formatDelta, deltaTone } from '@/lib/reportFormat';
+import { formatDelta, deltaTone, otherCurrencyTotals } from '@/lib/reportFormat';
 import { Head, Link, router } from '@inertiajs/vue3';
 import { computed, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
@@ -20,6 +20,9 @@ import {
     Boxes,
     TrendingUp,
 } from 'lucide-vue-next';
+import { usePermissions } from '@/composables/usePermissions';
+
+const { canVisit } = usePermissions();
 
 const { t } = useI18n();
 
@@ -57,7 +60,15 @@ const applyFilters = () => {
     });
 };
 
-const formatCurrency = (value) => formatMoney(value);
+// Money is never added across currencies: figures are in the organization's
+// currency (summary.currency) and each row's other currencies are listed
+// beside it from its by_currency split.
+const baseCurrency = computed(() => props.summary?.currency);
+const formatCurrency = (value, currency = baseCurrency.value) => formatMoney(value, currency);
+const plusOthers = (split, field) => {
+    const others = otherCurrencyTotals((split || []).map((r) => ({ currency: r.currency, amount: r[field] })), baseCurrency.value);
+    return others ? t('dashboard.plusOtherCurrencies', { amounts: others }) : '';
+};
 
 const statusVariant = (status) =>
     ({
@@ -145,6 +156,7 @@ const thClass =
             <StatTile
                 :label="t('reports.salesAnalysis.totalRevenue')"
                 :value="formatCurrency(summary.total_revenue)"
+                :hint="plusOthers(summary.by_currency, 'revenue') || undefined"
                 :delta="delta('total_revenue')"
                 :delta-tone="tone('total_revenue')"
                 icon-tone="success"
@@ -163,6 +175,7 @@ const thClass =
             <StatTile
                 :label="t('reports.salesAnalysis.avgOrderValue')"
                 :value="formatCurrency(summary.average_order_value)"
+                :hint="plusOthers(summary.by_currency, 'average_order_value') || undefined"
                 :delta="delta('average_order_value')"
                 :delta-tone="tone('average_order_value')"
                 icon-tone="success"
@@ -191,6 +204,7 @@ const thClass =
                         <div v-for="item in byStatus" :key="item.status" class="flex flex-1 flex-col items-center gap-1 text-center">
                             <Badge :variant="statusVariant(item.status)" size="sm" dot class="capitalize">{{ item.status }}</Badge>
                             <span class="text-xs text-text-tertiary">{{ item.count }} {{ t('nav.orders').toLowerCase() }}</span>
+                            <span v-if="plusOthers(item.by_currency, 'revenue')" class="text-[11px] text-text-tertiary">{{ plusOthers(item.by_currency, 'revenue') }}</span>
                         </div>
                     </div>
                 </div>
@@ -210,9 +224,9 @@ const thClass =
                         >
                             <div class="min-w-0">
                                 <p class="truncate text-sm font-medium text-text-primary">{{ product.product_name }}</p>
-                                <p class="text-xs text-text-tertiary">{{ product.quantity_sold }} {{ t('reports.salesAnalysis.unitsSold') }}</p>
+                                <p class="text-xs text-text-tertiary">{{ t('salesUnits.sold', product.quantity_sold) }}</p>
                             </div>
-                            <span class="shrink-0 text-sm font-semibold tabular-nums text-status-success">{{ formatCurrency(product.revenue) }}</span>
+                            <span class="shrink-0 text-sm font-semibold tabular-nums text-status-success">{{ formatCurrency(product.revenue, product.currency) }}</span>
                         </li>
                     </ul>
                 </div>
@@ -225,11 +239,12 @@ const thClass =
                 <div class="flex flex-wrap items-center justify-between gap-2 px-5 pt-5">
                     <CardHeader :title="t('payments.byPaymentStatus')" />
                     <Link
-                        v-if="summary.total_outstanding > 0"
+                        v-if="((summary.outstanding_by_currency || []).some((row) => Number(row.amount) > 0)) && canVisit('reports.receivables')"
                         :href="route('reports.receivables')"
                         class="text-sm text-brand transition-colors hover:text-brand-hover"
                     >
                         {{ t('payments.outstanding') }}: {{ formatCurrency(summary.total_outstanding) }}
+                        <span v-if="plusOthers(summary.outstanding_by_currency, 'amount')" class="text-text-tertiary">({{ plusOthers(summary.outstanding_by_currency, 'amount') }})</span>
                     </Link>
                 </div>
                 <div class="mt-4 w-full overflow-x-auto">
@@ -255,7 +270,10 @@ const thClass =
                                 <td class="px-4 py-3 text-right tabular-nums text-text-secondary">{{ row.count }}</td>
                                 <td class="px-4 py-3 text-right tabular-nums text-text-secondary">{{ formatCurrency(row.total) }}</td>
                                 <td class="px-4 py-3 text-right tabular-nums text-text-secondary">{{ formatCurrency(row.amount_paid) }}</td>
-                                <td class="px-4 py-3 text-right font-medium tabular-nums text-text-primary">{{ formatCurrency(row.balance_due) }}</td>
+                                <td class="px-4 py-3 text-right font-medium tabular-nums text-text-primary">
+                                    {{ formatCurrency(row.balance_due) }}
+                                    <span v-if="plusOthers(row.by_currency, 'balance_due')" class="block text-[11px] font-normal text-text-tertiary">{{ plusOthers(row.by_currency, 'balance_due') }}</span>
+                                </td>
                             </tr>
                         </tbody>
                     </table>
@@ -286,7 +304,10 @@ const thClass =
                             >
                                 <td class="px-4 py-3 text-text-primary">{{ displayCalendarDate(day.date) }}</td>
                                 <td class="px-4 py-3 text-right tabular-nums text-text-secondary">{{ day.orders }}</td>
-                                <td class="px-4 py-3 text-right font-medium tabular-nums text-status-success">{{ formatCurrency(day.revenue) }}</td>
+                                <td class="px-4 py-3 text-right font-medium tabular-nums text-status-success">
+                                    {{ formatCurrency(day.revenue) }}
+                                    <span v-if="plusOthers(day.by_currency, 'revenue')" class="block text-[11px] font-normal text-text-tertiary">{{ plusOthers(day.by_currency, 'revenue') }}</span>
+                                </td>
                             </tr>
                         </tbody>
                     </table>

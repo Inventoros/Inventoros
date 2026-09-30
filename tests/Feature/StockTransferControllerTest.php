@@ -452,6 +452,27 @@ class StockTransferControllerTest extends TestCase
         $this->assertSame($this->locationB->id, $this->product->fresh()->location_id);
     }
 
+    /**
+     * A completed transfer showed "Transferred By: -": the page read a key
+     * that was never sent, and who completed it was not recorded at all.
+     */
+    public function test_completing_a_transfer_records_and_shows_who_completed_it(): void
+    {
+        $transfer = $this->createTransfer();
+
+        $this->actingAs($this->admin)
+            ->post(route('stock-transfers.complete', $transfer))
+            ->assertRedirect(route('stock-transfers.show', $transfer));
+
+        $this->assertSame($this->admin->id, $transfer->fresh()->completed_by);
+
+        $this->actingAs($this->admin)
+            ->get(route('stock-transfers.show', $transfer))
+            ->assertInertia(fn ($page) => $page
+                ->where('transfer.transferred_by.name', $transfer->transferredBy->name)
+                ->where('transfer.completer.name', $this->admin->name));
+    }
+
     public function test_completing_transfer_records_single_audit_adjustment_per_item(): void
     {
         $initialStock = $this->product->stock; // 100

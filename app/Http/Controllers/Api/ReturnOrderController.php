@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Api;
 
+use App\Exceptions\BusinessRuleException;
 use App\Http\Controllers\Api\Concerns\HandlesApiResponses;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\ReturnOrder\StoreReturnOrderRequest;
@@ -144,7 +145,7 @@ class ReturnOrderController extends Controller
 
         try {
             $updated = $action();
-        } catch (\RuntimeException $e) {
+        } catch (BusinessRuleException $e) {
             return $this->stateError($e);
         }
 

@@ -10,6 +10,9 @@ import { useI18n } from 'vue-i18n';
 import { roleName } from '@/lib/permissionLabels';
 import { displayDate } from '@/lib/dates';
 import { Pencil, ArrowLeft, Trash2, X, AlertTriangle, CheckCircle2 } from 'lucide-vue-next';
+import { usePermissions } from '@/composables/usePermissions';
+
+const { canVisit } = usePermissions();
 
 const props = defineProps({
     user: Object,
@@ -55,7 +58,7 @@ const roleVariant = (role) =>
         <PageHeader :title="user.name" :description="t('admin.userDetails')">
             <template #actions>
                 <Badge :variant="roleVariant(user.role)" size="sm" dot class="capitalize">{{ t(`admin.users.roles.${user.role}`) }}</Badge>
-                <Button variant="default" size="sm" as="Link" :href="route('users.edit', user.id)">
+                <Button v-if="canVisit('users.edit')" variant="default" size="sm" as="Link" :href="route('users.edit', user.id)">
                     <Pencil :size="14" />
                     {{ t('admin.users.show.editUser') }}
                 </Button>
@@ -169,7 +172,7 @@ const roleVariant = (role) =>
                 <Card :padded="false">
                     <div class="px-5 pt-5"><h3 class="text-sm font-semibold text-text-primary">{{ t('common.actions') }}</h3></div>
                     <div class="p-5 space-y-3">
-                        <Button variant="default" class="w-full" as="Link" :href="route('users.edit', user.id)">
+                        <Button v-if="canVisit('users.edit')" variant="default" class="w-full" as="Link" :href="route('users.edit', user.id)">
                             <Pencil :size="16" />
                             {{ t('admin.users.show.editUser') }}
                         </Button>

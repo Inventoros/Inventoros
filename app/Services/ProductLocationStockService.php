@@ -91,7 +91,7 @@ final class ProductLocationStockService
         $available = (int) ($fromRow->quantity ?? 0);
 
         if ($available < $quantity) {
-            throw new \RuntimeException(
+            throw new InsufficientStockException(
                 "Insufficient stock at the source location for {$product->name}: have {$available}, transfer requires {$quantity}."
             );
         }

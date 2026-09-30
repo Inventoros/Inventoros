@@ -10,6 +10,9 @@ import { useI18n } from 'vue-i18n';
 import { Search, Eye, RotateCcw } from 'lucide-vue-next';
 import { formatMoney, formatNumber } from '@/lib/money';
 import { displayDate } from '@/lib/dates';
+import { usePermissions } from '@/composables/usePermissions';
+
+const { canVisit } = usePermissions();
 
 const { t } = useI18n();
 
@@ -152,7 +155,8 @@ const selectClass =
                             <span class="font-medium text-text-primary">{{ returnOrder.return_number }}</span>
                         </td>
                         <td class="px-4 py-3">
-                            <Link v-if="returnOrder.order" :href="route('orders.show', returnOrder.order_id)" class="text-brand hover:underline">
+                            <span v-if="returnOrder.order && !canVisit('orders.show')" class="text-text-primary">{{ returnOrder.order.order_number }}</span>
+                            <Link v-else-if="returnOrder.order" :href="route('orders.show', returnOrder.order_id)" class="text-brand hover:underline">
                                 {{ returnOrder.order.order_number }}
                             </Link>
                             <span v-else class="text-text-secondary">-</span>

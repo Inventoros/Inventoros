@@ -1,4 +1,36 @@
 {
+  "auditLabels": {
+    "notCounted": "Nie policzono",
+    "never": "Nigdy"
+  },
+  "salesUnits": {
+    "sold": "{count} sprzedana jednostka | {count} sprzedanych jednostek"
+  },
+  "stockTransferCompleter": {
+    "completedBy": "Zakończone przez"
+  },
+  "orderCurrency": {
+    "label": "Waluta",
+    "hint": "Ceny pozycji są pobierane z katalogu w tej walucie. Zmiana waluty przelicza ceny pozycji."
+  },
+  "orderInvoice": {
+    "notEmailed": "Wygenerowana, jeszcze niewysłana e-mailem. Użyj opcji Wyślij fakturę, aby wysłać ją klientowi."
+  },
+  "returnPicker": {
+    "title": "Nowy zwrot",
+    "description": "Wybierz zamówienie, z którego wraca towar. Zwrot można utworzyć tylko dla zamówień wysłanych lub dostarczonych.",
+    "back": "Powrót do zwrotów",
+    "search": "Szukaj",
+    "searchPlaceholder": "Szukaj po numerze zamówienia, nazwie lub e-mailu klienta...",
+    "order": "Zamówienie nr",
+    "customer": "Klient",
+    "date": "Data zamówienia",
+    "status": "Status",
+    "total": "Suma",
+    "choose": "Rozpocznij zwrot",
+    "empty": "Brak pasujących wysłanych lub dostarczonych zamówień.",
+    "showing": "{from}–{to} z {total}"
+  },
   "stockAudits": {
     "completeConfirm": "Zakończyć tę inwentaryzację? Dla każdej rozbieżności zostanie utworzona korekta stanu.",
     "completeUncountedConfirm": "Nie policzono {uncounted} z {total} pozycji. Mimo to zakończyć inwentaryzację? Niepoliczone pozycje zachowują obecny stan; korygowane są tylko policzone.",
@@ -1830,7 +1862,8 @@
         "auto_reorder": "Automatyczne zamówienie uzupełniające",
         "quick_reorder": "Szybkie zamówienie uzupełniające",
         "return_lines_updated": "Zaktualizowano pozycje zwrotu",
-        "portal_return_requested": "Zwrot zgłoszony w portalu"
+        "portal_return_requested": "Zwrot zgłoszony w portalu",
+        "pre_tracking_marked_paid": "Starsze zamówienie oznaczono jako opłacone"
       },
       "subjects": {
         "Customer": "Klient",

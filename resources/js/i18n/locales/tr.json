@@ -1,4 +1,36 @@
 {
+  "auditLabels": {
+    "notCounted": "Sayılmadı",
+    "never": "Hiç"
+  },
+  "salesUnits": {
+    "sold": "{count} birim satıldı | {count} birim satıldı"
+  },
+  "stockTransferCompleter": {
+    "completedBy": "Tamamlayan"
+  },
+  "orderCurrency": {
+    "label": "Para birimi",
+    "hint": "Satır fiyatları bu para biriminde katalogdan doldurulur. Değiştirmek satırları yeniden fiyatlandırır."
+  },
+  "orderInvoice": {
+    "notEmailed": "Oluşturuldu, henüz e-postayla gönderilmedi. Müşteriye göndermek için Faturayı e-postala'yı kullanın."
+  },
+  "returnPicker": {
+    "title": "Yeni iade",
+    "description": "Ürünlerin geri geldiği siparişi seçin. Yalnızca gönderilmiş veya teslim edilmiş siparişler iade edilebilir.",
+    "back": "İadelere dön",
+    "search": "Ara",
+    "searchPlaceholder": "Sipariş numarası, müşteri adı veya e-posta ile ara...",
+    "order": "Sipariş no",
+    "customer": "Müşteri",
+    "date": "Sipariş tarihi",
+    "status": "Durum",
+    "total": "Toplam",
+    "choose": "İadeyi başlat",
+    "empty": "Eşleşen gönderilmiş veya teslim edilmiş sipariş yok.",
+    "showing": "{total} kayıttan {from}-{to} gösteriliyor"
+  },
   "stockAudits": {
     "completeConfirm": "Bu sayım tamamlansın mı? Her fark için stok düzeltmesi oluşturulur.",
     "completeUncountedConfirm": "{total} üründen {uncounted} tanesi sayılmadı. Sayım yine de tamamlansın mı? Sayılmayan ürünler mevcut stoklarını korur; yalnızca sayılanlar düzeltilir.",
@@ -1830,7 +1862,8 @@
         "auto_reorder": "Otomatik yeniden sipariş",
         "quick_reorder": "Hızlı yeniden sipariş",
         "return_lines_updated": "İade satırları güncellendi",
-        "portal_return_requested": "Portalda iade talep edildi"
+        "portal_return_requested": "Portalda iade talep edildi",
+        "pre_tracking_marked_paid": "Eski sipariş ödendi olarak işaretlendi"
       },
       "subjects": {
         "Customer": "Müşteri",

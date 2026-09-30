@@ -25,6 +25,7 @@ export const ACTION_KEYS = [
     'quick_reorder',
     'return.lines_updated',
     'portal.return_requested',
+    'pre_tracking_marked_paid',
 ];
 
 // Model basenames that appear as activity subjects.

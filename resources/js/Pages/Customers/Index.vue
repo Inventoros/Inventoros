@@ -8,6 +8,9 @@ import { Head, Link, router } from '@inertiajs/vue3';
 import { ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { Plus, Search, Eye, Pencil, Trash2, Users } from 'lucide-vue-next';
+import { usePermissions } from '@/composables/usePermissions';
+
+const { hasPermission, canVisit } = usePermissions();
 
 const { t } = useI18n();
 
@@ -56,7 +59,7 @@ const thClass =
 
         <PageHeader :title="t('customers.title')" :description="t('customers.index.description')">
             <template #actions>
-                <Button variant="default" size="sm" as="Link" :href="route('customers.create')">
+                <Button v-if="canVisit('customers.create')" variant="default" size="sm" as="Link" :href="route('customers.create')">
                     <Plus :size="14" />
                     {{ t('customers.addCustomer') }}
                 </Button>
@@ -112,7 +115,7 @@ const thClass =
                                 <Users :size="22" class="text-text-tertiary" />
                                 <p class="text-sm font-medium text-text-primary">{{ t('customers.noCustomersFound') }}</p>
                                 <p class="text-sm text-text-tertiary">{{ t('customers.getStarted') }}</p>
-                                <Button variant="default" size="sm" as="Link" :href="route('customers.create')">
+                                <Button v-if="canVisit('customers.create')" variant="default" size="sm" as="Link" :href="route('customers.create')">
                                     <Plus :size="14" />
                                     {{ t('customers.addCustomer') }}
                                 </Button>
@@ -145,8 +148,8 @@ const thClass =
                         <td class="px-4 py-3">
                             <div class="flex items-center justify-end gap-1">
                                 <Link :href="route('customers.show', customer.id)" class="rounded-md p-1.5 text-text-tertiary transition-colors hover:bg-surface-overlay hover:text-brand" :title="t('common.view')"><Eye :size="16" /></Link>
-                                <Link :href="route('customers.edit', customer.id)" class="rounded-md p-1.5 text-text-tertiary transition-colors hover:bg-surface-overlay hover:text-status-success" :title="t('common.edit')"><Pencil :size="16" /></Link>
-                                <button @click="deleteCustomer(customer)" class="rounded-md p-1.5 text-text-tertiary transition-colors hover:bg-surface-overlay hover:text-status-danger" :title="t('common.delete')"><Trash2 :size="16" /></button>
+                                <Link v-if="canVisit('customers.edit')" :href="route('customers.edit', customer.id)" class="rounded-md p-1.5 text-text-tertiary transition-colors hover:bg-surface-overlay hover:text-status-success" :title="t('common.edit')"><Pencil :size="16" /></Link>
+                                <button v-if="hasPermission('delete_customers')" @click="deleteCustomer(customer)" class="rounded-md p-1.5 text-text-tertiary transition-colors hover:bg-surface-overlay hover:text-status-danger" :title="t('common.delete')"><Trash2 :size="16" /></button>
                             </div>
                         </td>
                     </tr>

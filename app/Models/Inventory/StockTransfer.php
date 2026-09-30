@@ -53,6 +53,7 @@ class StockTransfer extends Model
         'estimated_arrival',
         'notes',
         'completed_at',
+        'completed_by',
         'approval_status',
         'approval_requested_by',
         'approval_requested_at',
@@ -130,6 +131,18 @@ class StockTransfer extends Model
     public function transferredBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'transferred_by');
+    }
+
+    /**
+     * Get the user who completed the transfer (null before completion and on
+     * transfers completed before this was recorded). Named completer, not
+     * completedBy, so it does not serialize over the completed_by column.
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo<\App\Models\User, $this>
+     */
+    public function completer(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'completed_by');
     }
 
     /**

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Api\Concerns;
 
 use App\Exceptions\ApprovalException;
+use App\Exceptions\BusinessRuleException;
 use App\Exceptions\InvalidStateException;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Exceptions\HttpResponseException;
@@ -44,7 +45,7 @@ trait HandlesApiResponses
     /**
      * Map a domain-service refusal to the 422 error envelope.
      */
-    protected function stateError(\RuntimeException $e, string $fallbackCode = 'invalid_state'): JsonResponse
+    protected function stateError(BusinessRuleException $e, string $fallbackCode = 'invalid_state'): JsonResponse
     {
         return response()->json([
             'message' => $e->getMessage(),

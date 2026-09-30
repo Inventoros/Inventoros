@@ -46,9 +46,12 @@ class ListLowStockTool extends Tool
             ->when($request->get('warehouse_id'), function ($q, $warehouseId) {
                 $q->whereHas('location', fn ($l) => $l->where('warehouse_id', $warehouseId));
             })
-            ->orderByRaw('(min_stock - stock) DESC')
+            // A product sold by variant counts its active variants' stock.
+            ->select(['id', 'sku', 'name', 'stock', 'min_stock', 'reorder_point', 'reorder_quantity', 'location_id', 'has_variants'])
+            ->withEffectiveStock()
+            ->orderByRaw('(min_stock - '.Product::effectiveStockSql().') DESC')
             ->limit($limit)
-            ->get(['id', 'sku', 'name', 'stock', 'min_stock', 'reorder_point', 'reorder_quantity', 'location_id']);
+            ->get();
 
         return Response::json([
             'count' => $products->count(),
@@ -56,11 +59,11 @@ class ListLowStockTool extends Tool
                 'id' => $p->id,
                 'sku' => $p->sku,
                 'name' => $p->name,
-                'stock' => $p->stock,
+                'stock' => $p->total_stock,
                 'min_stock' => $p->min_stock,
                 'reorder_point' => $p->reorder_point,
                 'reorder_quantity' => $p->reorder_quantity,
-                'shortage' => max(0, ($p->min_stock ?? 0) - $p->stock),
+                'shortage' => max(0, ($p->min_stock ?? 0) - $p->total_stock),
                 'location_id' => $p->location_id,
             ])->all(),
         ]);

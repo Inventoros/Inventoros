@@ -83,13 +83,15 @@ class ReportController extends Controller
         // by_currency lists every currency (that one first).
         $currency = Organization::currencyFor($organizationId);
         $byCurrency = CurrencyTotals::breakdown(
+            // A product sold by variant counts its active variants, each at
+            // its own price and cost.
             $base()->groupBy('currency')->selectRaw('
                 currency,
                 COUNT(*) as items,
-                COALESCE(SUM(stock), 0) as quantity,
-                COALESCE(SUM(stock * price), 0) as stock_value,
-                COALESCE(SUM(stock * COALESCE(purchase_price, 0)), 0) as cost_value,
-                COALESCE(SUM(stock * (price - COALESCE(purchase_price, 0))), 0) as profit_potential
+                COALESCE(SUM('.Product::effectiveStockSql().'), 0) as quantity,
+                COALESCE(SUM('.Product::stockValueSql('price').'), 0) as stock_value,
+                COALESCE(SUM('.Product::stockValueSql('purchase_price').'), 0) as cost_value,
+                COALESCE(SUM('.Product::stockValueSql('price').' - '.Product::stockValueSql('purchase_price').'), 0) as profit_potential
             ')->get(),
             $currency,
             ['stock_value', 'cost_value', 'profit_potential'],
@@ -110,10 +112,11 @@ class ReportController extends Controller
             ->leftJoin('product_categories', 'product_categories.id', '=', 'products.category_id')
             ->leftJoin('product_locations', 'product_locations.id', '=', 'products.location_id')
             ->selectRaw('
-                products.id, products.name, products.sku, products.stock, products.price, products.purchase_price,
+                products.id, products.name, products.sku, '.Product::effectiveStockSql().' as stock, products.price, products.purchase_price,
                 products.currency,
                 product_categories.name as category, product_locations.name as location,
-                (products.stock * products.price) as stock_value
+                '.Product::stockValueSql('price').' as stock_value,
+                '.Product::stockValueSql('purchase_price').' as cost_value
             ')
             ->orderByDesc('stock_value')
             ->orderBy('products.id')
@@ -135,9 +138,11 @@ class ReportController extends Controller
                     'currency' => filled($product->currency) ? strtoupper(trim((string) $product->currency)) : $currency,
                     'price' => $price,
                     'purchase_price' => $cost,
-                    'stock_value' => round($stock * $price, 2),
-                    'cost_value' => round($stock * $cost, 2),
-                    'profit_potential' => round($stock * ($price - $cost), 2),
+                    // Values come from the query: a variant product's
+                    // variants each count at their own price and cost.
+                    'stock_value' => round((float) $product->stock_value, 2),
+                    'cost_value' => round((float) $product->cost_value, 2),
+                    'profit_potential' => round((float) $product->stock_value - (float) $product->cost_value, 2),
                 ];
             });
 
@@ -152,8 +157,8 @@ class ReportController extends Controller
                 product_categories.name as category,
                 products.currency as currency,
                 COUNT(*) as items,
-                COALESCE(SUM(products.stock), 0) as quantity,
-                COALESCE(SUM(products.stock * products.price), 0) as value
+                COALESCE(SUM('.Product::effectiveStockSql().'), 0) as quantity,
+                COALESCE(SUM('.Product::stockValueSql('price').'), 0) as value
             ')
             ->get()
             ->map(fn ($row) => [
@@ -330,14 +335,25 @@ class ReportController extends Controller
         // window into memory and aggregated in PHP, which OOMs on large
         // tenants and large windows.
 
-        // Summary
-        $summary = Order::forOrganization($organizationId)
+        // Money is never added across currencies (like receivables and
+        // valuation): each headline figure is the organization's currency,
+        // and every row carries its per-currency breakdown (by_currency, that
+        // currency first) for the page to list the others. Counts cover every
+        // currency.
+        $currency = Organization::currencyFor($organizationId);
+        $orders = fn () => Order::forOrganization($organizationId)
             ->whereBetween('order_date', [$fromTimestamp, $toTimestamp])
-            ->selectRaw('COUNT(*) as total_orders, COALESCE(SUM(total), 0) as total_revenue')
-            ->first();
+            ->toBase();
 
-        $totalOrders = (int) $summary->total_orders;
-        $totalRevenue = (float) $summary->total_revenue;
+        $byCurrency = array_map(
+            fn (array $row) => $row + ['average_order_value' => $row['orders'] > 0 ? round($row['revenue'] / $row['orders'], 2) : 0.0],
+            CurrencyTotals::breakdown(
+                $orders()->selectRaw('currency, COUNT(*) as orders, COALESCE(SUM(total), 0) as revenue')->groupBy('currency')->get(),
+                $currency,
+                ['revenue'],
+                ['orders'],
+            ),
+        );
 
         $totalItemsSold = (int) OrderItem::query()
             ->join('orders', 'orders.id', '=', 'order_items.order_id')
@@ -346,52 +362,73 @@ class ReportController extends Controller
             ->sum('order_items.quantity');
 
         $summary = [
-            'total_orders' => $totalOrders,
-            'total_revenue' => $totalRevenue,
+            'total_orders' => array_sum(array_column($byCurrency, 'orders')),
+            'currency' => $currency,
+            'total_revenue' => $byCurrency[0]['revenue'],
             'total_items_sold' => $totalItemsSold,
-            'average_order_value' => $totalOrders > 0 ? $totalRevenue / $totalOrders : 0,
+            'average_order_value' => $byCurrency[0]['average_order_value'],
+            'by_currency' => $byCurrency,
         ];
+
+        // One row per $key: counts over every currency, money in the
+        // organization's currency, and the per-currency split in by_currency.
+        $perCurrency = function ($rows, string $key, array $money, array $counts) use ($currency) {
+            return collect($rows)
+                ->groupBy(fn ($row) => (string) $row->{$key})
+                ->map(function ($group, $value) use ($key, $money, $counts, $currency) {
+                    $split = CurrencyTotals::breakdown($group, $currency, $money, $counts);
+                    $row = [$key => $value];
+                    foreach ($counts as $field) {
+                        $row[$field] = array_sum(array_column($split, $field));
+                    }
+                    foreach ($money as $field) {
+                        $row[$field] = $split[0][$field];
+                    }
+
+                    return $row + ['by_currency' => $split];
+                })
+                ->values();
+        };
 
         // Payment position of the window's orders, only for users who may see
         // payments (absent, not zeroed, for everyone else).
         $byPaymentStatus = null;
         if ($request->user()->hasPermission(Permission::VIEW_PAYMENTS)) {
-            $rows = Order::forOrganization($organizationId)
-                ->whereBetween('order_date', [$fromTimestamp, $toTimestamp])
-                ->where('status', '!=', 'cancelled')
-                ->selectRaw('payment_status, COUNT(*) as count, COALESCE(SUM(total), 0) as total, COALESCE(SUM(amount_paid), 0) as amount_paid, COALESCE(SUM(CASE WHEN total > amount_paid AND payment_status <> ? THEN total - amount_paid ELSE 0 END), 0) as balance_due', [PaymentStatus::UNTRACKED->value])
-                ->groupBy('payment_status')
-                ->get()
-                ->keyBy(fn ($row) => $row->payment_status instanceof PaymentStatus ? $row->payment_status->value : (string) $row->payment_status);
+            $rows = $perCurrency(
+                $orders()
+                    ->where('status', '!=', 'cancelled')
+                    ->selectRaw('payment_status, currency, COUNT(*) as count, COALESCE(SUM(total), 0) as total, COALESCE(SUM(amount_paid), 0) as amount_paid, COALESCE(SUM(CASE WHEN total > amount_paid AND payment_status <> ? THEN total - amount_paid ELSE 0 END), 0) as balance_due', [PaymentStatus::UNTRACKED->value])
+                    ->groupBy('payment_status', 'currency')
+                    ->get(),
+                'payment_status',
+                ['total', 'amount_paid', 'balance_due'],
+                ['count'],
+            )->keyBy('payment_status');
 
             $byPaymentStatus = collect(PaymentStatus::cases())
                 ->filter(fn (PaymentStatus $status) => $rows->has($status->value))
-                ->map(fn (PaymentStatus $status) => [
-                    'payment_status' => $status->value,
-                    'count' => (int) $rows[$status->value]->count,
-                    'total' => round((float) $rows[$status->value]->total, 2),
-                    'amount_paid' => round((float) $rows[$status->value]->amount_paid, 2),
-                    'balance_due' => round((float) $rows[$status->value]->balance_due, 2),
-                ])
+                ->map(fn (PaymentStatus $status) => $rows[$status->value])
                 ->values();
 
-            $summary['total_outstanding'] = round((float) $byPaymentStatus->sum('balance_due'), 2);
+            $summary['outstanding_by_currency'] = CurrencyTotals::list(
+                $byPaymentStatus->flatMap(fn (array $row) => $row['by_currency'])
+                    ->groupBy('currency')
+                    ->map(fn ($split) => $split->sum('balance_due')),
+                $currency,
+            );
+            $summary['total_outstanding'] = $summary['outstanding_by_currency'][0]['amount'];
         }
 
         // Sales by status
-        $byStatus = Order::forOrganization($organizationId)
-            ->whereBetween('order_date', [$fromTimestamp, $toTimestamp])
-            ->selectRaw('status, COUNT(*) as count, COALESCE(SUM(total), 0) as revenue')
-            ->groupBy('status')
-            ->get()
-            ->map(fn ($row) => [
-                'status' => $row->status,
-                'count' => (int) $row->count,
-                'revenue' => (float) $row->revenue,
-            ])
-            ->values();
+        $byStatus = $perCurrency(
+            $orders()->selectRaw('status, currency, COUNT(*) as count, COALESCE(SUM(total), 0) as revenue')->groupBy('status', 'currency')->get(),
+            'status',
+            ['revenue'],
+            ['count'],
+        );
 
-        // Top selling products (by revenue, top 10).
+        // Top selling products (by revenue, top 10), per product and currency:
+        // the organization's currency first, then each other currency.
         $topProducts = OrderItem::query()
             ->join('orders', 'orders.id', '=', 'order_items.order_id')
             ->where('orders.organization_id', $organizationId)
@@ -400,47 +437,45 @@ class ReportController extends Controller
                 order_items.product_id,
                 order_items.product_name,
                 order_items.sku,
+                orders.currency,
                 SUM(order_items.quantity) as quantity_sold,
                 SUM(order_items.total) as revenue
             ')
-            ->groupBy('order_items.product_id', 'order_items.product_name', 'order_items.sku')
+            ->groupBy('order_items.product_id', 'order_items.product_name', 'order_items.sku', 'orders.currency')
+            ->orderByRaw('CASE WHEN UPPER(orders.currency) = ? THEN 0 ELSE 1 END', [$currency])
             ->orderByDesc('revenue')
             ->limit(10)
             ->get()
             ->map(fn ($row) => [
                 'product_name' => $row->product_name,
                 'sku' => $row->sku,
+                'currency' => filled($row->currency) ? strtoupper(trim((string) $row->currency)) : $currency,
                 'quantity_sold' => (int) $row->quantity_sold,
                 'revenue' => (float) $row->revenue,
             ])
             ->values();
 
         // Daily sales trend
-        $dailySales = Order::forOrganization($organizationId)
-            ->whereBetween('order_date', [$fromTimestamp, $toTimestamp])
-            ->selectRaw('DATE(order_date) as date, COUNT(*) as orders, COALESCE(SUM(total), 0) as revenue')
-            ->groupBy('date')
-            ->orderBy('date')
-            ->get()
-            ->map(fn ($row) => [
-                'date' => $row->date,
-                'orders' => (int) $row->orders,
-                'revenue' => (float) $row->revenue,
-            ])
-            ->values();
+        $dailySales = $perCurrency(
+            $orders()->selectRaw('DATE(order_date) as date, currency, COUNT(*) as orders, COALESCE(SUM(total), 0) as revenue')->groupBy('date', 'currency')->orderBy('date')->get(),
+            'date',
+            ['revenue'],
+            ['orders'],
+        )->sortBy('date')->values();
 
         // Period-over-period: the same headline figures for the equal-length
         // period immediately before, with the change in percent (null when
         // the previous period had nothing to compare against).
         $previousPeriod = $period->previous();
-        $current = $this->analytics->salesSummary($organizationId, $period);
-        $previous = $this->analytics->salesSummary($organizationId, $previousPeriod);
+        $current = $this->analytics->salesSummary($organizationId, $period, $currency);
+        $previous = $this->analytics->salesSummary($organizationId, $previousPeriod, $currency);
         $delta = [];
         foreach ($current as $key => $value) {
             $delta[$key] = InventoryAnalyticsService::deltaPct((float) $value, (float) $previous[$key]);
         }
         $comparison = [
             'previousPeriod' => $previousPeriod->toFilters(),
+            'current' => $current,
             'previous' => $previous,
             'delta' => $delta,
         ];
@@ -448,28 +483,33 @@ class ReportController extends Controller
         if ($format = ReportExporter::requestedFormat($request)) {
             $notes = ['Period: '.$period->label().'.'];
 
+            // One line per currency present, never a sum across currencies.
+            $split = fn ($rows, string $key, string $count, string $money) => $rows->flatMap(
+                fn (array $r) => collect($r['by_currency'])
+                    ->filter(fn (array $c) => $c[$count] > 0)
+                    ->map(fn (array $c) => [$r[$key] instanceof \BackedEnum ? $r[$key]->value : (string) $r[$key], $c['currency'], $c[$count], $c[$money]])
+            );
+
             return match ($request->query('group')) {
                 'status' => $this->exporter->download(
                     $format,
                     'Sales by Status',
-                    ['Status', 'Orders', 'Revenue'],
-                    $byStatus->map(fn (array $r) => [
-                        $r['status'] instanceof \BackedEnum ? $r['status']->value : (string) $r['status'], $r['count'], $r['revenue'],
-                    ]),
+                    ['Status', 'Currency', 'Orders', 'Revenue'],
+                    $split($byStatus, 'status', 'count', 'revenue'),
                     $notes
                 ),
                 'products' => $this->exporter->download(
                     $format,
                     'Top Selling Products',
-                    ['Product', 'SKU', 'Units sold', 'Revenue'],
-                    $topProducts->map(fn (array $r) => [$r['product_name'], $r['sku'], $r['quantity_sold'], $r['revenue']]),
+                    ['Product', 'SKU', 'Currency', 'Units sold', 'Revenue'],
+                    $topProducts->map(fn (array $r) => [$r['product_name'], $r['sku'], $r['currency'], $r['quantity_sold'], $r['revenue']]),
                     $notes
                 ),
                 default => $this->exporter->download(
                     $format,
                     'Sales Analysis',
-                    ['Date', 'Orders', 'Revenue'],
-                    $dailySales->map(fn (array $r) => [(string) $r['date'], $r['orders'], $r['revenue']]),
+                    ['Date', 'Currency', 'Orders', 'Revenue'],
+                    $split($dailySales, 'date', 'orders', 'revenue'),
                     $notes
                 ),
             };
@@ -518,9 +558,9 @@ class ReportController extends Controller
                 return $this->exporter->download(
                     $format,
                     'Receivables by Order',
-                    ['Order', 'Customer', 'Order date', 'Status', 'Payment status', 'Total', 'Paid', 'Balance due', 'Age (days)', 'Bucket'],
+                    ['Order', 'Customer', 'Currency', 'Order date', 'Status', 'Payment status', 'Total', 'Paid', 'Balance due', 'Age (days)', 'Bucket'],
                     array_map(fn (array $o) => [
-                        $o['order_number'], $o['customer'], $o['order_date'], $o['status'], $o['payment_status'],
+                        $o['order_number'], $o['customer'], $currency, $o['order_date'], $o['status'], $o['payment_status'],
                         (float) $o['total'], (float) $o['amount_paid'], (float) $o['balance_due'], (int) $o['age_days'],
                         self::RECEIVABLES_BUCKET_LABELS[$o['bucket']] ?? $o['bucket'],
                     ], $report['orders']),
@@ -533,9 +573,9 @@ class ReportController extends Controller
             return $this->exporter->download(
                 $format,
                 'Receivables Aging',
-                array_merge(['Customer', 'Orders'], array_map(fn (string $b) => self::RECEIVABLES_BUCKET_LABELS[$b], $buckets), ['Total']),
+                array_merge(['Customer', 'Currency', 'Orders'], array_map(fn (string $b) => self::RECEIVABLES_BUCKET_LABELS[$b], $buckets), ['Total']),
                 array_map(fn (array $c) => array_merge(
-                    [$c['customer'], (int) $c['orders']],
+                    [$c['customer'], $currency, (int) $c['orders']],
                     array_map(fn (string $b) => (float) $c[$b], $buckets),
                     [(float) $c['total']],
                 ), $report['customers']),
@@ -573,9 +613,13 @@ class ReportController extends Controller
             ->where('is_active', true)
             // Low in total, or low in a warehouse with its own minimum.
             ->lowStock()
-            ->orderBy('stock', 'asc')
+            ->withEffectiveStock()
+            ->orderBy('effective_stock', 'asc')
             ->get()
             ->map(function ($product) use ($reorder) {
+                // A product sold by variant counts its active variants.
+                $stock = $product->total_stock;
+
                 $primarySupplier = $reorder->primarySupplier($product);
 
                 return [
@@ -584,11 +628,11 @@ class ReportController extends Controller
                     'sku' => $product->sku,
                     'category' => $product->category?->name,
                     'location' => $product->location?->name,
-                    'current_stock' => $product->stock,
+                    'current_stock' => $stock,
                     'min_stock' => $product->min_stock,
                     'max_stock' => $product->max_stock,
-                    'deficit' => max(0, $product->min_stock - $product->stock),
-                    'status' => $product->stock <= 0 ? 'out_of_stock' : 'low_stock',
+                    'deficit' => max(0, $product->min_stock - $stock),
+                    'status' => $stock <= 0 ? 'out_of_stock' : 'low_stock',
                     'price' => $product->price,
                     'supplier' => $primarySupplier?->name,
                     'supplier_id' => $primarySupplier?->id,
@@ -596,7 +640,7 @@ class ReportController extends Controller
                     // Reorder up to max_stock; fall back to reorder_point /
                     // min_stock when it's null, and never let a null or
                     // already-satisfied target produce a negative cost.
-                    'reorder_cost' => max(0, ($product->max_stock ?? $product->reorder_point ?? $product->min_stock ?? 0) - $product->stock)
+                    'reorder_cost' => max(0, ($product->max_stock ?? $product->reorder_point ?? $product->min_stock ?? 0) - $stock)
                         * ($product->purchase_price ?? $product->price),
                 ];
             });
@@ -655,9 +699,9 @@ class ReportController extends Controller
                 product_categories.name as category_name,
                 products.currency as currency,
                 COUNT(*) as product_count,
-                COALESCE(SUM(products.stock), 0) as total_stock,
-                COALESCE(SUM(products.stock * products.price), 0) as total_value,
-                SUM(CASE WHEN products.stock <= products.min_stock THEN 1 ELSE 0 END) as low_stock_items
+                COALESCE(SUM('.Product::effectiveStockSql().'), 0) as total_stock,
+                COALESCE(SUM('.Product::stockValueSql('price').'), 0) as total_value,
+                SUM(CASE WHEN '.Product::effectiveStockSql().' <= products.min_stock THEN 1 ELSE 0 END) as low_stock_items
             ')
             ->get()
             ->map(fn ($row) => [

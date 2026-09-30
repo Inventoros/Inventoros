@@ -76,7 +76,7 @@ class DashboardController extends Controller
             ? Product::where('organization_id', $orgId)
                 ->selectRaw('
                     COUNT(*) as total_count,
-                    SUM(CASE WHEN stock <= min_stock THEN 1 ELSE 0 END) as low_stock_count
+                    SUM(CASE WHEN '.Product::effectiveStockSql().' <= products.min_stock THEN 1 ELSE 0 END) as low_stock_count
                 ')
                 ->first()
             : null;
@@ -119,7 +119,7 @@ class DashboardController extends Controller
             $money('totalValue', Product::where('organization_id', $orgId)
                 ->where('is_active', true)
                 ->groupBy('currency')
-                ->selectRaw('currency, COALESCE(SUM(price * stock), 0) as amount')
+                ->selectRaw('currency, COALESCE(SUM('.Product::stockValueSql('price').'), 0) as amount')
                 ->pluck('amount', 'currency'));
 
             $money('revenueThisMonth', Order::where('organization_id', $orgId)
@@ -174,9 +174,10 @@ class DashboardController extends Controller
 
         // Get low stock products
         $lowStockProducts = ! $canViewProducts ? collect() : Product::where('organization_id', $user->organization_id)
-            ->whereColumn('stock', '<=', 'min_stock')
+            ->whereRaw(Product::effectiveStockSql().' <= products.min_stock')
+            ->withEffectiveStock()
             ->with(['category', 'location'])
-            ->orderBy('stock', 'asc')
+            ->orderBy('effective_stock', 'asc')
             ->limit(5)
             ->get();
 
@@ -184,6 +185,8 @@ class DashboardController extends Controller
         $recentOrders = ! $canViewOrders ? collect() : Order::where('organization_id', $user->organization_id)
             ->with('items')
             ->latest('order_date')
+            // order_date is a day: the newest order of the day first.
+            ->latest('id')
             ->limit(5)
             ->get();
 
@@ -194,7 +197,7 @@ class DashboardController extends Controller
                 $join->on('products.category_id', '=', 'product_categories.id')
                     ->where('products.is_active', true);
             })
-            ->selectRaw('product_categories.name, product_categories.id, products.currency, COALESCE(SUM(products.price * products.stock), 0) as value, COUNT(products.id) as count')
+            ->selectRaw('product_categories.name, product_categories.id, products.currency, COALESCE(SUM('.Product::stockValueSql('price').'), 0) as value, COUNT(products.id) as count')
             ->groupBy('product_categories.id', 'product_categories.name', 'products.currency')
             ->get()
             // One card per category. Its value is in the organization's
@@ -236,8 +239,9 @@ class DashboardController extends Controller
         $reorder = app(ReorderService::class);
         $reorderSuggestions = ! $canViewProducts ? collect() : Product::where('organization_id', $user->organization_id)
             ->needsReorder()
+            ->withEffectiveStock()
             ->with(array_merge(['category'], ReorderService::primarySupplierEagerLoad()))
-            ->orderBy('stock', 'asc')
+            ->orderBy('effective_stock', 'asc')
             ->limit(10)
             ->get()
             ->map(function ($product) use ($reorder) {
@@ -247,7 +251,7 @@ class DashboardController extends Controller
                     'id' => $product->id,
                     'name' => $product->name,
                     'sku' => $product->sku,
-                    'stock' => $product->stock,
+                    'stock' => $product->total_stock,
                     'reorder_point' => $product->reorder_point,
                     'reorder_quantity' => $product->reorder_quantity,
                     'suggested_quantity' => $reorder->suggestedQuantity($product, $primarySupplier),
@@ -276,15 +280,15 @@ class DashboardController extends Controller
         // Get top products by value
         $topProducts = ! $canViewProducts ? collect() : Product::where('organization_id', $user->organization_id)
             ->where('is_active', true)
-            ->where('stock', '>', 0)
-            ->selectRaw('id, name, sku, currency, price, stock, (price * stock) as total_value')
+            ->whereRaw(Product::effectiveStockSql().' > 0')
+            ->selectRaw('id, name, sku, currency, price, '.Product::effectiveStockSql().' as stock, '.Product::stockValueSql('price').' as total_value')
             // Values in different currencies don't rank against each other:
             // products in the organization's currency first, then each other
             // currency's, highest value first within a currency. Each row
             // carries its currency.
             ->orderByRaw('CASE WHEN UPPER(currency) = ? THEN 0 ELSE 1 END', [$currency])
             ->orderByRaw('UPPER(currency)')
-            ->orderByRaw('price * stock DESC')
+            ->orderByRaw(Product::stockValueSql('price').' DESC')
             ->limit(5)
             ->get()
             ->each(function (Product $product) use ($currency) {

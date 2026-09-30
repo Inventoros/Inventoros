@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services;
 
+use App\Exceptions\InsufficientStockException;
 use App\Exceptions\InvalidStateException;
 use App\Models\Inventory\Product;
 use App\Models\Inventory\ProductLocation;
@@ -186,7 +187,7 @@ final class StockTransferService
                     ?? throw (new ModelNotFoundException)->setModel(Product::class, [$item->product_id]);
 
                 if ($product->stock < $item->quantity) {
-                    throw new \RuntimeException(
+                    throw new InsufficientStockException(
                         "Insufficient stock for {$product->name}: have {$product->stock}, transfer requires {$item->quantity}."
                     );
                 }
@@ -231,6 +232,7 @@ final class StockTransferService
             $stockTransfer->update([
                 'status' => 'completed',
                 'completed_at' => now(),
+                'completed_by' => $actor->id,
             ]);
         });
 

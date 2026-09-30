@@ -9,6 +9,9 @@ import { computed, ref } from 'vue';
 import { ExternalLink, Users } from 'lucide-vue-next';
 
 import { useI18n } from 'vue-i18n';
+import { usePermissions } from '@/composables/usePermissions';
+
+const { canVisit } = usePermissions();
 const props = defineProps({
     organization: Object,
     user: Object,
@@ -16,6 +19,8 @@ const props = defineProps({
     canManageOrganization: { type: Boolean, default: false },
     can: { type: Object, default: () => ({ manageOrganization: false, viewUsers: false }) },
     portal: { type: Object, default: () => ({ enabled: false, login_url: null }) },
+    currencies: { type: Array, default: () => [] },
+    timezones: { type: Array, default: () => [] },
 });
 
 
@@ -305,26 +310,26 @@ const tabs = [
                         <div class="grid grid-cols-1 gap-5 md:grid-cols-2">
                             <div>
                                 <label for="currency" :class="fieldLabel">{{ t('common.currency') }}</label>
-                                <input
+                                <select
                                     id="currency"
                                     v-model="regionalForm.currency"
-                                    type="text"
                                     :class="fieldInput"
                                     :disabled="!canManage"
-                                    placeholder="USD"
-                                />
+                                >
+                                    <option v-for="currency in currencies" :key="currency.code" :value="currency.code">{{ currency.code }} - {{ currency.name }}</option>
+                                </select>
                                 <p v-if="regionalForm.errors.currency" :class="fieldError">{{ regionalForm.errors.currency }}</p>
                             </div>
                             <div>
                                 <label for="timezone" :class="fieldLabel">{{ t('settings.organization.timezone') }}</label>
-                                <input
+                                <select
                                     id="timezone"
                                     v-model="regionalForm.timezone"
-                                    type="text"
                                     :class="fieldInput"
                                     :disabled="!canManage"
-                                    placeholder="UTC"
-                                />
+                                >
+                                    <option v-for="zone in timezones" :key="zone" :value="zone">{{ zone }}</option>
+                                </select>
                                 <p v-if="regionalForm.errors.timezone" :class="fieldError">{{ regionalForm.errors.timezone }}</p>
                             </div>
                             <div>
@@ -504,7 +509,7 @@ const tabs = [
                     <p class="text-sm text-text-secondary">
                         {{ t('settings.organization.userMgmtHint') }}
                     </p>
-                    <Button variant="default" as="Link" :href="route('users.index')">
+                    <Button v-if="canVisit('users.index')" variant="default" as="Link" :href="route('users.index')">
                         {{ t('settings.organization.goToUserMgmt') }}
                     </Button>
                 </div>

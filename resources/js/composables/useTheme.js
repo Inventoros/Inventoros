@@ -1,11 +1,12 @@
-import { ref, watch } from 'vue';
+import { ref } from 'vue';
+import { currentTheme, saveTheme } from '@/lib/theme';
 
-const theme = ref(localStorage.getItem('theme') || 'dark');
+// The saved choice, else the system preference.
+const theme = ref(currentTheme());
 
 export function useTheme() {
     const setTheme = (newTheme) => {
-        theme.value = newTheme;
-        localStorage.setItem('theme', newTheme);
+        theme.value = saveTheme(newTheme);
     };
 
     const toggleTheme = () => {

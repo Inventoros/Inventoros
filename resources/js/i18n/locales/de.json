@@ -1,4 +1,36 @@
 {
+  "auditLabels": {
+    "notCounted": "Nicht gezählt",
+    "never": "Nie"
+  },
+  "salesUnits": {
+    "sold": "{count} Einheit verkauft | {count} Einheiten verkauft"
+  },
+  "stockTransferCompleter": {
+    "completedBy": "Abgeschlossen von"
+  },
+  "orderCurrency": {
+    "label": "Währung",
+    "hint": "Positionspreise werden aus dem Katalog in dieser Währung übernommen. Eine Änderung berechnet die Positionen neu."
+  },
+  "orderInvoice": {
+    "notEmailed": "Erstellt, aber noch nicht per E-Mail gesendet. Mit Rechnung per E-Mail senden geht sie an den Kunden."
+  },
+  "returnPicker": {
+    "title": "Neue Rücksendung",
+    "description": "Wählen Sie die Bestellung, aus der die Ware zurückkommt. Nur versandte oder zugestellte Bestellungen können zurückgesendet werden.",
+    "back": "Zurück zu Rücksendungen",
+    "search": "Suche",
+    "searchPlaceholder": "Nach Bestellnummer, Kundenname oder E-Mail suchen...",
+    "order": "Bestellung #",
+    "customer": "Kunde",
+    "date": "Bestelldatum",
+    "status": "Status",
+    "total": "Gesamt",
+    "choose": "Rücksendung starten",
+    "empty": "Keine passenden versandten oder zugestellten Bestellungen.",
+    "showing": "{from} bis {to} von {total}"
+  },
   "stockAudits": {
     "completeConfirm": "Diese Inventur abschließen? Für alle Abweichungen werden Bestandskorrekturen erstellt.",
     "completeUncountedConfirm": "{uncounted} von {total} Artikeln wurden nicht gezählt. Inventur trotzdem abschließen? Nicht gezählte Artikel behalten ihren aktuellen Bestand; nur gezählte Artikel werden korrigiert.",
@@ -1830,7 +1862,8 @@
         "auto_reorder": "Automatische Nachbestellung",
         "quick_reorder": "Schnelle Nachbestellung",
         "return_lines_updated": "Retourenpositionen aktualisiert",
-        "portal_return_requested": "Retoure im Portal angefordert"
+        "portal_return_requested": "Retoure im Portal angefordert",
+        "pre_tracking_marked_paid": "Ältere Bestellung als bezahlt markiert"
       },
       "subjects": {
         "Customer": "Kunde",

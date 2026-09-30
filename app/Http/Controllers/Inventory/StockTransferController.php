@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Inventory;
 
+use App\Exceptions\BusinessRuleException;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StockTransfer\StoreStockTransferRequest;
 use App\Http\Requests\StockTransfer\UpdateStockTransferRequest;
@@ -133,7 +134,7 @@ class StockTransferController extends Controller
 
         $this->warehouseAccess->authorizeAnyLocation($request->user(), [$stockTransfer->from_location_id, $stockTransfer->to_location_id]);
 
-        $stockTransfer->load(['fromLocation', 'toLocation', 'transferredBy', 'items.product', 'approver']);
+        $stockTransfer->load(['fromLocation', 'toLocation', 'transferredBy', 'completer', 'items.product', 'approver']);
 
         return Inertia::render('StockTransfers/Show', [
             'transfer' => $stockTransfer,
@@ -215,7 +216,7 @@ class StockTransferController extends Controller
     {
         try {
             $action();
-        } catch (\RuntimeException $e) {
+        } catch (BusinessRuleException $e) {
             return redirect()->route('stock-transfers.show', $stockTransfer)
                 ->with('error', $e->getMessage());
         }

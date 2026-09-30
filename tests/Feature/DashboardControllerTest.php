@@ -61,6 +61,28 @@ class DashboardControllerTest extends TestCase
         $response->assertStatus(200);
     }
 
+    /**
+     * Orders on the same day came back in any order: order_date is a day,
+     * so the newest order of the day was not always first.
+     */
+    public function test_recent_orders_are_newest_first_within_a_day(): void
+    {
+        $ids = [];
+        foreach (['R-1', 'R-2', 'R-3'] as $number) {
+            $ids[] = \App\Models\Order\Order::create([
+                'organization_id' => $this->organization->id, 'order_number' => $number, 'status' => 'pending',
+                'customer_name' => 'C', 'order_date' => now()->toDateString(), 'subtotal' => 1, 'total' => 1, 'currency' => 'USD',
+            ])->id;
+        }
+
+        $this->actingAs($this->admin)->get(route('dashboard'))
+            ->assertInertia(fn ($page) => $page
+                ->where('recentOrders.0.id', $ids[2])
+                ->where('recentOrders.1.id', $ids[1])
+                ->where('recentOrders.2.id', $ids[0])
+                ->etc());
+    }
+
     public function test_dashboard_renders_when_an_activity_log_has_no_user(): void
     {
         // A system action, or one whose acting user was since deleted, has a

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\GraphQL\Mutations;
 
+use App\Exceptions\BusinessRuleException;
 use App\GraphQL\Concerns\RequiresPermissions;
 use App\Models\Order\Order;
 use Closure;
@@ -148,7 +149,7 @@ class UpdateOrderMutation extends Mutation
         if ($cancelling) {
             try {
                 $order = app(\App\Services\OrderService::class)->cancel($order);
-            } catch (\RuntimeException $e) {
+            } catch (BusinessRuleException $e) {
                 throw new Error($e->getMessage());
             }
         }

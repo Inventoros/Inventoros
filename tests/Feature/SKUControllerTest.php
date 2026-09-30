@@ -59,6 +59,25 @@ class SKUControllerTest extends TestCase
         $response->assertStatus(200);
     }
 
+    /**
+     * The date examples were hard-coded to October 2025.
+     */
+    public function test_pattern_examples_use_the_current_date(): void
+    {
+        $this->travelTo(now()->setDate(2027, 3, 9));
+
+        $response = $this->actingAs($this->admin)->getJson(route('sku.patterns'))->assertOk();
+
+        $examples = collect($response->json('variables'))->pluck('example', 'key');
+        $this->assertSame('270309', $examples['{date}']);
+        $this->assertSame('2027', $examples['{year}']);
+        $this->assertSame('03', $examples['{month}']);
+
+        $presets = collect($response->json('presets'))->pluck('example', 'pattern');
+        $this->assertSame('2027-ELE-000123', $presets['{year}-{category}-{number}']);
+        $this->assertSame('ELE-270309-A7K9M2', $presets['{category}-{date}-{random}']);
+    }
+
     public function test_admin_can_generate_sku(): void
     {
         $response = $this->actingAs($this->admin)

@@ -1,4 +1,36 @@
 {
+  "auditLabels": {
+    "notCounted": "لم يُعدّ",
+    "never": "أبدًا"
+  },
+  "salesUnits": {
+    "sold": "بيعت {count} وحدة | بيعت {count} وحدات"
+  },
+  "stockTransferCompleter": {
+    "completedBy": "أكمله"
+  },
+  "orderCurrency": {
+    "label": "العملة",
+    "hint": "تُملأ أسعار البنود من الكتالوج بهذه العملة. تغييرها يعيد تسعير البنود."
+  },
+  "orderInvoice": {
+    "notEmailed": "تم إنشاؤها ولم تُرسل بالبريد الإلكتروني بعد. استخدم إرسال الفاتورة بالبريد لإرسالها إلى العميل."
+  },
+  "returnPicker": {
+    "title": "إرجاع جديد",
+    "description": "اختر الطلب الذي تعود منه البضائع. لا يمكن الإرجاع إلا للطلبات المشحونة أو المسلّمة.",
+    "back": "العودة إلى المرتجعات",
+    "search": "بحث",
+    "searchPlaceholder": "ابحث برقم الطلب أو اسم العميل أو بريده الإلكتروني...",
+    "order": "رقم الطلب",
+    "customer": "العميل",
+    "date": "تاريخ الطلب",
+    "status": "الحالة",
+    "total": "الإجمالي",
+    "choose": "بدء الإرجاع",
+    "empty": "لا توجد طلبات مشحونة أو مسلّمة مطابقة.",
+    "showing": "عرض {from} إلى {to} من {total}"
+  },
   "stockAudits": {
     "completeConfirm": "هل تريد إكمال هذا الجرد؟ سيتم إنشاء تعديلات مخزون لكل فرق.",
     "completeUncountedConfirm": "لم يتم عدّ {uncounted} من أصل {total} صنفًا. هل تريد إكمال الجرد على أي حال؟ تحتفظ الأصناف غير المعدودة بمخزونها الحالي، ويُعدَّل المعدود فقط.",
@@ -1830,7 +1862,8 @@
         "auto_reorder": "إعادة طلب تلقائية",
         "quick_reorder": "إعادة طلب سريعة",
         "return_lines_updated": "تم تحديث بنود الإرجاع",
-        "portal_return_requested": "طُلب إرجاع من البوابة"
+        "portal_return_requested": "طُلب إرجاع من البوابة",
+        "pre_tracking_marked_paid": "تم تعليم طلب قديم كمدفوع"
       },
       "subjects": {
         "Customer": "عميل",

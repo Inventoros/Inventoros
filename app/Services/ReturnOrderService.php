@@ -68,6 +68,38 @@ final class ReturnOrderService
     }
 
     /**
+     * Orders a return can be raised against, for the "New Return" picker:
+     * not cancelled, and shipped or delivered or with a shipment that has
+     * left the warehouse (the rule create() enforces). A restricted user
+     * sees only orders with goods from their warehouses.
+     */
+    public function returnableOrders(User $user, ?string $search = null): Builder
+    {
+        $query = Order::query()
+            ->forOrganization($user->organization_id)
+            ->where('status', '!=', OrderStatus::CANCELLED->value)
+            ->where(function (Builder $q): void {
+                $q->whereIn('status', [OrderStatus::SHIPPED->value, OrderStatus::DELIVERED->value])
+                    ->orWhereHas('shipments', fn (Builder $shipments) => $shipments->withoutGlobalScopes()->leftWarehouse());
+            })
+            ->when($search, function (Builder $q, string $search): void {
+                $q->where(function (Builder $inner) use ($search): void {
+                    $inner->where('order_number', 'like', "%{$search}%")
+                        ->orWhere('customer_name', 'like', "%{$search}%")
+                        ->orWhere('customer_email', 'like', "%{$search}%");
+                });
+            });
+
+        if ($this->warehouseAccess->isRestricted($user)) {
+            $query->whereHas('items.product', function ($products) use ($user) {
+                $this->warehouseAccess->scopeByLocation($products, $user, 'products.location_id');
+            });
+        }
+
+        return $query;
+    }
+
+    /**
      * @throws AuthorizationException when none of the return's lines comes back to the user's warehouses
      */
     public function authorizeView(ReturnOrder $returnOrder, User $user): void

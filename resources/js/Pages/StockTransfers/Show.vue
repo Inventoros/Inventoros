@@ -181,7 +181,7 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-t
                         </div>
                         <div>
                             <dt class="mb-1 text-xs text-text-tertiary">{{ t('stockTransfers.show.transferredBy') }}</dt>
-                            <dd class="text-sm font-medium text-text-primary">{{ transfer.transferred_by_user?.name || '-' }}</dd>
+                            <dd class="text-sm font-medium text-text-primary">{{ transfer.transferred_by?.name || '-' }}</dd>
                         </div>
                         <div>
                             <dt class="mb-1 text-xs text-text-tertiary">{{ t('stockTransfers.fromLocation') }}</dt>
@@ -204,6 +204,10 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-t
                         <div v-if="transfer.completed_at">
                             <dt class="mb-1 text-xs text-text-tertiary">{{ t('stockTransfers.show.completedAt') }}</dt>
                             <dd class="text-sm font-medium text-text-primary">{{ formatDate(transfer.completed_at) }}</dd>
+                        </div>
+                        <div v-if="transfer.completer">
+                            <dt class="mb-1 text-xs text-text-tertiary">{{ t('stockTransferCompleter.completedBy') }}</dt>
+                            <dd class="text-sm font-medium text-text-primary">{{ transfer.completer.name }}</dd>
                         </div>
                     </dl>
 

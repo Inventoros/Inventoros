@@ -13,6 +13,9 @@ import { displayCalendarDate, todayIsoDate } from '@/lib/dates';
 import { formatMoney } from '@/lib/money';
 import { orderSourceLabel, orderStatusLabel, orderStatusVariant } from '@/lib/orderLabels';
 import { Plus, Search, Eye, Pencil, Trash2, ShoppingCart, CheckCheck, X } from 'lucide-vue-next';
+import { usePermissions } from '@/composables/usePermissions';
+
+const { hasPermission, canVisit } = usePermissions();
 
 const { t, te } = useI18n();
 const statusText = (status) => orderStatusLabel(status, { t, te });
@@ -27,12 +30,14 @@ const props = defineProps({
     paymentStatuses: { type: Array, default: () => [] },
     canRecordPayments: Boolean,
     untrackedOrderCount: { type: Number, default: 0 },
+    // The day after the latest untracked order, so the default date covers them all.
+    markPaidBefore: { type: String, default: null },
     pluginComponents: Object,
 });
 
 // Orders placed before payment tracking can be marked paid in bulk.
 const showMarkPaidModal = ref(false);
-const markPaidForm = useForm({ before: todayIsoDate() });
+const markPaidForm = useForm({ before: props.markPaidBefore || todayIsoDate() });
 const submitMarkPaid = () => {
     markPaidForm.post(route('orders.payments.mark-pre-tracking-paid'), {
         preserveScroll: true,
@@ -118,7 +123,7 @@ const selectClass =
                     <CheckCheck :size="14" />
                     {{ t('payments.markPreTracking.button') }}
                 </Button>
-                <Button variant="default" size="sm" as="Link" :href="route('orders.create')">
+                <Button v-if="canVisit('orders.create')" variant="default" size="sm" as="Link" :href="route('orders.create')">
                     <Plus :size="14" />
                     {{ t('orders.createOrder') }}
                 </Button>
@@ -209,15 +214,15 @@ const selectClass =
                 <template #cell-actions="{ row }">
                     <div class="flex items-center justify-end gap-1">
                         <Link :href="route('orders.show', row.id)" class="rounded-md p-1.5 text-text-tertiary transition-colors hover:bg-surface-overlay hover:text-brand" :aria-label="t('common.view')"><Eye :size="16" /></Link>
-                        <Link :href="route('orders.edit', row.id)" class="rounded-md p-1.5 text-text-tertiary transition-colors hover:bg-surface-overlay hover:text-status-success" :aria-label="t('common.edit')"><Pencil :size="16" /></Link>
-                        <button type="button" @click="deleteOrder(row)" class="rounded-md p-1.5 text-text-tertiary transition-colors hover:bg-surface-overlay hover:text-status-danger" :aria-label="t('common.delete')"><Trash2 :size="16" /></button>
+                        <Link v-if="canVisit('orders.edit')" :href="route('orders.edit', row.id)" class="rounded-md p-1.5 text-text-tertiary transition-colors hover:bg-surface-overlay hover:text-status-success" :aria-label="t('common.edit')"><Pencil :size="16" /></Link>
+                        <button v-if="hasPermission('delete_orders')" type="button" @click="deleteOrder(row)" class="rounded-md p-1.5 text-text-tertiary transition-colors hover:bg-surface-overlay hover:text-status-danger" :aria-label="t('common.delete')"><Trash2 :size="16" /></button>
                     </div>
                 </template>
                 <template #empty>
                     <div class="flex flex-col items-center gap-3 py-10">
                         <ShoppingCart :size="22" class="text-text-tertiary" />
                         <p class="text-sm text-text-tertiary">{{ t('orders.noOrdersFound') }}</p>
-                        <Button variant="default" size="sm" as="Link" :href="route('orders.create')">
+                        <Button v-if="canVisit('orders.create')" variant="default" size="sm" as="Link" :href="route('orders.create')">
                             <Plus :size="14" />
                             {{ t('orders.createFirstOrder') }}
                         </Button>

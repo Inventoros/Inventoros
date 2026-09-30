@@ -64,6 +64,56 @@ class OrderCurrencyTest extends TestCase
         ], $this->admin);
     }
 
+    // ------------------------------------------------------ web currency choice
+
+    public function test_the_web_form_offers_the_currencies_and_defaults_to_the_organizations(): void
+    {
+        $this->withoutVite()->actingAs($this->admin)
+            ->get(route('orders.create'))
+            ->assertOk()
+            ->assertInertia(fn ($page) => $page
+                ->where('defaultCurrency', 'CAD')
+                ->where('currencies', fn ($currencies) => collect($currencies)->pluck('code')->contains('EUR')
+                    && collect($currencies)->pluck('code')->contains('CAD'))
+                // Products carry their prices per currency so the form can
+                // prefill a line in the order's currency.
+                ->where('products.0.currency', 'CAD')
+                ->where('products.0.prices.USD', '11.00')
+                ->where('products.0.prices.EUR', '10.50'));
+    }
+
+    public function test_a_web_order_can_be_placed_in_another_currency(): void
+    {
+        $this->actingAs($this->admin)->post(route('orders.store'), [
+            'customer_name' => 'Web', 'status' => 'pending', 'order_date' => now()->toDateString(),
+            'currency' => 'EUR',
+            'items' => [['product_id' => $this->product->id, 'quantity' => 1, 'unit_price' => '10.50']],
+        ])->assertRedirect(route('orders.index'));
+
+        $this->assertSame('EUR', Order::where('customer_name', 'Web')->value('currency'));
+    }
+
+    public function test_a_web_order_rejects_an_unknown_currency(): void
+    {
+        $this->actingAs($this->admin)->post(route('orders.store'), [
+            'customer_name' => 'Web', 'status' => 'pending', 'order_date' => now()->toDateString(),
+            'currency' => 'ZZZ',
+            'items' => [['product_id' => $this->product->id, 'quantity' => 1, 'unit_price' => '10.50']],
+        ])->assertSessionHasErrors('currency');
+    }
+
+    public function test_the_customer_lookup_returns_the_customers_currency(): void
+    {
+        \App\Models\Customer::create([
+            'organization_id' => $this->org->id, 'name' => 'Euro Buyer', 'code' => 'EURO', 'currency' => 'EUR', 'is_active' => true,
+        ]);
+
+        $this->actingAs($this->admin)
+            ->getJson(route('orders.customer-lookup', ['q' => 'Euro']))
+            ->assertOk()
+            ->assertJsonPath('customers.0.currency', 'EUR');
+    }
+
     // ------------------------------------------------------------ defaults
 
     public function test_the_service_defaults_the_currency_to_the_organizations(): void

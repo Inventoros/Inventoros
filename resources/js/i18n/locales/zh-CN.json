@@ -1,4 +1,36 @@
 {
+  "auditLabels": {
+    "notCounted": "未盘点",
+    "never": "从未"
+  },
+  "salesUnits": {
+    "sold": "已售 {count} 件 | 已售 {count} 件"
+  },
+  "stockTransferCompleter": {
+    "completedBy": "完成人"
+  },
+  "orderCurrency": {
+    "label": "币种",
+    "hint": "明细单价按此币种从目录填入。更改币种会重新定价各明细。"
+  },
+  "orderInvoice": {
+    "notEmailed": "已生成，尚未通过邮件发送。使用“邮件发送发票”将其发送给客户。"
+  },
+  "returnPicker": {
+    "title": "新建退货",
+    "description": "选择商品退回所属的订单。只有已发货或已送达的订单才能退货。",
+    "back": "返回退货列表",
+    "search": "搜索",
+    "searchPlaceholder": "按订单号、客户名称或邮箱搜索...",
+    "order": "订单号",
+    "customer": "客户",
+    "date": "下单日期",
+    "status": "状态",
+    "total": "合计",
+    "choose": "开始退货",
+    "empty": "没有匹配的已发货或已送达订单。",
+    "showing": "显示第 {from} 至 {to} 条，共 {total} 条"
+  },
   "stockAudits": {
     "completeConfirm": "完成此次盘点？将为每个差异创建库存调整。",
     "completeUncountedConfirm": "{total} 件商品中有 {uncounted} 件尚未盘点。仍要完成盘点吗？未盘点的商品保持当前库存，只调整已盘点的商品。",
@@ -1830,7 +1862,8 @@
         "auto_reorder": "自动补货",
         "quick_reorder": "快速补货",
         "return_lines_updated": "已更新退货明细",
-        "portal_return_requested": "已在门户申请退货"
+        "portal_return_requested": "已在门户申请退货",
+        "pre_tracking_marked_paid": "旧订单已标记为已付款"
       },
       "subjects": {
         "Customer": "客户",

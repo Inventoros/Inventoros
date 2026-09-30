@@ -12,6 +12,9 @@ import { useI18n } from 'vue-i18n';
 import { formatMoney } from '@/lib/money';
 import { displayDate } from '@/lib/dates';
 import { Pencil, ArrowLeft, Trash2, ShoppingCart, Wallet, PackageOpen, UserPlus, Send, Ban, ExternalLink } from 'lucide-vue-next';
+import { usePermissions } from '@/composables/usePermissions';
+
+const { canVisit } = usePermissions();
 
 const { t } = useI18n();
 
@@ -115,7 +118,7 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-t
                 <Badge :variant="customer.is_active ? 'success' : 'neutral'" size="sm" dot>
                     {{ customer.is_active ? t('common.active') : t('common.inactive') }}
                 </Badge>
-                <Button variant="default" size="sm" as="Link" :href="route('customers.edit', customer.id)">
+                <Button v-if="canVisit('customers.edit')" variant="default" size="sm" as="Link" :href="route('customers.edit', customer.id)">
                     <Pencil :size="14" />
                     {{ t('common.edit') }}
                 </Button>
@@ -241,9 +244,10 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-t
                                         class="border-b border-border-subtle transition-colors last:border-b-0 hover:bg-surface-overlay"
                                     >
                                         <td class="px-4 py-3">
-                                            <Link :href="route('orders.show', order.id)" class="font-medium text-brand hover:underline">
+                                            <Link v-if="canVisit('orders.show')" :href="route('orders.show', order.id)" class="font-medium text-brand hover:underline">
                                                 {{ order.order_number }}
                                             </Link>
+                                            <span v-else class="font-medium text-text-primary">{{ order.order_number }}</span>
                                         </td>
                                         <td class="px-4 py-3 text-text-tertiary">{{ formatDate(order.created_at) }}</td>
                                         <td class="px-4 py-3">
@@ -256,7 +260,7 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-t
                                             {{ order.total != null ? formatCurrency(order.total) : '-' }}
                                         </td>
                                         <td class="px-4 py-3 text-right">
-                                            <Link :href="route('orders.show', order.id)" class="text-sm text-brand hover:underline">
+                                            <Link v-if="canVisit('orders.show')" :href="route('orders.show', order.id)" class="text-sm text-brand hover:underline">
                                                 {{ t('common.view') }}
                                             </Link>
                                         </td>

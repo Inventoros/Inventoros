@@ -1,4 +1,36 @@
 {
+  "auditLabels": {
+    "notCounted": "미집계",
+    "never": "없음"
+  },
+  "salesUnits": {
+    "sold": "{count}개 판매 | {count}개 판매"
+  },
+  "stockTransferCompleter": {
+    "completedBy": "완료한 사용자"
+  },
+  "orderCurrency": {
+    "label": "통화",
+    "hint": "품목 가격은 이 통화의 카탈로그 가격으로 채워집니다. 변경하면 품목 가격을 다시 설정합니다."
+  },
+  "orderInvoice": {
+    "notEmailed": "생성되었지만 아직 이메일로 보내지 않았습니다. 인보이스 이메일 보내기로 고객에게 보내세요."
+  },
+  "returnPicker": {
+    "title": "새 반품",
+    "description": "상품이 반품되는 주문을 선택하세요. 배송되었거나 배달된 주문만 반품할 수 있습니다.",
+    "back": "반품 목록으로",
+    "search": "검색",
+    "searchPlaceholder": "주문 번호, 고객 이름 또는 이메일로 검색...",
+    "order": "주문 번호",
+    "customer": "고객",
+    "date": "주문일",
+    "status": "상태",
+    "total": "합계",
+    "choose": "반품 시작",
+    "empty": "일치하는 배송 또는 배달 완료 주문이 없습니다.",
+    "showing": "{total}개 중 {from}-{to} 표시"
+  },
   "stockAudits": {
     "completeConfirm": "이 실사를 완료할까요? 차이가 있는 항목마다 재고 조정이 생성됩니다.",
     "completeUncountedConfirm": "{total}개 중 {uncounted}개 품목을 세지 않았습니다. 그래도 실사를 완료할까요? 세지 않은 품목은 현재 재고를 유지하며, 센 품목만 조정됩니다.",
@@ -1830,7 +1862,8 @@
         "auto_reorder": "자동 재주문",
         "quick_reorder": "빠른 재주문",
         "return_lines_updated": "반품 품목 업데이트됨",
-        "portal_return_requested": "포털에서 반품 요청됨"
+        "portal_return_requested": "포털에서 반품 요청됨",
+        "pre_tracking_marked_paid": "이전 주문을 결제 완료로 표시"
       },
       "subjects": {
         "Customer": "고객",

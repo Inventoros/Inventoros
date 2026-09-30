@@ -1,4 +1,36 @@
 {
+  "auditLabels": {
+    "notCounted": "Not counted",
+    "never": "Never"
+  },
+  "salesUnits": {
+    "sold": "{count} unit sold | {count} units sold"
+  },
+  "stockTransferCompleter": {
+    "completedBy": "Completed by"
+  },
+  "orderCurrency": {
+    "label": "Currency",
+    "hint": "Line prices are filled in from the catalogue in this currency. Changing it re-prices the lines."
+  },
+  "orderInvoice": {
+    "notEmailed": "Generated, not emailed yet. Use Email Invoice to send it to the customer."
+  },
+  "returnPicker": {
+    "title": "New Return",
+    "description": "Choose the order the goods are coming back from. Only shipped or delivered orders can take a return.",
+    "back": "Back to Returns",
+    "search": "Search",
+    "searchPlaceholder": "Search by order number, customer name or email...",
+    "order": "Order #",
+    "customer": "Customer",
+    "date": "Order date",
+    "status": "Status",
+    "total": "Total",
+    "choose": "Start return",
+    "empty": "No shipped or delivered orders match.",
+    "showing": "Showing {from} to {to} of {total}"
+  },
   "common": {
     "save": "Save",
     "saveChanges": "Save Changes",
@@ -1756,7 +1788,8 @@
         "auto_reorder": "Automatic reorder",
         "quick_reorder": "Quick reorder",
         "return_lines_updated": "Return lines updated",
-        "portal_return_requested": "Return requested in portal"
+        "portal_return_requested": "Return requested in portal",
+        "pre_tracking_marked_paid": "Older order marked paid"
       },
       "subjects": {
         "Customer": "Customer",

@@ -141,6 +141,8 @@ class Product extends Model
             'selling_price' => 'decimal:2',
             'purchase_price' => 'decimal:2',
             'stock' => 'integer',
+            // Selected by withEffectiveStock(); SUM() is a string on MySQL.
+            'effective_stock' => 'integer',
             'min_stock' => 'integer',
             'max_stock' => 'integer',
             'reorder_point' => 'integer',

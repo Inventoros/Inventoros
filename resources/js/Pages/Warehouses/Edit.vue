@@ -121,7 +121,7 @@ const fieldError = 'mt-1 text-xs text-status-danger';
             </template>
         </PageHeader>
 
-        <form @submit.prevent="submit" class="mt-6 space-y-4">
+        <form v-if="hasPermission('edit_warehouses')" @submit.prevent="submit" class="mt-6 space-y-4">
             <!-- General -->
             <Card :padded="false">
                 <div class="px-5 pt-5"><h3 class="text-sm font-semibold text-text-primary">{{ t('warehouses.sections.general') }}</h3></div>

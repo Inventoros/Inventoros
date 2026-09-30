@@ -49,16 +49,16 @@ All data is scoped to your organization. You can only access resources belonging
 ### Pagination
 
 List endpoints return paginated results. Use these query parameters:
-- `per_page` — Items per page (default: 15, max: 100)
-- `page` — Page number
+- `per_page`: Items per page (default: 15, max: 100)
+- `page`: Page number
 
 Paginated responses include `links` and `meta` with pagination details.
 
 ### Sorting
 
 Most list endpoints support sorting:
-- `sort_by` — Field to sort by (varies per resource)
-- `sort_dir` — Sort direction: `asc` or `desc`
+- `sort_by`: Field to sort by (varies per resource)
+- `sort_dir`: Sort direction: `asc` or `desc`
 MARKDOWN,
     ],
 

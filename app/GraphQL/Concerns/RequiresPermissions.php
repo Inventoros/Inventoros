@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\GraphQL\Concerns;
 
+use App\Exceptions\BusinessRuleException;
 use App\GraphQL\Middleware\EnforcePermissions;
 use App\Models\User;
 use GraphQL\Error\Error;
@@ -59,7 +60,7 @@ trait RequiresPermissions
             return $action();
         } catch (ValidationException $e) {
             throw new ValidationError('validation', $e->validator);
-        } catch (\RuntimeException $e) {
+        } catch (BusinessRuleException $e) {
             throw new Error($e->getMessage());
         }
     }

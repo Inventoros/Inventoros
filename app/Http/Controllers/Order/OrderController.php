@@ -9,10 +9,13 @@ use App\Enums\OrderStatus;
 use App\Enums\PaymentMethod;
 use App\Enums\PaymentStatus;
 use App\Enums\Permission;
+use App\Exceptions\BusinessRuleException;
+use App\Exceptions\InvalidStateException;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Order\StoreOrderRequest;
 use App\Http\Requests\Order\UpdateOrderRequest;
 use App\Http\Resources\OrderResource;
+use App\Models\Auth\Organization;
 use App\Models\Customer;
 use App\Models\Inventory\Product;
 use App\Models\Inventory\ProductVariant;
@@ -81,6 +84,8 @@ class OrderController extends Controller
                 $query->where('payment_status', $request->input('payment_status'));
             })
             ->latest('order_date')
+            // order_date is a day: the newest order of the day first.
+            ->latest('id')
             ->paginate(config('limits.pagination.default'))
             ->withQueryString();
 
@@ -89,6 +94,19 @@ class OrderController extends Controller
         // transforms each item while preserving the pagination envelope the
         // frontend pager depends on.
         $orders->through(fn (Order $order) => (new OrderResource($order))->resolve($request));
+
+        // Orders from before payment tracking, offered a bulk "mark paid":
+        // how many (cancelled ones are skipped by the action, so not
+        // counted) and the day after the latest, the default "placed
+        // before" date that includes every one of them.
+        $untracked = $canViewPayments
+            ? Order::where('organization_id', $request->user()->organization_id)
+                ->where('payment_status', PaymentStatus::UNTRACKED->value)
+                ->where('status', '!=', OrderStatus::CANCELLED->value)
+                ->toBase()
+                ->selectRaw('COUNT(*) as count, MAX(order_date) as latest')
+                ->first()
+            : null;
 
         $activeWarehouse = $activeWarehouseId
             ? Warehouse::find($activeWarehouseId)
@@ -101,12 +119,10 @@ class OrderController extends Controller
             'canViewPayments' => $canViewPayments,
             'paymentStatuses' => $canViewPayments ? PaymentStatus::values() : [],
             'canRecordPayments' => $request->user()->hasPermission(Permission::RECORD_PAYMENTS),
-            // Orders from before payment tracking, offered a bulk "mark paid".
-            'untrackedOrderCount' => $canViewPayments
-                ? Order::where('organization_id', $request->user()->organization_id)
-                    ->where('payment_status', PaymentStatus::UNTRACKED->value)
-                    ->count()
-                : 0,
+            'untrackedOrderCount' => (int) ($untracked->count ?? 0),
+            'markPaidBefore' => filled($untracked->latest ?? null)
+                ? \Illuminate\Support\Carbon::parse($untracked->latest)->addDay()->toDateString()
+                : null,
             'sources' => ['manual', 'ebay', 'shopify', 'amazon'],
             'activeWarehouse' => $activeWarehouse,
             'pluginComponents' => [
@@ -139,6 +155,13 @@ class OrderController extends Controller
             'products' => $products,
             'warehouses' => $warehouses,
             'defaultWarehouseId' => $defaultWarehouseId,
+            // The order's currency: the organization's unless the user picks
+            // another (the form switches to a chosen customer's currency).
+            'defaultCurrency' => Organization::currencyFor((int) $organizationId),
+            'currencies' => collect(StoreOrderRequest::currencyCodes((int) $organizationId))
+                ->map(fn (string $code) => ['code' => $code, 'name' => config("currencies.supported.{$code}.name") ?? $code])
+                ->values()
+                ->all(),
             // New orders wait for approval (and cannot start out shipped)
             // when the organization requires order approval.
             'ordersNeedApproval' => ApprovalSettings::forOrganization((int) $request->user()->organization_id)->ordersEnabled,
@@ -191,7 +214,7 @@ class OrderController extends Controller
             return redirect()->back()
                 ->withInput()
                 ->with('error', 'Could not save the order due to a database error. Please try again, or contact support if the problem persists.');
-        } catch (\Exception $e) {
+        } catch (BusinessRuleException $e) {
             // Business-rule exceptions thrown inside the transaction
             // (insufficient stock, unknown product, etc.) carry safe
             // messages we intentionally surface to the user.
@@ -311,7 +334,7 @@ class OrderController extends Controller
                 if ($order->status === OrderStatus::CANCELLED
                     && isset($validated['status'])
                     && $validated['status'] !== OrderStatus::CANCELLED->value) {
-                    throw new \RuntimeException('A cancelled order cannot be reactivated. Create a new order instead.');
+                    throw new InvalidStateException('A cancelled order cannot be reactivated. Create a new order instead.', 'invalid_state_transition');
                 }
 
                 $isCancelling = $validated['status'] === 'cancelled'
@@ -361,7 +384,7 @@ class OrderController extends Controller
 
                 $order->update($validated);
             });
-        } catch (\RuntimeException $e) {
+        } catch (BusinessRuleException $e) {
             // Guard failures (e.g. cancelling a shipped order, insufficient
             // stock on an item increase) flash an error rather than 500ing.
             return redirect()->back()->with('error', $e->getMessage());
@@ -395,7 +418,7 @@ class OrderController extends Controller
 
                 $order->delete();
             });
-        } catch (\RuntimeException $e) {
+        } catch (BusinessRuleException $e) {
             // e.g. a partially shipped order, whose shipped units cannot be restocked.
             return redirect()->back()->with('error', $e->getMessage());
         }
@@ -429,7 +452,7 @@ class OrderController extends Controller
 
         try {
             $this->orderService->approve($order, $request->user(), $validated['notes'] ?? null);
-        } catch (\RuntimeException $e) {
+        } catch (BusinessRuleException $e) {
             return redirect()->back()->with('error', $e->getMessage());
         }
 
@@ -461,7 +484,7 @@ class OrderController extends Controller
 
         try {
             $this->orderService->reject($order, $request->user(), $validated['notes']);
-        } catch (\RuntimeException $e) {
+        } catch (BusinessRuleException $e) {
             return redirect()->back()->with('error', $e->getMessage());
         }
 
@@ -490,6 +513,7 @@ class OrderController extends Controller
                 'email' => $customer->email,
                 'shipping_address' => $customer->full_shipping_address,
                 'billing_address' => $customer->full_billing_address,
+                'currency' => filled($customer->currency) ? strtoupper(trim((string) $customer->currency)) : null,
             ]);
 
         return response()->json(['customers' => $customers->values()]);
@@ -513,12 +537,16 @@ class OrderController extends Controller
                 }
             })])
             ->orderBy('name')
-            ->get(['id', 'name', 'sku', 'price', 'stock', 'has_variants', 'category_id', 'location_id'])
+            ->get(['id', 'name', 'sku', 'price', 'currency', 'price_in_currencies', 'stock', 'has_variants', 'category_id', 'location_id'])
             ->map(fn (Product $product) => [
                 'id' => $product->id,
                 'name' => $product->name,
                 'sku' => $product->sku,
                 'price' => $product->price,
+                // A line in another currency is prefilled from these, as
+                // OrderService prices a line sent without a unit price.
+                'currency' => filled($product->currency) ? strtoupper(trim((string) $product->currency)) : Organization::currencyFor($organizationId),
+                'prices' => (object) array_change_key_case(array_filter((array) ($product->price_in_currencies ?? []), 'is_numeric'), CASE_UPPER),
                 'stock' => (int) $product->stock,
                 'has_variants' => (bool) $product->has_variants,
                 'variants' => $product->has_variants
@@ -529,6 +557,9 @@ class OrderController extends Controller
                         'barcode' => $variant->barcode,
                         'stock' => (int) $variant->stock,
                         'price' => $variant->price ?? $product->price,
+                        // Whether the variant has a price of its own (only
+                        // valid in the product's currency).
+                        'own_price' => $variant->price !== null,
                         'is_active' => (bool) $variant->is_active,
                     ])->values()->all()
                     : [],

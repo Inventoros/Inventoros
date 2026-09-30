@@ -10,6 +10,9 @@ import { useI18n } from 'vue-i18n';
 import { permissionCategoryLabel, permissionDescription, permissionLabel, roleDescription, roleName } from '@/lib/permissionLabels';
 import { displayDate } from '@/lib/dates';
 import { Pencil, ArrowLeft, Trash2, CheckCircle2, ShieldAlert, Info, X, AlertTriangle } from 'lucide-vue-next';
+import { usePermissions } from '@/composables/usePermissions';
+
+const { canVisit } = usePermissions();
 
 const props = defineProps({
     role: Object,
@@ -67,7 +70,7 @@ const deleteRole = () => {
             <template #actions>
                 <Badge v-if="role.is_system" variant="brand" size="sm">{{ t('admin.roles.show.systemRole') }}</Badge>
                 <Button
-                    v-if="!isProtected"
+                    v-if="(!isProtected) && canVisit('roles.edit')"
                     variant="default"
                     size="sm"
                     as="Link"
@@ -208,7 +211,7 @@ const deleteRole = () => {
                     <div class="px-5 pt-5"><h3 class="text-sm font-semibold text-text-primary">{{ t('common.actions') }}</h3></div>
                     <div class="p-5">
                         <div class="space-y-3">
-                            <Button variant="default" class="w-full" as="Link" :href="route('roles.edit', role.id)">
+                            <Button v-if="canVisit('roles.edit')" variant="default" class="w-full" as="Link" :href="route('roles.edit', role.id)">
                                 <Pencil :size="16" />
                                 {{ t('admin.roles.show.editRole') }}
                             </Button>

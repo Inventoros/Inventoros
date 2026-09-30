@@ -1,35 +1,24 @@
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, onBeforeUnmount } from 'vue';
 import { useI18n } from 'vue-i18n';
+import { applyTheme, followSystemTheme, saveTheme } from '@/lib/theme';
 
 const { t } = useI18n();
 
 const isDark = ref(true);
 
 const toggleTheme = () => {
-    isDark.value = !isDark.value;
-    if (isDark.value) {
-        document.documentElement.classList.add('dark');
-        localStorage.setItem('theme', 'dark');
-    } else {
-        document.documentElement.classList.remove('dark');
-        localStorage.setItem('theme', 'light');
-    }
+    isDark.value = saveTheme(isDark.value ? 'light' : 'dark') === 'dark';
 };
 
+// The saved choice, else the system's light or dark setting (followed live
+// until the user picks one here).
+let stopFollowing = () => {};
 onMounted(() => {
-    const savedTheme = localStorage.getItem('theme');
-    if (savedTheme) {
-        isDark.value = savedTheme === 'dark';
-        if (isDark.value) {
-            document.documentElement.classList.add('dark');
-        } else {
-            document.documentElement.classList.remove('dark');
-        }
-    } else {
-        document.documentElement.classList.add('dark');
-    }
+    isDark.value = applyTheme() === 'dark';
+    stopFollowing = followSystemTheme((theme) => { isDark.value = theme === 'dark'; });
 });
+onBeforeUnmount(() => stopFollowing());
 </script>
 
 <template>

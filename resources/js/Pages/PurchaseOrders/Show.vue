@@ -13,6 +13,9 @@ import { useI18n } from 'vue-i18n';
 import { displayCalendarDate, displayDate } from '@/lib/dates';
 import { formatMoney } from '@/lib/money';
 import { ArrowLeft, Pencil, Download, Eye, Send, PackageCheck, Ban, Trash2 } from 'lucide-vue-next';
+import { usePermissions } from '@/composables/usePermissions';
+
+const { canVisit } = usePermissions();
 
 const { t } = useI18n();
 
@@ -141,7 +144,7 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-t
                     {{ t('purchaseOrders.show.previewPdf') }}
                 </Button>
                 <Button
-                    v-if="purchaseOrder.status === 'draft' && !lockedForApproval"
+                    v-if="(purchaseOrder.status === 'draft' && !lockedForApproval) && canVisit('purchase-orders.edit')"
                     variant="default"
                     size="sm"
                     as="Link"
@@ -151,7 +154,7 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-t
                     {{ t('common.edit') }}
                 </Button>
                 <Button
-                    v-if="purchaseOrder.status === 'sent' || purchaseOrder.status === 'partial'"
+                    v-if="(purchaseOrder.status === 'sent' || purchaseOrder.status === 'partial') && canVisit('purchase-orders.receive')"
                     variant="default"
                     size="sm"
                     as="Link"
@@ -196,7 +199,8 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-t
                             <div>
                                 <dt class="text-xs text-text-tertiary">{{ t('purchaseOrders.supplier') }}</dt>
                                 <dd class="mt-1 text-sm text-text-primary">
-                                    <Link v-if="purchaseOrder.supplier" :href="route('suppliers.show', purchaseOrder.supplier.id)" class="text-brand hover:underline">
+                                    <span v-if="purchaseOrder.supplier && !canVisit('suppliers.show')">{{ purchaseOrder.supplier.name }}</span>
+                                    <Link v-else-if="purchaseOrder.supplier" :href="route('suppliers.show', purchaseOrder.supplier.id)" class="text-brand hover:underline">
                                         {{ purchaseOrder.supplier.name }}
                                     </Link>
                                     <span v-else>-</span>
@@ -234,7 +238,64 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-t
                 <Card :padded="false">
                     <div class="px-5 pt-5"><h3 class="text-sm font-semibold text-text-primary">{{ t('purchaseOrders.show.itemsCount', { count: purchaseOrder.items?.length || 0 }) }}</h3></div>
                     <div class="p-5">
-                        <div class="w-full overflow-x-auto rounded-lg border border-border-subtle">
+                        <!-- Phones: one card per line, so cost and total stay in view. -->
+                        <ul class="space-y-3 sm:hidden">
+                            <li
+                                v-for="item in purchaseOrder.items"
+                                :key="item.id"
+                                class="rounded-lg border border-border-subtle bg-surface-canvas p-4"
+                            >
+                                <p class="text-sm font-medium text-text-primary">
+                                    <span v-if="item.product && !canVisit('products.show')">{{ item.product_name }}</span>
+                                    <Link v-else-if="item.product" :href="route('products.show', item.product.id)" class="text-brand hover:underline">{{ item.product_name }}</Link>
+                                    <span v-else>{{ item.product_name }}</span>
+                                </p>
+                                <p v-if="item.variant" class="text-xs text-text-secondary">{{ t('orders.create.variant') }}: {{ item.variant.title }}</p>
+                                <p class="text-xs text-text-tertiary">SKU: {{ item.sku || '-' }}</p>
+                                <p v-if="item.supplier_sku" class="text-xs text-text-tertiary">{{ t('purchaseOrders.show.supplierSkuLine', { sku: item.supplier_sku }) }}</p>
+                                <dl class="mt-3 grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
+                                    <div>
+                                        <dt class="text-xs text-text-tertiary">{{ t('purchaseOrders.show.ordered') }}</dt>
+                                        <dd class="tabular-nums text-text-primary">{{ item.quantity_ordered }}</dd>
+                                    </div>
+                                    <div>
+                                        <dt class="text-xs text-text-tertiary">{{ t('purchaseOrders.show.received') }}</dt>
+                                        <dd
+                                            class="tabular-nums"
+                                            :class="item.quantity_received >= item.quantity_ordered ? 'text-status-success' : item.quantity_received > 0 ? 'text-status-warning' : 'text-text-tertiary'"
+                                        >{{ item.quantity_received }}</dd>
+                                    </div>
+                                    <div>
+                                        <dt class="text-xs text-text-tertiary">{{ t('purchaseOrders.create.unitCost') }}</dt>
+                                        <dd class="tabular-nums text-text-secondary">{{ formatCurrency(item.unit_cost) }}</dd>
+                                    </div>
+                                    <div>
+                                        <dt class="text-xs text-text-tertiary">{{ t('common.total') }}</dt>
+                                        <dd class="font-medium tabular-nums text-text-primary">{{ formatCurrency(item.total) }}</dd>
+                                    </div>
+                                </dl>
+                            </li>
+                        </ul>
+                        <dl class="mt-4 space-y-2 border-t border-border-subtle pt-3 text-sm sm:hidden">
+                            <div class="flex justify-between">
+                                <dt class="text-text-secondary">{{ t('common.subtotal') }}</dt>
+                                <dd class="font-medium tabular-nums text-text-primary">{{ formatCurrency(purchaseOrder.subtotal) }}</dd>
+                            </div>
+                            <div v-if="purchaseOrder.tax > 0" class="flex justify-between">
+                                <dt class="text-text-secondary">{{ t('common.tax') }}</dt>
+                                <dd class="tabular-nums text-text-primary">{{ formatCurrency(purchaseOrder.tax) }}</dd>
+                            </div>
+                            <div v-if="purchaseOrder.shipping > 0" class="flex justify-between">
+                                <dt class="text-text-secondary">{{ t('common.shipping') }}</dt>
+                                <dd class="tabular-nums text-text-primary">{{ formatCurrency(purchaseOrder.shipping) }}</dd>
+                            </div>
+                            <div class="flex justify-between border-t border-border-subtle pt-2">
+                                <dt class="font-bold text-text-primary">{{ t('common.total') }}</dt>
+                                <dd class="font-bold tabular-nums text-brand">{{ formatCurrency(purchaseOrder.total) }}</dd>
+                            </div>
+                        </dl>
+
+                        <div class="hidden w-full overflow-x-auto rounded-lg border border-border-subtle sm:block">
                             <table class="w-full text-sm">
                                 <thead>
                                     <tr class="border-b border-border-subtle">
@@ -249,7 +310,8 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-t
                                 <tbody>
                                     <tr v-for="item in purchaseOrder.items" :key="item.id" class="border-b border-border-subtle transition-colors last:border-b-0 hover:bg-surface-overlay">
                                         <td class="min-w-[12rem] px-4 py-3 text-sm text-text-primary">
-                                            <Link v-if="item.product" :href="route('products.show', item.product.id)" class="text-brand hover:underline">
+                                            <span v-if="item.product && !canVisit('products.show')">{{ item.product_name }}</span>
+                                            <Link v-else-if="item.product" :href="route('products.show', item.product.id)" class="text-brand hover:underline">
                                                 {{ item.product_name }}
                                             </Link>
                                             <span v-else>{{ item.product_name }}</span>
@@ -370,7 +432,7 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-t
                             {{ t('approvals.poSendBlocked') }}
                         </p>
                         <Button
-                            v-if="purchaseOrder.status === 'sent' || purchaseOrder.status === 'partial'"
+                            v-if="(purchaseOrder.status === 'sent' || purchaseOrder.status === 'partial') && canVisit('purchase-orders.receive')"
                             variant="default"
                             class="w-full"
                             as="Link"
@@ -380,7 +442,7 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-t
                             {{ t('purchaseOrders.show.receiveItems') }}
                         </Button>
                         <Button
-                            v-if="purchaseOrder.status === 'draft' && !lockedForApproval"
+                            v-if="(purchaseOrder.status === 'draft' && !lockedForApproval) && canVisit('purchase-orders.edit')"
                             variant="secondary"
                             class="w-full"
                             as="Link"

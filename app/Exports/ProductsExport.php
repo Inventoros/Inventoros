@@ -78,7 +78,7 @@ final class ProductsExport implements FromQuery, WithHeadings, WithMapping, With
         }
 
         if (!empty($this->filters['low_stock'])) {
-            $query->whereRaw('stock <= min_stock');
+            $query->whereRaw(Product::effectiveStockSql().' <= products.min_stock');
         }
 
         return $query->orderBy('created_at', 'desc');

@@ -1,16 +1,14 @@
 <script setup>
 import { Head, Link } from '@inertiajs/vue3';
 import { onMounted } from 'vue';
+import { applyTheme } from '@/lib/theme';
 import { useI18n } from 'vue-i18n';
 
 const { t } = useI18n();
 
 onMounted(() => {
-    // Apply dark mode based on localStorage
-    const savedTheme = localStorage.getItem('theme');
-    if (savedTheme === 'dark' || !savedTheme) {
-        document.documentElement.classList.add('dark');
-    }
+    // The saved theme, else the system preference.
+    applyTheme();
 });
 </script>
 

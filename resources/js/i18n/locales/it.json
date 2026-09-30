@@ -1,4 +1,36 @@
 {
+  "auditLabels": {
+    "notCounted": "Non contato",
+    "never": "Mai"
+  },
+  "salesUnits": {
+    "sold": "{count} unità venduta | {count} unità vendute"
+  },
+  "stockTransferCompleter": {
+    "completedBy": "Completato da"
+  },
+  "orderCurrency": {
+    "label": "Valuta",
+    "hint": "I prezzi delle righe sono presi dal catalogo in questa valuta. Cambiarla ricalcola i prezzi delle righe."
+  },
+  "orderInvoice": {
+    "notEmailed": "Generata, non ancora inviata via email. Usa Invia fattura per mandarla al cliente."
+  },
+  "returnPicker": {
+    "title": "Nuovo reso",
+    "description": "Scegli l'ordine da cui rientra la merce. Solo gli ordini spediti o consegnati possono essere resi.",
+    "back": "Torna ai resi",
+    "search": "Cerca",
+    "searchPlaceholder": "Cerca per numero d'ordine, nome o email del cliente...",
+    "order": "Ordine n.",
+    "customer": "Cliente",
+    "date": "Data ordine",
+    "status": "Stato",
+    "total": "Totale",
+    "choose": "Avvia reso",
+    "empty": "Nessun ordine spedito o consegnato corrisponde.",
+    "showing": "Da {from} a {to} di {total}"
+  },
   "stockAudits": {
     "completeConfirm": "Completare questo inventario? Verranno create rettifiche di scorte per ogni discrepanza.",
     "completeUncountedConfirm": "{uncounted} articoli su {total} non sono stati contati. Completare comunque l'inventario? Gli articoli non contati mantengono le scorte attuali; vengono rettificati solo quelli contati.",
@@ -1830,7 +1862,8 @@
         "auto_reorder": "Riordino automatico",
         "quick_reorder": "Riordino rapido",
         "return_lines_updated": "Righe del reso aggiornate",
-        "portal_return_requested": "Reso richiesto dal portale"
+        "portal_return_requested": "Reso richiesto dal portale",
+        "pre_tracking_marked_paid": "Ordine precedente segnato come pagato"
       },
       "subjects": {
         "Customer": "Cliente",

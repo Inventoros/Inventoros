@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Order;
 
+use App\Exceptions\BusinessRuleException;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\ReturnOrder\RejectReturnOrderRequest;
 use App\Http\Requests\ReturnOrder\StoreReturnOrderRequest;
@@ -13,7 +14,6 @@ use App\Models\Order\ReturnOrder;
 use App\Services\ReturnOrderService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -68,9 +68,14 @@ class ReturnOrderController extends Controller
      */
     public function create(Request $request): Response
     {
+        // "New Return" from the returns list has no order yet: pick one first.
+        if (! $request->filled('order_id')) {
+            return $this->selectOrder($request);
+        }
+
         $organizationId = $request->user()->organization_id;
 
-        $order = Order::with(['items.product'])
+        $order = Order::with(['items.product', 'items.variant'])
             ->forOrganization($organizationId)
             ->findOrFail($request->input('order_id'));
 
@@ -87,6 +92,27 @@ class ReturnOrderController extends Controller
     }
 
     /**
+     * List the orders a return can be raised against, newest first.
+     */
+    private function selectOrder(Request $request): Response
+    {
+        $search = trim((string) $request->input('search', ''));
+
+        $orders = app(ReturnOrderService::class)
+            ->returnableOrders($request->user(), $search !== '' ? $search : null)
+            ->withCount('items')
+            ->latest('order_date')
+            ->latest('id')
+            ->paginate(config('limits.pagination.default', 15), ['id', 'order_number', 'customer_name', 'customer_email', 'status', 'total', 'currency', 'order_date'])
+            ->withQueryString();
+
+        return Inertia::render('Returns/SelectOrder', [
+            'orders' => $orders,
+            'filters' => ['search' => $search],
+        ]);
+    }
+
+    /**
      * Store a newly created return order.
      */
     public function store(StoreReturnOrderRequest $request, ReturnOrderService $returns)
@@ -96,9 +122,7 @@ class ReturnOrderController extends Controller
 
             return redirect()->route('returns.show', $returnOrder)
                 ->with('success', 'Return request created successfully.');
-        } catch (ValidationException $e) {
-            throw $e;
-        } catch (\Exception $e) {
+        } catch (BusinessRuleException $e) {
             return redirect()->back()
                 ->withInput()
                 ->with('error', $e->getMessage());
@@ -116,7 +140,7 @@ class ReturnOrderController extends Controller
 
         app(ReturnOrderService::class)->authorizeView($returnOrder, auth()->user());
 
-        $returnOrder->load(['order.items.product', 'items.product', 'items.orderItem', 'processor']);
+        $returnOrder->load(['order.items.product', 'items.product', 'items.variant', 'items.orderItem', 'processor']);
 
         return Inertia::render('Returns/Show', [
             'returnOrder' => $returnOrder,
@@ -194,7 +218,7 @@ class ReturnOrderController extends Controller
     {
         try {
             $action();
-        } catch (\RuntimeException $e) {
+        } catch (BusinessRuleException $e) {
             return redirect()->back()->with('error', $e->getMessage());
         }
 

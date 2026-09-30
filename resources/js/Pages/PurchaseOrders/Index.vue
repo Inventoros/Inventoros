@@ -12,6 +12,9 @@ import { useI18n } from 'vue-i18n';
 import { displayCalendarDate } from '@/lib/dates';
 import { formatMoney } from '@/lib/money';
 import { Plus, Search, Eye, Pencil, Trash2, PackageCheck, ClipboardList } from 'lucide-vue-next';
+import { usePermissions } from '@/composables/usePermissions';
+
+const { hasPermission, canVisit } = usePermissions();
 
 const { t } = useI18n();
 
@@ -101,7 +104,7 @@ const selectClass =
 
         <PageHeader :title="t('purchaseOrders.title')" :description="t('purchaseOrders.index.description')">
             <template #actions>
-                <Button variant="default" size="sm" as="Link" :href="route('purchase-orders.create')">
+                <Button v-if="canVisit('purchase-orders.create')" variant="default" size="sm" as="Link" :href="route('purchase-orders.create')">
                     <Plus :size="14" />
                     {{ t('purchaseOrders.createPo') }}
                 </Button>
@@ -183,9 +186,9 @@ const selectClass =
                 <template #cell-actions="{ row }">
                     <div class="flex items-center justify-end gap-1">
                         <Link :href="route('purchase-orders.show', row.id)" class="rounded-md p-1.5 text-text-tertiary transition-colors hover:bg-surface-overlay hover:text-brand" :aria-label="t('common.view')" :title="t('common.view')"><Eye :size="16" /></Link>
-                        <Link v-if="row.status === 'draft'" :href="route('purchase-orders.edit', row.id)" class="rounded-md p-1.5 text-text-tertiary transition-colors hover:bg-surface-overlay hover:text-status-success" :aria-label="t('common.edit')" :title="t('common.edit')"><Pencil :size="16" /></Link>
-                        <Link v-if="row.status === 'sent' || row.status === 'partial'" :href="route('purchase-orders.receive', row.id)" class="rounded-md p-1.5 text-text-tertiary transition-colors hover:bg-surface-overlay hover:text-status-success" :title="t('purchaseOrders.receive.receive')"><PackageCheck :size="16" /></Link>
-                        <button v-if="row.status === 'draft'" type="button" @click="deletePO(row)" class="rounded-md p-1.5 text-text-tertiary transition-colors hover:bg-surface-overlay hover:text-status-danger" :aria-label="t('common.delete')" :title="t('common.delete')"><Trash2 :size="16" /></button>
+                        <Link v-if="(row.status === 'draft') && canVisit('purchase-orders.edit')" :href="route('purchase-orders.edit', row.id)" class="rounded-md p-1.5 text-text-tertiary transition-colors hover:bg-surface-overlay hover:text-status-success" :aria-label="t('common.edit')" :title="t('common.edit')"><Pencil :size="16" /></Link>
+                        <Link v-if="(row.status === 'sent' || row.status === 'partial') && canVisit('purchase-orders.receive')" :href="route('purchase-orders.receive', row.id)" class="rounded-md p-1.5 text-text-tertiary transition-colors hover:bg-surface-overlay hover:text-status-success" :title="t('purchaseOrders.receive.receive')"><PackageCheck :size="16" /></Link>
+                        <button v-if="row.status === 'draft' && hasPermission('delete_purchase_orders')" type="button" @click="deletePO(row)" class="rounded-md p-1.5 text-text-tertiary transition-colors hover:bg-surface-overlay hover:text-status-danger" :aria-label="t('common.delete')" :title="t('common.delete')"><Trash2 :size="16" /></button>
                     </div>
                 </template>
                 <template #empty>
@@ -193,7 +196,7 @@ const selectClass =
                         <ClipboardList :size="22" class="text-text-tertiary" />
                         <p class="text-sm font-medium text-text-secondary">{{ t('purchaseOrders.noPoFound') }}</p>
                         <p class="text-sm text-text-tertiary">{{ t('purchaseOrders.getStarted') }}</p>
-                        <Button variant="default" size="sm" as="Link" :href="route('purchase-orders.create')">
+                        <Button v-if="canVisit('purchase-orders.create')" variant="default" size="sm" as="Link" :href="route('purchase-orders.create')">
                             <Plus :size="14" />
                             {{ t('purchaseOrders.createPo') }}
                         </Button>

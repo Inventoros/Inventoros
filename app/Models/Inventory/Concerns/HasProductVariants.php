@@ -46,16 +46,23 @@ trait HasProductVariants
     }
 
     /**
-     * Get the total stock across all variants (or product stock if no variants).
+     * The stock on hand: the sum of the active variants' stock for a product
+     * sold by variant, else the product's own stock. Uses `effective_stock`
+     * when the query selected it (withEffectiveStock()), so lists do not
+     * query per row.
      */
     public function getTotalStockAttribute(): int
     {
-        if ($this->has_variants && $this->variants()->exists()) {
-            // SUM() is a numeric string on MySQL/PostgreSQL; the return type is int.
-            return (int) $this->variants()->sum('stock');
+        if (array_key_exists('effective_stock', $this->attributes) && $this->attributes['effective_stock'] !== null) {
+            return (int) $this->attributes['effective_stock'];
         }
 
-        return $this->stock;
+        if ($this->has_variants && $this->variants()->exists()) {
+            // SUM() is a numeric string on MySQL/PostgreSQL; the return type is int.
+            return (int) $this->variants()->where('is_active', true)->sum('stock');
+        }
+
+        return (int) $this->stock;
     }
 
     /**

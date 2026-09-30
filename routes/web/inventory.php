@@ -121,7 +121,15 @@ Route::resource('locations', ProductLocationController::class)
     ->middleware('permission:manage_locations');
 
 // Warehouses - Permission based
-Route::resource('warehouses', WarehouseController::class)->middleware('permission:view_warehouses');
+// Each verb has its own permission, matching the REST API. A single
+// view_warehouses middleware used to guard store, update and destroy too.
+// create is registered before show so /warehouses/create is not read as {warehouse}.
+Route::resource('warehouses', WarehouseController::class)->only(['create', 'store'])->middleware('permission:create_warehouses');
+Route::resource('warehouses', WarehouseController::class)->only(['index', 'show'])->middleware('permission:view_warehouses');
+// The edit page also holds the user-access form, which has its own permission.
+Route::resource('warehouses', WarehouseController::class)->only(['edit'])->middleware('permission:edit_warehouses|manage_warehouse_users');
+Route::resource('warehouses', WarehouseController::class)->only(['update'])->middleware('permission:edit_warehouses');
+Route::resource('warehouses', WarehouseController::class)->only(['destroy'])->middleware('permission:delete_warehouses');
 Route::post('warehouses/access-policy', [WarehouseController::class, 'updateAccessPolicy'])->name('warehouses.access-policy')->middleware('permission:manage_warehouse_users');
 Route::post('warehouses/{warehouse}/users', [WarehouseController::class, 'updateUsers'])->name('warehouses.users.update')->middleware('permission:manage_warehouse_users');
 Route::post('warehouses/{warehouse}/set-default', [WarehouseController::class, 'setDefault'])->name('warehouses.set-default')->middleware('permission:edit_warehouses');

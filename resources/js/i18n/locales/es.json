@@ -1,4 +1,36 @@
 {
+  "auditLabels": {
+    "notCounted": "Sin contar",
+    "never": "Nunca"
+  },
+  "salesUnits": {
+    "sold": "{count} unidad vendida | {count} unidades vendidas"
+  },
+  "stockTransferCompleter": {
+    "completedBy": "Completado por"
+  },
+  "orderCurrency": {
+    "label": "Moneda",
+    "hint": "Los precios de las líneas se toman del catálogo en esta moneda. Cambiarla vuelve a calcular los precios de las líneas."
+  },
+  "orderInvoice": {
+    "notEmailed": "Generada, aún no enviada por correo. Use Enviar factura para mandarla al cliente."
+  },
+  "returnPicker": {
+    "title": "Nueva devolución",
+    "description": "Elija el pedido del que vuelve la mercancía. Solo se pueden devolver pedidos enviados o entregados.",
+    "back": "Volver a devoluciones",
+    "search": "Buscar",
+    "searchPlaceholder": "Buscar por número de pedido, nombre o correo del cliente...",
+    "order": "Pedido n.º",
+    "customer": "Cliente",
+    "date": "Fecha del pedido",
+    "status": "Estado",
+    "total": "Total",
+    "choose": "Iniciar devolución",
+    "empty": "No hay pedidos enviados o entregados que coincidan.",
+    "showing": "Mostrando {from} a {to} de {total}"
+  },
   "stockAudits": {
     "completeConfirm": "¿Completar esta auditoría? Se crearán ajustes de stock para cada discrepancia.",
     "completeUncountedConfirm": "{uncounted} de {total} artículos no se han contado. ¿Completar la auditoría de todos modos? Los artículos sin contar mantienen su stock actual; solo se ajustan los contados.",
@@ -1830,7 +1862,8 @@
         "auto_reorder": "Reabastecimiento automático",
         "quick_reorder": "Reabastecimiento rápido",
         "return_lines_updated": "Líneas de devolución actualizadas",
-        "portal_return_requested": "Devolución solicitada en el portal"
+        "portal_return_requested": "Devolución solicitada en el portal",
+        "pre_tracking_marked_paid": "Pedido antiguo marcado como pagado"
       },
       "subjects": {
         "Customer": "Cliente",
