@@ -558,9 +558,9 @@ class ReportController extends Controller
                 return $this->exporter->download(
                     $format,
                     'Receivables by Order',
-                    ['Order', 'Customer', 'Order date', 'Status', 'Payment status', 'Total', 'Paid', 'Balance due', 'Age (days)', 'Bucket'],
+                    ['Order', 'Customer', 'Currency', 'Order date', 'Status', 'Payment status', 'Total', 'Paid', 'Balance due', 'Age (days)', 'Bucket'],
                     array_map(fn (array $o) => [
-                        $o['order_number'], $o['customer'], $o['order_date'], $o['status'], $o['payment_status'],
+                        $o['order_number'], $o['customer'], $currency, $o['order_date'], $o['status'], $o['payment_status'],
                         (float) $o['total'], (float) $o['amount_paid'], (float) $o['balance_due'], (int) $o['age_days'],
                         self::RECEIVABLES_BUCKET_LABELS[$o['bucket']] ?? $o['bucket'],
                     ], $report['orders']),
@@ -573,9 +573,9 @@ class ReportController extends Controller
             return $this->exporter->download(
                 $format,
                 'Receivables Aging',
-                array_merge(['Customer', 'Orders'], array_map(fn (string $b) => self::RECEIVABLES_BUCKET_LABELS[$b], $buckets), ['Total']),
+                array_merge(['Customer', 'Currency', 'Orders'], array_map(fn (string $b) => self::RECEIVABLES_BUCKET_LABELS[$b], $buckets), ['Total']),
                 array_map(fn (array $c) => array_merge(
-                    [$c['customer'], (int) $c['orders']],
+                    [$c['customer'], $currency, (int) $c['orders']],
                     array_map(fn (string $b) => (float) $c[$b], $buckets),
                     [(float) $c['total']],
                 ), $report['customers']),

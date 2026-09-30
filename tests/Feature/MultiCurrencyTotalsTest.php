@@ -126,7 +126,7 @@ class MultiCurrencyTotalsTest extends TestCase
         // The customer aging sums one currency only: Acme owes CAD 60 here,
         // not CAD 60 + USD 80.
         $customers = $this->get(route('reports.receivables', ['export' => 'csv']))->streamedContent();
-        $this->assertMatchesRegularExpression('/^Acme,1,60,0,0,0,0,60$/m', str_replace("\r", '', $customers));
+        $this->assertMatchesRegularExpression('/^Acme,CAD,1,60,0,0,0,0,60$/m', str_replace("\r", '', $customers));
     }
 
     public function test_the_dead_stock_tile_is_per_currency(): void

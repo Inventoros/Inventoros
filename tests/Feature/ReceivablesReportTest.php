@@ -225,4 +225,21 @@ class ReceivablesReportTest extends TestCase
         $this->assertStringContainsString('ORD-B', $orders);
         $this->assertStringContainsString('15', $orders);
     }
+
+    /**
+     * Every amount in a receivables export is in one currency, which only a
+     * note said; a spreadsheet row now carries it in a Currency column.
+     */
+    public function test_the_exports_have_a_currency_column(): void
+    {
+        $this->order('ORD-A', '2026-09-27 08:00:00', 100, 0);
+
+        $customers = $this->actingAs($this->admin)->get(route('reports.receivables', ['export' => 'csv']))->streamedContent();
+        $this->assertStringContainsString('Customer,Currency,Orders', $customers);
+        $this->assertMatchesRegularExpression('/Acme,USD,1,/', $customers);
+
+        $orders = $this->actingAs($this->admin)->get(route('reports.receivables', ['export' => 'csv', 'group' => 'orders']))->streamedContent();
+        $this->assertStringContainsString('Order,Customer,Currency,', $orders);
+        $this->assertMatchesRegularExpression('/ORD-A,Acme,USD,/', $orders);
+    }
 }
