@@ -6,6 +6,7 @@ namespace App\Services;
 
 use App\Models\Inventory\Product;
 use App\Models\Inventory\ProductCategory;
+use App\Models\Inventory\ProductVariant;
 use Illuminate\Support\Str;
 
 /**
@@ -168,6 +169,58 @@ final class SKUGeneratorService
         } while (!$this->isUnique($sku, $organizationId, $excludeProductId));
 
         return $sku;
+    }
+
+    /**
+     * A SKU for a variant saved without one: the parent SKU followed by the
+     * variant's option values ("TEE" + Size: Extra Large -> "TEE-EXTRA-LARGE"),
+     * with a numeric suffix when that is already used by a product or another
+     * variant in the organization.
+     *
+     * @param  array<string, mixed>|null  $optionValues
+     */
+    public function variantSku(Product $product, ?array $optionValues, ?int $excludeVariantId = null): string
+    {
+        $parts = [self::skuSegment((string) ($product->sku ?? '')) ?: 'VAR'];
+        foreach (array_values($optionValues ?? []) as $value) {
+            $segment = self::skuSegment((string) $value);
+            if ($segment !== '') {
+                $parts[] = $segment;
+            }
+        }
+
+        $base = mb_substr(implode('-', $parts), 0, 240);
+        $sku = $base;
+        $suffix = 1;
+        while (! $this->isVariantSkuFree($sku, (int) $product->organization_id, $excludeVariantId)) {
+            $sku = $base.'-'.$suffix++;
+        }
+
+        return $sku;
+    }
+
+    private function isVariantSkuFree(string $sku, int $organizationId, ?int $excludeVariantId): bool
+    {
+        if (! $this->isUnique($sku, $organizationId)) {
+            return false;
+        }
+
+        return ! ProductVariant::withoutGlobalScopes()
+            ->where('organization_id', $organizationId)
+            ->where('sku', $sku)
+            ->whereNull('deleted_at')
+            ->when($excludeVariantId !== null, fn ($q) => $q->where('id', '!=', $excludeVariantId))
+            ->exists();
+    }
+
+    /**
+     * Upper-case alphanumeric run for a SKU: "Extra large!" -> "EXTRA-LARGE".
+     */
+    private static function skuSegment(string $value): string
+    {
+        $ascii = \Illuminate\Support\Str::ascii($value);
+
+        return trim((string) preg_replace('/[^A-Z0-9]+/', '-', strtoupper($ascii)), '-');
     }
 
     /**

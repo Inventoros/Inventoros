@@ -13,6 +13,9 @@ const { t } = useI18n();
 const props = defineProps({
     order: Object,
     returnedQuantities: Object,
+    // Per order item id: what was paid for the whole line after line and
+    // order discounts. The refund is that share, as the server computes it.
+    paidNets: { type: Object, default: () => ({}) },
 });
 
 const form = useForm({
@@ -64,7 +67,11 @@ const estimatedRefund = computed(() => {
         if (item.selected && item.quantity > 0) {
             const orderItem = props.order.items.find(oi => oi.id === item.order_item_id);
             if (orderItem) {
-                total += item.quantity * parseFloat(orderItem.unit_price);
+                const paid = props.paidNets?.[orderItem.id];
+                const lineRefund = paid !== undefined && paid !== null && orderItem.quantity > 0
+                    ? (parseFloat(paid) * item.quantity) / orderItem.quantity
+                    : item.quantity * parseFloat(orderItem.unit_price);
+                total += Math.round(lineRefund * 100) / 100;
             }
         }
     }

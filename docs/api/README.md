@@ -197,7 +197,7 @@ All paths are relative to `/api/v1`.
 | Stock Audits          | `GET/POST /stock-audits`, `GET /stock-audits/{id}`, `POST /stock-audits/{id}/{start,complete}`, `POST /stock-audits/{id}/items/{item}/count` |
 | Suppliers             | `GET/POST /suppliers`, `GET/PUT/DELETE /suppliers/{id}`                                          |
 | Purchase Orders       | `GET/POST /purchase-orders`, `GET/PUT/DELETE /purchase-orders/{id}`, `POST /purchase-orders/{id}/{receive,send,cancel,submit-for-approval}` |
-| Approvals             | `GET /approvals`, `GET /approvals/mine`, `POST /approvals/{type}/{id}/{approve,reject}` (`type` is `purchase_order`, `stock_adjustment` or `stock_transfer`) |
+| Approvals             | `GET /approvals`, `GET /approvals/mine`, `POST /approvals/{type}/{id}/{approve,reject}` (`type` is `purchase_order`, `stock_adjustment`, `stock_transfer` or `sales_order`) |
 | Work Orders           | `GET/POST /work-orders`, `GET/DELETE /work-orders/{id}`, `POST /work-orders/{id}/{start,complete,cancel}` |
 | Barcode Lookup        | `GET /barcode/{code}`                                                                            |
 | Permission Sets       | `GET/POST /permission-sets`, `GET /permission-sets/categories`, `GET/PUT/DELETE /permission-sets/{id}` |

@@ -554,7 +554,10 @@ const fieldInput = 'h-9 w-full rounded-md border border-border-subtle bg-surface
                                     <tbody>
                                         <tr v-for="entry in priceHistory" :key="entry.id" class="border-b border-border-subtle last:border-b-0">
                                             <td class="whitespace-nowrap px-4 py-2.5 text-text-secondary">{{ formatDate(entry.recorded_at) }}</td>
-                                            <td class="px-4 py-2.5 text-text-primary">{{ entry.supplier_name || '-' }}</td>
+                                            <td class="px-4 py-2.5 text-text-primary">
+                                                {{ entry.supplier_name || '-' }}
+                                                <span v-if="entry.variant_title" class="block text-xs text-text-tertiary">{{ entry.variant_title }}</span>
+                                            </td>
                                             <td class="px-4 py-2.5 text-right tabular-nums text-text-primary">{{ formatCurrency(entry.cost_price) }}</td>
                                             <td class="px-4 py-2.5 text-text-secondary">
                                                 <Link
@@ -585,6 +588,7 @@ const fieldInput = 'h-9 w-full rounded-md border border-border-subtle bg-surface
                                 :variants="variants"
                                 :product-id="product.id"
                                 :currency-symbol="getCurrencySymbol()"
+                                :product-price="product.price"
                                 :show-stock-adjust="true"
                                 @variant-updated="onVariantUpdated"
                             />

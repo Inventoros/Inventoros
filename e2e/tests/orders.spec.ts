@@ -99,8 +99,15 @@ test.describe('Order Approval', () => {
         if (await viewButton.isVisible()) {
             await viewButton.click();
 
-            // Look for approval status section
-            await expect(page.locator('text=/approval status/i').first()).toBeVisible();
+            await expect(page.locator('text=/order summary/i').first()).toBeVisible();
+
+            // The approval card only shows for orders that needed approval
+            // (the organization's "Sales orders need approval" setting). When
+            // the order carries an approval badge, its card must be there too.
+            const approvalBadge = page.locator('text=/awaiting approval|^approved$|^rejected$/i').first();
+            if (await approvalBadge.isVisible()) {
+                await expect(page.locator('text=/approval status/i').first()).toBeVisible();
+            }
         }
     });
 

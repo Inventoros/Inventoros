@@ -243,7 +243,7 @@ class ProductController extends Controller
         // Recent supplier costs (link edits and PO receipts), newest first.
         $priceHistory = SupplierPriceHistory::where('product_id', $product->id)
             ->where('organization_id', $product->organization_id)
-            ->with(['supplier:id,name', 'user:id,name', 'purchaseOrder:id,po_number'])
+            ->with(['supplier:id,name', 'variant:id,title', 'user:id,name', 'purchaseOrder:id,po_number'])
             ->latest('recorded_at')
             ->latest('id')
             ->limit(25)
@@ -252,6 +252,8 @@ class ProductController extends Controller
                 'id' => $entry->id,
                 'supplier_id' => $entry->supplier_id,
                 'supplier_name' => $entry->supplier?->name,
+                'product_variant_id' => $entry->product_variant_id,
+                'variant_title' => $entry->variant?->title,
                 'cost_price' => $entry->cost_price,
                 'source' => $entry->source,
                 'purchase_order_id' => $entry->purchase_order_id,

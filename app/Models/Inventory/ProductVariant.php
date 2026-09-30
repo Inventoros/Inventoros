@@ -249,6 +249,16 @@ class ProductVariant extends Model
             if (empty($variant->title)) {
                 $variant->title = $variant->generateTitle();
             }
+
+            // The form says "Auto-generate" for a blank SKU: honour it on
+            // every path (web form, API, bulk generate, MCP).
+            if (trim((string) $variant->sku) === '' && $variant->product_id) {
+                $product = $variant->product ?? Product::withoutGlobalScopes()->find($variant->product_id);
+                if ($product !== null) {
+                    $variant->sku = app(\App\Services\SKUGeneratorService::class)
+                        ->variantSku($product, $variant->option_values, $variant->exists ? $variant->id : null);
+                }
+            }
         });
     }
 

@@ -1,4 +1,8 @@
 {
+  "stockAudits": {
+    "completeConfirm": "هل تريد إكمال هذا الجرد؟ سيتم إنشاء تعديلات مخزون لكل فرق.",
+    "completeUncountedConfirm": "لم يتم عدّ {uncounted} من أصل {total} صنفًا. هل تريد إكمال الجرد على أي حال؟ تحتفظ الأصناف غير المعدودة بمخزونها الحالي، ويُعدَّل المعدود فقط."
+  },
   "common": {
     "save": "حفظ",
     "saveChanges": "حفظ التغييرات",
@@ -143,6 +147,8 @@
     }
   },
   "dashboard": {
+    "atSellingPrice": "بسعر البيع",
+    "itemsCount": "{count} صنف | {count} أصناف",
     "title": "لوحة التحكم",
     "totalProducts": "إجمالي المنتجات",
     "totalValue": "القيمة الإجمالية",
@@ -245,6 +251,7 @@
       "variantStockReadOnlyHint": "غيّر مخزون المتغير المحفوظ من خلال تعديل مخزون."
     },
     "show": {
+      "usesProductPrice": "لا يوجد سعر للمتغير: يُباع بسعر المنتج",
       "title": "تفاصيل المنتج",
       "backToInventory": "العودة إلى المخزون",
       "sku": "SKU",
@@ -298,6 +305,27 @@
     }
   },
   "orders": {
+    "itemsCol": "الأصناف",
+    "sources": {
+      "manual": "يدوي",
+      "api": "API",
+      "graphql": "GraphQL",
+      "mcp": "MCP",
+      "import": "استيراد",
+      "ebay": "eBay",
+      "shopify": "Shopify",
+      "amazon": "Amazon",
+      "woocommerce": "WooCommerce"
+    },
+    "approval": {
+      "label": "الموافقة",
+      "not_required": "لا يحتاج إلى موافقة",
+      "pending": "بانتظار الموافقة",
+      "approved": "تمت الموافقة",
+      "rejected": "مرفوض",
+      "blocksShipping": "هذا الطلب بانتظار الموافقة. يمكن معالجته، لكن لا يمكن شحنه أو تسليمه حتى يوافق عليه أحد.",
+      "statusBlocked": "تتوفر حالتا تم الشحن وتم التسليم بعد الموافقة على الطلب."
+    },
     "title": "الطلبات",
     "createOrder": "إنشاء طلب",
     "searchOrders": "البحث في الطلبات",
@@ -1382,6 +1410,44 @@
       }
     },
     "activityLog": {
+      "action": "الإجراء",
+      "actions": {
+        "created": "تم الإنشاء",
+        "updated": "تم التحديث",
+        "deleted": "تم الحذف",
+        "viewed": "تم العرض",
+        "approval_requested": "طُلبت الموافقة",
+        "approved": "تمت الموافقة",
+        "rejected": "تم الرفض",
+        "payment_recorded": "تم تسجيل دفعة",
+        "payment_refunded": "تم رد دفعة",
+        "payment_voided": "تم إلغاء دفعة",
+        "invoice_emailed": "أُرسلت الفاتورة بالبريد الإلكتروني",
+        "emailed": "أُرسل بالبريد الإلكتروني",
+        "auto_reorder": "إعادة طلب تلقائية",
+        "quick_reorder": "إعادة طلب سريعة",
+        "return_lines_updated": "تم تحديث بنود الإرجاع",
+        "portal_return_requested": "طُلب إرجاع من البوابة"
+      },
+      "subjects": {
+        "Customer": "عميل",
+        "CycleCountSchedule": "جدول الجرد الدوري",
+        "Order": "طلب",
+        "Product": "منتج",
+        "ProductCategory": "فئة",
+        "ProductLocation": "موقع",
+        "ProductVariant": "متغير المنتج",
+        "PurchaseOrder": "أمر شراء",
+        "ReturnOrder": "إرجاع",
+        "Role": "دور",
+        "Setting": "إعداد",
+        "StockAdjustmentRequest": "طلب تعديل المخزون",
+        "StockAudit": "جرد المخزون",
+        "StockTransfer": "تحويل مخزون",
+        "Supplier": "مورد",
+        "User": "مستخدم",
+        "Warehouse": "مستودع"
+      },
       "title": "سجل النشاط",
       "searchPlaceholder": "البحث في أوصاف النشاط...",
       "allUsers": "جميع المستخدمين",
@@ -2188,7 +2254,7 @@
   },
   "approvals": {
     "title": "الموافقات",
-    "description": "أوامر الشراء وتعديلات المخزون وتحويلات المخزون التي تنتظر قراراً.",
+    "description": "أوامر الشراء وطلبات البيع وتعديلات المخزون وتحويلات المخزون التي تنتظر قراراً.",
     "tabs": {
       "pending": "بانتظاري",
       "mine": "طلباتي"
@@ -2200,7 +2266,8 @@
     "types": {
       "purchase_order": "أمر شراء",
       "stock_adjustment": "تعديل مخزون",
-      "stock_transfer": "تحويل مخزون"
+      "stock_transfer": "تحويل مخزون",
+      "sales_order": "طلب بيع"
     },
     "status": {
       "pending": "بانتظار الموافقة",
@@ -2230,6 +2297,8 @@
       "rejected": "رفضه {name}."
     },
     "settings": {
+      "orders": "تحتاج طلبات البيع إلى موافقة قبل شحنها",
+      "ordersHelp": "تنتظر الطلبات الجديدة الموافقة. يمكن معالجتها، لكن لا يمكن شحنها أو تسليمها حتى يوافق عليها شخص لديه صلاحية الموافقة على الطلبات. عند إيقاف هذا الخيار، لا تنتظر الطلبات أي موافقة.",
       "tab": "الموافقات",
       "title": "مسارات الموافقة",
       "description": "اختر الطلبات التي تحتاج إلى اعتماد من شخص يملك صلاحية الموافقة المناسبة. جميعها معطّلة افتراضياً.",

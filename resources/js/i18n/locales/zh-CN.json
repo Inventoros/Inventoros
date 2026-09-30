@@ -1,4 +1,8 @@
 {
+  "stockAudits": {
+    "completeConfirm": "完成此次盘点？将为每个差异创建库存调整。",
+    "completeUncountedConfirm": "{total} 件商品中有 {uncounted} 件尚未盘点。仍要完成盘点吗？未盘点的商品保持当前库存，只调整已盘点的商品。"
+  },
   "common": {
     "save": "保存",
     "saveChanges": "保存更改",
@@ -143,6 +147,8 @@
     }
   },
   "dashboard": {
+    "atSellingPrice": "按售价计",
+    "itemsCount": "{count} 件商品 | {count} 件商品",
     "title": "仪表盘",
     "totalProducts": "产品总数",
     "totalValue": "总价值",
@@ -245,6 +251,7 @@
       "variantStockReadOnlyHint": "请通过库存调整来更改已保存变体的库存。"
     },
     "show": {
+      "usesProductPrice": "未设置规格价格：按商品价格销售",
       "title": "产品详情",
       "backToInventory": "返回库存",
       "sku": "SKU",
@@ -298,6 +305,27 @@
     }
   },
   "orders": {
+    "itemsCol": "商品",
+    "sources": {
+      "manual": "手动",
+      "api": "API",
+      "graphql": "GraphQL",
+      "mcp": "MCP",
+      "import": "导入",
+      "ebay": "eBay",
+      "shopify": "Shopify",
+      "amazon": "Amazon",
+      "woocommerce": "WooCommerce"
+    },
+    "approval": {
+      "label": "审批",
+      "not_required": "无需审批",
+      "pending": "等待审批",
+      "approved": "已批准",
+      "rejected": "已拒绝",
+      "blocksShipping": "此订单正在等待审批。可以处理，但在有人批准之前不能发货或送达。",
+      "statusBlocked": "订单批准后才能选择已发货和已送达。"
+    },
     "title": "订单",
     "createOrder": "创建订单",
     "searchOrders": "搜索订单",
@@ -1382,6 +1410,44 @@
       }
     },
     "activityLog": {
+      "action": "操作",
+      "actions": {
+        "created": "已创建",
+        "updated": "已更新",
+        "deleted": "已删除",
+        "viewed": "已查看",
+        "approval_requested": "已申请审批",
+        "approved": "已批准",
+        "rejected": "已拒绝",
+        "payment_recorded": "已记录付款",
+        "payment_refunded": "已退款",
+        "payment_voided": "已作废付款",
+        "invoice_emailed": "已通过邮件发送发票",
+        "emailed": "已通过邮件发送",
+        "auto_reorder": "自动补货",
+        "quick_reorder": "快速补货",
+        "return_lines_updated": "已更新退货明细",
+        "portal_return_requested": "已在门户申请退货"
+      },
+      "subjects": {
+        "Customer": "客户",
+        "CycleCountSchedule": "循环盘点计划",
+        "Order": "订单",
+        "Product": "商品",
+        "ProductCategory": "分类",
+        "ProductLocation": "库位",
+        "ProductVariant": "商品规格",
+        "PurchaseOrder": "采购单",
+        "ReturnOrder": "退货",
+        "Role": "角色",
+        "Setting": "设置",
+        "StockAdjustmentRequest": "库存调整申请",
+        "StockAudit": "库存盘点",
+        "StockTransfer": "库存调拨",
+        "Supplier": "供应商",
+        "User": "用户",
+        "Warehouse": "仓库"
+      },
       "title": "活动日志",
       "searchPlaceholder": "搜索活动描述...",
       "allUsers": "所有用户",
@@ -2188,7 +2254,7 @@
   },
   "approvals": {
     "title": "审批",
-    "description": "等待决定的采购订单、库存调整和库存调拨。",
+    "description": "等待决定的采购订单、销售订单、库存调整和库存调拨。",
     "tabs": {
       "pending": "待我审批",
       "mine": "我的申请"
@@ -2200,7 +2266,8 @@
     "types": {
       "purchase_order": "采购订单",
       "stock_adjustment": "库存调整",
-      "stock_transfer": "库存调拨"
+      "stock_transfer": "库存调拨",
+      "sales_order": "销售订单"
     },
     "status": {
       "pending": "待审批",
@@ -2230,6 +2297,8 @@
       "rejected": "已由 {name} 拒绝。"
     },
     "settings": {
+      "orders": "销售订单发货前需要审批",
+      "ordersHelp": "新订单需等待审批。可以处理，但在有订单审批权限的人批准之前不能发货或送达。关闭时，订单永远不需要等待审批。",
       "tab": "审批",
       "title": "审批流程",
       "description": "选择哪些申请需要由拥有相应审批权限的人员签核。默认全部关闭。",

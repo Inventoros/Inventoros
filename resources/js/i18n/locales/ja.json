@@ -1,4 +1,8 @@
 {
+  "stockAudits": {
+    "completeConfirm": "この棚卸を完了しますか？差異があるものには在庫調整が作成されます。",
+    "completeUncountedConfirm": "{total}件中{uncounted}件が未カウントです。それでも棚卸を完了しますか？未カウントの品目は現在の在庫のままで、カウント済みの品目だけが調整されます。"
+  },
   "common": {
     "save": "保存",
     "saveChanges": "変更を保存",
@@ -143,6 +147,8 @@
     }
   },
   "dashboard": {
+    "atSellingPrice": "販売価格ベース",
+    "itemsCount": "{count}点 | {count}点",
     "title": "ダッシュボード",
     "totalProducts": "商品総数",
     "totalValue": "合計金額",
@@ -245,6 +251,7 @@
       "variantStockReadOnlyHint": "保存済みバリエーションの在庫は在庫調整で変更してください。"
     },
     "show": {
+      "usesProductPrice": "バリエーション価格が未設定のため、商品価格で販売されます",
       "title": "商品詳細",
       "backToInventory": "在庫に戻る",
       "sku": "SKU",
@@ -298,6 +305,27 @@
     }
   },
   "orders": {
+    "itemsCol": "明細",
+    "sources": {
+      "manual": "手動",
+      "api": "API",
+      "graphql": "GraphQL",
+      "mcp": "MCP",
+      "import": "インポート",
+      "ebay": "eBay",
+      "shopify": "Shopify",
+      "amazon": "Amazon",
+      "woocommerce": "WooCommerce"
+    },
+    "approval": {
+      "label": "承認",
+      "not_required": "承認不要",
+      "pending": "承認待ち",
+      "approved": "承認済み",
+      "rejected": "却下",
+      "blocksShipping": "この注文は承認待ちです。処理はできますが、承認されるまで出荷や配達はできません。",
+      "statusBlocked": "出荷済みと配達済みは、注文が承認されると選択できます。"
+    },
     "title": "注文",
     "createOrder": "注文を作成",
     "searchOrders": "注文を検索",
@@ -1382,6 +1410,44 @@
       }
     },
     "activityLog": {
+      "action": "アクション",
+      "actions": {
+        "created": "作成",
+        "updated": "更新",
+        "deleted": "削除",
+        "viewed": "閲覧",
+        "approval_requested": "承認申請",
+        "approved": "承認",
+        "rejected": "却下",
+        "payment_recorded": "入金を記録",
+        "payment_refunded": "返金",
+        "payment_voided": "入金を取消",
+        "invoice_emailed": "請求書をメール送信",
+        "emailed": "メール送信",
+        "auto_reorder": "自動再発注",
+        "quick_reorder": "クイック再発注",
+        "return_lines_updated": "返品明細を更新",
+        "portal_return_requested": "ポータルで返品申請"
+      },
+      "subjects": {
+        "Customer": "顧客",
+        "CycleCountSchedule": "循環棚卸スケジュール",
+        "Order": "注文",
+        "Product": "商品",
+        "ProductCategory": "カテゴリ",
+        "ProductLocation": "保管場所",
+        "ProductVariant": "商品バリエーション",
+        "PurchaseOrder": "発注書",
+        "ReturnOrder": "返品",
+        "Role": "ロール",
+        "Setting": "設定",
+        "StockAdjustmentRequest": "在庫調整申請",
+        "StockAudit": "棚卸",
+        "StockTransfer": "在庫移動",
+        "Supplier": "仕入先",
+        "User": "ユーザー",
+        "Warehouse": "倉庫"
+      },
       "title": "アクティビティログ",
       "searchPlaceholder": "アクティビティの説明を検索...",
       "allUsers": "すべてのユーザー",
@@ -2188,7 +2254,7 @@
   },
   "approvals": {
     "title": "承認",
-    "description": "承認待ちの発注、在庫調整、在庫移動。",
+    "description": "承認待ちの発注、販売注文、在庫調整、在庫移動。",
     "tabs": {
       "pending": "自分の承認待ち",
       "mine": "自分の申請"
@@ -2200,7 +2266,8 @@
     "types": {
       "purchase_order": "発注",
       "stock_adjustment": "在庫調整",
-      "stock_transfer": "在庫移動"
+      "stock_transfer": "在庫移動",
+      "sales_order": "販売注文"
     },
     "status": {
       "pending": "承認待ち",
@@ -2230,6 +2297,8 @@
       "rejected": "{name}が却下しました。"
     },
     "settings": {
+      "orders": "販売注文は出荷前に承認が必要",
+      "ordersHelp": "新しい注文は承認待ちになります。処理はできますが、注文承認の権限を持つ人が承認するまで出荷や配達はできません。オフの場合、注文が承認を待つことはありません。",
       "tab": "承認",
       "title": "承認ワークフロー",
       "description": "対応する承認権限を持つ人の承認が必要な申請を選択します。デフォルトではすべてオフです。",

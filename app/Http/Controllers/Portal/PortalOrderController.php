@@ -49,7 +49,7 @@ class PortalOrderController extends PortalController
     {
         $contact = $this->contact($request);
         $order = $this->findOrder($contact, $order);
-        $order->load('items');
+        $order->load(['items' => fn ($query) => $query->orderBy('id'), 'items.variant']);
 
         $returned = $returnsService->returnedQuantities($order);
         $items = $order->items->map(fn (OrderItem $item) => $this->lineSummary($item, (int) $returned->get($item->id, 0)))->values();
@@ -121,7 +121,7 @@ class PortalOrderController extends PortalController
             ->where('organization_id', $order->organization_id)
             ->where('order_id', $order->id)
             ->where('status', '!=', ShipmentStatus::CANCELLED->value)
-            ->with('items.orderItem')
+            ->with('items.orderItem.variant')
             ->orderBy('id')
             ->get()
             ->map(fn (Shipment $shipment) => [
@@ -138,6 +138,7 @@ class PortalOrderController extends PortalController
                     ->filter(fn (ShipmentItem $item) => $item->orderItem !== null && (int) $item->orderItem->order_id === (int) $order->id)
                     ->map(fn (ShipmentItem $item) => [
                         'product_name' => $item->orderItem->product_name,
+                        'variant_title' => $item->orderItem->variant?->title,
                         'sku' => $item->orderItem->sku,
                         'quantity' => (int) $item->quantity,
                     ])

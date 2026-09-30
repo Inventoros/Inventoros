@@ -18,6 +18,7 @@ use Illuminate\Support\Carbon;
  * @property int $id
  * @property int $organization_id
  * @property int $product_id
+ * @property int|null $product_variant_id
  * @property int $supplier_id
  * @property int|null $purchase_order_id
  * @property string $cost_price
@@ -25,6 +26,7 @@ use Illuminate\Support\Carbon;
  * @property int|null $user_id
  * @property Carbon $recorded_at
  * @property-read Product $product
+ * @property-read ProductVariant|null $variant
  * @property-read Supplier $supplier
  * @property-read PurchaseOrder|null $purchaseOrder
  * @property-read User|null $user
@@ -45,6 +47,7 @@ class SupplierPriceHistory extends Model
     protected $fillable = [
         'organization_id',
         'product_id',
+        'product_variant_id',
         'supplier_id',
         'purchase_order_id',
         'cost_price',
@@ -73,10 +76,12 @@ class SupplierPriceHistory extends Model
         float|int|string $costPrice,
         string $source,
         ?int $purchaseOrderId = null,
+        ?ProductVariant $variant = null,
     ): self {
         return self::create([
             'organization_id' => $product->organization_id,
             'product_id' => $product->id,
+            'product_variant_id' => $variant?->id,
             'supplier_id' => $supplierId,
             'purchase_order_id' => $purchaseOrderId,
             'cost_price' => $costPrice,
@@ -100,6 +105,14 @@ class SupplierPriceHistory extends Model
     public function product(): BelongsTo
     {
         return $this->belongsTo(Product::class);
+    }
+
+    /**
+     * @return BelongsTo<ProductVariant, $this>
+     */
+    public function variant(): BelongsTo
+    {
+        return $this->belongsTo(ProductVariant::class, 'product_variant_id');
     }
 
     /**

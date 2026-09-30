@@ -79,6 +79,16 @@ class DashboardControllerTest extends TestCase
             ->assertStatus(200);
     }
 
+    public function test_dashboard_amounts_use_the_organization_currency(): void
+    {
+        $this->organization->forceFill(['currency' => 'CAD'])->save();
+
+        $this->actingAs($this->admin)
+            ->get(route('dashboard'))
+            ->assertOk()
+            ->assertInertia(fn ($page) => $page->where('currency', 'CAD'));
+    }
+
     public function test_guest_cannot_view_dashboard(): void
     {
         $response = $this->get(route('dashboard'));

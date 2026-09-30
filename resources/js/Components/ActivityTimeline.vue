@@ -122,7 +122,7 @@ const getChangedFields = (properties) => {
                                     <span class="font-medium text-gray-900 dark:text-gray-100">
                                         {{ activity.user?.name || 'System' }}
                                     </span>
-                                    <span class="text-gray-500 dark:text-gray-400">
+                                    <span class="ml-1 text-gray-500 dark:text-gray-400">
                                         {{ activity.action }} this product
                                     </span>
                                 </div>

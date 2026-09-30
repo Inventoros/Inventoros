@@ -85,6 +85,62 @@ final class ReturnOrderService
     }
 
     /**
+     * What the customer actually paid for each order line's goods, as a 2-dp
+     * string keyed by order item id: the gross line (quantity x unit price)
+     * less the line's own discount, less the line's share of the order-level
+     * discount prorated by net line value. Tax and shipping are excluded,
+     * matching how refunds have always been priced (goods only).
+     *
+     * @return array<int, string>
+     */
+    public function paidLineNets(Order $order): array
+    {
+        $order->loadMissing('items');
+
+        $nets = [];
+        foreach ($order->items as $item) {
+            $gross = Money::of($item->subtotal);
+            if (Money::compare($gross, '0') === 0) {
+                // Rows written before subtotal was maintained.
+                $gross = Money::multiply($item->unit_price, $item->quantity);
+            }
+            $nets[$item->id] = Money::subtract($gross, $item->discount_amount ?? 0);
+        }
+
+        $merchandise = Money::add(...array_values($nets ?: ['0']));
+        $lineDiscounts = Money::add(...$order->items->map(fn (OrderItem $i) => $i->discount_amount ?? 0)->all() ?: ['0']);
+        $orderDiscount = Money::subtract($order->discount_amount ?? 0, $lineDiscounts);
+
+        if (Money::compare($orderDiscount, '0') <= 0 || Money::compare($merchandise, '0') <= 0) {
+            return $nets;
+        }
+
+        foreach ($nets as $id => $net) {
+            $share = bcdiv(bcmul($orderDiscount, $net, 8), $merchandise, 8);
+            $nets[$id] = Money::round(bcsub($net, $share, 8));
+        }
+
+        return $nets;
+    }
+
+    /**
+     * Refund for returning $quantity units of a line: that share of what the
+     * customer paid for the line (see paidLineNets()).
+     *
+     * @param  array<int, string>  $paidNets  from paidLineNets()
+     */
+    public function refundFor(OrderItem $item, int $quantity, array $paidNets): string
+    {
+        if ($quantity <= 0 || (int) $item->quantity <= 0) {
+            return '0.00';
+        }
+
+        $net = $paidNets[$item->id] ?? Money::multiply($item->unit_price, $item->quantity);
+
+        return Money::round(bcdiv(bcmul($net, (string) $quantity, 8), (string) (int) $item->quantity, 8));
+    }
+
+    /**
      * Quantities already returned per order item (excluding rejected returns).
      *
      * @return Collection<int, int|string>
@@ -177,11 +233,13 @@ final class ReturnOrderService
                 throw ValidationException::withMessages($errors);
             }
 
-            // Calculate refund amount
+            // Refund what the customer paid for the goods: net of the line
+            // discount and the line's share of the order-level discount.
+            $paidNets = $this->paidLineNets($order);
             $refundAmount = '0';
             foreach ($data['items'] as $item) {
                 $orderItem = $order->items->firstWhere('id', $item['order_item_id']);
-                $refundAmount = Money::add($refundAmount, Money::multiply($orderItem->unit_price, $item['quantity']));
+                $refundAmount = Money::add($refundAmount, $this->refundFor($orderItem, (int) $item['quantity'], $paidNets));
             }
 
             $returnOrder = ReturnOrder::create([

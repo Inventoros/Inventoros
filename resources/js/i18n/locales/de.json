@@ -1,4 +1,8 @@
 {
+  "stockAudits": {
+    "completeConfirm": "Diese Inventur abschließen? Für alle Abweichungen werden Bestandskorrekturen erstellt.",
+    "completeUncountedConfirm": "{uncounted} von {total} Artikeln wurden nicht gezählt. Inventur trotzdem abschließen? Nicht gezählte Artikel behalten ihren aktuellen Bestand; nur gezählte Artikel werden korrigiert."
+  },
   "common": {
     "save": "Speichern",
     "saveChanges": "Änderungen speichern",
@@ -143,6 +147,8 @@
     }
   },
   "dashboard": {
+    "atSellingPrice": "zum Verkaufspreis",
+    "itemsCount": "{count} Artikel | {count} Artikel",
     "title": "Dashboard",
     "totalProducts": "Produkte gesamt",
     "totalValue": "Gesamtwert",
@@ -245,6 +251,7 @@
       "variantStockReadOnlyHint": "Ändern Sie den Bestand einer gespeicherten Variante über eine Bestandskorrektur."
     },
     "show": {
+      "usesProductPrice": "Kein Variantenpreis festgelegt: wird zum Produktpreis verkauft",
       "title": "Produktdetails",
       "backToInventory": "Zurück zum Bestand",
       "sku": "SKU",
@@ -298,6 +305,27 @@
     }
   },
   "orders": {
+    "itemsCol": "Artikel",
+    "sources": {
+      "manual": "Manuell",
+      "api": "API",
+      "graphql": "GraphQL",
+      "mcp": "MCP",
+      "import": "Import",
+      "ebay": "eBay",
+      "shopify": "Shopify",
+      "amazon": "Amazon",
+      "woocommerce": "WooCommerce"
+    },
+    "approval": {
+      "label": "Freigabe",
+      "not_required": "Keine Freigabe nötig",
+      "pending": "Wartet auf Freigabe",
+      "approved": "Freigegeben",
+      "rejected": "Abgelehnt",
+      "blocksShipping": "Diese Bestellung wartet auf Freigabe. Sie kann bearbeitet, aber erst versendet oder zugestellt werden, wenn jemand sie freigibt.",
+      "statusBlocked": "Versendet und Zugestellt sind verfügbar, sobald die Bestellung freigegeben ist."
+    },
     "title": "Bestellungen",
     "createOrder": "Bestellung erstellen",
     "searchOrders": "Bestellungen suchen",
@@ -1382,6 +1410,44 @@
       }
     },
     "activityLog": {
+      "action": "Aktion",
+      "actions": {
+        "created": "Erstellt",
+        "updated": "Aktualisiert",
+        "deleted": "Gelöscht",
+        "viewed": "Angesehen",
+        "approval_requested": "Freigabe angefordert",
+        "approved": "Freigegeben",
+        "rejected": "Abgelehnt",
+        "payment_recorded": "Zahlung erfasst",
+        "payment_refunded": "Zahlung erstattet",
+        "payment_voided": "Zahlung storniert",
+        "invoice_emailed": "Rechnung per E-Mail gesendet",
+        "emailed": "Per E-Mail gesendet",
+        "auto_reorder": "Automatische Nachbestellung",
+        "quick_reorder": "Schnelle Nachbestellung",
+        "return_lines_updated": "Retourenpositionen aktualisiert",
+        "portal_return_requested": "Retoure im Portal angefordert"
+      },
+      "subjects": {
+        "Customer": "Kunde",
+        "CycleCountSchedule": "Zykluszählungsplan",
+        "Order": "Bestellung",
+        "Product": "Produkt",
+        "ProductCategory": "Kategorie",
+        "ProductLocation": "Lagerort",
+        "ProductVariant": "Produktvariante",
+        "PurchaseOrder": "Bestellung beim Lieferanten",
+        "ReturnOrder": "Retoure",
+        "Role": "Rolle",
+        "Setting": "Einstellung",
+        "StockAdjustmentRequest": "Antrag auf Bestandskorrektur",
+        "StockAudit": "Inventur",
+        "StockTransfer": "Umlagerung",
+        "Supplier": "Lieferant",
+        "User": "Benutzer",
+        "Warehouse": "Lager"
+      },
       "title": "Aktivitätsprotokoll",
       "searchPlaceholder": "Aktivitätsbeschreibungen durchsuchen...",
       "allUsers": "Alle Benutzer",
@@ -2188,7 +2254,7 @@
   },
   "approvals": {
     "title": "Genehmigungen",
-    "description": "Einkaufsbestellungen, Bestandsanpassungen und Umlagerungen, die auf eine Entscheidung warten.",
+    "description": "Einkaufsbestellungen, Verkaufsaufträge, Bestandsanpassungen und Umlagerungen, die auf eine Entscheidung warten.",
     "tabs": {
       "pending": "Warten auf mich",
       "mine": "Meine Anfragen"
@@ -2200,7 +2266,8 @@
     "types": {
       "purchase_order": "Einkaufsbestellung",
       "stock_adjustment": "Bestandsanpassung",
-      "stock_transfer": "Umlagerung"
+      "stock_transfer": "Umlagerung",
+      "sales_order": "Verkaufsauftrag"
     },
     "status": {
       "pending": "Genehmigung ausstehend",
@@ -2230,6 +2297,8 @@
       "rejected": "Abgelehnt von {name}."
     },
     "settings": {
+      "orders": "Verkaufsaufträge müssen vor dem Versand freigegeben werden",
+      "ordersHelp": "Neue Bestellungen warten auf Freigabe. Sie können bearbeitet, aber erst versendet oder zugestellt werden, wenn jemand mit der Berechtigung zum Freigeben von Bestellungen sie freigibt. Ist dies aus, warten Bestellungen nie auf eine Freigabe.",
       "tab": "Genehmigungen",
       "title": "Genehmigungsabläufe",
       "description": "Wählen Sie, welche Anfragen von jemandem mit der passenden Genehmigungsberechtigung freigegeben werden müssen. Standardmäßig sind alle deaktiviert.",

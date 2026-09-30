@@ -82,7 +82,27 @@ class WarehouseController extends Controller
      */
     public function create(Request $request): Response
     {
-        return Inertia::render('Warehouses/Create');
+        return Inertia::render('Warehouses/Create', [
+            // A new warehouse starts in the organization's regional settings.
+            'defaults' => $this->regionalDefaults($request),
+        ]);
+    }
+
+    /**
+     * The organization's currency, timezone and country, used to prefill and
+     * to fill in a new warehouse that was created without them.
+     *
+     * @return array{currency: string, timezone: string, country: string|null}
+     */
+    private function regionalDefaults(Request $request): array
+    {
+        $organization = $request->user()->organization;
+
+        return [
+            'currency' => $organization?->currency ?: 'CAD',
+            'timezone' => $organization?->timezone ?: 'America/Toronto',
+            'country' => $organization?->country ?: null,
+        ];
     }
 
     /**

@@ -37,6 +37,16 @@ const destroy = (schedule) => {
     <Head :title="t('cycleCounts.title')" />
 
     <AppLayout>
+        <template #header>
+            <div class="flex items-center gap-2 text-xs">
+                <span class="text-text-tertiary">{{ t('nav.sections.workspace') }}</span>
+                <span class="text-text-tertiary">/</span>
+                <Link :href="route('stock-audits.index')" class="text-text-tertiary hover:text-text-primary">{{ t('nav.stockAudits') }}</Link>
+                <span class="text-text-tertiary">/</span>
+                <span class="font-medium text-text-primary">{{ t('cycleCounts.title') }}</span>
+            </div>
+        </template>
+
         <PageHeader :title="t('cycleCounts.title')" :description="t('cycleCounts.description')">
             <template #actions>
                 <Button variant="secondary" size="sm" as="Link" :href="route('stock-audits.index')">

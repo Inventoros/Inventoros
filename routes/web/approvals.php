@@ -18,8 +18,8 @@ use Illuminate\Support\Facades\Route;
 
 Route::get('/approvals', [ApprovalController::class, 'index'])->name('approvals.index');
 Route::post('/approvals/{type}/{id}/approve', [ApprovalController::class, 'approve'])
-    ->whereIn('type', ['purchase_order', 'stock_adjustment', 'stock_transfer'])->whereNumber('id')
+    ->whereIn('type', \App\Services\ApprovalService::TYPES)->whereNumber('id')
     ->name('approvals.approve');
 Route::post('/approvals/{type}/{id}/reject', [ApprovalController::class, 'reject'])
-    ->whereIn('type', ['purchase_order', 'stock_adjustment', 'stock_transfer'])->whereNumber('id')
+    ->whereIn('type', \App\Services\ApprovalService::TYPES)->whereNumber('id')
     ->name('approvals.reject');

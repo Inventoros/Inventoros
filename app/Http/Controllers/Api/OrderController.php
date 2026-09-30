@@ -226,6 +226,14 @@ class OrderController extends Controller
             ], 422);
         }
 
+        // An order waiting for approval cannot ship or be delivered yet.
+        if (isset($validated['status']) && $order->approvalBlocks($validated['status'])) {
+            return response()->json([
+                'message' => Order::APPROVAL_PENDING_MESSAGE,
+                'error' => 'approval_pending',
+            ], 422);
+        }
+
         // Reject cancellation of orders that already left the warehouse;
         // restocking would lie about inventory that physically isn't here.
         if ($cancelTransition && in_array($order->status, [OrderStatus::SHIPPED, OrderStatus::DELIVERED], true)) {

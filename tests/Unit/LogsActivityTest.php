@@ -124,7 +124,7 @@ class LogsActivityTest extends TestCase
 
         $this->assertDatabaseHas('activity_logs', [
             'action' => 'created',
-            'description' => 'Created Product',
+            'description' => 'Created product',
         ]);
     }
 

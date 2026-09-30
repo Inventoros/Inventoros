@@ -7,7 +7,7 @@ import Badge from '@/Components/ui/Badge.vue';
 import { Head, useForm } from '@inertiajs/vue3';
 import { computed, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { ClipboardList, SlidersHorizontal, ArrowLeftRight, Inbox, ExternalLink } from 'lucide-vue-next';
+import { ClipboardList, SlidersHorizontal, ArrowLeftRight, Inbox, ExternalLink, ShoppingCart } from 'lucide-vue-next';
 
 const { t } = useI18n();
 
@@ -24,6 +24,7 @@ const typeIcon = (type) => ({
     purchase_order: ClipboardList,
     stock_adjustment: SlidersHorizontal,
     stock_transfer: ArrowLeftRight,
+    sales_order: ShoppingCart,
 }[type] || ClipboardList);
 
 const statusVariant = (status) => ({
@@ -68,6 +69,14 @@ const decide = (item) => {
     <Head :title="t('approvals.title')" />
 
     <AppLayout>
+        <template #header>
+            <div class="flex items-center gap-2 text-xs">
+                <span class="text-text-tertiary">{{ t('nav.sections.workspace') }}</span>
+                <span class="text-text-tertiary">/</span>
+                <span class="font-medium text-text-primary">{{ t('approvals.title') }}</span>
+            </div>
+        </template>
+
         <PageHeader :title="t('approvals.title')" :description="t('approvals.description')" />
 
         <div class="mt-6 flex gap-2 border-b border-border-subtle" role="tablist">

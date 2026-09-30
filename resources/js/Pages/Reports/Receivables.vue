@@ -6,10 +6,11 @@ import CardHeader from '@/Components/ui/CardHeader.vue';
 import Button from '@/Components/ui/Button.vue';
 import Badge from '@/Components/ui/Badge.vue';
 import StatTile from '@/Components/ui/StatTile.vue';
+import ExportMenu from '@/Components/Reports/ExportMenu.vue';
 import { Head, Link } from '@inertiajs/vue3';
 import { useI18n } from 'vue-i18n';
 import { formatCalendarDate } from '@/lib/dates';
-import { ArrowLeft, Download, Wallet, ShoppingCart, Users, CircleCheck } from 'lucide-vue-next';
+import { ArrowLeft, Wallet, ShoppingCart, Users, CircleCheck } from 'lucide-vue-next';
 
 const { t } = useI18n();
 
@@ -53,8 +54,6 @@ const share = (amount) => {
     return total > 0 ? Math.round(((parseFloat(amount) || 0) / total) * 100) : 0;
 };
 
-const exportReport = () => window.print();
-
 const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-text-secondary';
 </script>
 
@@ -78,10 +77,7 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-t
                     <ArrowLeft :size="14" />
                     {{ t('reports.backToReports') }}
                 </Button>
-                <Button variant="default" size="sm" @click="exportReport">
-                    <Download :size="14" />
-                    {{ t('common.export') }}
-                </Button>
+                <ExportMenu route-name="reports.receivables" />
             </template>
         </PageHeader>
 
@@ -158,7 +154,11 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-t
             <!-- By order -->
             <Card class="mt-4" :padded="false">
                 <div class="px-5 pt-5">
-                    <CardHeader :title="t('receivables.byOrder')" />
+                    <CardHeader :title="t('receivables.byOrder')">
+                        <template #actions>
+                            <ExportMenu route-name="reports.receivables" group="orders" />
+                        </template>
+                    </CardHeader>
                 </div>
                 <div class="mt-4 w-full overflow-x-auto">
                     <table class="w-full text-sm">

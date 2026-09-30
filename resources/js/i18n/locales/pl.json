@@ -1,4 +1,8 @@
 {
+  "stockAudits": {
+    "completeConfirm": "Zakończyć tę inwentaryzację? Dla każdej rozbieżności zostanie utworzona korekta stanu.",
+    "completeUncountedConfirm": "Nie policzono {uncounted} z {total} pozycji. Mimo to zakończyć inwentaryzację? Niepoliczone pozycje zachowują obecny stan; korygowane są tylko policzone."
+  },
   "common": {
     "save": "Zapisz",
     "saveChanges": "Zapisz zmiany",
@@ -143,6 +147,8 @@
     }
   },
   "dashboard": {
+    "atSellingPrice": "w cenie sprzedaży",
+    "itemsCount": "{count} pozycja | {count} pozycji",
     "title": "Panel główny",
     "totalProducts": "Łącznie produktów",
     "totalValue": "Łączna wartość",
@@ -245,6 +251,7 @@
       "variantStockReadOnlyHint": "Zmień stan zapisanego wariantu za pomocą korekty stanu."
     },
     "show": {
+      "usesProductPrice": "Brak ceny wariantu: sprzedawany w cenie produktu",
       "title": "Szczegóły produktu",
       "backToInventory": "Wróć do magazynu",
       "sku": "SKU",
@@ -298,6 +305,27 @@
     }
   },
   "orders": {
+    "itemsCol": "Pozycje",
+    "sources": {
+      "manual": "Ręcznie",
+      "api": "API",
+      "graphql": "GraphQL",
+      "mcp": "MCP",
+      "import": "Import",
+      "ebay": "eBay",
+      "shopify": "Shopify",
+      "amazon": "Amazon",
+      "woocommerce": "WooCommerce"
+    },
+    "approval": {
+      "label": "Zatwierdzenie",
+      "not_required": "Nie wymaga zatwierdzenia",
+      "pending": "Oczekuje na zatwierdzenie",
+      "approved": "Zatwierdzone",
+      "rejected": "Odrzucone",
+      "blocksShipping": "To zamówienie czeka na zatwierdzenie. Można je realizować, ale nie wysłać ani dostarczyć, dopóki ktoś go nie zatwierdzi.",
+      "statusBlocked": "Statusy Wysłane i Dostarczone są dostępne po zatwierdzeniu zamówienia."
+    },
     "title": "Zamówienia",
     "createOrder": "Utwórz zamówienie",
     "searchOrders": "Szukaj zamówień",
@@ -1382,6 +1410,44 @@
       }
     },
     "activityLog": {
+      "action": "Akcja",
+      "actions": {
+        "created": "Utworzono",
+        "updated": "Zaktualizowano",
+        "deleted": "Usunięto",
+        "viewed": "Wyświetlono",
+        "approval_requested": "Poproszono o zatwierdzenie",
+        "approved": "Zatwierdzono",
+        "rejected": "Odrzucono",
+        "payment_recorded": "Zarejestrowano płatność",
+        "payment_refunded": "Zwrócono płatność",
+        "payment_voided": "Anulowano płatność",
+        "invoice_emailed": "Wysłano fakturę e-mailem",
+        "emailed": "Wysłano e-mailem",
+        "auto_reorder": "Automatyczne zamówienie uzupełniające",
+        "quick_reorder": "Szybkie zamówienie uzupełniające",
+        "return_lines_updated": "Zaktualizowano pozycje zwrotu",
+        "portal_return_requested": "Zwrot zgłoszony w portalu"
+      },
+      "subjects": {
+        "Customer": "Klient",
+        "CycleCountSchedule": "Harmonogram inwentaryzacji cyklicznej",
+        "Order": "Zamówienie",
+        "Product": "Produkt",
+        "ProductCategory": "Kategoria",
+        "ProductLocation": "Lokalizacja",
+        "ProductVariant": "Wariant produktu",
+        "PurchaseOrder": "Zamówienie zakupu",
+        "ReturnOrder": "Zwrot",
+        "Role": "Rola",
+        "Setting": "Ustawienie",
+        "StockAdjustmentRequest": "Wniosek o korektę stanu",
+        "StockAudit": "Inwentaryzacja",
+        "StockTransfer": "Przesunięcie magazynowe",
+        "Supplier": "Dostawca",
+        "User": "Użytkownik",
+        "Warehouse": "Magazyn"
+      },
       "title": "Dziennik aktywności",
       "searchPlaceholder": "Szukaj w opisach aktywności...",
       "allUsers": "Wszyscy użytkownicy",
@@ -2188,7 +2254,7 @@
   },
   "approvals": {
     "title": "Zatwierdzenia",
-    "description": "Zamówienia zakupu, korekty magazynowe i przesunięcia magazynowe oczekujące na decyzję.",
+    "description": "Zamówienia zakupu, zamówienia sprzedaży, korekty magazynowe i przesunięcia magazynowe oczekujące na decyzję.",
     "tabs": {
       "pending": "Czekające na mnie",
       "mine": "Moje wnioski"
@@ -2200,7 +2266,8 @@
     "types": {
       "purchase_order": "Zamówienie zakupu",
       "stock_adjustment": "Korekta magazynowa",
-      "stock_transfer": "Przesunięcie magazynowe"
+      "stock_transfer": "Przesunięcie magazynowe",
+      "sales_order": "Zamówienie sprzedaży"
     },
     "status": {
       "pending": "Oczekuje na zatwierdzenie",
@@ -2230,6 +2297,8 @@
       "rejected": "Odrzucił: {name}."
     },
     "settings": {
+      "orders": "Zamówienia sprzedaży wymagają zatwierdzenia przed wysyłką",
+      "ordersHelp": "Nowe zamówienia czekają na zatwierdzenie. Można je realizować, ale nie wysłać ani dostarczyć, dopóki nie zatwierdzi ich osoba z uprawnieniem do zatwierdzania zamówień. Gdy wyłączone, zamówienia nigdy nie czekają na zatwierdzenie.",
       "tab": "Zatwierdzenia",
       "title": "Procesy zatwierdzania",
       "description": "Wybierz, które wnioski wymagają akceptacji osoby z odpowiednim uprawnieniem do zatwierdzania. Domyślnie wszystkie są wyłączone.",

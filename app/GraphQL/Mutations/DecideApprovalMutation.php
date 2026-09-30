@@ -31,7 +31,7 @@ class DecideApprovalMutation extends Mutation
      */
     protected function permissions(): array
     {
-        return ['approve_purchase_orders', 'approve_stock_adjustments', 'approve_stock_transfers'];
+        return ['approve_purchase_orders', 'approve_stock_adjustments', 'approve_stock_transfers', 'approve_orders'];
     }
 
     public function type(): Type
@@ -44,7 +44,7 @@ class DecideApprovalMutation extends Mutation
         return [
             'type' => [
                 'type' => Type::nonNull(Type::string()),
-                'description' => 'purchase_order, stock_adjustment or stock_transfer',
+                'description' => 'purchase_order, stock_adjustment, stock_transfer or sales_order',
                 'rules' => ['required', 'in:'.implode(',', ApprovalService::TYPES)],
             ],
             'id' => [

@@ -7,6 +7,7 @@ namespace App\Traits;
 use App\Models\ActivityLog;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 
 /**
  * Trait for automatic activity logging on model events.
@@ -26,7 +27,7 @@ trait LogsActivity
         static::created(function (Model $model) {
             try {
                 if (auth()->check() && auth()->user()->organization_id) {
-                    $model->logActivity('created', 'Created ' . class_basename($model));
+                    $model->logActivity('created', 'Created ' . self::activitySubjectName($model));
                 }
             } catch (\Exception $e) {
                 Log::warning('Activity logging failed for created event', [
@@ -54,7 +55,7 @@ trait LogsActivity
                     }
 
                     if (!empty($changes)) {
-                        $model->logActivity('updated', 'Updated ' . class_basename($model), [
+                        $model->logActivity('updated', 'Updated ' . self::activitySubjectName($model), [
                             'old' => $original,
                             'new' => $changes,
                         ]);
@@ -71,7 +72,7 @@ trait LogsActivity
         static::deleted(function (Model $model) {
             try {
                 if (auth()->check() && auth()->user()->organization_id) {
-                    $model->logActivity('deleted', 'Deleted ' . class_basename($model));
+                    $model->logActivity('deleted', 'Deleted ' . self::activitySubjectName($model));
                 }
             } catch (\Exception $e) {
                 Log::warning('Activity logging failed for deleted event', [
@@ -90,6 +91,15 @@ trait LogsActivity
      * @param array|null $properties Additional data to store with the log entry
      * @return ActivityLog|null Null when there is no staff user to attribute it to.
      */
+    /**
+     * The model as words for an activity description: ProductVariant ->
+     * "product variant", so the log reads "Created product variant".
+     */
+    public static function activitySubjectName(Model $model): string
+    {
+        return Str::lower(Str::headline(class_basename($model)));
+    }
+
     public function logActivity(string $action, ?string $description = null, ?array $properties = null): ?ActivityLog
     {
         return ActivityLog::log($action, $this, $description, $properties);

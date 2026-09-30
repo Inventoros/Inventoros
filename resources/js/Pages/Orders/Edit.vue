@@ -17,6 +17,8 @@ const { t } = useI18n();
 const props = defineProps({
     order: Object,
     products: Array,
+    // Waiting for approval: it cannot be shipped or delivered yet.
+    awaitingApproval: { type: Boolean, default: false },
 });
 
 const form = useForm({
@@ -323,10 +325,11 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                                 <select id="status" v-model="form.status" :class="fieldInput" required>
                                     <option value="pending">{{ t('orders.status.pending') }}</option>
                                     <option value="processing">{{ t('orders.status.processing') }}</option>
-                                    <option value="shipped">{{ t('orders.status.shipped') }}</option>
-                                    <option value="delivered">{{ t('orders.status.delivered') }}</option>
+                                    <option value="shipped" :disabled="awaitingApproval">{{ t('orders.status.shipped') }}</option>
+                                    <option value="delivered" :disabled="awaitingApproval">{{ t('orders.status.delivered') }}</option>
                                     <option value="cancelled">{{ t('orders.status.cancelled') }}</option>
                                 </select>
+                                <p v-if="awaitingApproval" class="mt-1 text-xs text-text-tertiary">{{ t('orders.approval.statusBlocked') }}</p>
                                 <p v-if="form.errors.status" :class="fieldError">{{ form.errors.status }}</p>
                             </div>
 

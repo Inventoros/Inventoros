@@ -12,16 +12,24 @@ import { Head, Link, router, useForm } from '@inertiajs/vue3';
 import { computed, ref } from 'vue';
 import { usePermissions } from '@/composables/usePermissions';
 import { formatCalendarDate, todayIsoDate } from '@/lib/dates';
+import { formatMoney } from '@/lib/money';
+import { approvalStatusLabel, approvalStatusVariant, orderSourceLabel, orderStatusLabel, orderStatusVariant } from '@/lib/orderLabels';
 import { useI18n } from 'vue-i18n';
 import { ArrowLeft, Pencil, Download, Eye, Undo2, Trash2, X, AlertTriangle, PackageOpen, Mail, Plus, RotateCcw, Wallet } from 'lucide-vue-next';
 
-const { t } = useI18n();
+const { t, te } = useI18n();
+const statusText = (status) => orderStatusLabel(status, { t, te });
+const sourceText = (source) => orderSourceLabel(source, { t, te });
+const approvalText = (status) => approvalStatusLabel(status, { t, te });
 
 const { hasPermission } = usePermissions();
 
 const props = defineProps({
     order: Object,
     canApprove: Boolean,
+    // False when the organization did not require approval for this order.
+    approvalRequired: { type: Boolean, default: true },
+    awaitingApproval: { type: Boolean, default: false },
     canRecordPayments: Boolean,
     paymentMethods: { type: Array, default: () => [] },
     pluginComponents: Object,
@@ -29,7 +37,8 @@ const props = defineProps({
     shipping: { type: Object, default: null },
 });
 
-const money = (value) => `$${(parseFloat(value) || 0).toFixed(2)}`;
+// Order amounts in the order's currency, grouped (see lib/money).
+const money = (value) => formatMoney(value, props.order.currency);
 
 const paymentStatusVariant = (s) =>
     ({ unpaid: 'warning', partial: 'info', paid: 'success', overpaid: 'brand', refunded: 'neutral' }[s] || 'neutral');
@@ -133,21 +142,7 @@ const submitApproval = () => {
     });
 };
 
-const statusVariant = (status) =>
-    ({
-        pending: 'warning',
-        processing: 'info',
-        shipped: 'brand',
-        delivered: 'success',
-        cancelled: 'danger',
-    }[status] || 'neutral');
-
-const approvalStatusVariant = (status) =>
-    ({
-        pending: 'warning',
-        approved: 'success',
-        rejected: 'danger',
-    }[status] || 'neutral');
+const statusVariant = orderStatusVariant;
 
 const deleteOrder = () => {
     deleting.value = true;
@@ -170,15 +165,10 @@ const formatDate = (date) => {
     });
 };
 
-// For instants (payments, timestamps) the viewer's timezone applies.
-const formatDateShort = (date) => {
-    if (!date) return '-';
-    return new Date(date).toLocaleDateString('en-US', {
-        year: 'numeric',
-        month: 'short',
-        day: 'numeric'
-    });
-};
+// A payment is recorded on a day (stored as UTC midnight): format it as that
+// calendar day, not as an instant, or it shows a day early west of UTC.
+const formatPaymentDate = (date) =>
+    formatCalendarDate(date, { year: 'numeric', month: 'short', day: 'numeric' }, 'en-US');
 
 // order_date names a calendar day; formatting it as an instant showed the
 // day before for anyone west of UTC.
@@ -205,8 +195,8 @@ const formatOrderDate = (date, long = false) =>
             :description="`Created on ${formatOrderDate(order.order_date)}`"
         >
             <template #actions>
-                <Badge :variant="statusVariant(order.status)" size="sm" dot>{{ order.status }}</Badge>
-                <Badge v-if="order.approval_status" :variant="approvalStatusVariant(order.approval_status)" size="sm" dot>{{ order.approval_status }}</Badge>
+                <Badge :variant="statusVariant(order.status)" size="sm" dot>{{ statusText(order.status) }}</Badge>
+                <Badge v-if="approvalRequired && order.approval_status" :variant="approvalStatusVariant(order.approval_status)" size="sm" dot>{{ approvalText(order.approval_status) }}</Badge>
                 <Badge v-if="order.payment_status" :variant="paymentStatusVariant(order.payment_status)" size="sm" dot>{{ t(`payments.status.${order.payment_status}`) }}</Badge>
                 <Button
                     v-if="hasPermission('view_orders')"
@@ -268,6 +258,11 @@ const formatOrderDate = (date, long = false) =>
         <!-- Plugin Slot: Header -->
         <PluginSlot slot="header" :components="pluginComponents?.header" />
 
+        <div v-if="awaitingApproval" class="mt-4 flex items-start gap-2 rounded-lg border border-status-warning/20 bg-status-warning-soft p-3">
+            <AlertTriangle :size="16" class="mt-0.5 shrink-0 text-status-warning" />
+            <p class="text-sm text-status-warning">{{ t('orders.approval.blocksShipping') }}</p>
+        </div>
+
         <!-- Plugin tabs: none registered renders the core content unchanged -->
         <PluginTabs :components="pluginComponents?.tabs">
             <div class="mt-6 grid grid-cols-1 gap-4 lg:grid-cols-3">
@@ -285,6 +280,7 @@ const formatOrderDate = (date, long = false) =>
                                 >
                                     <div class="min-w-0 basis-full xl:flex-1 xl:basis-0">
                                         <p class="font-medium text-text-primary">{{ item.product_name }}</p>
+                                        <p v-if="item.variant_title" class="text-xs text-text-secondary">{{ t('orders.create.variant') }}: {{ item.variant_title }}</p>
                                         <p class="text-xs text-text-tertiary">SKU: {{ item.sku }}</p>
                                         <p v-if="parseFloat(item.discount_amount) > 0" class="text-xs text-text-secondary">
                                             {{ t('discounts.discount') }}<template v-if="item.discount_type === 'percent'"> ({{ parseFloat(item.discount_value) }}%)</template>: -{{ money(item.discount_amount) }}
@@ -305,13 +301,13 @@ const formatOrderDate = (date, long = false) =>
 
                                     <div class="text-right">
                                         <p class="text-xs text-text-tertiary">{{ t('orders.show.unitPrice') }}</p>
-                                        <p class="font-medium tabular-nums text-text-primary">${{ parseFloat(item.unit_price).toFixed(2) }}</p>
+                                        <p class="font-medium tabular-nums text-text-primary">{{ money(item.unit_price) }}</p>
                                     </div>
 
                                     <div class="min-w-[100px] text-right">
                                         <p class="text-xs text-text-tertiary">{{ t('common.total') }}</p>
                                         <p class="font-semibold tabular-nums text-text-primary">
-                                            ${{ parseFloat(item.total || item.subtotal || (item.quantity * item.unit_price)).toFixed(2) }}
+                                            {{ money(item.total || item.subtotal || (item.quantity * item.unit_price)) }}
                                         </p>
                                     </div>
                                 </div>
@@ -370,7 +366,7 @@ const formatOrderDate = (date, long = false) =>
                                             <Badge v-if="payment.voided_at" variant="neutral" size="sm">{{ t('payments.voided') }}</Badge>
                                         </div>
                                         <p class="text-xs text-text-tertiary">
-                                            {{ formatDateShort(payment.paid_at) }}
+                                            {{ formatPaymentDate(payment.paid_at) }}
                                             <template v-if="payment.reference"> · {{ payment.reference }}</template>
                                             <template v-if="payment.recorded_by"> · {{ t('payments.recordedBy', { name: payment.recorded_by.name }) }}</template>
                                         </p>
@@ -480,7 +476,7 @@ const formatOrderDate = (date, long = false) =>
                             <dl class="space-y-3">
                                 <div class="flex justify-between text-sm">
                                     <dt class="text-text-secondary">{{ t('common.subtotal') }}</dt>
-                                    <dd class="font-medium tabular-nums text-text-primary">${{ parseFloat(order.subtotal).toFixed(2) }}</dd>
+                                    <dd class="font-medium tabular-nums text-text-primary">{{ money(order.subtotal) }}</dd>
                                 </div>
 
                                 <div v-if="parseFloat(order.line_discount_total) > 0" class="flex justify-between text-sm">
@@ -497,18 +493,18 @@ const formatOrderDate = (date, long = false) =>
 
                                 <div class="flex justify-between text-sm">
                                     <dt class="text-text-secondary">{{ t('common.tax') }}</dt>
-                                    <dd class="font-medium tabular-nums text-text-primary">${{ parseFloat(order.tax || 0).toFixed(2) }}</dd>
+                                    <dd class="font-medium tabular-nums text-text-primary">{{ money(order.tax || 0) }}</dd>
                                 </div>
 
                                 <div class="flex justify-between text-sm">
                                     <dt class="text-text-secondary">{{ t('common.shipping') }}</dt>
-                                    <dd class="font-medium tabular-nums text-text-primary">${{ parseFloat(order.shipping || 0).toFixed(2) }}</dd>
+                                    <dd class="font-medium tabular-nums text-text-primary">{{ money(order.shipping || 0) }}</dd>
                                 </div>
 
                                 <div class="border-t border-border-subtle pt-3">
                                     <div class="flex items-center justify-between">
                                         <dt class="text-sm font-semibold text-text-primary">{{ t('common.total') }}</dt>
-                                        <dd class="text-xl font-bold tabular-nums text-brand">${{ parseFloat(order.total).toFixed(2) }}</dd>
+                                        <dd class="text-xl font-bold tabular-nums text-brand">{{ money(order.total) }}</dd>
                                     </div>
                                 </div>
 
@@ -539,14 +535,14 @@ const formatOrderDate = (date, long = false) =>
                                 <div>
                                     <dt class="text-xs text-text-tertiary">{{ t('orders.source') }}</dt>
                                     <dd class="mt-1">
-                                        <Badge variant="brand" size="sm" class="capitalize">{{ order.source }}</Badge>
+                                        <Badge variant="brand" size="sm">{{ sourceText(order.source) }}</Badge>
                                     </dd>
                                 </div>
 
                                 <div>
                                     <dt class="text-xs text-text-tertiary">{{ t('common.status') }}</dt>
                                     <dd class="mt-1">
-                                        <Badge :variant="statusVariant(order.status)" size="sm" dot class="capitalize">{{ order.status }}</Badge>
+                                        <Badge :variant="statusVariant(order.status)" size="sm" dot>{{ statusText(order.status) }}</Badge>
                                     </dd>
                                 </div>
 
@@ -587,14 +583,14 @@ const formatOrderDate = (date, long = false) =>
                     </Card>
 
                     <!-- Approval Status -->
-                    <Card v-if="order.approval_status" :padded="false">
+                    <Card v-if="approvalRequired && order.approval_status" :padded="false">
                         <div class="px-5 pt-5"><h3 class="text-sm font-semibold text-text-primary">{{ t('orders.show.approvalStatus') }}</h3></div>
                         <div class="p-5">
                             <dl class="space-y-3">
                                 <div>
                                     <dt class="text-xs text-text-tertiary">{{ t('common.status') }}</dt>
                                     <dd class="mt-1">
-                                        <Badge :variant="approvalStatusVariant(order.approval_status)" size="sm" dot class="capitalize">{{ order.approval_status }}</Badge>
+                                        <Badge :variant="approvalStatusVariant(order.approval_status)" size="sm" dot>{{ approvalText(order.approval_status) }}</Badge>
                                     </dd>
                                 </div>
 

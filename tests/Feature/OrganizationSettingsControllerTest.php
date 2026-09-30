@@ -200,6 +200,65 @@ class OrganizationSettingsControllerTest extends TestCase
         $response->assertSessionHasErrors(['currency', 'timezone']);
     }
 
+    public function test_settings_page_receives_explicit_capability_flags(): void
+    {
+        $this->actingAs($this->admin)
+            ->get(route('settings.organization.index'))
+            ->assertOk()
+            ->assertInertia(fn ($page) => $page
+                ->component('Settings/Organization/Index')
+                ->where('can.manageOrganization', true)
+                ->where('can.viewUsers', true)
+                ->where('canManageOrganization', true)
+            );
+    }
+
+    public function test_viewer_with_view_settings_only_gets_read_only_flags(): void
+    {
+        $viewerRole = Role::create([
+            'name' => 'Settings viewer',
+            'slug' => 'settings-viewer',
+            'organization_id' => $this->organization->id,
+            'permissions' => ['view_settings'],
+        ]);
+        $this->member->roles()->sync([$viewerRole->id]);
+
+        $this->actingAs($this->member->fresh())
+            ->get(route('settings.organization.index'))
+            ->assertOk()
+            ->assertInertia(fn ($page) => $page
+                ->where('can.manageOrganization', false)
+                ->where('can.viewUsers', false)
+            );
+    }
+
+    public function test_non_admin_role_with_manage_organization_can_save_settings_and_portal(): void
+    {
+        $managerRole = Role::create([
+            'name' => 'Org manager',
+            'slug' => 'org-manager',
+            'organization_id' => $this->organization->id,
+            'permissions' => ['view_settings', 'manage_organization'],
+        ]);
+        $this->member->roles()->sync([$managerRole->id]);
+        $member = $this->member->fresh();
+
+        $this->actingAs($member)
+            ->patch(route('settings.organization.update.general'), ['name' => 'Renamed Org'])
+            ->assertRedirect();
+        $this->actingAs($member)
+            ->patch(route('settings.organization.update.regional'), ['currency' => 'CAD', 'timezone' => 'America/Toronto'])
+            ->assertRedirect();
+        $this->actingAs($member)
+            ->patch(route('settings.organization.update.portal'), ['portal_enabled' => true])
+            ->assertRedirect();
+
+        $this->organization->refresh();
+        $this->assertSame('Renamed Org', $this->organization->name);
+        $this->assertSame('CAD', $this->organization->currency);
+        $this->assertTrue((bool) $this->organization->portal_enabled);
+    }
+
     public function test_guest_cannot_access_organization_settings(): void
     {
         $response = $this->get(route('settings.organization.index'));

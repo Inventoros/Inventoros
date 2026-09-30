@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Order;
 
+use App\Enums\OrderApprovalStatus;
 use App\Enums\OrderStatus;
 use App\Enums\PaymentMethod;
 use App\Enums\PaymentStatus;
@@ -19,6 +20,7 @@ use App\Models\Order\Order;
 use App\Models\Warehouse;
 use App\Services\OrderService;
 use App\Services\Shipping\OrderShippingPanel;
+use App\Support\ApprovalSettings;
 use App\Support\Search;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\JsonResponse;
@@ -137,6 +139,9 @@ class OrderController extends Controller
             'products' => $products,
             'warehouses' => $warehouses,
             'defaultWarehouseId' => $defaultWarehouseId,
+            // New orders wait for approval (and cannot start out shipped)
+            // when the organization requires order approval.
+            'ordersNeedApproval' => ApprovalSettings::forOrganization((int) $request->user()->organization_id)->ordersEnabled,
         ]);
     }
 
@@ -203,7 +208,7 @@ class OrderController extends Controller
      */
     public function show(Order $order): Response
     {
-        $order->load(['items.product', 'organization', 'creator', 'approver']);
+        $order->load(['items.product', 'items.variant', 'organization', 'creator', 'approver']);
 
         // Ensure user can only view orders from their organization
         if ($order->organization_id !== auth()->user()->organization_id) {
@@ -223,6 +228,10 @@ class OrderController extends Controller
             // endpoint expose the same order shape (P2-15).
             'order' => (new OrderResource($order))->resolve(request()),
             'canApprove' => $canApprove,
+            // False when the order never needed approval (the organization
+            // does not require it): the page hides the approval card.
+            'approvalRequired' => $order->approval_status !== OrderApprovalStatus::NOT_REQUIRED,
+            'awaitingApproval' => $order->isPendingApproval(),
             'canRecordPayments' => $canViewPayments && auth()->user()->hasPermission(Permission::RECORD_PAYMENTS),
             'paymentMethods' => $canViewPayments
                 ? array_map(fn (PaymentMethod $method) => ['value' => $method->value, 'label' => $method->label()], PaymentMethod::cases())
@@ -268,6 +277,7 @@ class OrderController extends Controller
         return Inertia::render('Orders/Edit', [
             'order' => $order,
             'products' => $products,
+            'awaitingApproval' => $order->isPendingApproval(),
         ]);
     }
 

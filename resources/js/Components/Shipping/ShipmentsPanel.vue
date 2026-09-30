@@ -1,4 +1,6 @@
 <script setup>
+import { formatInstantDate } from '@/lib/dates';
+import { formatMoney as formatAppMoney } from '@/lib/money';
 import Card from '@/Components/ui/Card.vue';
 import Button from '@/Components/ui/Button.vue';
 import Badge from '@/Components/ui/Badge.vue';
@@ -53,17 +55,12 @@ const post = (name, shipment, confirmMessage = null) => {
     });
 };
 
-const formatDate = (date) =>
-    date ? new Date(date).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' }) : '';
+// Shipment dates are instants (the viewer's day); amounts use the app-wide
+// money formatter. A blank cost stays blank.
+const formatDate = (date) => (date ? formatInstantDate(date, { year: 'numeric', month: 'short', day: 'numeric' }) : '');
 
-const formatMoney = (amount, currency) => {
-    if (amount === null || amount === undefined || amount === '') return '';
-    try {
-        return new Intl.NumberFormat(undefined, { style: 'currency', currency: currency || 'USD' }).format(Number(amount));
-    } catch {
-        return `${amount} ${currency || ''}`;
-    }
-};
+const formatMoney = (amount, currency) =>
+    amount === null || amount === undefined || amount === '' ? '' : formatAppMoney(amount, currency);
 </script>
 
 <template>
@@ -77,6 +74,9 @@ const formatMoney = (amount, currency) => {
         </div>
 
         <div class="p-5">
+            <p v-if="shipping.awaitingApproval" class="mb-3 rounded-md border border-status-warning/20 bg-status-warning-soft px-3 py-2 text-xs text-status-warning">
+                {{ t('orders.approval.blocksShipping') }}
+            </p>
             <div v-if="shipments.length" class="space-y-3">
                 <div
                     v-for="shipment in shipments"
@@ -111,7 +111,7 @@ const formatMoney = (amount, currency) => {
 
                     <ul class="mt-3 space-y-0.5 text-xs text-text-secondary">
                         <li v-for="item in shipment.items" :key="item.order_item_id">
-                            <span class="tabular-nums">{{ item.quantity }}</span> × {{ item.product_name }}
+                            <span class="tabular-nums">{{ item.quantity }}</span> × {{ item.product_name }}<template v-if="item.variant_title"> ({{ item.variant_title }})</template>
                         </li>
                     </ul>
 

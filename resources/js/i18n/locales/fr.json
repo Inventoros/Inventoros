@@ -1,4 +1,8 @@
 {
+  "stockAudits": {
+    "completeConfirm": "Terminer cet inventaire ? Des ajustements de stock seront créés pour chaque écart.",
+    "completeUncountedConfirm": "{uncounted} articles sur {total} n'ont pas été comptés. Terminer l'inventaire quand même ? Les articles non comptés gardent leur stock actuel ; seuls les articles comptés sont ajustés."
+  },
   "common": {
     "save": "Enregistrer",
     "saveChanges": "Enregistrer les modifications",
@@ -143,6 +147,8 @@
     }
   },
   "dashboard": {
+    "atSellingPrice": "au prix de vente",
+    "itemsCount": "{count} article | {count} articles",
     "title": "Tableau de bord",
     "totalProducts": "Total des produits",
     "totalValue": "Valeur totale",
@@ -245,6 +251,7 @@
       "variantStockReadOnlyHint": "Modifiez le stock d'une variante enregistrée avec un ajustement de stock."
     },
     "show": {
+      "usesProductPrice": "Aucun prix de variante défini : vendue au prix du produit",
       "title": "Détails du produit",
       "backToInventory": "Retour à l'inventaire",
       "sku": "SKU",
@@ -298,6 +305,27 @@
     }
   },
   "orders": {
+    "itemsCol": "Articles",
+    "sources": {
+      "manual": "Manuelle",
+      "api": "API",
+      "graphql": "GraphQL",
+      "mcp": "MCP",
+      "import": "Import",
+      "ebay": "eBay",
+      "shopify": "Shopify",
+      "amazon": "Amazon",
+      "woocommerce": "WooCommerce"
+    },
+    "approval": {
+      "label": "Approbation",
+      "not_required": "Aucune approbation requise",
+      "pending": "En attente d'approbation",
+      "approved": "Approuvée",
+      "rejected": "Rejetée",
+      "blocksShipping": "Cette commande attend une approbation. Elle peut être traitée, mais pas expédiée ni livrée tant que quelqu'un ne l'a pas approuvée.",
+      "statusBlocked": "Les statuts Expédiée et Livrée sont disponibles une fois la commande approuvée."
+    },
     "title": "Commandes",
     "createOrder": "Créer une commande",
     "searchOrders": "Rechercher des commandes",
@@ -1382,6 +1410,44 @@
       }
     },
     "activityLog": {
+      "action": "Action",
+      "actions": {
+        "created": "Créé",
+        "updated": "Mis à jour",
+        "deleted": "Supprimé",
+        "viewed": "Consulté",
+        "approval_requested": "Approbation demandée",
+        "approved": "Approuvé",
+        "rejected": "Rejeté",
+        "payment_recorded": "Paiement enregistré",
+        "payment_refunded": "Paiement remboursé",
+        "payment_voided": "Paiement annulé",
+        "invoice_emailed": "Facture envoyée par e-mail",
+        "emailed": "Envoyé par e-mail",
+        "auto_reorder": "Réapprovisionnement automatique",
+        "quick_reorder": "Réapprovisionnement rapide",
+        "return_lines_updated": "Lignes de retour mises à jour",
+        "portal_return_requested": "Retour demandé sur le portail"
+      },
+      "subjects": {
+        "Customer": "Client",
+        "CycleCountSchedule": "Planning d'inventaire tournant",
+        "Order": "Commande",
+        "Product": "Produit",
+        "ProductCategory": "Catégorie",
+        "ProductLocation": "Emplacement",
+        "ProductVariant": "Variante de produit",
+        "PurchaseOrder": "Bon de commande",
+        "ReturnOrder": "Retour",
+        "Role": "Rôle",
+        "Setting": "Paramètre",
+        "StockAdjustmentRequest": "Demande d'ajustement de stock",
+        "StockAudit": "Inventaire",
+        "StockTransfer": "Transfert de stock",
+        "Supplier": "Fournisseur",
+        "User": "Utilisateur",
+        "Warehouse": "Entrepôt"
+      },
       "title": "Journal d'activité",
       "searchPlaceholder": "Rechercher dans les descriptions d'activité...",
       "allUsers": "Tous les utilisateurs",
@@ -2188,7 +2254,7 @@
   },
   "approvals": {
     "title": "Approbations",
-    "description": "Bons de commande, ajustements de stock et transferts de stock en attente de décision.",
+    "description": "Bons de commande, commandes clients, ajustements de stock et transferts de stock en attente de décision.",
     "tabs": {
       "pending": "En attente de moi",
       "mine": "Mes demandes"
@@ -2200,7 +2266,8 @@
     "types": {
       "purchase_order": "Bon de commande",
       "stock_adjustment": "Ajustement de stock",
-      "stock_transfer": "Transfert de stock"
+      "stock_transfer": "Transfert de stock",
+      "sales_order": "Commande client"
     },
     "status": {
       "pending": "En attente d'approbation",
@@ -2230,6 +2297,8 @@
       "rejected": "Rejeté par {name}."
     },
     "settings": {
+      "orders": "Les commandes clients doivent être approuvées avant l'expédition",
+      "ordersHelp": "Les nouvelles commandes attendent une approbation. Elles peuvent être traitées, mais pas expédiées ni livrées tant qu'une personne autorisée à approuver les commandes ne les a pas approuvées. Désactivé, aucune commande n'attend d'approbation.",
       "tab": "Approbations",
       "title": "Circuits d'approbation",
       "description": "Choisissez les demandes qui nécessitent la validation d'une personne disposant de la permission d'approbation correspondante. Toutes sont désactivées par défaut.",

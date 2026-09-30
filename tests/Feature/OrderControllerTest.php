@@ -452,6 +452,9 @@ class OrderControllerTest extends TestCase
 
         $initialStock = $this->product->stock;
 
+        // Orders only wait for approval when the organization requires it.
+        $this->organization->forceFill(['settings' => ['approvals' => ['orders_enabled' => true]]])->save();
+
         // Create the order through the controller so stock is decremented
         // and a StockAdjustment ledger entry is written.
         $this->actingAs($this->admin)->post(route('orders.store'), [

@@ -314,7 +314,9 @@ class StockAuditController extends Controller
         $this->warehouseAccess->authorizeLocation($request->user(), $stockAudit->warehouse_location_id);
 
         try {
-            $adjustmentsCreated = $audits->complete($stockAudit, $request->user());
+            // allow_uncounted: the user confirmed completing with lines left
+            // uncounted (they are left unchanged).
+            $adjustmentsCreated = $audits->complete($stockAudit, $request->user(), $request->boolean('allow_uncounted'));
         } catch (\RuntimeException $e) {
             return redirect()->route('stock-audits.show', $stockAudit)
                 ->with('error', $e->getMessage());

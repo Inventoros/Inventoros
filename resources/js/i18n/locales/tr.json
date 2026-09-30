@@ -1,4 +1,8 @@
 {
+  "stockAudits": {
+    "completeConfirm": "Bu sayım tamamlansın mı? Her fark için stok düzeltmesi oluşturulur.",
+    "completeUncountedConfirm": "{total} üründen {uncounted} tanesi sayılmadı. Sayım yine de tamamlansın mı? Sayılmayan ürünler mevcut stoklarını korur; yalnızca sayılanlar düzeltilir."
+  },
   "common": {
     "save": "Kaydet",
     "saveChanges": "Değişiklikleri Kaydet",
@@ -143,6 +147,8 @@
     }
   },
   "dashboard": {
+    "atSellingPrice": "satış fiyatıyla",
+    "itemsCount": "{count} ürün | {count} ürün",
     "title": "Gösterge Paneli",
     "totalProducts": "Toplam Ürün",
     "totalValue": "Toplam Değer",
@@ -245,6 +251,7 @@
       "variantStockReadOnlyHint": "Kayıtlı bir varyantın stokunu stok düzeltmesiyle değiştirin."
     },
     "show": {
+      "usesProductPrice": "Varyant fiyatı yok: ürün fiyatıyla satılır",
       "title": "Ürün Detayları",
       "backToInventory": "Envantere Dön",
       "sku": "SKU",
@@ -298,6 +305,27 @@
     }
   },
   "orders": {
+    "itemsCol": "Ürünler",
+    "sources": {
+      "manual": "Manuel",
+      "api": "API",
+      "graphql": "GraphQL",
+      "mcp": "MCP",
+      "import": "İçe aktarma",
+      "ebay": "eBay",
+      "shopify": "Shopify",
+      "amazon": "Amazon",
+      "woocommerce": "WooCommerce"
+    },
+    "approval": {
+      "label": "Onay",
+      "not_required": "Onay gerekmiyor",
+      "pending": "Onay bekliyor",
+      "approved": "Onaylandı",
+      "rejected": "Reddedildi",
+      "blocksShipping": "Bu sipariş onay bekliyor. İşlenebilir, ancak biri onaylayana kadar gönderilemez veya teslim edilemez.",
+      "statusBlocked": "Gönderildi ve Teslim edildi durumları sipariş onaylandığında kullanılabilir."
+    },
     "title": "Siparişler",
     "createOrder": "Sipariş Oluştur",
     "searchOrders": "Sipariş Ara",
@@ -1382,6 +1410,44 @@
       }
     },
     "activityLog": {
+      "action": "İşlem",
+      "actions": {
+        "created": "Oluşturuldu",
+        "updated": "Güncellendi",
+        "deleted": "Silindi",
+        "viewed": "Görüntülendi",
+        "approval_requested": "Onay istendi",
+        "approved": "Onaylandı",
+        "rejected": "Reddedildi",
+        "payment_recorded": "Ödeme kaydedildi",
+        "payment_refunded": "Ödeme iade edildi",
+        "payment_voided": "Ödeme iptal edildi",
+        "invoice_emailed": "Fatura e-postayla gönderildi",
+        "emailed": "E-postayla gönderildi",
+        "auto_reorder": "Otomatik yeniden sipariş",
+        "quick_reorder": "Hızlı yeniden sipariş",
+        "return_lines_updated": "İade satırları güncellendi",
+        "portal_return_requested": "Portalda iade talep edildi"
+      },
+      "subjects": {
+        "Customer": "Müşteri",
+        "CycleCountSchedule": "Dönemsel sayım planı",
+        "Order": "Sipariş",
+        "Product": "Ürün",
+        "ProductCategory": "Kategori",
+        "ProductLocation": "Konum",
+        "ProductVariant": "Ürün varyantı",
+        "PurchaseOrder": "Satın alma siparişi",
+        "ReturnOrder": "İade",
+        "Role": "Rol",
+        "Setting": "Ayar",
+        "StockAdjustmentRequest": "Stok düzeltme talebi",
+        "StockAudit": "Stok sayımı",
+        "StockTransfer": "Stok transferi",
+        "Supplier": "Tedarikçi",
+        "User": "Kullanıcı",
+        "Warehouse": "Depo"
+      },
       "title": "Etkinlik Günlüğü",
       "searchPlaceholder": "Etkinlik açıklamalarında ara...",
       "allUsers": "Tüm Kullanıcılar",
@@ -2188,7 +2254,7 @@
   },
   "approvals": {
     "title": "Onaylar",
-    "description": "Karar bekleyen satın alma siparişleri, stok düzeltmeleri ve stok transferleri.",
+    "description": "Karar bekleyen satın alma siparişleri, satış siparişleri, stok düzeltmeleri ve stok transferleri.",
     "tabs": {
       "pending": "Beni bekleyenler",
       "mine": "Taleplerim"
@@ -2200,7 +2266,8 @@
     "types": {
       "purchase_order": "Satın alma siparişi",
       "stock_adjustment": "Stok düzeltmesi",
-      "stock_transfer": "Stok transferi"
+      "stock_transfer": "Stok transferi",
+      "sales_order": "Satış siparişi"
     },
     "status": {
       "pending": "Onay bekliyor",
@@ -2230,6 +2297,8 @@
       "rejected": "{name} tarafından reddedildi."
     },
     "settings": {
+      "orders": "Satış siparişleri gönderilmeden önce onay gerektirir",
+      "ordersHelp": "Yeni siparişler onay bekler. İşlenebilirler, ancak sipariş onaylama yetkisi olan biri onaylayana kadar gönderilemez veya teslim edilemezler. Kapalıyken siparişler hiçbir zaman onay beklemez.",
       "tab": "Onaylar",
       "title": "Onay iş akışları",
       "description": "Hangi taleplerin ilgili onay iznine sahip birinin onayını gerektireceğini seçin. Varsayılan olarak tümü kapalıdır.",

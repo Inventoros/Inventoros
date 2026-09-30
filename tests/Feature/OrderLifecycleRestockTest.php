@@ -102,12 +102,25 @@ final class OrderLifecycleRestockTest extends TestCase
         return $product;
     }
 
-    private function order(Product $product, int $qty, string $status = 'pending', bool $adjustStock = true): Order
+    private function order(Product $product, int $qty, string $status = 'pending', bool $adjustStock = true, ?string $approval = null): Order
     {
-        return $this->orders()->create([
+        return $this->orders()->create(array_filter([
             'customer_name' => 'Acme', 'status' => $status, 'order_date' => now()->toDateString(),
+            'approval_status' => $approval,
             'items' => [['product_id' => $product->id, 'quantity' => $qty, 'unit_price' => 10.00]],
-        ], $this->admin, 'manual', $adjustStock)->load('items');
+        ], fn ($value) => $value !== null), $this->admin, 'manual', $adjustStock)->load('items');
+    }
+
+    /**
+     * Put an order back to "pending approval" the way rows written before
+     * approval became a setting could be, bypassing the model guard that
+     * now keeps pending orders from shipping.
+     */
+    private function markPendingApproval(Order $order): Order
+    {
+        DB::table('orders')->where('id', $order->id)->update(['approval_status' => 'pending']);
+
+        return $order->fresh();
     }
 
     private function orders(): OrderService
@@ -229,7 +242,7 @@ final class OrderLifecycleRestockTest extends TestCase
     public function test_rejecting_a_historical_order_does_not_restock(): void
     {
         $product = $this->product(10);
-        $order = $this->order($product, 3, adjustStock: false);
+        $order = $this->order($product, 3, adjustStock: false, approval: 'pending');
 
         $this->orders()->reject($order, $this->admin, 'No');
 
@@ -267,7 +280,7 @@ final class OrderLifecycleRestockTest extends TestCase
     public function test_rejecting_an_order_that_was_already_cancelled_does_not_restock_again(): void
     {
         $product = $this->product(10);
-        $order = $this->order($product, 4);
+        $order = $this->order($product, 4, approval: 'pending');
         $this->assertTrue($order->isPendingApproval());
 
         $this->orders()->cancel($order);
@@ -637,9 +650,10 @@ final class OrderLifecycleRestockTest extends TestCase
     {
         $product = $this->product(10);
         $order = $this->order($product, 3);
-        $this->assertTrue($order->isPendingApproval());
         $shipment = $this->shipments()->create($order, ['carrier' => 'manual'], $this->admin);
         $this->shipments()->markShipped($shipment, $this->admin);
+        $order = $this->markPendingApproval($order);
+        $this->assertTrue($order->isPendingApproval());
 
         try {
             $this->orders()->reject($order->fresh(), $this->admin, 'No');
@@ -656,6 +670,7 @@ final class OrderLifecycleRestockTest extends TestCase
         $product = $this->product(10);
         $order = $this->order($product, 3);
         $shipment = $this->shipments()->create($order, ['carrier' => 'manual'], $this->admin);
+        $order = $this->markPendingApproval($order);
 
         $this->orders()->reject($order, $this->admin, 'No');
 

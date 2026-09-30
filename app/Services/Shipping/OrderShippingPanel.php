@@ -38,7 +38,7 @@ final class OrderShippingPanel
         $remaining = $this->shipments->remainingQuantities($order);
 
         $shipments = Shipment::where('order_id', $order->id)
-            ->with('items.orderItem', 'warehouse')
+            ->with('items.orderItem.variant', 'warehouse')
             ->latest('id')
             ->get()
             ->map(fn (Shipment $s) => $s->toPublicArray())
@@ -49,12 +49,16 @@ final class OrderShippingPanel
         return [
             'shipments' => $shipments,
             'shipping' => [
-                'canCreate' => $user->hasPermission('create_shipments'),
+                // An order waiting for approval cannot ship (ShipmentService
+                // refuses it too); the panel says why instead of offering Ship.
+                'canCreate' => $user->hasPermission('create_shipments') && ! $order->isPendingApproval(),
+                'awaitingApproval' => $order->isPendingApproval(),
                 'carriers' => $this->carriers->available($organizationId),
-                'lines' => OrderItem::where('order_id', $order->id)->orderBy('id')->get()
+                'lines' => OrderItem::where('order_id', $order->id)->with('variant')->orderBy('id')->get()
                     ->map(fn (OrderItem $item) => [
                         'order_item_id' => $item->id,
                         'product_name' => $item->product_name,
+                        'variant_title' => $item->variant?->title,
                         'sku' => $item->sku,
                         'quantity' => (int) $item->quantity,
                         'remaining' => $remaining[$item->id] ?? 0,

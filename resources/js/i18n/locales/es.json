@@ -1,4 +1,8 @@
 {
+  "stockAudits": {
+    "completeConfirm": "¿Completar esta auditoría? Se crearán ajustes de stock para cada discrepancia.",
+    "completeUncountedConfirm": "{uncounted} de {total} artículos no se han contado. ¿Completar la auditoría de todos modos? Los artículos sin contar mantienen su stock actual; solo se ajustan los contados."
+  },
   "common": {
     "save": "Guardar",
     "saveChanges": "Guardar cambios",
@@ -143,6 +147,8 @@
     }
   },
   "dashboard": {
+    "atSellingPrice": "a precio de venta",
+    "itemsCount": "{count} artículo | {count} artículos",
     "title": "Panel de control",
     "totalProducts": "Total de productos",
     "totalValue": "Valor total",
@@ -245,6 +251,7 @@
       "variantStockReadOnlyHint": "Cambia el stock de una variante guardada con un ajuste de stock."
     },
     "show": {
+      "usesProductPrice": "Sin precio de variante: se vende al precio del producto",
       "title": "Detalles del producto",
       "backToInventory": "Volver al inventario",
       "sku": "SKU",
@@ -298,6 +305,27 @@
     }
   },
   "orders": {
+    "itemsCol": "Artículos",
+    "sources": {
+      "manual": "Manual",
+      "api": "API",
+      "graphql": "GraphQL",
+      "mcp": "MCP",
+      "import": "Importación",
+      "ebay": "eBay",
+      "shopify": "Shopify",
+      "amazon": "Amazon",
+      "woocommerce": "WooCommerce"
+    },
+    "approval": {
+      "label": "Aprobación",
+      "not_required": "No requiere aprobación",
+      "pending": "Pendiente de aprobación",
+      "approved": "Aprobado",
+      "rejected": "Rechazado",
+      "blocksShipping": "Este pedido está pendiente de aprobación. Se puede procesar, pero no enviar ni entregar hasta que alguien lo apruebe.",
+      "statusBlocked": "Enviado y Entregado estarán disponibles cuando se apruebe el pedido."
+    },
     "title": "Pedidos",
     "createOrder": "Crear pedido",
     "searchOrders": "Buscar pedidos",
@@ -1382,6 +1410,44 @@
       }
     },
     "activityLog": {
+      "action": "Acción",
+      "actions": {
+        "created": "Creado",
+        "updated": "Actualizado",
+        "deleted": "Eliminado",
+        "viewed": "Visto",
+        "approval_requested": "Aprobación solicitada",
+        "approved": "Aprobado",
+        "rejected": "Rechazado",
+        "payment_recorded": "Pago registrado",
+        "payment_refunded": "Pago reembolsado",
+        "payment_voided": "Pago anulado",
+        "invoice_emailed": "Factura enviada por correo",
+        "emailed": "Enviado por correo",
+        "auto_reorder": "Reabastecimiento automático",
+        "quick_reorder": "Reabastecimiento rápido",
+        "return_lines_updated": "Líneas de devolución actualizadas",
+        "portal_return_requested": "Devolución solicitada en el portal"
+      },
+      "subjects": {
+        "Customer": "Cliente",
+        "CycleCountSchedule": "Programa de conteo cíclico",
+        "Order": "Pedido",
+        "Product": "Producto",
+        "ProductCategory": "Categoría",
+        "ProductLocation": "Ubicación",
+        "ProductVariant": "Variante de producto",
+        "PurchaseOrder": "Orden de compra",
+        "ReturnOrder": "Devolución",
+        "Role": "Rol",
+        "Setting": "Ajuste",
+        "StockAdjustmentRequest": "Solicitud de ajuste de stock",
+        "StockAudit": "Auditoría de stock",
+        "StockTransfer": "Transferencia de stock",
+        "Supplier": "Proveedor",
+        "User": "Usuario",
+        "Warehouse": "Almacén"
+      },
       "title": "Registro de actividad",
       "searchPlaceholder": "Buscar descripciones de actividad...",
       "allUsers": "Todos los usuarios",
@@ -2188,7 +2254,7 @@
   },
   "approvals": {
     "title": "Aprobaciones",
-    "description": "\u00d3rdenes de compra, ajustes de stock y transferencias de stock en espera de una decisi\u00f3n.",
+    "description": "Órdenes de compra, pedidos de venta, ajustes de stock y transferencias de stock en espera de una decisión.",
     "tabs": {
       "pending": "Esperando mi decisi\u00f3n",
       "mine": "Mis solicitudes"
@@ -2200,7 +2266,8 @@
     "types": {
       "purchase_order": "Orden de compra",
       "stock_adjustment": "Ajuste de stock",
-      "stock_transfer": "Transferencia de stock"
+      "stock_transfer": "Transferencia de stock",
+      "sales_order": "Pedido de venta"
     },
     "status": {
       "pending": "Pendiente de aprobaci\u00f3n",
@@ -2230,6 +2297,8 @@
       "rejected": "Rechazado por {name}."
     },
     "settings": {
+      "orders": "Los pedidos de venta requieren aprobación antes de enviarse",
+      "ordersHelp": "Los pedidos nuevos esperan aprobación. Se pueden procesar, pero no enviar ni entregar hasta que alguien con permiso para aprobar pedidos los apruebe. Si está desactivado, los pedidos nunca esperan aprobación.",
       "tab": "Aprobaciones",
       "title": "Flujos de aprobaci\u00f3n",
       "description": "Elige qu\u00e9 solicitudes necesitan el visto bueno de alguien con el permiso de aprobaci\u00f3n correspondiente. Todas est\u00e1n desactivadas de forma predeterminada.",

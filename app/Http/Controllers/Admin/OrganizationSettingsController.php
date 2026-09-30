@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Admin;
 
+use App\Enums\Permission;
 use App\Http\Controllers\Controller;
 use App\Models\Auth\Organization;
 use App\Support\ApprovalSettings;
@@ -30,12 +31,20 @@ class OrganizationSettingsController extends Controller
     {
         $user = $request->user();
         $organization = Organization::with(['users'])->find($user->organization_id);
+        $canManage = $user->hasPermission(Permission::MANAGE_ORGANIZATION);
 
         return Inertia::render('Settings/Organization/Index', [
             'organization' => $organization,
             'user' => $user,
             'approvalSettings' => ApprovalSettings::forOrganization($organization)->toArray(),
-            'canManageOrganization' => $user->hasPermission('manage_organization'),
+            // Explicit capability flags. The page must not rely on
+            // `user.is_admin`: it is an accessor that is never serialized, so
+            // the page used to render read-only even for administrators.
+            'can' => [
+                'manageOrganization' => $canManage,
+                'viewUsers' => $user->hasPermission(Permission::VIEW_USERS),
+            ],
+            'canManageOrganization' => $canManage,
             'portal' => [
                 'enabled' => (bool) $organization?->portal_enabled,
                 'login_url' => $organization ? route('portal.login', ['organization' => $organization->slug]) : null,
@@ -53,8 +62,8 @@ class OrganizationSettingsController extends Controller
     {
         $user = $request->user();
 
-        if (! $user->is_admin) {
-            abort(403, 'Only administrators can update organization settings.');
+        if (! $user->hasPermission(Permission::MANAGE_ORGANIZATION)) {
+            abort(403, 'You do not have permission to update organization settings.');
         }
 
         $validated = $request->validate([
@@ -86,6 +95,7 @@ class OrganizationSettingsController extends Controller
             'stock_adjustments_value_threshold' => 'nullable|numeric|min:0|max:999999999',
             'stock_transfers_enabled' => 'boolean',
             'admins_can_self_approve' => 'boolean',
+            'orders_enabled' => 'boolean',
         ]);
 
         $organization = Organization::findOrFail($request->user()->organization_id);
@@ -112,9 +122,8 @@ class OrganizationSettingsController extends Controller
     {
         $user = $request->user();
 
-        // Ensure only admins can update organization settings
-        if (!$user->is_admin) {
-            abort(403, 'Only administrators can update organization settings.');
+        if (! $user->hasPermission(Permission::MANAGE_ORGANIZATION)) {
+            abort(403, 'You do not have permission to update organization settings.');
         }
 
         $validated = $request->validate([
@@ -144,9 +153,8 @@ class OrganizationSettingsController extends Controller
     {
         $user = $request->user();
 
-        // Ensure only admins can update organization settings
-        if (!$user->is_admin) {
-            abort(403, 'Only administrators can update organization settings.');
+        if (! $user->hasPermission(Permission::MANAGE_ORGANIZATION)) {
+            abort(403, 'You do not have permission to update organization settings.');
         }
 
         $validated = $request->validate([

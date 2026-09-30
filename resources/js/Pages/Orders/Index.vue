@@ -10,9 +10,12 @@ import { Head, Link, router, useForm } from '@inertiajs/vue3';
 import { ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { formatCalendarDate, todayIsoDate } from '@/lib/dates';
+import { orderSourceLabel, orderStatusLabel, orderStatusVariant } from '@/lib/orderLabels';
 import { Plus, Search, Eye, Pencil, Trash2, ShoppingCart, CheckCheck, X } from 'lucide-vue-next';
 
-const { t } = useI18n();
+const { t, te } = useI18n();
+const statusText = (status) => orderStatusLabel(status, { t, te });
+const sourceText = (source) => orderSourceLabel(source, { t, te });
 
 const props = defineProps({
     orders: Object,
@@ -67,8 +70,7 @@ const deleteOrder = (order) => {
     }
 };
 
-const statusVariant = (s) =>
-    ({ pending: 'warning', processing: 'info', shipped: 'brand', delivered: 'success', cancelled: 'danger' }[s] || 'neutral');
+const statusVariant = orderStatusVariant;
 
 const paymentStatusVariant = (s) =>
     ({ unpaid: 'warning', partial: 'info', paid: 'success', overpaid: 'brand', refunded: 'neutral' }[s] || 'neutral');
@@ -76,7 +78,7 @@ const paymentStatusVariant = (s) =>
 const columns = [
     { key: 'order_number', label: t('orders.orderCol') },
     { key: 'customer_name', label: t('orders.customer') },
-    { key: 'items', label: t('common.items'), align: 'right' },
+    { key: 'items', label: t('orders.itemsCol'), align: 'right' },
     { key: 'total', label: t('common.total'), align: 'right' },
     { key: 'status', label: t('common.status') },
     // Only for users who may see payments; the rows carry no payment data otherwise.
@@ -143,14 +145,14 @@ const selectClass =
                         <label for="status" class="mb-1 block text-xs font-medium text-text-secondary">{{ t('common.status') }}</label>
                         <select id="status" v-model="status" :class="selectClass">
                             <option value="">{{ t('common.allStatuses') }}</option>
-                            <option v-for="stat in statuses" :key="stat" :value="stat">{{ stat.charAt(0).toUpperCase() + stat.slice(1) }}</option>
+                            <option v-for="stat in statuses" :key="stat" :value="stat">{{ statusText(stat) }}</option>
                         </select>
                     </div>
                     <div>
                         <label for="source" class="mb-1 block text-xs font-medium text-text-secondary">{{ t('orders.source') }}</label>
                         <select id="source" v-model="source" :class="selectClass">
                             <option value="">{{ t('orders.allSources') }}</option>
-                            <option v-for="src in sources" :key="src" :value="src">{{ src.charAt(0).toUpperCase() + src.slice(1) }}</option>
+                            <option v-for="src in sources" :key="src" :value="src">{{ sourceText(src) }}</option>
                         </select>
                     </div>
                     <div v-if="canViewPayments">
@@ -192,13 +194,13 @@ const selectClass =
                     <span class="font-medium tabular-nums text-text-primary">{{ formatCurrency(row.total) }}</span>
                 </template>
                 <template #cell-status="{ row }">
-                    <Badge :variant="statusVariant(row.status)" size="sm" dot>{{ row.status }}</Badge>
+                    <Badge :variant="statusVariant(row.status)" size="sm" dot>{{ statusText(row.status) }}</Badge>
                 </template>
                 <template #cell-payment_status="{ row }">
                     <Badge v-if="row.payment_status" :variant="paymentStatusVariant(row.payment_status)" size="sm" dot>{{ t(`payments.status.${row.payment_status}`) }}</Badge>
                 </template>
                 <template #cell-source="{ row }">
-                    <Badge variant="neutral" size="sm">{{ row.source }}</Badge>
+                    <Badge variant="neutral" size="sm">{{ sourceText(row.source) }}</Badge>
                 </template>
                 <template #cell-order_date="{ row }">
                     <span class="text-text-secondary">{{ formatCalendarDate(row.order_date) }}</span>

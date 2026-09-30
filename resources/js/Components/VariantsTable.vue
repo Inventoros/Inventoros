@@ -19,6 +19,11 @@ const props = defineProps({
     showStockAdjust: {
         type: Boolean,
         default: true
+    },
+    // The parent product's price: a variant without its own price sells at it.
+    productPrice: {
+        type: [Number, String],
+        default: null
     }
 });
 
@@ -30,6 +35,9 @@ const formatPrice = (price) => {
     if (price === null || price === undefined) return '-';
     return `${props.currencySymbol}${parseFloat(price).toFixed(2)}`;
 };
+
+const hasOwnPrice = (variant) => variant.price !== null && variant.price !== undefined && variant.price !== '';
+const effectivePrice = (variant) => (hasOwnPrice(variant) ? variant.price : props.productPrice);
 
 const getStatusBadge = (variant) => {
     if (!variant.is_active) {
@@ -81,8 +89,11 @@ const onVariantUpdated = (updatedVariant) => {
                         </span>
                     </td>
                     <td class="px-4 py-3 whitespace-nowrap">
-                        <span class="text-sm font-medium text-gray-900 dark:text-gray-100">
-                            {{ formatPrice(variant.price) }}
+                        <span
+                            :class="['text-sm font-medium', hasOwnPrice(variant) ? 'text-gray-900 dark:text-gray-100' : 'text-gray-500 dark:text-gray-400']"
+                            :title="hasOwnPrice(variant) ? undefined : t('products.show.usesProductPrice')"
+                        >
+                            {{ formatPrice(effectivePrice(variant)) }}
                         </span>
                     </td>
                     <td class="px-4 py-3 whitespace-nowrap">
