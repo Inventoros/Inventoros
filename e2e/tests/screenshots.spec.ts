@@ -18,7 +18,8 @@ const pages = [
 ];
 
 const themes = [
-    { name: 'dark', suffix: '', setup: null },
+    // With no saved theme the app follows the system, so ask for dark.
+    { name: 'dark', suffix: '', before: async (page: any) => page.emulateMedia({ colorScheme: 'dark' }), setup: null },
     { name: 'light', suffix: '-light', setup: async (page: any) => {
         await page.evaluate(() => {
             document.documentElement.classList.remove('dark');
@@ -30,6 +31,7 @@ const themes = [
 for (const theme of themes) {
     for (const pg of pages) {
         test(`screenshot ${theme.name}: ${pg.name}`, async ({ page }) => {
+            if ((theme as any).before) await (theme as any).before(page);
             await page.goto(pg.path, { waitUntil: 'networkidle' });
             if (theme.setup) await theme.setup(page);
             await page.locator(pg.waitFor).first().waitFor({ timeout: 10000 }).catch(() => {});
