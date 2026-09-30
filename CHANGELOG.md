@@ -71,6 +71,11 @@ Before upgrading: take a database backup you have checked, run `php artisan opti
 - About 288 success and error flash messages that never reached the page.
 - Sidebar items that were hidden from everyone, the discarded language cookie, and several routes that returned 500.
 - Fresh installs on MySQL and PostgreSQL, and the web installer's database step.
+- The web installer's database step migrating into a new `database/database.sqlite` instead of the MySQL or PostgreSQL database it was given (the shipped `.env.example` says `DB_CONNECTION=sqlite`), reporting success and then failing on the admin step with "Table 'users' doesn't exist". It now switches to the chosen connection before migrating and checks the tables exist there afterwards.
+- A web-installed site stayed in debug mode (`APP_ENV=local`, `APP_DEBUG=true` from `.env.example`) and showed stack traces on errors. Finishing the installer sets `APP_ENV=production` and `APP_DEBUG=false`.
+- The dashboard's Recent products showed Qty 0 for products sold by variant; it shows their summed variant stock.
+- Sales Analysis and the dashboard's revenue this month counted cancelled orders, while the payment position and the analytics reports did not. Cancelled orders are left out of orders, revenue, items sold, average order value, top products, the daily trend and the period comparison; Sales by status still lists them.
+- Validation messages named fields by their raw keys in every language ("customer name", "items.0.quantity") and ended with an English "(and 2 more errors)". The order, product and purchase order form fields are named in all 14 languages and the suffix is translated.
 - The web installer's database step lifts PHP's time limit while migrating, and after an attempt that stopped part-way ("Table already exists") offers to reset the database and install again.
 - The web installer failing with 419 over plain HTTP: `.env.example` no longer forces `SESSION_SECURE_COOKIE=true`; the installer sets it to `true` for HTTPS installs and `false` otherwise. Installer messages are shown in the user's language.
 - `/install` and `/` answering 500 on a fresh install with the shipped `.env.example`: sessions and the cache use files until installation completes, since their database tables do not exist yet.
