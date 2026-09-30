@@ -206,4 +206,38 @@ class DashboardControllerTest extends TestCase
             ->where('stats.revenueThisMonth', 100)
         );
     }
+
+    /**
+     * A product sold by variant keeps its stock on the variants, so the
+     * Recent products widget read products.stock and showed "Qty 0" for it
+     * (#243). It now shows the summed stock like the rest of the app.
+     */
+    public function test_recent_products_show_the_summed_stock_of_a_variant_product(): void
+    {
+        $product = Product::create([
+            'organization_id' => $this->organization->id,
+            'sku' => 'TEE', 'name' => 'T-shirt',
+            'price' => 20, 'currency' => 'USD',
+            'stock' => 0, 'min_stock' => 0,
+            'is_active' => true, 'has_variants' => true,
+        ]);
+        foreach (['S' => 4, 'M' => 7] as $size => $stock) {
+            \App\Models\Inventory\ProductVariant::create([
+                'product_id' => $product->id, 'organization_id' => $this->organization->id, 'sku' => "TEE-{$size}",
+                'option_values' => ['Size' => $size], 'stock' => $stock, 'min_stock' => 0, 'is_active' => true, 'position' => 0,
+            ]);
+        }
+        Product::create([
+            'organization_id' => $this->organization->id,
+            'sku' => 'MUG', 'name' => 'Mug',
+            'price' => 8, 'currency' => 'USD',
+            'stock' => 5, 'min_stock' => 0,
+            'is_active' => true,
+        ]);
+
+        $this->actingAs($this->admin)->get(route('dashboard'))
+            ->assertInertia(fn ($page) => $page
+                ->where('recentProducts', fn ($rows) => collect($rows)->pluck('effective_stock', 'sku')->sortKeys()->all() === ['MUG' => 5, 'TEE' => 11])
+            );
+    }
 }

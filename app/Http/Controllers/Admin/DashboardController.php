@@ -165,8 +165,10 @@ class DashboardController extends Controller
         // Alias kept for plugins written against the name the guide used.
         do_action('dashboard_stats', $stats, $user);
 
-        // Get recent products
+        // Get recent products, with effective_stock: a product sold by
+        // variant keeps its stock on the variants, not in products.stock.
         $recentProducts = ! $canViewProducts ? collect() : Product::where('organization_id', $user->organization_id)
+            ->withEffectiveStock()
             ->with(['category', 'location'])
             ->latest()
             ->limit(5)
