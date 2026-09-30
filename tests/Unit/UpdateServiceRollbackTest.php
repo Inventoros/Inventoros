@@ -51,6 +51,11 @@ final class UpdateServiceRollbackTest extends TestCase
 
         $this->assertFalse($result['success']);
         $this->assertStringContainsStringIgnoringCase('restored', $result['message']);
+        // Said once, not "Update failed: Update failed and ...".
+        $this->assertSame(
+            'Update failed and the previous version was restored: disk full',
+            $result['message'],
+        );
     }
 
     public function test_failed_migration_triggers_restore_and_returns_failure(): void
