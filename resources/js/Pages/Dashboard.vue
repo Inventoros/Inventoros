@@ -363,7 +363,7 @@ const secondaryStats = () => [
                             </div>
                             <div class="shrink-0 text-right">
                                 <p class="text-sm font-semibold tabular-nums text-text-primary">{{ formatCurrency(product.price, product.currency) }}</p>
-                                <p class="text-[11px] text-text-tertiary">{{ t('dashboard.qty', { count: product.stock }) }}</p>
+                                <p class="text-[11px] text-text-tertiary">{{ t('dashboard.qty', { count: product.effective_stock ?? product.stock }) }}</p>
                             </div>
                         </li>
                     </ul>

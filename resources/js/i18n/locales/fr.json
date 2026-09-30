@@ -1005,7 +1005,8 @@
       "topSelling": "Produits les plus vendus",
       "unitsSold": "unités vendues",
       "dailySalesTrend": "Tendance des ventes quotidiennes",
-      "revenue": "Chiffre d'affaires"
+      "revenue": "Chiffre d'affaires",
+      "excludesCancelled": "Les commandes annulées ne sont pas comptées dans les commandes, le chiffre d'affaires, les articles vendus et les meilleures ventes. Les ventes par statut les indiquent toujours."
     },
     "lowStock": {
       "title": "Rapport de stock faible",

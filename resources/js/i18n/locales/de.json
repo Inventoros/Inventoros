@@ -1005,7 +1005,8 @@
       "topSelling": "Meistverkaufte Produkte",
       "unitsSold": "verkaufte Einheiten",
       "dailySalesTrend": "Täglicher Verkaufstrend",
-      "revenue": "Umsatz"
+      "revenue": "Umsatz",
+      "excludesCancelled": "Stornierte Bestellungen werden bei Bestellungen, Umsatz, verkauften Artikeln und Top-Produkten nicht mitgezählt. Unter Umsatz nach Status werden sie weiterhin aufgeführt."
     },
     "lowStock": {
       "title": "Bericht: Niedriger Bestand",

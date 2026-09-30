@@ -122,7 +122,9 @@ class DashboardController extends Controller
                 ->selectRaw('currency, COALESCE(SUM('.Product::stockValueSql('price').'), 0) as amount')
                 ->pluck('amount', 'currency'));
 
+            // Cancelled orders are not sales (as in reports.sales-analysis).
             $money('revenueThisMonth', Order::where('organization_id', $orgId)
+                ->where('status', '!=', 'cancelled')
                 ->where('order_date', '>=', $monthStart)
                 ->where('order_date', '<=', $monthEnd)
                 ->groupBy('currency')
@@ -165,8 +167,10 @@ class DashboardController extends Controller
         // Alias kept for plugins written against the name the guide used.
         do_action('dashboard_stats', $stats, $user);
 
-        // Get recent products
+        // Get recent products, with effective_stock: a product sold by
+        // variant keeps its stock on the variants, not in products.stock.
         $recentProducts = ! $canViewProducts ? collect() : Product::where('organization_id', $user->organization_id)
+            ->withEffectiveStock()
             ->with(['category', 'location'])
             ->latest()
             ->limit(5)

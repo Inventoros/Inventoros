@@ -129,6 +129,8 @@ sudo systemctl restart nginx
 http://your-domain.com/install
 ```
 
+The database step writes the connection you enter to `.env` (`DB_CONNECTION`, host, database and credentials) and creates the tables in that database. Finishing the installer (creating the admin account) sets `APP_ENV=production` and `APP_DEBUG=false`, so a site set up with the example `.env` does not stay in debug mode.
+
 ### CentOS / RHEL
 
 1. Update the system and enable EPEL and Remi:

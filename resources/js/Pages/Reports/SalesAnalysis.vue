@@ -141,6 +141,7 @@ const thClass =
         <p v-if="comparison?.previousPeriod" class="mt-3 text-xs text-text-tertiary">
             {{ t('reports.salesComparison.previousPeriod', { from: comparison.previousPeriod.date_from, to: comparison.previousPeriod.date_to }) }}
         </p>
+        <p :class="[comparison?.previousPeriod ? 'mt-1' : 'mt-3', 'text-xs text-text-tertiary']">{{ t('reports.salesAnalysis.excludesCancelled') }}</p>
 
         <!-- Summary metrics -->
         <section class="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">

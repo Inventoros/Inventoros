@@ -1005,7 +1005,8 @@
       "topSelling": "Produtos Mais Vendidos",
       "unitsSold": "unidades vendidas",
       "dailySalesTrend": "Tendência Diária de Vendas",
-      "revenue": "Receita"
+      "revenue": "Receita",
+      "excludesCancelled": "Pedidos cancelados não entram nos pedidos, na receita, nos itens vendidos nem nos produtos mais vendidos. As vendas por status continuam a mostrá-los."
     },
     "lowStock": {
       "title": "Relatório de Estoque Baixo",

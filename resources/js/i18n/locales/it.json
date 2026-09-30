@@ -1005,7 +1005,8 @@
       "topSelling": "Prodotti più venduti",
       "unitsSold": "unità vendute",
       "dailySalesTrend": "Tendenza vendite giornaliere",
-      "revenue": "Fatturato"
+      "revenue": "Fatturato",
+      "excludesCancelled": "Gli ordini annullati non sono conteggiati in ordini, ricavi, articoli venduti e prodotti più venduti. Le vendite per stato li elencano comunque."
     },
     "lowStock": {
       "title": "Report scorte basse",

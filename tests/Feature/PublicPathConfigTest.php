@@ -117,6 +117,9 @@ final class PublicPathConfigTest extends TestCase
             {
                 return $this->testEnvFile;
             }
+
+            // Only the .env this step writes is under test here.
+            protected function prepareDatabase(string $driver, array $input, bool $reset): void {}
         });
         Artisan::shouldReceive('call')->andReturn(0);
 
@@ -149,6 +152,9 @@ final class PublicPathConfigTest extends TestCase
             {
                 return $this->testEnvFile;
             }
+
+            // Only the .env this step writes is under test here.
+            protected function prepareDatabase(string $driver, array $input, bool $reset): void {}
         });
         Artisan::shouldReceive('call')->andReturn(0);
 

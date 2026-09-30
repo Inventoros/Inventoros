@@ -1,0 +1,4 @@
+{
+    "(and :count more error)": "(ve :count hata daha)",
+    "(and :count more errors)": "(ve :count hata daha)"
+}

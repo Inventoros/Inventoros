@@ -115,6 +115,8 @@ DB_PASSWORD=your_password
 SESSION_SECURE_COOKIE=true
 ```
 
+Prefer the web installer? Leave the database lines of `.env.example` as they are, run `php artisan key:generate`, and open `https://yourdomain.com/install`. The database step writes the MySQL settings you enter to `.env` and creates the tables in that database; finishing the installer (creating the admin account) sets `APP_ENV=production` and `APP_DEBUG=false`. Skip the `migrate` command in Step 6 in that case.
+
 Serve the site over HTTPS (Step 8) and keep `SESSION_SECURE_COOKIE=true`. It is `false` in `.env.example` so the web installer also works over plain HTTP, and the installer sets it to `true` when the site is served over HTTPS (or `APP_URL` starts with `https://`). Over plain HTTP a secure session cookie is never sent back, so every form fails with "419 Page Expired".
 
 ### Step 6: Generate the key, migrate, and cache

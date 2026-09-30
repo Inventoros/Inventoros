@@ -1005,7 +1005,8 @@
       "topSelling": "Bestverkochte producten",
       "unitsSold": "eenheden verkocht",
       "dailySalesTrend": "Dagelijkse verkooptrend",
-      "revenue": "Omzet"
+      "revenue": "Omzet",
+      "excludesCancelled": "Geannuleerde bestellingen tellen niet mee in de bestellingen, omzet, verkochte artikelen en best verkochte producten. Verkoop per status toont ze nog wel."
     },
     "lowStock": {
       "title": "Rapport lage voorraad",
