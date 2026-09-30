@@ -99,7 +99,7 @@ const formatDate = (value) => (value ? displayDateTime(value) : t('settings.apiT
 const abilitySummary = (token) => {
     const abilities = token.abilities || [];
     if (abilities.includes('*')) return t('settings.apiTokens.allPermissions');
-    return t('settings.apiTokens.abilitiesCount', { count: abilities.length });
+    return t('settings.apiTokens.abilitiesCount', { count: abilities.length }, abilities.length);
 };
 
 const thClass = 'px-4 py-2.5 text-left text-xs font-medium text-text-secondary';

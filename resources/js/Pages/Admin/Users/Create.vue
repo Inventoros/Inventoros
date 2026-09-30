@@ -159,7 +159,7 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                                     <div class="text-xs text-text-tertiary" v-if="role.description">{{ roleDescription(role, i18n) }}</div>
                                 </div>
                                 <span class="text-xs text-text-tertiary">
-                                    {{ t('admin.roles.permissionsCount', { count: role.permissions ? role.permissions.length : 0 }) }}
+                                    {{ t('admin.roles.permissionsCount', { count: role.permissions ? role.permissions.length : 0 }, role.permissions ? role.permissions.length : 0) }}
                                 </span>
                             </label>
                         </div>

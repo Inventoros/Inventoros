@@ -1085,7 +1085,7 @@
       "description": "Wareneinsatz im Verhältnis zum durchschnittlichen Bestand, pro Produkt und Kategorie",
       "turnover": "Umschlag",
       "daysOfInventory": "Lagerreichweite (Tage)",
-      "periodDays": "Über {n} Tage",
+      "periodDays": "Über {n} Tag | Über {n} Tage",
       "avgInventory": "Durchschn. Bestandswert",
       "cogs": "Wareneinsatz",
       "unitsSold": "Verkaufte Einheiten",
@@ -1097,7 +1097,7 @@
       "methodTitle": "So wird berechnet",
       "method": "Der durchschnittliche Bestand ist der Mittelwert aus Anfangs- und Endbestand in Einheiten, rekonstruiert aus dem aktuellen Bestand und dem Verlauf der Bestandsanpassungen, bewertet zum aktuellen Einkaufspreis. Bestandsänderungen, die nicht als Anpassungen erfasst wurden, sind nicht berücksichtigt.",
       "cogsNote": "Der Wareneinsatz sind die im Zeitraum verkauften Einheiten zu den Stückkosten, die beim jeweiligen Verkauf erfasst wurden.",
-      "estimatedCost": "{count} Einheiten wurden verkauft, bevor Kosten erfasst wurden, daher sind ihre Kosten geschätzt (der damalige Einkaufspreis)."
+      "estimatedCost": "{count} Einheit wurde verkauft, bevor Kosten erfasst wurden, daher sind ihre Kosten geschätzt (der damalige Einkaufspreis). | {count} Einheiten wurden verkauft, bevor Kosten erfasst wurden, daher sind ihre Kosten geschätzt (der damalige Einkaufspreis)."
     },
     "profitMargin": {
       "title": "Gewinnmarge",
@@ -1111,9 +1111,9 @@
       "byProduct": "Nach Produkt",
       "costBasisTitle": "Kostenbasis",
       "costBasis": "Der Wareneinsatz verwendet die Stückkosten, die beim Verkauf jeder Position erfasst wurden, sodass spätere Kostenänderungen vergangene Margen nicht verändern.",
-      "estimatedCost": "{count} Einheiten wurden verkauft, bevor Kosten erfasst wurden, daher sind ihre Kosten geschätzt (der damalige Einkaufspreis). Mit „Geschätzte Kosten“ markierte Zeilen enthalten diese.",
+      "estimatedCost": "{count} Einheit wurde verkauft, bevor Kosten erfasst wurden, daher sind ihre Kosten geschätzt (der damalige Einkaufspreis). Mit „Geschätzte Kosten“ markierte Zeilen enthalten sie. | {count} Einheiten wurden verkauft, bevor Kosten erfasst wurden, daher sind ihre Kosten geschätzt (der damalige Einkaufspreis). Mit „Geschätzte Kosten“ markierte Zeilen enthalten diese.",
       "estimatedBadge": "Geschätzte Kosten",
-      "missingCost": "{count} verkaufte Einheiten haben keinen Einkaufspreis und werden mit Kosten von null gerechnet."
+      "missingCost": "{count} verkaufte Einheit hat keinen Einkaufspreis und wird mit Kosten von null gerechnet. | {count} verkaufte Einheiten haben keinen Einkaufspreis und werden mit Kosten von null gerechnet."
     },
     "salesByLocation": {
       "title": "Verkäufe nach Lagerort",
@@ -1137,7 +1137,7 @@
       "classAHint": "Erste 80 % des Umsatzes",
       "classBHint": "Nächste 15 %",
       "classCHint": "Letzte 5 %",
-      "productCount": "{count} Produkte",
+      "productCount": "{count} Produkt | {count} Produkte",
       "ranking": "Umsatzrangliste",
       "totalRevenue": "Gesamtumsatz vor Steuern: {amount}",
       "rank": "Rang",
@@ -1272,7 +1272,7 @@
     "imported": "Importiert",
     "updated": "Aktualisiert",
     "errors": "Fehler",
-    "rowsFailed": "Zeile(n) fehlgeschlagen",
+    "rowsFailed": "Fehlgeschlagene Zeilen",
     "export": {
       "title": "Produkte exportieren",
       "subtitle": "Bestandsdaten herunterladen",
@@ -1334,8 +1334,8 @@
       "updated": "Aktualisiert",
       "skipped": "Übersprungen",
       "failed": "Nicht importiert",
-      "errorRows": "{count} Zeile(n) mit Fehlern",
-      "warningRows": "{count} Zeile(n) mit Warnungen",
+      "errorRows": "{count} Zeile mit Fehlern | {count} Zeilen mit Fehlern",
+      "warningRows": "{count} Zeile mit Warnungen | {count} Zeilen mit Warnungen",
       "row": "Zeile {row}:",
       "dismiss": "Importergebnis schließen",
       "removeFile": "Datei entfernen"
@@ -1616,7 +1616,7 @@
       "newTokenHint": "Kopieren Sie es jetzt. Aus Sicherheitsgründen wird es nur einmal angezeigt und kann später nicht abgerufen werden.",
       "copy": "Kopieren",
       "copied": "Kopiert",
-      "abilitiesCount": "{count} Berechtigungen",
+      "abilitiesCount": "{count} Berechtigung | {count} Berechtigungen",
       "allPermissions": "Alle Berechtigungen",
       "noPermissions": "Sie besitzen keine Berechtigungen, die Sie einem Token erteilen könnten."
     },
@@ -1738,7 +1738,7 @@
         "titleWithName": "Benutzer bearbeiten: {name}",
         "subtitle": "Aktualisieren Sie Kontodaten, Basisrolle und zugewiesene benutzerdefinierte Rollen.",
         "admin": "Administrator",
-        "customRolesSelected": "{count} benutzerdefinierte Rolle(n) ausgewählt"
+        "customRolesSelected": "{count} benutzerdefinierte Rolle ausgewählt | {count} benutzerdefinierte Rollen ausgewählt"
       },
       "show": {
         "title": "Benutzerdetails",
@@ -1775,8 +1775,8 @@
       "createRole": "Rolle erstellen",
       "description": "Verwalten Sie Rollen und Berechtigungen Ihrer Organisation. Erstellen Sie benutzerdefinierte Rollen mit spezifischen Berechtigungssätzen, um den Zugriff in der Anwendung zu steuern.",
       "systemBadge": "System",
-      "usersCount": "{count} Benutzer",
-      "permissionsCount": "{count} Berechtigungen",
+      "usersCount": "{count} Benutzer | {count} Benutzer",
+      "permissionsCount": "{count} Berechtigung | {count} Berechtigungen",
       "adminLocked": "Die Administratorrolle kann nicht bearbeitet werden",
       "noRolesFound": "Keine Rollen gefunden. Klicken Sie auf ‘Rolle erstellen’, um Ihre erste benutzerdefinierte Rolle zu definieren.",
       "create": {
@@ -1791,14 +1791,14 @@
         "individualHint": "Wählen Sie zusätzliche Berechtigungen. Sie können auf Kategorienamen klicken, um alle Berechtigungen in dieser Kategorie auszuwählen/abzuwählen.",
         "selectAll": "Alle auswählen",
         "deselectAll": "Alle abwählen",
-        "totalPermissions": "{count} Berechtigung(en) insgesamt",
+        "totalPermissions": "{count} Berechtigung insgesamt | {count} Berechtigungen insgesamt",
         "createRole": "Rolle erstellen",
         "success": "Rolle erfolgreich erstellt.",
         "subtitle": "Definieren Sie eine Rolle und weisen Sie ihr Berechtigungen zu.",
         "roleDetails": "Rollendetails",
         "namePlaceholder": "z. B. Lagerleiter",
         "descriptionPlaceholder": "Beschreiben Sie Zweck und Verantwortlichkeiten dieser Rolle...",
-        "permissionBreakdown": "({direct} direkt + {fromSets} aus {sets} Satz/Sätzen)"
+        "permissionBreakdown": "({direct} direkt + {fromSets} aus {sets} Satz) | ({direct} direkt + {fromSets} aus {sets} Sätzen)"
       },
       "edit": {
         "title": "Rolle bearbeiten",
@@ -1808,7 +1808,7 @@
         "systemDescHint": "Systemrollenbeschreibungen können nicht geändert werden",
         "permissions": "Berechtigungen",
         "permissionsHint": "Passen Sie die Berechtigungen für diese Rolle an. Klicken Sie auf Kategorienamen, um alle Berechtigungen in dieser Kategorie auszuwählen/abzuwählen.",
-        "permissionsSelected": "{count} Berechtigung(en) ausgewählt",
+        "permissionsSelected": "{count} Berechtigung ausgewählt | {count} Berechtigungen ausgewählt",
         "updateRole": "Rolle aktualisieren",
         "success": "Rolle erfolgreich aktualisiert.",
         "titleWithName": "Rolle bearbeiten: {name}",
@@ -2570,7 +2570,7 @@
       "selectProduct": "Produkt auswählen",
       "cameraHint": "Richten Sie Ihre Kamera auf einen Barcode, um ihn zu scannen",
       "locationFound": "Lagerort gefunden",
-      "productsHere": "{count} Produkte hier",
+      "productsHere": "{count} Produkt hier | {count} Produkte hier",
       "viewProductsHere": "Produkte hier ansehen",
       "lookupFailed": "Barcode konnte nicht nachgeschlagen werden",
       "stock": "Bestand",
@@ -2582,7 +2582,7 @@
       "noActivity": "Noch keine Aktivität erfasst",
       "system": "System",
       "thisProduct": "dieses Produkt",
-      "moreChanges": "+{count} weitere Änderungen",
+      "moreChanges": "+{count} weitere Änderung | +{count} weitere Änderungen",
       "actionOnProduct": {
         "created": "hat dieses Produkt erstellt",
         "updated": "hat dieses Produkt aktualisiert",
@@ -2605,7 +2605,7 @@
       "maxImages": "Max. {max} Bilder, jeweils bis zu {size} MB",
       "onlyImages": "Nur Bilddateien sind erlaubt",
       "tooLarge": "Bilder müssen kleiner als {size} MB sein",
-      "canAddMore": "Sie können noch {count} weitere(s) Bild(er) hinzufügen",
+      "canAddMore": "Sie können noch {count} weiteres Bild hinzufügen | Sie können noch {count} weitere Bilder hinzufügen",
       "moveLeft": "Nach links verschieben",
       "moveRight": "Nach rechts verschieben",
       "remove": "Entfernen",
@@ -2734,7 +2734,7 @@
       "hint": "Hier zugewiesene Benutzer können nur Bestand in den ihnen zugewiesenen Lagern sehen und bewegen. Administratoren und Rollen mit „Zugriff auf alle Lager“ sehen immer alle Lager.",
       "searchPlaceholder": "Benutzer suchen...",
       "noUsers": "Keine Benutzer gefunden.",
-      "selected": "{count} Benutzer ausgewählt",
+      "selected": "{count} Benutzer ausgewählt | {count} Benutzer ausgewählt",
       "save": "Benutzerzugriff speichern",
       "allWarehouses": "Alle Lager",
       "assigned": "Zugewiesene Benutzer ({count})",
@@ -2846,7 +2846,7 @@
     },
     "components": {
       "title": "Benötigte Komponenten",
-      "materialsNeeded": "Benötigte Materialien für {count} Einheit(en) von {name}",
+      "materialsNeeded": "Benötigte Materialien für {count} Einheit von {name} | Benötigte Materialien für {count} Einheiten von {name}",
       "component": "Komponente",
       "sku": "SKU",
       "required": "Benötigt",
@@ -2866,7 +2866,7 @@
       "startProduction": "Produktion starten",
       "startConfirm": "Produktion für diesen Arbeitsauftrag starten? Die Komponenten werden reserviert.",
       "completeProduction": "Produktion abschließen",
-      "completeConfirm": "Diesen Arbeitsauftrag abschließen? {count} Einheiten werden dem Bestand des Baugruppenprodukts hinzugefügt.",
+      "completeConfirm": "Diesen Arbeitsauftrag abschließen? {count} Einheit wird dem Bestand des Baugruppenprodukts hinzugefügt. | Diesen Arbeitsauftrag abschließen? {count} Einheiten werden dem Bestand des Baugruppenprodukts hinzugefügt.",
       "cancelWorkOrder": "Arbeitsauftrag stornieren",
       "cancelConfirm": "Diesen Arbeitsauftrag stornieren? Reservierte Komponenten werden freigegeben.",
       "view": "Ansehen"
@@ -3073,7 +3073,7 @@
     "notifyCustomer": "Sendungsdaten per E-Mail an {email} senden",
     "getRates": "Tarife abrufen",
     "chooseRate": "Tarif wählen",
-    "estDays": "Ca. {count} Tage",
+    "estDays": "Ca. {count} Tag | Ca. {count} Tage",
     "buyLabel": "Etikett kaufen",
     "labelBought": "Etikett gekauft. Sendungsnummer {number}.",
     "downloadLabel": "Etikett herunterladen",

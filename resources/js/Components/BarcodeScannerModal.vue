@@ -260,7 +260,7 @@ const selectProduct = () => {
                             <p class="mt-1 text-xs text-text-tertiary">
                                 {{ [foundLocation.warehouse, foundLocation.aisle && t('components.barcodeScanner.aisle', { value: foundLocation.aisle }), foundLocation.shelf && t('components.barcodeScanner.shelf', { value: foundLocation.shelf }), foundLocation.bin && t('components.barcodeScanner.bin', { value: foundLocation.bin })].filter(Boolean).join(' / ') }}
                             </p>
-                            <p class="mt-1 text-xs text-text-secondary">{{ t('components.barcodeScanner.productsHere', { count: foundLocation.product_count }) }}</p>
+                            <p class="mt-1 text-xs text-text-secondary">{{ t('components.barcodeScanner.productsHere', { count: foundLocation.product_count }, foundLocation.product_count) }}</p>
                             <a
                                 :href="foundLocation.products_url"
                                 class="mt-3 inline-flex w-full items-center justify-center rounded-md bg-brand px-4 py-2 text-xs font-semibold text-brand-foreground hover:bg-brand-hover ds-focus-ring"

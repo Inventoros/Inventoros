@@ -181,7 +181,7 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                                     <div class="font-medium text-text-primary">{{ permissionSetName(set, i18n) }}</div>
                                     <div class="mt-1 text-xs text-text-tertiary">{{ permissionSetDescription(set, i18n) }}</div>
                                     <div class="mt-2 flex items-center gap-2">
-                                        <Badge variant="neutral" size="sm">{{ t('admin.roles.permissionsCount', { count: set.permission_count }) }}</Badge>
+                                        <Badge variant="neutral" size="sm">{{ t('admin.roles.permissionsCount', { count: set.permission_count }, set.permission_count) }}</Badge>
                                         <Badge v-if="set.is_template" variant="info" size="sm">{{ t('admin.roles.create.template') }}</Badge>
                                     </div>
                                 </div>
@@ -248,9 +248,9 @@ const fieldError = 'mt-1 text-xs text-status-danger';
 
                     <div class="mt-4 rounded-lg border border-brand/20 bg-brand-soft p-3">
                         <p class="text-sm text-brand">
-                            {{ t('admin.roles.create.totalPermissions', { count: getTotalPermissions() }) }}
+                            {{ t('admin.roles.create.totalPermissions', { count: getTotalPermissions() }, getTotalPermissions()) }}
                             <span v-if="form.permission_set_ids.length > 0" class="text-text-tertiary">
-                                {{ t('admin.roles.create.permissionBreakdown', { direct: form.permissions.length, fromSets: getSetPermissions().length, sets: form.permission_set_ids.length }) }}
+                                {{ t('admin.roles.create.permissionBreakdown', { direct: form.permissions.length, fromSets: getSetPermissions().length, sets: form.permission_set_ids.length }, form.permission_set_ids.length) }}
                             </span>
                         </p>
                     </div>

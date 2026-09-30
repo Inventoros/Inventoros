@@ -376,7 +376,7 @@ const sectionTitle = 'text-xs font-semibold uppercase tracking-wide text-text-te
                             <input v-model="selectedRate" type="radio" :value="rate.id" class="text-brand ds-focus-ring" />
                             <div class="min-w-0 flex-1">
                                 <p class="text-sm font-medium text-text-primary">{{ rate.carrier }} {{ rate.service }}</p>
-                                <p v-if="rate.delivery_days" class="text-xs text-text-tertiary">{{ t('shipping.estDays', { count: rate.delivery_days }) }}</p>
+                                <p v-if="rate.delivery_days" class="text-xs text-text-tertiary">{{ t('shipping.estDays', { count: rate.delivery_days }, rate.delivery_days) }}</p>
                             </div>
                             <span class="text-sm font-semibold tabular-nums text-text-primary">{{ formatMoney(rate.amount, rate.currency) }}</span>
                         </label>

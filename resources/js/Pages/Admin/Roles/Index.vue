@@ -59,11 +59,11 @@ const i18n = { t, te };
                 <div class="mb-4 space-y-2">
                     <div class="flex items-center gap-2 text-sm text-text-secondary">
                         <Users :size="16" class="text-text-tertiary" />
-                        <span>{{ t('admin.roles.usersCount', { count: role.users_count || 0 }) }}</span>
+                        <span>{{ t('admin.roles.usersCount', { count: role.users_count || 0 }, role.users_count || 0) }}</span>
                     </div>
                     <div class="flex items-center gap-2 text-sm text-text-secondary">
                         <ShieldCheck :size="16" class="text-text-tertiary" />
-                        <span>{{ t('admin.roles.permissionsCount', { count: role.permissions ? role.permissions.length : 0 }) }}</span>
+                        <span>{{ t('admin.roles.permissionsCount', { count: role.permissions ? role.permissions.length : 0 }, role.permissions ? role.permissions.length : 0) }}</span>
                     </div>
                 </div>
 

@@ -1085,7 +1085,7 @@
       "description": "제품 및 카테고리별 평균 재고 대비 매출원가",
       "turnover": "회전율",
       "daysOfInventory": "재고 일수",
-      "periodDays": "{n}일 기준",
+      "periodDays": "{n}일 기준 | {n}일 기준",
       "avgInventory": "평균 재고 가치",
       "cogs": "매출원가",
       "unitsSold": "판매 수량",
@@ -1097,7 +1097,7 @@
       "methodTitle": "계산 방법",
       "method": "평균 재고는 기초 및 기말 보유 수량의 평균으로, 현재 재고와 재고 조정 내역으로 재구성하며 현재 매입가로 평가합니다. 조정으로 기록되지 않은 재고 변동은 반영되지 않습니다.",
       "cogsNote": "매출원가는 기간 내 판매 수량에 각 판매 시점에 기록된 단위 원가를 곱한 값입니다.",
-      "estimatedCost": "{count}개는 원가가 기록되기 전에 판매되어 원가가 추정치(당시 매입가)입니다."
+      "estimatedCost": "{count}개는 원가가 기록되기 전에 판매되어 원가가 추정치(당시 매입가)입니다. | {count}개는 원가가 기록되기 전에 판매되어 원가가 추정치(당시 매입가)입니다."
     },
     "profitMargin": {
       "title": "이익률",
@@ -1111,9 +1111,9 @@
       "byProduct": "제품별",
       "costBasisTitle": "원가 기준",
       "costBasis": "매출원가는 각 품목이 판매될 때 기록된 단위 원가를 사용하므로, 이후 원가가 변경되어도 과거 이익률은 바뀌지 않습니다.",
-      "estimatedCost": "{count}개는 원가가 기록되기 전에 판매되어 원가가 추정치(당시 매입가)입니다. 추정 원가로 표시된 행에 포함됩니다.",
+      "estimatedCost": "{count}개는 원가가 기록되기 전에 판매되어 원가가 추정치(당시 매입가)입니다. 추정 원가로 표시된 행에 포함됩니다. | {count}개는 원가가 기록되기 전에 판매되어 원가가 추정치(당시 매입가)입니다. 추정 원가로 표시된 행에 포함됩니다.",
       "estimatedBadge": "추정 원가",
-      "missingCost": "판매된 {count}개에 매입가가 없어 원가 0으로 계산됩니다."
+      "missingCost": "판매된 {count}개에 매입가가 없어 원가 0으로 계산됩니다. | 판매된 {count}개에 매입가가 없어 원가 0으로 계산됩니다."
     },
     "salesByLocation": {
       "title": "위치별 매출",
@@ -1137,7 +1137,7 @@
       "classAHint": "매출 상위 80%",
       "classBHint": "다음 15%",
       "classCHint": "나머지 5%",
-      "productCount": "제품 {count}개",
+      "productCount": "제품 {count}개 | 제품 {count}개",
       "ranking": "매출 순위",
       "totalRevenue": "세전 총 매출: {amount}",
       "rank": "순위",
@@ -1272,7 +1272,7 @@
     "imported": "가져옴",
     "updated": "업데이트됨",
     "errors": "오류",
-    "rowsFailed": "행 실패",
+    "rowsFailed": "실패한 행",
     "export": {
       "title": "제품 내보내기",
       "subtitle": "재고 데이터 다운로드",
@@ -1334,8 +1334,8 @@
       "updated": "업데이트됨",
       "skipped": "건너뜀",
       "failed": "가져오지 않음",
-      "errorRows": "오류가 있는 행 {count}개",
-      "warningRows": "경고가 있는 행 {count}개",
+      "errorRows": "오류가 있는 행 {count}개 | 오류가 있는 행 {count}개",
+      "warningRows": "경고가 있는 행 {count}개 | 경고가 있는 행 {count}개",
       "row": "{row}행:",
       "dismiss": "가져오기 결과 닫기",
       "removeFile": "파일 제거"
@@ -1616,7 +1616,7 @@
       "newTokenHint": "지금 복사하세요. 보안을 위해 한 번만 표시되며 나중에 다시 확인할 수 없습니다.",
       "copy": "복사",
       "copied": "복사됨",
-      "abilitiesCount": "권한 {count}개",
+      "abilitiesCount": "권한 {count}개 | 권한 {count}개",
       "allPermissions": "모든 권한",
       "noPermissions": "토큰에 부여할 수 있는 권한이 없습니다."
     },
@@ -1738,7 +1738,7 @@
         "titleWithName": "사용자 편집: {name}",
         "subtitle": "계정 상세, 기본 역할 및 사용자 정의 역할 할당을 업데이트합니다.",
         "admin": "관리자",
-        "customRolesSelected": "사용자 정의 역할 {count}개 선택됨"
+        "customRolesSelected": "사용자 정의 역할 {count}개 선택됨 | 사용자 정의 역할 {count}개 선택됨"
       },
       "show": {
         "title": "사용자 상세",
@@ -1775,8 +1775,8 @@
       "createRole": "역할 생성",
       "description": "조직의 역할 및 권한을 관리합니다. 특정 권한 세트를 가진 사용자 정의 역할을 생성하여 애플리케이션 전반의 접근을 제어합니다.",
       "systemBadge": "시스템",
-      "usersCount": "{count}명의 사용자",
-      "permissionsCount": "{count}개 권한",
+      "usersCount": "{count}명의 사용자 | {count}명의 사용자",
+      "permissionsCount": "{count}개 권한 | {count}개 권한",
       "adminLocked": "관리자 역할은 편집할 수 없습니다",
       "noRolesFound": "역할을 찾을 수 없습니다. \"역할 생성\"을 클릭하여 첫 사용자 정의 역할을 정의하세요.",
       "create": {
@@ -1791,14 +1791,14 @@
         "individualHint": "추가 권한을 선택하세요. 카테고리명을 클릭하면 해당 카테고리의 모든 권한을 선택/해제할 수 있습니다.",
         "selectAll": "모두 선택",
         "deselectAll": "모두 해제",
-        "totalPermissions": "총 {count}개 권한",
+        "totalPermissions": "총 {count}개 권한 | 총 {count}개 권한",
         "createRole": "역할 생성",
         "success": "역할이 성공적으로 생성되었습니다.",
         "subtitle": "역할을 정의하고 권한을 할당합니다.",
         "roleDetails": "역할 상세",
         "namePlaceholder": "예: 창고 관리자",
         "descriptionPlaceholder": "이 역할의 목적과 책임을 설명하세요...",
-        "permissionBreakdown": "(직접 {direct}개 + 세트 {sets}개에서 {fromSets}개)"
+        "permissionBreakdown": "(직접 {direct}개 + 세트 {sets}개에서 {fromSets}개) | (직접 {direct}개 + 세트 {sets}개에서 {fromSets}개)"
       },
       "edit": {
         "title": "역할 편집",
@@ -1808,7 +1808,7 @@
         "systemDescHint": "시스템 역할 설명은 변경할 수 없습니다",
         "permissions": "권한",
         "permissionsHint": "이 역할의 권한을 사용자 정의하세요. 카테고리명을 클릭하면 해당 카테고리의 모든 권한을 선택/해제할 수 있습니다.",
-        "permissionsSelected": "{count}개 권한 선택됨",
+        "permissionsSelected": "{count}개 권한 선택됨 | {count}개 권한 선택됨",
         "updateRole": "역할 업데이트",
         "success": "역할이 성공적으로 업데이트되었습니다.",
         "titleWithName": "역할 편집: {name}",
@@ -2570,7 +2570,7 @@
       "selectProduct": "제품 선택",
       "cameraHint": "바코드에 카메라를 맞춰주세요",
       "locationFound": "위치를 찾았습니다",
-      "productsHere": "이곳의 제품 {count}개",
+      "productsHere": "이곳의 제품 {count}개 | 이곳의 제품 {count}개",
       "viewProductsHere": "이곳의 제품 보기",
       "lookupFailed": "바코드 조회에 실패했습니다",
       "stock": "재고",
@@ -2582,7 +2582,7 @@
       "noActivity": "아직 기록된 활동이 없습니다",
       "system": "시스템",
       "thisProduct": "이 제품",
-      "moreChanges": "+{count}개 변경 더 보기",
+      "moreChanges": "+{count}개 변경 더 보기 | +{count}개 변경 더 보기",
       "actionOnProduct": {
         "created": "이 제품을 생성함",
         "updated": "이 제품을 업데이트함",
@@ -2605,7 +2605,7 @@
       "maxImages": "최대 {max}개 이미지, 각 {size}MB 이하",
       "onlyImages": "이미지 파일만 허용됩니다",
       "tooLarge": "이미지는 {size}MB 이하여야 합니다",
-      "canAddMore": "{count}개의 이미지만 더 추가할 수 있습니다",
+      "canAddMore": "{count}개의 이미지만 더 추가할 수 있습니다 | {count}개의 이미지만 더 추가할 수 있습니다",
       "moveLeft": "왼쪽으로 이동",
       "moveRight": "오른쪽으로 이동",
       "remove": "삭제",
@@ -2734,7 +2734,7 @@
       "hint": "여기에서 지정한 사용자는 지정된 창고의 재고만 보고 이동할 수 있습니다. 관리자와 모든 창고 접근 권한이 있는 역할은 항상 모든 창고를 볼 수 있습니다.",
       "searchPlaceholder": "사용자 검색...",
       "noUsers": "사용자를 찾을 수 없습니다.",
-      "selected": "사용자 {count}명 선택됨",
+      "selected": "사용자 {count}명 선택됨 | 사용자 {count}명 선택됨",
       "save": "사용자 접근 권한 저장",
       "allWarehouses": "모든 창고",
       "assigned": "지정된 사용자 ({count})",
@@ -2846,7 +2846,7 @@
     },
     "components": {
       "title": "필요 구성품",
-      "materialsNeeded": "{name} {count}개 생산에 필요한 자재",
+      "materialsNeeded": "{name} {count}개 생산에 필요한 자재 | {name} {count}개 생산에 필요한 자재",
       "component": "구성품",
       "sku": "SKU",
       "required": "필요",
@@ -2866,7 +2866,7 @@
       "startProduction": "생산 시작",
       "startConfirm": "이 작업 지시의 생산을 시작하시겠습니까? 구성품이 예약됩니다.",
       "completeProduction": "생산 완료",
-      "completeConfirm": "이 작업 지시를 완료하시겠습니까? 조립 제품 재고에 {count}개가 추가됩니다.",
+      "completeConfirm": "이 작업 지시를 완료하시겠습니까? 조립 제품 재고에 {count}개가 추가됩니다. | 이 작업 지시를 완료하시겠습니까? 조립 제품 재고에 {count}개가 추가됩니다.",
       "cancelWorkOrder": "작업 지시 취소",
       "cancelConfirm": "이 작업 지시를 취소하시겠습니까? 예약된 구성품이 모두 해제됩니다.",
       "view": "보기"
@@ -3073,7 +3073,7 @@
     "notifyCustomer": "{email}(으)로 배송 추적 정보 이메일 보내기",
     "getRates": "요금 조회",
     "chooseRate": "요금 선택",
-    "estDays": "예상 {count}일",
+    "estDays": "예상 {count}일 | 예상 {count}일",
     "buyLabel": "라벨 구매",
     "labelBought": "라벨을 구매했습니다. 운송장 번호 {number}.",
     "downloadLabel": "라벨 다운로드",

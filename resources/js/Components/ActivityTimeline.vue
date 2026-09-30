@@ -147,7 +147,7 @@ const getChangedFields = (properties) => {
                                         <span class="text-green-400">{{ formatValue(change.new) }}</span>
                                     </div>
                                     <div v-if="getChangedFields(activity.properties).length > 3" class="text-gray-400 italic">
-                                        {{ t('components.activityTimeline.moreChanges', { count: getChangedFields(activity.properties).length - 3 }) }}
+                                        {{ t('components.activityTimeline.moreChanges', { count: getChangedFields(activity.properties).length - 3 }, getChangedFields(activity.properties).length - 3) }}
                                     </div>
                                 </div>
                             </div>

@@ -64,7 +64,7 @@ const thRightClass = 'px-4 py-2.5 text-right text-xs font-medium tracking-tight 
                 :key="cls"
                 :label="t(`reports.abcAnalysis.class${cls}`)"
                 :value="formatCurrency(summary[cls].revenue)"
-                :hint="`${t(`reports.abcAnalysis.class${cls}Hint`)} · ${t('reports.abcAnalysis.productCount', { count: summary[cls].count })} · ${formatPercent(summary[cls].share_pct)}`"
+                :hint="`${t(`reports.abcAnalysis.class${cls}Hint`)} · ${t('reports.abcAnalysis.productCount', { count: summary[cls].count }, summary[cls].count)} · ${formatPercent(summary[cls].share_pct)}`"
                 :icon-tone="classTone[cls]"
             >
                 <template #icon><component :is="classIcon[cls]" :size="18" /></template>

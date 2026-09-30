@@ -64,10 +64,10 @@ const thRightClass = 'px-4 py-2.5 text-right text-xs font-medium tracking-tight 
                     <p class="font-medium text-text-primary">{{ t('reports.profitMargin.costBasisTitle') }}</p>
                     <p>{{ t('reports.profitMargin.costBasis') }}</p>
                     <p v-if="summary.units_estimated_cost > 0" class="text-status-warning">
-                        {{ t('reports.profitMargin.estimatedCost', { count: summary.units_estimated_cost }) }}
+                        {{ t('reports.profitMargin.estimatedCost', { count: summary.units_estimated_cost }, summary.units_estimated_cost) }}
                     </p>
                     <p v-if="summary.units_without_cost > 0" class="text-status-warning">
-                        {{ t('reports.profitMargin.missingCost', { count: summary.units_without_cost }) }}
+                        {{ t('reports.profitMargin.missingCost', { count: summary.units_without_cost }, summary.units_without_cost) }}
                     </p>
                 </div>
             </div>

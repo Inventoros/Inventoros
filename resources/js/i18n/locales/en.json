@@ -986,7 +986,7 @@
       "description": "Cost of goods sold against average inventory, per product and category",
       "turnover": "Turnover",
       "daysOfInventory": "Days of Inventory",
-      "periodDays": "Over {n} days",
+      "periodDays": "Over {n} day | Over {n} days",
       "avgInventory": "Avg Inventory Value",
       "cogs": "COGS",
       "unitsSold": "Units Sold",
@@ -998,7 +998,7 @@
       "methodTitle": "How this is calculated",
       "method": "Average inventory is the mean of opening and closing on-hand units, reconstructed from current stock and the stock adjustment history, valued at the current purchase price. Stock changes not recorded as adjustments are not reflected.",
       "cogsNote": "COGS is units sold in the period at the unit cost recorded when each was sold.",
-      "estimatedCost": "{count} units were sold before costs were recorded, so their cost is an estimate (the purchase price at that point)."
+      "estimatedCost": "{count} unit was sold before costs were recorded, so its cost is an estimate (the purchase price at that point). | {count} units were sold before costs were recorded, so their cost is an estimate (the purchase price at that point)."
     },
     "profitMargin": {
       "title": "Profit Margin",
@@ -1012,9 +1012,9 @@
       "byProduct": "By Product",
       "costBasisTitle": "Cost basis",
       "costBasis": "COGS uses the unit cost recorded when each line was sold, so later cost changes do not rewrite past margins.",
-      "estimatedCost": "{count} units were sold before costs were recorded, so their cost is an estimate (the purchase price at that point). Rows marked Estimated cost include them.",
+      "estimatedCost": "{count} unit was sold before costs were recorded, so its cost is an estimate (the purchase price at that point). Rows marked Estimated cost include it. | {count} units were sold before costs were recorded, so their cost is an estimate (the purchase price at that point). Rows marked Estimated cost include them.",
       "estimatedBadge": "Estimated cost",
-      "missingCost": "{count} units sold have no purchase price and are counted at zero cost."
+      "missingCost": "{count} unit sold has no purchase price and is counted at zero cost. | {count} units sold have no purchase price and are counted at zero cost."
     },
     "salesByLocation": {
       "title": "Sales by Location",
@@ -1038,7 +1038,7 @@
       "classAHint": "First 80% of revenue",
       "classBHint": "Next 15%",
       "classCHint": "Final 5%",
-      "productCount": "{count} products",
+      "productCount": "{count} product | {count} products",
       "ranking": "Revenue Ranking",
       "totalRevenue": "Total revenue before tax: {amount}",
       "rank": "Rank",
@@ -1173,7 +1173,7 @@
     "imported": "Imported",
     "updated": "Updated",
     "errors": "Errors",
-    "rowsFailed": "Row(s) failed",
+    "rowsFailed": "Failed rows",
     "export": {
       "title": "Export Products",
       "subtitle": "Download your inventory data",
@@ -1235,8 +1235,8 @@
       "updated": "Updated",
       "skipped": "Skipped",
       "failed": "Not imported",
-      "errorRows": "{count} row(s) with errors",
-      "warningRows": "{count} row(s) with warnings",
+      "errorRows": "{count} row with errors | {count} rows with errors",
+      "warningRows": "{count} row with warnings | {count} rows with warnings",
       "row": "Row {row}:",
       "dismiss": "Dismiss import result",
       "removeFile": "Remove file"
@@ -1517,7 +1517,7 @@
       "newTokenHint": "Copy it now. For security it is shown only once and cannot be retrieved later.",
       "copy": "Copy",
       "copied": "Copied",
-      "abilitiesCount": "{count} permissions",
+      "abilitiesCount": "{count} permission | {count} permissions",
       "allPermissions": "All permissions",
       "noPermissions": "You do not hold any permissions to grant to a token."
     },
@@ -1639,7 +1639,7 @@
         "titleWithName": "Edit User: {name}",
         "subtitle": "Update account details, base role, and custom role assignments.",
         "admin": "Admin",
-        "customRolesSelected": "{count} custom role(s) selected"
+        "customRolesSelected": "{count} custom role selected | {count} custom roles selected"
       },
       "show": {
         "title": "User Details",
@@ -1676,8 +1676,8 @@
       "createRole": "Create Role",
       "description": "Manage roles and permissions for your organization. Create custom roles with specific permission sets to control access across the application.",
       "systemBadge": "System",
-      "usersCount": "{count} users",
-      "permissionsCount": "{count} permissions",
+      "usersCount": "{count} user | {count} users",
+      "permissionsCount": "{count} permission | {count} permissions",
       "adminLocked": "Administrator role cannot be edited",
       "noRolesFound": "No roles found. Click \"Create Role\" to define your first custom role.",
       "create": {
@@ -1692,14 +1692,14 @@
         "individualHint": "Select additional permissions. You can click category names to select/deselect all permissions in that category.",
         "selectAll": "Select All",
         "deselectAll": "Deselect All",
-        "totalPermissions": "{count} total permission(s)",
+        "totalPermissions": "{count} permission in total | {count} permissions in total",
         "createRole": "Create Role",
         "success": "Role created successfully.",
         "subtitle": "Define a role and assign its permissions.",
         "roleDetails": "Role Details",
         "namePlaceholder": "e.g., Warehouse Manager",
         "descriptionPlaceholder": "Describe the purpose and responsibilities of this role...",
-        "permissionBreakdown": "({direct} direct + {fromSets} from {sets} set(s))"
+        "permissionBreakdown": "({direct} direct + {fromSets} from {sets} set) | ({direct} direct + {fromSets} from {sets} sets)"
       },
       "edit": {
         "title": "Edit Role",
@@ -1709,7 +1709,7 @@
         "systemDescHint": "System role descriptions cannot be changed",
         "permissions": "Permissions",
         "permissionsHint": "Customize the permissions for this role. Click category names to select/deselect all permissions in that category.",
-        "permissionsSelected": "{count} permission(s) selected",
+        "permissionsSelected": "{count} permission selected | {count} permissions selected",
         "updateRole": "Update Role",
         "success": "Role updated successfully.",
         "titleWithName": "Edit Role: {name}",
@@ -2471,7 +2471,7 @@
       "selectProduct": "Select Product",
       "cameraHint": "Point your camera at a barcode to scan",
       "locationFound": "Location Found",
-      "productsHere": "{count} products here",
+      "productsHere": "{count} product here | {count} products here",
       "viewProductsHere": "View Products Here",
       "lookupFailed": "Failed to lookup barcode",
       "stock": "Stock",
@@ -2483,7 +2483,7 @@
       "noActivity": "No activity recorded yet",
       "system": "System",
       "thisProduct": "this product",
-      "moreChanges": "+{count} more changes",
+      "moreChanges": "+{count} more change | +{count} more changes",
       "actionOnProduct": {
         "created": "created this product",
         "updated": "updated this product",
@@ -2506,7 +2506,7 @@
       "maxImages": "Max {max} images, up to {size}MB each",
       "onlyImages": "Only image files are allowed",
       "tooLarge": "Images must be less than {size}MB",
-      "canAddMore": "You can only add {count} more image(s)",
+      "canAddMore": "You can only add {count} more image | You can only add {count} more images",
       "moveLeft": "Move left",
       "moveRight": "Move right",
       "remove": "Remove",
@@ -2635,7 +2635,7 @@
       "hint": "Users you assign here can only see and move stock in the warehouses they are assigned to. Admins and roles with Access All Warehouses always see every warehouse.",
       "searchPlaceholder": "Search users...",
       "noUsers": "No users found.",
-      "selected": "{count} user(s) selected",
+      "selected": "{count} user selected | {count} users selected",
       "save": "Save user access",
       "allWarehouses": "All warehouses",
       "assigned": "Assigned users ({count})",
@@ -2747,7 +2747,7 @@
     },
     "components": {
       "title": "Required Components",
-      "materialsNeeded": "Materials needed to produce {count} unit(s) of {name}",
+      "materialsNeeded": "Materials needed to produce {count} unit of {name} | Materials needed to produce {count} units of {name}",
       "component": "Component",
       "sku": "SKU",
       "required": "Required",
@@ -2767,7 +2767,7 @@
       "startProduction": "Start Production",
       "startConfirm": "Start production for this work order? Components will be reserved.",
       "completeProduction": "Complete Production",
-      "completeConfirm": "Complete this work order? {count} units will be added to assembly stock.",
+      "completeConfirm": "Complete this work order? {count} unit will be added to assembly stock. | Complete this work order? {count} units will be added to assembly stock.",
       "cancelWorkOrder": "Cancel Work Order",
       "cancelConfirm": "Cancel this work order? Any reserved components will be released.",
       "view": "View"
@@ -2974,7 +2974,7 @@
     "notifyCustomer": "Email tracking details to {email}",
     "getRates": "Get rates",
     "chooseRate": "Choose a rate",
-    "estDays": "Est. {count} days",
+    "estDays": "Est. {count} day | Est. {count} days",
     "buyLabel": "Buy label",
     "labelBought": "Label bought. Tracking number {number}.",
     "downloadLabel": "Download label",

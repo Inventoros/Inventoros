@@ -1085,7 +1085,7 @@
       "description": "Koszt własny sprzedaży w stosunku do średniego zapasu, wg produktu i kategorii",
       "turnover": "Rotacja",
       "daysOfInventory": "Dni zapasu",
-      "periodDays": "W ciągu {n} dni",
+      "periodDays": "W ciągu dni: {n} | W ciągu dni: {n}",
       "avgInventory": "Średnia wartość zapasów",
       "cogs": "KWS",
       "unitsSold": "Sprzedane jednostki",
@@ -1097,7 +1097,7 @@
       "methodTitle": "Sposób obliczania",
       "method": "Średni zapas to średnia z jednostek na stanie na otwarcie i zamknięcie, odtworzona z bieżącego stanu i historii korekt magazynowych, wyceniona wg bieżącej ceny zakupu. Zmiany stanu niezarejestrowane jako korekty nie są uwzględniane.",
       "cogsNote": "KWS (koszt własny sprzedaży) to jednostki sprzedane w okresie wg kosztu jednostkowego zarejestrowanego w chwili sprzedaży.",
-      "estimatedCost": "Sprzedano {count} jedn. przed zarejestrowaniem kosztów, więc ich koszt jest szacunkowy (cena zakupu z tamtego momentu)."
+      "estimatedCost": "Sprzedano {count} jedn. przed zarejestrowaniem kosztów, więc ich koszt jest szacunkowy (cena zakupu z tamtego momentu). | Sprzedano {count} jedn. przed zarejestrowaniem kosztów, więc ich koszt jest szacunkowy (cena zakupu z tamtego momentu)."
     },
     "profitMargin": {
       "title": "Marża zysku",
@@ -1111,9 +1111,9 @@
       "byProduct": "Wg produktu",
       "costBasisTitle": "Podstawa kosztowa",
       "costBasis": "KWS wykorzystuje koszt jednostkowy zarejestrowany w chwili sprzedaży każdej pozycji, więc późniejsze zmiany kosztów nie zmieniają marż z przeszłości.",
-      "estimatedCost": "Sprzedano {count} jedn. przed zarejestrowaniem kosztów, więc ich koszt jest szacunkowy (cena zakupu z tamtego momentu). Uwzględniają je wiersze oznaczone jako Koszt szacunkowy.",
+      "estimatedCost": "Sprzedano {count} jedn. przed zarejestrowaniem kosztów, więc ich koszt jest szacunkowy (cena zakupu z tamtego momentu). Uwzględniają je wiersze oznaczone jako Koszt szacunkowy. | Sprzedano {count} jedn. przed zarejestrowaniem kosztów, więc ich koszt jest szacunkowy (cena zakupu z tamtego momentu). Uwzględniają je wiersze oznaczone jako Koszt szacunkowy.",
       "estimatedBadge": "Koszt szacunkowy",
-      "missingCost": "Sprzedane jednostki bez ceny zakupu ({count}) są liczone z zerowym kosztem."
+      "missingCost": "Sprzedane jednostki bez ceny zakupu ({count}) są liczone z zerowym kosztem. | Sprzedane jednostki bez ceny zakupu ({count}) są liczone z zerowym kosztem."
     },
     "salesByLocation": {
       "title": "Sprzedaż wg lokalizacji",
@@ -1137,7 +1137,7 @@
       "classAHint": "Pierwsze 80% przychodu",
       "classBHint": "Kolejne 15%",
       "classCHint": "Ostatnie 5%",
-      "productCount": "Produkty: {count}",
+      "productCount": "Produkty: {count} | Produkty: {count}",
       "ranking": "Ranking przychodów",
       "totalRevenue": "Łączny przychód przed podatkiem: {amount}",
       "rank": "Pozycja",
@@ -1272,7 +1272,7 @@
     "imported": "Zaimportowano",
     "updated": "Zaktualizowano",
     "errors": "Błędy",
-    "rowsFailed": "wierszy z błędami",
+    "rowsFailed": "Wiersze z błędami",
     "export": {
       "title": "Eksport produktów",
       "subtitle": "Pobierz dane magazynowe",
@@ -1334,8 +1334,8 @@
       "updated": "Zaktualizowano",
       "skipped": "Pominięto",
       "failed": "Nie zaimportowano",
-      "errorRows": "Wiersze z błędami: {count}",
-      "warningRows": "Wiersze z ostrzeżeniami: {count}",
+      "errorRows": "Wiersze z błędami: {count} | Wiersze z błędami: {count}",
+      "warningRows": "Wiersze z ostrzeżeniami: {count} | Wiersze z ostrzeżeniami: {count}",
       "row": "Wiersz {row}:",
       "dismiss": "Zamknij wynik importu",
       "removeFile": "Usuń plik"
@@ -1616,7 +1616,7 @@
       "newTokenHint": "Skopiuj go teraz. Ze względów bezpieczeństwa jest wyświetlany tylko raz i nie można go później odzyskać.",
       "copy": "Kopiuj",
       "copied": "Skopiowano",
-      "abilitiesCount": "Uprawnienia: {count}",
+      "abilitiesCount": "Uprawnienia: {count} | Uprawnienia: {count}",
       "allPermissions": "Wszystkie uprawnienia",
       "noPermissions": "Nie posiadasz żadnych uprawnień, które można nadać tokenowi."
     },
@@ -1738,7 +1738,7 @@
         "titleWithName": "Edytuj użytkownika: {name}",
         "subtitle": "Zaktualizuj dane konta, rolę podstawową i przypisane role niestandardowe.",
         "admin": "Administrator",
-        "customRolesSelected": "Wybrane role niestandardowe: {count}"
+        "customRolesSelected": "Wybrane role niestandardowe: {count} | Wybrane role niestandardowe: {count}"
       },
       "show": {
         "title": "Szczegóły użytkownika",
@@ -1775,8 +1775,8 @@
       "createRole": "Utwórz rolę",
       "description": "Zarządzaj rolami i uprawnieniami w organizacji. Twórz niestandardowe role z określonymi zestawami uprawnień do kontroli dostępu w aplikacji.",
       "systemBadge": "Systemowa",
-      "usersCount": "{count} użytkowników",
-      "permissionsCount": "{count} uprawnień",
+      "usersCount": "Użytkownicy: {count} | Użytkownicy: {count}",
+      "permissionsCount": "Uprawnienia: {count} | Uprawnienia: {count}",
       "adminLocked": "Roli administratora nie można edytować",
       "noRolesFound": "Nie znaleziono ról. Kliknij \"Utwórz rolę\", aby zdefiniować pierwszą rolę niestandardową.",
       "create": {
@@ -1791,14 +1791,14 @@
         "individualHint": "Wybierz dodatkowe uprawnienia. Kliknij nazwy kategorii, aby zaznaczyć/odznaczyć wszystkie uprawnienia w danej kategorii.",
         "selectAll": "Zaznacz wszystkie",
         "deselectAll": "Odznacz wszystkie",
-        "totalPermissions": "Łącznie {count} uprawnień",
+        "totalPermissions": "Łącznie uprawnień: {count} | Łącznie uprawnień: {count}",
         "createRole": "Utwórz rolę",
         "success": "Rola została pomyślnie utworzona.",
         "subtitle": "Zdefiniuj rolę i przypisz jej uprawnienia.",
         "roleDetails": "Szczegóły roli",
         "namePlaceholder": "np. Kierownik magazynu",
         "descriptionPlaceholder": "Opisz cel i zakres obowiązków tej roli...",
-        "permissionBreakdown": "({direct} bezpośrednich + {fromSets} z zestawów: {sets})"
+        "permissionBreakdown": "({direct} bezpośrednich + {fromSets} z zestawów: {sets}) | ({direct} bezpośrednich + {fromSets} z zestawów: {sets})"
       },
       "edit": {
         "title": "Edytuj rolę",
@@ -1808,7 +1808,7 @@
         "systemDescHint": "Opisów ról systemowych nie można zmieniać",
         "permissions": "Uprawnienia",
         "permissionsHint": "Dostosuj uprawnienia dla tej roli. Kliknij nazwy kategorii, aby zaznaczyć/odznaczyć wszystkie uprawnienia w danej kategorii.",
-        "permissionsSelected": "{count} uprawnień zaznaczonych",
+        "permissionsSelected": "Zaznaczone uprawnienia: {count} | Zaznaczone uprawnienia: {count}",
         "updateRole": "Zaktualizuj rolę",
         "success": "Rola została pomyślnie zaktualizowana.",
         "titleWithName": "Edytuj rolę: {name}",
@@ -2570,7 +2570,7 @@
       "selectProduct": "Wybierz produkt",
       "cameraHint": "Skieruj kamerę na kod kreskowy, aby go zeskanować",
       "locationFound": "Znaleziono lokalizację",
-      "productsHere": "Produkty w tym miejscu: {count}",
+      "productsHere": "Produkty w tym miejscu: {count} | Produkty w tym miejscu: {count}",
       "viewProductsHere": "Pokaż produkty w tym miejscu",
       "lookupFailed": "Nie udało się wyszukać kodu kreskowego",
       "stock": "Stan",
@@ -2582,7 +2582,7 @@
       "noActivity": "Brak zarejestrowanej aktywności",
       "system": "System",
       "thisProduct": "ten produkt",
-      "moreChanges": "+{count} więcej zmian",
+      "moreChanges": "+ więcej zmian: {count} | + więcej zmian: {count}",
       "actionOnProduct": {
         "created": "utworzył ten produkt",
         "updated": "zaktualizował ten produkt",
@@ -2605,7 +2605,7 @@
       "maxImages": "Maks. {max} zdjęć, do {size}MB każde",
       "onlyImages": "Dozwolone są tylko pliki graficzne",
       "tooLarge": "Zdjęcia muszą mieć mniej niż {size}MB",
-      "canAddMore": "Możesz dodać jeszcze {count} zdjęć",
+      "canAddMore": "Możesz dodać jeszcze zdjęć: {count} | Możesz dodać jeszcze zdjęć: {count}",
       "moveLeft": "Przesuń w lewo",
       "moveRight": "Przesuń w prawo",
       "remove": "Usuń",
@@ -2734,7 +2734,7 @@
       "hint": "Przypisani tutaj użytkownicy widzą i przesuwają zapasy tylko w magazynach, do których są przypisani. Administratorzy i role z uprawnieniem Dostęp do wszystkich magazynów zawsze widzą każdy magazyn.",
       "searchPlaceholder": "Szukaj użytkowników...",
       "noUsers": "Nie znaleziono użytkowników.",
-      "selected": "Zaznaczeni użytkownicy: {count}",
+      "selected": "Zaznaczeni użytkownicy: {count} | Zaznaczeni użytkownicy: {count}",
       "save": "Zapisz dostęp użytkowników",
       "allWarehouses": "Wszystkie magazyny",
       "assigned": "Przypisani użytkownicy ({count})",
@@ -2846,7 +2846,7 @@
     },
     "components": {
       "title": "Wymagane komponenty",
-      "materialsNeeded": "Materiały potrzebne do wyprodukowania {name} (jedn.: {count})",
+      "materialsNeeded": "Materiały potrzebne do wyprodukowania {name} (jedn.: {count}) | Materiały potrzebne do wyprodukowania {name} (jedn.: {count})",
       "component": "Komponent",
       "sku": "SKU",
       "required": "Wymagane",
@@ -2866,7 +2866,7 @@
       "startProduction": "Rozpocznij produkcję",
       "startConfirm": "Rozpocząć produkcję dla tego zlecenia? Komponenty zostaną zarezerwowane.",
       "completeProduction": "Zakończ produkcję",
-      "completeConfirm": "Zakończyć to zlecenie produkcyjne? Do stanu produktu złożonego zostanie dodanych {count} jedn.",
+      "completeConfirm": "Zakończyć to zlecenie produkcyjne? Do stanu produktu złożonego zostanie dodanych {count} jedn. | Zakończyć to zlecenie produkcyjne? Do stanu produktu złożonego zostanie dodanych {count} jedn.",
       "cancelWorkOrder": "Anuluj zlecenie produkcyjne",
       "cancelConfirm": "Anulować to zlecenie produkcyjne? Wszystkie zarezerwowane komponenty zostaną zwolnione.",
       "view": "Podgląd"
@@ -3073,7 +3073,7 @@
     "notifyCustomer": "Wyślij dane śledzenia na adres {email}",
     "getRates": "Pobierz stawki",
     "chooseRate": "Wybierz stawkę",
-    "estDays": "Ok. {count} dni",
+    "estDays": "Ok. dni: {count} | Ok. dni: {count}",
     "buyLabel": "Kup etykietę",
     "labelBought": "Etykieta kupiona. Numer śledzenia {number}.",
     "downloadLabel": "Pobierz etykietę",
