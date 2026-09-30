@@ -4,14 +4,12 @@ declare(strict_types=1);
 
 namespace App\Exceptions;
 
-use RuntimeException;
-
 /**
  * An approval action that cannot go ahead. `reason` is a stable code the
  * REST API, MCP tools and GraphQL surface as-is; `status` is the HTTP status
  * it maps to.
  */
-class ApprovalException extends RuntimeException
+class ApprovalException extends BusinessRuleException
 {
     public const FORBIDDEN = 'forbidden';
 

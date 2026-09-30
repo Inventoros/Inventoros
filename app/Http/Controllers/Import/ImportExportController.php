@@ -18,6 +18,7 @@ use App\Models\Inventory\ProductCategory;
 use App\Models\Inventory\ProductLocation;
 use App\Support\ProductCurrencyColumns;
 use App\Support\SpreadsheetReaderType;
+use Illuminate\Database\QueryException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -202,6 +203,9 @@ class ImportExportController extends Controller
                 $stats,
                 'Products imported successfully! Created: '.$stats['imported'].', Updated: '.$stats['updated'],
             );
+        } catch (QueryException $e) {
+            // Raw SQL is not for the banner; the error handler logs it.
+            throw $e;
         } catch (\Exception $e) {
             Log::error('Product import failed', [
                 'user_id' => $request->user()->id,
@@ -259,6 +263,9 @@ class ImportExportController extends Controller
                 $stats,
                 'Users imported successfully! Created: '.$stats['imported'],
             );
+        } catch (QueryException $e) {
+            // Raw SQL is not for the banner; the error handler logs it.
+            throw $e;
         } catch (\Exception $e) {
             Log::error('User import failed', [
                 'user_id' => $user->id,
@@ -346,6 +353,9 @@ class ImportExportController extends Controller
                 $stats,
                 'Orders imported successfully! Created: '.$stats['imported'].', Skipped (already imported): '.$stats['skipped'],
             );
+        } catch (QueryException $e) {
+            // Raw SQL is not for the banner; the error handler logs it.
+            throw $e;
         } catch (\Exception $e) {
             Log::error('Order import failed', [
                 'user_id' => $user->id,

@@ -7,6 +7,7 @@ namespace App\Http\Controllers\Api;
 use App\Enums\DiscountType;
 use App\Enums\OrderStatus;
 use App\Enums\PaymentStatus;
+use App\Exceptions\BusinessRuleException;
 use App\Exceptions\DocumentEmailException;
 use App\Exceptions\InsufficientStockException;
 use App\Exceptions\InvalidOrderItemException;
@@ -272,7 +273,7 @@ class OrderController extends Controller
         if ($cancelTransition) {
             try {
                 $order = $this->orderService->cancel($order);
-            } catch (\RuntimeException $e) {
+            } catch (BusinessRuleException $e) {
                 return response()->json([
                     'message' => $e->getMessage(),
                     'error' => 'invalid_state_transition',
@@ -319,7 +320,7 @@ class OrderController extends Controller
                     'message' => 'Order deleted successfully',
                 ]);
             });
-        } catch (\RuntimeException $e) {
+        } catch (BusinessRuleException $e) {
             // A partially shipped order: its shipped units cannot be restocked.
             return response()->json([
                 'message' => $e->getMessage(),

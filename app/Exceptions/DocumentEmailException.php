@@ -4,15 +4,13 @@ declare(strict_types=1);
 
 namespace App\Exceptions;
 
-use RuntimeException;
-
 /**
  * A document (purchase order, invoice) could not be emailed for a reason the
  * user can fix: no recipient on file, or a status that does not allow it.
  * The message is safe to show to the user as-is; $reason is a stable
  * machine-readable code for API and MCP callers.
  */
-class DocumentEmailException extends RuntimeException
+class DocumentEmailException extends BusinessRuleException
 {
     public const MISSING_RECIPIENT = 'missing_recipient';
 

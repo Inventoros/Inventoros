@@ -92,6 +92,7 @@ Before upgrading: take a database backup you have checked, run `php artisan opti
 - Laravel Excel 4.0.3 and PhpSpreadsheet 5.10.0 (CVE-2026-59933, CVE-2026-59932, CVE-2026-59931, CVE-2026-84374). Imports pick their reader from the detected file type.
 - Shipment creation checks access to the ship-from warehouse.
 - Creating, editing and deleting warehouses in the web app needs `create_warehouses`, `edit_warehouses` and `delete_warehouses`; `view_warehouses` alone used to allow all three.
+- Database errors are no longer shown to users. Receiving a purchase order, stock audits, transfers, work orders, order and return actions, imports and the REST and GraphQL equivalents used to put the raw SQL error in the message; they now show the standard error page (HTTP 500) and the error is logged. Business rule refusals (wrong status, not enough stock) are still shown as before.
 
 ## [1.0.x]
 

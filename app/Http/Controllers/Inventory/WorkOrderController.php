@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Inventory;
 
+use App\Exceptions\BusinessRuleException;
 use App\Exceptions\InvalidStateException;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\WorkOrder\StoreWorkOrderRequest;
@@ -252,7 +253,7 @@ class WorkOrderController extends Controller
                 $workOrder = WorkOrder::whereKey($workOrder->getKey())->lockForUpdate()->firstOrFail();
 
                 if ($workOrder->status !== 'in_progress') {
-                    throw new \RuntimeException('Only in-progress work orders can be completed.');
+                    throw new InvalidStateException('Only in-progress work orders can be completed.', 'invalid_status');
                 }
 
                 $workOrder->load('items.product');
@@ -325,7 +326,7 @@ class WorkOrderController extends Controller
                     'completed_at' => now(),
                 ]);
             });
-        } catch (\RuntimeException $e) {
+        } catch (BusinessRuleException $e) {
             return redirect()->route('work-orders.show', $workOrder)
                 ->with('error', $e->getMessage());
         }
@@ -361,7 +362,7 @@ class WorkOrderController extends Controller
                 $workOrder = WorkOrder::whereKey($workOrder->getKey())->lockForUpdate()->firstOrFail();
 
                 if (! in_array($workOrder->status, ['draft', 'pending', 'in_progress'], true)) {
-                    throw new \RuntimeException('Only draft, pending, or in-progress work orders can be cancelled.');
+                    throw new InvalidStateException('Only draft, pending, or in-progress work orders can be cancelled.', 'invalid_status');
                 }
 
                 // If in_progress, restore any consumed component stock
@@ -391,7 +392,7 @@ class WorkOrderController extends Controller
 
                 $workOrder->update(['status' => 'cancelled']);
             });
-        } catch (\RuntimeException $e) {
+        } catch (BusinessRuleException $e) {
             return redirect()->route('work-orders.show', $workOrder)
                 ->with('error', $e->getMessage());
         }

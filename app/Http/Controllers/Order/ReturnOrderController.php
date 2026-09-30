@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Order;
 
+use App\Exceptions\BusinessRuleException;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\ReturnOrder\RejectReturnOrderRequest;
 use App\Http\Requests\ReturnOrder\StoreReturnOrderRequest;
@@ -13,7 +14,6 @@ use App\Models\Order\ReturnOrder;
 use App\Services\ReturnOrderService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -96,9 +96,7 @@ class ReturnOrderController extends Controller
 
             return redirect()->route('returns.show', $returnOrder)
                 ->with('success', 'Return request created successfully.');
-        } catch (ValidationException $e) {
-            throw $e;
-        } catch (\Exception $e) {
+        } catch (BusinessRuleException $e) {
             return redirect()->back()
                 ->withInput()
                 ->with('error', $e->getMessage());
@@ -194,7 +192,7 @@ class ReturnOrderController extends Controller
     {
         try {
             $action();
-        } catch (\RuntimeException $e) {
+        } catch (BusinessRuleException $e) {
             return redirect()->back()->with('error', $e->getMessage());
         }
 

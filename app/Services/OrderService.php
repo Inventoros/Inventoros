@@ -9,6 +9,7 @@ use App\Enums\OrderApprovalStatus;
 use App\Enums\OrderStatus;
 use App\Enums\PaymentStatus;
 use App\Enums\ShipmentStatus;
+use App\Exceptions\BusinessRuleException;
 use App\Exceptions\InsufficientStockException;
 use App\Exceptions\InvalidOrderItemException;
 use App\Exceptions\InvalidStateException;
@@ -350,8 +351,9 @@ final class OrderService
             }
 
             if (in_array($locked->status, [OrderStatus::SHIPPED, OrderStatus::DELIVERED], true)) {
-                throw new \RuntimeException(
-                    "Cannot cancel an order that has already been {$locked->status->value}."
+                throw new InvalidStateException(
+                    "Cannot cancel an order that has already been {$locked->status->value}.",
+                    'invalid_state_transition'
                 );
             }
 
@@ -435,7 +437,7 @@ final class OrderService
                 $this->releaseStock($locked, 'reject', "Order {$locked->order_number} rejected");
             } catch (InvalidStateException $e) {
                 throw $e;
-            } catch (\RuntimeException $e) {
+            } catch (BusinessRuleException $e) {
                 throw new InvalidStateException($e->getMessage(), 'invalid_state_transition');
             }
 
@@ -481,8 +483,9 @@ final class OrderService
             // Returns are recorded against the order's lines and are the
             // audit trail of goods coming back; the order has to stay.
             if (ReturnOrder::withoutGlobalScopes()->where('order_id', $locked->getKey())->exists()) {
-                throw new \RuntimeException(
-                    'Cannot delete this order: it has returns recorded against it. Cancel it instead.'
+                throw new InvalidStateException(
+                    'Cannot delete this order: it has returns recorded against it. Cancel it instead.',
+                    'invalid_state_transition'
                 );
             }
 
@@ -617,8 +620,9 @@ final class OrderService
             ->exists();
 
         if ($openReturn) {
-            throw new \RuntimeException(
-                "Cannot {$action} this order: it has an open return. Receive or reject the return first."
+            throw new InvalidStateException(
+                "Cannot {$action} this order: it has an open return. Receive or reject the return first.",
+                'invalid_state_transition'
             );
         }
 
@@ -650,8 +654,9 @@ final class OrderService
             ->get();
 
         if ($open->contains(fn (Shipment $shipment) => $shipment->status === ShipmentStatus::LABEL_CREATED)) {
-            throw new \RuntimeException(
-                "Cannot {$action} this order: one of its shipments has a bought label. Cancel that shipment first so the label is voided."
+            throw new InvalidStateException(
+                "Cannot {$action} this order: one of its shipments has a bought label. Cancel that shipment first so the label is voided.",
+                'invalid_state_transition'
             );
         }
 
@@ -934,7 +939,7 @@ final class OrderService
             }
 
             if ($locked->status === OrderStatus::CANCELLED) {
-                throw new \RuntimeException('A cancelled order cannot be reactivated. Create a new order instead.');
+                throw new InvalidStateException('A cancelled order cannot be reactivated. Create a new order instead.', 'invalid_state_transition');
             }
 
             if ($locked->approvalBlocks($to)) {
@@ -992,8 +997,9 @@ final class OrderService
             ->exists();
 
         if ($shipped) {
-            throw new \RuntimeException(
-                "Cannot {$action} this order: some of its shipments have already left the warehouse."
+            throw new InvalidStateException(
+                "Cannot {$action} this order: some of its shipments have already left the warehouse.",
+                'invalid_state_transition'
             );
         }
     }

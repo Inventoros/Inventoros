@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Api;
 
+use App\Exceptions\BusinessRuleException;
 use App\Http\Controllers\Api\Concerns\HandlesApiResponses;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\StockAudit\RecordStockAuditCountRequest;
@@ -118,7 +119,7 @@ class StockAuditController extends Controller
 
         try {
             $audits->start($stockAudit, $request->user());
-        } catch (\RuntimeException $e) {
+        } catch (BusinessRuleException $e) {
             return $this->stateError($e);
         }
 
@@ -139,7 +140,7 @@ class StockAuditController extends Controller
 
         try {
             $audits->recordCount($stockAudit, $item, $request->user(), (int) $validated['counted_quantity'], $validated['notes'] ?? null);
-        } catch (\RuntimeException $e) {
+        } catch (BusinessRuleException $e) {
             return $this->stateError($e);
         }
 
@@ -162,7 +163,7 @@ class StockAuditController extends Controller
             // allow_uncounted=true confirms completing with uncounted lines,
             // which are left unchanged; without it they refuse (422).
             $adjustmentsCreated = $audits->complete($stockAudit, $request->user(), $request->boolean('allow_uncounted'));
-        } catch (\RuntimeException $e) {
+        } catch (BusinessRuleException $e) {
             return $this->stateError($e);
         }
 

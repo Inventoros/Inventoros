@@ -9,6 +9,8 @@ use App\Enums\OrderStatus;
 use App\Enums\PaymentMethod;
 use App\Enums\PaymentStatus;
 use App\Enums\Permission;
+use App\Exceptions\BusinessRuleException;
+use App\Exceptions\InvalidStateException;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Order\StoreOrderRequest;
 use App\Http\Requests\Order\UpdateOrderRequest;
@@ -191,7 +193,7 @@ class OrderController extends Controller
             return redirect()->back()
                 ->withInput()
                 ->with('error', 'Could not save the order due to a database error. Please try again, or contact support if the problem persists.');
-        } catch (\Exception $e) {
+        } catch (BusinessRuleException $e) {
             // Business-rule exceptions thrown inside the transaction
             // (insufficient stock, unknown product, etc.) carry safe
             // messages we intentionally surface to the user.
@@ -311,7 +313,7 @@ class OrderController extends Controller
                 if ($order->status === OrderStatus::CANCELLED
                     && isset($validated['status'])
                     && $validated['status'] !== OrderStatus::CANCELLED->value) {
-                    throw new \RuntimeException('A cancelled order cannot be reactivated. Create a new order instead.');
+                    throw new InvalidStateException('A cancelled order cannot be reactivated. Create a new order instead.', 'invalid_state_transition');
                 }
 
                 $isCancelling = $validated['status'] === 'cancelled'
@@ -361,7 +363,7 @@ class OrderController extends Controller
 
                 $order->update($validated);
             });
-        } catch (\RuntimeException $e) {
+        } catch (BusinessRuleException $e) {
             // Guard failures (e.g. cancelling a shipped order, insufficient
             // stock on an item increase) flash an error rather than 500ing.
             return redirect()->back()->with('error', $e->getMessage());
@@ -395,7 +397,7 @@ class OrderController extends Controller
 
                 $order->delete();
             });
-        } catch (\RuntimeException $e) {
+        } catch (BusinessRuleException $e) {
             // e.g. a partially shipped order, whose shipped units cannot be restocked.
             return redirect()->back()->with('error', $e->getMessage());
         }
@@ -429,7 +431,7 @@ class OrderController extends Controller
 
         try {
             $this->orderService->approve($order, $request->user(), $validated['notes'] ?? null);
-        } catch (\RuntimeException $e) {
+        } catch (BusinessRuleException $e) {
             return redirect()->back()->with('error', $e->getMessage());
         }
 
@@ -461,7 +463,7 @@ class OrderController extends Controller
 
         try {
             $this->orderService->reject($order, $request->user(), $validated['notes']);
-        } catch (\RuntimeException $e) {
+        } catch (BusinessRuleException $e) {
             return redirect()->back()->with('error', $e->getMessage());
         }
 
