@@ -1,4 +1,7 @@
 {
+  "stockTransferCompleter": {
+    "completedBy": "完成人"
+  },
   "orderCurrency": {
     "label": "币种",
     "hint": "明细单价按此币种从目录填入。更改币种会重新定价各明细。"

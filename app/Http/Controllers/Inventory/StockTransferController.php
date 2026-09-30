@@ -134,7 +134,7 @@ class StockTransferController extends Controller
 
         $this->warehouseAccess->authorizeAnyLocation($request->user(), [$stockTransfer->from_location_id, $stockTransfer->to_location_id]);
 
-        $stockTransfer->load(['fromLocation', 'toLocation', 'transferredBy', 'items.product', 'approver']);
+        $stockTransfer->load(['fromLocation', 'toLocation', 'transferredBy', 'completer', 'items.product', 'approver']);
 
         return Inertia::render('StockTransfers/Show', [
             'transfer' => $stockTransfer,

@@ -1,4 +1,7 @@
 {
+  "stockTransferCompleter": {
+    "completedBy": "Tamamlayan"
+  },
   "orderCurrency": {
     "label": "Para birimi",
     "hint": "Satır fiyatları bu para biriminde katalogdan doldurulur. Değiştirmek satırları yeniden fiyatlandırır."

@@ -232,6 +232,7 @@ final class StockTransferService
             $stockTransfer->update([
                 'status' => 'completed',
                 'completed_at' => now(),
+                'completed_by' => $actor->id,
             ]);
         });
 

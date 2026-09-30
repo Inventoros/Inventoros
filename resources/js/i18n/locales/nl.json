@@ -1,4 +1,7 @@
 {
+  "stockTransferCompleter": {
+    "completedBy": "Voltooid door"
+  },
   "orderCurrency": {
     "label": "Valuta",
     "hint": "Regelprijzen komen uit de catalogus in deze valuta. Wijzigen herprijst de regels."

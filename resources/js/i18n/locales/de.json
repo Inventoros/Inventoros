@@ -1,4 +1,7 @@
 {
+  "stockTransferCompleter": {
+    "completedBy": "Abgeschlossen von"
+  },
   "orderCurrency": {
     "label": "Währung",
     "hint": "Positionspreise werden aus dem Katalog in dieser Währung übernommen. Eine Änderung berechnet die Positionen neu."

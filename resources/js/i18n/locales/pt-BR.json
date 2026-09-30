@@ -1,4 +1,7 @@
 {
+  "stockTransferCompleter": {
+    "completedBy": "Concluído por"
+  },
   "orderCurrency": {
     "label": "Moeda",
     "hint": "Os preços dos itens vêm do catálogo nesta moeda. Alterá-la recalcula os preços dos itens."

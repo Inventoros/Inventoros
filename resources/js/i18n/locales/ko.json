@@ -1,4 +1,7 @@
 {
+  "stockTransferCompleter": {
+    "completedBy": "완료한 사용자"
+  },
   "orderCurrency": {
     "label": "통화",
     "hint": "품목 가격은 이 통화의 카탈로그 가격으로 채워집니다. 변경하면 품목 가격을 다시 설정합니다."

@@ -1,4 +1,7 @@
 {
+  "stockTransferCompleter": {
+    "completedBy": "أكمله"
+  },
   "orderCurrency": {
     "label": "العملة",
     "hint": "تُملأ أسعار البنود من الكتالوج بهذه العملة. تغييرها يعيد تسعير البنود."

@@ -131,6 +131,6 @@ class StockTransferController extends Controller
 
     private function loaded(StockTransfer $transfer): StockTransfer
     {
-        return $transfer->load(['fromLocation', 'toLocation', 'transferredBy', 'items.product']);
+        return $transfer->load(['fromLocation', 'toLocation', 'transferredBy', 'completer', 'items.product']);
     }
 }

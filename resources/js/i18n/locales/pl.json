@@ -1,4 +1,7 @@
 {
+  "stockTransferCompleter": {
+    "completedBy": "Zakończone przez"
+  },
   "orderCurrency": {
     "label": "Waluta",
     "hint": "Ceny pozycji są pobierane z katalogu w tej walucie. Zmiana waluty przelicza ceny pozycji."

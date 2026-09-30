@@ -1,4 +1,7 @@
 {
+  "stockTransferCompleter": {
+    "completedBy": "Completed by"
+  },
   "orderCurrency": {
     "label": "Currency",
     "hint": "Line prices are filled in from the catalogue in this currency. Changing it re-prices the lines."

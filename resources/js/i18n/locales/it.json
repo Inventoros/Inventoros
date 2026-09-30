@@ -1,4 +1,7 @@
 {
+  "stockTransferCompleter": {
+    "completedBy": "Completato da"
+  },
   "orderCurrency": {
     "label": "Valuta",
     "hint": "I prezzi delle righe sono presi dal catalogo in questa valuta. Cambiarla ricalcola i prezzi delle righe."

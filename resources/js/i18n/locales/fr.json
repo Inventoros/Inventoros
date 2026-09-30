@@ -1,4 +1,7 @@
 {
+  "stockTransferCompleter": {
+    "completedBy": "Terminé par"
+  },
   "orderCurrency": {
     "label": "Devise",
     "hint": "Les prix des lignes viennent du catalogue dans cette devise. La changer recalcule les prix des lignes."
