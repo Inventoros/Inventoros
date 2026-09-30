@@ -181,11 +181,12 @@ class DashboardController extends Controller
             ->limit(5)
             ->get();
 
-        // Get recent orders
+        // Recent orders: the ones most recently entered (created_at), so a
+        // backdated or imported order just added still shows; each row
+        // displays its order date.
         $recentOrders = ! $canViewOrders ? collect() : Order::where('organization_id', $user->organization_id)
             ->with('items')
-            ->latest('order_date')
-            // order_date is a day: the newest order of the day first.
+            ->latest('created_at')
             ->latest('id')
             ->limit(5)
             ->get();
