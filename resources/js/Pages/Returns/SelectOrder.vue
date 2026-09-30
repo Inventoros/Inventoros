@@ -9,11 +9,11 @@ import { ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { ArrowLeft, Search, RotateCcw, PackageOpen } from 'lucide-vue-next';
 import { formatMoney } from '@/lib/money';
-import { formatCalendarDate } from '@/lib/dates';
+import { displayCalendarDate } from '@/lib/dates';
 import { orderStatusLabel, orderStatusVariant } from '@/lib/orderLabels';
 
 const i18n = useI18n();
-const { t, locale } = i18n;
+const { t } = i18n;
 
 const props = defineProps({
     orders: Object,
@@ -100,11 +100,11 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium text-text-secondary';
                             <div class="text-text-primary">{{ order.customer_name || '-' }}</div>
                             <div v-if="order.customer_email" class="text-xs text-text-tertiary">{{ order.customer_email }}</div>
                         </td>
-                        <td class="hidden px-4 py-3 text-text-secondary sm:table-cell">{{ formatCalendarDate(order.order_date, undefined, locale) }}</td>
+                        <td class="hidden px-4 py-3 text-text-secondary sm:table-cell">{{ displayCalendarDate(order.order_date) }}</td>
                         <td class="px-4 py-3">
                             <Badge :variant="orderStatusVariant(order.status)" size="sm" dot>{{ orderStatusLabel(order.status, i18n) }}</Badge>
                         </td>
-                        <td class="hidden px-4 py-3 text-right tabular-nums text-text-primary md:table-cell">{{ formatMoney(order.total, order.currency, locale) }}</td>
+                        <td class="hidden px-4 py-3 text-right tabular-nums text-text-primary md:table-cell">{{ formatMoney(order.total, order.currency) }}</td>
                         <td class="px-4 py-3 text-right">
                             <Button variant="default" size="sm" as="Link" :href="route('returns.create', { order_id: order.id })">
                                 <RotateCcw :size="14" />
