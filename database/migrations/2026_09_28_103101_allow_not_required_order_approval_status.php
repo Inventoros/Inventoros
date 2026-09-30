@@ -31,6 +31,16 @@ return new class extends Migration
     {
         DB::table('orders')->where('approval_status', 'not_required')->update(['approval_status' => 'approved']);
 
+        // Blueprint cannot change a column to an enum on PostgreSQL; restore
+        // the CHECK constraint Laravel's enum() originally created.
+        if (DB::getDriverName() === 'pgsql') {
+            DB::statement("ALTER TABLE orders ALTER COLUMN approval_status TYPE varchar(255)");
+            DB::statement("ALTER TABLE orders ALTER COLUMN approval_status SET DEFAULT 'pending'");
+            DB::statement("ALTER TABLE orders ADD CONSTRAINT orders_approval_status_check CHECK (approval_status::text = ANY (ARRAY['pending'::character varying, 'approved'::character varying, 'rejected'::character varying]::text[]))");
+
+            return;
+        }
+
         Schema::table('orders', function (Blueprint $table) {
             $table->enum('approval_status', ['pending', 'approved', 'rejected'])->default('pending')->change();
         });
