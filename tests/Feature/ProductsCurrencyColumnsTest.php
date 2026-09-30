@@ -45,7 +45,14 @@ final class ProductsCurrencyColumnsTest extends TestCase
      */
     private function import(array $row): ProductsImport
     {
-        $import = new ProductsImport($this->org->id);
+        // Imports always run as a user (the web form and the queued job pass
+        // one); the stock recount a row books is attributed to them. Each
+        // row is all-or-nothing, so without one the row would not save.
+        $importer = User::firstOrCreate(
+            ['email' => 'importer@org.com'],
+            ['name' => 'Importer', 'password' => bcrypt('x'), 'organization_id' => $this->org->id, 'role' => 'admin'],
+        );
+        $import = new ProductsImport($this->org->id, $importer);
         $import->collection(new Collection([collect(array_merge(['sku' => 'CUR-1', 'name' => 'Priced', 'price' => 10, 'stock' => 5], $row))]));
 
         return $import;
