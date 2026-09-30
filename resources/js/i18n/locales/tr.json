@@ -1862,7 +1862,8 @@
         "auto_reorder": "Otomatik yeniden sipariş",
         "quick_reorder": "Hızlı yeniden sipariş",
         "return_lines_updated": "İade satırları güncellendi",
-        "portal_return_requested": "Portalda iade talep edildi"
+        "portal_return_requested": "Portalda iade talep edildi",
+        "pre_tracking_marked_paid": "Eski sipariş ödendi olarak işaretlendi"
       },
       "subjects": {
         "Customer": "Müşteri",

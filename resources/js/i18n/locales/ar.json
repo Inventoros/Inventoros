@@ -1862,7 +1862,8 @@
         "auto_reorder": "إعادة طلب تلقائية",
         "quick_reorder": "إعادة طلب سريعة",
         "return_lines_updated": "تم تحديث بنود الإرجاع",
-        "portal_return_requested": "طُلب إرجاع من البوابة"
+        "portal_return_requested": "طُلب إرجاع من البوابة",
+        "pre_tracking_marked_paid": "تم تعليم طلب قديم كمدفوع"
       },
       "subjects": {
         "Customer": "عميل",

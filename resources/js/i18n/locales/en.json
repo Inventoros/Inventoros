@@ -1788,7 +1788,8 @@
         "auto_reorder": "Automatic reorder",
         "quick_reorder": "Quick reorder",
         "return_lines_updated": "Return lines updated",
-        "portal_return_requested": "Return requested in portal"
+        "portal_return_requested": "Return requested in portal",
+        "pre_tracking_marked_paid": "Older order marked paid"
       },
       "subjects": {
         "Customer": "Customer",

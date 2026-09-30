@@ -1862,7 +1862,8 @@
         "auto_reorder": "自动补货",
         "quick_reorder": "快速补货",
         "return_lines_updated": "已更新退货明细",
-        "portal_return_requested": "已在门户申请退货"
+        "portal_return_requested": "已在门户申请退货",
+        "pre_tracking_marked_paid": "旧订单已标记为已付款"
       },
       "subjects": {
         "Customer": "客户",

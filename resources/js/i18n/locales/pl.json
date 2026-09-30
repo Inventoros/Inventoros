@@ -1862,7 +1862,8 @@
         "auto_reorder": "Automatyczne zamówienie uzupełniające",
         "quick_reorder": "Szybkie zamówienie uzupełniające",
         "return_lines_updated": "Zaktualizowano pozycje zwrotu",
-        "portal_return_requested": "Zwrot zgłoszony w portalu"
+        "portal_return_requested": "Zwrot zgłoszony w portalu",
+        "pre_tracking_marked_paid": "Starsze zamówienie oznaczono jako opłacone"
       },
       "subjects": {
         "Customer": "Klient",

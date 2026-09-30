@@ -1862,7 +1862,8 @@
         "auto_reorder": "Réapprovisionnement automatique",
         "quick_reorder": "Réapprovisionnement rapide",
         "return_lines_updated": "Lignes de retour mises à jour",
-        "portal_return_requested": "Retour demandé sur le portail"
+        "portal_return_requested": "Retour demandé sur le portail",
+        "pre_tracking_marked_paid": "Ancienne commande marquée payée"
       },
       "subjects": {
         "Customer": "Client",

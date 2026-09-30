@@ -1862,7 +1862,8 @@
         "auto_reorder": "Riordino automatico",
         "quick_reorder": "Riordino rapido",
         "return_lines_updated": "Righe del reso aggiornate",
-        "portal_return_requested": "Reso richiesto dal portale"
+        "portal_return_requested": "Reso richiesto dal portale",
+        "pre_tracking_marked_paid": "Ordine precedente segnato come pagato"
       },
       "subjects": {
         "Customer": "Cliente",

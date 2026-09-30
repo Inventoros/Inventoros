@@ -1862,7 +1862,8 @@
         "auto_reorder": "Автоматический дозаказ",
         "quick_reorder": "Быстрый дозаказ",
         "return_lines_updated": "Строки возврата обновлены",
-        "portal_return_requested": "Возврат запрошен через портал"
+        "portal_return_requested": "Возврат запрошен через портал",
+        "pre_tracking_marked_paid": "Старый заказ отмечен как оплаченный"
       },
       "subjects": {
         "Customer": "Клиент",

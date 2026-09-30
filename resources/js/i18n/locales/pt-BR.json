@@ -1862,7 +1862,8 @@
         "auto_reorder": "Reposição automática",
         "quick_reorder": "Reposição rápida",
         "return_lines_updated": "Linhas da devolução atualizadas",
-        "portal_return_requested": "Devolução solicitada no portal"
+        "portal_return_requested": "Devolução solicitada no portal",
+        "pre_tracking_marked_paid": "Pedido antigo marcado como pago"
       },
       "subjects": {
         "Customer": "Cliente",

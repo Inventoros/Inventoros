@@ -1862,7 +1862,8 @@
         "auto_reorder": "自動再発注",
         "quick_reorder": "クイック再発注",
         "return_lines_updated": "返品明細を更新",
-        "portal_return_requested": "ポータルで返品申請"
+        "portal_return_requested": "ポータルで返品申請",
+        "pre_tracking_marked_paid": "以前の注文を支払済みに設定"
       },
       "subjects": {
         "Customer": "顧客",

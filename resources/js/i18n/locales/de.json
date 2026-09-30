@@ -1862,7 +1862,8 @@
         "auto_reorder": "Automatische Nachbestellung",
         "quick_reorder": "Schnelle Nachbestellung",
         "return_lines_updated": "Retourenpositionen aktualisiert",
-        "portal_return_requested": "Retoure im Portal angefordert"
+        "portal_return_requested": "Retoure im Portal angefordert",
+        "pre_tracking_marked_paid": "Ältere Bestellung als bezahlt markiert"
       },
       "subjects": {
         "Customer": "Kunde",

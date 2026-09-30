@@ -1862,7 +1862,8 @@
         "auto_reorder": "자동 재주문",
         "quick_reorder": "빠른 재주문",
         "return_lines_updated": "반품 품목 업데이트됨",
-        "portal_return_requested": "포털에서 반품 요청됨"
+        "portal_return_requested": "포털에서 반품 요청됨",
+        "pre_tracking_marked_paid": "이전 주문을 결제 완료로 표시"
       },
       "subjects": {
         "Customer": "고객",

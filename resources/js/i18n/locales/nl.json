@@ -1862,7 +1862,8 @@
         "auto_reorder": "Automatisch nabestellen",
         "quick_reorder": "Snel nabestellen",
         "return_lines_updated": "Retourregels bijgewerkt",
-        "portal_return_requested": "Retour aangevraagd via portaal"
+        "portal_return_requested": "Retour aangevraagd via portaal",
+        "pre_tracking_marked_paid": "Oudere bestelling als betaald gemarkeerd"
       },
       "subjects": {
         "Customer": "Klant",
