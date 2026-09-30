@@ -259,22 +259,22 @@ final class SKUGeneratorService
             [
                 'key' => '{date}',
                 'description' => 'Current date (YYMMDD)',
-                'example' => '251013',
+                'example' => now()->format('ymd'),
             ],
             [
                 'key' => '{year}',
                 'description' => 'Current year (YYYY)',
-                'example' => '2025',
+                'example' => now()->format('Y'),
             ],
             [
                 'key' => '{month}',
                 'description' => 'Current month (MM)',
-                'example' => '10',
+                'example' => now()->format('m'),
             ],
             [
                 'key' => '{timestamp}',
                 'description' => 'Unix timestamp',
-                'example' => '1729036800',
+                'example' => (string) now()->timestamp,
             ],
         ];
     }
@@ -300,7 +300,7 @@ final class SKUGeneratorService
             [
                 'name' => 'Category + Date + Random',
                 'pattern' => '{category}-{date}-{random}',
-                'example' => 'ELE-251013-A7K9M2',
+                'example' => 'ELE-'.now()->format('ymd').'-A7K9M2',
             ],
             [
                 'name' => 'Name + Number',
@@ -310,7 +310,7 @@ final class SKUGeneratorService
             [
                 'name' => 'Year + Category + Number',
                 'pattern' => '{year}-{category}-{number}',
-                'example' => '2025-ELE-000123',
+                'example' => now()->format('Y').'-ELE-000123',
             ],
             [
                 'name' => 'Category ID + Number',
