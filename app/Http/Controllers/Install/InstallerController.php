@@ -14,6 +14,7 @@ use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Schema;
 use Inertia\Inertia;
 
 /**
@@ -248,18 +249,12 @@ class InstallerController extends Controller
 
             $this->updateEnvFile($env);
 
-            // Clear all caches
+            // Clear all caches, so the next request reads the new .env
+            // rather than a cached config.
             Artisan::call('config:clear');
             Artisan::call('cache:clear');
 
-            // Reconnect to database with new config — purge whichever
-            // connection the user picked, not just MySQL.
-            DB::purge($request->driver);
-            DB::reconnect($request->driver);
-
-            // Run migrations. A plain migrate resumes after the last
-            // migration that completed.
-            Artisan::call($reset ? 'migrate:fresh' : 'migrate', ['--force' => true]);
+            $this->prepareDatabase($request->driver, $request->only(['host', 'port', 'database', 'username', 'password']), $reset);
 
             return $this->answer(true, 'install.server.databaseInstalled', 'Database installed successfully!');
         } catch (\Throwable $e) {
@@ -284,6 +279,63 @@ class InstallerController extends Controller
 
             return $this->answer(false, 'install.database.installFailed', 'Installation failed: '.$e->getMessage(), 500, $e->getMessage());
         }
+    }
+
+    /**
+     * Point this request at the database the user chose and migrate it.
+     *
+     * Writing .env changes nothing for the running request: its config was
+     * built at boot from the shipped .env (DB_CONNECTION=sqlite, no DB_HOST
+     * or DB_DATABASE). Migrating without switching ran every migration into a
+     * new database/database.sqlite, reported success and left the chosen
+     * database empty. So the chosen connection is rebuilt from the submitted
+     * settings, made the default, migrated explicitly, and checked afterwards.
+     *
+     * @param  array<string, mixed>  $input  host, port, database, username, password
+     *
+     * @throws \RuntimeException when the migrations did not reach the chosen database
+     */
+    protected function prepareDatabase(string $driver, array $input, bool $reset): void
+    {
+        config([
+            "database.connections.{$driver}" => $this->connectionSettings($driver, $input),
+            'database.default' => $driver,
+        ]);
+        DB::purge($driver);
+
+        // A plain migrate resumes after the last migration that completed.
+        Artisan::call($reset ? 'migrate:fresh' : 'migrate', ['--database' => $driver, '--force' => true]);
+
+        $schema = Schema::connection($driver);
+        if (! $schema->hasTable('migrations') || ! $schema->hasTable('system_settings')) {
+            throw new \RuntimeException(sprintf(
+                'The migrations finished but the tables are missing from the %s database "%s"; nothing was installed there.',
+                $driver,
+                (string) DB::connection($driver)->getDatabaseName(),
+            ));
+        }
+    }
+
+    /**
+     * Connection settings for the chosen driver: the driver's configured
+     * options (charset, SSL, search path, ...) with the location and
+     * credentials the user submitted. Overridable for tests.
+     *
+     * @param  array<string, mixed>  $input  host, port, database, username, password
+     * @return array<string, mixed>
+     */
+    protected function connectionSettings(string $driver, array $input): array
+    {
+        return array_merge((array) config("database.connections.{$driver}", []), [
+            'driver' => $driver,
+            // A DB_URL would take precedence over everything below.
+            'url' => null,
+            'host' => (string) $input['host'],
+            'port' => (string) $input['port'],
+            'database' => (string) $input['database'],
+            'username' => (string) $input['username'],
+            'password' => (string) ($input['password'] ?? ''),
+        ]);
     }
 
     /**

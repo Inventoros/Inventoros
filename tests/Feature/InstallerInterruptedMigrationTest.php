@@ -29,38 +29,56 @@ final class InstallerInterruptedMigrationTest extends TestCase
     {
         parent::setUp();
 
-        // In-memory SQLite starts empty for every test; a MySQL or PostgreSQL
-        // test database is shared, so start from an empty one.
-        if (! $this->inMemory()) {
-            Artisan::call('db:wipe', ['--force' => true]);
-        }
-
         $this->envFile = storage_path('app/testing-installer/installer.env');
         File::ensureDirectoryExists(dirname($this->envFile));
         file_put_contents($this->envFile, "APP_NAME=Inventoros\nDB_CONNECTION=sqlite\n");
 
+        // The installer opens its own connection to the database it is given,
+        // which cannot reach the suite's in-memory SQLite database: use an
+        // empty SQLite file instead. A MySQL or PostgreSQL test database is
+        // shared, so start from an empty one.
+        if ($this->inMemory()) {
+            touch($this->sqliteFile());
+            config(['database.connections.sqlite.database' => $this->sqliteFile()]);
+            DB::purge('sqlite');
+        } else {
+            Artisan::call('db:wipe', ['--force' => true]);
+        }
+
+        // The database the user "chose" is the test database.
+        $settings = config('database.connections.'.config('database.default'));
+
         $envFile = $this->envFile;
-        $this->app->bind(InstallerController::class, fn () => new class($envFile) extends InstallerController
+        $this->app->bind(InstallerController::class, fn () => new class($envFile, $settings) extends InstallerController
         {
-            public function __construct(private string $testEnvFile) {}
+            public function __construct(private string $testEnvFile, private array $testSettings) {}
 
             protected function envFilePath(): string
             {
                 return $this->testEnvFile;
+            }
+
+            protected function connectionSettings(string $driver, array $input): array
+            {
+                return $this->testSettings;
             }
         });
     }
 
     protected function tearDown(): void
     {
-        File::deleteDirectory(dirname($this->envFile));
-
-        if (! $this->inMemory()) {
+        if (config('database.connections.sqlite.database') === $this->sqliteFile()) {
+            // Release the file before deleting it.
+            DB::purge();
+            DB::purge('sqlite');
+        } else {
             // Drop what this test committed; the next RefreshDatabase test
             // migrates again.
             Artisan::call('db:wipe', ['--force' => true]);
             RefreshDatabaseState::$migrated = false;
         }
+
+        File::deleteDirectory(dirname($this->envFile));
 
         parent::tearDown();
     }
@@ -68,6 +86,11 @@ final class InstallerInterruptedMigrationTest extends TestCase
     private function inMemory(): bool
     {
         return DB::connection()->getDatabaseName() === ':memory:';
+    }
+
+    private function sqliteFile(): string
+    {
+        return dirname($this->envFile).'/database.sqlite';
     }
 
     /**
