@@ -9,6 +9,8 @@ import { computed, reactive, ref } from 'vue';
 import { usePermissions } from '@/composables/usePermissions';
 import { useI18n } from 'vue-i18n';
 import { ArrowLeft, Check, PackageCheck, CheckCircle2, X, PackageOpen } from 'lucide-vue-next';
+import { formatMoney } from '@/lib/money';
+import { displayDateTime } from '@/lib/dates';
 
 const { t } = useI18n();
 const { hasPermission } = usePermissions();
@@ -40,20 +42,11 @@ const conditionVariant = (condition) =>
     }[condition] || 'neutral');
 
 const getConditionLabel = (condition) => {
-    const labels = { new: 'New (Unopened)', used: 'Used (Opened)', damaged: 'Damaged' };
+    const labels = { new: t('returns.conditions.new'), used: t('returns.conditions.used'), damaged: t('returns.conditions.damaged') };
     return labels[condition] || condition;
 };
 
-const formatDate = (date) => {
-    if (!date) return '-';
-    return new Date(date).toLocaleDateString('en-US', {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit',
-    });
-};
+const formatDate = (date) => displayDateTime(date);
 
 const performAction = (action) => {
     processing.value = true;
@@ -105,7 +98,7 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-t
 </script>
 
 <template>
-    <Head :title="`Return ${returnOrder.return_number}`" />
+    <Head :title="t('returns.show.headTitle', { number: returnOrder.return_number })" />
 
     <AppLayout>
         <template #header>
@@ -119,12 +112,12 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-t
         </template>
 
         <PageHeader
-            :title="`Return #${returnOrder.return_number}`"
-            :description="`Created on ${formatDate(returnOrder.created_at)}`"
+            :title="t('returns.show.title', { number: returnOrder.return_number })"
+            :description="t('returns.show.createdOn', { date: formatDate(returnOrder.created_at) })"
         >
             <template #actions>
-                <Badge :variant="typeVariant(returnOrder.type)" size="sm" class="capitalize">{{ returnOrder.type }}</Badge>
-                <Badge :variant="statusVariant(returnOrder.status)" size="sm" dot class="capitalize">{{ returnOrder.status }}</Badge>
+                <Badge :variant="typeVariant(returnOrder.type)" size="sm" class="capitalize">{{ t(`portal.returns.types.${returnOrder.type}`) }}</Badge>
+                <Badge :variant="statusVariant(returnOrder.status)" size="sm" dot class="capitalize">{{ t(`portal.statuses.${returnOrder.status}`) }}</Badge>
 
                 <Button
                     v-if="returnOrder.status === 'pending'"
@@ -134,7 +127,7 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-t
                     @click="performAction('approve')"
                 >
                     <Check :size="14" />
-                    Approve Return
+                    {{ t('returns.show.approve') }}
                 </Button>
                 <Button
                     v-if="returnOrder.status === 'approved'"
@@ -144,7 +137,7 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-t
                     @click="performAction('receive')"
                 >
                     <PackageCheck :size="14" />
-                    Mark as Received
+                    {{ t('returns.show.markReceived') }}
                 </Button>
                 <Button
                     v-if="returnOrder.status === 'received'"
@@ -154,7 +147,7 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-t
                     @click="performAction('complete')"
                 >
                     <CheckCircle2 :size="14" />
-                    Complete Return
+                    {{ t('returns.show.complete') }}
                 </Button>
                 <Button
                     v-if="returnOrder.status === 'pending'"
@@ -164,11 +157,11 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-t
                     @click="showRejectModal = true"
                 >
                     <X :size="14" />
-                    Reject Return
+                    {{ t('returns.show.reject') }}
                 </Button>
                 <Button variant="secondary" size="sm" as="Link" :href="route('returns.index')">
                     <ArrowLeft :size="14" />
-                    Back to Returns
+                    {{ t('returns.show.backToReturns') }}
                 </Button>
             </template>
         </PageHeader>
@@ -179,7 +172,7 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-t
                 <!-- Return Items -->
                 <Card :padded="false">
                     <div class="flex items-center justify-between gap-2 px-5 pt-5">
-                        <h3 class="text-sm font-semibold text-text-primary">Return Items</h3>
+                        <h3 class="text-sm font-semibold text-text-primary">{{ t('returns.show.items') }}</h3>
                         <div v-if="canEditLines" class="flex gap-2">
                             <template v-if="editingLines">
                                 <Button variant="ghost" size="xs" :disabled="processing" @click="editingLines = false">{{ t('returns.lines.cancel') }}</Button>
@@ -194,11 +187,11 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-t
                             <table class="min-w-full">
                                 <thead>
                                     <tr class="border-b border-border-subtle">
-                                        <th :class="thClass">Product</th>
+                                        <th :class="thClass">{{ t('common.product') }}</th>
                                         <th :class="thClass">SKU</th>
-                                        <th :class="[thClass, 'text-center']">Qty</th>
-                                        <th :class="[thClass, 'text-center']">Condition</th>
-                                        <th :class="[thClass, 'text-center']">Restock</th>
+                                        <th :class="[thClass, 'text-center']">{{ t('returns.columns.qty') }}</th>
+                                        <th :class="[thClass, 'text-center']">{{ t('returns.columns.condition') }}</th>
+                                        <th :class="[thClass, 'text-center']">{{ t('returns.columns.restock') }}</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -208,7 +201,7 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-t
                                         class="border-b border-border-subtle transition-colors last:border-b-0 hover:bg-surface-overlay"
                                     >
                                         <td class="min-w-[12rem] px-4 py-3 text-sm font-medium text-text-primary">
-                                            {{ item.product?.name || item.order_item?.product_name || 'Unknown Product' }}
+                                            {{ item.product?.name || item.order_item?.product_name || t('returns.show.unknownProduct') }}
                                         </td>
                                         <td class="whitespace-nowrap px-4 py-3 text-sm text-text-tertiary">
                                             {{ item.product?.sku || item.order_item?.sku || '-' }}
@@ -220,7 +213,7 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-t
                                             <select
                                                 v-if="editingLines && lineEdits[item.id]"
                                                 v-model="lineEdits[item.id].condition"
-                                                :aria-label="`Condition ${item.product?.name || ''}`"
+                                                :aria-label="t('returns.show.conditionFor', { name: item.product?.name || '' })"
                                                 :class="selectClass"
                                             >
                                                 <option value="new">{{ getConditionLabel('new') }}</option>
@@ -236,12 +229,12 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-t
                                                 v-if="editingLines && lineEdits[item.id]"
                                                 v-model="lineEdits[item.id].restock"
                                                 type="checkbox"
-                                                :aria-label="`Restock ${item.product?.name || ''}`"
+                                                :aria-label="t('returns.show.restockFor', { name: item.product?.name || '' })"
                                                 class="h-4 w-4 rounded border-border-strong text-brand ds-focus-ring"
                                             />
                                             <template v-else>
-                                                <Badge v-if="item.restock" variant="success" size="sm">Yes</Badge>
-                                                <Badge v-else variant="neutral" size="sm">No</Badge>
+                                                <Badge v-if="item.restock" variant="success" size="sm">{{ t('common.yes') }}</Badge>
+                                                <Badge v-else variant="neutral" size="sm">{{ t('common.no') }}</Badge>
                                             </template>
                                         </td>
                                     </tr>
@@ -251,26 +244,26 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-t
 
                         <div v-else class="flex flex-col items-center gap-2 py-8 text-center">
                             <PackageOpen :size="22" class="text-text-tertiary" />
-                            <p class="text-sm text-text-tertiary">No items on this return.</p>
+                            <p class="text-sm text-text-tertiary">{{ t('returns.show.noItems') }}</p>
                         </div>
                     </div>
                 </Card>
 
                 <!-- Reason & Notes -->
                 <Card :padded="false">
-                    <div class="px-5 pt-5"><h3 class="text-sm font-semibold text-text-primary">Details</h3></div>
+                    <div class="px-5 pt-5"><h3 class="text-sm font-semibold text-text-primary">{{ t('returns.show.details') }}</h3></div>
                     <div class="p-5">
                         <dl class="space-y-3">
                             <div>
-                                <dt class="text-xs text-text-tertiary">Reason</dt>
+                                <dt class="text-xs text-text-tertiary">{{ t('returns.show.reason') }}</dt>
                                 <dd class="mt-1 text-sm text-text-primary">{{ returnOrder.reason }}</dd>
                             </div>
                             <div v-if="returnOrder.notes">
-                                <dt class="text-xs text-text-tertiary">Notes</dt>
+                                <dt class="text-xs text-text-tertiary">{{ t('common.notes') }}</dt>
                                 <dd class="mt-1 whitespace-pre-line text-sm text-text-secondary">{{ returnOrder.notes }}</dd>
                             </div>
                             <div v-if="returnOrder.order">
-                                <dt class="text-xs text-text-tertiary">For Order</dt>
+                                <dt class="text-xs text-text-tertiary">{{ t('returns.show.forOrder') }}</dt>
                                 <dd class="mt-1 text-sm">
                                     <Link :href="route('orders.show', returnOrder.order_id)" class="text-brand hover:underline">
                                         #{{ returnOrder.order.order_number }}
@@ -286,41 +279,41 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-t
             <div class="space-y-4">
                 <!-- Summary -->
                 <Card :padded="false">
-                    <div class="px-5 pt-5"><h3 class="text-sm font-semibold text-text-primary">Summary</h3></div>
+                    <div class="px-5 pt-5"><h3 class="text-sm font-semibold text-text-primary">{{ t('returns.show.summary') }}</h3></div>
                     <div class="p-5">
                         <dl class="space-y-3">
                             <div class="flex justify-between text-sm">
-                                <dt class="text-text-secondary">Return Number</dt>
+                                <dt class="text-text-secondary">{{ t('returns.show.returnNumber') }}</dt>
                                 <dd class="font-medium text-text-primary">{{ returnOrder.return_number }}</dd>
                             </div>
                             <div class="flex items-center justify-between text-sm">
-                                <dt class="text-text-secondary">Type</dt>
+                                <dt class="text-text-secondary">{{ t('common.type') }}</dt>
                                 <dd>
-                                    <Badge :variant="typeVariant(returnOrder.type)" size="sm" class="capitalize">{{ returnOrder.type }}</Badge>
+                                    <Badge :variant="typeVariant(returnOrder.type)" size="sm" class="capitalize">{{ t(`portal.returns.types.${returnOrder.type}`) }}</Badge>
                                 </dd>
                             </div>
                             <div class="flex items-center justify-between text-sm">
-                                <dt class="text-text-secondary">Status</dt>
+                                <dt class="text-text-secondary">{{ t('common.status') }}</dt>
                                 <dd>
-                                    <Badge :variant="statusVariant(returnOrder.status)" size="sm" dot class="capitalize">{{ returnOrder.status }}</Badge>
+                                    <Badge :variant="statusVariant(returnOrder.status)" size="sm" dot class="capitalize">{{ t(`portal.statuses.${returnOrder.status}`) }}</Badge>
                                 </dd>
                             </div>
                             <div class="flex justify-between text-sm">
-                                <dt class="text-text-secondary">Created</dt>
+                                <dt class="text-text-secondary">{{ t('common.createdAt') }}</dt>
                                 <dd class="font-medium text-text-primary">{{ formatDate(returnOrder.created_at) }}</dd>
                             </div>
                             <div v-if="returnOrder.completed_at" class="flex justify-between text-sm">
-                                <dt class="text-text-secondary">Completed</dt>
+                                <dt class="text-text-secondary">{{ t('returns.show.completed') }}</dt>
                                 <dd class="font-medium text-text-primary">{{ formatDate(returnOrder.completed_at) }}</dd>
                             </div>
                             <div v-if="returnOrder.processor" class="flex justify-between text-sm">
-                                <dt class="text-text-secondary">Processed By</dt>
+                                <dt class="text-text-secondary">{{ t('returns.show.processedBy') }}</dt>
                                 <dd class="font-medium text-text-primary">{{ returnOrder.processor.name }}</dd>
                             </div>
                             <div class="border-t border-border-subtle pt-3">
                                 <div class="flex items-center justify-between">
-                                    <dt class="text-sm font-semibold text-text-primary">Refund Amount</dt>
-                                    <dd class="text-xl font-bold tabular-nums text-brand">${{ parseFloat(returnOrder.refund_amount || 0).toFixed(2) }}</dd>
+                                    <dt class="text-sm font-semibold text-text-primary">{{ t('returns.show.refundAmount') }}</dt>
+                                    <dd class="text-xl font-bold tabular-nums text-brand">{{ formatMoney(returnOrder.refund_amount, returnOrder.order?.currency) }}</dd>
                                 </div>
                             </div>
                         </dl>
@@ -329,7 +322,7 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-t
 
                 <!-- Actions -->
                 <Card v-if="returnOrder.status !== 'completed' && returnOrder.status !== 'rejected'" :padded="false">
-                    <div class="px-5 pt-5"><h3 class="text-sm font-semibold text-text-primary">Actions</h3></div>
+                    <div class="px-5 pt-5"><h3 class="text-sm font-semibold text-text-primary">{{ t('common.actions') }}</h3></div>
                     <div class="p-5">
                         <div class="space-y-2">
                             <Button
@@ -339,7 +332,7 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-t
                                 :disabled="processing"
                                 @click="performAction('approve')"
                             >
-                                Approve Return
+                                {{ t('returns.show.approve') }}
                             </Button>
                             <Button
                                 v-if="returnOrder.status === 'approved'"
@@ -348,7 +341,7 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-t
                                 :disabled="processing"
                                 @click="performAction('receive')"
                             >
-                                Mark as Received
+                                {{ t('returns.show.markReceived') }}
                             </Button>
                             <Button
                                 v-if="returnOrder.status === 'received'"
@@ -357,19 +350,19 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-t
                                 :disabled="processing"
                                 @click="performAction('complete')"
                             >
-                                Complete Return
+                                {{ t('returns.show.complete') }}
                             </Button>
                         </div>
 
                         <p class="mt-3 text-xs text-text-tertiary">
                             <template v-if="returnOrder.status === 'pending'">
-                                Approve to proceed or reject the return.
+                                {{ t('returns.show.pendingHint') }}
                             </template>
                             <template v-else-if="returnOrder.status === 'approved'">
-                                Mark as received when items arrive. Items marked for restock will be added back to inventory.
+                                {{ t('returns.show.approvedHint') }}
                             </template>
                             <template v-else-if="returnOrder.status === 'received'">
-                                Complete the return to finalize the process.
+                                {{ t('returns.show.receivedHint') }}
                             </template>
                         </p>
                     </div>
@@ -377,13 +370,13 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-t
 
                 <!-- Danger Zone -->
                 <Card v-if="returnOrder.status === 'pending'" :padded="false">
-                    <div class="px-5 pt-5"><h3 class="text-sm font-semibold text-text-primary">Danger Zone</h3></div>
+                    <div class="px-5 pt-5"><h3 class="text-sm font-semibold text-text-primary">{{ t('returns.show.dangerZone') }}</h3></div>
                     <div class="p-5">
                         <Button variant="danger" class="w-full" :disabled="processing" @click="showRejectModal = true">
-                            Reject Return
+                            {{ t('returns.show.reject') }}
                         </Button>
                         <p class="mt-2 text-xs text-text-tertiary">
-                            Rejecting closes this return. This cannot be undone.
+                            {{ t('returns.show.rejectWarning') }}
                         </p>
                     </div>
                 </Card>
@@ -397,7 +390,7 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-t
 
                 <div class="relative mx-4 w-full max-w-md rounded-xl border border-border-subtle bg-surface-raised p-6 shadow-lg" @click.stop>
                     <div class="mb-4 flex items-center justify-between">
-                        <h3 class="text-base font-semibold text-text-primary">Reject Return</h3>
+                        <h3 class="text-base font-semibold text-text-primary">{{ t('returns.show.reject') }}</h3>
                         <button
                             @click="showRejectModal = false"
                             class="text-text-tertiary transition-colors hover:text-text-primary"
@@ -407,22 +400,22 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-t
                     </div>
 
                     <div class="mb-6">
-                        <label class="mb-1 block text-sm font-medium text-text-secondary">Reason for rejection</label>
+                        <label class="mb-1 block text-sm font-medium text-text-secondary">{{ t('returns.show.rejectReason') }}</label>
                         <textarea
                             v-model="rejectNotes"
                             rows="3"
                             class="w-full rounded-md border border-border-subtle bg-surface-canvas px-3 py-2 text-sm text-text-primary placeholder:text-text-tertiary ds-focus-ring"
-                            placeholder="Why is this return being rejected?"
+                            :placeholder="t('returns.show.rejectPlaceholder')"
                         ></textarea>
                     </div>
 
                     <div class="flex justify-end gap-3">
                         <Button variant="secondary" :disabled="processing" @click="showRejectModal = false">
-                            Cancel
+                            {{ t('common.cancel') }}
                         </Button>
                         <Button variant="danger" :loading="processing" :disabled="processing" @click="submitReject">
-                            <span v-if="processing">Rejecting...</span>
-                            <span v-else>Reject Return</span>
+                            <span v-if="processing">{{ t('returns.show.rejecting') }}</span>
+                            <span v-else>{{ t('returns.show.reject') }}</span>
                         </Button>
                     </div>
                 </div>

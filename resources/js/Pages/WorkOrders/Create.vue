@@ -55,7 +55,7 @@ const fieldError = 'mt-1 text-xs text-status-danger';
 </script>
 
 <template>
-    <Head title="Create Work Order" />
+    <Head :title="t('workOrders.createWorkOrder')" />
 
     <AppLayout>
         <template #header>
@@ -68,11 +68,11 @@ const fieldError = 'mt-1 text-xs text-status-danger';
             </div>
         </template>
 
-        <PageHeader title="Create Work Order" description="Start a new production work order for an assembly product">
+        <PageHeader :title="t('workOrders.createWorkOrder')" :description="t('workOrders.createSubtitle')">
             <template #actions>
                 <Button variant="secondary" size="sm" as="Link" :href="route('work-orders.index')">
                     <ArrowLeft :size="14" />
-                    Back to Work Orders
+                    {{ t('workOrders.backToWorkOrders') }}
                 </Button>
             </template>
         </PageHeader>
@@ -83,7 +83,7 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                     <!-- Assembly Product -->
                     <div>
                         <label for="product_id" :class="fieldLabel">
-                            Assembly Product <span class="text-status-danger">*</span>
+                            {{ t('workOrders.fields.assemblyProduct') }} <span class="text-status-danger">*</span>
                         </label>
                         <select
                             id="product_id"
@@ -91,7 +91,7 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                             :class="fieldInput"
                             required
                         >
-                            <option value="">Select an assembly product...</option>
+                            <option value="">{{ t('workOrders.fields.selectProduct') }}</option>
                             <option v-for="product in assemblyProducts" :key="product.id" :value="product.id">
                                 {{ product.name }} ({{ product.sku }})
                             </option>
@@ -104,7 +104,7 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                     <!-- Quantity -->
                     <div>
                         <label for="quantity" :class="fieldLabel">
-                            Quantity to Produce <span class="text-status-danger">*</span>
+                            {{ t('workOrders.fields.quantityToProduce') }} <span class="text-status-danger">*</span>
                         </label>
                         <input
                             id="quantity"
@@ -122,14 +122,14 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                     <!-- Warehouse -->
                     <div v-if="warehouses && warehouses.length > 0">
                         <label for="warehouse_id" :class="fieldLabel">
-                            Warehouse
+                            {{ t('workOrders.fields.warehouse') }}
                         </label>
                         <select
                             id="warehouse_id"
                             v-model="form.warehouse_id"
                             :class="fieldInput"
                         >
-                            <option value="">No specific warehouse</option>
+                            <option value="">{{ t('workOrders.fields.noWarehouse') }}</option>
                             <option v-for="warehouse in warehouses" :key="warehouse.id" :value="warehouse.id">
                                 {{ warehouse.name }}
                             </option>
@@ -142,14 +142,14 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                     <!-- Notes -->
                     <div>
                         <label for="notes" :class="fieldLabel">
-                            Notes
+                            {{ t('workOrders.fields.notes') }}
                         </label>
                         <textarea
                             id="notes"
                             v-model="form.notes"
                             rows="3"
                             :class="fieldArea"
-                            placeholder="Optional production notes..."
+                            :placeholder="t('workOrders.fields.notesPlaceholder')"
                         ></textarea>
                         <p v-if="form.errors.notes" :class="fieldError">
                             {{ form.errors.notes }}
@@ -160,21 +160,21 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                     <div v-if="selectedProduct && requiredComponents.length > 0" class="overflow-hidden rounded-lg border border-border-subtle">
                         <div class="border-b border-border-subtle bg-surface-canvas px-4 py-3">
                             <h3 class="text-sm font-semibold text-text-primary">
-                                Required Components
+                                {{ t('workOrders.components.title') }}
                             </h3>
                             <p class="mt-0.5 text-xs text-text-tertiary">
-                                Materials needed to produce {{ form.quantity }} unit{{ form.quantity !== 1 ? 's' : '' }} of {{ selectedProduct.name }}
+                                {{ t('workOrders.create.materialsNeeded', { count: form.quantity, name: selectedProduct.name }, form.quantity) }}
                             </p>
                         </div>
                         <div class="overflow-x-auto">
                             <table class="min-w-full divide-y divide-border-subtle">
                                 <thead class="bg-surface-canvas">
                                     <tr>
-                                        <th class="px-4 py-2 text-left text-xs font-medium uppercase tracking-wider text-text-tertiary">Component</th>
-                                        <th class="px-4 py-2 text-left text-xs font-medium uppercase tracking-wider text-text-tertiary">SKU</th>
-                                        <th class="px-4 py-2 text-center text-xs font-medium uppercase tracking-wider text-text-tertiary">Required</th>
-                                        <th class="px-4 py-2 text-center text-xs font-medium uppercase tracking-wider text-text-tertiary">Available</th>
-                                        <th class="px-4 py-2 text-center text-xs font-medium uppercase tracking-wider text-text-tertiary">Status</th>
+                                        <th class="px-4 py-2 text-left text-xs font-medium uppercase tracking-wider text-text-tertiary">{{ t('workOrders.components.component') }}</th>
+                                        <th class="px-4 py-2 text-left text-xs font-medium uppercase tracking-wider text-text-tertiary">{{ t('workOrders.components.sku') }}</th>
+                                        <th class="px-4 py-2 text-center text-xs font-medium uppercase tracking-wider text-text-tertiary">{{ t('workOrders.components.required') }}</th>
+                                        <th class="px-4 py-2 text-center text-xs font-medium uppercase tracking-wider text-text-tertiary">{{ t('workOrders.components.available') }}</th>
+                                        <th class="px-4 py-2 text-center text-xs font-medium uppercase tracking-wider text-text-tertiary">{{ t('workOrders.components.status') }}</th>
                                     </tr>
                                 </thead>
                                 <tbody class="divide-y divide-border-subtle">
@@ -184,7 +184,7 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                                         :class="!comp.sufficient ? 'bg-status-danger/10' : ''"
                                     >
                                         <td class="px-4 py-3 text-sm text-text-primary">
-                                            {{ comp.component?.name || 'Unknown' }}
+                                            {{ comp.component?.name || t('workOrders.components.unknown') }}
                                         </td>
                                         <td class="px-4 py-3 text-sm text-text-tertiary">
                                             {{ comp.component?.sku || '-' }}
@@ -200,7 +200,7 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                                                 class="rounded-full px-2 py-0.5 text-xs font-semibold"
                                                 :class="comp.sufficient ? 'bg-status-success/15 text-status-success' : 'bg-status-danger/15 text-status-danger'"
                                             >
-                                                {{ comp.sufficient ? 'OK' : 'Insufficient' }}
+                                                {{ comp.sufficient ? t('workOrders.components.ok') : t('workOrders.components.insufficient') }}
                                             </span>
                                         </td>
                                     </tr>
@@ -212,7 +212,7 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                         <div v-if="!allComponentsSufficient" class="border-t border-border-subtle bg-status-danger/10 px-4 py-3">
                             <p class="flex items-center text-sm text-status-danger">
                                 <AlertTriangle :size="16" class="mr-2 flex-shrink-0" />
-                                Some components have insufficient stock. You can still create the work order, but production cannot begin until stock is replenished.
+                                {{ t('workOrders.components.insufficientWarning') }}
                             </p>
                         </div>
                     </div>
@@ -221,7 +221,7 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                     <div v-if="selectedProduct && requiredComponents.length === 0" class="rounded-lg border border-status-warning/40 bg-status-warning/10 p-4">
                         <p class="flex items-center text-sm text-status-warning">
                             <AlertTriangle :size="16" class="mr-2" />
-                            This assembly product has no components defined. Add components in the product detail page before creating a work order.
+                            {{ t('workOrders.components.noComponentsDefined') }}
                         </p>
                     </div>
                 </div>
@@ -229,10 +229,10 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                 <!-- Form Actions -->
                 <div class="flex items-center justify-end gap-3 border-t border-border-subtle px-5 py-4">
                     <Button variant="secondary" as="Link" :href="route('work-orders.index')">
-                        Cancel
+                        {{ t('common.cancel') }}
                     </Button>
                     <Button type="submit" variant="default" :loading="form.processing" :disabled="form.processing">
-                        Create Work Order
+                        {{ t('workOrders.createWorkOrder') }}
                     </Button>
                 </div>
             </Card>

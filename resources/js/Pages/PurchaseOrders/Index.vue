@@ -9,7 +9,8 @@ import DataTable from '@/Components/ui/DataTable.vue';
 import { Head, Link, router } from '@inertiajs/vue3';
 import { ref } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { formatCalendarDate } from '@/lib/dates';
+import { displayCalendarDate } from '@/lib/dates';
+import { formatMoney } from '@/lib/money';
 import { Plus, Search, Eye, Pencil, Trash2, PackageCheck, ClipboardList } from 'lucide-vue-next';
 
 const { t } = useI18n();
@@ -45,31 +46,28 @@ const clearFilters = () => {
 };
 
 const deletePO = (po) => {
-    if (confirm(`Are you sure you want to delete "${po.po_number}"?`)) {
+    if (confirm(t('purchaseOrders.confirmDelete', { number: po.po_number }))) {
         router.delete(route('purchase-orders.destroy', po.id));
     }
 };
 
-const formatCurrency = (value, currency = 'USD') => {
-    return new Intl.NumberFormat('en-US', {
-        style: 'currency',
-        currency: currency,
-    }).format(value || 0);
+const formatCurrency = (value, currency = undefined) => {
+    return formatMoney(value, currency);
 };
 
 // order_date and expected_date are calendar days (date columns).
 const formatDate = (dateString) =>
-    formatCalendarDate(dateString, { year: 'numeric', month: 'short', day: 'numeric' }, 'en-US');
+    displayCalendarDate(dateString);
 
 const statusVariant = (s) =>
     ({ draft: 'neutral', sent: 'info', partial: 'warning', received: 'success', cancelled: 'danger' }[s] || 'neutral');
 
 const statusLabels = {
-    draft: 'Draft',
-    sent: 'Sent',
-    partial: 'Partial',
-    received: 'Received',
-    cancelled: 'Cancelled',
+    draft: t('purchaseOrders.status.draft'),
+    sent: t('purchaseOrders.status.sent'),
+    partial: t('purchaseOrders.status.partial'),
+    received: t('purchaseOrders.status.received'),
+    cancelled: t('purchaseOrders.status.cancelled'),
 };
 
 const columns = [
@@ -101,7 +99,7 @@ const selectClass =
 
         <PluginSlot slot="header" :components="pluginComponents?.header" />
 
-        <PageHeader :title="t('purchaseOrders.title')" description="Restock orders to your suppliers.">
+        <PageHeader :title="t('purchaseOrders.title')" :description="t('purchaseOrders.index.description')">
             <template #actions>
                 <Button variant="default" size="sm" as="Link" :href="route('purchase-orders.create')">
                     <Plus :size="14" />
@@ -184,10 +182,10 @@ const selectClass =
                 </template>
                 <template #cell-actions="{ row }">
                     <div class="flex items-center justify-end gap-1">
-                        <Link :href="route('purchase-orders.show', row.id)" class="rounded-md p-1.5 text-text-tertiary transition-colors hover:bg-surface-overlay hover:text-brand" :aria-label="t('common.view')" title="View"><Eye :size="16" /></Link>
-                        <Link v-if="row.status === 'draft'" :href="route('purchase-orders.edit', row.id)" class="rounded-md p-1.5 text-text-tertiary transition-colors hover:bg-surface-overlay hover:text-status-success" :aria-label="t('common.edit')" title="Edit"><Pencil :size="16" /></Link>
-                        <Link v-if="row.status === 'sent' || row.status === 'partial'" :href="route('purchase-orders.receive', row.id)" class="rounded-md p-1.5 text-text-tertiary transition-colors hover:bg-surface-overlay hover:text-status-success" title="Receive"><PackageCheck :size="16" /></Link>
-                        <button v-if="row.status === 'draft'" type="button" @click="deletePO(row)" class="rounded-md p-1.5 text-text-tertiary transition-colors hover:bg-surface-overlay hover:text-status-danger" :aria-label="t('common.delete')" title="Delete"><Trash2 :size="16" /></button>
+                        <Link :href="route('purchase-orders.show', row.id)" class="rounded-md p-1.5 text-text-tertiary transition-colors hover:bg-surface-overlay hover:text-brand" :aria-label="t('common.view')" :title="t('common.view')"><Eye :size="16" /></Link>
+                        <Link v-if="row.status === 'draft'" :href="route('purchase-orders.edit', row.id)" class="rounded-md p-1.5 text-text-tertiary transition-colors hover:bg-surface-overlay hover:text-status-success" :aria-label="t('common.edit')" :title="t('common.edit')"><Pencil :size="16" /></Link>
+                        <Link v-if="row.status === 'sent' || row.status === 'partial'" :href="route('purchase-orders.receive', row.id)" class="rounded-md p-1.5 text-text-tertiary transition-colors hover:bg-surface-overlay hover:text-status-success" :title="t('purchaseOrders.receive.receive')"><PackageCheck :size="16" /></Link>
+                        <button v-if="row.status === 'draft'" type="button" @click="deletePO(row)" class="rounded-md p-1.5 text-text-tertiary transition-colors hover:bg-surface-overlay hover:text-status-danger" :aria-label="t('common.delete')" :title="t('common.delete')"><Trash2 :size="16" /></button>
                     </div>
                 </template>
                 <template #empty>

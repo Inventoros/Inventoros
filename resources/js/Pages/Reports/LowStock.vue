@@ -11,6 +11,7 @@ import { Head, Link } from '@inertiajs/vue3';
 import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useQuickReorder } from '@/composables/useQuickReorder';
+import { formatMoney } from '@/lib/money';
 import {
     AlertTriangle,
     PackageX,
@@ -27,12 +28,7 @@ const props = defineProps({
     summary: Object,
 });
 
-const formatCurrency = (value) => {
-    return new Intl.NumberFormat('en-US', {
-        style: 'currency',
-        currency: 'USD',
-    }).format(value);
-};
+const formatCurrency = (value) => formatMoney(value);
 
 const quickReorder = useQuickReorder(computed(() => props.products || []));
 
@@ -139,8 +135,8 @@ const thClassRight = 'px-4 py-2.5 text-right text-xs font-medium tracking-tight 
                             <th :class="thClass">{{ t('common.product') }}</th>
                             <th :class="thClass">{{ t('products.category') }}</th>
                             <th :class="thClassRight">{{ t('reports.lowStock.current') }}</th>
-                            <th :class="thClassRight">Min</th>
-                            <th :class="thClassRight">Max</th>
+                            <th :class="thClassRight">{{ t('reports.lowStock.min') }}</th>
+                            <th :class="thClassRight">{{ t('reports.lowStock.max') }}</th>
                             <th :class="thClassRight">{{ t('reports.lowStock.deficit') }}</th>
                             <th :class="thClassRight">{{ t('reports.lowStock.reorderCost') }}</th>
                             <th :class="thClass">{{ t('productSuppliers.supplier') }}</th>

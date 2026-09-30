@@ -21,7 +21,7 @@ test('a UTC-midnight payment date is that calendar day west of UTC', () => {
 });
 
 test('the order page formats payment dates as calendar days', () => {
-    const formatter = /const formatPaymentDate = \(date\) =>\s*formatCalendarDate\(/;
+    const formatter = /const formatPaymentDate = \(date\) =>\s*displayCalendarDate\(/;
     assert.match(page, formatter);
     assert.match(page, /formatPaymentDate\(payment\.paid_at\)/);
     assert.doesNotMatch(page, /formatDateShort\(payment\.paid_at\)/);

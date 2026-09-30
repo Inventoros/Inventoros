@@ -8,6 +8,7 @@ import StatTile from '@/Components/ui/StatTile.vue';
 import { Head, Link, router } from '@inertiajs/vue3';
 import { ref } from 'vue';
 import { useI18n } from 'vue-i18n';
+import { displayDateTime } from '@/lib/dates';
 import { ArrowLeft, Play, CheckCircle2, X, Boxes, PackageCheck, Check, AlertTriangle, Trash2 } from 'lucide-vue-next';
 
 const { t } = useI18n();
@@ -20,10 +21,10 @@ const processing = ref(false);
 const quantityProduced = ref(props.workOrder.quantity);
 
 const statusSteps = [
-    { key: 'draft', label: 'Draft' },
-    { key: 'pending', label: 'Pending' },
-    { key: 'in_progress', label: 'In Progress' },
-    { key: 'completed', label: 'Completed' },
+    { key: 'draft', label: t('workOrders.statuses.draft') },
+    { key: 'pending', label: t('workOrders.statuses.pending') },
+    { key: 'in_progress', label: t('workOrders.statuses.in_progress') },
+    { key: 'completed', label: t('workOrders.statuses.completed') },
 ];
 
 const statusOrder = { draft: 0, pending: 1, in_progress: 2, completed: 3, cancelled: -1 };
@@ -48,11 +49,11 @@ const statusVariant = (status) =>
 
 const getStatusLabel = (status) => {
     const labels = {
-        'draft': 'Draft',
-        'pending': 'Pending',
-        'in_progress': 'In Progress',
-        'completed': 'Completed',
-        'cancelled': 'Cancelled',
+        'draft': t('workOrders.statuses.draft'),
+        'pending': t('workOrders.statuses.pending'),
+        'in_progress': t('workOrders.statuses.in_progress'),
+        'completed': t('workOrders.statuses.completed'),
+        'cancelled': t('workOrders.statuses.cancelled'),
     };
     return labels[status] || status;
 };
@@ -64,21 +65,12 @@ const componentStatusVariant = (comp) => {
 };
 
 const componentStatusLabel = (comp) => {
-    if ((comp.quantity_consumed || 0) >= comp.quantity_required) return 'Consumed';
-    if ((comp.component?.stock || 0) >= comp.quantity_required) return 'Ready';
-    return 'Insufficient';
+    if ((comp.quantity_consumed || 0) >= comp.quantity_required) return t('workOrders.components.consumed');
+    if ((comp.component?.stock || 0) >= comp.quantity_required) return t('workOrders.components.ready');
+    return t('workOrders.components.insufficient');
 };
 
-const formatDate = (dateStr) => {
-    if (!dateStr) return '-';
-    return new Date(dateStr).toLocaleDateString('en-US', {
-        year: 'numeric',
-        month: 'short',
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit',
-    });
-};
+const formatDate = (dateStr) => displayDateTime(dateStr);
 
 const canStart = ['draft', 'pending'].includes(props.workOrder.status);
 const canComplete = props.workOrder.status === 'in_progress';
@@ -88,7 +80,7 @@ const isReadOnly = ['completed', 'cancelled'].includes(props.workOrder.status);
 const canDelete = ['draft', 'cancelled'].includes(props.workOrder.status);
 
 const startProduction = () => {
-    if (!confirm('Start production for this work order? Components will be reserved.')) return;
+    if (!confirm(t('workOrders.actions.startConfirm'))) return;
     processing.value = true;
     router.post(route('work-orders.start', props.workOrder.id), {}, {
         onFinish: () => { processing.value = false; },
@@ -96,7 +88,7 @@ const startProduction = () => {
 };
 
 const completeProduction = () => {
-    if (!confirm(`Complete this work order? ${quantityProduced.value} units will be added to assembly stock.`)) return;
+    if (!confirm(t('workOrders.actions.completeConfirm', { count: quantityProduced.value }))) return;
     processing.value = true;
     router.post(route('work-orders.complete', props.workOrder.id), {
         quantity_produced: quantityProduced.value,
@@ -106,7 +98,7 @@ const completeProduction = () => {
 };
 
 const cancelWorkOrder = () => {
-    if (!confirm('Cancel this work order? Any reserved components will be released.')) return;
+    if (!confirm(t('workOrders.actions.cancelConfirm'))) return;
     processing.value = true;
     router.post(route('work-orders.cancel', props.workOrder.id), {}, {
         onFinish: () => { processing.value = false; },
@@ -114,7 +106,7 @@ const cancelWorkOrder = () => {
 };
 
 const deleteWorkOrder = () => {
-    if (!confirm('Delete this work order? This cannot be undone.')) return;
+    if (!confirm(t('workOrders.show.deleteConfirm'))) return;
     processing.value = true;
     router.delete(route('work-orders.destroy', props.workOrder.id), {
         onFinish: () => { processing.value = false; },
@@ -126,7 +118,7 @@ const fieldInput = 'h-9 w-full rounded-md border border-border-subtle bg-surface
 </script>
 
 <template>
-    <Head :title="`Work Order ${workOrder.wo_number}`" />
+    <Head :title="t('workOrders.show.headTitle', { number: workOrder.wo_number })" />
 
     <AppLayout>
         <template #header>
@@ -139,7 +131,7 @@ const fieldInput = 'h-9 w-full rounded-md border border-border-subtle bg-surface
             </div>
         </template>
 
-        <PageHeader :title="workOrder.wo_number" description="Work order details">
+        <PageHeader :title="workOrder.wo_number" :description="t('workOrders.detailsSubtitle')">
             <template #actions>
                 <Badge :variant="statusVariant(workOrder.status)" size="sm" dot>{{ getStatusLabel(workOrder.status) }}</Badge>
                 <Button
@@ -150,7 +142,7 @@ const fieldInput = 'h-9 w-full rounded-md border border-border-subtle bg-surface
                     @click="startProduction"
                 >
                     <Play :size="14" />
-                    Start Production
+                    {{ t('workOrders.actions.startProduction') }}
                 </Button>
                 <Button
                     v-if="canCancel"
@@ -160,7 +152,7 @@ const fieldInput = 'h-9 w-full rounded-md border border-border-subtle bg-surface
                     @click="cancelWorkOrder"
                 >
                     <X :size="14" />
-                    Cancel Work Order
+                    {{ t('workOrders.actions.cancelWorkOrder') }}
                 </Button>
                 <Button
                     v-if="canDelete"
@@ -170,18 +162,18 @@ const fieldInput = 'h-9 w-full rounded-md border border-border-subtle bg-surface
                     @click="deleteWorkOrder"
                 >
                     <Trash2 :size="14" />
-                    Delete
+                    {{ t('common.delete') }}
                 </Button>
                 <Button variant="secondary" size="sm" as="Link" :href="route('work-orders.index')">
                     <ArrowLeft :size="14" />
-                    Back to Work Orders
+                    {{ t('workOrders.backToWorkOrders') }}
                 </Button>
             </template>
         </PageHeader>
 
         <!-- Status Timeline -->
         <Card v-if="workOrder.status !== 'cancelled'" :padded="false" class="mt-6">
-            <div class="px-5 pt-5"><h3 class="text-sm font-semibold text-text-primary">Production Progress</h3></div>
+            <div class="px-5 pt-5"><h3 class="text-sm font-semibold text-text-primary">{{ t('workOrders.progress.title') }}</h3></div>
             <div class="p-5">
                 <div class="flex items-center justify-between">
                     <template v-for="(step, index) in statusSteps" :key="step.key">
@@ -216,21 +208,21 @@ const fieldInput = 'h-9 w-full rounded-md border border-border-subtle bg-surface
         <Card v-if="workOrder.status === 'cancelled'" class="mt-6 border-status-danger/20 bg-status-danger-soft">
             <div class="flex items-center gap-3">
                 <AlertTriangle :size="20" class="shrink-0 text-status-danger" />
-                <span class="text-sm font-medium text-status-danger">This work order has been cancelled.</span>
+                <span class="text-sm font-medium text-status-danger">{{ t('workOrders.cancelledBanner') }}</span>
             </div>
         </Card>
 
         <!-- Key metrics -->
         <section class="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-2">
             <StatTile
-                label="Quantity to Produce"
+                :label="t('workOrders.fields.quantityToProduce')"
                 :value="workOrder.quantity"
                 icon-tone="brand"
             >
                 <template #icon><Boxes :size="18" /></template>
             </StatTile>
             <StatTile
-                label="Quantity Produced"
+                :label="t('workOrders.fields.quantityProduced')"
                 :value="workOrder.quantity_produced || 0"
                 :icon-tone="(workOrder.quantity_produced || 0) >= workOrder.quantity ? 'success' : 'info'"
             >
@@ -243,11 +235,11 @@ const fieldInput = 'h-9 w-full rounded-md border border-border-subtle bg-surface
             <div class="space-y-4 lg:col-span-2">
                 <!-- Work Order Details -->
                 <Card :padded="false">
-                    <div class="px-5 pt-5"><h3 class="text-sm font-semibold text-text-primary">Work Order Details</h3></div>
+                    <div class="px-5 pt-5"><h3 class="text-sm font-semibold text-text-primary">{{ t('workOrders.details') }}</h3></div>
                     <div class="p-5">
                         <dl class="grid grid-cols-2 gap-4">
                             <div>
-                                <dt class="mb-1 text-xs text-text-tertiary">Assembly Product</dt>
+                                <dt class="mb-1 text-xs text-text-tertiary">{{ t('workOrders.fields.assemblyProduct') }}</dt>
                                 <dd>
                                     <Link
                                         v-if="workOrder.product"
@@ -260,27 +252,27 @@ const fieldInput = 'h-9 w-full rounded-md border border-border-subtle bg-surface
                                 </dd>
                             </div>
                             <div>
-                                <dt class="mb-1 text-xs text-text-tertiary">Status</dt>
+                                <dt class="mb-1 text-xs text-text-tertiary">{{ t('common.status') }}</dt>
                                 <dd>
                                     <Badge :variant="statusVariant(workOrder.status)" size="sm" dot>{{ getStatusLabel(workOrder.status) }}</Badge>
                                 </dd>
                             </div>
                             <div>
-                                <dt class="mb-1 text-xs text-text-tertiary">Quantity to Produce</dt>
+                                <dt class="mb-1 text-xs text-text-tertiary">{{ t('workOrders.fields.quantityToProduce') }}</dt>
                                 <dd class="text-lg font-bold tabular-nums text-text-primary">{{ workOrder.quantity }}</dd>
                             </div>
                             <div>
-                                <dt class="mb-1 text-xs text-text-tertiary">Quantity Produced</dt>
+                                <dt class="mb-1 text-xs text-text-tertiary">{{ t('workOrders.fields.quantityProduced') }}</dt>
                                 <dd class="text-lg font-bold tabular-nums" :class="(workOrder.quantity_produced || 0) >= workOrder.quantity ? 'text-status-success' : 'text-text-primary'">
                                     {{ workOrder.quantity_produced || 0 }}
                                 </dd>
                             </div>
                             <div v-if="workOrder.warehouse">
-                                <dt class="mb-1 text-xs text-text-tertiary">Warehouse</dt>
+                                <dt class="mb-1 text-xs text-text-tertiary">{{ t('workOrders.fields.warehouse') }}</dt>
                                 <dd class="text-sm text-text-primary">{{ workOrder.warehouse.name }}</dd>
                             </div>
                             <div v-if="workOrder.notes">
-                                <dt class="mb-1 text-xs text-text-tertiary">Notes</dt>
+                                <dt class="mb-1 text-xs text-text-tertiary">{{ t('workOrders.fields.notes') }}</dt>
                                 <dd class="text-sm text-text-primary">{{ workOrder.notes }}</dd>
                             </div>
                         </dl>
@@ -289,18 +281,18 @@ const fieldInput = 'h-9 w-full rounded-md border border-border-subtle bg-surface
 
                 <!-- Components Table -->
                 <Card :padded="false">
-                    <div class="px-5 pt-5"><h3 class="text-sm font-semibold text-text-primary">Required Components</h3></div>
+                    <div class="px-5 pt-5"><h3 class="text-sm font-semibold text-text-primary">{{ t('workOrders.components.title') }}</h3></div>
                     <div class="p-5">
                         <div class="w-full overflow-x-auto rounded-lg border border-border-subtle">
                             <table class="min-w-full">
                                 <thead>
                                     <tr class="border-b border-border-subtle">
-                                        <th :class="thClass">Component</th>
-                                        <th :class="thClass">SKU</th>
-                                        <th :class="[thClass, 'text-center']">Required Qty</th>
-                                        <th :class="[thClass, 'text-center']">Consumed</th>
-                                        <th :class="[thClass, 'text-center']">Available</th>
-                                        <th :class="[thClass, 'text-center']">Status</th>
+                                        <th :class="thClass">{{ t('workOrders.components.component') }}</th>
+                                        <th :class="thClass">{{ t('workOrders.components.sku') }}</th>
+                                        <th :class="[thClass, 'text-center']">{{ t('workOrders.components.requiredQty') }}</th>
+                                        <th :class="[thClass, 'text-center']">{{ t('workOrders.components.consumed') }}</th>
+                                        <th :class="[thClass, 'text-center']">{{ t('workOrders.components.available') }}</th>
+                                        <th :class="[thClass, 'text-center']">{{ t('workOrders.components.status') }}</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -313,7 +305,7 @@ const fieldInput = 'h-9 w-full rounded-md border border-border-subtle bg-surface
                                             >
                                                 {{ comp.component.name }}
                                             </Link>
-                                            <span v-else class="text-sm text-text-tertiary">Unknown</span>
+                                            <span v-else class="text-sm text-text-tertiary">{{ t('workOrders.components.unknown') }}</span>
                                         </td>
                                         <td class="px-4 py-3 text-sm text-text-tertiary">
                                             {{ comp.component?.sku || '-' }}
@@ -336,7 +328,7 @@ const fieldInput = 'h-9 w-full rounded-md border border-border-subtle bg-surface
 
                                     <tr v-if="!workOrder.components || workOrder.components.length === 0">
                                         <td colspan="6" class="px-4 py-8 text-center text-sm text-text-tertiary">
-                                            No components recorded for this work order.
+                                            {{ t('workOrders.components.noComponents') }}
                                         </td>
                                     </tr>
                                 </tbody>
@@ -350,11 +342,11 @@ const fieldInput = 'h-9 w-full rounded-md border border-border-subtle bg-surface
             <div class="space-y-4">
                 <!-- Complete Production -->
                 <Card v-if="!isReadOnly && canComplete" :padded="false">
-                    <div class="px-5 pt-5"><h3 class="text-sm font-semibold text-text-primary">Complete Production</h3></div>
+                    <div class="px-5 pt-5"><h3 class="text-sm font-semibold text-text-primary">{{ t('workOrders.actions.completeProduction') }}</h3></div>
                     <div class="p-5">
                         <div class="space-y-2">
                             <label class="block text-sm font-medium text-text-secondary">
-                                Quantity Produced
+                                {{ t('workOrders.fields.quantityProduced') }}
                             </label>
                             <input
                                 v-model.number="quantityProduced"
@@ -370,7 +362,7 @@ const fieldInput = 'h-9 w-full rounded-md border border-border-subtle bg-surface
                                 @click="completeProduction"
                             >
                                 <CheckCircle2 :size="16" />
-                                Complete Production
+                                {{ t('workOrders.actions.completeProduction') }}
                             </Button>
                         </div>
                     </div>
@@ -378,31 +370,31 @@ const fieldInput = 'h-9 w-full rounded-md border border-border-subtle bg-surface
 
                 <!-- Dates / Info -->
                 <Card :padded="false">
-                    <div class="px-5 pt-5"><h3 class="text-sm font-semibold text-text-primary">Information</h3></div>
+                    <div class="px-5 pt-5"><h3 class="text-sm font-semibold text-text-primary">{{ t('workOrders.info.title') }}</h3></div>
                     <div class="p-5">
                         <dl class="space-y-3">
                             <div>
-                                <dt class="mb-1 text-xs text-text-tertiary">Created By</dt>
+                                <dt class="mb-1 text-xs text-text-tertiary">{{ t('workOrders.info.createdBy') }}</dt>
                                 <dd class="text-sm text-text-primary">{{ workOrder.created_by?.name || '-' }}</dd>
                             </div>
                             <div>
-                                <dt class="mb-1 text-xs text-text-tertiary">Created</dt>
+                                <dt class="mb-1 text-xs text-text-tertiary">{{ t('workOrders.info.created') }}</dt>
                                 <dd class="text-sm text-text-primary">{{ formatDate(workOrder.created_at) }}</dd>
                             </div>
                             <div v-if="workOrder.started_at">
-                                <dt class="mb-1 text-xs text-text-tertiary">Production Started</dt>
+                                <dt class="mb-1 text-xs text-text-tertiary">{{ t('workOrders.info.productionStarted') }}</dt>
                                 <dd class="text-sm text-text-primary">{{ formatDate(workOrder.started_at) }}</dd>
                             </div>
                             <div v-if="workOrder.completed_at">
-                                <dt class="mb-1 text-xs text-text-tertiary">Completed</dt>
+                                <dt class="mb-1 text-xs text-text-tertiary">{{ t('workOrders.info.completed') }}</dt>
                                 <dd class="text-sm text-text-primary">{{ formatDate(workOrder.completed_at) }}</dd>
                             </div>
                             <div v-if="workOrder.cancelled_at">
-                                <dt class="mb-1 text-xs text-text-tertiary">Cancelled</dt>
+                                <dt class="mb-1 text-xs text-text-tertiary">{{ t('workOrders.info.cancelled') }}</dt>
                                 <dd class="text-sm text-text-primary">{{ formatDate(workOrder.cancelled_at) }}</dd>
                             </div>
                             <div>
-                                <dt class="mb-1 text-xs text-text-tertiary">Last Updated</dt>
+                                <dt class="mb-1 text-xs text-text-tertiary">{{ t('workOrders.info.lastUpdated') }}</dt>
                                 <dd class="text-sm text-text-primary">{{ formatDate(workOrder.updated_at) }}</dd>
                             </div>
                         </dl>
@@ -411,14 +403,14 @@ const fieldInput = 'h-9 w-full rounded-md border border-border-subtle bg-surface
 
                 <!-- Danger Zone -->
                 <Card v-if="canCancel" :padded="false">
-                    <div class="px-5 pt-5"><h3 class="text-sm font-semibold text-text-primary">Danger Zone</h3></div>
+                    <div class="px-5 pt-5"><h3 class="text-sm font-semibold text-text-primary">{{ t('workOrders.show.dangerZone') }}</h3></div>
                     <div class="p-5">
                         <Button variant="danger" class="w-full" :disabled="processing" @click="cancelWorkOrder">
                             <X :size="16" />
-                            Cancel Work Order
+                            {{ t('workOrders.actions.cancelWorkOrder') }}
                         </Button>
                         <p class="mt-2 text-xs text-text-tertiary">
-                            Any reserved components will be released back to stock.
+                            {{ t('workOrders.show.releaseHint') }}
                         </p>
                     </div>
                 </Card>

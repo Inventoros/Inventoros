@@ -10,6 +10,7 @@ import ReportSchedules from '@/Components/Reports/ReportSchedules.vue';
 import { Head, Link, router } from '@inertiajs/vue3';
 import { useI18n } from 'vue-i18n';
 import { formatDateValue } from '@/lib/dates';
+import { formatMoney } from '@/lib/money';
 import { ArrowLeft, Pencil, Trash2, Database, Columns3, Rows3, FileSpreadsheet } from 'lucide-vue-next';
 
 const { t } = useI18n();
@@ -39,10 +40,10 @@ const formatValue = (value, col) => {
     const sourceConfig = props.dataSources?.[props.report.data_source]?.columns?.[col];
     if (!sourceConfig) return value;
     if (sourceConfig.type === 'currency' && !isNaN(value)) {
-        return new Intl.NumberFormat('en-CA', { style: 'currency', currency: 'CAD' }).format(Number(value));
+        return formatMoney(Number(value));
     }
     if (sourceConfig.type === 'boolean') {
-        return value ? 'Yes' : 'No';
+        return value ? t('common.yes') : t('common.no');
     }
     if (sourceConfig.type === 'date' && value) {
         // Date-only values are calendar days; timestamps are instants.

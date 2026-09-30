@@ -18,6 +18,7 @@ import {
 } from 'lucide-vue-next';
 
 import { useI18n } from 'vue-i18n';
+import { displayDateTime } from '@/lib/dates';
 const props = defineProps({
     currentVersion: String,
     latestRelease: Object,
@@ -46,7 +47,7 @@ const formatBytes = (bytes) => {
 };
 
 const formatDate = (timestamp) => {
-    return new Date(timestamp * 1000).toLocaleString();
+    return displayDateTime(new Date(timestamp * 1000));
 };
 
 const checkForUpdates = async () => {
@@ -58,14 +59,14 @@ const checkForUpdates = async () => {
         }
     } catch (error) {
         console.error('Failed to check for updates:', error);
-        alert('Failed to check for updates. Please try again.');
+        alert(t('admin.update.checkFailed'));
     } finally {
         isCheckingUpdate.value = false;
     }
 };
 
 const performUpdate = async () => {
-    if (!confirm('Are you sure you want to update the application? A backup will be created automatically.')) {
+    if (!confirm(t('admin.update.confirmUpdate'))) {
         return;
     }
 
@@ -89,7 +90,7 @@ const performUpdate = async () => {
         console.error('Update failed:', error);
         updateResult.value = {
             success: false,
-            message: error.response?.data?.message || 'Update failed. Please check the logs.',
+            message: error.response?.data?.message || t('admin.update.updateFailed'),
         };
     } finally {
         isUpdating.value = false;
@@ -97,7 +98,7 @@ const performUpdate = async () => {
 };
 
 const createBackup = async () => {
-    if (!confirm('Create a backup of the current installation?')) {
+    if (!confirm(t('admin.update.confirmBackup'))) {
         return;
     }
 
@@ -107,19 +108,19 @@ const createBackup = async () => {
         const response = await axios.post(route('admin.update.backup'));
 
         if (response.data.success) {
-            alert(response.data.message || 'Backup created successfully!');
+            alert(response.data.message || t('admin.update.backupCreated'));
             router.reload();
         }
     } catch (error) {
         console.error('Backup failed:', error);
-        alert(error.response?.data?.message || 'Failed to create backup. Please check the logs.');
+        alert(error.response?.data?.message || t('admin.update.backupFailed'));
     } finally {
         isCreatingBackup.value = false;
     }
 };
 
 const restoreBackup = async (backupFile) => {
-    if (!confirm(`Are you sure you want to restore from ${backupFile}? This will overwrite the current installation.`)) {
+    if (!confirm(t('admin.update.confirmRestore', { file: backupFile }))) {
         return;
     }
 
@@ -133,23 +134,23 @@ const restoreBackup = async (backupFile) => {
         });
 
         if (response.data.success) {
-            alert('Restore completed successfully!');
+            alert(t('admin.update.restoreCompleted'));
             setTimeout(() => {
                 window.location.reload();
             }, 2000);
         } else {
-            alert(response.data.message || 'Restore failed.');
+            alert(response.data.message || t('admin.update.restoreFailed'));
         }
     } catch (error) {
         console.error('Restore failed:', error);
-        alert('Failed to restore backup. Please check the logs.');
+        alert(t('admin.update.restoreError'));
     } finally {
         isRestoring.value = false;
     }
 };
 
 const deleteBackup = async (backupFile) => {
-    if (!confirm(`Are you sure you want to delete ${backupFile}?`)) {
+    if (!confirm(t('admin.update.confirmDeleteBackup', { file: backupFile }))) {
         return;
     }
 
@@ -163,7 +164,7 @@ const deleteBackup = async (backupFile) => {
         }
     } catch (error) {
         console.error('Failed to delete backup:', error);
-        alert('Failed to delete backup. Please try again.');
+        alert(t('admin.update.deleteBackupFailed'));
     }
 };
 
@@ -185,8 +186,8 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-t
         </template>
 
         <PageHeader
-            title="Update Manager"
-            description="Check for new releases, install updates, and manage installation backups."
+            :title="t('admin.update.managerTitle')"
+            :description="t('admin.update.subtitle')"
         >
             <template #actions>
                 <Button
@@ -196,7 +197,7 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-t
                     :disabled="isCheckingUpdate"
                     @click="checkForUpdates"
                 >
-                    {{ isCheckingUpdate ? 'Checking…' : 'Check for Updates' }}
+                    {{ isCheckingUpdate ? t('admin.update.checking') : t('admin.update.checkForUpdates') }}
                 </Button>
             </template>
         </PageHeader>
@@ -205,14 +206,14 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-t
             <!-- Current Version Card -->
             <Card :padded="false">
                 <div class="px-5 pt-5">
-                    <h3 class="text-sm font-semibold text-text-primary">Current Version</h3>
+                    <h3 class="text-sm font-semibold text-text-primary">{{ t('admin.update.currentVersion') }}</h3>
                 </div>
                 <div class="p-5">
                     <div class="flex items-center justify-between gap-4">
                         <div class="flex items-center gap-3">
                             <p class="text-3xl font-bold tabular-nums text-brand">{{ currentVersion }}</p>
                             <Badge :variant="updateAvailable ? 'warning' : 'success'" size="md" dot>
-                                {{ updateAvailable ? 'Update available' : 'Up to date' }}
+                                {{ updateAvailable ? t('admin.update.updateAvailable') : t('admin.update.upToDateBadge') }}
                             </Badge>
                         </div>
                         <component
@@ -221,7 +222,7 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-t
                             :class="updateAvailable ? 'text-status-warning' : 'text-status-success'"
                         />
                     </div>
-                    <p class="mt-2 text-xs text-text-tertiary">Installed version</p>
+                    <p class="mt-2 text-xs text-text-tertiary">{{ t('admin.update.installedVersion') }}</p>
                 </div>
             </Card>
 
@@ -229,8 +230,8 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-t
             <Card v-if="updateAvailable && latestRelease" :padded="false">
                 <div class="flex items-start justify-between gap-4 px-5 pt-5">
                     <div>
-                        <h3 class="text-sm font-semibold text-text-primary">Update Available</h3>
-                        <p class="mt-0.5 text-xs text-text-secondary">A new version is ready to install.</p>
+                        <h3 class="text-sm font-semibold text-text-primary">{{ t('admin.update.updateAvailable') }}</h3>
+                        <p class="mt-0.5 text-xs text-text-secondary">{{ t('admin.update.newVersionReady') }}</p>
                     </div>
                     <Badge variant="brand" size="md">{{ latestRelease.version }}</Badge>
                 </div>
@@ -240,7 +241,7 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-t
                     </div>
 
                     <div v-if="latestRelease.body" class="mb-4">
-                        <h4 class="mb-2 text-xs font-medium uppercase tracking-wider text-text-tertiary">Release Notes</h4>
+                        <h4 class="mb-2 text-xs font-medium uppercase tracking-wider text-text-tertiary">{{ t('admin.update.releaseNotes') }}</h4>
                         <div class="whitespace-pre-wrap rounded-lg border border-border-subtle bg-surface-canvas p-4 text-sm text-text-secondary">{{ latestRelease.body }}</div>
                     </div>
 
@@ -250,7 +251,7 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-t
                             target="_blank"
                             class="inline-flex items-center gap-1.5 text-sm text-brand hover:underline"
                         >
-                            View on GitHub
+                            {{ t('admin.update.viewOnGithub') }}
                             <ExternalLink :size="14" />
                         </a>
                     </div>
@@ -262,11 +263,11 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-t
                         :disabled="isUpdating"
                         @click="performUpdate"
                     >
-                        {{ isUpdating ? 'Updating…' : 'Install Update' }}
+                        {{ isUpdating ? t('admin.update.updating') : t('admin.update.installUpdate') }}
                     </Button>
 
                     <p class="mt-2 text-center text-xs text-text-tertiary">
-                        A backup will be created automatically before updating.
+                        {{ t('admin.update.backupNote') }}
                     </p>
                 </div>
             </Card>
@@ -276,8 +277,8 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-t
                 <div class="flex items-center gap-4">
                     <CircleCheck :size="32" class="shrink-0 text-status-success" />
                     <div>
-                        <h3 class="text-sm font-semibold text-text-primary">You're up to date</h3>
-                        <p class="mt-0.5 text-sm text-text-secondary">You're running the latest version of the application.</p>
+                        <h3 class="text-sm font-semibold text-text-primary">{{ t('admin.update.upToDate') }}</h3>
+                        <p class="mt-0.5 text-sm text-text-secondary">{{ t('admin.update.latestVersion') }}</p>
                     </div>
                 </div>
             </Card>
@@ -285,13 +286,13 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-t
             <!-- Update Progress -->
             <Card v-if="isUpdating || updateResult" :padded="false">
                 <div class="px-5 pt-5">
-                    <h3 class="text-sm font-semibold text-text-primary">Update Progress</h3>
+                    <h3 class="text-sm font-semibold text-text-primary">{{ t('admin.update.updateProgress') }}</h3>
                 </div>
                 <div class="p-5">
                     <div v-if="isUpdating" class="space-y-3">
                         <div class="flex items-center gap-3">
                             <span class="h-4 w-4 animate-spin rounded-full border-2 border-brand border-r-transparent"></span>
-                            <span class="text-sm text-text-secondary">Updating application… This may take several minutes.</span>
+                            <span class="text-sm text-text-secondary">{{ t('admin.update.updatingApp') }}</span>
                         </div>
                         <div class="h-1.5 w-full overflow-hidden rounded-full bg-surface-sunken">
                             <div class="h-full w-1/3 animate-pulse rounded-full bg-brand"></div>
@@ -308,9 +309,9 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-t
                                 <div class="text-sm text-status-success">
                                     <p class="font-semibold">{{ updateResult.message }}</p>
                                     <p v-if="updateResult.new_version" class="mt-1">
-                                        Updated to version: {{ updateResult.new_version }}
+                                        {{ t('admin.update.updatedTo', { version: updateResult.new_version }) }}
                                     </p>
-                                    <p class="mt-1">The page will reload automatically…</p>
+                                    <p class="mt-1">{{ t('admin.update.willReload') }}</p>
                                 </div>
                             </div>
                         </div>
@@ -331,9 +332,9 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-t
             <Card :padded="false">
                 <div class="flex items-start justify-between gap-4 px-5 pt-5">
                     <div>
-                        <h3 class="text-sm font-semibold text-text-primary">Backup Management</h3>
+                        <h3 class="text-sm font-semibold text-text-primary">{{ t('admin.update.backupManagement') }}</h3>
                         <p class="mt-0.5 text-xs text-text-secondary">
-                            Backups are created automatically before each update. You can also create manual backups here.
+                            {{ t('admin.update.backupHint') }}
                         </p>
                     </div>
                     <Button
@@ -344,7 +345,7 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-t
                         @click="createBackup"
                     >
                         <Database :size="14" />
-                        {{ isCreatingBackup ? 'Creating…' : 'Create Backup' }}
+                        {{ isCreatingBackup ? t('admin.update.creatingBackup') : t('admin.update.createBackup') }}
                     </Button>
                 </div>
 
@@ -356,9 +357,9 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-t
                         <table class="w-full text-sm">
                             <thead>
                                 <tr class="border-b border-border-subtle">
-                                    <th :class="thClass">Filename</th>
-                                    <th :class="thClass">Size</th>
-                                    <th :class="thClass">Created</th>
+                                    <th :class="thClass">{{ t('admin.update.filename') }}</th>
+                                    <th :class="thClass">{{ t('admin.update.size') }}</th>
+                                    <th :class="thClass">{{ t('common.createdAt') }}</th>
                                     <th :class="[thClass, 'text-right']">{{ t('common.actions') }}</th>
                                 </tr>
                             </thead>
@@ -377,7 +378,7 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-t
                                                 @click="restoreBackup(backup.filename)"
                                                 :disabled="isRestoring"
                                                 class="rounded-md p-1.5 text-text-tertiary transition-colors hover:bg-surface-sunken hover:text-brand disabled:opacity-50"
-                                                title="Restore"
+                                                :title="t('admin.update.restore')"
                                             >
                                                 <RotateCcw :size="16" />
                                             </button>
@@ -397,7 +398,7 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-t
 
                     <div v-else class="flex flex-col items-center gap-2 py-8 text-center">
                         <Database :size="22" class="text-text-tertiary" />
-                        <p class="text-sm text-text-tertiary">No backups available. Click "Create Backup" to create your first backup.</p>
+                        <p class="text-sm text-text-tertiary">{{ t('admin.update.noBackups') }}</p>
                     </div>
                 </div>
             </Card>
@@ -405,25 +406,25 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-t
             <!-- Information Card -->
             <Card :padded="false">
                 <div class="px-5 pt-5">
-                    <h3 class="text-sm font-semibold text-text-primary">Update Information</h3>
+                    <h3 class="text-sm font-semibold text-text-primary">{{ t('admin.update.updateInfo') }}</h3>
                 </div>
                 <div class="p-5">
                     <ul class="space-y-2.5 text-sm text-text-secondary">
                         <li class="flex items-start gap-2.5">
                             <Info :size="16" class="mt-0.5 shrink-0 text-brand" />
-                            <span>Updates are fetched from <strong class="text-text-primary">{{ githubRepo }}</strong> on GitHub.</span>
+                            <span>{{ t('admin.update.fetchedFromRepo', { repo: githubRepo }) }}</span>
                         </li>
                         <li class="flex items-start gap-2.5">
                             <Info :size="16" class="mt-0.5 shrink-0 text-brand" />
-                            <span>A backup is automatically created before each update.</span>
+                            <span>{{ t('admin.update.autoBackup') }}</span>
                         </li>
                         <li class="flex items-start gap-2.5">
                             <Info :size="16" class="mt-0.5 shrink-0 text-brand" />
-                            <span>The application will be in maintenance mode during updates.</span>
+                            <span>{{ t('admin.update.maintenanceMode') }}</span>
                         </li>
                         <li class="flex items-start gap-2.5">
                             <Info :size="16" class="mt-0.5 shrink-0 text-brand" />
-                            <span>Database migrations are run automatically during updates.</span>
+                            <span>{{ t('admin.update.autoMigrations') }}</span>
                         </li>
                     </ul>
                 </div>

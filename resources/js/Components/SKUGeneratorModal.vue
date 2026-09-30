@@ -70,7 +70,7 @@ const generateSKUPreview = async (pattern) => {
         skuPreview.value = response.data.sku;
     } catch (error) {
         console.error('Error generating SKU:', error);
-        skuPreview.value = 'Error generating preview';
+        skuPreview.value = t('components.skuGenerator.previewError');
     } finally {
         skuGenerating.value = false;
     }
@@ -88,7 +88,7 @@ const onCustomPatternInput = () => {
 };
 
 const applySKU = () => {
-    if (skuPreview.value && skuPreview.value !== 'Error generating preview') {
+    if (skuPreview.value && skuPreview.value !== t('components.skuGenerator.previewError')) {
         emit('apply', skuPreview.value);
         emit('close');
     }
@@ -102,7 +102,7 @@ const close = () => {
 <template>
     <QuickAddModal
         :show="show"
-        title="SKU Generator"
+        :title="t('components.skuGenerator.title')"
         :loading="loading"
         max-width="2xl"
         @close="close"
@@ -111,7 +111,7 @@ const close = () => {
             <!-- Preset Patterns -->
             <div>
                 <label class="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-2">
-                    Choose a Preset Pattern
+                    {{ t('components.skuGenerator.presetPattern') }}
                 </label>
                 <div class="grid grid-cols-2 gap-2">
                     <button
@@ -137,27 +137,27 @@ const close = () => {
                     <div class="w-full border-t border-gray-200 dark:border-border-subtle"></div>
                 </div>
                 <div class="relative flex justify-center text-sm">
-                    <span class="px-2 bg-white dark:bg-surface-raised text-gray-500 dark:text-gray-400">OR</span>
+                    <span class="px-2 bg-white dark:bg-surface-raised text-gray-500 dark:text-gray-400">{{ t('components.skuGenerator.or') }}</span>
                 </div>
             </div>
 
             <!-- Custom Pattern -->
             <div>
                 <label class="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-2">
-                    Custom Pattern
+                    {{ t('components.skuGenerator.customPattern') }}
                 </label>
                 <input
                     v-model="customPattern"
                     @input="onCustomPatternInput"
                     type="text"
                     class="block w-full rounded-md bg-gray-50 dark:bg-surface-canvas border-gray-200 dark:border-border-subtle text-gray-900 dark:text-gray-100 placeholder-gray-500 shadow-sm focus:border-brand focus:ring-brand"
-                    placeholder="e.g., {category}-{year}-{number}"
+                    :placeholder="t('components.skuGenerator.patternExample', { example: '{category}-{year}-{number}' })"
                 />
             </div>
 
             <!-- Available Variables -->
             <div class="p-4 bg-gray-50 dark:bg-surface-canvas rounded-lg">
-                <p class="text-sm font-medium text-gray-600 dark:text-gray-300 mb-2">Available Variables:</p>
+                <p class="text-sm font-medium text-gray-600 dark:text-gray-300 mb-2">{{ t('components.skuGenerator.availableVars') }}:</p>
                 <div class="grid grid-cols-2 gap-2">
                     <div v-for="variable in skuPatterns.variables" :key="variable.key" class="text-xs">
                         <code class="px-1 py-0.5 bg-gray-200 dark:bg-surface-raised rounded text-brand">{{ variable.key }}</code>
@@ -168,10 +168,10 @@ const close = () => {
 
             <!-- Preview -->
             <div v-if="skuPreview || skuGenerating" class="p-4 bg-brand/20 rounded-lg border border-brand">
-                <p class="text-sm font-medium text-gray-300 mb-2">Preview:</p>
+                <p class="text-sm font-medium text-gray-300 mb-2">{{ t('components.skuGenerator.preview') }}:</p>
                 <div v-if="skuGenerating" class="flex items-center gap-2">
                     <div class="animate-spin rounded-full h-4 w-4 border-b-2 border-brand"></div>
-                    <span class="text-sm text-gray-400">Generating...</span>
+                    <span class="text-sm text-gray-400">{{ t('components.skuGenerator.generating') }}</span>
                 </div>
                 <p v-else class="text-lg font-mono font-bold text-brand">{{ skuPreview }}</p>
             </div>
@@ -188,10 +188,10 @@ const close = () => {
             <button
                 type="button"
                 @click="applySKU"
-                :disabled="!skuPreview || skuPreview === 'Error generating preview'"
+                :disabled="!skuPreview || skuPreview === t('components.skuGenerator.previewError')"
                 class="px-4 py-2 bg-brand text-white rounded-md hover:bg-brand-hover disabled:opacity-50"
             >
-                Apply SKU
+                {{ t('components.skuGenerator.applySku') }}
             </button>
         </template>
     </QuickAddModal>

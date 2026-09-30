@@ -105,11 +105,11 @@ const fieldError = 'mt-1 text-xs text-status-danger';
             </div>
         </template>
 
-        <PageHeader :title="t('admin.createRole')" description="Define a role and assign its permissions.">
+        <PageHeader :title="t('admin.createRole')" :description="t('admin.roles.create.subtitle')">
             <template #actions>
                 <Button variant="secondary" size="sm" as="Link" :href="route('roles.index')">
                     <ArrowLeft :size="14" />
-                    Back to Roles
+                    {{ t('admin.roles.create.backToRoles') }}
                 </Button>
             </template>
         </PageHeader>
@@ -117,10 +117,10 @@ const fieldError = 'mt-1 text-xs text-status-danger';
         <form @submit.prevent="submit" class="mt-6 space-y-4">
             <!-- Name & Description -->
             <Card :padded="false">
-                <div class="px-5 pt-5"><h3 class="text-sm font-semibold text-text-primary">Role Details</h3></div>
+                <div class="px-5 pt-5"><h3 class="text-sm font-semibold text-text-primary">{{ t('admin.roles.create.roleDetails') }}</h3></div>
                 <div class="space-y-4 p-5">
                     <div>
-                        <label for="name" :class="fieldLabel">Role Name</label>
+                        <label for="name" :class="fieldLabel">{{ t('admin.roles.create.roleName') }}</label>
                         <input
                             id="name"
                             v-model="form.name"
@@ -128,19 +128,19 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                             :class="fieldInput"
                             required
                             autofocus
-                            placeholder="e.g., Warehouse Manager"
+                            :placeholder="t('admin.roles.create.namePlaceholder')"
                         />
                         <p v-if="form.errors.name" :class="fieldError">{{ form.errors.name }}</p>
                     </div>
 
                     <div>
-                        <label for="description" :class="fieldLabel">Description (Optional)</label>
+                        <label for="description" :class="fieldLabel">{{ t('admin.roles.create.description') }}</label>
                         <textarea
                             id="description"
                             v-model="form.description"
                             rows="3"
                             :class="fieldArea"
-                            placeholder="Describe the purpose and responsibilities of this role..."
+                            :placeholder="t('admin.roles.create.descriptionPlaceholder')"
                         ></textarea>
                         <p v-if="form.errors.description" :class="fieldError">{{ form.errors.description }}</p>
                     </div>
@@ -150,9 +150,9 @@ const fieldError = 'mt-1 text-xs text-status-danger';
             <!-- Permission Sets (Quick Templates) -->
             <Card v-if="permissionSets && permissionSets.length > 0" :padded="false">
                 <div class="px-5 pt-5">
-                    <h3 class="text-sm font-semibold text-text-primary">Permission Sets (Quick Templates)</h3>
+                    <h3 class="text-sm font-semibold text-text-primary">{{ t('admin.roles.create.permissionSets') }}</h3>
                     <p class="mt-1 text-sm text-text-tertiary">
-                        Apply pre-configured permission sets to quickly assign common permission groups.
+                        {{ t('admin.roles.create.permissionSetsHint') }}
                     </p>
                 </div>
                 <div class="p-5">
@@ -179,8 +179,8 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                                     <div class="font-medium text-text-primary">{{ set.name }}</div>
                                     <div class="mt-1 text-xs text-text-tertiary">{{ set.description }}</div>
                                     <div class="mt-2 flex items-center gap-2">
-                                        <Badge variant="neutral" size="sm">{{ set.permission_count }} permissions</Badge>
-                                        <Badge v-if="set.is_template" variant="info" size="sm">Template</Badge>
+                                        <Badge variant="neutral" size="sm">{{ t('admin.roles.permissionsCount', { count: set.permission_count }) }}</Badge>
+                                        <Badge v-if="set.is_template" variant="info" size="sm">{{ t('admin.roles.create.template') }}</Badge>
                                     </div>
                                 </div>
                                 <div v-if="form.permission_set_ids.includes(set.id)" class="flex-shrink-0">
@@ -195,9 +195,9 @@ const fieldError = 'mt-1 text-xs text-status-danger';
             <!-- Individual Permissions -->
             <Card :padded="false">
                 <div class="px-5 pt-5">
-                    <h3 class="text-sm font-semibold text-text-primary">Individual Permissions</h3>
+                    <h3 class="text-sm font-semibold text-text-primary">{{ t('admin.roles.create.individualPermissions') }}</h3>
                     <p class="mt-1 text-sm text-text-tertiary">
-                        Select additional permissions. You can click category names to select/deselect all permissions in that category.
+                        {{ t('admin.roles.create.individualHint') }}
                     </p>
                 </div>
                 <div class="p-5">
@@ -216,7 +216,7 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                                             : 'bg-surface-overlay text-text-secondary hover:text-text-primary'
                                     ]"
                                 >
-                                    {{ isCategorySelected(category) ? 'Deselect All' : 'Select All' }}
+                                    {{ isCategorySelected(category) ? t('admin.roles.create.deselectAll') : t('admin.roles.create.selectAll') }}
                                 </button>
                             </div>
 
@@ -246,9 +246,9 @@ const fieldError = 'mt-1 text-xs text-status-danger';
 
                     <div class="mt-4 rounded-lg border border-brand/20 bg-brand-soft p-3">
                         <p class="text-sm text-brand">
-                            <strong>{{ getTotalPermissions() }}</strong> total permission(s)
+                            {{ t('admin.roles.create.totalPermissions', { count: getTotalPermissions() }) }}
                             <span v-if="form.permission_set_ids.length > 0" class="text-text-tertiary">
-                                ({{ form.permissions.length }} direct + {{ getSetPermissions().length }} from {{ form.permission_set_ids.length }} set(s))
+                                {{ t('admin.roles.create.permissionBreakdown', { direct: form.permissions.length, fromSets: getSetPermissions().length, sets: form.permission_set_ids.length }) }}
                             </span>
                         </p>
                     </div>
@@ -272,7 +272,7 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                     leave-to-class="opacity-0"
                 >
                     <p v-if="form.recentlySuccessful" class="text-sm text-status-success">
-                        Role created successfully.
+                        {{ t('admin.roles.create.success') }}
                     </p>
                 </Transition>
             </div>

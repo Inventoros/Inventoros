@@ -10,6 +10,7 @@ import { Search, Download, User, ChevronRight, FileText, Plus, Pencil, Trash2, E
 
 import { useI18n } from 'vue-i18n';
 import { actionLabel as labelForAction, subjectLabel } from '@/lib/activityLabels';
+import { displayDateTime } from '@/lib/dates';
 const props = defineProps({
     activities: Object,
     filters: Object,
@@ -111,7 +112,7 @@ const securityDetails = (activity) => {
 };
 
 const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleString();
+    return displayDateTime(dateString);
 };
 
 const formatRelativeTime = (dateString) => {
@@ -124,10 +125,10 @@ const formatRelativeTime = (dateString) => {
     const hours = Math.floor(minutes / 60);
     const days = Math.floor(hours / 24);
 
-    if (days > 0) return `${days} day${days > 1 ? 's' : ''} ago`;
-    if (hours > 0) return `${hours} hour${hours > 1 ? 's' : ''} ago`;
-    if (minutes > 0) return `${minutes} minute${minutes > 1 ? 's' : ''} ago`;
-    return 'Just now';
+    if (days > 0) return t('admin.activityLog.daysAgo', { count: days }, days);
+    if (hours > 0) return t('admin.activityLog.hoursAgo', { count: hours }, hours);
+    if (minutes > 0) return t('admin.activityLog.minutesAgo', { count: minutes }, minutes);
+    return t('admin.activityLog.justNow');
 };
 
 const formatFieldName = (field) => {
@@ -136,7 +137,7 @@ const formatFieldName = (field) => {
 
 const formatValue = (value) => {
     if (value === null || value === undefined) return '-';
-    if (typeof value === 'boolean') return value ? 'Yes' : 'No';
+    if (typeof value === 'boolean') return value ? t('common.yes') : t('common.no');
     if (typeof value === 'object') return JSON.stringify(value);
     return String(value);
 };
@@ -174,7 +175,7 @@ const selectClass =
             </div>
         </template>
 
-        <PageHeader :title="t('admin.activityLog.title')" description="Audit trail of every change across your workspace.">
+        <PageHeader :title="t('admin.activityLog.title')" :description="t('admin.activityLog.description')">
             <template #actions>
                 <Button variant="secondary" size="sm" @click="showSecurity">
                     <ShieldAlert :size="14" />
@@ -182,11 +183,11 @@ const selectClass =
                 </Button>
                 <Button variant="secondary" size="sm" as="a" :href="exportUrl('csv')">
                     <Download :size="14" />
-                    Export CSV
+                    {{ t('admin.activityLog.exportCsv') }}
                 </Button>
                 <Button variant="secondary" size="sm" as="a" :href="exportUrl('xlsx')">
                     <Download :size="14" />
-                    Export XLSX
+                    {{ t('admin.activityLog.exportXlsx') }}
                 </Button>
             </template>
         </PageHeader>
@@ -197,14 +198,14 @@ const selectClass =
                 <div class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
                     <!-- Search -->
                     <div class="lg:col-span-3">
-                        <label for="search" class="mb-1 block text-xs font-medium text-text-secondary">Search Description</label>
+                        <label for="search" class="mb-1 block text-xs font-medium text-text-secondary">{{ t('admin.activityLog.searchDescription') }}</label>
                         <div class="relative">
                             <Search :size="15" class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-text-tertiary" />
                             <input
                                 id="search"
                                 v-model="search"
                                 type="text"
-                                placeholder="Search activity descriptions..."
+                                :placeholder="t('admin.activityLog.searchPlaceholder')"
                                 class="h-9 w-full rounded-md border border-border-subtle bg-surface-canvas pl-9 pr-3 text-sm text-text-primary placeholder:text-text-tertiary ds-focus-ring"
                             />
                         </div>
@@ -214,7 +215,7 @@ const selectClass =
                     <div>
                         <label for="user_id" class="mb-1 block text-xs font-medium text-text-secondary">{{ t('common.user') }}</label>
                         <select id="user_id" v-model="user_id" :class="selectClass">
-                            <option value="">All Users</option>
+                            <option value="">{{ t('admin.activityLog.allUsers') }}</option>
                             <option v-for="user in users" :key="user.id" :value="user.id">{{ user.name }}</option>
                         </select>
                     </div>
@@ -248,13 +249,13 @@ const selectClass =
 
                     <!-- Date From -->
                     <div>
-                        <label for="date_from" class="mb-1 block text-xs font-medium text-text-secondary">From Date</label>
+                        <label for="date_from" class="mb-1 block text-xs font-medium text-text-secondary">{{ t('admin.activityLog.fromDate') }}</label>
                         <input id="date_from" v-model="date_from" type="date" :class="selectClass" />
                     </div>
 
                     <!-- Date To -->
                     <div>
-                        <label for="date_to" class="mb-1 block text-xs font-medium text-text-secondary">To Date</label>
+                        <label for="date_to" class="mb-1 block text-xs font-medium text-text-secondary">{{ t('admin.activityLog.toDate') }}</label>
                         <input id="date_to" v-model="date_to" type="date" :class="selectClass" />
                     </div>
                 </div>
@@ -299,7 +300,7 @@ const selectClass =
                                     <div class="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-text-tertiary">
                                         <span class="flex items-center gap-1">
                                             <User :size="13" />
-                                            {{ activity.user?.name || 'Unknown User' }}
+                                            {{ activity.user?.name || t('admin.activityLog.unknownUser') }}
                                         </span>
                                         <span>&middot;</span>
                                         <Badge :variant="actionVariant(activity.action)" size="sm">{{ actionLabel(activity.action) }}</Badge>
@@ -333,13 +334,13 @@ const selectClass =
                                         <details class="group">
                                             <summary class="inline-flex cursor-pointer items-center gap-1 text-xs font-medium text-brand hover:underline">
                                                 <ChevronRight :size="14" class="transition-transform group-open:rotate-90" />
-                                                View {{ getChangedFields(activity.properties).length }} Change{{ getChangedFields(activity.properties).length > 1 ? 's' : '' }}
+                                                {{ t('admin.activityLog.viewChanges', { count: getChangedFields(activity.properties).length }, getChangedFields(activity.properties).length) }}
                                             </summary>
                                             <div class="mt-2 overflow-x-auto rounded-lg border border-border-subtle bg-surface-canvas p-3">
                                                 <table class="w-full text-xs">
                                                     <thead>
                                                         <tr class="border-b border-border-subtle">
-                                                            <th class="px-3 py-2 text-left font-medium text-text-secondary">Field</th>
+                                                            <th class="px-3 py-2 text-left font-medium text-text-secondary">{{ t('admin.activityLog.field') }}</th>
                                                             <th class="px-3 py-2 text-left font-medium text-status-danger">{{ t('stockAdjustments.show.stockBefore') }}</th>
                                                             <th class="px-3 py-2 text-left font-medium text-status-success">{{ t('stockAdjustments.show.stockAfter') }}</th>
                                                         </tr>
@@ -375,8 +376,8 @@ const selectClass =
             <!-- Empty State -->
             <div v-else class="flex flex-col items-center gap-3 px-4 py-12 text-center">
                 <FileText :size="22" class="text-text-tertiary" />
-                <p class="text-sm font-medium text-text-primary">No activity found</p>
-                <p class="text-sm text-text-tertiary">Try adjusting your filters to see more results</p>
+                <p class="text-sm font-medium text-text-primary">{{ t('admin.activityLog.noActivityFound') }}</p>
+                <p class="text-sm text-text-tertiary">{{ t('admin.activityLog.adjustFilters') }}</p>
             </div>
         </div>
 

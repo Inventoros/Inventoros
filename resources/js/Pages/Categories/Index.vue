@@ -72,7 +72,7 @@ const updateCategory = () => {
 };
 
 const deleteCategory = (category) => {
-    if (confirm(`Are you sure you want to delete "${category.name}"? This action cannot be undone.`)) {
+    if (confirm(t('categories.confirmDelete', { name: category.name }))) {
         router.delete(route('categories.destroy', category.id));
     }
 };
@@ -95,7 +95,7 @@ const inputClass =
 
         <PluginSlot slot="header" :components="pluginComponents?.header" />
 
-        <PageHeader :title="t('categories.title')" description="Organize your catalog into categories.">
+        <PageHeader :title="t('categories.title')" :description="t('categories.index.description')">
             <template #actions>
                 <Button variant="default" size="sm" @click="openCreateModal">
                     <Plus :size="14" />
@@ -142,7 +142,7 @@ const inputClass =
                             {{ category.description }}
                         </p>
                     </div>
-                    <Badge variant="brand" size="sm">{{ category.products_count }} products</Badge>
+                    <Badge variant="brand" size="sm">{{ t('categories.productsCount', { count: category.products_count }, category.products_count) }}</Badge>
                 </div>
 
                 <div class="mt-4 flex items-center justify-end gap-1 border-t border-border-subtle pt-4">
@@ -307,7 +307,7 @@ const inputClass =
 
                         <div class="mt-6 flex justify-end gap-2">
                             <Button type="button" variant="secondary" size="sm" @click="showEditModal = false">{{ t('common.cancel') }}</Button>
-                            <Button type="submit" variant="default" size="sm">{{ t('common.update') }} {{ t('nav.categories') }}</Button>
+                            <Button type="submit" variant="default" size="sm">{{ t('categories.updateCategory') }}</Button>
                         </div>
                     </form>
                 </div>

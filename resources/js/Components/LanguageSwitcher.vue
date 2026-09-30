@@ -13,7 +13,7 @@ import { useI18n } from 'vue-i18n';
 import { Languages, Check } from 'lucide-vue-next';
 import { availableLocales, setLocale } from '@/i18n';
 
-const { locale } = useI18n();
+const { locale, t } = useI18n();
 const page = usePage();
 const isOpen = ref(false);
 const dropdownRef = ref(null);
@@ -52,7 +52,7 @@ onUnmounted(() => document.removeEventListener('click', handleClickOutside));
             class="flex items-center gap-1.5 h-8 px-2 rounded-md text-xs text-text-secondary hover:text-text-primary hover:bg-surface-overlay transition-colors ds-focus-ring"
             :aria-expanded="isOpen"
             aria-haspopup="listbox"
-            :aria-label="`Language: ${current.name}`"
+            :aria-label="t('components.languageSwitcher.ariaLabel', { name: current.name })"
         >
             <Languages :size="15" />
             <span class="hidden sm:inline uppercase">{{ current.code }}</span>

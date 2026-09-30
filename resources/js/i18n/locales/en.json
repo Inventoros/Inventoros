@@ -188,7 +188,33 @@
     "viewInventory": "View Inventory",
     "browseAllItems": "Browse all items",
     "viewOrders": "View Orders",
-    "allOrders": "All orders"
+    "allOrders": "All orders",
+    "description": "Snapshot of inventory, orders, and reorder priorities.",
+    "customize": "Customize",
+    "hints": {
+      "activeInCatalog": "active in catalog",
+      "belowMinimum": "below minimum",
+      "allTime": "all time"
+    },
+    "widgets": {
+      "statsOverview": "Stats Overview",
+      "revenueChart": "Revenue & Secondary Stats",
+      "stockMovements": "Stock Movements",
+      "lowStockAlerts": "Low Stock Alerts",
+      "topProducts": "Top Products",
+      "stockByCategory": "Stock by Category",
+      "reorderSuggestions": "Reorder Suggestions"
+    },
+    "reorderSuggestions": {
+      "title": "Reorder suggestions",
+      "subtitle": "Below reorder point. Suggested quantity comes from product config and the supplier minimum order.",
+      "reorderAt": "Reorder at"
+    },
+    "customizeModal": {
+      "title": "Customize dashboard",
+      "help": "Toggle widgets to show or hide them on your dashboard.",
+      "savePreferences": "Save preferences"
+    }
   },
   "products": {
     "title": "Inventory",
@@ -237,7 +263,8 @@
       "variantHint": "Add options like Size or Color to sell different versions of this product. Each combination creates a variant with its own price and stock.",
       "variantStockHint": "Stock is tracked per variant when variants are enabled.",
       "notesPlaceholder": "Additional notes about this product...",
-      "createProduct": "Create Product"
+      "createProduct": "Create Product",
+      "subtitle": "Create a product with pricing, stock, variants, and images."
     },
     "edit": {
       "title": "Edit Product",
@@ -284,7 +311,34 @@
       "outOfStock": "Out of Stock",
       "lowStock": "Low Stock",
       "inStock": "In Stock",
-      "activityHistory": "Activity History"
+      "activityHistory": "Activity History",
+      "minHint": "min {count}",
+      "stockAtPrice": "stock at price",
+      "barcodeValue": "Barcode: {barcode}",
+      "currencyValue": "Currency: {currency}",
+      "confirmGenerateRandom": "Generate a new random barcode for this product?",
+      "generateBarcodeFailed": "Failed to generate barcode",
+      "confirmGenerateFromSku": "Generate barcode from SKU?",
+      "generateFromSkuFailed": "Failed to generate barcode from SKU",
+      "bom": {
+        "title": "Bill of Materials",
+        "addComponent": "Add Component",
+        "availableKitStock": "Available Kit Stock (limited by lowest component)",
+        "searchProduct": "Search Product",
+        "searchPlaceholder": "Search by name or SKU...",
+        "stockInline": "(Stock: {count})",
+        "searching": "Searching...",
+        "qtyRequired": "Qty Required",
+        "availableStock": "Available Stock",
+        "unknown": "Unknown",
+        "remove": "Remove",
+        "empty": "No components added yet.",
+        "emptyHint": "Click \"Add Component\" to build the bill of materials.",
+        "addFailed": "Failed to add component",
+        "updateQuantityFailed": "Failed to update quantity",
+        "confirmRemove": "Remove this component from the bill of materials?",
+        "removeFailed": "Failed to remove component"
+      }
     },
     "quickAddCategory": {
       "title": "Quick Add Category",
@@ -299,6 +353,56 @@
       "locationCode": "Location Code",
       "codePlaceholder": "e.g., WH-A",
       "descPlaceholder": "Optional description..."
+    },
+    "subtitle": "Your catalog, stock levels, and reorder thresholds.",
+    "duplicate": "Duplicate",
+    "printBarcode": "Print barcode",
+    "variantsCount": "{count} variant | {count} variants",
+    "types": {
+      "standard": "Standard",
+      "kit": "Kit",
+      "assembly": "Assembly"
+    },
+    "trackingTypes": {
+      "none": "No Tracking",
+      "batch": "Batch Tracking",
+      "serial": "Serial Number Tracking"
+    },
+    "form": {
+      "productType": "Product Type",
+      "productTypeHint": "Kits bundle components for sale. Assemblies require work orders to produce.",
+      "additionalCurrencies": "Additional Currencies",
+      "selectCurrency": "Select currency...",
+      "addPriceInCurrency": "+ Add price in another currency",
+      "reorderPoint": "Reorder Point",
+      "reorderPointHint": "Stock level that triggers automatic reorder",
+      "reorderQuantity": "Reorder Quantity",
+      "reorderQuantityHint": "Quantity to order when stock reaches reorder point",
+      "leaveEmptyToDisable": "Leave empty to disable",
+      "inventoryTracking": "Inventory Tracking",
+      "inventoryTrackingHint": "Choose how to track individual units of this product.",
+      "createCategoryFailed": "Failed to create category. Please try again.",
+      "createLocationFailed": "Failed to create location. Please try again."
+    },
+    "index": {
+      "selectedCount": "{count} product selected | {count} products selected",
+      "confirmBulkDelete": "Are you sure you want to delete {count} product? This action cannot be undone. | Are you sure you want to delete {count} products? This action cannot be undone."
+    },
+    "bulk": {
+      "changeCategory": "Change category",
+      "updateCategoryFor": "Update category for {count} selected product. | Update category for {count} selected products.",
+      "selectCategory": "Select a category...",
+      "updateCategory": "Update category",
+      "adjustPrice": "Adjust price",
+      "adjustPriceFor": "Adjust price for {count} selected product. | Adjust price for {count} selected products.",
+      "adjustmentType": "Adjustment type",
+      "percentage": "Percentage (%)",
+      "fixedAmount": "Fixed Amount ($)",
+      "value": "Value",
+      "useNegative": "(use negative to decrease)",
+      "percentagePlaceholder": "e.g. 10 for +10%, -20 for -20%",
+      "fixedPlaceholder": "e.g. 5.00 or -3.50",
+      "applyPriceChange": "Apply price change"
     }
   },
   "orders": {
@@ -368,7 +472,9 @@
       "searchingCustomers": "Searching...",
       "noCustomersFound": "No matching customers. Type the details below for a one-off customer.",
       "linkedCustomer": "Linked to saved customer {name}",
-      "clearCustomer": "Use a one-off customer"
+      "clearCustomer": "Use a one-off customer",
+      "description": "Add a customer order and its line items.",
+      "addAtLeastOneProduct": "Please add at least one product to the order."
     },
     "show": {
       "orderNumber": "Order #{number}",
@@ -411,7 +517,10 @@
       "approvalNotesPlaceholder": "Optional notes about this approval...",
       "rejectionNotesPlaceholder": "Reason for rejection...",
       "approve": "Approve",
-      "reject": "Reject"
+      "reject": "Reject",
+      "downloadInvoice": "Download Invoice",
+      "previewInvoice": "Preview Invoice",
+      "createReturn": "Create Return"
     },
     "edit": {
       "title": "Edit Order",
@@ -428,7 +537,11 @@
       "deliveredAt": "Delivered at:",
       "updatingOrder": "Updating Order...",
       "updateOrder": "Update Order",
-      "viewDetails": "View Order Details"
+      "viewDetails": "View Order Details",
+      "removeItem": "Remove item"
+    },
+    "index": {
+      "description": "Customer orders from every channel."
     }
   },
   "purchaseOrders": {
@@ -461,13 +574,15 @@
       "unitCost": "Unit Cost",
       "supplierSku": "Supplier SKU",
       "orderItems": "Order Items ({count})",
-      "createPo": "Create Purchase Order"
+      "createPo": "Create Purchase Order",
+      "description": "Create a purchase order and add the items to receive."
     },
     "edit": {
       "title": "Edit Purchase Order",
       "backToPo": "Back to Purchase Orders",
       "updatePo": "Update Purchase Order",
-      "viewDetails": "View Details"
+      "viewDetails": "View Details",
+      "poNumber": "PO #{number}"
     },
     "show": {
       "receiveItems": "Receive Items",
@@ -480,7 +595,14 @@
       "sendToSupplier": "Send to Supplier",
       "editPo": "Edit Purchase Order",
       "cancelOrder": "Cancel Order",
-      "deleteOrder": "Delete Order"
+      "deleteOrder": "Delete Order",
+      "confirmCancel": "Are you sure you want to cancel this purchase order?",
+      "orderDateOn": "Order date {date}",
+      "downloadPdf": "Download PDF",
+      "previewPdf": "Preview PDF",
+      "itemsCount": "Items ({count})",
+      "supplierSkuLine": "Supplier: {sku}",
+      "cannotUndo": "This action cannot be undone."
     },
     "receive": {
       "title": "Receive Items - {poNumber}",
@@ -493,7 +615,11 @@
       "complete": "Complete",
       "readyToReceive": "Ready to receive {count} items",
       "selectQuantities": "Select quantities to receive",
-      "confirmReceiving": "Confirm Receiving"
+      "confirmReceiving": "Confirm Receiving",
+      "receive": "Receive",
+      "headTitle": "Receive - {poNumber}",
+      "description": "Record received quantities against this purchase order.",
+      "readyToReceiveCount": "Ready to receive {count} item | Ready to receive {count} items"
     },
     "currencies": {
       "usd": "USD - US Dollar",
@@ -501,7 +627,12 @@
       "gbp": "GBP - British Pound",
       "cad": "CAD - Canadian Dollar",
       "aud": "AUD - Australian Dollar"
-    }
+    },
+    "index": {
+      "description": "Restock orders to your suppliers."
+    },
+    "confirmDelete": "Are you sure you want to delete \"{number}\"?",
+    "noSku": "No SKU"
   },
   "productSuppliers": {
     "title": "Suppliers",
@@ -564,7 +695,8 @@
       "businessDetails": "Business Details",
       "paymentTerms": "Payment Terms",
       "paymentTermsPlaceholder": "e.g., Net 30",
-      "createSupplier": "Create Supplier"
+      "createSupplier": "Create Supplier",
+      "description": "Add a supplier and its contact, address, and business details."
     },
     "edit": {
       "title": "Edit Supplier",
@@ -583,7 +715,14 @@
       "supplierCode": "Supplier Code",
       "paymentTerms": "Payment Terms",
       "editSupplier": "Edit Supplier",
-      "deleteSupplier": "Delete Supplier"
+      "deleteSupplier": "Delete Supplier",
+      "code": "Code: {code}",
+      "supplierDetails": "Supplier details",
+      "products": "Products",
+      "deleteWarning": "This permanently removes the supplier and cannot be undone."
+    },
+    "index": {
+      "description": "Your vendors and the products they supply."
     }
   },
   "customers": {
@@ -610,7 +749,8 @@
       "paymentTerms": "Payment Terms",
       "paymentTermsPlaceholder": "e.g., Net 30",
       "creditLimit": "Credit Limit",
-      "createCustomer": "Create Customer"
+      "createCustomer": "Create Customer",
+      "description": "Add a customer and their billing, shipping, and business details."
     },
     "edit": {
       "title": "Edit Customer",
@@ -633,6 +773,9 @@
       "recentOrders": "Recent Orders",
       "noOrdersYet": "No orders yet",
       "deleteCustomer": "Delete Customer"
+    },
+    "index": {
+      "description": "Your customers and the orders they place."
     }
   },
   "categories": {
@@ -646,7 +789,13 @@
     "editCategory": "Edit Category",
     "categoryName": "Category Name",
     "namePlaceholder": "e.g., Electronics",
-    "descPlaceholder": "Optional description..."
+    "descPlaceholder": "Optional description...",
+    "index": {
+      "description": "Organize your catalog into categories."
+    },
+    "confirmDelete": "Are you sure you want to delete \"{name}\"? This action cannot be undone.",
+    "productsCount": "{count} product | {count} products",
+    "updateCategory": "Update Category"
   },
   "locations": {
     "title": "Warehouse Locations",
@@ -668,7 +817,12 @@
     "noWarehouse": "No warehouse",
     "capacity": "Capacity (units)",
     "capacityHint": "Optional. Used to show how full the location is.",
-    "capacityValue": "Capacity: {capacity} units"
+    "capacityValue": "Capacity: {capacity} units",
+    "subtitle": "Physical places where your stock lives.",
+    "close": "Close",
+    "productsCount": "{count} product | {count} products",
+    "updateLocation": "Update Location",
+    "confirmDelete": "Are you sure you want to delete \"{name}\"? This action cannot be undone."
   },
   "reports": {
     "title": "Reports & Analytics",
@@ -736,7 +890,9 @@
       "current": "Current",
       "deficit": "Deficit",
       "allWellStocked": "All products are well stocked!",
-      "noProductsBelowMin": "No products are below minimum stock levels"
+      "noProductsBelowMin": "No products are below minimum stock levels",
+      "min": "Min",
+      "max": "Max"
     },
     "categoryPerformance": {
       "title": "Category Performance Report",
@@ -885,6 +1041,16 @@
       "loss": "Loss",
       "return": "Return",
       "correction": "Correction"
+    },
+    "index": {
+      "dataSources": {
+        "products": "Products",
+        "orders": "Orders",
+        "stock_adjustments": "Stock Adjustments",
+        "customers": "Customers",
+        "suppliers": "Suppliers",
+        "purchase_orders": "Purchase Orders"
+      }
     }
   },
   "stockAdjustments": {
@@ -915,7 +1081,13 @@
       "negativeWarningMsg": "This adjustment will result in negative stock. Please verify the quantity.",
       "createAdjustment": "Create Adjustment",
       "stockIncrease": "Stock increase",
-      "stockDecrease": "Stock decrease"
+      "stockDecrease": "Stock decrease",
+      "currentStockValue": "Current Stock: {stock}",
+      "locationOptional": "Location (Optional)",
+      "noSpecificLocation": "No specific location",
+      "locationHint": "Apply this adjustment to a specific location so the per-location breakdown stays in step. Leave blank to adjust the total only.",
+      "quantityPlaceholder": "Enter positive number to add, negative to subtract",
+      "negativeWarningValue": "This adjustment will result in negative stock ({stock}). Please verify the quantity."
     },
     "show": {
       "title": "Stock Adjustment Details",
@@ -935,7 +1107,30 @@
       "finalStock": "Final Stock",
       "manualAdjustment": "Manual Adjustment",
       "stockRecount": "Stock Recount",
-      "order": "Order"
+      "order": "Order",
+      "unitsCount": "{count} unit | {count} units"
+    },
+    "variantAdjuster": {
+      "title": "Adjust Stock: {name}",
+      "failed": "Failed to adjust stock"
+    },
+    "types": {
+      "manual": "Manual Adjustment",
+      "order": "Order",
+      "return": "Return",
+      "damage": "Damage",
+      "loss": "Loss",
+      "recount": "Stock Recount",
+      "correction": "Correction",
+      "opening_stock": "Opening Stock"
+    },
+    "index": {
+      "allProducts": "All Products",
+      "dateFrom": "Date From",
+      "dateTo": "Date To",
+      "before": "Before",
+      "change": "Change",
+      "after": "After"
     }
   },
   "importExport": {
@@ -963,7 +1158,8 @@
       "includeNames": "Product names, SKUs, and barcodes",
       "includePricing": "Pricing and currency information",
       "includeStock": "Stock levels and minimum stock",
-      "includeCategories": "Categories and locations"
+      "includeCategories": "Categories and locations",
+      "exportIncludesLabel": "Export includes:"
     },
     "import": {
       "title": "Import Products",
@@ -987,7 +1183,14 @@
       "noteUpdate": "Existing products (matching SKU) will be updated",
       "noteCreate": "Categories and locations will be created if they don't exist",
       "noteCurrency": "Default currency is USD if not specified",
-      "noteSkip": "Invalid rows will be skipped and reported"
+      "noteSkip": "Invalid rows will be skipped and reported",
+      "templateHelpLabel": "Need help? Download our template file with example data:",
+      "requiredFieldsLabel": "Required Fields:",
+      "importantNotesLabel": "Important Notes:",
+      "fieldNameDesc": "Product name",
+      "fieldSkuDesc": "Unique SKU identifier",
+      "fieldPriceDesc": "Selling price",
+      "fieldStockDesc": "Current stock quantity"
     },
     "pageDescription": "Bulk import and export products, orders and users.",
     "tabs": {
@@ -1060,7 +1263,21 @@
       "ruleEscalation": "You can only assign roles you are allowed to assign: non-admins can import members only, with roles no wider than their own permissions."
     },
     "exportProducts": "Export Products",
-    "importProducts": "Import Products"
+    "importProducts": "Import Products",
+    "exports": {
+      "title": "Your exports",
+      "description": "Large exports are prepared in the background. You'll be notified when each is ready to download.",
+      "file": "File",
+      "rows": "Rows",
+      "action": "Action",
+      "download": "Download",
+      "statuses": {
+        "pending": "Pending",
+        "processing": "Processing",
+        "completed": "Completed",
+        "failed": "Failed"
+      }
+    }
   },
   "notifications": {
     "title": "Notifications",
@@ -1077,7 +1294,20 @@
     "noNotifications": "No notifications",
     "allCaughtUp": "You're all caught up!",
     "noNewNotifications": "No new notifications",
-    "viewAllNotifications": "View all"
+    "viewAllNotifications": "View all",
+    "confirmMarkAllRead": "Mark all notifications as read?",
+    "confirmDelete": "Delete this notification?",
+    "confirmClearRead": "Clear all read notifications?",
+    "allCount": "All ({count})",
+    "unreadCount": "Unread ({count})",
+    "readCount": "Read ({count})",
+    "viewDetailsLabel": "View Details",
+    "priorities": {
+      "low": "Low",
+      "normal": "Normal",
+      "high": "High",
+      "urgent": "Urgent"
+    }
   },
   "plugins": {
     "title": "Plugins",
@@ -1128,7 +1358,12 @@
       "notOwned": "Your connected account does not own this plugin yet.",
       "viewOnMarketplace": "View on inventoros.com",
       "readOnly": "You can browse the marketplace. Installing plugins needs the Manage Plugins permission."
-    }
+    },
+    "confirmDelete": "Are you sure you want to delete \"{name}\"? This action cannot be undone.",
+    "subtitle": "Extend your workspace with installable plugins.",
+    "versionLabel": "Version: {version}",
+    "authorLabel": "Author:",
+    "requiresLabel": "Requires: {requires}"
   },
   "settings": {
     "title": "Settings",
@@ -1143,7 +1378,8 @@
       "dateFormat": "Date Format",
       "timeFormat": "Time Format",
       "userMgmtHint": "User management functionality is available in the Users section.",
-      "goToUserMgmt": "Go to User Management"
+      "goToUserMgmt": "Go to User Management",
+      "description": "Manage your organization's profile and regional preferences."
     },
     "account": {
       "title": "Account Settings",
@@ -1175,7 +1411,8 @@
       "dark": "Dark",
       "auto": "Auto",
       "language": "Language",
-      "itemsPerPage": "Items Per Page"
+      "itemsPerPage": "Items Per Page",
+      "description": "Manage your profile, password, notifications, and preferences."
     },
     "email": {
       "title": "Email Settings",
@@ -1209,7 +1446,9 @@
       "sendTest": "Send Test Email",
       "sending": "Sending...",
       "saveSettings": "Save Email Settings",
-      "testSuccess": "Test email sent successfully."
+      "testSuccess": "Test email sent successfully.",
+      "description": "Configure how your workspace sends email and notifications.",
+      "fromNamePlaceholder": "Your Company Name"
     },
     "notificationPreferences": {
       "title": "Email Notification Preferences",
@@ -1286,8 +1525,46 @@
         "deleteWebhook": "Delete Webhook",
         "integrationGuide": "Integration Guide",
         "signatureHeader": "Signature Header",
-        "verification": "Verification"
-      }
+        "verification": "Verification",
+        "headTitle": "Webhook: {name}",
+        "description": "Webhook configuration and delivery activity.",
+        "sendTestShort": "Send Test",
+        "secretHidden": "Hidden for security. Regenerate the secret to issue a new one; it is shown only once.",
+        "createdAt": "Created At",
+        "subscribedEventsCount": "Subscribed Events ({count})",
+        "deliveryStatuses": {
+          "success": "Success",
+          "pending": "Pending",
+          "failed": "Failed"
+        },
+        "noResponseBody": "No response body",
+        "otherGroup": "Other",
+        "signatureHeaderDesc": "All webhook payloads include a signature in the {header} header.",
+        "verificationDesc": "Verify the signature by computing HMAC-SHA256 of the raw request body using your secret.",
+        "responseDesc": "Return a 2xx status code to acknowledge receipt. Failed deliveries will be retried up to 5 times.",
+        "deleteDesc": "Permanently delete this webhook and all of its delivery logs. This action cannot be undone.",
+        "confirmDelete": "Are you sure you want to delete \"{name}\"? This action cannot be undone.",
+        "confirmRegenerate": "Are you sure you want to regenerate the secret? You will need to update the secret in your receiving application."
+      },
+      "description": "External services that receive real-time event notifications.",
+      "signingSecret": "Signing secret",
+      "secretShownOnce": "Copy this now. For security it is shown only once and cannot be retrieved later.",
+      "confirmDelete": "Are you sure you want to delete \"{name}\"?",
+      "createdByName": "Created by {name}",
+      "unknownCreator": "Unknown",
+      "eventCount": "{count} event | {count} events",
+      "deliveriesTotal": "{count} total",
+      "namePlaceholder": "My Webhook"
+    },
+    "description": "Manage your workspace, account, and integrations.",
+    "hub": {
+      "accountDescription": "Update your profile, password, and personal preferences, including language.",
+      "notificationsDescription": "Choose which email and in-app notifications you receive.",
+      "twoFactorTitle": "Two-factor authentication",
+      "twoFactorDescription": "Protect your account with a one-time code from an authenticator app.",
+      "emailDescription": "Configure how your organization sends email (SMTP, Mailgun, or SendGrid).",
+      "webhooksDescription": "Connect external services and deliver real-time event notifications.",
+      "updatesDescription": "Check for new versions, update the application, and manage backups."
     }
   },
   "admin": {
@@ -1313,7 +1590,8 @@
         "additionalRoles": "Additional Roles (Optional)",
         "additionalRolesHint": "Assign custom roles with specific permission sets.",
         "createUser": "Create User",
-        "success": "User created successfully."
+        "success": "User created successfully.",
+        "subtitle": "Create a new user account and assign roles."
       },
       "edit": {
         "title": "Edit User",
@@ -1325,7 +1603,11 @@
         "customRoles": "Additional Custom Roles (Optional)",
         "customRolesHint": "Assign custom roles created for your organization to grant specific permissions.",
         "updateUser": "Update User",
-        "success": "User updated successfully."
+        "success": "User updated successfully.",
+        "titleWithName": "Edit User: {name}",
+        "subtitle": "Update account details, base role, and custom role assignments.",
+        "admin": "Admin",
+        "customRolesSelected": "{count} custom role(s) selected"
       },
       "show": {
         "title": "User Details",
@@ -1345,7 +1627,16 @@
         "notVerified": "Not Verified",
         "deleteUser": "Delete User",
         "confirmDelete": "Are you sure you want to delete {name}?",
-        "cannotUndo": "This action cannot be undone."
+        "cannotUndo": "This action cannot be undone.",
+        "titleWithName": "User: {name}"
+      },
+      "subtitle": "Manage users in your organization, assign roles and permissions.",
+      "noUsersTitle": "No users found.",
+      "noUsersHint": "Click \"Add User\" to create your first user.",
+      "roles": {
+        "admin": "Admin",
+        "manager": "Manager",
+        "member": "Member"
       }
     },
     "roles": {
@@ -1371,7 +1662,12 @@
         "deselectAll": "Deselect All",
         "totalPermissions": "{count} total permission(s)",
         "createRole": "Create Role",
-        "success": "Role created successfully."
+        "success": "Role created successfully.",
+        "subtitle": "Define a role and assign its permissions.",
+        "roleDetails": "Role Details",
+        "namePlaceholder": "e.g., Warehouse Manager",
+        "descriptionPlaceholder": "Describe the purpose and responsibilities of this role...",
+        "permissionBreakdown": "({direct} direct + {fromSets} from {sets} set(s))"
       },
       "edit": {
         "title": "Edit Role",
@@ -1383,7 +1679,10 @@
         "permissionsHint": "Customize the permissions for this role. Click category names to select/deselect all permissions in that category.",
         "permissionsSelected": "{count} permission(s) selected",
         "updateRole": "Update Role",
-        "success": "Role updated successfully."
+        "success": "Role updated successfully.",
+        "titleWithName": "Edit Role: {name}",
+        "subtitle": "Update the role details and permissions.",
+        "viewRole": "View Role"
       },
       "show": {
         "title": "Role Details & Permissions",
@@ -1403,7 +1702,15 @@
         "deleteRole": "Delete Role",
         "reassignFirst": "Reassign users before deleting",
         "systemRoleHint": "This is a system role and cannot be modified or deleted.",
-        "confirmDelete": "Are you sure you want to delete the {name} role? This action cannot be undone."
+        "confirmDelete": "Are you sure you want to delete the {name} role? This action cannot be undone.",
+        "otherCategory": "Other",
+        "titleWithName": "Role: {name}",
+        "permissionsWithCount": "Permissions ({count})",
+        "noPermissions": "No permissions assigned to this role.",
+        "usersCountValue": "{count} user | {count} users",
+        "cannotDeleteWithUsers": "Cannot delete role with assigned users",
+        "deleteRoleTooltip": "Delete role",
+        "confirmDeleteRole": "Are you sure you want to delete the {name} role?"
       }
     },
     "activityLog": {
@@ -1469,7 +1776,16 @@
         "Supplier": "Supplier",
         "User": "User",
         "Warehouse": "Warehouse"
-      }
+      },
+      "description": "Audit trail of every change across your workspace.",
+      "exportCsv": "Export CSV",
+      "exportXlsx": "Export XLSX",
+      "searchDescription": "Search Description",
+      "unknownUser": "Unknown User",
+      "viewChanges": "View {count} Change | View {count} Changes",
+      "daysAgo": "{count} day ago | {count} days ago",
+      "hoursAgo": "{count} hour ago | {count} hours ago",
+      "minutesAgo": "{count} minute ago | {count} minutes ago"
     },
     "update": {
       "title": "System Update",
@@ -1503,7 +1819,23 @@
       "onGithub": "on GitHub",
       "autoBackup": "A backup is automatically created before each update",
       "maintenanceMode": "The application will be in maintenance mode during updates",
-      "autoMigrations": "Database migrations are run automatically during updates"
+      "autoMigrations": "Database migrations are run automatically during updates",
+      "checkFailed": "Failed to check for updates. Please try again.",
+      "confirmUpdate": "Are you sure you want to update the application? A backup will be created automatically.",
+      "updateFailed": "Update failed. Please check the logs.",
+      "confirmBackup": "Create a backup of the current installation?",
+      "backupCreated": "Backup created successfully!",
+      "backupFailed": "Failed to create backup. Please check the logs.",
+      "confirmRestore": "Are you sure you want to restore from {file}? This will overwrite the current installation.",
+      "restoreCompleted": "Restore completed successfully!",
+      "restoreFailed": "Restore failed.",
+      "restoreError": "Failed to restore backup. Please check the logs.",
+      "confirmDeleteBackup": "Are you sure you want to delete {file}?",
+      "deleteBackupFailed": "Failed to delete backup. Please try again.",
+      "managerTitle": "Update Manager",
+      "subtitle": "Check for new releases, install updates, and manage installation backups.",
+      "upToDateBadge": "Up to date",
+      "fetchedFromRepo": "Updates are fetched from {repo} on GitHub."
     },
     "createRole": "Create Role",
     "createUser": "Create User",
@@ -1552,6 +1884,35 @@
       "linkSent": "A new verification link has been sent to the email address you provided during registration.",
       "resend": "Resend Verification Email",
       "logOut": "Log Out"
+    },
+    "twoFactorChallenge": {
+      "title": "Two-Factor Challenge",
+      "codeHint": "Please enter the authentication code from your authenticator app.",
+      "recoveryHint": "Please enter one of your recovery codes.",
+      "code": "Authentication Code",
+      "codePlaceholder": "Enter 6-digit code",
+      "recoveryCode": "Recovery Code",
+      "recoveryPlaceholder": "Enter recovery code",
+      "useCode": "Use authentication code",
+      "useRecovery": "Use a recovery code",
+      "verify": "Verify"
+    },
+    "twoFactor": {
+      "setupTitle": "Two-Factor Authentication Setup",
+      "title": "Two-Factor Authentication",
+      "description": "Add an extra layer of security to your account with an authenticator app.",
+      "enabled": "Enabled",
+      "enabledTitle": "Two-Factor Authentication is Enabled",
+      "enabledHint": "Two-factor authentication is currently active on your account. Enter your password to disable it.",
+      "password": "Password",
+      "disable": "Disable Two-Factor Authentication",
+      "enable": "Enable Two-Factor Authentication",
+      "scanHint": "Scan the QR code below with your authenticator app (Google Authenticator, Authy, etc.), then enter the verification code to enable 2FA.",
+      "manualKey": "Or enter this key manually:",
+      "verificationCode": "Verification Code",
+      "showRecoveryCodes": "Show Recovery Codes",
+      "hideRecoveryCodes": "Hide Recovery Codes",
+      "recoveryHint": "Save these recovery codes in a safe place. They can be used to access your account if you lose your authenticator device."
     }
   },
   "profile": {
@@ -1578,7 +1939,8 @@
       "confirmTitle": "Are you sure you want to delete your account?",
       "confirmDescription": "Once your account is deleted, all of its resources and data will be permanently deleted. Please enter your password to confirm you would like to permanently delete your account.",
       "password": "Password"
-    }
+    },
+    "description": "Manage your account information, password, and account removal."
   },
   "install": {
     "welcome": {
@@ -1630,7 +1992,9 @@
       "testing": "Testing Connection...",
       "dbExistsHint": "Make sure your database exists before proceeding. The installer will create the necessary tables.",
       "installDatabase": "Install Database",
-      "installing": "Installing..."
+      "installing": "Installing...",
+      "testFailed": "Failed to test connection: {error}",
+      "installFailed": "Installation failed: {error}"
     },
     "admin": {
       "title": "Create Admin Account",
@@ -1646,7 +2010,10 @@
       "confirmPasswordHint": "Confirm your password",
       "accessNote": "This admin account will have full access to your Inventoros installation.",
       "completeInstallation": "Complete Installation",
-      "creatingAccount": "Creating Account..."
+      "creatingAccount": "Creating Account...",
+      "orgNamePlaceholder": "Acme Corporation",
+      "fullNamePlaceholder": "John Doe",
+      "createFailed": "Failed to create admin account: {error}"
     },
     "complete": {
       "title": "Installation Complete!",
@@ -1685,7 +2052,10 @@
       "availableVars": "Available Variables",
       "preview": "Preview",
       "generating": "Generating...",
-      "applySku": "Apply SKU"
+      "applySku": "Apply SKU",
+      "or": "OR",
+      "patternExample": "e.g., {example}",
+      "previewError": "Error generating preview"
     },
     "variantManager": {
       "productOptions": "Product Options",
@@ -1701,7 +2071,10 @@
       "autoGenerate": "Auto-generate",
       "enableAll": "Enable All",
       "disableAll": "Disable All",
-      "addOptionsHint": "Add options like Size or Color to create product variants"
+      "addOptionsHint": "Add options like Size or Color to create product variants",
+      "optionName": "Option Name",
+      "optionValues": "Option Values (comma-separated)",
+      "addOptionButton": "Add Option (e.g., Size, Color)"
     },
     "variantsTable": {
       "variant": "Variant",
@@ -1746,20 +2119,34 @@
       "cameraHint": "Point your camera at a barcode to scan",
       "locationFound": "Location Found",
       "productsHere": "{count} products here",
-      "viewProductsHere": "View Products Here"
+      "viewProductsHere": "View Products Here",
+      "lookupFailed": "Failed to lookup barcode",
+      "stock": "Stock",
+      "aisle": "Aisle {value}",
+      "shelf": "Shelf {value}",
+      "bin": "Bin {value}"
     },
     "activityTimeline": {
       "noActivity": "No activity recorded yet",
       "system": "System",
       "thisProduct": "this product",
-      "moreChanges": "+{count} more changes"
+      "moreChanges": "+{count} more changes",
+      "actionOnProduct": {
+        "created": "created this product",
+        "updated": "updated this product",
+        "deleted": "deleted this product",
+        "viewed": "viewed this product",
+        "other": "{action} this product"
+      }
     },
     "themeToggle": {
       "switchToLight": "Switch to light mode",
       "switchToDark": "Switch to dark mode"
     },
     "imageGallery": {
-      "noImages": "No images available"
+      "noImages": "No images available",
+      "close": "Close",
+      "imageAlt": "{name} - Image {number}"
     },
     "imageUploader": {
       "dragDrop": "Drag and drop images here, or click to browse",
@@ -1771,6 +2158,62 @@
       "moveRight": "Move right",
       "remove": "Remove",
       "noImagesHint": "No images uploaded yet. The first image will be used as the primary product image."
+    },
+    "relativeTime": {
+      "justNow": "Just now",
+      "minutesAgo": "{count}m ago",
+      "hoursAgo": "{count}h ago",
+      "daysAgo": "{count}d ago"
+    },
+    "batchList": {
+      "title": "Batch Tracking",
+      "addBatch": "Add Batch",
+      "createFailed": "Failed to create batch",
+      "batchNumberLabel": "Batch Number (auto-generated if empty)",
+      "manufacturedDate": "Manufactured Date",
+      "expiryDate": "Expiry Date",
+      "createBatch": "Create Batch",
+      "columns": {
+        "batchNumber": "Batch #",
+        "quantity": "Qty",
+        "manufactured": "Manufactured",
+        "expiry": "Expiry"
+      },
+      "expired": "(expired)",
+      "empty": "No batches recorded yet.",
+      "emptyHint": "Click \"Add Batch\" to record the first batch."
+    },
+    "languageSwitcher": {
+      "ariaLabel": "Language: {name}"
+    },
+    "dataTable": {
+      "noData": "No data."
+    },
+    "serialList": {
+      "title": "Serial Number Tracking",
+      "addSerial": "Add Serial",
+      "createFailed": "Failed to create serial",
+      "updateFailed": "Failed to update status",
+      "all": "All",
+      "statuses": {
+        "available": "Available",
+        "sold": "Sold",
+        "reserved": "Reserved",
+        "damaged": "Damaged"
+      },
+      "serialNumber": "Serial Number",
+      "createSerial": "Create Serial",
+      "columns": {
+        "serialNumber": "Serial #"
+      },
+      "markAsSold": "Mark as sold",
+      "markAsReserved": "Mark as reserved",
+      "markAsDamaged": "Mark as damaged",
+      "markAsAvailable": "Mark as available",
+      "reserve": "Reserve",
+      "empty": "No serial numbers recorded yet.",
+      "emptyHint": "Click \"Add Serial\" to register the first serial number.",
+      "noMatches": "No serials matching the selected filter."
     }
   },
   "warehouses": {
@@ -1850,7 +2293,8 @@
       "badge": "Default warehouse",
       "makeDefault": "Make default",
       "confirm": "Make \"{name}\" the default warehouse?",
-      "hint": "The default warehouse is preselected for new orders."
+      "hint": "The default warehouse is preselected for new orders.",
+      "label": "Default"
     },
     "capacity": {
       "utilisation": "Utilisation",
@@ -1873,6 +2317,41 @@
       "reorder": "Reorder",
       "shortIn": "Short in {names}",
       "save": "Save warehouse levels"
+    },
+    "subtitle": "Your storage locations and stock distribution.",
+    "updateWarehouse": "Update Warehouse",
+    "index": {
+      "searchLabel": "Search Warehouses"
+    },
+    "create": {
+      "subtitle": "Add a warehouse location and its settings."
+    },
+    "edit": {
+      "title": "Edit Warehouse: {name}",
+      "subtitle": "Update warehouse details, contact info, and user access."
+    },
+    "timezoneOptions": {
+      "stJohns": "Newfoundland (St. John's)",
+      "halifax": "Atlantic (Halifax)",
+      "toronto": "Eastern (Toronto)",
+      "winnipeg": "Central (Winnipeg)",
+      "edmonton": "Mountain (Edmonton)",
+      "vancouver": "Pacific (Vancouver)"
+    },
+    "show": {
+      "codeLabel": "Code: {code}",
+      "totalLocations": "Total Locations",
+      "totalProductsStored": "Total Products Stored",
+      "assignedUsers": "Assigned Users",
+      "details": "Warehouse Details",
+      "manager": "Manager",
+      "noAddress": "No address provided",
+      "locationsCount": "Locations ({count})",
+      "products": "Products",
+      "noLocations": "No locations in this warehouse",
+      "dangerZone": "Danger Zone",
+      "deleteWarehouse": "Delete Warehouse",
+      "cannotUndo": "This action cannot be undone."
     }
   },
   "workOrders": {
@@ -1928,7 +2407,8 @@
       "ready": "Ready",
       "noComponents": "No components recorded for this work order.",
       "noComponentsDefined": "This assembly product has no components defined. Add components in the product detail page before creating a work order.",
-      "insufficientWarning": "Some components have insufficient stock. You can still create the work order, but production cannot begin until stock is replenished."
+      "insufficientWarning": "Some components have insufficient stock. You can still create the work order, but production cannot begin until stock is replenished.",
+      "unknown": "Unknown"
     },
     "actions": {
       "startProduction": "Start Production",
@@ -1951,7 +2431,19 @@
       "cancelled": "Cancelled",
       "lastUpdated": "Last Updated"
     },
-    "cancelledBanner": "This work order has been cancelled."
+    "cancelledBanner": "This work order has been cancelled.",
+    "create": {
+      "materialsNeeded": "Materials needed to produce {count} unit of {name} | Materials needed to produce {count} units of {name}"
+    },
+    "index": {
+      "filter": "Filter"
+    },
+    "show": {
+      "headTitle": "Work Order {number}",
+      "deleteConfirm": "Delete this work order? This cannot be undone.",
+      "dangerZone": "Danger Zone",
+      "releaseHint": "Any reserved components will be released back to stock."
+    }
   },
   "reportBuilder": {
     "title": "Custom Reports",
@@ -2317,7 +2809,102 @@
   },
   "stockAudits": {
     "completeConfirm": "Complete this audit? Stock adjustments will be created for any discrepancies.",
-    "completeUncountedConfirm": "{uncounted} of {total} items have not been counted. Complete the audit anyway? Uncounted items keep their current stock; only counted items are adjusted."
+    "completeUncountedConfirm": "{uncounted} of {total} items have not been counted. Complete the audit anyway? Uncounted items keep their current stock; only counted items are adjusted.",
+    "backToList": "Back to List",
+    "auditDetails": "Audit Details",
+    "types": {
+      "full": "Full Audit",
+      "cycle": "Cycle Count",
+      "spot": "Spot Check"
+    },
+    "statuses": {
+      "draft": "Draft",
+      "in_progress": "In Progress",
+      "completed": "Completed",
+      "cancelled": "Cancelled"
+    },
+    "itemStatuses": {
+      "pending": "Pending",
+      "counted": "Counted",
+      "verified": "Verified",
+      "adjusted": "Adjusted"
+    },
+    "fields": {
+      "name": "Audit Name",
+      "namePlaceholder": "e.g., Q1 2026 Warehouse Cycle Count",
+      "descriptionPlaceholder": "Describe the purpose of this audit...",
+      "auditType": "Audit Type",
+      "typeHints": {
+        "full": "Count all products in the warehouse",
+        "cycle": "Count a subset of products on a rotating schedule",
+        "spot": "Quick check of specific products"
+      },
+      "location": "Warehouse Location",
+      "locationHint": "Leave blank to include products from all locations"
+    },
+    "columns": {
+      "auditNumber": "Audit #",
+      "location": "Location",
+      "items": "Items",
+      "createdBy": "Created By",
+      "systemQty": "System Qty",
+      "countedQty": "Counted Qty",
+      "discrepancy": "Discrepancy",
+      "countedBy": "Counted By"
+    },
+    "index": {
+      "description": "Manage stock audits and cycle counts.",
+      "newAudit": "New Audit",
+      "searchPlaceholder": "Search by audit number or name...",
+      "empty": "No stock audits found",
+      "createFirst": "Create First Audit"
+    },
+    "create": {
+      "title": "Create Stock Audit",
+      "description": "Set up a new stock audit or cycle count.",
+      "notesPlaceholder": "Additional notes or instructions for audit staff...",
+      "selectProducts": "Select Products",
+      "selectProductsHint": "Choose which products to include in this audit. Leave empty to include all products.",
+      "selectProductsHintAtLocation": "Choose which products to include in this audit. Leave empty to include all products at the selected location.",
+      "searchProducts": "Search products by name or SKU...",
+      "selectAll": "Select all ({count} product) | Select all ({count} products)",
+      "inStock": "in stock",
+      "fullAuditInfo": "All active products will be automatically included in this audit. You can review items after creation.",
+      "fullAuditInfoAtLocation": "All active products at the selected location will be automatically included in this audit. You can review items after creation.",
+      "submit": "Create Audit"
+    },
+    "edit": {
+      "title": "Edit Stock Audit",
+      "backToAudit": "Back to Audit",
+      "notesPlaceholder": "Additional notes or instructions...",
+      "submit": "Update Audit"
+    },
+    "show": {
+      "pageTitle": "Audit {number}",
+      "totalItems": "Total Items",
+      "progress": "Progress",
+      "discrepancies": "Discrepancies",
+      "started": "Started",
+      "completed": "Completed",
+      "auditItems": "Audit Items",
+      "countedProgress": "({counted} of {total} counted)",
+      "count": "Count",
+      "recount": "Recount",
+      "countNotesPlaceholder": "Notes (optional)",
+      "noItems": "No items in this audit",
+      "processing": "Processing...",
+      "startAudit": "Start Audit",
+      "completeAudit": "Complete Audit",
+      "deleteAudit": "Delete Audit",
+      "startHint": "Starting the audit will record current system stock levels and allow counting to begin.",
+      "completeHint": "Completing the audit will create stock adjustments for any discrepancies between system and counted quantities.",
+      "dangerZone": "Danger Zone",
+      "deleteHint": "Deleting this audit is permanent and cannot be undone.",
+      "startConfirm": "Are you sure you want to start this audit? System quantities will be recorded at current levels.",
+      "deleteConfirm": "Are you sure you want to delete this audit? This action cannot be undone.",
+      "updateCountFailed": "Failed to update count",
+      "saveCountError": "An error occurred while saving the count"
+    }
   },
   "cycleCounts": {
     "title": "Cycle count schedules",
@@ -2454,6 +3041,78 @@
       "save": "Save lines",
       "cancel": "Cancel",
       "hint": "Change what is put back on the shelf. Stock only moves when the return is received."
+    },
+    "index": {
+      "title": "Returns & Exchanges",
+      "description": "Track returns, exchanges, and refunds across every order.",
+      "newReturn": "New Return",
+      "searchPlaceholder": "Search by return number, order number, or customer...",
+      "returnNumber": "Return #",
+      "orderNumber": "Order #",
+      "items": "Items",
+      "refund": "Refund",
+      "empty": "No returns found."
+    },
+    "columns": {
+      "qty": "Qty",
+      "condition": "Condition",
+      "restock": "Restock"
+    },
+    "conditions": {
+      "new": "New (Unopened)",
+      "used": "Used (Opened)",
+      "damaged": "Damaged"
+    },
+    "create": {
+      "headTitle": "Create Return - Order #{number}",
+      "title": "Create Return / Exchange",
+      "fromOrder": "From Order #{number}",
+      "backToOrder": "Back to Order",
+      "details": "Return Details",
+      "typeReturn": "Return (Refund)",
+      "reasonRequired": "Reason *",
+      "reasonPlaceholder": "Reason for return or exchange...",
+      "notesOptional": "Notes (optional)",
+      "notesPlaceholder": "Additional notes...",
+      "selectItems": "Select Items to Return",
+      "ordered": "Ordered: {count}",
+      "alreadyReturned": "({count} already returned)",
+      "maxReturnable": "Max returnable: {count}",
+      "selectedSummary": "{count} item selected for {type} | {count} items selected for {type}",
+      "estimatedRefund": "Estimated Refund:",
+      "processing": "Processing...",
+      "submit": "Submit Return Request"
+    },
+    "show": {
+      "headTitle": "Return {number}",
+      "title": "Return #{number}",
+      "createdOn": "Created on {date}",
+      "approve": "Approve Return",
+      "markReceived": "Mark as Received",
+      "complete": "Complete Return",
+      "reject": "Reject Return",
+      "backToReturns": "Back to Returns",
+      "items": "Return Items",
+      "unknownProduct": "Unknown Product",
+      "conditionFor": "Condition {name}",
+      "restockFor": "Restock {name}",
+      "noItems": "No items on this return.",
+      "details": "Details",
+      "reason": "Reason",
+      "forOrder": "For Order",
+      "summary": "Summary",
+      "returnNumber": "Return Number",
+      "completed": "Completed",
+      "processedBy": "Processed By",
+      "refundAmount": "Refund Amount",
+      "pendingHint": "Approve to proceed or reject the return.",
+      "approvedHint": "Mark as received when items arrive. Items marked for restock will be added back to inventory.",
+      "receivedHint": "Complete the return to finalize the process.",
+      "dangerZone": "Danger Zone",
+      "rejectWarning": "Rejecting closes this return. This cannot be undone.",
+      "rejectReason": "Reason for rejection",
+      "rejectPlaceholder": "Why is this return being rejected?",
+      "rejecting": "Rejecting..."
     }
   },
   "portal": {
@@ -2677,5 +3336,60 @@
   "legal": {
     "licensedUnder": "Licensed under the {license}",
     "sourceCode": "Source code"
+  },
+  "stockTransfers": {
+    "title": "Stock Transfers",
+    "subtitle": "Transfer inventory between locations.",
+    "newTransfer": "New Transfer",
+    "backToList": "Back to List",
+    "transferDetails": "Transfer Details",
+    "transferItems": "Transfer Items",
+    "fromLocation": "From Location",
+    "toLocation": "To Location",
+    "statuses": {
+      "pending": "Pending",
+      "in_transit": "In Transit",
+      "completed": "Completed",
+      "cancelled": "Cancelled"
+    },
+    "create": {
+      "title": "Create Stock Transfer",
+      "selectSource": "Select source location",
+      "selectDestination": "Select destination location",
+      "notesPlaceholder": "Add any notes about this transfer...",
+      "addItem": "Add Item",
+      "selectProduct": "Select product",
+      "productOption": "{name} ({sku}) - Stock: {stock}",
+      "qty": "Qty",
+      "available": "Available: {count}",
+      "itemNotesPlaceholder": "Item notes...",
+      "totalProducts": "Total items: {count} product | Total items: {count} products",
+      "totalUnits": "Total quantity: {count} unit | Total quantity: {count} units",
+      "createTransfer": "Create Transfer"
+    },
+    "index": {
+      "searchPlaceholder": "Search by transfer number...",
+      "filter": "Filter",
+      "transferNumber": "Transfer #",
+      "from": "From",
+      "to": "To",
+      "items": "Items",
+      "empty": "No stock transfers found. Create your first transfer to move inventory between locations.",
+      "itemCount": "{count} item | {count} items",
+      "showingTransfers": "Showing {from} to {to} of {total} transfers"
+    },
+    "show": {
+      "headTitle": "Transfer {number}",
+      "subtitle": "Stock transfer details",
+      "transferNumber": "Transfer Number",
+      "transferredBy": "Transferred By",
+      "completedAt": "Completed",
+      "processing": "Processing...",
+      "completeTransfer": "Complete Transfer",
+      "cancelTransfer": "Cancel Transfer",
+      "completeHint": "Completing the transfer will deduct stock from the source location and add it to the destination location.",
+      "confirmComplete": "Are you sure you want to complete this transfer? Stock levels will be adjusted.",
+      "confirmCancel": "Are you sure you want to cancel this transfer?"
+    }
   }
 }

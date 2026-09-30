@@ -31,7 +31,7 @@ const activeTab = ref('configuration');
             </div>
         </template>
 
-        <PageHeader :title="t('settings.email.title')" description="Configure how your workspace sends email and notifications." />
+        <PageHeader :title="t('settings.email.title')" :description="t('settings.email.description')" />
 
         <!-- Tabs -->
         <div class="mt-6 border-b border-border-subtle">

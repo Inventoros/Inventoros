@@ -51,10 +51,10 @@ const formatRelativeTime = (dateString) => {
     const hours = Math.floor(minutes / 60);
     const days = Math.floor(hours / 24);
 
-    if (days > 0) return `${days}d ago`;
-    if (hours > 0) return `${hours}h ago`;
-    if (minutes > 0) return `${minutes}m ago`;
-    return 'Just now';
+    if (days > 0) return t('components.relativeTime.daysAgo', { count: days });
+    if (hours > 0) return t('components.relativeTime.hoursAgo', { count: hours });
+    if (minutes > 0) return t('components.relativeTime.minutesAgo', { count: minutes });
+    return t('components.relativeTime.justNow');
 };
 
 const formatFieldName = (field) => {
@@ -63,7 +63,7 @@ const formatFieldName = (field) => {
 
 const formatValue = (value) => {
     if (value === null || value === undefined) return '-';
-    if (typeof value === 'boolean') return value ? 'Yes' : 'No';
+    if (typeof value === 'boolean') return value ? t('common.yes') : t('common.no');
     if (typeof value === 'object') return JSON.stringify(value);
     return String(value);
 };
@@ -92,7 +92,7 @@ const getChangedFields = (properties) => {
             <svg class="w-12 h-12 mx-auto mb-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
-            <p>No activity recorded yet</p>
+            <p>{{ t('components.activityTimeline.noActivity') }}</p>
         </div>
 
         <ul v-else role="list" class="-mb-8">
@@ -120,10 +120,10 @@ const getChangedFields = (properties) => {
                             <div class="flex items-center justify-between gap-2">
                                 <div class="text-sm">
                                     <span class="font-medium text-gray-900 dark:text-gray-100">
-                                        {{ activity.user?.name || 'System' }}
+                                        {{ activity.user?.name || t('components.activityTimeline.system') }}
                                     </span>
                                     <span class="ml-1 text-gray-500 dark:text-gray-400">
-                                        {{ activity.action }} this product
+                                        {{ ['created', 'updated', 'deleted', 'viewed'].includes(activity.action) ? t(`components.activityTimeline.actionOnProduct.${activity.action}`) : t('components.activityTimeline.actionOnProduct.other', { action: activity.action }) }}
                                     </span>
                                 </div>
                                 <span class="text-xs text-gray-500 dark:text-gray-400 whitespace-nowrap">
@@ -147,7 +147,7 @@ const getChangedFields = (properties) => {
                                         <span class="text-green-400">{{ formatValue(change.new) }}</span>
                                     </div>
                                     <div v-if="getChangedFields(activity.properties).length > 3" class="text-gray-400 italic">
-                                        +{{ getChangedFields(activity.properties).length - 3 }} more changes
+                                        {{ t('components.activityTimeline.moreChanges', { count: getChangedFields(activity.properties).length - 3 }) }}
                                     </div>
                                 </div>
                             </div>

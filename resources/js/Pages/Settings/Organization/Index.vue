@@ -102,8 +102,8 @@ const fieldArea = 'w-full rounded-md border border-border-subtle bg-surface-canv
 const fieldError = 'mt-1 text-xs text-status-danger';
 
 const tabs = [
-    { key: 'general', label: 'General Information' },
-    { key: 'regional', label: 'Regional Settings' },
+    { key: 'general', label: t('settings.organization.generalInfo') },
+    { key: 'regional', label: t('settings.organization.regionalSettings') },
 ];
 </script>
 
@@ -121,7 +121,7 @@ const tabs = [
             </div>
         </template>
 
-        <PageHeader :title="t('settings.organization.title')" description="Manage your organization's profile and regional preferences." />
+        <PageHeader :title="t('settings.organization.title')" :description="t('settings.organization.description')" />
 
         <!-- Tabs -->
         <div class="mt-6 border-b border-border-subtle">
@@ -135,7 +135,7 @@ const tabs = [
                             : 'border-transparent text-text-tertiary hover:border-border-strong hover:text-text-secondary'
                     ]"
                 >
-                    General Information
+                    {{ t('settings.organization.generalInfo') }}
                 </button>
                 <button
                     @click="activeTab = 'regional'"
@@ -146,7 +146,7 @@ const tabs = [
                             : 'border-transparent text-text-tertiary hover:border-border-strong hover:text-text-secondary'
                     ]"
                 >
-                    Regional Settings
+                    {{ t('settings.organization.regionalSettings') }}
                 </button>
                 <button
                     @click="activeTab = 'approvals'"
@@ -169,7 +169,7 @@ const tabs = [
                             : 'border-transparent text-text-tertiary hover:border-border-strong hover:text-text-secondary'
                     ]"
                 >
-                    User Management
+                    {{ t('settings.organization.userManagement') }}
                 </button>
                 <button
                     @click="activeTab = 'portal'"
@@ -190,12 +190,12 @@ const tabs = [
             <Card :padded="false">
                 <form @submit.prevent="submitGeneral">
                     <div class="px-5 pt-5">
-                        <h3 class="text-sm font-semibold text-text-primary">Organization Information</h3>
+                        <h3 class="text-sm font-semibold text-text-primary">{{ t('settings.organization.orgInfo') }}</h3>
                     </div>
                     <div class="p-5">
                         <div class="grid grid-cols-1 gap-5 md:grid-cols-2">
                             <div>
-                                <label for="name" :class="fieldLabel">Organization Name</label>
+                                <label for="name" :class="fieldLabel">{{ t('settings.organization.orgName') }}</label>
                                 <input
                                     id="name"
                                     v-model="generalForm.name"
@@ -206,7 +206,7 @@ const tabs = [
                                 <p v-if="generalForm.errors.name" :class="fieldError">{{ generalForm.errors.name }}</p>
                             </div>
                             <div>
-                                <label for="email" :class="fieldLabel">Email</label>
+                                <label for="email" :class="fieldLabel">{{ t('common.email') }}</label>
                                 <input
                                     id="email"
                                     v-model="generalForm.email"
@@ -217,7 +217,7 @@ const tabs = [
                                 <p v-if="generalForm.errors.email" :class="fieldError">{{ generalForm.errors.email }}</p>
                             </div>
                             <div>
-                                <label for="phone" :class="fieldLabel">Phone</label>
+                                <label for="phone" :class="fieldLabel">{{ t('common.phone') }}</label>
                                 <input
                                     id="phone"
                                     v-model="generalForm.phone"
@@ -228,7 +228,7 @@ const tabs = [
                                 <p v-if="generalForm.errors.phone" :class="fieldError">{{ generalForm.errors.phone }}</p>
                             </div>
                             <div>
-                                <label for="address" :class="fieldLabel">Address</label>
+                                <label for="address" :class="fieldLabel">{{ t('common.address') }}</label>
                                 <input
                                     id="address"
                                     v-model="generalForm.address"
@@ -239,7 +239,7 @@ const tabs = [
                                 <p v-if="generalForm.errors.address" :class="fieldError">{{ generalForm.errors.address }}</p>
                             </div>
                             <div>
-                                <label for="city" :class="fieldLabel">City</label>
+                                <label for="city" :class="fieldLabel">{{ t('common.city') }}</label>
                                 <input
                                     id="city"
                                     v-model="generalForm.city"
@@ -250,7 +250,7 @@ const tabs = [
                                 <p v-if="generalForm.errors.city" :class="fieldError">{{ generalForm.errors.city }}</p>
                             </div>
                             <div>
-                                <label for="state" :class="fieldLabel">State/Province</label>
+                                <label for="state" :class="fieldLabel">{{ t('common.stateProvince') }}</label>
                                 <input
                                     id="state"
                                     v-model="generalForm.state"
@@ -261,7 +261,7 @@ const tabs = [
                                 <p v-if="generalForm.errors.state" :class="fieldError">{{ generalForm.errors.state }}</p>
                             </div>
                             <div>
-                                <label for="zip" :class="fieldLabel">ZIP/Postal Code</label>
+                                <label for="zip" :class="fieldLabel">{{ t('common.zipPostalCode') }}</label>
                                 <input
                                     id="zip"
                                     v-model="generalForm.zip"
@@ -272,7 +272,7 @@ const tabs = [
                                 <p v-if="generalForm.errors.zip" :class="fieldError">{{ generalForm.errors.zip }}</p>
                             </div>
                             <div>
-                                <label for="country" :class="fieldLabel">Country</label>
+                                <label for="country" :class="fieldLabel">{{ t('common.country') }}</label>
                                 <input
                                     id="country"
                                     v-model="generalForm.country"
@@ -286,7 +286,7 @@ const tabs = [
 
                         <div v-if="canManage" class="mt-6 flex justify-end">
                             <Button type="submit" variant="default" :loading="generalForm.processing" :disabled="generalForm.processing">
-                                Save Changes
+                                {{ t('common.saveChanges') }}
                             </Button>
                         </div>
                     </div>
@@ -299,12 +299,12 @@ const tabs = [
             <Card :padded="false">
                 <form @submit.prevent="submitRegional">
                     <div class="px-5 pt-5">
-                        <h3 class="text-sm font-semibold text-text-primary">Regional Settings</h3>
+                        <h3 class="text-sm font-semibold text-text-primary">{{ t('settings.organization.regionalSettings') }}</h3>
                     </div>
                     <div class="p-5">
                         <div class="grid grid-cols-1 gap-5 md:grid-cols-2">
                             <div>
-                                <label for="currency" :class="fieldLabel">Currency</label>
+                                <label for="currency" :class="fieldLabel">{{ t('common.currency') }}</label>
                                 <input
                                     id="currency"
                                     v-model="regionalForm.currency"
@@ -316,7 +316,7 @@ const tabs = [
                                 <p v-if="regionalForm.errors.currency" :class="fieldError">{{ regionalForm.errors.currency }}</p>
                             </div>
                             <div>
-                                <label for="timezone" :class="fieldLabel">Timezone</label>
+                                <label for="timezone" :class="fieldLabel">{{ t('settings.organization.timezone') }}</label>
                                 <input
                                     id="timezone"
                                     v-model="regionalForm.timezone"
@@ -328,7 +328,7 @@ const tabs = [
                                 <p v-if="regionalForm.errors.timezone" :class="fieldError">{{ regionalForm.errors.timezone }}</p>
                             </div>
                             <div>
-                                <label for="date_format" :class="fieldLabel">Date Format</label>
+                                <label for="date_format" :class="fieldLabel">{{ t('settings.organization.dateFormat') }}</label>
                                 <input
                                     id="date_format"
                                     v-model="regionalForm.date_format"
@@ -340,7 +340,7 @@ const tabs = [
                                 <p v-if="regionalForm.errors.date_format" :class="fieldError">{{ regionalForm.errors.date_format }}</p>
                             </div>
                             <div>
-                                <label for="time_format" :class="fieldLabel">Time Format</label>
+                                <label for="time_format" :class="fieldLabel">{{ t('settings.organization.timeFormat') }}</label>
                                 <input
                                     id="time_format"
                                     v-model="regionalForm.time_format"
@@ -355,7 +355,7 @@ const tabs = [
 
                         <div v-if="canManage" class="mt-6 flex justify-end">
                             <Button type="submit" variant="default" :loading="regionalForm.processing" :disabled="regionalForm.processing">
-                                Save Changes
+                                {{ t('common.saveChanges') }}
                             </Button>
                         </div>
                     </div>
@@ -500,12 +500,12 @@ const tabs = [
             <Card>
                 <div class="flex flex-col items-center gap-3 py-12 text-center">
                     <Users :size="40" class="text-text-tertiary" />
-                    <h3 class="text-sm font-semibold text-text-primary">User Management</h3>
+                    <h3 class="text-sm font-semibold text-text-primary">{{ t('settings.organization.userManagement') }}</h3>
                     <p class="text-sm text-text-secondary">
-                        User management functionality is available in the Users section.
+                        {{ t('settings.organization.userMgmtHint') }}
                     </p>
                     <Button variant="default" as="Link" :href="route('users.index')">
-                        Go to User Management
+                        {{ t('settings.organization.goToUserMgmt') }}
                     </Button>
                 </div>
             </Card>

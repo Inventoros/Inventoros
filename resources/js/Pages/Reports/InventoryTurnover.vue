@@ -8,6 +8,7 @@ import StatTile from '@/Components/ui/StatTile.vue';
 import ExportMenu from '@/Components/Reports/ExportMenu.vue';
 import PeriodFilter from '@/Components/Reports/PeriodFilter.vue';
 import { formatCurrency, formatNumber } from '@/lib/reportFormat';
+import { formatNumber as formatPlainNumber } from '@/lib/money';
 import { Head, Link } from '@inertiajs/vue3';
 import { useI18n } from 'vue-i18n';
 import { ArrowLeft, RefreshCw, CalendarClock, DollarSign, Info } from 'lucide-vue-next';
@@ -22,7 +23,7 @@ defineProps({
     filters: Object,
 });
 
-const ratio = (value) => (value === null || value === undefined ? t('reports.inventoryTurnover.notAvailable') : `${Number(value).toFixed(2)}x`);
+const ratio = (value) => (value === null || value === undefined ? t('reports.inventoryTurnover.notAvailable') : `${formatPlainNumber(value, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}x`);
 const daysOf = (value) => (value === null || value === undefined ? t('reports.inventoryTurnover.notAvailable') : formatNumber(value));
 
 const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-text-secondary';

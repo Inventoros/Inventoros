@@ -16,6 +16,7 @@ import {
 // until the user actually opens the scanner.
 const BarcodeScannerModal = defineAsyncComponent(() => import('@/Components/BarcodeScannerModal.vue'));
 import { useI18n } from 'vue-i18n';
+import { formatMoney } from '@/lib/money';
 
 const { t } = useI18n();
 
@@ -118,8 +119,8 @@ const printBarcode = (productId) => {
     window.open(route('products.barcode.print', productId), '_blank');
 };
 
-const formatCurrency = (value) =>
-    new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(value);
+const formatCurrency = (value, currency) =>
+    formatMoney(value, currency);
 
 const searchProducts = () => {
     router.get(route('products.index'), {
@@ -137,7 +138,7 @@ const clearFilters = () => {
 };
 
 const deleteProduct = (product) => {
-    if (confirm(`Are you sure you want to delete "${product.name}"?`)) {
+    if (confirm(t('products.confirmDelete', { name: product.name }))) {
         router.delete(route('products.destroy', product.id));
     }
 };
@@ -145,7 +146,7 @@ const deleteProduct = (product) => {
 const isLowStock = (product) => product.stock <= product.min_stock;
 
 const bulkDelete = () => {
-    if (!confirm(`Are you sure you want to delete ${selectedProducts.value.length} product(s)? This action cannot be undone.`)) return;
+    if (!confirm(t('products.index.confirmBulkDelete', { count: selectedProducts.value.length }, selectedProducts.value.length))) return;
     bulkProcessing.value = true;
     router.post(route('products.bulk.delete'), { ids: selectedProducts.value }, {
         onSuccess: () => { selectedProducts.value = []; selectAll.value = false; bulkProcessing.value = false; },
@@ -217,7 +218,7 @@ const thClass =
 
         <PluginSlot slot="header" :components="pluginComponents?.header" />
 
-        <PageHeader :title="t('products.title')" description="Your catalog, stock levels, and reorder thresholds.">
+        <PageHeader :title="t('products.title')" :description="t('products.subtitle')">
             <template #actions>
                 <Button variant="default" size="sm" as="Link" :href="route('products.create')">
                     <Plus :size="14" />
@@ -265,16 +266,16 @@ const thClass =
         <!-- Bulk actions bar -->
         <div v-if="selectedProducts.length > 0" class="sticky top-12 z-30 mt-4 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-brand/20 bg-brand-soft p-3">
             <div class="flex items-center gap-3">
-                <span class="text-sm font-medium text-text-primary">{{ selectedProducts.length }} product{{ selectedProducts.length > 1 ? 's' : '' }} selected</span>
+                <span class="text-sm font-medium text-text-primary">{{ t('products.index.selectedCount', { count: selectedProducts.length }, selectedProducts.length) }}</span>
                 <button @click="selectedProducts = []; selectAll = false" class="text-xs text-text-tertiary hover:text-text-primary">{{ t('common.clearSelection') }}</button>
             </div>
             <div class="flex flex-wrap items-center gap-2">
                 <Button variant="default" size="sm" @click="printSelectedBarcodes"><Barcode :size="14" />{{ t('products.printBarcodes') }}</Button>
                 <Button variant="secondary" size="sm" @click="printSelectedQrLabels"><QrCode :size="14" />{{ t('products.printQrLabels') }}</Button>
-                <Button variant="secondary" size="sm" :disabled="bulkProcessing" @click="showBulkCategoryModal = true">Change category</Button>
-                <Button variant="secondary" size="sm" :disabled="bulkProcessing" @click="showBulkPriceModal = true">Adjust price</Button>
-                <Button variant="secondary" size="sm" :disabled="bulkProcessing" @click="bulkExport">Export</Button>
-                <Button variant="danger" size="sm" :disabled="bulkProcessing" @click="bulkDelete"><Trash2 :size="14" />Delete</Button>
+                <Button variant="secondary" size="sm" :disabled="bulkProcessing" @click="showBulkCategoryModal = true">{{ t('products.bulk.changeCategory') }}</Button>
+                <Button variant="secondary" size="sm" :disabled="bulkProcessing" @click="showBulkPriceModal = true">{{ t('products.bulk.adjustPrice') }}</Button>
+                <Button variant="secondary" size="sm" :disabled="bulkProcessing" @click="bulkExport">{{ t('common.export') }}</Button>
+                <Button variant="danger" size="sm" :disabled="bulkProcessing" @click="bulkDelete"><Trash2 :size="14" />{{ t('common.delete') }}</Button>
             </div>
         </div>
 
@@ -324,16 +325,16 @@ const thClass =
                                 <span :class="['font-medium tabular-nums', isLowStock(product) ? 'text-status-danger' : 'text-text-primary']">{{ product.stock }}</span>
                                 <AlertTriangle v-if="isLowStock(product)" :size="14" class="text-status-danger" />
                             </div>
-                            <p class="text-[11px] text-text-tertiary">Min: {{ product.min_stock }}</p>
+                            <p class="text-[11px] text-text-tertiary">{{ t('products.min', { count: product.min_stock }) }}</p>
                         </td>
-                        <td class="px-4 py-3 font-medium tabular-nums text-text-primary">{{ formatCurrency(product.display_price ?? product.price) }}</td>
+                        <td class="px-4 py-3 font-medium tabular-nums text-text-primary">{{ formatCurrency(product.display_price ?? product.price, product.currency) }}</td>
                         <td class="px-4 py-3">
                             <div class="flex items-center justify-end gap-1">
-                                <Link :href="route('products.show', product.id)" class="rounded-md p-1.5 text-text-tertiary transition-colors hover:bg-surface-sunken hover:text-brand" title="View"><Eye :size="16" /></Link>
-                                <button v-if="product.barcode || product.sku" @click="printBarcode(product.id)" class="rounded-md p-1.5 text-text-tertiary transition-colors hover:bg-surface-sunken hover:text-text-primary" title="Print barcode"><Barcode :size="16" /></button>
-                                <button @click="duplicateProduct(product)" class="rounded-md p-1.5 text-text-tertiary transition-colors hover:bg-surface-sunken hover:text-status-warning" title="Duplicate"><Copy :size="16" /></button>
-                                <Link :href="route('products.edit', product.id)" class="rounded-md p-1.5 text-text-tertiary transition-colors hover:bg-surface-sunken hover:text-status-success" title="Edit"><Pencil :size="16" /></Link>
-                                <button @click="deleteProduct(product)" class="rounded-md p-1.5 text-text-tertiary transition-colors hover:bg-surface-sunken hover:text-status-danger" title="Delete"><Trash2 :size="16" /></button>
+                                <Link :href="route('products.show', product.id)" class="rounded-md p-1.5 text-text-tertiary transition-colors hover:bg-surface-sunken hover:text-brand" :title="t('common.view')"><Eye :size="16" /></Link>
+                                <button v-if="product.barcode || product.sku" @click="printBarcode(product.id)" class="rounded-md p-1.5 text-text-tertiary transition-colors hover:bg-surface-sunken hover:text-text-primary" :title="t('products.printBarcode')"><Barcode :size="16" /></button>
+                                <button @click="duplicateProduct(product)" class="rounded-md p-1.5 text-text-tertiary transition-colors hover:bg-surface-sunken hover:text-status-warning" :title="t('products.duplicate')"><Copy :size="16" /></button>
+                                <Link :href="route('products.edit', product.id)" class="rounded-md p-1.5 text-text-tertiary transition-colors hover:bg-surface-sunken hover:text-status-success" :title="t('common.edit')"><Pencil :size="16" /></Link>
+                                <button @click="deleteProduct(product)" class="rounded-md p-1.5 text-text-tertiary transition-colors hover:bg-surface-sunken hover:text-status-danger" :title="t('common.delete')"><Trash2 :size="16" /></button>
                             </div>
                         </td>
                     </tr>
@@ -368,15 +369,15 @@ const thClass =
             <div v-if="showBulkCategoryModal" class="fixed inset-0 z-50 flex items-center justify-center">
                 <div class="fixed inset-0 bg-black/50" @click="showBulkCategoryModal = false"></div>
                 <div class="relative mx-4 w-full max-w-md rounded-xl border border-border-subtle bg-surface-raised p-6 shadow-lg">
-                    <h3 class="mb-1 text-base font-semibold text-text-primary">Change category</h3>
-                    <p class="mb-4 text-sm text-text-secondary">Update category for {{ selectedProducts.length }} selected product(s).</p>
+                    <h3 class="mb-1 text-base font-semibold text-text-primary">{{ t('products.bulk.changeCategory') }}</h3>
+                    <p class="mb-4 text-sm text-text-secondary">{{ t('products.bulk.updateCategoryFor', { count: selectedProducts.length }, selectedProducts.length) }}</p>
                     <select v-model="bulkCategoryId" :class="[selectClass, 'mb-4']">
-                        <option value="">Select a category...</option>
+                        <option value="">{{ t('products.bulk.selectCategory') }}</option>
                         <option v-for="cat in categories" :key="cat.id" :value="cat.id">{{ cat.name }}</option>
                     </select>
                     <div class="flex justify-end gap-2">
-                        <Button variant="secondary" size="sm" @click="showBulkCategoryModal = false">Cancel</Button>
-                        <Button variant="default" size="sm" :disabled="!bulkCategoryId || bulkProcessing" @click="bulkUpdateCategory">Update category</Button>
+                        <Button variant="secondary" size="sm" @click="showBulkCategoryModal = false">{{ t('common.cancel') }}</Button>
+                        <Button variant="default" size="sm" :disabled="!bulkCategoryId || bulkProcessing" @click="bulkUpdateCategory">{{ t('products.bulk.updateCategory') }}</Button>
                     </div>
                 </div>
             </div>
@@ -387,26 +388,26 @@ const thClass =
             <div v-if="showBulkPriceModal" class="fixed inset-0 z-50 flex items-center justify-center">
                 <div class="fixed inset-0 bg-black/50" @click="showBulkPriceModal = false"></div>
                 <div class="relative mx-4 w-full max-w-md rounded-xl border border-border-subtle bg-surface-raised p-6 shadow-lg">
-                    <h3 class="mb-1 text-base font-semibold text-text-primary">Adjust price</h3>
-                    <p class="mb-4 text-sm text-text-secondary">Adjust price for {{ selectedProducts.length }} selected product(s).</p>
+                    <h3 class="mb-1 text-base font-semibold text-text-primary">{{ t('products.bulk.adjustPrice') }}</h3>
+                    <p class="mb-4 text-sm text-text-secondary">{{ t('products.bulk.adjustPriceFor', { count: selectedProducts.length }, selectedProducts.length) }}</p>
                     <div class="space-y-4">
                         <div>
-                            <label class="mb-1 block text-xs font-medium text-text-secondary">Adjustment type</label>
+                            <label class="mb-1 block text-xs font-medium text-text-secondary">{{ t('products.bulk.adjustmentType') }}</label>
                             <select v-model="bulkPriceType" :class="selectClass">
-                                <option value="percentage">Percentage (%)</option>
-                                <option value="fixed">Fixed Amount ($)</option>
+                                <option value="percentage">{{ t('products.bulk.percentage') }}</option>
+                                <option value="fixed">{{ t('products.bulk.fixedAmount') }}</option>
                             </select>
                         </div>
                         <div>
-                            <label class="mb-1 block text-xs font-medium text-text-secondary">Value <span class="text-text-tertiary">(use negative to decrease)</span></label>
+                            <label class="mb-1 block text-xs font-medium text-text-secondary">{{ t('products.bulk.value') }} <span class="text-text-tertiary">{{ t('products.bulk.useNegative') }}</span></label>
                             <input v-model.number="bulkPriceValue" type="number" step="0.01"
                                 class="h-9 w-full rounded-md border border-border-subtle bg-surface-canvas px-3 text-sm text-text-primary placeholder:text-text-tertiary ds-focus-ring"
-                                :placeholder="bulkPriceType === 'percentage' ? 'e.g. 10 for +10%, -20 for -20%' : 'e.g. 5.00 or -3.50'" />
+                                :placeholder="bulkPriceType === 'percentage' ? t('products.bulk.percentagePlaceholder') : t('products.bulk.fixedPlaceholder')" />
                         </div>
                     </div>
                     <div class="mt-6 flex justify-end gap-2">
-                        <Button variant="secondary" size="sm" @click="showBulkPriceModal = false">Cancel</Button>
-                        <Button variant="default" size="sm" :disabled="!bulkPriceValue || bulkProcessing" @click="bulkUpdatePrice">Apply price change</Button>
+                        <Button variant="secondary" size="sm" @click="showBulkPriceModal = false">{{ t('common.cancel') }}</Button>
+                        <Button variant="default" size="sm" :disabled="!bulkPriceValue || bulkProcessing" @click="bulkUpdatePrice">{{ t('products.bulk.applyPriceChange') }}</Button>
                     </div>
                 </div>
             </div>

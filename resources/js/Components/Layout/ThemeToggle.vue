@@ -1,5 +1,8 @@
 <script setup>
 import { ref, onMounted } from 'vue';
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
 
 const isDark = ref(true);
 
@@ -33,7 +36,7 @@ onMounted(() => {
     <button
         @click="toggleTheme"
         class="p-2 text-gray-500 hover:text-brand dark:text-slate-400 dark:hover:text-brand hover:bg-gray-100 dark:hover:bg-surface-raised rounded-lg transition"
-        :title="isDark ? 'Switch to light mode' : 'Switch to dark mode'"
+        :title="isDark ? t('components.themeToggle.switchToLight') : t('components.themeToggle.switchToDark')"
     >
         <!-- Sun icon (shown when IN dark mode) -->
         <svg v-if="isDark" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

@@ -125,7 +125,7 @@ const fieldError = 'mt-1 text-xs text-status-danger';
 </script>
 
 <template>
-    <Head title="Create Stock Transfer" />
+    <Head :title="t('stockTransfers.create.title')" />
 
     <AppLayout>
         <template #header>
@@ -138,11 +138,11 @@ const fieldError = 'mt-1 text-xs text-status-danger';
             </div>
         </template>
 
-        <PageHeader title="Create Stock Transfer" description="Transfer inventory between locations.">
+        <PageHeader :title="t('stockTransfers.create.title')" :description="t('stockTransfers.subtitle')">
             <template #actions>
                 <Button variant="secondary" size="sm" as="Link" :href="route('stock-transfers.index')">
                     <ArrowLeft :size="14" />
-                    Back to List
+                    {{ t('stockTransfers.backToList') }}
                 </Button>
             </template>
         </PageHeader>
@@ -150,18 +150,18 @@ const fieldError = 'mt-1 text-xs text-status-danger';
         <form @submit.prevent="submit" class="mt-6 space-y-4">
             <!-- Location Selection -->
             <Card :padded="false">
-                <div class="px-5 pt-5"><h3 class="text-sm font-semibold text-text-primary">Transfer Details</h3></div>
+                <div class="px-5 pt-5"><h3 class="text-sm font-semibold text-text-primary">{{ t('stockTransfers.transferDetails') }}</h3></div>
                 <div class="p-5">
                     <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
                         <!-- From Location -->
                         <div>
-                            <label :class="fieldLabel">From Location <span class="text-status-danger">*</span></label>
+                            <label :class="fieldLabel">{{ t('stockTransfers.fromLocation') }} <span class="text-status-danger">*</span></label>
                             <select
                                 v-model="form.from_location_id"
                                 required
                                 :class="fieldInput"
                             >
-                                <option value="">Select source location</option>
+                                <option value="">{{ t('stockTransfers.create.selectSource') }}</option>
                                 <option v-for="location in availableFromLocations" :key="location.id" :value="location.id">
                                     {{ location.name }} {{ location.code ? `(${location.code})` : '' }}
                                 </option>
@@ -173,13 +173,13 @@ const fieldError = 'mt-1 text-xs text-status-danger';
 
                         <!-- To Location -->
                         <div>
-                            <label :class="fieldLabel">To Location <span class="text-status-danger">*</span></label>
+                            <label :class="fieldLabel">{{ t('stockTransfers.toLocation') }} <span class="text-status-danger">*</span></label>
                             <select
                                 v-model="form.to_location_id"
                                 required
                                 :class="fieldInput"
                             >
-                                <option value="">Select destination location</option>
+                                <option value="">{{ t('stockTransfers.create.selectDestination') }}</option>
                                 <option v-for="location in availableToLocations" :key="location.id" :value="location.id">
                                     {{ location.name }} {{ location.code ? `(${location.code})` : '' }}
                                 </option>
@@ -201,12 +201,12 @@ const fieldError = 'mt-1 text-xs text-status-danger';
 
                     <!-- Notes -->
                     <div class="mt-4">
-                        <label :class="fieldLabel">Notes (Optional)</label>
+                        <label :class="fieldLabel">{{ t('stockAdjustments.create.notesOptional') }}</label>
                         <textarea
                             v-model="form.notes"
                             rows="3"
                             :class="fieldArea"
-                            placeholder="Add any notes about this transfer..."
+                            :placeholder="t('stockTransfers.create.notesPlaceholder')"
                         ></textarea>
                         <p v-if="form.errors.notes" :class="fieldError">
                             {{ form.errors.notes }}
@@ -218,7 +218,7 @@ const fieldError = 'mt-1 text-xs text-status-danger';
             <!-- Transfer Items -->
             <Card :padded="false">
                 <div class="flex flex-wrap items-center justify-between gap-2 px-5 pt-5">
-                    <h3 class="text-sm font-semibold text-text-primary">Transfer Items</h3>
+                    <h3 class="text-sm font-semibold text-text-primary">{{ t('stockTransfers.transferItems') }}</h3>
                     <div class="flex flex-wrap gap-2">
                         <Button type="button" variant="secondary" size="lg" class="min-h-11" @click="showScanner = true">
                             <ScanLine :size="16" />
@@ -226,7 +226,7 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                         </Button>
                         <Button type="button" variant="default" size="lg" class="min-h-11" @click="addItem">
                             <Plus :size="14" />
-                            Add Item
+                            {{ t('stockTransfers.create.addItem') }}
                         </Button>
                     </div>
                 </div>
@@ -259,15 +259,15 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                         >
                             <!-- Product -->
                             <div class="min-w-0 flex-1 basis-full sm:basis-auto sm:min-w-[200px]">
-                                <label :class="fieldLabel">Product <span class="text-status-danger">*</span></label>
+                                <label :class="fieldLabel">{{ t('common.product') }} <span class="text-status-danger">*</span></label>
                                 <select
                                     v-model="item.product_id"
                                     required
                                     :class="fieldInput"
                                 >
-                                    <option value="">Select product</option>
+                                    <option value="">{{ t('stockTransfers.create.selectProduct') }}</option>
                                     <option v-for="product in products" :key="product.id" :value="product.id">
-                                        {{ product.name }} ({{ product.sku }}) - Stock: {{ product.stock }}
+                                        {{ t('stockTransfers.create.productOption', { name: product.name, sku: product.sku, stock: product.stock }) }}
                                     </option>
                                 </select>
                                 <p v-if="form.errors[`items.${index}.product_id`]" :class="fieldError">
@@ -277,7 +277,7 @@ const fieldError = 'mt-1 text-xs text-status-danger';
 
                             <!-- Quantity -->
                             <div class="w-32">
-                                <label :class="fieldLabel">Qty <span class="text-status-danger">*</span></label>
+                                <label :class="fieldLabel">{{ t('stockTransfers.create.qty') }} <span class="text-status-danger">*</span></label>
                                 <input
                                     v-model="item.quantity"
                                     type="number"
@@ -286,7 +286,7 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                                     :class="fieldInput"
                                 />
                                 <p v-if="item.product_id && getProduct(item.product_id)" class="mt-1 text-xs text-text-tertiary">
-                                    Available: {{ getProduct(item.product_id).stock }}
+                                    {{ t('stockTransfers.create.available', { count: getProduct(item.product_id).stock }) }}
                                 </p>
                                 <p v-if="form.errors[`items.${index}.quantity`]" :class="fieldError">
                                     {{ form.errors[`items.${index}.quantity`] }}
@@ -295,12 +295,12 @@ const fieldError = 'mt-1 text-xs text-status-danger';
 
                             <!-- Notes -->
                             <div class="min-w-0 flex-1 sm:min-w-[150px]">
-                                <label :class="fieldLabel">Notes</label>
+                                <label :class="fieldLabel">{{ t('common.notes') }}</label>
                                 <input
                                     v-model="item.notes"
                                     type="text"
                                     :class="fieldInput"
-                                    placeholder="Item notes..."
+                                    :placeholder="t('stockTransfers.create.itemNotesPlaceholder')"
                                 />
                             </div>
 
@@ -322,10 +322,10 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                     <div v-if="hasValidItems" class="mt-4 rounded-lg border border-border-subtle bg-surface-canvas p-4">
                         <div class="flex items-center justify-between">
                             <span class="text-sm font-medium text-text-secondary">
-                                Total items: {{ form.items.filter(i => i.product_id).length }} product(s)
+                                {{ t('stockTransfers.create.totalProducts', { count: form.items.filter(i => i.product_id).length }, form.items.filter(i => i.product_id).length) }}
                             </span>
                             <span class="text-sm font-medium text-text-secondary">
-                                Total quantity: {{ totalItems }} unit(s)
+                                {{ t('stockTransfers.create.totalUnits', { count: totalItems }, totalItems) }}
                             </span>
                         </div>
                     </div>
@@ -334,14 +334,14 @@ const fieldError = 'mt-1 text-xs text-status-danger';
 
             <!-- Actions -->
             <div class="flex justify-end gap-3">
-                <Button variant="secondary" as="Link" :href="route('stock-transfers.index')">Cancel</Button>
+                <Button variant="secondary" as="Link" :href="route('stock-transfers.index')">{{ t('common.cancel') }}</Button>
                 <Button
                     type="submit"
                     variant="default"
                     :loading="form.processing"
                     :disabled="form.processing || !form.from_location_id || !form.to_location_id || !hasValidItems"
                 >
-                    {{ form.processing ? 'Creating...' : 'Create Transfer' }}
+                    {{ form.processing ? t('common.creating') : t('stockTransfers.create.createTransfer') }}
                 </Button>
             </div>
         </form>

@@ -1,7 +1,102 @@
 {
   "stockAudits": {
     "completeConfirm": "Bu sayım tamamlansın mı? Her fark için stok düzeltmesi oluşturulur.",
-    "completeUncountedConfirm": "{total} üründen {uncounted} tanesi sayılmadı. Sayım yine de tamamlansın mı? Sayılmayan ürünler mevcut stoklarını korur; yalnızca sayılanlar düzeltilir."
+    "completeUncountedConfirm": "{total} üründen {uncounted} tanesi sayılmadı. Sayım yine de tamamlansın mı? Sayılmayan ürünler mevcut stoklarını korur; yalnızca sayılanlar düzeltilir.",
+    "backToList": "Listeye Dön",
+    "auditDetails": "Sayım Detayları",
+    "types": {
+      "full": "Tam Sayım",
+      "cycle": "Dönemsel Sayım",
+      "spot": "Anlık Kontrol"
+    },
+    "statuses": {
+      "draft": "Taslak",
+      "in_progress": "Devam Ediyor",
+      "completed": "Tamamlandı",
+      "cancelled": "İptal Edildi"
+    },
+    "itemStatuses": {
+      "pending": "Beklemede",
+      "counted": "Sayıldı",
+      "verified": "Doğrulandı",
+      "adjusted": "Düzeltildi"
+    },
+    "fields": {
+      "name": "Sayım Adı",
+      "namePlaceholder": "ör. 2026 1. Çeyrek Depo Dönemsel Sayımı",
+      "descriptionPlaceholder": "Bu sayımın amacını açıklayın...",
+      "auditType": "Sayım Türü",
+      "typeHints": {
+        "full": "Depodaki tüm ürünleri say",
+        "cycle": "Ürünlerin bir kısmını dönüşümlü bir planla say",
+        "spot": "Belirli ürünlerin hızlı kontrolü"
+      },
+      "location": "Depo Konumu",
+      "locationHint": "Tüm konumlardaki ürünleri dahil etmek için boş bırakın"
+    },
+    "columns": {
+      "auditNumber": "Sayım #",
+      "location": "Konum",
+      "items": "Kalemler",
+      "createdBy": "Oluşturan",
+      "systemQty": "Sistem Miktarı",
+      "countedQty": "Sayılan Miktar",
+      "discrepancy": "Fark",
+      "countedBy": "Sayan"
+    },
+    "index": {
+      "description": "Stok sayımlarını ve dönemsel sayımları yönetin.",
+      "newAudit": "Yeni Sayım",
+      "searchPlaceholder": "Sayım numarası veya adı ile ara...",
+      "empty": "Stok sayımı bulunamadı",
+      "createFirst": "İlk Sayımı Oluştur"
+    },
+    "create": {
+      "title": "Stok Sayımı Oluştur",
+      "description": "Yeni bir stok sayımı veya dönemsel sayım oluşturun.",
+      "notesPlaceholder": "Sayım personeli için ek notlar veya talimatlar...",
+      "selectProducts": "Ürünleri Seç",
+      "selectProductsHint": "Bu sayıma dahil edilecek ürünleri seçin. Tüm ürünleri dahil etmek için boş bırakın.",
+      "selectProductsHintAtLocation": "Bu sayıma dahil edilecek ürünleri seçin. Seçili konumdaki tüm ürünleri dahil etmek için boş bırakın.",
+      "searchProducts": "Ürünleri ad veya SKU ile ara...",
+      "selectAll": "Tümünü seç ({count} ürün) | Tümünü seç ({count} ürün)",
+      "inStock": "stokta",
+      "fullAuditInfo": "Tüm aktif ürünler bu sayıma otomatik olarak dahil edilecektir. Oluşturduktan sonra kalemleri gözden geçirebilirsiniz.",
+      "fullAuditInfoAtLocation": "Seçili konumdaki tüm aktif ürünler bu sayıma otomatik olarak dahil edilecektir. Oluşturduktan sonra kalemleri gözden geçirebilirsiniz.",
+      "submit": "Sayım Oluştur"
+    },
+    "edit": {
+      "title": "Stok Sayımını Düzenle",
+      "backToAudit": "Sayıma Dön",
+      "notesPlaceholder": "Ek notlar veya talimatlar...",
+      "submit": "Sayımı Güncelle"
+    },
+    "show": {
+      "pageTitle": "Sayım {number}",
+      "totalItems": "Toplam Kalem",
+      "progress": "İlerleme",
+      "discrepancies": "Farklar",
+      "started": "Başlangıç",
+      "completed": "Tamamlanma",
+      "auditItems": "Sayım Kalemleri",
+      "countedProgress": "({total} kalemden {counted} tanesi sayıldı)",
+      "count": "Say",
+      "recount": "Yeniden Say",
+      "countNotesPlaceholder": "Notlar (isteğe bağlı)",
+      "noItems": "Bu sayımda kalem yok",
+      "processing": "İşleniyor...",
+      "startAudit": "Sayımı Başlat",
+      "completeAudit": "Sayımı Tamamla",
+      "deleteAudit": "Sayımı Sil",
+      "startHint": "Sayımı başlatmak mevcut sistem stok seviyelerini kaydeder ve saymaya başlamanızı sağlar.",
+      "completeHint": "Sayımı tamamlamak, sistem ve sayılan miktarlar arasındaki her fark için stok düzeltmesi oluşturur.",
+      "dangerZone": "Tehlikeli Bölge",
+      "deleteHint": "Bu sayımı silmek kalıcıdır ve geri alınamaz.",
+      "startConfirm": "Bu sayımı başlatmak istediğinize emin misiniz? Sistem miktarları mevcut seviyelerle kaydedilecektir.",
+      "deleteConfirm": "Bu sayımı silmek istediğinize emin misiniz? Bu işlem geri alınamaz.",
+      "updateCountFailed": "Sayım güncellenemedi",
+      "saveCountError": "Sayım kaydedilirken bir hata oluştu"
+    }
   },
   "common": {
     "save": "Kaydet",
@@ -192,6 +287,32 @@
       "queueBacklog": "15 dakikadan uzun süredir kuyrukta bekleyen işler: {count}. E-postalar ve webhook'lar gönderilmiyor.",
       "failedJobs": "Son 24 saatte başarısız olan arka plan işleri: {count}.",
       "help": "Cron işinin her dakika php artisan schedule:run çalıştırdığını kontrol edin. Ayrıntılar için cPanel kılavuzuna bakın."
+    },
+    "description": "Envanter, siparişler ve yeniden sipariş önceliklerine genel bakış.",
+    "customize": "Özelleştir",
+    "hints": {
+      "activeInCatalog": "katalogda aktif",
+      "belowMinimum": "minimumun altında",
+      "allTime": "tüm zamanlar"
+    },
+    "widgets": {
+      "statsOverview": "İstatistiklere Genel Bakış",
+      "revenueChart": "Gelir ve İkincil İstatistikler",
+      "stockMovements": "Stok Hareketleri",
+      "lowStockAlerts": "Düşük Stok Uyarıları",
+      "topProducts": "En Çok Satan Ürünler",
+      "stockByCategory": "Kategoriye Göre Stok",
+      "reorderSuggestions": "Yeniden Sipariş Önerileri"
+    },
+    "reorderSuggestions": {
+      "title": "Yeniden sipariş önerileri",
+      "subtitle": "Yeniden sipariş noktasının altında. Önerilen miktar, ürün ayarlarından ve tedarikçinin minimum sipariş miktarından gelir.",
+      "reorderAt": "Yeniden sipariş noktası"
+    },
+    "customizeModal": {
+      "title": "Gösterge panelini özelleştir",
+      "help": "Gösterge panelinizde göstermek veya gizlemek için bileşenleri açıp kapatın.",
+      "savePreferences": "Tercihleri kaydet"
     }
   },
   "products": {
@@ -241,7 +362,8 @@
       "variantHint": "Bu ürünün farklı sürümlerini satmak için Beden veya Renk gibi seçenekler ekleyin. Her kombinasyon, kendi fiyatı ve stoku olan bir varyant oluşturur.",
       "variantStockHint": "Varyantlar etkinleştirildiğinde stok varyant bazında takip edilir.",
       "notesPlaceholder": "Bu ürünle ilgili ek notlar...",
-      "createProduct": "Ürün Oluştur"
+      "createProduct": "Ürün Oluştur",
+      "subtitle": "Fiyat, stok, varyant ve görsellerle bir ürün oluşturun."
     },
     "edit": {
       "title": "Ürün Düzenle",
@@ -288,7 +410,34 @@
       "outOfStock": "Stokta Yok",
       "lowStock": "Düşük Stok",
       "inStock": "Stokta",
-      "activityHistory": "İşlem Geçmişi"
+      "activityHistory": "İşlem Geçmişi",
+      "minHint": "min {count}",
+      "stockAtPrice": "fiyatla stok",
+      "barcodeValue": "Barkod: {barcode}",
+      "currencyValue": "Para Birimi: {currency}",
+      "confirmGenerateRandom": "Bu ürün için yeni bir rastgele barkod oluşturulsun mu?",
+      "generateBarcodeFailed": "Barkod oluşturulamadı",
+      "confirmGenerateFromSku": "SKU'dan barkod oluşturulsun mu?",
+      "generateFromSkuFailed": "SKU'dan barkod oluşturulamadı",
+      "bom": {
+        "title": "Ürün Ağacı",
+        "addComponent": "Bileşen Ekle",
+        "availableKitStock": "Kullanılabilir Set Stoku (en düşük bileşenle sınırlı)",
+        "searchProduct": "Ürün Ara",
+        "searchPlaceholder": "Ad veya SKU ile ara...",
+        "stockInline": "(Stok: {count})",
+        "searching": "Aranıyor...",
+        "qtyRequired": "Gerekli Miktar",
+        "availableStock": "Kullanılabilir Stok",
+        "unknown": "Bilinmiyor",
+        "remove": "Kaldır",
+        "empty": "Henüz bileşen eklenmedi.",
+        "emptyHint": "Ürün ağacını oluşturmak için \"Bileşen Ekle\"ye tıklayın.",
+        "addFailed": "Bileşen eklenemedi",
+        "updateQuantityFailed": "Miktar güncellenemedi",
+        "confirmRemove": "Bu bileşen ürün ağacından kaldırılsın mı?",
+        "removeFailed": "Bileşen kaldırılamadı"
+      }
     },
     "quickAddCategory": {
       "title": "Hızlı Kategori Ekle",
@@ -303,6 +452,56 @@
       "locationCode": "Konum Kodu",
       "codePlaceholder": "ör. DP-A",
       "descPlaceholder": "İsteğe bağlı açıklama..."
+    },
+    "subtitle": "Kataloğunuz, stok seviyeleriniz ve yeniden sipariş eşikleriniz.",
+    "duplicate": "Çoğalt",
+    "printBarcode": "Barkod yazdır",
+    "variantsCount": "{count} varyant | {count} varyant",
+    "types": {
+      "standard": "Standart",
+      "kit": "Set",
+      "assembly": "Montaj"
+    },
+    "trackingTypes": {
+      "none": "Takip Yok",
+      "batch": "Parti Takibi",
+      "serial": "Seri Numarası Takibi"
+    },
+    "form": {
+      "productType": "Ürün Türü",
+      "productTypeHint": "Setler, bileşenleri satış için bir araya getirir. Montaj ürünleri üretim için iş emri gerektirir.",
+      "additionalCurrencies": "Ek Para Birimleri",
+      "selectCurrency": "Para birimi seçin...",
+      "addPriceInCurrency": "+ Başka bir para biriminde fiyat ekle",
+      "reorderPoint": "Yeniden Sipariş Noktası",
+      "reorderPointHint": "Otomatik yeniden siparişi tetikleyen stok seviyesi",
+      "reorderQuantity": "Yeniden Sipariş Miktarı",
+      "reorderQuantityHint": "Stok yeniden sipariş noktasına ulaştığında sipariş edilecek miktar",
+      "leaveEmptyToDisable": "Devre dışı bırakmak için boş bırakın",
+      "inventoryTracking": "Envanter Takibi",
+      "inventoryTrackingHint": "Bu ürünün tekil birimlerinin nasıl takip edileceğini seçin.",
+      "createCategoryFailed": "Kategori oluşturulamadı. Lütfen tekrar deneyin.",
+      "createLocationFailed": "Konum oluşturulamadı. Lütfen tekrar deneyin."
+    },
+    "index": {
+      "selectedCount": "{count} ürün seçildi | {count} ürün seçildi",
+      "confirmBulkDelete": "{count} ürünü silmek istediğinize emin misiniz? Bu işlem geri alınamaz. | {count} ürünü silmek istediğinize emin misiniz? Bu işlem geri alınamaz."
+    },
+    "bulk": {
+      "changeCategory": "Kategoriyi değiştir",
+      "updateCategoryFor": "Seçili {count} ürünün kategorisini güncelleyin. | Seçili {count} ürünün kategorisini güncelleyin.",
+      "selectCategory": "Bir kategori seçin...",
+      "updateCategory": "Kategoriyi güncelle",
+      "adjustPrice": "Fiyatı ayarla",
+      "adjustPriceFor": "Seçili {count} ürünün fiyatını ayarlayın. | Seçili {count} ürünün fiyatını ayarlayın.",
+      "adjustmentType": "Ayarlama türü",
+      "percentage": "Yüzde (%)",
+      "fixedAmount": "Sabit Tutar ($)",
+      "value": "Değer",
+      "useNegative": "(azaltmak için negatif değer kullanın)",
+      "percentagePlaceholder": "ör. +%10 için 10, -%20 için -20",
+      "fixedPlaceholder": "ör. 5.00 veya -3.50",
+      "applyPriceChange": "Fiyat değişikliğini uygula"
     }
   },
   "orders": {
@@ -372,7 +571,9 @@
       "searchingCustomers": "Aranıyor...",
       "noCustomersFound": "Eşleşen müşteri yok. Tek seferlik bir müşteri için bilgileri aşağıya girin.",
       "linkedCustomer": "Kayıtlı müşteri {name} ile bağlantılı",
-      "clearCustomer": "Tek seferlik müşteri kullan"
+      "clearCustomer": "Tek seferlik müşteri kullan",
+      "description": "Bir müşteri siparişi ve kalemlerini ekleyin.",
+      "addAtLeastOneProduct": "Lütfen siparişe en az bir ürün ekleyin."
     },
     "show": {
       "orderNumber": "Sipariş #{number}",
@@ -415,7 +616,10 @@
       "approvalNotesPlaceholder": "Bu onay hakkında notlar (isteğe bağlı)...",
       "rejectionNotesPlaceholder": "Ret gerekçesi...",
       "approve": "Onayla",
-      "reject": "Reddet"
+      "reject": "Reddet",
+      "downloadInvoice": "Faturayı İndir",
+      "previewInvoice": "Faturayı Önizle",
+      "createReturn": "İade Oluştur"
     },
     "edit": {
       "title": "Siparişi Düzenle",
@@ -432,7 +636,11 @@
       "deliveredAt": "Teslim edildi:",
       "updatingOrder": "Sipariş Güncelleniyor...",
       "updateOrder": "Siparişi Güncelle",
-      "viewDetails": "Sipariş Detaylarını Görüntüle"
+      "viewDetails": "Sipariş Detaylarını Görüntüle",
+      "removeItem": "Kalemi kaldır"
+    },
+    "index": {
+      "description": "Tüm kanallardan gelen müşteri siparişleri."
     }
   },
   "purchaseOrders": {
@@ -465,13 +673,15 @@
       "unitCost": "Birim Maliyet",
       "supplierSku": "Tedarikçi SKU",
       "orderItems": "Sipariş Kalemleri ({count})",
-      "createPo": "Satın Alma Siparişi Oluştur"
+      "createPo": "Satın Alma Siparişi Oluştur",
+      "description": "Bir satın alma siparişi oluşturun ve teslim alınacak kalemleri ekleyin."
     },
     "edit": {
       "title": "Satın Alma Siparişini Düzenle",
       "backToPo": "Satın Alma Siparişlerine Dön",
       "updatePo": "Satın Alma Siparişini Güncelle",
-      "viewDetails": "Detayları Görüntüle"
+      "viewDetails": "Detayları Görüntüle",
+      "poNumber": "Sipariş #{number}"
     },
     "show": {
       "receiveItems": "Ürünleri Teslim Al",
@@ -484,7 +694,14 @@
       "sendToSupplier": "Tedarikçiye Gönder",
       "editPo": "Satın Alma Siparişini Düzenle",
       "cancelOrder": "Siparişi İptal Et",
-      "deleteOrder": "Siparişi Sil"
+      "deleteOrder": "Siparişi Sil",
+      "confirmCancel": "Bu satın alma siparişini iptal etmek istediğinize emin misiniz?",
+      "orderDateOn": "Sipariş tarihi {date}",
+      "downloadPdf": "PDF İndir",
+      "previewPdf": "PDF Önizle",
+      "itemsCount": "Kalemler ({count})",
+      "supplierSkuLine": "Tedarikçi: {sku}",
+      "cannotUndo": "Bu işlem geri alınamaz."
     },
     "receive": {
       "title": "Ürün Teslim Al - {poNumber}",
@@ -497,7 +714,11 @@
       "complete": "Tamamlandı",
       "readyToReceive": "{count} ürün teslim almaya hazır",
       "selectQuantities": "Teslim alınacak miktarları seçin",
-      "confirmReceiving": "Teslim Almayı Onayla"
+      "confirmReceiving": "Teslim Almayı Onayla",
+      "receive": "Teslim Al",
+      "headTitle": "Teslim Al - {poNumber}",
+      "description": "Bu satın alma siparişi için teslim alınan miktarları kaydedin.",
+      "readyToReceiveCount": "{count} kalem teslim almaya hazır | {count} kalem teslim almaya hazır"
     },
     "currencies": {
       "usd": "USD - ABD Doları",
@@ -505,7 +726,12 @@
       "gbp": "GBP - İngiliz Sterlini",
       "cad": "CAD - Kanada Doları",
       "aud": "AUD - Avustralya Doları"
-    }
+    },
+    "index": {
+      "description": "Tedarikçilerinize verilen stok yenileme siparişleri."
+    },
+    "confirmDelete": "\"{number}\" siparişini silmek istediğinize emin misiniz?",
+    "noSku": "SKU yok"
   },
   "productSuppliers": {
     "title": "Tedarikçiler",
@@ -568,7 +794,8 @@
       "businessDetails": "İşletme Bilgileri",
       "paymentTerms": "Ödeme Koşulları",
       "paymentTermsPlaceholder": "ör. 30 gün vadeli",
-      "createSupplier": "Tedarikçi Oluştur"
+      "createSupplier": "Tedarikçi Oluştur",
+      "description": "Bir tedarikçi ve iletişim, adres ve işletme bilgilerini ekleyin."
     },
     "edit": {
       "title": "Tedarikçiyi Düzenle",
@@ -587,7 +814,14 @@
       "supplierCode": "Tedarikçi Kodu",
       "paymentTerms": "Ödeme Koşulları",
       "editSupplier": "Tedarikçiyi Düzenle",
-      "deleteSupplier": "Tedarikçiyi Sil"
+      "deleteSupplier": "Tedarikçiyi Sil",
+      "code": "Kod: {code}",
+      "supplierDetails": "Tedarikçi detayları",
+      "products": "Ürünler",
+      "deleteWarning": "Bu işlem tedarikçiyi kalıcı olarak kaldırır ve geri alınamaz."
+    },
+    "index": {
+      "description": "Tedarikçileriniz ve sağladıkları ürünler."
     }
   },
   "customers": {
@@ -614,7 +848,8 @@
       "paymentTerms": "Ödeme Koşulları",
       "paymentTermsPlaceholder": "ör. 30 gün vadeli",
       "creditLimit": "Kredi Limiti",
-      "createCustomer": "Müşteri Oluştur"
+      "createCustomer": "Müşteri Oluştur",
+      "description": "Bir müşteri ve fatura, teslimat ve işletme bilgilerini ekleyin."
     },
     "edit": {
       "title": "Müşteriyi Düzenle",
@@ -637,6 +872,9 @@
       "recentOrders": "Son Siparişler",
       "noOrdersYet": "Henüz sipariş yok",
       "deleteCustomer": "Müşteriyi Sil"
+    },
+    "index": {
+      "description": "Müşterileriniz ve verdikleri siparişler."
     }
   },
   "categories": {
@@ -650,7 +888,13 @@
     "editCategory": "Kategoriyi Düzenle",
     "categoryName": "Kategori Adı",
     "namePlaceholder": "ör. Elektronik",
-    "descPlaceholder": "İsteğe bağlı açıklama..."
+    "descPlaceholder": "İsteğe bağlı açıklama...",
+    "index": {
+      "description": "Kataloğunuzu kategorilere ayırın."
+    },
+    "confirmDelete": "\"{name}\" kategorisini silmek istediğinize emin misiniz? Bu işlem geri alınamaz.",
+    "productsCount": "{count} ürün | {count} ürün",
+    "updateCategory": "Kategoriyi Güncelle"
   },
   "locations": {
     "title": "Depo Konumları",
@@ -672,7 +916,12 @@
     "noWarehouse": "Depo yok",
     "capacity": "Kapasite (birim)",
     "capacityHint": "İsteğe bağlı. Konumun doluluk oranını göstermek için kullanılır.",
-    "capacityValue": "Kapasite: {capacity} birim"
+    "capacityValue": "Kapasite: {capacity} birim",
+    "subtitle": "Stoklarınızın bulunduğu fiziksel yerler.",
+    "close": "Kapat",
+    "productsCount": "{count} ürün | {count} ürün",
+    "updateLocation": "Konumu Güncelle",
+    "confirmDelete": "\"{name}\" konumunu silmek istediğinize emin misiniz? Bu işlem geri alınamaz."
   },
   "reports": {
     "title": "Raporlar ve Analitik",
@@ -740,7 +989,9 @@
       "current": "Mevcut",
       "deficit": "Açık",
       "allWellStocked": "Tüm ürünlerin stoku yeterli!",
-      "noProductsBelowMin": "Minimum stok seviyesinin altında ürün yok"
+      "noProductsBelowMin": "Minimum stok seviyesinin altında ürün yok",
+      "min": "Min",
+      "max": "Maks"
     },
     "categoryPerformance": {
       "title": "Kategori Performans Raporu",
@@ -889,6 +1140,16 @@
       "loss": "Kayıp",
       "return": "İade",
       "correction": "Düzeltme"
+    },
+    "index": {
+      "dataSources": {
+        "products": "Ürünler",
+        "orders": "Siparişler",
+        "stock_adjustments": "Stok Düzeltmeleri",
+        "customers": "Müşteriler",
+        "suppliers": "Tedarikçiler",
+        "purchase_orders": "Satın Alma Siparişleri"
+      }
     }
   },
   "stockAdjustments": {
@@ -919,7 +1180,13 @@
       "negativeWarningMsg": "Bu düzeltme stokun negatife düşmesine neden olacak. Lütfen miktarı doğrulayın.",
       "createAdjustment": "Düzeltme Oluştur",
       "stockIncrease": "Stok artışı",
-      "stockDecrease": "Stok azalışı"
+      "stockDecrease": "Stok azalışı",
+      "currentStockValue": "Mevcut Stok: {stock}",
+      "locationOptional": "Konum (İsteğe Bağlı)",
+      "noSpecificLocation": "Belirli bir konum yok",
+      "locationHint": "Konum bazlı dağılımın tutarlı kalması için bu düzeltmeyi belirli bir konuma uygulayın. Yalnızca toplamı düzeltmek için boş bırakın.",
+      "quantityPlaceholder": "Eklemek için pozitif, çıkarmak için negatif sayı girin",
+      "negativeWarningValue": "Bu düzeltme negatif stokla ({stock}) sonuçlanacak. Lütfen miktarı doğrulayın."
     },
     "show": {
       "title": "Stok Düzeltme Detayları",
@@ -939,7 +1206,30 @@
       "finalStock": "Son Stok",
       "manualAdjustment": "Manuel Düzeltme",
       "stockRecount": "Stok Sayımı",
-      "order": "Sipariş"
+      "order": "Sipariş",
+      "unitsCount": "{count} birim | {count} birim"
+    },
+    "variantAdjuster": {
+      "title": "Stoku Düzelt: {name}",
+      "failed": "Stok düzeltilemedi"
+    },
+    "types": {
+      "manual": "Manuel Düzeltme",
+      "order": "Sipariş",
+      "return": "İade",
+      "damage": "Hasar",
+      "loss": "Kayıp",
+      "recount": "Stok Sayımı",
+      "correction": "Düzeltme",
+      "opening_stock": "Açılış Stoku"
+    },
+    "index": {
+      "allProducts": "Tüm Ürünler",
+      "dateFrom": "Başlangıç Tarihi",
+      "dateTo": "Bitiş Tarihi",
+      "before": "Önce",
+      "change": "Değişim",
+      "after": "Sonra"
     }
   },
   "importExport": {
@@ -967,7 +1257,8 @@
       "includeNames": "Ürün adları, SKU'lar ve barkodlar",
       "includePricing": "Fiyatlandırma ve para birimi bilgileri",
       "includeStock": "Stok seviyeleri ve minimum stok",
-      "includeCategories": "Kategoriler ve konumlar"
+      "includeCategories": "Kategoriler ve konumlar",
+      "exportIncludesLabel": "Dışa aktarma şunları içerir:"
     },
     "import": {
       "title": "Ürünleri İçe Aktar",
@@ -991,7 +1282,14 @@
       "noteUpdate": "Mevcut ürünler (eşleşen SKU) güncellenecektir",
       "noteCreate": "Kategoriler ve konumlar yoksa otomatik oluşturulur",
       "noteCurrency": "Belirtilmezse varsayılan para birimi USD'dir",
-      "noteSkip": "Geçersiz satırlar atlanacak ve raporlanacaktır"
+      "noteSkip": "Geçersiz satırlar atlanacak ve raporlanacaktır",
+      "templateHelpLabel": "Yardıma mı ihtiyacınız var? Örnek veriler içeren şablon dosyamızı indirin:",
+      "requiredFieldsLabel": "Zorunlu Alanlar:",
+      "importantNotesLabel": "Önemli Notlar:",
+      "fieldNameDesc": "Ürün adı",
+      "fieldSkuDesc": "Benzersiz SKU tanımlayıcı",
+      "fieldPriceDesc": "Satış fiyatı",
+      "fieldStockDesc": "Mevcut stok miktarı"
     },
     "pageDescription": "Ürünleri, siparişleri ve kullanıcıları toplu olarak içe ve dışa aktarın.",
     "tabs": {
@@ -1064,7 +1362,21 @@
       "ruleEscalation": "Yalnızca atama yetkiniz olan rolleri atayabilirsiniz: yönetici olmayanlar yalnızca kendi izinlerinden daha geniş olmayan rollerle üye içe aktarabilir."
     },
     "exportProducts": "Ürünleri Dışa Aktar",
-    "importProducts": "Ürünleri İçe Aktar"
+    "importProducts": "Ürünleri İçe Aktar",
+    "exports": {
+      "title": "Dışa aktarmalarınız",
+      "description": "Büyük dışa aktarmalar arka planda hazırlanır. Her biri indirmeye hazır olduğunda bilgilendirileceksiniz.",
+      "file": "Dosya",
+      "rows": "Satırlar",
+      "action": "İşlem",
+      "download": "İndir",
+      "statuses": {
+        "pending": "Beklemede",
+        "processing": "İşleniyor",
+        "completed": "Tamamlandı",
+        "failed": "Başarısız"
+      }
+    }
   },
   "notifications": {
     "title": "Bildirimler",
@@ -1081,7 +1393,20 @@
     "noNotifications": "Bildirim yok",
     "allCaughtUp": "Her şey güncel!",
     "noNewNotifications": "Yeni bildirim yok",
-    "viewAllNotifications": "Tümünü gör"
+    "viewAllNotifications": "Tümünü gör",
+    "confirmMarkAllRead": "Tüm bildirimler okundu olarak işaretlensin mi?",
+    "confirmDelete": "Bu bildirim silinsin mi?",
+    "confirmClearRead": "Tüm okunmuş bildirimler temizlensin mi?",
+    "allCount": "Tümü ({count})",
+    "unreadCount": "Okunmamış ({count})",
+    "readCount": "Okunmuş ({count})",
+    "viewDetailsLabel": "Detayları Gör",
+    "priorities": {
+      "low": "Düşük",
+      "normal": "Normal",
+      "high": "Yüksek",
+      "urgent": "Acil"
+    }
   },
   "plugins": {
     "title": "Eklentiler",
@@ -1132,7 +1457,12 @@
       "notOwned": "Bağlı hesabınız henüz bu eklentiye sahip değil.",
       "viewOnMarketplace": "inventoros.com'da görüntüle",
       "readOnly": "Pazar yerine göz atabilirsiniz. Eklenti yüklemek için Eklentileri Yönet izni gerekir."
-    }
+    },
+    "confirmDelete": "\"{name}\" eklentisini silmek istediğinize emin misiniz? Bu işlem geri alınamaz.",
+    "subtitle": "Çalışma alanınızı yüklenebilir eklentilerle genişletin.",
+    "versionLabel": "Sürüm: {version}",
+    "authorLabel": "Yazar:",
+    "requiresLabel": "Gerektirir: {requires}"
   },
   "settings": {
     "title": "Ayarlar",
@@ -1147,7 +1477,8 @@
       "dateFormat": "Tarih Formatı",
       "timeFormat": "Saat Formatı",
       "userMgmtHint": "Kullanıcı yönetimi işlevleri Kullanıcılar bölümünde mevcuttur.",
-      "goToUserMgmt": "Kullanıcı Yönetimine Git"
+      "goToUserMgmt": "Kullanıcı Yönetimine Git",
+      "description": "Organizasyonunuzun profilini ve bölgesel tercihlerini yönetin."
     },
     "account": {
       "title": "Hesap Ayarları",
@@ -1179,7 +1510,8 @@
       "dark": "Koyu",
       "auto": "Otomatik",
       "language": "Dil",
-      "itemsPerPage": "Sayfa Başına Öğe"
+      "itemsPerPage": "Sayfa Başına Öğe",
+      "description": "Profilinizi, şifrenizi, bildirimlerinizi ve tercihlerinizi yönetin."
     },
     "email": {
       "title": "E-posta Ayarları",
@@ -1213,7 +1545,9 @@
       "sendTest": "Test E-postası Gönder",
       "sending": "Gönderiliyor...",
       "saveSettings": "E-posta Ayarlarını Kaydet",
-      "testSuccess": "Test e-postası başarıyla gönderildi."
+      "testSuccess": "Test e-postası başarıyla gönderildi.",
+      "description": "Çalışma alanınızın e-posta ve bildirimleri nasıl göndereceğini yapılandırın.",
+      "fromNamePlaceholder": "Şirketinizin Adı"
     },
     "notificationPreferences": {
       "title": "E-posta Bildirim Tercihleri",
@@ -1290,8 +1624,46 @@
         "deleteWebhook": "Webhook'u Sil",
         "integrationGuide": "Entegrasyon Kılavuzu",
         "signatureHeader": "İmza Başlığı",
-        "verification": "Doğrulama"
-      }
+        "verification": "Doğrulama",
+        "headTitle": "Webhook: {name}",
+        "description": "Webhook yapılandırması ve teslimat etkinliği.",
+        "sendTestShort": "Test Gönder",
+        "secretHidden": "Güvenlik nedeniyle gizlendi. Yeni bir anahtar almak için gizli anahtarı yenileyin; yalnızca bir kez gösterilir.",
+        "createdAt": "Oluşturulma Tarihi",
+        "subscribedEventsCount": "Abone Olunan Olaylar ({count})",
+        "deliveryStatuses": {
+          "success": "Başarılı",
+          "pending": "Beklemede",
+          "failed": "Başarısız"
+        },
+        "noResponseBody": "Yanıt gövdesi yok",
+        "otherGroup": "Diğer",
+        "signatureHeaderDesc": "Tüm webhook verileri {header} başlığında bir imza içerir.",
+        "verificationDesc": "İmzayı, ham istek gövdesinin gizli anahtarınızla HMAC-SHA256 değerini hesaplayarak doğrulayın.",
+        "responseDesc": "Alındığını onaylamak için 2xx durum kodu döndürün. Başarısız teslimatlar en fazla 5 kez yeniden denenir.",
+        "deleteDesc": "Bu webhook'u ve tüm teslimat günlüklerini kalıcı olarak silin. Bu işlem geri alınamaz.",
+        "confirmDelete": "\"{name}\" webhook'unu silmek istediğinize emin misiniz? Bu işlem geri alınamaz.",
+        "confirmRegenerate": "Gizli anahtarı yenilemek istediğinize emin misiniz? Alıcı uygulamanızdaki gizli anahtarı güncellemeniz gerekecektir."
+      },
+      "description": "Gerçek zamanlı olay bildirimleri alan harici servisler.",
+      "signingSecret": "İmzalama anahtarı",
+      "secretShownOnce": "Bunu şimdi kopyalayın. Güvenlik nedeniyle yalnızca bir kez gösterilir ve daha sonra tekrar alınamaz.",
+      "confirmDelete": "\"{name}\" webhook'unu silmek istediğinize emin misiniz?",
+      "createdByName": "Oluşturan: {name}",
+      "unknownCreator": "Bilinmiyor",
+      "eventCount": "{count} olay | {count} olay",
+      "deliveriesTotal": "Toplam {count}",
+      "namePlaceholder": "Webhook'um"
+    },
+    "description": "Çalışma alanınızı, hesabınızı ve entegrasyonlarınızı yönetin.",
+    "hub": {
+      "accountDescription": "Profilinizi, şifrenizi ve dil dahil kişisel tercihlerinizi güncelleyin.",
+      "notificationsDescription": "Hangi e-posta ve uygulama içi bildirimleri alacağınızı seçin.",
+      "twoFactorTitle": "İki adımlı doğrulama",
+      "twoFactorDescription": "Hesabınızı bir doğrulama uygulamasından alınan tek kullanımlık kodla koruyun.",
+      "emailDescription": "Organizasyonunuzun e-postayı nasıl göndereceğini yapılandırın (SMTP, Mailgun veya SendGrid).",
+      "webhooksDescription": "Harici servisleri bağlayın ve gerçek zamanlı olay bildirimleri iletin.",
+      "updatesDescription": "Yeni sürümleri kontrol edin, uygulamayı güncelleyin ve yedekleri yönetin."
     }
   },
   "admin": {
@@ -1317,7 +1689,8 @@
         "additionalRoles": "Ek Roller (İsteğe Bağlı)",
         "additionalRolesHint": "Belirli izin setlerine sahip özel roller atayın.",
         "createUser": "Kullanıcı Oluştur",
-        "success": "Kullanıcı başarıyla oluşturuldu."
+        "success": "Kullanıcı başarıyla oluşturuldu.",
+        "subtitle": "Yeni bir kullanıcı hesabı oluşturun ve rol atayın."
       },
       "edit": {
         "title": "Kullanıcıyı Düzenle",
@@ -1329,7 +1702,11 @@
         "customRoles": "Ek Özel Roller (İsteğe Bağlı)",
         "customRolesHint": "Belirli izinler vermek için organizasyonunuz için oluşturulan özel rolleri atayın.",
         "updateUser": "Kullanıcıyı Güncelle",
-        "success": "Kullanıcı başarıyla güncellendi."
+        "success": "Kullanıcı başarıyla güncellendi.",
+        "titleWithName": "Kullanıcıyı Düzenle: {name}",
+        "subtitle": "Hesap detaylarını, temel rolü ve özel rol atamalarını güncelleyin.",
+        "admin": "Sistem Yöneticisi",
+        "customRolesSelected": "{count} özel rol seçildi"
       },
       "show": {
         "title": "Kullanıcı Detayları",
@@ -1349,7 +1726,16 @@
         "notVerified": "Doğrulanmadı",
         "deleteUser": "Kullanıcıyı Sil",
         "confirmDelete": "{name} kullanıcısını silmek istediğinize emin misiniz?",
-        "cannotUndo": "Bu işlem geri alınamaz."
+        "cannotUndo": "Bu işlem geri alınamaz.",
+        "titleWithName": "Kullanıcı: {name}"
+      },
+      "subtitle": "Organizasyonunuzdaki kullanıcıları yönetin, rol ve izin atayın.",
+      "noUsersTitle": "Kullanıcı bulunamadı.",
+      "noUsersHint": "İlk kullanıcınızı oluşturmak için \"Kullanıcı Ekle\"ye tıklayın.",
+      "roles": {
+        "admin": "Sistem Yöneticisi",
+        "manager": "Yönetici",
+        "member": "Üye"
       }
     },
     "roles": {
@@ -1375,7 +1761,12 @@
         "deselectAll": "Tüm Seçimi Kaldır",
         "totalPermissions": "Toplam {count} izin",
         "createRole": "Rol Oluştur",
-        "success": "Rol başarıyla oluşturuldu."
+        "success": "Rol başarıyla oluşturuldu.",
+        "subtitle": "Bir rol tanımlayın ve izinlerini atayın.",
+        "roleDetails": "Rol Detayları",
+        "namePlaceholder": "ör. Depo Müdürü",
+        "descriptionPlaceholder": "Bu rolün amacını ve sorumluluklarını açıklayın...",
+        "permissionBreakdown": "({direct} doğrudan + {sets} setten {fromSets})"
       },
       "edit": {
         "title": "Rolü Düzenle",
@@ -1387,7 +1778,10 @@
         "permissionsHint": "Bu rol için izinleri özelleştirin. Kategori içindeki tüm izinleri seçmek/kaldırmak için kategori adlarına tıklayın.",
         "permissionsSelected": "{count} izin seçili",
         "updateRole": "Rolü Güncelle",
-        "success": "Rol başarıyla güncellendi."
+        "success": "Rol başarıyla güncellendi.",
+        "titleWithName": "Rolü Düzenle: {name}",
+        "subtitle": "Rol detaylarını ve izinlerini güncelleyin.",
+        "viewRole": "Rolü Görüntüle"
       },
       "show": {
         "title": "Rol Detayları ve İzinler",
@@ -1407,7 +1801,15 @@
         "deleteRole": "Rolü Sil",
         "reassignFirst": "Silmeden önce kullanıcıları yeniden atayın",
         "systemRoleHint": "Bu bir sistem rolüdür ve değiştirilemez veya silinemez.",
-        "confirmDelete": "{name} rolünü silmek istediğinize emin misiniz? Bu işlem geri alınamaz."
+        "confirmDelete": "{name} rolünü silmek istediğinize emin misiniz? Bu işlem geri alınamaz.",
+        "otherCategory": "Diğer",
+        "titleWithName": "Rol: {name}",
+        "permissionsWithCount": "İzinler ({count})",
+        "noPermissions": "Bu role atanmış izin yok.",
+        "usersCountValue": "{count} kullanıcı | {count} kullanıcı",
+        "cannotDeleteWithUsers": "Atanmış kullanıcıları olan rol silinemez",
+        "deleteRoleTooltip": "Rolü sil",
+        "confirmDeleteRole": "{name} rolünü silmek istediğinize emin misiniz?"
       }
     },
     "activityLog": {
@@ -1473,7 +1875,16 @@
       "allCategories": "Tüm kategoriler",
       "securityBadge": "Güvenlik",
       "securityShortcut": "Güvenlik olayları",
-      "viewDetails": "Detayları görüntüle"
+      "viewDetails": "Detayları görüntüle",
+      "description": "Çalışma alanınızdaki her değişikliğin denetim kaydı.",
+      "exportCsv": "CSV Olarak Dışa Aktar",
+      "exportXlsx": "XLSX Olarak Dışa Aktar",
+      "searchDescription": "Açıklamada Ara",
+      "unknownUser": "Bilinmeyen Kullanıcı",
+      "viewChanges": "{count} Değişikliği Görüntüle | {count} Değişikliği Görüntüle",
+      "daysAgo": "{count} gün önce | {count} gün önce",
+      "hoursAgo": "{count} saat önce | {count} saat önce",
+      "minutesAgo": "{count} dakika önce | {count} dakika önce"
     },
     "update": {
       "title": "Sistem Güncellemesi",
@@ -1507,7 +1918,23 @@
       "onGithub": "GitHub üzerinde",
       "autoBackup": "Her güncellemeden önce otomatik olarak bir yedek oluşturulur",
       "maintenanceMode": "Güncellemeler sırasında uygulama bakım modunda olacaktır",
-      "autoMigrations": "Veritabanı geçişleri güncellemeler sırasında otomatik olarak çalıştırılır"
+      "autoMigrations": "Veritabanı geçişleri güncellemeler sırasında otomatik olarak çalıştırılır",
+      "checkFailed": "Güncellemeler kontrol edilemedi. Lütfen tekrar deneyin.",
+      "confirmUpdate": "Uygulamayı güncellemek istediğinize emin misiniz? Otomatik olarak bir yedek oluşturulacaktır.",
+      "updateFailed": "Güncelleme başarısız oldu. Lütfen günlükleri kontrol edin.",
+      "confirmBackup": "Mevcut kurulumun yedeği oluşturulsun mu?",
+      "backupCreated": "Yedek başarıyla oluşturuldu!",
+      "backupFailed": "Yedek oluşturulamadı. Lütfen günlükleri kontrol edin.",
+      "confirmRestore": "{file} dosyasından geri yüklemek istediğinize emin misiniz? Bu işlem mevcut kurulumun üzerine yazacaktır.",
+      "restoreCompleted": "Geri yükleme başarıyla tamamlandı!",
+      "restoreFailed": "Geri yükleme başarısız oldu.",
+      "restoreError": "Yedek geri yüklenemedi. Lütfen günlükleri kontrol edin.",
+      "confirmDeleteBackup": "{file} dosyasını silmek istediğinize emin misiniz?",
+      "deleteBackupFailed": "Yedek silinemedi. Lütfen tekrar deneyin.",
+      "managerTitle": "Güncelleme Yöneticisi",
+      "subtitle": "Yeni sürümleri kontrol edin, güncellemeleri yükleyin ve kurulum yedeklerini yönetin.",
+      "upToDateBadge": "Güncel",
+      "fetchedFromRepo": "Güncellemeler GitHub üzerindeki {repo} deposundan alınır."
     },
     "createRole": "Rol Oluştur",
     "createUser": "Kullanıcı Oluştur",
@@ -1556,6 +1983,35 @@
       "linkSent": "Kayıt sırasında verdiğiniz e-posta adresine yeni bir doğrulama bağlantısı gönderildi.",
       "resend": "Doğrulama E-postasını Tekrar Gönder",
       "logOut": "Çıkış Yap"
+    },
+    "twoFactorChallenge": {
+      "title": "İki Adımlı Doğrulama",
+      "codeHint": "Lütfen doğrulama uygulamanızdaki kimlik doğrulama kodunu girin.",
+      "recoveryHint": "Lütfen kurtarma kodlarınızdan birini girin.",
+      "code": "Doğrulama Kodu",
+      "codePlaceholder": "6 haneli kodu girin",
+      "recoveryCode": "Kurtarma Kodu",
+      "recoveryPlaceholder": "Kurtarma kodunu girin",
+      "useCode": "Doğrulama kodu kullan",
+      "useRecovery": "Kurtarma kodu kullan",
+      "verify": "Doğrula"
+    },
+    "twoFactor": {
+      "setupTitle": "İki Adımlı Doğrulama Kurulumu",
+      "title": "İki Adımlı Doğrulama",
+      "description": "Bir doğrulama uygulamasıyla hesabınıza ek bir güvenlik katmanı ekleyin.",
+      "enabled": "Etkin",
+      "enabledTitle": "İki Adımlı Doğrulama Etkin",
+      "enabledHint": "İki adımlı doğrulama şu anda hesabınızda etkin. Devre dışı bırakmak için şifrenizi girin.",
+      "password": "Şifre",
+      "disable": "İki Adımlı Doğrulamayı Devre Dışı Bırak",
+      "enable": "İki Adımlı Doğrulamayı Etkinleştir",
+      "scanHint": "Aşağıdaki QR kodunu doğrulama uygulamanızla (Google Authenticator, Authy vb.) tarayın, ardından 2FA'yı etkinleştirmek için doğrulama kodunu girin.",
+      "manualKey": "Veya bu anahtarı elle girin:",
+      "verificationCode": "Doğrulama Kodu",
+      "showRecoveryCodes": "Kurtarma Kodlarını Göster",
+      "hideRecoveryCodes": "Kurtarma Kodlarını Gizle",
+      "recoveryHint": "Bu kurtarma kodlarını güvenli bir yerde saklayın. Doğrulama cihazınızı kaybederseniz hesabınıza erişmek için kullanılabilirler."
     }
   },
   "profile": {
@@ -1582,7 +2038,8 @@
       "confirmTitle": "Hesabınızı silmek istediğinize emin misiniz?",
       "confirmDescription": "Hesabınız silindiğinde, tüm kaynakları ve verileri kalıcı olarak silinecektir. Hesabınızı kalıcı olarak silmek istediğinizi onaylamak için lütfen şifrenizi girin.",
       "password": "Şifre"
-    }
+    },
+    "description": "Hesap bilgilerinizi, şifrenizi ve hesap silme işlemini yönetin."
   },
   "install": {
     "welcome": {
@@ -1634,7 +2091,9 @@
       "testing": "Bağlantı test ediliyor...",
       "dbExistsHint": "Devam etmeden önce veritabanınızın mevcut olduğundan emin olun. Yükleyici gerekli tabloları oluşturacaktır.",
       "installDatabase": "Veritabanını Kur",
-      "installing": "Kuruluyor..."
+      "installing": "Kuruluyor...",
+      "testFailed": "Bağlantı test edilemedi: {error}",
+      "installFailed": "Kurulum başarısız oldu: {error}"
     },
     "admin": {
       "title": "Yönetici Hesabı Oluştur",
@@ -1650,7 +2109,10 @@
       "confirmPasswordHint": "Şifrenizi onaylayın",
       "accessNote": "Bu yönetici hesabı, Inventoros kurulumunuza tam erişime sahip olacaktır.",
       "completeInstallation": "Kurulumu Tamamla",
-      "creatingAccount": "Hesap oluşturuluyor..."
+      "creatingAccount": "Hesap oluşturuluyor...",
+      "orgNamePlaceholder": "Acme A.Ş.",
+      "fullNamePlaceholder": "Ahmet Yılmaz",
+      "createFailed": "Yönetici hesabı oluşturulamadı: {error}"
     },
     "complete": {
       "title": "Kurulum Tamamlandı!",
@@ -1689,7 +2151,10 @@
       "availableVars": "Kullanılabilir Değişkenler",
       "preview": "Önizleme",
       "generating": "Oluşturuluyor...",
-      "applySku": "SKU Uygula"
+      "applySku": "SKU Uygula",
+      "or": "VEYA",
+      "patternExample": "ör. {example}",
+      "previewError": "Önizleme oluşturulurken hata oluştu"
     },
     "variantManager": {
       "productOptions": "Ürün Seçenekleri",
@@ -1705,7 +2170,10 @@
       "autoGenerate": "Otomatik Oluştur",
       "enableAll": "Tümünü Etkinleştir",
       "disableAll": "Tümünü Devre Dışı Bırak",
-      "addOptionsHint": "Ürün varyantları oluşturmak için Beden veya Renk gibi seçenekler ekleyin"
+      "addOptionsHint": "Ürün varyantları oluşturmak için Beden veya Renk gibi seçenekler ekleyin",
+      "optionName": "Seçenek Adı",
+      "optionValues": "Seçenek Değerleri (virgülle ayrılmış)",
+      "addOptionButton": "Seçenek Ekle (ör. Beden, Renk)"
     },
     "variantsTable": {
       "variant": "Varyant",
@@ -1750,20 +2218,34 @@
       "cameraHint": "Taramak için kameranızı barkoda doğrultun",
       "locationFound": "Konum Bulundu",
       "productsHere": "Burada {count} ürün var",
-      "viewProductsHere": "Buradaki Ürünleri Görüntüle"
+      "viewProductsHere": "Buradaki Ürünleri Görüntüle",
+      "lookupFailed": "Barkod aranamadı",
+      "stock": "Stok",
+      "aisle": "Koridor {value}",
+      "shelf": "Raf {value}",
+      "bin": "Göz {value}"
     },
     "activityTimeline": {
       "noActivity": "Henüz etkinlik kaydedilmedi",
       "system": "Sistem",
       "thisProduct": "bu ürün",
-      "moreChanges": "+{count} değişiklik daha"
+      "moreChanges": "+{count} değişiklik daha",
+      "actionOnProduct": {
+        "created": "bu ürünü oluşturdu",
+        "updated": "bu ürünü güncelledi",
+        "deleted": "bu ürünü sildi",
+        "viewed": "bu ürünü görüntüledi",
+        "other": "bu ürün için {action}"
+      }
     },
     "themeToggle": {
       "switchToLight": "Açık moda geç",
       "switchToDark": "Koyu moda geç"
     },
     "imageGallery": {
-      "noImages": "Görsel mevcut değil"
+      "noImages": "Görsel mevcut değil",
+      "close": "Kapat",
+      "imageAlt": "{name} - Görsel {number}"
     },
     "imageUploader": {
       "dragDrop": "Görselleri buraya sürükleyip bırakın veya göz atmak için tıklayın",
@@ -1775,6 +2257,62 @@
       "moveRight": "Sağa taşı",
       "remove": "Kaldır",
       "noImagesHint": "Henüz görsel yüklenmedi. İlk görsel, ana ürün görseli olarak kullanılacaktır."
+    },
+    "relativeTime": {
+      "justNow": "Az önce",
+      "minutesAgo": "{count} dk önce",
+      "hoursAgo": "{count} sa önce",
+      "daysAgo": "{count} g önce"
+    },
+    "batchList": {
+      "title": "Parti Takibi",
+      "addBatch": "Parti Ekle",
+      "createFailed": "Parti oluşturulamadı",
+      "batchNumberLabel": "Parti Numarası (boşsa otomatik oluşturulur)",
+      "manufacturedDate": "Üretim Tarihi",
+      "expiryDate": "Son Kullanma Tarihi",
+      "createBatch": "Parti Oluştur",
+      "columns": {
+        "batchNumber": "Parti #",
+        "quantity": "Adet",
+        "manufactured": "Üretim",
+        "expiry": "Son Kullanma"
+      },
+      "expired": "(süresi doldu)",
+      "empty": "Henüz kayıtlı parti yok.",
+      "emptyHint": "İlk partiyi kaydetmek için \"Parti Ekle\"ye tıklayın."
+    },
+    "languageSwitcher": {
+      "ariaLabel": "Dil: {name}"
+    },
+    "dataTable": {
+      "noData": "Veri yok."
+    },
+    "serialList": {
+      "title": "Seri Numarası Takibi",
+      "addSerial": "Seri No Ekle",
+      "createFailed": "Seri numarası oluşturulamadı",
+      "updateFailed": "Durum güncellenemedi",
+      "all": "Tümü",
+      "statuses": {
+        "available": "Mevcut",
+        "sold": "Satıldı",
+        "reserved": "Rezerve",
+        "damaged": "Hasarlı"
+      },
+      "serialNumber": "Seri Numarası",
+      "createSerial": "Seri No Oluştur",
+      "columns": {
+        "serialNumber": "Seri #"
+      },
+      "markAsSold": "Satıldı olarak işaretle",
+      "markAsReserved": "Rezerve olarak işaretle",
+      "markAsDamaged": "Hasarlı olarak işaretle",
+      "markAsAvailable": "Mevcut olarak işaretle",
+      "reserve": "Rezerve Et",
+      "empty": "Henüz kayıtlı seri numarası yok.",
+      "emptyHint": "İlk seri numarasını kaydetmek için \"Seri No Ekle\"ye tıklayın.",
+      "noMatches": "Seçili filtreyle eşleşen seri numarası yok."
     }
   },
   "warehouses": {
@@ -1854,7 +2392,8 @@
       "badge": "Varsayılan depo",
       "makeDefault": "Varsayılan yap",
       "confirm": "\"{name}\" varsayılan depo yapılsın mı?",
-      "hint": "Varsayılan depo yeni siparişler için önceden seçilir."
+      "hint": "Varsayılan depo yeni siparişler için önceden seçilir.",
+      "label": "Varsayılan"
     },
     "capacity": {
       "utilisation": "Doluluk",
@@ -1877,6 +2416,41 @@
       "reorder": "Yeniden Sipariş",
       "shortIn": "Eksik: {names}",
       "save": "Depo seviyelerini kaydet"
+    },
+    "subtitle": "Depolama yerleriniz ve stok dağılımınız.",
+    "updateWarehouse": "Depoyu Güncelle",
+    "index": {
+      "searchLabel": "Depolarda Ara"
+    },
+    "create": {
+      "subtitle": "Bir depo ve ayarlarını ekleyin."
+    },
+    "edit": {
+      "title": "Depoyu Düzenle: {name}",
+      "subtitle": "Depo detaylarını, iletişim bilgilerini ve kullanıcı erişimini güncelleyin."
+    },
+    "timezoneOptions": {
+      "stJohns": "Newfoundland (St. John's)",
+      "halifax": "Atlantik (Halifax)",
+      "toronto": "Doğu (Toronto)",
+      "winnipeg": "Merkez (Winnipeg)",
+      "edmonton": "Dağ (Edmonton)",
+      "vancouver": "Pasifik (Vancouver)"
+    },
+    "show": {
+      "codeLabel": "Kod: {code}",
+      "totalLocations": "Toplam Konum",
+      "totalProductsStored": "Depolanan Toplam Ürün",
+      "assignedUsers": "Atanan Kullanıcılar",
+      "details": "Depo Detayları",
+      "manager": "Müdür",
+      "noAddress": "Adres belirtilmemiş",
+      "locationsCount": "Konumlar ({count})",
+      "products": "Ürünler",
+      "noLocations": "Bu depoda konum yok",
+      "dangerZone": "Tehlikeli Bölge",
+      "deleteWarehouse": "Depoyu Sil",
+      "cannotUndo": "Bu işlem geri alınamaz."
     }
   },
   "workOrders": {
@@ -1932,7 +2506,8 @@
       "ready": "Hazır",
       "noComponents": "Bu iş emri için kayıtlı bileşen yok.",
       "noComponentsDefined": "Bu montaj ürününün tanımlı bileşeni yok. İş emri oluşturmadan önce ürün detay sayfasından bileşen ekleyin.",
-      "insufficientWarning": "Bazı bileşenlerin stoku yetersiz. İş emrini yine de oluşturabilirsiniz, ancak stok yenilenene kadar üretim başlayamaz."
+      "insufficientWarning": "Bazı bileşenlerin stoku yetersiz. İş emrini yine de oluşturabilirsiniz, ancak stok yenilenene kadar üretim başlayamaz.",
+      "unknown": "Bilinmiyor"
     },
     "actions": {
       "startProduction": "Üretimi Başlat",
@@ -1955,7 +2530,19 @@
       "cancelled": "İptal Edildi",
       "lastUpdated": "Son Güncelleme"
     },
-    "cancelledBanner": "Bu iş emri iptal edildi."
+    "cancelledBanner": "Bu iş emri iptal edildi.",
+    "create": {
+      "materialsNeeded": "{count} birim {name} üretmek için gereken malzemeler | {count} birim {name} üretmek için gereken malzemeler"
+    },
+    "index": {
+      "filter": "Filtrele"
+    },
+    "show": {
+      "headTitle": "İş Emri {number}",
+      "deleteConfirm": "Bu iş emri silinsin mi? Bu işlem geri alınamaz.",
+      "dangerZone": "Tehlikeli Bölge",
+      "releaseHint": "Rezerve edilmiş tüm bileşenler stoka geri bırakılacaktır."
+    }
   },
   "reportBuilder": {
     "title": "Özel Raporlar",
@@ -2454,6 +3041,78 @@
       "save": "Kalemleri kaydet",
       "cancel": "İptal",
       "hint": "Rafa geri konulacak ürünleri değiştirin. Stok yalnızca iade teslim alındığında hareket eder."
+    },
+    "index": {
+      "title": "İadeler ve Değişimler",
+      "description": "Tüm siparişlerdeki iadeleri, değişimleri ve geri ödemeleri takip edin.",
+      "newReturn": "Yeni İade",
+      "searchPlaceholder": "İade numarası, sipariş numarası veya müşteri ile ara...",
+      "returnNumber": "İade #",
+      "orderNumber": "Sipariş #",
+      "items": "Kalemler",
+      "refund": "Geri Ödeme",
+      "empty": "İade bulunamadı."
+    },
+    "columns": {
+      "qty": "Adet",
+      "condition": "Durum",
+      "restock": "Stoka Geri Al"
+    },
+    "conditions": {
+      "new": "Yeni (Açılmamış)",
+      "used": "Kullanılmış (Açılmış)",
+      "damaged": "Hasarlı"
+    },
+    "create": {
+      "headTitle": "İade Oluştur - Sipariş #{number}",
+      "title": "İade / Değişim Oluştur",
+      "fromOrder": "Sipariş #{number} için",
+      "backToOrder": "Siparişe Dön",
+      "details": "İade Detayları",
+      "typeReturn": "İade (Geri Ödeme)",
+      "reasonRequired": "Sebep *",
+      "reasonPlaceholder": "İade veya değişim sebebi...",
+      "notesOptional": "Notlar (isteğe bağlı)",
+      "notesPlaceholder": "Ek notlar...",
+      "selectItems": "İade Edilecek Kalemleri Seçin",
+      "ordered": "Sipariş edilen: {count}",
+      "alreadyReturned": "({count} adet zaten iade edildi)",
+      "maxReturnable": "En fazla iade edilebilir: {count}",
+      "selectedSummary": "{type} için {count} kalem seçildi | {type} için {count} kalem seçildi",
+      "estimatedRefund": "Tahmini Geri Ödeme:",
+      "processing": "İşleniyor...",
+      "submit": "İade Talebini Gönder"
+    },
+    "show": {
+      "headTitle": "İade {number}",
+      "title": "İade #{number}",
+      "createdOn": "{date} tarihinde oluşturuldu",
+      "approve": "İadeyi Onayla",
+      "markReceived": "Teslim Alındı Olarak İşaretle",
+      "complete": "İadeyi Tamamla",
+      "reject": "İadeyi Reddet",
+      "backToReturns": "İadelere Dön",
+      "items": "İade Kalemleri",
+      "unknownProduct": "Bilinmeyen Ürün",
+      "conditionFor": "{name} durumu",
+      "restockFor": "{name} stoka geri al",
+      "noItems": "Bu iadede kalem yok.",
+      "details": "Detaylar",
+      "reason": "Sebep",
+      "forOrder": "İlgili Sipariş",
+      "summary": "Özet",
+      "returnNumber": "İade Numarası",
+      "completed": "Tamamlanma",
+      "processedBy": "İşleyen",
+      "refundAmount": "Geri Ödeme Tutarı",
+      "pendingHint": "Devam etmek için iadeyi onaylayın veya reddedin.",
+      "approvedHint": "Kalemler geldiğinde teslim alındı olarak işaretleyin. Stoka geri alınacak olarak işaretlenen kalemler envantere geri eklenir.",
+      "receivedHint": "Süreci sonlandırmak için iadeyi tamamlayın.",
+      "dangerZone": "Tehlikeli Bölge",
+      "rejectWarning": "Reddetmek bu iadeyi kapatır. Bu işlem geri alınamaz.",
+      "rejectReason": "Ret sebebi",
+      "rejectPlaceholder": "Bu iade neden reddediliyor?",
+      "rejecting": "Reddediliyor..."
     }
   },
   "portal": {
@@ -2677,5 +3336,60 @@
   "legal": {
     "licensedUnder": "{license} ile lisanslanmıştır",
     "sourceCode": "Kaynak kodu"
+  },
+  "stockTransfers": {
+    "title": "Stok Transferleri",
+    "subtitle": "Envanteri konumlar arasında transfer edin.",
+    "newTransfer": "Yeni Transfer",
+    "backToList": "Listeye Dön",
+    "transferDetails": "Transfer Detayları",
+    "transferItems": "Transfer Kalemleri",
+    "fromLocation": "Kaynak Konum",
+    "toLocation": "Hedef Konum",
+    "statuses": {
+      "pending": "Beklemede",
+      "in_transit": "Yolda",
+      "completed": "Tamamlandı",
+      "cancelled": "İptal Edildi"
+    },
+    "create": {
+      "title": "Stok Transferi Oluştur",
+      "selectSource": "Kaynak konumu seçin",
+      "selectDestination": "Hedef konumu seçin",
+      "notesPlaceholder": "Bu transferle ilgili notlar ekleyin...",
+      "addItem": "Kalem Ekle",
+      "selectProduct": "Ürün seçin",
+      "productOption": "{name} ({sku}) - Stok: {stock}",
+      "qty": "Adet",
+      "available": "Kullanılabilir: {count}",
+      "itemNotesPlaceholder": "Kalem notları...",
+      "totalProducts": "Toplam kalem: {count} ürün | Toplam kalem: {count} ürün",
+      "totalUnits": "Toplam miktar: {count} birim | Toplam miktar: {count} birim",
+      "createTransfer": "Transfer Oluştur"
+    },
+    "index": {
+      "searchPlaceholder": "Transfer numarası ile ara...",
+      "filter": "Filtrele",
+      "transferNumber": "Transfer #",
+      "from": "Kaynak",
+      "to": "Hedef",
+      "items": "Kalemler",
+      "empty": "Stok transferi bulunamadı. Envanteri konumlar arasında taşımak için ilk transferinizi oluşturun.",
+      "itemCount": "{count} kalem | {count} kalem",
+      "showingTransfers": "{from} ile {to} arası, toplam {total} transfer"
+    },
+    "show": {
+      "headTitle": "Transfer {number}",
+      "subtitle": "Stok transferi detayları",
+      "transferNumber": "Transfer Numarası",
+      "transferredBy": "Transfer Eden",
+      "completedAt": "Tamamlanma",
+      "processing": "İşleniyor...",
+      "completeTransfer": "Transferi Tamamla",
+      "cancelTransfer": "Transferi İptal Et",
+      "completeHint": "Transferi tamamlamak, stoku kaynak konumdan düşer ve hedef konuma ekler.",
+      "confirmComplete": "Bu transferi tamamlamak istediğinize emin misiniz? Stok seviyeleri düzeltilecektir.",
+      "confirmCancel": "Bu transferi iptal etmek istediğinize emin misiniz?"
+    }
   }
 }

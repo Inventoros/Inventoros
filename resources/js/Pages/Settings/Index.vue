@@ -34,19 +34,19 @@ const allSections = [
         href: route('settings.account.index'),
         icon: UserCircle,
         title: t('settings.account.title'),
-        description: 'Update your profile, password, and personal preferences, including language.',
+        description: t('settings.hub.accountDescription'),
     },
     {
         href: route('settings.account.index', { tab: 'notifications' }),
         icon: Bell,
-        title: 'Notifications',
-        description: 'Choose which email and in-app notifications you receive.',
+        title: t('nav.notifications'),
+        description: t('settings.hub.notificationsDescription'),
     },
     {
         href: route('two-factor.setup'),
         icon: ShieldCheck,
-        title: 'Two-factor authentication',
-        description: 'Protect your account with a one-time code from an authenticator app.',
+        title: t('settings.hub.twoFactorTitle'),
+        description: t('settings.hub.twoFactorDescription'),
     },
     {
         href: route('settings.api-tokens.index'),
@@ -58,14 +58,14 @@ const allSections = [
         href: route('settings.organization.index'),
         icon: Building2,
         title: t('settings.organization.title'),
-        description: "Manage your organization's profile and regional preferences.",
+        description: t('settings.organization.description'),
         perm: 'view_settings',
     },
     {
         href: route('settings.email.index'),
         icon: Mail,
         title: t('settings.email.title'),
-        description: 'Configure how your organization sends email (SMTP, Mailgun, or SendGrid).',
+        description: t('settings.hub.emailDescription'),
         perm: 'manage_organization',
     },
     {
@@ -78,15 +78,15 @@ const allSections = [
     {
         href: route('webhooks.index'),
         icon: Webhook,
-        title: 'Webhooks',
-        description: 'Connect external services and deliver real-time event notifications.',
+        title: t('settings.webhooks.title'),
+        description: t('settings.hub.webhooksDescription'),
         perm: 'manage_organization',
     },
     {
         href: route('admin.update.index'),
         icon: RefreshCw,
-        title: 'Updates',
-        description: 'Check for new versions, update the application, and manage backups.',
+        title: t('nav.updates'),
+        description: t('settings.hub.updatesDescription'),
         perm: 'manage_organization',
         adminOnly: true,
     },
@@ -111,7 +111,7 @@ const settingsSections = computed(() =>
 
         <PageHeader
             :title="t('settings.title')"
-            description="Manage your workspace, account, and integrations."
+            :description="t('settings.description')"
         />
 
         <!-- Settings sections -->

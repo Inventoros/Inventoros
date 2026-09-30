@@ -7,6 +7,7 @@ import Badge from '@/Components/ui/Badge.vue';
 import { Head, Link, router } from '@inertiajs/vue3';
 import { ref } from 'vue';
 import { useI18n } from 'vue-i18n';
+import { displayDate } from '@/lib/dates';
 import { Pencil, ArrowLeft, Trash2, X, AlertTriangle, CheckCircle2 } from 'lucide-vue-next';
 
 const props = defineProps({
@@ -36,14 +37,14 @@ const roleVariant = (role) =>
 </script>
 
 <template>
-    <Head :title="`User: ${user.name}`" />
+    <Head :title="t('admin.users.show.titleWithName', { name: user.name })" />
 
     <AppLayout>
         <template #header>
             <div class="flex items-center gap-2 text-xs">
                 <Link :href="route('users.index')" class="text-text-tertiary hover:text-text-primary">{{ t('nav.sections.workspace') }}</Link>
                 <span class="text-text-tertiary">/</span>
-                <Link :href="route('users.index')" class="text-text-tertiary hover:text-text-primary">{{ t('admin.users') }}</Link>
+                <Link :href="route('users.index')" class="text-text-tertiary hover:text-text-primary">{{ t('admin.users.title') }}</Link>
                 <span class="text-text-tertiary">/</span>
                 <span class="font-medium text-text-primary">{{ user.name }}</span>
             </div>
@@ -51,14 +52,14 @@ const roleVariant = (role) =>
 
         <PageHeader :title="user.name" :description="t('admin.userDetails')">
             <template #actions>
-                <Badge :variant="roleVariant(user.role)" size="sm" dot class="capitalize">{{ user.role }}</Badge>
+                <Badge :variant="roleVariant(user.role)" size="sm" dot class="capitalize">{{ t(`admin.users.roles.${user.role}`) }}</Badge>
                 <Button variant="default" size="sm" as="Link" :href="route('users.edit', user.id)">
                     <Pencil :size="14" />
-                    Edit User
+                    {{ t('admin.users.show.editUser') }}
                 </Button>
                 <Button variant="secondary" size="sm" as="Link" :href="route('users.index')">
                     <ArrowLeft :size="14" />
-                    Back to Users
+                    {{ t('admin.users.show.backToUsers') }}
                 </Button>
             </template>
         </PageHeader>
@@ -68,28 +69,28 @@ const roleVariant = (role) =>
             <div class="space-y-4 lg:col-span-2">
                 <!-- User Information -->
                 <Card :padded="false">
-                    <div class="px-5 pt-5"><h3 class="text-sm font-semibold text-text-primary">User Information</h3></div>
+                    <div class="px-5 pt-5"><h3 class="text-sm font-semibold text-text-primary">{{ t('admin.users.show.userInfo') }}</h3></div>
                     <div class="p-5">
                         <dl class="space-y-4">
                             <div>
-                                <dt class="text-xs text-text-tertiary">Full Name</dt>
+                                <dt class="text-xs text-text-tertiary">{{ t('admin.users.show.fullName') }}</dt>
                                 <dd class="mt-1 text-sm text-text-primary">{{ user.name }}</dd>
                             </div>
 
                             <div>
-                                <dt class="text-xs text-text-tertiary">Email Address</dt>
+                                <dt class="text-xs text-text-tertiary">{{ t('admin.users.show.emailAddress') }}</dt>
                                 <dd class="mt-1 text-sm text-text-primary">{{ user.email }}</dd>
                             </div>
 
                             <div>
-                                <dt class="text-xs text-text-tertiary">Primary Role</dt>
+                                <dt class="text-xs text-text-tertiary">{{ t('admin.users.show.primaryRole') }}</dt>
                                 <dd class="mt-1">
-                                    <Badge :variant="roleVariant(user.role)" size="sm" class="capitalize">{{ user.role }}</Badge>
+                                    <Badge :variant="roleVariant(user.role)" size="sm" class="capitalize">{{ t(`admin.users.roles.${user.role}`) }}</Badge>
                                 </dd>
                             </div>
 
                             <div v-if="user.roles && user.roles.length > 0">
-                                <dt class="text-xs text-text-tertiary">Additional Roles</dt>
+                                <dt class="text-xs text-text-tertiary">{{ t('admin.users.show.additionalRoles') }}</dt>
                                 <dd class="mt-2 flex flex-wrap gap-2">
                                     <Badge
                                         v-for="role in user.roles"
@@ -111,7 +112,7 @@ const roleVariant = (role) =>
                     <div class="p-5">
                         <dl class="space-y-4">
                             <div>
-                                <dt class="text-xs text-text-tertiary">Organization Name</dt>
+                                <dt class="text-xs text-text-tertiary">{{ t('admin.users.show.orgName') }}</dt>
                                 <dd class="mt-1 text-sm text-text-primary">{{ user.organization.name }}</dd>
                             </div>
 
@@ -128,33 +129,33 @@ const roleVariant = (role) =>
             <div class="space-y-4">
                 <!-- Account Details -->
                 <Card :padded="false">
-                    <div class="px-5 pt-5"><h3 class="text-sm font-semibold text-text-primary">Account Details</h3></div>
+                    <div class="px-5 pt-5"><h3 class="text-sm font-semibold text-text-primary">{{ t('admin.users.show.accountDetails') }}</h3></div>
                     <div class="p-5">
                         <dl class="space-y-4">
                             <div>
-                                <dt class="text-xs text-text-tertiary">Member Since</dt>
+                                <dt class="text-xs text-text-tertiary">{{ t('admin.users.show.memberSince') }}</dt>
                                 <dd class="mt-1 text-sm text-text-primary">
-                                    {{ new Date(user.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) }}
+                                    {{ displayDate(user.created_at) }}
                                 </dd>
                             </div>
 
                             <div>
-                                <dt class="text-xs text-text-tertiary">Last Updated</dt>
+                                <dt class="text-xs text-text-tertiary">{{ t('common.updatedAt') }}</dt>
                                 <dd class="mt-1 text-sm text-text-primary">
-                                    {{ new Date(user.updated_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) }}
+                                    {{ displayDate(user.updated_at) }}
                                 </dd>
                             </div>
 
                             <div>
-                                <dt class="text-xs text-text-tertiary">Email Verified</dt>
+                                <dt class="text-xs text-text-tertiary">{{ t('admin.users.show.emailVerified') }}</dt>
                                 <dd class="mt-1">
                                     <Badge v-if="user.email_verified_at" variant="success" size="sm" dot>
                                         <CheckCircle2 :size="12" />
-                                        Verified
+                                        {{ t('admin.users.show.verified') }}
                                     </Badge>
                                     <Badge v-else variant="warning" size="sm" dot>
                                         <AlertTriangle :size="12" />
-                                        Not Verified
+                                        {{ t('admin.users.show.notVerified') }}
                                     </Badge>
                                 </dd>
                             </div>
@@ -168,11 +169,11 @@ const roleVariant = (role) =>
                     <div class="p-5 space-y-3">
                         <Button variant="default" class="w-full" as="Link" :href="route('users.edit', user.id)">
                             <Pencil :size="16" />
-                            Edit User
+                            {{ t('admin.users.show.editUser') }}
                         </Button>
                         <Button variant="danger" class="w-full" @click="showDeleteModal = true">
                             <Trash2 :size="16" />
-                            Delete User
+                            {{ t('admin.users.show.deleteUser') }}
                         </Button>
                     </div>
                 </Card>
@@ -187,7 +188,7 @@ const roleVariant = (role) =>
                 <div class="relative mx-4 w-full max-w-md rounded-xl border border-border-subtle bg-surface-raised p-6 shadow-lg" @click.stop>
                     <div class="mb-4 flex items-center justify-between">
                         <h3 class="text-base font-semibold text-text-primary">
-                            Delete User
+                            {{ t('admin.users.show.deleteUser') }}
                         </h3>
                         <button
                             @click="showDeleteModal = false"
@@ -199,13 +200,13 @@ const roleVariant = (role) =>
 
                     <div class="mb-6">
                         <p class="mb-4 text-sm text-text-secondary">
-                            Are you sure you want to delete <strong class="text-text-primary">{{ user.name }}</strong>?
+                            {{ t('admin.users.show.confirmDelete', { name: user.name }) }}
                         </p>
                         <div class="rounded-lg border border-status-warning/20 bg-status-warning-soft p-4">
                             <div class="flex items-start gap-3">
                                 <AlertTriangle :size="20" class="mt-0.5 flex-shrink-0 text-status-warning" />
                                 <div class="text-sm text-status-warning">
-                                    <p class="font-semibold">This action cannot be undone.</p>
+                                    <p class="font-semibold">{{ t('admin.users.show.cannotUndo') }}</p>
                                 </div>
                             </div>
                         </div>
@@ -216,8 +217,8 @@ const roleVariant = (role) =>
                             {{ t('common.cancel') }}
                         </Button>
                         <Button variant="danger" :loading="deleting" :disabled="deleting" @click="deleteUser">
-                            <span v-if="deleting">Deleting...</span>
-                            <span v-else>Delete User</span>
+                            <span v-if="deleting">{{ t('common.deleting') }}</span>
+                            <span v-else>{{ t('admin.users.show.deleteUser') }}</span>
                         </Button>
                     </div>
                 </div>

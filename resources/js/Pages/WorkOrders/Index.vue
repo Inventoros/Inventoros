@@ -7,6 +7,7 @@ import Badge from '@/Components/ui/Badge.vue';
 import { Head, Link, router } from '@inertiajs/vue3';
 import { ref } from 'vue';
 import { useI18n } from 'vue-i18n';
+import { displayDate } from '@/lib/dates';
 import { Plus, Search, Eye, Settings } from 'lucide-vue-next';
 
 const { t } = useI18n();
@@ -46,23 +47,16 @@ const statusVariant = (status) =>
 
 const getStatusLabel = (status) => {
     const labels = {
-        'draft': 'Draft',
-        'pending': 'Pending',
-        'in_progress': 'In Progress',
-        'completed': 'Completed',
-        'cancelled': 'Cancelled',
+        'draft': t('workOrders.statuses.draft'),
+        'pending': t('workOrders.statuses.pending'),
+        'in_progress': t('workOrders.statuses.in_progress'),
+        'completed': t('workOrders.statuses.completed'),
+        'cancelled': t('workOrders.statuses.cancelled'),
     };
     return labels[status] || status;
 };
 
-const formatDate = (dateStr) => {
-    if (!dateStr) return '-';
-    return new Date(dateStr).toLocaleDateString('en-US', {
-        year: 'numeric',
-        month: 'short',
-        day: 'numeric',
-    });
-};
+const formatDate = (dateStr) => displayDate(dateStr);
 
 const selectClass =
     'h-9 w-full rounded-md border border-border-subtle bg-surface-canvas px-3 text-sm text-text-primary ds-focus-ring';
@@ -72,7 +66,7 @@ const thClass =
 </script>
 
 <template>
-    <Head title="Work Orders" />
+    <Head :title="t('workOrders.title')" />
 
     <AppLayout>
         <template #header>
@@ -83,11 +77,11 @@ const thClass =
             </div>
         </template>
 
-        <PageHeader title="Work Orders" description="Manage assembly production work orders.">
+        <PageHeader :title="t('workOrders.title')" :description="t('workOrders.subtitle')">
             <template #actions>
                 <Button variant="default" size="sm" as="Link" :href="route('work-orders.create')">
                     <Plus :size="14" />
-                    Create Work Order
+                    {{ t('workOrders.createWorkOrder') }}
                 </Button>
             </template>
         </PageHeader>
@@ -97,36 +91,36 @@ const thClass =
             <form @submit.prevent="applyFilters" class="space-y-4">
                 <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
                     <div class="sm:col-span-2">
-                        <label for="search" class="mb-1 block text-xs font-medium text-text-secondary">Search</label>
+                        <label for="search" class="mb-1 block text-xs font-medium text-text-secondary">{{ t('common.search') }}</label>
                         <div class="relative">
                             <Search :size="15" class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-text-tertiary" />
                             <input
                                 id="search"
                                 v-model="search"
                                 type="text"
-                                placeholder="Search by WO number or product name..."
+                                :placeholder="t('workOrders.searchPlaceholder')"
                                 class="h-9 w-full rounded-md border border-border-subtle bg-surface-canvas pl-9 pr-3 text-sm text-text-primary placeholder:text-text-tertiary ds-focus-ring"
                             />
                         </div>
                     </div>
                     <div>
-                        <label for="status" class="mb-1 block text-xs font-medium text-text-secondary">Status</label>
+                        <label for="status" class="mb-1 block text-xs font-medium text-text-secondary">{{ t('common.status') }}</label>
                         <select id="status" v-model="selectedStatus" :class="selectClass" @change="applyFilters">
-                            <option value="">All Statuses</option>
-                            <option value="draft">Draft</option>
-                            <option value="pending">Pending</option>
-                            <option value="in_progress">In Progress</option>
-                            <option value="completed">Completed</option>
-                            <option value="cancelled">Cancelled</option>
+                            <option value="">{{ t('common.allStatuses') }}</option>
+                            <option value="draft">{{ t('workOrders.statuses.draft') }}</option>
+                            <option value="pending">{{ t('workOrders.statuses.pending') }}</option>
+                            <option value="in_progress">{{ t('workOrders.statuses.in_progress') }}</option>
+                            <option value="completed">{{ t('workOrders.statuses.completed') }}</option>
+                            <option value="cancelled">{{ t('workOrders.statuses.cancelled') }}</option>
                         </select>
                     </div>
                 </div>
                 <div class="flex items-center gap-2">
                     <Button type="submit" variant="default" size="sm">
                         <Search :size="14" />
-                        Filter
+                        {{ t('workOrders.index.filter') }}
                     </Button>
-                    <Button type="button" variant="secondary" size="sm" @click="clearFilters">Clear</Button>
+                    <Button type="button" variant="secondary" size="sm" @click="clearFilters">{{ t('common.clear') }}</Button>
                 </div>
             </form>
         </Card>
@@ -136,14 +130,14 @@ const thClass =
             <table class="w-full text-sm">
                 <thead>
                     <tr class="border-b border-border-subtle">
-                        <th :class="thClass">WO Number</th>
-                        <th :class="thClass">Assembly Product</th>
-                        <th :class="[thClass, 'text-center']">Quantity</th>
-                        <th :class="[thClass, 'text-center']">Produced</th>
-                        <th :class="thClass">Status</th>
-                        <th :class="thClass">Created By</th>
-                        <th :class="thClass">Date</th>
-                        <th :class="[thClass, 'text-right']">Actions</th>
+                        <th :class="thClass">{{ t('workOrders.columns.woNumber') }}</th>
+                        <th :class="thClass">{{ t('workOrders.columns.assemblyProduct') }}</th>
+                        <th :class="[thClass, 'text-center']">{{ t('workOrders.columns.quantity') }}</th>
+                        <th :class="[thClass, 'text-center']">{{ t('workOrders.columns.produced') }}</th>
+                        <th :class="thClass">{{ t('workOrders.columns.status') }}</th>
+                        <th :class="thClass">{{ t('workOrders.columns.createdBy') }}</th>
+                        <th :class="thClass">{{ t('workOrders.columns.date') }}</th>
+                        <th :class="[thClass, 'text-right']">{{ t('workOrders.columns.actions') }}</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -152,11 +146,11 @@ const thClass =
                         <td colspan="8" class="px-4 py-12 text-center">
                             <div class="flex flex-col items-center gap-3">
                                 <Settings :size="22" class="text-text-tertiary" />
-                                <p class="text-sm font-medium text-text-primary">No work orders</p>
-                                <p class="text-sm text-text-tertiary">Get started by creating a new work order for an assembly product.</p>
+                                <p class="text-sm font-medium text-text-primary">{{ t('workOrders.noWorkOrders') }}</p>
+                                <p class="text-sm text-text-tertiary">{{ t('workOrders.noWorkOrdersHint') }}</p>
                                 <Button variant="default" size="sm" as="Link" :href="route('work-orders.create')">
                                     <Plus :size="14" />
-                                    Create Work Order
+                                    {{ t('workOrders.createWorkOrder') }}
                                 </Button>
                             </div>
                         </td>
@@ -190,7 +184,7 @@ const thClass =
                         </td>
                         <td class="px-4 py-3">
                             <div class="flex items-center justify-end gap-1">
-                                <Link :href="route('work-orders.show', wo.id)" class="rounded-md p-1.5 text-text-tertiary transition-colors hover:bg-surface-overlay hover:text-brand" title="View"><Eye :size="16" /></Link>
+                                <Link :href="route('work-orders.show', wo.id)" class="rounded-md p-1.5 text-text-tertiary transition-colors hover:bg-surface-overlay hover:text-brand" :title="t('workOrders.actions.view')"><Eye :size="16" /></Link>
                             </div>
                         </td>
                     </tr>
@@ -201,9 +195,7 @@ const thClass =
         <!-- Pagination -->
         <div v-if="workOrders.links && workOrders.links.length > 3" class="mt-4 flex flex-col items-center justify-between gap-3 sm:flex-row">
             <p class="text-xs text-text-tertiary">
-                Showing <span class="font-medium text-text-secondary">{{ workOrders.from }}</span>
-                to <span class="font-medium text-text-secondary">{{ workOrders.to }}</span>
-                of <span class="font-medium text-text-secondary">{{ workOrders.total }}</span> results
+                {{ t('common.showingResults', { from: workOrders.from, to: workOrders.to, total: workOrders.total }) }}
             </p>
             <nav class="inline-flex items-center gap-1">
                 <template v-for="link in workOrders.links" :key="link.label">

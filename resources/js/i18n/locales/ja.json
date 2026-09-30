@@ -1,7 +1,102 @@
 {
   "stockAudits": {
     "completeConfirm": "この棚卸を完了しますか？差異があるものには在庫調整が作成されます。",
-    "completeUncountedConfirm": "{total}件中{uncounted}件が未カウントです。それでも棚卸を完了しますか？未カウントの品目は現在の在庫のままで、カウント済みの品目だけが調整されます。"
+    "completeUncountedConfirm": "{total}件中{uncounted}件が未カウントです。それでも棚卸を完了しますか？未カウントの品目は現在の在庫のままで、カウント済みの品目だけが調整されます。",
+    "backToList": "一覧に戻る",
+    "auditDetails": "棚卸しの詳細",
+    "types": {
+      "full": "全数棚卸し",
+      "cycle": "循環棚卸し",
+      "spot": "スポットチェック"
+    },
+    "statuses": {
+      "draft": "下書き",
+      "in_progress": "進行中",
+      "completed": "完了",
+      "cancelled": "キャンセル済み"
+    },
+    "itemStatuses": {
+      "pending": "保留中",
+      "counted": "カウント済み",
+      "verified": "確認済み",
+      "adjusted": "調整済み"
+    },
+    "fields": {
+      "name": "棚卸し名",
+      "namePlaceholder": "例: 2026年第1四半期 倉庫循環棚卸し",
+      "descriptionPlaceholder": "この棚卸しの目的を説明してください...",
+      "auditType": "棚卸しの種類",
+      "typeHints": {
+        "full": "倉庫内のすべての商品をカウント",
+        "cycle": "ローテーションで一部の商品をカウント",
+        "spot": "特定の商品をすばやくチェック"
+      },
+      "location": "倉庫ロケーション",
+      "locationHint": "空欄の場合は、すべてのロケーションの商品が対象になります"
+    },
+    "columns": {
+      "auditNumber": "棚卸し番号",
+      "location": "ロケーション",
+      "items": "品目",
+      "createdBy": "作成者",
+      "systemQty": "システム数量",
+      "countedQty": "カウント数量",
+      "discrepancy": "差異",
+      "countedBy": "カウント担当者"
+    },
+    "index": {
+      "description": "棚卸しと循環棚卸しを管理します。",
+      "newAudit": "新規棚卸し",
+      "searchPlaceholder": "棚卸し番号または名前で検索...",
+      "empty": "棚卸しが見つかりません",
+      "createFirst": "最初の棚卸しを作成"
+    },
+    "create": {
+      "title": "棚卸しを作成",
+      "description": "新しい棚卸しまたは循環棚卸しを設定します。",
+      "notesPlaceholder": "棚卸し担当者への追加メモや指示...",
+      "selectProducts": "商品を選択",
+      "selectProductsHint": "この棚卸しに含める商品を選択してください。空欄の場合はすべての商品が対象になります。",
+      "selectProductsHintAtLocation": "この棚卸しに含める商品を選択してください。空欄の場合は、選択したロケーションのすべての商品が対象になります。",
+      "searchProducts": "商品名またはSKUで検索...",
+      "selectAll": "すべて選択（{count}件の商品） | すべて選択（{count}件の商品）",
+      "inStock": "在庫",
+      "fullAuditInfo": "有効なすべての商品がこの棚卸しに自動的に含まれます。品目は作成後に確認できます。",
+      "fullAuditInfoAtLocation": "選択したロケーションの有効なすべての商品がこの棚卸しに自動的に含まれます。品目は作成後に確認できます。",
+      "submit": "棚卸しを作成"
+    },
+    "edit": {
+      "title": "棚卸しを編集",
+      "backToAudit": "棚卸しに戻る",
+      "notesPlaceholder": "追加メモや指示...",
+      "submit": "棚卸しを更新"
+    },
+    "show": {
+      "pageTitle": "棚卸し {number}",
+      "totalItems": "品目の合計",
+      "progress": "進捗",
+      "discrepancies": "差異",
+      "started": "開始",
+      "completed": "完了",
+      "auditItems": "棚卸し品目",
+      "countedProgress": "（{total}件中 {counted}件カウント済み）",
+      "count": "カウント",
+      "recount": "再カウント",
+      "countNotesPlaceholder": "メモ（任意）",
+      "noItems": "この棚卸しに品目はありません",
+      "processing": "処理中...",
+      "startAudit": "棚卸しを開始",
+      "completeAudit": "棚卸しを完了",
+      "deleteAudit": "棚卸しを削除",
+      "startHint": "棚卸しを開始すると、現在のシステム在庫数が記録され、カウントを始められます。",
+      "completeHint": "棚卸しを完了すると、システム数量とカウント数量に差異がある品目について在庫調整が作成されます。",
+      "dangerZone": "危険操作",
+      "deleteHint": "この棚卸しの削除は永続的で、元に戻せません。",
+      "startConfirm": "この棚卸しを開始してもよろしいですか？システム数量は現在の在庫数で記録されます。",
+      "deleteConfirm": "この棚卸しを削除してもよろしいですか？この操作は元に戻せません。",
+      "updateCountFailed": "カウントの更新に失敗しました",
+      "saveCountError": "カウントの保存中にエラーが発生しました"
+    }
   },
   "common": {
     "save": "保存",
@@ -192,6 +287,32 @@
       "queueBacklog": "15分以上待機しているキューのジョブ: {count}。メールとWebhookが送信されていません。",
       "failedJobs": "過去24時間に失敗したバックグラウンドジョブ: {count}。",
       "help": "cronジョブが毎分 php artisan schedule:run を実行しているか確認してください。詳しくはcPanelガイドを参照してください。"
+    },
+    "description": "在庫、注文、発注の優先度の概要です。",
+    "customize": "カスタマイズ",
+    "hints": {
+      "activeInCatalog": "カタログ内で有効",
+      "belowMinimum": "最小在庫を下回る",
+      "allTime": "全期間"
+    },
+    "widgets": {
+      "statsOverview": "統計の概要",
+      "revenueChart": "売上とその他の統計",
+      "stockMovements": "在庫の動き",
+      "lowStockAlerts": "在庫不足アラート",
+      "topProducts": "人気商品",
+      "stockByCategory": "カテゴリ別在庫",
+      "reorderSuggestions": "発注の提案"
+    },
+    "reorderSuggestions": {
+      "title": "発注の提案",
+      "subtitle": "発注点を下回っている商品です。提案数量は商品の設定と仕入先の最小発注数から算出されます。",
+      "reorderAt": "発注点"
+    },
+    "customizeModal": {
+      "title": "ダッシュボードをカスタマイズ",
+      "help": "ウィジェットを切り替えて、ダッシュボードでの表示・非表示を設定します。",
+      "savePreferences": "設定を保存"
     }
   },
   "products": {
@@ -241,7 +362,8 @@
       "variantHint": "サイズやカラーなどのオプションを追加して、この商品のバリエーションを販売できます。各組み合わせは独自の価格と在庫を持つバリエーションとなります。",
       "variantStockHint": "バリエーションが有効な場合、在庫はバリエーションごとに管理されます。",
       "notesPlaceholder": "この商品に関する追加メモ...",
-      "createProduct": "商品を作成"
+      "createProduct": "商品を作成",
+      "subtitle": "価格、在庫、バリエーション、画像を含む商品を作成します。"
     },
     "edit": {
       "title": "商品を編集",
@@ -288,7 +410,34 @@
       "outOfStock": "在庫切れ",
       "lowStock": "在庫不足",
       "inStock": "在庫あり",
-      "activityHistory": "アクティビティ履歴"
+      "activityHistory": "アクティビティ履歴",
+      "minHint": "最小 {count}",
+      "stockAtPrice": "在庫（価格ベース）",
+      "barcodeValue": "バーコード: {barcode}",
+      "currencyValue": "通貨: {currency}",
+      "confirmGenerateRandom": "この商品の新しいランダムバーコードを生成しますか？",
+      "generateBarcodeFailed": "バーコードの生成に失敗しました",
+      "confirmGenerateFromSku": "SKUからバーコードを生成しますか？",
+      "generateFromSkuFailed": "SKUからのバーコード生成に失敗しました",
+      "bom": {
+        "title": "部品表",
+        "addComponent": "構成部品を追加",
+        "availableKitStock": "キットの利用可能在庫（最も少ない構成部品で決まります）",
+        "searchProduct": "商品を検索",
+        "searchPlaceholder": "名前またはSKUで検索...",
+        "stockInline": "（在庫: {count}）",
+        "searching": "検索中...",
+        "qtyRequired": "必要数量",
+        "availableStock": "利用可能在庫",
+        "unknown": "不明",
+        "remove": "削除",
+        "empty": "構成部品はまだ追加されていません。",
+        "emptyHint": "「構成部品を追加」をクリックして部品表を作成してください。",
+        "addFailed": "構成部品の追加に失敗しました",
+        "updateQuantityFailed": "数量の更新に失敗しました",
+        "confirmRemove": "この構成部品を部品表から削除しますか？",
+        "removeFailed": "構成部品の削除に失敗しました"
+      }
     },
     "quickAddCategory": {
       "title": "カテゴリをクイック追加",
@@ -303,6 +452,56 @@
       "locationCode": "ロケーションコード",
       "codePlaceholder": "例: WH-A",
       "descPlaceholder": "説明（任意）..."
+    },
+    "subtitle": "カタログ、在庫数、発注点を管理します。",
+    "duplicate": "複製",
+    "printBarcode": "バーコードを印刷",
+    "variantsCount": "{count}件のバリエーション | {count}件のバリエーション",
+    "types": {
+      "standard": "標準",
+      "kit": "キット",
+      "assembly": "組立品"
+    },
+    "trackingTypes": {
+      "none": "追跡なし",
+      "batch": "ロット管理",
+      "serial": "シリアル番号管理"
+    },
+    "form": {
+      "productType": "商品の種類",
+      "productTypeHint": "キットは販売用に構成部品をまとめたものです。組立品の製造には作業指示が必要です。",
+      "additionalCurrencies": "追加の通貨",
+      "selectCurrency": "通貨を選択...",
+      "addPriceInCurrency": "+ 別の通貨で価格を追加",
+      "reorderPoint": "発注点",
+      "reorderPointHint": "自動発注のきっかけとなる在庫数",
+      "reorderQuantity": "発注数量",
+      "reorderQuantityHint": "在庫が発注点に達したときに発注する数量",
+      "leaveEmptyToDisable": "空欄の場合は無効",
+      "inventoryTracking": "在庫追跡",
+      "inventoryTrackingHint": "この商品の個々の単位を追跡する方法を選択してください。",
+      "createCategoryFailed": "カテゴリの作成に失敗しました。もう一度お試しください。",
+      "createLocationFailed": "ロケーションの作成に失敗しました。もう一度お試しください。"
+    },
+    "index": {
+      "selectedCount": "{count}件の商品を選択中 | {count}件の商品を選択中",
+      "confirmBulkDelete": "{count}件の商品を削除してもよろしいですか？この操作は元に戻せません。 | {count}件の商品を削除してもよろしいですか？この操作は元に戻せません。"
+    },
+    "bulk": {
+      "changeCategory": "カテゴリを変更",
+      "updateCategoryFor": "選択した{count}件の商品のカテゴリを更新します。 | 選択した{count}件の商品のカテゴリを更新します。",
+      "selectCategory": "カテゴリを選択...",
+      "updateCategory": "カテゴリを更新",
+      "adjustPrice": "価格を調整",
+      "adjustPriceFor": "選択した{count}件の商品の価格を調整します。 | 選択した{count}件の商品の価格を調整します。",
+      "adjustmentType": "調整方法",
+      "percentage": "割合（%）",
+      "fixedAmount": "固定額（$）",
+      "value": "値",
+      "useNegative": "（減らす場合は負の数を入力）",
+      "percentagePlaceholder": "例: +10%なら10、-20%なら-20",
+      "fixedPlaceholder": "例: 5.00 または -3.50",
+      "applyPriceChange": "価格変更を適用"
     }
   },
   "orders": {
@@ -372,7 +571,9 @@
       "searchingCustomers": "検索中...",
       "noCustomersFound": "一致する顧客がいません。単発の顧客として下に詳細を入力してください。",
       "linkedCustomer": "登録済みの顧客 {name} に紐付け済み",
-      "clearCustomer": "単発の顧客を使用"
+      "clearCustomer": "単発の顧客を使用",
+      "description": "顧客注文と明細を追加します。",
+      "addAtLeastOneProduct": "注文に商品を1つ以上追加してください。"
     },
     "show": {
       "orderNumber": "注文 #{number}",
@@ -415,7 +616,10 @@
       "approvalNotesPlaceholder": "承認に関するメモ（任意）...",
       "rejectionNotesPlaceholder": "却下理由...",
       "approve": "承認",
-      "reject": "却下"
+      "reject": "却下",
+      "downloadInvoice": "請求書をダウンロード",
+      "previewInvoice": "請求書をプレビュー",
+      "createReturn": "返品を作成"
     },
     "edit": {
       "title": "注文を編集",
@@ -432,7 +636,11 @@
       "deliveredAt": "配達日:",
       "updatingOrder": "注文を更新中...",
       "updateOrder": "注文を更新",
-      "viewDetails": "注文詳細を表示"
+      "viewDetails": "注文詳細を表示",
+      "removeItem": "明細を削除"
+    },
+    "index": {
+      "description": "すべてのチャネルからの顧客注文です。"
     }
   },
   "purchaseOrders": {
@@ -465,13 +673,15 @@
       "unitCost": "単価",
       "supplierSku": "仕入先SKU",
       "orderItems": "発注商品（{count}件）",
-      "createPo": "発注を作成"
+      "createPo": "発注を作成",
+      "description": "発注を作成し、入荷する商品を追加します。"
     },
     "edit": {
       "title": "発注を編集",
       "backToPo": "発注に戻る",
       "updatePo": "発注を更新",
-      "viewDetails": "詳細を表示"
+      "viewDetails": "詳細を表示",
+      "poNumber": "発注 #{number}"
     },
     "show": {
       "receiveItems": "商品を入荷",
@@ -484,7 +694,14 @@
       "sendToSupplier": "仕入先に送信",
       "editPo": "発注を編集",
       "cancelOrder": "発注をキャンセル",
-      "deleteOrder": "発注を削除"
+      "deleteOrder": "発注を削除",
+      "confirmCancel": "この発注をキャンセルしてもよろしいですか？",
+      "orderDateOn": "発注日 {date}",
+      "downloadPdf": "PDFをダウンロード",
+      "previewPdf": "PDFをプレビュー",
+      "itemsCount": "商品（{count}）",
+      "supplierSkuLine": "仕入先: {sku}",
+      "cannotUndo": "この操作は元に戻せません。"
     },
     "receive": {
       "title": "商品入荷 - {poNumber}",
@@ -497,7 +714,11 @@
       "complete": "完了",
       "readyToReceive": "{count}件の商品を入荷準備完了",
       "selectQuantities": "入荷する数量を選択",
-      "confirmReceiving": "入荷を確定"
+      "confirmReceiving": "入荷を確定",
+      "receive": "入荷",
+      "headTitle": "入荷 - {poNumber}",
+      "description": "この発注に対する入荷数量を記録します。",
+      "readyToReceiveCount": "{count}件の商品を入荷準備完了 | {count}件の商品を入荷準備完了"
     },
     "currencies": {
       "usd": "USD - 米ドル",
@@ -505,7 +726,12 @@
       "gbp": "GBP - 英ポンド",
       "cad": "CAD - カナダドル",
       "aud": "AUD - オーストラリアドル"
-    }
+    },
+    "index": {
+      "description": "仕入先への補充発注です。"
+    },
+    "confirmDelete": "「{number}」を削除してもよろしいですか？",
+    "noSku": "SKUなし"
   },
   "productSuppliers": {
     "title": "仕入先",
@@ -568,7 +794,8 @@
       "businessDetails": "取引詳細",
       "paymentTerms": "支払条件",
       "paymentTermsPlaceholder": "例: 月末締め翌月払い",
-      "createSupplier": "仕入先を作成"
+      "createSupplier": "仕入先を作成",
+      "description": "仕入先と、その連絡先・住所・取引の詳細を追加します。"
     },
     "edit": {
       "title": "仕入先を編集",
@@ -587,7 +814,14 @@
       "supplierCode": "仕入先コード",
       "paymentTerms": "支払条件",
       "editSupplier": "仕入先を編集",
-      "deleteSupplier": "仕入先を削除"
+      "deleteSupplier": "仕入先を削除",
+      "code": "コード: {code}",
+      "supplierDetails": "仕入先の詳細",
+      "products": "商品",
+      "deleteWarning": "この仕入先は完全に削除され、元に戻せません。"
+    },
+    "index": {
+      "description": "仕入先と、その供給商品を管理します。"
     }
   },
   "customers": {
@@ -614,7 +848,8 @@
       "paymentTerms": "支払条件",
       "paymentTermsPlaceholder": "例: 月末締め翌月払い",
       "creditLimit": "与信限度額",
-      "createCustomer": "顧客を作成"
+      "createCustomer": "顧客を作成",
+      "description": "顧客と、その請求先・配送先・取引の詳細を追加します。"
     },
     "edit": {
       "title": "顧客を編集",
@@ -637,6 +872,9 @@
       "recentOrders": "最近の注文",
       "noOrdersYet": "注文はまだありません",
       "deleteCustomer": "顧客を削除"
+    },
+    "index": {
+      "description": "顧客とその注文を管理します。"
     }
   },
   "categories": {
@@ -650,7 +888,13 @@
     "editCategory": "カテゴリを編集",
     "categoryName": "カテゴリ名",
     "namePlaceholder": "例: 電子機器",
-    "descPlaceholder": "説明（任意）..."
+    "descPlaceholder": "説明（任意）...",
+    "index": {
+      "description": "カタログをカテゴリで整理します。"
+    },
+    "confirmDelete": "「{name}」を削除してもよろしいですか？この操作は元に戻せません。",
+    "productsCount": "{count}件の商品 | {count}件の商品",
+    "updateCategory": "カテゴリを更新"
   },
   "locations": {
     "title": "倉庫ロケーション",
@@ -672,7 +916,12 @@
     "noWarehouse": "倉庫なし",
     "capacity": "容量（個）",
     "capacityHint": "任意。ロケーションの使用率を表示するために使用します。",
-    "capacityValue": "容量: {capacity}個"
+    "capacityValue": "容量: {capacity}個",
+    "subtitle": "在庫が保管されている物理的な場所です。",
+    "close": "閉じる",
+    "productsCount": "{count}件の商品 | {count}件の商品",
+    "updateLocation": "ロケーションを更新",
+    "confirmDelete": "「{name}」を削除してもよろしいですか？この操作は元に戻せません。"
   },
   "reports": {
     "title": "レポート・分析",
@@ -740,7 +989,9 @@
       "current": "現在",
       "deficit": "不足数",
       "allWellStocked": "すべての商品の在庫は十分です！",
-      "noProductsBelowMin": "最小在庫を下回っている商品はありません"
+      "noProductsBelowMin": "最小在庫を下回っている商品はありません",
+      "min": "最小",
+      "max": "最大"
     },
     "categoryPerformance": {
       "title": "カテゴリ実績レポート",
@@ -889,6 +1140,16 @@
       "loss": "紛失",
       "return": "返品",
       "correction": "修正"
+    },
+    "index": {
+      "dataSources": {
+        "products": "商品",
+        "orders": "注文",
+        "stock_adjustments": "在庫調整",
+        "customers": "顧客",
+        "suppliers": "仕入先",
+        "purchase_orders": "発注"
+      }
     }
   },
   "stockAdjustments": {
@@ -919,7 +1180,13 @@
       "negativeWarningMsg": "この調整により在庫がマイナスになります。数量を確認してください。",
       "createAdjustment": "調整を作成",
       "stockIncrease": "在庫増加",
-      "stockDecrease": "在庫減少"
+      "stockDecrease": "在庫減少",
+      "currentStockValue": "現在の在庫: {stock}",
+      "locationOptional": "ロケーション（任意）",
+      "noSpecificLocation": "ロケーションを指定しない",
+      "locationHint": "特定のロケーションにこの調整を適用すると、ロケーション別の内訳も一致した状態に保たれます。空欄の場合は合計のみを調整します。",
+      "quantityPlaceholder": "追加する場合は正の数、減らす場合は負の数を入力",
+      "negativeWarningValue": "この調整により在庫がマイナス（{stock}）になります。数量を確認してください。"
     },
     "show": {
       "title": "在庫調整詳細",
@@ -939,7 +1206,30 @@
       "finalStock": "最終在庫",
       "manualAdjustment": "手動調整",
       "stockRecount": "棚卸し",
-      "order": "注文"
+      "order": "注文",
+      "unitsCount": "{count}個 | {count}個"
+    },
+    "variantAdjuster": {
+      "title": "在庫を調整: {name}",
+      "failed": "在庫の調整に失敗しました"
+    },
+    "types": {
+      "manual": "手動調整",
+      "order": "注文",
+      "return": "返品",
+      "damage": "破損",
+      "loss": "紛失",
+      "recount": "棚卸し",
+      "correction": "訂正",
+      "opening_stock": "期首在庫"
+    },
+    "index": {
+      "allProducts": "すべての商品",
+      "dateFrom": "開始日",
+      "dateTo": "終了日",
+      "before": "調整前",
+      "change": "変更",
+      "after": "調整後"
     }
   },
   "importExport": {
@@ -967,7 +1257,8 @@
       "includeNames": "商品名、SKU、バーコード",
       "includePricing": "価格と通貨情報",
       "includeStock": "在庫数と最小在庫",
-      "includeCategories": "カテゴリとロケーション"
+      "includeCategories": "カテゴリとロケーション",
+      "exportIncludesLabel": "エクスポート内容:"
     },
     "import": {
       "title": "商品をインポート",
@@ -991,7 +1282,14 @@
       "noteUpdate": "既存の商品（SKU一致）は更新されます",
       "noteCreate": "カテゴリとロケーションは存在しない場合に自動作成されます",
       "noteCurrency": "通貨が指定されていない場合、デフォルトはUSDです",
-      "noteSkip": "無効な行はスキップされ、レポートされます"
+      "noteSkip": "無効な行はスキップされ、レポートされます",
+      "templateHelpLabel": "ヘルプが必要ですか？サンプルデータ付きのテンプレートファイルをダウンロードしてください:",
+      "requiredFieldsLabel": "必須フィールド:",
+      "importantNotesLabel": "重要事項:",
+      "fieldNameDesc": "商品名",
+      "fieldSkuDesc": "一意のSKU識別子",
+      "fieldPriceDesc": "販売価格",
+      "fieldStockDesc": "現在の在庫数"
     },
     "pageDescription": "商品、注文、ユーザーを一括でインポート・エクスポートします。",
     "tabs": {
@@ -1064,7 +1362,21 @@
       "ruleEscalation": "割り当て可能なのは、あなたに割り当て権限があるロールのみです。管理者以外はメンバーのみインポートでき、そのロールは自身の権限の範囲内に限られます。"
     },
     "exportProducts": "商品をエクスポート",
-    "importProducts": "商品をインポート"
+    "importProducts": "商品をインポート",
+    "exports": {
+      "title": "エクスポート履歴",
+      "description": "大きなエクスポートはバックグラウンドで作成されます。ダウンロードの準備ができるたびに通知されます。",
+      "file": "ファイル",
+      "rows": "行数",
+      "action": "操作",
+      "download": "ダウンロード",
+      "statuses": {
+        "pending": "保留中",
+        "processing": "処理中",
+        "completed": "完了",
+        "failed": "失敗"
+      }
+    }
   },
   "notifications": {
     "title": "通知",
@@ -1081,7 +1393,20 @@
     "noNotifications": "通知はありません",
     "allCaughtUp": "すべて確認済みです！",
     "noNewNotifications": "新しい通知はありません",
-    "viewAllNotifications": "すべて表示"
+    "viewAllNotifications": "すべて表示",
+    "confirmMarkAllRead": "すべての通知を既読にしますか？",
+    "confirmDelete": "この通知を削除しますか？",
+    "confirmClearRead": "既読の通知をすべて消去しますか？",
+    "allCount": "すべて（{count}）",
+    "unreadCount": "未読（{count}）",
+    "readCount": "既読（{count}）",
+    "viewDetailsLabel": "詳細を表示",
+    "priorities": {
+      "low": "低",
+      "normal": "通常",
+      "high": "高",
+      "urgent": "緊急"
+    }
   },
   "plugins": {
     "title": "プラグイン",
@@ -1132,7 +1457,12 @@
       "notOwned": "接続中のアカウントはこのプラグインをまだ所有していません。",
       "viewOnMarketplace": "inventoros.comで表示",
       "readOnly": "マーケットプレイスは閲覧できます。プラグインのインストールには「プラグインの管理」権限が必要です。"
-    }
+    },
+    "confirmDelete": "「{name}」を削除してもよろしいですか？この操作は元に戻せません。",
+    "subtitle": "インストール可能なプラグインでワークスペースを拡張します。",
+    "versionLabel": "バージョン: {version}",
+    "authorLabel": "作成者:",
+    "requiresLabel": "必要条件: {requires}"
   },
   "settings": {
     "title": "設定",
@@ -1147,7 +1477,8 @@
       "dateFormat": "日付形式",
       "timeFormat": "時刻形式",
       "userMgmtHint": "ユーザー管理機能はユーザーセクションで利用できます。",
-      "goToUserMgmt": "ユーザー管理へ"
+      "goToUserMgmt": "ユーザー管理へ",
+      "description": "組織のプロフィールと地域設定を管理します。"
     },
     "account": {
       "title": "アカウント設定",
@@ -1179,7 +1510,8 @@
       "dark": "ダーク",
       "auto": "自動",
       "language": "言語",
-      "itemsPerPage": "1ページあたりの表示件数"
+      "itemsPerPage": "1ページあたりの表示件数",
+      "description": "プロフィール、パスワード、通知、環境設定を管理します。"
     },
     "email": {
       "title": "メール設定",
@@ -1213,7 +1545,9 @@
       "sendTest": "テストメールを送信",
       "sending": "送信中...",
       "saveSettings": "メール設定を保存",
-      "testSuccess": "テストメールを送信しました。"
+      "testSuccess": "テストメールを送信しました。",
+      "description": "ワークスペースのメールと通知の送信方法を設定します。",
+      "fromNamePlaceholder": "会社名"
     },
     "notificationPreferences": {
       "title": "メール通知設定",
@@ -1290,8 +1624,46 @@
         "deleteWebhook": "Webhookを削除",
         "integrationGuide": "連携ガイド",
         "signatureHeader": "署名ヘッダー",
-        "verification": "検証"
-      }
+        "verification": "検証",
+        "headTitle": "Webhook: {name}",
+        "description": "Webhookの設定と配信履歴です。",
+        "sendTestShort": "テスト送信",
+        "secretHidden": "セキュリティのため非表示です。新しいシークレットを発行するには再生成してください。一度しか表示されません。",
+        "createdAt": "作成日時",
+        "subscribedEventsCount": "購読イベント（{count}）",
+        "deliveryStatuses": {
+          "success": "成功",
+          "pending": "保留中",
+          "failed": "失敗"
+        },
+        "noResponseBody": "レスポンス本文なし",
+        "otherGroup": "その他",
+        "signatureHeaderDesc": "すべてのWebhookペイロードには、{header}ヘッダーに署名が含まれます。",
+        "verificationDesc": "シークレットを使用して、生のリクエスト本文のHMAC-SHA256を計算し、署名を検証してください。",
+        "responseDesc": "受信を確認するには2xxのステータスコードを返してください。失敗した配信は最大5回まで再試行されます。",
+        "deleteDesc": "このWebhookとすべての配信ログを完全に削除します。この操作は元に戻せません。",
+        "confirmDelete": "「{name}」を削除してもよろしいですか？この操作は元に戻せません。",
+        "confirmRegenerate": "シークレットを再生成してもよろしいですか？受信側アプリケーションのシークレットを更新する必要があります。"
+      },
+      "description": "イベント通知をリアルタイムで受け取る外部サービスです。",
+      "signingSecret": "署名シークレット",
+      "secretShownOnce": "今すぐコピーしてください。セキュリティのため、一度しか表示されず、後から取得することはできません。",
+      "confirmDelete": "「{name}」を削除してもよろしいですか？",
+      "createdByName": "作成者: {name}",
+      "unknownCreator": "不明",
+      "eventCount": "{count}件のイベント | {count}件のイベント",
+      "deliveriesTotal": "合計{count}件",
+      "namePlaceholder": "マイWebhook"
+    },
+    "description": "ワークスペース、アカウント、連携を管理します。",
+    "hub": {
+      "accountDescription": "プロフィール、パスワード、言語などの個人設定を更新します。",
+      "notificationsDescription": "受け取るメール通知とアプリ内通知を選択します。",
+      "twoFactorTitle": "二要素認証",
+      "twoFactorDescription": "認証アプリのワンタイムコードでアカウントを保護します。",
+      "emailDescription": "組織のメール送信方法（SMTP、Mailgun、SendGrid）を設定します。",
+      "webhooksDescription": "外部サービスと連携し、イベント通知をリアルタイムで配信します。",
+      "updatesDescription": "新しいバージョンの確認、アプリケーションのアップデート、バックアップの管理を行います。"
     }
   },
   "admin": {
@@ -1317,7 +1689,8 @@
         "additionalRoles": "追加ロール（任意）",
         "additionalRolesHint": "特定の権限セットを持つカスタムロールを割り当てます。",
         "createUser": "ユーザーを作成",
-        "success": "ユーザーが正常に作成されました。"
+        "success": "ユーザーが正常に作成されました。",
+        "subtitle": "新しいユーザーアカウントを作成し、ロールを割り当てます。"
       },
       "edit": {
         "title": "ユーザーを編集",
@@ -1329,7 +1702,11 @@
         "customRoles": "追加カスタムロール（任意）",
         "customRolesHint": "組織用に作成されたカスタムロールを割り当てて特定の権限を付与します。",
         "updateUser": "ユーザーを更新",
-        "success": "ユーザーが正常に更新されました。"
+        "success": "ユーザーが正常に更新されました。",
+        "titleWithName": "ユーザーを編集: {name}",
+        "subtitle": "アカウントの詳細、基本ロール、カスタムロールの割り当てを更新します。",
+        "admin": "管理者",
+        "customRolesSelected": "{count}件のカスタムロールを選択中"
       },
       "show": {
         "title": "ユーザー詳細",
@@ -1349,7 +1726,16 @@
         "notVerified": "未認証",
         "deleteUser": "ユーザーを削除",
         "confirmDelete": "{name}を削除してもよろしいですか？",
-        "cannotUndo": "この操作は元に戻せません。"
+        "cannotUndo": "この操作は元に戻せません。",
+        "titleWithName": "ユーザー: {name}"
+      },
+      "subtitle": "組織のユーザーを管理し、ロールと権限を割り当てます。",
+      "noUsersTitle": "ユーザーが見つかりません。",
+      "noUsersHint": "「ユーザーを追加」をクリックして最初のユーザーを作成してください。",
+      "roles": {
+        "admin": "管理者",
+        "manager": "マネージャー",
+        "member": "メンバー"
       }
     },
     "roles": {
@@ -1375,7 +1761,12 @@
         "deselectAll": "すべて解除",
         "totalPermissions": "合計{count}件の権限",
         "createRole": "ロールを作成",
-        "success": "ロールが正常に作成されました。"
+        "success": "ロールが正常に作成されました。",
+        "subtitle": "ロールを定義し、権限を割り当てます。",
+        "roleDetails": "ロールの詳細",
+        "namePlaceholder": "例: 倉庫マネージャー",
+        "descriptionPlaceholder": "このロールの目的と責任を説明してください...",
+        "permissionBreakdown": "（直接 {direct}件 + {sets}件のセットから {fromSets}件）"
       },
       "edit": {
         "title": "ロールを編集",
@@ -1387,7 +1778,10 @@
         "permissionsHint": "このロールの権限をカスタマイズします。カテゴリ名をクリックすると、そのカテゴリのすべての権限を一括選択・解除できます。",
         "permissionsSelected": "{count}件の権限が選択されています",
         "updateRole": "ロールを更新",
-        "success": "ロールが正常に更新されました。"
+        "success": "ロールが正常に更新されました。",
+        "titleWithName": "ロールを編集: {name}",
+        "subtitle": "ロールの詳細と権限を更新します。",
+        "viewRole": "ロールを表示"
       },
       "show": {
         "title": "ロール詳細と権限",
@@ -1407,7 +1801,15 @@
         "deleteRole": "ロールを削除",
         "reassignFirst": "削除する前にユーザーを再割り当てしてください",
         "systemRoleHint": "これはシステムロールであり、変更または削除できません。",
-        "confirmDelete": "{name}ロールを削除してもよろしいですか？この操作は元に戻せません。"
+        "confirmDelete": "{name}ロールを削除してもよろしいですか？この操作は元に戻せません。",
+        "otherCategory": "その他",
+        "titleWithName": "ロール: {name}",
+        "permissionsWithCount": "権限（{count}）",
+        "noPermissions": "このロールに割り当てられた権限はありません。",
+        "usersCountValue": "{count}人のユーザー | {count}人のユーザー",
+        "cannotDeleteWithUsers": "ユーザーが割り当てられているロールは削除できません",
+        "deleteRoleTooltip": "ロールを削除",
+        "confirmDeleteRole": "ロール「{name}」を削除してもよろしいですか？"
       }
     },
     "activityLog": {
@@ -1473,7 +1875,16 @@
       "allCategories": "すべてのカテゴリ",
       "securityBadge": "セキュリティ",
       "securityShortcut": "セキュリティイベント",
-      "viewDetails": "詳細を表示"
+      "viewDetails": "詳細を表示",
+      "description": "ワークスペース全体のすべての変更の監査証跡です。",
+      "exportCsv": "CSVをエクスポート",
+      "exportXlsx": "XLSXをエクスポート",
+      "searchDescription": "説明を検索",
+      "unknownUser": "不明なユーザー",
+      "viewChanges": "{count}件の変更を表示 | {count}件の変更を表示",
+      "daysAgo": "{count}日前 | {count}日前",
+      "hoursAgo": "{count}時間前 | {count}時間前",
+      "minutesAgo": "{count}分前 | {count}分前"
     },
     "update": {
       "title": "システム更新",
@@ -1507,7 +1918,23 @@
       "onGithub": "（GitHub）",
       "autoBackup": "各更新前にバックアップが自動作成されます",
       "maintenanceMode": "更新中、アプリケーションはメンテナンスモードになります",
-      "autoMigrations": "データベースマイグレーションは更新中に自動実行されます"
+      "autoMigrations": "データベースマイグレーションは更新中に自動実行されます",
+      "checkFailed": "アップデートの確認に失敗しました。もう一度お試しください。",
+      "confirmUpdate": "アプリケーションをアップデートしてもよろしいですか？バックアップは自動的に作成されます。",
+      "updateFailed": "アップデートに失敗しました。ログを確認してください。",
+      "confirmBackup": "現在のインストールのバックアップを作成しますか？",
+      "backupCreated": "バックアップを作成しました！",
+      "backupFailed": "バックアップの作成に失敗しました。ログを確認してください。",
+      "confirmRestore": "{file}から復元してもよろしいですか？現在のインストールは上書きされます。",
+      "restoreCompleted": "復元が完了しました！",
+      "restoreFailed": "復元に失敗しました。",
+      "restoreError": "バックアップの復元に失敗しました。ログを確認してください。",
+      "confirmDeleteBackup": "{file}を削除してもよろしいですか？",
+      "deleteBackupFailed": "バックアップの削除に失敗しました。もう一度お試しください。",
+      "managerTitle": "アップデート管理",
+      "subtitle": "新しいリリースの確認、アップデートのインストール、インストールのバックアップ管理を行います。",
+      "upToDateBadge": "最新",
+      "fetchedFromRepo": "アップデートはGitHubの{repo}から取得されます。"
     },
     "createRole": "ロールを作成",
     "createUser": "ユーザーを作成",
@@ -1556,6 +1983,35 @@
       "linkSent": "登録時にご提供いただいたメールアドレスに新しい認証リンクが送信されました。",
       "resend": "認証メールを再送信",
       "logOut": "ログアウト"
+    },
+    "twoFactorChallenge": {
+      "title": "二要素認証",
+      "codeHint": "認証アプリに表示された認証コードを入力してください。",
+      "recoveryHint": "リカバリーコードのいずれかを入力してください。",
+      "code": "認証コード",
+      "codePlaceholder": "6桁のコードを入力",
+      "recoveryCode": "リカバリーコード",
+      "recoveryPlaceholder": "リカバリーコードを入力",
+      "useCode": "認証コードを使用",
+      "useRecovery": "リカバリーコードを使用",
+      "verify": "確認"
+    },
+    "twoFactor": {
+      "setupTitle": "二要素認証の設定",
+      "title": "二要素認証",
+      "description": "認証アプリを使って、アカウントのセキュリティをさらに強化します。",
+      "enabled": "有効",
+      "enabledTitle": "二要素認証は有効です",
+      "enabledHint": "現在、アカウントで二要素認証が有効になっています。無効にするにはパスワードを入力してください。",
+      "password": "パスワード",
+      "disable": "二要素認証を無効にする",
+      "enable": "二要素認証を有効にする",
+      "scanHint": "下のQRコードを認証アプリ（Google Authenticator、Authyなど）でスキャンし、確認コードを入力して2FAを有効にしてください。",
+      "manualKey": "または、このキーを手動で入力してください:",
+      "verificationCode": "確認コード",
+      "showRecoveryCodes": "リカバリーコードを表示",
+      "hideRecoveryCodes": "リカバリーコードを非表示",
+      "recoveryHint": "これらのリカバリーコードを安全な場所に保管してください。認証デバイスを紛失した場合に、アカウントへのアクセスに使用できます。"
     }
   },
   "profile": {
@@ -1582,7 +2038,8 @@
       "confirmTitle": "本当にアカウントを削除しますか？",
       "confirmDescription": "アカウントを削除すると、すべてのリソースとデータが完全に削除されます。アカウントの永久削除を確認するには、パスワードを入力してください。",
       "password": "パスワード"
-    }
+    },
+    "description": "アカウント情報、パスワード、アカウントの削除を管理します。"
   },
   "install": {
     "welcome": {
@@ -1634,7 +2091,9 @@
       "testing": "接続をテスト中...",
       "dbExistsHint": "続行する前にデータベースが存在することを確認してください。インストーラーが必要なテーブルを作成します。",
       "installDatabase": "データベースをインストール",
-      "installing": "インストール中..."
+      "installing": "インストール中...",
+      "testFailed": "接続テストに失敗しました: {error}",
+      "installFailed": "インストールに失敗しました: {error}"
     },
     "admin": {
       "title": "管理者アカウントを作成",
@@ -1650,7 +2109,10 @@
       "confirmPasswordHint": "パスワードを確認してください",
       "accessNote": "この管理者アカウントはInventorosインストール全体へのフルアクセスを持ちます。",
       "completeInstallation": "インストールを完了",
-      "creatingAccount": "アカウントを作成中..."
+      "creatingAccount": "アカウントを作成中...",
+      "orgNamePlaceholder": "株式会社サンプル",
+      "fullNamePlaceholder": "山田 太郎",
+      "createFailed": "管理者アカウントの作成に失敗しました: {error}"
     },
     "complete": {
       "title": "インストール完了！",
@@ -1689,7 +2151,10 @@
       "availableVars": "利用可能な変数",
       "preview": "プレビュー",
       "generating": "生成中...",
-      "applySku": "SKUを適用"
+      "applySku": "SKUを適用",
+      "or": "または",
+      "patternExample": "例: {example}",
+      "previewError": "プレビューの生成中にエラーが発生しました"
     },
     "variantManager": {
       "productOptions": "商品オプション",
@@ -1705,7 +2170,10 @@
       "autoGenerate": "自動生成",
       "enableAll": "すべて有効",
       "disableAll": "すべて無効",
-      "addOptionsHint": "サイズやカラーなどのオプションを追加して商品バリエーションを作成してください"
+      "addOptionsHint": "サイズやカラーなどのオプションを追加して商品バリエーションを作成してください",
+      "optionName": "オプション名",
+      "optionValues": "オプション値（カンマ区切り）",
+      "addOptionButton": "オプションを追加（例: サイズ、カラー）"
     },
     "variantsTable": {
       "variant": "バリエーション",
@@ -1750,20 +2218,34 @@
       "cameraHint": "カメラをバーコードに向けてスキャンしてください",
       "locationFound": "ロケーションが見つかりました",
       "productsHere": "ここに{count}件の商品",
-      "viewProductsHere": "ここの商品を表示"
+      "viewProductsHere": "ここの商品を表示",
+      "lookupFailed": "バーコードの検索に失敗しました",
+      "stock": "在庫",
+      "aisle": "通路 {value}",
+      "shelf": "棚 {value}",
+      "bin": "ビン {value}"
     },
     "activityTimeline": {
       "noActivity": "記録されたアクティビティはまだありません",
       "system": "システム",
       "thisProduct": "この商品",
-      "moreChanges": "+ 他{count}件の変更"
+      "moreChanges": "+ 他{count}件の変更",
+      "actionOnProduct": {
+        "created": "がこの商品を作成しました",
+        "updated": "がこの商品を更新しました",
+        "deleted": "がこの商品を削除しました",
+        "viewed": "がこの商品を表示しました",
+        "other": "がこの商品に対して {action}"
+      }
     },
     "themeToggle": {
       "switchToLight": "ライトモードに切り替え",
       "switchToDark": "ダークモードに切り替え"
     },
     "imageGallery": {
-      "noImages": "画像がありません"
+      "noImages": "画像がありません",
+      "close": "閉じる",
+      "imageAlt": "{name} - 画像 {number}"
     },
     "imageUploader": {
       "dragDrop": "ここに画像をドラッグ＆ドロップするか、クリックして参照",
@@ -1775,6 +2257,62 @@
       "moveRight": "右に移動",
       "remove": "削除",
       "noImagesHint": "画像がまだアップロードされていません。最初の画像がメイン商品画像として使用されます。"
+    },
+    "relativeTime": {
+      "justNow": "たった今",
+      "minutesAgo": "{count}分前",
+      "hoursAgo": "{count}時間前",
+      "daysAgo": "{count}日前"
+    },
+    "batchList": {
+      "title": "ロット管理",
+      "addBatch": "ロットを追加",
+      "createFailed": "ロットの作成に失敗しました",
+      "batchNumberLabel": "ロット番号（空欄の場合は自動生成）",
+      "manufacturedDate": "製造日",
+      "expiryDate": "有効期限",
+      "createBatch": "ロットを作成",
+      "columns": {
+        "batchNumber": "ロット番号",
+        "quantity": "数量",
+        "manufactured": "製造日",
+        "expiry": "有効期限"
+      },
+      "expired": "（期限切れ）",
+      "empty": "記録されたロットはまだありません。",
+      "emptyHint": "「ロットを追加」をクリックして最初のロットを記録してください。"
+    },
+    "languageSwitcher": {
+      "ariaLabel": "言語: {name}"
+    },
+    "dataTable": {
+      "noData": "データがありません。"
+    },
+    "serialList": {
+      "title": "シリアル番号管理",
+      "addSerial": "シリアルを追加",
+      "createFailed": "シリアルの作成に失敗しました",
+      "updateFailed": "ステータスの更新に失敗しました",
+      "all": "すべて",
+      "statuses": {
+        "available": "利用可能",
+        "sold": "販売済み",
+        "reserved": "予約済み",
+        "damaged": "破損"
+      },
+      "serialNumber": "シリアル番号",
+      "createSerial": "シリアルを作成",
+      "columns": {
+        "serialNumber": "シリアル番号"
+      },
+      "markAsSold": "販売済みにする",
+      "markAsReserved": "予約済みにする",
+      "markAsDamaged": "破損にする",
+      "markAsAvailable": "利用可能にする",
+      "reserve": "予約",
+      "empty": "記録されたシリアル番号はまだありません。",
+      "emptyHint": "「シリアルを追加」をクリックして最初のシリアル番号を登録してください。",
+      "noMatches": "選択したフィルターに一致するシリアルはありません。"
     }
   },
   "warehouses": {
@@ -1854,7 +2392,8 @@
       "badge": "デフォルト倉庫",
       "makeDefault": "デフォルトに設定",
       "confirm": "「{name}」をデフォルト倉庫に設定しますか？",
-      "hint": "新しい注文ではデフォルト倉庫があらかじめ選択されます。"
+      "hint": "新しい注文ではデフォルト倉庫があらかじめ選択されます。",
+      "label": "デフォルト"
     },
     "capacity": {
       "utilisation": "使用率",
@@ -1877,6 +2416,41 @@
       "reorder": "要発注",
       "shortIn": "{names}で不足",
       "save": "倉庫の在庫水準を保存"
+    },
+    "subtitle": "保管場所と在庫の配置を管理します。",
+    "updateWarehouse": "倉庫を更新",
+    "index": {
+      "searchLabel": "倉庫を検索"
+    },
+    "create": {
+      "subtitle": "倉庫とその設定を追加します。"
+    },
+    "edit": {
+      "title": "倉庫を編集: {name}",
+      "subtitle": "倉庫の詳細、連絡先、ユーザーアクセスを更新します。"
+    },
+    "timezoneOptions": {
+      "stJohns": "ニューファンドランド（セントジョンズ）",
+      "halifax": "大西洋（ハリファックス）",
+      "toronto": "東部（トロント）",
+      "winnipeg": "中部（ウィニペグ）",
+      "edmonton": "山岳部（エドモントン）",
+      "vancouver": "太平洋（バンクーバー）"
+    },
+    "show": {
+      "codeLabel": "コード: {code}",
+      "totalLocations": "ロケーション総数",
+      "totalProductsStored": "保管商品の総数",
+      "assignedUsers": "割り当て済みユーザー",
+      "details": "倉庫の詳細",
+      "manager": "責任者",
+      "noAddress": "住所が未登録です",
+      "locationsCount": "ロケーション（{count}）",
+      "products": "商品",
+      "noLocations": "この倉庫にロケーションはありません",
+      "dangerZone": "危険操作",
+      "deleteWarehouse": "倉庫を削除",
+      "cannotUndo": "この操作は元に戻せません。"
     }
   },
   "workOrders": {
@@ -1932,7 +2506,8 @@
       "ready": "準備完了",
       "noComponents": "この作業指示に記録された構成部品はありません。",
       "noComponentsDefined": "この組立品には構成部品が定義されていません。作業指示を作成する前に、商品詳細ページで構成部品を追加してください。",
-      "insufficientWarning": "一部の構成部品の在庫が不足しています。作業指示は作成できますが、在庫が補充されるまで製造を開始できません。"
+      "insufficientWarning": "一部の構成部品の在庫が不足しています。作業指示は作成できますが、在庫が補充されるまで製造を開始できません。",
+      "unknown": "不明"
     },
     "actions": {
       "startProduction": "製造を開始",
@@ -1955,7 +2530,19 @@
       "cancelled": "キャンセル",
       "lastUpdated": "最終更新"
     },
-    "cancelledBanner": "この作業指示はキャンセルされました。"
+    "cancelledBanner": "この作業指示はキャンセルされました。",
+    "create": {
+      "materialsNeeded": "{name}を{count}個製造するのに必要な資材 | {name}を{count}個製造するのに必要な資材"
+    },
+    "index": {
+      "filter": "絞り込み"
+    },
+    "show": {
+      "headTitle": "作業指示 {number}",
+      "deleteConfirm": "この作業指示を削除しますか？この操作は元に戻せません。",
+      "dangerZone": "危険操作",
+      "releaseHint": "引き当て済みの構成部品はすべて在庫に戻されます。"
+    }
   },
   "reportBuilder": {
     "title": "カスタムレポート",
@@ -2454,6 +3041,78 @@
       "save": "明細を保存",
       "cancel": "キャンセル",
       "hint": "棚に戻す内容を変更します。在庫は返品の受領時にのみ移動します。"
+    },
+    "index": {
+      "title": "返品・交換",
+      "description": "すべての注文の返品、交換、返金を追跡します。",
+      "newReturn": "新規返品",
+      "searchPlaceholder": "返品番号、注文番号、または顧客で検索...",
+      "returnNumber": "返品番号",
+      "orderNumber": "注文番号",
+      "items": "商品",
+      "refund": "返金",
+      "empty": "返品が見つかりません。"
+    },
+    "columns": {
+      "qty": "数量",
+      "condition": "状態",
+      "restock": "在庫に戻す"
+    },
+    "conditions": {
+      "new": "新品（未開封）",
+      "used": "使用済み（開封済み）",
+      "damaged": "破損"
+    },
+    "create": {
+      "headTitle": "返品を作成 - 注文 #{number}",
+      "title": "返品・交換を作成",
+      "fromOrder": "注文 #{number}から",
+      "backToOrder": "注文に戻る",
+      "details": "返品の詳細",
+      "typeReturn": "返品（返金）",
+      "reasonRequired": "理由 *",
+      "reasonPlaceholder": "返品または交換の理由...",
+      "notesOptional": "メモ（任意）",
+      "notesPlaceholder": "追加メモ...",
+      "selectItems": "返品する商品を選択",
+      "ordered": "注文数: {count}",
+      "alreadyReturned": "（{count}件は返品済み）",
+      "maxReturnable": "返品可能数: 最大{count}",
+      "selectedSummary": "{type}の対象として{count}件を選択中 | {type}の対象として{count}件を選択中",
+      "estimatedRefund": "返金見込額:",
+      "processing": "処理中...",
+      "submit": "返品リクエストを送信"
+    },
+    "show": {
+      "headTitle": "返品 {number}",
+      "title": "返品 #{number}",
+      "createdOn": "{date}に作成",
+      "approve": "返品を承認",
+      "markReceived": "受領済みにする",
+      "complete": "返品を完了",
+      "reject": "返品を却下",
+      "backToReturns": "返品に戻る",
+      "items": "返品商品",
+      "unknownProduct": "不明な商品",
+      "conditionFor": "{name}の状態",
+      "restockFor": "{name}を在庫に戻す",
+      "noItems": "この返品に商品はありません。",
+      "details": "詳細",
+      "reason": "理由",
+      "forOrder": "対象の注文",
+      "summary": "サマリー",
+      "returnNumber": "返品番号",
+      "completed": "完了",
+      "processedBy": "処理者",
+      "refundAmount": "返金額",
+      "pendingHint": "承認して処理を進めるか、返品を却下してください。",
+      "approvedHint": "商品が届いたら受領済みにしてください。在庫に戻す指定の商品は在庫に追加されます。",
+      "receivedHint": "返品を完了して処理を確定してください。",
+      "dangerZone": "危険操作",
+      "rejectWarning": "却下するとこの返品は終了します。この操作は元に戻せません。",
+      "rejectReason": "却下の理由",
+      "rejectPlaceholder": "この返品を却下する理由は何ですか？",
+      "rejecting": "却下中..."
     }
   },
   "portal": {
@@ -2677,5 +3336,60 @@
   "legal": {
     "licensedUnder": "{license}のもとでライセンスされています",
     "sourceCode": "ソースコード"
+  },
+  "stockTransfers": {
+    "title": "在庫移動",
+    "subtitle": "ロケーション間で在庫を移動します。",
+    "newTransfer": "新規移動",
+    "backToList": "一覧に戻る",
+    "transferDetails": "移動の詳細",
+    "transferItems": "移動する商品",
+    "fromLocation": "移動元ロケーション",
+    "toLocation": "移動先ロケーション",
+    "statuses": {
+      "pending": "保留中",
+      "in_transit": "輸送中",
+      "completed": "完了",
+      "cancelled": "キャンセル済み"
+    },
+    "create": {
+      "title": "在庫移動を作成",
+      "selectSource": "移動元ロケーションを選択",
+      "selectDestination": "移動先ロケーションを選択",
+      "notesPlaceholder": "この移動に関するメモを追加...",
+      "addItem": "商品を追加",
+      "selectProduct": "商品を選択",
+      "productOption": "{name}（{sku}）- 在庫: {stock}",
+      "qty": "数量",
+      "available": "利用可能: {count}",
+      "itemNotesPlaceholder": "商品のメモ...",
+      "totalProducts": "商品数の合計: {count}件 | 商品数の合計: {count}件",
+      "totalUnits": "数量の合計: {count}個 | 数量の合計: {count}個",
+      "createTransfer": "移動を作成"
+    },
+    "index": {
+      "searchPlaceholder": "移動番号で検索...",
+      "filter": "絞り込み",
+      "transferNumber": "移動番号",
+      "from": "移動元",
+      "to": "移動先",
+      "items": "商品",
+      "empty": "在庫移動が見つかりません。最初の移動を作成して、ロケーション間で在庫を移動しましょう。",
+      "itemCount": "{count}件 | {count}件",
+      "showingTransfers": "{total}件中 {from}〜{to}件の移動を表示"
+    },
+    "show": {
+      "headTitle": "移動 {number}",
+      "subtitle": "在庫移動の詳細",
+      "transferNumber": "移動番号",
+      "transferredBy": "移動担当者",
+      "completedAt": "完了日時",
+      "processing": "処理中...",
+      "completeTransfer": "移動を完了",
+      "cancelTransfer": "移動をキャンセル",
+      "completeHint": "移動を完了すると、移動元ロケーションから在庫が差し引かれ、移動先ロケーションに追加されます。",
+      "confirmComplete": "この移動を完了してもよろしいですか？在庫数が調整されます。",
+      "confirmCancel": "この移動をキャンセルしてもよろしいですか？"
+    }
   }
 }

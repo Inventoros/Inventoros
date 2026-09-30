@@ -1,7 +1,102 @@
 {
   "stockAudits": {
     "completeConfirm": "Deze telling afronden? Voor elke afwijking worden voorraadcorrecties aangemaakt.",
-    "completeUncountedConfirm": "{uncounted} van {total} artikelen zijn niet geteld. De telling toch afronden? Niet-getelde artikelen houden hun huidige voorraad; alleen getelde artikelen worden gecorrigeerd."
+    "completeUncountedConfirm": "{uncounted} van {total} artikelen zijn niet geteld. De telling toch afronden? Niet-getelde artikelen houden hun huidige voorraad; alleen getelde artikelen worden gecorrigeerd.",
+    "backToList": "Terug naar overzicht",
+    "auditDetails": "Controlegegevens",
+    "types": {
+      "full": "Volledige controle",
+      "cycle": "Cyclustelling",
+      "spot": "Steekproef"
+    },
+    "statuses": {
+      "draft": "Concept",
+      "in_progress": "In behandeling",
+      "completed": "Voltooid",
+      "cancelled": "Geannuleerd"
+    },
+    "itemStatuses": {
+      "pending": "In afwachting",
+      "counted": "Geteld",
+      "verified": "Geverifieerd",
+      "adjusted": "Aangepast"
+    },
+    "fields": {
+      "name": "Naam controle",
+      "namePlaceholder": "bijv. Cyclustelling magazijn Q1 2026",
+      "descriptionPlaceholder": "Beschrijf het doel van deze controle...",
+      "auditType": "Type controle",
+      "typeHints": {
+        "full": "Alle producten in het magazijn tellen",
+        "cycle": "Een deel van de producten volgens een roterend schema tellen",
+        "spot": "Snelle controle van specifieke producten"
+      },
+      "location": "Magazijnlocatie",
+      "locationHint": "Laat leeg om producten van alle locaties op te nemen"
+    },
+    "columns": {
+      "auditNumber": "Controle #",
+      "location": "Locatie",
+      "items": "Artikelen",
+      "createdBy": "Aangemaakt door",
+      "systemQty": "Systeemaantal",
+      "countedQty": "Geteld aantal",
+      "discrepancy": "Afwijking",
+      "countedBy": "Geteld door"
+    },
+    "index": {
+      "description": "Beheer voorraadcontroles en cyclustellingen.",
+      "newAudit": "Nieuwe controle",
+      "searchPlaceholder": "Zoeken op controlenummer of naam...",
+      "empty": "Geen voorraadcontroles gevonden",
+      "createFirst": "Eerste controle aanmaken"
+    },
+    "create": {
+      "title": "Voorraadcontrole aanmaken",
+      "description": "Stel een nieuwe voorraadcontrole of cyclustelling in.",
+      "notesPlaceholder": "Aanvullende notities of instructies voor de tellers...",
+      "selectProducts": "Producten selecteren",
+      "selectProductsHint": "Kies welke producten u in deze controle wilt opnemen. Laat leeg om alle producten op te nemen.",
+      "selectProductsHintAtLocation": "Kies welke producten u in deze controle wilt opnemen. Laat leeg om alle producten op de geselecteerde locatie op te nemen.",
+      "searchProducts": "Producten zoeken op naam of SKU...",
+      "selectAll": "Alles selecteren ({count} product) | Alles selecteren ({count} producten)",
+      "inStock": "op voorraad",
+      "fullAuditInfo": "Alle actieve producten worden automatisch in deze controle opgenomen. U kunt de artikelen na het aanmaken controleren.",
+      "fullAuditInfoAtLocation": "Alle actieve producten op de geselecteerde locatie worden automatisch in deze controle opgenomen. U kunt de artikelen na het aanmaken controleren.",
+      "submit": "Controle aanmaken"
+    },
+    "edit": {
+      "title": "Voorraadcontrole bewerken",
+      "backToAudit": "Terug naar controle",
+      "notesPlaceholder": "Aanvullende notities of instructies...",
+      "submit": "Controle bijwerken"
+    },
+    "show": {
+      "pageTitle": "Controle {number}",
+      "totalItems": "Totaal artikelen",
+      "progress": "Voortgang",
+      "discrepancies": "Afwijkingen",
+      "started": "Gestart",
+      "completed": "Voltooid",
+      "auditItems": "Te controleren artikelen",
+      "countedProgress": "({counted} van {total} geteld)",
+      "count": "Tellen",
+      "recount": "Opnieuw tellen",
+      "countNotesPlaceholder": "Notities (optioneel)",
+      "noItems": "Geen artikelen in deze controle",
+      "processing": "Verwerken...",
+      "startAudit": "Controle starten",
+      "completeAudit": "Controle afronden",
+      "deleteAudit": "Controle verwijderen",
+      "startHint": "Bij het starten van de controle worden de huidige systeemvoorraden vastgelegd en kan het tellen beginnen.",
+      "completeHint": "Bij het afronden van de controle worden voorraadaanpassingen aangemaakt voor alle afwijkingen tussen systeem- en getelde aantallen.",
+      "dangerZone": "Gevarenzone",
+      "deleteHint": "Het verwijderen van deze controle is definitief en kan niet ongedaan worden gemaakt.",
+      "startConfirm": "Weet u zeker dat u deze controle wilt starten? De systeemaantallen worden op het huidige niveau vastgelegd.",
+      "deleteConfirm": "Weet u zeker dat u deze controle wilt verwijderen? Deze actie kan niet ongedaan worden gemaakt.",
+      "updateCountFailed": "Telling bijwerken mislukt",
+      "saveCountError": "Er is een fout opgetreden bij het opslaan van de telling"
+    }
   },
   "common": {
     "save": "Opslaan",
@@ -192,6 +287,32 @@
       "queueBacklog": "Taken in de wachtrij die langer dan 15 minuten wachten: {count}. E-mails en webhooks worden niet verstuurd.",
       "failedJobs": "Achtergrondtaken die in de afgelopen 24 uur zijn mislukt: {count}.",
       "help": "Controleer of de cronjob elke minuut php artisan schedule:run uitvoert. Zie de cPanel-handleiding voor details."
+    },
+    "description": "Overzicht van voorraad, bestellingen en nabestelprioriteiten.",
+    "customize": "Aanpassen",
+    "hints": {
+      "activeInCatalog": "actief in catalogus",
+      "belowMinimum": "onder minimum",
+      "allTime": "sinds het begin"
+    },
+    "widgets": {
+      "statsOverview": "Statistiekenoverzicht",
+      "revenueChart": "Omzet & overige statistieken",
+      "stockMovements": "Voorraadbewegingen",
+      "lowStockAlerts": "Waarschuwingen lage voorraad",
+      "topProducts": "Topproducten",
+      "stockByCategory": "Voorraad per categorie",
+      "reorderSuggestions": "Nabestelsuggesties"
+    },
+    "reorderSuggestions": {
+      "title": "Nabestelsuggesties",
+      "subtitle": "Onder het bestelpunt. Het voorgestelde aantal komt uit de productinstellingen en de minimale bestelhoeveelheid van de leverancier.",
+      "reorderAt": "Bijbestellen bij"
+    },
+    "customizeModal": {
+      "title": "Dashboard aanpassen",
+      "help": "Schakel widgets in of uit om ze op uw dashboard te tonen of te verbergen.",
+      "savePreferences": "Voorkeuren opslaan"
     }
   },
   "products": {
@@ -241,7 +362,8 @@
       "variantHint": "Voeg opties toe zoals Maat of Kleur om verschillende versies van dit product te verkopen. Elke combinatie creëert een variant met een eigen prijs en voorraad.",
       "variantStockHint": "Wanneer varianten zijn ingeschakeld, wordt de voorraad per variant bijgehouden.",
       "notesPlaceholder": "Aanvullende opmerkingen over dit product...",
-      "createProduct": "Product aanmaken"
+      "createProduct": "Product aanmaken",
+      "subtitle": "Maak een product aan met prijzen, voorraad, varianten en afbeeldingen."
     },
     "edit": {
       "title": "Product bewerken",
@@ -288,7 +410,34 @@
       "outOfStock": "Niet op voorraad",
       "lowStock": "Lage voorraad",
       "inStock": "Op voorraad",
-      "activityHistory": "Activiteitengeschiedenis"
+      "activityHistory": "Activiteitengeschiedenis",
+      "minHint": "min. {count}",
+      "stockAtPrice": "voorraad tegen prijs",
+      "barcodeValue": "Barcode: {barcode}",
+      "currencyValue": "Valuta: {currency}",
+      "confirmGenerateRandom": "Een nieuwe willekeurige barcode voor dit product genereren?",
+      "generateBarcodeFailed": "Barcode genereren mislukt",
+      "confirmGenerateFromSku": "Barcode genereren vanuit SKU?",
+      "generateFromSkuFailed": "Barcode genereren vanuit SKU mislukt",
+      "bom": {
+        "title": "Stuklijst",
+        "addComponent": "Component toevoegen",
+        "availableKitStock": "Beschikbare kitvoorraad (beperkt door laagste component)",
+        "searchProduct": "Product zoeken",
+        "searchPlaceholder": "Zoeken op naam of SKU...",
+        "stockInline": "(Voorraad: {count})",
+        "searching": "Zoeken...",
+        "qtyRequired": "Benodigd aantal",
+        "availableStock": "Beschikbare voorraad",
+        "unknown": "Onbekend",
+        "remove": "Verwijderen",
+        "empty": "Nog geen componenten toegevoegd.",
+        "emptyHint": "Klik op \"Component toevoegen\" om de stuklijst op te bouwen.",
+        "addFailed": "Component toevoegen mislukt",
+        "updateQuantityFailed": "Aantal bijwerken mislukt",
+        "confirmRemove": "Dit component uit de stuklijst verwijderen?",
+        "removeFailed": "Component verwijderen mislukt"
+      }
     },
     "quickAddCategory": {
       "title": "Snel categorie toevoegen",
@@ -303,6 +452,56 @@
       "locationCode": "Locatiecode",
       "codePlaceholder": "bijv. WH-A",
       "descPlaceholder": "Optionele beschrijving..."
+    },
+    "subtitle": "Uw catalogus, voorraadniveaus en bestelpunten.",
+    "duplicate": "Dupliceren",
+    "printBarcode": "Barcode afdrukken",
+    "variantsCount": "{count} variant | {count} varianten",
+    "types": {
+      "standard": "Standaard",
+      "kit": "Kit",
+      "assembly": "Assemblage"
+    },
+    "trackingTypes": {
+      "none": "Geen registratie",
+      "batch": "Batchregistratie",
+      "serial": "Serienummerregistratie"
+    },
+    "form": {
+      "productType": "Producttype",
+      "productTypeHint": "Kits bundelen componenten voor de verkoop. Assemblages vereisen werkorders om te produceren.",
+      "additionalCurrencies": "Extra valuta's",
+      "selectCurrency": "Selecteer valuta...",
+      "addPriceInCurrency": "+ Prijs in een andere valuta toevoegen",
+      "reorderPoint": "Bestelpunt",
+      "reorderPointHint": "Voorraadniveau dat automatisch nabestellen activeert",
+      "reorderQuantity": "Bestelaantal",
+      "reorderQuantityHint": "Te bestellen aantal wanneer de voorraad het bestelpunt bereikt",
+      "leaveEmptyToDisable": "Laat leeg om uit te schakelen",
+      "inventoryTracking": "Voorraadregistratie",
+      "inventoryTrackingHint": "Kies hoe afzonderlijke eenheden van dit product worden geregistreerd.",
+      "createCategoryFailed": "Categorie aanmaken mislukt. Probeer het opnieuw.",
+      "createLocationFailed": "Locatie aanmaken mislukt. Probeer het opnieuw."
+    },
+    "index": {
+      "selectedCount": "{count} product geselecteerd | {count} producten geselecteerd",
+      "confirmBulkDelete": "Weet u zeker dat u {count} product wilt verwijderen? Deze actie kan niet ongedaan worden gemaakt. | Weet u zeker dat u {count} producten wilt verwijderen? Deze actie kan niet ongedaan worden gemaakt."
+    },
+    "bulk": {
+      "changeCategory": "Categorie wijzigen",
+      "updateCategoryFor": "Categorie bijwerken voor {count} geselecteerd product. | Categorie bijwerken voor {count} geselecteerde producten.",
+      "selectCategory": "Selecteer een categorie...",
+      "updateCategory": "Categorie bijwerken",
+      "adjustPrice": "Prijs aanpassen",
+      "adjustPriceFor": "Prijs aanpassen voor {count} geselecteerd product. | Prijs aanpassen voor {count} geselecteerde producten.",
+      "adjustmentType": "Type aanpassing",
+      "percentage": "Percentage (%)",
+      "fixedAmount": "Vast bedrag ($)",
+      "value": "Waarde",
+      "useNegative": "(gebruik een negatief getal om te verlagen)",
+      "percentagePlaceholder": "bijv. 10 voor +10%, -20 voor -20%",
+      "fixedPlaceholder": "bijv. 5.00 of -3.50",
+      "applyPriceChange": "Prijswijziging toepassen"
     }
   },
   "orders": {
@@ -372,7 +571,9 @@
       "searchingCustomers": "Zoeken...",
       "noCustomersFound": "Geen overeenkomende klanten. Voer hieronder de gegevens in voor een eenmalige klant.",
       "linkedCustomer": "Gekoppeld aan opgeslagen klant {name}",
-      "clearCustomer": "Eenmalige klant gebruiken"
+      "clearCustomer": "Eenmalige klant gebruiken",
+      "description": "Voeg een klantbestelling en de bijbehorende artikelen toe.",
+      "addAtLeastOneProduct": "Voeg ten minste één product toe aan de bestelling."
     },
     "show": {
       "orderNumber": "Bestelling #{number}",
@@ -415,7 +616,10 @@
       "approvalNotesPlaceholder": "Optionele opmerkingen over deze goedkeuring...",
       "rejectionNotesPlaceholder": "Reden voor afwijzing...",
       "approve": "Goedkeuren",
-      "reject": "Afwijzen"
+      "reject": "Afwijzen",
+      "downloadInvoice": "Factuur downloaden",
+      "previewInvoice": "Voorbeeld factuur",
+      "createReturn": "Retour aanmaken"
     },
     "edit": {
       "title": "Bestelling bewerken",
@@ -432,7 +636,11 @@
       "deliveredAt": "Afgeleverd op:",
       "updatingOrder": "Bestelling bijwerken...",
       "updateOrder": "Bestelling bijwerken",
-      "viewDetails": "Bestelgegevens bekijken"
+      "viewDetails": "Bestelgegevens bekijken",
+      "removeItem": "Artikel verwijderen"
+    },
+    "index": {
+      "description": "Klantbestellingen uit alle kanalen."
     }
   },
   "purchaseOrders": {
@@ -465,13 +673,15 @@
       "unitCost": "Kostprijs per eenheid",
       "supplierSku": "Leverancier SKU",
       "orderItems": "Bestelartikelen ({count})",
-      "createPo": "Inkooporder aanmaken"
+      "createPo": "Inkooporder aanmaken",
+      "description": "Maak een inkooporder aan en voeg de te ontvangen artikelen toe."
     },
     "edit": {
       "title": "Inkooporder bewerken",
       "backToPo": "Terug naar inkooporders",
       "updatePo": "Inkooporder bijwerken",
-      "viewDetails": "Details bekijken"
+      "viewDetails": "Details bekijken",
+      "poNumber": "Inkooporder #{number}"
     },
     "show": {
       "receiveItems": "Artikelen ontvangen",
@@ -484,7 +694,14 @@
       "sendToSupplier": "Versturen naar leverancier",
       "editPo": "Inkooporder bewerken",
       "cancelOrder": "Bestelling annuleren",
-      "deleteOrder": "Bestelling verwijderen"
+      "deleteOrder": "Bestelling verwijderen",
+      "confirmCancel": "Weet u zeker dat u deze inkooporder wilt annuleren?",
+      "orderDateOn": "Besteldatum {date}",
+      "downloadPdf": "PDF downloaden",
+      "previewPdf": "Voorbeeld PDF",
+      "itemsCount": "Artikelen ({count})",
+      "supplierSkuLine": "Leverancier: {sku}",
+      "cannotUndo": "Deze actie kan niet ongedaan worden gemaakt."
     },
     "receive": {
       "title": "Artikelen ontvangen - {poNumber}",
@@ -497,7 +714,11 @@
       "complete": "Volledig",
       "readyToReceive": "Klaar om {count} artikelen te ontvangen",
       "selectQuantities": "Selecteer te ontvangen aantallen",
-      "confirmReceiving": "Ontvangst bevestigen"
+      "confirmReceiving": "Ontvangst bevestigen",
+      "receive": "Ontvangen",
+      "headTitle": "Ontvangen - {poNumber}",
+      "description": "Registreer de ontvangen aantallen voor deze inkooporder.",
+      "readyToReceiveCount": "Klaar om {count} artikel te ontvangen | Klaar om {count} artikelen te ontvangen"
     },
     "currencies": {
       "usd": "USD - Amerikaanse dollar",
@@ -505,7 +726,12 @@
       "gbp": "GBP - Brits pond",
       "cad": "CAD - Canadese dollar",
       "aud": "AUD - Australische dollar"
-    }
+    },
+    "index": {
+      "description": "Aanvullingsorders bij uw leveranciers."
+    },
+    "confirmDelete": "Weet u zeker dat u \"{number}\" wilt verwijderen?",
+    "noSku": "Geen SKU"
   },
   "productSuppliers": {
     "title": "Leveranciers",
@@ -568,7 +794,8 @@
       "businessDetails": "Bedrijfsgegevens",
       "paymentTerms": "Betalingsvoorwaarden",
       "paymentTermsPlaceholder": "bijv. 30 dagen netto",
-      "createSupplier": "Leverancier aanmaken"
+      "createSupplier": "Leverancier aanmaken",
+      "description": "Voeg een leverancier toe met contact-, adres- en bedrijfsgegevens."
     },
     "edit": {
       "title": "Leverancier bewerken",
@@ -587,7 +814,14 @@
       "supplierCode": "Leverancierscode",
       "paymentTerms": "Betalingsvoorwaarden",
       "editSupplier": "Leverancier bewerken",
-      "deleteSupplier": "Leverancier verwijderen"
+      "deleteSupplier": "Leverancier verwijderen",
+      "code": "Code: {code}",
+      "supplierDetails": "Leveranciersgegevens",
+      "products": "Producten",
+      "deleteWarning": "Hiermee wordt de leverancier definitief verwijderd. Dit kan niet ongedaan worden gemaakt."
+    },
+    "index": {
+      "description": "Uw leveranciers en de producten die zij leveren."
     }
   },
   "customers": {
@@ -614,7 +848,8 @@
       "paymentTerms": "Betalingsvoorwaarden",
       "paymentTermsPlaceholder": "bijv. 30 dagen netto",
       "creditLimit": "Kredietlimiet",
-      "createCustomer": "Klant aanmaken"
+      "createCustomer": "Klant aanmaken",
+      "description": "Voeg een klant toe met factuur-, verzend- en bedrijfsgegevens."
     },
     "edit": {
       "title": "Klant bewerken",
@@ -637,6 +872,9 @@
       "recentOrders": "Recente bestellingen",
       "noOrdersYet": "Nog geen bestellingen",
       "deleteCustomer": "Klant verwijderen"
+    },
+    "index": {
+      "description": "Uw klanten en de bestellingen die zij plaatsen."
     }
   },
   "categories": {
@@ -650,7 +888,13 @@
     "editCategory": "Categorie bewerken",
     "categoryName": "Categorienaam",
     "namePlaceholder": "bijv. Elektronica",
-    "descPlaceholder": "Optionele beschrijving..."
+    "descPlaceholder": "Optionele beschrijving...",
+    "index": {
+      "description": "Deel uw catalogus in categorieën in."
+    },
+    "confirmDelete": "Weet u zeker dat u \"{name}\" wilt verwijderen? Deze actie kan niet ongedaan worden gemaakt.",
+    "productsCount": "{count} product | {count} producten",
+    "updateCategory": "Categorie bijwerken"
   },
   "locations": {
     "title": "Magazijnlocaties",
@@ -672,7 +916,12 @@
     "noWarehouse": "Geen magazijn",
     "capacity": "Capaciteit (eenheden)",
     "capacityHint": "Optioneel. Wordt gebruikt om te tonen hoe vol de locatie is.",
-    "capacityValue": "Capaciteit: {capacity} eenheden"
+    "capacityValue": "Capaciteit: {capacity} eenheden",
+    "subtitle": "Fysieke plekken waar uw voorraad ligt.",
+    "close": "Sluiten",
+    "productsCount": "{count} product | {count} producten",
+    "updateLocation": "Locatie bijwerken",
+    "confirmDelete": "Weet u zeker dat u \"{name}\" wilt verwijderen? Deze actie kan niet ongedaan worden gemaakt."
   },
   "reports": {
     "title": "Rapporten & Analyses",
@@ -740,7 +989,9 @@
       "current": "Huidig",
       "deficit": "Tekort",
       "allWellStocked": "Alle producten zijn goed op voorraad!",
-      "noProductsBelowMin": "Geen producten onder het minimale voorraadniveau"
+      "noProductsBelowMin": "Geen producten onder het minimale voorraadniveau",
+      "min": "Min.",
+      "max": "Max."
     },
     "categoryPerformance": {
       "title": "Categorieprestatierapport",
@@ -889,6 +1140,16 @@
       "loss": "Verlies",
       "return": "Retour",
       "correction": "Correctie"
+    },
+    "index": {
+      "dataSources": {
+        "products": "Producten",
+        "orders": "Bestellingen",
+        "stock_adjustments": "Voorraadaanpassingen",
+        "customers": "Klanten",
+        "suppliers": "Leveranciers",
+        "purchase_orders": "Inkooporders"
+      }
     }
   },
   "stockAdjustments": {
@@ -919,7 +1180,13 @@
       "negativeWarningMsg": "Deze aanpassing resulteert in een negatieve voorraad. Controleer het aantal.",
       "createAdjustment": "Aanpassing aanmaken",
       "stockIncrease": "Voorraadverhoging",
-      "stockDecrease": "Voorraadverlaging"
+      "stockDecrease": "Voorraadverlaging",
+      "currentStockValue": "Huidige voorraad: {stock}",
+      "locationOptional": "Locatie (optioneel)",
+      "noSpecificLocation": "Geen specifieke locatie",
+      "locationHint": "Pas deze aanpassing toe op een specifieke locatie, zodat de verdeling per locatie klopt. Laat leeg om alleen het totaal aan te passen.",
+      "quantityPlaceholder": "Voer een positief getal in om toe te voegen, een negatief om af te trekken",
+      "negativeWarningValue": "Deze aanpassing resulteert in een negatieve voorraad ({stock}). Controleer het aantal."
     },
     "show": {
       "title": "Voorraadaanpassingsdetails",
@@ -939,7 +1206,30 @@
       "finalStock": "Eindvoorraad",
       "manualAdjustment": "Handmatige aanpassing",
       "stockRecount": "Voorraadtelling",
-      "order": "Bestelling"
+      "order": "Bestelling",
+      "unitsCount": "{count} eenheid | {count} eenheden"
+    },
+    "variantAdjuster": {
+      "title": "Voorraad aanpassen: {name}",
+      "failed": "Voorraad aanpassen mislukt"
+    },
+    "types": {
+      "manual": "Handmatige aanpassing",
+      "order": "Bestelling",
+      "return": "Retour",
+      "damage": "Schade",
+      "loss": "Verlies",
+      "recount": "Voorraadtelling",
+      "correction": "Correctie",
+      "opening_stock": "Beginvoorraad"
+    },
+    "index": {
+      "allProducts": "Alle producten",
+      "dateFrom": "Datum vanaf",
+      "dateTo": "Datum tot",
+      "before": "Voor",
+      "change": "Wijziging",
+      "after": "Na"
     }
   },
   "importExport": {
@@ -967,7 +1257,8 @@
       "includeNames": "Productnamen, SKU's en barcodes",
       "includePricing": "Prijs- en valutagegevens",
       "includeStock": "Voorraadniveaus en minimale voorraad",
-      "includeCategories": "Categorieën en locaties"
+      "includeCategories": "Categorieën en locaties",
+      "exportIncludesLabel": "Export bevat:"
     },
     "import": {
       "title": "Producten importeren",
@@ -991,7 +1282,14 @@
       "noteUpdate": "Bestaande producten (overeenkomend SKU) worden bijgewerkt",
       "noteCreate": "Categorieën en locaties worden aangemaakt als ze niet bestaan",
       "noteCurrency": "Standaardvaluta is USD indien niet opgegeven",
-      "noteSkip": "Ongeldige rijen worden overgeslagen en gerapporteerd"
+      "noteSkip": "Ongeldige rijen worden overgeslagen en gerapporteerd",
+      "templateHelpLabel": "Hulp nodig? Download ons sjabloonbestand met voorbeeldgegevens:",
+      "requiredFieldsLabel": "Verplichte velden:",
+      "importantNotesLabel": "Belangrijke opmerkingen:",
+      "fieldNameDesc": "Productnaam",
+      "fieldSkuDesc": "Unieke SKU-code",
+      "fieldPriceDesc": "Verkoopprijs",
+      "fieldStockDesc": "Huidige voorraad"
     },
     "pageDescription": "Producten, bestellingen en gebruikers in bulk importeren en exporteren.",
     "tabs": {
@@ -1064,7 +1362,21 @@
       "ruleEscalation": "U kunt alleen rollen toewijzen die u mag toewijzen: niet-beheerders kunnen alleen leden importeren, met rollen die niet ruimer zijn dan hun eigen rechten."
     },
     "exportProducts": "Producten exporteren",
-    "importProducts": "Producten importeren"
+    "importProducts": "Producten importeren",
+    "exports": {
+      "title": "Uw exports",
+      "description": "Grote exports worden op de achtergrond voorbereid. U krijgt een melding zodra elke export klaar is om te downloaden.",
+      "file": "Bestand",
+      "rows": "Rijen",
+      "action": "Actie",
+      "download": "Downloaden",
+      "statuses": {
+        "pending": "In afwachting",
+        "processing": "In verwerking",
+        "completed": "Voltooid",
+        "failed": "Mislukt"
+      }
+    }
   },
   "notifications": {
     "title": "Meldingen",
@@ -1081,7 +1393,20 @@
     "noNotifications": "Geen meldingen",
     "allCaughtUp": "U bent helemaal bij!",
     "noNewNotifications": "Geen nieuwe meldingen",
-    "viewAllNotifications": "Alles bekijken"
+    "viewAllNotifications": "Alles bekijken",
+    "confirmMarkAllRead": "Alle meldingen als gelezen markeren?",
+    "confirmDelete": "Deze melding verwijderen?",
+    "confirmClearRead": "Alle gelezen meldingen wissen?",
+    "allCount": "Alle ({count})",
+    "unreadCount": "Ongelezen ({count})",
+    "readCount": "Gelezen ({count})",
+    "viewDetailsLabel": "Details bekijken",
+    "priorities": {
+      "low": "Laag",
+      "normal": "Normaal",
+      "high": "Hoog",
+      "urgent": "Dringend"
+    }
   },
   "plugins": {
     "title": "Plugins",
@@ -1132,7 +1457,12 @@
       "notOwned": "Uw gekoppelde account bezit deze plugin nog niet.",
       "viewOnMarketplace": "Bekijken op inventoros.com",
       "readOnly": "U kunt de marktplaats bekijken. Voor het installeren van plugins is de machtiging Plugins beheren nodig."
-    }
+    },
+    "confirmDelete": "Weet u zeker dat u \"{name}\" wilt verwijderen? Deze actie kan niet ongedaan worden gemaakt.",
+    "subtitle": "Breid uw werkruimte uit met installeerbare plugins.",
+    "versionLabel": "Versie: {version}",
+    "authorLabel": "Auteur:",
+    "requiresLabel": "Vereist: {requires}"
   },
   "settings": {
     "title": "Instellingen",
@@ -1147,7 +1477,8 @@
       "dateFormat": "Datumformaat",
       "timeFormat": "Tijdformaat",
       "userMgmtHint": "Gebruikersbeheer is beschikbaar in het onderdeel Gebruikers.",
-      "goToUserMgmt": "Naar gebruikersbeheer"
+      "goToUserMgmt": "Naar gebruikersbeheer",
+      "description": "Beheer het profiel en de regionale voorkeuren van uw organisatie."
     },
     "account": {
       "title": "Accountinstellingen",
@@ -1179,7 +1510,8 @@
       "dark": "Donker",
       "auto": "Automatisch",
       "language": "Taal",
-      "itemsPerPage": "Items per pagina"
+      "itemsPerPage": "Items per pagina",
+      "description": "Beheer uw profiel, wachtwoord, meldingen en voorkeuren."
     },
     "email": {
       "title": "E-mailinstellingen",
@@ -1213,7 +1545,9 @@
       "sendTest": "Test-e-mail verzenden",
       "sending": "Verzenden...",
       "saveSettings": "E-mailinstellingen opslaan",
-      "testSuccess": "Testmail succesvol verzonden."
+      "testSuccess": "Testmail succesvol verzonden.",
+      "description": "Configureer hoe uw werkruimte e-mails en meldingen verstuurt.",
+      "fromNamePlaceholder": "Uw bedrijfsnaam"
     },
     "notificationPreferences": {
       "title": "E-mailmeldingsvoorkeuren",
@@ -1290,8 +1624,46 @@
         "deleteWebhook": "Webhook verwijderen",
         "integrationGuide": "Integratiegids",
         "signatureHeader": "Handtekeningheader",
-        "verification": "Verificatie"
-      }
+        "verification": "Verificatie",
+        "headTitle": "Webhook: {name}",
+        "description": "Webhookconfiguratie en afleveringsactiviteit.",
+        "sendTestShort": "Test verzenden",
+        "secretHidden": "Verborgen om veiligheidsredenen. Genereer het geheim opnieuw om een nieuw geheim uit te geven; dit wordt maar één keer getoond.",
+        "createdAt": "Aangemaakt op",
+        "subscribedEventsCount": "Geabonneerde gebeurtenissen ({count})",
+        "deliveryStatuses": {
+          "success": "Geslaagd",
+          "pending": "In afwachting",
+          "failed": "Mislukt"
+        },
+        "noResponseBody": "Geen antwoordtekst",
+        "otherGroup": "Overig",
+        "signatureHeaderDesc": "Alle webhook-payloads bevatten een handtekening in de header {header}.",
+        "verificationDesc": "Verifieer de handtekening door de HMAC-SHA256 van de onbewerkte request body te berekenen met uw geheim.",
+        "responseDesc": "Retourneer een 2xx-statuscode om de ontvangst te bevestigen. Mislukte afleveringen worden maximaal 5 keer opnieuw geprobeerd.",
+        "deleteDesc": "Verwijder deze webhook en al zijn afleveringslogboeken definitief. Deze actie kan niet ongedaan worden gemaakt.",
+        "confirmDelete": "Weet u zeker dat u \"{name}\" wilt verwijderen? Deze actie kan niet ongedaan worden gemaakt.",
+        "confirmRegenerate": "Weet u zeker dat u het geheim opnieuw wilt genereren? U moet het geheim dan bijwerken in uw ontvangende applicatie."
+      },
+      "description": "Externe diensten die realtime meldingen van gebeurtenissen ontvangen.",
+      "signingSecret": "Ondertekeningsgeheim",
+      "secretShownOnce": "Kopieer dit nu. Om veiligheidsredenen wordt het maar één keer getoond en kan het later niet meer worden opgehaald.",
+      "confirmDelete": "Weet u zeker dat u \"{name}\" wilt verwijderen?",
+      "createdByName": "Aangemaakt door {name}",
+      "unknownCreator": "Onbekend",
+      "eventCount": "{count} gebeurtenis | {count} gebeurtenissen",
+      "deliveriesTotal": "{count} in totaal",
+      "namePlaceholder": "Mijn webhook"
+    },
+    "description": "Beheer uw werkruimte, account en integraties.",
+    "hub": {
+      "accountDescription": "Werk uw profiel, wachtwoord en persoonlijke voorkeuren bij, waaronder de taal.",
+      "notificationsDescription": "Kies welke e-mail- en in-app-meldingen u ontvangt.",
+      "twoFactorTitle": "Tweestapsverificatie",
+      "twoFactorDescription": "Beveilig uw account met een eenmalige code uit een authenticator-app.",
+      "emailDescription": "Configureer hoe uw organisatie e-mail verstuurt (SMTP, Mailgun of SendGrid).",
+      "webhooksDescription": "Koppel externe diensten en verstuur realtime meldingen van gebeurtenissen.",
+      "updatesDescription": "Controleer op nieuwe versies, werk de applicatie bij en beheer back-ups."
     }
   },
   "admin": {
@@ -1317,7 +1689,8 @@
         "additionalRoles": "Extra rollen (optioneel)",
         "additionalRolesHint": "Wijs aangepaste rollen toe met specifieke machtigingen.",
         "createUser": "Gebruiker aanmaken",
-        "success": "Gebruiker succesvol aangemaakt."
+        "success": "Gebruiker succesvol aangemaakt.",
+        "subtitle": "Maak een nieuw gebruikersaccount aan en wijs rollen toe."
       },
       "edit": {
         "title": "Gebruiker bewerken",
@@ -1329,7 +1702,11 @@
         "customRoles": "Extra aangepaste rollen (optioneel)",
         "customRolesHint": "Wijs aangepaste rollen toe die voor uw organisatie zijn aangemaakt om specifieke machtigingen te verlenen.",
         "updateUser": "Gebruiker bijwerken",
-        "success": "Gebruiker succesvol bijgewerkt."
+        "success": "Gebruiker succesvol bijgewerkt.",
+        "titleWithName": "Gebruiker bewerken: {name}",
+        "subtitle": "Werk accountgegevens, basisrol en aangepaste rollen bij.",
+        "admin": "Beheerder",
+        "customRolesSelected": "{count} aangepaste rol(len) geselecteerd"
       },
       "show": {
         "title": "Gebruikersdetails",
@@ -1349,7 +1726,16 @@
         "notVerified": "Niet geverifieerd",
         "deleteUser": "Gebruiker verwijderen",
         "confirmDelete": "Weet u zeker dat u {name} wilt verwijderen?",
-        "cannotUndo": "Deze actie kan niet ongedaan worden gemaakt."
+        "cannotUndo": "Deze actie kan niet ongedaan worden gemaakt.",
+        "titleWithName": "Gebruiker: {name}"
+      },
+      "subtitle": "Beheer gebruikers in uw organisatie en wijs rollen en machtigingen toe.",
+      "noUsersTitle": "Geen gebruikers gevonden.",
+      "noUsersHint": "Klik op \"Gebruiker toevoegen\" om uw eerste gebruiker aan te maken.",
+      "roles": {
+        "admin": "Beheerder",
+        "manager": "Manager",
+        "member": "Lid"
       }
     },
     "roles": {
@@ -1375,7 +1761,12 @@
         "deselectAll": "Alles deselecteren",
         "totalPermissions": "{count} machtiging(en) totaal",
         "createRole": "Rol aanmaken",
-        "success": "Rol succesvol aangemaakt."
+        "success": "Rol succesvol aangemaakt.",
+        "subtitle": "Definieer een rol en wijs de machtigingen toe.",
+        "roleDetails": "Rolgegevens",
+        "namePlaceholder": "bijv. Magazijnbeheerder",
+        "descriptionPlaceholder": "Beschrijf het doel en de verantwoordelijkheden van deze rol...",
+        "permissionBreakdown": "({direct} direct + {fromSets} uit {sets} set(s))"
       },
       "edit": {
         "title": "Rol bewerken",
@@ -1387,7 +1778,10 @@
         "permissionsHint": "Pas de machtigingen voor deze rol aan. Klik op categorienamen om alle machtigingen in die categorie te selecteren/deselecteren.",
         "permissionsSelected": "{count} machtiging(en) geselecteerd",
         "updateRole": "Rol bijwerken",
-        "success": "Rol succesvol bijgewerkt."
+        "success": "Rol succesvol bijgewerkt.",
+        "titleWithName": "Rol bewerken: {name}",
+        "subtitle": "Werk de rolgegevens en machtigingen bij.",
+        "viewRole": "Rol bekijken"
       },
       "show": {
         "title": "Roldetails & Machtigingen",
@@ -1407,7 +1801,15 @@
         "deleteRole": "Rol verwijderen",
         "reassignFirst": "Wijs gebruikers opnieuw toe voordat u verwijdert",
         "systemRoleHint": "Dit is een systeemrol en kan niet worden gewijzigd of verwijderd.",
-        "confirmDelete": "Weet u zeker dat u de rol {name} wilt verwijderen? Deze actie kan niet ongedaan worden gemaakt."
+        "confirmDelete": "Weet u zeker dat u de rol {name} wilt verwijderen? Deze actie kan niet ongedaan worden gemaakt.",
+        "otherCategory": "Overig",
+        "titleWithName": "Rol: {name}",
+        "permissionsWithCount": "Machtigingen ({count})",
+        "noPermissions": "Er zijn geen machtigingen aan deze rol toegewezen.",
+        "usersCountValue": "{count} gebruiker | {count} gebruikers",
+        "cannotDeleteWithUsers": "Een rol met toegewezen gebruikers kan niet worden verwijderd",
+        "deleteRoleTooltip": "Rol verwijderen",
+        "confirmDeleteRole": "Weet u zeker dat u de rol {name} wilt verwijderen?"
       }
     },
     "activityLog": {
@@ -1473,7 +1875,16 @@
       "allCategories": "Alle categorieën",
       "securityBadge": "Beveiliging",
       "securityShortcut": "Beveiligingsgebeurtenissen",
-      "viewDetails": "Details bekijken"
+      "viewDetails": "Details bekijken",
+      "description": "Audittrail van elke wijziging in uw werkruimte.",
+      "exportCsv": "CSV exporteren",
+      "exportXlsx": "XLSX exporteren",
+      "searchDescription": "Beschrijving zoeken",
+      "unknownUser": "Onbekende gebruiker",
+      "viewChanges": "{count} wijziging bekijken | {count} wijzigingen bekijken",
+      "daysAgo": "{count} dag geleden | {count} dagen geleden",
+      "hoursAgo": "{count} uur geleden | {count} uur geleden",
+      "minutesAgo": "{count} minuut geleden | {count} minuten geleden"
     },
     "update": {
       "title": "Systeemupdate",
@@ -1507,7 +1918,23 @@
       "onGithub": "op GitHub",
       "autoBackup": "Er wordt automatisch een back-up gemaakt vóór elke update",
       "maintenanceMode": "De applicatie staat in onderhoudsmodus tijdens updates",
-      "autoMigrations": "Databasemigraties worden automatisch uitgevoerd tijdens updates"
+      "autoMigrations": "Databasemigraties worden automatisch uitgevoerd tijdens updates",
+      "checkFailed": "Controleren op updates is mislukt. Probeer het opnieuw.",
+      "confirmUpdate": "Weet u zeker dat u de applicatie wilt bijwerken? Er wordt automatisch een back-up gemaakt.",
+      "updateFailed": "Bijwerken mislukt. Controleer de logboeken.",
+      "confirmBackup": "Een back-up van de huidige installatie maken?",
+      "backupCreated": "Back-up succesvol aangemaakt!",
+      "backupFailed": "Back-up maken is mislukt. Controleer de logboeken.",
+      "confirmRestore": "Weet u zeker dat u wilt herstellen vanuit {file}? Hiermee wordt de huidige installatie overschreven.",
+      "restoreCompleted": "Herstel succesvol voltooid!",
+      "restoreFailed": "Herstel mislukt.",
+      "restoreError": "Back-up herstellen is mislukt. Controleer de logboeken.",
+      "confirmDeleteBackup": "Weet u zeker dat u {file} wilt verwijderen?",
+      "deleteBackupFailed": "Back-up verwijderen is mislukt. Probeer het opnieuw.",
+      "managerTitle": "Updatebeheer",
+      "subtitle": "Controleer op nieuwe releases, installeer updates en beheer back-ups van de installatie.",
+      "upToDateBadge": "Up-to-date",
+      "fetchedFromRepo": "Updates worden opgehaald van {repo} op GitHub."
     },
     "createRole": "Rol aanmaken",
     "createUser": "Gebruiker aanmaken",
@@ -1556,6 +1983,35 @@
       "linkSent": "Er is een nieuwe verificatielink verzonden naar het e-mailadres dat u bij registratie hebt opgegeven.",
       "resend": "Verificatie-e-mail opnieuw verzenden",
       "logOut": "Uitloggen"
+    },
+    "twoFactorChallenge": {
+      "title": "Tweestapsverificatie",
+      "codeHint": "Voer de verificatiecode uit uw authenticator-app in.",
+      "recoveryHint": "Voer een van uw herstelcodes in.",
+      "code": "Verificatiecode",
+      "codePlaceholder": "Voer de 6-cijferige code in",
+      "recoveryCode": "Herstelcode",
+      "recoveryPlaceholder": "Voer de herstelcode in",
+      "useCode": "Verificatiecode gebruiken",
+      "useRecovery": "Een herstelcode gebruiken",
+      "verify": "Verifiëren"
+    },
+    "twoFactor": {
+      "setupTitle": "Tweestapsverificatie instellen",
+      "title": "Tweestapsverificatie",
+      "description": "Voeg een extra beveiligingslaag toe aan uw account met een authenticator-app.",
+      "enabled": "Ingeschakeld",
+      "enabledTitle": "Tweestapsverificatie is ingeschakeld",
+      "enabledHint": "Tweestapsverificatie is momenteel actief voor uw account. Voer uw wachtwoord in om deze uit te schakelen.",
+      "password": "Wachtwoord",
+      "disable": "Tweestapsverificatie uitschakelen",
+      "enable": "Tweestapsverificatie inschakelen",
+      "scanHint": "Scan de onderstaande QR-code met uw authenticator-app (Google Authenticator, Authy, enz.) en voer daarna de verificatiecode in om 2FA in te schakelen.",
+      "manualKey": "Of voer deze sleutel handmatig in:",
+      "verificationCode": "Verificatiecode",
+      "showRecoveryCodes": "Herstelcodes tonen",
+      "hideRecoveryCodes": "Herstelcodes verbergen",
+      "recoveryHint": "Bewaar deze herstelcodes op een veilige plek. U kunt ze gebruiken om toegang te krijgen tot uw account als u uw authenticator-apparaat kwijtraakt."
     }
   },
   "profile": {
@@ -1582,7 +2038,8 @@
       "confirmTitle": "Weet u zeker dat u uw account wilt verwijderen?",
       "confirmDescription": "Zodra uw account is verwijderd, worden alle gegevens en data permanent verwijderd. Voer uw wachtwoord in om te bevestigen dat u uw account permanent wilt verwijderen.",
       "password": "Wachtwoord"
-    }
+    },
+    "description": "Beheer uw accountgegevens, wachtwoord en het verwijderen van uw account."
   },
   "install": {
     "welcome": {
@@ -1634,7 +2091,9 @@
       "testing": "Verbinding testen...",
       "dbExistsHint": "Zorg ervoor dat uw database bestaat voordat u verdergaat. Het installatieprogramma maakt de benodigde tabellen aan.",
       "installDatabase": "Database installeren",
-      "installing": "Installeren..."
+      "installing": "Installeren...",
+      "testFailed": "Verbinding testen mislukt: {error}",
+      "installFailed": "Installatie mislukt: {error}"
     },
     "admin": {
       "title": "Beheerdersaccount aanmaken",
@@ -1650,7 +2109,10 @@
       "confirmPasswordHint": "Bevestig uw wachtwoord",
       "accessNote": "Dit beheerdersaccount heeft volledige toegang tot uw Inventoros-installatie.",
       "completeInstallation": "Installatie voltooien",
-      "creatingAccount": "Account aanmaken..."
+      "creatingAccount": "Account aanmaken...",
+      "orgNamePlaceholder": "Acme B.V.",
+      "fullNamePlaceholder": "Jan Jansen",
+      "createFailed": "Beheerdersaccount aanmaken mislukt: {error}"
     },
     "complete": {
       "title": "Installatie voltooid!",
@@ -1689,7 +2151,10 @@
       "availableVars": "Beschikbare variabelen",
       "preview": "Voorbeeld",
       "generating": "Genereren...",
-      "applySku": "SKU toepassen"
+      "applySku": "SKU toepassen",
+      "or": "OF",
+      "patternExample": "bijv. {example}",
+      "previewError": "Fout bij het genereren van het voorbeeld"
     },
     "variantManager": {
       "productOptions": "Productopties",
@@ -1705,7 +2170,10 @@
       "autoGenerate": "Automatisch genereren",
       "enableAll": "Alles inschakelen",
       "disableAll": "Alles uitschakelen",
-      "addOptionsHint": "Voeg opties toe zoals Maat of Kleur om productvarianten te maken"
+      "addOptionsHint": "Voeg opties toe zoals Maat of Kleur om productvarianten te maken",
+      "optionName": "Optienaam",
+      "optionValues": "Optiewaarden (kommagescheiden)",
+      "addOptionButton": "Optie toevoegen (bijv. Maat, Kleur)"
     },
     "variantsTable": {
       "variant": "Variant",
@@ -1750,20 +2218,34 @@
       "cameraHint": "Richt uw camera op een barcode om te scannen",
       "locationFound": "Locatie gevonden",
       "productsHere": "{count} producten hier",
-      "viewProductsHere": "Producten hier bekijken"
+      "viewProductsHere": "Producten hier bekijken",
+      "lookupFailed": "Barcode opzoeken mislukt",
+      "stock": "Voorraad",
+      "aisle": "Gang {value}",
+      "shelf": "Schap {value}",
+      "bin": "Vak {value}"
     },
     "activityTimeline": {
       "noActivity": "Nog geen activiteit vastgelegd",
       "system": "Systeem",
       "thisProduct": "dit product",
-      "moreChanges": "+{count} andere wijzigingen"
+      "moreChanges": "+{count} andere wijzigingen",
+      "actionOnProduct": {
+        "created": "heeft dit product aangemaakt",
+        "updated": "heeft dit product bijgewerkt",
+        "deleted": "heeft dit product verwijderd",
+        "viewed": "heeft dit product bekeken",
+        "other": "{action}: dit product"
+      }
     },
     "themeToggle": {
       "switchToLight": "Overschakelen naar lichte modus",
       "switchToDark": "Overschakelen naar donkere modus"
     },
     "imageGallery": {
-      "noImages": "Geen afbeeldingen beschikbaar"
+      "noImages": "Geen afbeeldingen beschikbaar",
+      "close": "Sluiten",
+      "imageAlt": "{name} - Afbeelding {number}"
     },
     "imageUploader": {
       "dragDrop": "Sleep afbeeldingen hierheen of klik om te bladeren",
@@ -1775,6 +2257,62 @@
       "moveRight": "Naar rechts",
       "remove": "Verwijderen",
       "noImagesHint": "Nog geen afbeeldingen geüpload. De eerste afbeelding wordt gebruikt als de primaire productafbeelding."
+    },
+    "relativeTime": {
+      "justNow": "Zojuist",
+      "minutesAgo": "{count} min. geleden",
+      "hoursAgo": "{count} u geleden",
+      "daysAgo": "{count} d geleden"
+    },
+    "batchList": {
+      "title": "Batchregistratie",
+      "addBatch": "Batch toevoegen",
+      "createFailed": "Batch aanmaken mislukt",
+      "batchNumberLabel": "Batchnummer (automatisch gegenereerd indien leeg)",
+      "manufacturedDate": "Productiedatum",
+      "expiryDate": "Vervaldatum",
+      "createBatch": "Batch aanmaken",
+      "columns": {
+        "batchNumber": "Batch #",
+        "quantity": "Aantal",
+        "manufactured": "Geproduceerd",
+        "expiry": "Vervaldatum"
+      },
+      "expired": "(verlopen)",
+      "empty": "Nog geen batches geregistreerd.",
+      "emptyHint": "Klik op \"Batch toevoegen\" om de eerste batch te registreren."
+    },
+    "languageSwitcher": {
+      "ariaLabel": "Taal: {name}"
+    },
+    "dataTable": {
+      "noData": "Geen gegevens."
+    },
+    "serialList": {
+      "title": "Serienummerregistratie",
+      "addSerial": "Serienummer toevoegen",
+      "createFailed": "Serienummer aanmaken mislukt",
+      "updateFailed": "Status bijwerken mislukt",
+      "all": "Alle",
+      "statuses": {
+        "available": "Beschikbaar",
+        "sold": "Verkocht",
+        "reserved": "Gereserveerd",
+        "damaged": "Beschadigd"
+      },
+      "serialNumber": "Serienummer",
+      "createSerial": "Serienummer aanmaken",
+      "columns": {
+        "serialNumber": "Serienr."
+      },
+      "markAsSold": "Markeren als verkocht",
+      "markAsReserved": "Markeren als gereserveerd",
+      "markAsDamaged": "Markeren als beschadigd",
+      "markAsAvailable": "Markeren als beschikbaar",
+      "reserve": "Reserveren",
+      "empty": "Nog geen serienummers geregistreerd.",
+      "emptyHint": "Klik op \"Serienummer toevoegen\" om het eerste serienummer te registreren.",
+      "noMatches": "Geen serienummers die overeenkomen met het geselecteerde filter."
     }
   },
   "warehouses": {
@@ -1854,7 +2392,8 @@
       "badge": "Standaardmagazijn",
       "makeDefault": "Als standaard instellen",
       "confirm": "\"{name}\" instellen als standaardmagazijn?",
-      "hint": "Het standaardmagazijn wordt vooraf geselecteerd voor nieuwe bestellingen."
+      "hint": "Het standaardmagazijn wordt vooraf geselecteerd voor nieuwe bestellingen.",
+      "label": "Standaard"
     },
     "capacity": {
       "utilisation": "Bezetting",
@@ -1877,6 +2416,41 @@
       "reorder": "Nabestellen",
       "shortIn": "Tekort in {names}",
       "save": "Magazijnniveaus opslaan"
+    },
+    "subtitle": "Uw opslaglocaties en voorraadverdeling.",
+    "updateWarehouse": "Magazijn bijwerken",
+    "index": {
+      "searchLabel": "Magazijnen zoeken"
+    },
+    "create": {
+      "subtitle": "Voeg een magazijn en de bijbehorende instellingen toe."
+    },
+    "edit": {
+      "title": "Magazijn bewerken: {name}",
+      "subtitle": "Werk magazijngegevens, contactinformatie en gebruikerstoegang bij."
+    },
+    "timezoneOptions": {
+      "stJohns": "Newfoundland (St. John's)",
+      "halifax": "Atlantische tijd (Halifax)",
+      "toronto": "Oostelijke tijd (Toronto)",
+      "winnipeg": "Centrale tijd (Winnipeg)",
+      "edmonton": "Mountain-tijd (Edmonton)",
+      "vancouver": "Pacifische tijd (Vancouver)"
+    },
+    "show": {
+      "codeLabel": "Code: {code}",
+      "totalLocations": "Totaal locaties",
+      "totalProductsStored": "Totaal opgeslagen producten",
+      "assignedUsers": "Toegewezen gebruikers",
+      "details": "Magazijngegevens",
+      "manager": "Beheerder",
+      "noAddress": "Geen adres opgegeven",
+      "locationsCount": "Locaties ({count})",
+      "products": "Producten",
+      "noLocations": "Geen locaties in dit magazijn",
+      "dangerZone": "Gevarenzone",
+      "deleteWarehouse": "Magazijn verwijderen",
+      "cannotUndo": "Deze actie kan niet ongedaan worden gemaakt."
     }
   },
   "workOrders": {
@@ -1932,7 +2506,8 @@
       "ready": "Gereed",
       "noComponents": "Geen componenten vastgelegd voor deze werkorder.",
       "noComponentsDefined": "Voor dit assemblageproduct zijn geen componenten gedefinieerd. Voeg componenten toe op de productdetailpagina voordat u een werkorder aanmaakt.",
-      "insufficientWarning": "Sommige componenten hebben onvoldoende voorraad. U kunt de werkorder nog steeds aanmaken, maar de productie kan pas beginnen wanneer de voorraad is aangevuld."
+      "insufficientWarning": "Sommige componenten hebben onvoldoende voorraad. U kunt de werkorder nog steeds aanmaken, maar de productie kan pas beginnen wanneer de voorraad is aangevuld.",
+      "unknown": "Onbekend"
     },
     "actions": {
       "startProduction": "Productie starten",
@@ -1955,7 +2530,19 @@
       "cancelled": "Geannuleerd",
       "lastUpdated": "Laatst bijgewerkt"
     },
-    "cancelledBanner": "Deze werkorder is geannuleerd."
+    "cancelledBanner": "Deze werkorder is geannuleerd.",
+    "create": {
+      "materialsNeeded": "Materialen nodig om {count} eenheid {name} te produceren | Materialen nodig om {count} eenheden {name} te produceren"
+    },
+    "index": {
+      "filter": "Filteren"
+    },
+    "show": {
+      "headTitle": "Werkorder {number}",
+      "deleteConfirm": "Deze werkorder verwijderen? Dit kan niet ongedaan worden gemaakt.",
+      "dangerZone": "Gevarenzone",
+      "releaseHint": "Eventueel gereserveerde componenten worden weer vrijgegeven aan de voorraad."
+    }
   },
   "reportBuilder": {
     "title": "Aangepaste rapporten",
@@ -2454,6 +3041,78 @@
       "save": "Regels opslaan",
       "cancel": "Annuleren",
       "hint": "Wijzig wat terug in het schap gaat. De voorraad verandert pas wanneer de retour is ontvangen."
+    },
+    "index": {
+      "title": "Retouren & omruilingen",
+      "description": "Volg retouren, omruilingen en terugbetalingen voor alle bestellingen.",
+      "newReturn": "Nieuwe retour",
+      "searchPlaceholder": "Zoeken op retournummer, bestelnummer of klant...",
+      "returnNumber": "Retour #",
+      "orderNumber": "Bestelling #",
+      "items": "Artikelen",
+      "refund": "Terugbetaling",
+      "empty": "Geen retouren gevonden."
+    },
+    "columns": {
+      "qty": "Aantal",
+      "condition": "Staat",
+      "restock": "Terug in voorraad"
+    },
+    "conditions": {
+      "new": "Nieuw (ongeopend)",
+      "used": "Gebruikt (geopend)",
+      "damaged": "Beschadigd"
+    },
+    "create": {
+      "headTitle": "Retour aanmaken - Bestelling #{number}",
+      "title": "Retour / omruiling aanmaken",
+      "fromOrder": "Uit bestelling #{number}",
+      "backToOrder": "Terug naar bestelling",
+      "details": "Retourgegevens",
+      "typeReturn": "Retour (terugbetaling)",
+      "reasonRequired": "Reden *",
+      "reasonPlaceholder": "Reden voor retour of omruiling...",
+      "notesOptional": "Notities (optioneel)",
+      "notesPlaceholder": "Aanvullende notities...",
+      "selectItems": "Te retourneren artikelen selecteren",
+      "ordered": "Besteld: {count}",
+      "alreadyReturned": "({count} al geretourneerd)",
+      "maxReturnable": "Max. te retourneren: {count}",
+      "selectedSummary": "{count} artikel geselecteerd voor {type} | {count} artikelen geselecteerd voor {type}",
+      "estimatedRefund": "Geschatte terugbetaling:",
+      "processing": "Verwerken...",
+      "submit": "Retouraanvraag indienen"
+    },
+    "show": {
+      "headTitle": "Retour {number}",
+      "title": "Retour #{number}",
+      "createdOn": "Aangemaakt op {date}",
+      "approve": "Retour goedkeuren",
+      "markReceived": "Markeren als ontvangen",
+      "complete": "Retour afronden",
+      "reject": "Retour afwijzen",
+      "backToReturns": "Terug naar retouren",
+      "items": "Retourartikelen",
+      "unknownProduct": "Onbekend product",
+      "conditionFor": "Staat {name}",
+      "restockFor": "{name} terug in voorraad",
+      "noItems": "Geen artikelen in deze retour.",
+      "details": "Details",
+      "reason": "Reden",
+      "forOrder": "Voor bestelling",
+      "summary": "Overzicht",
+      "returnNumber": "Retournummer",
+      "completed": "Afgerond",
+      "processedBy": "Verwerkt door",
+      "refundAmount": "Terugbetalingsbedrag",
+      "pendingHint": "Keur de retour goed om door te gaan, of wijs deze af.",
+      "approvedHint": "Markeer als ontvangen wanneer de artikelen binnenkomen. Artikelen die terug in voorraad gaan, worden weer aan de voorraad toegevoegd.",
+      "receivedHint": "Rond de retour af om het proces te voltooien.",
+      "dangerZone": "Gevarenzone",
+      "rejectWarning": "Afwijzen sluit deze retour. Dit kan niet ongedaan worden gemaakt.",
+      "rejectReason": "Reden voor afwijzing",
+      "rejectPlaceholder": "Waarom wordt deze retour afgewezen?",
+      "rejecting": "Afwijzen..."
     }
   },
   "portal": {
@@ -2677,5 +3336,60 @@
   "legal": {
     "licensedUnder": "Gelicentieerd onder de {license}",
     "sourceCode": "Broncode"
+  },
+  "stockTransfers": {
+    "title": "Voorraadoverboekingen",
+    "subtitle": "Verplaats voorraad tussen locaties.",
+    "newTransfer": "Nieuwe overboeking",
+    "backToList": "Terug naar overzicht",
+    "transferDetails": "Overboekingsgegevens",
+    "transferItems": "Over te boeken artikelen",
+    "fromLocation": "Van locatie",
+    "toLocation": "Naar locatie",
+    "statuses": {
+      "pending": "In afwachting",
+      "in_transit": "Onderweg",
+      "completed": "Voltooid",
+      "cancelled": "Geannuleerd"
+    },
+    "create": {
+      "title": "Voorraadoverboeking aanmaken",
+      "selectSource": "Selecteer de bronlocatie",
+      "selectDestination": "Selecteer de bestemmingslocatie",
+      "notesPlaceholder": "Voeg eventuele notities over deze overboeking toe...",
+      "addItem": "Artikel toevoegen",
+      "selectProduct": "Selecteer een product",
+      "productOption": "{name} ({sku}) - Voorraad: {stock}",
+      "qty": "Aantal",
+      "available": "Beschikbaar: {count}",
+      "itemNotesPlaceholder": "Artikelnotities...",
+      "totalProducts": "Totaal artikelen: {count} product | Totaal artikelen: {count} producten",
+      "totalUnits": "Totaal aantal: {count} eenheid | Totaal aantal: {count} eenheden",
+      "createTransfer": "Overboeking aanmaken"
+    },
+    "index": {
+      "searchPlaceholder": "Zoeken op overboekingsnummer...",
+      "filter": "Filteren",
+      "transferNumber": "Overboeking #",
+      "from": "Van",
+      "to": "Naar",
+      "items": "Artikelen",
+      "empty": "Geen voorraadoverboekingen gevonden. Maak uw eerste overboeking aan om voorraad tussen locaties te verplaatsen.",
+      "itemCount": "{count} artikel | {count} artikelen",
+      "showingTransfers": "{from} tot {to} van {total} overboekingen"
+    },
+    "show": {
+      "headTitle": "Overboeking {number}",
+      "subtitle": "Gegevens voorraadoverboeking",
+      "transferNumber": "Overboekingsnummer",
+      "transferredBy": "Overgeboekt door",
+      "completedAt": "Voltooid",
+      "processing": "Verwerken...",
+      "completeTransfer": "Overboeking voltooien",
+      "cancelTransfer": "Overboeking annuleren",
+      "completeHint": "Bij het voltooien van de overboeking wordt de voorraad van de bronlocatie afgeboekt en aan de bestemmingslocatie toegevoegd.",
+      "confirmComplete": "Weet u zeker dat u deze overboeking wilt voltooien? De voorraadniveaus worden aangepast.",
+      "confirmCancel": "Weet u zeker dat u deze overboeking wilt annuleren?"
+    }
   }
 }

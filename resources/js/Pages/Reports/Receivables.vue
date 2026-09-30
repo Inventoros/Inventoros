@@ -9,7 +9,7 @@ import StatTile from '@/Components/ui/StatTile.vue';
 import ExportMenu from '@/Components/Reports/ExportMenu.vue';
 import { Head, Link } from '@inertiajs/vue3';
 import { useI18n } from 'vue-i18n';
-import { formatCalendarDate } from '@/lib/dates';
+import { displayCalendarDate } from '@/lib/dates';
 import { formatMoney } from '@/lib/money';
 import { ArrowLeft, Wallet, ShoppingCart, Users, CircleCheck } from 'lucide-vue-next';
 
@@ -205,7 +205,7 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-t
                                     <Link :href="route('orders.show', order.id)" class="font-mono text-xs font-medium text-text-primary hover:text-brand">{{ order.order_number }}</Link>
                                 </td>
                                 <td class="px-4 py-3 text-text-primary">{{ order.customer || '-' }}</td>
-                                <td class="px-4 py-3 whitespace-nowrap text-text-secondary">{{ formatCalendarDate(order.order_date) }}</td>
+                                <td class="px-4 py-3 whitespace-nowrap text-text-secondary">{{ displayCalendarDate(order.order_date) }}</td>
                                 <td class="px-4 py-3 whitespace-nowrap">
                                     <Badge :variant="bucketVariant(order.bucket)" size="sm">{{ t('receivables.days', order.age_days) }}</Badge>
                                 </td>

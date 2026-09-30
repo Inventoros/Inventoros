@@ -15,9 +15,12 @@ import WarehouseStockLevels from '@/Components/WarehouseStockLevels.vue';
 import { Head, Link, router } from '@inertiajs/vue3';
 import { ref, onMounted, computed, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
+import { formatPercent } from '@/lib/reportFormat';
 import axios from 'axios';
 import ImageGallery from '@/Components/ImageGallery.vue';
 import { usePermissions } from '@/composables/usePermissions';
+import { formatMoney } from '@/lib/money';
+import { displayDate, displayDateTime } from '@/lib/dates';
 import {
     Boxes,
     DollarSign,
@@ -72,10 +75,7 @@ const printQrLabel = () => {
 };
 
 const formatCurrency = (value) => {
-    return new Intl.NumberFormat('en-US', {
-        style: 'currency',
-        currency: 'USD',
-    }).format(value);
+    return formatMoney(value, props.product.currency);
 };
 
 const getStockStatus = () => {
@@ -97,7 +97,7 @@ const productSuppliers = computed(() =>
     )
 );
 
-const formatDate = (iso) => (iso ? new Date(iso).toLocaleDateString() : '-');
+const formatDate = (iso) => displayDate(iso);
 
 const supplierThClass = 'px-4 py-2.5 text-left text-xs font-medium text-text-secondary';
 
@@ -127,7 +127,7 @@ const printBarcode = () => {
 };
 
 const generateRandomBarcode = async () => {
-    if (!confirm('Generate a new random barcode for this product?')) return;
+    if (!confirm(t('products.show.confirmGenerateRandom'))) return;
 
     try {
         await axios.post(route('products.barcode.generate-random', props.product.id));
@@ -135,12 +135,12 @@ const generateRandomBarcode = async () => {
         setTimeout(loadBarcode, 100);
     } catch (error) {
         console.error('Failed to generate barcode:', error);
-        alert('Failed to generate barcode');
+        alert(t('products.show.generateBarcodeFailed'));
     }
 };
 
 const generateFromSKU = async () => {
-    if (!confirm('Generate barcode from SKU?')) return;
+    if (!confirm(t('products.show.confirmGenerateFromSku'))) return;
 
     try {
         await axios.post(route('products.barcode.generate-from-sku', props.product.id));
@@ -148,7 +148,7 @@ const generateFromSKU = async () => {
         setTimeout(loadBarcode, 100);
     } catch (error) {
         console.error('Failed to generate barcode:', error);
-        alert('Failed to generate barcode from SKU');
+        alert(t('products.show.generateFromSkuFailed'));
     }
 };
 
@@ -238,7 +238,7 @@ const addComponent = async () => {
         selectedComponent.value = null;
         newComponentQty.value = 1;
     } catch (error) {
-        alert(error.response?.data?.message || 'Failed to add component');
+        alert(error.response?.data?.message || t('products.show.bom.addFailed'));
     }
 };
 
@@ -255,17 +255,17 @@ const saveComponentQty = async (component) => {
         router.reload({ only: ['product'] });
         editingComponentId.value = null;
     } catch (error) {
-        alert('Failed to update quantity');
+        alert(t('products.show.bom.updateQuantityFailed'));
     }
 };
 
 const removeComponent = async (component) => {
-    if (!confirm('Remove this component from the bill of materials?')) return;
+    if (!confirm(t('products.show.bom.confirmRemove'))) return;
     try {
         await axios.delete(route('products.components.destroy', [props.product.id, component.id]));
         router.reload({ only: ['product'] });
     } catch (error) {
-        alert('Failed to remove component');
+        alert(t('products.show.bom.removeFailed'));
     }
 };
 
@@ -300,7 +300,7 @@ const fieldInput = 'h-9 w-full rounded-md border border-border-subtle bg-surface
             <template #actions>
                 <Button variant="secondary" size="sm" @click="duplicateProduct">
                     <Copy :size="14" />
-                    Duplicate
+                    {{ t('products.duplicate') }}
                 </Button>
                 <Button variant="default" size="sm" as="Link" :href="route('products.edit', product.id)">
                     <Pencil :size="14" />
@@ -323,7 +323,7 @@ const fieldInput = 'h-9 w-full rounded-md border border-border-subtle bg-surface
                 <StatTile
                     :label="t('products.show.currentStock')"
                     :value="product.stock"
-                    :hint="`min ${product.min_stock}`"
+                    :hint="t('products.show.minHint', { count: product.min_stock })"
                     icon-tone="brand"
                 >
                     <template #icon><Boxes :size="18" /></template>
@@ -339,7 +339,7 @@ const fieldInput = 'h-9 w-full rounded-md border border-border-subtle bg-surface
                 <StatTile
                     :label="t('products.show.totalValue')"
                     :value="formatCurrency(product.price * product.stock)"
-                    hint="stock at price"
+                    :hint="t('products.show.stockAtPrice')"
                     icon-tone="violet"
                 >
                     <template #icon><Wallet :size="18" /></template>
@@ -357,11 +357,11 @@ const fieldInput = 'h-9 w-full rounded-md border border-border-subtle bg-surface
                                     <h3 class="text-lg font-semibold text-text-primary">{{ product.display_name ?? product.name }}</h3>
                                     <div v-if="product.type && product.type !== 'standard'" class="mt-1">
                                         <Badge :variant="product.type === 'kit' ? 'info' : 'brand'" size="sm">
-                                            {{ product.type === 'kit' ? 'Kit' : 'Assembly' }}
+                                            {{ product.type === 'kit' ? t('products.types.kit') : t('products.types.assembly') }}
                                         </Badge>
                                     </div>
                                     <p class="mt-1 text-sm text-text-tertiary">SKU: {{ product.sku }}</p>
-                                    <p v-if="product.barcode" class="text-sm text-text-tertiary">Barcode: {{ product.barcode }}</p>
+                                    <p v-if="product.barcode" class="text-sm text-text-tertiary">{{ t('products.show.barcodeValue', { barcode: product.barcode }) }}</p>
                                 </div>
                                 <Badge :variant="stockStatus.variant" size="md" dot>{{ stockStatus.text }}</Badge>
                             </div>
@@ -420,7 +420,7 @@ const fieldInput = 'h-9 w-full rounded-md border border-border-subtle bg-surface
                                         {{ formatCurrency(product.display_price ?? product.price) }}
                                     </p>
                                     <p v-if="product.currency" class="mt-1 text-xs text-text-tertiary">
-                                        Currency: {{ product.currency }}
+                                        {{ t('products.show.currencyValue', { currency: product.currency }) }}
                                     </p>
                                 </div>
                                 <div v-if="product.purchase_price">
@@ -445,7 +445,7 @@ const fieldInput = 'h-9 w-full rounded-md border border-border-subtle bg-surface
                                 <div>
                                     <h4 class="mb-1 text-xs font-medium text-status-success">{{ t('products.show.profitMargin') }}</h4>
                                     <p class="text-lg font-bold tabular-nums text-status-success">
-                                        {{ ((product.price - product.purchase_price) / product.price * 100).toFixed(1) }}%
+                                        {{ formatPercent(((product.price - product.purchase_price) / product.price * 100)) }}
                                     </p>
                                 </div>
                                 <div>
@@ -467,7 +467,7 @@ const fieldInput = 'h-9 w-full rounded-md border border-border-subtle bg-surface
                                     >
                                         <p class="text-xs text-text-tertiary">{{ currency }}</p>
                                         <p class="text-lg font-semibold tabular-nums text-text-primary">
-                                            {{ new Intl.NumberFormat('en-US', { style: 'currency', currency: currency }).format(price) }}
+                                            {{ formatMoney(price, currency) }}
                                         </p>
                                     </div>
                                 </div>
@@ -581,7 +581,7 @@ const fieldInput = 'h-9 w-full rounded-md border border-border-subtle bg-surface
                     <Card v-if="product.has_variants && variants.length > 0" :padded="false">
                         <div class="flex items-center justify-between px-5 pt-5">
                             <h3 class="text-sm font-semibold text-text-primary">{{ t('products.show.variants') }}</h3>
-                            <Badge variant="brand" size="sm">{{ variants.length }} variants</Badge>
+                            <Badge variant="brand" size="sm">{{ t('products.variantsCount', { count: variants.length }, variants.length) }}</Badge>
                         </div>
                         <div class="p-5">
                             <VariantsTable
@@ -597,7 +597,7 @@ const fieldInput = 'h-9 w-full rounded-md border border-border-subtle bg-surface
                             <div class="mt-4 flex items-start gap-2 rounded-lg border border-status-info/20 bg-status-info-soft p-3">
                                 <Info :size="16" class="mt-0.5 shrink-0 text-status-info" />
                                 <p class="text-sm text-status-info">
-                                    Stock is tracked per variant. Total variant stock: <span class="font-semibold">{{ totalVariantStock }}</span>
+                                    {{ t('products.show.variantStockTracked') }}: <span class="font-semibold">{{ totalVariantStock }}</span>
                                 </p>
                             </div>
                         </div>
@@ -607,14 +607,14 @@ const fieldInput = 'h-9 w-full rounded-md border border-border-subtle bg-surface
                     <Card v-if="isKitOrAssembly" :padded="false">
                         <div class="flex items-center justify-between px-5 pt-5">
                             <div class="flex items-center gap-3">
-                                <h3 class="text-sm font-semibold text-text-primary">Bill of Materials</h3>
+                                <h3 class="text-sm font-semibold text-text-primary">{{ t('products.show.bom.title') }}</h3>
                                 <Badge :variant="product.type === 'kit' ? 'info' : 'brand'" size="sm">
-                                    {{ product.type === 'kit' ? 'Kit' : 'Assembly' }}
+                                    {{ product.type === 'kit' ? t('products.types.kit') : t('products.types.assembly') }}
                                 </Badge>
                             </div>
                             <Button variant="default" size="sm" @click="showAddComponent = !showAddComponent">
                                 <Plus :size="14" />
-                                Add Component
+                                {{ t('products.show.bom.addComponent') }}
                             </Button>
                         </div>
                         <div class="p-5">
@@ -622,7 +622,7 @@ const fieldInput = 'h-9 w-full rounded-md border border-border-subtle bg-surface
                             <div v-if="product.type === 'kit' && components.length > 0" class="mb-4 flex items-center justify-between rounded-lg border border-status-info/20 bg-status-info-soft p-3">
                                 <span class="flex items-center gap-2 text-sm text-status-info">
                                     <Info :size="16" class="shrink-0" />
-                                    Available Kit Stock (limited by lowest component)
+                                    {{ t('products.show.bom.availableKitStock') }}
                                 </span>
                                 <span class="text-lg font-bold text-status-info">{{ availableKitStock }}</span>
                             </div>
@@ -631,20 +631,20 @@ const fieldInput = 'h-9 w-full rounded-md border border-border-subtle bg-surface
                             <div v-if="product.type === 'assembly' && components.length > 0" class="mb-4">
                                 <Button variant="default" size="md" as="Link" :href="route('work-orders.create', { product_id: product.id })">
                                     <Settings2 :size="16" />
-                                    Create Work Order
+                                    {{ t('workOrders.createWorkOrder') }}
                                 </Button>
                             </div>
 
                             <!-- Add Component Form -->
                             <div v-if="showAddComponent" class="mb-4 rounded-lg border border-border-subtle bg-surface-canvas p-4">
-                                <h4 class="mb-3 text-sm font-medium text-text-primary">Add Component</h4>
+                                <h4 class="mb-3 text-sm font-medium text-text-primary">{{ t('products.show.bom.addComponent') }}</h4>
                                 <div class="flex items-end gap-3">
                                     <div class="relative flex-1">
-                                        <label class="mb-1 block text-xs text-text-tertiary">Search Product</label>
+                                        <label class="mb-1 block text-xs text-text-tertiary">{{ t('products.show.bom.searchProduct') }}</label>
                                         <input
                                             v-model="componentSearch"
                                             type="text"
-                                            placeholder="Search by name or SKU..."
+                                            :placeholder="t('products.show.bom.searchPlaceholder')"
                                             :class="fieldInput"
                                             @input="searchComponents"
                                         />
@@ -659,15 +659,15 @@ const fieldInput = 'h-9 w-full rounded-md border border-border-subtle bg-surface
                                             >
                                                 <span class="text-text-primary">{{ result.name }}</span>
                                                 <span class="ml-2 text-text-tertiary">{{ result.sku }}</span>
-                                                <span class="ml-2 text-text-tertiary">(Stock: {{ result.stock }})</span>
+                                                <span class="ml-2 text-text-tertiary">{{ t('products.show.bom.stockInline', { count: result.stock }) }}</span>
                                             </button>
                                         </div>
                                         <div v-if="componentSearching" class="absolute z-10 mt-1 w-full rounded-lg border border-border-subtle bg-surface-raised p-3 text-center shadow-lg">
-                                            <span class="text-sm text-text-tertiary">Searching...</span>
+                                            <span class="text-sm text-text-tertiary">{{ t('products.show.bom.searching') }}</span>
                                         </div>
                                     </div>
                                     <div class="w-28">
-                                        <label class="mb-1 block text-xs text-text-tertiary">Quantity</label>
+                                        <label class="mb-1 block text-xs text-text-tertiary">{{ t('common.quantity') }}</label>
                                         <input
                                             v-model.number="newComponentQty"
                                             type="number"
@@ -676,10 +676,10 @@ const fieldInput = 'h-9 w-full rounded-md border border-border-subtle bg-surface
                                         />
                                     </div>
                                     <Button type="button" variant="default" @click="addComponent" :disabled="!selectedComponent">
-                                        Add
+                                        {{ t('common.add') }}
                                     </Button>
                                     <Button type="button" variant="secondary" @click="showAddComponent = false">
-                                        Cancel
+                                        {{ t('common.cancel') }}
                                     </Button>
                                 </div>
                             </div>
@@ -689,18 +689,18 @@ const fieldInput = 'h-9 w-full rounded-md border border-border-subtle bg-surface
                                 <table class="min-w-full">
                                     <thead>
                                         <tr class="border-b border-border-subtle">
-                                            <th :class="thClass">Product</th>
-                                            <th :class="thClass">SKU</th>
-                                            <th :class="[thClass, 'text-center']">Qty Required</th>
-                                            <th :class="[thClass, 'text-center']">Available Stock</th>
-                                            <th :class="[thClass, 'text-right']">Actions</th>
+                                            <th :class="thClass">{{ t('common.product') }}</th>
+                                            <th :class="thClass">{{ t('products.show.sku') }}</th>
+                                            <th :class="[thClass, 'text-center']">{{ t('products.show.bom.qtyRequired') }}</th>
+                                            <th :class="[thClass, 'text-center']">{{ t('products.show.bom.availableStock') }}</th>
+                                            <th :class="[thClass, 'text-right']">{{ t('common.actions') }}</th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         <tr v-for="comp in components" :key="comp.id" class="border-b border-border-subtle transition-colors last:border-b-0 hover:bg-surface-overlay">
                                             <td class="px-4 py-3">
                                                 <Link :href="route('products.show', comp.component?.id || comp.component_product_id)" class="text-sm font-medium text-brand hover:underline">
-                                                    {{ comp.component?.name || 'Unknown' }}
+                                                    {{ comp.component?.name || t('products.show.bom.unknown') }}
                                                 </Link>
                                             </td>
                                             <td class="px-4 py-3 text-sm text-text-tertiary">
@@ -730,12 +730,12 @@ const fieldInput = 'h-9 w-full rounded-md border border-border-subtle bg-surface
                                             <td class="px-4 py-3 text-right">
                                                 <div class="flex justify-end gap-2">
                                                     <template v-if="editingComponentId === comp.id">
-                                                        <button @click="saveComponentQty(comp)" class="text-sm text-status-success hover:underline">Save</button>
-                                                        <button @click="editingComponentId = null" class="text-sm text-text-tertiary hover:text-text-primary">Cancel</button>
+                                                        <button @click="saveComponentQty(comp)" class="text-sm text-status-success hover:underline">{{ t('common.save') }}</button>
+                                                        <button @click="editingComponentId = null" class="text-sm text-text-tertiary hover:text-text-primary">{{ t('common.cancel') }}</button>
                                                     </template>
                                                     <template v-else>
-                                                        <button @click="startEditComponent(comp)" class="text-sm text-brand hover:underline">Edit</button>
-                                                        <button @click="removeComponent(comp)" class="text-sm text-status-danger hover:underline">Remove</button>
+                                                        <button @click="startEditComponent(comp)" class="text-sm text-brand hover:underline">{{ t('common.edit') }}</button>
+                                                        <button @click="removeComponent(comp)" class="text-sm text-status-danger hover:underline">{{ t('products.show.bom.remove') }}</button>
                                                     </template>
                                                 </div>
                                             </td>
@@ -747,8 +747,8 @@ const fieldInput = 'h-9 w-full rounded-md border border-border-subtle bg-surface
                             <!-- Empty State -->
                             <div v-else class="flex flex-col items-center gap-2 py-8 text-center">
                                 <Package :size="22" class="text-text-tertiary" />
-                                <p class="text-sm text-text-tertiary">No components added yet.</p>
-                                <p class="text-xs text-text-tertiary">Click "Add Component" to build the bill of materials.</p>
+                                <p class="text-sm text-text-tertiary">{{ t('products.show.bom.empty') }}</p>
+                                <p class="text-xs text-text-tertiary">{{ t('products.show.bom.emptyHint') }}</p>
                             </div>
                         </div>
                     </Card>
@@ -796,7 +796,7 @@ const fieldInput = 'h-9 w-full rounded-md border border-border-subtle bg-surface
 
                             <div v-else-if="barcodeImage" class="space-y-4">
                                 <div class="flex justify-center rounded-lg border border-border-subtle bg-white p-4">
-                                    <img :src="barcodeImage" alt="Barcode" class="h-auto max-w-full" />
+                                    <img :src="barcodeImage" :alt="t('products.show.barcode')" class="h-auto max-w-full" />
                                 </div>
 
                                 <div class="text-center">
@@ -853,7 +853,7 @@ const fieldInput = 'h-9 w-full rounded-md border border-border-subtle bg-surface
                         </div>
                         <div class="space-y-3 p-5">
                             <div v-if="qrImage" class="flex justify-center rounded-lg border border-border-subtle bg-white p-4">
-                                <img :src="qrImage" alt="QR code" class="h-40 w-40" />
+                                <img :src="qrImage" :alt="t('products.show.qrCode')" class="h-40 w-40" />
                             </div>
                             <p class="break-all text-center font-mono text-xs text-text-secondary">{{ qrPayload }}</p>
                             <p class="text-xs text-text-tertiary">{{ t('products.show.qrModeHint') }}</p>
@@ -916,13 +916,13 @@ const fieldInput = 'h-9 w-full rounded-md border border-border-subtle bg-surface
                                 <div class="border-t border-border-subtle pt-3">
                                     <p class="mb-1 text-xs text-text-tertiary">{{ t('common.createdAt') }}</p>
                                     <p class="text-sm text-text-primary">
-                                        {{ new Date(product.created_at).toLocaleString() }}
+                                        {{ displayDateTime(product.created_at) }}
                                     </p>
                                 </div>
                                 <div>
                                     <p class="mb-1 text-xs text-text-tertiary">{{ t('common.updatedAt') }}</p>
                                     <p class="text-sm text-text-primary">
-                                        {{ new Date(product.updated_at).toLocaleString() }}
+                                        {{ displayDateTime(product.updated_at) }}
                                     </p>
                                 </div>
                             </div>

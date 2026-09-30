@@ -10,7 +10,7 @@ import { ScanLine, AlertTriangle } from 'lucide-vue-next';
 const BarcodeScannerModal = defineAsyncComponent(() => import('@/Components/BarcodeScannerModal.vue'));
 import { useI18n } from 'vue-i18n';
 
-const { t } = useI18n();
+const { t, te } = useI18n();
 
 const props = defineProps({
     products: Array,
@@ -98,11 +98,13 @@ const adjustmentType = computed(() => {
 watch(() => form.adjustment_quantity, (newVal) => {
     // Auto-select reason based on adjustment type
     if (newVal > 0 && !form.reason) {
-        form.reason = 'Stock increase';
+        form.reason = t('stockAdjustments.create.stockIncrease');
     } else if (newVal < 0 && !form.reason) {
-        form.reason = 'Stock decrease';
+        form.reason = t('stockAdjustments.create.stockDecrease');
     }
 });
+
+const typeLabel = (value, label) => (te(`stockAdjustments.types.${value}`) ? t(`stockAdjustments.types.${value}`) : label);
 
 const submit = () => {
     form.post(route('stock-adjustments.store'), {
@@ -117,7 +119,7 @@ const fieldError = 'mt-1 text-xs text-status-danger';
 </script>
 
 <template>
-    <Head title="Create Stock Adjustment" />
+    <Head :title="t('stockAdjustments.create.title')" />
 
     <AppLayout>
         <template #header>
@@ -130,10 +132,10 @@ const fieldError = 'mt-1 text-xs text-status-danger';
             </div>
         </template>
 
-        <PageHeader title="Create Stock Adjustment" description="Manually adjust product stock levels">
+        <PageHeader :title="t('stockAdjustments.create.title')" :description="t('stockAdjustments.create.subtitle')">
             <template #actions>
                 <Button variant="secondary" size="sm" as="Link" :href="route('stock-adjustments.index')">
-                    Back to List
+                    {{ t('stockAdjustments.create.backToList') }}
                 </Button>
             </template>
         </PageHeader>
@@ -141,12 +143,12 @@ const fieldError = 'mt-1 text-xs text-status-danger';
         <form @submit.prevent="submit" class="mt-6">
             <div class="mx-auto max-w-3xl">
                 <Card :padded="false">
-                    <div class="px-5 pt-5"><h3 class="text-sm font-semibold text-text-primary">Adjustment Details</h3></div>
+                    <div class="px-5 pt-5"><h3 class="text-sm font-semibold text-text-primary">{{ t('stockAdjustments.create.adjustmentDetails') }}</h3></div>
                     <div class="space-y-6 p-5">
                         <!-- Product Selection -->
                         <div>
                             <label :class="fieldLabel">
-                                Product <span class="text-status-danger">*</span>
+                                {{ t('common.product') }} <span class="text-status-danger">*</span>
                             </label>
                             <div class="relative">
                                 <select
@@ -154,9 +156,9 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                                     required
                                     :class="[fieldInput, 'pr-12', { 'border-status-danger': form.errors.product_id }]"
                                 >
-                                    <option value="">Select a product</option>
+                                    <option value="">{{ t('stockAdjustments.create.selectProduct') }}</option>
                                     <option v-for="product in products" :key="product.id" :value="product.id">
-                                        {{ product.name }} ({{ product.sku }}) - Current Stock: {{ product.stock }}
+                                        {{ product.name }} ({{ product.sku }}) - {{ t('stockAdjustments.create.currentStockValue', { stock: product.stock }) }}
                                     </option>
                                 </select>
                                 <!-- Scan Icon Button -->
@@ -165,7 +167,7 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                                     type="button"
                                     @click="openScanner"
                                     class="absolute right-2 top-1/2 -translate-y-1/2 rounded-md p-1.5 text-text-tertiary transition-colors hover:text-brand"
-                                    title="Scan barcode to find product"
+                                    :title="t('stockAdjustments.create.scanBarcode')"
                                 >
                                     <ScanLine :size="18" />
                                 </button>
@@ -188,7 +190,7 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                             >
                                 <option :value="null">{{ t('orders.create.chooseVariant') }}</option>
                                 <option v-for="variant in selectedProduct.variants" :key="variant.id" :value="variant.id">
-                                    {{ variant.title }}<template v-if="variant.sku"> ({{ variant.sku }})</template> - Current Stock: {{ variant.stock }}
+                                    {{ variant.title }}<template v-if="variant.sku"> ({{ variant.sku }})</template> - {{ t('stockAdjustments.create.currentStockValue', { stock: variant.stock }) }}
                                 </option>
                             </select>
                             <p v-if="form.errors.product_variant_id" :class="fieldError">
@@ -200,11 +202,11 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                         <div v-if="currentStock !== null" class="rounded-lg border border-status-info/20 bg-status-info-soft p-4">
                             <div class="grid grid-cols-3 gap-4 text-center">
                                 <div>
-                                    <p class="mb-1 text-sm text-text-secondary">Current Stock</p>
+                                    <p class="mb-1 text-sm text-text-secondary">{{ t('stockAdjustments.create.currentStock') }}</p>
                                     <p class="text-2xl font-bold text-text-primary">{{ currentStock }}</p>
                                 </div>
                                 <div>
-                                    <p class="mb-1 text-sm text-text-secondary">Adjustment</p>
+                                    <p class="mb-1 text-sm text-text-secondary">{{ t('stockAdjustments.create.adjustment') }}</p>
                                     <p class="text-2xl font-bold" :class="{
                                         'text-status-success': adjustmentType === 'increase',
                                         'text-status-danger': adjustmentType === 'decrease',
@@ -214,7 +216,7 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                                     </p>
                                 </div>
                                 <div>
-                                    <p class="mb-1 text-sm text-text-secondary">New Stock</p>
+                                    <p class="mb-1 text-sm text-text-secondary">{{ t('stockAdjustments.create.newStock') }}</p>
                                     <p class="text-2xl font-bold text-text-primary">{{ newStock }}</p>
                                 </div>
                             </div>
@@ -223,14 +225,14 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                         <!-- Adjustment Type -->
                         <div>
                             <label :class="fieldLabel">
-                                Type <span class="text-status-danger">*</span>
+                                {{ t('common.type') }} <span class="text-status-danger">*</span>
                             </label>
                             <select
                                 v-model="form.type"
                                 required
                                 :class="[fieldInput, { 'border-status-danger': form.errors.type }]"
                             >
-                                <option v-for="(label, value) in types" :key="value" :value="value">{{ label }}</option>
+                                <option v-for="(label, value) in types" :key="value" :value="value">{{ typeLabel(value, label) }}</option>
                             </select>
                             <p v-if="form.errors.type" :class="fieldError">
                                 {{ form.errors.type }}
@@ -239,18 +241,18 @@ const fieldError = 'mt-1 text-xs text-status-danger';
 
                         <!-- Location (optional) -->
                         <div v-if="locations.length && !form.product_variant_id">
-                            <label :class="fieldLabel">Location (Optional)</label>
+                            <label :class="fieldLabel">{{ t('stockAdjustments.create.locationOptional') }}</label>
                             <select
                                 v-model="form.location_id"
                                 :class="[fieldInput, { 'border-status-danger': form.errors.location_id }]"
                             >
-                                <option :value="null">No specific location</option>
+                                <option :value="null">{{ t('stockAdjustments.create.noSpecificLocation') }}</option>
                                 <option v-for="location in locations" :key="location.id" :value="location.id">
                                     {{ location.name }}<template v-if="location.code"> ({{ location.code }})</template>
                                 </option>
                             </select>
                             <p class="mt-1 text-xs text-text-tertiary">
-                                Apply this adjustment to a specific location so the per-location breakdown stays in step. Leave blank to adjust the total only.
+                                {{ t('stockAdjustments.create.locationHint') }}
                             </p>
                             <p v-if="form.errors.location_id" :class="fieldError">
                                 {{ form.errors.location_id }}
@@ -260,7 +262,7 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                         <!-- Adjustment Quantity -->
                         <div>
                             <label :class="fieldLabel">
-                                Adjustment Quantity <span class="text-status-danger">*</span>
+                                {{ t('stockAdjustments.create.adjustmentQuantity') }} <span class="text-status-danger">*</span>
                             </label>
                             <input
                                 v-model="form.adjustment_quantity"
@@ -268,10 +270,10 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                                 required
                                 step="1"
                                 :class="[fieldInput, { 'border-status-danger': form.errors.adjustment_quantity }]"
-                                placeholder="Enter positive number to add, negative to subtract"
+                                :placeholder="t('stockAdjustments.create.quantityPlaceholder')"
                             />
                             <p class="mt-1 text-xs text-text-tertiary">
-                                Use positive numbers to increase stock (+10), negative to decrease stock (-5)
+                                {{ t('stockAdjustments.create.adjustmentHint') }}
                             </p>
                             <p v-if="form.errors.adjustment_quantity" :class="fieldError">
                                 {{ form.errors.adjustment_quantity }}
@@ -281,7 +283,7 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                         <!-- Reason -->
                         <div>
                             <label :class="fieldLabel">
-                                Reason <span class="text-status-danger">*</span>
+                                {{ t('stockAdjustments.create.reason') }} <span class="text-status-danger">*</span>
                             </label>
                             <input
                                 v-model="form.reason"
@@ -289,7 +291,7 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                                 required
                                 maxlength="255"
                                 :class="[fieldInput, { 'border-status-danger': form.errors.reason }]"
-                                placeholder="e.g., Damaged items, Inventory recount, Customer return"
+                                :placeholder="t('stockAdjustments.create.reasonPlaceholder')"
                             />
                             <p v-if="form.errors.reason" :class="fieldError">
                                 {{ form.errors.reason }}
@@ -299,13 +301,13 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                         <!-- Notes -->
                         <div>
                             <label :class="fieldLabel">
-                                Notes (Optional)
+                                {{ t('stockAdjustments.create.notesOptional') }}
                             </label>
                             <textarea
                                 v-model="form.notes"
                                 rows="4"
                                 :class="[fieldArea, { 'border-status-danger': form.errors.notes }]"
-                                placeholder="Add any additional details about this adjustment..."
+                                :placeholder="t('stockAdjustments.create.notesPlaceholder')"
                             ></textarea>
                             <p v-if="form.errors.notes" :class="fieldError">
                                 {{ form.errors.notes }}
@@ -317,9 +319,9 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                             <div class="flex gap-3">
                                 <AlertTriangle :size="20" class="shrink-0 text-status-danger" />
                                 <div>
-                                    <p class="text-sm font-medium text-status-danger">Warning: Negative Stock</p>
+                                    <p class="text-sm font-medium text-status-danger">{{ t('stockAdjustments.create.negativeWarning') }}</p>
                                     <p class="mt-1 text-xs text-text-secondary">
-                                        This adjustment will result in negative stock ({{ newStock }}). Please verify the quantity.
+                                        {{ t('stockAdjustments.create.negativeWarningValue', { stock: newStock }) }}
                                     </p>
                                 </div>
                             </div>
@@ -329,7 +331,7 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                     <!-- Actions -->
                     <div class="flex justify-end gap-3 border-t border-border-subtle p-5">
                         <Button variant="secondary" as="Link" :href="route('stock-adjustments.index')">
-                            Cancel
+                            {{ t('common.cancel') }}
                         </Button>
                         <Button
                             type="submit"
@@ -337,7 +339,7 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                             :loading="form.processing"
                             :disabled="form.processing || !form.product_id || (selectedProduct?.has_variants && !form.product_variant_id) || form.adjustment_quantity === 0"
                         >
-                            {{ form.processing ? 'Creating...' : 'Create Adjustment' }}
+                            {{ form.processing ? t('common.creating') : t('stockAdjustments.create.createAdjustment') }}
                         </Button>
                     </div>
                 </Card>

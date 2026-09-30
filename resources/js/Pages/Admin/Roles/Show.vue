@@ -7,6 +7,7 @@ import Badge from '@/Components/ui/Badge.vue';
 import { Head, Link, router } from '@inertiajs/vue3';
 import { ref, computed } from 'vue';
 import { useI18n } from 'vue-i18n';
+import { displayDate } from '@/lib/dates';
 import { Pencil, ArrowLeft, Trash2, CheckCircle2, ShieldAlert, Info, X, AlertTriangle } from 'lucide-vue-next';
 
 const props = defineProps({
@@ -23,7 +24,7 @@ const isProtected = computed(() => props.role.is_system || props.role.slug === '
 const groupedPermissions = computed(() => {
     const groups = {};
     props.rolePermissions.forEach(permission => {
-        const category = permission.category || 'Other';
+        const category = permission.category || t('admin.roles.show.otherCategory');
         if (!groups[category]) {
             groups[category] = [];
         }
@@ -33,7 +34,7 @@ const groupedPermissions = computed(() => {
 });
 
 const formatDate = (date) =>
-    new Date(date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+    displayDate(date);
 
 const deleteRole = () => {
     deleting.value = true;
@@ -47,7 +48,7 @@ const deleteRole = () => {
 </script>
 
 <template>
-    <Head :title="`Role: ${role.name}`" />
+    <Head :title="t('admin.roles.show.titleWithName', { name: role.name })" />
 
     <AppLayout>
         <template #header>
@@ -60,9 +61,9 @@ const deleteRole = () => {
             </div>
         </template>
 
-        <PageHeader :title="role.name" description="Role Details & Permissions">
+        <PageHeader :title="role.name" :description="t('admin.roles.show.title')">
             <template #actions>
-                <Badge v-if="role.is_system" variant="brand" size="sm">System Role</Badge>
+                <Badge v-if="role.is_system" variant="brand" size="sm">{{ t('admin.roles.show.systemRole') }}</Badge>
                 <Button
                     v-if="!isProtected"
                     variant="default"
@@ -71,11 +72,11 @@ const deleteRole = () => {
                     :href="route('roles.edit', role.id)"
                 >
                     <Pencil :size="14" />
-                    Edit Role
+                    {{ t('admin.roles.show.editRole') }}
                 </Button>
                 <Button variant="secondary" size="sm" as="Link" :href="route('roles.index')">
                     <ArrowLeft :size="14" />
-                    Back to Roles
+                    {{ t('admin.roles.show.backToRoles') }}
                 </Button>
             </template>
         </PageHeader>
@@ -85,11 +86,11 @@ const deleteRole = () => {
             <div class="space-y-4 lg:col-span-2">
                 <!-- Role Information -->
                 <Card :padded="false">
-                    <div class="px-5 pt-5"><h3 class="text-sm font-semibold text-text-primary">Role Information</h3></div>
+                    <div class="px-5 pt-5"><h3 class="text-sm font-semibold text-text-primary">{{ t('admin.roles.show.roleInfo') }}</h3></div>
                     <div class="p-5">
                         <dl class="space-y-4">
                             <div>
-                                <dt class="text-xs text-text-tertiary">Role Name</dt>
+                                <dt class="text-xs text-text-tertiary">{{ t('admin.roles.show.roleName') }}</dt>
                                 <dd class="mt-1 text-sm text-text-primary">{{ role.name }}</dd>
                             </div>
 
@@ -99,16 +100,16 @@ const deleteRole = () => {
                             </div>
 
                             <div>
-                                <dt class="text-xs text-text-tertiary">Role Type</dt>
+                                <dt class="text-xs text-text-tertiary">{{ t('admin.roles.show.roleType') }}</dt>
                                 <dd class="mt-1">
                                     <Badge :variant="role.is_system ? 'brand' : 'neutral'" size="sm">
-                                        {{ role.is_system ? 'System Role' : 'Custom Role' }}
+                                        {{ role.is_system ? t('admin.roles.show.systemRole') : t('admin.roles.show.customRole') }}
                                     </Badge>
                                 </dd>
                             </div>
 
                             <div>
-                                <dt class="mb-2 text-xs text-text-tertiary">Users with this Role</dt>
+                                <dt class="mb-2 text-xs text-text-tertiary">{{ t('admin.roles.show.usersWithRole') }}</dt>
                                 <dd v-if="role.users && role.users.length > 0" class="space-y-2">
                                     <div
                                         v-for="user in role.users"
@@ -124,7 +125,7 @@ const deleteRole = () => {
                                         </div>
                                     </div>
                                 </dd>
-                                <dd v-else class="text-sm text-text-tertiary">No users assigned to this role yet.</dd>
+                                <dd v-else class="text-sm text-text-tertiary">{{ t('admin.roles.show.noUsersAssigned') }}</dd>
                             </div>
                         </dl>
                     </div>
@@ -133,7 +134,7 @@ const deleteRole = () => {
                 <!-- Permissions -->
                 <Card :padded="false">
                     <div class="px-5 pt-5">
-                        <h3 class="text-sm font-semibold text-text-primary">Permissions ({{ rolePermissions.length }})</h3>
+                        <h3 class="text-sm font-semibold text-text-primary">{{ t('admin.roles.show.permissionsWithCount', { count: rolePermissions.length }) }}</h3>
                     </div>
                     <div class="p-5">
                         <div v-if="rolePermissions.length > 0" class="space-y-6">
@@ -158,7 +159,7 @@ const deleteRole = () => {
                         </div>
                         <div v-else class="flex flex-col items-center gap-2 py-8 text-center">
                             <ShieldAlert :size="22" class="text-text-tertiary" />
-                            <p class="text-sm text-text-tertiary">No permissions assigned to this role.</p>
+                            <p class="text-sm text-text-tertiary">{{ t('admin.roles.show.noPermissions') }}</p>
                         </div>
                     </div>
                 </Card>
@@ -168,21 +169,21 @@ const deleteRole = () => {
             <div class="space-y-4">
                 <!-- Details -->
                 <Card :padded="false">
-                    <div class="px-5 pt-5"><h3 class="text-sm font-semibold text-text-primary">Details</h3></div>
+                    <div class="px-5 pt-5"><h3 class="text-sm font-semibold text-text-primary">{{ t('admin.roles.show.details') }}</h3></div>
                     <div class="p-5">
                         <dl class="space-y-4">
                             <div>
-                                <dt class="text-xs text-text-tertiary">Created</dt>
+                                <dt class="text-xs text-text-tertiary">{{ t('common.createdAt') }}</dt>
                                 <dd class="mt-1 text-sm text-text-primary">{{ formatDate(role.created_at) }}</dd>
                             </div>
 
                             <div>
-                                <dt class="text-xs text-text-tertiary">Last Updated</dt>
+                                <dt class="text-xs text-text-tertiary">{{ t('common.updatedAt') }}</dt>
                                 <dd class="mt-1 text-sm text-text-primary">{{ formatDate(role.updated_at) }}</dd>
                             </div>
 
                             <div>
-                                <dt class="text-xs text-text-tertiary">Role Slug</dt>
+                                <dt class="text-xs text-text-tertiary">{{ t('admin.roles.show.roleSlug') }}</dt>
                                 <dd class="mt-1">
                                     <span class="inline-block rounded-md border border-border-subtle bg-surface-canvas px-2 py-1 font-mono text-sm text-text-primary">
                                         {{ role.slug }}
@@ -191,9 +192,9 @@ const deleteRole = () => {
                             </div>
 
                             <div>
-                                <dt class="text-xs text-text-tertiary">Users Count</dt>
+                                <dt class="text-xs text-text-tertiary">{{ t('admin.roles.show.usersCount') }}</dt>
                                 <dd class="mt-1 text-sm text-text-primary">
-                                    {{ role.users ? role.users.length : 0 }} {{ role.users && role.users.length === 1 ? 'user' : 'users' }}
+                                    {{ t('admin.roles.show.usersCountValue', { count: role.users ? role.users.length : 0 }, role.users ? role.users.length : 0) }}
                                 </dd>
                             </div>
                         </dl>
@@ -207,22 +208,22 @@ const deleteRole = () => {
                         <div class="space-y-3">
                             <Button variant="default" class="w-full" as="Link" :href="route('roles.edit', role.id)">
                                 <Pencil :size="16" />
-                                Edit Role
+                                {{ t('admin.roles.show.editRole') }}
                             </Button>
 
                             <Button
                                 variant="danger"
                                 class="w-full"
                                 :disabled="role.users && role.users.length > 0"
-                                :title="role.users && role.users.length > 0 ? 'Cannot delete role with assigned users' : 'Delete role'"
+                                :title="role.users && role.users.length > 0 ? t('admin.roles.show.cannotDeleteWithUsers') : t('admin.roles.show.deleteRoleTooltip')"
                                 @click="showDeleteModal = true"
                             >
                                 <Trash2 :size="16" />
-                                Delete Role
+                                {{ t('admin.roles.show.deleteRole') }}
                             </Button>
 
                             <p v-if="role.users && role.users.length > 0" class="text-center text-xs text-text-tertiary">
-                                Reassign users before deleting
+                                {{ t('admin.roles.show.reassignFirst') }}
                             </p>
                         </div>
                     </div>
@@ -234,9 +235,9 @@ const deleteRole = () => {
                         <div class="flex gap-3 rounded-lg border border-brand/20 bg-brand-soft p-4">
                             <Info :size="18" class="mt-0.5 flex-shrink-0 text-brand" />
                             <div>
-                                <p class="text-sm font-medium text-text-primary">System Role</p>
+                                <p class="text-sm font-medium text-text-primary">{{ t('admin.roles.show.systemRole') }}</p>
                                 <p class="mt-1 text-xs text-text-secondary">
-                                    This is a system role and cannot be modified or deleted.
+                                    {{ t('admin.roles.show.systemRoleHint') }}
                                 </p>
                             </div>
                         </div>
@@ -252,7 +253,7 @@ const deleteRole = () => {
 
                 <div class="relative mx-4 w-full max-w-md rounded-xl border border-border-subtle bg-surface-raised p-6 shadow-lg" @click.stop>
                     <div class="mb-4 flex items-center justify-between">
-                        <h3 class="text-base font-semibold text-text-primary">Delete Role</h3>
+                        <h3 class="text-base font-semibold text-text-primary">{{ t('admin.roles.show.deleteRole') }}</h3>
                         <button
                             @click="showDeleteModal = false"
                             class="text-text-tertiary transition-colors hover:text-text-primary"
@@ -263,13 +264,13 @@ const deleteRole = () => {
 
                     <div class="mb-6">
                         <p class="mb-4 text-sm text-text-secondary">
-                            Are you sure you want to delete the <strong class="text-text-primary">{{ role.name }}</strong> role?
+                            {{ t('admin.roles.show.confirmDeleteRole', { name: role.name }) }}
                         </p>
                         <div class="rounded-lg border border-status-warning/20 bg-status-warning-soft p-4">
                             <div class="flex items-start gap-3">
                                 <AlertTriangle :size="20" class="mt-0.5 flex-shrink-0 text-status-warning" />
                                 <div class="text-sm text-status-warning">
-                                    <p class="font-semibold">This action cannot be undone.</p>
+                                    <p class="font-semibold">{{ t('admin.users.show.cannotUndo') }}</p>
                                 </div>
                             </div>
                         </div>
@@ -280,8 +281,8 @@ const deleteRole = () => {
                             {{ t('common.cancel') }}
                         </Button>
                         <Button variant="danger" :loading="deleting" :disabled="deleting" @click="deleteRole">
-                            <span v-if="deleting">Deleting...</span>
-                            <span v-else>Delete Role</span>
+                            <span v-if="deleting">{{ t('common.deleting') }}</span>
+                            <span v-else>{{ t('admin.roles.show.deleteRole') }}</span>
                         </Button>
                     </div>
                 </div>

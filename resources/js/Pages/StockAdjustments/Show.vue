@@ -9,6 +9,8 @@ import { Head, Link } from '@inertiajs/vue3';
 import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { ArrowLeft, Boxes, ArrowUp, ArrowDown, Clock, CheckCircle2 } from 'lucide-vue-next';
+import { displayDate } from '@/lib/dates';
+import { formatLocale } from '@/lib/formatSettings';
 
 const { t } = useI18n();
 
@@ -28,35 +30,30 @@ const typeVariant = (type) =>
     }[type] || 'info');
 
 const typeLabels = {
-    'manual': 'Manual Adjustment',
-    'recount': 'Stock Recount',
-    'damage': 'Damage',
-    'loss': 'Loss',
-    'return': 'Return',
-    'correction': 'Correction',
-    'order': 'Order',
-    'opening_stock': 'Opening Stock',
+    'manual': t('stockAdjustments.types.manual'),
+    'recount': t('stockAdjustments.types.recount'),
+    'damage': t('stockAdjustments.types.damage'),
+    'loss': t('stockAdjustments.types.loss'),
+    'return': t('stockAdjustments.types.return'),
+    'correction': t('stockAdjustments.types.correction'),
+    'order': t('stockAdjustments.types.order'),
+    'opening_stock': t('stockAdjustments.types.opening_stock'),
 };
 
 const isIncrease = computed(() => props.adjustment.adjustment_quantity > 0);
 const isDecrease = computed(() => props.adjustment.adjustment_quantity < 0);
 
-const formatDate = (date) =>
-    new Date(date).toLocaleDateString('en-US', {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric',
-    });
+const formatDate = (date) => displayDate(date);
 
 const formatTime = (date) =>
-    new Date(date).toLocaleTimeString('en-US', {
+    new Date(date).toLocaleTimeString(formatLocale(), {
         hour: '2-digit',
         minute: '2-digit',
     });
 </script>
 
 <template>
-    <Head title="Stock Adjustment Details" />
+    <Head :title="t('stockAdjustments.show.title')" />
 
     <AppLayout>
         <template #header>
@@ -70,14 +67,14 @@ const formatTime = (date) =>
         </template>
 
         <PageHeader
-            title="Stock Adjustment Details"
-            :description="`Adjustment #${adjustment.id}`"
+            :title="t('stockAdjustments.show.title')"
+            :description="t('stockAdjustments.show.adjustmentNumber', { id: adjustment.id })"
         >
             <template #actions>
                 <Badge :variant="typeVariant(adjustment.type)" size="sm">{{ typeLabels[adjustment.type] || adjustment.type }}</Badge>
                 <Button variant="secondary" size="sm" as="Link" :href="route('stock-adjustments.index')">
                     <ArrowLeft :size="14" />
-                    Back to List
+                    {{ t('stockAdjustments.show.backToList') }}
                 </Button>
             </template>
         </PageHeader>
@@ -85,17 +82,17 @@ const formatTime = (date) =>
         <!-- Summary Tiles -->
         <section class="mt-6 grid grid-cols-1 gap-3 md:grid-cols-3">
             <StatTile
-                label="Stock Before"
+                :label="t('stockAdjustments.show.stockBefore')"
                 :value="adjustment.quantity_before"
-                hint="units"
+                :hint="t('stockAdjustments.show.units')"
                 icon-tone="info"
             >
                 <template #icon><Boxes :size="18" /></template>
             </StatTile>
             <StatTile
-                label="Adjustment"
+                :label="t('stockAdjustments.create.adjustment')"
                 :value="`${adjustment.adjustment_quantity > 0 ? '+' : ''}${adjustment.adjustment_quantity}`"
-                hint="units"
+                :hint="t('stockAdjustments.show.units')"
                 :icon-tone="isIncrease ? 'success' : isDecrease ? 'warning' : 'brand'"
             >
                 <template #icon>
@@ -105,9 +102,9 @@ const formatTime = (date) =>
                 </template>
             </StatTile>
             <StatTile
-                label="Stock After"
+                :label="t('stockAdjustments.show.stockAfter')"
                 :value="adjustment.quantity_after"
-                hint="units"
+                :hint="t('stockAdjustments.show.units')"
                 icon-tone="brand"
             >
                 <template #icon><Boxes :size="18" /></template>
@@ -116,11 +113,11 @@ const formatTime = (date) =>
 
         <!-- Adjustment Details -->
         <Card :padded="false" class="mt-4">
-            <div class="px-5 pt-5"><h3 class="text-sm font-semibold text-text-primary">Adjustment Information</h3></div>
+            <div class="px-5 pt-5"><h3 class="text-sm font-semibold text-text-primary">{{ t('stockAdjustments.show.adjustmentInfo') }}</h3></div>
             <div class="p-5">
                 <dl class="grid grid-cols-1 gap-6 md:grid-cols-2">
                     <div>
-                        <dt class="mb-1 text-xs text-text-tertiary">Product</dt>
+                        <dt class="mb-1 text-xs text-text-tertiary">{{ t('common.product') }}</dt>
                         <dd>
                             <Link
                                 :href="route('products.show', adjustment.product.id)"
@@ -133,7 +130,7 @@ const formatTime = (date) =>
                     </div>
 
                     <div>
-                        <dt class="mb-1 text-xs text-text-tertiary">Type</dt>
+                        <dt class="mb-1 text-xs text-text-tertiary">{{ t('common.type') }}</dt>
                         <dd>
                             <Badge :variant="typeVariant(adjustment.type)" size="sm">
                                 {{ typeLabels[adjustment.type] || adjustment.type }}
@@ -142,31 +139,31 @@ const formatTime = (date) =>
                     </div>
 
                     <div>
-                        <dt class="mb-1 text-xs text-text-tertiary">Adjusted By</dt>
-                        <dd class="text-sm text-text-primary">{{ adjustment.user?.name || 'System' }}</dd>
+                        <dt class="mb-1 text-xs text-text-tertiary">{{ t('stockAdjustments.show.adjustedBy') }}</dt>
+                        <dd class="text-sm text-text-primary">{{ adjustment.user?.name || t('common.system') }}</dd>
                         <p v-if="adjustment.user?.email" class="mt-1 text-xs text-text-tertiary">
                             {{ adjustment.user.email }}
                         </p>
                     </div>
 
                     <div>
-                        <dt class="mb-1 text-xs text-text-tertiary">Date & Time</dt>
+                        <dt class="mb-1 text-xs text-text-tertiary">{{ t('stockAdjustments.show.dateTime') }}</dt>
                         <dd class="text-sm text-text-primary">{{ formatDate(adjustment.created_at) }}</dd>
                         <p class="mt-1 text-xs text-text-tertiary">{{ formatTime(adjustment.created_at) }}</p>
                     </div>
 
                     <div class="md:col-span-2">
-                        <dt class="mb-1 text-xs text-text-tertiary">Reason</dt>
+                        <dt class="mb-1 text-xs text-text-tertiary">{{ t('stockAdjustments.create.reason') }}</dt>
                         <dd class="text-sm text-text-primary">{{ adjustment.reason }}</dd>
                     </div>
 
                     <div v-if="adjustment.notes" class="md:col-span-2">
-                        <dt class="mb-1 text-xs text-text-tertiary">Notes</dt>
+                        <dt class="mb-1 text-xs text-text-tertiary">{{ t('common.notes') }}</dt>
                         <dd class="whitespace-pre-line text-sm text-text-primary">{{ adjustment.notes }}</dd>
                     </div>
 
                     <div v-if="adjustment.reference_type" class="md:col-span-2">
-                        <dt class="mb-1 text-xs text-text-tertiary">Reference</dt>
+                        <dt class="mb-1 text-xs text-text-tertiary">{{ t('stockAdjustments.show.reference') }}</dt>
                         <dd class="rounded-lg border border-border-subtle bg-surface-canvas p-3">
                             <p class="text-sm text-text-primary">
                                 {{ adjustment.reference_type }} #{{ adjustment.reference_id }}
@@ -179,7 +176,7 @@ const formatTime = (date) =>
 
         <!-- Visual Timeline -->
         <Card :padded="false" class="mt-4">
-            <div class="px-5 pt-5"><h3 class="text-sm font-semibold text-text-primary">Stock Change Timeline</h3></div>
+            <div class="px-5 pt-5"><h3 class="text-sm font-semibold text-text-primary">{{ t('stockAdjustments.show.stockChangeTimeline') }}</h3></div>
             <div class="p-5">
                 <div class="relative">
                     <!-- Timeline line -->
@@ -191,8 +188,8 @@ const formatTime = (date) =>
                             <Clock :size="28" class="text-status-info" />
                         </div>
                         <div class="flex-1 rounded-lg border border-border-subtle bg-surface-canvas p-4">
-                            <p class="text-sm font-medium text-text-secondary">Starting Stock</p>
-                            <p class="mt-1 text-2xl font-bold tabular-nums text-text-primary">{{ adjustment.quantity_before }} units</p>
+                            <p class="text-sm font-medium text-text-secondary">{{ t('stockAdjustments.show.startingStock') }}</p>
+                            <p class="mt-1 text-2xl font-bold tabular-nums text-text-primary">{{ t('stockAdjustments.show.unitsCount', { count: adjustment.quantity_before }, adjustment.quantity_before) }}</p>
                         </div>
                     </div>
 
@@ -210,10 +207,10 @@ const formatTime = (date) =>
                             :class="isIncrease ? 'border-status-success/20 bg-status-success-soft' : 'border-status-danger/20 bg-status-danger-soft'"
                         >
                             <p class="text-sm font-medium" :class="isIncrease ? 'text-status-success' : 'text-status-danger'">
-                                {{ isIncrease ? 'Stock Increased' : 'Stock Decreased' }}
+                                {{ isIncrease ? t('stockAdjustments.show.stockIncreased') : t('stockAdjustments.show.stockDecreased') }}
                             </p>
                             <p class="mt-1 text-2xl font-bold tabular-nums" :class="isIncrease ? 'text-status-success' : 'text-status-danger'">
-                                {{ adjustment.adjustment_quantity > 0 ? '+' : '' }}{{ adjustment.adjustment_quantity }} units
+                                {{ adjustment.adjustment_quantity > 0 ? '+' : '' }}{{ t('stockAdjustments.show.unitsCount', { count: adjustment.adjustment_quantity }, Math.abs(adjustment.adjustment_quantity)) }}
                             </p>
                             <p class="mt-2 text-xs" :class="isIncrease ? 'text-status-success' : 'text-status-danger'">
                                 {{ adjustment.reason }}
@@ -227,8 +224,8 @@ const formatTime = (date) =>
                             <CheckCircle2 :size="28" class="text-brand" />
                         </div>
                         <div class="flex-1 rounded-lg border border-brand/20 bg-brand-soft p-4">
-                            <p class="text-sm font-medium text-brand">Final Stock</p>
-                            <p class="mt-1 text-2xl font-bold tabular-nums text-text-primary">{{ adjustment.quantity_after }} units</p>
+                            <p class="text-sm font-medium text-brand">{{ t('stockAdjustments.show.finalStock') }}</p>
+                            <p class="mt-1 text-2xl font-bold tabular-nums text-text-primary">{{ t('stockAdjustments.show.unitsCount', { count: adjustment.quantity_after }, adjustment.quantity_after) }}</p>
                         </div>
                     </div>
                 </div>

@@ -54,7 +54,7 @@ const thClass =
             </div>
         </template>
 
-        <PageHeader :title="t('customers.title')" description="Your customers and the orders they place.">
+        <PageHeader :title="t('customers.title')" :description="t('customers.index.description')">
             <template #actions>
                 <Button variant="default" size="sm" as="Link" :href="route('customers.create')">
                     <Plus :size="14" />

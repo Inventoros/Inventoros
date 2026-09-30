@@ -12,9 +12,11 @@ import SKUGeneratorModal from '@/Components/SKUGeneratorModal.vue';
 import { Head, Link, useForm, router } from '@inertiajs/vue3';
 import { ref, computed } from 'vue';
 import { useI18n } from 'vue-i18n';
+import { formatPercent } from '@/lib/reportFormat';
 import { usePermissions } from '@/composables/usePermissions';
 import axios from 'axios';
 import ImageUploader from '@/Components/ImageUploader.vue';
+import { formatMoney } from '@/lib/money';
 import { ArrowLeft, Eye, Zap, ChevronDown, Layers, Info, X, Trash2 } from 'lucide-vue-next';
 
 const { t } = useI18n();
@@ -169,7 +171,7 @@ const createCategory = async () => {
         }
     } catch (error) {
         console.error('Error creating category:', error);
-        alert('Failed to create category. Please try again.');
+        alert(t('products.form.createCategoryFailed'));
     } finally {
         categoryLoading.value = false;
     }
@@ -190,7 +192,7 @@ const createLocation = async () => {
         }
     } catch (error) {
         console.error('Error creating location:', error);
-        alert('Failed to create location. Please try again.');
+        alert(t('products.form.createLocationFailed'));
     } finally {
         locationLoading.value = false;
     }
@@ -294,14 +296,14 @@ const fieldError = 'mt-1 text-xs text-status-danger';
 
                         <!-- Product Type -->
                         <div>
-                            <label for="type" :class="fieldLabel">Product Type</label>
+                            <label for="type" :class="fieldLabel">{{ t('products.form.productType') }}</label>
                             <select id="type" v-model="form.type" :class="fieldInput">
-                                <option value="standard">Standard</option>
-                                <option value="kit">Kit</option>
-                                <option value="assembly">Assembly</option>
+                                <option value="standard">{{ t('products.types.standard') }}</option>
+                                <option value="kit">{{ t('products.types.kit') }}</option>
+                                <option value="assembly">{{ t('products.types.assembly') }}</option>
                             </select>
                             <p class="mt-1 text-xs text-text-tertiary">
-                                Kits bundle components for sale. Assemblies require work orders to produce.
+                                {{ t('products.form.productTypeHint') }}
                             </p>
                             <p v-if="form.errors.type" :class="fieldError">{{ form.errors.type }}</p>
                         </div>
@@ -352,13 +354,13 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                             <div class="flex items-center justify-between">
                                 <span class="text-sm font-medium text-status-success">{{ t('products.create.profitPerUnit') }}:</span>
                                 <span class="text-lg font-bold text-status-success">
-                                    ${{ (parseFloat(form.price) - parseFloat(form.purchase_price)).toFixed(2) }}
+                                    {{ formatMoney(parseFloat(form.price) - parseFloat(form.purchase_price), product.currency) }}
                                 </span>
                             </div>
                             <div class="mt-1 flex items-center justify-between">
                                 <span class="text-xs text-status-success">{{ t('products.create.margin') }}:</span>
                                 <span class="text-sm font-semibold text-status-success">
-                                    {{ ((parseFloat(form.price) - parseFloat(form.purchase_price)) / parseFloat(form.price) * 100).toFixed(1) }}%
+                                    {{ formatPercent(((parseFloat(form.price) - parseFloat(form.purchase_price)) / parseFloat(form.price) * 100)) }}
                                 </span>
                             </div>
                         </div>
@@ -391,17 +393,17 @@ const fieldError = 'mt-1 text-xs text-status-danger';
 
                         <!-- Reorder Point -->
                         <div>
-                            <label for="reorder_point" :class="fieldLabel">Reorder Point</label>
-                            <input id="reorder_point" v-model="form.reorder_point" type="number" min="0" :class="fieldInput" placeholder="Leave empty to disable" />
-                            <p class="mt-1 text-xs text-text-tertiary">Stock level that triggers automatic reorder</p>
+                            <label for="reorder_point" :class="fieldLabel">{{ t('products.form.reorderPoint') }}</label>
+                            <input id="reorder_point" v-model="form.reorder_point" type="number" min="0" :class="fieldInput" :placeholder="t('products.form.leaveEmptyToDisable')" />
+                            <p class="mt-1 text-xs text-text-tertiary">{{ t('products.form.reorderPointHint') }}</p>
                             <p v-if="form.errors.reorder_point" :class="fieldError">{{ form.errors.reorder_point }}</p>
                         </div>
 
                         <!-- Reorder Quantity -->
                         <div>
-                            <label for="reorder_quantity" :class="fieldLabel">Reorder Quantity</label>
-                            <input id="reorder_quantity" v-model="form.reorder_quantity" type="number" min="0" :class="fieldInput" placeholder="Leave empty to disable" />
-                            <p class="mt-1 text-xs text-text-tertiary">Quantity to order when stock reaches reorder point</p>
+                            <label for="reorder_quantity" :class="fieldLabel">{{ t('products.form.reorderQuantity') }}</label>
+                            <input id="reorder_quantity" v-model="form.reorder_quantity" type="number" min="0" :class="fieldInput" :placeholder="t('products.form.leaveEmptyToDisable')" />
+                            <p class="mt-1 text-xs text-text-tertiary">{{ t('products.form.reorderQuantityHint') }}</p>
                             <p v-if="form.errors.reorder_quantity" :class="fieldError">{{ form.errors.reorder_quantity }}</p>
                         </div>
 
@@ -453,13 +455,13 @@ const fieldError = 'mt-1 text-xs text-status-danger';
 
                         <!-- Tracking Type -->
                         <div>
-                            <label for="tracking_type" :class="fieldLabel">Inventory Tracking</label>
+                            <label for="tracking_type" :class="fieldLabel">{{ t('products.form.inventoryTracking') }}</label>
                             <select id="tracking_type" v-model="form.tracking_type" :class="fieldInput">
-                                <option value="none">No Tracking</option>
-                                <option value="batch">Batch Tracking</option>
-                                <option value="serial">Serial Number Tracking</option>
+                                <option value="none">{{ t('products.trackingTypes.none') }}</option>
+                                <option value="batch">{{ t('products.trackingTypes.batch') }}</option>
+                                <option value="serial">{{ t('products.trackingTypes.serial') }}</option>
                             </select>
-                            <p class="mt-1 text-xs text-text-tertiary">Choose how to track individual units of this product.</p>
+                            <p class="mt-1 text-xs text-text-tertiary">{{ t('products.form.inventoryTrackingHint') }}</p>
                             <p v-if="form.errors.tracking_type" :class="fieldError">{{ form.errors.tracking_type }}</p>
                         </div>
                     </div>
@@ -491,7 +493,7 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                                 {{ t('products.create.productVariants') }}
                             </span>
                             <Badge v-if="form.variants.length > 0" variant="brand" size="sm">
-                                {{ form.variants.length }} variants
+                                {{ t('products.variantsCount', { count: form.variants.length }, form.variants.length) }}
                             </Badge>
                         </div>
                         <ChevronDown

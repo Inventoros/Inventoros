@@ -108,7 +108,7 @@ const toggles = [
             </div>
         </template>
 
-        <PageHeader :title="t('settings.account.title')" description="Manage your profile, password, notifications, and preferences." />
+        <PageHeader :title="t('settings.account.title')" :description="t('settings.account.description')" />
 
         <!-- Tabs -->
         <div class="mt-6 border-b border-border-subtle">

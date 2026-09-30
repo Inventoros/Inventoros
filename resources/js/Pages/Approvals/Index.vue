@@ -7,6 +7,7 @@ import Badge from '@/Components/ui/Badge.vue';
 import { Head, useForm } from '@inertiajs/vue3';
 import { computed, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
+import { displayDateTime } from '@/lib/dates';
 import { ClipboardList, SlidersHorizontal, ArrowLeftRight, Inbox, ExternalLink, ShoppingCart } from 'lucide-vue-next';
 
 const { t } = useI18n();
@@ -33,7 +34,7 @@ const statusVariant = (status) => ({
     rejected: 'danger',
 }[status] || 'neutral');
 
-const formatDate = (value) => (value ? new Date(value).toLocaleString() : '');
+const formatDate = (value) => (value ? displayDateTime(value) : '');
 
 // One decision form at a time, keyed by type:id.
 const open = ref(null);

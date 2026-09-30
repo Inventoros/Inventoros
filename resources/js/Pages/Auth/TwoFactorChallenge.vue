@@ -6,6 +6,9 @@ import InputLabel from '@/Components/InputLabel.vue';
 import InputError from '@/Components/InputError.vue';
 import { Head, useForm } from '@inertiajs/vue3';
 import { ref } from 'vue';
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
 
 const useRecoveryCode = ref(false);
 
@@ -33,21 +36,21 @@ const toggleMode = () => {
 
 <template>
     <GuestLayout>
-        <Head title="Two-Factor Challenge" />
+        <Head :title="t('auth.twoFactorChallenge.title')" />
 
         <div class="mb-4 text-sm text-text-secondary">
             <template v-if="!useRecoveryCode">
-                Please enter the authentication code from your authenticator app.
+                {{ t('auth.twoFactorChallenge.codeHint') }}
             </template>
             <template v-else>
-                Please enter one of your recovery codes.
+                {{ t('auth.twoFactorChallenge.recoveryHint') }}
             </template>
         </div>
 
         <form @submit.prevent="submit">
             <!-- TOTP Code Input -->
             <div v-if="!useRecoveryCode">
-                <InputLabel for="code" value="Authentication Code" />
+                <InputLabel for="code" :value="t('auth.twoFactorChallenge.code')" />
                 <TextInput
                     id="code"
                     v-model="form.code"
@@ -55,7 +58,7 @@ const toggleMode = () => {
                     class="mt-1 block w-full"
                     required
                     maxlength="6"
-                    placeholder="Enter 6-digit code"
+                    :placeholder="t('auth.twoFactorChallenge.codePlaceholder')"
                     autocomplete="one-time-code"
                     autofocus
                 />
@@ -64,14 +67,14 @@ const toggleMode = () => {
 
             <!-- Recovery Code Input -->
             <div v-else>
-                <InputLabel for="recovery_code" value="Recovery Code" />
+                <InputLabel for="recovery_code" :value="t('auth.twoFactorChallenge.recoveryCode')" />
                 <TextInput
                     id="recovery_code"
                     v-model="form.recovery_code"
                     type="text"
                     class="mt-1 block w-full"
                     required
-                    placeholder="Enter recovery code"
+                    :placeholder="t('auth.twoFactorChallenge.recoveryPlaceholder')"
                     autofocus
                 />
                 <InputError class="mt-2" :message="form.errors.code" />
@@ -83,11 +86,11 @@ const toggleMode = () => {
                     @click="toggleMode"
                     class="text-sm text-text-secondary hover:text-text-primary underline"
                 >
-                    {{ useRecoveryCode ? 'Use authentication code' : 'Use a recovery code' }}
+                    {{ useRecoveryCode ? t('auth.twoFactorChallenge.useCode') : t('auth.twoFactorChallenge.useRecovery') }}
                 </button>
 
                 <PrimaryButton :disabled="form.processing">
-                    Verify
+                    {{ t('auth.twoFactorChallenge.verify') }}
                 </PrimaryButton>
             </div>
         </form>

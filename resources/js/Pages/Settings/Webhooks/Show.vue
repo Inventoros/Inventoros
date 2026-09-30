@@ -9,6 +9,7 @@ import { ref, computed } from 'vue';
 import { ArrowLeft, Pencil, Trash2, Send, RefreshCw, RotateCcw, ChevronDown, Inbox, X } from 'lucide-vue-next';
 
 import { useI18n } from 'vue-i18n';
+import { displayDateTime } from '@/lib/dates';
 const props = defineProps({
     webhook: Object,
     deliveries: Object,
@@ -57,13 +58,13 @@ const submitEdit = () => {
 };
 
 const deleteWebhook = () => {
-    if (confirm(`Are you sure you want to delete "${props.webhook.name}"? This action cannot be undone.`)) {
+    if (confirm(t('settings.webhooks.show.confirmDelete', { name: props.webhook.name }))) {
         router.delete(route('webhooks.destroy', props.webhook.id));
     }
 };
 
 const regenerateSecret = () => {
-    if (confirm('Are you sure you want to regenerate the secret? You will need to update the secret in your receiving application.')) {
+    if (confirm(t('settings.webhooks.show.confirmRegenerate'))) {
         router.post(route('webhooks.regenerate-secret', props.webhook.id));
     }
 };
@@ -97,10 +98,7 @@ const toggleDeliveryExpand = (deliveryId) => {
     }
 };
 
-const formatDate = (date) => {
-    if (!date) return '-';
-    return new Date(date).toLocaleString();
-};
+const formatDate = (date) => displayDateTime(date);
 
 const formatJson = (data) => {
     if (!data) return '-';
@@ -144,7 +142,7 @@ const getEventGroup = (event) => {
             return group;
         }
     }
-    return 'Other';
+    return t('settings.webhooks.show.otherGroup');
 };
 
 const toggleEvent = (form, event) => {
@@ -198,7 +196,7 @@ const fieldError = 'mt-1 text-xs text-status-danger';
 </script>
 
 <template>
-    <Head :title="`Webhook: ${webhook.name}`" />
+    <Head :title="t('settings.webhooks.show.headTitle', { name: webhook.name })" />
 
     <AppLayout>
         <template #header>
@@ -213,14 +211,14 @@ const fieldError = 'mt-1 text-xs text-status-danger';
             </div>
         </template>
 
-        <PageHeader :title="webhook.name" description="Webhook configuration and delivery activity.">
+        <PageHeader :title="webhook.name" :description="t('settings.webhooks.show.description')">
             <template #actions>
                 <Badge :variant="webhook.is_active ? 'success' : 'neutral'" size="sm" dot>
-                    {{ webhook.is_active ? 'Active' : 'Inactive' }}
+                    {{ webhook.is_active ? t('common.active') : t('common.inactive') }}
                 </Badge>
                 <Button variant="secondary" size="sm" @click="sendTest">
                     <Send :size="14" />
-                    Send Test
+                    {{ t('settings.webhooks.show.sendTestShort') }}
                 </Button>
                 <Button variant="default" size="sm" @click="openEditModal">
                     <Pencil :size="14" />
@@ -238,24 +236,24 @@ const fieldError = 'mt-1 text-xs text-status-danger';
             <div class="space-y-4 lg:col-span-2">
                 <!-- Webhook Details Card -->
                 <Card :padded="false">
-                    <div class="px-5 pt-5"><h3 class="text-sm font-semibold text-text-primary">Webhook Details</h3></div>
+                    <div class="px-5 pt-5"><h3 class="text-sm font-semibold text-text-primary">{{ t('settings.webhooks.show.title') }}</h3></div>
                     <div class="p-5">
                         <dl class="grid grid-cols-1 gap-x-4 gap-y-6 sm:grid-cols-2">
                             <div class="sm:col-span-2">
-                                <dt class="text-xs text-text-tertiary">Endpoint URL</dt>
+                                <dt class="text-xs text-text-tertiary">{{ t('settings.webhooks.endpointUrl') }}</dt>
                                 <dd class="mt-1 break-all font-mono text-sm text-text-primary">
                                     {{ webhook.url }}
                                 </dd>
                             </div>
                             <div class="sm:col-span-2">
                                 <dt class="flex items-center justify-between text-xs text-text-tertiary">
-                                    <span>Signing secret</span>
+                                    <span>{{ t('settings.webhooks.signingSecret') }}</span>
                                     <button
                                         v-if="revealedSecret"
                                         @click="copySecret"
                                         class="text-xs text-brand hover:underline"
                                     >
-                                        {{ copiedSecret ? 'Copied!' : 'Copy' }}
+                                        {{ copiedSecret ? t('common.copied') : t('common.copy') }}
                                     </button>
                                 </dt>
                                 <dd
@@ -264,7 +262,7 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                                 >
                                     {{ revealedSecret }}
                                     <p class="mt-2 font-sans text-amber-400">
-                                        Copy this now. For security it is shown only once and cannot be retrieved later.
+                                        {{ t('settings.webhooks.secretShownOnce') }}
                                     </p>
                                 </dd>
                                 <dd
@@ -273,18 +271,18 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                                 >
                                     ****************
                                     <p class="mt-2 font-sans text-text-tertiary">
-                                        Hidden for security. Regenerate the secret to issue a new one; it is shown only once.
+                                        {{ t('settings.webhooks.show.secretHidden') }}
                                     </p>
                                 </dd>
                             </div>
                             <div>
                                 <dt class="text-xs text-text-tertiary">{{ t('purchaseOrders.show.createdBy') }}</dt>
                                 <dd class="mt-1 text-sm text-text-primary">
-                                    {{ webhook.creator?.name || 'Unknown' }}
+                                    {{ webhook.creator?.name || t('settings.webhooks.unknownCreator') }}
                                 </dd>
                             </div>
                             <div>
-                                <dt class="text-xs text-text-tertiary">Created At</dt>
+                                <dt class="text-xs text-text-tertiary">{{ t('settings.webhooks.show.createdAt') }}</dt>
                                 <dd class="mt-1 text-sm text-text-primary">
                                     {{ formatDate(webhook.created_at) }}
                                 </dd>
@@ -297,7 +295,7 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                 <Card :padded="false">
                     <div class="px-5 pt-5">
                         <h3 class="text-sm font-semibold text-text-primary">
-                            Subscribed Events ({{ webhook.events?.length || 0 }})
+                            {{ t('settings.webhooks.show.subscribedEventsCount', { count: webhook.events?.length || 0 }) }}
                         </h3>
                     </div>
                     <div class="p-5">
@@ -313,24 +311,24 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                             </Badge>
                         </div>
                         <p v-else class="text-sm text-text-tertiary">
-                            No events subscribed
+                            {{ t('settings.webhooks.show.noEvents') }}
                         </p>
                     </div>
                 </Card>
 
                 <!-- Delivery Logs -->
                 <Card :padded="false">
-                    <div class="px-5 pt-5"><h3 class="text-sm font-semibold text-text-primary">Delivery Logs</h3></div>
+                    <div class="px-5 pt-5"><h3 class="text-sm font-semibold text-text-primary">{{ t('settings.webhooks.show.deliveryLogs') }}</h3></div>
                     <div class="p-5">
                         <div class="w-full overflow-x-auto rounded-lg border border-border-subtle">
                             <table class="w-full text-sm">
                                 <thead>
                                     <tr class="border-b border-border-subtle">
-                                        <th :class="thClass">Event</th>
+                                        <th :class="thClass">{{ t('settings.webhooks.show.event') }}</th>
                                         <th :class="thClass">{{ t('common.status') }}</th>
-                                        <th :class="thClass">Attempts</th>
-                                        <th :class="thClass">Response</th>
-                                        <th :class="thClass">Created</th>
+                                        <th :class="thClass">{{ t('settings.webhooks.show.attempts') }}</th>
+                                        <th :class="thClass">{{ t('settings.webhooks.show.response') }}</th>
+                                        <th :class="thClass">{{ t('common.createdAt') }}</th>
                                         <th :class="[thClass, 'text-right']">{{ t('common.actions') }}</th>
                                     </tr>
                                 </thead>
@@ -339,9 +337,9 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                                         <td colspan="6" class="px-4 py-12 text-center">
                                             <div class="flex flex-col items-center gap-3">
                                                 <Inbox :size="22" class="text-text-tertiary" />
-                                                <p class="text-sm text-text-tertiary">No delivery logs yet</p>
+                                                <p class="text-sm text-text-tertiary">{{ t('settings.webhooks.show.noLogs') }}</p>
                                                 <p class="text-xs text-text-tertiary">
-                                                    Logs will appear here when events are triggered
+                                                    {{ t('settings.webhooks.show.logsHint') }}
                                                 </p>
                                             </div>
                                         </td>
@@ -356,7 +354,7 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                                             </td>
                                             <td class="px-4 py-3">
                                                 <Badge :variant="statusVariant(delivery.status)" size="sm">
-                                                    {{ delivery.status }}
+                                                    {{ t(`settings.webhooks.show.deliveryStatuses.${delivery.status}`) }}
                                                 </Badge>
                                             </td>
                                             <td class="px-4 py-3 text-sm text-text-primary">
@@ -375,7 +373,7 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                                                     <button
                                                         @click.stop="toggleDeliveryExpand(delivery.id)"
                                                         class="rounded-md p-1.5 text-text-tertiary transition-colors hover:bg-surface-overlay hover:text-text-primary"
-                                                        :title="expandedDelivery === delivery.id ? 'Collapse' : 'Expand'"
+                                                        :title="expandedDelivery === delivery.id ? t('common.collapse') : t('common.expand')"
                                                     >
                                                         <ChevronDown :size="16" :class="['transition-transform', expandedDelivery === delivery.id ? 'rotate-180' : '']" />
                                                     </button>
@@ -383,7 +381,7 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                                                         v-if="delivery.status === 'failed'"
                                                         @click.stop="retryDelivery(delivery)"
                                                         class="rounded-md p-1.5 text-text-tertiary transition-colors hover:bg-surface-overlay hover:text-brand"
-                                                        title="Retry"
+                                                        :title="t('common.retry')"
                                                     >
                                                         <RotateCcw :size="16" />
                                                     </button>
@@ -395,12 +393,12 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                                             <td colspan="6" class="bg-surface-canvas px-4 py-4">
                                                 <div class="grid grid-cols-1 gap-4 lg:grid-cols-2">
                                                     <div>
-                                                        <h4 class="mb-2 text-sm font-medium text-text-secondary">Payload</h4>
+                                                        <h4 class="mb-2 text-sm font-medium text-text-secondary">{{ t('settings.webhooks.show.payload') }}</h4>
                                                         <pre class="max-h-64 overflow-x-auto rounded-lg bg-slate-900 p-4 font-mono text-xs text-slate-300">{{ formatJson(delivery.payload) }}</pre>
                                                     </div>
                                                     <div>
-                                                        <h4 class="mb-2 text-sm font-medium text-text-secondary">Response</h4>
-                                                        <pre class="max-h-64 overflow-x-auto rounded-lg bg-slate-900 p-4 font-mono text-xs text-slate-300">{{ delivery.response_body || 'No response body' }}</pre>
+                                                        <h4 class="mb-2 text-sm font-medium text-text-secondary">{{ t('settings.webhooks.show.response') }}</h4>
+                                                        <pre class="max-h-64 overflow-x-auto rounded-lg bg-slate-900 p-4 font-mono text-xs text-slate-300">{{ delivery.response_body || t('settings.webhooks.show.noResponseBody') }}</pre>
                                                     </div>
                                                 </div>
                                             </td>
@@ -413,13 +411,7 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                         <!-- Pagination -->
                         <div v-if="deliveries.data.length > 0" class="mt-4 flex items-center justify-between">
                             <p class="text-sm text-text-secondary">
-                                Showing
-                                <span class="font-medium text-text-primary">{{ deliveries.from }}</span>
-                                to
-                                <span class="font-medium text-text-primary">{{ deliveries.to }}</span>
-                                of
-                                <span class="font-medium text-text-primary">{{ deliveries.total }}</span>
-                                results
+                                {{ t('common.showingResults', { from: deliveries.from, to: deliveries.to, total: deliveries.total }) }}
                             </p>
                             <nav class="inline-flex items-center gap-1">
                                 <template v-for="link in deliveries.links" :key="link.label">
@@ -454,40 +446,40 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                     <div class="space-y-2 p-5">
                         <Button variant="secondary" class="w-full" @click="sendTest">
                             <Send :size="16" />
-                            Send Test Webhook
+                            {{ t('settings.webhooks.show.sendTest') }}
                         </Button>
                         <Button variant="default" class="w-full" @click="openEditModal">
                             <Pencil :size="16" />
-                            Edit Webhook
+                            {{ t('settings.webhooks.editWebhook') }}
                         </Button>
                         <Button variant="secondary" class="w-full" @click="regenerateSecret">
                             <RefreshCw :size="16" />
-                            Regenerate Secret
+                            {{ t('settings.webhooks.show.regenerateSecret') }}
                         </Button>
                     </div>
                 </Card>
 
                 <!-- Integration Guide Card -->
                 <Card :padded="false">
-                    <div class="px-5 pt-5"><h3 class="text-sm font-semibold text-text-primary">Integration Guide</h3></div>
+                    <div class="px-5 pt-5"><h3 class="text-sm font-semibold text-text-primary">{{ t('settings.webhooks.show.integrationGuide') }}</h3></div>
                     <div class="space-y-4 p-5">
                         <div>
-                            <h4 class="mb-1 text-sm font-medium text-text-secondary">Signature Header</h4>
-                            <p class="text-xs text-text-tertiary">
-                                All webhook payloads include a signature in the <code class="rounded bg-surface-overlay px-1 font-mono text-text-secondary">X-Webhook-Signature</code> header.
-                            </p>
+                            <h4 class="mb-1 text-sm font-medium text-text-secondary">{{ t('settings.webhooks.show.signatureHeader') }}</h4>
+                            <i18n-t keypath="settings.webhooks.show.signatureHeaderDesc" tag="p" class="text-xs text-text-tertiary">
+                                <template #header><code class="rounded bg-surface-overlay px-1 font-mono text-text-secondary">X-Webhook-Signature</code></template>
+                            </i18n-t>
                         </div>
                         <div>
-                            <h4 class="mb-1 text-sm font-medium text-text-secondary">Verification</h4>
+                            <h4 class="mb-1 text-sm font-medium text-text-secondary">{{ t('settings.webhooks.show.verification') }}</h4>
                             <p class="mb-2 text-xs text-text-tertiary">
-                                Verify the signature by computing HMAC-SHA256 of the raw request body using your secret.
+                                {{ t('settings.webhooks.show.verificationDesc') }}
                             </p>
                             <pre class="overflow-x-auto rounded-lg bg-slate-900 p-4 font-mono text-xs text-slate-300">hash_hmac('sha256', $payload, $secret)</pre>
                         </div>
                         <div>
-                            <h4 class="mb-1 text-sm font-medium text-text-secondary">Response</h4>
+                            <h4 class="mb-1 text-sm font-medium text-text-secondary">{{ t('settings.webhooks.show.response') }}</h4>
                             <p class="text-xs text-text-tertiary">
-                                Return a 2xx status code to acknowledge receipt. Failed deliveries will be retried up to 5 times.
+                                {{ t('settings.webhooks.show.responseDesc') }}
                             </p>
                         </div>
                     </div>
@@ -495,14 +487,14 @@ const fieldError = 'mt-1 text-xs text-status-danger';
 
                 <!-- Danger Zone Card -->
                 <Card :padded="false">
-                    <div class="px-5 pt-5"><h3 class="text-sm font-semibold text-text-primary">Danger Zone</h3></div>
+                    <div class="px-5 pt-5"><h3 class="text-sm font-semibold text-text-primary">{{ t('orders.show.dangerZone') }}</h3></div>
                     <div class="p-5">
                         <Button variant="danger" class="w-full" @click="deleteWebhook">
                             <Trash2 :size="16" />
-                            Delete Webhook
+                            {{ t('settings.webhooks.show.deleteWebhook') }}
                         </Button>
                         <p class="mt-2 text-xs text-text-tertiary">
-                            Permanently delete this webhook and all of its delivery logs. This action cannot be undone.
+                            {{ t('settings.webhooks.show.deleteDesc') }}
                         </p>
                     </div>
                 </Card>
@@ -516,7 +508,7 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                 <div class="relative mx-4 my-8 max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-xl border border-border-subtle bg-surface-raised p-6 shadow-lg">
                     <div class="mb-6 flex items-center justify-between">
                         <h3 class="text-base font-semibold text-text-primary">
-                            Edit Webhook
+                            {{ t('settings.webhooks.editWebhook') }}
                         </h3>
                         <button @click="closeEditModal" class="rounded-md p-1.5 text-text-tertiary transition-colors hover:bg-surface-overlay hover:text-text-primary">
                             <X :size="18" />
@@ -526,20 +518,20 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                     <form @submit.prevent="submitEdit" class="space-y-6">
                         <!-- Name -->
                         <div>
-                            <label for="edit-name" :class="fieldLabel">Name</label>
+                            <label for="edit-name" :class="fieldLabel">{{ t('common.name') }}</label>
                             <input
                                 id="edit-name"
                                 v-model="editForm.name"
                                 type="text"
                                 :class="fieldInput"
-                                placeholder="My Webhook"
+                                :placeholder="t('settings.webhooks.namePlaceholder')"
                             />
                             <p v-if="editForm.errors.name" :class="fieldError">{{ editForm.errors.name }}</p>
                         </div>
 
                         <!-- URL -->
                         <div>
-                            <label for="edit-url" :class="fieldLabel">Endpoint URL</label>
+                            <label for="edit-url" :class="fieldLabel">{{ t('settings.webhooks.endpointUrl') }}</label>
                             <input
                                 id="edit-url"
                                 v-model="editForm.url"
@@ -552,9 +544,9 @@ const fieldError = 'mt-1 text-xs text-status-danger';
 
                         <!-- Events -->
                         <div>
-                            <label :class="fieldLabel">Events</label>
+                            <label :class="fieldLabel">{{ t('settings.webhooks.events') }}</label>
                             <p class="mb-3 text-sm text-text-tertiary">
-                                Select the events you want to receive notifications for.
+                                {{ t('settings.webhooks.selectEvents') }}
                             </p>
                             <div class="max-h-64 space-y-4 overflow-y-auto rounded-md border border-border-subtle p-4">
                                 <div v-for="(events, group) in eventGroups" :key="group" class="space-y-2">
@@ -603,7 +595,7 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                                 {{ t('common.active') }}
                             </label>
                             <span class="ml-2 text-xs text-text-tertiary">
-                                (Inactive webhooks will not receive any deliveries)
+                                {{ t('settings.webhooks.inactiveHint') }}
                             </span>
                         </div>
 
@@ -613,8 +605,8 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                                 {{ t('common.cancel') }}
                             </Button>
                             <Button type="submit" variant="default" size="sm" :loading="editForm.processing" :disabled="editForm.processing">
-                                <span v-if="editForm.processing">Saving...</span>
-                                <span v-else>Save Changes</span>
+                                <span v-if="editForm.processing">{{ t('common.saving') }}</span>
+                                <span v-else>{{ t('common.saveChanges') }}</span>
                             </Button>
                         </div>
                     </form>

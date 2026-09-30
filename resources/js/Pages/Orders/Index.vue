@@ -9,7 +9,8 @@ import DataTable from '@/Components/ui/DataTable.vue';
 import { Head, Link, router, useForm } from '@inertiajs/vue3';
 import { ref } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { formatCalendarDate, todayIsoDate } from '@/lib/dates';
+import { displayCalendarDate, todayIsoDate } from '@/lib/dates';
+import { formatMoney } from '@/lib/money';
 import { orderSourceLabel, orderStatusLabel, orderStatusVariant } from '@/lib/orderLabels';
 import { Plus, Search, Eye, Pencil, Trash2, ShoppingCart, CheckCheck, X } from 'lucide-vue-next';
 
@@ -44,8 +45,8 @@ const status = ref(props.filters?.status || '');
 const source = ref(props.filters?.source || '');
 const paymentStatus = ref(props.filters?.payment_status || '');
 
-const formatCurrency = (value) =>
-    new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(value);
+const formatCurrency = (value, currency) =>
+    formatMoney(value, currency);
 
 const searchOrders = () => {
     router.get(route('orders.index'), {
@@ -106,7 +107,7 @@ const selectClass =
 
         <PluginSlot slot="header" :components="pluginComponents?.header" />
 
-        <PageHeader :title="t('orders.title')" description="Customer orders from every channel.">
+        <PageHeader :title="t('orders.title')" :description="t('orders.index.description')">
             <template #actions>
                 <Button
                     v-if="canRecordPayments && untrackedOrderCount > 0"
@@ -191,7 +192,7 @@ const selectClass =
                     <span class="tabular-nums text-text-secondary">{{ row.items.length }}</span>
                 </template>
                 <template #cell-total="{ row }">
-                    <span class="font-medium tabular-nums text-text-primary">{{ formatCurrency(row.total) }}</span>
+                    <span class="font-medium tabular-nums text-text-primary">{{ formatCurrency(row.total, row.currency) }}</span>
                 </template>
                 <template #cell-status="{ row }">
                     <Badge :variant="statusVariant(row.status)" size="sm" dot>{{ statusText(row.status) }}</Badge>
@@ -203,7 +204,7 @@ const selectClass =
                     <Badge variant="neutral" size="sm">{{ sourceText(row.source) }}</Badge>
                 </template>
                 <template #cell-order_date="{ row }">
-                    <span class="text-text-secondary">{{ formatCalendarDate(row.order_date) }}</span>
+                    <span class="text-text-secondary">{{ displayCalendarDate(row.order_date) }}</span>
                 </template>
                 <template #cell-actions="{ row }">
                     <div class="flex items-center justify-end gap-1">

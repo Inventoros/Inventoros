@@ -115,7 +115,7 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                     type="text"
                     required
                     :class="fieldInput"
-                    placeholder="Your Company Name"
+                    :placeholder="t('settings.email.fromNamePlaceholder')"
                 />
                 <p v-if="form.errors.from_name" :class="fieldError">{{ form.errors.from_name }}</p>
             </div>

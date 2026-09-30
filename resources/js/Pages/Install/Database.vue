@@ -59,7 +59,7 @@ const testConnection = async () => {
     } catch (error) {
         testResult.value = {
             success: false,
-            message: 'Failed to test connection: ' + error.message,
+            message: t('install.database.testFailed', { error: error.message }),
         };
     } finally {
         testing.value = false;
@@ -92,7 +92,7 @@ const install = async () => {
     } catch (error) {
         testResult.value = {
             success: false,
-            message: 'Installation failed: ' + error.message,
+            message: t('install.database.installFailed', { error: error.message }),
         };
     } finally {
         installing.value = false;

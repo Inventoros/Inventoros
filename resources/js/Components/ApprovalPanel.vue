@@ -11,6 +11,7 @@
 import { computed, ref } from 'vue';
 import { useForm } from '@inertiajs/vue3';
 import { useI18n } from 'vue-i18n';
+import { displayDateTime } from '@/lib/dates';
 import { ShieldCheck, ShieldAlert, ShieldQuestion, Send } from 'lucide-vue-next';
 import Card from '@/Components/ui/Card.vue';
 import Badge from '@/Components/ui/Badge.vue';
@@ -72,7 +73,7 @@ const submit = () => {
     submission.post(props.submitUrl, { preserveScroll: true });
 };
 
-const formatDate = (value) => (value ? new Date(value).toLocaleString() : '');
+const formatDate = (value) => displayDateTime(value);
 </script>
 
 <template>

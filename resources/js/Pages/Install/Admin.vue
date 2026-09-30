@@ -41,7 +41,7 @@ const createAdmin = async () => {
             error.value = data.message;
         }
     } catch (err) {
-        error.value = 'Failed to create admin account: ' + err.message;
+        error.value = t('install.admin.createFailed', { error: err.message });
     } finally {
         creating.value = false;
     }
@@ -85,7 +85,7 @@ const createAdmin = async () => {
                             type="text"
                             required
                             class="w-full px-4 py-2 border border-border-subtle rounded-lg bg-surface-canvas text-text-primary placeholder:text-text-tertiary focus:ring-2 focus:ring-brand focus:border-transparent"
-                            placeholder="Acme Corporation"
+                            :placeholder="t('install.admin.orgNamePlaceholder')"
                         />
                         <p class="mt-1 text-sm text-text-tertiary">{{ t('install.admin.orgNameHint') }}</p>
                     </div>
@@ -104,7 +104,7 @@ const createAdmin = async () => {
                                 type="text"
                                 required
                                 class="w-full px-4 py-2 border border-border-subtle rounded-lg bg-surface-canvas text-text-primary placeholder:text-text-tertiary focus:ring-2 focus:ring-brand focus:border-transparent"
-                                placeholder="John Doe"
+                                :placeholder="t('install.admin.fullNamePlaceholder')"
                             />
                         </div>
 
