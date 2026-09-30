@@ -157,6 +157,7 @@
     "totalOrders": "Total de Pedidos",
     "revenueThisMonth": "Receita do Mês",
     "outstandingReceivables": "Contas a receber em aberto",
+    "plusOtherCurrencies": "Mais {amounts}",
     "pendingOrders": "Pedidos Pendentes",
     "locations": "Localizações",
     "inventoryValue": "Valor do Estoque",
@@ -2442,6 +2443,8 @@
     "paid": "Pago",
     "balance": "Saldo",
     "agingNote": "A idade é contada em dias a partir da data do pedido. Pedidos cancelados e pagos a maior não são incluídos.",
+    "byCurrency": "Saldos por moeda",
+    "currencyNote": "Cada moeda é totalizada separadamente. Valores em moedas diferentes nunca são somados.",
     "truncated": "Exibindo os {count} pedidos mais antigos. Os totais acima abrangem todos os pedidos.",
     "empty": "Nada em aberto. Todos os pedidos ativos estão totalmente pagos."
   },

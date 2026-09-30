@@ -7,6 +7,7 @@ namespace App\Http\Controllers\Admin;
 use App\Enums\Permission;
 use App\Http\Controllers\Controller;
 use App\Models\ActivityLog;
+use App\Models\Auth\Organization;
 use App\Models\Inventory\Product;
 use App\Models\Inventory\ProductCategory;
 use App\Models\Inventory\ProductLocation;
@@ -16,6 +17,7 @@ use App\Models\User;
 use App\Services\PluginUIService;
 use App\Services\ReorderService;
 use App\Services\Reports\InventoryAnalyticsService;
+use App\Support\CurrencyTotals;
 use App\Support\SchedulerHealth;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -74,7 +76,6 @@ class DashboardController extends Controller
             ? Product::where('organization_id', $orgId)
                 ->selectRaw('
                     COUNT(*) as total_count,
-                    COALESCE(SUM(CASE WHEN is_active THEN price * stock ELSE 0 END), 0) as total_value,
                     SUM(CASE WHEN stock <= min_stock THEN 1 ELSE 0 END) as low_stock_count
                 ')
                 ->first()
@@ -84,9 +85,8 @@ class DashboardController extends Controller
             ? Order::where('organization_id', $orgId)
                 ->selectRaw('
                     COUNT(*) as total_count,
-                    SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) as pending_count,
-                    COALESCE(SUM(CASE WHEN order_date >= ? AND order_date <= ? THEN total ELSE 0 END), 0) as month_revenue
-                ', ['pending', $monthStart, $monthEnd])
+                    SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) as pending_count
+                ', ['pending'])
                 ->first()
             : null;
 
@@ -104,9 +104,30 @@ class DashboardController extends Controller
             $stats['pendingOrders'] = (int) ($orderAgg->pending_count ?? 0);
         }
 
+        // Money tiles never add up amounts in different currencies. Each
+        // headline figure is the organization's currency only; the per-
+        // currency breakdown (that currency first, then any other with an
+        // amount) travels in stats.byCurrency for the tile to list.
+        $currency = Organization::currencyFor($orgId);
+        $byCurrency = [];
+        $money = function (string $key, iterable $amounts) use (&$stats, &$byCurrency, $currency): void {
+            $byCurrency[$key] = CurrencyTotals::list($amounts, $currency);
+            $stats[$key] = $byCurrency[$key][0]['amount'];
+        };
+
         if ($canViewReports) {
-            $stats['totalValue'] = (float) ($productAgg->total_value ?? 0);
-            $stats['revenueThisMonth'] = (float) ($orderAgg->month_revenue ?? 0);
+            $money('totalValue', Product::where('organization_id', $orgId)
+                ->where('is_active', true)
+                ->groupBy('currency')
+                ->selectRaw('currency, COALESCE(SUM(price * stock), 0) as amount')
+                ->pluck('amount', 'currency'));
+
+            $money('revenueThisMonth', Order::where('organization_id', $orgId)
+                ->where('order_date', '>=', $monthStart)
+                ->where('order_date', '<=', $monthEnd)
+                ->groupBy('currency')
+                ->selectRaw('currency, COALESCE(SUM(total), 0) as amount')
+                ->pluck('amount', 'currency'));
         }
 
         // Stock idle for 90 days (no sale and no outbound movement), at cost.
@@ -114,7 +135,7 @@ class DashboardController extends Controller
         // permissions; one aggregate query, skipped entirely otherwise.
         if ($canViewReports && $canViewProducts && $canViewOrders) {
             $deadStock = app(InventoryAnalyticsService::class)->deadStockSummary($orgId, 90, now());
-            $stats['deadStockValue'] = $deadStock['total_value'];
+            $money('deadStockValue', array_column($deadStock['values_by_currency'], 'amount', 'currency'));
             $stats['deadStockCount'] = $deadStock['product_count'];
         }
 
@@ -122,11 +143,17 @@ class DashboardController extends Controller
             // What customers still owe on live orders. Overpaid orders owe
             // nothing (they don't offset others) and cancelled orders are out,
             // as are untracked orders from before payment tracking.
-            $stats['outstandingReceivables'] = (float) Order::where('organization_id', $orgId)
+            $money('outstandingReceivables', Order::where('organization_id', $orgId)
                 ->where('status', '!=', 'cancelled')
                 ->where('payment_status', '!=', 'untracked')
                 ->whereColumn('total', '>', 'amount_paid')
-                ->sum(DB::raw('total - amount_paid'));
+                ->groupBy('currency')
+                ->selectRaw('currency, SUM(total - amount_paid) as amount')
+                ->pluck('amount', 'currency'));
+        }
+
+        if ($byCurrency !== []) {
+            $stats['byCurrency'] = $byCurrency;
         }
 
         // Hook: Allow plugins to modify stats
@@ -167,9 +194,25 @@ class DashboardController extends Controller
                 $join->on('products.category_id', '=', 'product_categories.id')
                     ->where('products.is_active', true);
             })
-            ->selectRaw('product_categories.name, product_categories.id, COALESCE(SUM(products.price * products.stock), 0) as value, COUNT(products.id) as count')
-            ->groupBy('product_categories.id', 'product_categories.name')
-            ->get();
+            ->selectRaw('product_categories.name, product_categories.id, products.currency, COALESCE(SUM(products.price * products.stock), 0) as value, COUNT(products.id) as count')
+            ->groupBy('product_categories.id', 'product_categories.name', 'products.currency')
+            ->get()
+            // One card per category. Its value is in the organization's
+            // currency; `values` lists every currency's own total (the
+            // organization's first) rather than adding them together.
+            ->groupBy('id')
+            ->map(function ($rows) use ($currency) {
+                $values = CurrencyTotals::list($rows->pluck('value', 'currency'), $currency);
+
+                return [
+                    'id' => $rows->first()->id,
+                    'name' => $rows->first()->name,
+                    'value' => $values[0]['amount'],
+                    'values' => $values,
+                    'count' => (int) $rows->sum('count'),
+                ];
+            })
+            ->values();
 
         // Get recent activity logs
         $recentActivity = ! $canViewActivity ? collect() : ActivityLog::where('organization_id', $user->organization_id)
@@ -234,10 +277,19 @@ class DashboardController extends Controller
         $topProducts = ! $canViewProducts ? collect() : Product::where('organization_id', $user->organization_id)
             ->where('is_active', true)
             ->where('stock', '>', 0)
-            ->selectRaw('id, name, sku, price, stock, (price * stock) as total_value')
+            ->selectRaw('id, name, sku, currency, price, stock, (price * stock) as total_value')
+            // Values in different currencies don't rank against each other:
+            // products in the organization's currency first, then each other
+            // currency's, highest value first within a currency. Each row
+            // carries its currency.
+            ->orderByRaw('CASE WHEN UPPER(currency) = ? THEN 0 ELSE 1 END', [$currency])
+            ->orderByRaw('UPPER(currency)')
             ->orderByRaw('price * stock DESC')
             ->limit(5)
-            ->get();
+            ->get()
+            ->each(function (Product $product) use ($currency) {
+                $product->currency = filled($product->currency) ? strtoupper(trim((string) $product->currency)) : $currency;
+            });
 
         // Get widget preferences (default: all visible)
         $defaultWidgets = [
@@ -278,6 +330,8 @@ class DashboardController extends Controller
 
         $data = [
             'stats' => $stats,
+            // The organization's currency: what the headline money figures are in.
+            'currency' => $currency,
             'recentProducts' => $recentProducts,
             'lowStockProducts' => $lowStockProducts,
             'reorderSuggestions' => $reorderSuggestions,
@@ -307,9 +361,6 @@ class DashboardController extends Controller
                 'footer' => get_page_components('dashboard', 'footer'),
             ],
         ];
-
-        // Stat tiles and order totals are shown in the organization's currency.
-        $data['currency'] = $user->organization?->currency ?: 'USD';
 
         // Hook: Allow plugins to modify all dashboard data
         $data = apply_filters('dashboard_page_data', $data, $user);

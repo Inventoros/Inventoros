@@ -74,11 +74,16 @@ order line. The column names match the line-items export.
 | `customer_name`, `customer_email` | no | See customers below. |
 | `product_sku` / `variant_sku` | one of them | A variant SKU is also accepted in `product_sku`. Products sold by variant need a variant SKU. |
 | `quantity` | yes | Whole number, 1 or more. |
-| `unit_price` | no | Blank uses the variant's or product's current price. |
+| `unit_price` | no | Blank uses the product's price in the order's currency: its own price (or the variant's) when the order is in the product's currency, otherwise its price for that currency. With no price in that currency the order fails; fill in `unit_price`. |
 | `line_tax` | no | Tax on this line. |
 | `unit_cost` | no | What one unit cost you when it was sold, 0 or more. Used by the profit margin and inventory turnover reports. See unit cost below. |
 | `order_tax`, `order_shipping` | no | Order-level amounts. |
-| `currency`, `shipped_at`, `delivered_at`, `notes` | no | |
+| `currency` | no | Blank uses the organization's currency. |
+| `shipped_at`, `delivered_at`, `notes` | no | |
+
+Money columns (`unit_price`, `line_tax`, `unit_cost`, `order_tax`,
+`order_shipping`) take at most two decimal places; a value with more fails
+that order rather than being rounded.
 
 Order-level columns (date, status, customer, order tax and shipping, currency,
 dates, notes) come from the first non-blank value among the order's rows. You

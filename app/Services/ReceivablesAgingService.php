@@ -6,6 +6,7 @@ namespace App\Services;
 
 use App\Enums\OrderStatus;
 use App\Enums\PaymentStatus;
+use App\Models\Auth\Organization;
 use App\Models\Customer;
 use App\Models\Order\Order;
 use App\Support\Money;
@@ -22,7 +23,8 @@ use Illuminate\Support\Carbon;
  * orders (placed before payment tracking, so nothing is known to be owed).
  *
  * Money is summed with Money (exact decimals), not SQL SUM, so the buckets
- * reconcile to the cent with the total.
+ * reconcile to the cent with the total. Each currency is reported on its
+ * own; balances in different currencies are never added together.
  */
 final class ReceivablesAgingService
 {
@@ -44,11 +46,22 @@ final class ReceivablesAgingService
     public const ORDER_LIST_LIMIT = 500;
 
     /**
-     * @return array{summary: array<string, mixed>, buckets: array<int, array<string, mixed>>, customers: array<int, array<string, mixed>>, orders: array<int, array<string, mixed>>}
+     * The aging report for one currency, plus the outstanding total of every
+     * currency that has a balance.
+     *
+     * Amounts in different currencies are never added together: the
+     * summary, buckets, customers and orders cover only $currency (default:
+     * the organization's currency), and `currencies` lists each currency's
+     * own total, the organization's currency first.
+     *
+     * @return array{currency: string, currencies: array<int, array{currency: string, total_outstanding: string, order_count: int}>, summary: array<string, mixed>, buckets: array<int, array<string, mixed>>, customers: array<int, array<string, mixed>>, orders: array<int, array<string, mixed>>}
      */
-    public function build(int $organizationId, ?Carbon $asOf = null): array
+    public function build(int $organizationId, ?Carbon $asOf = null, ?string $currency = null): array
     {
         $today = ($asOf ?? now())->copy()->startOfDay();
+        $base = Organization::currencyFor($organizationId);
+        $currency = filled($currency) ? strtoupper(trim($currency)) : $base;
+        $totals = [];
 
         $buckets = array_fill_keys(array_keys(self::BUCKETS), ['count' => 0, 'amount' => '0.00']);
         $customers = [];
@@ -94,6 +107,16 @@ final class ReceivablesAgingService
 
         foreach ($query->cursor() as $order) {
             $balance = Money::subtract($order->total, $order->amount_paid);
+            $orderCurrency = filled($order->currency) ? strtoupper(trim((string) $order->currency)) : $base;
+
+            $totals[$orderCurrency] ??= ['currency' => $orderCurrency, 'total_outstanding' => '0.00', 'order_count' => 0];
+            $totals[$orderCurrency]['total_outstanding'] = Money::add($totals[$orderCurrency]['total_outstanding'], $balance);
+            $totals[$orderCurrency]['order_count']++;
+
+            if ($orderCurrency !== $currency) {
+                continue;
+            }
+
             $age = $order->order_date
                 ? max(0, (int) $order->order_date->copy()->startOfDay()->diffInDays($today, false))
                 : 0;
@@ -131,7 +154,7 @@ final class ReceivablesAgingService
                     'order_date' => $order->order_date?->toDateString(),
                     'status' => $order->status?->value,
                     'payment_status' => $order->payment_status?->value,
-                    'currency' => $order->currency,
+                    'currency' => $orderCurrency,
                     'total' => Money::of($order->total),
                     'amount_paid' => Money::of($order->amount_paid),
                     'balance_due' => $balance,
@@ -144,7 +167,12 @@ final class ReceivablesAgingService
         $customerRows = array_values($customers);
         usort($customerRows, fn (array $a, array $b) => Money::compare($b['total'], $a['total']) ?: strcmp((string) $a['customer'], (string) $b['customer']));
 
+        // The organization's currency first, then the rest alphabetically.
+        uksort($totals, fn (string $a, string $b) => [$a !== $base, $a] <=> [$b !== $base, $b]);
+
         return [
+            'currency' => $currency,
+            'currencies' => array_values($totals),
             'summary' => [
                 'total_outstanding' => $total,
                 'order_count' => $count,

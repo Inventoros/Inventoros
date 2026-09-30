@@ -98,7 +98,9 @@ class E2ELayoutSeeder extends Seeder
                 'customer_name' => $customer->name,
                 'customer_email' => $customer->email,
                 'status' => OrderStatus::DELIVERED,
-                'approval_status' => OrderApprovalStatus::PENDING,
+                // A delivered order is past approval: a pending one may not
+                // be saved as delivered.
+                'approval_status' => OrderApprovalStatus::NOT_REQUIRED,
                 'subtotal' => 1349.97, 'tax' => 0, 'shipping' => 12.50, 'total' => 1362.47,
                 'currency' => 'USD',
                 'order_date' => now()->startOfDay(),

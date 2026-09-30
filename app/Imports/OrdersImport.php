@@ -13,8 +13,10 @@ use App\Models\Scopes\OrganizationScope;
 use App\Models\User;
 use App\Models\Warehouse;
 use App\Services\OrderService;
+use App\Support\SequenceNumberRetry;
 use App\Support\SpreadsheetSafety;
 use Carbon\CarbonImmutable;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -22,6 +24,7 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 use Maatwebsite\Excel\Concerns\ToCollection;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
+use Maatwebsite\Excel\Facades\Excel;
 use PhpOffice\PhpSpreadsheet\Shared\Date as ExcelDate;
 use Throwable;
 
@@ -34,10 +37,12 @@ use Throwable;
  * shipped_at, delivered_at, notes) are read from the first non-blank value
  * among the order's rows, so they may be repeated on every line or given only
  * once. Line columns: product_sku and/or variant_sku, quantity, unit_price
- * (blank = the variant's or product's current price), line_tax, unit_cost
+ * (blank = the product's price in the order currency), line_tax, unit_cost
  * (see below). The
  * line-items order export uses the same column names, so its file can be
  * imported elsewhere once external_reference is filled in.
+ *
+ * Import a file with importFile(), not Excel::import(): see importFile().
  *
  * Processing:
  *  1. Every row is validated and every SKU resolved BEFORE any order is
@@ -178,6 +183,22 @@ final class OrdersImport implements ToCollection, WithHeadingRow
     }
 
     /**
+     * Read a file and import it. Use this, not Excel::import().
+     *
+     * Excel::import() runs the whole file inside one database transaction
+     * (Laravel Excel's default transaction handler), which would wrap every
+     * order's transaction. Each order must commit on its own, and its number
+     * retry must be able to restart the order's outermost transaction (see
+     * createOrder), so the rows are read without that wrapper.
+     */
+    public function importFile(string|UploadedFile $file, ?string $disk = null, ?string $readerType = null): self
+    {
+        $this->collection(Excel::toCollection($this, $file, $disk, $readerType)->first() ?? collect());
+
+        return $this;
+    }
+
+    /**
      * @return array{imported: int, skipped: int, failed: int, errors: array<int, mixed>, warnings: array<int, mixed>}
      */
     public function getStats(): array
@@ -264,9 +285,9 @@ final class OrdersImport implements ToCollection, WithHeadingRow
             'product_sku' => 'nullable|string|max:255|required_without:variant_sku',
             'variant_sku' => 'nullable|string|max:255',
             'quantity' => 'required|integer|min:1',
-            'unit_price' => 'nullable|numeric|min:0',
-            'line_tax' => 'nullable|numeric|min:0',
-            'unit_cost' => 'nullable|numeric|min:0',
+            'unit_price' => 'nullable|numeric|decimal:0,2|min:0',
+            'line_tax' => 'nullable|numeric|decimal:0,2|min:0',
+            'unit_cost' => 'nullable|numeric|decimal:0,2|min:0',
         ];
 
         if ($withOrderRules) {
@@ -276,8 +297,8 @@ final class OrdersImport implements ToCollection, WithHeadingRow
                 'status' => ['nullable', Rule::in(OrderStatus::values())],
                 'customer_name' => 'nullable|string|max:255',
                 'customer_email' => 'nullable|email|max:255',
-                'order_tax' => 'nullable|numeric|min:0',
-                'order_shipping' => 'nullable|numeric|min:0',
+                'order_tax' => 'nullable|numeric|decimal:0,2|min:0',
+                'order_shipping' => 'nullable|numeric|decimal:0,2|min:0',
                 'currency' => ['nullable', 'string', Rule::in(array_keys(config('currencies.supported', [])))],
                 'shipped_at' => 'nullable|date',
                 'delivered_at' => 'nullable|date',
@@ -356,15 +377,28 @@ final class OrdersImport implements ToCollection, WithHeadingRow
         $status = $header['status'] ?? OrderStatus::PENDING->value;
         $adjustStock = ! $this->historical && $status !== OrderStatus::CANCELLED->value;
 
+        $attempts = 0;
+
         try {
-            DB::transaction(function () use ($order, $header, $status, $adjustStock) {
+            // The retry loop owns the order's transaction (not the other way
+            // round), and OrderService's own SequenceNumberRetry defers to
+            // it: an order-number collision rolls back the WHOLE order and
+            // re-runs it in a fresh transaction. Retrying inside a transaction
+            // that is still open would, under MySQL's REPEATABLE READ, re-read
+            // the same snapshot and collide on every attempt. The closure may
+            // run more than once, so counters and warnings are applied only
+            // after it returns.
+            $outcome = SequenceNumberRetry::create(fn () => DB::transaction(function () use ($order, $header, $status, $adjustStock, &$attempts) {
+                if ($attempts++ > 0) {
+                    // The per-run customer cache may point at a customer the
+                    // rolled-back attempt created.
+                    $this->customerIds = [];
+                }
+
                 // Re-check under the transaction: another import may have
                 // created this reference since phase 1.
                 if ($this->existingReferences([$order['reference']]) !== []) {
-                    $this->skipped++;
-                    $this->warn($order['row'], "Order '{$order['reference']}' already exists; skipped.");
-
-                    return;
+                    return 'skipped';
                 }
 
                 [$customerId, $customerName, $customerEmail] = $this->resolveCustomer(
@@ -394,8 +428,15 @@ final class OrdersImport implements ToCollection, WithHeadingRow
 
                 $this->applyUnitCosts($created, $order['costs']);
 
+                return 'imported';
+            }));
+
+            if ($outcome === 'skipped') {
+                $this->skipped++;
+                $this->warn($order['row'], "Order '{$order['reference']}' already exists; skipped.");
+            } else {
                 $this->imported++;
-            });
+            }
         } catch (Throwable $e) {
             $this->failed++;
             // The per-run customer cache may point at a customer that the

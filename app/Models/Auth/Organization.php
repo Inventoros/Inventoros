@@ -136,6 +136,32 @@ class Organization extends Model
     }
 
     /**
+     * The organization's base currency (upper-case ISO 4217): the default for
+     * its orders and products, falling back to the app-wide default.
+     */
+    public function baseCurrency(): string
+    {
+        return self::normaliseCurrency($this->currency);
+    }
+
+    /**
+     * The base currency of the organization with this id.
+     */
+    public static function currencyFor(?int $organizationId): string
+    {
+        $currency = $organizationId === null ? null : static::query()->whereKey($organizationId)->value('currency');
+
+        return self::normaliseCurrency($currency);
+    }
+
+    private static function normaliseCurrency(?string $currency): string
+    {
+        $currency = trim((string) $currency);
+
+        return strtoupper($currency !== '' ? $currency : (string) config('currencies.default', 'USD'));
+    }
+
+    /**
      * Scope a query to only include active organizations.
      *
      * @param \Illuminate\Database\Eloquent\Builder<static> $query

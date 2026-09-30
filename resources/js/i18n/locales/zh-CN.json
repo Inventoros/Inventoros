@@ -157,6 +157,7 @@
     "totalOrders": "订单总数",
     "revenueThisMonth": "本月营收",
     "outstandingReceivables": "未收应收账款",
+    "plusOtherCurrencies": "另有 {amounts}",
     "pendingOrders": "待处理订单",
     "locations": "库位",
     "inventoryValue": "库存价值",
@@ -2442,6 +2443,8 @@
     "paid": "已付",
     "balance": "余额",
     "agingNote": "账龄从订单日期起按天计算。不包括已取消和多付的订单。",
+    "byCurrency": "按币种列出的余额",
+    "currencyNote": "每种币种单独汇总。不同币种的金额从不相加。",
     "truncated": "显示最早的 {count} 个订单。上方合计涵盖所有订单。",
     "empty": "没有未结款项。所有有效订单均已全额付款。"
   },

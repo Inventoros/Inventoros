@@ -12,6 +12,7 @@ use App\Enums\ShipmentStatus;
 use App\Exceptions\InsufficientStockException;
 use App\Exceptions\InvalidOrderItemException;
 use App\Exceptions\InvalidStateException;
+use App\Models\Auth\Organization;
 use App\Models\Inventory\Product;
 use App\Models\Inventory\ProductVariant;
 use App\Models\Inventory\StockAdjustment;
@@ -105,6 +106,8 @@ final class OrderService
         $data['approval_status'] ??= ApprovalSettings::forOrganization((int) $creator->organization_id)
             ->initialOrderApprovalStatus()->value;
         $this->assertCreatableWhileAwaitingApproval($data);
+        // Orders are in the organization's currency unless the caller names one.
+        $data['currency'] = $this->currencyCode($data['currency'] ?? null, (int) $creator->organization_id);
 
         $order = SequenceNumberRetry::create(fn () => DB::transaction(function () use ($data, $creator, $adjustStock) {
             $orgId = $data['organization_id'];
@@ -200,14 +203,9 @@ final class OrderService
                 $key = $line['key'];
                 $targets[$key] = $line['target'];
 
-                // unit_price is optional: callers may omit it and fall back to
-                // the variant's own price (when a variant is chosen) or the
-                // product's selling/list price.
-                $unitPrice = $item['unit_price']
-                    ?? $variant?->price
-                    ?? $product->selling_price
-                    ?? $product->price
-                    ?? 0;
+                // unit_price is optional: callers may omit it and get the
+                // product's price in the order's currency (see unitPriceFor).
+                $unitPrice = $this->unitPriceFor($item, $product, $variant, $data['currency'], $line['index']);
                 // Price the line and validate its discount before anything is
                 // written, so a bad discount rejects the whole order cleanly.
                 $orderItemRows[] = [
@@ -796,7 +794,11 @@ final class OrderService
 
             // Price (and validate the discount on) every line before anything
             // is written, so a bad discount cannot leave a half-edited order.
-            $unitPrice = $item['unit_price'] ?? $variant?->price ?? $product->selling_price ?? $product->price ?? 0;
+            $unitPrice = $this->unitPriceFor(
+                $item, $product, $variant,
+                $this->currencyCode($order->currency, (int) $order->organization_id),
+                $index,
+            );
             $priced = $this->priceLine($unitPrice, $qty, [
                 'discount_type' => $item['discount_type'] ?? null,
                 'discount_value' => $item['discount_value'] ?? null,
@@ -1068,6 +1070,62 @@ final class OrderService
             Money::subtract($order->tax, Money::add(...$order->items()->pluck('tax')->all())),
             0,
         );
+    }
+
+    /**
+     * The unit price of a line in the order's currency.
+     *
+     * An explicit unit_price always wins. Otherwise the price must be one set
+     * in the order's currency:
+     *  - an order in the product's own currency takes the variant's own price,
+     *    else the product's selling price, else its list price;
+     *  - an order in another currency takes the product's price for that
+     *    currency (price_in_currencies), unless the line is a variant with a
+     *    price of its own, which that product-level figure does not describe.
+     * With neither, the line is rejected rather than silently charged a price
+     * set in another currency.
+     *
+     * @param  array<string, mixed>  $item
+     *
+     * @throws ValidationException when no price exists in the order's currency
+     */
+    private function unitPriceFor(array $item, Product $product, ?ProductVariant $variant, string $currency, int $index): mixed
+    {
+        if (($item['unit_price'] ?? null) !== null && $item['unit_price'] !== '') {
+            return $item['unit_price'];
+        }
+
+        $productCurrency = $this->currencyCode($product->currency, (int) $product->organization_id);
+
+        if ($currency === $productCurrency) {
+            return $variant?->price ?? $product->selling_price ?? $product->price ?? 0;
+        }
+
+        $prices = array_change_key_case((array) ($product->price_in_currencies ?? []), CASE_UPPER);
+        $price = $prices[$currency] ?? null;
+
+        if ($variant?->price === null && is_numeric($price)) {
+            return $price;
+        }
+
+        $label = $variant !== null
+            ? "{$product->name} (".($variant->title ?? $variant->sku ?? "variant {$variant->id}").')'
+            : $product->name;
+
+        throw ValidationException::withMessages([
+            "items.{$index}.unit_price" => "{$label} has no price in {$currency}. Enter a unit price for this line.",
+        ]);
+    }
+
+    /**
+     * An upper-case currency code, or the organization's base currency when
+     * none is given.
+     */
+    private function currencyCode(mixed $currency, int $organizationId): string
+    {
+        return filled($currency)
+            ? strtoupper(trim((string) $currency))
+            : Organization::currencyFor($organizationId);
     }
 
     /**

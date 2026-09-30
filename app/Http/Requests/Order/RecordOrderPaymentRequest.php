@@ -24,7 +24,7 @@ final class RecordOrderPaymentRequest extends FormRequest
     {
         return [
             'type' => ['sometimes', Rule::in(PaymentType::values())],
-            'amount' => ['required', 'numeric', 'gt:0', 'max:99999999'],
+            'amount' => ['required', 'numeric', 'decimal:0,2', 'gt:0', 'max:99999999'],
             'method' => ['required', Rule::in(PaymentMethod::values())],
             'reference' => ['nullable', 'string', 'max:255'],
             'paid_at' => ['nullable', 'date'],

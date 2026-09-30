@@ -157,6 +157,7 @@
     "totalOrders": "전체 주문 수",
     "revenueThisMonth": "이번 달 매출",
     "outstandingReceivables": "미수금",
+    "plusOtherCurrencies": "추가로 {amounts}",
     "pendingOrders": "대기 중인 주문",
     "locations": "위치",
     "inventoryValue": "재고 가치",
@@ -2442,6 +2443,8 @@
     "paid": "결제됨",
     "balance": "잔액",
     "agingNote": "경과 기간은 주문일로부터 일수로 계산됩니다. 취소된 주문과 초과 결제된 주문은 포함되지 않습니다.",
+    "byCurrency": "통화별 잔액",
+    "currencyNote": "통화마다 따로 합산합니다. 서로 다른 통화의 금액은 절대 합산하지 않습니다.",
     "truncated": "가장 오래된 주문 {count}건을 표시합니다. 위의 합계는 모든 주문을 포함합니다.",
     "empty": "미수금이 없습니다. 모든 유효한 주문이 전액 결제되었습니다."
   },

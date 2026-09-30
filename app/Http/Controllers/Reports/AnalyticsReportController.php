@@ -47,14 +47,18 @@ class AnalyticsReportController extends Controller
             return $this->exporter->download(
                 $format,
                 'Dead Stock',
-                ['Product', 'SKU', 'Category', 'Location', 'On hand', 'Unit cost', 'Tied-up value', 'Last sale', 'Last outbound movement'],
+                ['Product', 'SKU', 'Category', 'Location', 'On hand', 'Currency', 'Unit cost', 'Tied-up value', 'Last sale', 'Last outbound movement'],
                 array_map(fn (array $r) => [
                     $r['name'], $r['sku'], $r['category'], $r['location'], $r['stock'],
-                    $r['unit_cost'], $r['tied_up_value'], $r['last_sale_at'], $r['last_outbound_at'],
+                    $r['currency'], $r['unit_cost'], $r['tied_up_value'], $r['last_sale_at'], $r['last_outbound_at'],
                 ], $result['rows']),
                 [
                     "No activity in the last {$days} days (basis: {$basis}).",
-                    'Tied-up value is on-hand quantity at the current purchase price.',
+                    'Tied-up value is on-hand quantity at the current purchase price, in the product\'s currency.',
+                    'Total tied-up value per currency: '.implode(', ', array_map(
+                        fn (array $v) => $v['currency'].' '.number_format($v['amount'], 2, '.', ''),
+                        $result['summary']['values_by_currency'],
+                    )).'.',
                 ]
             );
         }

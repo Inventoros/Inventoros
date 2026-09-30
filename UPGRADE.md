@@ -17,6 +17,7 @@ v2.0.0 is a major release: MCP tool names, the plugin asset path, access to `/do
 - [Plugin assets](#plugin-assets)
 - [API reference access](#api-reference-access)
 - [Plugin marketplace](#plugin-marketplace)
+- [Currencies and money](#currencies-and-money)
 - [Other behaviour changes](#other-behaviour-changes)
 - [License](#license)
 
@@ -214,6 +215,15 @@ Plugins > Marketplace installs and updates plugins from inventoros.com. Every pa
 - **Marketplace updates only replace marketplace installs.** Update is offered only for plugins installed from the marketplace. A plugin you uploaded or copied in by hand is never overwritten, even if it has the same name as a marketplace plugin; delete it and install the marketplace version to switch.
 - **One organization administers plugins.** Plugins are shared by every organization on an installation, so installing, updating, uploading, activating, deactivating and deleting them needs Manage Plugins in the plugin administrator organization: `INVENTOROS_PLUGIN_ADMIN_ORG`, or the first organization when unset. Single-organization installs are unaffected; on multi-organization installs, other organizations' admins can only browse plugins.
 - **Plugin pages always need sign-in.** A page registered with `register_page()` is always behind `auth`; a plugin's own `middleware` is added after it instead of replacing it. Pages under a reserved prefix (`api`, `portal`, `install`, `graphql`, `mcp`, `webhooks`, `plugins`, `plugin-assets`, the sign-in and password pages) or at a URI the app already uses are skipped and logged. Plugin author links are shown only for http(s) URLs, and marketplace icons only for https ones.
+
+### Currencies and money
+
+- **Products stored as USD by default move to your organization's currency.** In 1.0.x a product created through the REST API, GraphQL, MCP or the products import without a currency was saved as USD, whatever your organization's currency. The 2.0.0 migrations change every USD product of an organization whose currency is not USD to that organization's currency. Nothing changes for organizations whose currency is USD. **If you really price some products in USD in a non-USD organization**, open each one after upgrading and set its USD price under the product's additional currency prices (and set its currency back if you want USD to be its main one). New products created without a currency now take the organization's currency.
+- **Orders default to the organization's currency** on every surface. The REST API, GraphQL and MCP used to default to USD.
+- **Order lines without a unit price are priced in the order's currency**: the product's own price when the order is in the product's currency, otherwise the product's price for that currency. If the product has no price in the order's currency the order is rejected (`422` on `items.N.unit_price`) instead of silently using a price in another currency. Send `unit_price` for such lines.
+- **Money takes at most two decimal places.** Unit prices and costs, taxes, shipping, discount values (percentages included) and payment amounts with more decimals are rejected on the web forms, REST, GraphQL, MCP and imports. Calculated amounts are rounded half up to the cent (they used to be truncated).
+- **Totals are shown per currency.** The Outstanding Balances, dead stock, inventory valuation and category performance reports and the dashboard money figures no longer add amounts in different currencies together. Each figure is in your organization's currency with the other currencies listed beside it, and report exports have a Currency column (one row per currency where rows are totals).
+- **A failed import row no longer affects the others.** Each order in an order import commits on its own, and a product or user row that fails in the database is reported against that row while the rest of the file imports (on PostgreSQL it used to abort the rest).
 
 ### Other behaviour changes
 

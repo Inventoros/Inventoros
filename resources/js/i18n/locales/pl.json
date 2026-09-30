@@ -157,6 +157,7 @@
     "totalOrders": "Łącznie zamówień",
     "revenueThisMonth": "Przychód w tym miesiącu",
     "outstandingReceivables": "Nierozliczone należności",
+    "plusOtherCurrencies": "Oraz {amounts}",
     "pendingOrders": "Oczekujące zamówienia",
     "locations": "Lokalizacje",
     "inventoryValue": "Wartość magazynu",
@@ -2442,6 +2443,8 @@
     "paid": "Zapłacono",
     "balance": "Saldo",
     "agingNote": "Wiek jest liczony w dniach od daty zamówienia. Zamówienia anulowane i nadpłacone nie są uwzględniane.",
+    "byCurrency": "Salda według waluty",
+    "currencyNote": "Każda waluta jest sumowana osobno. Kwoty w różnych walutach nigdy nie są dodawane do siebie.",
     "truncated": "Wyświetlono {count} najstarszych zamówień. Powyższe sumy obejmują wszystkie zamówienia.",
     "empty": "Brak zaległości. Każde aktywne zamówienie jest w pełni opłacone."
   },

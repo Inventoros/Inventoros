@@ -28,8 +28,8 @@ final class UpdatePurchaseOrderRequest extends FormRequest
             'order_date' => ['sometimes', 'date'],
             'expected_date' => ['nullable', 'date', 'after_or_equal:order_date'],
             'currency' => ['sometimes', 'string', 'max:3'],
-            'shipping' => ['nullable', 'numeric', 'min:0'],
-            'tax' => ['nullable', 'numeric', 'min:0'],
+            'shipping' => ['nullable', 'numeric', 'decimal:0,2', 'min:0'],
+            'tax' => ['nullable', 'numeric', 'decimal:0,2', 'min:0'],
             'notes' => ['nullable', 'string'],
             'items' => ['sometimes', 'array', 'min:1'],
             // parent purchase_order is already org-scoped via route-model binding
@@ -37,7 +37,7 @@ final class UpdatePurchaseOrderRequest extends FormRequest
             'items.*.product_id' => ['required_with:items', Rule::exists('products', 'id')->where('organization_id', $organizationId)],
             'items.*.product_variant_id' => ['nullable', 'integer', Rule::exists('product_variants', 'id')->where('organization_id', $organizationId)->whereNull('deleted_at')],
             'items.*.quantity' => ['required_with:items', 'integer', 'min:1'],
-            'items.*.unit_cost' => ['required_with:items', 'numeric', 'min:0'],
+            'items.*.unit_cost' => ['required_with:items', 'numeric', 'decimal:0,2', 'min:0'],
             'items.*.supplier_sku' => ['nullable', 'string', 'max:255'],
         ];
     }

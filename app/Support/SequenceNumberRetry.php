@@ -26,10 +26,25 @@ use Throwable;
  * computes the next number. After max attempts the original exception
  * is re-thrown wrapped in a RuntimeException so the failure remains
  * observable.
+ *
+ * The retry must own the transaction: wrap `DB::transaction(...)` in this
+ * helper, never the other way round. Under MySQL's REPEATABLE READ a
+ * transaction reads from the snapshot taken at its first read, so retrying
+ * inside a transaction that is still open re-reads the same MAX, regenerates
+ * the same number and collides every time. For the same reason a call nested
+ * inside another SequenceNumberRetry (e.g. OrderService::create inside the
+ * order import's per-order retry) makes a single attempt and lets a
+ * collision propagate: the outermost loop rolls back its whole transaction
+ * and re-runs it with a fresh snapshot.
  */
 final class SequenceNumberRetry
 {
     public const MAX_ATTEMPTS = 5;
+
+    /**
+     * How many create() calls are running on the stack.
+     */
+    private static int $depth = 0;
 
     /**
      * Run $factory; on unique-constraint QueryException retry up to
@@ -37,17 +52,28 @@ final class SequenceNumberRetry
      */
     public static function create(Closure $factory, int $maxAttempts = self::MAX_ATTEMPTS)
     {
+        // Nested: the enclosing retry owns the transaction and the retrying.
+        if (self::$depth > 0) {
+            return $factory();
+        }
+
         $lastException = null;
 
-        for ($attempt = 1; $attempt <= $maxAttempts; $attempt++) {
-            try {
-                return $factory();
-            } catch (QueryException $e) {
-                if (!self::isUniqueConstraintViolation($e)) {
-                    throw $e;
+        self::$depth++;
+
+        try {
+            for ($attempt = 1; $attempt <= $maxAttempts; $attempt++) {
+                try {
+                    return $factory();
+                } catch (QueryException $e) {
+                    if (!self::isUniqueConstraintViolation($e)) {
+                        throw $e;
+                    }
+                    $lastException = $e;
                 }
-                $lastException = $e;
             }
+        } finally {
+            self::$depth--;
         }
 
         throw new RuntimeException(

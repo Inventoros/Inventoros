@@ -8,6 +8,7 @@ import Button from '@/Components/ui/Button.vue';
 import ExportMenu from '@/Components/Reports/ExportMenu.vue';
 import { Head, Link } from '@inertiajs/vue3';
 import { useI18n } from 'vue-i18n';
+import { formatCurrency, otherCurrencyTotals } from '@/lib/reportFormat';
 import {
     Boxes,
     Layers,
@@ -26,11 +27,14 @@ const props = defineProps({
     truncated: Boolean,
 });
 
-const formatCurrency = (value) => {
-    return new Intl.NumberFormat('en-US', {
-        style: 'currency',
-        currency: 'USD',
-    }).format(value);
+// Values are never added across currencies: each figure is in the
+// organization's currency (summary.currency), with the other currencies'
+// own totals listed under it.
+const base = () => props.summary.currency;
+const money = (value) => formatCurrency(value, base());
+const plusOthers = (rows, field = 'amount') => {
+    const others = otherCurrencyTotals((rows || []).map((r) => ({ currency: r.currency, amount: r[field] })), base());
+    return others ? t('dashboard.plusOtherCurrencies', { amounts: others }) : '';
 };
 
 const thClass =
@@ -86,16 +90,16 @@ const thRightClass =
             </StatTile>
             <StatTile
                 :label="t('reports.inventoryValuation.stockValue')"
-                :value="formatCurrency(summary.total_stock_value)"
-                :hint="t('reports.inventoryValuation.atSellingPrice')"
+                :value="money(summary.total_stock_value)"
+                :hint="plusOthers(summary.by_currency, 'stock_value') || t('reports.inventoryValuation.atSellingPrice')"
                 icon-tone="success"
             >
                 <template #icon><DollarSign :size="18" /></template>
             </StatTile>
             <StatTile
                 :label="t('reports.inventoryValuation.profitPotential')"
-                :value="formatCurrency(summary.total_profit_potential)"
-                :hint="t('reports.inventoryValuation.ifAllSold')"
+                :value="money(summary.total_profit_potential)"
+                :hint="plusOthers(summary.by_currency, 'profit_potential') || t('reports.inventoryValuation.ifAllSold')"
                 icon-tone="brand"
             >
                 <template #icon><TrendingUp :size="18" /></template>
@@ -130,8 +134,9 @@ const thRightClass =
                             </div>
                             <div class="flex justify-between text-sm">
                                 <span class="text-text-tertiary">{{ t('reports.inventoryValuation.stockValue') }}</span>
-                                <span class="font-semibold tabular-nums text-status-success">{{ formatCurrency(cat.value) }}</span>
+                                <span class="font-semibold tabular-nums text-status-success">{{ money(cat.value) }}</span>
                             </div>
+                            <p v-if="plusOthers(cat.values)" class="text-right text-xs tabular-nums text-text-tertiary">{{ plusOthers(cat.values) }}</p>
                         </div>
                     </div>
                 </div>
@@ -173,8 +178,11 @@ const thRightClass =
                                 <td class="px-4 py-3 text-text-secondary">{{ loc.warehouse || '-' }}</td>
                                 <td class="px-4 py-3 text-right tabular-nums text-text-secondary">{{ loc.products }}</td>
                                 <td class="px-4 py-3 text-right tabular-nums text-text-primary">{{ loc.quantity }}</td>
-                                <td class="px-4 py-3 text-right tabular-nums text-text-secondary">{{ formatCurrency(loc.cost_value) }}</td>
-                                <td class="px-4 py-3 text-right font-semibold tabular-nums text-status-success">{{ formatCurrency(loc.retail_value) }}</td>
+                                <td class="px-4 py-3 text-right tabular-nums text-text-secondary">{{ money(loc.cost_value) }}</td>
+                                <td class="px-4 py-3 text-right font-semibold tabular-nums text-status-success">
+                                    {{ money(loc.retail_value) }}
+                                    <p v-if="plusOthers(loc.values, 'retail_value')" class="text-xs font-normal text-text-tertiary">{{ plusOthers(loc.values, 'retail_value') }}</p>
+                                </td>
                             </tr>
                             <tr v-if="byLocation.length === 0">
                                 <td colspan="6" class="px-4 py-8 text-center text-sm text-text-tertiary">{{ t('reports.common.noData') }}</td>
@@ -222,13 +230,13 @@ const thRightClass =
                                         {{ product.stock }}
                                     </td>
                                     <td class="px-4 py-3 text-right tabular-nums text-text-secondary">
-                                        {{ formatCurrency(product.price) }}
+                                        {{ formatCurrency(product.price, product.currency) }}
                                     </td>
                                     <td class="px-4 py-3 text-right font-semibold tabular-nums text-status-success">
-                                        {{ formatCurrency(product.stock_value) }}
+                                        {{ formatCurrency(product.stock_value, product.currency) }}
                                     </td>
                                     <td class="px-4 py-3 text-right font-semibold tabular-nums text-status-success">
-                                        {{ formatCurrency(product.profit_potential) }}
+                                        {{ formatCurrency(product.profit_potential, product.currency) }}
                                     </td>
                                 </tr>
                             </tbody>

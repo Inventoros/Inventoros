@@ -28,7 +28,7 @@ class CreateOrderTool extends Tool
             'customer_name' => $schema->string()->required()->description('Customer or company name.'),
             'customer_email' => $schema->string()->description('Customer email (optional).'),
             'customer_address' => $schema->string()->description('Free-text shipping address.'),
-            'currency' => $schema->string()->description('ISO 4217 currency code, default USD.'),
+            'currency' => $schema->string()->description('ISO 4217 currency code; defaults to the organization currency. Lines without unit_price are priced in this currency and fail if the product has no price in it.'),
             'source' => $schema->string()->description('Source label, default "mcp".'),
             'status' => $schema->string()->enum(['pending', 'processing', 'shipped', 'delivered', 'cancelled'])->description('Initial status, default pending.'),
             'order_date' => $schema->string()->description('ISO date, default today.'),
@@ -58,17 +58,17 @@ class CreateOrderTool extends Tool
             'items.*.product_id' => ['required', 'integer', Rule::exists('products', 'id')->where('organization_id', $orgId)],
             'items.*.product_variant_id' => ['nullable', 'integer', Rule::exists('product_variants', 'id')->where('organization_id', $orgId)],
             'items.*.quantity' => ['required', 'integer', 'min:1'],
-            'items.*.unit_price' => ['nullable', 'numeric', 'min:0'],
-            'items.*.tax' => ['nullable', 'numeric', 'min:0'],
+            'items.*.unit_price' => ['nullable', 'numeric', 'decimal:0,2', 'min:0'],
+            'items.*.tax' => ['nullable', 'numeric', 'decimal:0,2', 'min:0'],
             'items.*.discount_type' => ['nullable', 'string', 'in:percent,fixed'],
-            'items.*.discount_value' => ['nullable', 'numeric', 'min:0'],
+            'items.*.discount_value' => ['nullable', 'numeric', 'decimal:0,2', 'min:0'],
             'discount_type' => ['nullable', 'string', 'in:percent,fixed'],
-            'discount_value' => ['nullable', 'numeric', 'min:0'],
+            'discount_value' => ['nullable', 'numeric', 'decimal:0,2', 'min:0'],
         ]);
 
         $validated['status'] ??= 'pending';
         $validated['order_date'] ??= now();
-        $validated['currency'] ??= 'USD';
+        // No currency: OrderService uses the organization's currency.
 
         // OrderService owns the create invariant (lock → validate → ledger +
         // decrement, wrapped in SequenceNumberRetry) shared with the

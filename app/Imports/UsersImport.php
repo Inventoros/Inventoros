@@ -12,6 +12,7 @@ use App\Services\SecurityEventLogger;
 use App\Services\UserActivityAlertService;
 use App\Support\RoleAssignmentGuard;
 use App\Support\SpreadsheetSafety;
+use Illuminate\Database\QueryException;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -154,7 +155,19 @@ final class UsersImport implements ToCollection, WithHeadingRow
                 continue;
             }
 
-            $this->createUser($rowNumber, $name, $email, $baseRole, $roleIds);
+            try {
+                $this->createUser($rowNumber, $name, $email, $baseRole, $roleIds);
+            } catch (QueryException $e) {
+                // createUser's transaction (a savepoint inside Laravel
+                // Excel's import transaction) has rolled back just this row,
+                // so on PostgreSQL the rest of the file still imports.
+                Log::error('User import row failed with database error', [
+                    'organization_id' => $this->importer->organization_id,
+                    'row' => $rowNumber,
+                    'error' => $e->getMessage(),
+                ]);
+                $this->error($rowNumber, ['The user could not be saved due to a database error.']);
+            }
         }
     }
 

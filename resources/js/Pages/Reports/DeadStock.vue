@@ -7,9 +7,9 @@ import Button from '@/Components/ui/Button.vue';
 import Badge from '@/Components/ui/Badge.vue';
 import StatTile from '@/Components/ui/StatTile.vue';
 import ExportMenu from '@/Components/Reports/ExportMenu.vue';
-import { formatCurrency, formatNumber, formatDay, formatTimestampDate } from '@/lib/reportFormat';
+import { formatCurrency, formatNumber, formatDay, formatTimestampDate, otherCurrencyTotals } from '@/lib/reportFormat';
 import { Head, Link, router } from '@inertiajs/vue3';
-import { ref } from 'vue';
+import { computed, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { ArrowLeft, Boxes, Layers, DollarSign, PackageCheck } from 'lucide-vue-next';
 
@@ -22,6 +22,10 @@ const props = defineProps({
     filters: Object,
     options: Object,
 });
+
+// Tied-up value is totalled per currency: the tile shows the organization's
+// currency and lists any others under it.
+const otherValues = computed(() => otherCurrencyTotals(props.summary.values_by_currency, props.summary.currency));
 
 const days = ref(props.filters.days);
 const basis = ref(props.filters.basis);
@@ -90,8 +94,8 @@ const thRightClass = 'px-4 py-2.5 text-right text-xs font-medium tracking-tight 
             </StatTile>
             <StatTile
                 :label="t('reports.deadStock.value')"
-                :value="formatCurrency(summary.total_value)"
-                :hint="t('reports.deadStock.valueHint')"
+                :value="formatCurrency(summary.total_value, summary.currency)"
+                :hint="otherValues ? t('dashboard.plusOtherCurrencies', { amounts: otherValues }) : t('reports.deadStock.valueHint')"
                 icon-tone="brand"
             >
                 <template #icon><DollarSign :size="18" /></template>
@@ -139,9 +143,9 @@ const thRightClass = 'px-4 py-2.5 text-right text-xs font-medium tracking-tight 
                                     <td class="px-4 py-3 text-right tabular-nums text-text-primary">{{ formatNumber(row.stock) }}</td>
                                     <td class="px-4 py-3 text-right tabular-nums text-text-secondary">
                                         <Badge v-if="row.cost_missing" variant="warning" size="sm">{{ t('reports.common.costMissing') }}</Badge>
-                                        <span v-else>{{ formatCurrency(row.unit_cost) }}</span>
+                                        <span v-else>{{ formatCurrency(row.unit_cost, row.currency) }}</span>
                                     </td>
-                                    <td class="px-4 py-3 text-right font-semibold tabular-nums text-text-primary">{{ formatCurrency(row.tied_up_value) }}</td>
+                                    <td class="px-4 py-3 text-right font-semibold tabular-nums text-text-primary">{{ formatCurrency(row.tied_up_value, row.currency) }}</td>
                                     <td class="px-4 py-3 text-text-secondary">{{ row.last_sale_at ? formatDay(row.last_sale_at) : t('reports.deadStock.never') }}</td>
                                     <td class="px-4 py-3 text-text-secondary">{{ row.last_outbound_at ? formatTimestampDate(row.last_outbound_at) : t('reports.deadStock.never') }}</td>
                                 </tr>

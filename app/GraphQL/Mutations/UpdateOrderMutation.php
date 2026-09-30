@@ -77,7 +77,7 @@ class UpdateOrderMutation extends Mutation
             'discount_value' => [
                 'type' => Type::float(),
                 'description' => 'Order-level discount value; totals are recomputed on the server',
-                'rules' => ['nullable', 'numeric', 'min:0'],
+                'rules' => ['nullable', 'numeric', 'decimal:0,2', 'min:0'],
             ],
         ];
     }

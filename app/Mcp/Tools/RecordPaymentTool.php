@@ -44,7 +44,7 @@ class RecordPaymentTool extends Tool
 
         $validated = $request->validate([
             'order_id' => ['required', 'integer'],
-            'amount' => ['required', 'numeric', 'gt:0', 'max:99999999'],
+            'amount' => ['required', 'numeric', 'decimal:0,2', 'gt:0', 'max:99999999'],
             'method' => ['required', Rule::in(PaymentMethod::values())],
             'reference' => ['nullable', 'string', 'max:255'],
             'paid_at' => ['nullable', 'date'],

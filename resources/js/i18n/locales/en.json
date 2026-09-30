@@ -161,6 +161,7 @@
     "totalOrders": "Total Orders",
     "revenueThisMonth": "Revenue This Month",
     "outstandingReceivables": "Outstanding receivables",
+    "plusOtherCurrencies": "Plus {amounts}",
     "pendingOrders": "Pending Orders",
     "locations": "Locations",
     "inventoryValue": "Inventory Value",
@@ -2442,6 +2443,8 @@
     "paid": "Paid",
     "balance": "Balance",
     "agingNote": "Age is counted in days from the order date. Cancelled and overpaid orders are not included.",
+    "byCurrency": "Balances by currency",
+    "currencyNote": "Each currency is totalled on its own. Amounts in different currencies are never added together.",
     "truncated": "Showing the oldest {count} orders. The totals above cover every order.",
     "empty": "Nothing outstanding. Every live order is paid in full."
   },

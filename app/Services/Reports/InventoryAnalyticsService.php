@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Services\Reports;
 
+use App\Models\Auth\Organization;
+use App\Support\CurrencyTotals;
 use Carbon\CarbonImmutable;
 use Carbon\CarbonInterface;
 use Illuminate\Database\Query\Builder;
@@ -76,7 +78,8 @@ class InventoryAnalyticsService
     public function deadStock(int $organizationId, int $days, string $basis, CarbonInterface $asOf): array
     {
         $base = $this->deadStockBase($organizationId, $days, $basis, $asOf);
-        $summary = $this->deadStockSummaryFrom($base);
+        $summary = $this->deadStockSummaryFrom($base, $organizationId);
+        $baseCurrency = $summary['currency'];
 
         $rows = (clone $base)
             ->orderByDesc('tied_up_value')
@@ -93,6 +96,8 @@ class InventoryAnalyticsService
                 'unit_cost' => $row->purchase_price === null ? null : (float) $row->purchase_price,
                 'cost_missing' => $row->purchase_price === null,
                 'tied_up_value' => round((float) $row->tied_up_value, 2),
+                // Unit cost and value are in the product's currency.
+                'currency' => filled($row->currency) ? strtoupper(trim((string) $row->currency)) : $baseCurrency,
                 'last_sale_at' => $row->last_sale_at,
                 'last_outbound_at' => $row->last_outbound_at,
             ])
@@ -109,11 +114,11 @@ class InventoryAnalyticsService
      * Headline dead-stock figures only (one aggregate query), for the
      * dashboard tile.
      *
-     * @return array{product_count: int, total_units: int, total_value: float}
+     * @return array{product_count: int, total_units: int, currency: string, total_value: float, values_by_currency: array<int, array{currency: string, amount: float}>}
      */
     public function deadStockSummary(int $organizationId, int $days, CarbonInterface $asOf): array
     {
-        return $this->deadStockSummaryFrom($this->deadStockBase($organizationId, $days, 'both', $asOf));
+        return $this->deadStockSummaryFrom($this->deadStockBase($organizationId, $days, 'both', $asOf), $organizationId);
     }
 
     private function deadStockBase(int $organizationId, int $days, string $basis, CarbonInterface $asOf): Builder
@@ -151,6 +156,7 @@ class InventoryAnalyticsService
                 product_locations.name as location,
                 products.stock,
                 products.purchase_price,
+                products.currency,
                 (products.stock * COALESCE(products.purchase_price, 0)) as tied_up_value,
                 ls.last_sale_at,
                 lo.last_outbound_at
@@ -167,18 +173,31 @@ class InventoryAnalyticsService
         return $query;
     }
 
-    /** @return array{product_count: int, total_units: int, total_value: float} */
-    private function deadStockSummaryFrom(Builder $base): array
+    /**
+     * Counts across every product, value per product currency: total_value
+     * is the organization's currency only and values_by_currency lists each
+     * currency's own total (that currency first), so amounts in different
+     * currencies are never added together.
+     *
+     * @return array{product_count: int, total_units: int, currency: string, total_value: float, values_by_currency: array<int, array{currency: string, amount: float}>}
+     */
+    private function deadStockSummaryFrom(Builder $base, int $organizationId): array
     {
-        $totals = DB::query()
+        $groups = DB::query()
             ->fromSub(clone $base, 'dead')
-            ->selectRaw('COUNT(*) as product_count, COALESCE(SUM(stock), 0) as total_units, COALESCE(SUM(tied_up_value), 0) as total_value')
-            ->first();
+            ->groupBy('currency')
+            ->selectRaw('currency, COUNT(*) as product_count, COALESCE(SUM(stock), 0) as total_units, COALESCE(SUM(tied_up_value), 0) as total_value')
+            ->get();
+
+        $currency = Organization::currencyFor($organizationId);
+        $values = CurrencyTotals::list($groups->pluck('total_value', 'currency'), $currency);
 
         return [
-            'product_count' => (int) $totals->product_count,
-            'total_units' => (int) $totals->total_units,
-            'total_value' => round((float) $totals->total_value, 2),
+            'product_count' => (int) $groups->sum('product_count'),
+            'total_units' => (int) $groups->sum('total_units'),
+            'currency' => $currency,
+            'total_value' => $values[0]['amount'],
+            'values_by_currency' => $values,
         ];
     }
 
@@ -581,6 +600,8 @@ class InventoryAnalyticsService
      */
     public function valuationByLocation(int $organizationId, ?array $warehouseIds = null): array
     {
+        $currency = Organization::currencyFor($organizationId);
+
         $rows = DB::table('product_location_stocks')
             ->join('products', function (JoinClause $join) use ($organizationId) {
                 $join->on('products.id', '=', 'product_location_stocks.product_id')
@@ -598,28 +619,29 @@ class InventoryAnalyticsService
             ->whereNull('products.deleted_at')
             ->where('products.is_active', true)
             ->when($warehouseIds !== null, fn (Builder $q) => $q->whereIn('product_locations.warehouse_id', $warehouseIds))
-            ->groupBy('product_locations.id', 'product_locations.name', 'warehouses.name')
+            ->groupBy('product_locations.id', 'product_locations.name', 'warehouses.name', 'products.currency')
             ->selectRaw('
                 product_locations.id as location_id,
                 product_locations.name as location,
                 warehouses.name as warehouse,
+                products.currency as currency,
                 COUNT(DISTINCT products.id) as products,
                 COALESCE(SUM(product_location_stocks.quantity), 0) as quantity,
                 COALESCE(SUM(product_location_stocks.quantity * COALESCE(products.purchase_price, 0)), 0) as cost_value,
                 COALESCE(SUM(product_location_stocks.quantity * products.price), 0) as retail_value
             ')
-            ->orderByDesc('cost_value')
-            ->limit($this->maxRows())
             ->get()
-            ->map(fn ($row) => [
-                'location_id' => (int) $row->location_id,
-                'location' => $row->location,
-                'warehouse' => $row->warehouse,
-                'products' => (int) $row->products,
-                'quantity' => (int) $row->quantity,
-                'cost_value' => round((float) $row->cost_value, 2),
-                'retail_value' => round((float) $row->retail_value, 2),
-            ])
+            ->groupBy('location_id')
+            ->map(fn (Collection $group) => $this->locationValuationRow(
+                (int) $group->first()->location_id,
+                $group->first()->location,
+                $group->first()->warehouse,
+                $group,
+                $currency,
+            ))
+            ->sort(fn (array $a, array $b) => [$b['cost_value'], $a['location_id']] <=> [$a['cost_value'], $b['location_id']])
+            ->take($this->maxRows())
+            ->values()
             ->all();
 
         if ($warehouseIds !== null) {
@@ -639,27 +661,46 @@ class InventoryAnalyticsService
             ->where('products.organization_id', $organizationId)
             ->whereNull('products.deleted_at')
             ->where('products.is_active', true)
+            ->groupBy('products.currency')
             ->selectRaw("
+                products.currency as currency,
                 COALESCE(SUM(CASE WHEN {$remainder} > 0 THEN 1 ELSE 0 END), 0) as products,
                 COALESCE(SUM({$positive}), 0) as quantity,
                 COALESCE(SUM({$positive} * COALESCE(products.purchase_price, 0)), 0) as cost_value,
                 COALESCE(SUM({$positive} * products.price), 0) as retail_value
             ")
-            ->first();
+            ->get();
 
-        if ((int) $unallocated->quantity > 0) {
-            $rows[] = [
-                'location_id' => null,
-                'location' => null,
-                'warehouse' => null,
-                'products' => (int) $unallocated->products,
-                'quantity' => (int) $unallocated->quantity,
-                'cost_value' => round((float) $unallocated->cost_value, 2),
-                'retail_value' => round((float) $unallocated->retail_value, 2),
-            ];
+        if ((int) $unallocated->sum('quantity') > 0) {
+            $rows[] = $this->locationValuationRow(null, null, null, $unallocated, $currency);
         }
 
         return $rows;
+    }
+
+    /**
+     * One valuation-by-location row from its per-currency groups: counts
+     * across every product, cost and retail value in the organization's
+     * currency, and `values` listing each currency's own (that one first).
+     *
+     * @param  Collection<int, object>  $groups
+     * @return array<string, mixed>
+     */
+    private function locationValuationRow(?int $locationId, ?string $location, ?string $warehouse, Collection $groups, string $currency): array
+    {
+        $values = CurrencyTotals::breakdown($groups, $currency, ['cost_value', 'retail_value'], ['products', 'quantity']);
+
+        return [
+            'location_id' => $locationId,
+            'location' => $location,
+            'warehouse' => $warehouse,
+            'products' => (int) $groups->sum('products'),
+            'quantity' => (int) $groups->sum('quantity'),
+            'currency' => $currency,
+            'cost_value' => $values[0]['cost_value'],
+            'retail_value' => $values[0]['retail_value'],
+            'values' => $values,
+        ];
     }
 
     // ----------------------------------------------------------------------

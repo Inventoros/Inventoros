@@ -157,6 +157,7 @@
     "totalOrders": "Total de pedidos",
     "revenueThisMonth": "Ingresos este mes",
     "outstandingReceivables": "Cuentas por cobrar pendientes",
+    "plusOtherCurrencies": "Además {amounts}",
     "pendingOrders": "Pedidos pendientes",
     "locations": "Ubicaciones",
     "inventoryValue": "Valor del inventario",
@@ -2442,6 +2443,8 @@
     "paid": "Pagado",
     "balance": "Saldo",
     "agingNote": "La antig\u00fcedad se cuenta en d\u00edas desde la fecha del pedido. No se incluyen los pedidos cancelados ni los sobrepagados.",
+    "byCurrency": "Saldos por moneda",
+    "currencyNote": "Cada moneda se suma por separado. Los importes en monedas distintas nunca se suman entre sí.",
     "truncated": "Mostrando los {count} pedidos m\u00e1s antiguos. Los totales de arriba incluyen todos los pedidos.",
     "empty": "Nada pendiente. Todos los pedidos vigentes est\u00e1n pagados en su totalidad."
   },

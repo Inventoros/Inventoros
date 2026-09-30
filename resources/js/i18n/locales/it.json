@@ -157,6 +157,7 @@
     "totalOrders": "Ordini totali",
     "revenueThisMonth": "Fatturato questo mese",
     "outstandingReceivables": "Crediti da incassare",
+    "plusOtherCurrencies": "Più {amounts}",
     "pendingOrders": "Ordini in sospeso",
     "locations": "Ubicazioni",
     "inventoryValue": "Valore dell'inventario",
@@ -2442,6 +2443,8 @@
     "paid": "Pagato",
     "balance": "Saldo",
     "agingNote": "L'anzianità è calcolata in giorni dalla data dell'ordine. Gli ordini annullati e pagati in eccesso non sono inclusi.",
+    "byCurrency": "Saldi per valuta",
+    "currencyNote": "Ogni valuta viene totalizzata separatamente. Gli importi in valute diverse non vengono mai sommati.",
     "truncated": "Visualizzazione dei {count} ordini più vecchi. I totali qui sopra coprono tutti gli ordini.",
     "empty": "Nulla da incassare. Ogni ordine attivo è interamente pagato."
   },
