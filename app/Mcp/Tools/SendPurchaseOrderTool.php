@@ -67,11 +67,12 @@ class SendPurchaseOrderTool extends Tool
         }
 
         return Response::json([
-            'message' => "Purchase order emailed to {$po->sent_to}.",
+            'message' => "Purchase order queued for {$po->sent_to}.",
             'id' => $po->id,
             'po_number' => $po->po_number,
             'status' => $po->status,
             'sent_to' => $po->sent_to,
+            'queued_at' => $po->queued_at?->toIso8601String(),
             'sent_at' => $po->sent_at?->toIso8601String(),
         ]);
     }

@@ -79,6 +79,7 @@ Route::post('/orders/{order}/approve', [OrderController::class, 'approve'])->nam
 Route::post('/orders/{order}/reject', [OrderController::class, 'reject'])->name('orders.reject')->middleware('permission:approve_orders');
 
 // Order Payments
+Route::post('/orders/payments/mark-pre-tracking-paid', [OrderPaymentController::class, 'markPreTrackingPaid'])->name('orders.payments.mark-pre-tracking-paid')->middleware('permission:record_payments');
 Route::post('/orders/{order}/payments', [OrderPaymentController::class, 'store'])->name('orders.payments.store')->middleware('permission:record_payments');
 Route::post('/orders/{order}/payments/{payment}/void', [OrderPaymentController::class, 'void'])->name('orders.payments.void')->middleware('permission:record_payments');
 

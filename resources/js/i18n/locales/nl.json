@@ -177,7 +177,15 @@
     "viewInventory": "Voorraad bekijken",
     "browseAllItems": "Alle artikelen bekijken",
     "viewOrders": "Bestellingen bekijken",
-    "allOrders": "Alle bestellingen"
+    "allOrders": "Alle bestellingen",
+    "systemHealth": {
+      "title": "Achtergrondtaken vragen aandacht",
+      "schedulerNeverRan": "De scheduler heeft nog niet gedraaid, dus e-mails, webhooks, bestelmeldingen en geplande rapporten worden niet verwerkt.",
+      "schedulerStale": "De scheduler draaide voor het laatst op {date}. E-mails, webhooks, bestelmeldingen en geplande rapporten wachten.",
+      "queueBacklog": "Taken in de wachtrij die langer dan 15 minuten wachten: {count}. E-mails en webhooks worden niet verstuurd.",
+      "failedJobs": "Achtergrondtaken die in de afgelopen 24 uur zijn mislukt: {count}.",
+      "help": "Controleer of de cronjob elke minuut php artisan schedule:run uitvoert. Zie de cPanel-handleiding voor details."
+    }
   },
   "products": {
     "title": "Voorraad",
@@ -2144,7 +2152,9 @@
     "invoiceNotIssued": "Nog niet uitgegeven. Er wordt een nummer toegekend wanneer de factuur voor het eerst wordt gegenereerd.",
     "invoiceIssued": "Uitgegeven",
     "invoiceSent": "Verzonden",
-    "send": "Verzenden"
+    "send": "Verzenden",
+    "queuedOn": "In de wachtrij voor {to} op {date}. Wordt verstuurd zodra de mailwachtrij weer draait.",
+    "invoiceQueued": "In wachtrij"
   },
   "scanning": {
     "scan": "Scannen",
@@ -2287,7 +2297,8 @@
       "partial": "Gedeeltelijk betaald",
       "paid": "Betaald",
       "overpaid": "Te veel betaald",
-      "refunded": "Terugbetaald"
+      "refunded": "Terugbetaald",
+      "untracked": "Niet bijgehouden"
     },
     "amountPaid": "Betaald bedrag",
     "balanceDue": "Openstaand saldo",
@@ -2314,7 +2325,15 @@
     "save": "Opslaan",
     "byPaymentStatus": "Bestellingen per betaalstatus",
     "outstanding": "Openstaand",
-    "ordersCount": "{n} bestelling | {n} bestellingen"
+    "ordersCount": "{n} bestelling | {n} bestellingen",
+    "untrackedNotice": "Deze bestelling is geplaatst voordat betalingen werden bijgehouden, dus over de betaling is niets bekend. Een betaling registreren start het bijhouden.",
+    "markPreTracking": {
+      "button": "Oudere bestellingen als betaald markeren",
+      "title": "Oudere bestellingen als betaald markeren",
+      "description": "{n} bestelling is geplaatst voordat betalingen werden bijgehouden. Bestellingen van vóór de datum hieronder worden als betaald gemarkeerd met een betaling via methode Overig voor het volledige totaal, gedateerd op de besteldatum. Geannuleerde bestellingen blijven ongewijzigd. | {n} bestellingen zijn geplaatst voordat betalingen werden bijgehouden. Bestellingen van vóór de datum hieronder worden als betaald gemarkeerd met een betaling via methode Overig voor het volledige totaal, gedateerd op de besteldatum. Geannuleerde bestellingen blijven ongewijzigd.",
+      "before": "Geplaatst vóór",
+      "submit": "Als betaald markeren"
+    }
   },
   "discounts": {
     "discount": "Korting",
@@ -2489,7 +2508,8 @@
         "partial": "Gedeeltelijk betaald",
         "paid": "Betaald",
         "overpaid": "Te veel betaald",
-        "refunded": "Terugbetaald"
+        "refunded": "Terugbetaald",
+        "untracked": "Niet bijgehouden"
       }
     },
     "returns": {

@@ -595,7 +595,9 @@ final class ShipmentService
      */
     private function notifyCustomer(Shipment $shipment): void
     {
-        if (! $shipment->notify_customer || $shipment->customer_notified_at !== null) {
+        if (! $shipment->notify_customer
+            || $shipment->customer_notification_queued_at !== null
+            || $shipment->customer_notified_at !== null) {
             return;
         }
 
@@ -606,11 +608,13 @@ final class ShipmentService
         }
 
         // Claim the notification atomically so a webhook and a poll racing on
-        // the same shipment cannot both send it.
+        // the same shipment cannot both send it. customer_notified_at is
+        // stamped on delivery (DocumentEmailDelivered).
         $claimed = Shipment::withoutGlobalScopes()
             ->whereKey($shipment->getKey())
+            ->whereNull('customer_notification_queued_at')
             ->whereNull('customer_notified_at')
-            ->update(['customer_notified_at' => now()]);
+            ->update(['customer_notification_queued_at' => now()]);
 
         if ($claimed === 0) {
             return;
@@ -620,7 +624,7 @@ final class ShipmentService
             Mail::to($email)->queue(new ShipmentShippedEmail($shipment->fresh()));
         } catch (\Throwable $e) {
             Log::warning('Could not queue the shipment email', ['shipment_id' => $shipment->id, 'error' => $e->getMessage()]);
-            Shipment::withoutGlobalScopes()->whereKey($shipment->getKey())->update(['customer_notified_at' => null]);
+            Shipment::withoutGlobalScopes()->whereKey($shipment->getKey())->update(['customer_notification_queued_at' => null]);
         }
     }
 

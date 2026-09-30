@@ -36,6 +36,7 @@ use Illuminate\Support\Facades\DB;
  * @property Carbon|null $expected_date
  * @property Carbon|null $received_date
  * @property Carbon|null $sent_at
+ * @property Carbon|null $queued_at
  * @property string|null $sent_to
  * @property string|null $approval_status
  * @property int|null $approval_requested_by
@@ -78,6 +79,7 @@ class PurchaseOrder extends Model
         'received_date',
         'sent_at',
         'sent_to',
+        'queued_at',
         'approval_status',
         'approval_requested_by',
         'approval_requested_at',
@@ -98,6 +100,7 @@ class PurchaseOrder extends Model
         'expected_date' => 'date',
         'received_date' => 'date',
         'sent_at' => 'datetime',
+        'queued_at' => 'datetime',
         'approval_requested_at' => 'datetime',
         'approved_at' => 'datetime',
         'subtotal' => 'decimal:2',
@@ -393,6 +396,17 @@ class PurchaseOrder extends Model
             && in_array($this->approval_status, [null, self::APPROVAL_REJECTED], true)
             && $this->needsApproval()
             && $this->items()->count() > 0;
+    }
+
+    /**
+     * Whether the latest email to the supplier is still waiting in the queue:
+     * it was queued and has not been delivered since (sent_at is stamped on
+     * delivery, so a resend reads as queued until it goes out).
+     */
+    public function emailIsQueued(): bool
+    {
+        return $this->queued_at !== null
+            && ($this->sent_at === null || $this->sent_at->lessThan($this->queued_at));
     }
 
     /**

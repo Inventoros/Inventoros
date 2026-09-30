@@ -47,6 +47,7 @@ use Illuminate\Support\Carbon;
  * @property string|null $tracking_status_detail
  * @property bool $notify_customer
  * @property Carbon|null $customer_notified_at
+ * @property Carbon|null $customer_notification_queued_at
  * @property Carbon|null $shipped_at
  * @property Carbon|null $delivered_at
  * @property Carbon|null $last_tracked_at
@@ -83,6 +84,7 @@ class Shipment extends Model
         'tracking_status_detail',
         'notify_customer',
         'customer_notified_at',
+        'customer_notification_queued_at',
         'shipped_at',
         'delivered_at',
         'last_tracked_at',
@@ -115,6 +117,7 @@ class Shipment extends Model
             'height_in' => 'decimal:2',
             'notify_customer' => 'boolean',
             'customer_notified_at' => 'datetime',
+            'customer_notification_queued_at' => 'datetime',
             'shipped_at' => 'datetime',
             'delivered_at' => 'datetime',
             'last_tracked_at' => 'datetime',
@@ -213,6 +216,7 @@ class Shipment extends Model
             'warehouse' => $this->warehouse ? ['id' => $this->warehouse->id, 'name' => $this->warehouse->name] : null,
             'notify_customer' => $this->notify_customer,
             'customer_notified_at' => $this->customer_notified_at?->toIso8601String(),
+            'customer_notification_queued_at' => $this->customer_notification_queued_at?->toIso8601String(),
             'shipped_at' => $this->shipped_at?->toIso8601String(),
             'delivered_at' => $this->delivered_at?->toIso8601String(),
             'created_at' => $this->created_at?->toIso8601String(),

@@ -34,6 +34,7 @@ use Illuminate\Support\Carbon;
  * @property string|null $invoice_number
  * @property \Illuminate\Support\Carbon|null $invoice_issued_at
  * @property \Illuminate\Support\Carbon|null $invoice_sent_at
+ * @property \Illuminate\Support\Carbon|null $invoice_queued_at
  * @property string|null $invoice_sent_to
  * @property string|null $source
  * @property string|null $external_id
@@ -99,6 +100,7 @@ class Order extends Model
         'invoice_issued_at',
         'invoice_sent_at',
         'invoice_sent_to',
+        'invoice_queued_at',
         'source',
         'external_id',
         'external_reference',
@@ -153,6 +155,7 @@ class Order extends Model
             'approved_at' => 'datetime',
             'invoice_issued_at' => 'datetime',
             'invoice_sent_at' => 'datetime',
+            'invoice_queued_at' => 'datetime',
             'metadata' => 'array',
         ];
     }
@@ -227,6 +230,15 @@ class Order extends Model
      */
     public function syncPaymentState(): void
     {
+        // An order from before payment tracking stays untracked until the
+        // first payment row (voided or not) is recorded against it.
+        if ($this->payment_status === PaymentStatus::UNTRACKED
+            && ! $this->payments()->withoutGlobalScopes()->exists()) {
+            $this->amount_paid = '0.00';
+
+            return;
+        }
+
         $paid = '0.00';
         $refunded = '0.00';
 
@@ -245,10 +257,34 @@ class Order extends Model
     /**
      * What the customer still owes: total minus what has been paid, never
      * below zero (an overpaid order owes nothing; its status says overpaid).
+     * An untracked order (from before payment tracking) owes nothing either:
+     * nothing is known about its payment, so it is never reported as owed.
      */
     public function balanceDue(): string
     {
-        return Money::max(Money::subtract($this->total, $this->amount_paid), 0);
+        if (! $this->isPaymentTracked()) {
+            return '0.00';
+        }
+
+        return $this->unpaidAmount();
+    }
+
+    /**
+     * Total minus what has been paid, never below zero, whether or not the
+     * order's payments are tracked. What a first payment is checked against.
+     */
+    public function unpaidAmount(): string
+    {
+        return Money::max(Money::subtract($this->total, $this->amount_paid ?? '0'), 0);
+    }
+
+    /**
+     * False for an order that predates payment tracking and has had no
+     * payment recorded since.
+     */
+    public function isPaymentTracked(): bool
+    {
+        return $this->payment_status !== PaymentStatus::UNTRACKED;
     }
 
     /**
@@ -347,6 +383,16 @@ class Order extends Model
     {
         return $query->where('approval_status', 'pending')
             ->where('status', '!=', OrderStatus::CANCELLED->value);
+    }
+
+    /**
+     * Whether the latest invoice email is still waiting in the queue: queued
+     * and not delivered since (invoice_sent_at is stamped on delivery).
+     */
+    public function invoiceEmailIsQueued(): bool
+    {
+        return $this->invoice_queued_at !== null
+            && ($this->invoice_sent_at === null || $this->invoice_sent_at->lessThan($this->invoice_queued_at));
     }
 
     /**

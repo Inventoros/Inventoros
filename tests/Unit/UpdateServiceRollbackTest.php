@@ -36,7 +36,8 @@ final class UpdateServiceRollbackTest extends TestCase
         $files->shouldReceive('downloadRelease')->once()->andReturn('/tmp/update.zip');
         $files->shouldReceive('verifyArchiveSignature')->once();
         $files->shouldReceive('extractZip')->once()->andReturn('/tmp/extracted');
-        $files->shouldReceive('replaceFiles')->once()->andThrow(new \RuntimeException('disk full'));
+        $files->shouldReceive('validateRelease')->once()->andReturn(['version' => '9.9.9', 'layout' => 'cpanel-v1']);
+        $files->shouldReceive('installRelease')->once()->andThrow(new \RuntimeException('disk full'));
 
         $service = Mockery::mock(UpdateService::class, [$github, $backups, $files])
             ->makePartial()
@@ -71,7 +72,9 @@ final class UpdateServiceRollbackTest extends TestCase
         $files->shouldReceive('downloadRelease')->once()->andReturn('/tmp/update.zip');
         $files->shouldReceive('verifyArchiveSignature')->once();
         $files->shouldReceive('extractZip')->once()->andReturn('/tmp/extracted');
-        $files->shouldReceive('replaceFiles')->once(); // files replace fine; migration is what fails
+        $files->shouldReceive('validateRelease')->once()->andReturn(['version' => '9.9.9', 'layout' => 'cpanel-v1']);
+        $files->shouldReceive('installRelease')->once(); // files install fine; migration is what fails
+        $files->shouldReceive('writeVersion')->never();
         $files->shouldReceive('cleanup')->never();     // must not clean up after a failed apply
 
         $service = Mockery::mock(UpdateService::class, [$github, $backups, $files])
@@ -86,6 +89,34 @@ final class UpdateServiceRollbackTest extends TestCase
 
         $this->assertFalse($result['success']);
         $this->assertStringContainsStringIgnoringCase('restored', $result['message']);
+    }
+
+    public function test_a_failing_up_does_not_hide_why_the_update_failed(): void
+    {
+        Artisan::shouldReceive('call')->andReturn(0)->byDefault();
+        Artisan::shouldReceive('call')->with('up')->andThrow(new \RuntimeException('cannot bring app up'));
+
+        $github = Mockery::mock(GitHubReleaseService::class);
+        $backups = Mockery::mock(BackupService::class);
+        $files = Mockery::mock(FileUpdateService::class);
+
+        $backups->shouldReceive('createBackup')->once()->andReturn('/tmp/backup_test.zip');
+        $backups->shouldReceive('lastDatabaseBackupMethod')->andReturn('pg_dump');
+        $files->shouldReceive('downloadRelease')->once()->andReturn('/tmp/update.zip');
+        $files->shouldReceive('verifyArchiveSignature')->once();
+        $files->shouldReceive('extractZip')->once()->andReturn('/tmp/extracted');
+        $files->shouldReceive('validateRelease')->once()->andReturn(['version' => '9.9.9', 'layout' => 'cpanel-v1']);
+        $files->shouldReceive('installRelease')->once()->andThrow(new \RuntimeException('disk full'));
+
+        $service = Mockery::mock(UpdateService::class, [$github, $backups, $files])
+            ->makePartial()
+            ->shouldAllowMockingProtectedMethods();
+        $service->shouldReceive('restoreFromBackup')->once()->andReturn(['success' => true, 'message' => 'ok']);
+
+        $result = $service->update('https://github.com/Inventoros/Inventoros/releases/download/v9.9.9/x.zip');
+
+        $this->assertFalse($result['success']);
+        $this->assertStringContainsString('disk full', $result['message']);
     }
 
     public function test_update_is_blocked_when_another_update_holds_the_lock(): void

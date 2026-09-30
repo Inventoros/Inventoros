@@ -190,7 +190,10 @@ class OrderInvoiceEmailTest extends TestCase
 
         $order->refresh();
         $this->assertSame('INV-000001', $order->invoice_number);
-        $this->assertNotNull($order->invoice_sent_at);
+        // Queued, not yet delivered.
+        $this->assertNotNull($order->invoice_queued_at);
+        $this->assertNull($order->invoice_sent_at);
+        $this->assertTrue($order->invoiceEmailIsQueued());
         $this->assertSame('casey@customer.test', $order->invoice_sent_to);
 
         $log = ActivityLog::where('subject_type', Order::class)->where('subject_id', $order->id)
@@ -225,6 +228,7 @@ class OrderInvoiceEmailTest extends TestCase
 
         Mail::assertNothingQueued();
         $this->assertNull($order->fresh()->invoice_sent_at);
+        $this->assertNull($order->fresh()->invoice_queued_at);
     }
 
     public function test_viewer_cannot_email_the_invoice(): void
@@ -290,5 +294,17 @@ class OrderInvoiceEmailTest extends TestCase
         $mail->assertSeeInText('INV-000001');
         $mail->assertSeeInText('Thanks!');
         $mail->assertSeeInText('Acme Hardware');
+    }
+    public function test_invoice_sent_at_is_stamped_only_when_the_email_is_delivered(): void
+    {
+        Setting::create(['organization_id' => $this->org->id, 'key' => 'email.provider', 'value' => 'array', 'encrypted' => false]);
+        $order = $this->order();
+
+        app(OrderInvoiceEmailService::class)->send($order, $this->editor);
+
+        $order->refresh();
+        $this->assertNotNull($order->invoice_queued_at);
+        $this->assertNotNull($order->invoice_sent_at);
+        $this->assertFalse($order->invoiceEmailIsQueued());
     }
 }

@@ -56,6 +56,21 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Web Root (split installs)
+    |--------------------------------------------------------------------------
+    |
+    | On cPanel the app lives in e.g. ~/inventoros and the web root in
+    | ~/public_html. The installer and the web updater record the web root
+    | here (absolute, or relative to the app directory) so CLI commands, such
+    | as plugin activation and `php artisan update`, write assets to the same
+    | place the website serves. Leave empty for the standard <app>/public.
+    |
+    */
+
+    'public_path' => env('APP_PUBLIC_PATH'),
+
+    /*
+    |--------------------------------------------------------------------------
     | Application Timezone
     |--------------------------------------------------------------------------
     |

@@ -7,6 +7,7 @@ namespace App\Services;
 use App\Services\Update\BackupService;
 use App\Services\Update\FileUpdateService;
 use App\Services\Update\GitHubReleaseService;
+use App\Support\ArtisanProcess;
 use App\Support\SafeZipExtractor;
 use Exception;
 use Illuminate\Support\Facades\Artisan;
@@ -135,14 +136,23 @@ class UpdateService
                 $this->log($progressCallback, 'Fetching latest release information...');
                 $latest = $this->githubService->getLatestRelease();
 
-                if (! $latest || ! $latest['download_url']) {
+                if (! $latest || ! $latest['version']) {
                     throw new Exception('Could not fetch latest release information');
                 }
 
+                $expectedVersion = $this->githubService->stripVersion((string) $latest['version']);
+
+                if (! $latest['download_url']) {
+                    throw new Exception(
+                        "Release {$latest['version']} has no ".GitHubReleaseService::packageName($expectedVersion)
+                        .' package attached, so it cannot be installed from here. Download it from GitHub and follow UPGRADE.md.'
+                    );
+                }
+
                 $downloadUrl = $latest['download_url'];
-                $newVersion = $latest['version'];
             } else {
-                $newVersion = 'unknown';
+                // A direct URL: the package's own manifest names the version.
+                $expectedVersion = null;
             }
 
             // Step 2: Create backup
@@ -164,6 +174,19 @@ class UpdateService
             $this->log($progressCallback, 'Extracting files...');
             $extractPath = $this->fileService->extractZip($zipPath);
 
+            // Step 4b: Check the package (manifest, version, PHP range, layout,
+            // web root) while the site is still up; a bad package must never
+            // take the site down.
+            $this->log($progressCallback, 'Checking the release package...');
+            try {
+                $manifest = $this->fileService->validateRelease($extractPath, $expectedVersion);
+            } catch (\Throwable $invalid) {
+                $this->fileService->cleanup($zipPath, $extractPath);
+
+                throw $invalid;
+            }
+            $newVersion = $manifest['version'];
+
             // Step 5: Put application in maintenance mode
             $this->log($progressCallback, 'Enabling maintenance mode...');
             Artisan::call('down', ['--retry' => 60]);
@@ -177,25 +200,27 @@ class UpdateService
                 // the pre-update backup (files AND the database dump) on any failure in
                 // this block, not just a file-replacement failure.
                 try {
-                    // Step 6: Replace files
+                    // Step 6: Install the package files (app + web root)
                     $this->log($progressCallback, 'Replacing application files...');
-                    $this->fileService->replaceFiles($extractPath);
+                    $this->fileService->installRelease($extractPath);
 
-                    // Step 7: Run migrations
-                    $this->log($progressCallback, 'Running database migrations...');
-                    Artisan::call('migrate', ['--force' => true]);
-
-                    // Step 8: Clear and rebuild caches
+                    // Step 7: Drop caches compiled against the old code
+                    // (config, routes, package manifest) before anything boots
+                    // the new files.
                     $this->log($progressCallback, 'Clearing caches...');
-                    Artisan::call('optimize:clear');
+                    $this->artisan('optimize:clear');
 
+                    // Step 8: Run migrations
+                    $this->log($progressCallback, 'Running database migrations...');
+                    $this->artisan('migrate', ['--force' => true]);
+
+                    // Step 9: Rebuild caches
                     $this->log($progressCallback, 'Rebuilding caches...');
-                    Artisan::call('optimize');
+                    $this->artisan('optimize');
 
-                    // Step 9: Update version file
-                    if ($newVersion !== 'unknown') {
-                        $this->writeVersionFile($this->githubService->stripVersion($newVersion));
-                    }
+                    // Step 10: Record the new version last, once everything
+                    // above succeeded.
+                    $this->fileService->writeVersion($newVersion);
                 } catch (\Throwable $applyError) {
                     // The install is now half-updated (files and/or schema); restore
                     // the backup taken in Step 2 before surfacing the failure.
@@ -204,7 +229,16 @@ class UpdateService
                         'backup' => $backupPath,
                     ]);
                     $this->log($progressCallback, 'Update failed; restoring previous version...');
-                    $this->restoreFromBackup($backupPath);
+                    $restore = $this->restoreFromBackup($backupPath);
+
+                    if (! ($restore['success'] ?? false)) {
+                        throw new Exception(
+                            'Update failed ('.$applyError->getMessage().') and restoring the backup also failed ('
+                            .($restore['message'] ?? 'unknown error').'). Restore '.$backupPath.' by hand.',
+                            0,
+                            $applyError
+                        );
+                    }
 
                     throw new Exception(
                         'Update failed and the previous version was restored: '
@@ -214,15 +248,21 @@ class UpdateService
                     );
                 }
 
-                // Step 10: Cleanup temp files. Benign — these are temp artifacts only,
+                // Step 11: Cleanup temp files. Benign — these are temp artifacts only,
                 // so a cleanup failure must not roll back an otherwise-successful update.
                 $this->log($progressCallback, 'Cleaning up temporary files...');
                 $this->fileService->cleanup($zipPath, $extractPath);
 
             } finally {
-                // Always bring the application back up
+                // Always bring the application back up. A failure here must not
+                // replace the exception that explains why the update failed.
                 $this->log($progressCallback, 'Disabling maintenance mode...');
-                Artisan::call('up');
+                try {
+                    Artisan::call('up');
+                } catch (\Throwable $upError) {
+                    Log::error('Failed to bring the application up after the update', ['error' => $upError->getMessage()]);
+                    $this->log($progressCallback, 'Could not disable maintenance mode: run php artisan up.');
+                }
             }
 
             $this->log($progressCallback, 'Update completed successfully!');
@@ -281,9 +321,11 @@ class UpdateService
             }
 
             try {
+                // Backups hold vendor/ and storage/, so they are allowed to
+                // be much larger than a release package.
                 SafeZipExtractor::validate($zip, $extractPath, [
-                    'max_entries' => (int) config('update.max_entry_count', 50000),
-                    'max_bytes' => (int) config('update.max_extracted_bytes', 300 * 1024 * 1024),
+                    'max_entries' => (int) config('update.restore_max_entry_count', 500000),
+                    'max_bytes' => (int) config('update.restore_max_extracted_bytes', 4 * 1024 * 1024 * 1024),
                 ]);
                 $zip->extractTo($extractPath);
             } finally {
@@ -300,9 +342,10 @@ class UpdateService
             $databaseMethod = $this->backupService->restoreDatabase($extractPath);
             Log::info('Backup restore: database', ['method' => $databaseMethod ?? 'none (files-only backup)']);
 
-            // Clear caches
-            Artisan::call('optimize:clear');
-            Artisan::call('optimize');
+            // Clear caches (in a fresh process: this one may have loaded
+            // classes from the files that were just rolled back).
+            $this->artisan('optimize:clear');
+            $this->artisan('optimize');
 
             // Cleanup
             File::deleteDirectory($extractPath);
@@ -351,14 +394,35 @@ class UpdateService
     }
 
     /**
-     * Write version to VERSION file.
+     * Run an artisan command for the update.
      *
-     * @param  string  $version  The version string to write
+     * Once the new files are in place this PHP process still holds the old
+     * classes, and config:cache boots a second application and re-points the
+     * facades at it: running cache and migration commands in-process mixes old
+     * and new code. They run as `php artisan ...` in a new process in the
+     * application directory instead, which sees only the files on disk. When
+     * processes cannot be started (proc_open disabled, no PHP CLI binary
+     * found, or update.run_artisan_in_subprocess off) it falls back to an
+     * in-process call.
+     *
+     * @param  array<string, mixed>  $parameters
+     *
+     * @throws \RuntimeException When the command fails.
      */
-    protected function writeVersionFile(string $version): void
+    protected function artisan(string $command, array $parameters = []): void
     {
-        $versionFile = base_path('VERSION');
-        File::put($versionFile, $version);
+        $processes = app(ArtisanProcess::class);
+
+        if ($processes->available()) {
+            $processes->run($command, $parameters, $this->fileService->basePath());
+
+            return;
+        }
+
+        $status = Artisan::call($command, $parameters);
+        if ($status !== 0) {
+            throw new \RuntimeException("php artisan {$command} failed (exit {$status}): ".trim(Artisan::output()));
+        }
     }
 
     /**

@@ -9,6 +9,11 @@ use App\Support\Money;
 /**
  * An order's payment position, derived from its total and the net of its
  * non-voided payments and refunds.
+ *
+ * UNTRACKED is the exception: orders that existed before payment tracking was
+ * added carry no payment rows, so nothing is known about whether they were
+ * paid. They are never counted as money owed, and recording a payment moves
+ * them into normal tracking. derive() never returns it.
  */
 enum PaymentStatus: string
 {
@@ -17,6 +22,7 @@ enum PaymentStatus: string
     case PAID = 'paid';
     case OVERPAID = 'overpaid';
     case REFUNDED = 'refunded';
+    case UNTRACKED = 'untracked';
 
     /**
      * @return array<int, string>

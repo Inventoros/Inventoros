@@ -177,7 +177,15 @@
     "viewInventory": "Envanteri Görüntüle",
     "browseAllItems": "Tüm ürünleri gör",
     "viewOrders": "Siparişleri Görüntüle",
-    "allOrders": "Tüm siparişler"
+    "allOrders": "Tüm siparişler",
+    "systemHealth": {
+      "title": "Arka plan görevleri ilgi bekliyor",
+      "schedulerNeverRan": "Zamanlayıcı henüz çalışmadı; e-postalar, webhook'lar, yeniden sipariş uyarıları ve zamanlanmış raporlar işlenmiyor.",
+      "schedulerStale": "Zamanlayıcı en son {date} tarihinde çalıştı. E-postalar, webhook'lar, yeniden sipariş uyarıları ve zamanlanmış raporlar bekliyor.",
+      "queueBacklog": "15 dakikadan uzun süredir kuyrukta bekleyen işler: {count}. E-postalar ve webhook'lar gönderilmiyor.",
+      "failedJobs": "Son 24 saatte başarısız olan arka plan işleri: {count}.",
+      "help": "Cron işinin her dakika php artisan schedule:run çalıştırdığını kontrol edin. Ayrıntılar için cPanel kılavuzuna bakın."
+    }
   },
   "products": {
     "title": "Envanter",
@@ -2144,7 +2152,9 @@
     "invoiceNotIssued": "Henüz düzenlenmedi. Fatura ilk kez oluşturulduğunda bir numara atanır.",
     "invoiceIssued": "Düzenlendi",
     "invoiceSent": "Gönderildi",
-    "send": "Gönder"
+    "send": "Gönder",
+    "queuedOn": "{to} için {date} tarihinde kuyruğa alındı. Posta kuyruğu bir sonraki çalıştığında gönderilir.",
+    "invoiceQueued": "Kuyrukta"
   },
   "scanning": {
     "scan": "Tara",
@@ -2287,7 +2297,8 @@
       "partial": "Kısmen ödendi",
       "paid": "Ödendi",
       "overpaid": "Fazla ödendi",
-      "refunded": "İade edildi"
+      "refunded": "İade edildi",
+      "untracked": "Takip edilmiyor"
     },
     "amountPaid": "Ödenen tutar",
     "balanceDue": "Kalan bakiye",
@@ -2314,7 +2325,15 @@
     "save": "Kaydet",
     "byPaymentStatus": "Ödeme durumuna göre siparişler",
     "outstanding": "Ödenmemiş",
-    "ordersCount": "{n} sipariş | {n} sipariş"
+    "ordersCount": "{n} sipariş | {n} sipariş",
+    "untrackedNotice": "Bu sipariş ödeme takibinden önce verildi, bu yüzden ödemesi hakkında bilgi yok. Bir ödeme kaydetmek takibi başlatır.",
+    "markPreTracking": {
+      "button": "Eski siparişleri ödendi olarak işaretle",
+      "title": "Eski siparişleri ödendi olarak işaretle",
+      "description": "Ödeme takibinden önce verilen sipariş sayısı: {n}. Aşağıdaki tarihten önce verilen siparişler, sipariş tarihli ve tutarın tamamı için Diğer yöntemiyle bir ödemeyle ödendi olarak işaretlenir. İptal edilen siparişler değişmez. | Ödeme takibinden önce verilen sipariş sayısı: {n}. Aşağıdaki tarihten önce verilen siparişler, sipariş tarihli ve tutarın tamamı için Diğer yöntemiyle bir ödemeyle ödendi olarak işaretlenir. İptal edilen siparişler değişmez.",
+      "before": "Şu tarihten önce verilen",
+      "submit": "Ödendi olarak işaretle"
+    }
   },
   "discounts": {
     "discount": "İndirim",
@@ -2489,7 +2508,8 @@
         "partial": "Kısmen ödendi",
         "paid": "Ödendi",
         "overpaid": "Fazla ödendi",
-        "refunded": "İade edildi"
+        "refunded": "İade edildi",
+        "untracked": "Takip edilmiyor"
       }
     },
     "returns": {

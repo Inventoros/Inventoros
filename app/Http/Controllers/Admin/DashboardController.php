@@ -16,6 +16,7 @@ use App\Models\User;
 use App\Services\PluginUIService;
 use App\Services\ReorderService;
 use App\Services\Reports\InventoryAnalyticsService;
+use App\Support\SchedulerHealth;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -119,9 +120,11 @@ class DashboardController extends Controller
 
         if ($canViewReceivables) {
             // What customers still owe on live orders. Overpaid orders owe
-            // nothing (they don't offset others) and cancelled orders are out.
+            // nothing (they don't offset others) and cancelled orders are out,
+            // as are untracked orders from before payment tracking.
             $stats['outstandingReceivables'] = (float) Order::where('organization_id', $orgId)
                 ->where('status', '!=', 'cancelled')
+                ->where('payment_status', '!=', 'untracked')
                 ->whereColumn('total', '>', 'amount_paid')
                 ->sum(DB::raw('total - amount_paid'));
         }
@@ -287,6 +290,8 @@ class DashboardController extends Controller
                 'viewReports' => $canViewReports,
             ],
             'stockMovements' => $stockMovements,
+            // Scheduler / queue health, for the people who can fix the cron.
+            'systemWarnings' => $user->is_admin ? app(SchedulerHealth::class)->warnings() : [],
             'topProducts' => $topProducts,
             'widgetPreferences' => $widgetPreferences,
             // Plugin widgets (register_dashboard_widget), gated like the figures

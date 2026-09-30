@@ -43,7 +43,7 @@ class OrderController extends Controller
     #[QueryParameter('search', description: 'Search by order number, customer name, or email', type: 'string')]
     #[QueryParameter('status', description: 'Filter by status', type: 'string', enum: ['pending', 'processing', 'shipped', 'delivered', 'cancelled'])]
     #[QueryParameter('source', description: 'Filter by order source', type: 'string')]
-    #[QueryParameter('payment_status', description: 'Filter by payment status (requires view_payments)', type: 'string', enum: ['unpaid', 'partial', 'paid', 'overpaid', 'refunded'])]
+    #[QueryParameter('payment_status', description: 'Filter by payment status (requires view_payments)', type: 'string', enum: ['unpaid', 'partial', 'paid', 'overpaid', 'refunded', 'untracked'])]
     #[QueryParameter('warehouse_id', description: 'Filter by warehouse ID', type: 'integer')]
     #[QueryParameter('date_from', description: 'Filter orders from this date (YYYY-MM-DD)', type: 'string', example: '2025-01-01')]
     #[QueryParameter('date_to', description: 'Filter orders until this date (YYYY-MM-DD)', type: 'string', example: '2025-12-31')]

@@ -27,8 +27,18 @@ return new class extends Migration
 
     public function down(): void
     {
+        // Foreign key and the explicit index go first: SQLite refuses to drop
+        // a column that an index still names.
         Schema::table('purchase_order_items', function (Blueprint $table) {
-            $table->dropConstrainedForeignId('product_variant_id');
+            $table->dropForeign(['product_variant_id']);
+        });
+
+        Schema::table('purchase_order_items', function (Blueprint $table) {
+            $table->dropIndex(['product_variant_id']);
+        });
+
+        Schema::table('purchase_order_items', function (Blueprint $table) {
+            $table->dropColumn('product_variant_id');
         });
     }
 };

@@ -144,6 +144,14 @@
   },
   "dashboard": {
     "title": "Dashboard",
+    "systemHealth": {
+      "title": "Background tasks need attention",
+      "schedulerNeverRan": "The scheduler has not run yet, so emails, webhooks, reorder alerts and scheduled reports are not being processed.",
+      "schedulerStale": "The scheduler last ran at {date}. Emails, webhooks, reorder alerts and scheduled reports are waiting.",
+      "queueBacklog": "Queued jobs waiting more than 15 minutes: {count}. Emails and webhooks are not going out.",
+      "failedJobs": "Background jobs that failed in the last 24 hours: {count}.",
+      "help": "Check that the cron job runs php artisan schedule:run every minute. See the cPanel guide for details."
+    },
     "totalProducts": "Total Products",
     "totalValue": "Total Value",
     "lowStock": "Low Stock",
@@ -2131,6 +2139,7 @@
     "attachmentNote": "{file} will be attached as a PDF.",
     "sending": "Sending...",
     "sentOn": "Sent to {to} on {date}",
+    "queuedOn": "Queued for {to} on {date}. It goes out when the mail queue next runs.",
     "noRecipient": "No email address on file. Enter a recipient to send.",
     "sendPo": "Send to Supplier",
     "resendPo": "Resend to Supplier",
@@ -2144,6 +2153,7 @@
     "invoiceNotIssued": "Not issued yet. A number is assigned the first time the invoice is generated.",
     "invoiceIssued": "Issued",
     "invoiceSent": "Sent",
+    "invoiceQueued": "Queued",
     "send": "Send"
   },
   "scanning": {
@@ -2287,7 +2297,16 @@
       "partial": "Partially paid",
       "paid": "Paid",
       "overpaid": "Overpaid",
-      "refunded": "Refunded"
+      "refunded": "Refunded",
+      "untracked": "Not tracked"
+    },
+    "untrackedNotice": "This order was placed before payment tracking, so nothing is known about its payment. Recording a payment starts tracking it.",
+    "markPreTracking": {
+      "button": "Mark older orders paid",
+      "title": "Mark older orders as paid",
+      "description": "{n} order was placed before payment tracking. Orders placed before the date below are marked paid with a payment of method Other for their full total, dated on the order date. Cancelled orders are left as they are. | {n} orders were placed before payment tracking. Orders placed before the date below are marked paid with a payment of method Other for their full total, dated on the order date. Cancelled orders are left as they are.",
+      "before": "Placed before",
+      "submit": "Mark as paid"
     },
     "amountPaid": "Amount paid",
     "balanceDue": "Balance due",
@@ -2489,7 +2508,8 @@
         "partial": "Partly paid",
         "paid": "Paid",
         "overpaid": "Overpaid",
-        "refunded": "Refunded"
+        "refunded": "Refunded",
+        "untracked": "Not tracked"
       }
     },
     "returns": {

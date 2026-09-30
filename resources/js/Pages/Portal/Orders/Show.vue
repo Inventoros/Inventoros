@@ -243,7 +243,7 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-t
                             </li>
                         </ul>
                         <p v-else class="text-text-tertiary">{{ t('portal.order.noPayments') }}</p>
-                        <dl class="space-y-1.5 border-t border-border-subtle pt-3">
+                        <dl v-if="order.balance_due !== null" class="space-y-1.5 border-t border-border-subtle pt-3">
                             <div class="flex justify-between text-text-secondary">
                                 <dt>{{ t('portal.order.paid') }}</dt>
                                 <dd class="tabular-nums">{{ money(order.amount_paid) }}</dd>

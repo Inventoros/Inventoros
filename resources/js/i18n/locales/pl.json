@@ -177,7 +177,15 @@
     "viewInventory": "Przeglądaj magazyn",
     "browseAllItems": "Wszystkie produkty",
     "viewOrders": "Przeglądaj zamówienia",
-    "allOrders": "Wszystkie zamówienia"
+    "allOrders": "Wszystkie zamówienia",
+    "systemHealth": {
+      "title": "Zadania w tle wymagają uwagi",
+      "schedulerNeverRan": "Harmonogram jeszcze się nie uruchomił, więc e-maile, webhooki, alerty o ponownym zamówieniu i zaplanowane raporty nie są przetwarzane.",
+      "schedulerStale": "Harmonogram uruchomił się ostatnio {date}. E-maile, webhooki, alerty o ponownym zamówieniu i zaplanowane raporty czekają.",
+      "queueBacklog": "Zadania w kolejce czekające dłużej niż 15 minut: {count}. E-maile i webhooki nie są wysyłane.",
+      "failedJobs": "Zadania w tle, które nie powiodły się w ciągu ostatnich 24 godzin: {count}.",
+      "help": "Sprawdź, czy zadanie cron uruchamia php artisan schedule:run co minutę. Szczegóły znajdziesz w przewodniku cPanel."
+    }
   },
   "products": {
     "title": "Magazyn",
@@ -2144,7 +2152,9 @@
     "invoiceNotIssued": "Jeszcze nie wystawiona. Numer jest nadawany przy pierwszym wygenerowaniu faktury.",
     "invoiceIssued": "Wystawiona",
     "invoiceSent": "Wysłana",
-    "send": "Wyślij"
+    "send": "Wyślij",
+    "queuedOn": "W kolejce do {to} od {date}. Zostanie wysłana przy następnym przetworzeniu kolejki poczty.",
+    "invoiceQueued": "W kolejce"
   },
   "scanning": {
     "scan": "Skanuj",
@@ -2287,7 +2297,8 @@
       "partial": "Częściowo opłacone",
       "paid": "Opłacone",
       "overpaid": "Nadpłacone",
-      "refunded": "Zwrócone"
+      "refunded": "Zwrócone",
+      "untracked": "Nieśledzone"
     },
     "amountPaid": "Zapłacona kwota",
     "balanceDue": "Do zapłaty",
@@ -2314,7 +2325,15 @@
     "save": "Zapisz",
     "byPaymentStatus": "Zamówienia wg statusu płatności",
     "outstanding": "Do zapłaty",
-    "ordersCount": "{n} zamówienie | {n} zamówień"
+    "ordersCount": "{n} zamówienie | {n} zamówień",
+    "untrackedNotice": "To zamówienie złożono przed wprowadzeniem śledzenia płatności, więc nic nie wiadomo o jego płatności. Zarejestrowanie płatności rozpoczyna śledzenie.",
+    "markPreTracking": {
+      "button": "Oznacz starsze zamówienia jako opłacone",
+      "title": "Oznacz starsze zamówienia jako opłacone",
+      "description": "Zamówienia złożone przed śledzeniem płatności: {n}. Zamówienia złożone przed poniższą datą zostaną oznaczone jako opłacone płatnością metodą Inna na pełną kwotę, z datą zamówienia. Anulowane zamówienia pozostają bez zmian. | Zamówienia złożone przed śledzeniem płatności: {n}. Zamówienia złożone przed poniższą datą zostaną oznaczone jako opłacone płatnością metodą Inna na pełną kwotę, z datą zamówienia. Anulowane zamówienia pozostają bez zmian.",
+      "before": "Złożone przed",
+      "submit": "Oznacz jako opłacone"
+    }
   },
   "discounts": {
     "discount": "Rabat",
@@ -2489,7 +2508,8 @@
         "partial": "Częściowo opłacone",
         "paid": "Opłacone",
         "overpaid": "Nadpłacone",
-        "refunded": "Zwrócone"
+        "refunded": "Zwrócone",
+        "untracked": "Nieśledzone"
       }
     },
     "returns": {

@@ -93,7 +93,14 @@ const showDeleteModal = ref(false);
 
 // Invoice emailing
 const showInvoiceModal = ref(false);
+// invoice_queued_at is stamped when the email is queued, invoice_sent_at when
+// it is delivered; a newer queued stamp means the latest send is still waiting.
+const invoiceQueued = computed(() => {
+    const { invoice_queued_at: queuedAt, invoice_sent_at: sentAt } = props.order;
+    return Boolean(queuedAt) && (!sentAt || new Date(sentAt) < new Date(queuedAt));
+});
 const invoiceStatus = computed(() => {
+    if (invoiceQueued.value) return { label: t('documentEmail.invoiceQueued'), variant: 'warning' };
     if (props.order.invoice_sent_at) return { label: t('documentEmail.invoiceSent'), variant: 'success' };
     if (props.order.invoice_number) return { label: t('documentEmail.invoiceIssued'), variant: 'info' };
     return null;
@@ -347,6 +354,7 @@ const formatOrderDate = (date, long = false) =>
                         </div>
                         <div class="p-5">
                             <p v-if="order.status === 'cancelled' && canRecordPayments" class="mb-3 text-xs text-text-tertiary">{{ t('payments.cancelledNotice') }}</p>
+                            <p v-if="order.payment_status === 'untracked'" class="mb-3 text-xs text-text-tertiary">{{ t('payments.untrackedNotice') }}</p>
 
                             <ul v-if="order.payments.length > 0" class="divide-y divide-border-subtle rounded-lg border border-border-subtle">
                                 <li
@@ -504,7 +512,7 @@ const formatOrderDate = (date, long = false) =>
                                     </div>
                                 </div>
 
-                                <template v-if="order.amount_paid !== undefined">
+                                <template v-if="order.amount_paid !== undefined && order.payment_status !== 'untracked'">
                                     <div class="flex justify-between text-sm">
                                         <dt class="text-text-secondary">{{ t('payments.amountPaid') }}</dt>
                                         <dd class="font-medium tabular-nums text-text-primary">{{ money(order.amount_paid) }}</dd>
@@ -568,7 +576,10 @@ const formatOrderDate = (date, long = false) =>
                                     <dd class="mt-1 text-sm font-medium text-text-primary">{{ order.invoice_number }}</dd>
                                 </div>
                             </dl>
-                            <p v-if="order.invoice_sent_at" class="mt-3 text-xs text-text-secondary">
+                            <p v-if="invoiceQueued" class="mt-3 text-xs text-text-secondary">
+                                {{ t('documentEmail.queuedOn', { to: order.invoice_sent_to, date: formatDate(order.invoice_queued_at) }) }}
+                            </p>
+                            <p v-else-if="order.invoice_sent_at" class="mt-3 text-xs text-text-secondary">
                                 {{ t('documentEmail.sentOn', { to: order.invoice_sent_to, date: formatDate(order.invoice_sent_at) }) }}
                             </p>
                             <p v-else class="text-xs text-text-tertiary">{{ t('documentEmail.invoiceNotIssued') }}</p>

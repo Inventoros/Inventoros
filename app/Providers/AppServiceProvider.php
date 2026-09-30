@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Providers;
 
+use App\Listeners\DocumentEmailDelivered;
 use App\Listeners\SecurityEventSubscriber;
 use App\Listeners\WebhookEventSubscriber;
 use App\Models\Customer;
@@ -35,6 +36,7 @@ use Dedoc\Scramble\Support\Generator\OpenApi;
 use Dedoc\Scramble\Support\Generator\SecurityScheme;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
+use Illuminate\Mail\Events\MessageSent;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Log;
@@ -111,6 +113,10 @@ class AppServiceProvider extends ServiceProvider
         Event::subscribe(SecurityEventSubscriber::class);
         User::observe(UserSecurityObserver::class);
         Role::observe(RoleSecurityObserver::class);
+
+        // A purchase order, invoice or shipment email is "sent" when it is
+        // delivered, not when it is queued.
+        Event::listen(MessageSent::class, [DocumentEmailDelivered::class, 'record']);
 
         // Scramble API documentation - Bearer token security
         Scramble::afterOpenApiGenerated(function (OpenApi $openApi) {

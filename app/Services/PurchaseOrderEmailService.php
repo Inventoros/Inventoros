@@ -17,8 +17,9 @@ use Throwable;
 
 /**
  * Sends a purchase order to its supplier: queues an email with the PO PDF
- * attached, moves a draft to "sent", stamps when and to whom it went, and
- * records the send in the activity log. The web UI, the REST API and the MCP
+ * attached, moves a draft to "sent", stamps when it was queued and to whom,
+ * and records the send in the activity log. sent_at is stamped later, when
+ * the queue worker actually delivers the email (DocumentEmailDelivered). The web UI, the REST API and the MCP
  * tool all go through here so the three behave identically.
  */
 class PurchaseOrderEmailService
@@ -95,7 +96,7 @@ class PurchaseOrderEmailService
             if ($purchaseOrder->status === PurchaseOrder::STATUS_DRAFT) {
                 $purchaseOrder->status = PurchaseOrder::STATUS_SENT;
             }
-            $purchaseOrder->sent_at = $sentAt;
+            $purchaseOrder->queued_at = $sentAt;
             $purchaseOrder->sent_to = $recipient;
             $purchaseOrder->save();
 

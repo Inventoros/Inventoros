@@ -74,11 +74,21 @@ const showSendModal = ref(false);
 const canSend = computed(() => ['draft', 'sent', 'partial'].includes(props.purchaseOrder.status) && !awaitingApproval.value);
 const isResend = computed(() => props.purchaseOrder.status !== 'draft');
 
-const sentSummary = computed(() =>
-    props.purchaseOrder.sent_at
+// queued_at is stamped when the email is queued, sent_at when it is delivered;
+// a queued_at newer than sent_at means the latest send has not gone out yet.
+const emailQueued = computed(() => {
+    const { queued_at: queuedAt, sent_at: sentAt } = props.purchaseOrder;
+    return Boolean(queuedAt) && (!sentAt || new Date(sentAt) < new Date(queuedAt));
+});
+
+const sentSummary = computed(() => {
+    if (emailQueued.value) {
+        return t('documentEmail.queuedOn', { to: props.purchaseOrder.sent_to, date: formatDate(props.purchaseOrder.queued_at) });
+    }
+    return props.purchaseOrder.sent_at
         ? t('documentEmail.sentOn', { to: props.purchaseOrder.sent_to, date: formatDate(props.purchaseOrder.sent_at) })
-        : null,
-);
+        : null;
+});
 
 const cancelPO = () => {
     if (confirm('Are you sure you want to cancel this purchase order?')) {

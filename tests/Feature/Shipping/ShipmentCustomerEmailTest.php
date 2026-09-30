@@ -46,7 +46,31 @@ class ShipmentCustomerEmailTest extends TestCase
 
         Mail::assertQueued(ShipmentShippedEmail::class, 1);
         Mail::assertQueued(ShipmentShippedEmail::class, fn (ShipmentShippedEmail $mail) => $mail->hasTo('casey@customer.test'));
-        $this->assertNotNull($shipment->fresh()->customer_notified_at);
+        // Claimed and queued; customer_notified_at waits for delivery.
+        $this->assertNotNull($shipment->fresh()->customer_notification_queued_at);
+        $this->assertNull($shipment->fresh()->customer_notified_at);
+    }
+
+    public function test_customer_notified_at_is_stamped_when_the_email_is_delivered(): void
+    {
+        $shipment = $this->shipment();
+
+        app(ShipmentService::class)->markShipped($shipment, $this->admin);
+
+        $fresh = $shipment->fresh();
+        $this->assertNotNull($fresh->customer_notification_queued_at);
+        $this->assertNotNull($fresh->customer_notified_at);
+    }
+
+    public function test_a_shipment_notified_before_the_queued_column_existed_is_not_emailed_again(): void
+    {
+        Mail::fake();
+        $shipment = $this->shipment();
+        $shipment->forceFill(['customer_notified_at' => now()->subDay()])->save();
+
+        app(ShipmentService::class)->markShipped($shipment->fresh(), $this->admin);
+
+        Mail::assertNothingQueued();
     }
 
     public function test_no_email_when_notifications_are_off_or_there_is_no_address(): void

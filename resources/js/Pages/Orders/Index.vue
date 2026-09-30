@@ -6,11 +6,11 @@ import Card from '@/Components/ui/Card.vue';
 import Button from '@/Components/ui/Button.vue';
 import Badge from '@/Components/ui/Badge.vue';
 import DataTable from '@/Components/ui/DataTable.vue';
-import { Head, Link, router } from '@inertiajs/vue3';
+import { Head, Link, router, useForm } from '@inertiajs/vue3';
 import { ref } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { formatCalendarDate } from '@/lib/dates';
-import { Plus, Search, Eye, Pencil, Trash2, ShoppingCart } from 'lucide-vue-next';
+import { formatCalendarDate, todayIsoDate } from '@/lib/dates';
+import { Plus, Search, Eye, Pencil, Trash2, ShoppingCart, CheckCheck, X } from 'lucide-vue-next';
 
 const { t } = useI18n();
 
@@ -21,8 +21,20 @@ const props = defineProps({
     sources: Array,
     canViewPayments: Boolean,
     paymentStatuses: { type: Array, default: () => [] },
+    canRecordPayments: Boolean,
+    untrackedOrderCount: { type: Number, default: 0 },
     pluginComponents: Object,
 });
+
+// Orders placed before payment tracking can be marked paid in bulk.
+const showMarkPaidModal = ref(false);
+const markPaidForm = useForm({ before: todayIsoDate() });
+const submitMarkPaid = () => {
+    markPaidForm.post(route('orders.payments.mark-pre-tracking-paid'), {
+        preserveScroll: true,
+        onSuccess: () => { showMarkPaidModal.value = false; },
+    });
+};
 
 const search = ref(props.filters?.search || '');
 const status = ref(props.filters?.status || '');
@@ -94,6 +106,15 @@ const selectClass =
 
         <PageHeader :title="t('orders.title')" description="Customer orders from every channel.">
             <template #actions>
+                <Button
+                    v-if="canRecordPayments && untrackedOrderCount > 0"
+                    variant="secondary"
+                    size="sm"
+                    @click="showMarkPaidModal = true"
+                >
+                    <CheckCheck :size="14" />
+                    {{ t('payments.markPreTracking.button') }}
+                </Button>
                 <Button variant="default" size="sm" as="Link" :href="route('orders.create')">
                     <Plus :size="14" />
                     {{ t('orders.createOrder') }}
@@ -228,5 +249,36 @@ const selectClass =
         </div>
 
         <PluginSlot slot="footer" :components="pluginComponents?.footer" />
+
+        <!-- Mark pre-tracking orders paid -->
+        <Teleport to="body">
+            <div v-if="showMarkPaidModal" class="fixed inset-0 z-50 flex items-center justify-center" @click="showMarkPaidModal = false">
+                <div class="fixed inset-0 bg-black/50"></div>
+
+                <form class="relative mx-4 w-full max-w-md rounded-xl border border-border-subtle bg-surface-raised p-6 shadow-lg" @click.stop @submit.prevent="submitMarkPaid">
+                    <div class="mb-4 flex items-center justify-between">
+                        <h3 class="text-base font-semibold text-text-primary">{{ t('payments.markPreTracking.title') }}</h3>
+                        <button type="button" class="text-text-tertiary transition-colors hover:text-text-primary ds-focus-ring" @click="showMarkPaidModal = false">
+                            <X :size="18" />
+                        </button>
+                    </div>
+                    <p class="mb-4 text-sm text-text-secondary">{{ t('payments.markPreTracking.description', untrackedOrderCount) }}</p>
+                    <label for="mark_paid_before" class="mb-1 block text-sm font-medium text-text-secondary">{{ t('payments.markPreTracking.before') }}</label>
+                    <input
+                        id="mark_paid_before"
+                        v-model="markPaidForm.before"
+                        type="date"
+                        required
+                        class="h-9 w-full rounded-md border border-border-subtle bg-surface-canvas px-3 text-sm text-text-primary ds-focus-ring"
+                    />
+                    <p v-if="markPaidForm.errors.before" class="mt-1 text-xs text-status-danger">{{ markPaidForm.errors.before }}</p>
+
+                    <div class="mt-6 flex justify-end gap-3">
+                        <Button type="button" variant="secondary" :disabled="markPaidForm.processing" @click="showMarkPaidModal = false">{{ t('common.cancel') }}</Button>
+                        <Button type="submit" variant="default" :loading="markPaidForm.processing" :disabled="markPaidForm.processing">{{ t('payments.markPreTracking.submit') }}</Button>
+                    </div>
+                </form>
+            </div>
+        </Teleport>
     </AppLayout>
 </template>

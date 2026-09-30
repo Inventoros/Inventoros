@@ -28,13 +28,63 @@ return [
             ',',
             (string) env(
                 'INVENTOROS_UPDATE_PREFIXES',
-                'https://github.com/Inventoros/Inventoros/releases/download/,'
-                .'https://github.com/Inventoros/Inventoros/archive/,'
-                .'https://api.github.com/repos/Inventoros/Inventoros/zipball/,'
-                .'https://api.github.com/repos/Inventoros/Inventoros/tarball/'
+                'https://github.com/Inventoros/Inventoros/releases/download/'
             )
         )
     ))),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Redirect hosts and download limits
+    |--------------------------------------------------------------------------
+    |
+    | GitHub answers a release asset download with a 302 to short-lived
+    | storage. Redirects are followed one hop at a time: every hop must be
+    | https and go to one of these hosts (or to the host of the allowlisted
+    | starting URL), and at most `max_redirects` hops are taken. Override the
+    | hosts with INVENTOROS_UPDATE_HOSTS (comma-separated) for a mirror.
+    |
+    | `max_download_bytes` caps the archive while it streams to disk.
+    |
+    */
+
+    'download_hosts' => array_values(array_filter(array_map(
+        'trim',
+        explode(
+            ',',
+            (string) env(
+                'INVENTOROS_UPDATE_HOSTS',
+                'github.com,objects.githubusercontent.com,release-assets.githubusercontent.com,codeload.github.com'
+            )
+        )
+    ))),
+
+    'max_redirects' => (int) env('INVENTOROS_UPDATE_MAX_REDIRECTS', 5),
+
+    'max_download_bytes' => (int) env('INVENTOROS_UPDATE_MAX_DOWNLOAD_BYTES', 200 * 1024 * 1024),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Post-install commands
+    |--------------------------------------------------------------------------
+    |
+    | After the new files are in place, optimize:clear, migrate and optimize
+    | run as `php artisan ...` in a new process so they execute only the new
+    | code. `php_binary` names the PHP CLI binary when it cannot be found next
+    | to the running PHP (e.g. /opt/cpanel/ea-php84/root/usr/bin/php). With
+    | proc_open disabled, or run_artisan_in_subprocess off, they run in the
+    | updating process instead.
+    |
+    */
+
+    'run_artisan_in_subprocess' => filter_var(
+        env('INVENTOROS_UPDATE_ARTISAN_SUBPROCESS', env('APP_ENV') !== 'testing'),
+        FILTER_VALIDATE_BOOL
+    ),
+
+    'php_binary' => (string) env('INVENTOROS_UPDATE_PHP_BINARY', ''),
+
+    'artisan_timeout' => (int) env('INVENTOROS_UPDATE_ARTISAN_TIMEOUT', 900),
 
     /*
     |--------------------------------------------------------------------------
@@ -50,6 +100,11 @@ return [
     'max_entry_count' => (int) env('INVENTOROS_UPDATE_MAX_ENTRIES', 50000),
 
     'max_extracted_bytes' => (int) env('INVENTOROS_UPDATE_MAX_BYTES', 300 * 1024 * 1024),
+
+    // Restoring a pre-update backup: backups also hold vendor/ and storage/.
+    'restore_max_entry_count' => (int) env('INVENTOROS_RESTORE_MAX_ENTRIES', 500000),
+
+    'restore_max_extracted_bytes' => (int) env('INVENTOROS_RESTORE_MAX_BYTES', 4 * 1024 * 1024 * 1024),
 
     /*
     |--------------------------------------------------------------------------

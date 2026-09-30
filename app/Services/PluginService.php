@@ -8,8 +8,10 @@ use App\Exceptions\PluginHookFailed;
 use App\Models\Plugin;
 use App\Services\Plugins\PluginAssetPublisher;
 use App\Services\Plugins\PluginRequirements;
+use App\Support\ArtisanProcess;
 use App\Support\ReleaseSignatureVerifier;
 use App\Support\SafeZipExtractor;
+use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
@@ -171,6 +173,8 @@ final class PluginService
             'deactivated_at' => null,
         ]);
 
+        $this->refreshRouteCache();
+
         return true;
     }
 
@@ -214,6 +218,8 @@ final class PluginService
         ]);
 
         $this->assets->remove($slug);
+
+        $this->refreshRouteCache();
 
         if ($failure !== null) {
             throw new PluginHookFailed(
@@ -294,6 +300,8 @@ final class PluginService
         }
 
         File::deleteDirectory($pluginPath);
+
+        $this->refreshRouteCache();
 
         if ($failures !== []) {
             $messages = implode('; ', array_map(fn (\Throwable $e) => $e->getMessage(), $failures));
@@ -838,6 +846,51 @@ final class PluginService
     {
         if (! $this->isSafeSlug($slug)) {
             throw new \RuntimeException('Invalid plugin slug.');
+        }
+    }
+
+    /**
+     * Rebuild a cached route table after a plugin's routes appear or go.
+     *
+     * With `route:cache` (part of `optimize`), a plugin's routes exist only
+     * once they are in the cache, so a newly activated plugin's pages 404ed
+     * and a deactivated one's stayed routable. The stale cache is cleared
+     * first (uncached routes are always right), then rebuilt in a separate
+     * PHP process: route:cache boots a second application and would re-point
+     * this request's facades at it. If the rebuild fails the routes simply
+     * stay uncached.
+     */
+    protected function refreshRouteCache(): void
+    {
+        if (! app()->routesAreCached()) {
+            return;
+        }
+
+        try {
+            Artisan::call('route:clear');
+        } catch (\Throwable $e) {
+            Log::warning('Could not clear the route cache after a plugin change', ['error' => $e->getMessage()]);
+
+            return;
+        }
+
+        $processes = app(ArtisanProcess::class);
+        if (! $processes->available()) {
+            Log::info('Route cache cleared after a plugin change; run php artisan route:cache to rebuild it');
+
+            return;
+        }
+
+        try {
+            $processes->run('route:cache');
+        } catch (\Throwable $e) {
+            Log::warning('Could not rebuild the route cache after a plugin change; routes are left uncached', ['error' => $e->getMessage()]);
+
+            try {
+                Artisan::call('route:clear');
+            } catch (\Throwable) {
+                // Already reported above.
+            }
         }
     }
 }

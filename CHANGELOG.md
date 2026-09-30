@@ -22,7 +22,8 @@ Before upgrading: take a database backup you have checked, run `php artisan opti
 - PHP 8.4.1 or newer is required and PHP 8.5 is not supported yet. The 1.0.8 package already needed 8.4.1, so most hosts are unaffected. Building assets needs Node.js 20.19+ or 22.12+.
 - The `schedule:run` cron entry is required. It also processes the database queue every minute, so shared hosting needs no separate worker; VPS and Docker installs should run one.
 - Users with warehouse assignments on Member or custom roles are limited to those warehouses unless the role has the new `access_all_warehouses` permission.
-- Orders created before 2.0.0 show the payment status "Not tracked"; admins can mark them paid in bulk.
+- Orders created before 2.0.0 show the payment status "Not tracked" and are left out of receivables, the portal balance and the invoice balance line; users with `record_payments` can mark them paid in bulk (Orders > Mark older orders paid).
+- Purchase order, invoice and shipment emails show "Queued" until they are delivered. `sent_at`, `invoice_sent_at` and `customer_notified_at` are set on delivery, not when queued; the new `*_queued_at` columns record the queueing.
 
 ### Added
 
@@ -40,6 +41,10 @@ Before upgrading: take a database backup you have checked, run `php artisan opti
 - Security events in the activity log, user activity alert emails, and Settings > API tokens.
 - REST, GraphQL, MCP and webhook coverage for customers, returns, transfers, users, approvals, shipments and payments.
 - Production Docker image on GHCR; PostgreSQL and SQLite backups in the updater.
+- The cPanel package carries a `release.json` manifest (version, layout, supported PHP range) that the updater checks before it takes the site down. `deploy/cpanel/build-release.php` builds and verifies the package in CI and locally.
+- The scheduler works the database queue every minute on shared hosting (`QUEUE_RUN_VIA_SCHEDULER`), and the admin dashboard warns when the scheduler or queue is stuck.
+- `APP_PUBLIC_PATH` gives command-line tasks the web root of a split (cPanel) install; the installer and updater set it.
+- A plain "requires PHP 8.4.1" message from `index.php` and `artisan` on older PHP.
 
 ### Fixed
 
@@ -48,6 +53,9 @@ Before upgrading: take a database backup you have checked, run `php artisan opti
 - Fresh installs on MySQL and PostgreSQL, and the web installer's database step.
 - Dates shown one day early for users west of UTC.
 - Batch, serial and variant stock calls that returned 401 in the browser, and variant decrease adjustments that added stock.
+- The in-app updater: it follows GitHub's download redirect (one allowlisted https hop at a time, size-capped), installs the cPanel package by its exact name instead of the first ZIP, puts `inventoros/` and `public_html/` in the right places (including `vendor/` and the web root), keeps a SQLite database in `database/`, runs cache and migration commands in a fresh PHP process, and rolls back files, `vendor/`, the web root and the database on failure.
+- Plugin pages 404ing (or staying reachable after deactivation) when routes are cached.
+- Rolling back the purchase order variant migration on SQLite.
 
 ### Security
 
@@ -55,6 +63,7 @@ Before upgrading: take a database backup you have checked, run `php artisan opti
 - Stored mail and EasyPost secrets are never sent to the browser.
 - XLSX exports cannot contain formulas.
 - Marketplace packages are verified against a pinned Ed25519 key and a sha256, with SSRF and zip-slip protection.
+- The example plugin ZIP attached to releases is no longer signed with the core update key, so it can never pass the updater's signature check. The release package is checked for `.env` files, tests, dev dependencies and other files that must not ship.
 - A user administrator who is not an admin can no longer edit, reset the password of, or delete an admin, a manager, or anyone holding permissions they lack.
 - Each organization's mail goes through its own mailer, so a queue worker never sends one organization's mail through another's SMTP. Password-reset and invitation mail always uses the instance mailer (`MAIL_*` in `.env`).
 - API tokens: `POST /api/v1/tokens` never mints a token broader than the calling token and the user's permissions. GraphQL approvals and every approval listing honour token abilities.

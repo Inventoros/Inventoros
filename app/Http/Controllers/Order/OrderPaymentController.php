@@ -11,6 +11,7 @@ use App\Models\Order\OrderPayment;
 use App\Services\OrderPaymentService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 
 /**
  * Payments panel actions on the order page: record a payment or refund, and
@@ -52,6 +53,30 @@ class OrderPaymentController extends Controller
 
         return redirect()->route('orders.show', $order)
             ->with('success', $payment->isRefund() ? 'Refund voided.' : 'Payment voided.');
+    }
+
+    /**
+     * Bulk-settle orders placed before payment tracking: every untracked
+     * order dated before the given day is marked paid with a reconciling
+     * payment (see OrderPaymentService::markPreTrackingOrdersPaid).
+     */
+    public function markPreTrackingPaid(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'before' => ['required', 'date_format:Y-m-d'],
+        ]);
+
+        $count = $this->payments->markPreTrackingOrdersPaid(
+            (int) $request->user()->organization_id,
+            $request->user(),
+            Carbon::createFromFormat('Y-m-d', $validated['before'])->startOfDay(),
+        );
+
+        return back()->with('success', trans_choice(
+            '{0} No untracked orders were placed before that date.|{1} Marked 1 order as paid.|[2,*] Marked :count orders as paid.',
+            $count,
+            ['count' => $count],
+        ));
     }
 
     private function authorizeOrder(Request $request, Order $order): void

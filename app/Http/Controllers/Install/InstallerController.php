@@ -8,6 +8,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Auth\Organization;
 use App\Models\System\SystemSetting;
 use App\Models\User;
+use App\Support\PublicPath;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
@@ -211,14 +212,24 @@ class InstallerController extends Controller
         try {
             // Update .env file with database config. The driver is written to
             // DB_CONNECTION inside updateEnvFile() (issue #50).
-            $this->updateEnvFile([
+            $env = [
                 'DB_CONNECTION' => $request->driver,
                 'DB_HOST' => $request->host,
                 'DB_PORT' => $request->port,
                 'DB_DATABASE' => $request->database,
                 'DB_USERNAME' => $request->username,
                 'DB_PASSWORD' => $request->password ?? '',
-            ]);
+            ];
+
+            // On a split install (cPanel: ~/inventoros + ~/public_html) record
+            // the web root this request is served from, so CLI commands
+            // publish plugin assets and install updates into the same place.
+            $publicPath = PublicPath::envValue(base_path(), public_path());
+            if ($publicPath !== null) {
+                $env['APP_PUBLIC_PATH'] = $publicPath;
+            }
+
+            $this->updateEnvFile($env);
 
             // Clear all caches
             Artisan::call('config:clear');

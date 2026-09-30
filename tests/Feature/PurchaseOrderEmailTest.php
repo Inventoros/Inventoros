@@ -135,7 +135,10 @@ class PurchaseOrderEmailTest extends TestCase
         $po->refresh();
         $this->assertSame(PurchaseOrder::STATUS_SENT, $po->status);
         $this->assertSame('orders@bolt.test', $po->sent_to);
-        $this->assertNotNull($po->sent_at);
+        // Queued, not yet delivered: sent_at waits for the mail to go out.
+        $this->assertNotNull($po->queued_at);
+        $this->assertNull($po->sent_at);
+        $this->assertTrue($po->emailIsQueued());
     }
 
     public function test_web_send_can_override_the_recipient(): void
@@ -226,7 +229,7 @@ class PurchaseOrderEmailTest extends TestCase
         Mail::assertQueued(PurchaseOrderEmail::class, 1);
         $po->refresh();
         $this->assertSame(PurchaseOrder::STATUS_PARTIAL, $po->status);
-        $this->assertNotNull($po->sent_at);
+        $this->assertNotNull($po->queued_at);
     }
 
     public function test_a_cancelled_po_cannot_be_sent(): void
@@ -459,5 +462,30 @@ class PurchaseOrderEmailTest extends TestCase
         $this->expectExceptionMessage('Quiet Supply has no email address');
 
         app(PurchaseOrderEmailService::class)->send($po, $this->admin);
+    }
+    public function test_sent_at_is_stamped_only_when_the_email_is_delivered(): void
+    {
+        // No Mail::fake: the array mailer really "delivers" the message, and
+        // the sync queue runs the job inline, so MessageSent fires.
+        Setting::create(['organization_id' => $this->org->id, 'key' => 'email.provider', 'value' => 'array', 'encrypted' => false]);
+        $po = $this->draftPo();
+
+        app(PurchaseOrderEmailService::class)->send($po, $this->admin);
+
+        $po->refresh();
+        $this->assertNotNull($po->queued_at);
+        $this->assertNotNull($po->sent_at);
+        $this->assertTrue($po->sent_at->greaterThanOrEqualTo($po->queued_at));
+        $this->assertFalse($po->emailIsQueued());
+    }
+
+    public function test_a_resend_waiting_in_the_queue_reads_as_queued(): void
+    {
+        $po = $this->draftPo(['status' => PurchaseOrder::STATUS_SENT]);
+        $po->forceFill(['sent_at' => now()->subDay(), 'queued_at' => now()->subDay()])->save();
+        $this->assertFalse($po->fresh()->emailIsQueued());
+
+        $po->forceFill(['queued_at' => now()])->save();
+        $this->assertTrue($po->fresh()->emailIsQueued());
     }
 }

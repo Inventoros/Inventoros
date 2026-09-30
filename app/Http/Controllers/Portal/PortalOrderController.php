@@ -15,7 +15,6 @@ use App\Models\Shipping\Shipment;
 use App\Models\Shipping\ShipmentItem;
 use App\Services\Documents\DocumentPdfService;
 use App\Services\ReturnOrderService;
-use App\Support\Money;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -87,7 +86,9 @@ class PortalOrderController extends PortalController
                 'discount_value' => $order->discount_value,
                 'discount_amount' => $order->discount_amount,
                 'amount_paid' => $order->amount_paid,
-                'balance_due' => Money::max('0', Money::subtract($order->total, $order->amount_paid ?? '0')),
+                // Nothing is known about payment on an order from before
+                // payment tracking, so no balance is shown for it.
+                'balance_due' => $order->isPaymentTracked() ? $order->balanceDue() : null,
                 'payment_status' => $order->payment_status?->value,
                 'payments' => $payments,
                 'subtotal' => $order->subtotal,

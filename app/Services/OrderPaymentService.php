@@ -6,6 +6,7 @@ namespace App\Services;
 
 use App\Enums\OrderStatus;
 use App\Enums\PaymentMethod;
+use App\Enums\PaymentStatus;
 use App\Enums\PaymentType;
 use App\Models\ActivityLog;
 use App\Models\Order\Order;
@@ -57,7 +58,9 @@ final class OrderPaymentService
                 ]);
             }
 
-            $balance = $locked->balanceDue();
+            // An untracked order (from before payment tracking) reports no
+            // balance, but its first payment is still held to the total.
+            $balance = $locked->unpaidAmount();
             if (Money::compare($amount, $balance) > 0 && ! ($data['allow_overpayment'] ?? false)) {
                 throw ValidationException::withMessages([
                     'amount' => "This payment of {$amount} is more than the {$balance} balance due. Allow an overpayment to record it anyway.",
@@ -150,6 +153,81 @@ final class OrderPaymentService
         do_action('payment_voided', $voided, $locked, $actor);
 
         return $voided;
+    }
+
+    public const PRE_TRACKING_REFERENCE = 'Marked paid (pre-tracking)';
+
+    /**
+     * Bring untracked orders (placed before payment tracking) dated before
+     * $before into tracking as paid. Each gets a payment of method `other`
+     * for its full total, dated on the order date, so amounts reconcile
+     * with the payment rows. Zero-total orders need no payment and become
+     * paid; cancelled orders are left untracked (they owe nothing anyway).
+     *
+     * Plugin hooks and webhooks are not fired: this settles history in bulk,
+     * it does not receive money. Each order gets an activity-log entry.
+     *
+     * @return int How many orders were marked paid
+     */
+    public function markPreTrackingOrdersPaid(int $organizationId, User $actor, Carbon $before): int
+    {
+        $marked = 0;
+
+        Order::withoutGlobalScopes()
+            ->where('organization_id', $organizationId)
+            ->where('payment_status', PaymentStatus::UNTRACKED->value)
+            ->where('status', '!=', OrderStatus::CANCELLED->value)
+            ->where('order_date', '<', $before->copy()->startOfDay())
+            ->select('id')
+            ->chunkById(200, function ($orders) use ($actor, &$marked) {
+                foreach ($orders as $row) {
+                    DB::transaction(function () use ($row, $actor, &$marked) {
+                        $locked = Order::withoutGlobalScopes()->whereKey($row->id)->lockForUpdate()->first();
+
+                        // Re-checked under the lock: a payment may have been
+                        // recorded since the list was read.
+                        if ($locked === null || $locked->payment_status !== PaymentStatus::UNTRACKED
+                            || $locked->payments()->withoutGlobalScopes()->exists()) {
+                            return;
+                        }
+
+                        $amount = Money::of($locked->total);
+                        $payment = null;
+
+                        if (Money::compare($amount, 0) > 0) {
+                            $payment = $this->insert($locked, $actor, PaymentType::PAYMENT, $amount, [
+                                'method' => PaymentMethod::OTHER->value,
+                                'reference' => self::PRE_TRACKING_REFERENCE,
+                                'paid_at' => $locked->order_date ?? $locked->created_at ?? now(),
+                            ]);
+                        }
+
+                        // Out of the untracked state so the derivation applies.
+                        $locked->payment_status = PaymentStatus::UNPAID;
+                        $this->settle($locked);
+
+                        ActivityLog::create([
+                            'organization_id' => $locked->organization_id,
+                            'user_id' => $actor->id,
+                            'subject_type' => Order::class,
+                            'subject_id' => $locked->id,
+                            'action' => 'pre_tracking_marked_paid',
+                            'description' => "Marked order {$locked->order_number} paid (placed before payment tracking)",
+                            'properties' => [
+                                'payment_id' => $payment?->id,
+                                'amount' => $amount,
+                                'payment_status' => $locked->payment_status->value,
+                            ],
+                            'ip_address' => request()?->ip(),
+                            'user_agent' => request()?->userAgent(),
+                        ]);
+
+                        $marked++;
+                    });
+                }
+            });
+
+        return $marked;
     }
 
     /**

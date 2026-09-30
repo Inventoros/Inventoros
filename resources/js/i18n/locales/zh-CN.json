@@ -177,7 +177,15 @@
     "viewInventory": "查看库存",
     "browseAllItems": "浏览所有商品",
     "viewOrders": "查看订单",
-    "allOrders": "所有订单"
+    "allOrders": "所有订单",
+    "systemHealth": {
+      "title": "后台任务需要处理",
+      "schedulerNeverRan": "调度器尚未运行，因此邮件、Webhook、补货提醒和定时报表都未被处理。",
+      "schedulerStale": "调度器上次运行于 {date}。邮件、Webhook、补货提醒和定时报表正在等待。",
+      "queueBacklog": "在队列中等待超过 15 分钟的任务：{count}。邮件和 Webhook 没有发出。",
+      "failedJobs": "过去 24 小时内失败的后台任务：{count}。",
+      "help": "请检查 cron 任务是否每分钟运行 php artisan schedule:run。详情请参阅 cPanel 指南。"
+    }
   },
   "products": {
     "title": "库存",
@@ -2144,7 +2152,9 @@
     "invoiceNotIssued": "尚未开具。首次生成发票时将分配编号。",
     "invoiceIssued": "已开具",
     "invoiceSent": "已发送",
-    "send": "发送"
+    "send": "发送",
+    "queuedOn": "已于 {date} 为 {to} 加入队列。邮件队列下次运行时发送。",
+    "invoiceQueued": "排队中"
   },
   "scanning": {
     "scan": "扫描",
@@ -2287,7 +2297,8 @@
       "partial": "部分付款",
       "paid": "已付款",
       "overpaid": "多付",
-      "refunded": "已退款"
+      "refunded": "已退款",
+      "untracked": "未跟踪"
     },
     "amountPaid": "已付金额",
     "balanceDue": "应付余额",
@@ -2314,7 +2325,15 @@
     "save": "保存",
     "byPaymentStatus": "按付款状态统计订单",
     "outstanding": "未结清",
-    "ordersCount": "{n} 个订单 | {n} 个订单"
+    "ordersCount": "{n} 个订单 | {n} 个订单",
+    "untrackedNotice": "此订单在启用付款跟踪之前创建，因此其付款情况未知。记录一笔付款即可开始跟踪。",
+    "markPreTracking": {
+      "button": "将旧订单标记为已付款",
+      "title": "将旧订单标记为已付款",
+      "description": "在启用付款跟踪之前创建的订单：{n} 个。下方日期之前创建的订单将以\"其他\"方式按全额记录一笔付款（日期为下单日期）并标记为已付款。已取消的订单保持不变。 | 在启用付款跟踪之前创建的订单：{n} 个。下方日期之前创建的订单将以\"其他\"方式按全额记录一笔付款（日期为下单日期）并标记为已付款。已取消的订单保持不变。",
+      "before": "下单日期早于",
+      "submit": "标记为已付款"
+    }
   },
   "discounts": {
     "discount": "折扣",
@@ -2489,7 +2508,8 @@
         "partial": "部分付款",
         "paid": "已付款",
         "overpaid": "多付",
-        "refunded": "已退款"
+        "refunded": "已退款",
+        "untracked": "未跟踪"
       }
     },
     "returns": {

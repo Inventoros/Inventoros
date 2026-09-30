@@ -221,7 +221,7 @@ class OrderPaymentSurfacesTest extends TestCase
                 ->where('orders.data.0.payment_status', 'paid')
                 ->where('filters.payment_status', 'paid')
                 ->where('canViewPayments', true)
-                ->has('paymentStatuses', 5)
+                ->has('paymentStatuses', 6)
             );
 
         // Without view_payments the filter is ignored (it would otherwise leak
