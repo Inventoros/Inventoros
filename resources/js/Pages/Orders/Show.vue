@@ -331,7 +331,7 @@ const formatOrderDate = (date, long = false) =>
                                 <h3 class="text-sm font-semibold text-text-primary">{{ t('payments.title') }}</h3>
                                 <Badge v-if="order.payment_status" :variant="paymentStatusVariant(order.payment_status)" size="sm" dot>{{ t(`payments.status.${order.payment_status}`) }}</Badge>
                             </div>
-                            <div v-if="canRecordPayments" class="flex items-center gap-2">
+                            <div v-if="canRecordPayments" class="flex flex-wrap items-center gap-2">
                                 <Button
                                     v-if="parseFloat(order.amount_paid) > 0"
                                     variant="secondary"
