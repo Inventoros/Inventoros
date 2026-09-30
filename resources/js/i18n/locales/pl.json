@@ -1,4 +1,19 @@
 {
+  "returnPicker": {
+    "title": "Nowy zwrot",
+    "description": "Wybierz zamówienie, z którego wraca towar. Zwrot można utworzyć tylko dla zamówień wysłanych lub dostarczonych.",
+    "back": "Powrót do zwrotów",
+    "search": "Szukaj",
+    "searchPlaceholder": "Szukaj po numerze zamówienia, nazwie lub e-mailu klienta...",
+    "order": "Zamówienie nr",
+    "customer": "Klient",
+    "date": "Data zamówienia",
+    "status": "Status",
+    "total": "Suma",
+    "choose": "Rozpocznij zwrot",
+    "empty": "Brak pasujących wysłanych lub dostarczonych zamówień.",
+    "showing": "{from}–{to} z {total}"
+  },
   "stockAudits": {
     "completeConfirm": "Zakończyć tę inwentaryzację? Dla każdej rozbieżności zostanie utworzona korekta stanu.",
     "completeUncountedConfirm": "Nie policzono {uncounted} z {total} pozycji. Mimo to zakończyć inwentaryzację? Niepoliczone pozycje zachowują obecny stan; korygowane są tylko policzone.",

@@ -1,4 +1,19 @@
 {
+  "returnPicker": {
+    "title": "New Return",
+    "description": "Choose the order the goods are coming back from. Only shipped or delivered orders can take a return.",
+    "back": "Back to Returns",
+    "search": "Search",
+    "searchPlaceholder": "Search by order number, customer name or email...",
+    "order": "Order #",
+    "customer": "Customer",
+    "date": "Order date",
+    "status": "Status",
+    "total": "Total",
+    "choose": "Start return",
+    "empty": "No shipped or delivered orders match.",
+    "showing": "Showing {from} to {to} of {total}"
+  },
   "common": {
     "save": "Save",
     "saveChanges": "Save Changes",

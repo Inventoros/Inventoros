@@ -1,4 +1,19 @@
 {
+  "returnPicker": {
+    "title": "Nieuwe retour",
+    "description": "Kies de bestelling waaruit de goederen terugkomen. Alleen verzonden of geleverde bestellingen kunnen worden geretourneerd.",
+    "back": "Terug naar retouren",
+    "search": "Zoeken",
+    "searchPlaceholder": "Zoek op bestelnummer, naam of e-mail van de klant...",
+    "order": "Bestelling #",
+    "customer": "Klant",
+    "date": "Besteldatum",
+    "status": "Status",
+    "total": "Totaal",
+    "choose": "Retour starten",
+    "empty": "Geen verzonden of geleverde bestellingen gevonden.",
+    "showing": "{from} tot {to} van {total}"
+  },
   "stockAudits": {
     "completeConfirm": "Deze telling afronden? Voor elke afwijking worden voorraadcorrecties aangemaakt.",
     "completeUncountedConfirm": "{uncounted} van {total} artikelen zijn niet geteld. De telling toch afronden? Niet-getelde artikelen houden hun huidige voorraad; alleen getelde artikelen worden gecorrigeerd.",

@@ -1,4 +1,19 @@
 {
+  "returnPicker": {
+    "title": "Neue Rücksendung",
+    "description": "Wählen Sie die Bestellung, aus der die Ware zurückkommt. Nur versandte oder zugestellte Bestellungen können zurückgesendet werden.",
+    "back": "Zurück zu Rücksendungen",
+    "search": "Suche",
+    "searchPlaceholder": "Nach Bestellnummer, Kundenname oder E-Mail suchen...",
+    "order": "Bestellung #",
+    "customer": "Kunde",
+    "date": "Bestelldatum",
+    "status": "Status",
+    "total": "Gesamt",
+    "choose": "Rücksendung starten",
+    "empty": "Keine passenden versandten oder zugestellten Bestellungen.",
+    "showing": "{from} bis {to} von {total}"
+  },
   "stockAudits": {
     "completeConfirm": "Diese Inventur abschließen? Für alle Abweichungen werden Bestandskorrekturen erstellt.",
     "completeUncountedConfirm": "{uncounted} von {total} Artikeln wurden nicht gezählt. Inventur trotzdem abschließen? Nicht gezählte Artikel behalten ihren aktuellen Bestand; nur gezählte Artikel werden korrigiert.",

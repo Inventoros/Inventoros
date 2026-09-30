@@ -1,4 +1,19 @@
 {
+  "returnPicker": {
+    "title": "新規返品",
+    "description": "商品が戻ってくる注文を選択してください。返品できるのは出荷済みまたは配達済みの注文のみです。",
+    "back": "返品一覧に戻る",
+    "search": "検索",
+    "searchPlaceholder": "注文番号、顧客名、メールアドレスで検索...",
+    "order": "注文番号",
+    "customer": "顧客",
+    "date": "注文日",
+    "status": "ステータス",
+    "total": "合計",
+    "choose": "返品を開始",
+    "empty": "該当する出荷済みまたは配達済みの注文はありません。",
+    "showing": "{total}件中 {from}〜{to}件を表示"
+  },
   "stockAudits": {
     "completeConfirm": "この棚卸を完了しますか？差異があるものには在庫調整が作成されます。",
     "completeUncountedConfirm": "{total}件中{uncounted}件が未カウントです。それでも棚卸を完了しますか？未カウントの品目は現在の在庫のままで、カウント済みの品目だけが調整されます。",

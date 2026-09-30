@@ -1,4 +1,19 @@
 {
+  "returnPicker": {
+    "title": "새 반품",
+    "description": "상품이 반품되는 주문을 선택하세요. 배송되었거나 배달된 주문만 반품할 수 있습니다.",
+    "back": "반품 목록으로",
+    "search": "검색",
+    "searchPlaceholder": "주문 번호, 고객 이름 또는 이메일로 검색...",
+    "order": "주문 번호",
+    "customer": "고객",
+    "date": "주문일",
+    "status": "상태",
+    "total": "합계",
+    "choose": "반품 시작",
+    "empty": "일치하는 배송 또는 배달 완료 주문이 없습니다.",
+    "showing": "{total}개 중 {from}-{to} 표시"
+  },
   "stockAudits": {
     "completeConfirm": "이 실사를 완료할까요? 차이가 있는 항목마다 재고 조정이 생성됩니다.",
     "completeUncountedConfirm": "{total}개 중 {uncounted}개 품목을 세지 않았습니다. 그래도 실사를 완료할까요? 세지 않은 품목은 현재 재고를 유지하며, 센 품목만 조정됩니다.",

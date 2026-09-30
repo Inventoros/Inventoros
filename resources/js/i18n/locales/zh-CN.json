@@ -1,4 +1,19 @@
 {
+  "returnPicker": {
+    "title": "新建退货",
+    "description": "选择商品退回所属的订单。只有已发货或已送达的订单才能退货。",
+    "back": "返回退货列表",
+    "search": "搜索",
+    "searchPlaceholder": "按订单号、客户名称或邮箱搜索...",
+    "order": "订单号",
+    "customer": "客户",
+    "date": "下单日期",
+    "status": "状态",
+    "total": "合计",
+    "choose": "开始退货",
+    "empty": "没有匹配的已发货或已送达订单。",
+    "showing": "显示第 {from} 至 {to} 条，共 {total} 条"
+  },
   "stockAudits": {
     "completeConfirm": "完成此次盘点？将为每个差异创建库存调整。",
     "completeUncountedConfirm": "{total} 件商品中有 {uncounted} 件尚未盘点。仍要完成盘点吗？未盘点的商品保持当前库存，只调整已盘点的商品。",

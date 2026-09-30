@@ -374,6 +374,55 @@ class ReturnOrderControllerTest extends TestCase
         );
     }
 
+    /**
+     * "New Return" on the returns list links to returns.create with no
+     * order; that used to 404. It now asks which order the return is for.
+     */
+    public function test_new_return_without_an_order_lists_orders_to_choose_from(): void
+    {
+        $delivered = $this->createOrder(['status' => 'delivered', 'order_number' => 'ORD-DELIVERED']);
+        $shipped = $this->createOrder(['status' => 'shipped', 'order_number' => 'ORD-SHIPPED']);
+        $this->createOrder(['status' => 'pending', 'order_number' => 'ORD-PENDING']);
+        $this->createOrder(['status' => 'cancelled', 'order_number' => 'ORD-CANCELLED']);
+
+        $this->actingAs($this->admin)
+            ->get(route('returns.create'))
+            ->assertOk()
+            ->assertInertia(fn ($page) => $page
+                ->component('Returns/SelectOrder')
+                ->has('orders.data', 2)
+                ->where('orders.data', fn ($orders) => collect($orders)->pluck('id')->sort()->values()->all()
+                    === collect([$delivered->id, $shipped->id])->sort()->values()->all())
+            );
+    }
+
+    public function test_the_order_picker_searches_by_number_and_customer(): void
+    {
+        $this->createOrder(['order_number' => 'ORD-AAA', 'customer_name' => 'Alice']);
+        $bob = $this->createOrder(['order_number' => 'ORD-BBB', 'customer_name' => 'Bob Builder']);
+
+        $this->actingAs($this->admin)
+            ->get(route('returns.create', ['search' => 'Bob']))
+            ->assertOk()
+            ->assertInertia(fn ($page) => $page
+                ->component('Returns/SelectOrder')
+                ->has('orders.data', 1)
+                ->where('orders.data.0.id', $bob->id)
+                ->where('filters.search', 'Bob')
+            );
+    }
+
+    public function test_the_order_picker_is_limited_to_the_organization(): void
+    {
+        $other = Organization::create(['name' => 'Other', 'email' => 'other@example.com', 'currency' => 'USD', 'timezone' => 'UTC']);
+        $this->createOrder(['organization_id' => $other->id, 'order_number' => 'ORD-OTHER']);
+
+        $this->actingAs($this->admin)
+            ->get(route('returns.create'))
+            ->assertOk()
+            ->assertInertia(fn ($page) => $page->has('orders.data', 0));
+    }
+
     // ==================== STORE TESTS ====================
 
     public function test_admin_can_create_return_from_order(): void

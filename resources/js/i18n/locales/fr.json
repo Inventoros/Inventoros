@@ -1,4 +1,19 @@
 {
+  "returnPicker": {
+    "title": "Nouveau retour",
+    "description": "Choisissez la commande dont proviennent les articles. Seules les commandes expédiées ou livrées peuvent faire l'objet d'un retour.",
+    "back": "Retour aux retours",
+    "search": "Rechercher",
+    "searchPlaceholder": "Rechercher par numéro de commande, nom ou e-mail du client...",
+    "order": "Commande n°",
+    "customer": "Client",
+    "date": "Date de commande",
+    "status": "Statut",
+    "total": "Total",
+    "choose": "Créer le retour",
+    "empty": "Aucune commande expédiée ou livrée ne correspond.",
+    "showing": "Affichage de {from} à {to} sur {total}"
+  },
   "stockAudits": {
     "completeConfirm": "Terminer cet inventaire ? Des ajustements de stock seront créés pour chaque écart.",
     "completeUncountedConfirm": "{uncounted} articles sur {total} n'ont pas été comptés. Terminer l'inventaire quand même ? Les articles non comptés gardent leur stock actuel ; seuls les articles comptés sont ajustés.",

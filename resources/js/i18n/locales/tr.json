@@ -1,4 +1,19 @@
 {
+  "returnPicker": {
+    "title": "Yeni iade",
+    "description": "Ürünlerin geri geldiği siparişi seçin. Yalnızca gönderilmiş veya teslim edilmiş siparişler iade edilebilir.",
+    "back": "İadelere dön",
+    "search": "Ara",
+    "searchPlaceholder": "Sipariş numarası, müşteri adı veya e-posta ile ara...",
+    "order": "Sipariş no",
+    "customer": "Müşteri",
+    "date": "Sipariş tarihi",
+    "status": "Durum",
+    "total": "Toplam",
+    "choose": "İadeyi başlat",
+    "empty": "Eşleşen gönderilmiş veya teslim edilmiş sipariş yok.",
+    "showing": "{total} kayıttan {from}-{to} gösteriliyor"
+  },
   "stockAudits": {
     "completeConfirm": "Bu sayım tamamlansın mı? Her fark için stok düzeltmesi oluşturulur.",
     "completeUncountedConfirm": "{total} üründen {uncounted} tanesi sayılmadı. Sayım yine de tamamlansın mı? Sayılmayan ürünler mevcut stoklarını korur; yalnızca sayılanlar düzeltilir.",

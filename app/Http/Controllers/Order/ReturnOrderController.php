@@ -68,6 +68,11 @@ class ReturnOrderController extends Controller
      */
     public function create(Request $request): Response
     {
+        // "New Return" from the returns list has no order yet: pick one first.
+        if (! $request->filled('order_id')) {
+            return $this->selectOrder($request);
+        }
+
         $organizationId = $request->user()->organization_id;
 
         $order = Order::with(['items.product'])
@@ -83,6 +88,27 @@ class ReturnOrderController extends Controller
             // Per line, what the customer paid after line and order
             // discounts: the estimate matches the refund the service records.
             'paidNets' => (object) $returns->paidLineNets($order),
+        ]);
+    }
+
+    /**
+     * List the orders a return can be raised against, newest first.
+     */
+    private function selectOrder(Request $request): Response
+    {
+        $search = trim((string) $request->input('search', ''));
+
+        $orders = app(ReturnOrderService::class)
+            ->returnableOrders($request->user(), $search !== '' ? $search : null)
+            ->withCount('items')
+            ->latest('order_date')
+            ->latest('id')
+            ->paginate(config('limits.pagination.default', 15), ['id', 'order_number', 'customer_name', 'customer_email', 'status', 'total', 'currency', 'order_date'])
+            ->withQueryString();
+
+        return Inertia::render('Returns/SelectOrder', [
+            'orders' => $orders,
+            'filters' => ['search' => $search],
         ]);
     }
 

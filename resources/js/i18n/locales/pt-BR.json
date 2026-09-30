@@ -1,4 +1,19 @@
 {
+  "returnPicker": {
+    "title": "Nova devolução",
+    "description": "Escolha o pedido de onde a mercadoria está voltando. Só pedidos enviados ou entregues podem ser devolvidos.",
+    "back": "Voltar para devoluções",
+    "search": "Pesquisar",
+    "searchPlaceholder": "Pesquisar por número do pedido, nome ou e-mail do cliente...",
+    "order": "Pedido nº",
+    "customer": "Cliente",
+    "date": "Data do pedido",
+    "status": "Status",
+    "total": "Total",
+    "choose": "Iniciar devolução",
+    "empty": "Nenhum pedido enviado ou entregue corresponde.",
+    "showing": "Mostrando {from} a {to} de {total}"
+  },
   "stockAudits": {
     "completeConfirm": "Concluir esta auditoria? Serão criados ajustes de estoque para cada divergência.",
     "completeUncountedConfirm": "{uncounted} de {total} itens não foram contados. Concluir a auditoria mesmo assim? Itens não contados mantêm o estoque atual; apenas os contados são ajustados.",
