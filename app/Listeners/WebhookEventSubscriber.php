@@ -164,7 +164,8 @@ final class WebhookEventSubscriber
                 'product.low_stock',
                 [
                     'product' => self::formatProductData($product),
-                    'current_stock' => $product->stock,
+                    // On hand: summed active variants for a product sold by variant.
+                    'current_stock' => $product->total_stock,
                     'min_stock' => $product->min_stock,
                 ],
                 $product->organization_id

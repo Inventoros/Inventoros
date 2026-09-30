@@ -61,6 +61,8 @@ Before upgrading: take a database backup you have checked, run `php artisan opti
 
 ### Fixed
 
+- Server-side validation, sign-in, password reset and pagination messages were always English. Laravel's messages now ship in `lang/` for all 14 languages, and the user's language (then the language cookie, then the default) applies to web and REST responses.
+- Low-stock and out-of-stock alerts never fired for products sold by variant. A variant with its own minimum alerts when it crosses it; otherwise the product alerts when the sum of its active variants crosses the product's minimum. Low-stock alert emails and the `product.low_stock` webhook report that summed stock.
 - A completed stock transfer showed "Transferred By: -". The transfer page shows who created it and who completed it; the new `stock_transfers.completed_by` column records the completer (REST `completed_by`), empty for transfers completed before upgrading.
 - Users without a permission no longer see buttons and links that only lead to a 403 (new order, add product, the categories and locations tiles, edit and delete icons on orders, products, purchase orders, customers and suppliers, supplier links, new audit and more). Pages check the same permissions as the routes (`resources/js/lib/routePermissions.js`, kept in step by a test).
 - The web order form had no currency choice. It has a Currency select (the organization's currency, or a chosen customer's), prefills line prices from the catalogue in that currency and shows totals in it.

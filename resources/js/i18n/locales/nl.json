@@ -1085,7 +1085,7 @@
       "description": "Kostprijs van de verkopen ten opzichte van de gemiddelde voorraad, per product en categorie",
       "turnover": "Omloopsnelheid",
       "daysOfInventory": "Voorraaddagen",
-      "periodDays": "Over {n} dagen",
+      "periodDays": "Over {n} dag | Over {n} dagen",
       "avgInventory": "Gem. voorraadwaarde",
       "cogs": "Kostprijs verkopen",
       "unitsSold": "Verkochte eenheden",
@@ -1097,7 +1097,7 @@
       "methodTitle": "Hoe dit wordt berekend",
       "method": "De gemiddelde voorraad is het gemiddelde van de begin- en eindvoorraad in eenheden, gereconstrueerd uit de huidige voorraad en de geschiedenis van voorraadaanpassingen, gewaardeerd tegen de huidige inkoopprijs. Voorraadwijzigingen die niet als aanpassing zijn vastgelegd, worden niet meegenomen.",
       "cogsNote": "De kostprijs van de verkopen is het aantal verkochte eenheden in de periode tegen de kostprijs per eenheid die bij elke verkoop is vastgelegd.",
-      "estimatedCost": "{count} eenheden zijn verkocht voordat kosten werden vastgelegd, dus hun kostprijs is een schatting (de inkoopprijs op dat moment)."
+      "estimatedCost": "{count} eenheid is verkocht voordat kosten werden vastgelegd, dus de kostprijs is een schatting (de inkoopprijs op dat moment). | {count} eenheden zijn verkocht voordat kosten werden vastgelegd, dus hun kostprijs is een schatting (de inkoopprijs op dat moment)."
     },
     "profitMargin": {
       "title": "Winstmarge",
@@ -1111,9 +1111,9 @@
       "byProduct": "Per product",
       "costBasisTitle": "Kostenbasis",
       "costBasis": "De kostprijs van de verkopen gebruikt de kostprijs per eenheid die bij de verkoop van elke regel is vastgelegd, zodat latere kostenwijzigingen eerdere marges niet herschrijven.",
-      "estimatedCost": "{count} eenheden zijn verkocht voordat kosten werden vastgelegd, dus hun kostprijs is een schatting (de inkoopprijs op dat moment). Rijen gemarkeerd met Geschatte kostprijs bevatten deze eenheden.",
+      "estimatedCost": "{count} eenheid is verkocht voordat kosten werden vastgelegd, dus de kostprijs is een schatting (de inkoopprijs op dat moment). Rijen gemarkeerd met Geschatte kostprijs bevatten deze eenheid. | {count} eenheden zijn verkocht voordat kosten werden vastgelegd, dus hun kostprijs is een schatting (de inkoopprijs op dat moment). Rijen gemarkeerd met Geschatte kostprijs bevatten deze eenheden.",
       "estimatedBadge": "Geschatte kostprijs",
-      "missingCost": "{count} verkochte eenheden hebben geen inkoopprijs en worden tegen nul kosten meegeteld."
+      "missingCost": "{count} verkochte eenheid heeft geen inkoopprijs en wordt tegen nul kosten meegeteld. | {count} verkochte eenheden hebben geen inkoopprijs en worden tegen nul kosten meegeteld."
     },
     "salesByLocation": {
       "title": "Verkoop per locatie",
@@ -1137,7 +1137,7 @@
       "classAHint": "Eerste 80% van de omzet",
       "classBHint": "Volgende 15%",
       "classCHint": "Laatste 5%",
-      "productCount": "{count} producten",
+      "productCount": "{count} product | {count} producten",
       "ranking": "Omzetrangschikking",
       "totalRevenue": "Totale omzet exclusief btw: {amount}",
       "rank": "Positie",
@@ -1272,7 +1272,7 @@
     "imported": "Geïmporteerd",
     "updated": "Bijgewerkt",
     "errors": "Fouten",
-    "rowsFailed": "Rij(en) mislukt",
+    "rowsFailed": "Mislukte rijen",
     "export": {
       "title": "Producten exporteren",
       "subtitle": "Download uw voorraadgegevens",
@@ -1334,8 +1334,8 @@
       "updated": "Bijgewerkt",
       "skipped": "Overgeslagen",
       "failed": "Niet geïmporteerd",
-      "errorRows": "{count} rij(en) met fouten",
-      "warningRows": "{count} rij(en) met waarschuwingen",
+      "errorRows": "{count} rij met fouten | {count} rijen met fouten",
+      "warningRows": "{count} rij met waarschuwingen | {count} rijen met waarschuwingen",
       "row": "Rij {row}:",
       "dismiss": "Importresultaat sluiten",
       "removeFile": "Bestand verwijderen"
@@ -1616,7 +1616,7 @@
       "newTokenHint": "Kopieer het nu. Om veiligheidsredenen wordt het maar één keer getoond en kan het later niet worden opgehaald.",
       "copy": "Kopiëren",
       "copied": "Gekopieerd",
-      "abilitiesCount": "{count} rechten",
+      "abilitiesCount": "{count} recht | {count} rechten",
       "allPermissions": "Alle rechten",
       "noPermissions": "U hebt geen rechten die u aan een token kunt toekennen."
     },
@@ -1738,7 +1738,7 @@
         "titleWithName": "Gebruiker bewerken: {name}",
         "subtitle": "Werk accountgegevens, basisrol en aangepaste rollen bij.",
         "admin": "Beheerder",
-        "customRolesSelected": "{count} aangepaste rol(len) geselecteerd"
+        "customRolesSelected": "{count} aangepaste rol geselecteerd | {count} aangepaste rollen geselecteerd"
       },
       "show": {
         "title": "Gebruikersdetails",
@@ -1775,8 +1775,8 @@
       "createRole": "Rol aanmaken",
       "description": "Beheer rollen en machtigingen voor uw organisatie. Maak aangepaste rollen met specifieke machtigingen om de toegang in de applicatie te beheren.",
       "systemBadge": "Systeem",
-      "usersCount": "{count} gebruikers",
-      "permissionsCount": "{count} machtigingen",
+      "usersCount": "{count} gebruiker | {count} gebruikers",
+      "permissionsCount": "{count} machtiging | {count} machtigingen",
       "adminLocked": "Beheerdersrol kan niet worden bewerkt",
       "noRolesFound": "Geen rollen gevonden. Klik op \"Rol aanmaken\" om uw eerste aangepaste rol te definiëren.",
       "create": {
@@ -1791,14 +1791,14 @@
         "individualHint": "Selecteer extra machtigingen. Klik op categorienamen om alle machtigingen in die categorie te selecteren/deselecteren.",
         "selectAll": "Alles selecteren",
         "deselectAll": "Alles deselecteren",
-        "totalPermissions": "{count} machtiging(en) totaal",
+        "totalPermissions": "{count} machtiging in totaal | {count} machtigingen in totaal",
         "createRole": "Rol aanmaken",
         "success": "Rol succesvol aangemaakt.",
         "subtitle": "Definieer een rol en wijs de machtigingen toe.",
         "roleDetails": "Rolgegevens",
         "namePlaceholder": "bijv. Magazijnbeheerder",
         "descriptionPlaceholder": "Beschrijf het doel en de verantwoordelijkheden van deze rol...",
-        "permissionBreakdown": "({direct} direct + {fromSets} uit {sets} set(s))"
+        "permissionBreakdown": "({direct} direct + {fromSets} uit {sets} set) | ({direct} direct + {fromSets} uit {sets} sets)"
       },
       "edit": {
         "title": "Rol bewerken",
@@ -1808,7 +1808,7 @@
         "systemDescHint": "Systeemrolbeschrijvingen kunnen niet worden gewijzigd",
         "permissions": "Machtigingen",
         "permissionsHint": "Pas de machtigingen voor deze rol aan. Klik op categorienamen om alle machtigingen in die categorie te selecteren/deselecteren.",
-        "permissionsSelected": "{count} machtiging(en) geselecteerd",
+        "permissionsSelected": "{count} machtiging geselecteerd | {count} machtigingen geselecteerd",
         "updateRole": "Rol bijwerken",
         "success": "Rol succesvol bijgewerkt.",
         "titleWithName": "Rol bewerken: {name}",
@@ -2570,7 +2570,7 @@
       "selectProduct": "Product selecteren",
       "cameraHint": "Richt uw camera op een barcode om te scannen",
       "locationFound": "Locatie gevonden",
-      "productsHere": "{count} producten hier",
+      "productsHere": "{count} product hier | {count} producten hier",
       "viewProductsHere": "Producten hier bekijken",
       "lookupFailed": "Barcode opzoeken mislukt",
       "stock": "Voorraad",
@@ -2582,7 +2582,7 @@
       "noActivity": "Nog geen activiteit vastgelegd",
       "system": "Systeem",
       "thisProduct": "dit product",
-      "moreChanges": "+{count} andere wijzigingen",
+      "moreChanges": "+{count} andere wijziging | +{count} andere wijzigingen",
       "actionOnProduct": {
         "created": "heeft dit product aangemaakt",
         "updated": "heeft dit product bijgewerkt",
@@ -2605,7 +2605,7 @@
       "maxImages": "Max {max} afbeeldingen, tot {size}MB per stuk",
       "onlyImages": "Alleen afbeeldingsbestanden zijn toegestaan",
       "tooLarge": "Afbeeldingen moeten kleiner zijn dan {size}MB",
-      "canAddMore": "U kunt nog {count} afbeelding(en) toevoegen",
+      "canAddMore": "U kunt nog {count} afbeelding toevoegen | U kunt nog {count} afbeeldingen toevoegen",
       "moveLeft": "Naar links",
       "moveRight": "Naar rechts",
       "remove": "Verwijderen",
@@ -2734,7 +2734,7 @@
       "hint": "Gebruikers die u hier toewijst, kunnen alleen voorraad zien en verplaatsen in de magazijnen waaraan ze zijn toegewezen. Beheerders en rollen met Toegang tot alle magazijnen zien altijd elk magazijn.",
       "searchPlaceholder": "Gebruikers zoeken...",
       "noUsers": "Geen gebruikers gevonden.",
-      "selected": "{count} gebruiker(s) geselecteerd",
+      "selected": "{count} gebruiker geselecteerd | {count} gebruikers geselecteerd",
       "save": "Gebruikerstoegang opslaan",
       "allWarehouses": "Alle magazijnen",
       "assigned": "Toegewezen gebruikers ({count})",
@@ -2846,7 +2846,7 @@
     },
     "components": {
       "title": "Benodigde componenten",
-      "materialsNeeded": "Materialen nodig om {count} eenhe(i)d(en) van {name} te produceren",
+      "materialsNeeded": "Materialen nodig om {count} eenheid {name} te produceren | Materialen nodig om {count} eenheden {name} te produceren",
       "component": "Component",
       "sku": "SKU",
       "required": "Benodigd",
@@ -2866,7 +2866,7 @@
       "startProduction": "Productie starten",
       "startConfirm": "Productie voor deze werkorder starten? Componenten worden gereserveerd.",
       "completeProduction": "Productie voltooien",
-      "completeConfirm": "Deze werkorder voltooien? {count} eenheden worden toegevoegd aan de assemblagevoorraad.",
+      "completeConfirm": "Deze werkorder voltooien? {count} eenheid wordt toegevoegd aan de assemblagevoorraad. | Deze werkorder voltooien? {count} eenheden worden toegevoegd aan de assemblagevoorraad.",
       "cancelWorkOrder": "Werkorder annuleren",
       "cancelConfirm": "Deze werkorder annuleren? Eventueel gereserveerde componenten worden vrijgegeven.",
       "view": "Bekijken"
@@ -3073,7 +3073,7 @@
     "notifyCustomer": "Trackinggegevens e-mailen naar {email}",
     "getRates": "Tarieven ophalen",
     "chooseRate": "Kies een tarief",
-    "estDays": "Ca. {count} dagen",
+    "estDays": "Ca. {count} dag | Ca. {count} dagen",
     "buyLabel": "Label kopen",
     "labelBought": "Label gekocht. Trackingnummer {number}.",
     "downloadLabel": "Label downloaden",

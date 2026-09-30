@@ -243,6 +243,7 @@ Schema::dropIfExists('my_plugin_notes');
 | `stock_adjusted` | `$stock_adjustment`, `$product` | A stock adjustment is committed. `$product` is null for a variant adjustment. |
 | `low_stock_alert` | `$product` | A product's stock drops to or below its minimum. |
 | `out_of_stock_alert` | `$product` | A product's stock reaches zero. |
+| `variant_low_stock_alert` | `$variant` | A variant with its own minimum stock drops to or below it. Variants without one count toward the product's `low_stock_alert`. |
 | `warehouse_low_stock_alert` | `$product`, `$warehouse`, `$on_hand` | A product's on-hand quantity in one warehouse drops to or below its minimum stock level for that warehouse. |
 | `order_created` | `$order`, `$user` | An order and all its items are created. |
 | `order_updated` | `$order`, `$user` | An order is saved. |

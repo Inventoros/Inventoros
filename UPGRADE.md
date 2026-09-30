@@ -262,6 +262,7 @@ Plugins > Marketplace installs and updates plugins from inventoros.com. Every pa
 - **Sales Analysis exports.** The daily, status and top products exports have a Currency column after the first column (after SKU for products), and a day or status with orders in two currencies has one line per currency.
 - **Receivables exports.** Both receivables exports have a Currency column after Customer.
 - **Regional settings.** Currency and timezone are chosen from lists: a currency from `config/currencies.php` (or the one the organization already has) and a timezone PHP recognises. Saving an unknown code or timezone name is refused.
+- **Localized validation messages.** Web and REST validation errors (the `message` and `errors` of a 422) are in the user's saved language, for REST the language of the token's user. Clients that match English error text should match on field names instead. The `lang/` directory is new; the cPanel and in-app updaters already copy it.
 
 ### License
 

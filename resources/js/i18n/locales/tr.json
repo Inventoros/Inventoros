@@ -1085,7 +1085,7 @@
       "description": "Ürün ve kategori bazında satılan malın maliyetinin ortalama envantere oranı",
       "turnover": "Devir Hızı",
       "daysOfInventory": "Stok Gün Sayısı",
-      "periodDays": "{n} gün boyunca",
+      "periodDays": "{n} gün boyunca | {n} gün boyunca",
       "avgInventory": "Ort. Envanter Değeri",
       "cogs": "SMM",
       "unitsSold": "Satılan Birim",
@@ -1097,7 +1097,7 @@
       "methodTitle": "Nasıl hesaplanır",
       "method": "Ortalama envanter, dönem başı ve dönem sonu eldeki birimlerin ortalamasıdır; mevcut stok ve stok düzeltme geçmişinden yeniden oluşturulur ve güncel alış fiyatıyla değerlenir. Düzeltme olarak kaydedilmeyen stok değişiklikleri yansıtılmaz.",
       "cogsNote": "SMM, dönem içinde satılan birimlerin her biri satıldığında kaydedilen birim maliyetle hesaplanır.",
-      "estimatedCost": "{count} birim maliyetler kaydedilmeden önce satıldı, bu nedenle maliyetleri tahminidir (o andaki alış fiyatı)."
+      "estimatedCost": "{count} birim maliyetler kaydedilmeden önce satıldı, bu nedenle maliyeti tahminidir (o andaki alış fiyatı). | {count} birim maliyetler kaydedilmeden önce satıldı, bu nedenle maliyetleri tahminidir (o andaki alış fiyatı)."
     },
     "profitMargin": {
       "title": "Kâr Marjı",
@@ -1111,9 +1111,9 @@
       "byProduct": "Ürüne Göre",
       "costBasisTitle": "Maliyet esası",
       "costBasis": "SMM, her satır satıldığında kaydedilen birim maliyeti kullanır; böylece sonraki maliyet değişiklikleri geçmiş marjları değiştirmez.",
-      "estimatedCost": "{count} birim maliyetler kaydedilmeden önce satıldı, bu nedenle maliyetleri tahminidir (o andaki alış fiyatı). Tahmini maliyet olarak işaretlenen satırlar bunları içerir.",
+      "estimatedCost": "{count} birim maliyetler kaydedilmeden önce satıldı, bu nedenle maliyeti tahminidir (o andaki alış fiyatı). Tahmini maliyet olarak işaretlenen satırlar bunu içerir. | {count} birim maliyetler kaydedilmeden önce satıldı, bu nedenle maliyetleri tahminidir (o andaki alış fiyatı). Tahmini maliyet olarak işaretlenen satırlar bunları içerir.",
       "estimatedBadge": "Tahmini maliyet",
-      "missingCost": "Satılan {count} birimin alış fiyatı yok ve sıfır maliyetle hesaplanıyor."
+      "missingCost": "Satılan {count} birimin alış fiyatı yok ve sıfır maliyetle hesaplanıyor. | Satılan {count} birimin alış fiyatı yok ve sıfır maliyetle hesaplanıyor."
     },
     "salesByLocation": {
       "title": "Konuma Göre Satışlar",
@@ -1137,7 +1137,7 @@
       "classAHint": "Gelirin ilk %80'i",
       "classBHint": "Sonraki %15",
       "classCHint": "Son %5",
-      "productCount": "{count} ürün",
+      "productCount": "{count} ürün | {count} ürün",
       "ranking": "Gelir Sıralaması",
       "totalRevenue": "Vergi öncesi toplam gelir: {amount}",
       "rank": "Sıra",
@@ -1272,7 +1272,7 @@
     "imported": "İçe Aktarıldı",
     "updated": "Güncellendi",
     "errors": "Hatalar",
-    "rowsFailed": "satır başarısız",
+    "rowsFailed": "Başarısız satırlar",
     "export": {
       "title": "Ürünleri Dışa Aktar",
       "subtitle": "Envanter verilerinizi indirin",
@@ -1334,8 +1334,8 @@
       "updated": "Güncellendi",
       "skipped": "Atlandı",
       "failed": "İçe aktarılmadı",
-      "errorRows": "Hatalı {count} satır",
-      "warningRows": "Uyarılı {count} satır",
+      "errorRows": "Hatalı {count} satır | Hatalı {count} satır",
+      "warningRows": "Uyarılı {count} satır | Uyarılı {count} satır",
       "row": "Satır {row}:",
       "dismiss": "İçe aktarma sonucunu kapat",
       "removeFile": "Dosyayı kaldır"
@@ -1616,7 +1616,7 @@
       "newTokenHint": "Şimdi kopyalayın. Güvenlik nedeniyle yalnızca bir kez gösterilir ve daha sonra alınamaz.",
       "copy": "Kopyala",
       "copied": "Kopyalandı",
-      "abilitiesCount": "{count} izin",
+      "abilitiesCount": "{count} izin | {count} izin",
       "allPermissions": "Tüm izinler",
       "noPermissions": "Bir token'a verebileceğiniz hiçbir izne sahip değilsiniz."
     },
@@ -1738,7 +1738,7 @@
         "titleWithName": "Kullanıcıyı Düzenle: {name}",
         "subtitle": "Hesap detaylarını, temel rolü ve özel rol atamalarını güncelleyin.",
         "admin": "Sistem Yöneticisi",
-        "customRolesSelected": "{count} özel rol seçildi"
+        "customRolesSelected": "{count} özel rol seçildi | {count} özel rol seçildi"
       },
       "show": {
         "title": "Kullanıcı Detayları",
@@ -1775,8 +1775,8 @@
       "createRole": "Rol Oluştur",
       "description": "Organizasyonunuz için roller ve izinleri yönetin. Uygulama genelinde erişimi kontrol etmek için belirli izin setlerine sahip özel roller oluşturun.",
       "systemBadge": "Sistem",
-      "usersCount": "{count} kullanıcı",
-      "permissionsCount": "{count} izin",
+      "usersCount": "{count} kullanıcı | {count} kullanıcı",
+      "permissionsCount": "{count} izin | {count} izin",
       "adminLocked": "Sistem yöneticisi rolü düzenlenemez",
       "noRolesFound": "Rol bulunamadı. İlk özel rolünüzü tanımlamak için \"Rol Oluştur\"a tıklayın.",
       "create": {
@@ -1791,14 +1791,14 @@
         "individualHint": "Ek izinler seçin. Kategori içindeki tüm izinleri seçmek/kaldırmak için kategori adlarına tıklayın.",
         "selectAll": "Tümünü Seç",
         "deselectAll": "Tüm Seçimi Kaldır",
-        "totalPermissions": "Toplam {count} izin",
+        "totalPermissions": "Toplam {count} izin | Toplam {count} izin",
         "createRole": "Rol Oluştur",
         "success": "Rol başarıyla oluşturuldu.",
         "subtitle": "Bir rol tanımlayın ve izinlerini atayın.",
         "roleDetails": "Rol Detayları",
         "namePlaceholder": "ör. Depo Müdürü",
         "descriptionPlaceholder": "Bu rolün amacını ve sorumluluklarını açıklayın...",
-        "permissionBreakdown": "({direct} doğrudan + {sets} setten {fromSets})"
+        "permissionBreakdown": "({direct} doğrudan + {sets} setten {fromSets}) | ({direct} doğrudan + {sets} setten {fromSets})"
       },
       "edit": {
         "title": "Rolü Düzenle",
@@ -1808,7 +1808,7 @@
         "systemDescHint": "Sistem rol açıklamaları değiştirilemez",
         "permissions": "İzinler",
         "permissionsHint": "Bu rol için izinleri özelleştirin. Kategori içindeki tüm izinleri seçmek/kaldırmak için kategori adlarına tıklayın.",
-        "permissionsSelected": "{count} izin seçili",
+        "permissionsSelected": "{count} izin seçili | {count} izin seçili",
         "updateRole": "Rolü Güncelle",
         "success": "Rol başarıyla güncellendi.",
         "titleWithName": "Rolü Düzenle: {name}",
@@ -2570,7 +2570,7 @@
       "selectProduct": "Ürün Seç",
       "cameraHint": "Taramak için kameranızı barkoda doğrultun",
       "locationFound": "Konum Bulundu",
-      "productsHere": "Burada {count} ürün var",
+      "productsHere": "Burada {count} ürün var | Burada {count} ürün var",
       "viewProductsHere": "Buradaki Ürünleri Görüntüle",
       "lookupFailed": "Barkod aranamadı",
       "stock": "Stok",
@@ -2582,7 +2582,7 @@
       "noActivity": "Henüz etkinlik kaydedilmedi",
       "system": "Sistem",
       "thisProduct": "bu ürün",
-      "moreChanges": "+{count} değişiklik daha",
+      "moreChanges": "+{count} değişiklik daha | +{count} değişiklik daha",
       "actionOnProduct": {
         "created": "bu ürünü oluşturdu",
         "updated": "bu ürünü güncelledi",
@@ -2605,7 +2605,7 @@
       "maxImages": "Maks. {max} görsel, her biri {size}MB'a kadar",
       "onlyImages": "Yalnızca görsel dosyalarına izin verilir",
       "tooLarge": "Görseller {size}MB'dan küçük olmalıdır",
-      "canAddMore": "En fazla {count} görsel daha ekleyebilirsiniz",
+      "canAddMore": "En fazla {count} görsel daha ekleyebilirsiniz | En fazla {count} görsel daha ekleyebilirsiniz",
       "moveLeft": "Sola taşı",
       "moveRight": "Sağa taşı",
       "remove": "Kaldır",
@@ -2734,7 +2734,7 @@
       "hint": "Burada atadığınız kullanıcılar yalnızca atandıkları depolardaki stoku görebilir ve hareket ettirebilir. Yöneticiler ve Tüm Depolara Erişim iznine sahip roller her zaman tüm depoları görür.",
       "searchPlaceholder": "Kullanıcı ara...",
       "noUsers": "Kullanıcı bulunamadı.",
-      "selected": "{count} kullanıcı seçili",
+      "selected": "{count} kullanıcı seçili | {count} kullanıcı seçili",
       "save": "Kullanıcı erişimini kaydet",
       "allWarehouses": "Tüm depolar",
       "assigned": "Atanan kullanıcılar ({count})",
@@ -2846,7 +2846,7 @@
     },
     "components": {
       "title": "Gerekli Bileşenler",
-      "materialsNeeded": "{name} ürününden {count} birim üretmek için gereken malzemeler",
+      "materialsNeeded": "{count} birim {name} üretmek için gereken malzemeler | {count} birim {name} üretmek için gereken malzemeler",
       "component": "Bileşen",
       "sku": "SKU",
       "required": "Gerekli",
@@ -2866,7 +2866,7 @@
       "startProduction": "Üretimi Başlat",
       "startConfirm": "Bu iş emri için üretim başlatılsın mı? Bileşenler rezerve edilecek.",
       "completeProduction": "Üretimi Tamamla",
-      "completeConfirm": "Bu iş emri tamamlansın mı? Montaj stokuna {count} birim eklenecek.",
+      "completeConfirm": "Bu iş emri tamamlansın mı? Montaj stokuna {count} birim eklenecek. | Bu iş emri tamamlansın mı? Montaj stokuna {count} birim eklenecek.",
       "cancelWorkOrder": "İş Emrini İptal Et",
       "cancelConfirm": "Bu iş emri iptal edilsin mi? Rezerve edilen tüm bileşenler serbest bırakılacak.",
       "view": "Görüntüle"
@@ -3073,7 +3073,7 @@
     "notifyCustomer": "Takip bilgilerini {email} adresine e-postala",
     "getRates": "Fiyatları al",
     "chooseRate": "Bir fiyat seçin",
-    "estDays": "Tahmini {count} gün",
+    "estDays": "Tahmini {count} gün | Tahmini {count} gün",
     "buyLabel": "Etiket satın al",
     "labelBought": "Etiket satın alındı. Takip numarası {number}.",
     "downloadLabel": "Etiketi indir",

@@ -325,7 +325,7 @@ const fieldError = 'mt-1 text-xs text-status-danger';
 
                     <div class="mt-3 flex flex-wrap items-center justify-between gap-2">
                         <p class="text-xs text-text-tertiary">
-                            {{ t('warehouses.users.selected', { count: usersForm.user_ids.length }) }}
+                            {{ t('warehouses.users.selected', { count: usersForm.user_ids.length }, usersForm.user_ids.length) }}
                         </p>
                         <Button type="submit" variant="default" size="sm" :loading="usersForm.processing" :disabled="usersForm.processing">
                             {{ t('warehouses.users.save') }}

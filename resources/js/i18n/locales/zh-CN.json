@@ -1085,7 +1085,7 @@
       "description": "按产品和分类统计销售成本与平均库存之比",
       "turnover": "周转率",
       "daysOfInventory": "库存天数",
-      "periodDays": "统计 {n} 天",
+      "periodDays": "统计 {n} 天 | 统计 {n} 天",
       "avgInventory": "平均库存价值",
       "cogs": "销售成本",
       "unitsSold": "已售数量",
@@ -1097,7 +1097,7 @@
       "methodTitle": "计算方式",
       "method": "平均库存为期初与期末在库数量的平均值，根据当前库存和库存调整记录推算，并按当前采购价计值。未记录为调整的库存变动不计入。",
       "cogsNote": "销售成本为期内已售数量乘以每件售出时记录的单位成本。",
-      "estimatedCost": "有 {count} 件在记录成本之前售出，其成本为估算值（取当时的采购价）。"
+      "estimatedCost": "有 {count} 件在记录成本之前售出，其成本为估算值（取当时的采购价）。 | 有 {count} 件在记录成本之前售出，其成本为估算值（取当时的采购价）。"
     },
     "profitMargin": {
       "title": "利润率",
@@ -1111,9 +1111,9 @@
       "byProduct": "按产品",
       "costBasisTitle": "成本基准",
       "costBasis": "销售成本采用每行售出时记录的单位成本，因此后续的成本变化不会改写以往的利润。",
-      "estimatedCost": "有 {count} 件在记录成本之前售出，其成本为估算值（取当时的采购价）。标记为“估算成本”的行包含这些数据。",
+      "estimatedCost": "有 {count} 件在记录成本之前售出，其成本为估算值（取当时的采购价）。标记为“估算成本”的行包含这些数据。 | 有 {count} 件在记录成本之前售出，其成本为估算值（取当时的采购价）。标记为“估算成本”的行包含这些数据。",
       "estimatedBadge": "估算成本",
-      "missingCost": "有 {count} 件已售商品没有采购价，按零成本计算。"
+      "missingCost": "有 {count} 件已售商品没有采购价，按零成本计算。 | 有 {count} 件已售商品没有采购价，按零成本计算。"
     },
     "salesByLocation": {
       "title": "按库位统计销售",
@@ -1137,7 +1137,7 @@
       "classAHint": "前 80% 营收",
       "classBHint": "其后 15%",
       "classCHint": "最后 5%",
-      "productCount": "{count} 个产品",
+      "productCount": "{count} 个产品 | {count} 个产品",
       "ranking": "营收排名",
       "totalRevenue": "税前总营收：{amount}",
       "rank": "排名",
@@ -1272,7 +1272,7 @@
     "imported": "已导入",
     "updated": "已更新",
     "errors": "错误",
-    "rowsFailed": "行失败",
+    "rowsFailed": "失败的行",
     "export": {
       "title": "导出产品",
       "subtitle": "下载您的库存数据",
@@ -1334,8 +1334,8 @@
       "updated": "已更新",
       "skipped": "已跳过",
       "failed": "未导入",
-      "errorRows": "{count} 行有错误",
-      "warningRows": "{count} 行有警告",
+      "errorRows": "{count} 行有错误 | {count} 行有错误",
+      "warningRows": "{count} 行有警告 | {count} 行有警告",
       "row": "第 {row} 行：",
       "dismiss": "关闭导入结果",
       "removeFile": "移除文件"
@@ -1616,7 +1616,7 @@
       "newTokenHint": "请立即复制。出于安全考虑，令牌仅显示一次，之后无法再次获取。",
       "copy": "复制",
       "copied": "已复制",
-      "abilitiesCount": "{count} 项权限",
+      "abilitiesCount": "{count} 项权限 | {count} 项权限",
       "allPermissions": "所有权限",
       "noPermissions": "您没有可授予令牌的权限。"
     },
@@ -1738,7 +1738,7 @@
         "titleWithName": "编辑用户：{name}",
         "subtitle": "更新账户详情、基础角色和自定义角色分配。",
         "admin": "管理员",
-        "customRolesSelected": "已选择 {count} 个自定义角色"
+        "customRolesSelected": "已选择 {count} 个自定义角色 | 已选择 {count} 个自定义角色"
       },
       "show": {
         "title": "用户详情",
@@ -1775,8 +1775,8 @@
       "createRole": "创建角色",
       "description": "管理组织的角色和权限。创建具有特定权限集的自定义角色，以控制整个应用程序的访问权限。",
       "systemBadge": "系统",
-      "usersCount": "{count} 个用户",
-      "permissionsCount": "{count} 项权限",
+      "usersCount": "{count} 个用户 | {count} 个用户",
+      "permissionsCount": "{count} 项权限 | {count} 项权限",
       "adminLocked": "管理员角色不可编辑",
       "noRolesFound": "未找到角色。点击\"创建角色\"定义第一个自定义角色。",
       "create": {
@@ -1791,14 +1791,14 @@
         "individualHint": "选择额外的权限。点击分类名称可以选择/取消选择该分类下的所有权限。",
         "selectAll": "全选",
         "deselectAll": "取消全选",
-        "totalPermissions": "共 {count} 项权限",
+        "totalPermissions": "共 {count} 项权限 | 共 {count} 项权限",
         "createRole": "创建角色",
         "success": "角色创建成功。",
         "subtitle": "定义角色并分配其权限。",
         "roleDetails": "角色详情",
         "namePlaceholder": "例如：仓库经理",
         "descriptionPlaceholder": "描述此角色的用途和职责...",
-        "permissionBreakdown": "（{direct} 项直接权限 + 来自 {sets} 个权限集的 {fromSets} 项）"
+        "permissionBreakdown": "（{direct} 项直接权限 + 来自 {sets} 个权限集的 {fromSets} 项） | （{direct} 项直接权限 + 来自 {sets} 个权限集的 {fromSets} 项）"
       },
       "edit": {
         "title": "编辑角色",
@@ -1808,7 +1808,7 @@
         "systemDescHint": "系统角色描述不可更改",
         "permissions": "权限",
         "permissionsHint": "自定义此角色的权限。点击分类名称可以选择/取消选择该分类下的所有权限。",
-        "permissionsSelected": "已选择 {count} 项权限",
+        "permissionsSelected": "已选择 {count} 项权限 | 已选择 {count} 项权限",
         "updateRole": "更新角色",
         "success": "角色更新成功。",
         "titleWithName": "编辑角色：{name}",
@@ -2570,7 +2570,7 @@
       "selectProduct": "选择产品",
       "cameraHint": "将摄像头对准条形码进行扫描",
       "locationFound": "已找到库位",
-      "productsHere": "此处有 {count} 个产品",
+      "productsHere": "此处有 {count} 个产品 | 此处有 {count} 个产品",
       "viewProductsHere": "查看此处产品",
       "lookupFailed": "查找条形码失败",
       "stock": "库存",
@@ -2582,7 +2582,7 @@
       "noActivity": "暂无活动记录",
       "system": "系统",
       "thisProduct": "此产品",
-      "moreChanges": "+ 另外 {count} 项更改",
+      "moreChanges": "+ 另外 {count} 项更改 | + 另外 {count} 项更改",
       "actionOnProduct": {
         "created": "创建了此产品",
         "updated": "更新了此产品",
@@ -2605,7 +2605,7 @@
       "maxImages": "最多 {max} 张图片，每张不超过 {size}MB",
       "onlyImages": "仅允许图片文件",
       "tooLarge": "图片不能超过 {size}MB",
-      "canAddMore": "您还可以添加 {count} 张图片",
+      "canAddMore": "您还可以添加 {count} 张图片 | 您还可以添加 {count} 张图片",
       "moveLeft": "左移",
       "moveRight": "右移",
       "remove": "删除",
@@ -2734,7 +2734,7 @@
       "hint": "在此分配的用户只能查看和移动其所分配仓库中的库存。管理员和拥有“访问所有仓库”权限的角色始终可以看到所有仓库。",
       "searchPlaceholder": "搜索用户...",
       "noUsers": "未找到用户。",
-      "selected": "已选择 {count} 位用户",
+      "selected": "已选择 {count} 位用户 | 已选择 {count} 位用户",
       "save": "保存用户访问权限",
       "allWarehouses": "所有仓库",
       "assigned": "已分配用户（{count}）",
@@ -2846,7 +2846,7 @@
     },
     "components": {
       "title": "所需组件",
-      "materialsNeeded": "生产 {count} 件 {name} 所需的物料",
+      "materialsNeeded": "生产 {count} 件 {name} 所需的物料 | 生产 {count} 件 {name} 所需的物料",
       "component": "组件",
       "sku": "SKU",
       "required": "需求",
@@ -2866,7 +2866,7 @@
       "startProduction": "开始生产",
       "startConfirm": "要开始此工单的生产吗？组件将被预留。",
       "completeProduction": "完成生产",
-      "completeConfirm": "要完成此工单吗？{count} 件将被添加到组装产品库存。",
+      "completeConfirm": "要完成此工单吗？{count} 件将被添加到组装产品库存。 | 要完成此工单吗？{count} 件将被添加到组装产品库存。",
       "cancelWorkOrder": "取消工单",
       "cancelConfirm": "要取消此工单吗？所有已预留的组件将被释放。",
       "view": "查看"
@@ -3073,7 +3073,7 @@
     "notifyCustomer": "将物流信息发送至 {email}",
     "getRates": "获取运费报价",
     "chooseRate": "选择运费方案",
-    "estDays": "预计 {count} 天",
+    "estDays": "预计 {count} 天 | 预计 {count} 天",
     "buyLabel": "购买面单",
     "labelBought": "面单已购买。物流单号 {number}。",
     "downloadLabel": "下载面单",

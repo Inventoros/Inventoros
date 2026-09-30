@@ -63,7 +63,7 @@ const counts = computed(() => [
 
                 <div v-if="errors.length" class="mt-4">
                     <p class="mb-1 text-sm font-medium text-status-danger">
-                        {{ t('importExport.result.errorRows', { count: errors.length }) }}
+                        {{ t('importExport.result.errorRows', { count: errors.length }, errors.length) }}
                     </p>
                     <ul class="max-h-48 space-y-1 overflow-y-auto">
                         <li
@@ -79,7 +79,7 @@ const counts = computed(() => [
 
                 <div v-if="warnings.length" class="mt-4">
                     <p class="mb-1 text-sm font-medium text-status-warning">
-                        {{ t('importExport.result.warningRows', { count: warnings.length }) }}
+                        {{ t('importExport.result.warningRows', { count: warnings.length }, warnings.length) }}
                     </p>
                     <ul class="max-h-48 space-y-1 overflow-y-auto">
                         <li

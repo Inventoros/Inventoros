@@ -33,7 +33,7 @@
                                             Current Stock
                                         </span>
                                         <strong style="color: #dc2626; font-size: 24px;">
-                                            {{ $product->stock ?? 0 }}
+                                            {{ $product->total_stock ?? 0 }}
                                         </strong>
                                     </td>
                                     <td width="50%">

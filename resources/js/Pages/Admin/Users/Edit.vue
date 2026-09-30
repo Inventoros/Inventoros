@@ -161,7 +161,7 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                                     <div class="text-sm font-medium text-text-primary">{{ roleName(role, i18n) }}</div>
                                     <div class="text-xs text-text-tertiary" v-if="role.description">{{ roleDescription(role, i18n) }}</div>
                                     <div class="mt-1 text-xs text-text-tertiary">
-                                        {{ t('admin.roles.permissionsCount', { count: role.permissions ? role.permissions.length : 0 }) }}
+                                        {{ t('admin.roles.permissionsCount', { count: role.permissions ? role.permissions.length : 0 }, role.permissions ? role.permissions.length : 0) }}
                                     </div>
                                 </div>
                             </label>
@@ -171,7 +171,7 @@ const fieldError = 'mt-1 text-xs text-status-danger';
 
                         <div class="mt-3 rounded-md border border-brand/20 bg-brand-soft p-3">
                             <p class="text-sm text-brand">
-                                {{ t('admin.users.edit.customRolesSelected', { count: form.role_ids.length }) }}
+                                {{ t('admin.users.edit.customRolesSelected', { count: form.role_ids.length }, form.role_ids.length) }}
                             </p>
                         </div>
                     </div>

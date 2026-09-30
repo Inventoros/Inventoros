@@ -1085,7 +1085,7 @@
       "description": "Costo de ventas frente al inventario promedio, por producto y categor\u00eda",
       "turnover": "Rotaci\u00f3n",
       "daysOfInventory": "D\u00edas de inventario",
-      "periodDays": "En {n} d\u00edas",
+      "periodDays": "En {n} día | En {n} días",
       "avgInventory": "Valor promedio del inventario",
       "cogs": "Costo de ventas",
       "unitsSold": "Unidades vendidas",
@@ -1097,7 +1097,7 @@
       "methodTitle": "C\u00f3mo se calcula",
       "method": "El inventario promedio es la media de las unidades disponibles al inicio y al final, reconstruidas a partir del stock actual y del historial de ajustes de stock, valoradas al precio de compra actual. Los cambios de stock no registrados como ajustes no se reflejan.",
       "cogsNote": "El costo de ventas son las unidades vendidas en el per\u00edodo al costo unitario registrado al momento de cada venta.",
-      "estimatedCost": "{count} unidades se vendieron antes de que se registraran costos, por lo que su costo es una estimaci\u00f3n (el precio de compra en ese momento)."
+      "estimatedCost": "{count} unidad se vendió antes de que se registraran costos, por lo que su costo es una estimación (el precio de compra en ese momento). | {count} unidades se vendieron antes de que se registraran costos, por lo que su costo es una estimación (el precio de compra en ese momento)."
     },
     "profitMargin": {
       "title": "Margen de ganancia",
@@ -1111,9 +1111,9 @@
       "byProduct": "Por producto",
       "costBasisTitle": "Base de costo",
       "costBasis": "El costo de ventas usa el costo unitario registrado al vender cada l\u00ednea, as\u00ed los cambios de costo posteriores no alteran los m\u00e1rgenes pasados.",
-      "estimatedCost": "{count} unidades se vendieron antes de que se registraran costos, por lo que su costo es una estimaci\u00f3n (el precio de compra en ese momento). Las filas marcadas como Costo estimado las incluyen.",
+      "estimatedCost": "{count} unidad se vendió antes de que se registraran costos, por lo que su costo es una estimación (el precio de compra en ese momento). Las filas marcadas como Costo estimado la incluyen. | {count} unidades se vendieron antes de que se registraran costos, por lo que su costo es una estimación (el precio de compra en ese momento). Las filas marcadas como Costo estimado las incluyen.",
       "estimatedBadge": "Costo estimado",
-      "missingCost": "{count} unidades vendidas no tienen precio de compra y se cuentan con costo cero."
+      "missingCost": "{count} unidad vendida no tiene precio de compra y se cuenta con costo cero. | {count} unidades vendidas no tienen precio de compra y se cuentan con costo cero."
     },
     "salesByLocation": {
       "title": "Ventas por ubicaci\u00f3n",
@@ -1137,7 +1137,7 @@
       "classAHint": "Primer 80% de los ingresos",
       "classBHint": "Siguiente 15%",
       "classCHint": "\u00daltimo 5%",
-      "productCount": "{count} productos",
+      "productCount": "{count} producto | {count} productos",
       "ranking": "Clasificaci\u00f3n por ingresos",
       "totalRevenue": "Ingresos totales antes de impuestos: {amount}",
       "rank": "Posici\u00f3n",
@@ -1272,7 +1272,7 @@
     "imported": "Importados",
     "updated": "Actualizados",
     "errors": "Errores",
-    "rowsFailed": "Fila(s) fallidas",
+    "rowsFailed": "Filas fallidas",
     "export": {
       "title": "Exportar productos",
       "subtitle": "Descargar los datos de tu inventario",
@@ -1334,8 +1334,8 @@
       "updated": "Actualizados",
       "skipped": "Omitidos",
       "failed": "No importados",
-      "errorRows": "{count} fila(s) con errores",
-      "warningRows": "{count} fila(s) con advertencias",
+      "errorRows": "{count} fila con errores | {count} filas con errores",
+      "warningRows": "{count} fila con advertencias | {count} filas con advertencias",
       "row": "Fila {row}:",
       "dismiss": "Descartar resultado de la importaci\u00f3n",
       "removeFile": "Quitar archivo"
@@ -1616,7 +1616,7 @@
       "newTokenHint": "C\u00f3pialo ahora. Por seguridad, solo se muestra una vez y no se puede recuperar despu\u00e9s.",
       "copy": "Copiar",
       "copied": "Copiado",
-      "abilitiesCount": "{count} permisos",
+      "abilitiesCount": "{count} permiso | {count} permisos",
       "allPermissions": "Todos los permisos",
       "noPermissions": "No tienes permisos que puedas otorgar a un token."
     },
@@ -1738,7 +1738,7 @@
         "titleWithName": "Editar usuario: {name}",
         "subtitle": "Actualiza los detalles de la cuenta, el rol base y los roles personalizados asignados.",
         "admin": "Administrador",
-        "customRolesSelected": "{count} rol(es) personalizado(s) seleccionado(s)"
+        "customRolesSelected": "{count} rol personalizado seleccionado | {count} roles personalizados seleccionados"
       },
       "show": {
         "title": "Detalles del usuario",
@@ -1775,8 +1775,8 @@
       "createRole": "Crear rol",
       "description": "Gestiona los roles y permisos de tu organizaci\u00f3n. Crea roles personalizados con conjuntos de permisos espec\u00edficos para controlar el acceso en toda la aplicaci\u00f3n.",
       "systemBadge": "Sistema",
-      "usersCount": "{count} usuarios",
-      "permissionsCount": "{count} permisos",
+      "usersCount": "{count} usuario | {count} usuarios",
+      "permissionsCount": "{count} permiso | {count} permisos",
       "adminLocked": "El rol de administrador no se puede editar",
       "noRolesFound": "No se encontraron roles. Haz clic en \"Crear rol\" para definir tu primer rol personalizado.",
       "create": {
@@ -1791,14 +1791,14 @@
         "individualHint": "Selecciona permisos adicionales. Puedes hacer clic en los nombres de categor\u00eda para seleccionar/deseleccionar todos los permisos de esa categor\u00eda.",
         "selectAll": "Seleccionar todos",
         "deselectAll": "Deseleccionar todos",
-        "totalPermissions": "{count} permiso(s) en total",
+        "totalPermissions": "{count} permiso en total | {count} permisos en total",
         "createRole": "Crear rol",
         "success": "Rol creado exitosamente.",
         "subtitle": "Define un rol y asigna sus permisos.",
         "roleDetails": "Detalles del rol",
         "namePlaceholder": "Ej., Gerente de almacén",
         "descriptionPlaceholder": "Describe el propósito y las responsabilidades de este rol...",
-        "permissionBreakdown": "({direct} directos + {fromSets} de {sets} conjunto(s))"
+        "permissionBreakdown": "({direct} directos + {fromSets} de {sets} conjunto) | ({direct} directos + {fromSets} de {sets} conjuntos)"
       },
       "edit": {
         "title": "Editar rol",
@@ -1808,7 +1808,7 @@
         "systemDescHint": "Las descripciones de los roles del sistema no se pueden cambiar",
         "permissions": "Permisos",
         "permissionsHint": "Personaliza los permisos de este rol. Haz clic en los nombres de categor\u00eda para seleccionar/deseleccionar todos los permisos de esa categor\u00eda.",
-        "permissionsSelected": "{count} permiso(s) seleccionados",
+        "permissionsSelected": "{count} permiso seleccionado | {count} permisos seleccionados",
         "updateRole": "Actualizar rol",
         "success": "Rol actualizado exitosamente.",
         "titleWithName": "Editar rol: {name}",
@@ -2570,7 +2570,7 @@
       "selectProduct": "Seleccionar producto",
       "cameraHint": "Apunta tu c\u00e1mara a un c\u00f3digo de barras para escanear",
       "locationFound": "Ubicaci\u00f3n encontrada",
-      "productsHere": "{count} productos aqu\u00ed",
+      "productsHere": "{count} producto aquí | {count} productos aquí",
       "viewProductsHere": "Ver productos aqu\u00ed",
       "lookupFailed": "No se pudo buscar el código de barras",
       "stock": "Stock",
@@ -2582,7 +2582,7 @@
       "noActivity": "A\u00fan no hay actividad registrada",
       "system": "Sistema",
       "thisProduct": "este producto",
-      "moreChanges": "+{count} cambios m\u00e1s",
+      "moreChanges": "+{count} cambio más | +{count} cambios más",
       "actionOnProduct": {
         "created": "creó este producto",
         "updated": "actualizó este producto",
@@ -2605,7 +2605,7 @@
       "maxImages": "M\u00e1x {max} im\u00e1genes, hasta {size}MB cada una",
       "onlyImages": "Solo se permiten archivos de imagen",
       "tooLarge": "Las im\u00e1genes deben ser menores de {size}MB",
-      "canAddMore": "Solo puedes agregar {count} imagen(es) m\u00e1s",
+      "canAddMore": "Solo puedes agregar {count} imagen más | Solo puedes agregar {count} imágenes más",
       "moveLeft": "Mover a la izquierda",
       "moveRight": "Mover a la derecha",
       "remove": "Eliminar",
@@ -2734,7 +2734,7 @@
       "hint": "Los usuarios que asignes aqu\u00ed solo pueden ver y mover stock en los almacenes a los que est\u00e1n asignados. Los administradores y los roles con Acceso a todos los almacenes siempre ven todos los almacenes.",
       "searchPlaceholder": "Buscar usuarios...",
       "noUsers": "No se encontraron usuarios.",
-      "selected": "{count} usuario(s) seleccionado(s)",
+      "selected": "{count} usuario seleccionado | {count} usuarios seleccionados",
       "save": "Guardar acceso de usuarios",
       "allWarehouses": "Todos los almacenes",
       "assigned": "Usuarios asignados ({count})",
@@ -2846,7 +2846,7 @@
     },
     "components": {
       "title": "Componentes requeridos",
-      "materialsNeeded": "Materiales necesarios para producir {count} unidad(es) de {name}",
+      "materialsNeeded": "Materiales necesarios para producir {count} unidad de {name} | Materiales necesarios para producir {count} unidades de {name}",
       "component": "Componente",
       "sku": "SKU",
       "required": "Requerido",
@@ -2866,7 +2866,7 @@
       "startProduction": "Iniciar producci\u00f3n",
       "startConfirm": "\u00bfIniciar la producci\u00f3n de esta orden de trabajo? Los componentes quedar\u00e1n reservados.",
       "completeProduction": "Completar producci\u00f3n",
-      "completeConfirm": "\u00bfCompletar esta orden de trabajo? Se agregar\u00e1n {count} unidades al stock del ensamblaje.",
+      "completeConfirm": "¿Completar esta orden de trabajo? Se agregará {count} unidad al stock del ensamblaje. | ¿Completar esta orden de trabajo? Se agregarán {count} unidades al stock del ensamblaje.",
       "cancelWorkOrder": "Cancelar orden de trabajo",
       "cancelConfirm": "\u00bfCancelar esta orden de trabajo? Se liberar\u00e1n los componentes reservados.",
       "view": "Ver"
@@ -3073,7 +3073,7 @@
     "notifyCustomer": "Enviar los datos de seguimiento por correo a {email}",
     "getRates": "Obtener tarifas",
     "chooseRate": "Elige una tarifa",
-    "estDays": "Aprox. {count} d\u00edas",
+    "estDays": "Aprox. {count} día | Aprox. {count} días",
     "buyLabel": "Comprar etiqueta",
     "labelBought": "Etiqueta comprada. N\u00famero de seguimiento {number}.",
     "downloadLabel": "Descargar etiqueta",

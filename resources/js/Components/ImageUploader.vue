@@ -36,7 +36,7 @@ const handleFiles = (files) => {
     const remainingSlots = props.maxImages - images.value.length;
     
     if (filesArray.length > remainingSlots) {
-        error.value = t('components.imageUploader.canAddMore', { count: remainingSlots });
+        error.value = t('components.imageUploader.canAddMore', { count: remainingSlots }, remainingSlots);
         return;
     }
 

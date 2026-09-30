@@ -15,6 +15,7 @@ use Symfony\Component\HttpFoundation\Response;
  * cookie written by the language switcher (so guests on the login page keep
  * their choice), then config('app.locale'). Unsupported values are skipped.
  * HandleInertiaRequests shares the result with the frontend as `locale`.
+ * Also runs on the REST API, so validation messages there are localized.
  */
 class SetLocale
 {
@@ -31,8 +32,12 @@ class SetLocale
 
     public function handle(Request $request, Closure $next): Response
     {
+        // REST requests authenticate with a bearer token in route
+        // middleware, after this runs, so resolve that user here too.
+        $user = $request->user() ?? ($request->bearerToken() !== null ? $request->user('sanctum') : null);
+
         $candidates = [
-            $request->user()?->notification_preferences['preferences']['language'] ?? null,
+            $user?->notification_preferences['preferences']['language'] ?? null,
             $request->cookie(self::COOKIE),
             config('app.locale'),
         ];

@@ -175,7 +175,7 @@ const fieldError = 'mt-1 text-xs text-status-danger';
 
                     <div class="mt-4 rounded-lg border border-brand/20 bg-brand-soft p-3">
                         <p class="text-sm text-brand">
-                            {{ t('admin.roles.edit.permissionsSelected', { count: form.permissions.length }) }}
+                            {{ t('admin.roles.edit.permissionsSelected', { count: form.permissions.length }, form.permissions.length) }}
                         </p>
                     </div>
                 </div>

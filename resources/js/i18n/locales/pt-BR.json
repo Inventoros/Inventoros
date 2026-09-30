@@ -1085,7 +1085,7 @@
       "description": "Custo das mercadorias vendidas em relação ao estoque médio, por produto e categoria",
       "turnover": "Giro",
       "daysOfInventory": "Dias de Estoque",
-      "periodDays": "Em {n} dias",
+      "periodDays": "Em {n} dia | Em {n} dias",
       "avgInventory": "Valor Médio do Estoque",
       "cogs": "CMV",
       "unitsSold": "Unidades Vendidas",
@@ -1097,7 +1097,7 @@
       "methodTitle": "Como é calculado",
       "method": "O estoque médio é a média entre as unidades em estoque inicial e final, reconstruída a partir do estoque atual e do histórico de ajustes de estoque, avaliada pelo preço de compra atual. Alterações de estoque não registradas como ajustes não são consideradas.",
       "cogsNote": "O CMV corresponde às unidades vendidas no período ao custo unitário registrado no momento de cada venda.",
-      "estimatedCost": "{count} unidades foram vendidas antes do registro de custos, então o custo delas é uma estimativa (o preço de compra naquele momento)."
+      "estimatedCost": "{count} unidade foi vendida antes do registro de custos, então o custo dela é uma estimativa (o preço de compra naquele momento). | {count} unidades foram vendidas antes do registro de custos, então o custo delas é uma estimativa (o preço de compra naquele momento)."
     },
     "profitMargin": {
       "title": "Margem de Lucro",
@@ -1111,9 +1111,9 @@
       "byProduct": "Por Produto",
       "costBasisTitle": "Base de custo",
       "costBasis": "O CMV usa o custo unitário registrado quando cada linha foi vendida, então alterações posteriores de custo não reescrevem margens passadas.",
-      "estimatedCost": "{count} unidades foram vendidas antes do registro de custos, então o custo delas é uma estimativa (o preço de compra naquele momento). As linhas marcadas como Custo estimado as incluem.",
+      "estimatedCost": "{count} unidade foi vendida antes do registro de custos, então o custo dela é uma estimativa (o preço de compra naquele momento). As linhas marcadas como Custo estimado a incluem. | {count} unidades foram vendidas antes do registro de custos, então o custo delas é uma estimativa (o preço de compra naquele momento). As linhas marcadas como Custo estimado as incluem.",
       "estimatedBadge": "Custo estimado",
-      "missingCost": "{count} unidades vendidas não têm preço de compra e são contabilizadas com custo zero."
+      "missingCost": "{count} unidade vendida não tem preço de compra e é contabilizada com custo zero. | {count} unidades vendidas não têm preço de compra e são contabilizadas com custo zero."
     },
     "salesByLocation": {
       "title": "Vendas por Localização",
@@ -1137,7 +1137,7 @@
       "classAHint": "Primeiros 80% da receita",
       "classBHint": "Próximos 15%",
       "classCHint": "Últimos 5%",
-      "productCount": "{count} produtos",
+      "productCount": "{count} produto | {count} produtos",
       "ranking": "Ranking de Receita",
       "totalRevenue": "Receita total antes de impostos: {amount}",
       "rank": "Posição",
@@ -1272,7 +1272,7 @@
     "imported": "Importados",
     "updated": "Atualizados",
     "errors": "Erros",
-    "rowsFailed": "Linha(s) com falha",
+    "rowsFailed": "Linhas com falha",
     "export": {
       "title": "Exportar Produtos",
       "subtitle": "Baixe seus dados de estoque",
@@ -1334,8 +1334,8 @@
       "updated": "Atualizados",
       "skipped": "Ignorados",
       "failed": "Não importados",
-      "errorRows": "{count} linha(s) com erros",
-      "warningRows": "{count} linha(s) com avisos",
+      "errorRows": "{count} linha com erros | {count} linhas com erros",
+      "warningRows": "{count} linha com avisos | {count} linhas com avisos",
       "row": "Linha {row}:",
       "dismiss": "Dispensar resultado da importação",
       "removeFile": "Remover arquivo"
@@ -1616,7 +1616,7 @@
       "newTokenHint": "Copie-o agora. Por segurança, ele é exibido apenas uma vez e não pode ser recuperado depois.",
       "copy": "Copiar",
       "copied": "Copiado",
-      "abilitiesCount": "{count} permissões",
+      "abilitiesCount": "{count} permissão | {count} permissões",
       "allPermissions": "Todas as permissões",
       "noPermissions": "Você não tem nenhuma permissão para conceder a um token."
     },
@@ -1738,7 +1738,7 @@
         "titleWithName": "Editar Usuário: {name}",
         "subtitle": "Atualize os dados da conta, a função base e as funções personalizadas atribuídas.",
         "admin": "Administrador",
-        "customRolesSelected": "{count} função(ões) personalizada(s) selecionada(s)"
+        "customRolesSelected": "{count} função personalizada selecionada | {count} funções personalizadas selecionadas"
       },
       "show": {
         "title": "Detalhes do Usuário",
@@ -1775,8 +1775,8 @@
       "createRole": "Criar Função",
       "description": "Gerencie funções e permissões para sua organização. Crie funções personalizadas com conjuntos de permissões específicos para controlar o acesso em todo o aplicativo.",
       "systemBadge": "Sistema",
-      "usersCount": "{count} usuários",
-      "permissionsCount": "{count} permissões",
+      "usersCount": "{count} usuário | {count} usuários",
+      "permissionsCount": "{count} permissão | {count} permissões",
       "adminLocked": "A função de Administrador não pode ser editada",
       "noRolesFound": "Nenhuma função encontrada. Clique em \"Criar Função\" para definir sua primeira função personalizada.",
       "create": {
@@ -1791,14 +1791,14 @@
         "individualHint": "Selecione permissões adicionais. Você pode clicar nos nomes das categorias para selecionar/desmarcar todas as permissões daquela categoria.",
         "selectAll": "Selecionar Tudo",
         "deselectAll": "Desmarcar Tudo",
-        "totalPermissions": "{count} permissão(ões) no total",
+        "totalPermissions": "{count} permissão no total | {count} permissões no total",
         "createRole": "Criar Função",
         "success": "Função criada com sucesso.",
         "subtitle": "Defina uma função e atribua suas permissões.",
         "roleDetails": "Detalhes da Função",
         "namePlaceholder": "ex.: Gerente de Depósito",
         "descriptionPlaceholder": "Descreva o objetivo e as responsabilidades desta função...",
-        "permissionBreakdown": "({direct} diretas + {fromSets} de {sets} conjunto(s))"
+        "permissionBreakdown": "({direct} diretas + {fromSets} de {sets} conjunto) | ({direct} diretas + {fromSets} de {sets} conjuntos)"
       },
       "edit": {
         "title": "Editar Função",
@@ -1808,7 +1808,7 @@
         "systemDescHint": "Descrições de funções do sistema não podem ser alteradas",
         "permissions": "Permissões",
         "permissionsHint": "Personalize as permissões para esta função. Clique nos nomes das categorias para selecionar/desmarcar todas as permissões daquela categoria.",
-        "permissionsSelected": "{count} permissão(ões) selecionada(s)",
+        "permissionsSelected": "{count} permissão selecionada | {count} permissões selecionadas",
         "updateRole": "Atualizar Função",
         "success": "Função atualizada com sucesso.",
         "titleWithName": "Editar Função: {name}",
@@ -2570,7 +2570,7 @@
       "selectProduct": "Selecionar Produto",
       "cameraHint": "Aponte sua câmera para um código de barras para escanear",
       "locationFound": "Localização Encontrada",
-      "productsHere": "{count} produtos aqui",
+      "productsHere": "{count} produto aqui | {count} produtos aqui",
       "viewProductsHere": "Ver Produtos Aqui",
       "lookupFailed": "Falha ao consultar o código de barras",
       "stock": "Estoque",
@@ -2582,7 +2582,7 @@
       "noActivity": "Nenhuma atividade registrada ainda",
       "system": "Sistema",
       "thisProduct": "este produto",
-      "moreChanges": "+{count} alterações adicionais",
+      "moreChanges": "+{count} alteração adicional | +{count} alterações adicionais",
       "actionOnProduct": {
         "created": "criou este produto",
         "updated": "atualizou este produto",
@@ -2605,7 +2605,7 @@
       "maxImages": "Máx. {max} imagens, até {size}MB cada",
       "onlyImages": "Apenas arquivos de imagem são permitidos",
       "tooLarge": "As imagens devem ter menos de {size}MB",
-      "canAddMore": "Você pode adicionar mais {count} imagem(ns)",
+      "canAddMore": "Você pode adicionar mais {count} imagem | Você pode adicionar mais {count} imagens",
       "moveLeft": "Mover para esquerda",
       "moveRight": "Mover para direita",
       "remove": "Remover",
@@ -2734,7 +2734,7 @@
       "hint": "Os usuários atribuídos aqui só podem ver e movimentar estoque nos depósitos aos quais estão atribuídos. Administradores e funções com Acessar Todos os Depósitos sempre veem todos os depósitos.",
       "searchPlaceholder": "Pesquisar usuários...",
       "noUsers": "Nenhum usuário encontrado.",
-      "selected": "{count} usuário(s) selecionado(s)",
+      "selected": "{count} usuário selecionado | {count} usuários selecionados",
       "save": "Salvar acesso de usuários",
       "allWarehouses": "Todos os depósitos",
       "assigned": "Usuários atribuídos ({count})",
@@ -2846,7 +2846,7 @@
     },
     "components": {
       "title": "Componentes Necessários",
-      "materialsNeeded": "Materiais necessários para produzir {count} unidade(s) de {name}",
+      "materialsNeeded": "Materiais necessários para produzir {count} unidade de {name} | Materiais necessários para produzir {count} unidades de {name}",
       "component": "Componente",
       "sku": "SKU",
       "required": "Necessário",
@@ -2866,7 +2866,7 @@
       "startProduction": "Iniciar Produção",
       "startConfirm": "Iniciar a produção desta ordem? Os componentes serão reservados.",
       "completeProduction": "Concluir Produção",
-      "completeConfirm": "Concluir esta ordem de produção? {count} unidades serão adicionadas ao estoque do produto montado.",
+      "completeConfirm": "Concluir esta ordem de produção? {count} unidade será adicionada ao estoque do produto montado. | Concluir esta ordem de produção? {count} unidades serão adicionadas ao estoque do produto montado.",
       "cancelWorkOrder": "Cancelar Ordem de Produção",
       "cancelConfirm": "Cancelar esta ordem de produção? Os componentes reservados serão liberados.",
       "view": "Visualizar"
@@ -3073,7 +3073,7 @@
     "notifyCustomer": "Enviar dados de rastreamento por e-mail para {email}",
     "getRates": "Obter tarifas",
     "chooseRate": "Escolha uma tarifa",
-    "estDays": "Est. {count} dias",
+    "estDays": "Est. {count} dia | Est. {count} dias",
     "buyLabel": "Comprar etiqueta",
     "labelBought": "Etiqueta comprada. Código de rastreamento {number}.",
     "downloadLabel": "Baixar etiqueta",

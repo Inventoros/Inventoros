@@ -82,6 +82,8 @@ $app = Application::configure(basePath: dirname(__DIR__))
         $middleware->encryptCookies(except: [SetLocale::COOKIE]);
 
         $middleware->api(append: [
+            // The API user's language for validation and other messages.
+            SetLocale::class,
             SecurityHeaders::class,
             LogAccessDenied::class,
         ]);

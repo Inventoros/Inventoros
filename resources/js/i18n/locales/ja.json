@@ -1085,7 +1085,7 @@
       "description": "商品別・カテゴリ別の、平均在庫に対する売上原価",
       "turnover": "回転率",
       "daysOfInventory": "在庫日数",
-      "periodDays": "{n}日間",
+      "periodDays": "{n}日間 | {n}日間",
       "avgInventory": "平均在庫金額",
       "cogs": "売上原価",
       "unitsSold": "販売数",
@@ -1097,7 +1097,7 @@
       "methodTitle": "計算方法",
       "method": "平均在庫は期首と期末の手持在庫数の平均で、現在の在庫と在庫調整履歴から再構成し、現在の仕入価格で評価しています。調整として記録されていない在庫変動は反映されません。",
       "cogsNote": "売上原価は、期間中の販売数に各販売時点で記録された単価を掛けたものです。",
-      "estimatedCost": "{count}個は原価の記録前に販売されたため、その原価は推定値（当時の仕入価格）です。"
+      "estimatedCost": "{count}個は原価の記録前に販売されたため、その原価は推定値（当時の仕入価格）です。 | {count}個は原価の記録前に販売されたため、その原価は推定値（当時の仕入価格）です。"
     },
     "profitMargin": {
       "title": "利益率",
@@ -1111,9 +1111,9 @@
       "byProduct": "商品別",
       "costBasisTitle": "原価の基準",
       "costBasis": "売上原価には各明細の販売時点で記録された単価を使用するため、後から原価が変わっても過去の利益は書き換わりません。",
-      "estimatedCost": "{count}個は原価の記録前に販売されたため、その原価は推定値（当時の仕入価格）です。「推定原価」と表示された行にはこれが含まれます。",
+      "estimatedCost": "{count}個は原価の記録前に販売されたため、その原価は推定値（当時の仕入価格）です。「推定原価」と表示された行にはこれが含まれます。 | {count}個は原価の記録前に販売されたため、その原価は推定値（当時の仕入価格）です。「推定原価」と表示された行にはこれが含まれます。",
       "estimatedBadge": "推定原価",
-      "missingCost": "販売された{count}個に仕入価格がなく、原価ゼロとして計算されています。"
+      "missingCost": "販売された{count}個に仕入価格がなく、原価ゼロとして計算されています。 | 販売された{count}個に仕入価格がなく、原価ゼロとして計算されています。"
     },
     "salesByLocation": {
       "title": "ロケーション別売上",
@@ -1137,7 +1137,7 @@
       "classAHint": "売上の上位80%",
       "classBHint": "次の15%",
       "classCHint": "残りの5%",
-      "productCount": "{count}商品",
+      "productCount": "{count}商品 | {count}商品",
       "ranking": "売上ランキング",
       "totalRevenue": "税抜総売上: {amount}",
       "rank": "順位",
@@ -1272,7 +1272,7 @@
     "imported": "インポート済み",
     "updated": "更新済み",
     "errors": "エラー",
-    "rowsFailed": "行が失敗しました",
+    "rowsFailed": "失敗した行",
     "export": {
       "title": "商品をエクスポート",
       "subtitle": "在庫データをダウンロード",
@@ -1334,8 +1334,8 @@
       "updated": "更新済み",
       "skipped": "スキップ",
       "failed": "未インポート",
-      "errorRows": "エラーのある行: {count}件",
-      "warningRows": "警告のある行: {count}件",
+      "errorRows": "エラーのある行: {count}件 | エラーのある行: {count}件",
+      "warningRows": "警告のある行: {count}件 | 警告のある行: {count}件",
       "row": "{row}行目:",
       "dismiss": "インポート結果を閉じる",
       "removeFile": "ファイルを削除"
@@ -1616,7 +1616,7 @@
       "newTokenHint": "今すぐコピーしてください。セキュリティのため、表示されるのは一度だけで、後から確認することはできません。",
       "copy": "コピー",
       "copied": "コピーしました",
-      "abilitiesCount": "{count}件の権限",
+      "abilitiesCount": "{count}件の権限 | {count}件の権限",
       "allPermissions": "すべての権限",
       "noPermissions": "トークンに付与できる権限を保持していません。"
     },
@@ -1738,7 +1738,7 @@
         "titleWithName": "ユーザーを編集: {name}",
         "subtitle": "アカウントの詳細、基本ロール、カスタムロールの割り当てを更新します。",
         "admin": "管理者",
-        "customRolesSelected": "{count}件のカスタムロールを選択中"
+        "customRolesSelected": "{count}件のカスタムロールを選択中 | {count}件のカスタムロールを選択中"
       },
       "show": {
         "title": "ユーザー詳細",
@@ -1775,8 +1775,8 @@
       "createRole": "ロールを作成",
       "description": "組織のロールと権限を管理します。カスタムロールを作成して特定の権限セットで、アプリケーション全体のアクセスを制御します。",
       "systemBadge": "システム",
-      "usersCount": "{count}人のユーザー",
-      "permissionsCount": "{count}件の権限",
+      "usersCount": "{count}人のユーザー | {count}人のユーザー",
+      "permissionsCount": "{count}件の権限 | {count}件の権限",
       "adminLocked": "管理者ロールは編集できません",
       "noRolesFound": "ロールが見つかりません。「ロールを作成」をクリックして最初のカスタムロールを定義してください。",
       "create": {
@@ -1791,14 +1791,14 @@
         "individualHint": "追加の権限を選択します。カテゴリ名をクリックすると、そのカテゴリのすべての権限を一括選択・解除できます。",
         "selectAll": "すべて選択",
         "deselectAll": "すべて解除",
-        "totalPermissions": "合計{count}件の権限",
+        "totalPermissions": "合計{count}件の権限 | 合計{count}件の権限",
         "createRole": "ロールを作成",
         "success": "ロールが正常に作成されました。",
         "subtitle": "ロールを定義し、権限を割り当てます。",
         "roleDetails": "ロールの詳細",
         "namePlaceholder": "例: 倉庫マネージャー",
         "descriptionPlaceholder": "このロールの目的と責任を説明してください...",
-        "permissionBreakdown": "（直接 {direct}件 + {sets}件のセットから {fromSets}件）"
+        "permissionBreakdown": "（直接 {direct}件 + {sets}件のセットから {fromSets}件） | （直接 {direct}件 + {sets}件のセットから {fromSets}件）"
       },
       "edit": {
         "title": "ロールを編集",
@@ -1808,7 +1808,7 @@
         "systemDescHint": "システムロールの説明は変更できません",
         "permissions": "権限",
         "permissionsHint": "このロールの権限をカスタマイズします。カテゴリ名をクリックすると、そのカテゴリのすべての権限を一括選択・解除できます。",
-        "permissionsSelected": "{count}件の権限が選択されています",
+        "permissionsSelected": "{count}件の権限が選択されています | {count}件の権限が選択されています",
         "updateRole": "ロールを更新",
         "success": "ロールが正常に更新されました。",
         "titleWithName": "ロールを編集: {name}",
@@ -2570,7 +2570,7 @@
       "selectProduct": "商品を選択",
       "cameraHint": "カメラをバーコードに向けてスキャンしてください",
       "locationFound": "ロケーションが見つかりました",
-      "productsHere": "ここに{count}件の商品",
+      "productsHere": "ここに{count}件の商品 | ここに{count}件の商品",
       "viewProductsHere": "ここの商品を表示",
       "lookupFailed": "バーコードの検索に失敗しました",
       "stock": "在庫",
@@ -2582,7 +2582,7 @@
       "noActivity": "記録されたアクティビティはまだありません",
       "system": "システム",
       "thisProduct": "この商品",
-      "moreChanges": "+ 他{count}件の変更",
+      "moreChanges": "+ 他{count}件の変更 | + 他{count}件の変更",
       "actionOnProduct": {
         "created": "がこの商品を作成しました",
         "updated": "がこの商品を更新しました",
@@ -2605,7 +2605,7 @@
       "maxImages": "最大{max}枚、各{size}MBまで",
       "onlyImages": "画像ファイルのみ対応しています",
       "tooLarge": "画像は{size}MB未満である必要があります",
-      "canAddMore": "あと{count}枚の画像を追加できます",
+      "canAddMore": "あと{count}枚の画像を追加できます | あと{count}枚の画像を追加できます",
       "moveLeft": "左に移動",
       "moveRight": "右に移動",
       "remove": "削除",
@@ -2734,7 +2734,7 @@
       "hint": "ここで割り当てたユーザーは、割り当てられた倉庫の在庫のみを表示・移動できます。管理者と「すべての倉庫にアクセス」権限を持つロールは常にすべての倉庫を表示できます。",
       "searchPlaceholder": "ユーザーを検索...",
       "noUsers": "ユーザーが見つかりません。",
-      "selected": "{count}人のユーザーを選択中",
+      "selected": "{count}人のユーザーを選択中 | {count}人のユーザーを選択中",
       "save": "ユーザーアクセスを保存",
       "allWarehouses": "すべての倉庫",
       "assigned": "割り当て済みユーザー（{count}）",
@@ -2846,7 +2846,7 @@
     },
     "components": {
       "title": "必要な構成部品",
-      "materialsNeeded": "{name}を{count}個製造するのに必要な資材",
+      "materialsNeeded": "{name}を{count}個製造するのに必要な資材 | {name}を{count}個製造するのに必要な資材",
       "component": "構成部品",
       "sku": "SKU",
       "required": "必要数",
@@ -2866,7 +2866,7 @@
       "startProduction": "製造を開始",
       "startConfirm": "この作業指示の製造を開始しますか？構成部品が引き当てられます。",
       "completeProduction": "製造を完了",
-      "completeConfirm": "この作業指示を完了しますか？組立品の在庫に{count}個が追加されます。",
+      "completeConfirm": "この作業指示を完了しますか？組立品の在庫に{count}個が追加されます。 | この作業指示を完了しますか？組立品の在庫に{count}個が追加されます。",
       "cancelWorkOrder": "作業指示をキャンセル",
       "cancelConfirm": "この作業指示をキャンセルしますか？引き当て済みの構成部品は解放されます。",
       "view": "表示"
@@ -3073,7 +3073,7 @@
     "notifyCustomer": "追跡情報を{email}にメールで送信",
     "getRates": "料金を取得",
     "chooseRate": "料金を選択",
-    "estDays": "約{count}日",
+    "estDays": "約{count}日 | 約{count}日",
     "buyLabel": "ラベルを購入",
     "labelBought": "ラベルを購入しました。追跡番号 {number}。",
     "downloadLabel": "ラベルをダウンロード",

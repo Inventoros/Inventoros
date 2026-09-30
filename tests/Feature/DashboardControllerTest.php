@@ -83,6 +83,31 @@ class DashboardControllerTest extends TestCase
                 ->etc());
     }
 
+    /**
+     * Recent orders are the ones most recently placed in the app: an order
+     * backdated to last week (or imported with an old order date) that was
+     * entered just now comes first, and each row still shows its order date.
+     */
+    public function test_recent_orders_follow_when_they_were_created_not_the_order_date(): void
+    {
+        $make = fn (string $number, string $orderDate, string $createdAt) => tap(\App\Models\Order\Order::create([
+            'organization_id' => $this->organization->id, 'order_number' => $number, 'status' => 'pending',
+            'customer_name' => 'C', 'order_date' => $orderDate, 'subtotal' => 1, 'total' => 1, 'currency' => 'USD',
+        ]), fn ($order) => $order->forceFill(['created_at' => $createdAt])->saveQuietly());
+
+        $older = $make('OLDER', '2026-09-29', '2026-09-29 09:00:00');
+        $backdated = $make('BACKDATED', '2026-09-20', '2026-09-30 15:00:00');
+        $midday = $make('MIDDAY', '2026-09-30 12:00:00', '2026-09-30 12:00:00');
+
+        $this->actingAs($this->admin)->get(route('dashboard'))
+            ->assertInertia(fn ($page) => $page
+                ->where('recentOrders.0.order_number', 'BACKDATED')
+                ->where('recentOrders.1.order_number', 'MIDDAY')
+                ->where('recentOrders.2.order_number', 'OLDER')
+                ->has('recentOrders.0.order_date')
+                ->etc());
+    }
+
     public function test_dashboard_renders_when_an_activity_log_has_no_user(): void
     {
         // A system action, or one whose acting user was since deleted, has a

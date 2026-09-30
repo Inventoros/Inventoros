@@ -88,7 +88,7 @@ const startProduction = () => {
 };
 
 const completeProduction = () => {
-    if (!confirm(t('workOrders.actions.completeConfirm', { count: quantityProduced.value }))) return;
+    if (!confirm(t('workOrders.actions.completeConfirm', { count: quantityProduced.value }, quantityProduced.value))) return;
     processing.value = true;
     router.post(route('work-orders.complete', props.workOrder.id), {
         quantity_produced: quantityProduced.value,
