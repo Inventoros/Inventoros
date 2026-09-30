@@ -1,4 +1,7 @@
 {
+  "orderInvoice": {
+    "notEmailed": "Erstellt, aber noch nicht per E-Mail gesendet. Mit Rechnung per E-Mail senden geht sie an den Kunden."
+  },
   "returnPicker": {
     "title": "Neue Rücksendung",
     "description": "Wählen Sie die Bestellung, aus der die Ware zurückkommt. Nur versandte oder zugestellte Bestellungen können zurückgesendet werden.",

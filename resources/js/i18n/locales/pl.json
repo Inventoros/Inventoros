@@ -1,4 +1,7 @@
 {
+  "orderInvoice": {
+    "notEmailed": "Wygenerowana, jeszcze niewysłana e-mailem. Użyj opcji Wyślij fakturę, aby wysłać ją klientowi."
+  },
   "returnPicker": {
     "title": "Nowy zwrot",
     "description": "Wybierz zamówienie, z którego wraca towar. Zwrot można utworzyć tylko dla zamówień wysłanych lub dostarczonych.",

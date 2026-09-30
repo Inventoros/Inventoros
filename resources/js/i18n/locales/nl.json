@@ -1,4 +1,7 @@
 {
+  "orderInvoice": {
+    "notEmailed": "Aangemaakt, nog niet gemaild. Gebruik Factuur e-mailen om hem naar de klant te sturen."
+  },
   "returnPicker": {
     "title": "Nieuwe retour",
     "description": "Kies de bestelling waaruit de goederen terugkomen. Alleen verzonden of geleverde bestellingen kunnen worden geretourneerd.",

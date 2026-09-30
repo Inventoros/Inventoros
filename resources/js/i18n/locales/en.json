@@ -1,4 +1,7 @@
 {
+  "orderInvoice": {
+    "notEmailed": "Generated, not emailed yet. Use Email Invoice to send it to the customer."
+  },
   "returnPicker": {
     "title": "New Return",
     "description": "Choose the order the goods are coming back from. Only shipped or delivered orders can take a return.",

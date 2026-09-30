@@ -1,4 +1,7 @@
 {
+  "orderInvoice": {
+    "notEmailed": "Generata, non ancora inviata via email. Usa Invia fattura per mandarla al cliente."
+  },
   "returnPicker": {
     "title": "Nuovo reso",
     "description": "Scegli l'ordine da cui rientra la merce. Solo gli ordini spediti o consegnati possono essere resi.",

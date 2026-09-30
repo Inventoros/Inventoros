@@ -1,4 +1,7 @@
 {
+  "orderInvoice": {
+    "notEmailed": "Générée, pas encore envoyée par e-mail. Utilisez Envoyer la facture pour l'adresser au client."
+  },
   "returnPicker": {
     "title": "Nouveau retour",
     "description": "Choisissez la commande dont proviennent les articles. Seules les commandes expédiées ou livrées peuvent faire l'objet d'un retour.",

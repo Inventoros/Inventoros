@@ -1,4 +1,7 @@
 {
+  "orderInvoice": {
+    "notEmailed": "已生成，尚未通过邮件发送。使用“邮件发送发票”将其发送给客户。"
+  },
   "returnPicker": {
     "title": "新建退货",
     "description": "选择商品退回所属的订单。只有已发货或已送达的订单才能退货。",

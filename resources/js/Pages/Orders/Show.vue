@@ -13,6 +13,7 @@ import { computed, ref } from 'vue';
 import { usePermissions } from '@/composables/usePermissions';
 import { displayCalendarDate, displayDateTime, todayIsoDate } from '@/lib/dates';
 import { formatMoney } from '@/lib/money';
+import { invoiceState } from '@/lib/invoiceState';
 import { approvalStatusLabel, approvalStatusVariant, orderSourceLabel, orderStatusLabel, orderStatusVariant } from '@/lib/orderLabels';
 import { useI18n } from 'vue-i18n';
 import { ArrowLeft, Pencil, Download, Eye, Undo2, Trash2, X, AlertTriangle, PackageOpen, Mail, Plus, RotateCcw, Wallet } from 'lucide-vue-next';
@@ -102,18 +103,12 @@ const showDeleteModal = ref(false);
 
 // Invoice emailing
 const showInvoiceModal = ref(false);
-// invoice_queued_at is stamped when the email is queued, invoice_sent_at when
-// it is delivered; a newer queued stamp means the latest send is still waiting.
-const invoiceQueued = computed(() => {
-    const { invoice_queued_at: queuedAt, invoice_sent_at: sentAt } = props.order;
-    return Boolean(queuedAt) && (!sentAt || new Date(sentAt) < new Date(queuedAt));
-});
-const invoiceStatus = computed(() => {
-    if (invoiceQueued.value) return { label: t('documentEmail.invoiceQueued'), variant: 'warning' };
-    if (props.order.invoice_sent_at) return { label: t('documentEmail.invoiceSent'), variant: 'success' };
-    if (props.order.invoice_number) return { label: t('documentEmail.invoiceIssued'), variant: 'info' };
-    return null;
-});
+const invoice = computed(() => invoiceState(props.order));
+const invoiceStatus = computed(() => ({
+    queued: { label: t('documentEmail.invoiceQueued'), variant: 'warning' },
+    sent: { label: t('documentEmail.invoiceSent'), variant: 'success' },
+    issued: { label: t('documentEmail.invoiceIssued'), variant: 'info' },
+}[invoice.value.badge] ?? null));
 const deleting = ref(false);
 
 // Approval functionality
@@ -566,12 +561,13 @@ const formatOrderDate = (date, long = false) =>
                                     <dd class="mt-1 text-sm font-medium text-text-primary">{{ order.invoice_number }}</dd>
                                 </div>
                             </dl>
-                            <p v-if="invoiceQueued" class="mt-3 text-xs text-text-secondary">
+                            <p v-if="invoice.note === 'queued'" class="mt-3 text-xs text-text-secondary">
                                 {{ t('documentEmail.queuedOn', { to: order.invoice_sent_to, date: formatDate(order.invoice_queued_at) }) }}
                             </p>
-                            <p v-else-if="order.invoice_sent_at" class="mt-3 text-xs text-text-secondary">
+                            <p v-else-if="invoice.note === 'sent'" class="mt-3 text-xs text-text-secondary">
                                 {{ t('documentEmail.sentOn', { to: order.invoice_sent_to, date: formatDate(order.invoice_sent_at) }) }}
                             </p>
+                            <p v-else-if="invoice.note === 'notEmailed'" class="mt-3 text-xs text-text-tertiary">{{ t('orderInvoice.notEmailed') }}</p>
                             <p v-else class="text-xs text-text-tertiary">{{ t('documentEmail.invoiceNotIssued') }}</p>
                         </div>
                     </Card>

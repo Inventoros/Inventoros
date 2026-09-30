@@ -1,4 +1,7 @@
 {
+  "orderInvoice": {
+    "notEmailed": "Generada, aún no enviada por correo. Use Enviar factura para mandarla al cliente."
+  },
   "returnPicker": {
     "title": "Nueva devolución",
     "description": "Elija el pedido del que vuelve la mercancía. Solo se pueden devolver pedidos enviados o entregados.",

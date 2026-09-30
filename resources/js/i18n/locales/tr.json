@@ -1,4 +1,7 @@
 {
+  "orderInvoice": {
+    "notEmailed": "Oluşturuldu, henüz e-postayla gönderilmedi. Müşteriye göndermek için Faturayı e-postala'yı kullanın."
+  },
   "returnPicker": {
     "title": "Yeni iade",
     "description": "Ürünlerin geri geldiği siparişi seçin. Yalnızca gönderilmiş veya teslim edilmiş siparişler iade edilebilir.",
