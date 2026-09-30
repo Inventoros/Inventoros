@@ -7,6 +7,7 @@ namespace App\Http\Controllers\Reports;
 use App\Enums\PaymentStatus;
 use App\Enums\Permission;
 use App\Http\Controllers\Controller;
+use App\Models\Auth\Organization;
 use App\Models\Inventory\Product;
 use App\Models\Inventory\StockAdjustment;
 use App\Models\Order\Order;
@@ -18,6 +19,7 @@ use App\Services\Reports\InventoryAnalyticsService;
 use App\Services\Reports\ReportExporter;
 use App\Services\Reports\ReportPeriod;
 use App\Services\WarehouseAccessService;
+use App\Support\CurrencyTotals;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
@@ -76,20 +78,32 @@ class ReportController extends Controller
             ->whereNull('products.deleted_at')
             ->where('products.is_active', true);
 
-        $totals = $base()->selectRaw('
-            COUNT(*) as total_items,
-            COALESCE(SUM(stock), 0) as total_quantity,
-            COALESCE(SUM(stock * price), 0) as total_stock_value,
-            COALESCE(SUM(stock * COALESCE(purchase_price, 0)), 0) as total_cost_value,
-            COALESCE(SUM(stock * (price - COALESCE(purchase_price, 0))), 0) as total_profit_potential
-        ')->first();
+        // Money is totalled per product currency and never added across
+        // currencies: the headline figures are the organization's currency,
+        // by_currency lists every currency (that one first).
+        $currency = Organization::currencyFor($organizationId);
+        $byCurrency = CurrencyTotals::breakdown(
+            $base()->groupBy('currency')->selectRaw('
+                currency,
+                COUNT(*) as items,
+                COALESCE(SUM(stock), 0) as quantity,
+                COALESCE(SUM(stock * price), 0) as stock_value,
+                COALESCE(SUM(stock * COALESCE(purchase_price, 0)), 0) as cost_value,
+                COALESCE(SUM(stock * (price - COALESCE(purchase_price, 0))), 0) as profit_potential
+            ')->get(),
+            $currency,
+            ['stock_value', 'cost_value', 'profit_potential'],
+            ['items', 'quantity'],
+        );
 
         $summary = [
-            'total_items' => (int) $totals->total_items,
-            'total_quantity' => (int) $totals->total_quantity,
-            'total_stock_value' => round((float) $totals->total_stock_value, 2),
-            'total_cost_value' => round((float) $totals->total_cost_value, 2),
-            'total_profit_potential' => round((float) $totals->total_profit_potential, 2),
+            'total_items' => array_sum(array_column($byCurrency, 'items')),
+            'total_quantity' => array_sum(array_column($byCurrency, 'quantity')),
+            'currency' => $currency,
+            'total_stock_value' => $byCurrency[0]['stock_value'],
+            'total_cost_value' => $byCurrency[0]['cost_value'],
+            'total_profit_potential' => $byCurrency[0]['profit_potential'],
+            'by_currency' => $byCurrency,
         ];
 
         $products = $base()
@@ -97,6 +111,7 @@ class ReportController extends Controller
             ->leftJoin('product_locations', 'product_locations.id', '=', 'products.location_id')
             ->selectRaw('
                 products.id, products.name, products.sku, products.stock, products.price, products.purchase_price,
+                products.currency,
                 product_categories.name as category, product_locations.name as location,
                 (products.stock * products.price) as stock_value
             ')
@@ -104,7 +119,7 @@ class ReportController extends Controller
             ->orderBy('products.id')
             ->limit($maxRows)
             ->get()
-            ->map(function ($product) {
+            ->map(function ($product) use ($currency) {
                 $price = (float) $product->price;
                 $cost = (float) ($product->purchase_price ?? 0);
                 $stock = (int) $product->stock;
@@ -116,6 +131,8 @@ class ReportController extends Controller
                     'category' => $product->category,
                     'location' => $product->location,
                     'stock' => $stock,
+                    // Price, cost and values are in the product's currency.
+                    'currency' => filled($product->currency) ? strtoupper(trim((string) $product->currency)) : $currency,
                     'price' => $price,
                     'purchase_price' => $cost,
                     'stock_value' => round($stock * $price, 2),
@@ -124,26 +141,46 @@ class ReportController extends Controller
                 ];
             });
 
-        $byCategory = $base()
+        // One row per category and product currency (exports list these
+        // as they are); the page gets one row per category whose value is in
+        // the organization's currency, with every currency under `values`.
+        $categoryCurrencyRows = $base()
             ->leftJoin('product_categories', 'product_categories.id', '=', 'products.category_id')
-            ->groupBy('products.category_id', 'product_categories.name')
+            ->groupBy('products.category_id', 'product_categories.name', 'products.currency')
             ->selectRaw('
                 products.category_id as category_id,
                 product_categories.name as category,
+                products.currency as currency,
                 COUNT(*) as items,
                 COALESCE(SUM(products.stock), 0) as quantity,
                 COALESCE(SUM(products.stock * products.price), 0) as value
             ')
-            ->orderByDesc('value')
-            ->limit($maxRows)
             ->get()
             ->map(fn ($row) => [
                 'category_id' => $row->category_id === null ? null : (int) $row->category_id,
                 'category' => $row->category ?: 'Uncategorized',
+                'currency' => filled($row->currency) ? strtoupper(trim((string) $row->currency)) : $currency,
                 'items' => (int) $row->items,
                 'quantity' => (int) $row->quantity,
                 'value' => round((float) $row->value, 2),
-            ])
+            ]);
+
+        $byCategory = $categoryCurrencyRows
+            ->groupBy(fn (array $r) => $r['category_id'] ?? 'none')
+            ->map(function ($rows) use ($currency) {
+                $values = CurrencyTotals::list($rows->pluck('value', 'currency'), $currency);
+
+                return [
+                    'category_id' => $rows->first()['category_id'],
+                    'category' => $rows->first()['category'],
+                    'items' => $rows->sum('items'),
+                    'quantity' => $rows->sum('quantity'),
+                    'value' => $values[0]['amount'],
+                    'values' => $values,
+                ];
+            })
+            ->sort(fn (array $a, array $b) => [$b['value'], $a['category']] <=> [$a['value'], $b['category']])
+            ->take($maxRows)
             ->values();
 
         // Per-location stock follows warehouse access (#224).
@@ -157,23 +194,27 @@ class ReportController extends Controller
                 'category' => $this->exporter->download(
                     $format,
                     'Inventory Valuation by Category',
-                    ['Category', 'Products', 'Quantity', 'Stock value'],
-                    $byCategory->map(fn (array $r) => [$r['category'], $r['items'], $r['quantity'], $r['value']])
+                    ['Category', 'Products', 'Quantity', 'Currency', 'Stock value'],
+                    $categoryCurrencyRows
+                        ->sortBy([['category', 'asc'], ['currency', 'asc']])
+                        ->map(fn (array $r) => [$r['category'], $r['items'], $r['quantity'], $r['currency'], $r['value']])
+                        ->values()
                 ),
                 'location' => $this->exporter->download(
                     $format,
                     'Inventory Valuation by Location',
-                    ['Location', 'Warehouse', 'Products', 'Quantity', 'Cost value', 'Retail value'],
-                    array_map(fn (array $r) => [
-                        $r['location'] ?? 'Unallocated', $r['warehouse'], $r['products'], $r['quantity'], $r['cost_value'], $r['retail_value'],
-                    ], $byLocation)
+                    ['Location', 'Warehouse', 'Products', 'Quantity', 'Currency', 'Cost value', 'Retail value'],
+                    collect($byLocation)->flatMap(fn (array $r) => array_map(fn (array $v) => [
+                        $r['location'] ?? 'Unallocated', $r['warehouse'], $v['products'], $v['quantity'],
+                        $v['currency'], $v['cost_value'], $v['retail_value'],
+                    ], $r['values']))->all()
                 ),
                 default => $this->exporter->download(
                     $format,
                     'Inventory Valuation',
-                    ['Product', 'SKU', 'Category', 'Location', 'Stock', 'Price', 'Purchase price', 'Stock value', 'Cost value', 'Profit potential'],
+                    ['Product', 'SKU', 'Category', 'Location', 'Stock', 'Currency', 'Price', 'Purchase price', 'Stock value', 'Cost value', 'Profit potential'],
                     $products->map(fn (array $r) => [
-                        $r['name'], $r['sku'], $r['category'], $r['location'], $r['stock'], $r['price'],
+                        $r['name'], $r['sku'], $r['category'], $r['location'], $r['stock'], $r['currency'], $r['price'],
                         $r['purchase_price'], $r['stock_value'], $r['cost_value'], $r['profit_potential'],
                     ])
                 ),
@@ -597,50 +638,88 @@ class ReportController extends Controller
     {
         $organizationId = $request->user()->organization_id;
 
-        $categoryStats = DB::table('products')
+        $currency = Organization::currencyFor($organizationId);
+
+        // One row per category and product currency. Stock value is never
+        // added across currencies: each category's total_value (and its
+        // average per product) is in the organization's currency, with every
+        // currency under `values`; the export lists the rows as they are.
+        $currencyRows = DB::table('products')
             ->leftJoin('product_categories', 'product_categories.id', '=', 'products.category_id')
             ->where('products.organization_id', $organizationId)
             ->whereNull('products.deleted_at')
             ->where('products.is_active', true)
-            ->groupBy('products.category_id', 'product_categories.name')
+            ->groupBy('products.category_id', 'product_categories.name', 'products.currency')
             ->selectRaw('
                 products.category_id as category_id,
                 product_categories.name as category_name,
+                products.currency as currency,
                 COUNT(*) as product_count,
                 COALESCE(SUM(products.stock), 0) as total_stock,
                 COALESCE(SUM(products.stock * products.price), 0) as total_value,
                 SUM(CASE WHEN products.stock <= products.min_stock THEN 1 ELSE 0 END) as low_stock_items
             ')
-            ->orderByDesc('total_value')
-            ->limit($this->analytics->maxRows())
             ->get()
             ->map(fn ($row) => [
                 'category_id' => $row->category_id === null ? null : (int) $row->category_id,
                 'category_name' => $row->category_name ?? 'Uncategorized',
+                'currency' => filled($row->currency) ? strtoupper(trim((string) $row->currency)) : $currency,
                 'product_count' => (int) $row->product_count,
                 'total_stock' => (int) $row->total_stock,
                 'total_value' => round((float) $row->total_value, 2),
                 'low_stock_items' => (int) $row->low_stock_items,
-            ])
-            ->values();
+            ]);
 
         if ($format = ReportExporter::requestedFormat($request)) {
             return $this->exporter->download(
                 $format,
                 'Category Performance',
-                ['Category', 'Products', 'Total stock', 'Total value', 'Low stock items'],
-                $categoryStats->map(fn (array $r) => [
-                    $r['category_name'], $r['product_count'], $r['total_stock'], $r['total_value'], $r['low_stock_items'],
-                ])
+                ['Category', 'Products', 'Total stock', 'Currency', 'Total value', 'Low stock items'],
+                $currencyRows
+                    ->sortBy([['category_name', 'asc'], ['currency', 'asc']])
+                    ->map(fn (array $r) => [
+                        $r['category_name'], $r['product_count'], $r['total_stock'], $r['currency'], $r['total_value'], $r['low_stock_items'],
+                    ])
+                    ->values()
             );
         }
+
+        $categoryStats = $currencyRows
+            ->groupBy(fn (array $r) => $r['category_id'] ?? 'none')
+            ->map(function ($rows) use ($currency) {
+                $values = CurrencyTotals::list($rows->pluck('total_value', 'currency'), $currency);
+                $baseProducts = $rows->where('currency', $currency)->sum('product_count');
+
+                return [
+                    'category_id' => $rows->first()['category_id'],
+                    'category_name' => $rows->first()['category_name'],
+                    'product_count' => $rows->sum('product_count'),
+                    'total_stock' => $rows->sum('total_stock'),
+                    'total_value' => $values[0]['amount'],
+                    // Per product in the organization's currency; null when
+                    // the category has none.
+                    'average_value' => $baseProducts > 0 ? round($values[0]['amount'] / $baseProducts, 2) : null,
+                    'values' => $values,
+                    'low_stock_items' => $rows->sum('low_stock_items'),
+                ];
+            })
+            ->sort(fn (array $a, array $b) => [$b['total_value'], $a['category_name']] <=> [$a['total_value'], $b['category_name']])
+            ->take($this->analytics->maxRows())
+            ->values();
+
+        $values = CurrencyTotals::list(
+            $currencyRows->groupBy('currency')->map(fn ($rows) => $rows->sum('total_value')),
+            $currency,
+        );
 
         return Inertia::render('Reports/CategoryPerformance', [
             'categories' => $categoryStats,
             'summary' => [
                 'total_categories' => $categoryStats->count(),
                 'total_products' => $categoryStats->sum('product_count'),
-                'total_value' => round((float) $categoryStats->sum('total_value'), 2),
+                'currency' => $currency,
+                'total_value' => $values[0]['amount'],
+                'values_by_currency' => $values,
             ],
         ]);
     }

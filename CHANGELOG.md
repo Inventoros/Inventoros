@@ -11,7 +11,7 @@ Full release notes, with the pull request behind each change, are on [GitHub Rel
 - Products saved as USD only because none was given (API, GraphQL, MCP and products import in 1.0.x) move to their organization's currency when upgrading, and new products without a currency take the organization's. See [UPGRADE.md](UPGRADE.md#currencies-and-money).
 - Orders default to the organization's currency on every surface, and an order line without a unit price is priced in the order's currency or rejected when the product has no price in it.
 - Money amounts accept at most two decimal places everywhere, and calculated amounts round half up to the cent instead of truncating.
-- Outstanding Balances, the dead stock report and the dashboard show totals per currency instead of adding currencies together.
+- Outstanding Balances, dead stock, inventory valuation and category performance reports and the dashboard show totals per currency instead of adding currencies together; their exports carry a Currency column.
 
 ### Fixed
 

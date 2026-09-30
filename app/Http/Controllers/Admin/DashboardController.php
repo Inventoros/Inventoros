@@ -277,10 +277,19 @@ class DashboardController extends Controller
         $topProducts = ! $canViewProducts ? collect() : Product::where('organization_id', $user->organization_id)
             ->where('is_active', true)
             ->where('stock', '>', 0)
-            ->selectRaw('id, name, sku, price, stock, (price * stock) as total_value')
+            ->selectRaw('id, name, sku, currency, price, stock, (price * stock) as total_value')
+            // Values in different currencies don't rank against each other:
+            // products in the organization's currency first, then each other
+            // currency's, highest value first within a currency. Each row
+            // carries its currency.
+            ->orderByRaw('CASE WHEN UPPER(currency) = ? THEN 0 ELSE 1 END', [$currency])
+            ->orderByRaw('UPPER(currency)')
             ->orderByRaw('price * stock DESC')
             ->limit(5)
-            ->get();
+            ->get()
+            ->each(function (Product $product) use ($currency) {
+                $product->currency = filled($product->currency) ? strtoupper(trim((string) $product->currency)) : $currency;
+            });
 
         // Get widget preferences (default: all visible)
         $defaultWidgets = [

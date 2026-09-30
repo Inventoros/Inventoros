@@ -10,6 +10,7 @@ import ExportMenu from '@/Components/Reports/ExportMenu.vue';
 import { Head, Link } from '@inertiajs/vue3';
 import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
+import { formatCurrency as formatMoney, otherCurrencyTotals } from '@/lib/reportFormat';
 import {
     Tag,
     Boxes,
@@ -24,12 +25,15 @@ const props = defineProps({
     summary: Object,
 });
 
-const formatCurrency = (value) => {
-    return new Intl.NumberFormat('en-US', {
-        style: 'currency',
-        currency: 'USD',
-    }).format(value);
+// Values are never added across currencies: each figure is in the
+// organization's currency (summary.currency), with the other currencies'
+// own totals listed under it.
+const formatCurrency = (value) => formatMoney(value, props.summary.currency);
+const plusOthers = (values) => {
+    const others = otherCurrencyTotals(values, props.summary.currency);
+    return others ? t('dashboard.plusOtherCurrencies', { amounts: others }) : '';
 };
+const average = (category) => (category.average_value === null ? '-' : formatCurrency(category.average_value));
 
 // Largest category value, used to scale the bar visuals.
 const maxValue = computed(() =>
@@ -90,6 +94,7 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-t
             <StatTile
                 :label="t('reports.categoryPerformance.totalValue')"
                 :value="formatCurrency(summary.total_value)"
+                :hint="plusOthers(summary.values_by_currency) || null"
                 icon-tone="success"
             >
                 <template #icon><DollarSign :size="18" /></template>
@@ -113,6 +118,7 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-t
                 <p class="mt-3 text-2xl font-semibold tabular-nums tracking-tight text-text-primary">
                     {{ formatCurrency(category.total_value) }}
                 </p>
+                <p v-if="plusOthers(category.values)" class="mt-0.5 text-xs tabular-nums text-text-tertiary">{{ plusOthers(category.values) }}</p>
 
                 <!-- Value bar visual -->
                 <div class="mt-3 h-2 w-full overflow-hidden rounded-full bg-surface-sunken">
@@ -136,7 +142,7 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-t
                 <div class="mt-4 flex items-center justify-between border-t border-border-subtle pt-3">
                     <span class="text-xs text-text-tertiary">{{ t('reports.categoryPerformance.avgPerProduct') }}</span>
                     <span class="text-xs font-medium tabular-nums text-text-secondary">
-                        {{ formatCurrency(category.product_count > 0 ? category.total_value / category.product_count : 0) }}
+                        {{ average(category) }}
                     </span>
                 </div>
             </div>
@@ -169,8 +175,11 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-t
                                 <td class="px-4 py-3 font-medium text-text-primary">{{ category.category_name }}</td>
                                 <td class="px-4 py-3 text-right tabular-nums text-text-secondary">{{ category.product_count }}</td>
                                 <td class="px-4 py-3 text-right tabular-nums text-text-secondary">{{ category.total_stock }}</td>
-                                <td class="px-4 py-3 text-right font-medium tabular-nums text-text-primary">{{ formatCurrency(category.total_value) }}</td>
-                                <td class="px-4 py-3 text-right tabular-nums text-text-secondary">{{ formatCurrency(category.total_value / category.product_count) }}</td>
+                                <td class="px-4 py-3 text-right font-medium tabular-nums text-text-primary">
+                                    {{ formatCurrency(category.total_value) }}
+                                    <p v-if="plusOthers(category.values)" class="text-xs font-normal text-text-tertiary">{{ plusOthers(category.values) }}</p>
+                                </td>
+                                <td class="px-4 py-3 text-right tabular-nums text-text-secondary">{{ average(category) }}</td>
                                 <td class="px-4 py-3 text-right">
                                     <Badge v-if="category.low_stock_items > 0" variant="danger" size="sm">{{ category.low_stock_items }}</Badge>
                                     <span v-else class="text-xs tabular-nums text-text-tertiary">0</span>
