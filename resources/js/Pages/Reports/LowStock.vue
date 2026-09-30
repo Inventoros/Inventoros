@@ -20,6 +20,9 @@ import {
     CheckCircle2,
     ClipboardList,
 } from 'lucide-vue-next';
+import { usePermissions } from '@/composables/usePermissions';
+
+const { canVisit } = usePermissions();
 
 const { t } = useI18n();
 
@@ -188,7 +191,7 @@ const thClassRight = 'px-4 py-2.5 text-right text-xs font-medium tracking-tight 
                                 <span v-if="product.supplier" class="text-text-secondary">{{ product.supplier }}</span>
                                 <span v-else class="flex flex-col">
                                     <span class="text-xs italic text-status-danger">{{ t('quickReorder.noSupplier') }}</span>
-                                    <Link :href="route('products.edit', product.id)" class="text-xs font-medium text-brand hover:underline">{{ t('quickReorder.addSupplier') }}</Link>
+                                    <Link v-if="canVisit('products.edit')" :href="route('products.edit', product.id)" class="text-xs font-medium text-brand hover:underline">{{ t('quickReorder.addSupplier') }}</Link>
                                 </span>
                             </td>
                             <td class="px-4 py-3 text-right font-medium tabular-nums text-text-primary">{{ product.suggested_quantity }}</td>

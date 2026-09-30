@@ -9,6 +9,9 @@ import { computed, ref } from 'vue';
 import { ExternalLink, Users } from 'lucide-vue-next';
 
 import { useI18n } from 'vue-i18n';
+import { usePermissions } from '@/composables/usePermissions';
+
+const { canVisit } = usePermissions();
 const props = defineProps({
     organization: Object,
     user: Object,
@@ -504,7 +507,7 @@ const tabs = [
                     <p class="text-sm text-text-secondary">
                         {{ t('settings.organization.userMgmtHint') }}
                     </p>
-                    <Button variant="default" as="Link" :href="route('users.index')">
+                    <Button v-if="canVisit('users.index')" variant="default" as="Link" :href="route('users.index')">
                         {{ t('settings.organization.goToUserMgmt') }}
                     </Button>
                 </div>

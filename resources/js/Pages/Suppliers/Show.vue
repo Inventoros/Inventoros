@@ -10,6 +10,9 @@ import { Head, Link, router } from '@inertiajs/vue3';
 import { useI18n } from 'vue-i18n';
 import { formatMoney } from '@/lib/money';
 import { Pencil, ArrowLeft, Trash2, PackageOpen } from 'lucide-vue-next';
+import { usePermissions } from '@/composables/usePermissions';
+
+const { canVisit } = usePermissions();
 
 const { t } = useI18n();
 
@@ -50,7 +53,7 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium text-text-secondary';
                 <Badge :variant="supplier.is_active ? 'success' : 'neutral'" size="sm" dot>
                     {{ supplier.is_active ? t('common.active') : t('common.inactive') }}
                 </Badge>
-                <Button variant="default" size="sm" as="Link" :href="route('suppliers.edit', supplier.id)">
+                <Button v-if="canVisit('suppliers.edit')" variant="default" size="sm" as="Link" :href="route('suppliers.edit', supplier.id)">
                     <Pencil :size="14" />
                     {{ t('common.edit') }}
                 </Button>
@@ -142,9 +145,10 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium text-text-secondary';
                                     <tr v-for="product in supplier.products" :key="product.id" class="border-b border-border-subtle transition-colors last:border-b-0 hover:bg-surface-overlay">
                                         <td class="px-4 py-3">
                                             <div class="flex items-center gap-2">
-                                                <Link :href="route('products.show', product.id)" class="text-sm font-medium text-brand hover:underline">
+                                                <Link v-if="canVisit('products.show')" :href="route('products.show', product.id)" class="text-sm font-medium text-brand hover:underline">
                                                     {{ product.name }}
                                                 </Link>
+                                                <span v-else class="text-sm font-medium text-text-primary">{{ product.name }}</span>
                                                 <Badge v-if="product.pivot?.is_primary" variant="brand" size="sm">{{ t('productSuppliers.primary') }}</Badge>
                                             </div>
                                         </td>

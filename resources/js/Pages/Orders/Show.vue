@@ -23,7 +23,7 @@ const statusText = (status) => orderStatusLabel(status, { t, te });
 const sourceText = (source) => orderSourceLabel(source, { t, te });
 const approvalText = (status) => approvalStatusLabel(status, { t, te });
 
-const { hasPermission } = usePermissions();
+const { hasPermission, canVisit } = usePermissions();
 
 const props = defineProps({
     order: Object,
@@ -275,7 +275,7 @@ const formatOrderDate = (date, long = false) =>
                                             {{ t('discounts.discount') }}<template v-if="item.discount_type === 'percent'"> ({{ parseFloat(item.discount_value) }}%)</template>: -{{ money(item.discount_amount) }}
                                         </p>
                                         <Link
-                                            v-if="item.product"
+                                            v-if="item.product && canVisit('products.show')"
                                             :href="route('products.show', item.product_id)"
                                             class="mt-1 inline-block text-xs text-brand hover:underline"
                                         >

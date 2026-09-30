@@ -8,6 +8,9 @@ import { Head, Link } from '@inertiajs/vue3';
 import { useI18n } from 'vue-i18n';
 import { roleDescription, roleName } from '@/lib/permissionLabels';
 import { Plus, Users, ShieldCheck } from 'lucide-vue-next';
+import { usePermissions } from '@/composables/usePermissions';
+
+const { canVisit } = usePermissions();
 
 defineProps({
     roles: Object,
@@ -35,7 +38,7 @@ const i18n = { t, te };
             :description="t('admin.roles.description')"
         >
             <template #actions>
-                <Button variant="default" size="sm" as="Link" :href="route('roles.create')">
+                <Button v-if="canVisit('roles.create')" variant="default" size="sm" as="Link" :href="route('roles.create')">
                     <Plus :size="14" />
                     {{ t('admin.createRole') }}
                 </Button>
@@ -69,7 +72,7 @@ const i18n = { t, te };
                         {{ t('common.view') }}
                     </Button>
                     <Button
-                        v-if="role.slug !== 'system-administrator'"
+                        v-if="(role.slug !== 'system-administrator') && canVisit('roles.edit')"
                         variant="default"
                         size="sm"
                         as="Link"
@@ -94,7 +97,7 @@ const i18n = { t, te };
                     <div class="flex flex-col items-center gap-3 py-10 text-center">
                         <ShieldCheck :size="22" class="text-text-tertiary" />
                         <p class="text-sm text-text-tertiary">{{ t('admin.roles.noRolesFound') }}</p>
-                        <Button variant="default" size="sm" as="Link" :href="route('roles.create')">
+                        <Button v-if="canVisit('roles.create')" variant="default" size="sm" as="Link" :href="route('roles.create')">
                             <Plus :size="14" />
                             {{ t('admin.createRole') }}
                         </Button>

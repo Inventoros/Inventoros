@@ -10,6 +10,9 @@ import { Head, Link, router } from '@inertiajs/vue3';
 import { ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { Plus, Search, Eye, Pencil, Trash2, Truck } from 'lucide-vue-next';
+import { usePermissions } from '@/composables/usePermissions';
+
+const { hasPermission, canVisit } = usePermissions();
 
 const { t } = useI18n();
 
@@ -61,7 +64,7 @@ const thClass =
 
         <PageHeader :title="t('suppliers.title')" :description="t('suppliers.index.description')">
             <template #actions>
-                <Button variant="default" size="sm" as="Link" :href="route('suppliers.create')">
+                <Button v-if="canVisit('suppliers.create')" variant="default" size="sm" as="Link" :href="route('suppliers.create')">
                     <Plus :size="14" />
                     {{ t('suppliers.addSupplier') }}
                 </Button>
@@ -120,7 +123,7 @@ const thClass =
                                 <Truck :size="22" class="text-text-tertiary" />
                                 <p class="text-sm font-medium text-text-primary">{{ t('suppliers.noSuppliersFound') }}</p>
                                 <p class="text-sm text-text-tertiary">{{ t('suppliers.getStarted') }}</p>
-                                <Button variant="default" size="sm" as="Link" :href="route('suppliers.create')">
+                                <Button v-if="canVisit('suppliers.create')" variant="default" size="sm" as="Link" :href="route('suppliers.create')">
                                     <Plus :size="14" />
                                     {{ t('suppliers.addSupplier') }}
                                 </Button>
@@ -156,8 +159,8 @@ const thClass =
                         <td class="px-4 py-3">
                             <div class="flex items-center justify-end gap-1">
                                 <Link :href="route('suppliers.show', supplier.id)" class="rounded-md p-1.5 text-text-tertiary transition-colors hover:bg-surface-overlay hover:text-brand" :title="t('common.view')"><Eye :size="16" /></Link>
-                                <Link :href="route('suppliers.edit', supplier.id)" class="rounded-md p-1.5 text-text-tertiary transition-colors hover:bg-surface-overlay hover:text-status-success" :title="t('common.edit')"><Pencil :size="16" /></Link>
-                                <button @click="deleteSupplier(supplier)" class="rounded-md p-1.5 text-text-tertiary transition-colors hover:bg-surface-overlay hover:text-status-danger" :title="t('common.delete')"><Trash2 :size="16" /></button>
+                                <Link v-if="canVisit('suppliers.edit')" :href="route('suppliers.edit', supplier.id)" class="rounded-md p-1.5 text-text-tertiary transition-colors hover:bg-surface-overlay hover:text-status-success" :title="t('common.edit')"><Pencil :size="16" /></Link>
+                                <button v-if="hasPermission('delete_suppliers')" @click="deleteSupplier(supplier)" class="rounded-md p-1.5 text-text-tertiary transition-colors hover:bg-surface-overlay hover:text-status-danger" :title="t('common.delete')"><Trash2 :size="16" /></button>
                             </div>
                         </td>
                     </tr>

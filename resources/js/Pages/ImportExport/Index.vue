@@ -39,7 +39,7 @@ const props = defineProps({
 
 const { t } = useI18n();
 const page = usePage();
-const { hasPermission } = usePermissions();
+const { hasPermission, canVisit } = usePermissions();
 
 const canExport = computed(() => hasPermission('export_data'));
 const canExportUsers = computed(() => canExport.value && hasPermission('view_users'));
@@ -370,7 +370,7 @@ const code = 'rounded bg-surface-overlay px-1 py-0.5 font-mono text-xs text-text
                                 <p class="mb-3 text-sm text-text-tertiary">
                                     {{ t('importExport.import.templateHelpLabel') }}
                                 </p>
-                                <Button as="a" variant="secondary" class="w-full" :href="route('import-export.download-template')">
+                                <Button v-if="canVisit('import-export.download-template')" as="a" variant="secondary" class="w-full" :href="route('import-export.download-template')">
                                     <Download :size="14" />
                                     {{ t('importExport.import.downloadTemplate') }}
                                 </Button>
@@ -549,7 +549,7 @@ const code = 'rounded bg-surface-overlay px-1 py-0.5 font-mono text-xs text-text
                             </Button>
 
                             <div class="border-t border-border-subtle pt-4">
-                                <Button as="a" variant="secondary" class="w-full" :href="route('import-export.download-order-template')">
+                                <Button v-if="canVisit('import-export.download-order-template')" as="a" variant="secondary" class="w-full" :href="route('import-export.download-order-template')">
                                     <Download :size="14" />
                                     {{ t('importExport.import.downloadTemplate') }}
                                 </Button>
@@ -649,7 +649,7 @@ const code = 'rounded bg-surface-overlay px-1 py-0.5 font-mono text-xs text-text
                             </Button>
 
                             <div class="border-t border-border-subtle pt-4">
-                                <Button as="a" variant="secondary" class="w-full" :href="route('import-export.download-user-template')">
+                                <Button v-if="canVisit('import-export.download-user-template')" as="a" variant="secondary" class="w-full" :href="route('import-export.download-user-template')">
                                     <Download :size="14" />
                                     {{ t('importExport.import.downloadTemplate') }}
                                 </Button>

@@ -12,6 +12,9 @@ import { useI18n } from 'vue-i18n';
 import { displayCalendarDate } from '@/lib/dates';
 import { formatMoney } from '@/lib/money';
 import { ArrowLeft, Wallet, ShoppingCart, Users, CircleCheck } from 'lucide-vue-next';
+import { usePermissions } from '@/composables/usePermissions';
+
+const { canVisit } = usePermissions();
 
 const { t } = useI18n();
 
@@ -163,7 +166,7 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-t
                         <tbody>
                             <tr v-for="row in customers" :key="`${row.customer_id ?? ''}-${row.customer}`" class="border-b border-border-subtle transition-colors last:border-b-0 hover:bg-surface-overlay">
                                 <td class="px-4 py-3 text-text-primary">
-                                    <Link v-if="row.customer_id" :href="route('customers.show', row.customer_id)" class="hover:text-brand">{{ row.customer }}</Link>
+                                    <Link v-if="row.customer_id && canVisit('customers.show')" :href="route('customers.show', row.customer_id)" class="hover:text-brand">{{ row.customer }}</Link>
                                     <span v-else>{{ row.customer }}</span>
                                 </td>
                                 <td class="px-4 py-3 text-right tabular-nums text-text-secondary">{{ row.orders }}</td>
@@ -202,7 +205,8 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-t
                         <tbody>
                             <tr v-for="order in orders" :key="order.id" class="border-b border-border-subtle transition-colors last:border-b-0 hover:bg-surface-overlay">
                                 <td class="px-4 py-3">
-                                    <Link :href="route('orders.show', order.id)" class="font-mono text-xs font-medium text-text-primary hover:text-brand">{{ order.order_number }}</Link>
+                                    <Link v-if="canVisit('orders.show')" :href="route('orders.show', order.id)" class="font-mono text-xs font-medium text-text-primary hover:text-brand">{{ order.order_number }}</Link>
+                                    <span v-else class="font-mono text-xs font-medium text-text-primary">{{ order.order_number }}</span>
                                 </td>
                                 <td class="px-4 py-3 text-text-primary">{{ order.customer || '-' }}</td>
                                 <td class="px-4 py-3 whitespace-nowrap text-text-secondary">{{ displayCalendarDate(order.order_date) }}</td>

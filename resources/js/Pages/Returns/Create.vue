@@ -8,8 +8,14 @@ import { ref, computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { ArrowLeft, Trash2 } from 'lucide-vue-next';
 import { formatMoney } from '@/lib/money';
+import { usePermissions } from '@/composables/usePermissions';
+
+const { canVisit } = usePermissions();
 
 const { t } = useI18n();
+
+// Back to the order, or to the returns list for a user who cannot open orders.
+const backHref = computed(() => (canVisit('orders.show') ? route('orders.show', props.order.id) : route('returns.index')));
 
 const props = defineProps({
     order: Object,
@@ -119,7 +125,7 @@ const fieldError = 'mt-1 text-xs text-status-danger';
 
         <PageHeader :title="t('returns.create.title')" :description="t('returns.create.fromOrder', { number: order.order_number })">
             <template #actions>
-                <Button variant="secondary" size="sm" as="Link" :href="route('orders.show', order.id)">
+                <Button variant="secondary" size="sm" as="Link" :href="backHref">
                     <ArrowLeft :size="14" />
                     {{ t('returns.create.backToOrder') }}
                 </Button>
@@ -264,7 +270,7 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                             </p>
                         </div>
                         <div class="flex gap-3">
-                            <Button variant="secondary" as="Link" :href="route('orders.show', order.id)">
+                            <Button variant="secondary" as="Link" :href="backHref">
                                 {{ t('common.cancel') }}
                             </Button>
                             <Button

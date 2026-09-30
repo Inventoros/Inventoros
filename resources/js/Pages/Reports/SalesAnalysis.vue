@@ -20,6 +20,9 @@ import {
     Boxes,
     TrendingUp,
 } from 'lucide-vue-next';
+import { usePermissions } from '@/composables/usePermissions';
+
+const { canVisit } = usePermissions();
 
 const { t } = useI18n();
 
@@ -236,7 +239,7 @@ const thClass =
                 <div class="flex flex-wrap items-center justify-between gap-2 px-5 pt-5">
                     <CardHeader :title="t('payments.byPaymentStatus')" />
                     <Link
-                        v-if="(summary.outstanding_by_currency || []).some((row) => Number(row.amount) > 0)"
+                        v-if="((summary.outstanding_by_currency || []).some((row) => Number(row.amount) > 0)) && canVisit('reports.receivables')"
                         :href="route('reports.receivables')"
                         class="text-sm text-brand transition-colors hover:text-brand-hover"
                     >

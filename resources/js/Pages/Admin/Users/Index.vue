@@ -7,6 +7,9 @@ import Badge from '@/Components/ui/Badge.vue';
 import { Head, Link } from '@inertiajs/vue3';
 import { useI18n } from 'vue-i18n';
 import { Plus, Eye, Pencil, Users } from 'lucide-vue-next';
+import { usePermissions } from '@/composables/usePermissions';
+
+const { canVisit } = usePermissions();
 
 defineProps({
     users: Object,
@@ -36,7 +39,7 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium text-text-secondary';
 
         <PageHeader :title="t('admin.users.title')" :description="t('admin.users.subtitle')">
             <template #actions>
-                <Button variant="default" size="sm" as="Link" :href="route('users.create')">
+                <Button v-if="canVisit('users.create')" variant="default" size="sm" as="Link" :href="route('users.create')">
                     <Plus :size="14" />
                     {{ t('admin.users.addUser') }}
                 </Button>
@@ -61,7 +64,7 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium text-text-secondary';
                                 <Users :size="22" class="text-text-tertiary" />
                                 <p class="text-sm font-medium text-text-primary">{{ t('admin.users.noUsersTitle') }}</p>
                                 <p class="text-sm text-text-tertiary">{{ t('admin.users.noUsersHint') }}</p>
-                                <Button variant="default" size="sm" as="Link" :href="route('users.create')">
+                                <Button v-if="canVisit('users.create')" variant="default" size="sm" as="Link" :href="route('users.create')">
                                     <Plus :size="14" />
                                     {{ t('admin.users.addUser') }}
                                 </Button>
@@ -85,7 +88,7 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium text-text-secondary';
                         <td class="px-4 py-3">
                             <div class="flex items-center justify-end gap-1">
                                 <Link :href="route('users.show', user.id)" class="rounded-md p-1.5 text-text-tertiary transition-colors hover:bg-surface-overlay hover:text-brand" :title="t('common.view')"><Eye :size="16" /></Link>
-                                <Link :href="route('users.edit', user.id)" class="rounded-md p-1.5 text-text-tertiary transition-colors hover:bg-surface-overlay hover:text-status-success" :title="t('common.edit')"><Pencil :size="16" /></Link>
+                                <Link v-if="canVisit('users.edit')" :href="route('users.edit', user.id)" class="rounded-md p-1.5 text-text-tertiary transition-colors hover:bg-surface-overlay hover:text-status-success" :title="t('common.edit')"><Pencil :size="16" /></Link>
                             </div>
                         </td>
                     </tr>

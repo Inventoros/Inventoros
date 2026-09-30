@@ -17,6 +17,9 @@ import {
 const BarcodeScannerModal = defineAsyncComponent(() => import('@/Components/BarcodeScannerModal.vue'));
 import { useI18n } from 'vue-i18n';
 import { formatMoney } from '@/lib/money';
+import { usePermissions } from '@/composables/usePermissions';
+
+const { hasPermission, canVisit } = usePermissions();
 
 const { t } = useI18n();
 
@@ -222,7 +225,7 @@ const thClass =
 
         <PageHeader :title="t('products.title')" :description="t('products.subtitle')">
             <template #actions>
-                <Button variant="default" size="sm" as="Link" :href="route('products.create')">
+                <Button v-if="canVisit('products.create')" variant="default" size="sm" as="Link" :href="route('products.create')">
                     <Plus :size="14" />
                     {{ t('products.addProduct') }}
                 </Button>
@@ -304,7 +307,7 @@ const thClass =
                             <div class="flex flex-col items-center gap-3">
                                 <Boxes :size="22" class="text-text-tertiary" />
                                 <p class="text-sm text-text-tertiary">{{ t('products.noProductsFound') }}</p>
-                                <Button variant="default" size="sm" as="Link" :href="route('products.create')"><Plus :size="14" />{{ t('products.addFirstProduct') }}</Button>
+                                <Button v-if="canVisit('products.create')" variant="default" size="sm" as="Link" :href="route('products.create')"><Plus :size="14" />{{ t('products.addFirstProduct') }}</Button>
                             </div>
                         </td>
                     </tr>
@@ -335,8 +338,8 @@ const thClass =
                                 <Link :href="route('products.show', product.id)" class="rounded-md p-1.5 text-text-tertiary transition-colors hover:bg-surface-sunken hover:text-brand" :title="t('common.view')"><Eye :size="16" /></Link>
                                 <button v-if="product.barcode || product.sku" @click="printBarcode(product.id)" class="rounded-md p-1.5 text-text-tertiary transition-colors hover:bg-surface-sunken hover:text-text-primary" :title="t('products.printBarcode')"><Barcode :size="16" /></button>
                                 <button @click="duplicateProduct(product)" class="rounded-md p-1.5 text-text-tertiary transition-colors hover:bg-surface-sunken hover:text-status-warning" :title="t('products.duplicate')"><Copy :size="16" /></button>
-                                <Link :href="route('products.edit', product.id)" class="rounded-md p-1.5 text-text-tertiary transition-colors hover:bg-surface-sunken hover:text-status-success" :title="t('common.edit')"><Pencil :size="16" /></Link>
-                                <button @click="deleteProduct(product)" class="rounded-md p-1.5 text-text-tertiary transition-colors hover:bg-surface-sunken hover:text-status-danger" :title="t('common.delete')"><Trash2 :size="16" /></button>
+                                <Link v-if="canVisit('products.edit')" :href="route('products.edit', product.id)" class="rounded-md p-1.5 text-text-tertiary transition-colors hover:bg-surface-sunken hover:text-status-success" :title="t('common.edit')"><Pencil :size="16" /></Link>
+                                <button v-if="hasPermission('delete_products')" @click="deleteProduct(product)" class="rounded-md p-1.5 text-text-tertiary transition-colors hover:bg-surface-sunken hover:text-status-danger" :title="t('common.delete')"><Trash2 :size="16" /></button>
                             </div>
                         </td>
                     </tr>

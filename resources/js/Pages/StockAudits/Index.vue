@@ -9,6 +9,9 @@ import { ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { displayDate } from '@/lib/dates';
 import { Plus, Search, Eye, ClipboardList, CalendarClock } from 'lucide-vue-next';
+import { usePermissions } from '@/composables/usePermissions';
+
+const { canVisit } = usePermissions();
 
 const { t } = useI18n();
 
@@ -73,7 +76,7 @@ const thClass =
                     <CalendarClock :size="14" />
                     {{ t('cycleCounts.title') }}
                 </Button>
-                <Button variant="default" size="sm" as="Link" :href="route('stock-audits.create')">
+                <Button v-if="canVisit('stock-audits.create')" variant="default" size="sm" as="Link" :href="route('stock-audits.create')">
                     <Plus :size="14" />
                     {{ t('stockAudits.index.newAudit') }}
                 </Button>
@@ -144,7 +147,7 @@ const thClass =
                             <div class="flex flex-col items-center gap-3">
                                 <ClipboardList :size="22" class="text-text-tertiary" />
                                 <p class="text-sm text-text-tertiary">{{ t('stockAudits.index.empty') }}</p>
-                                <Button variant="default" size="sm" as="Link" :href="route('stock-audits.create')">
+                                <Button v-if="canVisit('stock-audits.create')" variant="default" size="sm" as="Link" :href="route('stock-audits.create')">
                                     <Plus :size="14" />
                                     {{ t('stockAudits.index.createFirst') }}
                                 </Button>

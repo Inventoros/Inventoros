@@ -30,6 +30,9 @@ import {
     X,
     ClipboardList,
 } from 'lucide-vue-next';
+import { usePermissions } from '@/composables/usePermissions';
+
+const { canVisit } = usePermissions();
 
 const { t, te } = useI18n();
 
@@ -121,8 +124,8 @@ const reorderThClass = 'px-3 py-2 text-left text-xs font-medium tracking-tight t
 // Secondary stat tiles (revenue_chart widget)
 const secondaryStats = () => [
     { key: 'pendingOrders', label: t('dashboard.pendingOrders'), value: formatNumber(props.stats?.pendingOrders), href: route('orders.index', { status: 'pending' }), tone: 'text-status-warning' },
-    { key: 'categories', label: t('dashboard.categories'), value: props.stats?.categories, href: route('categories.index'), tone: 'text-brand' },
-    { key: 'locations', label: t('dashboard.locations'), value: props.stats?.locations, href: route('locations.index'), tone: 'text-brand' },
+    { key: 'categories', label: t('dashboard.categories'), value: props.stats?.categories, href: canVisit('categories.index') ? route('categories.index') : null, tone: 'text-brand' },
+    { key: 'locations', label: t('dashboard.locations'), value: props.stats?.locations, href: canVisit('locations.index') ? route('locations.index') : null, tone: 'text-brand' },
     { key: 'revenueThisMonth', label: t('dashboard.revenueThisMonth'), value: formatCompactCurrency(props.stats?.revenueThisMonth), extra: otherCurrencies('revenueThisMonth'), href: null, tone: 'text-brand' },
     { key: 'deadStockValue', label: t('dashboard.deadStockValue'), value: formatCompactCurrency(props.stats?.deadStockValue), extra: otherCurrencies('deadStockValue'), href: route('reports.dead-stock'), tone: 'text-status-warning' },
     { key: 'outstandingReceivables', label: t('dashboard.outstandingReceivables'), value: formatCompactCurrency(props.stats?.outstandingReceivables), extra: otherCurrencies('outstandingReceivables'), href: route('reports.receivables'), tone: 'text-status-warning' },
@@ -156,7 +159,7 @@ const secondaryStats = () => [
                     <Settings2 :size="14" />
                     {{ t('dashboard.customize') }}
                 </Button>
-                <Button variant="default" size="sm" as="Link" :href="route('orders.create')">
+                <Button v-if="canVisit('orders.create')" variant="default" size="sm" as="Link" :href="route('orders.create')">
                     <Plus :size="14" />
                     {{ t('dashboard.newOrder') }}
                 </Button>
@@ -267,7 +270,7 @@ const secondaryStats = () => [
                     <div v-if="recentOrders.length === 0" class="flex flex-col items-center gap-2 py-8 text-center">
                         <ShoppingCart :size="20" class="text-text-tertiary" />
                         <p class="text-sm text-text-tertiary">{{ t('dashboard.noOrdersYet') }}</p>
-                        <Button variant="default" size="sm" as="Link" :href="route('orders.create')">
+                        <Button v-if="canVisit('orders.create')" variant="default" size="sm" as="Link" :href="route('orders.create')">
                             {{ t('dashboard.createFirstOrder') }}
                         </Button>
                     </div>
@@ -346,7 +349,7 @@ const secondaryStats = () => [
                     <div v-if="recentProducts.length === 0" class="flex flex-col items-center gap-2 py-8 text-center">
                         <Package :size="20" class="text-text-tertiary" />
                         <p class="text-sm text-text-tertiary">{{ t('dashboard.noProductsYet') }}</p>
-                        <Button variant="default" size="sm" as="Link" :href="route('products.create')">
+                        <Button v-if="canVisit('products.create')" variant="default" size="sm" as="Link" :href="route('products.create')">
                             {{ t('dashboard.addFirstProduct') }}
                         </Button>
                     </div>
@@ -431,7 +434,7 @@ const secondaryStats = () => [
                                         <span v-if="row.supplier" class="text-text-secondary">{{ row.supplier }}</span>
                                         <span v-else class="flex flex-col">
                                             <span class="text-xs italic text-status-danger">{{ t('quickReorder.noSupplier') }}</span>
-                                            <Link :href="route('products.edit', row.id)" class="text-xs font-medium text-brand hover:underline">{{ t('quickReorder.addSupplier') }}</Link>
+                                            <Link v-if="canVisit('products.edit')" :href="route('products.edit', row.id)" class="text-xs font-medium text-brand hover:underline">{{ t('quickReorder.addSupplier') }}</Link>
                                         </span>
                                     </td>
                                     <td class="px-3 py-2 text-right">
@@ -508,6 +511,7 @@ const secondaryStats = () => [
                 </div>
                 <div class="grid grid-cols-1 gap-3 p-5 sm:grid-cols-2 lg:grid-cols-4">
                     <Link
+                        v-if="canVisit('orders.create')"
                         :href="route('orders.create')"
                         class="group flex items-center gap-3 rounded-lg border border-border-subtle bg-surface-canvas p-4 transition-colors hover:border-brand"
                     >
@@ -520,6 +524,7 @@ const secondaryStats = () => [
                         </div>
                     </Link>
                     <Link
+                        v-if="canVisit('products.create')"
                         :href="route('products.create')"
                         class="group flex items-center gap-3 rounded-lg border border-border-subtle bg-surface-canvas p-4 transition-colors hover:border-brand"
                     >

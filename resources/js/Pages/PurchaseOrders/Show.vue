@@ -13,6 +13,9 @@ import { useI18n } from 'vue-i18n';
 import { displayCalendarDate, displayDate } from '@/lib/dates';
 import { formatMoney } from '@/lib/money';
 import { ArrowLeft, Pencil, Download, Eye, Send, PackageCheck, Ban, Trash2 } from 'lucide-vue-next';
+import { usePermissions } from '@/composables/usePermissions';
+
+const { canVisit } = usePermissions();
 
 const { t } = useI18n();
 
@@ -141,7 +144,7 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-t
                     {{ t('purchaseOrders.show.previewPdf') }}
                 </Button>
                 <Button
-                    v-if="purchaseOrder.status === 'draft' && !lockedForApproval"
+                    v-if="(purchaseOrder.status === 'draft' && !lockedForApproval) && canVisit('purchase-orders.edit')"
                     variant="default"
                     size="sm"
                     as="Link"
@@ -151,7 +154,7 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-t
                     {{ t('common.edit') }}
                 </Button>
                 <Button
-                    v-if="purchaseOrder.status === 'sent' || purchaseOrder.status === 'partial'"
+                    v-if="(purchaseOrder.status === 'sent' || purchaseOrder.status === 'partial') && canVisit('purchase-orders.receive')"
                     variant="default"
                     size="sm"
                     as="Link"
@@ -196,7 +199,8 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-t
                             <div>
                                 <dt class="text-xs text-text-tertiary">{{ t('purchaseOrders.supplier') }}</dt>
                                 <dd class="mt-1 text-sm text-text-primary">
-                                    <Link v-if="purchaseOrder.supplier" :href="route('suppliers.show', purchaseOrder.supplier.id)" class="text-brand hover:underline">
+                                    <span v-if="purchaseOrder.supplier && !canVisit('suppliers.show')">{{ purchaseOrder.supplier.name }}</span>
+                                    <Link v-else-if="purchaseOrder.supplier" :href="route('suppliers.show', purchaseOrder.supplier.id)" class="text-brand hover:underline">
                                         {{ purchaseOrder.supplier.name }}
                                     </Link>
                                     <span v-else>-</span>
@@ -249,7 +253,8 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-t
                                 <tbody>
                                     <tr v-for="item in purchaseOrder.items" :key="item.id" class="border-b border-border-subtle transition-colors last:border-b-0 hover:bg-surface-overlay">
                                         <td class="min-w-[12rem] px-4 py-3 text-sm text-text-primary">
-                                            <Link v-if="item.product" :href="route('products.show', item.product.id)" class="text-brand hover:underline">
+                                            <span v-if="item.product && !canVisit('products.show')">{{ item.product_name }}</span>
+                                            <Link v-else-if="item.product" :href="route('products.show', item.product.id)" class="text-brand hover:underline">
                                                 {{ item.product_name }}
                                             </Link>
                                             <span v-else>{{ item.product_name }}</span>
@@ -370,7 +375,7 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-t
                             {{ t('approvals.poSendBlocked') }}
                         </p>
                         <Button
-                            v-if="purchaseOrder.status === 'sent' || purchaseOrder.status === 'partial'"
+                            v-if="(purchaseOrder.status === 'sent' || purchaseOrder.status === 'partial') && canVisit('purchase-orders.receive')"
                             variant="default"
                             class="w-full"
                             as="Link"
@@ -380,7 +385,7 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-t
                             {{ t('purchaseOrders.show.receiveItems') }}
                         </Button>
                         <Button
-                            v-if="purchaseOrder.status === 'draft' && !lockedForApproval"
+                            v-if="(purchaseOrder.status === 'draft' && !lockedForApproval) && canVisit('purchase-orders.edit')"
                             variant="secondary"
                             class="w-full"
                             as="Link"

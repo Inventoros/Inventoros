@@ -13,7 +13,7 @@ import { formatMoney } from '@/lib/money';
 import { displayDateTime } from '@/lib/dates';
 
 const { t } = useI18n();
-const { hasPermission } = usePermissions();
+const { hasPermission, canVisit } = usePermissions();
 
 const props = defineProps({
     returnOrder: Object,
@@ -265,9 +265,10 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-t
                             <div v-if="returnOrder.order">
                                 <dt class="text-xs text-text-tertiary">{{ t('returns.show.forOrder') }}</dt>
                                 <dd class="mt-1 text-sm">
-                                    <Link :href="route('orders.show', returnOrder.order_id)" class="text-brand hover:underline">
+                                    <Link v-if="canVisit('orders.show')" :href="route('orders.show', returnOrder.order_id)" class="text-brand hover:underline">
                                         #{{ returnOrder.order.order_number }}
                                     </Link>
+                                    <span v-else class="text-text-primary">#{{ returnOrder.order.order_number }}</span>
                                 </dd>
                             </div>
                         </dl>

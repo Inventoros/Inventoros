@@ -22,6 +22,9 @@ import {
     AlertTriangle,
     ScanLine,
 } from 'lucide-vue-next';
+import { usePermissions } from '@/composables/usePermissions';
+
+const { canVisit } = usePermissions();
 
 const BarcodeScannerModal = defineAsyncComponent(() => import('@/Components/BarcodeScannerModal.vue'));
 
@@ -288,7 +291,7 @@ const thClass = 'px-6 py-3 text-left text-xs font-medium uppercase tracking-wide
             <template #actions>
                 <Badge :variant="statusVariant(audit.status)" size="sm" dot>{{ getStatusLabel(audit.status) }}</Badge>
                 <Button
-                    v-if="canEdit"
+                    v-if="(canEdit) && canVisit('stock-audits.edit')"
                     variant="default"
                     size="sm"
                     as="Link"
