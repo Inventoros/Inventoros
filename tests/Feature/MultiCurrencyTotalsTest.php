@@ -111,6 +111,24 @@ class MultiCurrencyTotalsTest extends TestCase
             ->assertInertia(fn (Assert $page) => $page->where('currency', 'CAD')->where('summary.total_outstanding', '110.00')->etc());
     }
 
+    public function test_the_receivables_export_is_one_currency_at_a_time(): void
+    {
+        $this->actingAs($this->admin);
+
+        $cad = $this->get(route('reports.receivables', ['export' => 'csv', 'group' => 'orders']))->streamedContent();
+        $this->assertStringContainsString('CAD-1', $cad);
+        $this->assertStringNotContainsString('USD-1', $cad);
+
+        $usd = $this->get(route('reports.receivables', ['export' => 'csv', 'group' => 'orders', 'currency' => 'USD']))->streamedContent();
+        $this->assertStringContainsString('USD-1', $usd);
+        $this->assertStringNotContainsString('CAD-1', $usd);
+
+        // The customer aging sums one currency only: Acme owes CAD 60 here,
+        // not CAD 60 + USD 80.
+        $customers = $this->get(route('reports.receivables', ['export' => 'csv']))->streamedContent();
+        $this->assertMatchesRegularExpression('/^Acme,1,60,0,0,0,0,60$/m', str_replace("\r", '', $customers));
+    }
+
     public function test_the_dead_stock_tile_is_per_currency(): void
     {
         foreach ([['OLD-CAD', 'CAD', 4], ['OLD-USD', 'USD', 5]] as [$sku, $currency, $cost]) {
