@@ -2383,6 +2383,14 @@
     "description": "管理您的账户信息、密码和账户删除。"
   },
   "install": {
+    "server": {
+      "alreadyInstalled": "Inventoros 已安装。",
+      "connectionSuccessful": "数据库连接成功。",
+      "connectionFailed": "数据库连接失败：{error}",
+      "databaseInstalled": "数据库已安装。",
+      "unfinishedInstall": "数据库中已有表，可能来自一次未完成的安装，在其上安装失败：{error}",
+      "adminCreated": "管理员账户已创建。"
+    },
     "welcome": {
       "title": "欢迎使用 Inventoros",
       "subtitle": "人人适用的库存管理系统",

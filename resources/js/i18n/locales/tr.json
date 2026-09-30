@@ -2383,6 +2383,14 @@
     "description": "Hesap bilgilerinizi, şifrenizi ve hesap silme işlemini yönetin."
   },
   "install": {
+    "server": {
+      "alreadyInstalled": "Inventoros zaten kurulu.",
+      "connectionSuccessful": "Veritabanı bağlantısı başarılı.",
+      "connectionFailed": "Veritabanı bağlantısı başarısız: {error}",
+      "databaseInstalled": "Veritabanı kuruldu.",
+      "unfinishedInstall": "Veritabanında, muhtemelen tamamlanmamış önceki bir kurulumdan kalan tablolar var ve bunların üzerine kurulum başarısız oldu: {error}",
+      "adminCreated": "Yönetici hesabı oluşturuldu."
+    },
     "welcome": {
       "title": "Inventoros'a Hoş Geldiniz",
       "subtitle": "Herkes İçin Envanter Yönetimi",

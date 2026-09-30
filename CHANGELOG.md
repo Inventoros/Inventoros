@@ -70,6 +70,7 @@ Before upgrading: take a database backup you have checked, run `php artisan opti
 - Sidebar items that were hidden from everyone, the discarded language cookie, and several routes that returned 500.
 - Fresh installs on MySQL and PostgreSQL, and the web installer's database step.
 - The web installer's database step lifts PHP's time limit while migrating, and after an attempt that stopped part-way ("Table already exists") offers to reset the database and install again.
+- The web installer failing with 419 over plain HTTP: `.env.example` no longer forces `SESSION_SECURE_COOKIE=true`; the installer sets it to `true` for HTTPS installs and `false` otherwise. Installer messages are shown in the user's language.
 - `/install` and `/` answering 500 on a fresh install with the shipped `.env.example`: sessions and the cache use files until installation completes, since their database tables do not exist yet.
 - Dates shown one day early for users west of UTC.
 - Batch, serial and variant stock calls that returned 401 in the browser, and variant decrease adjustments that added stock.

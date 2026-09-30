@@ -2383,6 +2383,14 @@
     "description": "계정 정보, 비밀번호 및 계정 삭제를 관리합니다."
   },
   "install": {
+    "server": {
+      "alreadyInstalled": "Inventoros가 이미 설치되어 있습니다.",
+      "connectionSuccessful": "데이터베이스에 연결했습니다.",
+      "connectionFailed": "데이터베이스 연결 실패: {error}",
+      "databaseInstalled": "데이터베이스를 설치했습니다.",
+      "unfinishedInstall": "데이터베이스에 완료되지 않은 이전 설치에서 남은 것으로 보이는 테이블이 이미 있어 그 위에 설치하지 못했습니다: {error}",
+      "adminCreated": "관리자 계정을 만들었습니다."
+    },
     "welcome": {
       "title": "Inventoros에 오신 것을 환영합니다",
       "subtitle": "모두를 위한 재고 관리",

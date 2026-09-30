@@ -2383,6 +2383,14 @@
     "description": "أدِر معلومات حسابك وكلمة المرور وحذف الحساب."
   },
   "install": {
+    "server": {
+      "alreadyInstalled": "Inventoros مثبت بالفعل.",
+      "connectionSuccessful": "تم الاتصال بقاعدة البيانات بنجاح.",
+      "connectionFailed": "فشل الاتصال بقاعدة البيانات: {error}",
+      "databaseInstalled": "تم تثبيت قاعدة البيانات.",
+      "unfinishedInstall": "تحتوي قاعدة البيانات بالفعل على جداول، ربما من تثبيت سابق لم يكتمل، وفشل التثبيت فوقها: {error}",
+      "adminCreated": "تم إنشاء حساب المسؤول."
+    },
     "welcome": {
       "title": "مرحباً بك في Inventoros",
       "subtitle": "إدارة المخزون للجميع",

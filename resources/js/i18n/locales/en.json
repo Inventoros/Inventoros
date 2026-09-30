@@ -2284,6 +2284,14 @@
     "description": "Manage your account information, password, and account removal."
   },
   "install": {
+    "server": {
+      "alreadyInstalled": "Inventoros is already installed.",
+      "connectionSuccessful": "Database connection successful.",
+      "connectionFailed": "Database connection failed: {error}",
+      "databaseInstalled": "Database installed.",
+      "unfinishedInstall": "The database already has tables, probably from an earlier installation that did not finish, and installing on top of them failed: {error}",
+      "adminCreated": "Admin account created."
+    },
     "welcome": {
       "title": "Welcome to Inventoros",
       "subtitle": "Inventory Management for the Rest of Us",

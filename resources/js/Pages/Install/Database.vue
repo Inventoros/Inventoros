@@ -6,6 +6,12 @@ import Button from '@/Components/ui/Button.vue';
 
 const { t } = useI18n();
 
+// The installer answers with an i18n key (and the raw error) next to its
+// English message; show the translation when there is one.
+const serverMessage = (data) => (data?.message_key
+    ? t(data.message_key, { error: data.error ?? '' })
+    : data?.message);
+
 const props = defineProps({
     currentConfig: Object,
 });
@@ -59,7 +65,7 @@ const testConnection = async () => {
         });
 
         const data = await response.json();
-        testResult.value = data;
+        testResult.value = { ...data, message: serverMessage(data) };
     } catch (error) {
         testResult.value = {
             success: false,
@@ -92,7 +98,7 @@ const install = async (reset = false) => {
             window.location.href = route('install.admin');
         } else {
             confirmReset.value = false;
-            testResult.value = data;
+            testResult.value = { ...data, message: serverMessage(data) };
         }
     } catch (error) {
         testResult.value = {

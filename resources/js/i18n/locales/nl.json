@@ -2383,6 +2383,14 @@
     "description": "Beheer uw accountgegevens, wachtwoord en het verwijderen van uw account."
   },
   "install": {
+    "server": {
+      "alreadyInstalled": "Inventoros is al geïnstalleerd.",
+      "connectionSuccessful": "Verbinding met de database geslaagd.",
+      "connectionFailed": "Verbinding met de database mislukt: {error}",
+      "databaseInstalled": "Database geïnstalleerd.",
+      "unfinishedInstall": "De database bevat al tabellen, waarschijnlijk van een eerdere installatie die niet is voltooid, en installeren daaroverheen is mislukt: {error}",
+      "adminCreated": "Beheerdersaccount aangemaakt."
+    },
     "welcome": {
       "title": "Welkom bij Inventoros",
       "subtitle": "Voorraadbeheer voor iedereen",

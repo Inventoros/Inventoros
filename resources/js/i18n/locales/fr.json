@@ -2383,6 +2383,14 @@
     "description": "Gérez les informations de votre compte, votre mot de passe et la suppression du compte."
   },
   "install": {
+    "server": {
+      "alreadyInstalled": "Inventoros est déjà installé.",
+      "connectionSuccessful": "Connexion à la base de données réussie.",
+      "connectionFailed": "Échec de la connexion à la base de données : {error}",
+      "databaseInstalled": "Base de données installée.",
+      "unfinishedInstall": "La base de données contient déjà des tables, sans doute d'une installation précédente inachevée, et l'installation par-dessus a échoué : {error}",
+      "adminCreated": "Compte administrateur créé."
+    },
     "welcome": {
       "title": "Bienvenue sur Inventoros",
       "subtitle": "La gestion d'inventaire pour tous",

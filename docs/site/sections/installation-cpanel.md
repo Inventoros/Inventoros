@@ -111,7 +111,11 @@ DB_PORT=3306
 DB_DATABASE=cpaneluser_inventoros
 DB_USERNAME=cpaneluser_invuser
 DB_PASSWORD=your_password
+
+SESSION_SECURE_COOKIE=true
 ```
+
+Serve the site over HTTPS (Step 8) and keep `SESSION_SECURE_COOKIE=true`. It is `false` in `.env.example` so the web installer also works over plain HTTP, and the installer sets it to `true` when the site is served over HTTPS (or `APP_URL` starts with `https://`). Over plain HTTP a secure session cookie is never sent back, so every form fails with "419 Page Expired".
 
 ### Step 6: Generate the key, migrate, and cache
 

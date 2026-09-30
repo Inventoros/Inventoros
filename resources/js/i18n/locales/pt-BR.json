@@ -2383,6 +2383,14 @@
     "description": "Gerencie as informações da sua conta, a senha e a exclusão da conta."
   },
   "install": {
+    "server": {
+      "alreadyInstalled": "O Inventoros já está instalado.",
+      "connectionSuccessful": "Conexão com o banco de dados bem-sucedida.",
+      "connectionFailed": "Falha na conexão com o banco de dados: {error}",
+      "databaseInstalled": "Banco de dados instalado.",
+      "unfinishedInstall": "O banco de dados já tem tabelas, provavelmente de uma instalação anterior que não terminou, e a instalação sobre elas falhou: {error}",
+      "adminCreated": "Conta de administrador criada."
+    },
     "welcome": {
       "title": "Bem-vindo ao Inventoros",
       "subtitle": "Gerenciamento de Estoque para Todos",

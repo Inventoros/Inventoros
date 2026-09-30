@@ -2383,6 +2383,14 @@
     "description": "アカウント情報、パスワード、アカウントの削除を管理します。"
   },
   "install": {
+    "server": {
+      "alreadyInstalled": "Inventoros はすでにインストールされています。",
+      "connectionSuccessful": "データベースに接続しました。",
+      "connectionFailed": "データベースへの接続に失敗しました: {error}",
+      "databaseInstalled": "データベースをインストールしました。",
+      "unfinishedInstall": "データベースには、完了しなかった以前のインストールのものと思われるテーブルがすでにあり、その上へのインストールに失敗しました: {error}",
+      "adminCreated": "管理者アカウントを作成しました。"
+    },
     "welcome": {
       "title": "Inventorosへようこそ",
       "subtitle": "みんなのための在庫管理",
