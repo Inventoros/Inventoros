@@ -56,8 +56,9 @@ test('an explicit locale still wins over the active one', () => {
 
 test('compact money and plain numbers follow the locale too', () => {
     applyFormatSettings({ locale: 'de' });
-    // German has no short form for thousands; millions are "Mio.".
-    assert.equal(plain(formatCompactMoney(234100, 'EUR')), '234.100 €');
+    // German has no short form for thousands (ICU versions differ on the
+    // trailing ",0"); millions are "Mio.".
+    assert.match(plain(formatCompactMoney(234100, 'EUR')), /^234\.100(,0)? €$/);
     assert.equal(plain(formatCompactMoney(2500000, 'EUR')), '2,5 Mio. €');
     assert.equal(formatNumber(1234567), '1.234.567');
     applyFormatSettings({ locale: 'fr' });
