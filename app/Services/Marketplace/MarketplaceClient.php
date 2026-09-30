@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services\Marketplace;
 
+use App\Support\CanonicalHost;
 use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Http\Client\Response;
 use Illuminate\Support\Facades\Cache;
@@ -42,9 +43,11 @@ final class MarketplaceClient
         $url = trim((string) config('marketplace.url', ''));
         $parts = parse_url($url);
 
+        $host = CanonicalHost::of($url);
+
         $valid = is_array($parts)
+            && $host !== null
             && strtolower((string) ($parts['scheme'] ?? '')) === 'https'
-            && ($parts['host'] ?? '') !== ''
             && ! isset($parts['user'])
             && ! isset($parts['pass'])
             && ! isset($parts['query'])
@@ -59,7 +62,7 @@ final class MarketplaceClient
 
         $port = isset($parts['port']) ? ':'.(int) $parts['port'] : '';
 
-        return 'https://'.strtolower((string) $parts['host']).$port;
+        return 'https://'.$host.$port;
     }
 
     /**

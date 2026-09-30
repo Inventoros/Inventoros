@@ -39,6 +39,7 @@ use Dedoc\Scramble\Support\Generator\SecurityScheme;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Mail\Events\MessageSent;
+use Illuminate\Mail\Markdown;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Log;
@@ -75,6 +76,11 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         Vite::prefetch(concurrency: 3);
+
+        // Markdown mail (the account invitation) interpolates names that users
+        // and admins choose. Escape them so a name written as a Markdown link
+        // or HTML stays text instead of becoming a link in the email.
+        Markdown::withSecuredEncoding();
 
         // API rate limiting
         RateLimiter::for('api', function (Request $request) {
