@@ -200,6 +200,32 @@ class OrganizationSettingsControllerTest extends TestCase
         $response->assertSessionHasErrors(['currency', 'timezone']);
     }
 
+    /**
+     * Currency and timezone were free text, so a typo ("Europe/Pari",
+     * "EURO") was saved and broke money and date formatting. They are now
+     * picked from lists and validated against them.
+     */
+    public function test_regional_settings_offer_currency_and_timezone_lists(): void
+    {
+        $this->actingAs($this->admin)
+            ->get(route('settings.organization.index'))
+            ->assertOk()
+            ->assertInertia(fn ($page) => $page
+                ->where('currencies', fn ($currencies) => collect($currencies)->pluck('code')->contains('EUR'))
+                ->where('timezones', fn ($zones) => collect($zones)->contains('Europe/Paris') && collect($zones)->contains('UTC'))
+            );
+    }
+
+    public function test_regional_settings_reject_an_unknown_currency_or_timezone(): void
+    {
+        $this->actingAs($this->admin)
+            ->patch(route('settings.organization.update.regional'), [
+                'currency' => 'ZZZ',
+                'timezone' => 'Europe/Pari',
+            ])
+            ->assertSessionHasErrors(['currency', 'timezone']);
+    }
+
     public function test_settings_page_receives_explicit_capability_flags(): void
     {
         $this->actingAs($this->admin)

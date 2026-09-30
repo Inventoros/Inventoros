@@ -49,7 +49,31 @@ class OrganizationSettingsController extends Controller
                 'enabled' => (bool) $organization?->portal_enabled,
                 'login_url' => $organization ? route('portal.login', ['organization' => $organization->slug]) : null,
             ],
+            // Regional settings are picked from these lists.
+            'currencies' => collect(self::currencyCodes($organization?->currency))
+                ->map(fn (string $code) => ['code' => $code, 'name' => config("currencies.supported.{$code}.name") ?? $code])
+                ->values()
+                ->all(),
+            'timezones' => \DateTimeZone::listIdentifiers(),
         ]);
+    }
+
+    /**
+     * The currencies an organization can use: the supported list, plus the
+     * one it already has (an older install may hold a code outside it).
+     *
+     * @return array<int, string>
+     */
+    private static function currencyCodes(?string $current): array
+    {
+        $codes = array_keys((array) config('currencies.supported', []));
+        $current = strtoupper(trim((string) $current));
+
+        if ($current !== '' && ! in_array($current, $codes, true)) {
+            $codes[] = $current;
+        }
+
+        return $codes;
     }
 
     /**
@@ -158,8 +182,8 @@ class OrganizationSettingsController extends Controller
         }
 
         $validated = $request->validate([
-            'currency' => 'required|string|max:3',
-            'timezone' => 'required|string|max:255',
+            'currency' => ['required', 'string', \Illuminate\Validation\Rule::in(self::currencyCodes($user->organization?->currency))],
+            'timezone' => ['required', 'string', 'timezone:all'],
             'date_format' => 'nullable|string|max:50',
             'time_format' => 'nullable|string|max:50',
         ]);

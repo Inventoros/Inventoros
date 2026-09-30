@@ -251,6 +251,7 @@ Plugins > Marketplace installs and updates plugins from inventoros.com. Every pa
 - **Products sold by variant.** Their stock is the sum of their active variants' stock wherever stock is shown, valued or compared with `min_stock` and `reorder_point` (dashboard, reports, reorder suggestions, low-stock filters). `products.stock` itself is unchanged, and the REST and GraphQL `stock` field still returns it; read `total_stock` for the figure the app shows.
 - **Sales Analysis exports.** The daily, status and top products exports have a Currency column after the first column (after SKU for products), and a day or status with orders in two currencies has one line per currency.
 - **Receivables exports.** Both receivables exports have a Currency column after Customer.
+- **Regional settings.** Currency and timezone are chosen from lists: a currency from `config/currencies.php` (or the one the organization already has) and a timezone PHP recognises. Saving an unknown code or timezone name is refused.
 
 ### License
 
