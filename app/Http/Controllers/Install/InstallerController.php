@@ -191,6 +191,13 @@ class InstallerController extends Controller
     /**
      * Save database configuration and run migrations.
      *
+     * With `reset_database` every table in the database is dropped first
+     * (`migrate:fresh`). The wizard only offers that after a run failed on a
+     * database that already has tables, typically an earlier attempt cut off
+     * part-way through a migration (MySQL cannot roll back schema changes,
+     * so the tables that migration created stay behind unrecorded and every
+     * retry fails with "Table already exists").
+     *
      * @param Request $request The incoming HTTP request containing database credentials
      * @return \Illuminate\Http\JsonResponse
      */
@@ -207,7 +214,19 @@ class InstallerController extends Controller
             'database' => 'required|string',
             'username' => 'required|string',
             'password' => 'nullable|string',
+            'reset_database' => 'nullable|boolean',
         ]);
+
+        $reset = $request->boolean('reset_database');
+
+        // Running every migration takes longer than PHP's default 30 second
+        // max_execution_time on many hosts; being cut off part-way leaves a
+        // half-migrated database. Lift the limit (where the host allows it)
+        // and finish even if the browser gives up waiting.
+        if (function_exists('set_time_limit')) {
+            set_time_limit(0);
+        }
+        ignore_user_abort(true);
 
         try {
             // Update .env file with database config. The driver is written to
@@ -240,23 +259,47 @@ class InstallerController extends Controller
             DB::purge($request->driver);
             DB::reconnect($request->driver);
 
-            // Run migrations
-            Artisan::call('migrate', ['--force' => true]);
+            // Run migrations. A plain migrate resumes after the last
+            // migration that completed.
+            Artisan::call($reset ? 'migrate:fresh' : 'migrate', ['--force' => true]);
 
             return response()->json([
                 'success' => true,
                 'message' => 'Database installed successfully!',
             ]);
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             Log::error('Database installation failed', [
                 'host' => $request->host,
                 'database' => $request->database,
+                'reset' => $reset,
                 'error' => $e->getMessage(),
             ]);
+
+            if (! $reset && $this->databaseHasTables()) {
+                return response()->json([
+                    'success' => false,
+                    'can_reset' => true,
+                    'message' => 'The database already has tables, probably from an earlier installation that did not finish, and installing on top of them failed: '
+                        .$e->getMessage(),
+                ], 409);
+            }
+
             return response()->json([
                 'success' => false,
                 'message' => 'Installation failed: ' . $e->getMessage(),
             ], 500);
+        }
+    }
+
+    /**
+     * Whether the (newly configured) database already has any tables.
+     */
+    protected function databaseHasTables(): bool
+    {
+        try {
+            return DB::connection()->getSchemaBuilder()->getTableListing() !== [];
+        } catch (\Throwable) {
+            return false;
         }
     }
 

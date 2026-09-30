@@ -179,6 +179,7 @@ For addon domains, if your addon domain points to `~/yourdomain.com`:
 - 500 Internal Server Error. Check storage and bootstrap/cache permissions, verify `.env` exists, and check `~/inventoros/storage/logs/laravel.log` for errors.
 - Assets not loading (CSS / JS broken). Ensure the `build/` folder was uploaded to `public_html` and `.htaccess` is present. Check that `APP_URL` matches your domain.
 - Database connection failed. Verify the credentials in `.env`. Test the same credentials in phpMyAdmin. Ensure the database user has privileges.
+- "Table already exists" when the web installer creates the tables. An earlier attempt stopped part-way (for example at the host's PHP time limit). The installer lifts the limit where the host allows it; on the database step it now offers **Reset database and install**, which deletes every table in that database and starts again. Only use it on a database that holds nothing but Inventoros. From SSH, `php artisan migrate --force` resumes after the last completed migration.
 - PHP version issues. In cPanel, open MultiPHP Manager or Select PHP Version and ensure PHP 8.4 (8.4.1 or newer) is selected for your domain.
 - Storage link issues. If uploaded files are not accessible, verify the symlink with `ls -la ~/public_html/storage` and recreate it if needed.
 
