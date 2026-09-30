@@ -247,6 +247,7 @@ Plugins > Marketplace installs and updates plugins from inventoros.com. Every pa
 - **Spreadsheet imports.** Laravel Excel is now 4.x with PhpSpreadsheet 5.x (fixes CVE-2026-59933 and related advisories). Imports pick the CSV, XLSX or XLS reader from the file's detected content, not its name, and the file name must end in `.csv`, `.txt`, `.xlsx` or `.xls`. Custom code that implements Laravel Excel concerns must match the 4.x signatures (for example `ToCollection::collection(): void`).
 - **Shipments and warehouse access.** A user limited to some warehouses can only create shipments from those warehouses (web, REST and MCP return 403 otherwise).
 - **Warehouse permissions.** The web warehouse pages check `create_warehouses`, `edit_warehouses` and `delete_warehouses` for creating, editing and deleting, as the REST API already did. Before, `view_warehouses` alone allowed all three. Grant those permissions to any custom role that should keep managing warehouses.
+- **Database errors.** A database error during a web, REST or GraphQL action is logged and answered with the standard error page or an HTTP 500, instead of showing its SQL in a message or returning it in a 422. REST clients that treated every 422 from receiving, transfers, audits, work orders or order actions as a business refusal now see real failures as 500s.
 
 ### License
 
