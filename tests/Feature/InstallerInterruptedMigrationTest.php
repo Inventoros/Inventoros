@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Feature;
 
 use App\Http\Controllers\Install\InstallerController;
+use Illuminate\Foundation\Testing\RefreshDatabaseState;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
@@ -28,6 +29,12 @@ final class InstallerInterruptedMigrationTest extends TestCase
     {
         parent::setUp();
 
+        // In-memory SQLite starts empty for every test; a MySQL or PostgreSQL
+        // test database is shared, so start from an empty one.
+        if (! $this->inMemory()) {
+            Artisan::call('db:wipe', ['--force' => true]);
+        }
+
         $this->envFile = storage_path('app/testing-installer/installer.env');
         File::ensureDirectoryExists(dirname($this->envFile));
         file_put_contents($this->envFile, "APP_NAME=Inventoros\nDB_CONNECTION=sqlite\n");
@@ -48,7 +55,19 @@ final class InstallerInterruptedMigrationTest extends TestCase
     {
         File::deleteDirectory(dirname($this->envFile));
 
+        if (! $this->inMemory()) {
+            // Drop what this test committed; the next RefreshDatabase test
+            // migrates again.
+            Artisan::call('db:wipe', ['--force' => true]);
+            RefreshDatabaseState::$migrated = false;
+        }
+
         parent::tearDown();
+    }
+
+    private function inMemory(): bool
+    {
+        return DB::connection()->getDatabaseName() === ':memory:';
     }
 
     /**

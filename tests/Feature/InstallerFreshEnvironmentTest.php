@@ -18,12 +18,17 @@ use Tests\TestCase;
 final class InstallerFreshEnvironmentTest extends TestCase
 {
     /**
-     * The shipped defaults, on a database with no tables at all.
+     * The shipped defaults, on a database with no tables at all (the suite's
+     * in-memory SQLite; on MySQL and PostgreSQL the tables of other tests
+     * exist, but nothing is installed either).
      */
     private function useShippedDriversOnAnEmptyDatabase(): void
     {
         config(['session.driver' => 'database', 'cache.default' => 'database']);
-        $this->assertFalse(Schema::hasTable('sessions'));
+
+        if (DB::connection()->getDatabaseName() === ':memory:') {
+            $this->assertFalse(Schema::hasTable('sessions'));
+        }
     }
 
     public function test_the_installer_opens_before_any_table_exists(): void
@@ -40,6 +45,7 @@ final class InstallerFreshEnvironmentTest extends TestCase
         config([
             'session.driver' => 'database',
             'cache.default' => 'database',
+            'database.default' => 'sqlite',
             'database.connections.sqlite.database' => storage_path('framework/testing/missing-'.uniqid().'.sqlite'),
         ]);
         DB::purge('sqlite');

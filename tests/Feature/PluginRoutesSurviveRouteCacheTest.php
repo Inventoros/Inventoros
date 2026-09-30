@@ -9,6 +9,7 @@ use App\Services\PluginUIService;
 use App\Support\ArtisanProcess;
 use Illuminate\Container\Container;
 use Illuminate\Database\DatabaseManager;
+use Illuminate\Foundation\Testing\RefreshDatabaseState;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Facade;
 use Illuminate\Support\Facades\File;
@@ -25,15 +26,17 @@ use Tests\TestCase;
  * application never ran register_page() and every plugin page 404ed once
  * routes were cached.
  *
- * The second application needs a database it can see, so these tests use a
- * SQLite file instead of the suite's in-memory one.
+ * The second application needs a database it can see: with the suite's
+ * in-memory SQLite these tests switch to a SQLite file; on MySQL and
+ * PostgreSQL they share the server database and leave it empty, as an
+ * in-memory database would be.
  */
 final class PluginRoutesSurviveRouteCacheTest extends TestCase
 {
     use CreatesPluginUiUsers;
     use InteractsWithFixturePlugins;
 
-    private string $database;
+    private ?string $database = null;
 
     private string $routeCache;
 
@@ -41,9 +44,11 @@ final class PluginRoutesSurviveRouteCacheTest extends TestCase
 
     protected function setUp(): void
     {
-        $this->database = str_replace('\\', '/', sys_get_temp_dir()).'/inventoros-route-cache-'.uniqid().'.sqlite';
-        touch($this->database);
-        $this->setEnv('DB_DATABASE', $this->database);
+        if (getenv('DB_CONNECTION') === 'sqlite' && getenv('DB_DATABASE') === ':memory:') {
+            $this->database = str_replace('\\', '/', sys_get_temp_dir()).'/inventoros-route-cache-'.uniqid().'.sqlite';
+            touch($this->database);
+            $this->setEnv('DB_DATABASE', $this->database);
+        }
 
         // Relative to the base path: Laravel only treats paths starting with
         // a slash as absolute, which a Windows drive path does not.
@@ -56,6 +61,8 @@ final class PluginRoutesSurviveRouteCacheTest extends TestCase
         File::ensureDirectoryExists(dirname($this->routeCache));
         $this->helloAssetsExisted = File::isDirectory(public_path('plugin-assets/hello-world'));
 
+        // Committed, not in a test transaction: the second application
+        // must see the plugin and its users.
         Artisan::call('migrate', ['--force' => true]);
         $this->createPluginUiUsers();
     }
@@ -69,11 +76,21 @@ final class PluginRoutesSurviveRouteCacheTest extends TestCase
             File::deleteDirectory(public_path('plugin-assets/hello-world'));
         }
         Mockery::close();
+        if ($this->database === null) {
+            // Drop what this test committed; the next RefreshDatabase test
+            // migrates again.
+            Artisan::call('db:wipe', ['--force' => true]);
+            RefreshDatabaseState::$migrated = false;
+        }
         $this->closeConnections($this->app->make('db'));
 
         parent::tearDown();
 
         $this->setEnv('APP_ROUTES_CACHE', null);
+        if ($this->database === null) {
+            return;
+        }
+
         $this->setEnv('DB_DATABASE', ':memory:');
         // An application booted during the test can keep the file open, and
         // Windows will not delete an open file; retry at shutdown.
