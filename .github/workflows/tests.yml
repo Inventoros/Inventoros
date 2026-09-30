@@ -5,9 +5,12 @@ on:
     branches: [main, master]
   pull_request:
     branches: [main, master]
+  schedule:
+    - cron: '17 6 * * 1'
 
 jobs:
   phpunit:
+    if: github.event_name != 'schedule'
     runs-on: ubuntu-latest
 
     steps:
@@ -51,6 +54,7 @@ jobs:
   # runtime still has everything it needs (the MCP server in particular)
   # without the dev tools that used to pull laravel/mcp in.
   production-install:
+    if: github.event_name != 'schedule'
     runs-on: ubuntu-latest
 
     steps:
@@ -77,7 +81,38 @@ jobs:
           php artisan key:generate
           php artisan route:list --path=mcp | grep -q 'mcp'
 
+  # Known-vulnerable production dependencies must not drift back in. The
+  # full advisory list is always printed; the job fails on high or critical
+  # advisories in the packages that ship (composer --no-dev, npm without
+  # devDependencies). Low and medium ones are reported for the next routine
+  # update rather than blocking unrelated pull requests. Runs weekly as well,
+  # because a new advisory can land without any commit touching the lock files.
+  dependency-audit:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          coverage: none
+
+      - name: Composer audit (production dependencies)
+        run: composer audit --locked --no-dev --abandoned=report --ignore-severity=low --ignore-severity=medium
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: npm audit (production dependencies)
+        run: npm audit --package-lock-only --omit=dev --audit-level=high
+
   js-unit:
+    if: github.event_name != 'schedule'
     runs-on: ubuntu-latest
 
     steps:
@@ -104,6 +139,7 @@ jobs:
   # env); host, port and credentials come from the env below.
   phpunit-database:
     name: phpunit (${{ matrix.database }})
+    if: github.event_name != 'schedule'
     runs-on: ubuntu-latest
 
     strategy:
