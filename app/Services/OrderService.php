@@ -527,7 +527,7 @@ final class OrderService
         // order creation for the same product. adjust()'s later re-lock is
         // harmlessly re-entrant.
         if ($item->product_id !== null) {
-            Product::whereKey($item->product_id)->lockForUpdate()->first();
+            Product::withTrashed()->whereKey($item->product_id)->lockForUpdate()->first();
         }
 
         // Return any serials this line consumed to available before restocking
@@ -628,7 +628,12 @@ final class OrderService
 
         $this->closeOpenShipments($locked, $action);
 
-        $locked->load('items.product', 'items.variant');
+        // Include products and variants deleted since the order was placed:
+        // their units still come back.
+        $locked->load([
+            'items.product' => fn ($query) => $query->withTrashed(),
+            'items.variant' => fn ($query) => $query->withTrashed(),
+        ]);
         $restockable = $this->restockableQuantities($locked);
 
         foreach ($locked->items as $item) {
