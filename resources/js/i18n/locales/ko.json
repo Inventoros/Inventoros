@@ -1005,7 +1005,8 @@
       "topSelling": "베스트셀러 제품",
       "unitsSold": "판매 수량",
       "dailySalesTrend": "일별 매출 추세",
-      "revenue": "매출"
+      "revenue": "매출",
+      "excludesCancelled": "취소된 주문은 주문 수, 매출, 판매 수량, 인기 상품에 포함되지 않습니다. 상태별 판매에는 계속 표시됩니다."
     },
     "lowStock": {
       "title": "재고 부족 보고서",

@@ -344,11 +344,16 @@ class ReportController extends Controller
         $orders = fn () => Order::forOrganization($organizationId)
             ->whereBetween('order_date', [$fromTimestamp, $toTimestamp])
             ->toBase();
+        // A cancelled order is not a sale: the orders, revenue, items sold,
+        // top products, daily trend and comparison leave it out, as the
+        // payment position and the analytics reports do. Sales by status
+        // still lists it.
+        $sales = fn () => $orders()->where('status', '!=', 'cancelled');
 
         $byCurrency = array_map(
             fn (array $row) => $row + ['average_order_value' => $row['orders'] > 0 ? round($row['revenue'] / $row['orders'], 2) : 0.0],
             CurrencyTotals::breakdown(
-                $orders()->selectRaw('currency, COUNT(*) as orders, COALESCE(SUM(total), 0) as revenue')->groupBy('currency')->get(),
+                $sales()->selectRaw('currency, COUNT(*) as orders, COALESCE(SUM(total), 0) as revenue')->groupBy('currency')->get(),
                 $currency,
                 ['revenue'],
                 ['orders'],
@@ -358,6 +363,8 @@ class ReportController extends Controller
         $totalItemsSold = (int) OrderItem::query()
             ->join('orders', 'orders.id', '=', 'order_items.order_id')
             ->where('orders.organization_id', $organizationId)
+            ->whereNull('orders.deleted_at')
+            ->where('orders.status', '!=', 'cancelled')
             ->whereBetween('orders.order_date', [$fromTimestamp, $toTimestamp])
             ->sum('order_items.quantity');
 
@@ -395,8 +402,7 @@ class ReportController extends Controller
         $byPaymentStatus = null;
         if ($request->user()->hasPermission(Permission::VIEW_PAYMENTS)) {
             $rows = $perCurrency(
-                $orders()
-                    ->where('status', '!=', 'cancelled')
+                $sales()
                     ->selectRaw('payment_status, currency, COUNT(*) as count, COALESCE(SUM(total), 0) as total, COALESCE(SUM(amount_paid), 0) as amount_paid, COALESCE(SUM(CASE WHEN total > amount_paid AND payment_status <> ? THEN total - amount_paid ELSE 0 END), 0) as balance_due', [PaymentStatus::UNTRACKED->value])
                     ->groupBy('payment_status', 'currency')
                     ->get(),
@@ -432,6 +438,8 @@ class ReportController extends Controller
         $topProducts = OrderItem::query()
             ->join('orders', 'orders.id', '=', 'order_items.order_id')
             ->where('orders.organization_id', $organizationId)
+            ->whereNull('orders.deleted_at')
+            ->where('orders.status', '!=', 'cancelled')
             ->whereBetween('orders.order_date', [$fromTimestamp, $toTimestamp])
             ->selectRaw('
                 order_items.product_id,
@@ -457,7 +465,7 @@ class ReportController extends Controller
 
         // Daily sales trend
         $dailySales = $perCurrency(
-            $orders()->selectRaw('DATE(order_date) as date, currency, COUNT(*) as orders, COALESCE(SUM(total), 0) as revenue')->groupBy('date', 'currency')->orderBy('date')->get(),
+            $sales()->selectRaw('DATE(order_date) as date, currency, COUNT(*) as orders, COALESCE(SUM(total), 0) as revenue')->groupBy('date', 'currency')->orderBy('date')->get(),
             'date',
             ['revenue'],
             ['orders'],

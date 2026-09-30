@@ -1005,7 +1005,8 @@
       "topSelling": "En Çok Satan Ürünler",
       "unitsSold": "adet satıldı",
       "dailySalesTrend": "Günlük Satış Trendi",
-      "revenue": "Gelir"
+      "revenue": "Gelir",
+      "excludesCancelled": "İptal edilen siparişler siparişlere, gelire, satılan ürünlere ve en çok satan ürünlere dahil edilmez. Duruma göre satışlar bunları göstermeye devam eder."
     },
     "lowStock": {
       "title": "Düşük Stok Raporu",

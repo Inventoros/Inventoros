@@ -1005,7 +1005,8 @@
       "topSelling": "Najlepiej sprzedające się produkty",
       "unitsSold": "sztuk sprzedanych",
       "dailySalesTrend": "Dzienny trend sprzedaży",
-      "revenue": "Przychód"
+      "revenue": "Przychód",
+      "excludesCancelled": "Anulowane zamówienia nie są wliczane do zamówień, przychodu, sprzedanych pozycji ani najlepiej sprzedających się produktów. Sprzedaż według statusu nadal je pokazuje."
     },
     "lowStock": {
       "title": "Raport niskiego stanu",

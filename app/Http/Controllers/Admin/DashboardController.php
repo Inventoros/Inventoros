@@ -122,7 +122,9 @@ class DashboardController extends Controller
                 ->selectRaw('currency, COALESCE(SUM('.Product::stockValueSql('price').'), 0) as amount')
                 ->pluck('amount', 'currency'));
 
+            // Cancelled orders are not sales (as in reports.sales-analysis).
             $money('revenueThisMonth', Order::where('organization_id', $orgId)
+                ->where('status', '!=', 'cancelled')
                 ->where('order_date', '>=', $monthStart)
                 ->where('order_date', '<=', $monthEnd)
                 ->groupBy('currency')

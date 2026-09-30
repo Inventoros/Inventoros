@@ -1005,7 +1005,8 @@
       "topSelling": "畅销产品",
       "unitsSold": "已售数量",
       "dailySalesTrend": "每日销售趋势",
-      "revenue": "营收"
+      "revenue": "营收",
+      "excludesCancelled": "已取消的订单不计入订单数、收入、售出件数和畅销产品。按状态统计的销售中仍会列出它们。"
     },
     "lowStock": {
       "title": "库存不足报告",

@@ -1005,7 +1005,8 @@
       "topSelling": "売上上位商品",
       "unitsSold": "販売数",
       "dailySalesTrend": "日別売上推移",
-      "revenue": "売上"
+      "revenue": "売上",
+      "excludesCancelled": "キャンセルされた注文は、注文数、売上、販売数、売れ筋商品に含まれません。ステータス別売上には引き続き表示されます。"
     },
     "lowStock": {
       "title": "在庫不足レポート",

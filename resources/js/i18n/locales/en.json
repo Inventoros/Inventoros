@@ -906,7 +906,8 @@
       "topSelling": "Top Selling Products",
       "unitsSold": "units sold",
       "dailySalesTrend": "Daily Sales Trend",
-      "revenue": "Revenue"
+      "revenue": "Revenue",
+      "excludesCancelled": "Cancelled orders are left out of the orders, revenue, items sold and top products. Sales by status still lists them."
     },
     "lowStock": {
       "title": "Low Stock Report",

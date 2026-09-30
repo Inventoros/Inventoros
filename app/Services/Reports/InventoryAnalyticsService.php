@@ -499,7 +499,7 @@ class InventoryAnalyticsService
 
     /**
      * Headline sales figures for a period, with the same basis as the Sales
-     * Analysis summary (all orders dated in the period).
+     * Analysis summary (orders dated in the period, cancelled ones left out).
      *
      * @return array{total_orders: int, total_revenue: float, total_items_sold: int, average_order_value: float}
      */
@@ -508,6 +508,7 @@ class InventoryAnalyticsService
         $orders = DB::table('orders')
             ->where('organization_id', $organizationId)
             ->whereNull('deleted_at')
+            ->where('status', '!=', 'cancelled')
             ->whereBetween('order_date', [$period->from, $period->to])
             // Revenue (and the average) only in $currency when one is given:
             // amounts in different currencies are never added together.
@@ -523,6 +524,7 @@ class InventoryAnalyticsService
             ->join('orders', 'orders.id', '=', 'order_items.order_id')
             ->where('orders.organization_id', $organizationId)
             ->whereNull('orders.deleted_at')
+            ->where('orders.status', '!=', 'cancelled')
             ->whereBetween('orders.order_date', [$period->from, $period->to])
             ->sum('order_items.quantity');
 

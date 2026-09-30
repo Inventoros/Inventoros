@@ -1005,7 +1005,8 @@
       "topSelling": "Productos m\u00e1s vendidos",
       "unitsSold": "unidades vendidas",
       "dailySalesTrend": "Tendencia de ventas diarias",
-      "revenue": "Ingresos"
+      "revenue": "Ingresos",
+      "excludesCancelled": "Los pedidos cancelados no se cuentan en los pedidos, los ingresos, los artículos vendidos ni los productos más vendidos. Las ventas por estado los siguen mostrando."
     },
     "lowStock": {
       "title": "Informe de stock bajo",
