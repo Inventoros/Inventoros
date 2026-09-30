@@ -55,6 +55,8 @@ class PurchaseOrderController extends Controller
                 $query->bySupplier($supplierId);
             })
             ->latest('order_date')
+            // order_date is a day: the newest order of the day first.
+            ->latest('id')
             ->paginate(15)
             ->withQueryString();
 

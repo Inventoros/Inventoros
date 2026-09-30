@@ -84,6 +84,8 @@ class OrderController extends Controller
                 $query->where('payment_status', $request->input('payment_status'));
             })
             ->latest('order_date')
+            // order_date is a day: the newest order of the day first.
+            ->latest('id')
             ->paginate(config('limits.pagination.default'))
             ->withQueryString();
 

@@ -185,6 +185,8 @@ class DashboardController extends Controller
         $recentOrders = ! $canViewOrders ? collect() : Order::where('organization_id', $user->organization_id)
             ->with('items')
             ->latest('order_date')
+            // order_date is a day: the newest order of the day first.
+            ->latest('id')
             ->limit(5)
             ->get();
 
