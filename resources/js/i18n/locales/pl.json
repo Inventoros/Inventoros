@@ -2383,6 +2383,14 @@
     "description": "Zarządzaj danymi konta, hasłem i usunięciem konta."
   },
   "install": {
+    "server": {
+      "alreadyInstalled": "Inventoros jest już zainstalowany.",
+      "connectionSuccessful": "Połączono z bazą danych.",
+      "connectionFailed": "Nie udało się połączyć z bazą danych: {error}",
+      "databaseInstalled": "Baza danych zainstalowana.",
+      "unfinishedInstall": "Baza danych zawiera już tabele, prawdopodobnie z wcześniejszej, niedokończonej instalacji, a instalacja na nich się nie powiodła: {error}",
+      "adminCreated": "Utworzono konto administratora."
+    },
     "welcome": {
       "title": "Witamy w Inventoros",
       "subtitle": "Zarządzanie magazynem dla każdego",
@@ -2431,6 +2439,10 @@
       "testConnection": "Testuj połączenie",
       "testing": "Testowanie połączenia...",
       "dbExistsHint": "Upewnij się, że baza danych istnieje. Instalator utworzy niezbędne tabele.",
+      "resetTitle": "Ta baza danych zawiera tabele z niedokończonej instalacji",
+      "resetWarning": "Zresetowanie usuwa wszystkie tabele w tej bazie danych, również te, które nie należą do Inventoros, a następnie instaluje ponownie. Kontynuuj tylko wtedy, gdy ta baza danych służy wyłącznie Inventoros.",
+      "resetConfirm": "Rozumiem, że wszystkie tabele w tej bazie danych zostaną usunięte",
+      "resetAndInstall": "Zresetuj bazę danych i zainstaluj",
       "installDatabase": "Zainstaluj bazę danych",
       "installing": "Instalowanie...",
       "testFailed": "Nie udało się przetestować połączenia: {error}",

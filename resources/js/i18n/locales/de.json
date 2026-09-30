@@ -2383,6 +2383,14 @@
     "description": "Verwalten Sie Ihre Kontoinformationen, Ihr Passwort und die Kontolöschung."
   },
   "install": {
+    "server": {
+      "alreadyInstalled": "Inventoros ist bereits installiert.",
+      "connectionSuccessful": "Datenbankverbindung erfolgreich.",
+      "connectionFailed": "Datenbankverbindung fehlgeschlagen: {error}",
+      "databaseInstalled": "Datenbank installiert.",
+      "unfinishedInstall": "Die Datenbank enthält bereits Tabellen, vermutlich aus einer früheren, nicht abgeschlossenen Installation, und die Installation darüber ist fehlgeschlagen: {error}",
+      "adminCreated": "Administratorkonto erstellt."
+    },
     "welcome": {
       "title": "Willkommen bei Inventoros",
       "subtitle": "Bestandsverwaltung für alle",
@@ -2431,6 +2439,10 @@
       "testConnection": "Verbindung testen",
       "testing": "Verbindung wird getestet...",
       "dbExistsHint": "Stellen Sie sicher, dass Ihre Datenbank existiert, bevor Sie fortfahren. Der Installer erstellt die erforderlichen Tabellen.",
+      "resetTitle": "Diese Datenbank enthält Tabellen aus einer nicht abgeschlossenen Installation",
+      "resetWarning": "Beim Zurücksetzen werden alle Tabellen dieser Datenbank gelöscht, auch solche, die nicht zu Inventoros gehören, und anschließend wird neu installiert. Fahren Sie nur fort, wenn diese Datenbank ausschließlich für Inventoros verwendet wird.",
+      "resetConfirm": "Mir ist bewusst, dass alle Tabellen dieser Datenbank gelöscht werden",
+      "resetAndInstall": "Datenbank zurücksetzen und installieren",
       "installDatabase": "Datenbank installieren",
       "installing": "Wird installiert...",
       "testFailed": "Verbindungstest fehlgeschlagen: {error}",

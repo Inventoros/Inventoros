@@ -193,8 +193,9 @@ class StockAdjustment extends Model
             // Re-fetch the product with a row lock so concurrent adjustments
             // serialize on this row; otherwise two callers can both read
             // the same pre-image, compute different "after" values, and
-            // one update overwrites the other (lost write).
-            $locked = Product::where('id', $product->id)->lockForUpdate()->firstOrFail();
+            // one update overwrites the other (lost write). A soft-deleted
+            // product can still take stock back (cancelling an older order).
+            $locked = Product::withTrashed()->where('id', $product->id)->lockForUpdate()->firstOrFail();
 
             $quantityBefore = $locked->stock;
             $quantityAfter = $quantityBefore + $quantity;
@@ -270,7 +271,7 @@ class StockAdjustment extends Model
         return DB::transaction(function () use ($variant, $quantity, $type, $reason, $notes, $reference, $allowNegative, $actor) {
             // Re-fetch the variant with a row lock — same race protection as
             // adjust() above.
-            $locked = ProductVariant::where('id', $variant->id)->lockForUpdate()->firstOrFail();
+            $locked = ProductVariant::withTrashed()->where('id', $variant->id)->lockForUpdate()->firstOrFail();
 
             $quantityBefore = $locked->stock;
             $quantityAfter = $quantityBefore + $quantity;

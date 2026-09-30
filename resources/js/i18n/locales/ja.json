@@ -2383,6 +2383,14 @@
     "description": "アカウント情報、パスワード、アカウントの削除を管理します。"
   },
   "install": {
+    "server": {
+      "alreadyInstalled": "Inventoros はすでにインストールされています。",
+      "connectionSuccessful": "データベースに接続しました。",
+      "connectionFailed": "データベースへの接続に失敗しました: {error}",
+      "databaseInstalled": "データベースをインストールしました。",
+      "unfinishedInstall": "データベースには、完了しなかった以前のインストールのものと思われるテーブルがすでにあり、その上へのインストールに失敗しました: {error}",
+      "adminCreated": "管理者アカウントを作成しました。"
+    },
     "welcome": {
       "title": "Inventorosへようこそ",
       "subtitle": "みんなのための在庫管理",
@@ -2431,6 +2439,10 @@
       "testConnection": "接続をテスト",
       "testing": "接続をテスト中...",
       "dbExistsHint": "続行する前にデータベースが存在することを確認してください。インストーラーが必要なテーブルを作成します。",
+      "resetTitle": "このデータベースには未完了のインストールのテーブルがあります",
+      "resetWarning": "リセットすると、Inventoros 以外のものも含め、このデータベースのすべてのテーブルが削除され、再度インストールされます。このデータベースを Inventoros 専用に使用している場合のみ続行してください。",
+      "resetConfirm": "このデータベースのすべてのテーブルが削除されることを理解しました",
+      "resetAndInstall": "データベースをリセットしてインストール",
       "installDatabase": "データベースをインストール",
       "installing": "インストール中...",
       "testFailed": "接続テストに失敗しました: {error}",

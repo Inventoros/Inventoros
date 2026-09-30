@@ -41,6 +41,12 @@ const EXCLUDE_TOP = [
 ];
 
 /**
+ * Seeders for end-to-end tests and screenshots: they create known users
+ * with known passwords and need Faker (a dev dependency), so they never ship.
+ */
+const EXCLUDE_SEEDERS = ['E2ETestSeeder.php', 'E2ELayoutSeeder.php', 'ScreenshotSeeder.php'];
+
+/**
  * Web root entries that are runtime state or dev leftovers.
  */
 const EXCLUDE_PUBLIC = ['hot', 'storage', 'plugin-assets', 'plugins', 'index.php', '.htaccess'];
@@ -58,6 +64,7 @@ const FORBIDDEN = [
     '#^inventoros/\.github/#' => '.github directory',
     '#^inventoros/(phpunit[^/]*\.xml|playwright\.config\.[jt]s|Dockerfile|docker-compose[^/]*\.ya?ml|\.dockerignore|auth\.json|\.phpunit\.result\.cache|todo\.txt|\.phpactor\.json|CLAUDE\.md|AGENTS\.md|package(-lock)?\.json|vite\.config\.js)$#' => 'dev file',
     '#^inventoros/bootstrap/cache/(?!\.gitkeep$)#' => 'compiled bootstrap cache',
+    '#^inventoros/database/seeders/(E2ETestSeeder|E2ELayoutSeeder|ScreenshotSeeder)\.php$#' => 'test or screenshot seeder',
     '#^public_html/(hot|storage|plugin-assets)(/|$)#' => 'web root runtime state',
     '#\.(sqlite|sqlite3|log)$#' => 'database or log file',
     '#^inventoros/vendor/(phpunit|mockery|fakerphp|laravel/pail|laravel/sail|laravel/boost|laravel/pint|nunomaduro/collision)/#' => 'dev dependency (build with composer install --no-dev)',
@@ -225,6 +232,9 @@ function build(string $root, string $version, string $out): string
             }
         }
         if (str_starts_with($rel, 'bootstrap/cache/') && $rel !== 'bootstrap/cache/.gitignore') {
+            return true;
+        }
+        if (str_starts_with($rel, 'database/seeders/') && in_array(basename($rel), EXCLUDE_SEEDERS, true)) {
             return true;
         }
 

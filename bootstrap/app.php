@@ -17,6 +17,7 @@ use App\Http\Middleware\Portal\ResolvePortalOrganization;
 use App\Http\Middleware\Portal\UsePortalGuard;
 use App\Http\Middleware\SecurityHeaders;
 use App\Http\Middleware\SetLocale;
+use App\Http\Middleware\UseFileDriversUntilInstalled;
 use App\Support\PublicPath;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Cookie\Middleware\EncryptCookies;
@@ -52,6 +53,14 @@ $app = Application::configure(basePath: dirname(__DIR__))
         // 404 for non-numeric ids before route-model binding hits the
         // database (PostgreSQL errors on `id = 'abc'` against a bigint).
         $middleware->web(prepend: [RejectNonNumericModelKeys::class]);
+
+        // Before the session starts: until installed, sessions and the cache
+        // use files, since their database tables do not exist yet.
+        $middleware->web(prepend: [UseFileDriversUntilInstalled::class]);
+        $middleware->prependToPriorityList(
+            before: StartSession::class,
+            prepend: UseFileDriversUntilInstalled::class,
+        );
         $middleware->api(prepend: [RejectNonNumericModelKeys::class]);
         $middleware->prependToPriorityList(
             before: \Illuminate\Routing\Middleware\SubstituteBindings::class,
@@ -82,6 +91,7 @@ $app = Application::configure(basePath: dirname(__DIR__))
         // the user, and the portal organization is resolved (or 404s) before
         // the portal's own Inertia props are shared.
         $middleware->group('portal', [
+            UseFileDriversUntilInstalled::class,
             EncryptCookies::class,
             AddQueuedCookiesToResponse::class,
             StartSession::class,

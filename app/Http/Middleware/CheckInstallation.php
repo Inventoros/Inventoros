@@ -29,8 +29,10 @@ final class CheckInstallation
             return $next($request);
         }
 
-        // Check if application is installed
-        if (!$this->isInstalled()) {
+        // Check if application is installed (UseFileDriversUntilInstalled
+        // has usually checked already, before the session started)
+        $installed = $request->attributes->get(UseFileDriversUntilInstalled::ATTRIBUTE);
+        if (! (is_bool($installed) ? $installed : $this->isInstalled())) {
             return redirect()->route('install.index');
         }
 

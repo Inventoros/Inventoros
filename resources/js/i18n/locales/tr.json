@@ -2383,6 +2383,14 @@
     "description": "Hesap bilgilerinizi, şifrenizi ve hesap silme işlemini yönetin."
   },
   "install": {
+    "server": {
+      "alreadyInstalled": "Inventoros zaten kurulu.",
+      "connectionSuccessful": "Veritabanı bağlantısı başarılı.",
+      "connectionFailed": "Veritabanı bağlantısı başarısız: {error}",
+      "databaseInstalled": "Veritabanı kuruldu.",
+      "unfinishedInstall": "Veritabanında, muhtemelen tamamlanmamış önceki bir kurulumdan kalan tablolar var ve bunların üzerine kurulum başarısız oldu: {error}",
+      "adminCreated": "Yönetici hesabı oluşturuldu."
+    },
     "welcome": {
       "title": "Inventoros'a Hoş Geldiniz",
       "subtitle": "Herkes İçin Envanter Yönetimi",
@@ -2431,6 +2439,10 @@
       "testConnection": "Bağlantıyı Test Et",
       "testing": "Bağlantı test ediliyor...",
       "dbExistsHint": "Devam etmeden önce veritabanınızın mevcut olduğundan emin olun. Yükleyici gerekli tabloları oluşturacaktır.",
+      "resetTitle": "Bu veritabanında tamamlanmamış bir kurulumdan kalan tablolar var",
+      "resetWarning": "Sıfırlama, Inventoros'a ait olmayanlar dahil bu veritabanındaki tüm tabloları siler ve ardından yeniden kurar. Yalnızca bu veritabanı sadece Inventoros için kullanılıyorsa devam edin.",
+      "resetConfirm": "Bu veritabanındaki tüm tabloların silineceğini anlıyorum",
+      "resetAndInstall": "Veritabanını sıfırla ve kur",
       "installDatabase": "Veritabanını Kur",
       "installing": "Kuruluyor...",
       "testFailed": "Bağlantı test edilemedi: {error}",

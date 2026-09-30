@@ -2383,6 +2383,14 @@
     "description": "계정 정보, 비밀번호 및 계정 삭제를 관리합니다."
   },
   "install": {
+    "server": {
+      "alreadyInstalled": "Inventoros가 이미 설치되어 있습니다.",
+      "connectionSuccessful": "데이터베이스에 연결했습니다.",
+      "connectionFailed": "데이터베이스 연결 실패: {error}",
+      "databaseInstalled": "데이터베이스를 설치했습니다.",
+      "unfinishedInstall": "데이터베이스에 완료되지 않은 이전 설치에서 남은 것으로 보이는 테이블이 이미 있어 그 위에 설치하지 못했습니다: {error}",
+      "adminCreated": "관리자 계정을 만들었습니다."
+    },
     "welcome": {
       "title": "Inventoros에 오신 것을 환영합니다",
       "subtitle": "모두를 위한 재고 관리",
@@ -2431,6 +2439,10 @@
       "testConnection": "연결 테스트",
       "testing": "연결 테스트 중...",
       "dbExistsHint": "계속하기 전에 데이터베이스가 존재하는지 확인하세요. 설치 프로그램이 필요한 테이블을 생성합니다.",
+      "resetTitle": "이 데이터베이스에 완료되지 않은 설치의 테이블이 있습니다",
+      "resetWarning": "재설정하면 Inventoros에 속하지 않는 테이블을 포함하여 이 데이터베이스의 모든 테이블이 삭제된 후 다시 설치됩니다. 이 데이터베이스를 Inventoros 전용으로 사용하는 경우에만 계속하세요.",
+      "resetConfirm": "이 데이터베이스의 모든 테이블이 삭제된다는 것을 이해합니다",
+      "resetAndInstall": "데이터베이스 재설정 후 설치",
       "installDatabase": "데이터베이스 설치",
       "installing": "설치 중...",
       "testFailed": "연결 테스트 실패: {error}",

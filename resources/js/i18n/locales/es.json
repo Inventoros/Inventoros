@@ -2383,6 +2383,14 @@
     "description": "Gestiona la información de tu cuenta, tu contraseña y la eliminación de la cuenta."
   },
   "install": {
+    "server": {
+      "alreadyInstalled": "Inventoros ya está instalado.",
+      "connectionSuccessful": "Conexión con la base de datos correcta.",
+      "connectionFailed": "Error al conectar con la base de datos: {error}",
+      "databaseInstalled": "Base de datos instalada.",
+      "unfinishedInstall": "La base de datos ya tiene tablas, probablemente de una instalación anterior que no terminó, y la instalación sobre ellas falló: {error}",
+      "adminCreated": "Cuenta de administrador creada."
+    },
     "welcome": {
       "title": "Bienvenido a Inventoros",
       "subtitle": "Gesti\u00f3n de inventario para todos",
@@ -2431,6 +2439,10 @@
       "testConnection": "Probar conexi\u00f3n",
       "testing": "Probando conexi\u00f3n...",
       "dbExistsHint": "Aseg\u00farate de que tu base de datos exista antes de continuar. El instalador crear\u00e1 las tablas necesarias.",
+      "resetTitle": "Esta base de datos tiene tablas de una instalación sin terminar",
+      "resetWarning": "Al restablecer se eliminan todas las tablas de esta base de datos, incluidas las que no pertenecen a Inventoros, y luego se instala de nuevo. Continúa solo si esta base de datos se usa únicamente para Inventoros.",
+      "resetConfirm": "Entiendo que se eliminarán todas las tablas de esta base de datos",
+      "resetAndInstall": "Restablecer la base de datos e instalar",
       "installDatabase": "Instalar base de datos",
       "installing": "Instalando...",
       "testFailed": "No se pudo probar la conexión: {error}",

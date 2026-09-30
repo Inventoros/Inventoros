@@ -47,6 +47,8 @@ final class CpanelPackageVerifierTest extends TestCase
             'inventoros/bootstrap/cache/.gitkeep' => '',
             'inventoros/storage/logs/.gitkeep' => '',
             'inventoros/vendor/autoload.php' => '<?php',
+            'inventoros/database/seeders/DatabaseSeeder.php' => '<?php',
+            'inventoros/database/seeders/RoleSeeder.php' => '<?php',
             'inventoros/vendor/laravel/framework/src/x.php' => '<?php',
             'inventoros/vendor/markbaker/complex/.github/workflows/main.yml' => 'ci',
             'public_html/index.php' => "<?php\nif (version_compare(PHP_VERSION, '8.4.1', '<')) { exit(1); }\n\$laravelPath = __DIR__ . '/../inventoros';\n",
@@ -108,6 +110,9 @@ final class CpanelPackageVerifierTest extends TestCase
             'compiled cache' => ['inventoros/bootstrap/cache/config.php'],
             'plugin assets' => ['public_html/plugin-assets/x/ui.js'],
             'vite hot file' => ['public_html/hot'],
+            'e2e seeder' => ['inventoros/database/seeders/E2ETestSeeder.php'],
+            'e2e layout seeder' => ['inventoros/database/seeders/E2ELayoutSeeder.php'],
+            'screenshot seeder' => ['inventoros/database/seeders/ScreenshotSeeder.php'],
         ];
     }
 

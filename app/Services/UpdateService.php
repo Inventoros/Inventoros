@@ -277,7 +277,13 @@ class UpdateService
         } catch (Exception $e) {
             Log::error('Update failed', ['error' => $e->getMessage(), 'trace' => $e->getTraceAsString()]);
 
-            $this->log($progressCallback, 'Update failed: '.$e->getMessage());
+            // The rollback path already words its message as "Update failed
+            // ..."; don't say it twice.
+            $message = str_starts_with($e->getMessage(), 'Update failed')
+                ? $e->getMessage()
+                : 'Update failed: '.$e->getMessage();
+
+            $this->log($progressCallback, $message);
 
             // Attempt to bring the application back up if it's down
             try {
@@ -288,7 +294,7 @@ class UpdateService
 
             return [
                 'success' => false,
-                'message' => 'Update failed: '.$e->getMessage(),
+                'message' => $message,
                 'error' => $e->getMessage(),
             ];
         } finally {

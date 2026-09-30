@@ -87,6 +87,20 @@ final class OrderCancelRestockTest extends TestCase
             ->count());
     }
 
+    public function test_cancel_restocks_a_product_deleted_after_the_order(): void
+    {
+        $this->actingAs($this->admin);
+
+        $order = $this->makeOrder(5);
+        $this->product->delete();
+        $this->assertSoftDeleted($this->product);
+
+        app(OrderService::class)->cancel($order);
+
+        $this->assertSame(100, Product::withTrashed()->find($this->product->id)->stock, 'The 5 units must go back to the (deleted) product.');
+        $this->assertSame(OrderStatus::CANCELLED, $order->fresh()->status);
+    }
+
     public function test_service_cancel_rejects_shipped(): void
     {
         $order = $this->makeOrder(5);

@@ -33,8 +33,16 @@ v2.0.0 is a major release: MCP tool names, the plugin asset path, access to `/do
 
 Before you start, on every install:
 
-- **Take a database backup you have checked.** Restore it somewhere, or at least open the dump and confirm it contains your tables. `php artisan app:update --backup` makes a files-and-database backup; keep your host's own backup as well.
-- **On MySQL or PostgreSQL, preview the migrations first** with `php artisan migrate --pretend` (run it after replacing the files, before migrating). Installs that were patched by hand, or that have been upgraded many times, can have a schema that differs from a fresh one. If the preview shows something that will fail, stop and restore rather than migrate halfway.
+- **Take a database backup you have checked.** Do not rely on the 1.0.x backup alone: `php artisan app:update --backup` (and Admin > Update's backup) in 1.0.x silently leaves the database out when `mysqldump` or `pg_dump` is not installed, which is common on shared hosting, and still reports success. Make your own dump and check it:
+
+  | Database | Dump | Check it |
+  |---|---|---|
+  | MySQL | `mysqldump --single-transaction --routines --triggers -u USER -p DATABASE > inventoros-1.0.sql` (or phpMyAdmin > Export, or cPanel > Backup) | `grep -c "CREATE TABLE" inventoros-1.0.sql` counts your tables; `grep -c "INSERT INTO" inventoros-1.0.sql` should not be 0 |
+  | PostgreSQL | `pg_dump -Fc -h HOST -U USER DATABASE > inventoros-1.0.dump` | `pg_restore --list inventoros-1.0.dump` lists every table and its `TABLE DATA` |
+  | SQLite | `sqlite3 database/database.sqlite ".backup 'inventoros-1.0.sqlite'"` (or copy the file while the site is down) | `sqlite3 inventoros-1.0.sqlite ".tables"` and `sqlite3 inventoros-1.0.sqlite "select count(*) from products"` |
+
+  Better still, restore the dump into a scratch database and open a few records. Keep your host's own backup as well.
+- **On MySQL or PostgreSQL, preview the migrations first** with `php artisan migrate --pretend --force` (run it after replacing the files, before migrating). `--force` is needed because with `APP_ENV=production` the command otherwise stops at a confirmation prompt, which waits forever in a non-interactive shell or cron. `--pretend` only prints the SQL; nothing changes. Installs that were patched by hand, or that have been upgraded many times, can have a schema that differs from a fresh one. If the preview shows something that will fail, stop and restore rather than migrate halfway.
 - **Clear the old caches before migrating.** Cached 1.0.x config and routes do not know about 2.0.0's customer portal guard, so the app fails with `Auth guard [customer] is not defined` until `php artisan optimize:clear` runs.
 
 #### cPanel (release package)
@@ -54,7 +62,7 @@ Before you start, on every install:
    ```bash
    cd ~/inventoros
    php artisan optimize:clear
-   php artisan migrate --pretend    # MySQL / PostgreSQL: review the SQL first
+   php artisan migrate --pretend --force    # MySQL / PostgreSQL: review the SQL first (prints only)
    php artisan migrate --force
    php artisan optimize
    php artisan up
@@ -71,14 +79,14 @@ When everything works, delete the old folder.
 
 ```bash
 cd /var/www/inventoros
-php artisan app:update --backup    # and your own database dump
+php artisan app:update --backup    # 1.0.x may skip the database: take and check your own dump too
 php artisan down
 git fetch --tags
 git checkout v2.0.0
 composer install --no-dev --optimize-autoloader
 npm ci && npm run build
 php artisan optimize:clear
-php artisan migrate --pretend    # MySQL / PostgreSQL: review the SQL first
+php artisan migrate --pretend --force    # MySQL / PostgreSQL: review the SQL first (prints only)
 php artisan migrate --force
 php artisan optimize
 php artisan queue:restart
@@ -160,7 +168,7 @@ Administrators hold every permission. The upgrade migrations grant the new permi
 
 Things to check after upgrading:
 
-- **Warehouse access is enforced.** A user who has warehouse assignments and whose role lacks `access_all_warehouses` now sees and acts on only the assigned warehouses. The Manager role gets the permission on upgrade, but **Member and custom roles do not**, so staff on those roles who were assigned warehouses (for example just to set the header switcher) lose sight of the others. To keep a role organisation-wide, open Roles, edit the role and tick "Access All Warehouses", or remove the user's warehouse assignments. Users with no assignments are unaffected unless the organization setting "Restrict users to their assigned warehouses" is on.
+- **Warehouse access is enforced.** A user who has warehouse assignments and whose role lacks `access_all_warehouses` is limited to the assigned warehouses in these areas: the warehouse list, locations, stock adjustments, stock audits, stock transfers (either end), returns (by where their goods are restocked), purchase order receiving, shipments (the ship-from warehouse), the per-warehouse stock breakdown on products, per-warehouse low-stock alerts, the stock-by-location and sales-by-location reports, and approving stock adjustments, transfers and sales orders (an order by the warehouse set on it). Everything else is not filtered by warehouse: the order list and order pages, customers, suppliers, purchase orders themselves, invoices and the other reports show the whole organization, and the product catalogue stays visible. Details: [docs/features/warehouses.md](docs/features/warehouses.md#warehouse-access). The Manager role gets the permission on upgrade, but **Member and custom roles do not**, so staff on those roles who were assigned warehouses (for example just to set the header switcher) lose sight of the others. To keep a role organisation-wide, open Roles, edit the role and tick "Access All Warehouses", or remove the user's warehouse assignments. Users with no assignments are unaffected unless the organization setting "Restrict users to their assigned warehouses" is on.
 - **Payments are hidden without `view_payments`.** Order payloads omit payment fields unless both the role and the API token allow it.
 - **Approvals are off by default.** Turn them on per organization; make sure someone holds the matching `approve_*` permission first.
 - **The dashboard** hides figures the user's permissions do not cover.
@@ -230,7 +238,9 @@ Plugins > Marketplace installs and updates plugins from inventoros.com. Every pa
 - `/api/v1` accepts bearer tokens only. Browser sessions are not accepted there.
 - `POST /api/v1/purchase-orders/{id}/send` emails the supplier and returns `Purchase order sent`.
 - **Queued and sent emails.** Sending a purchase order, invoice or shipment email records `queued_at` (`invoice_queued_at`, `customer_notification_queued_at`); `sent_at` (`invoice_sent_at`, `customer_notified_at`) is set only when the mail is delivered, so it is empty until the queue runs. The MCP send tools say the email was queued and return `queued_at`. A purchase order still moves from draft to sent when it is queued.
-- **Plugins and the route cache.** Activating, deactivating or deleting a plugin rebuilds a cached route table (`php artisan route:cache`) so the plugin's pages appear or disappear straight away. If the rebuild fails, routes are left uncached.
+- **Plugins and the route cache.** Activating, deactivating or deleting a plugin rebuilds a cached route table (`php artisan route:cache`) so the plugin's pages appear or disappear straight away. If the rebuild fails, routes are left uncached. A plugin's main file now runs once for each application Inventoros boots rather than once per PHP process, so `route:cache` and `optimize` include plugin pages. Plugin authors: see [The main file](docs/PLUGIN_DEVELOPMENT.md#the-main-file).
+- **Secure session cookie on new installs.** `.env.example` now has `SESSION_SECURE_COOKIE=false`, so the web installer works over plain HTTP (it failed with 419 before). The installer writes `true` when the site is served over HTTPS or `APP_URL` starts with `https://`, and `false` otherwise. Existing `.env` files are not changed; production should run over HTTPS with `SESSION_SECURE_COOKIE=true`.
+- **Sessions and cache before installation.** Until the installer has finished, sessions and the cache use files even when `SESSION_DRIVER` or `CACHE_STORE` is `database`, because those tables do not exist yet. Installed applications are unaffected.
 - Invoice PDFs are named after the invoice number (`INV-000001.pdf`).
 - REST reads of categories, locations and stock adjustments require `manage_categories`, `manage_locations` and `manage_stock`.
 - The MCP `create_product` tool requires `create_products`.

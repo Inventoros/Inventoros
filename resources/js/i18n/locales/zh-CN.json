@@ -2383,6 +2383,14 @@
     "description": "管理您的账户信息、密码和账户删除。"
   },
   "install": {
+    "server": {
+      "alreadyInstalled": "Inventoros 已安装。",
+      "connectionSuccessful": "数据库连接成功。",
+      "connectionFailed": "数据库连接失败：{error}",
+      "databaseInstalled": "数据库已安装。",
+      "unfinishedInstall": "数据库中已有表，可能来自一次未完成的安装，在其上安装失败：{error}",
+      "adminCreated": "管理员账户已创建。"
+    },
     "welcome": {
       "title": "欢迎使用 Inventoros",
       "subtitle": "人人适用的库存管理系统",
@@ -2431,6 +2439,10 @@
       "testConnection": "测试连接",
       "testing": "正在测试连接...",
       "dbExistsHint": "请在继续之前确保数据库已存在。安装程序将创建必要的表。",
+      "resetTitle": "此数据库包含一次未完成安装留下的表",
+      "resetWarning": "重置会删除此数据库中的所有表（包括不属于 Inventoros 的表），然后重新安装。仅当此数据库专供 Inventoros 使用时才继续。",
+      "resetConfirm": "我了解此数据库中的所有表都将被删除",
+      "resetAndInstall": "重置数据库并安装",
       "installDatabase": "安装数据库",
       "installing": "安装中...",
       "testFailed": "测试连接失败：{error}",

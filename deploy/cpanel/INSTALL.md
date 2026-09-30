@@ -99,6 +99,12 @@ upgrade by hand once: see UPGRADE.md in the repository.
 ### "Inventoros requires PHP 8.4.1 or newer"
 - Switch the site to PHP 8.4 in cPanel > MultiPHP Manager
 
+### "Table already exists" in the web installer
+- An earlier attempt stopped part-way through creating the tables (often the
+  host's PHP time limit). Use **Reset database and install** on the database
+  step: it deletes every table in that database and starts again, so only use
+  it on a database that holds nothing but Inventoros.
+
 ### Assets Not Loading
 - Ensure the `build` folder was uploaded to public_html
 - Check that .htaccess is present in public_html

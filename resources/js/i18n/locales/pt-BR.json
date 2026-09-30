@@ -2383,6 +2383,14 @@
     "description": "Gerencie as informações da sua conta, a senha e a exclusão da conta."
   },
   "install": {
+    "server": {
+      "alreadyInstalled": "O Inventoros já está instalado.",
+      "connectionSuccessful": "Conexão com o banco de dados bem-sucedida.",
+      "connectionFailed": "Falha na conexão com o banco de dados: {error}",
+      "databaseInstalled": "Banco de dados instalado.",
+      "unfinishedInstall": "O banco de dados já tem tabelas, provavelmente de uma instalação anterior que não terminou, e a instalação sobre elas falhou: {error}",
+      "adminCreated": "Conta de administrador criada."
+    },
     "welcome": {
       "title": "Bem-vindo ao Inventoros",
       "subtitle": "Gerenciamento de Estoque para Todos",
@@ -2431,6 +2439,10 @@
       "testConnection": "Testar Conexão",
       "testing": "Testando Conexão...",
       "dbExistsHint": "Certifique-se de que seu banco de dados exista antes de prosseguir. O instalador criará as tabelas necessárias.",
+      "resetTitle": "Este banco de dados tem tabelas de uma instalação não concluída",
+      "resetWarning": "Redefinir exclui todas as tabelas deste banco de dados, inclusive as que não pertencem ao Inventoros, e depois instala novamente. Continue somente se este banco de dados for usado apenas pelo Inventoros.",
+      "resetConfirm": "Entendo que todas as tabelas deste banco de dados serão excluídas",
+      "resetAndInstall": "Redefinir banco de dados e instalar",
       "installDatabase": "Instalar Banco de Dados",
       "installing": "Instalando...",
       "testFailed": "Falha ao testar a conexão: {error}",

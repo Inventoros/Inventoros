@@ -2383,6 +2383,14 @@
     "description": "Beheer uw accountgegevens, wachtwoord en het verwijderen van uw account."
   },
   "install": {
+    "server": {
+      "alreadyInstalled": "Inventoros is al geïnstalleerd.",
+      "connectionSuccessful": "Verbinding met de database geslaagd.",
+      "connectionFailed": "Verbinding met de database mislukt: {error}",
+      "databaseInstalled": "Database geïnstalleerd.",
+      "unfinishedInstall": "De database bevat al tabellen, waarschijnlijk van een eerdere installatie die niet is voltooid, en installeren daaroverheen is mislukt: {error}",
+      "adminCreated": "Beheerdersaccount aangemaakt."
+    },
     "welcome": {
       "title": "Welkom bij Inventoros",
       "subtitle": "Voorraadbeheer voor iedereen",
@@ -2431,6 +2439,10 @@
       "testConnection": "Verbinding testen",
       "testing": "Verbinding testen...",
       "dbExistsHint": "Zorg ervoor dat uw database bestaat voordat u verdergaat. Het installatieprogramma maakt de benodigde tabellen aan.",
+      "resetTitle": "Deze database bevat tabellen van een onvoltooide installatie",
+      "resetWarning": "Resetten verwijdert alle tabellen in deze database, ook tabellen die niet bij Inventoros horen, en installeert daarna opnieuw. Ga alleen verder als deze database uitsluitend voor Inventoros wordt gebruikt.",
+      "resetConfirm": "Ik begrijp dat alle tabellen in deze database worden verwijderd",
+      "resetAndInstall": "Database resetten en installeren",
       "installDatabase": "Database installeren",
       "installing": "Installeren...",
       "testFailed": "Verbinding testen mislukt: {error}",

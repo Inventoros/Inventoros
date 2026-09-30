@@ -2,8 +2,15 @@
 import { Head, Link, useForm } from '@inertiajs/vue3';
 import { ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
+import Button from '@/Components/ui/Button.vue';
 
 const { t } = useI18n();
+
+// The installer answers with an i18n key (and the raw error) next to its
+// English message; show the translation when there is one.
+const serverMessage = (data) => (data?.message_key
+    ? t(data.message_key, { error: data.error ?? '' })
+    : data?.message);
 
 const props = defineProps({
     currentConfig: Object,
@@ -27,6 +34,9 @@ const form = useForm({
 const testing = ref(false);
 const testResult = ref(null);
 const installing = ref(false);
+// Set when installing failed on a database that already has tables (an
+// earlier attempt that did not finish): the server can reset it.
+const confirmReset = ref(false);
 
 // When the user switches driver, invalidate any prior test result and
 // nudge the port to the new driver's default if it was the old default.
@@ -55,7 +65,7 @@ const testConnection = async () => {
         });
 
         const data = await response.json();
-        testResult.value = data;
+        testResult.value = { ...data, message: serverMessage(data) };
     } catch (error) {
         testResult.value = {
             success: false,
@@ -66,7 +76,7 @@ const testConnection = async () => {
     }
 };
 
-const install = async () => {
+const install = async (reset = false) => {
     installing.value = true;
 
     try {
@@ -79,7 +89,7 @@ const install = async () => {
                 'X-CSRF-TOKEN': csrfToken,
                 'Accept': 'application/json',
             },
-            body: JSON.stringify(form.data()),
+            body: JSON.stringify({ ...form.data(), reset_database: reset === true }),
         });
 
         const data = await response.json();
@@ -87,7 +97,8 @@ const install = async () => {
         if (data.success) {
             window.location.href = route('install.admin');
         } else {
-            testResult.value = data;
+            confirmReset.value = false;
+            testResult.value = { ...data, message: serverMessage(data) };
         }
     } catch (error) {
         testResult.value = {
@@ -141,10 +152,31 @@ const install = async () => {
                                 <p class="text-sm font-semibold text-text-primary">{{ testResult.message }}</p>
                             </div>
                         </div>
+
+                        <div v-if="testResult.can_reset" class="mt-4 border-t border-status-danger/20 pt-4 space-y-3">
+                            <p class="text-sm font-semibold text-text-primary">{{ t('install.database.resetTitle') }}</p>
+                            <p class="text-sm text-text-secondary">{{ t('install.database.resetWarning') }}</p>
+                            <label class="flex items-start gap-2 text-sm text-text-primary">
+                                <input
+                                    v-model="confirmReset"
+                                    type="checkbox"
+                                    class="mt-0.5 rounded border-border-subtle ds-focus-ring"
+                                />
+                                <span>{{ t('install.database.resetConfirm') }}</span>
+                            </label>
+                            <Button
+                                variant="danger"
+                                :disabled="!confirmReset"
+                                :loading="installing"
+                                @click="install(true)"
+                            >
+                                {{ installing ? t('install.database.installing') : t('install.database.resetAndInstall') }}
+                            </Button>
+                        </div>
                     </div>
                 </div>
 
-                <form @submit.prevent="install" class="space-y-6">
+                <form @submit.prevent="install()" class="space-y-6">
                     <!-- Database Driver (issue #50) -->
                     <div>
                         <label for="driver" class="block text-sm font-medium text-text-secondary mb-2">

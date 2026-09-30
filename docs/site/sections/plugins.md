@@ -28,6 +28,8 @@ my-plugin/
   README.md
 ```
 
+`Plugin.php` runs once for each application Inventoros boots, including the extra one `php artisan route:cache` boots in the same process. Return a registration closure from it (`return function (string $slug, array $manifest): void { ... };`) and keep named functions and classes in files you `require_once`, so the plugin's pages are always in the route cache.
+
 ### The plugin.json manifest
 
 ```json

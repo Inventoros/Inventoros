@@ -5,6 +5,12 @@ import { useI18n } from 'vue-i18n';
 
 const { t } = useI18n();
 
+// The installer answers with an i18n key (and the raw error) next to its
+// English message; show the translation when there is one.
+const serverMessage = (data) => (data?.message_key
+    ? t(data.message_key, { error: data.error ?? '' })
+    : data?.message);
+
 const form = useForm({
     organization_name: '',
     admin_name: '',
@@ -38,7 +44,7 @@ const createAdmin = async () => {
         if (data.success) {
             window.location.href = route('install.complete');
         } else {
-            error.value = data.message;
+            error.value = serverMessage(data);
         }
     } catch (err) {
         error.value = t('install.admin.createFailed', { error: err.message });

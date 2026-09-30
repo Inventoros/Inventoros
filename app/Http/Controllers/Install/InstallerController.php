@@ -134,7 +134,7 @@ class InstallerController extends Controller
     public function testDatabase(Request $request)
     {
         if ($this->isInstalled()) {
-            return response()->json(['success' => false, 'message' => 'Application is already installed.'], 403);
+            return $this->answer(false, 'install.server.alreadyInstalled', 'Application is already installed.', 403);
         }
 
         $request->validate([
@@ -155,10 +155,7 @@ class InstallerController extends Controller
                 $request->password
             );
 
-            return response()->json([
-                'success' => true,
-                'message' => 'Database connection successful!',
-            ]);
+            return $this->answer(true, 'install.server.connectionSuccessful', 'Database connection successful!');
         } catch (\Exception $e) {
             Log::warning('Database connection test failed', [
                 'driver' => $request->driver,
@@ -166,10 +163,7 @@ class InstallerController extends Controller
                 'database' => $request->database,
                 'error' => $e->getMessage(),
             ]);
-            return response()->json([
-                'success' => false,
-                'message' => 'Database connection failed: ' . $e->getMessage(),
-            ], 422);
+            return $this->answer(false, 'install.server.connectionFailed', 'Database connection failed: '.$e->getMessage(), 422, $e->getMessage());
         }
     }
 
@@ -191,13 +185,20 @@ class InstallerController extends Controller
     /**
      * Save database configuration and run migrations.
      *
+     * With `reset_database` every table in the database is dropped first
+     * (`migrate:fresh`). The wizard only offers that after a run failed on a
+     * database that already has tables, typically an earlier attempt cut off
+     * part-way through a migration (MySQL cannot roll back schema changes,
+     * so the tables that migration created stay behind unrecorded and every
+     * retry fails with "Table already exists").
+     *
      * @param Request $request The incoming HTTP request containing database credentials
      * @return \Illuminate\Http\JsonResponse
      */
     public function installDatabase(Request $request)
     {
         if ($this->isInstalled()) {
-            return response()->json(['success' => false, 'message' => 'Application is already installed.'], 403);
+            return $this->answer(false, 'install.server.alreadyInstalled', 'Application is already installed.', 403);
         }
 
         $request->validate([
@@ -207,7 +208,19 @@ class InstallerController extends Controller
             'database' => 'required|string',
             'username' => 'required|string',
             'password' => 'nullable|string',
+            'reset_database' => 'nullable|boolean',
         ]);
+
+        $reset = $request->boolean('reset_database');
+
+        // Running every migration takes longer than PHP's default 30 second
+        // max_execution_time on many hosts; being cut off part-way leaves a
+        // half-migrated database. Lift the limit (where the host allows it)
+        // and finish even if the browser gives up waiting.
+        if (function_exists('set_time_limit')) {
+            set_time_limit(0);
+        }
+        ignore_user_abort(true);
 
         try {
             // Update .env file with database config. The driver is written to
@@ -219,6 +232,10 @@ class InstallerController extends Controller
                 'DB_DATABASE' => $request->database,
                 'DB_USERNAME' => $request->username,
                 'DB_PASSWORD' => $request->password ?? '',
+                // Secure cookies only over https: a browser never sends a
+                // Secure cookie back over plain http, which would lose the
+                // session on every request (419 on every form).
+                'SESSION_SECURE_COOKIE' => $this->servedOverHttps($request) ? 'true' : 'false',
             ];
 
             // On a split install (cPanel: ~/inventoros + ~/public_html) record
@@ -240,23 +257,70 @@ class InstallerController extends Controller
             DB::purge($request->driver);
             DB::reconnect($request->driver);
 
-            // Run migrations
-            Artisan::call('migrate', ['--force' => true]);
+            // Run migrations. A plain migrate resumes after the last
+            // migration that completed.
+            Artisan::call($reset ? 'migrate:fresh' : 'migrate', ['--force' => true]);
 
-            return response()->json([
-                'success' => true,
-                'message' => 'Database installed successfully!',
-            ]);
-        } catch (\Exception $e) {
+            return $this->answer(true, 'install.server.databaseInstalled', 'Database installed successfully!');
+        } catch (\Throwable $e) {
             Log::error('Database installation failed', [
                 'host' => $request->host,
                 'database' => $request->database,
+                'reset' => $reset,
                 'error' => $e->getMessage(),
             ]);
-            return response()->json([
-                'success' => false,
-                'message' => 'Installation failed: ' . $e->getMessage(),
-            ], 500);
+
+            if (! $reset && $this->databaseHasTables()) {
+                return $this->answer(
+                    false,
+                    'install.server.unfinishedInstall',
+                    'The database already has tables, probably from an earlier installation that did not finish, and installing on top of them failed: '
+                        .$e->getMessage(),
+                    409,
+                    $e->getMessage(),
+                    ['can_reset' => true],
+                );
+            }
+
+            return $this->answer(false, 'install.database.installFailed', 'Installation failed: '.$e->getMessage(), 500, $e->getMessage());
+        }
+    }
+
+    /**
+     * A JSON answer for the wizard: the English message for API clients and
+     * logs, and an i18n key (with the raw error as {error}) the wizard shows
+     * in the user's language.
+     *
+     * @param  array<string, mixed>  $extra
+     */
+    protected function answer(bool $success, string $key, string $message, int $status = 200, ?string $error = null, array $extra = []): \Illuminate\Http\JsonResponse
+    {
+        return response()->json(array_merge([
+            'success' => $success,
+            'message' => $message,
+            'message_key' => $key,
+            'error' => $error,
+        ], $extra), $status);
+    }
+
+    /**
+     * Whether the installation is served over https: this request is, or
+     * APP_URL says so (TLS ended at a proxy that is not trusted yet).
+     */
+    protected function servedOverHttps(Request $request): bool
+    {
+        return $request->isSecure() || str_starts_with(strtolower((string) config('app.url')), 'https://');
+    }
+
+    /**
+     * Whether the (newly configured) database already has any tables.
+     */
+    protected function databaseHasTables(): bool
+    {
+        try {
+            return DB::connection()->getSchemaBuilder()->getTableListing() !== [];
+        } catch (\Throwable) {
+            return false;
         }
     }
 
@@ -283,10 +347,7 @@ class InstallerController extends Controller
     public function createAdmin(Request $request)
     {
         if ($this->isInstalled()) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Application is already installed.',
-            ], 403);
+            return $this->answer(false, 'install.server.alreadyInstalled', 'Application is already installed.', 403);
         }
 
         $validated = $request->validate([
@@ -329,10 +390,7 @@ class InstallerController extends Controller
 
             DB::commit();
 
-            return response()->json([
-                'success' => true,
-                'message' => 'Admin account created successfully!',
-            ]);
+            return $this->answer(true, 'install.server.adminCreated', 'Admin account created successfully!');
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('Admin account creation failed during installation', [
@@ -341,10 +399,7 @@ class InstallerController extends Controller
                 'error' => $e->getMessage(),
             ]);
 
-            return response()->json([
-                'success' => false,
-                'message' => 'Failed to create admin account: ' . $e->getMessage(),
-            ], 500);
+            return $this->answer(false, 'install.admin.createFailed', 'Failed to create admin account: '.$e->getMessage(), 500, $e->getMessage());
         }
     }
 

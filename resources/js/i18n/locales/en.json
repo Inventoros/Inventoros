@@ -2284,6 +2284,14 @@
     "description": "Manage your account information, password, and account removal."
   },
   "install": {
+    "server": {
+      "alreadyInstalled": "Inventoros is already installed.",
+      "connectionSuccessful": "Database connection successful.",
+      "connectionFailed": "Database connection failed: {error}",
+      "databaseInstalled": "Database installed.",
+      "unfinishedInstall": "The database already has tables, probably from an earlier installation that did not finish, and installing on top of them failed: {error}",
+      "adminCreated": "Admin account created."
+    },
     "welcome": {
       "title": "Welcome to Inventoros",
       "subtitle": "Inventory Management for the Rest of Us",
@@ -2332,6 +2340,10 @@
       "testConnection": "Test Connection",
       "testing": "Testing Connection...",
       "dbExistsHint": "Make sure your database exists before proceeding. The installer will create the necessary tables.",
+      "resetTitle": "This database has tables from an unfinished installation",
+      "resetWarning": "Resetting deletes every table in this database, including any that do not belong to Inventoros, then installs again. Only continue if this database is used for Inventoros alone.",
+      "resetConfirm": "I understand that every table in this database will be deleted",
+      "resetAndInstall": "Reset database and install",
       "installDatabase": "Install Database",
       "installing": "Installing...",
       "testFailed": "Failed to test connection: {error}",
