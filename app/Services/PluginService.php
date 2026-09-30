@@ -7,6 +7,7 @@ namespace App\Services;
 use App\Exceptions\PluginHookFailed;
 use App\Models\Plugin;
 use App\Services\Plugins\PluginAssetPublisher;
+use App\Services\Plugins\PluginMainFile;
 use App\Services\Plugins\PluginRequirements;
 use App\Support\ArtisanProcess;
 use App\Support\ReleaseSignatureVerifier;
@@ -785,7 +786,8 @@ final class PluginService
     /**
      * Load a specific plugin.
      *
-     * Requires the main plugin file and fires plugin_loaded action.
+     * Runs the main plugin file (once per application) and fires the
+     * plugin_loaded action.
      * Skips (with a warning) rather than throwing for unsafe slugs because
      * this method runs at application boot for all DB-sourced slugs; a throw
      * here would take down every request.
@@ -829,8 +831,15 @@ final class PluginService
         // At boot (non-strict) failures are isolated: a parse error or throw
         // while loading one plugin must not take down every request. On
         // activation (strict) the failure propagates so the plugin stays off.
+        // Once per application, not once per process: route:cache boots a
+        // second application in the same process and must see the plugin's
+        // pages too (see PluginMainFile).
+        if (PluginMainFile::isLoaded(app(), $slug)) {
+            return;
+        }
+
         try {
-            require_once $pluginFile;
+            PluginMainFile::load(app(), $slug, $pluginFile, $manifest);
 
             // Run the plugin's init action if it exists
             do_action('plugin_loaded', $slug, $manifest);

@@ -40,6 +40,27 @@ my-plugin/
 
 The folder name is the plugin's **slug** (`my-plugin`). It may contain letters, digits, `.`, `_` and `-`, and must start with a letter or digit.
 
+### The main file
+
+`Plugin.php` runs once for every application Inventoros boots, and one PHP process can boot more than one: `php artisan route:cache` and `php artisan optimize` boot a second application to collect the routes they cache. Everything the file registers (actions, filters, pages, menu items, widgets) has to be registered again there, or the plugin's pages are missing from the route cache and answer 404.
+
+The safest shape is a file that returns a registration closure. Inventoros requires the file once per process and calls the closure once per application:
+
+```php
+<?php
+
+// plugins/my-plugin/Plugin.php
+require_once __DIR__.'/src/helpers.php';   // named functions and classes: load once
+
+return function (string $slug, array $manifest): void {
+    add_action('product_created', fn ($product, $user) => my_plugin_log($product));
+
+    register_page('my-plugin.index', 'Plugin::my-plugin/Index', ['uri' => '/my-plugin']);
+};
+```
+
+A file that registers directly at the top level, like `plugins/hello-world/Plugin.php`, also works: it is required again in each application. It must then not declare named functions, classes, interfaces, traits or enums at its top level (declaring one twice is a fatal PHP error). Put those in `src/` and `require_once` them, or guard them with `function_exists()` / `class_exists()`. A top-level file that does declare them is loaded only in the first application, and a warning is logged.
+
 ## The manifest (plugin.json)
 
 ```json
@@ -678,6 +699,7 @@ Schema::dropIfExists('plugin_analytics_views');
 - **Make `activate.php` idempotent** (`Schema::hasTable` before `Schema::create`) and clean up everything in `uninstall.php`.
 - **Catch your own errors** in hooks that talk to other systems, so a failing mail server does not break product saves.
 - **Namespace your PHP classes** (`namespace MyPlugin;`) and prefix custom hook names and tables with your slug.
+- **Return a registration closure from `Plugin.php`**, and keep named functions and classes in files you `require_once` (see [The main file](#the-main-file)).
 - **Declare `requires`** with the lowest Inventoros version you tested against.
 
 ## Security notes

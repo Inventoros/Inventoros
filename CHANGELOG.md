@@ -72,7 +72,7 @@ Before upgrading: take a database backup you have checked, run `php artisan opti
 - Dates shown one day early for users west of UTC.
 - Batch, serial and variant stock calls that returned 401 in the browser, and variant decrease adjustments that added stock.
 - The in-app updater: it follows GitHub's download redirect (one allowlisted https hop at a time, size-capped), installs the cPanel package by its exact name instead of the first ZIP, puts `inventoros/` and `public_html/` in the right places (including `vendor/` and the web root), keeps a SQLite database in `database/`, runs cache and migration commands in a fresh PHP process, and rolls back files, `vendor/`, the web root and the database on failure.
-- Plugin pages 404ing (or staying reachable after deactivation) when routes are cached.
+- Plugin pages 404ing (or staying reachable after deactivation) when routes are cached, including every plugin page after `php artisan route:cache` or `optimize`: plugin main files now run once per application instead of once per PHP process, and may return a registration closure.
 - Rolling back the purchase order variant migration on SQLite.
 
 ### Security
