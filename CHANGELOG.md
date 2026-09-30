@@ -61,6 +61,7 @@ Before upgrading: take a database backup you have checked, run `php artisan opti
 
 ### Fixed
 
+- Sales Analysis added orders in different currencies together (revenue, average order value, the daily and status rows, outstanding and the exports). Its figures are in the organization's currency with the others listed beside them, top products carry their currency, and the exports have a Currency column with one line per currency.
 - Products sold by variant showed 0 stock, "Out of Stock", a value of 0 and a low-stock alert while their variants held stock. Their stock is now the sum of their active variants' stock on the product list and page, the dashboard, the low stock, valuation, category and dead stock reports, reorder suggestions, the products export and the MCP `list_low_stock` tool; each variant is valued at its own price and cost.
 - About 288 success and error flash messages that never reached the page.
 - Sidebar items that were hidden from everyone, the discarded language cookie, and several routes that returned 500.

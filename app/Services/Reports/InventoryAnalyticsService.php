@@ -503,13 +503,20 @@ class InventoryAnalyticsService
      *
      * @return array{total_orders: int, total_revenue: float, total_items_sold: int, average_order_value: float}
      */
-    public function salesSummary(int $organizationId, ReportPeriod $period): array
+    public function salesSummary(int $organizationId, ReportPeriod $period, ?string $currency = null): array
     {
         $orders = DB::table('orders')
             ->where('organization_id', $organizationId)
             ->whereNull('deleted_at')
             ->whereBetween('order_date', [$period->from, $period->to])
-            ->selectRaw('COUNT(*) as total_orders, COALESCE(SUM(total), 0) as total_revenue')
+            // Revenue (and the average) only in $currency when one is given:
+            // amounts in different currencies are never added together.
+            ->selectRaw(
+                $currency === null
+                    ? 'COUNT(*) as total_orders, COUNT(*) as currency_orders, COALESCE(SUM(total), 0) as total_revenue'
+                    : 'COUNT(*) as total_orders, SUM(CASE WHEN UPPER(COALESCE(currency, ?)) = ? THEN 1 ELSE 0 END) as currency_orders, COALESCE(SUM(CASE WHEN UPPER(COALESCE(currency, ?)) = ? THEN total ELSE 0 END), 0) as total_revenue',
+                $currency === null ? [] : [strtoupper($currency), strtoupper($currency), strtoupper($currency), strtoupper($currency)],
+            )
             ->first();
 
         $items = (int) DB::table('order_items')
@@ -520,13 +527,14 @@ class InventoryAnalyticsService
             ->sum('order_items.quantity');
 
         $count = (int) $orders->total_orders;
+        $currencyCount = (int) $orders->currency_orders;
         $revenue = (float) $orders->total_revenue;
 
         return [
             'total_orders' => $count,
             'total_revenue' => round($revenue, 2),
             'total_items_sold' => $items,
-            'average_order_value' => $count > 0 ? round($revenue / $count, 2) : 0.0,
+            'average_order_value' => $currencyCount > 0 ? round($revenue / $currencyCount, 2) : 0.0,
         ];
     }
 
