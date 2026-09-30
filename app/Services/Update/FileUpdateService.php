@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services\Update;
 
+use App\Support\CanonicalHost;
 use App\Support\PublicPath;
 use App\Support\ReleaseSignatureVerifier;
 use App\Support\SafeZipExtractor;
@@ -126,7 +127,7 @@ class FileUpdateService
     protected function fetch(string $url, string $destination, int $maxBytes, string $what): void
     {
         $maxRedirects = max(0, (int) config('update.max_redirects', 5));
-        $startHost = strtolower((string) parse_url($url, PHP_URL_HOST));
+        $startHost = CanonicalHost::of($url) ?? '';
         $current = $url;
 
         for ($hop = 0; ; $hop++) {
@@ -217,16 +218,28 @@ class FileUpdateService
     protected function assertAllowedHop(string $url, string $startHost): void
     {
         $scheme = strtolower((string) parse_url($url, PHP_URL_SCHEME));
-        $host = strtolower((string) parse_url($url, PHP_URL_HOST));
 
         if ($scheme !== 'https') {
             throw new Exception("Refusing to download over '{$scheme}': update downloads must use https.");
         }
 
-        $allowed = array_map('strtolower', (array) config('update.download_hosts', []));
-        $allowed[] = $startHost;
+        // Noncanonical hosts (userinfo, backslashes, percent-escapes, trailing
+        // dots, non-ASCII) are refused: the HTTP client could read them as a
+        // different host from the one compared here.
+        $host = CanonicalHost::of($url);
+        if ($host === null) {
+            throw new Exception(
+                'Refusing to download from a URL whose host is not written in canonical form: it cannot be '
+                .'checked against the update download allowlist (INVENTOROS_UPDATE_HOSTS).'
+            );
+        }
 
-        if ($host === '' || ! in_array($host, $allowed, true)) {
+        $allowed = array_map('strtolower', (array) config('update.download_hosts', []));
+        if ($startHost !== '') {
+            $allowed[] = $startHost;
+        }
+
+        if (! in_array($host, $allowed, true)) {
             throw new Exception(
                 "Refusing to follow a redirect to {$host}: the host is not in the update download allowlist "
                 .'(INVENTOROS_UPDATE_HOSTS).'
