@@ -91,6 +91,7 @@ Before upgrading: take a database backup you have checked, run `php artisan opti
 - Marketplace downloads are streamed to disk and stopped at the size cap.
 - Laravel Excel 4.0.3 and PhpSpreadsheet 5.10.0 (CVE-2026-59933, CVE-2026-59932, CVE-2026-59931, CVE-2026-84374). Imports pick their reader from the detected file type.
 - Shipment creation checks access to the ship-from warehouse.
+- Creating, editing and deleting warehouses in the web app needs `create_warehouses`, `edit_warehouses` and `delete_warehouses`; `view_warehouses` alone used to allow all three.
 
 ## [1.0.x]
 

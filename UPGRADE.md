@@ -246,6 +246,7 @@ Plugins > Marketplace installs and updates plugins from inventoros.com. Every pa
 - **Purchase order totals.** Editing a purchase order always recomputes its total from subtotal, tax and shipping, including REST and GraphQL edits that change only shipping or tax. A PO whose new total reaches the approval threshold needs approval again before it can be sent, and a cleared tax or shipping is stored as 0.
 - **Spreadsheet imports.** Laravel Excel is now 4.x with PhpSpreadsheet 5.x (fixes CVE-2026-59933 and related advisories). Imports pick the CSV, XLSX or XLS reader from the file's detected content, not its name, and the file name must end in `.csv`, `.txt`, `.xlsx` or `.xls`. Custom code that implements Laravel Excel concerns must match the 4.x signatures (for example `ToCollection::collection(): void`).
 - **Shipments and warehouse access.** A user limited to some warehouses can only create shipments from those warehouses (web, REST and MCP return 403 otherwise).
+- **Warehouse permissions.** The web warehouse pages check `create_warehouses`, `edit_warehouses` and `delete_warehouses` for creating, editing and deleting, as the REST API already did. Before, `view_warehouses` alone allowed all three. Grant those permissions to any custom role that should keep managing warehouses.
 
 ### License
 
