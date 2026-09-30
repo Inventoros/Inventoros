@@ -69,6 +69,7 @@ Before upgrading: take a database backup you have checked, run `php artisan opti
 - About 288 success and error flash messages that never reached the page.
 - Sidebar items that were hidden from everyone, the discarded language cookie, and several routes that returned 500.
 - Fresh installs on MySQL and PostgreSQL, and the web installer's database step.
+- `/install` and `/` answering 500 on a fresh install with the shipped `.env.example`: sessions and the cache use files until installation completes, since their database tables do not exist yet.
 - Dates shown one day early for users west of UTC.
 - Batch, serial and variant stock calls that returned 401 in the browser, and variant decrease adjustments that added stock.
 - The in-app updater: it follows GitHub's download redirect (one allowlisted https hop at a time, size-capped), installs the cPanel package by its exact name instead of the first ZIP, puts `inventoros/` and `public_html/` in the right places (including `vendor/` and the web root), keeps a SQLite database in `database/`, runs cache and migration commands in a fresh PHP process, and rolls back files, `vendor/`, the web root and the database on failure.
