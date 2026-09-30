@@ -116,7 +116,7 @@ All paths are relative to `/api/v1`. See the OpenAPI spec for full schemas:
 - Stock Audits: list, show, create, `start`, `items/{item}/count`, `complete` (books recount adjustments)
 - Suppliers: CRUD
 - Purchase Orders: CRUD plus `send`, `receive`, `cancel` and `submit-for-approval`
-- Approvals: `GET /approvals` (what the caller may decide), `GET /approvals/mine` (the caller's own requests), and `POST /approvals/{type}/{id}/approve` or `/reject` for a `purchase_order`, `stock_adjustment` or `stock_transfer` (needs the matching `approve_*` permission; rejecting needs notes)
+- Approvals: `GET /approvals` (what the caller may decide), `GET /approvals/mine` (the caller's own requests), and `POST /approvals/{type}/{id}/approve` or `/reject` for a `purchase_order`, `stock_adjustment`, `stock_transfer` or `sales_order` (needs the matching `approve_*` permission; rejecting needs notes)
 - Work Orders: read plus `start`, `complete`, `cancel`, and delete while draft or cancelled
 - Webhooks: CRUD, `regenerate-secret` and `deliveries`. The signing secret is returned only on create and regenerate
 - Users: list, show, create and update, with the same role-assignment guards as the web app

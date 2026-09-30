@@ -21,7 +21,7 @@ class ApprovalItemType extends GraphQLType
     public function fields(): array
     {
         return [
-            'type' => ['type' => Type::nonNull(Type::string()), 'description' => 'purchase_order, stock_adjustment or stock_transfer'],
+            'type' => ['type' => Type::nonNull(Type::string()), 'description' => 'purchase_order, stock_adjustment, stock_transfer or sales_order'],
             'id' => ['type' => Type::nonNull(Type::int()), 'description' => 'Id of the purchase order, stock adjustment request or transfer'],
             'reference' => ['type' => Type::string(), 'description' => 'PO number, transfer number or request reference'],
             'title' => ['type' => Type::string(), 'description' => 'Short description of the request'],

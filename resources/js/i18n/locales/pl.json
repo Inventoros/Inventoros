@@ -2254,7 +2254,7 @@
   },
   "approvals": {
     "title": "Zatwierdzenia",
-    "description": "Zamówienia zakupu, korekty magazynowe i przesunięcia magazynowe oczekujące na decyzję.",
+    "description": "Zamówienia zakupu, zamówienia sprzedaży, korekty magazynowe i przesunięcia magazynowe oczekujące na decyzję.",
     "tabs": {
       "pending": "Czekające na mnie",
       "mine": "Moje wnioski"
@@ -2266,7 +2266,8 @@
     "types": {
       "purchase_order": "Zamówienie zakupu",
       "stock_adjustment": "Korekta magazynowa",
-      "stock_transfer": "Przesunięcie magazynowe"
+      "stock_transfer": "Przesunięcie magazynowe",
+      "sales_order": "Zamówienie sprzedaży"
     },
     "status": {
       "pending": "Oczekuje na zatwierdzenie",

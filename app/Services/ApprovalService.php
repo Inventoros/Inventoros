@@ -4,9 +4,12 @@ declare(strict_types=1);
 
 namespace App\Services;
 
+use App\Enums\OrderApprovalStatus;
+use App\Enums\OrderStatus;
 use App\Enums\Permission;
 use App\Exceptions\ApprovalException;
 use App\Exceptions\InsufficientStockException;
+use App\Exceptions\InvalidStateException;
 use App\Http\Middleware\CheckApiPermission;
 use App\Models\ActivityLog;
 use App\Models\Inventory\Product;
@@ -14,6 +17,7 @@ use App\Models\Inventory\ProductVariant;
 use App\Models\Inventory\StockAdjustment;
 use App\Models\Inventory\StockAdjustmentRequest;
 use App\Models\Inventory\StockTransfer;
+use App\Models\Order\Order;
 use App\Models\Purchasing\PurchaseOrder;
 use App\Models\Scopes\OrganizationScope;
 use App\Models\User;
@@ -45,7 +49,13 @@ final class ApprovalService
 
     public const STOCK_TRANSFER = 'stock_transfer';
 
-    public const TYPES = [self::PURCHASE_ORDER, self::STOCK_ADJUSTMENT, self::STOCK_TRANSFER];
+    /**
+     * A sales order waiting for approval (when the organization requires
+     * order approval). Decided through OrderService::approve()/reject().
+     */
+    public const SALES_ORDER = 'sales_order';
+
+    public const TYPES = [self::PURCHASE_ORDER, self::STOCK_ADJUSTMENT, self::STOCK_TRANSFER, self::SALES_ORDER];
 
     /**
      * @var array<string, Permission>
@@ -54,6 +64,7 @@ final class ApprovalService
         self::PURCHASE_ORDER => Permission::APPROVE_PURCHASE_ORDERS,
         self::STOCK_ADJUSTMENT => Permission::APPROVE_STOCK_ADJUSTMENTS,
         self::STOCK_TRANSFER => Permission::APPROVE_STOCK_TRANSFERS,
+        self::SALES_ORDER => Permission::APPROVE_ORDERS,
     ];
 
     /**
@@ -66,6 +77,7 @@ final class ApprovalService
         self::PURCHASE_ORDER => ['view_purchase_orders', 'edit_purchase_orders', 'approve_purchase_orders'],
         self::STOCK_ADJUSTMENT => ['manage_stock', 'approve_stock_adjustments'],
         self::STOCK_TRANSFER => ['transfer_stock', 'approve_stock_transfers'],
+        self::SALES_ORDER => ['view_orders', 'create_orders', 'approve_orders'],
     ];
 
     public function __construct(private readonly WarehouseAccessService $warehouseAccess) {}
@@ -294,6 +306,10 @@ final class ApprovalService
         $subject = $this->find($user, $type, $id);
         $this->authorizeDecision($user, $type, $subject);
 
+        if ($type === self::SALES_ORDER) {
+            return $this->decideSalesOrder($user, $subject, $approve, $notes);
+        }
+
         $status = $approve ? 'approved' : 'rejected';
 
         $decided = DB::transaction(function () use ($user, $type, $subject, $approve, $notes, $status) {
@@ -337,6 +353,37 @@ final class ApprovalService
         });
 
         DB::afterCommit(fn () => $this->notifyRequester($type, $decided, $user, $status, $notes));
+
+        return $decided;
+    }
+
+    /**
+     * Sales orders are decided by OrderService, the same path as the order
+     * page, so a rejection cancels the order and restocks it and the
+     * order's own notification goes out. Its state errors are mapped to
+     * the approval contract.
+     */
+    private function decideSalesOrder(User $user, Order $order, bool $approve, ?string $notes): Order
+    {
+        $orders = app(OrderService::class);
+
+        try {
+            $decided = $approve
+                ? $orders->approve($order, $user, $notes)
+                : $orders->reject($order, $user, (string) $notes);
+        } catch (InvalidStateException $e) {
+            throw $e->errorCode === 'self_approval'
+                ? ApprovalException::selfApproval()
+                : ApprovalException::invalidState($e->getMessage());
+        }
+
+        $this->log(
+            $decided,
+            $user,
+            $approve ? 'approved' : 'rejected',
+            ($approve ? 'Approved' : 'Rejected')." sales order {$decided->order_number}".($notes ? ": {$notes}" : ''),
+            ['notes' => $notes],
+        );
 
         return $decided;
     }
@@ -443,6 +490,7 @@ final class ApprovalService
             self::PURCHASE_ORDER => [$subject->approval_requested_by, $subject->created_by],
             self::STOCK_TRANSFER => [$subject->approval_requested_by, $subject->transferred_by],
             self::STOCK_ADJUSTMENT => [$subject->requested_by],
+            self::SALES_ORDER => [$subject->created_by],
         };
 
         return array_values(array_map('intval', array_filter($ids)));
@@ -459,6 +507,7 @@ final class ApprovalService
             self::STOCK_ADJUSTMENT => $this->warehouseAccess->canAccessLocation($user, $subject->location_id),
             self::STOCK_TRANSFER => $this->warehouseAccess->canAccessLocation($user, $subject->from_location_id)
                 || $this->warehouseAccess->canAccessLocation($user, $subject->to_location_id),
+            self::SALES_ORDER => $this->warehouseAccess->canAccessWarehouse($user, $subject->warehouse_id),
             default => true,
         };
     }
@@ -469,12 +518,15 @@ final class ApprovalService
             self::PURCHASE_ORDER => $subject->approval_requested_by ?? $subject->created_by,
             self::STOCK_TRANSFER => $subject->approval_requested_by ?? $subject->transferred_by,
             self::STOCK_ADJUSTMENT => $subject->requested_by,
+            self::SALES_ORDER => $subject->created_by,
         };
     }
 
     private function approvalStatus(string $type, Model $subject): ?string
     {
-        return $type === self::STOCK_ADJUSTMENT ? $subject->status : $subject->approval_status;
+        $status = $type === self::STOCK_ADJUSTMENT ? $subject->status : $subject->approval_status;
+
+        return $status instanceof \BackedEnum ? $status->value : $status;
     }
 
     /**
@@ -488,6 +540,7 @@ final class ApprovalService
             self::PURCHASE_ORDER => PurchaseOrder::class,
             self::STOCK_ADJUSTMENT => StockAdjustmentRequest::class,
             self::STOCK_TRANSFER => StockTransfer::class,
+            self::SALES_ORDER => Order::class,
             default => throw ApprovalException::notFound("Unknown approval type '{$type}'."),
         };
 
@@ -556,8 +609,15 @@ final class ApprovalService
         $adjustments = StockAdjustmentRequest::withoutGlobalScope(OrganizationScope::class)->with(['product', 'variant', 'requester', 'approver'])
             ->where('organization_id', $orgId)->where('requested_by', $user->id)
             ->latest()->limit($limit)->get();
+        // Orders the user created that waited (or wait) for approval; orders
+        // that never needed it are not requests.
+        $salesOrders = Order::withoutGlobalScope(OrganizationScope::class)->with(['creator', 'approver'])
+            ->where('organization_id', $orgId)->where('created_by', $user->id)
+            ->where(fn ($q) => $q->where('approval_status', OrderApprovalStatus::PENDING->value)->orWhereNotNull('approved_by'))
+            ->latest()->limit($limit)->get();
 
         return $pos->map(fn ($s) => $this->describe(self::PURCHASE_ORDER, $s))
+            ->concat($salesOrders->map(fn ($s) => $this->describe(self::SALES_ORDER, $s)))
             ->concat($transfers->map(fn ($s) => $this->describe(self::STOCK_TRANSFER, $s)))
             ->concat($adjustments->map(fn ($s) => $this->describe(self::STOCK_ADJUSTMENT, $s)))
             ->filter(fn (array $item): bool => $visible($item['type']))
@@ -582,6 +642,10 @@ final class ApprovalService
             self::STOCK_ADJUSTMENT => StockAdjustmentRequest::withoutGlobalScope(OrganizationScope::class)->with(['product', 'variant', 'requester', 'location'])
                 ->where('organization_id', $organizationId)
                 ->where('status', StockAdjustmentRequest::STATUS_PENDING),
+            self::SALES_ORDER => Order::withoutGlobalScope(OrganizationScope::class)->with(['creator'])
+                ->where('organization_id', $organizationId)
+                ->where('approval_status', OrderApprovalStatus::PENDING->value)
+                ->where('status', '!=', OrderStatus::CANCELLED->value),
         };
     }
 
@@ -622,6 +686,15 @@ final class ApprovalService
                 'url' => route('approvals.index'),
                 'requested_at' => $subject->created_at?->toIso8601String(),
                 'requester' => $subject->requester?->name,
+            ],
+            self::SALES_ORDER => [
+                'reference' => $subject->order_number,
+                'title' => "sales order {$subject->order_number}",
+                'summary' => trim(($subject->customer_name ?: 'No customer').', '.($subject->currency ?? '').' '.number_format((float) $subject->total, 2)),
+                'amount' => (float) $subject->total,
+                'url' => route('orders.show', $subject->id),
+                'requested_at' => $subject->created_at?->toIso8601String(),
+                'requester' => $subject->creator?->name,
             ],
         };
 

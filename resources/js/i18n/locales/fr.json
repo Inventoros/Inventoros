@@ -2254,7 +2254,7 @@
   },
   "approvals": {
     "title": "Approbations",
-    "description": "Bons de commande, ajustements de stock et transferts de stock en attente de décision.",
+    "description": "Bons de commande, commandes clients, ajustements de stock et transferts de stock en attente de décision.",
     "tabs": {
       "pending": "En attente de moi",
       "mine": "Mes demandes"
@@ -2266,7 +2266,8 @@
     "types": {
       "purchase_order": "Bon de commande",
       "stock_adjustment": "Ajustement de stock",
-      "stock_transfer": "Transfert de stock"
+      "stock_transfer": "Transfert de stock",
+      "sales_order": "Commande client"
     },
     "status": {
       "pending": "En attente d'approbation",

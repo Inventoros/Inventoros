@@ -2254,7 +2254,7 @@
   },
   "approvals": {
     "title": "Goedkeuringen",
-    "description": "Inkooporders, voorraadaanpassingen en voorraadoverboekingen die wachten op een beslissing.",
+    "description": "Inkooporders, verkooporders, voorraadaanpassingen en voorraadoverboekingen die wachten op een beslissing.",
     "tabs": {
       "pending": "Wacht op mij",
       "mine": "Mijn aanvragen"
@@ -2266,7 +2266,8 @@
     "types": {
       "purchase_order": "Inkooporder",
       "stock_adjustment": "Voorraadaanpassing",
-      "stock_transfer": "Voorraadoverboeking"
+      "stock_transfer": "Voorraadoverboeking",
+      "sales_order": "Verkooporder"
     },
     "status": {
       "pending": "Wacht op goedkeuring",

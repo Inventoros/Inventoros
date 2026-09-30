@@ -2254,7 +2254,7 @@
   },
   "approvals": {
     "title": "审批",
-    "description": "等待决定的采购订单、库存调整和库存调拨。",
+    "description": "等待决定的采购订单、销售订单、库存调整和库存调拨。",
     "tabs": {
       "pending": "待我审批",
       "mine": "我的申请"
@@ -2266,7 +2266,8 @@
     "types": {
       "purchase_order": "采购订单",
       "stock_adjustment": "库存调整",
-      "stock_transfer": "库存调拨"
+      "stock_transfer": "库存调拨",
+      "sales_order": "销售订单"
     },
     "status": {
       "pending": "待审批",

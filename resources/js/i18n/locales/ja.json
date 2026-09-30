@@ -2254,7 +2254,7 @@
   },
   "approvals": {
     "title": "承認",
-    "description": "承認待ちの発注、在庫調整、在庫移動。",
+    "description": "承認待ちの発注、販売注文、在庫調整、在庫移動。",
     "tabs": {
       "pending": "自分の承認待ち",
       "mine": "自分の申請"
@@ -2266,7 +2266,8 @@
     "types": {
       "purchase_order": "発注",
       "stock_adjustment": "在庫調整",
-      "stock_transfer": "在庫移動"
+      "stock_transfer": "在庫移動",
+      "sales_order": "販売注文"
     },
     "status": {
       "pending": "承認待ち",

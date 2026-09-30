@@ -2254,7 +2254,7 @@
   },
   "approvals": {
     "title": "Genehmigungen",
-    "description": "Einkaufsbestellungen, Bestandsanpassungen und Umlagerungen, die auf eine Entscheidung warten.",
+    "description": "Einkaufsbestellungen, Verkaufsaufträge, Bestandsanpassungen und Umlagerungen, die auf eine Entscheidung warten.",
     "tabs": {
       "pending": "Warten auf mich",
       "mine": "Meine Anfragen"
@@ -2266,7 +2266,8 @@
     "types": {
       "purchase_order": "Einkaufsbestellung",
       "stock_adjustment": "Bestandsanpassung",
-      "stock_transfer": "Umlagerung"
+      "stock_transfer": "Umlagerung",
+      "sales_order": "Verkaufsauftrag"
     },
     "status": {
       "pending": "Genehmigung ausstehend",

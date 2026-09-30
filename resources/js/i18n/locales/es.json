@@ -2254,7 +2254,7 @@
   },
   "approvals": {
     "title": "Aprobaciones",
-    "description": "\u00d3rdenes de compra, ajustes de stock y transferencias de stock en espera de una decisi\u00f3n.",
+    "description": "Órdenes de compra, pedidos de venta, ajustes de stock y transferencias de stock en espera de una decisión.",
     "tabs": {
       "pending": "Esperando mi decisi\u00f3n",
       "mine": "Mis solicitudes"
@@ -2266,7 +2266,8 @@
     "types": {
       "purchase_order": "Orden de compra",
       "stock_adjustment": "Ajuste de stock",
-      "stock_transfer": "Transferencia de stock"
+      "stock_transfer": "Transferencia de stock",
+      "sales_order": "Pedido de venta"
     },
     "status": {
       "pending": "Pendiente de aprobaci\u00f3n",

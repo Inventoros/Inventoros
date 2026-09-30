@@ -2250,7 +2250,7 @@
   },
   "approvals": {
     "title": "Approvals",
-    "description": "Purchase orders, stock adjustments and stock transfers waiting for a decision.",
+    "description": "Purchase orders, sales orders, stock adjustments and stock transfers waiting for a decision.",
     "tabs": {
       "pending": "Waiting for me",
       "mine": "My requests"
@@ -2262,7 +2262,8 @@
     "types": {
       "purchase_order": "Purchase order",
       "stock_adjustment": "Stock adjustment",
-      "stock_transfer": "Stock transfer"
+      "stock_transfer": "Stock transfer",
+      "sales_order": "Sales order"
     },
     "status": {
       "pending": "Pending approval",

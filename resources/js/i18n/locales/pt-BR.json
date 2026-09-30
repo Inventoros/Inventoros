@@ -2254,7 +2254,7 @@
   },
   "approvals": {
     "title": "Aprovações",
-    "description": "Ordens de compra, ajustes de estoque e transferências de estoque aguardando uma decisão.",
+    "description": "Ordens de compra, pedidos de venda, ajustes de estoque e transferências de estoque aguardando uma decisão.",
     "tabs": {
       "pending": "Aguardando por mim",
       "mine": "Minhas solicitações"
@@ -2266,7 +2266,8 @@
     "types": {
       "purchase_order": "Ordem de compra",
       "stock_adjustment": "Ajuste de estoque",
-      "stock_transfer": "Transferência de estoque"
+      "stock_transfer": "Transferência de estoque",
+      "sales_order": "Pedido de venda"
     },
     "status": {
       "pending": "Aguardando aprovação",

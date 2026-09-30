@@ -140,7 +140,7 @@ Purchasing:
 Approvals:
 
 - `list_pending_approvals` (no single permission; returns only the purchase orders, stock adjustment requests and stock transfers the caller may decide). Each item carries the `type` and `id` to pass to `decide_approval`.
-- `decide_approval` (`approve_purchase_orders`, `approve_stock_adjustments` or `approve_stock_transfers`, by `type`). Approve or reject a pending request; rejecting needs notes. Destructive.
+- `decide_approval` (`approve_purchase_orders`, `approve_stock_adjustments`, `approve_stock_transfers` or `approve_orders`, by `type`). Approve or reject a pending request; rejecting needs notes. Destructive.
 
 Manufacturing:
 

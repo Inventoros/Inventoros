@@ -7,7 +7,7 @@ import Badge from '@/Components/ui/Badge.vue';
 import { Head, useForm } from '@inertiajs/vue3';
 import { computed, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { ClipboardList, SlidersHorizontal, ArrowLeftRight, Inbox, ExternalLink } from 'lucide-vue-next';
+import { ClipboardList, SlidersHorizontal, ArrowLeftRight, Inbox, ExternalLink, ShoppingCart } from 'lucide-vue-next';
 
 const { t } = useI18n();
 
@@ -24,6 +24,7 @@ const typeIcon = (type) => ({
     purchase_order: ClipboardList,
     stock_adjustment: SlidersHorizontal,
     stock_transfer: ArrowLeftRight,
+    sales_order: ShoppingCart,
 }[type] || ClipboardList);
 
 const statusVariant = (status) => ({

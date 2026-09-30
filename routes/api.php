@@ -227,11 +227,11 @@ Route::prefix('v1')->as('api.')->middleware('throttle:api')->group(function () {
         Route::get('approvals', [ApprovalController::class, 'index']);
         Route::get('approvals/mine', [ApprovalController::class, 'mine']);
         Route::post('approvals/{type}/{id}/approve', [ApprovalController::class, 'approve'])
-            ->whereIn('type', ['purchase_order', 'stock_adjustment', 'stock_transfer'])->whereNumber('id')
-            ->middleware('api.permission:approve_purchase_orders|approve_stock_adjustments|approve_stock_transfers');
+            ->whereIn('type', \App\Services\ApprovalService::TYPES)->whereNumber('id')
+            ->middleware('api.permission:approve_purchase_orders|approve_stock_adjustments|approve_stock_transfers|approve_orders');
         Route::post('approvals/{type}/{id}/reject', [ApprovalController::class, 'reject'])
-            ->whereIn('type', ['purchase_order', 'stock_adjustment', 'stock_transfer'])->whereNumber('id')
-            ->middleware('api.permission:approve_purchase_orders|approve_stock_adjustments|approve_stock_transfers');
+            ->whereIn('type', \App\Services\ApprovalService::TYPES)->whereNumber('id')
+            ->middleware('api.permission:approve_purchase_orders|approve_stock_adjustments|approve_stock_transfers|approve_orders');
 
         // Barcode Lookup
         Route::get('barcode/{code}', [BarcodeLookupController::class, 'lookup'])

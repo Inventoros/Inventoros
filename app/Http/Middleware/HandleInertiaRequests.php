@@ -104,7 +104,7 @@ class HandleInertiaRequests extends Middleware
                 }
 
                 $canApprove = $user->hasAnyPermission([
-                    'approve_purchase_orders', 'approve_stock_adjustments', 'approve_stock_transfers',
+                    'approve_purchase_orders', 'approve_stock_adjustments', 'approve_stock_transfers', 'approve_orders',
                 ]);
 
                 return $canApprove ? app(ApprovalService::class)->pendingCountFor($user) : 0;

@@ -2254,7 +2254,7 @@
   },
   "approvals": {
     "title": "Onaylar",
-    "description": "Karar bekleyen satın alma siparişleri, stok düzeltmeleri ve stok transferleri.",
+    "description": "Karar bekleyen satın alma siparişleri, satış siparişleri, stok düzeltmeleri ve stok transferleri.",
     "tabs": {
       "pending": "Beni bekleyenler",
       "mine": "Taleplerim"
@@ -2266,7 +2266,8 @@
     "types": {
       "purchase_order": "Satın alma siparişi",
       "stock_adjustment": "Stok düzeltmesi",
-      "stock_transfer": "Stok transferi"
+      "stock_transfer": "Stok transferi",
+      "sales_order": "Satış siparişi"
     },
     "status": {
       "pending": "Onay bekliyor",
