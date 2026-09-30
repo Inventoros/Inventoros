@@ -202,9 +202,10 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-t
                                     >
                                         <td class="min-w-[12rem] px-4 py-3 text-sm font-medium text-text-primary">
                                             {{ item.product?.name || item.order_item?.product_name || t('returns.show.unknownProduct') }}
+                                            <span v-if="item.variant?.title" class="text-text-secondary"> ({{ item.variant.title }})</span>
                                         </td>
                                         <td class="whitespace-nowrap px-4 py-3 text-sm text-text-tertiary">
-                                            {{ item.product?.sku || item.order_item?.sku || '-' }}
+                                            {{ item.variant?.sku || item.order_item?.sku || item.product?.sku || '-' }}
                                         </td>
                                         <td class="px-4 py-3 text-center text-sm font-medium tabular-nums text-text-primary">
                                             {{ item.quantity }}

@@ -94,6 +94,32 @@ final class ReturnVariantRestockTest extends TestCase
         $this->assertSame($this->variant->id, (int) $return->items()->first()->product_variant_id);
     }
 
+    /**
+     * The staff return form and the return page showed the parent product
+     * and its SKU for a variant line although the variant is stored.
+     */
+    public function test_the_return_form_and_page_show_the_variant(): void
+    {
+        $order = $this->variantOrder(5);
+
+        $this->withoutVite()->get(route('returns.create', ['order_id' => $order->id]))
+            ->assertOk()
+            ->assertInertia(fn ($page) => $page
+                ->where('order.items.0.variant.title', 'S')
+                ->where('order.items.0.variant.sku', 'RV-1-S'));
+
+        $return = app(ReturnOrderService::class)->create($this->org->id, $this->admin, [
+            'order_id' => $order->id, 'type' => 'return', 'reason' => 'Too small',
+            'items' => [['order_item_id' => $order->items->first()->id, 'quantity' => 1, 'condition' => 'new', 'restock' => true]],
+        ]);
+
+        $this->get(route('returns.show', $return))
+            ->assertOk()
+            ->assertInertia(fn ($page) => $page
+                ->where('returnOrder.items.0.variant.title', 'S')
+                ->where('returnOrder.items.0.variant.sku', 'RV-1-S'));
+    }
+
     public function test_receiving_a_variant_return_credits_the_variant_not_the_parent(): void
     {
         $order = $this->variantOrder(5);

@@ -75,7 +75,7 @@ class ReturnOrderController extends Controller
 
         $organizationId = $request->user()->organization_id;
 
-        $order = Order::with(['items.product'])
+        $order = Order::with(['items.product', 'items.variant'])
             ->forOrganization($organizationId)
             ->findOrFail($request->input('order_id'));
 
@@ -140,7 +140,7 @@ class ReturnOrderController extends Controller
 
         app(ReturnOrderService::class)->authorizeView($returnOrder, auth()->user());
 
-        $returnOrder->load(['order.items.product', 'items.product', 'items.orderItem', 'processor']);
+        $returnOrder->load(['order.items.product', 'items.product', 'items.variant', 'items.orderItem', 'processor']);
 
         return Inertia::render('Returns/Show', [
             'returnOrder' => $returnOrder,
