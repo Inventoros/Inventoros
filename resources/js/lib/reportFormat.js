@@ -1,18 +1,11 @@
 import { formatCalendarDate, formatDateValue, formatInstantDate } from './dates.js';
+import { formatMoney } from './money.js';
 
 // Shared number formatting for the report pages. Figures come from the
-// server already rounded, so these only present them. Money is shown in the
-// currency given (USD when none is), falling back to "12.00 XYZ" for a code
-// Intl does not know.
+// server already rounded, so these only present them. Money goes through the
+// app's one formatter (lib/money) in the currency given, USD when none is.
 
-export const formatCurrency = (value, currency = 'USD') => {
-    const amount = Number(value) || 0;
-    try {
-        return new Intl.NumberFormat('en-US', { style: 'currency', currency: currency || 'USD' }).format(amount);
-    } catch {
-        return `${amount.toFixed(2)} ${currency || ''}`.trim();
-    }
-};
+export const formatCurrency = (value, currency = 'USD') => formatMoney(value, currency, 'en-US');
 
 // "Plus EUR 10.00, USD 50.00": the totals in currencies other than `base`,
 // listed beside a headline figure instead of being added into it.
