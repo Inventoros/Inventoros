@@ -106,6 +106,10 @@ Before upgrading: take a database backup you have checked, run `php artisan opti
 - Shipment creation checks access to the ship-from warehouse.
 - Creating, editing and deleting warehouses in the web app needs `create_warehouses`, `edit_warehouses` and `delete_warehouses`; `view_warehouses` alone used to allow all three.
 - Database errors are no longer shown to users. Receiving a purchase order, stock audits, transfers, work orders, order and return actions, imports and the REST and GraphQL equivalents used to put the raw SQL error in the message; they now show the standard error page (HTTP 500) and the error is logged. Business rule refusals (wrong status, not enough stock) are still shown as before.
+- Dependency updates clearing every known advisory in the shipped packages: laravel/framework 13.34.0 (debug page XSS, CVE-2026-102279), guzzlehttp/guzzle 7.15.5 and guzzlehttp/psr7 2.13.1 (noncanonical host bypass CVE-2026-69246, host confusion CVE-2026-59882, CRLF injection CVE-2026-55766, cookie scope, proxy and Referer issues), dompdf/dompdf 3.1.6 (SVG local file read CVE-2026-56722, chroot bypass CVE-2026-55554, file existence oracles, image DoS), league/commonmark 2.10.3 (DoS and XSS advisories) and league/flysystem 3.36.0. On the JavaScript side: axios 1.20.0, postcss 8.5.28, nanoid 3.3.19, brace-expansion 2.1.7, browserslist 4.29.3, shell-quote 1.9.0 and vite 7.3.6 with esbuild 0.28.2. `composer audit` and `npm audit` report nothing.
+- The updater and the marketplace client refuse URLs whose host is not written in canonical form (userinfo, backslashes, percent-escapes, non-ASCII lookalikes, empty labels, trailing dots), so a host the HTTP client would read differently can no longer pass the download allowlist. Internationalised marketplace hosts must be configured in punycode.
+- Names in Markdown mail (the account invitation) are shown as text: a user or organization name written as a Markdown link no longer becomes a link in the email.
+- CI audits production Composer and npm dependencies on every change and weekly, and fails on high or critical advisories.
 
 ## [1.0.x]
 
