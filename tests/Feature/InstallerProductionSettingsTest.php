@@ -95,6 +95,14 @@ final class InstallerProductionSettingsTest extends TestCase
         $this->assertMatchesRegularExpression('/^SESSION_SECURE_COOKIE="false"$/m', $env);
     }
 
+    public function test_the_installed_version_is_the_release_version(): void
+    {
+        // It was config('app.version'), which is not defined: always 0.1.0.
+        $this->createAdmin()->assertOk();
+
+        $this->assertSame(\App\Support\AppVersion::current(), \App\Models\System\SystemSetting::get('app_version'));
+    }
+
     public function test_a_failed_admin_step_leaves_the_environment_unchanged(): void
     {
         $this->postJson('/install/admin', ['organization_name' => 'Acme'])->assertStatus(422);

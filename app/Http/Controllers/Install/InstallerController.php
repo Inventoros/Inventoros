@@ -8,6 +8,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Auth\Organization;
 use App\Models\System\SystemSetting;
 use App\Models\User;
+use App\Support\AppVersion;
 use App\Support\PublicPath;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Artisan;
@@ -431,7 +432,7 @@ class InstallerController extends Controller
             // Mark installation as complete
             SystemSetting::set('installed', true, 'boolean', 'Installation completed');
             SystemSetting::set('installed_at', now()->toDateTimeString(), 'string', 'Installation date');
-            SystemSetting::set('app_version', config('app.version', '0.1.0'), 'string', 'Application version');
+            SystemSetting::set('app_version', AppVersion::current(), 'string', 'Application version');
 
             // Switch back to database sessions now that tables exist, and
             // leave the development defaults of .env.example: in debug mode
