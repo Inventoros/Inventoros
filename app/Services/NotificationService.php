@@ -14,6 +14,7 @@ use App\Mail\OrderStatusEmail;
 use App\Models\CustomerContact;
 use App\Models\DataExport;
 use App\Models\Inventory\Product;
+use App\Models\Inventory\ProductVariant;
 use App\Models\Inventory\StockAudit;
 use App\Models\Notification;
 use App\Models\Order\Order;
@@ -194,6 +195,9 @@ final class NotificationService
             (int) config('notifications.low_stock_cooldown_minutes', 1440)
         ));
 
+        // On hand: a product sold by variant counts its active variants.
+        $onHand = $product->total_stock;
+
         // Get all users in the organization with manage_stock permission
         $users = User::where('organization_id', $product->organization_id)
             ->whereHas('roles', function ($query) {
@@ -212,22 +216,82 @@ final class NotificationService
                 'user_id' => $user->id,
                 'type' => 'low_stock',
                 'title' => 'Low Stock Alert',
-                'message' => "Product '{$product->name}' (SKU: {$product->sku}) is running low. Current stock: {$product->stock}, Minimum: {$product->min_stock}",
+                'message' => "Product '{$product->name}' (SKU: {$product->sku}) is running low. Current stock: {$onHand}, Minimum: {$product->min_stock}",
                 'data' => [
                     'product_id' => $product->id,
                     'product_name' => $product->name,
                     'sku' => $product->sku,
-                    'current_stock' => $product->stock,
+                    'current_stock' => $onHand,
                     'min_stock' => $product->min_stock,
                 ],
                 'action_url' => route('products.show', $product->id),
-                'priority' => $product->stock == 0 ? 'urgent' : 'high',
+                'priority' => $onHand == 0 ? 'urgent' : 'high',
             ]);
 
             // Send email notification
             self::sendEmailNotification($user, 'low_stock', [
                 'product' => $product,
                 'notification_url' => route('products.show', $product->id),
+            ]);
+        }
+    }
+
+    /**
+     * Notify stock managers that a variant with its own minimum has fallen to
+     * or below it ('low_stock'), or run out ('out_of_stock'). Low-stock alerts
+     * share the product alerts' cooldown, per variant. In-app only, like the
+     * warehouse alerts: the low-stock email reports the product total.
+     */
+    public static function createVariantStockNotification(ProductVariant $variant, string $type): void
+    {
+        if ($type === 'low_stock') {
+            $cooldownKey = "low_stock_alerted:variant:{$variant->id}";
+            if (Cache::has($cooldownKey)) {
+                return;
+            }
+            Cache::put($cooldownKey, true, now()->addMinutes(
+                (int) config('notifications.low_stock_cooldown_minutes', 1440)
+            ));
+        }
+
+        $product = $variant->product;
+        if ($product === null) {
+            return;
+        }
+
+        $label = "{$product->name} ({$variant->title})";
+        $sku = $variant->sku ?: $product->sku;
+
+        $users = User::where('organization_id', $product->organization_id)
+            ->whereHas('roles', function ($query) {
+                $query->whereJsonContains('permissions', 'manage_stock');
+            })
+            ->get();
+
+        foreach ($users as $user) {
+            if (! self::shouldNotifyUser($user, $type)) {
+                continue;
+            }
+
+            Notification::create([
+                'organization_id' => $product->organization_id,
+                'user_id' => $user->id,
+                'type' => $type,
+                'title' => $type === 'out_of_stock' ? 'Out of Stock Alert' : 'Low Stock Alert',
+                'message' => $type === 'out_of_stock'
+                    ? "Variant '{$label}' (SKU: {$sku}) is now out of stock!"
+                    : "Variant '{$label}' (SKU: {$sku}) is running low. Current stock: {$variant->stock}, Minimum: {$variant->min_stock}",
+                'data' => [
+                    'product_id' => $product->id,
+                    'product_name' => $product->name,
+                    'variant_id' => $variant->id,
+                    'variant_title' => $variant->title,
+                    'sku' => $sku,
+                    'current_stock' => (int) $variant->stock,
+                    'min_stock' => (int) $variant->min_stock,
+                ],
+                'action_url' => route('products.show', $product->id),
+                'priority' => $type === 'out_of_stock' || (int) $variant->stock === 0 ? 'urgent' : 'high',
             ]);
         }
     }

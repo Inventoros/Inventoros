@@ -10,6 +10,7 @@ use App\Listeners\WebhookEventSubscriber;
 use App\Models\Customer;
 use App\Models\Inventory\Product;
 use App\Models\Inventory\ProductLocationStock;
+use App\Models\Inventory\ProductVariant;
 use App\Models\Inventory\StockAudit;
 use App\Models\Inventory\StockTransfer;
 use App\Models\Inventory\WorkOrder;
@@ -22,6 +23,7 @@ use App\Observers\CustomerObserver;
 use App\Observers\OrderObserver;
 use App\Observers\ProductLocationStockObserver;
 use App\Observers\ProductObserver;
+use App\Observers\ProductVariantObserver;
 use App\Observers\PurchaseOrderObserver;
 use App\Observers\ReturnOrderObserver;
 use App\Observers\RoleSecurityObserver;
@@ -81,6 +83,7 @@ class AppServiceProvider extends ServiceProvider
 
         // Register observers
         Product::observe(ProductObserver::class);
+        ProductVariant::observe(ProductVariantObserver::class);
         ProductLocationStock::observe(ProductLocationStockObserver::class);
         Order::observe(OrderObserver::class);
         PurchaseOrder::observe(PurchaseOrderObserver::class);
