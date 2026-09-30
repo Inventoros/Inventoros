@@ -107,6 +107,17 @@ export function toIsoDate(value) {
 }
 
 /**
+ * Whether a raw value names a calendar day: a date-only string, or a
+ * zone-less server value at exactly midnight (how date columns and the
+ * order_date timestamp come out of a raw query).
+ *
+ * @param {unknown} value
+ */
+export function isCalendarDayValue(value) {
+    return typeof value === 'string' && (DATE_ONLY.test(value.trim()) || ZONELESS_MIDNIGHT.test(value.trim()));
+}
+
+/**
  * Format a value that may be either a calendar date or a timestamp (report
  * columns mix both):
  *  - a date-only string, or a zone-less server value at exactly midnight
@@ -121,7 +132,7 @@ export function toIsoDate(value) {
 export function formatDateValue(value, options = undefined, locale = formatLocale()) {
     if (!value) return '-';
 
-    if (typeof value === 'string' && (DATE_ONLY.test(value.trim()) || ZONELESS_MIDNIGHT.test(value.trim()))) {
+    if (isCalendarDayValue(value)) {
         return formatCalendarDate(value, options, locale);
     }
 

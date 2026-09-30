@@ -1,4 +1,4 @@
-import { formatCalendarDate, formatDateValue, formatInstantDate } from './dates.js';
+import { displayCalendarDate, displayDate, isCalendarDayValue } from './dates.js';
 import { formatLocale } from './formatSettings.js';
 import { formatMoney, formatNumber as formatPlainNumber } from './money.js';
 
@@ -43,9 +43,10 @@ export const deltaTone = (value) => {
 // kind each field is rather than guessing (see lib/dates.js):
 //  - formatDay: a calendar day (a date column, MAX(order_date));
 //  - formatTimestampDate: the viewer's day of a UTC timestamp (MAX(created_at)).
-export const formatDay = (value, locale = undefined) => formatCalendarDate(value, undefined, locale);
+// Both honour the organization's date format.
+export const formatDay = (value) => displayCalendarDate(value);
 
-export const formatTimestampDate = (value, locale = undefined) => formatInstantDate(value, undefined, locale);
+export const formatTimestampDate = (value) => displayDate(value);
 
 // A value of either kind (midnight = calendar day, other times = instant).
-export const formatDate = (value, locale = undefined) => formatDateValue(value, undefined, locale);
+export const formatDate = (value) => (isCalendarDayValue(value) ? displayCalendarDate(value) : displayDate(value));
