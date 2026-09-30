@@ -7,13 +7,15 @@ import { Head, Link, useForm } from '@inertiajs/vue3';
 import { ArrowLeft, Eye } from 'lucide-vue-next';
 
 import { useI18n } from 'vue-i18n';
+import { permissionCategoryLabel, permissionDescription, permissionLabel, roleName } from '@/lib/permissionLabels';
 const props = defineProps({
     role: Object,
     permissions: Object,
 });
 
 
-const { t } = useI18n();
+const { t, te } = useI18n();
+const i18n = { t, te };
 const form = useForm({
     name: props.role.name,
     description: props.role.description || '',
@@ -50,7 +52,7 @@ const fieldError = 'mt-1 text-xs text-status-danger';
 </script>
 
 <template>
-    <Head :title="t('common.editWithName', { name: role.name })" />
+    <Head :title="t('common.editWithName', { name: roleName(role, i18n) })" />
 
     <AppLayout>
         <template #header>
@@ -59,12 +61,12 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                 <span class="text-text-tertiary">/</span>
                 <Link :href="route('roles.index')" class="text-text-tertiary hover:text-text-primary">{{ t('nav.roles') }}</Link>
                 <span class="text-text-tertiary">/</span>
-                <span class="font-medium text-text-primary">{{ t('common.editWithName', { name: role.name }) }}</span>
+                <span class="font-medium text-text-primary">{{ t('common.editWithName', { name: roleName(role, i18n) }) }}</span>
             </div>
         </template>
 
         <PageHeader
-            :title="t('admin.roles.edit.titleWithName', { name: role.name })"
+            :title="t('admin.roles.edit.titleWithName', { name: roleName(role, i18n) })"
             :description="role.is_system ? t('admin.roles.edit.systemHint') : t('admin.roles.edit.subtitle')"
         >
             <template #actions>
@@ -134,7 +136,7 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                         >
                             <!-- Category Header -->
                             <div class="mb-3 flex items-center justify-between">
-                                <h4 class="text-xs font-medium uppercase tracking-wider text-text-tertiary">{{ category }}</h4>
+                                <h4 class="text-xs font-medium uppercase tracking-wider text-text-tertiary">{{ permissionCategoryLabel(category, i18n) }}</h4>
                                 <button
                                     type="button"
                                     @click="toggleCategory(category)"
@@ -161,8 +163,8 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                                         class="mt-0.5 rounded border-border-strong bg-surface-canvas text-brand ds-focus-ring"
                                     />
                                     <div class="min-w-0">
-                                        <p class="text-sm font-medium text-text-primary">{{ permission.label }}</p>
-                                        <p class="text-xs text-text-tertiary">{{ permission.description }}</p>
+                                        <p class="text-sm font-medium text-text-primary">{{ permissionLabel(permission, i18n) }}</p>
+                                        <p class="text-xs text-text-tertiary">{{ permissionDescription(permission, i18n) }}</p>
                                     </div>
                                 </label>
                             </div>

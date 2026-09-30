@@ -7,6 +7,7 @@ import Badge from '@/Components/ui/Badge.vue';
 import { Head, Link, router } from '@inertiajs/vue3';
 import { ref } from 'vue';
 import { useI18n } from 'vue-i18n';
+import { roleName } from '@/lib/permissionLabels';
 import { displayDate } from '@/lib/dates';
 import { Pencil, ArrowLeft, Trash2, X, AlertTriangle, CheckCircle2 } from 'lucide-vue-next';
 
@@ -14,7 +15,8 @@ const props = defineProps({
     user: Object,
 });
 
-const { t } = useI18n();
+const { t, te } = useI18n();
+const i18n = { t, te };
 const showDeleteModal = ref(false);
 const deleting = ref(false);
 
@@ -98,7 +100,7 @@ const roleVariant = (role) =>
                                         variant="brand"
                                         size="sm"
                                     >
-                                        {{ role.name }}
+                                        {{ roleName(role, i18n) }}
                                     </Badge>
                                 </dd>
                             </div>

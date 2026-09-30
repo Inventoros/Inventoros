@@ -1938,7 +1938,315 @@
     },
     "createRole": "역할 생성",
     "createUser": "사용자 생성",
-    "userDetails": "사용자 상세"
+    "userDetails": "사용자 상세",
+    "permissionCatalog": {
+      "permissions": {
+        "view_users": {
+          "label": "사용자 보기",
+          "description": "사용자 목록과 상세 정보를 볼 수 있습니다"
+        },
+        "create_users": {
+          "label": "사용자 생성",
+          "description": "새 사용자를 생성할 수 있습니다"
+        },
+        "edit_users": {
+          "label": "사용자 편집",
+          "description": "기존 사용자를 편집할 수 있습니다"
+        },
+        "delete_users": {
+          "label": "사용자 삭제",
+          "description": "사용자를 삭제할 수 있습니다"
+        },
+        "view_roles": {
+          "label": "역할 보기",
+          "description": "역할과 권한을 볼 수 있습니다"
+        },
+        "create_roles": {
+          "label": "역할 생성",
+          "description": "새 역할을 생성할 수 있습니다"
+        },
+        "edit_roles": {
+          "label": "역할 편집",
+          "description": "기존 역할을 편집할 수 있습니다"
+        },
+        "delete_roles": {
+          "label": "역할 삭제",
+          "description": "역할을 삭제할 수 있습니다"
+        },
+        "view_products": {
+          "label": "제품 보기",
+          "description": "제품 재고를 볼 수 있습니다"
+        },
+        "create_products": {
+          "label": "제품 생성",
+          "description": "새 제품을 추가할 수 있습니다"
+        },
+        "edit_products": {
+          "label": "제품 편집",
+          "description": "제품 상세 정보를 수정할 수 있습니다"
+        },
+        "delete_products": {
+          "label": "제품 삭제",
+          "description": "제품을 삭제할 수 있습니다"
+        },
+        "manage_stock": {
+          "label": "재고 수준 관리",
+          "description": "재고 수준을 조정하고 재고 이동 내역을 관리할 수 있습니다"
+        },
+        "transfer_stock": {
+          "label": "재고 이동",
+          "description": "위치 간 재고 이동을 생성하고 관리할 수 있습니다"
+        },
+        "manage_categories": {
+          "label": "카테고리 관리",
+          "description": "제품 카테고리를 생성하고 관리할 수 있습니다"
+        },
+        "manage_locations": {
+          "label": "위치 관리",
+          "description": "보관 위치를 생성하고 관리할 수 있습니다"
+        },
+        "view_customers": {
+          "label": "고객 보기",
+          "description": "고객 목록과 상세 정보를 볼 수 있습니다"
+        },
+        "create_customers": {
+          "label": "고객 생성",
+          "description": "새 고객을 생성할 수 있습니다"
+        },
+        "edit_customers": {
+          "label": "고객 편집",
+          "description": "기존 고객을 편집할 수 있습니다"
+        },
+        "delete_customers": {
+          "label": "고객 삭제",
+          "description": "고객을 삭제할 수 있습니다"
+        },
+        "view_suppliers": {
+          "label": "공급업체 보기",
+          "description": "공급업체 목록과 상세 정보를 볼 수 있습니다"
+        },
+        "create_suppliers": {
+          "label": "공급업체 생성",
+          "description": "새 공급업체를 생성할 수 있습니다"
+        },
+        "edit_suppliers": {
+          "label": "공급업체 편집",
+          "description": "기존 공급업체를 편집할 수 있습니다"
+        },
+        "delete_suppliers": {
+          "label": "공급업체 삭제",
+          "description": "공급업체를 삭제할 수 있습니다"
+        },
+        "view_purchase_orders": {
+          "label": "발주 보기",
+          "description": "발주를 볼 수 있습니다"
+        },
+        "create_purchase_orders": {
+          "label": "발주 생성",
+          "description": "새 발주를 생성할 수 있습니다"
+        },
+        "edit_purchase_orders": {
+          "label": "발주 편집",
+          "description": "발주를 편집할 수 있습니다"
+        },
+        "delete_purchase_orders": {
+          "label": "발주 삭제",
+          "description": "발주를 삭제할 수 있습니다"
+        },
+        "receive_purchase_orders": {
+          "label": "발주 입고",
+          "description": "발주 품목을 입고할 수 있습니다"
+        },
+        "approve_purchase_orders": {
+          "label": "발주 승인",
+          "description": "발송 전 승인이 필요한 발주를 승인하거나 거부할 수 있습니다"
+        },
+        "view_orders": {
+          "label": "주문 보기",
+          "description": "주문을 볼 수 있습니다"
+        },
+        "create_orders": {
+          "label": "주문 생성",
+          "description": "새 주문을 생성할 수 있습니다"
+        },
+        "edit_orders": {
+          "label": "주문 편집",
+          "description": "주문을 수정할 수 있습니다"
+        },
+        "delete_orders": {
+          "label": "주문 삭제",
+          "description": "주문을 삭제할 수 있습니다"
+        },
+        "approve_orders": {
+          "label": "주문 승인",
+          "description": "주문을 승인하거나 거부할 수 있습니다"
+        },
+        "view_payments": {
+          "label": "결제 보기",
+          "description": "주문 결제, 미결제 잔액 및 미수금을 볼 수 있습니다"
+        },
+        "record_payments": {
+          "label": "결제 기록",
+          "description": "주문 결제를 기록, 무효화 및 환불할 수 있습니다"
+        },
+        "view_settings": {
+          "label": "설정 보기",
+          "description": "시스템 설정을 볼 수 있습니다"
+        },
+        "edit_settings": {
+          "label": "설정 편집",
+          "description": "시스템 설정을 수정할 수 있습니다"
+        },
+        "manage_organization": {
+          "label": "조직 관리",
+          "description": "조직 상세 정보를 관리할 수 있습니다"
+        },
+        "view_plugins": {
+          "label": "플러그인 보기",
+          "description": "설치된 플러그인을 볼 수 있습니다"
+        },
+        "manage_plugins": {
+          "label": "플러그인 관리",
+          "description": "플러그인을 설치, 활성화 및 삭제할 수 있습니다"
+        },
+        "view_stock_audits": {
+          "label": "재고 실사 보기",
+          "description": "재고 실사와 순환 실사를 볼 수 있습니다"
+        },
+        "create_stock_audits": {
+          "label": "재고 실사 생성",
+          "description": "새 재고 실사를 생성할 수 있습니다"
+        },
+        "manage_stock_audits": {
+          "label": "재고 실사 관리",
+          "description": "재고 실사를 관리하고 시작, 완료 및 수량 조정을 할 수 있습니다"
+        },
+        "approve_stock_adjustments": {
+          "label": "재고 조정 승인",
+          "description": "재고 변경 전 승인이 필요한 재고 조정을 승인하거나 거부할 수 있습니다"
+        },
+        "approve_stock_transfers": {
+          "label": "재고 이동 승인",
+          "description": "출고 전 승인이 필요한 재고 이동을 승인하거나 거부할 수 있습니다"
+        },
+        "view_warehouses": {
+          "label": "창고 보기",
+          "description": "창고 목록과 상세 정보를 볼 수 있습니다"
+        },
+        "create_warehouses": {
+          "label": "창고 생성",
+          "description": "새 창고를 생성할 수 있습니다"
+        },
+        "edit_warehouses": {
+          "label": "창고 편집",
+          "description": "창고 설정을 편집할 수 있습니다"
+        },
+        "delete_warehouses": {
+          "label": "창고 삭제",
+          "description": "창고를 삭제할 수 있습니다"
+        },
+        "manage_warehouse_users": {
+          "label": "창고 사용자 관리",
+          "description": "창고에 사용자를 할당하거나 제외할 수 있습니다"
+        },
+        "access_all_warehouses": {
+          "label": "모든 창고 접근",
+          "description": "특정 창고에 할당된 경우에도 모든 창고의 재고를 조회하고 처리할 수 있습니다"
+        },
+        "manage_returns": {
+          "label": "반품 관리",
+          "description": "반품 및 교환을 생성하고 관리할 수 있습니다"
+        },
+        "view_shipments": {
+          "label": "배송 보기",
+          "description": "주문 배송, 추적 정보 및 배송 라벨을 볼 수 있습니다"
+        },
+        "create_shipments": {
+          "label": "배송 생성",
+          "description": "배송을 생성하고, 배송 라벨을 구매 및 무효화하고, 주문을 배송됨으로 표시할 수 있습니다"
+        },
+        "view_reports": {
+          "label": "보고서 보기",
+          "description": "시스템 보고서를 볼 수 있습니다"
+        },
+        "export_data": {
+          "label": "데이터 내보내기",
+          "description": "시스템에서 데이터를 내보낼 수 있습니다"
+        },
+        "import_data": {
+          "label": "데이터 가져오기",
+          "description": "시스템으로 데이터를 가져올 수 있습니다"
+        },
+        "view_activity_log": {
+          "label": "활동 로그 보기",
+          "description": "활동 및 감사 로그를 볼 수 있습니다"
+        }
+      },
+      "categories": {
+        "userManagement": "사용자 관리",
+        "roleManagement": "역할 관리",
+        "inventoryManagement": "재고 관리",
+        "customerManagement": "고객 관리",
+        "supplierManagement": "공급업체 관리",
+        "purchaseOrderManagement": "발주 관리",
+        "orderManagement": "주문 관리",
+        "payments": "결제",
+        "settings": "설정",
+        "plugins": "플러그인",
+        "warehouseManagement": "창고 관리",
+        "returnsManagement": "반품 관리",
+        "shipping": "배송",
+        "reportsData": "보고서 및 데이터"
+      },
+      "sets": {
+        "inventoryManager": {
+          "name": "재고 관리자",
+          "description": "제품, 카테고리, 위치를 포함한 재고 관리 전체 접근 권한."
+        },
+        "orderProcessor": {
+          "name": "주문 처리 담당자",
+          "description": "생성부터 완료까지 주문을 관리합니다."
+        },
+        "warehouseStaff": {
+          "name": "창고 직원",
+          "description": "제품을 조회하고 재고 수준을 관리합니다."
+        },
+        "purchasingAgent": {
+          "name": "구매 담당자",
+          "description": "공급업체와 발주를 관리합니다."
+        },
+        "approver": {
+          "name": "승인자",
+          "description": "결재가 필요한 발주, 재고 조정 및 재고 이동을 승인하거나 거부합니다."
+        },
+        "readOnlyAuditor": {
+          "name": "읽기 전용 감사자",
+          "description": "감사 목적으로 모든 데이터에 대한 조회 전용 접근 권한."
+        },
+        "userAdministrator": {
+          "name": "사용자 관리자",
+          "description": "사용자와 사용자의 접근 권한을 관리합니다."
+        },
+        "reportsViewer": {
+          "name": "보고서 조회자",
+          "description": "보고서 및 데이터 내보내기 기능에 대한 접근 권한."
+        }
+      },
+      "roles": {
+        "systemAdministrator": {
+          "name": "관리자",
+          "description": "모든 권한을 가진 전체 시스템 접근."
+        },
+        "systemManager": {
+          "name": "매니저",
+          "description": "재고, 주문, 카테고리를 관리하고 보고서를 볼 수 있습니다."
+        },
+        "systemMember": {
+          "name": "멤버",
+          "description": "할당된 작업을 조회하고 관리할 수 있는 기본 접근 권한."
+        }
+      }
+    }
   },
   "auth": {
     "login": {

@@ -1839,7 +1839,315 @@
     },
     "createRole": "Create Role",
     "createUser": "Create User",
-    "userDetails": "User Details"
+    "userDetails": "User Details",
+    "permissionCatalog": {
+      "permissions": {
+        "view_users": {
+          "label": "View Users",
+          "description": "Can view user list and details"
+        },
+        "create_users": {
+          "label": "Create Users",
+          "description": "Can create new users"
+        },
+        "edit_users": {
+          "label": "Edit Users",
+          "description": "Can edit existing users"
+        },
+        "delete_users": {
+          "label": "Delete Users",
+          "description": "Can delete users"
+        },
+        "view_roles": {
+          "label": "View Roles",
+          "description": "Can view roles and permissions"
+        },
+        "create_roles": {
+          "label": "Create Roles",
+          "description": "Can create new roles"
+        },
+        "edit_roles": {
+          "label": "Edit Roles",
+          "description": "Can edit existing roles"
+        },
+        "delete_roles": {
+          "label": "Delete Roles",
+          "description": "Can delete roles"
+        },
+        "view_products": {
+          "label": "View Products",
+          "description": "Can view product inventory"
+        },
+        "create_products": {
+          "label": "Create Products",
+          "description": "Can add new products"
+        },
+        "edit_products": {
+          "label": "Edit Products",
+          "description": "Can modify product details"
+        },
+        "delete_products": {
+          "label": "Delete Products",
+          "description": "Can remove products"
+        },
+        "manage_stock": {
+          "label": "Manage Stock",
+          "description": "Can adjust stock levels and manage stock movements"
+        },
+        "transfer_stock": {
+          "label": "Transfer Stock",
+          "description": "Can create and manage stock transfers between locations"
+        },
+        "manage_categories": {
+          "label": "Manage Categories",
+          "description": "Can create and manage product categories"
+        },
+        "manage_locations": {
+          "label": "Manage Locations",
+          "description": "Can create and manage storage locations"
+        },
+        "view_customers": {
+          "label": "View Customers",
+          "description": "Can view customer list and details"
+        },
+        "create_customers": {
+          "label": "Create Customers",
+          "description": "Can create new customers"
+        },
+        "edit_customers": {
+          "label": "Edit Customers",
+          "description": "Can edit existing customers"
+        },
+        "delete_customers": {
+          "label": "Delete Customers",
+          "description": "Can delete customers"
+        },
+        "view_suppliers": {
+          "label": "View Suppliers",
+          "description": "Can view supplier list and details"
+        },
+        "create_suppliers": {
+          "label": "Create Suppliers",
+          "description": "Can create new suppliers"
+        },
+        "edit_suppliers": {
+          "label": "Edit Suppliers",
+          "description": "Can edit existing suppliers"
+        },
+        "delete_suppliers": {
+          "label": "Delete Suppliers",
+          "description": "Can delete suppliers"
+        },
+        "view_purchase_orders": {
+          "label": "View Purchase Orders",
+          "description": "Can view purchase orders"
+        },
+        "create_purchase_orders": {
+          "label": "Create Purchase Orders",
+          "description": "Can create new purchase orders"
+        },
+        "edit_purchase_orders": {
+          "label": "Edit Purchase Orders",
+          "description": "Can edit purchase orders"
+        },
+        "delete_purchase_orders": {
+          "label": "Delete Purchase Orders",
+          "description": "Can delete purchase orders"
+        },
+        "receive_purchase_orders": {
+          "label": "Receive Purchase Orders",
+          "description": "Can receive items from purchase orders"
+        },
+        "approve_purchase_orders": {
+          "label": "Approve Purchase Orders",
+          "description": "Can approve or reject purchase orders that need approval before they are sent"
+        },
+        "view_orders": {
+          "label": "View Orders",
+          "description": "Can view orders"
+        },
+        "create_orders": {
+          "label": "Create Orders",
+          "description": "Can create new orders"
+        },
+        "edit_orders": {
+          "label": "Edit Orders",
+          "description": "Can modify orders"
+        },
+        "delete_orders": {
+          "label": "Delete Orders",
+          "description": "Can delete orders"
+        },
+        "approve_orders": {
+          "label": "Approve Orders",
+          "description": "Can approve or reject orders"
+        },
+        "view_payments": {
+          "label": "View Payments",
+          "description": "Can view order payments, balances due, and receivables"
+        },
+        "record_payments": {
+          "label": "Record Payments",
+          "description": "Can record, void, and refund order payments"
+        },
+        "view_settings": {
+          "label": "View Settings",
+          "description": "Can view system settings"
+        },
+        "edit_settings": {
+          "label": "Edit Settings",
+          "description": "Can modify system settings"
+        },
+        "manage_organization": {
+          "label": "Manage Organization",
+          "description": "Can manage organization details"
+        },
+        "view_plugins": {
+          "label": "View Plugins",
+          "description": "Can view installed plugins"
+        },
+        "manage_plugins": {
+          "label": "Manage Plugins",
+          "description": "Can install, activate, and delete plugins"
+        },
+        "view_stock_audits": {
+          "label": "View Stock Audits",
+          "description": "Can view stock audits and cycle counts"
+        },
+        "create_stock_audits": {
+          "label": "Create Stock Audits",
+          "description": "Can create new stock audits"
+        },
+        "manage_stock_audits": {
+          "label": "Manage Stock Audits",
+          "description": "Can manage stock audits, start, complete, and adjust counts"
+        },
+        "approve_stock_adjustments": {
+          "label": "Approve Stock Adjustments",
+          "description": "Can approve or reject stock adjustments that need approval before stock changes"
+        },
+        "approve_stock_transfers": {
+          "label": "Approve Stock Transfers",
+          "description": "Can approve or reject stock transfers that need approval before they ship"
+        },
+        "view_warehouses": {
+          "label": "View Warehouses",
+          "description": "Can view warehouse list and details"
+        },
+        "create_warehouses": {
+          "label": "Create Warehouses",
+          "description": "Can create new warehouses"
+        },
+        "edit_warehouses": {
+          "label": "Edit Warehouses",
+          "description": "Can edit warehouse settings"
+        },
+        "delete_warehouses": {
+          "label": "Delete Warehouses",
+          "description": "Can delete warehouses"
+        },
+        "manage_warehouse_users": {
+          "label": "Manage Warehouse Users",
+          "description": "Can assign and remove users from warehouses"
+        },
+        "access_all_warehouses": {
+          "label": "Access All Warehouses",
+          "description": "Can view and act on stock in every warehouse, even when assigned to specific ones"
+        },
+        "manage_returns": {
+          "label": "Manage Returns",
+          "description": "Can create and manage returns and exchanges"
+        },
+        "view_shipments": {
+          "label": "View Shipments",
+          "description": "Can view order shipments, tracking, and shipping labels"
+        },
+        "create_shipments": {
+          "label": "Create Shipments",
+          "description": "Can create shipments, buy and void shipping labels, and mark orders shipped"
+        },
+        "view_reports": {
+          "label": "View Reports",
+          "description": "Can view system reports"
+        },
+        "export_data": {
+          "label": "Export Data",
+          "description": "Can export data from the system"
+        },
+        "import_data": {
+          "label": "Import Data",
+          "description": "Can import data into the system"
+        },
+        "view_activity_log": {
+          "label": "View Activity Log",
+          "description": "Can view activity and audit logs"
+        }
+      },
+      "categories": {
+        "userManagement": "User Management",
+        "roleManagement": "Role Management",
+        "inventoryManagement": "Inventory Management",
+        "customerManagement": "Customer Management",
+        "supplierManagement": "Supplier Management",
+        "purchaseOrderManagement": "Purchase Order Management",
+        "orderManagement": "Order Management",
+        "payments": "Payments",
+        "settings": "Settings",
+        "plugins": "Plugins",
+        "warehouseManagement": "Warehouse Management",
+        "returnsManagement": "Returns Management",
+        "shipping": "Shipping",
+        "reportsData": "Reports & Data"
+      },
+      "sets": {
+        "inventoryManager": {
+          "name": "Inventory Manager",
+          "description": "Full access to inventory management including products, categories, and locations."
+        },
+        "orderProcessor": {
+          "name": "Order Processor",
+          "description": "Manage orders from creation to completion."
+        },
+        "warehouseStaff": {
+          "name": "Warehouse Staff",
+          "description": "View products and manage stock levels."
+        },
+        "purchasingAgent": {
+          "name": "Purchasing Agent",
+          "description": "Manage suppliers and purchase orders."
+        },
+        "approver": {
+          "name": "Approver",
+          "description": "Approve or reject purchase orders, stock adjustments and stock transfers that need sign-off."
+        },
+        "readOnlyAuditor": {
+          "name": "Read-Only Auditor",
+          "description": "View-only access to all data for auditing purposes."
+        },
+        "userAdministrator": {
+          "name": "User Administrator",
+          "description": "Manage users and their access permissions."
+        },
+        "reportsViewer": {
+          "name": "Reports Viewer",
+          "description": "Access to reports and data export functionality."
+        }
+      },
+      "roles": {
+        "systemAdministrator": {
+          "name": "Administrator",
+          "description": "Full system access with all permissions."
+        },
+        "systemManager": {
+          "name": "Manager",
+          "description": "Can manage inventory, orders, categories, and view reports."
+        },
+        "systemMember": {
+          "name": "Member",
+          "description": "Basic access to view and manage assigned tasks."
+        }
+      }
+    }
   },
   "auth": {
     "login": {

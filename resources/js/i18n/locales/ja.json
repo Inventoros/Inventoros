@@ -1938,7 +1938,315 @@
     },
     "createRole": "ロールを作成",
     "createUser": "ユーザーを作成",
-    "userDetails": "ユーザー詳細"
+    "userDetails": "ユーザー詳細",
+    "permissionCatalog": {
+      "permissions": {
+        "view_users": {
+          "label": "ユーザーを表示",
+          "description": "ユーザーの一覧と詳細を表示できます"
+        },
+        "create_users": {
+          "label": "ユーザーを作成",
+          "description": "新しいユーザーを作成できます"
+        },
+        "edit_users": {
+          "label": "ユーザーを編集",
+          "description": "既存のユーザーを編集できます"
+        },
+        "delete_users": {
+          "label": "ユーザーを削除",
+          "description": "ユーザーを削除できます"
+        },
+        "view_roles": {
+          "label": "ロールを表示",
+          "description": "ロールと権限を表示できます"
+        },
+        "create_roles": {
+          "label": "ロールを作成",
+          "description": "新しいロールを作成できます"
+        },
+        "edit_roles": {
+          "label": "ロールを編集",
+          "description": "既存のロールを編集できます"
+        },
+        "delete_roles": {
+          "label": "ロールを削除",
+          "description": "ロールを削除できます"
+        },
+        "view_products": {
+          "label": "商品を表示",
+          "description": "商品在庫を表示できます"
+        },
+        "create_products": {
+          "label": "商品を作成",
+          "description": "新しい商品を追加できます"
+        },
+        "edit_products": {
+          "label": "商品を編集",
+          "description": "商品の詳細を変更できます"
+        },
+        "delete_products": {
+          "label": "商品を削除",
+          "description": "商品を削除できます"
+        },
+        "manage_stock": {
+          "label": "在庫を管理",
+          "description": "在庫数の調整と在庫移動の管理ができます"
+        },
+        "transfer_stock": {
+          "label": "在庫を移動",
+          "description": "ロケーション間の在庫移動を作成・管理できます"
+        },
+        "manage_categories": {
+          "label": "カテゴリを管理",
+          "description": "商品カテゴリを作成・管理できます"
+        },
+        "manage_locations": {
+          "label": "ロケーションを管理",
+          "description": "保管ロケーションを作成・管理できます"
+        },
+        "view_customers": {
+          "label": "顧客を表示",
+          "description": "顧客の一覧と詳細を表示できます"
+        },
+        "create_customers": {
+          "label": "顧客を作成",
+          "description": "新しい顧客を作成できます"
+        },
+        "edit_customers": {
+          "label": "顧客を編集",
+          "description": "既存の顧客を編集できます"
+        },
+        "delete_customers": {
+          "label": "顧客を削除",
+          "description": "顧客を削除できます"
+        },
+        "view_suppliers": {
+          "label": "仕入先を表示",
+          "description": "仕入先の一覧と詳細を表示できます"
+        },
+        "create_suppliers": {
+          "label": "仕入先を作成",
+          "description": "新しい仕入先を作成できます"
+        },
+        "edit_suppliers": {
+          "label": "仕入先を編集",
+          "description": "既存の仕入先を編集できます"
+        },
+        "delete_suppliers": {
+          "label": "仕入先を削除",
+          "description": "仕入先を削除できます"
+        },
+        "view_purchase_orders": {
+          "label": "発注を表示",
+          "description": "発注を表示できます"
+        },
+        "create_purchase_orders": {
+          "label": "発注を作成",
+          "description": "新しい発注を作成できます"
+        },
+        "edit_purchase_orders": {
+          "label": "発注を編集",
+          "description": "発注を編集できます"
+        },
+        "delete_purchase_orders": {
+          "label": "発注を削除",
+          "description": "発注を削除できます"
+        },
+        "receive_purchase_orders": {
+          "label": "発注を入荷",
+          "description": "発注の品目を入荷できます"
+        },
+        "approve_purchase_orders": {
+          "label": "発注を承認",
+          "description": "送信前に承認が必要な発注を承認または却下できます"
+        },
+        "view_orders": {
+          "label": "注文を表示",
+          "description": "注文を表示できます"
+        },
+        "create_orders": {
+          "label": "注文を作成",
+          "description": "新しい注文を作成できます"
+        },
+        "edit_orders": {
+          "label": "注文を編集",
+          "description": "注文を変更できます"
+        },
+        "delete_orders": {
+          "label": "注文を削除",
+          "description": "注文を削除できます"
+        },
+        "approve_orders": {
+          "label": "注文を承認",
+          "description": "注文を承認または却下できます"
+        },
+        "view_payments": {
+          "label": "支払いを表示",
+          "description": "注文の支払い、未払残高、売掛金を表示できます"
+        },
+        "record_payments": {
+          "label": "支払いを記録",
+          "description": "注文の支払いの記録、無効化、返金ができます"
+        },
+        "view_settings": {
+          "label": "設定を表示",
+          "description": "システム設定を表示できます"
+        },
+        "edit_settings": {
+          "label": "設定を編集",
+          "description": "システム設定を変更できます"
+        },
+        "manage_organization": {
+          "label": "組織を管理",
+          "description": "組織の詳細を管理できます"
+        },
+        "view_plugins": {
+          "label": "プラグインを表示",
+          "description": "インストール済みのプラグインを表示できます"
+        },
+        "manage_plugins": {
+          "label": "プラグインを管理",
+          "description": "プラグインのインストール、有効化、削除ができます"
+        },
+        "view_stock_audits": {
+          "label": "棚卸しを表示",
+          "description": "棚卸しと循環棚卸しを表示できます"
+        },
+        "create_stock_audits": {
+          "label": "棚卸しを作成",
+          "description": "新しい棚卸しを作成できます"
+        },
+        "manage_stock_audits": {
+          "label": "棚卸しを管理",
+          "description": "棚卸しの管理、開始、完了、カウントの調整ができます"
+        },
+        "approve_stock_adjustments": {
+          "label": "在庫調整を承認",
+          "description": "在庫変更前に承認が必要な在庫調整を承認または却下できます"
+        },
+        "approve_stock_transfers": {
+          "label": "在庫移動を承認",
+          "description": "出荷前に承認が必要な在庫移動を承認または却下できます"
+        },
+        "view_warehouses": {
+          "label": "倉庫を表示",
+          "description": "倉庫の一覧と詳細を表示できます"
+        },
+        "create_warehouses": {
+          "label": "倉庫を作成",
+          "description": "新しい倉庫を作成できます"
+        },
+        "edit_warehouses": {
+          "label": "倉庫を編集",
+          "description": "倉庫の設定を編集できます"
+        },
+        "delete_warehouses": {
+          "label": "倉庫を削除",
+          "description": "倉庫を削除できます"
+        },
+        "manage_warehouse_users": {
+          "label": "倉庫ユーザーを管理",
+          "description": "倉庫へのユーザーの割り当てと解除ができます"
+        },
+        "access_all_warehouses": {
+          "label": "すべての倉庫にアクセス",
+          "description": "特定の倉庫に割り当てられている場合でも、すべての倉庫の在庫を表示・操作できます"
+        },
+        "manage_returns": {
+          "label": "返品を管理",
+          "description": "返品と交換を作成・管理できます"
+        },
+        "view_shipments": {
+          "label": "出荷を表示",
+          "description": "注文の出荷、追跡情報、配送ラベルを表示できます"
+        },
+        "create_shipments": {
+          "label": "出荷を作成",
+          "description": "出荷の作成、配送ラベルの購入と無効化、注文の出荷済み設定ができます"
+        },
+        "view_reports": {
+          "label": "レポートを表示",
+          "description": "システムレポートを表示できます"
+        },
+        "export_data": {
+          "label": "データをエクスポート",
+          "description": "システムからデータをエクスポートできます"
+        },
+        "import_data": {
+          "label": "データをインポート",
+          "description": "システムにデータをインポートできます"
+        },
+        "view_activity_log": {
+          "label": "アクティビティログを表示",
+          "description": "アクティビティログと監査ログを表示できます"
+        }
+      },
+      "categories": {
+        "userManagement": "ユーザー管理",
+        "roleManagement": "ロール管理",
+        "inventoryManagement": "在庫管理",
+        "customerManagement": "顧客管理",
+        "supplierManagement": "仕入先管理",
+        "purchaseOrderManagement": "発注管理",
+        "orderManagement": "注文管理",
+        "payments": "支払い",
+        "settings": "設定",
+        "plugins": "プラグイン",
+        "warehouseManagement": "倉庫管理",
+        "returnsManagement": "返品管理",
+        "shipping": "配送",
+        "reportsData": "レポートとデータ"
+      },
+      "sets": {
+        "inventoryManager": {
+          "name": "在庫マネージャー",
+          "description": "商品、カテゴリ、ロケーションを含む在庫管理へのフルアクセス。"
+        },
+        "orderProcessor": {
+          "name": "注文処理担当",
+          "description": "注文を作成から完了まで管理します。"
+        },
+        "warehouseStaff": {
+          "name": "倉庫スタッフ",
+          "description": "商品を表示し、在庫数を管理します。"
+        },
+        "purchasingAgent": {
+          "name": "購買担当",
+          "description": "仕入先と発注を管理します。"
+        },
+        "approver": {
+          "name": "承認者",
+          "description": "承認が必要な発注、在庫調整、在庫移動を承認または却下します。"
+        },
+        "readOnlyAuditor": {
+          "name": "閲覧専用監査担当",
+          "description": "監査目的ですべてのデータを閲覧のみ可能です。"
+        },
+        "userAdministrator": {
+          "name": "ユーザー管理者",
+          "description": "ユーザーとそのアクセス権限を管理します。"
+        },
+        "reportsViewer": {
+          "name": "レポート閲覧者",
+          "description": "レポートとデータエクスポート機能へのアクセス。"
+        }
+      },
+      "roles": {
+        "systemAdministrator": {
+          "name": "管理者",
+          "description": "すべての権限を持つシステムへのフルアクセス。"
+        },
+        "systemManager": {
+          "name": "マネージャー",
+          "description": "在庫、注文、カテゴリの管理とレポートの表示ができます。"
+        },
+        "systemMember": {
+          "name": "メンバー",
+          "description": "割り当てられたタスクの表示と管理を行う基本アクセス。"
+        }
+      }
+    }
   },
   "auth": {
     "login": {

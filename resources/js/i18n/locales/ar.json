@@ -1938,7 +1938,315 @@
     },
     "createRole": "إنشاء دور",
     "createUser": "إنشاء مستخدم",
-    "userDetails": "تفاصيل المستخدم"
+    "userDetails": "تفاصيل المستخدم",
+    "permissionCatalog": {
+      "permissions": {
+        "view_users": {
+          "label": "عرض المستخدمين",
+          "description": "يمكنه عرض قائمة المستخدمين وتفاصيلهم"
+        },
+        "create_users": {
+          "label": "إنشاء المستخدمين",
+          "description": "يمكنه إنشاء مستخدمين جدد"
+        },
+        "edit_users": {
+          "label": "تعديل المستخدمين",
+          "description": "يمكنه تعديل المستخدمين الحاليين"
+        },
+        "delete_users": {
+          "label": "حذف المستخدمين",
+          "description": "يمكنه حذف المستخدمين"
+        },
+        "view_roles": {
+          "label": "عرض الأدوار",
+          "description": "يمكنه عرض الأدوار والصلاحيات"
+        },
+        "create_roles": {
+          "label": "إنشاء الأدوار",
+          "description": "يمكنه إنشاء أدوار جديدة"
+        },
+        "edit_roles": {
+          "label": "تعديل الأدوار",
+          "description": "يمكنه تعديل الأدوار الحالية"
+        },
+        "delete_roles": {
+          "label": "حذف الأدوار",
+          "description": "يمكنه حذف الأدوار"
+        },
+        "view_products": {
+          "label": "عرض المنتجات",
+          "description": "يمكنه عرض مخزون المنتجات"
+        },
+        "create_products": {
+          "label": "إنشاء المنتجات",
+          "description": "يمكنه إضافة منتجات جديدة"
+        },
+        "edit_products": {
+          "label": "تعديل المنتجات",
+          "description": "يمكنه تعديل تفاصيل المنتجات"
+        },
+        "delete_products": {
+          "label": "حذف المنتجات",
+          "description": "يمكنه إزالة المنتجات"
+        },
+        "manage_stock": {
+          "label": "إدارة المخزون",
+          "description": "يمكنه تعديل مستويات المخزون وإدارة حركات المخزون"
+        },
+        "transfer_stock": {
+          "label": "تحويل المخزون",
+          "description": "يمكنه إنشاء وإدارة تحويلات المخزون بين المواقع"
+        },
+        "manage_categories": {
+          "label": "إدارة الفئات",
+          "description": "يمكنه إنشاء وإدارة فئات المنتجات"
+        },
+        "manage_locations": {
+          "label": "إدارة المواقع",
+          "description": "يمكنه إنشاء وإدارة مواقع التخزين"
+        },
+        "view_customers": {
+          "label": "عرض العملاء",
+          "description": "يمكنه عرض قائمة العملاء وتفاصيلهم"
+        },
+        "create_customers": {
+          "label": "إنشاء العملاء",
+          "description": "يمكنه إنشاء عملاء جدد"
+        },
+        "edit_customers": {
+          "label": "تعديل العملاء",
+          "description": "يمكنه تعديل العملاء الحاليين"
+        },
+        "delete_customers": {
+          "label": "حذف العملاء",
+          "description": "يمكنه حذف العملاء"
+        },
+        "view_suppliers": {
+          "label": "عرض الموردين",
+          "description": "يمكنه عرض قائمة الموردين وتفاصيلهم"
+        },
+        "create_suppliers": {
+          "label": "إنشاء الموردين",
+          "description": "يمكنه إنشاء موردين جدد"
+        },
+        "edit_suppliers": {
+          "label": "تعديل الموردين",
+          "description": "يمكنه تعديل الموردين الحاليين"
+        },
+        "delete_suppliers": {
+          "label": "حذف الموردين",
+          "description": "يمكنه حذف الموردين"
+        },
+        "view_purchase_orders": {
+          "label": "عرض أوامر الشراء",
+          "description": "يمكنه عرض أوامر الشراء"
+        },
+        "create_purchase_orders": {
+          "label": "إنشاء أوامر الشراء",
+          "description": "يمكنه إنشاء أوامر شراء جديدة"
+        },
+        "edit_purchase_orders": {
+          "label": "تعديل أوامر الشراء",
+          "description": "يمكنه تعديل أوامر الشراء"
+        },
+        "delete_purchase_orders": {
+          "label": "حذف أوامر الشراء",
+          "description": "يمكنه حذف أوامر الشراء"
+        },
+        "receive_purchase_orders": {
+          "label": "استلام أوامر الشراء",
+          "description": "يمكنه استلام الأصناف من أوامر الشراء"
+        },
+        "approve_purchase_orders": {
+          "label": "اعتماد أوامر الشراء",
+          "description": "يمكنه الموافقة على أوامر الشراء التي تتطلب موافقة قبل إرسالها أو رفضها"
+        },
+        "view_orders": {
+          "label": "عرض الطلبات",
+          "description": "يمكنه عرض الطلبات"
+        },
+        "create_orders": {
+          "label": "إنشاء الطلبات",
+          "description": "يمكنه إنشاء طلبات جديدة"
+        },
+        "edit_orders": {
+          "label": "تعديل الطلبات",
+          "description": "يمكنه تعديل الطلبات"
+        },
+        "delete_orders": {
+          "label": "حذف الطلبات",
+          "description": "يمكنه حذف الطلبات"
+        },
+        "approve_orders": {
+          "label": "اعتماد الطلبات",
+          "description": "يمكنه الموافقة على الطلبات أو رفضها"
+        },
+        "view_payments": {
+          "label": "عرض المدفوعات",
+          "description": "يمكنه عرض مدفوعات الطلبات والأرصدة المستحقة والذمم المدينة"
+        },
+        "record_payments": {
+          "label": "تسجيل المدفوعات",
+          "description": "يمكنه تسجيل مدفوعات الطلبات وإلغاؤها واستردادها"
+        },
+        "view_settings": {
+          "label": "عرض الإعدادات",
+          "description": "يمكنه عرض إعدادات النظام"
+        },
+        "edit_settings": {
+          "label": "تعديل الإعدادات",
+          "description": "يمكنه تعديل إعدادات النظام"
+        },
+        "manage_organization": {
+          "label": "إدارة المؤسسة",
+          "description": "يمكنه إدارة تفاصيل المؤسسة"
+        },
+        "view_plugins": {
+          "label": "عرض الإضافات",
+          "description": "يمكنه عرض الإضافات المثبتة"
+        },
+        "manage_plugins": {
+          "label": "إدارة الإضافات",
+          "description": "يمكنه تثبيت الإضافات وتفعيلها وحذفها"
+        },
+        "view_stock_audits": {
+          "label": "عرض عمليات جرد المخزون",
+          "description": "يمكنه عرض عمليات جرد المخزون والجرد الدوري"
+        },
+        "create_stock_audits": {
+          "label": "إنشاء عمليات جرد المخزون",
+          "description": "يمكنه إنشاء عمليات جرد مخزون جديدة"
+        },
+        "manage_stock_audits": {
+          "label": "إدارة عمليات جرد المخزون",
+          "description": "يمكنه إدارة عمليات جرد المخزون وبدؤها وإكمالها وتعديل الكميات المعدودة"
+        },
+        "approve_stock_adjustments": {
+          "label": "اعتماد تعديلات المخزون",
+          "description": "يمكنه الموافقة على تعديلات المخزون التي تتطلب موافقة قبل تغيير المخزون أو رفضها"
+        },
+        "approve_stock_transfers": {
+          "label": "اعتماد تحويلات المخزون",
+          "description": "يمكنه الموافقة على تحويلات المخزون التي تتطلب موافقة قبل شحنها أو رفضها"
+        },
+        "view_warehouses": {
+          "label": "عرض المستودعات",
+          "description": "يمكنه عرض قائمة المستودعات وتفاصيلها"
+        },
+        "create_warehouses": {
+          "label": "إنشاء المستودعات",
+          "description": "يمكنه إنشاء مستودعات جديدة"
+        },
+        "edit_warehouses": {
+          "label": "تعديل المستودعات",
+          "description": "يمكنه تعديل إعدادات المستودعات"
+        },
+        "delete_warehouses": {
+          "label": "حذف المستودعات",
+          "description": "يمكنه حذف المستودعات"
+        },
+        "manage_warehouse_users": {
+          "label": "إدارة مستخدمي المستودعات",
+          "description": "يمكنه تعيين المستخدمين للمستودعات وإزالتهم منها"
+        },
+        "access_all_warehouses": {
+          "label": "الوصول إلى جميع المستودعات",
+          "description": "يمكنه عرض المخزون والتصرف فيه في كل مستودع، حتى عند تعيينه لمستودعات محددة"
+        },
+        "manage_returns": {
+          "label": "إدارة المرتجعات",
+          "description": "يمكنه إنشاء وإدارة المرتجعات والاستبدالات"
+        },
+        "view_shipments": {
+          "label": "عرض الشحنات",
+          "description": "يمكنه عرض شحنات الطلبات والتتبع وملصقات الشحن"
+        },
+        "create_shipments": {
+          "label": "إنشاء الشحنات",
+          "description": "يمكنه إنشاء الشحنات وشراء ملصقات الشحن وإلغاؤها وتحديد الطلبات كمشحونة"
+        },
+        "view_reports": {
+          "label": "عرض التقارير",
+          "description": "يمكنه عرض تقارير النظام"
+        },
+        "export_data": {
+          "label": "تصدير البيانات",
+          "description": "يمكنه تصدير البيانات من النظام"
+        },
+        "import_data": {
+          "label": "استيراد البيانات",
+          "description": "يمكنه استيراد البيانات إلى النظام"
+        },
+        "view_activity_log": {
+          "label": "عرض سجل النشاط",
+          "description": "يمكنه عرض سجلات النشاط والتدقيق"
+        }
+      },
+      "categories": {
+        "userManagement": "إدارة المستخدمين",
+        "roleManagement": "إدارة الأدوار",
+        "inventoryManagement": "إدارة المخزون",
+        "customerManagement": "إدارة العملاء",
+        "supplierManagement": "إدارة الموردين",
+        "purchaseOrderManagement": "إدارة أوامر الشراء",
+        "orderManagement": "إدارة الطلبات",
+        "payments": "المدفوعات",
+        "settings": "الإعدادات",
+        "plugins": "الإضافات",
+        "warehouseManagement": "إدارة المستودعات",
+        "returnsManagement": "إدارة المرتجعات",
+        "shipping": "الشحن",
+        "reportsData": "التقارير والبيانات"
+      },
+      "sets": {
+        "inventoryManager": {
+          "name": "مدير المخزون",
+          "description": "وصول كامل إلى إدارة المخزون بما في ذلك المنتجات والفئات والمواقع."
+        },
+        "orderProcessor": {
+          "name": "معالج الطلبات",
+          "description": "إدارة الطلبات من الإنشاء حتى الإكمال."
+        },
+        "warehouseStaff": {
+          "name": "موظفو المستودع",
+          "description": "عرض المنتجات وإدارة مستويات المخزون."
+        },
+        "purchasingAgent": {
+          "name": "مسؤول المشتريات",
+          "description": "إدارة الموردين وأوامر الشراء."
+        },
+        "approver": {
+          "name": "المعتمِد",
+          "description": "الموافقة على أوامر الشراء وتعديلات المخزون وتحويلات المخزون التي تتطلب اعتماداً أو رفضها."
+        },
+        "readOnlyAuditor": {
+          "name": "مدقق (قراءة فقط)",
+          "description": "وصول للعرض فقط إلى جميع البيانات لأغراض التدقيق."
+        },
+        "userAdministrator": {
+          "name": "مسؤول المستخدمين",
+          "description": "إدارة المستخدمين وصلاحيات الوصول الخاصة بهم."
+        },
+        "reportsViewer": {
+          "name": "مستعرض التقارير",
+          "description": "الوصول إلى التقارير ووظيفة تصدير البيانات."
+        }
+      },
+      "roles": {
+        "systemAdministrator": {
+          "name": "مسؤول",
+          "description": "وصول كامل إلى النظام بجميع الصلاحيات."
+        },
+        "systemManager": {
+          "name": "مدير",
+          "description": "يمكنه إدارة المخزون والطلبات والفئات وعرض التقارير."
+        },
+        "systemMember": {
+          "name": "عضو",
+          "description": "وصول أساسي لعرض المهام المعيّنة وإدارتها."
+        }
+      }
+    }
   },
   "auth": {
     "login": {

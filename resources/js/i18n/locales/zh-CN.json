@@ -1938,7 +1938,315 @@
     },
     "createRole": "创建角色",
     "createUser": "创建用户",
-    "userDetails": "用户详情"
+    "userDetails": "用户详情",
+    "permissionCatalog": {
+      "permissions": {
+        "view_users": {
+          "label": "查看用户",
+          "description": "可以查看用户列表和详情"
+        },
+        "create_users": {
+          "label": "创建用户",
+          "description": "可以创建新用户"
+        },
+        "edit_users": {
+          "label": "编辑用户",
+          "description": "可以编辑现有用户"
+        },
+        "delete_users": {
+          "label": "删除用户",
+          "description": "可以删除用户"
+        },
+        "view_roles": {
+          "label": "查看角色",
+          "description": "可以查看角色和权限"
+        },
+        "create_roles": {
+          "label": "创建角色",
+          "description": "可以创建新角色"
+        },
+        "edit_roles": {
+          "label": "编辑角色",
+          "description": "可以编辑现有角色"
+        },
+        "delete_roles": {
+          "label": "删除角色",
+          "description": "可以删除角色"
+        },
+        "view_products": {
+          "label": "查看产品",
+          "description": "可以查看产品库存"
+        },
+        "create_products": {
+          "label": "创建产品",
+          "description": "可以添加新产品"
+        },
+        "edit_products": {
+          "label": "编辑产品",
+          "description": "可以修改产品详情"
+        },
+        "delete_products": {
+          "label": "删除产品",
+          "description": "可以移除产品"
+        },
+        "manage_stock": {
+          "label": "管理库存",
+          "description": "可以调整库存水平并管理库存变动"
+        },
+        "transfer_stock": {
+          "label": "调拨库存",
+          "description": "可以创建和管理库位之间的库存调拨"
+        },
+        "manage_categories": {
+          "label": "管理分类",
+          "description": "可以创建和管理产品分类"
+        },
+        "manage_locations": {
+          "label": "管理库位",
+          "description": "可以创建和管理存储库位"
+        },
+        "view_customers": {
+          "label": "查看客户",
+          "description": "可以查看客户列表和详情"
+        },
+        "create_customers": {
+          "label": "创建客户",
+          "description": "可以创建新客户"
+        },
+        "edit_customers": {
+          "label": "编辑客户",
+          "description": "可以编辑现有客户"
+        },
+        "delete_customers": {
+          "label": "删除客户",
+          "description": "可以删除客户"
+        },
+        "view_suppliers": {
+          "label": "查看供应商",
+          "description": "可以查看供应商列表和详情"
+        },
+        "create_suppliers": {
+          "label": "创建供应商",
+          "description": "可以创建新供应商"
+        },
+        "edit_suppliers": {
+          "label": "编辑供应商",
+          "description": "可以编辑现有供应商"
+        },
+        "delete_suppliers": {
+          "label": "删除供应商",
+          "description": "可以删除供应商"
+        },
+        "view_purchase_orders": {
+          "label": "查看采购订单",
+          "description": "可以查看采购订单"
+        },
+        "create_purchase_orders": {
+          "label": "创建采购订单",
+          "description": "可以创建新采购订单"
+        },
+        "edit_purchase_orders": {
+          "label": "编辑采购订单",
+          "description": "可以编辑采购订单"
+        },
+        "delete_purchase_orders": {
+          "label": "删除采购订单",
+          "description": "可以删除采购订单"
+        },
+        "receive_purchase_orders": {
+          "label": "采购订单收货",
+          "description": "可以接收采购订单中的商品"
+        },
+        "approve_purchase_orders": {
+          "label": "审批采购订单",
+          "description": "可以批准或拒绝发送前需要审批的采购订单"
+        },
+        "view_orders": {
+          "label": "查看订单",
+          "description": "可以查看订单"
+        },
+        "create_orders": {
+          "label": "创建订单",
+          "description": "可以创建新订单"
+        },
+        "edit_orders": {
+          "label": "编辑订单",
+          "description": "可以修改订单"
+        },
+        "delete_orders": {
+          "label": "删除订单",
+          "description": "可以删除订单"
+        },
+        "approve_orders": {
+          "label": "审批订单",
+          "description": "可以批准或拒绝订单"
+        },
+        "view_payments": {
+          "label": "查看付款",
+          "description": "可以查看订单付款、应付余额和应收账款"
+        },
+        "record_payments": {
+          "label": "记录付款",
+          "description": "可以记录、作废和退还订单付款"
+        },
+        "view_settings": {
+          "label": "查看设置",
+          "description": "可以查看系统设置"
+        },
+        "edit_settings": {
+          "label": "编辑设置",
+          "description": "可以修改系统设置"
+        },
+        "manage_organization": {
+          "label": "管理组织",
+          "description": "可以管理组织详情"
+        },
+        "view_plugins": {
+          "label": "查看插件",
+          "description": "可以查看已安装的插件"
+        },
+        "manage_plugins": {
+          "label": "管理插件",
+          "description": "可以安装、启用和删除插件"
+        },
+        "view_stock_audits": {
+          "label": "查看库存盘点",
+          "description": "可以查看库存盘点和循环盘点"
+        },
+        "create_stock_audits": {
+          "label": "创建库存盘点",
+          "description": "可以创建新的库存盘点"
+        },
+        "manage_stock_audits": {
+          "label": "管理库存盘点",
+          "description": "可以管理库存盘点，包括开始、完成和调整盘点数量"
+        },
+        "approve_stock_adjustments": {
+          "label": "审批库存调整",
+          "description": "可以批准或拒绝库存变更前需要审批的库存调整"
+        },
+        "approve_stock_transfers": {
+          "label": "审批库存调拨",
+          "description": "可以批准或拒绝发运前需要审批的库存调拨"
+        },
+        "view_warehouses": {
+          "label": "查看仓库",
+          "description": "可以查看仓库列表和详情"
+        },
+        "create_warehouses": {
+          "label": "创建仓库",
+          "description": "可以创建新仓库"
+        },
+        "edit_warehouses": {
+          "label": "编辑仓库",
+          "description": "可以编辑仓库设置"
+        },
+        "delete_warehouses": {
+          "label": "删除仓库",
+          "description": "可以删除仓库"
+        },
+        "manage_warehouse_users": {
+          "label": "管理仓库用户",
+          "description": "可以为仓库分配和移除用户"
+        },
+        "access_all_warehouses": {
+          "label": "访问所有仓库",
+          "description": "即使已分配到特定仓库，也可以查看和操作所有仓库的库存"
+        },
+        "manage_returns": {
+          "label": "管理退货",
+          "description": "可以创建和管理退货与换货"
+        },
+        "view_shipments": {
+          "label": "查看发货",
+          "description": "可以查看订单发货、物流跟踪和面单"
+        },
+        "create_shipments": {
+          "label": "创建发货",
+          "description": "可以创建发货、购买和作废面单，并将订单标记为已发货"
+        },
+        "view_reports": {
+          "label": "查看报表",
+          "description": "可以查看系统报表"
+        },
+        "export_data": {
+          "label": "导出数据",
+          "description": "可以从系统导出数据"
+        },
+        "import_data": {
+          "label": "导入数据",
+          "description": "可以向系统导入数据"
+        },
+        "view_activity_log": {
+          "label": "查看活动日志",
+          "description": "可以查看活动日志和审计日志"
+        }
+      },
+      "categories": {
+        "userManagement": "用户管理",
+        "roleManagement": "角色管理",
+        "inventoryManagement": "库存管理",
+        "customerManagement": "客户管理",
+        "supplierManagement": "供应商管理",
+        "purchaseOrderManagement": "采购订单管理",
+        "orderManagement": "订单管理",
+        "payments": "付款",
+        "settings": "设置",
+        "plugins": "插件",
+        "warehouseManagement": "仓库管理",
+        "returnsManagement": "退货管理",
+        "shipping": "发货",
+        "reportsData": "报表与数据"
+      },
+      "sets": {
+        "inventoryManager": {
+          "name": "库存经理",
+          "description": "拥有库存管理的完全访问权限，包括产品、分类和库位。"
+        },
+        "orderProcessor": {
+          "name": "订单处理员",
+          "description": "管理订单从创建到完成的全过程。"
+        },
+        "warehouseStaff": {
+          "name": "仓库员工",
+          "description": "查看产品并管理库存水平。"
+        },
+        "purchasingAgent": {
+          "name": "采购员",
+          "description": "管理供应商和采购订单。"
+        },
+        "approver": {
+          "name": "审批人",
+          "description": "批准或拒绝需要签核的采购订单、库存调整和库存调拨。"
+        },
+        "readOnlyAuditor": {
+          "name": "只读审计员",
+          "description": "出于审计目的，对所有数据拥有只读访问权限。"
+        },
+        "userAdministrator": {
+          "name": "用户管理员",
+          "description": "管理用户及其访问权限。"
+        },
+        "reportsViewer": {
+          "name": "报表查看者",
+          "description": "可访问报表和数据导出功能。"
+        }
+      },
+      "roles": {
+        "systemAdministrator": {
+          "name": "管理员",
+          "description": "拥有全部权限的完全系统访问权限。"
+        },
+        "systemManager": {
+          "name": "经理",
+          "description": "可以管理库存、订单、分类并查看报表。"
+        },
+        "systemMember": {
+          "name": "成员",
+          "description": "查看和管理所分配任务的基本访问权限。"
+        }
+      }
+    }
   },
   "auth": {
     "login": {

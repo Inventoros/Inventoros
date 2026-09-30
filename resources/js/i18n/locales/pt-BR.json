@@ -1938,7 +1938,315 @@
     },
     "createRole": "Criar Função",
     "createUser": "Criar Usuário",
-    "userDetails": "Detalhes do Usuário"
+    "userDetails": "Detalhes do Usuário",
+    "permissionCatalog": {
+      "permissions": {
+        "view_users": {
+          "label": "Ver Usuários",
+          "description": "Pode ver a lista e os detalhes dos usuários"
+        },
+        "create_users": {
+          "label": "Criar Usuários",
+          "description": "Pode criar novos usuários"
+        },
+        "edit_users": {
+          "label": "Editar Usuários",
+          "description": "Pode editar usuários existentes"
+        },
+        "delete_users": {
+          "label": "Excluir Usuários",
+          "description": "Pode excluir usuários"
+        },
+        "view_roles": {
+          "label": "Ver Funções",
+          "description": "Pode ver funções e permissões"
+        },
+        "create_roles": {
+          "label": "Criar Funções",
+          "description": "Pode criar novas funções"
+        },
+        "edit_roles": {
+          "label": "Editar Funções",
+          "description": "Pode editar funções existentes"
+        },
+        "delete_roles": {
+          "label": "Excluir Funções",
+          "description": "Pode excluir funções"
+        },
+        "view_products": {
+          "label": "Ver Produtos",
+          "description": "Pode ver o estoque de produtos"
+        },
+        "create_products": {
+          "label": "Criar Produtos",
+          "description": "Pode adicionar novos produtos"
+        },
+        "edit_products": {
+          "label": "Editar Produtos",
+          "description": "Pode modificar os detalhes dos produtos"
+        },
+        "delete_products": {
+          "label": "Excluir Produtos",
+          "description": "Pode remover produtos"
+        },
+        "manage_stock": {
+          "label": "Gerenciar Estoque",
+          "description": "Pode ajustar níveis de estoque e gerenciar movimentações de estoque"
+        },
+        "transfer_stock": {
+          "label": "Transferir Estoque",
+          "description": "Pode criar e gerenciar transferências de estoque entre localizações"
+        },
+        "manage_categories": {
+          "label": "Gerenciar Categorias",
+          "description": "Pode criar e gerenciar categorias de produtos"
+        },
+        "manage_locations": {
+          "label": "Gerenciar Localizações",
+          "description": "Pode criar e gerenciar localizações de armazenamento"
+        },
+        "view_customers": {
+          "label": "Ver Clientes",
+          "description": "Pode ver a lista e os detalhes dos clientes"
+        },
+        "create_customers": {
+          "label": "Criar Clientes",
+          "description": "Pode criar novos clientes"
+        },
+        "edit_customers": {
+          "label": "Editar Clientes",
+          "description": "Pode editar clientes existentes"
+        },
+        "delete_customers": {
+          "label": "Excluir Clientes",
+          "description": "Pode excluir clientes"
+        },
+        "view_suppliers": {
+          "label": "Ver Fornecedores",
+          "description": "Pode ver a lista e os detalhes dos fornecedores"
+        },
+        "create_suppliers": {
+          "label": "Criar Fornecedores",
+          "description": "Pode criar novos fornecedores"
+        },
+        "edit_suppliers": {
+          "label": "Editar Fornecedores",
+          "description": "Pode editar fornecedores existentes"
+        },
+        "delete_suppliers": {
+          "label": "Excluir Fornecedores",
+          "description": "Pode excluir fornecedores"
+        },
+        "view_purchase_orders": {
+          "label": "Ver Ordens de Compra",
+          "description": "Pode ver ordens de compra"
+        },
+        "create_purchase_orders": {
+          "label": "Criar Ordens de Compra",
+          "description": "Pode criar novas ordens de compra"
+        },
+        "edit_purchase_orders": {
+          "label": "Editar Ordens de Compra",
+          "description": "Pode editar ordens de compra"
+        },
+        "delete_purchase_orders": {
+          "label": "Excluir Ordens de Compra",
+          "description": "Pode excluir ordens de compra"
+        },
+        "receive_purchase_orders": {
+          "label": "Receber Ordens de Compra",
+          "description": "Pode receber itens de ordens de compra"
+        },
+        "approve_purchase_orders": {
+          "label": "Aprovar Ordens de Compra",
+          "description": "Pode aprovar ou rejeitar ordens de compra que precisam de aprovação antes do envio"
+        },
+        "view_orders": {
+          "label": "Ver Pedidos",
+          "description": "Pode ver pedidos"
+        },
+        "create_orders": {
+          "label": "Criar Pedidos",
+          "description": "Pode criar novos pedidos"
+        },
+        "edit_orders": {
+          "label": "Editar Pedidos",
+          "description": "Pode modificar pedidos"
+        },
+        "delete_orders": {
+          "label": "Excluir Pedidos",
+          "description": "Pode excluir pedidos"
+        },
+        "approve_orders": {
+          "label": "Aprovar Pedidos",
+          "description": "Pode aprovar ou rejeitar pedidos"
+        },
+        "view_payments": {
+          "label": "Ver Pagamentos",
+          "description": "Pode ver pagamentos de pedidos, saldos devedores e contas a receber"
+        },
+        "record_payments": {
+          "label": "Registrar Pagamentos",
+          "description": "Pode registrar, anular e reembolsar pagamentos de pedidos"
+        },
+        "view_settings": {
+          "label": "Ver Configurações",
+          "description": "Pode ver as configurações do sistema"
+        },
+        "edit_settings": {
+          "label": "Editar Configurações",
+          "description": "Pode modificar as configurações do sistema"
+        },
+        "manage_organization": {
+          "label": "Gerenciar Organização",
+          "description": "Pode gerenciar os detalhes da organização"
+        },
+        "view_plugins": {
+          "label": "Ver Plugins",
+          "description": "Pode ver os plugins instalados"
+        },
+        "manage_plugins": {
+          "label": "Gerenciar Plugins",
+          "description": "Pode instalar, ativar e excluir plugins"
+        },
+        "view_stock_audits": {
+          "label": "Ver Auditorias de Estoque",
+          "description": "Pode ver auditorias de estoque e contagens cíclicas"
+        },
+        "create_stock_audits": {
+          "label": "Criar Auditorias de Estoque",
+          "description": "Pode criar novas auditorias de estoque"
+        },
+        "manage_stock_audits": {
+          "label": "Gerenciar Auditorias de Estoque",
+          "description": "Pode gerenciar auditorias de estoque, iniciá-las, concluí-las e ajustar contagens"
+        },
+        "approve_stock_adjustments": {
+          "label": "Aprovar Ajustes de Estoque",
+          "description": "Pode aprovar ou rejeitar ajustes de estoque que precisam de aprovação antes de alterar o estoque"
+        },
+        "approve_stock_transfers": {
+          "label": "Aprovar Transferências de Estoque",
+          "description": "Pode aprovar ou rejeitar transferências de estoque que precisam de aprovação antes do envio"
+        },
+        "view_warehouses": {
+          "label": "Ver Depósitos",
+          "description": "Pode ver a lista e os detalhes dos depósitos"
+        },
+        "create_warehouses": {
+          "label": "Criar Depósitos",
+          "description": "Pode criar novos depósitos"
+        },
+        "edit_warehouses": {
+          "label": "Editar Depósitos",
+          "description": "Pode editar as configurações dos depósitos"
+        },
+        "delete_warehouses": {
+          "label": "Excluir Depósitos",
+          "description": "Pode excluir depósitos"
+        },
+        "manage_warehouse_users": {
+          "label": "Gerenciar Usuários do Depósito",
+          "description": "Pode atribuir usuários a depósitos e removê-los"
+        },
+        "access_all_warehouses": {
+          "label": "Acessar Todos os Depósitos",
+          "description": "Pode ver e movimentar o estoque em todos os depósitos, mesmo quando atribuído a depósitos específicos"
+        },
+        "manage_returns": {
+          "label": "Gerenciar Devoluções",
+          "description": "Pode criar e gerenciar devoluções e trocas"
+        },
+        "view_shipments": {
+          "label": "Ver Remessas",
+          "description": "Pode ver remessas de pedidos, rastreamento e etiquetas de envio"
+        },
+        "create_shipments": {
+          "label": "Criar Remessas",
+          "description": "Pode criar remessas, comprar e anular etiquetas de envio e marcar pedidos como enviados"
+        },
+        "view_reports": {
+          "label": "Ver Relatórios",
+          "description": "Pode ver os relatórios do sistema"
+        },
+        "export_data": {
+          "label": "Exportar Dados",
+          "description": "Pode exportar dados do sistema"
+        },
+        "import_data": {
+          "label": "Importar Dados",
+          "description": "Pode importar dados para o sistema"
+        },
+        "view_activity_log": {
+          "label": "Ver Log de Atividades",
+          "description": "Pode ver logs de atividades e de auditoria"
+        }
+      },
+      "categories": {
+        "userManagement": "Gestão de Usuários",
+        "roleManagement": "Gestão de Funções",
+        "inventoryManagement": "Gestão de Estoque",
+        "customerManagement": "Gestão de Clientes",
+        "supplierManagement": "Gestão de Fornecedores",
+        "purchaseOrderManagement": "Gestão de Ordens de Compra",
+        "orderManagement": "Gestão de Pedidos",
+        "payments": "Pagamentos",
+        "settings": "Configurações",
+        "plugins": "Plugins",
+        "warehouseManagement": "Gestão de Depósitos",
+        "returnsManagement": "Gestão de Devoluções",
+        "shipping": "Envio",
+        "reportsData": "Relatórios e Dados"
+      },
+      "sets": {
+        "inventoryManager": {
+          "name": "Gerente de Estoque",
+          "description": "Acesso completo à gestão de estoque, incluindo produtos, categorias e localizações."
+        },
+        "orderProcessor": {
+          "name": "Processador de Pedidos",
+          "description": "Gerencie pedidos da criação à conclusão."
+        },
+        "warehouseStaff": {
+          "name": "Equipe de Depósito",
+          "description": "Veja produtos e gerencie níveis de estoque."
+        },
+        "purchasingAgent": {
+          "name": "Comprador",
+          "description": "Gerencie fornecedores e ordens de compra."
+        },
+        "approver": {
+          "name": "Aprovador",
+          "description": "Aprove ou rejeite ordens de compra, ajustes de estoque e transferências de estoque que precisam de aprovação."
+        },
+        "readOnlyAuditor": {
+          "name": "Auditor Somente Leitura",
+          "description": "Acesso somente leitura a todos os dados para fins de auditoria."
+        },
+        "userAdministrator": {
+          "name": "Administrador de Usuários",
+          "description": "Gerencie usuários e suas permissões de acesso."
+        },
+        "reportsViewer": {
+          "name": "Visualizador de Relatórios",
+          "description": "Acesso aos relatórios e à exportação de dados."
+        }
+      },
+      "roles": {
+        "systemAdministrator": {
+          "name": "Administrador",
+          "description": "Acesso completo ao sistema com todas as permissões."
+        },
+        "systemManager": {
+          "name": "Gerente",
+          "description": "Pode gerenciar estoque, pedidos e categorias e ver relatórios."
+        },
+        "systemMember": {
+          "name": "Membro",
+          "description": "Acesso básico para ver e gerenciar tarefas atribuídas."
+        }
+      }
+    }
   },
   "auth": {
     "login": {

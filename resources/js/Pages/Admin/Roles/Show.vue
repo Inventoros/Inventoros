@@ -7,6 +7,7 @@ import Badge from '@/Components/ui/Badge.vue';
 import { Head, Link, router } from '@inertiajs/vue3';
 import { ref, computed } from 'vue';
 import { useI18n } from 'vue-i18n';
+import { permissionCategoryLabel, permissionDescription, permissionLabel, roleDescription, roleName } from '@/lib/permissionLabels';
 import { displayDate } from '@/lib/dates';
 import { Pencil, ArrowLeft, Trash2, CheckCircle2, ShieldAlert, Info, X, AlertTriangle } from 'lucide-vue-next';
 
@@ -15,7 +16,8 @@ const props = defineProps({
     rolePermissions: Array,
 });
 
-const { t } = useI18n();
+const { t, te } = useI18n();
+const i18n = { t, te };
 const showDeleteModal = ref(false);
 const deleting = ref(false);
 
@@ -48,7 +50,7 @@ const deleteRole = () => {
 </script>
 
 <template>
-    <Head :title="t('admin.roles.show.titleWithName', { name: role.name })" />
+    <Head :title="t('admin.roles.show.titleWithName', { name: roleName(role, i18n) })" />
 
     <AppLayout>
         <template #header>
@@ -57,11 +59,11 @@ const deleteRole = () => {
                 <span class="text-text-tertiary">/</span>
                 <Link :href="route('roles.index')" class="text-text-tertiary hover:text-text-primary">{{ t('nav.roles') }}</Link>
                 <span class="text-text-tertiary">/</span>
-                <span class="font-medium text-text-primary">{{ role.name }}</span>
+                <span class="font-medium text-text-primary">{{ roleName(role, i18n) }}</span>
             </div>
         </template>
 
-        <PageHeader :title="role.name" :description="t('admin.roles.show.title')">
+        <PageHeader :title="roleName(role, i18n)" :description="t('admin.roles.show.title')">
             <template #actions>
                 <Badge v-if="role.is_system" variant="brand" size="sm">{{ t('admin.roles.show.systemRole') }}</Badge>
                 <Button
@@ -91,12 +93,12 @@ const deleteRole = () => {
                         <dl class="space-y-4">
                             <div>
                                 <dt class="text-xs text-text-tertiary">{{ t('admin.roles.show.roleName') }}</dt>
-                                <dd class="mt-1 text-sm text-text-primary">{{ role.name }}</dd>
+                                <dd class="mt-1 text-sm text-text-primary">{{ roleName(role, i18n) }}</dd>
                             </div>
 
                             <div v-if="role.description">
                                 <dt class="text-xs text-text-tertiary">{{ t('common.description') }}</dt>
-                                <dd class="mt-1 text-sm text-text-primary">{{ role.description }}</dd>
+                                <dd class="mt-1 text-sm text-text-primary">{{ roleDescription(role, i18n) }}</dd>
                             </div>
 
                             <div>
@@ -140,7 +142,7 @@ const deleteRole = () => {
                         <div v-if="rolePermissions.length > 0" class="space-y-6">
                             <div v-for="(permissions, category) in groupedPermissions" :key="category">
                                 <h4 class="mb-3 text-xs font-medium uppercase tracking-wider text-text-tertiary">
-                                    {{ category }}
+                                    {{ permissionCategoryLabel(category, i18n) }}
                                 </h4>
                                 <div class="grid grid-cols-1 gap-3 md:grid-cols-2">
                                     <div
@@ -150,8 +152,8 @@ const deleteRole = () => {
                                     >
                                         <CheckCircle2 :size="18" class="mt-0.5 flex-shrink-0 text-status-success" />
                                         <div class="min-w-0">
-                                            <p class="text-sm font-medium text-text-primary">{{ permission.label }}</p>
-                                            <p class="text-xs text-text-tertiary">{{ permission.description }}</p>
+                                            <p class="text-sm font-medium text-text-primary">{{ permissionLabel(permission, i18n) }}</p>
+                                            <p class="text-xs text-text-tertiary">{{ permissionDescription(permission, i18n) }}</p>
                                         </div>
                                     </div>
                                 </div>
@@ -264,7 +266,7 @@ const deleteRole = () => {
 
                     <div class="mb-6">
                         <p class="mb-4 text-sm text-text-secondary">
-                            {{ t('admin.roles.show.confirmDeleteRole', { name: role.name }) }}
+                            {{ t('admin.roles.show.confirmDeleteRole', { name: roleName(role, i18n) }) }}
                         </p>
                         <div class="rounded-lg border border-status-warning/20 bg-status-warning-soft p-4">
                             <div class="flex items-start gap-3">

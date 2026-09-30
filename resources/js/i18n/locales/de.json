@@ -1938,7 +1938,315 @@
     },
     "createRole": "Rolle erstellen",
     "createUser": "Benutzer erstellen",
-    "userDetails": "Benutzerdetails"
+    "userDetails": "Benutzerdetails",
+    "permissionCatalog": {
+      "permissions": {
+        "view_users": {
+          "label": "Benutzer anzeigen",
+          "description": "Kann die Benutzerliste und Benutzerdetails anzeigen"
+        },
+        "create_users": {
+          "label": "Benutzer erstellen",
+          "description": "Kann neue Benutzer erstellen"
+        },
+        "edit_users": {
+          "label": "Benutzer bearbeiten",
+          "description": "Kann bestehende Benutzer bearbeiten"
+        },
+        "delete_users": {
+          "label": "Benutzer löschen",
+          "description": "Kann Benutzer löschen"
+        },
+        "view_roles": {
+          "label": "Rollen anzeigen",
+          "description": "Kann Rollen und Berechtigungen anzeigen"
+        },
+        "create_roles": {
+          "label": "Rollen erstellen",
+          "description": "Kann neue Rollen erstellen"
+        },
+        "edit_roles": {
+          "label": "Rollen bearbeiten",
+          "description": "Kann bestehende Rollen bearbeiten"
+        },
+        "delete_roles": {
+          "label": "Rollen löschen",
+          "description": "Kann Rollen löschen"
+        },
+        "view_products": {
+          "label": "Produkte anzeigen",
+          "description": "Kann den Produktbestand anzeigen"
+        },
+        "create_products": {
+          "label": "Produkte erstellen",
+          "description": "Kann neue Produkte hinzufügen"
+        },
+        "edit_products": {
+          "label": "Produkte bearbeiten",
+          "description": "Kann Produktdetails ändern"
+        },
+        "delete_products": {
+          "label": "Produkte löschen",
+          "description": "Kann Produkte entfernen"
+        },
+        "manage_stock": {
+          "label": "Bestand verwalten",
+          "description": "Kann Bestände anpassen und Bestandsbewegungen verwalten"
+        },
+        "transfer_stock": {
+          "label": "Bestand umlagern",
+          "description": "Kann Umlagerungen zwischen Lagerorten erstellen und verwalten"
+        },
+        "manage_categories": {
+          "label": "Kategorien verwalten",
+          "description": "Kann Produktkategorien erstellen und verwalten"
+        },
+        "manage_locations": {
+          "label": "Lagerorte verwalten",
+          "description": "Kann Lagerorte erstellen und verwalten"
+        },
+        "view_customers": {
+          "label": "Kunden anzeigen",
+          "description": "Kann die Kundenliste und Kundendetails anzeigen"
+        },
+        "create_customers": {
+          "label": "Kunden erstellen",
+          "description": "Kann neue Kunden erstellen"
+        },
+        "edit_customers": {
+          "label": "Kunden bearbeiten",
+          "description": "Kann bestehende Kunden bearbeiten"
+        },
+        "delete_customers": {
+          "label": "Kunden löschen",
+          "description": "Kann Kunden löschen"
+        },
+        "view_suppliers": {
+          "label": "Lieferanten anzeigen",
+          "description": "Kann die Lieferantenliste und Lieferantendetails anzeigen"
+        },
+        "create_suppliers": {
+          "label": "Lieferanten erstellen",
+          "description": "Kann neue Lieferanten erstellen"
+        },
+        "edit_suppliers": {
+          "label": "Lieferanten bearbeiten",
+          "description": "Kann bestehende Lieferanten bearbeiten"
+        },
+        "delete_suppliers": {
+          "label": "Lieferanten löschen",
+          "description": "Kann Lieferanten löschen"
+        },
+        "view_purchase_orders": {
+          "label": "Einkaufsbestellungen anzeigen",
+          "description": "Kann Einkaufsbestellungen anzeigen"
+        },
+        "create_purchase_orders": {
+          "label": "Einkaufsbestellungen erstellen",
+          "description": "Kann neue Einkaufsbestellungen erstellen"
+        },
+        "edit_purchase_orders": {
+          "label": "Einkaufsbestellungen bearbeiten",
+          "description": "Kann Einkaufsbestellungen bearbeiten"
+        },
+        "delete_purchase_orders": {
+          "label": "Einkaufsbestellungen löschen",
+          "description": "Kann Einkaufsbestellungen löschen"
+        },
+        "receive_purchase_orders": {
+          "label": "Wareneingang buchen",
+          "description": "Kann Artikel aus Einkaufsbestellungen als eingegangen buchen"
+        },
+        "approve_purchase_orders": {
+          "label": "Einkaufsbestellungen genehmigen",
+          "description": "Kann genehmigungspflichtige Einkaufsbestellungen vor dem Versand genehmigen oder ablehnen"
+        },
+        "view_orders": {
+          "label": "Bestellungen anzeigen",
+          "description": "Kann Bestellungen anzeigen"
+        },
+        "create_orders": {
+          "label": "Bestellungen erstellen",
+          "description": "Kann neue Bestellungen erstellen"
+        },
+        "edit_orders": {
+          "label": "Bestellungen bearbeiten",
+          "description": "Kann Bestellungen ändern"
+        },
+        "delete_orders": {
+          "label": "Bestellungen löschen",
+          "description": "Kann Bestellungen löschen"
+        },
+        "approve_orders": {
+          "label": "Bestellungen genehmigen",
+          "description": "Kann Bestellungen genehmigen oder ablehnen"
+        },
+        "view_payments": {
+          "label": "Zahlungen anzeigen",
+          "description": "Kann Bestellzahlungen, offene Beträge und Forderungen anzeigen"
+        },
+        "record_payments": {
+          "label": "Zahlungen erfassen",
+          "description": "Kann Bestellzahlungen erfassen, stornieren und erstatten"
+        },
+        "view_settings": {
+          "label": "Einstellungen anzeigen",
+          "description": "Kann Systemeinstellungen anzeigen"
+        },
+        "edit_settings": {
+          "label": "Einstellungen bearbeiten",
+          "description": "Kann Systemeinstellungen ändern"
+        },
+        "manage_organization": {
+          "label": "Organisation verwalten",
+          "description": "Kann Organisationsdetails verwalten"
+        },
+        "view_plugins": {
+          "label": "Plugins anzeigen",
+          "description": "Kann installierte Plugins anzeigen"
+        },
+        "manage_plugins": {
+          "label": "Plugins verwalten",
+          "description": "Kann Plugins installieren, aktivieren und löschen"
+        },
+        "view_stock_audits": {
+          "label": "Inventuren anzeigen",
+          "description": "Kann Inventuren und Zykluszählungen anzeigen"
+        },
+        "create_stock_audits": {
+          "label": "Inventuren erstellen",
+          "description": "Kann neue Inventuren erstellen"
+        },
+        "manage_stock_audits": {
+          "label": "Inventuren verwalten",
+          "description": "Kann Inventuren verwalten, starten, abschließen und Zählungen anpassen"
+        },
+        "approve_stock_adjustments": {
+          "label": "Bestandsanpassungen genehmigen",
+          "description": "Kann genehmigungspflichtige Bestandsanpassungen genehmigen oder ablehnen, bevor sich der Bestand ändert"
+        },
+        "approve_stock_transfers": {
+          "label": "Umlagerungen genehmigen",
+          "description": "Kann genehmigungspflichtige Umlagerungen vor dem Versand genehmigen oder ablehnen"
+        },
+        "view_warehouses": {
+          "label": "Lager anzeigen",
+          "description": "Kann die Lagerliste und Lagerdetails anzeigen"
+        },
+        "create_warehouses": {
+          "label": "Lager erstellen",
+          "description": "Kann neue Lager erstellen"
+        },
+        "edit_warehouses": {
+          "label": "Lager bearbeiten",
+          "description": "Kann Lagereinstellungen bearbeiten"
+        },
+        "delete_warehouses": {
+          "label": "Lager löschen",
+          "description": "Kann Lager löschen"
+        },
+        "manage_warehouse_users": {
+          "label": "Lagerbenutzer verwalten",
+          "description": "Kann Benutzer Lagern zuweisen und daraus entfernen"
+        },
+        "access_all_warehouses": {
+          "label": "Zugriff auf alle Lager",
+          "description": "Kann den Bestand in jedem Lager anzeigen und bearbeiten, auch wenn bestimmte Lager zugewiesen sind"
+        },
+        "manage_returns": {
+          "label": "Retouren verwalten",
+          "description": "Kann Retouren und Umtausche erstellen und verwalten"
+        },
+        "view_shipments": {
+          "label": "Sendungen anzeigen",
+          "description": "Kann Bestellsendungen, Sendungsverfolgung und Versandetiketten anzeigen"
+        },
+        "create_shipments": {
+          "label": "Sendungen erstellen",
+          "description": "Kann Sendungen erstellen, Versandetiketten kaufen und stornieren sowie Bestellungen als versendet markieren"
+        },
+        "view_reports": {
+          "label": "Berichte anzeigen",
+          "description": "Kann Systemberichte anzeigen"
+        },
+        "export_data": {
+          "label": "Daten exportieren",
+          "description": "Kann Daten aus dem System exportieren"
+        },
+        "import_data": {
+          "label": "Daten importieren",
+          "description": "Kann Daten in das System importieren"
+        },
+        "view_activity_log": {
+          "label": "Aktivitätsprotokoll anzeigen",
+          "description": "Kann Aktivitäts- und Prüfprotokolle anzeigen"
+        }
+      },
+      "categories": {
+        "userManagement": "Benutzerverwaltung",
+        "roleManagement": "Rollenverwaltung",
+        "inventoryManagement": "Bestandsverwaltung",
+        "customerManagement": "Kundenverwaltung",
+        "supplierManagement": "Lieferantenverwaltung",
+        "purchaseOrderManagement": "Einkaufsbestellungen",
+        "orderManagement": "Bestellverwaltung",
+        "payments": "Zahlungen",
+        "settings": "Einstellungen",
+        "plugins": "Plugins",
+        "warehouseManagement": "Lagerverwaltung",
+        "returnsManagement": "Retourenverwaltung",
+        "shipping": "Versand",
+        "reportsData": "Berichte & Daten"
+      },
+      "sets": {
+        "inventoryManager": {
+          "name": "Bestandsmanager",
+          "description": "Vollzugriff auf die Bestandsverwaltung einschließlich Produkten, Kategorien und Lagerorten."
+        },
+        "orderProcessor": {
+          "name": "Auftragsbearbeiter",
+          "description": "Bestellungen von der Erstellung bis zum Abschluss verwalten."
+        },
+        "warehouseStaff": {
+          "name": "Lagerpersonal",
+          "description": "Produkte anzeigen und Bestände verwalten."
+        },
+        "purchasingAgent": {
+          "name": "Einkäufer",
+          "description": "Lieferanten und Einkaufsbestellungen verwalten."
+        },
+        "approver": {
+          "name": "Genehmiger",
+          "description": "Freigabepflichtige Einkaufsbestellungen, Bestandsanpassungen und Umlagerungen genehmigen oder ablehnen."
+        },
+        "readOnlyAuditor": {
+          "name": "Prüfer (nur Lesen)",
+          "description": "Lesezugriff auf alle Daten zu Prüfzwecken."
+        },
+        "userAdministrator": {
+          "name": "Benutzeradministrator",
+          "description": "Benutzer und ihre Zugriffsberechtigungen verwalten."
+        },
+        "reportsViewer": {
+          "name": "Berichtsbetrachter",
+          "description": "Zugriff auf Berichte und Datenexport."
+        }
+      },
+      "roles": {
+        "systemAdministrator": {
+          "name": "Administrator",
+          "description": "Vollständiger Systemzugriff mit allen Berechtigungen."
+        },
+        "systemManager": {
+          "name": "Manager",
+          "description": "Kann Bestand, Bestellungen und Kategorien verwalten und Berichte anzeigen."
+        },
+        "systemMember": {
+          "name": "Mitglied",
+          "description": "Basiszugriff zum Anzeigen und Verwalten zugewiesener Aufgaben."
+        }
+      }
+    }
   },
   "auth": {
     "login": {

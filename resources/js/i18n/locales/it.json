@@ -1938,7 +1938,315 @@
     },
     "createRole": "Crea ruolo",
     "createUser": "Crea utente",
-    "userDetails": "Dettagli utente"
+    "userDetails": "Dettagli utente",
+    "permissionCatalog": {
+      "permissions": {
+        "view_users": {
+          "label": "Visualizza utenti",
+          "description": "Può visualizzare l'elenco e i dettagli degli utenti"
+        },
+        "create_users": {
+          "label": "Crea utenti",
+          "description": "Può creare nuovi utenti"
+        },
+        "edit_users": {
+          "label": "Modifica utenti",
+          "description": "Può modificare gli utenti esistenti"
+        },
+        "delete_users": {
+          "label": "Elimina utenti",
+          "description": "Può eliminare gli utenti"
+        },
+        "view_roles": {
+          "label": "Visualizza ruoli",
+          "description": "Può visualizzare ruoli e permessi"
+        },
+        "create_roles": {
+          "label": "Crea ruoli",
+          "description": "Può creare nuovi ruoli"
+        },
+        "edit_roles": {
+          "label": "Modifica ruoli",
+          "description": "Può modificare i ruoli esistenti"
+        },
+        "delete_roles": {
+          "label": "Elimina ruoli",
+          "description": "Può eliminare i ruoli"
+        },
+        "view_products": {
+          "label": "Visualizza prodotti",
+          "description": "Può visualizzare l'inventario dei prodotti"
+        },
+        "create_products": {
+          "label": "Crea prodotti",
+          "description": "Può aggiungere nuovi prodotti"
+        },
+        "edit_products": {
+          "label": "Modifica prodotti",
+          "description": "Può modificare i dettagli dei prodotti"
+        },
+        "delete_products": {
+          "label": "Elimina prodotti",
+          "description": "Può rimuovere i prodotti"
+        },
+        "manage_stock": {
+          "label": "Gestisci scorte",
+          "description": "Può rettificare i livelli di scorta e gestire i movimenti di magazzino"
+        },
+        "transfer_stock": {
+          "label": "Trasferisci scorte",
+          "description": "Può creare e gestire trasferimenti di scorte tra ubicazioni"
+        },
+        "manage_categories": {
+          "label": "Gestisci categorie",
+          "description": "Può creare e gestire le categorie di prodotti"
+        },
+        "manage_locations": {
+          "label": "Gestisci ubicazioni",
+          "description": "Può creare e gestire le ubicazioni di stoccaggio"
+        },
+        "view_customers": {
+          "label": "Visualizza clienti",
+          "description": "Può visualizzare l'elenco e i dettagli dei clienti"
+        },
+        "create_customers": {
+          "label": "Crea clienti",
+          "description": "Può creare nuovi clienti"
+        },
+        "edit_customers": {
+          "label": "Modifica clienti",
+          "description": "Può modificare i clienti esistenti"
+        },
+        "delete_customers": {
+          "label": "Elimina clienti",
+          "description": "Può eliminare i clienti"
+        },
+        "view_suppliers": {
+          "label": "Visualizza fornitori",
+          "description": "Può visualizzare l'elenco e i dettagli dei fornitori"
+        },
+        "create_suppliers": {
+          "label": "Crea fornitori",
+          "description": "Può creare nuovi fornitori"
+        },
+        "edit_suppliers": {
+          "label": "Modifica fornitori",
+          "description": "Può modificare i fornitori esistenti"
+        },
+        "delete_suppliers": {
+          "label": "Elimina fornitori",
+          "description": "Può eliminare i fornitori"
+        },
+        "view_purchase_orders": {
+          "label": "Visualizza ordini di acquisto",
+          "description": "Può visualizzare gli ordini di acquisto"
+        },
+        "create_purchase_orders": {
+          "label": "Crea ordini di acquisto",
+          "description": "Può creare nuovi ordini di acquisto"
+        },
+        "edit_purchase_orders": {
+          "label": "Modifica ordini di acquisto",
+          "description": "Può modificare gli ordini di acquisto"
+        },
+        "delete_purchase_orders": {
+          "label": "Elimina ordini di acquisto",
+          "description": "Può eliminare gli ordini di acquisto"
+        },
+        "receive_purchase_orders": {
+          "label": "Ricevi ordini di acquisto",
+          "description": "Può ricevere articoli dagli ordini di acquisto"
+        },
+        "approve_purchase_orders": {
+          "label": "Approva ordini di acquisto",
+          "description": "Può approvare o rifiutare gli ordini di acquisto che richiedono approvazione prima dell'invio"
+        },
+        "view_orders": {
+          "label": "Visualizza ordini",
+          "description": "Può visualizzare gli ordini"
+        },
+        "create_orders": {
+          "label": "Crea ordini",
+          "description": "Può creare nuovi ordini"
+        },
+        "edit_orders": {
+          "label": "Modifica ordini",
+          "description": "Può modificare gli ordini"
+        },
+        "delete_orders": {
+          "label": "Elimina ordini",
+          "description": "Può eliminare gli ordini"
+        },
+        "approve_orders": {
+          "label": "Approva ordini",
+          "description": "Può approvare o rifiutare gli ordini"
+        },
+        "view_payments": {
+          "label": "Visualizza pagamenti",
+          "description": "Può visualizzare i pagamenti degli ordini, i saldi dovuti e i crediti"
+        },
+        "record_payments": {
+          "label": "Registra pagamenti",
+          "description": "Può registrare, annullare e rimborsare i pagamenti degli ordini"
+        },
+        "view_settings": {
+          "label": "Visualizza impostazioni",
+          "description": "Può visualizzare le impostazioni di sistema"
+        },
+        "edit_settings": {
+          "label": "Modifica impostazioni",
+          "description": "Può modificare le impostazioni di sistema"
+        },
+        "manage_organization": {
+          "label": "Gestisci organizzazione",
+          "description": "Può gestire i dettagli dell'organizzazione"
+        },
+        "view_plugins": {
+          "label": "Visualizza plugin",
+          "description": "Può visualizzare i plugin installati"
+        },
+        "manage_plugins": {
+          "label": "Gestisci plugin",
+          "description": "Può installare, attivare ed eliminare plugin"
+        },
+        "view_stock_audits": {
+          "label": "Visualizza inventari fisici",
+          "description": "Può visualizzare gli inventari fisici e i conteggi ciclici"
+        },
+        "create_stock_audits": {
+          "label": "Crea inventari fisici",
+          "description": "Può creare nuovi inventari fisici"
+        },
+        "manage_stock_audits": {
+          "label": "Gestisci inventari fisici",
+          "description": "Può gestire gli inventari fisici: avviarli, completarli e rettificare i conteggi"
+        },
+        "approve_stock_adjustments": {
+          "label": "Approva aggiustamenti di scorte",
+          "description": "Può approvare o rifiutare gli aggiustamenti di scorte che richiedono approvazione prima della modifica delle giacenze"
+        },
+        "approve_stock_transfers": {
+          "label": "Approva trasferimenti di scorte",
+          "description": "Può approvare o rifiutare i trasferimenti di scorte che richiedono approvazione prima della spedizione"
+        },
+        "view_warehouses": {
+          "label": "Visualizza magazzini",
+          "description": "Può visualizzare l'elenco e i dettagli dei magazzini"
+        },
+        "create_warehouses": {
+          "label": "Crea magazzini",
+          "description": "Può creare nuovi magazzini"
+        },
+        "edit_warehouses": {
+          "label": "Modifica magazzini",
+          "description": "Può modificare le impostazioni dei magazzini"
+        },
+        "delete_warehouses": {
+          "label": "Elimina magazzini",
+          "description": "Può eliminare i magazzini"
+        },
+        "manage_warehouse_users": {
+          "label": "Gestisci utenti del magazzino",
+          "description": "Può assegnare e rimuovere utenti dai magazzini"
+        },
+        "access_all_warehouses": {
+          "label": "Accedi a tutti i magazzini",
+          "description": "Può visualizzare e gestire le scorte in ogni magazzino, anche se assegnato a magazzini specifici"
+        },
+        "manage_returns": {
+          "label": "Gestisci resi",
+          "description": "Può creare e gestire resi e cambi"
+        },
+        "view_shipments": {
+          "label": "Visualizza spedizioni",
+          "description": "Può visualizzare le spedizioni degli ordini, il tracciamento e le etichette di spedizione"
+        },
+        "create_shipments": {
+          "label": "Crea spedizioni",
+          "description": "Può creare spedizioni, acquistare e annullare etichette di spedizione e contrassegnare gli ordini come spediti"
+        },
+        "view_reports": {
+          "label": "Visualizza report",
+          "description": "Può visualizzare i report di sistema"
+        },
+        "export_data": {
+          "label": "Esporta dati",
+          "description": "Può esportare dati dal sistema"
+        },
+        "import_data": {
+          "label": "Importa dati",
+          "description": "Può importare dati nel sistema"
+        },
+        "view_activity_log": {
+          "label": "Visualizza registro attività",
+          "description": "Può visualizzare i registri delle attività e di audit"
+        }
+      },
+      "categories": {
+        "userManagement": "Gestione utenti",
+        "roleManagement": "Gestione ruoli",
+        "inventoryManagement": "Gestione inventario",
+        "customerManagement": "Gestione clienti",
+        "supplierManagement": "Gestione fornitori",
+        "purchaseOrderManagement": "Gestione ordini di acquisto",
+        "orderManagement": "Gestione ordini",
+        "payments": "Pagamenti",
+        "settings": "Impostazioni",
+        "plugins": "Plugin",
+        "warehouseManagement": "Gestione magazzini",
+        "returnsManagement": "Gestione resi",
+        "shipping": "Spedizioni",
+        "reportsData": "Report e dati"
+      },
+      "sets": {
+        "inventoryManager": {
+          "name": "Responsabile inventario",
+          "description": "Accesso completo alla gestione dell'inventario, inclusi prodotti, categorie e ubicazioni."
+        },
+        "orderProcessor": {
+          "name": "Addetto agli ordini",
+          "description": "Gestisce gli ordini dalla creazione al completamento."
+        },
+        "warehouseStaff": {
+          "name": "Personale di magazzino",
+          "description": "Visualizza i prodotti e gestisce i livelli di scorta."
+        },
+        "purchasingAgent": {
+          "name": "Addetto agli acquisti",
+          "description": "Gestisce fornitori e ordini di acquisto."
+        },
+        "approver": {
+          "name": "Approvatore",
+          "description": "Approva o rifiuta ordini di acquisto, aggiustamenti di scorte e trasferimenti di scorte che richiedono un'autorizzazione."
+        },
+        "readOnlyAuditor": {
+          "name": "Revisore in sola lettura",
+          "description": "Accesso in sola lettura a tutti i dati a fini di revisione."
+        },
+        "userAdministrator": {
+          "name": "Amministratore utenti",
+          "description": "Gestisce gli utenti e i loro permessi di accesso."
+        },
+        "reportsViewer": {
+          "name": "Visualizzatore report",
+          "description": "Accesso ai report e alla funzionalità di esportazione dei dati."
+        }
+      },
+      "roles": {
+        "systemAdministrator": {
+          "name": "Amministratore",
+          "description": "Accesso completo al sistema con tutti i permessi."
+        },
+        "systemManager": {
+          "name": "Responsabile",
+          "description": "Può gestire inventario, ordini e categorie e visualizzare i report."
+        },
+        "systemMember": {
+          "name": "Membro",
+          "description": "Accesso di base per visualizzare e gestire le attività assegnate."
+        }
+      }
+    }
   },
   "auth": {
     "login": {

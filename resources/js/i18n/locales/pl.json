@@ -1938,7 +1938,315 @@
     },
     "createRole": "Utwórz rolę",
     "createUser": "Utwórz użytkownika",
-    "userDetails": "Szczegóły użytkownika"
+    "userDetails": "Szczegóły użytkownika",
+    "permissionCatalog": {
+      "permissions": {
+        "view_users": {
+          "label": "Przeglądanie użytkowników",
+          "description": "Może przeglądać listę użytkowników i ich szczegóły"
+        },
+        "create_users": {
+          "label": "Tworzenie użytkowników",
+          "description": "Może tworzyć nowych użytkowników"
+        },
+        "edit_users": {
+          "label": "Edycja użytkowników",
+          "description": "Może edytować istniejących użytkowników"
+        },
+        "delete_users": {
+          "label": "Usuwanie użytkowników",
+          "description": "Może usuwać użytkowników"
+        },
+        "view_roles": {
+          "label": "Przeglądanie ról",
+          "description": "Może przeglądać role i uprawnienia"
+        },
+        "create_roles": {
+          "label": "Tworzenie ról",
+          "description": "Może tworzyć nowe role"
+        },
+        "edit_roles": {
+          "label": "Edycja ról",
+          "description": "Może edytować istniejące role"
+        },
+        "delete_roles": {
+          "label": "Usuwanie ról",
+          "description": "Może usuwać role"
+        },
+        "view_products": {
+          "label": "Przeglądanie produktów",
+          "description": "Może przeglądać produkty w magazynie"
+        },
+        "create_products": {
+          "label": "Tworzenie produktów",
+          "description": "Może dodawać nowe produkty"
+        },
+        "edit_products": {
+          "label": "Edycja produktów",
+          "description": "Może modyfikować szczegóły produktów"
+        },
+        "delete_products": {
+          "label": "Usuwanie produktów",
+          "description": "Może usuwać produkty"
+        },
+        "manage_stock": {
+          "label": "Zarządzanie stanami",
+          "description": "Może korygować stany magazynowe i zarządzać ruchami magazynowymi"
+        },
+        "transfer_stock": {
+          "label": "Przesunięcia magazynowe",
+          "description": "Może tworzyć przesunięcia magazynowe między lokalizacjami i nimi zarządzać"
+        },
+        "manage_categories": {
+          "label": "Zarządzanie kategoriami",
+          "description": "Może tworzyć kategorie produktów i nimi zarządzać"
+        },
+        "manage_locations": {
+          "label": "Zarządzanie lokalizacjami",
+          "description": "Może tworzyć lokalizacje magazynowe i nimi zarządzać"
+        },
+        "view_customers": {
+          "label": "Przeglądanie klientów",
+          "description": "Może przeglądać listę klientów i ich szczegóły"
+        },
+        "create_customers": {
+          "label": "Tworzenie klientów",
+          "description": "Może tworzyć nowych klientów"
+        },
+        "edit_customers": {
+          "label": "Edycja klientów",
+          "description": "Może edytować istniejących klientów"
+        },
+        "delete_customers": {
+          "label": "Usuwanie klientów",
+          "description": "Może usuwać klientów"
+        },
+        "view_suppliers": {
+          "label": "Przeglądanie dostawców",
+          "description": "Może przeglądać listę dostawców i ich szczegóły"
+        },
+        "create_suppliers": {
+          "label": "Tworzenie dostawców",
+          "description": "Może tworzyć nowych dostawców"
+        },
+        "edit_suppliers": {
+          "label": "Edycja dostawców",
+          "description": "Może edytować istniejących dostawców"
+        },
+        "delete_suppliers": {
+          "label": "Usuwanie dostawców",
+          "description": "Może usuwać dostawców"
+        },
+        "view_purchase_orders": {
+          "label": "Przeglądanie zamówień zakupu",
+          "description": "Może przeglądać zamówienia zakupu"
+        },
+        "create_purchase_orders": {
+          "label": "Tworzenie zamówień zakupu",
+          "description": "Może tworzyć nowe zamówienia zakupu"
+        },
+        "edit_purchase_orders": {
+          "label": "Edycja zamówień zakupu",
+          "description": "Może edytować zamówienia zakupu"
+        },
+        "delete_purchase_orders": {
+          "label": "Usuwanie zamówień zakupu",
+          "description": "Może usuwać zamówienia zakupu"
+        },
+        "receive_purchase_orders": {
+          "label": "Przyjmowanie zamówień zakupu",
+          "description": "Może przyjmować pozycje z zamówień zakupu"
+        },
+        "approve_purchase_orders": {
+          "label": "Zatwierdzanie zamówień zakupu",
+          "description": "Może zatwierdzać lub odrzucać zamówienia zakupu wymagające zatwierdzenia przed wysłaniem"
+        },
+        "view_orders": {
+          "label": "Przeglądanie zamówień",
+          "description": "Może przeglądać zamówienia"
+        },
+        "create_orders": {
+          "label": "Tworzenie zamówień",
+          "description": "Może tworzyć nowe zamówienia"
+        },
+        "edit_orders": {
+          "label": "Edycja zamówień",
+          "description": "Może modyfikować zamówienia"
+        },
+        "delete_orders": {
+          "label": "Usuwanie zamówień",
+          "description": "Może usuwać zamówienia"
+        },
+        "approve_orders": {
+          "label": "Zatwierdzanie zamówień",
+          "description": "Może zatwierdzać lub odrzucać zamówienia"
+        },
+        "view_payments": {
+          "label": "Przeglądanie płatności",
+          "description": "Może przeglądać płatności za zamówienia, kwoty do zapłaty i należności"
+        },
+        "record_payments": {
+          "label": "Rejestrowanie płatności",
+          "description": "Może rejestrować, anulować i zwracać płatności za zamówienia"
+        },
+        "view_settings": {
+          "label": "Przeglądanie ustawień",
+          "description": "Może przeglądać ustawienia systemu"
+        },
+        "edit_settings": {
+          "label": "Edycja ustawień",
+          "description": "Może modyfikować ustawienia systemu"
+        },
+        "manage_organization": {
+          "label": "Zarządzanie organizacją",
+          "description": "Może zarządzać danymi organizacji"
+        },
+        "view_plugins": {
+          "label": "Przeglądanie wtyczek",
+          "description": "Może przeglądać zainstalowane wtyczki"
+        },
+        "manage_plugins": {
+          "label": "Zarządzanie wtyczkami",
+          "description": "Może instalować, aktywować i usuwać wtyczki"
+        },
+        "view_stock_audits": {
+          "label": "Przeglądanie inwentaryzacji",
+          "description": "Może przeglądać inwentaryzacje i inwentaryzacje cykliczne"
+        },
+        "create_stock_audits": {
+          "label": "Tworzenie inwentaryzacji",
+          "description": "Może tworzyć nowe inwentaryzacje"
+        },
+        "manage_stock_audits": {
+          "label": "Zarządzanie inwentaryzacjami",
+          "description": "Może zarządzać inwentaryzacjami, rozpoczynać je, kończyć i korygować liczenia"
+        },
+        "approve_stock_adjustments": {
+          "label": "Zatwierdzanie korekt magazynowych",
+          "description": "Może zatwierdzać lub odrzucać korekty magazynowe wymagające zatwierdzenia przed zmianą stanu"
+        },
+        "approve_stock_transfers": {
+          "label": "Zatwierdzanie przesunięć magazynowych",
+          "description": "Może zatwierdzać lub odrzucać przesunięcia magazynowe wymagające zatwierdzenia przed wysyłką"
+        },
+        "view_warehouses": {
+          "label": "Przeglądanie magazynów",
+          "description": "Może przeglądać listę magazynów i ich szczegóły"
+        },
+        "create_warehouses": {
+          "label": "Tworzenie magazynów",
+          "description": "Może tworzyć nowe magazyny"
+        },
+        "edit_warehouses": {
+          "label": "Edycja magazynów",
+          "description": "Może edytować ustawienia magazynów"
+        },
+        "delete_warehouses": {
+          "label": "Usuwanie magazynów",
+          "description": "Może usuwać magazyny"
+        },
+        "manage_warehouse_users": {
+          "label": "Zarządzanie użytkownikami magazynów",
+          "description": "Może przypisywać użytkowników do magazynów i usuwać ich z magazynów"
+        },
+        "access_all_warehouses": {
+          "label": "Dostęp do wszystkich magazynów",
+          "description": "Może przeglądać stany i wykonywać na nich operacje w każdym magazynie, nawet gdy jest przypisany do wybranych magazynów"
+        },
+        "manage_returns": {
+          "label": "Zarządzanie zwrotami",
+          "description": "Może tworzyć zwroty i wymiany oraz nimi zarządzać"
+        },
+        "view_shipments": {
+          "label": "Przeglądanie przesyłek",
+          "description": "Może przeglądać przesyłki zamówień, śledzenie i etykiety wysyłkowe"
+        },
+        "create_shipments": {
+          "label": "Tworzenie przesyłek",
+          "description": "Może tworzyć przesyłki, kupować i anulować etykiety wysyłkowe oraz oznaczać zamówienia jako wysłane"
+        },
+        "view_reports": {
+          "label": "Przeglądanie raportów",
+          "description": "Może przeglądać raporty systemowe"
+        },
+        "export_data": {
+          "label": "Eksport danych",
+          "description": "Może eksportować dane z systemu"
+        },
+        "import_data": {
+          "label": "Import danych",
+          "description": "Może importować dane do systemu"
+        },
+        "view_activity_log": {
+          "label": "Przeglądanie dziennika aktywności",
+          "description": "Może przeglądać dzienniki aktywności i audytu"
+        }
+      },
+      "categories": {
+        "userManagement": "Zarządzanie użytkownikami",
+        "roleManagement": "Zarządzanie rolami",
+        "inventoryManagement": "Zarządzanie magazynem",
+        "customerManagement": "Zarządzanie klientami",
+        "supplierManagement": "Zarządzanie dostawcami",
+        "purchaseOrderManagement": "Zarządzanie zamówieniami zakupu",
+        "orderManagement": "Zarządzanie zamówieniami",
+        "payments": "Płatności",
+        "settings": "Ustawienia",
+        "plugins": "Wtyczki",
+        "warehouseManagement": "Zarządzanie magazynami",
+        "returnsManagement": "Zarządzanie zwrotami",
+        "shipping": "Wysyłka",
+        "reportsData": "Raporty i dane"
+      },
+      "sets": {
+        "inventoryManager": {
+          "name": "Kierownik magazynu",
+          "description": "Pełny dostęp do zarządzania magazynem, w tym produktami, kategoriami i lokalizacjami."
+        },
+        "orderProcessor": {
+          "name": "Obsługa zamówień",
+          "description": "Zarządzanie zamówieniami od utworzenia do realizacji."
+        },
+        "warehouseStaff": {
+          "name": "Pracownik magazynu",
+          "description": "Przeglądanie produktów i zarządzanie stanami magazynowymi."
+        },
+        "purchasingAgent": {
+          "name": "Zaopatrzeniowiec",
+          "description": "Zarządzanie dostawcami i zamówieniami zakupu."
+        },
+        "approver": {
+          "name": "Zatwierdzający",
+          "description": "Zatwierdzanie lub odrzucanie zamówień zakupu, korekt magazynowych i przesunięć magazynowych wymagających akceptacji."
+        },
+        "readOnlyAuditor": {
+          "name": "Audytor (tylko odczyt)",
+          "description": "Dostęp tylko do odczytu do wszystkich danych na potrzeby audytu."
+        },
+        "userAdministrator": {
+          "name": "Administrator użytkowników",
+          "description": "Zarządzanie użytkownikami i ich uprawnieniami dostępu."
+        },
+        "reportsViewer": {
+          "name": "Przeglądający raporty",
+          "description": "Dostęp do raportów i funkcji eksportu danych."
+        }
+      },
+      "roles": {
+        "systemAdministrator": {
+          "name": "Administrator",
+          "description": "Pełny dostęp do systemu ze wszystkimi uprawnieniami."
+        },
+        "systemManager": {
+          "name": "Kierownik",
+          "description": "Może zarządzać magazynem, zamówieniami i kategoriami oraz przeglądać raporty."
+        },
+        "systemMember": {
+          "name": "Członek",
+          "description": "Podstawowy dostęp do przeglądania przypisanych zadań i zarządzania nimi."
+        }
+      }
+    }
   },
   "auth": {
     "login": {

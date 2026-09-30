@@ -6,6 +6,7 @@ import Button from '@/Components/ui/Button.vue';
 import Badge from '@/Components/ui/Badge.vue';
 import { Head, Link, useForm } from '@inertiajs/vue3';
 import { useI18n } from 'vue-i18n';
+import { permissionCategoryLabel, permissionDescription, permissionLabel, permissionSetDescription, permissionSetName } from '@/lib/permissionLabels';
 import { ArrowLeft, Check } from 'lucide-vue-next';
 
 const props = defineProps({
@@ -14,7 +15,8 @@ const props = defineProps({
 });
 
 
-const { t } = useI18n();
+const { t, te } = useI18n();
+const i18n = { t, te };
 const form = useForm({
     name: '',
     description: '',
@@ -176,8 +178,8 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                                     </svg>
                                 </div>
                                 <div class="min-w-0 flex-1">
-                                    <div class="font-medium text-text-primary">{{ set.name }}</div>
-                                    <div class="mt-1 text-xs text-text-tertiary">{{ set.description }}</div>
+                                    <div class="font-medium text-text-primary">{{ permissionSetName(set, i18n) }}</div>
+                                    <div class="mt-1 text-xs text-text-tertiary">{{ permissionSetDescription(set, i18n) }}</div>
                                     <div class="mt-2 flex items-center gap-2">
                                         <Badge variant="neutral" size="sm">{{ t('admin.roles.permissionsCount', { count: set.permission_count }) }}</Badge>
                                         <Badge v-if="set.is_template" variant="info" size="sm">{{ t('admin.roles.create.template') }}</Badge>
@@ -205,7 +207,7 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                         <div v-for="(perms, category) in permissions" :key="category">
                             <!-- Category Header -->
                             <div class="mb-3 flex items-center justify-between">
-                                <h4 class="text-xs font-medium uppercase tracking-wider text-text-tertiary">{{ category }}</h4>
+                                <h4 class="text-xs font-medium uppercase tracking-wider text-text-tertiary">{{ permissionCategoryLabel(category, i18n) }}</h4>
                                 <button
                                     type="button"
                                     @click="toggleCategory(category)"
@@ -234,8 +236,8 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                                         class="mt-0.5 h-4 w-4 rounded border-border-subtle bg-surface-canvas text-brand ds-focus-ring"
                                     />
                                     <div class="min-w-0 flex-1">
-                                        <div class="text-sm font-medium text-text-primary">{{ permission.label }}</div>
-                                        <div class="text-xs text-text-tertiary">{{ permission.description }}</div>
+                                        <div class="text-sm font-medium text-text-primary">{{ permissionLabel(permission, i18n) }}</div>
+                                        <div class="text-xs text-text-tertiary">{{ permissionDescription(permission, i18n) }}</div>
                                     </div>
                                 </label>
                             </div>

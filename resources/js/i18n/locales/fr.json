@@ -1938,7 +1938,315 @@
     },
     "createRole": "Créer un rôle",
     "createUser": "Créer un utilisateur",
-    "userDetails": "Détails de l'utilisateur"
+    "userDetails": "Détails de l'utilisateur",
+    "permissionCatalog": {
+      "permissions": {
+        "view_users": {
+          "label": "Voir les utilisateurs",
+          "description": "Peut consulter la liste et les détails des utilisateurs"
+        },
+        "create_users": {
+          "label": "Créer des utilisateurs",
+          "description": "Peut créer de nouveaux utilisateurs"
+        },
+        "edit_users": {
+          "label": "Modifier les utilisateurs",
+          "description": "Peut modifier les utilisateurs existants"
+        },
+        "delete_users": {
+          "label": "Supprimer des utilisateurs",
+          "description": "Peut supprimer des utilisateurs"
+        },
+        "view_roles": {
+          "label": "Voir les rôles",
+          "description": "Peut consulter les rôles et les permissions"
+        },
+        "create_roles": {
+          "label": "Créer des rôles",
+          "description": "Peut créer de nouveaux rôles"
+        },
+        "edit_roles": {
+          "label": "Modifier les rôles",
+          "description": "Peut modifier les rôles existants"
+        },
+        "delete_roles": {
+          "label": "Supprimer des rôles",
+          "description": "Peut supprimer des rôles"
+        },
+        "view_products": {
+          "label": "Voir les produits",
+          "description": "Peut consulter l'inventaire des produits"
+        },
+        "create_products": {
+          "label": "Créer des produits",
+          "description": "Peut ajouter de nouveaux produits"
+        },
+        "edit_products": {
+          "label": "Modifier les produits",
+          "description": "Peut modifier les détails des produits"
+        },
+        "delete_products": {
+          "label": "Supprimer des produits",
+          "description": "Peut supprimer des produits"
+        },
+        "manage_stock": {
+          "label": "Gérer le stock",
+          "description": "Peut ajuster les niveaux de stock et gérer les mouvements de stock"
+        },
+        "transfer_stock": {
+          "label": "Transférer du stock",
+          "description": "Peut créer et gérer les transferts de stock entre emplacements"
+        },
+        "manage_categories": {
+          "label": "Gérer les catégories",
+          "description": "Peut créer et gérer les catégories de produits"
+        },
+        "manage_locations": {
+          "label": "Gérer les emplacements",
+          "description": "Peut créer et gérer les emplacements de stockage"
+        },
+        "view_customers": {
+          "label": "Voir les clients",
+          "description": "Peut consulter la liste et les détails des clients"
+        },
+        "create_customers": {
+          "label": "Créer des clients",
+          "description": "Peut créer de nouveaux clients"
+        },
+        "edit_customers": {
+          "label": "Modifier les clients",
+          "description": "Peut modifier les clients existants"
+        },
+        "delete_customers": {
+          "label": "Supprimer des clients",
+          "description": "Peut supprimer des clients"
+        },
+        "view_suppliers": {
+          "label": "Voir les fournisseurs",
+          "description": "Peut consulter la liste et les détails des fournisseurs"
+        },
+        "create_suppliers": {
+          "label": "Créer des fournisseurs",
+          "description": "Peut créer de nouveaux fournisseurs"
+        },
+        "edit_suppliers": {
+          "label": "Modifier les fournisseurs",
+          "description": "Peut modifier les fournisseurs existants"
+        },
+        "delete_suppliers": {
+          "label": "Supprimer des fournisseurs",
+          "description": "Peut supprimer des fournisseurs"
+        },
+        "view_purchase_orders": {
+          "label": "Voir les bons de commande",
+          "description": "Peut consulter les bons de commande"
+        },
+        "create_purchase_orders": {
+          "label": "Créer des bons de commande",
+          "description": "Peut créer de nouveaux bons de commande"
+        },
+        "edit_purchase_orders": {
+          "label": "Modifier les bons de commande",
+          "description": "Peut modifier les bons de commande"
+        },
+        "delete_purchase_orders": {
+          "label": "Supprimer des bons de commande",
+          "description": "Peut supprimer des bons de commande"
+        },
+        "receive_purchase_orders": {
+          "label": "Réceptionner les bons de commande",
+          "description": "Peut réceptionner les articles des bons de commande"
+        },
+        "approve_purchase_orders": {
+          "label": "Approuver les bons de commande",
+          "description": "Peut approuver ou rejeter les bons de commande qui doivent être approuvés avant leur envoi"
+        },
+        "view_orders": {
+          "label": "Voir les commandes",
+          "description": "Peut consulter les commandes"
+        },
+        "create_orders": {
+          "label": "Créer des commandes",
+          "description": "Peut créer de nouvelles commandes"
+        },
+        "edit_orders": {
+          "label": "Modifier les commandes",
+          "description": "Peut modifier les commandes"
+        },
+        "delete_orders": {
+          "label": "Supprimer des commandes",
+          "description": "Peut supprimer des commandes"
+        },
+        "approve_orders": {
+          "label": "Approuver les commandes",
+          "description": "Peut approuver ou rejeter les commandes"
+        },
+        "view_payments": {
+          "label": "Voir les paiements",
+          "description": "Peut consulter les paiements des commandes, les soldes dus et les créances"
+        },
+        "record_payments": {
+          "label": "Enregistrer des paiements",
+          "description": "Peut enregistrer, annuler et rembourser les paiements des commandes"
+        },
+        "view_settings": {
+          "label": "Voir les paramètres",
+          "description": "Peut consulter les paramètres du système"
+        },
+        "edit_settings": {
+          "label": "Modifier les paramètres",
+          "description": "Peut modifier les paramètres du système"
+        },
+        "manage_organization": {
+          "label": "Gérer l'organisation",
+          "description": "Peut gérer les détails de l'organisation"
+        },
+        "view_plugins": {
+          "label": "Voir les plugins",
+          "description": "Peut consulter les plugins installés"
+        },
+        "manage_plugins": {
+          "label": "Gérer les plugins",
+          "description": "Peut installer, activer et supprimer des plugins"
+        },
+        "view_stock_audits": {
+          "label": "Voir les inventaires de stock",
+          "description": "Peut consulter les inventaires de stock et les inventaires tournants"
+        },
+        "create_stock_audits": {
+          "label": "Créer des inventaires de stock",
+          "description": "Peut créer de nouveaux inventaires de stock"
+        },
+        "manage_stock_audits": {
+          "label": "Gérer les inventaires de stock",
+          "description": "Peut gérer les inventaires de stock : les démarrer, les terminer et ajuster les comptages"
+        },
+        "approve_stock_adjustments": {
+          "label": "Approuver les ajustements de stock",
+          "description": "Peut approuver ou rejeter les ajustements de stock qui doivent être approuvés avant de modifier le stock"
+        },
+        "approve_stock_transfers": {
+          "label": "Approuver les transferts de stock",
+          "description": "Peut approuver ou rejeter les transferts de stock qui doivent être approuvés avant leur expédition"
+        },
+        "view_warehouses": {
+          "label": "Voir les entrepôts",
+          "description": "Peut consulter la liste et les détails des entrepôts"
+        },
+        "create_warehouses": {
+          "label": "Créer des entrepôts",
+          "description": "Peut créer de nouveaux entrepôts"
+        },
+        "edit_warehouses": {
+          "label": "Modifier les entrepôts",
+          "description": "Peut modifier les paramètres des entrepôts"
+        },
+        "delete_warehouses": {
+          "label": "Supprimer des entrepôts",
+          "description": "Peut supprimer des entrepôts"
+        },
+        "manage_warehouse_users": {
+          "label": "Gérer les utilisateurs des entrepôts",
+          "description": "Peut attribuer des utilisateurs aux entrepôts et les en retirer"
+        },
+        "access_all_warehouses": {
+          "label": "Accéder à tous les entrepôts",
+          "description": "Peut consulter et gérer le stock de tous les entrepôts, même en étant affecté à certains d'entre eux"
+        },
+        "manage_returns": {
+          "label": "Gérer les retours",
+          "description": "Peut créer et gérer les retours et les échanges"
+        },
+        "view_shipments": {
+          "label": "Voir les expéditions",
+          "description": "Peut consulter les expéditions des commandes, le suivi et les étiquettes d'expédition"
+        },
+        "create_shipments": {
+          "label": "Créer des expéditions",
+          "description": "Peut créer des expéditions, acheter et annuler des étiquettes d'expédition, et marquer les commandes comme expédiées"
+        },
+        "view_reports": {
+          "label": "Voir les rapports",
+          "description": "Peut consulter les rapports du système"
+        },
+        "export_data": {
+          "label": "Exporter des données",
+          "description": "Peut exporter des données du système"
+        },
+        "import_data": {
+          "label": "Importer des données",
+          "description": "Peut importer des données dans le système"
+        },
+        "view_activity_log": {
+          "label": "Voir le journal d'activité",
+          "description": "Peut consulter les journaux d'activité et d'audit"
+        }
+      },
+      "categories": {
+        "userManagement": "Gestion des utilisateurs",
+        "roleManagement": "Gestion des rôles",
+        "inventoryManagement": "Gestion de l'inventaire",
+        "customerManagement": "Gestion des clients",
+        "supplierManagement": "Gestion des fournisseurs",
+        "purchaseOrderManagement": "Gestion des bons de commande",
+        "orderManagement": "Gestion des commandes",
+        "payments": "Paiements",
+        "settings": "Paramètres",
+        "plugins": "Plugins",
+        "warehouseManagement": "Gestion des entrepôts",
+        "returnsManagement": "Gestion des retours",
+        "shipping": "Expédition",
+        "reportsData": "Rapports et données"
+      },
+      "sets": {
+        "inventoryManager": {
+          "name": "Gestionnaire d'inventaire",
+          "description": "Accès complet à la gestion de l'inventaire, y compris les produits, les catégories et les emplacements."
+        },
+        "orderProcessor": {
+          "name": "Préparateur de commandes",
+          "description": "Gérer les commandes de la création à la finalisation."
+        },
+        "warehouseStaff": {
+          "name": "Personnel d'entrepôt",
+          "description": "Consulter les produits et gérer les niveaux de stock."
+        },
+        "purchasingAgent": {
+          "name": "Acheteur",
+          "description": "Gérer les fournisseurs et les bons de commande."
+        },
+        "approver": {
+          "name": "Approbateur",
+          "description": "Approuver ou rejeter les bons de commande, ajustements de stock et transferts de stock qui nécessitent une validation."
+        },
+        "readOnlyAuditor": {
+          "name": "Auditeur en lecture seule",
+          "description": "Accès en lecture seule à toutes les données à des fins d'audit."
+        },
+        "userAdministrator": {
+          "name": "Administrateur des utilisateurs",
+          "description": "Gérer les utilisateurs et leurs permissions d'accès."
+        },
+        "reportsViewer": {
+          "name": "Lecteur de rapports",
+          "description": "Accès aux rapports et à l'exportation des données."
+        }
+      },
+      "roles": {
+        "systemAdministrator": {
+          "name": "Administrateur",
+          "description": "Accès complet au système avec toutes les permissions."
+        },
+        "systemManager": {
+          "name": "Responsable",
+          "description": "Peut gérer l'inventaire, les commandes et les catégories, et consulter les rapports."
+        },
+        "systemMember": {
+          "name": "Membre",
+          "description": "Accès de base pour consulter et gérer les tâches attribuées."
+        }
+      }
+    }
   },
   "auth": {
     "login": {

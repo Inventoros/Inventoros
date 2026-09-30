@@ -1938,7 +1938,315 @@
     },
     "createRole": "Rol Oluştur",
     "createUser": "Kullanıcı Oluştur",
-    "userDetails": "Kullanıcı Detayları"
+    "userDetails": "Kullanıcı Detayları",
+    "permissionCatalog": {
+      "permissions": {
+        "view_users": {
+          "label": "Kullanıcıları Görüntüle",
+          "description": "Kullanıcı listesini ve detaylarını görüntüleyebilir"
+        },
+        "create_users": {
+          "label": "Kullanıcı Oluştur",
+          "description": "Yeni kullanıcı oluşturabilir"
+        },
+        "edit_users": {
+          "label": "Kullanıcıları Düzenle",
+          "description": "Mevcut kullanıcıları düzenleyebilir"
+        },
+        "delete_users": {
+          "label": "Kullanıcıları Sil",
+          "description": "Kullanıcıları silebilir"
+        },
+        "view_roles": {
+          "label": "Rolleri Görüntüle",
+          "description": "Rolleri ve izinleri görüntüleyebilir"
+        },
+        "create_roles": {
+          "label": "Rol Oluştur",
+          "description": "Yeni rol oluşturabilir"
+        },
+        "edit_roles": {
+          "label": "Rolleri Düzenle",
+          "description": "Mevcut rolleri düzenleyebilir"
+        },
+        "delete_roles": {
+          "label": "Rolleri Sil",
+          "description": "Rolleri silebilir"
+        },
+        "view_products": {
+          "label": "Ürünleri Görüntüle",
+          "description": "Ürün envanterini görüntüleyebilir"
+        },
+        "create_products": {
+          "label": "Ürün Oluştur",
+          "description": "Yeni ürün ekleyebilir"
+        },
+        "edit_products": {
+          "label": "Ürünleri Düzenle",
+          "description": "Ürün detaylarını değiştirebilir"
+        },
+        "delete_products": {
+          "label": "Ürünleri Sil",
+          "description": "Ürünleri kaldırabilir"
+        },
+        "manage_stock": {
+          "label": "Stoku Yönet",
+          "description": "Stok seviyelerini düzeltebilir ve stok hareketlerini yönetebilir"
+        },
+        "transfer_stock": {
+          "label": "Stok Transferi",
+          "description": "Konumlar arası stok transferleri oluşturabilir ve yönetebilir"
+        },
+        "manage_categories": {
+          "label": "Kategorileri Yönet",
+          "description": "Ürün kategorileri oluşturabilir ve yönetebilir"
+        },
+        "manage_locations": {
+          "label": "Konumları Yönet",
+          "description": "Depolama konumları oluşturabilir ve yönetebilir"
+        },
+        "view_customers": {
+          "label": "Müşterileri Görüntüle",
+          "description": "Müşteri listesini ve detaylarını görüntüleyebilir"
+        },
+        "create_customers": {
+          "label": "Müşteri Oluştur",
+          "description": "Yeni müşteri oluşturabilir"
+        },
+        "edit_customers": {
+          "label": "Müşterileri Düzenle",
+          "description": "Mevcut müşterileri düzenleyebilir"
+        },
+        "delete_customers": {
+          "label": "Müşterileri Sil",
+          "description": "Müşterileri silebilir"
+        },
+        "view_suppliers": {
+          "label": "Tedarikçileri Görüntüle",
+          "description": "Tedarikçi listesini ve detaylarını görüntüleyebilir"
+        },
+        "create_suppliers": {
+          "label": "Tedarikçi Oluştur",
+          "description": "Yeni tedarikçi oluşturabilir"
+        },
+        "edit_suppliers": {
+          "label": "Tedarikçileri Düzenle",
+          "description": "Mevcut tedarikçileri düzenleyebilir"
+        },
+        "delete_suppliers": {
+          "label": "Tedarikçileri Sil",
+          "description": "Tedarikçileri silebilir"
+        },
+        "view_purchase_orders": {
+          "label": "Satın Alma Siparişlerini Görüntüle",
+          "description": "Satın alma siparişlerini görüntüleyebilir"
+        },
+        "create_purchase_orders": {
+          "label": "Satın Alma Siparişi Oluştur",
+          "description": "Yeni satın alma siparişi oluşturabilir"
+        },
+        "edit_purchase_orders": {
+          "label": "Satın Alma Siparişlerini Düzenle",
+          "description": "Satın alma siparişlerini düzenleyebilir"
+        },
+        "delete_purchase_orders": {
+          "label": "Satın Alma Siparişlerini Sil",
+          "description": "Satın alma siparişlerini silebilir"
+        },
+        "receive_purchase_orders": {
+          "label": "Satın Alma Siparişlerini Teslim Al",
+          "description": "Satın alma siparişlerindeki ürünleri teslim alabilir"
+        },
+        "approve_purchase_orders": {
+          "label": "Satın Alma Siparişlerini Onayla",
+          "description": "Gönderilmeden önce onay gerektiren satın alma siparişlerini onaylayabilir veya reddedebilir"
+        },
+        "view_orders": {
+          "label": "Siparişleri Görüntüle",
+          "description": "Siparişleri görüntüleyebilir"
+        },
+        "create_orders": {
+          "label": "Sipariş Oluştur",
+          "description": "Yeni sipariş oluşturabilir"
+        },
+        "edit_orders": {
+          "label": "Siparişleri Düzenle",
+          "description": "Siparişleri değiştirebilir"
+        },
+        "delete_orders": {
+          "label": "Siparişleri Sil",
+          "description": "Siparişleri silebilir"
+        },
+        "approve_orders": {
+          "label": "Siparişleri Onayla",
+          "description": "Siparişleri onaylayabilir veya reddedebilir"
+        },
+        "view_payments": {
+          "label": "Ödemeleri Görüntüle",
+          "description": "Sipariş ödemelerini, kalan bakiyeleri ve alacakları görüntüleyebilir"
+        },
+        "record_payments": {
+          "label": "Ödeme Kaydet",
+          "description": "Sipariş ödemelerini kaydedebilir, iptal edebilir ve iade edebilir"
+        },
+        "view_settings": {
+          "label": "Ayarları Görüntüle",
+          "description": "Sistem ayarlarını görüntüleyebilir"
+        },
+        "edit_settings": {
+          "label": "Ayarları Düzenle",
+          "description": "Sistem ayarlarını değiştirebilir"
+        },
+        "manage_organization": {
+          "label": "Organizasyonu Yönet",
+          "description": "Organizasyon detaylarını yönetebilir"
+        },
+        "view_plugins": {
+          "label": "Eklentileri Görüntüle",
+          "description": "Yüklü eklentileri görüntüleyebilir"
+        },
+        "manage_plugins": {
+          "label": "Eklentileri Yönet",
+          "description": "Eklentileri yükleyebilir, etkinleştirebilir ve silebilir"
+        },
+        "view_stock_audits": {
+          "label": "Stok Sayımlarını Görüntüle",
+          "description": "Stok sayımlarını ve dönemsel sayımları görüntüleyebilir"
+        },
+        "create_stock_audits": {
+          "label": "Stok Sayımı Oluştur",
+          "description": "Yeni stok sayımı oluşturabilir"
+        },
+        "manage_stock_audits": {
+          "label": "Stok Sayımlarını Yönet",
+          "description": "Stok sayımlarını yönetebilir, başlatabilir, tamamlayabilir ve sayımları düzeltebilir"
+        },
+        "approve_stock_adjustments": {
+          "label": "Stok Düzeltmelerini Onayla",
+          "description": "Stok değişmeden önce onay gerektiren stok düzeltmelerini onaylayabilir veya reddedebilir"
+        },
+        "approve_stock_transfers": {
+          "label": "Stok Transferlerini Onayla",
+          "description": "Sevk edilmeden önce onay gerektiren stok transferlerini onaylayabilir veya reddedebilir"
+        },
+        "view_warehouses": {
+          "label": "Depoları Görüntüle",
+          "description": "Depo listesini ve detaylarını görüntüleyebilir"
+        },
+        "create_warehouses": {
+          "label": "Depo Oluştur",
+          "description": "Yeni depo oluşturabilir"
+        },
+        "edit_warehouses": {
+          "label": "Depoları Düzenle",
+          "description": "Depo ayarlarını düzenleyebilir"
+        },
+        "delete_warehouses": {
+          "label": "Depoları Sil",
+          "description": "Depoları silebilir"
+        },
+        "manage_warehouse_users": {
+          "label": "Depo Kullanıcılarını Yönet",
+          "description": "Depolara kullanıcı atayabilir ve depolardan kullanıcı kaldırabilir"
+        },
+        "access_all_warehouses": {
+          "label": "Tüm Depolara Erişim",
+          "description": "Belirli depolara atanmış olsa bile her depodaki stoku görüntüleyebilir ve üzerinde işlem yapabilir"
+        },
+        "manage_returns": {
+          "label": "İadeleri Yönet",
+          "description": "İade ve değişim oluşturabilir ve yönetebilir"
+        },
+        "view_shipments": {
+          "label": "Gönderileri Görüntüle",
+          "description": "Sipariş gönderilerini, takip bilgilerini ve kargo etiketlerini görüntüleyebilir"
+        },
+        "create_shipments": {
+          "label": "Gönderi Oluştur",
+          "description": "Gönderi oluşturabilir, kargo etiketi satın alıp iptal edebilir ve siparişleri gönderildi olarak işaretleyebilir"
+        },
+        "view_reports": {
+          "label": "Raporları Görüntüle",
+          "description": "Sistem raporlarını görüntüleyebilir"
+        },
+        "export_data": {
+          "label": "Veri Dışa Aktar",
+          "description": "Sistemden veri dışa aktarabilir"
+        },
+        "import_data": {
+          "label": "Veri İçe Aktar",
+          "description": "Sisteme veri içe aktarabilir"
+        },
+        "view_activity_log": {
+          "label": "Etkinlik Günlüğünü Görüntüle",
+          "description": "Etkinlik ve denetim günlüklerini görüntüleyebilir"
+        }
+      },
+      "categories": {
+        "userManagement": "Kullanıcı Yönetimi",
+        "roleManagement": "Rol Yönetimi",
+        "inventoryManagement": "Envanter Yönetimi",
+        "customerManagement": "Müşteri Yönetimi",
+        "supplierManagement": "Tedarikçi Yönetimi",
+        "purchaseOrderManagement": "Satın Alma Siparişi Yönetimi",
+        "orderManagement": "Sipariş Yönetimi",
+        "payments": "Ödemeler",
+        "settings": "Ayarlar",
+        "plugins": "Eklentiler",
+        "warehouseManagement": "Depo Yönetimi",
+        "returnsManagement": "İade Yönetimi",
+        "shipping": "Kargo",
+        "reportsData": "Raporlar ve Veriler"
+      },
+      "sets": {
+        "inventoryManager": {
+          "name": "Envanter Yöneticisi",
+          "description": "Ürünler, kategoriler ve konumlar dahil envanter yönetimine tam erişim."
+        },
+        "orderProcessor": {
+          "name": "Sipariş İşlemcisi",
+          "description": "Siparişleri oluşturulmasından tamamlanmasına kadar yönetin."
+        },
+        "warehouseStaff": {
+          "name": "Depo Personeli",
+          "description": "Ürünleri görüntüleyin ve stok seviyelerini yönetin."
+        },
+        "purchasingAgent": {
+          "name": "Satın Alma Sorumlusu",
+          "description": "Tedarikçileri ve satın alma siparişlerini yönetin."
+        },
+        "approver": {
+          "name": "Onaylayıcı",
+          "description": "Onay gerektiren satın alma siparişlerini, stok düzeltmelerini ve stok transferlerini onaylayın veya reddedin."
+        },
+        "readOnlyAuditor": {
+          "name": "Salt Okunur Denetçi",
+          "description": "Denetim amacıyla tüm verilere salt okunur erişim."
+        },
+        "userAdministrator": {
+          "name": "Kullanıcı Yöneticisi",
+          "description": "Kullanıcıları ve erişim izinlerini yönetin."
+        },
+        "reportsViewer": {
+          "name": "Rapor Görüntüleyici",
+          "description": "Raporlara ve veri dışa aktarma işlevine erişim."
+        }
+      },
+      "roles": {
+        "systemAdministrator": {
+          "name": "Sistem Yöneticisi",
+          "description": "Tüm izinlerle tam sistem erişimi."
+        },
+        "systemManager": {
+          "name": "Yönetici",
+          "description": "Envanteri, siparişleri ve kategorileri yönetebilir ve raporları görüntüleyebilir."
+        },
+        "systemMember": {
+          "name": "Üye",
+          "description": "Atanan görevleri görüntülemek ve yönetmek için temel erişim."
+        }
+      }
+    }
   },
   "auth": {
     "login": {

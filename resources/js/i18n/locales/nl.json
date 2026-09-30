@@ -1938,7 +1938,315 @@
     },
     "createRole": "Rol aanmaken",
     "createUser": "Gebruiker aanmaken",
-    "userDetails": "Gebruikersgegevens"
+    "userDetails": "Gebruikersgegevens",
+    "permissionCatalog": {
+      "permissions": {
+        "view_users": {
+          "label": "Gebruikers bekijken",
+          "description": "Kan de gebruikerslijst en gebruikersgegevens bekijken"
+        },
+        "create_users": {
+          "label": "Gebruikers aanmaken",
+          "description": "Kan nieuwe gebruikers aanmaken"
+        },
+        "edit_users": {
+          "label": "Gebruikers bewerken",
+          "description": "Kan bestaande gebruikers bewerken"
+        },
+        "delete_users": {
+          "label": "Gebruikers verwijderen",
+          "description": "Kan gebruikers verwijderen"
+        },
+        "view_roles": {
+          "label": "Rollen bekijken",
+          "description": "Kan rollen en machtigingen bekijken"
+        },
+        "create_roles": {
+          "label": "Rollen aanmaken",
+          "description": "Kan nieuwe rollen aanmaken"
+        },
+        "edit_roles": {
+          "label": "Rollen bewerken",
+          "description": "Kan bestaande rollen bewerken"
+        },
+        "delete_roles": {
+          "label": "Rollen verwijderen",
+          "description": "Kan rollen verwijderen"
+        },
+        "view_products": {
+          "label": "Producten bekijken",
+          "description": "Kan de productvoorraad bekijken"
+        },
+        "create_products": {
+          "label": "Producten aanmaken",
+          "description": "Kan nieuwe producten toevoegen"
+        },
+        "edit_products": {
+          "label": "Producten bewerken",
+          "description": "Kan productgegevens wijzigen"
+        },
+        "delete_products": {
+          "label": "Producten verwijderen",
+          "description": "Kan producten verwijderen"
+        },
+        "manage_stock": {
+          "label": "Voorraad beheren",
+          "description": "Kan voorraadniveaus aanpassen en voorraadmutaties beheren"
+        },
+        "transfer_stock": {
+          "label": "Voorraad overboeken",
+          "description": "Kan voorraadoverboekingen tussen locaties aanmaken en beheren"
+        },
+        "manage_categories": {
+          "label": "Categorieën beheren",
+          "description": "Kan productcategorieën aanmaken en beheren"
+        },
+        "manage_locations": {
+          "label": "Locaties beheren",
+          "description": "Kan opslaglocaties aanmaken en beheren"
+        },
+        "view_customers": {
+          "label": "Klanten bekijken",
+          "description": "Kan de klantenlijst en klantgegevens bekijken"
+        },
+        "create_customers": {
+          "label": "Klanten aanmaken",
+          "description": "Kan nieuwe klanten aanmaken"
+        },
+        "edit_customers": {
+          "label": "Klanten bewerken",
+          "description": "Kan bestaande klanten bewerken"
+        },
+        "delete_customers": {
+          "label": "Klanten verwijderen",
+          "description": "Kan klanten verwijderen"
+        },
+        "view_suppliers": {
+          "label": "Leveranciers bekijken",
+          "description": "Kan de leverancierslijst en leveranciersgegevens bekijken"
+        },
+        "create_suppliers": {
+          "label": "Leveranciers aanmaken",
+          "description": "Kan nieuwe leveranciers aanmaken"
+        },
+        "edit_suppliers": {
+          "label": "Leveranciers bewerken",
+          "description": "Kan bestaande leveranciers bewerken"
+        },
+        "delete_suppliers": {
+          "label": "Leveranciers verwijderen",
+          "description": "Kan leveranciers verwijderen"
+        },
+        "view_purchase_orders": {
+          "label": "Inkooporders bekijken",
+          "description": "Kan inkooporders bekijken"
+        },
+        "create_purchase_orders": {
+          "label": "Inkooporders aanmaken",
+          "description": "Kan nieuwe inkooporders aanmaken"
+        },
+        "edit_purchase_orders": {
+          "label": "Inkooporders bewerken",
+          "description": "Kan inkooporders bewerken"
+        },
+        "delete_purchase_orders": {
+          "label": "Inkooporders verwijderen",
+          "description": "Kan inkooporders verwijderen"
+        },
+        "receive_purchase_orders": {
+          "label": "Inkooporders ontvangen",
+          "description": "Kan artikelen van inkooporders ontvangen"
+        },
+        "approve_purchase_orders": {
+          "label": "Inkooporders goedkeuren",
+          "description": "Kan inkooporders goedkeuren of afwijzen die goedkeuring nodig hebben voordat ze worden verzonden"
+        },
+        "view_orders": {
+          "label": "Bestellingen bekijken",
+          "description": "Kan bestellingen bekijken"
+        },
+        "create_orders": {
+          "label": "Bestellingen aanmaken",
+          "description": "Kan nieuwe bestellingen aanmaken"
+        },
+        "edit_orders": {
+          "label": "Bestellingen bewerken",
+          "description": "Kan bestellingen wijzigen"
+        },
+        "delete_orders": {
+          "label": "Bestellingen verwijderen",
+          "description": "Kan bestellingen verwijderen"
+        },
+        "approve_orders": {
+          "label": "Bestellingen goedkeuren",
+          "description": "Kan bestellingen goedkeuren of afwijzen"
+        },
+        "view_payments": {
+          "label": "Betalingen bekijken",
+          "description": "Kan betalingen van bestellingen, openstaande saldi en vorderingen bekijken"
+        },
+        "record_payments": {
+          "label": "Betalingen registreren",
+          "description": "Kan betalingen van bestellingen registreren, annuleren en terugbetalen"
+        },
+        "view_settings": {
+          "label": "Instellingen bekijken",
+          "description": "Kan systeeminstellingen bekijken"
+        },
+        "edit_settings": {
+          "label": "Instellingen bewerken",
+          "description": "Kan systeeminstellingen wijzigen"
+        },
+        "manage_organization": {
+          "label": "Organisatie beheren",
+          "description": "Kan organisatiegegevens beheren"
+        },
+        "view_plugins": {
+          "label": "Plugins bekijken",
+          "description": "Kan geïnstalleerde plugins bekijken"
+        },
+        "manage_plugins": {
+          "label": "Plugins beheren",
+          "description": "Kan plugins installeren, activeren en verwijderen"
+        },
+        "view_stock_audits": {
+          "label": "Voorraadcontroles bekijken",
+          "description": "Kan voorraadcontroles en cyclustellingen bekijken"
+        },
+        "create_stock_audits": {
+          "label": "Voorraadcontroles aanmaken",
+          "description": "Kan nieuwe voorraadcontroles aanmaken"
+        },
+        "manage_stock_audits": {
+          "label": "Voorraadcontroles beheren",
+          "description": "Kan voorraadcontroles beheren, starten, afronden en tellingen aanpassen"
+        },
+        "approve_stock_adjustments": {
+          "label": "Voorraadaanpassingen goedkeuren",
+          "description": "Kan voorraadaanpassingen goedkeuren of afwijzen die goedkeuring nodig hebben voordat de voorraad wijzigt"
+        },
+        "approve_stock_transfers": {
+          "label": "Voorraadoverboekingen goedkeuren",
+          "description": "Kan voorraadoverboekingen goedkeuren of afwijzen die goedkeuring nodig hebben voordat ze worden verzonden"
+        },
+        "view_warehouses": {
+          "label": "Magazijnen bekijken",
+          "description": "Kan de magazijnlijst en magazijngegevens bekijken"
+        },
+        "create_warehouses": {
+          "label": "Magazijnen aanmaken",
+          "description": "Kan nieuwe magazijnen aanmaken"
+        },
+        "edit_warehouses": {
+          "label": "Magazijnen bewerken",
+          "description": "Kan magazijninstellingen bewerken"
+        },
+        "delete_warehouses": {
+          "label": "Magazijnen verwijderen",
+          "description": "Kan magazijnen verwijderen"
+        },
+        "manage_warehouse_users": {
+          "label": "Magazijngebruikers beheren",
+          "description": "Kan gebruikers aan magazijnen toewijzen en ervan verwijderen"
+        },
+        "access_all_warehouses": {
+          "label": "Toegang tot alle magazijnen",
+          "description": "Kan voorraad in elk magazijn bekijken en bewerken, ook als de gebruiker aan specifieke magazijnen is toegewezen"
+        },
+        "manage_returns": {
+          "label": "Retouren beheren",
+          "description": "Kan retouren en omruilingen aanmaken en beheren"
+        },
+        "view_shipments": {
+          "label": "Zendingen bekijken",
+          "description": "Kan zendingen van bestellingen, tracking en verzendlabels bekijken"
+        },
+        "create_shipments": {
+          "label": "Zendingen aanmaken",
+          "description": "Kan zendingen aanmaken, verzendlabels kopen en annuleren, en bestellingen als verzonden markeren"
+        },
+        "view_reports": {
+          "label": "Rapporten bekijken",
+          "description": "Kan systeemrapporten bekijken"
+        },
+        "export_data": {
+          "label": "Gegevens exporteren",
+          "description": "Kan gegevens uit het systeem exporteren"
+        },
+        "import_data": {
+          "label": "Gegevens importeren",
+          "description": "Kan gegevens in het systeem importeren"
+        },
+        "view_activity_log": {
+          "label": "Activiteitenlogboek bekijken",
+          "description": "Kan activiteiten- en auditlogboeken bekijken"
+        }
+      },
+      "categories": {
+        "userManagement": "Gebruikersbeheer",
+        "roleManagement": "Rolbeheer",
+        "inventoryManagement": "Voorraadbeheer",
+        "customerManagement": "Klantenbeheer",
+        "supplierManagement": "Leveranciersbeheer",
+        "purchaseOrderManagement": "Inkooporderbeheer",
+        "orderManagement": "Bestellingsbeheer",
+        "payments": "Betalingen",
+        "settings": "Instellingen",
+        "plugins": "Plugins",
+        "warehouseManagement": "Magazijnbeheer",
+        "returnsManagement": "Retourbeheer",
+        "shipping": "Verzending",
+        "reportsData": "Rapporten & gegevens"
+      },
+      "sets": {
+        "inventoryManager": {
+          "name": "Voorraadbeheerder",
+          "description": "Volledige toegang tot voorraadbeheer, inclusief producten, categorieën en locaties."
+        },
+        "orderProcessor": {
+          "name": "Orderverwerker",
+          "description": "Beheer bestellingen van aanmaak tot afronding."
+        },
+        "warehouseStaff": {
+          "name": "Magazijnmedewerker",
+          "description": "Bekijk producten en beheer voorraadniveaus."
+        },
+        "purchasingAgent": {
+          "name": "Inkoper",
+          "description": "Beheer leveranciers en inkooporders."
+        },
+        "approver": {
+          "name": "Goedkeurder",
+          "description": "Keur inkooporders, voorraadaanpassingen en voorraadoverboekingen die goedkeuring nodig hebben goed of af."
+        },
+        "readOnlyAuditor": {
+          "name": "Auditor (alleen lezen)",
+          "description": "Alleen-lezentoegang tot alle gegevens voor auditdoeleinden."
+        },
+        "userAdministrator": {
+          "name": "Gebruikersbeheerder",
+          "description": "Beheer gebruikers en hun toegangsmachtigingen."
+        },
+        "reportsViewer": {
+          "name": "Rapportenlezer",
+          "description": "Toegang tot rapporten en gegevensexport."
+        }
+      },
+      "roles": {
+        "systemAdministrator": {
+          "name": "Beheerder",
+          "description": "Volledige systeemtoegang met alle machtigingen."
+        },
+        "systemManager": {
+          "name": "Manager",
+          "description": "Kan voorraad, bestellingen en categorieën beheren en rapporten bekijken."
+        },
+        "systemMember": {
+          "name": "Lid",
+          "description": "Basistoegang om toegewezen taken te bekijken en te beheren."
+        }
+      }
+    }
   },
   "auth": {
     "login": {

@@ -6,6 +6,7 @@ import Button from '@/Components/ui/Button.vue';
 import Badge from '@/Components/ui/Badge.vue';
 import { Head, Link } from '@inertiajs/vue3';
 import { useI18n } from 'vue-i18n';
+import { roleDescription, roleName } from '@/lib/permissionLabels';
 import { Plus, Users, ShieldCheck } from 'lucide-vue-next';
 
 defineProps({
@@ -13,7 +14,8 @@ defineProps({
     filters: Object,
 });
 
-const { t } = useI18n();
+const { t, te } = useI18n();
+const i18n = { t, te };
 </script>
 
 <template>
@@ -45,8 +47,8 @@ const { t } = useI18n();
             <Card v-for="role in roles?.data" :key="role.id">
                 <div class="mb-4 flex items-start justify-between">
                     <div class="min-w-0">
-                        <h3 class="text-sm font-semibold text-text-primary">{{ role.name }}</h3>
-                        <p v-if="role.description" class="mt-1 text-sm text-text-secondary">{{ role.description }}</p>
+                        <h3 class="text-sm font-semibold text-text-primary">{{ roleName(role, i18n) }}</h3>
+                        <p v-if="role.description" class="mt-1 text-sm text-text-secondary">{{ roleDescription(role, i18n) }}</p>
                     </div>
                     <Badge v-if="role.is_system" variant="brand" size="sm">{{ t('admin.roles.systemBadge') }}</Badge>
                 </div>

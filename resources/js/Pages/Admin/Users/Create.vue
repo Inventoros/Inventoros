@@ -5,6 +5,7 @@ import Card from '@/Components/ui/Card.vue';
 import Button from '@/Components/ui/Button.vue';
 import { Head, Link, useForm } from '@inertiajs/vue3';
 import { useI18n } from 'vue-i18n';
+import { roleDescription, roleName } from '@/lib/permissionLabels';
 import { ArrowLeft } from 'lucide-vue-next';
 
 const props = defineProps({
@@ -12,7 +13,8 @@ const props = defineProps({
 });
 
 
-const { t } = useI18n();
+const { t, te } = useI18n();
+const i18n = { t, te };
 const form = useForm({
     name: '',
     email: '',
@@ -153,8 +155,8 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                                     class="rounded border-border-subtle bg-surface-canvas text-brand ds-focus-ring"
                                 />
                                 <div class="flex-1">
-                                    <div class="text-sm font-medium text-text-secondary">{{ role.name }}</div>
-                                    <div class="text-xs text-text-tertiary" v-if="role.description">{{ role.description }}</div>
+                                    <div class="text-sm font-medium text-text-secondary">{{ roleName(role, i18n) }}</div>
+                                    <div class="text-xs text-text-tertiary" v-if="role.description">{{ roleDescription(role, i18n) }}</div>
                                 </div>
                                 <span class="text-xs text-text-tertiary">
                                     {{ t('admin.roles.permissionsCount', { count: role.permissions ? role.permissions.length : 0 }) }}
