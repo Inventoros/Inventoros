@@ -1071,6 +1071,7 @@
     "getStarted": "Get started by uploading your first plugin above.",
     "uploadsDisabled": "ZIP uploads are turned off on this instance. Signed plugins can still be installed from the marketplace.",
     "browseMarketplace": "Browse the marketplace",
+    "managedElsewhere": "Plugins are shared by every organization on this installation, so only the plugin administrator organization can install, update or remove them.",
     "tabs": {
       "installed": "Installed",
       "marketplace": "Marketplace"

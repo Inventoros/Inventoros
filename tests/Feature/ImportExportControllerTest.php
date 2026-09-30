@@ -395,6 +395,33 @@ class ImportExportControllerTest extends TestCase
 
     // ==================== IMPORT TESTS ====================
 
+    public function test_an_import_file_with_a_disallowed_extension_is_rejected(): void
+    {
+        // CSV text passes the content (mimes/mimetypes) checks on its own;
+        // the file name must also be one of the supported types.
+        $file = UploadedFile::fake()->createWithContent('products.html', (string) $this->createValidCsv()->get());
+
+        $this->actingAs($this->admin)
+            ->post(route('import-export.import-products'), ['file' => $file])
+            ->assertSessionHasErrors('file');
+
+        $this->assertDatabaseMissing('products', ['sku' => 'IMP-001']);
+    }
+
+    public function test_the_spreadsheet_reader_follows_the_detected_content_not_the_file_name(): void
+    {
+        // CSV content named .xlsx: choosing the reader from the client's
+        // extension handed text to the XLSX reader. The reader now follows
+        // the detected file type.
+        $file = UploadedFile::fake()->createWithContent('products.xlsx', (string) $this->createValidCsv()->get());
+
+        $this->actingAs($this->admin)
+            ->post(route('import-export.import-products'), ['file' => $file])
+            ->assertSessionHas('success');
+
+        $this->assertDatabaseHas('products', ['sku' => 'IMP-001', 'organization_id' => $this->organization->id]);
+    }
+
     public function test_admin_can_import_products(): void
     {
         $file = $this->createValidCsv();

@@ -1071,6 +1071,7 @@
     "getStarted": "Yukarıdan ilk eklentinizi yükleyerek başlayın.",
     "uploadsDisabled": "Bu kurulumda ZIP yüklemeleri kapalı. İmzalı eklentiler yine de pazar yerinden yüklenebilir.",
     "browseMarketplace": "Pazar yerine göz atın",
+    "managedElsewhere": "Eklentiler bu kurulumdaki tüm kuruluşlar tarafından paylaşılır, bu yüzden yalnızca eklenti yöneticisi kuruluş bunları yükleyebilir, güncelleyebilir veya kaldırabilir.",
     "tabs": {
       "installed": "Yüklü",
       "marketplace": "Pazar Yeri"

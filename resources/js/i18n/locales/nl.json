@@ -1071,6 +1071,7 @@
     "getStarted": "Begin door hierboven uw eerste plugin te uploaden.",
     "uploadsDisabled": "ZIP-uploads zijn uitgeschakeld op deze installatie. Ondertekende plugins kunnen nog steeds vanuit de marktplaats worden geïnstalleerd.",
     "browseMarketplace": "Marktplaats bekijken",
+    "managedElsewhere": "Plug-ins worden gedeeld door alle organisaties in deze installatie, dus alleen de plug-inbeheerorganisatie kan ze installeren, bijwerken of verwijderen.",
     "tabs": {
       "installed": "Geïnstalleerd",
       "marketplace": "Marktplaats"

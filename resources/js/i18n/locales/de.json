@@ -1071,6 +1071,7 @@
     "getStarted": "Laden Sie oben Ihr erstes Plugin hoch, um loszulegen.",
     "uploadsDisabled": "ZIP-Uploads sind auf dieser Instanz deaktiviert. Signierte Plugins können weiterhin über den Marktplatz installiert werden.",
     "browseMarketplace": "Marktplatz durchsuchen",
+    "managedElsewhere": "Plugins werden von allen Organisationen dieser Installation gemeinsam genutzt. Nur die Plugin-Administrator-Organisation kann sie installieren, aktualisieren oder entfernen.",
     "tabs": {
       "installed": "Installiert",
       "marketplace": "Marktplatz"

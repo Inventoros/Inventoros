@@ -1071,6 +1071,7 @@
     "getStarted": "在上方上传第一个插件开始使用。",
     "uploadsDisabled": "此实例已关闭 ZIP 上传。仍可从插件市场安装已签名的插件。",
     "browseMarketplace": "浏览插件市场",
+    "managedElsewhere": "插件由此安装中的所有组织共享，因此只有插件管理组织可以安装、更新或删除插件。",
     "tabs": {
       "installed": "已安装",
       "marketplace": "插件市场"

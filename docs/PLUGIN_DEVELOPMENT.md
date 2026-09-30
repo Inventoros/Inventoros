@@ -396,7 +396,7 @@ register_page('my-plugin.settings', 'Plugin::my-plugin/Settings', [
     'props' => fn ($request, $user) => [  // or a plain array
         'settings' => my_plugin_settings($user->organization_id),
     ],
-    'middleware' => ['auth'],             // default; the web middleware group always applies
+    'middleware' => ['throttle:60,1'],    // extra middleware; `auth` and the web group always apply
 ]);
 ```
 
@@ -405,7 +405,7 @@ register_page('my-plugin.settings', 'Plugin::my-plugin/Settings', [
 plugin.registerPage('Settings', SettingsPage);   // becomes 'Plugin::my-plugin/Settings'
 ```
 
-The route is added after all core routes. A page cannot reuse a route name that already exists (it is skipped and logged), so a plugin cannot take over a core route or link. Link to it by name as usual (`route('my-plugin.settings')`), for example from a menu item.
+The route is added after all core routes and always requires sign-in: your `middleware` is added after `auth`, never instead of it. A page cannot reuse a route name or URI the application already uses, and cannot live under a reserved prefix (`api`, `portal`, `install`, `graphql`, `mcp`, `webhooks`, `plugins`, `plugin-assets`, the sign-in and password pages, and similar); such a page is skipped and logged, so a plugin cannot take over a core route, link or the customer portal. Link to it by name as usual (`route('my-plugin.settings')`), for example from a menu item.
 
 If you cache routes (`php artisan route:cache`), rebuild the cache after activating or deactivating a plugin that registers pages. A cached route whose plugin is no longer active answers 404.
 
@@ -685,7 +685,8 @@ Schema::dropIfExists('plugin_analytics_views');
 A plugin runs PHP inside the application with full access to the database and filesystem. Install only plugins you trust.
 
 - Uploads are disabled until `INVENTOROS_ALLOW_PLUGIN_UPLOADS=true` is set, because an admin who can upload a plugin can run code on the server.
-- Marketplace installs are allowed with uploads off because every marketplace package must carry a valid Ed25519 signature from the marketplace key configured in `config/marketplace.php`, and match the sha256 in the catalog. With no key configured they are refused.
+- Plugins are shared by every organization on an installation, so only users with Manage Plugins in the plugin administrator organization can install, update, upload, activate, deactivate or delete them. That is the organization set in `INVENTOROS_PLUGIN_ADMIN_ORG`, or the first organization (the one the installer created) when it is unset. Admins of other organizations can browse plugins only.
+- Marketplace installs are allowed with uploads off because every marketplace package must carry a valid Ed25519 signature from the marketplace key configured in `config/marketplace.php`, and match the sha256 in the catalog. The signature covers the plugin's slug, version and sha256 together, the package's `plugin.json` must declare that signed version, and an update must be newer than the installed version, so an older signed package cannot be replayed as an update. With no key configured they are refused.
 - `INVENTOROS_PLUGIN_SIGNATURE_REQUIRED=true` with `INVENTOROS_PLUGIN_PUBLIC_KEY` accepts only ZIPs signed with your key.
 - Uploaded ZIPs are checked for path traversal, entry count and size before extraction.
 - Query filters (`product_list_query`, `supplier_list_query`) have the organization scope re-applied after they run, and `product_search_query` only sees the search group.

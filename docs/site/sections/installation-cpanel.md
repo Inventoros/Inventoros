@@ -12,7 +12,7 @@ The cPanel release packages are specially built and include:
 ### Prerequisites
 
 - Access to your cPanel control panel
-- PHP 8.4 enabled for your domain (8.4.1 or newer; PHP 8.5 is not supported yet)
+- PHP 8.4.1 or newer enabled for your domain (8.4 and 8.5)
 - A MySQL database available
 - SSH access (recommended) or the cPanel Terminal
 - At least 512MB of disk space

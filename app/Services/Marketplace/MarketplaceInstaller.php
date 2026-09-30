@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Services\Marketplace;
 
 use App\Models\Auth\Organization;
+use App\Models\Plugin;
 use App\Services\PluginService;
 use App\Support\AppVersion;
 use App\Support\ReleaseSignatureVerifier;
@@ -14,12 +15,17 @@ use Illuminate\Support\Facades\Log;
 /**
  * One-click install and update from the marketplace.
  *
- * The package is downloaded server side, its detached Ed25519 signature is
- * verified against the marketplace public key shipped in config, and its
- * sha256 is checked against both the download and the catalog. Only then is
- * it handed to PluginService, which applies exactly the same archive safety
- * and `requires` checks as a manual upload. Because the package is signed,
- * this works even when manual ZIP uploads are disabled.
+ * The package is downloaded server side and its detached Ed25519 signature
+ * is verified against the marketplace public key shipped in config. The
+ * signature covers the plugin's slug, version and sha256 together (see
+ * PackageSignature), so a genuinely signed package cannot be passed off as
+ * another plugin or another version. The sha256 is also checked against the
+ * catalog, the plugin.json inside the package must carry the signed version,
+ * and an update must be newer than what is installed by that SIGNED version,
+ * never by the unsigned catalog alone. Only then is the package handed to
+ * PluginService, which applies exactly the same archive safety and `requires`
+ * checks as a manual upload. Because the package is signed, this works even
+ * when manual ZIP uploads are disabled.
  */
 final class MarketplaceInstaller
 {
@@ -47,10 +53,11 @@ final class MarketplaceInstaller
 
         $this->assertAccess($entry, $token);
 
-        $zip = $this->downloadVerified($entry, $token);
+        ['path' => $zip, 'version' => $version] = $this->downloadVerified($entry, $token);
 
         try {
-            $this->plugins->installFromZip($zip, $slug);
+            $this->plugins->installFromZip($zip, $slug, $version);
+            Plugin::updateOrCreate(['slug' => $slug], ['source' => Plugin::SOURCE_MARKETPLACE]);
         } catch (\RuntimeException $e) {
             throw new MarketplaceException("{$name} could not be installed: {$e->getMessage()}", 0, $e);
         } finally {
@@ -68,7 +75,7 @@ final class MarketplaceInstaller
 
         return [
             'name' => $name,
-            'version' => (string) $entry['version'],
+            'version' => $version,
             'activated' => $activate && $activationError === null,
             'activation_error' => $activationError,
         ];
@@ -92,16 +99,27 @@ final class MarketplaceInstaller
             throw new MarketplaceException("{$name} is not installed. Use Install instead.");
         }
 
+        // Never overwrite a plugin the marketplace did not install (an upload
+        // or a hand-copied plugin that happens to share this slug).
+        if (! self::installedFromMarketplace($slug)) {
+            throw new MarketplaceException("A plugin named \"{$slug}\" is installed on this server, but it was not installed from the marketplace, so the marketplace will not replace it. Delete it first to install the marketplace version.");
+        }
+
         if (! self::isNewer((string) $entry['version'], $installed)) {
             throw new MarketplaceException("{$name} is already up to date ({$installed}).");
         }
 
         $this->assertAccess($entry, $token);
 
-        $zip = $this->downloadVerified($entry, $token);
+        ['path' => $zip, 'version' => $version] = $this->downloadVerified($entry, $token);
 
         try {
-            $result = $this->plugins->replaceFromZip($zip, $slug);
+            // Judge "newer" on the signed version, not the catalog's claim.
+            if (! self::isNewer($version, $installed)) {
+                throw new MarketplaceException("The marketplace package is version {$version}, which is not newer than the installed {$installed}; it was not installed.");
+            }
+
+            $result = $this->plugins->replaceFromZip($zip, $slug, $version);
         } catch (\RuntimeException $e) {
             throw new MarketplaceException("{$name} could not be updated: {$e->getMessage()}", 0, $e);
         } finally {
@@ -111,7 +129,7 @@ final class MarketplaceInstaller
         return [
             'name' => $name,
             'from' => $installed,
-            'to' => (string) $entry['version'],
+            'to' => $version,
             'warning' => $result['warning'],
         ];
     }
@@ -133,6 +151,11 @@ final class MarketplaceInstaller
         $data = json_decode((string) file_get_contents($manifest), true);
 
         return is_array($data) && is_string($data['version'] ?? null) ? $data['version'] : '0';
+    }
+
+    public static function installedFromMarketplace(string $slug): bool
+    {
+        return Plugin::where('slug', $slug)->value('source') === Plugin::SOURCE_MARKETPLACE;
     }
 
     public static function isNewer(string $available, string $installed): bool
@@ -200,13 +223,17 @@ final class MarketplaceInstaller
 
     /**
      * Download the package and prove it is the one the marketplace signed and
-     * listed. Returns the verified temp file; the caller deletes it.
+     * listed: the signature must cover this slug, the served version and the
+     * downloaded bytes' sha256. Returns the verified temp file and its signed
+     * version; the caller deletes the file.
      *
      * @param  array<string, mixed>  $entry
+     * @return array{path: string, version: string}
      */
-    private function downloadVerified(array $entry, ?string $token): string
+    private function downloadVerified(array $entry, ?string $token): array
     {
-        $download = $this->client->download((string) $entry['slug'], $token);
+        $slug = (string) $entry['slug'];
+        $download = $this->client->download($slug, $token);
         $path = $download['path'];
 
         try {
@@ -214,15 +241,29 @@ final class MarketplaceInstaller
                 throw new MarketplaceException('The marketplace package is not signed, so it was not installed.');
             }
 
+            $version = $download['version'];
+            if ($version === null || ! PackageSignature::isValidVersion($version)) {
+                throw new MarketplaceException('The marketplace did not say which version this package is, so it was not installed.');
+            }
+
+            if ($version !== (string) $entry['version']) {
+                throw new MarketplaceException("The marketplace served version {$version} but lists {$entry['version']}, so it was not installed. Try again in a minute.");
+            }
+
+            $actual = (string) hash_file('sha256', $path);
+
             try {
-                ReleaseSignatureVerifier::verify($path, $download['signature'], (string) config('marketplace.public_key'));
+                ReleaseSignatureVerifier::verifyMessage(
+                    PackageSignature::message($slug, $version, $actual),
+                    $download['signature'],
+                    (string) config('marketplace.public_key'),
+                );
             } catch (\RuntimeException $e) {
-                Log::warning('Marketplace package failed signature verification', ['slug' => $entry['slug'], 'error' => $e->getMessage()]);
+                Log::warning('Marketplace package failed signature verification', ['slug' => $slug, 'version' => $version, 'error' => $e->getMessage()]);
 
                 throw new MarketplaceException('The plugin package failed signature verification, so it was not installed. It may be corrupt or tampered with.', 0, $e);
             }
 
-            $actual = (string) hash_file('sha256', $path);
             $expected = [strtolower((string) $entry['checksum'])];
             if ($download['checksum'] !== null) {
                 $expected[] = strtolower($download['checksum']);
@@ -239,7 +280,7 @@ final class MarketplaceInstaller
             throw $e;
         }
 
-        return $path;
+        return ['path' => $path, 'version' => $version];
     }
 
     /**

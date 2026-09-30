@@ -25,9 +25,12 @@ return [
     |--------------------------------------------------------------------------
     |
     | Every plugin ZIP the marketplace serves carries a detached Ed25519
-    | signature (base64, 64 bytes) over its exact bytes. The app verifies it
-    | against this base64 32-byte public key before extracting anything, which
-    | is why marketplace installs work even when manual ZIP uploads are off.
+    | signature (base64, 64 bytes) over a statement binding the plugin's
+    | slug, version and the ZIP's sha256 (see PackageSignature in
+    | app/Services/Marketplace). The app verifies it against this base64
+    | 32-byte public key before extracting anything, which is why marketplace installs
+    | work even when manual ZIP uploads are off, and why an older signed
+    | package cannot be replayed as an update.
     |
     | The matching secret key lives only in the marketplace's environment
     | (MARKETPLACE_SIGNING_SECRET_KEY on inventoros.com). The key is minted

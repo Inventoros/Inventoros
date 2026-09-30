@@ -16,10 +16,18 @@ const props = defineProps({
     uploadsEnabled: { type: Boolean, default: false },
     activeTab: { type: String, default: 'installed' },
     marketplace: { type: Object, default: null },
+    canAdministerPlugins: { type: Boolean, default: false },
 });
 
 const { hasPermission } = usePermissions();
-const canManage = hasPermission('manage_plugins');
+const hasManagePermission = hasPermission('manage_plugins');
+// Plugins are shared by the whole installation: changing them also needs the
+// plugin administrator organization.
+const canManage = hasManagePermission && props.canAdministerPlugins;
+const managedElsewhere = hasManagePermission && !props.canAdministerPlugins;
+
+// Only http(s) links from a plugin's manifest become clickable.
+const isWebUrl = (url) => typeof url === 'string' && /^https?:\/\//i.test(url);
 
 const tabClass = (key) => [
     'ds-focus-ring -mb-px whitespace-nowrap border-b-2 px-3 py-2 text-sm font-medium transition-colors',
@@ -172,7 +180,8 @@ const deletePlugin = (slug, name) => {
                 <p class="text-sm text-status-warning">{{ t('plugins.marketplace.notConfigured') }}</p>
             </Card>
 
-            <p v-if="!canManage" class="mt-4 text-sm text-text-tertiary">{{ t('plugins.marketplace.readOnly') }}</p>
+            <p v-if="managedElsewhere" class="mt-4 text-sm text-text-tertiary">{{ t('plugins.managedElsewhere') }}</p>
+            <p v-else-if="!canManage" class="mt-4 text-sm text-text-tertiary">{{ t('plugins.marketplace.readOnly') }}</p>
 
             <!-- Account connection -->
             <Card v-if="canManage" class="mt-4">
@@ -278,7 +287,10 @@ const deletePlugin = (slug, name) => {
         </div>
 
         <div v-else>
-        <Card v-if="!uploadsEnabled" class="mt-6">
+        <Card v-if="managedElsewhere" class="mt-6">
+            <p class="text-sm text-text-secondary">{{ t('plugins.managedElsewhere') }}</p>
+        </Card>
+        <Card v-else-if="canManage && !uploadsEnabled" class="mt-6">
             <div class="flex items-start gap-2 text-sm text-text-secondary">
                 <UploadCloud :size="16" class="mt-0.5 shrink-0 text-text-tertiary" />
                 <p>
@@ -289,7 +301,7 @@ const deletePlugin = (slug, name) => {
         </Card>
 
         <!-- Upload Section -->
-        <Card v-else class="mt-6">
+        <Card v-else-if="canManage" class="mt-6">
             <h3 class="text-sm font-semibold text-text-primary">Upload New Plugin</h3>
             <div
                 @dragover.prevent="isDragging = true"
@@ -350,9 +362,10 @@ const deletePlugin = (slug, name) => {
                             <span>Version: {{ plugin.version }}</span>
                             <span class="inline-flex items-center gap-1">Author:
                                 <a
-                                    v-if="plugin.author_url"
+                                    v-if="isWebUrl(plugin.author_url)"
                                     :href="plugin.author_url"
                                     target="_blank"
+                                    rel="noopener noreferrer"
                                     class="inline-flex items-center gap-1 text-brand transition-colors hover:text-brand-hover"
                                 >
                                     {{ plugin.author }}
@@ -363,7 +376,7 @@ const deletePlugin = (slug, name) => {
                             <span>Requires: {{ plugin.requires }}</span>
                         </div>
                     </div>
-                    <div class="flex shrink-0 flex-wrap gap-2">
+                    <div v-if="canManage" class="flex shrink-0 flex-wrap gap-2">
                         <Button
                             v-if="!plugin.is_active"
                             variant="default"

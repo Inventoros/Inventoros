@@ -27,6 +27,22 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Plugin administrator organization
+    |--------------------------------------------------------------------------
+    |
+    | Plugins are installed for the whole installation and run for every
+    | organization, but manage_plugins is granted per organization. So only
+    | users (with manage_plugins) of ONE organization may install, update,
+    | upload, activate, deactivate or delete plugins: the organization with
+    | this id, or when unset, the first organization created (the one the
+    | installer set up). On a single-organization install nothing changes.
+    |
+    */
+
+    'admin_organization_id' => env('INVENTOROS_PLUGIN_ADMIN_ORG'),
+
+    /*
+    |--------------------------------------------------------------------------
     | ZIP extraction limits
     |--------------------------------------------------------------------------
     |

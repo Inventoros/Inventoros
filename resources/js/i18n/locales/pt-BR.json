@@ -1071,6 +1071,7 @@
     "getStarted": "Comece enviando seu primeiro plugin acima.",
     "uploadsDisabled": "O envio de arquivos ZIP está desativado nesta instância. Plugins assinados ainda podem ser instalados pelo marketplace.",
     "browseMarketplace": "Explorar o marketplace",
+    "managedElsewhere": "Os plugins são compartilhados por todas as organizações desta instalação, então apenas a organização administradora de plugins pode instalá-los, atualizá-los ou removê-los.",
     "tabs": {
       "installed": "Instalados",
       "marketplace": "Marketplace"

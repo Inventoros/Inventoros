@@ -22,7 +22,7 @@ v2.0.0 is a major release: MCP tool names, the plugin asset path, access to `/do
 
 ### Requirements
 
-- **PHP 8.4.1 or newer. PHP 8.5 is not supported yet** (`phpoffice/phpspreadsheet` does not install on it). The 1.0.8 release package already needed PHP 8.4.1, so most 1.0.8 installs meet this.
+- **PHP 8.4.1 or newer** (8.4 and 8.5). The 1.0.8 release package already needed PHP 8.4.1, so most 1.0.8 installs meet this.
 - **Node.js 20.19+ or 22.12+**, only if you build the frontend yourself. The cPanel release package and the Docker image ship pre-built assets.
 - MySQL 8.0+ or PostgreSQL 13+ (SQLite for development), as before.
 
@@ -136,6 +136,7 @@ All are optional. `.env.example` lists each one with its default.
 | `INVENTOROS_UPDATE_PHP_BINARY` | found automatically | PHP CLI binary the updater runs `php artisan` with. |
 | `INVENTOROS_UPDATE_ARTISAN_SUBPROCESS`, `INVENTOROS_UPDATE_ARTISAN_TIMEOUT` | `true`, 900 | Run post-update commands in a separate process, and its timeout in seconds. |
 | `INVENTOROS_PLUGIN_MAX_ENTRIES`, `INVENTOROS_PLUGIN_MAX_BYTES` | 2000, 50 MB | Plugin package limits. |
+| `INVENTOROS_PLUGIN_ADMIN_ORG` | first organization | The one organization whose admins may install, update and remove plugins. See [Plugin marketplace](#plugin-marketplace). |
 | `LOW_STOCK_ALERT_COOLDOWN_MINUTES` | `1440` | Minimum gap between low-stock alerts for one product. |
 | `REPORTS_MAX_ROWS` | `10000` | Row cap for any report. |
 | `REPORTS_PDF_MAX_ROWS` | `1000` | Row cap for report PDFs; CSV and Excel carry the full set. |
@@ -209,6 +210,11 @@ The interactive API reference at `/docs/api` now requires a signed-in user outsi
 
 Plugins > Marketplace installs and updates plugins from inventoros.com. Every package is verified against the marketplace signing public key configured in `config/marketplace.php` (override it with `INVENTOROS_MARKETPLACE_PUBLIC_KEY`); the app never trusts a key the marketplace advertises. If the Marketplace tab says installs are off, no key is configured. Paid plugins need an inventoros.com account connected on the same tab.
 
+- **Signed manifest.** The marketplace signs each package's slug, version and sha256 together, not just the ZIP bytes. The package's `plugin.json` must declare the signed version, and an update must be newer than the installed version, so an older package cannot be installed as an update. Marketplaces or mirrors that sign only the ZIP bytes are refused.
+- **Marketplace updates only replace marketplace installs.** Update is offered only for plugins installed from the marketplace. A plugin you uploaded or copied in by hand is never overwritten, even if it has the same name as a marketplace plugin; delete it and install the marketplace version to switch.
+- **One organization administers plugins.** Plugins are shared by every organization on an installation, so installing, updating, uploading, activating, deactivating and deleting them needs Manage Plugins in the plugin administrator organization: `INVENTOROS_PLUGIN_ADMIN_ORG`, or the first organization when unset. Single-organization installs are unaffected; on multi-organization installs, other organizations' admins can only browse plugins.
+- **Plugin pages always need sign-in.** A page registered with `register_page()` is always behind `auth`; a plugin's own `middleware` is added after it instead of replacing it. Pages under a reserved prefix (`api`, `portal`, `install`, `graphql`, `mcp`, `webhooks`, `plugins`, `plugin-assets`, the sign-in and password pages) or at a URI the app already uses are skipped and logged. Plugin author links are shown only for http(s) URLs, and marketplace icons only for https ones.
+
 ### Other behaviour changes
 
 - `/api/v1` accepts bearer tokens only. Browser sessions are not accepted there.
@@ -227,6 +233,9 @@ Plugins > Marketplace installs and updates plugins from inventoros.com. Every pa
 - **User management.** Users with `edit_users` or `delete_users` who are not admins get `403` when editing or deleting an admin, a manager, or anyone holding permissions they lack.
 - **Scheduled reports.** Recipients must hold `view_reports` and the view permission of the report's data source; others are rejected when saving and skipped when sending. Review existing schedules after upgrading.
 - **Exports.** A generated export can only be downloaded by the user who requested it, or by an admin.
+- **Purchase order totals.** Editing a purchase order always recomputes its total from subtotal, tax and shipping, including REST and GraphQL edits that change only shipping or tax. A PO whose new total reaches the approval threshold needs approval again before it can be sent, and a cleared tax or shipping is stored as 0.
+- **Spreadsheet imports.** Laravel Excel is now 4.x with PhpSpreadsheet 5.x (fixes CVE-2026-59933 and related advisories). Imports pick the CSV, XLSX or XLS reader from the file's detected content, not its name, and the file name must end in `.csv`, `.txt`, `.xlsx` or `.xls`. Custom code that implements Laravel Excel concerns must match the 4.x signatures (for example `ToCollection::collection(): void`).
+- **Shipments and warehouse access.** A user limited to some warehouses can only create shipments from those warehouses (web, REST and MCP return 403 otherwise).
 
 ### License
 

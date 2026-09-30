@@ -7,6 +7,7 @@ namespace App\Http\Controllers\Admin;
 use App\Exceptions\PluginHookFailed;
 use App\Http\Controllers\Controller;
 use App\Services\PluginService;
+use App\Support\PluginAdministration;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -47,6 +48,7 @@ class PluginController extends Controller
             'uploadsEnabled' => $this->pluginService->uploadsEnabled(),
             'activeTab' => 'installed',
             'marketplace' => null,
+            'canAdministerPlugins' => PluginAdministration::isAdministratorOrganization(request()->user()),
         ]);
     }
 

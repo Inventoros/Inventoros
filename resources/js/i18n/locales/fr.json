@@ -1071,6 +1071,7 @@
     "getStarted": "Commencez par téléverser votre premier plugin ci-dessus.",
     "uploadsDisabled": "Les envois de ZIP sont désactivés sur cette instance. Les plugins signés peuvent toujours être installés depuis la marketplace.",
     "browseMarketplace": "Parcourir la marketplace",
+    "managedElsewhere": "Les plugins sont partagés par toutes les organisations de cette installation : seule l'organisation administratrice des plugins peut les installer, les mettre à jour ou les supprimer.",
     "tabs": {
       "installed": "Installés",
       "marketplace": "Marketplace"

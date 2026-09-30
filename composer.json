@@ -18,7 +18,7 @@
         "laravel/mcp": "^0.7.0",
         "laravel/sanctum": "^4.0",
         "laravel/tinker": "^3.0",
-        "maatwebsite/excel": "^3.1",
+        "maatwebsite/excel": "^4.0.3",
         "picqer/php-barcode-generator": "^3.2",
         "pragmarx/google2fa-laravel": "^3.0",
         "rebing/graphql-laravel": "^9.0",

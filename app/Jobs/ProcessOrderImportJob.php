@@ -49,6 +49,9 @@ final class ProcessOrderImportJob implements ShouldQueue
         public string $path,
         public bool $historical,
         public bool $notifyIntegrations = true,
+        // Chosen from the detected upload content by the controller; null for
+        // jobs queued before this was recorded (the reader then follows the name).
+        public ?string $readerType = null,
     ) {}
 
     public function handle(): void
@@ -56,7 +59,7 @@ final class ProcessOrderImportJob implements ShouldQueue
         $importer = User::where('organization_id', $this->organizationId)->findOrFail($this->userId);
 
         $import = new OrdersImport($importer, $this->historical, $this->notifyIntegrations);
-        Excel::import($import, $this->path, $this->disk);
+        Excel::import($import, $this->path, $this->disk, $this->readerType);
 
         NotificationService::createImportCompleteNotification(
             $this->organizationId,

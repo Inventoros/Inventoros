@@ -81,7 +81,10 @@ final class PluginService
                     'description' => $manifest['description'] ?? '',
                     'version' => $manifest['version'] ?? '1.0.0',
                     'author' => $manifest['author'] ?? 'Unknown',
-                    'author_url' => $manifest['author_url'] ?? '',
+                    // Rendered as a link: only http(s), never javascript: or data:.
+                    'author_url' => is_string($manifest['author_url'] ?? null) && preg_match('#^https?://#i', $manifest['author_url']) === 1
+                        ? $manifest['author_url']
+                        : '',
                     'requires' => $manifest['requires'] ?? '1.0.0',
                     'requires_php' => $manifest['requires_php'] ?? null,
                     'has_runtime_ui' => is_array($manifest['ui'] ?? null),
@@ -533,6 +536,9 @@ final class PluginService
             @unlink($tempPath);
         }
 
+        // An uploaded plugin is local: the marketplace must never update it.
+        Plugin::where('slug', $result['slug'])->update(['source' => null]);
+
         return ['slug' => $result['slug'], 'path' => $result['path']];
     }
 
@@ -549,13 +555,14 @@ final class PluginService
      *
      * @param  string  $zipPath  Path to the ZIP on disk (left in place).
      * @param  string|null  $expectedSlug  When set, the archive's root folder must match.
+     * @param  string|null  $expectedVersion  When set (the version a marketplace signature covers), plugin.json must declare exactly this version.
      * @return array{slug: string, path: string, manifest: array<string, mixed>}
      *
      * @throws \RuntimeException When the archive is invalid, unsafe, already installed or unsupported.
      */
-    public function installFromZip(string $zipPath, ?string $expectedSlug = null): array
+    public function installFromZip(string $zipPath, ?string $expectedSlug = null, ?string $expectedVersion = null): array
     {
-        return $this->extractPluginArchive($zipPath, $this->pluginsPath, $expectedSlug);
+        return $this->extractPluginArchive($zipPath, $this->pluginsPath, $expectedSlug, $expectedVersion);
     }
 
     /**
@@ -572,7 +579,7 @@ final class PluginService
      *
      * @throws \RuntimeException When the package is invalid or the update was rolled back.
      */
-    public function replaceFromZip(string $zipPath, string $slug): array
+    public function replaceFromZip(string $zipPath, string $slug, ?string $expectedVersion = null): array
     {
         $this->assertSafeSlug($slug);
 
@@ -585,7 +592,7 @@ final class PluginService
         File::ensureDirectoryExists($staging);
 
         try {
-            $staged = $this->extractPluginArchive($zipPath, $staging, $slug);
+            $staged = $this->extractPluginArchive($zipPath, $staging, $slug, $expectedVersion);
 
             $wasActive = (bool) Plugin::where('slug', $slug)->value('is_active');
             $warning = null;
@@ -651,7 +658,7 @@ final class PluginService
      *
      * @return array{slug: string, path: string, manifest: array<string, mixed>}
      */
-    private function extractPluginArchive(string $zipPath, string $targetRoot, ?string $expectedSlug): array
+    private function extractPluginArchive(string $zipPath, string $targetRoot, ?string $expectedSlug, ?string $expectedVersion = null): array
     {
         $zip = new ZipArchive;
         if ($zip->open($zipPath) !== true) {
@@ -701,6 +708,12 @@ final class PluginService
         try {
             if (! is_array($manifest)) {
                 throw new \RuntimeException('Invalid plugin: plugin.json is not a JSON object');
+            }
+
+            if ($expectedVersion !== null && ($manifest['version'] ?? null) !== $expectedVersion) {
+                $declared = is_string($manifest['version'] ?? null) ? $manifest['version'] : 'no version';
+
+                throw new \RuntimeException("the package's plugin.json declares {$declared}, but it was signed as version {$expectedVersion}");
             }
 
             PluginRequirements::assertMet($manifest, is_string($manifest['name'] ?? null) ? $manifest['name'] : $rootFolder);
