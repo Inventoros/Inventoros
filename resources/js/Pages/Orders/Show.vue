@@ -165,15 +165,10 @@ const formatDate = (date) => {
     });
 };
 
-// For instants (payments, timestamps) the viewer's timezone applies.
-const formatDateShort = (date) => {
-    if (!date) return '-';
-    return new Date(date).toLocaleDateString('en-US', {
-        year: 'numeric',
-        month: 'short',
-        day: 'numeric'
-    });
-};
+// A payment is recorded on a day (stored as UTC midnight): format it as that
+// calendar day, not as an instant, or it shows a day early west of UTC.
+const formatPaymentDate = (date) =>
+    formatCalendarDate(date, { year: 'numeric', month: 'short', day: 'numeric' }, 'en-US');
 
 // order_date names a calendar day; formatting it as an instant showed the
 // day before for anyone west of UTC.
@@ -371,7 +366,7 @@ const formatOrderDate = (date, long = false) =>
                                             <Badge v-if="payment.voided_at" variant="neutral" size="sm">{{ t('payments.voided') }}</Badge>
                                         </div>
                                         <p class="text-xs text-text-tertiary">
-                                            {{ formatDateShort(payment.paid_at) }}
+                                            {{ formatPaymentDate(payment.paid_at) }}
                                             <template v-if="payment.reference"> · {{ payment.reference }}</template>
                                             <template v-if="payment.recorded_by"> · {{ t('payments.recordedBy', { name: payment.recorded_by.name }) }}</template>
                                         </p>
