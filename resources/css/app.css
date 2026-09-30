@@ -25,3 +25,61 @@
         background: rgba(148, 163, 184, 0.4);
     }
 }
+
+@layer components {
+    /*
+     * Top-strip breadcrumb (AppLayout wraps every page's #header slot in
+     * .app-breadcrumb). Crumbs never wrap; the current page truncates instead
+     * of running under the warehouse/language/theme controls. Below md only
+     * the current page shows: there is no room for the trail on a phone.
+     */
+    .app-breadcrumb > * {
+        flex-wrap: nowrap;
+        min-width: 0;
+    }
+    .app-breadcrumb > * > * {
+        flex-shrink: 0;
+        white-space: nowrap;
+    }
+    .app-breadcrumb > * > :last-child {
+        flex-shrink: 1;
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    @media (max-width: 767.98px) {
+        .app-breadcrumb > * > :not(:last-child) {
+            display: none;
+        }
+    }
+
+    /*
+     * Underlined tab bar (<nav class="ds-tabs">). Scrolls sideways when the
+     * tabs are wider than the screen instead of widening the page.
+     */
+    .ds-tabs {
+        display: flex;
+        overflow-x: auto;
+        overflow-y: hidden;
+        scrollbar-width: none;
+    }
+    .ds-tabs::-webkit-scrollbar {
+        display: none;
+    }
+    .ds-tabs > * {
+        flex-shrink: 0;
+        white-space: nowrap;
+    }
+}
+
+@layer utilities {
+    /*
+     * An absolutely positioned .sr-only label is placed against the nearest
+     * positioned ancestor, not against a table's overflow-x-auto wrapper, so
+     * one sitting in the last column of a wide table used to stretch the whole
+     * page sideways on a phone. Pinning it to the left edge keeps it inside.
+     */
+    .sr-only {
+        left: 0;
+    }
+}

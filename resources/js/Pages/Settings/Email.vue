@@ -35,7 +35,7 @@ const activeTab = ref('configuration');
 
         <!-- Tabs -->
         <div class="mt-6 border-b border-border-subtle">
-            <nav class="-mb-px flex gap-8">
+            <nav class="ds-tabs -mb-px gap-6 sm:gap-8">
                 <button
                     @click="activeTab = 'configuration'"
                     :class="[

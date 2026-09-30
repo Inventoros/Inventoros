@@ -207,10 +207,10 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-t
                                         :key="item.id"
                                         class="border-b border-border-subtle transition-colors last:border-b-0 hover:bg-surface-overlay"
                                     >
-                                        <td class="px-4 py-3 text-sm font-medium text-text-primary">
+                                        <td class="min-w-[12rem] px-4 py-3 text-sm font-medium text-text-primary">
                                             {{ item.product?.name || item.order_item?.product_name || 'Unknown Product' }}
                                         </td>
-                                        <td class="px-4 py-3 text-sm text-text-tertiary">
+                                        <td class="whitespace-nowrap px-4 py-3 text-sm text-text-tertiary">
                                             {{ item.product?.sku || item.order_item?.sku || '-' }}
                                         </td>
                                         <td class="px-4 py-3 text-center text-sm font-medium tabular-nums text-text-primary">

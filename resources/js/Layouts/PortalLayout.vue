@@ -64,7 +64,7 @@ const initials = computed(() =>
                         :key="item.name"
                         :href="route(item.name)"
                         :class="[
-                            'inline-flex h-8 items-center gap-1.5 rounded-md px-3 text-sm font-medium transition-colors ds-focus-ring',
+                            'inline-flex h-8 items-center gap-1.5 whitespace-nowrap rounded-md px-3 text-sm font-medium transition-colors ds-focus-ring',
                             isActive(item)
                                 ? 'bg-surface-overlay text-text-primary'
                                 : 'text-text-secondary hover:bg-surface-overlay hover:text-text-primary',
@@ -79,17 +79,20 @@ const initials = computed(() =>
                     <LanguageSwitcher />
                     <ThemeToggle />
                     <template v-if="contact">
-                        <div class="ml-2 hidden text-right md:block">
+                        <div class="ml-2 hidden text-right lg:block">
                             <p class="max-w-48 truncate text-xs font-medium text-text-primary">{{ contact.name }}</p>
                             <p v-if="contact.customer" class="max-w-48 truncate text-[11px] text-text-tertiary">{{ contact.customer }}</p>
                         </div>
                         <button
                             type="button"
-                            class="ml-1 hidden h-8 items-center gap-1.5 rounded-md px-2.5 text-sm text-text-secondary hover:bg-surface-overlay hover:text-text-primary ds-focus-ring md:inline-flex"
+                            class="ml-1 hidden h-8 items-center gap-1.5 whitespace-nowrap rounded-md px-2.5 text-sm text-text-secondary hover:bg-surface-overlay hover:text-text-primary ds-focus-ring md:inline-flex"
+                            :aria-label="t('portal.nav.signOut')"
+                            :title="t('portal.nav.signOut')"
                             @click="signOut"
                         >
                             <LogOut :size="15" />
-                            {{ t('portal.nav.signOut') }}
+                            <!-- Icon only at md: the nav plus a long (French) label overflowed a tablet. -->
+                            <span class="hidden lg:inline">{{ t('portal.nav.signOut') }}</span>
                         </button>
                         <button
                             type="button"

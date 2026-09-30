@@ -116,7 +116,7 @@ defineExpose({ closeDropdown });
 </script>
 
 <template>
-    <div class="relative">
+    <div class="sm:relative">
         <button
             @click="toggleNotifications"
             class="relative p-2 text-gray-500 hover:text-brand dark:text-slate-400 dark:hover:text-brand hover:bg-gray-100 dark:hover:bg-surface-raised rounded-lg transition"
@@ -137,7 +137,7 @@ defineExpose({ closeDropdown });
         <div
             v-show="notificationsOpen"
             @click.stop
-            class="absolute right-0 mt-2 w-96 bg-white dark:bg-surface-raised border border-gray-200 dark:border-border-subtle rounded-xl shadow-xl overflow-hidden z-50"
+            class="absolute inset-x-4 top-full mt-1 sm:inset-x-auto sm:right-0 sm:top-auto sm:mt-2 sm:w-96 bg-white dark:bg-surface-raised border border-gray-200 dark:border-border-subtle rounded-xl shadow-xl overflow-hidden z-50"
         >
             <!-- Header -->
             <div class="flex items-center justify-between px-4 py-3 border-b border-gray-100 dark:border-border-subtle">

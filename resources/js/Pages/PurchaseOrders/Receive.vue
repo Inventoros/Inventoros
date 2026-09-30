@@ -199,11 +199,11 @@ const thClassCenter = 'px-4 py-2.5 text-center text-xs font-medium tracking-tigh
                                     class="border-b border-border-subtle transition-colors last:border-b-0 hover:bg-surface-overlay"
                                     :class="{ 'bg-status-success-soft': item.remaining === 0 }"
                                 >
-                                    <td class="px-4 py-3 text-sm text-text-primary">
+                                    <td class="min-w-[12rem] px-4 py-3 text-sm text-text-primary">
                                         {{ item.product_name }}
                                         <span v-if="item.variant_title" class="block text-xs text-text-secondary">{{ t('orders.create.variant') }}: {{ item.variant_title }}</span>
                                     </td>
-                                    <td class="px-4 py-3 text-sm text-text-tertiary">
+                                    <td class="whitespace-nowrap px-4 py-3 text-sm text-text-tertiary">
                                         {{ item.sku || '-' }}
                                     </td>
                                     <td class="px-4 py-3 text-center text-sm tabular-nums text-text-primary">

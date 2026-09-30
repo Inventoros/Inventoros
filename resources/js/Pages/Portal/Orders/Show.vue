@@ -4,7 +4,7 @@ import PortalStatusBadge from '@/Components/Portal/PortalStatusBadge.vue';
 import PageHeader from '@/Components/ui/PageHeader.vue';
 import Card from '@/Components/ui/Card.vue';
 import Button from '@/Components/ui/Button.vue';
-import { formatDate, formatMoney } from '@/lib/portal';
+import { formatDate, formatDay, formatMoney } from '@/lib/portal';
 import { Head, Link } from '@inertiajs/vue3';
 import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
@@ -44,12 +44,12 @@ const paymentStatusLabel = computed(() => {
 });
 
 const progress = computed(() => [
-    { key: 'ordered', label: t('portal.order.ordered'), date: props.order.order_date, done: true },
+    { key: 'ordered', label: t('portal.order.ordered'), date: props.order.order_date, day: true, done: true },
     { key: 'shipped', label: t('portal.order.shipped'), date: props.order.shipped_at, done: ['shipped', 'delivered'].includes(props.order.status) || !!props.order.shipped_at },
     { key: 'delivered', label: t('portal.order.delivered'), date: props.order.delivered_at, done: props.order.status === 'delivered' || !!props.order.delivered_at },
 ]);
 
-const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-text-secondary';
+const thClass = 'px-3 sm:px-4 py-2.5 text-left text-xs font-medium tracking-tight text-text-secondary';
 </script>
 
 <template>
@@ -63,7 +63,7 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-t
             </Link>
         </div>
 
-        <PageHeader :title="t('portal.order.title', { number: order.order_number })" :description="formatDate(order.order_date)">
+        <PageHeader :title="t('portal.order.title', { number: order.order_number })" :description="formatDay(order.order_date)">
             <template #actions>
                 <PortalStatusBadge :status="order.status" />
                 <Button
@@ -99,23 +99,24 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-t
                                     <tr class="border-b border-border-subtle">
                                         <th :class="thClass">{{ t('portal.order.product') }}</th>
                                         <th :class="[thClass, 'text-right']">{{ t('portal.order.quantity') }}</th>
-                                        <th :class="[thClass, 'text-right']">{{ t('portal.order.unitPrice') }}</th>
+                                        <th :class="[thClass, 'hidden text-right sm:table-cell']">{{ t('portal.order.unitPrice') }}</th>
                                         <th :class="[thClass, 'text-right']">{{ t('portal.order.lineTotal') }}</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     <tr v-for="item in order.items" :key="item.id" class="border-b border-border-subtle last:border-b-0">
-                                        <td class="px-4 py-3">
+                                        <td class="px-3 py-3 sm:px-4">
                                             <div class="font-medium text-text-primary">{{ item.product_name }}</div>
+                                            <div class="text-xs tabular-nums text-text-secondary sm:hidden">{{ t('portal.order.unitPrice') }}: <span class="whitespace-nowrap">{{ money(item.unit_price) }}</span></div>
                                             <div class="text-xs text-text-tertiary">
                                                 {{ t('portal.order.sku') }} {{ item.sku }}
                                                 <span v-if="Number(item.discount_amount || 0) > 0"> · {{ t('portal.order.lineDiscount', { amount: money(item.discount_amount) }) }}</span>
                                                 <span v-if="item.returned_quantity > 0"> · {{ t('portal.order.returned', { count: item.returned_quantity }) }}</span>
                                             </div>
                                         </td>
-                                        <td class="px-4 py-3 text-right tabular-nums text-text-secondary">{{ item.quantity }}</td>
-                                        <td class="px-4 py-3 text-right tabular-nums text-text-secondary">{{ money(item.unit_price) }}</td>
-                                        <td class="px-4 py-3 text-right font-medium tabular-nums text-text-primary">{{ money(item.total) }}</td>
+                                        <td class="px-3 py-3 sm:px-4 text-right tabular-nums text-text-secondary">{{ item.quantity }}</td>
+                                        <td class="hidden px-3 py-3 sm:px-4 text-right tabular-nums text-text-secondary sm:table-cell">{{ money(item.unit_price) }}</td>
+                                        <td class="whitespace-nowrap px-3 py-3 sm:px-4 text-right font-medium tabular-nums text-text-primary">{{ money(item.total) }}</td>
                                     </tr>
                                 </tbody>
                             </table>
@@ -221,7 +222,7 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-t
                             <Circle v-else :size="18" class="mt-0.5 shrink-0 text-text-tertiary" />
                             <div>
                                 <p :class="['text-sm font-medium', step.done ? 'text-text-primary' : 'text-text-tertiary']">{{ step.label }}</p>
-                                <p v-if="step.date" class="text-xs text-text-tertiary">{{ formatDate(step.date) }}</p>
+                                <p v-if="step.date" class="text-xs text-text-tertiary">{{ step.day ? formatDay(step.date) : formatDate(step.date) }}</p>
                             </div>
                         </li>
                     </ol>
@@ -236,7 +237,7 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-t
                         <ul v-if="order.payments && order.payments.length" class="space-y-1.5">
                             <li v-for="payment in order.payments" :key="payment.id" class="flex justify-between gap-2 text-text-secondary">
                                 <span>
-                                    {{ formatDate(payment.paid_at) }}
+                                    {{ formatDay(payment.paid_at) }}
                                     <span class="text-text-tertiary">· {{ payment.type === 'refund' ? t('portal.order.refund') : payment.method_label }}</span>
                                 </span>
                                 <span class="tabular-nums">{{ payment.type === 'refund' ? '-' : '' }}{{ money(payment.amount) }}</span>

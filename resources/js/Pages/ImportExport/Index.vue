@@ -206,7 +206,7 @@ const code = 'rounded bg-surface-overlay px-1 py-0.5 font-mono text-xs text-text
 
             <!-- Tabs -->
             <div class="mt-6 border-b border-border-subtle">
-                <nav class="-mb-px flex gap-8" role="tablist">
+                <nav class="ds-tabs -mb-px gap-6 sm:gap-8" role="tablist">
                     <button
                         v-for="tab in tabs"
                         :key="tab.key"

@@ -4,7 +4,7 @@ import PortalStatusBadge from '@/Components/Portal/PortalStatusBadge.vue';
 import PageHeader from '@/Components/ui/PageHeader.vue';
 import Card from '@/Components/ui/Card.vue';
 import StatTile from '@/Components/ui/StatTile.vue';
-import { formatDate, formatMoney } from '@/lib/portal';
+import { formatDate, formatDay, formatMoney } from '@/lib/portal';
 import { Head, Link, usePage } from '@inertiajs/vue3';
 import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
@@ -75,7 +75,7 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-t
                                         {{ order.order_number }}
                                     </Link>
                                 </td>
-                                <td class="px-4 py-3 text-text-tertiary">{{ formatDate(order.order_date) }}</td>
+                                <td class="px-4 py-3 text-text-tertiary">{{ formatDay(order.order_date) }}</td>
                                 <td class="px-4 py-3"><PortalStatusBadge :status="order.status" /></td>
                                 <td class="px-4 py-3 text-right font-medium tabular-nums text-text-primary">
                                     {{ formatMoney(order.total, order.currency) }}
