@@ -90,7 +90,7 @@ final class ReorderService
             $quantity = (int) $product->reorder_quantity;
         } else {
             $target = $product->max_stock ?? $product->reorder_point ?? $product->min_stock ?? 0;
-            $quantity = (int) $target - (int) $product->stock;
+            $quantity = (int) $target - $product->total_stock;
         }
 
         $quantity = max(1, $quantity);

@@ -51,6 +51,8 @@ class ProductController extends Controller
         // Hook: Allow plugins to modify the product query
         $query = Product::with(['category', 'location'])
             ->forOrganization($organizationId)
+            // A product sold by variant shows the sum of its variants' stock.
+            ->withEffectiveStock()
             ->when($activeWarehouseId, function ($query, $warehouseId) {
                 $query->whereHas('location', function ($q) use ($warehouseId) {
                     $q->where('warehouse_id', $warehouseId);

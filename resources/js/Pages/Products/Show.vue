@@ -21,6 +21,7 @@ import ImageGallery from '@/Components/ImageGallery.vue';
 import { usePermissions } from '@/composables/usePermissions';
 import { formatMoney } from '@/lib/money';
 import { displayDate, displayDateTime } from '@/lib/dates';
+import { onHandStock, stockStatus as stockStatusOf, stockValue } from '@/lib/productStock';
 import {
     Boxes,
     DollarSign,
@@ -78,17 +79,17 @@ const formatCurrency = (value) => {
     return formatMoney(value, props.product.currency);
 };
 
-const getStockStatus = () => {
-    if (props.product.stock <= 0) {
-        return { text: t('products.show.outOfStock'), variant: 'danger' };
-    }
-    if (props.product.stock <= props.product.min_stock) {
-        return { text: t('products.show.lowStock'), variant: 'warning' };
-    }
-    return { text: t('products.show.inStock'), variant: 'success' };
-};
+// A product sold by variant keeps its stock on the variants: these read the
+// active variants (and follow edits made in the variant table).
+const onHand = computed(() => onHandStock(props.product, variants.value));
+const valueAtPrice = computed(() => stockValue(props.product, variants.value, 'price'));
+const valueAtCost = computed(() => stockValue(props.product, variants.value, 'purchase_price'));
 
-const stockStatus = getStockStatus();
+const stockStatus = computed(() => ({
+    out_of_stock: { text: t('products.show.outOfStock'), variant: 'danger' },
+    low_stock: { text: t('products.show.lowStock'), variant: 'warning' },
+    in_stock: { text: t('products.show.inStock'), variant: 'success' },
+}[stockStatusOf(props.product, variants.value)]));
 
 // Supplier links, primary first
 const productSuppliers = computed(() =>
@@ -322,7 +323,7 @@ const fieldInput = 'h-9 w-full rounded-md border border-border-subtle bg-surface
             <section class="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
                 <StatTile
                     :label="t('products.show.currentStock')"
-                    :value="product.stock"
+                    :value="onHand"
                     :hint="t('products.show.minHint', { count: product.min_stock })"
                     icon-tone="brand"
                 >
@@ -338,7 +339,7 @@ const fieldInput = 'h-9 w-full rounded-md border border-border-subtle bg-surface
                 </StatTile>
                 <StatTile
                     :label="t('products.show.totalValue')"
-                    :value="formatCurrency(product.price * product.stock)"
+                    :value="formatCurrency(valueAtPrice)"
                     :hint="t('products.show.stockAtPrice')"
                     icon-tone="violet"
                 >
@@ -451,7 +452,7 @@ const fieldInput = 'h-9 w-full rounded-md border border-border-subtle bg-surface
                                 <div>
                                     <h4 class="mb-1 text-xs font-medium text-status-success">{{ t('products.show.totalProfitInStock') }}</h4>
                                     <p class="text-lg font-bold tabular-nums text-status-success">
-                                        {{ formatCurrency((product.price - product.purchase_price) * product.stock) }}
+                                        {{ formatCurrency(valueAtPrice - valueAtCost) }}
                                     </p>
                                 </div>
                             </div>
@@ -873,9 +874,9 @@ const fieldInput = 'h-9 w-full rounded-md border border-border-subtle bg-surface
                                     <p class="mb-1 text-sm text-text-tertiary">{{ t('products.show.currentStock') }}</p>
                                     <p
                                         class="text-3xl font-bold tabular-nums"
-                                        :class="product.stock <= product.min_stock ? 'text-status-danger' : 'text-brand'"
+                                        :class="onHand <= product.min_stock ? 'text-status-danger' : 'text-brand'"
                                     >
-                                        {{ product.stock }}
+                                        {{ onHand }}
                                     </p>
                                 </div>
                                 <div class="grid grid-cols-2 gap-3">
@@ -895,7 +896,7 @@ const fieldInput = 'h-9 w-full rounded-md border border-border-subtle bg-surface
                                 <div class="rounded-lg border border-status-success/20 bg-status-success-soft p-3">
                                     <p class="mb-1 text-xs text-text-tertiary">{{ t('products.show.totalValue') }}</p>
                                     <p class="text-xl font-bold tabular-nums text-status-success">
-                                        {{ formatCurrency(product.price * product.stock) }}
+                                        {{ formatCurrency(valueAtPrice) }}
                                     </p>
                                 </div>
                             </div>

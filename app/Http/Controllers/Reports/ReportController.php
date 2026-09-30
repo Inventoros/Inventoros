@@ -83,13 +83,15 @@ class ReportController extends Controller
         // by_currency lists every currency (that one first).
         $currency = Organization::currencyFor($organizationId);
         $byCurrency = CurrencyTotals::breakdown(
+            // A product sold by variant counts its active variants, each at
+            // its own price and cost.
             $base()->groupBy('currency')->selectRaw('
                 currency,
                 COUNT(*) as items,
-                COALESCE(SUM(stock), 0) as quantity,
-                COALESCE(SUM(stock * price), 0) as stock_value,
-                COALESCE(SUM(stock * COALESCE(purchase_price, 0)), 0) as cost_value,
-                COALESCE(SUM(stock * (price - COALESCE(purchase_price, 0))), 0) as profit_potential
+                COALESCE(SUM('.Product::effectiveStockSql().'), 0) as quantity,
+                COALESCE(SUM('.Product::stockValueSql('price').'), 0) as stock_value,
+                COALESCE(SUM('.Product::stockValueSql('purchase_price').'), 0) as cost_value,
+                COALESCE(SUM('.Product::stockValueSql('price').' - '.Product::stockValueSql('purchase_price').'), 0) as profit_potential
             ')->get(),
             $currency,
             ['stock_value', 'cost_value', 'profit_potential'],
@@ -110,10 +112,11 @@ class ReportController extends Controller
             ->leftJoin('product_categories', 'product_categories.id', '=', 'products.category_id')
             ->leftJoin('product_locations', 'product_locations.id', '=', 'products.location_id')
             ->selectRaw('
-                products.id, products.name, products.sku, products.stock, products.price, products.purchase_price,
+                products.id, products.name, products.sku, '.Product::effectiveStockSql().' as stock, products.price, products.purchase_price,
                 products.currency,
                 product_categories.name as category, product_locations.name as location,
-                (products.stock * products.price) as stock_value
+                '.Product::stockValueSql('price').' as stock_value,
+                '.Product::stockValueSql('purchase_price').' as cost_value
             ')
             ->orderByDesc('stock_value')
             ->orderBy('products.id')
@@ -135,9 +138,11 @@ class ReportController extends Controller
                     'currency' => filled($product->currency) ? strtoupper(trim((string) $product->currency)) : $currency,
                     'price' => $price,
                     'purchase_price' => $cost,
-                    'stock_value' => round($stock * $price, 2),
-                    'cost_value' => round($stock * $cost, 2),
-                    'profit_potential' => round($stock * ($price - $cost), 2),
+                    // Values come from the query: a variant product's
+                    // variants each count at their own price and cost.
+                    'stock_value' => round((float) $product->stock_value, 2),
+                    'cost_value' => round((float) $product->cost_value, 2),
+                    'profit_potential' => round((float) $product->stock_value - (float) $product->cost_value, 2),
                 ];
             });
 
@@ -152,8 +157,8 @@ class ReportController extends Controller
                 product_categories.name as category,
                 products.currency as currency,
                 COUNT(*) as items,
-                COALESCE(SUM(products.stock), 0) as quantity,
-                COALESCE(SUM(products.stock * products.price), 0) as value
+                COALESCE(SUM('.Product::effectiveStockSql().'), 0) as quantity,
+                COALESCE(SUM('.Product::stockValueSql('price').'), 0) as value
             ')
             ->get()
             ->map(fn ($row) => [
@@ -573,9 +578,13 @@ class ReportController extends Controller
             ->where('is_active', true)
             // Low in total, or low in a warehouse with its own minimum.
             ->lowStock()
-            ->orderBy('stock', 'asc')
+            ->withEffectiveStock()
+            ->orderBy('effective_stock', 'asc')
             ->get()
             ->map(function ($product) use ($reorder) {
+                // A product sold by variant counts its active variants.
+                $stock = $product->total_stock;
+
                 $primarySupplier = $reorder->primarySupplier($product);
 
                 return [
@@ -584,11 +593,11 @@ class ReportController extends Controller
                     'sku' => $product->sku,
                     'category' => $product->category?->name,
                     'location' => $product->location?->name,
-                    'current_stock' => $product->stock,
+                    'current_stock' => $stock,
                     'min_stock' => $product->min_stock,
                     'max_stock' => $product->max_stock,
-                    'deficit' => max(0, $product->min_stock - $product->stock),
-                    'status' => $product->stock <= 0 ? 'out_of_stock' : 'low_stock',
+                    'deficit' => max(0, $product->min_stock - $stock),
+                    'status' => $stock <= 0 ? 'out_of_stock' : 'low_stock',
                     'price' => $product->price,
                     'supplier' => $primarySupplier?->name,
                     'supplier_id' => $primarySupplier?->id,
@@ -596,7 +605,7 @@ class ReportController extends Controller
                     // Reorder up to max_stock; fall back to reorder_point /
                     // min_stock when it's null, and never let a null or
                     // already-satisfied target produce a negative cost.
-                    'reorder_cost' => max(0, ($product->max_stock ?? $product->reorder_point ?? $product->min_stock ?? 0) - $product->stock)
+                    'reorder_cost' => max(0, ($product->max_stock ?? $product->reorder_point ?? $product->min_stock ?? 0) - $stock)
                         * ($product->purchase_price ?? $product->price),
                 ];
             });
@@ -655,9 +664,9 @@ class ReportController extends Controller
                 product_categories.name as category_name,
                 products.currency as currency,
                 COUNT(*) as product_count,
-                COALESCE(SUM(products.stock), 0) as total_stock,
-                COALESCE(SUM(products.stock * products.price), 0) as total_value,
-                SUM(CASE WHEN products.stock <= products.min_stock THEN 1 ELSE 0 END) as low_stock_items
+                COALESCE(SUM('.Product::effectiveStockSql().'), 0) as total_stock,
+                COALESCE(SUM('.Product::stockValueSql('price').'), 0) as total_value,
+                SUM(CASE WHEN '.Product::effectiveStockSql().' <= products.min_stock THEN 1 ELSE 0 END) as low_stock_items
             ')
             ->get()
             ->map(fn ($row) => [

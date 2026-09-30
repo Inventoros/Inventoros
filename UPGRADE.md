@@ -248,6 +248,7 @@ Plugins > Marketplace installs and updates plugins from inventoros.com. Every pa
 - **Shipments and warehouse access.** A user limited to some warehouses can only create shipments from those warehouses (web, REST and MCP return 403 otherwise).
 - **Warehouse permissions.** The web warehouse pages check `create_warehouses`, `edit_warehouses` and `delete_warehouses` for creating, editing and deleting, as the REST API already did. Before, `view_warehouses` alone allowed all three. Grant those permissions to any custom role that should keep managing warehouses.
 - **Database errors.** A database error during a web, REST or GraphQL action is logged and answered with the standard error page or an HTTP 500, instead of showing its SQL in a message or returning it in a 422. REST clients that treated every 422 from receiving, transfers, audits, work orders or order actions as a business refusal now see real failures as 500s.
+- **Products sold by variant.** Their stock is the sum of their active variants' stock wherever stock is shown, valued or compared with `min_stock` and `reorder_point` (dashboard, reports, reorder suggestions, low-stock filters). `products.stock` itself is unchanged, and the REST and GraphQL `stock` field still returns it; read `total_stock` for the figure the app shows.
 
 ### License
 

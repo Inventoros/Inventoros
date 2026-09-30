@@ -324,7 +324,7 @@ const secondaryStats = () => [
                                         {{ product.category?.name }} <span v-if="product.location">· {{ product.location?.name }}</span>
                                     </p>
                                 </div>
-                                <Badge variant="danger" size="sm" dot>{{ product.stock }} / {{ product.min_stock }}</Badge>
+                                <Badge variant="danger" size="sm" dot>{{ product.effective_stock ?? product.stock }} / {{ product.min_stock }}</Badge>
                             </Link>
                         </li>
                     </ul>

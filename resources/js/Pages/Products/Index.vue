@@ -143,7 +143,9 @@ const deleteProduct = (product) => {
     }
 };
 
-const isLowStock = (product) => product.stock <= product.min_stock;
+// A product sold by variant shows the sum of its active variants' stock.
+const onHand = (product) => product.effective_stock ?? product.stock;
+const isLowStock = (product) => onHand(product) <= product.min_stock;
 
 const bulkDelete = () => {
     if (!confirm(t('products.index.confirmBulkDelete', { count: selectedProducts.value.length }, selectedProducts.value.length))) return;
@@ -322,7 +324,7 @@ const thClass =
                         <td class="px-4 py-3"><Badge variant="neutral" size="sm">{{ product.location?.name || t('common.na') }}</Badge></td>
                         <td class="px-4 py-3">
                             <div class="flex items-center gap-1">
-                                <span :class="['font-medium tabular-nums', isLowStock(product) ? 'text-status-danger' : 'text-text-primary']">{{ product.stock }}</span>
+                                <span :class="['font-medium tabular-nums', isLowStock(product) ? 'text-status-danger' : 'text-text-primary']">{{ onHand(product) }}</span>
                                 <AlertTriangle v-if="isLowStock(product)" :size="14" class="text-status-danger" />
                             </div>
                             <p class="text-[11px] text-text-tertiary">{{ t('products.min', { count: product.min_stock }) }}</p>

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Services\Reports;
 
 use App\Models\Auth\Organization;
+use App\Models\Inventory\Product;
 use App\Support\CurrencyTotals;
 use Carbon\CarbonImmutable;
 use Carbon\CarbonInterface;
@@ -146,7 +147,8 @@ class InventoryAnalyticsService
             ->where('products.organization_id', $organizationId)
             ->whereNull('products.deleted_at')
             ->where('products.is_active', true)
-            ->where('products.stock', '>', 0)
+            // A product sold by variant counts its active variants' stock.
+            ->whereRaw(Product::effectiveStockSql().' > 0')
             ->where('products.created_at', '<=', $cutoff)
             ->selectRaw('
                 products.id,
@@ -154,10 +156,10 @@ class InventoryAnalyticsService
                 products.sku,
                 product_categories.name as category,
                 product_locations.name as location,
-                products.stock,
+                '.Product::effectiveStockSql().' as stock,
                 products.purchase_price,
                 products.currency,
-                (products.stock * COALESCE(products.purchase_price, 0)) as tied_up_value,
+                '.Product::stockValueSql('purchase_price').' as tied_up_value,
                 ls.last_sale_at,
                 lo.last_outbound_at
             ');
