@@ -49,7 +49,7 @@ class PortalOrderController extends PortalController
     {
         $contact = $this->contact($request);
         $order = $this->findOrder($contact, $order);
-        $order->load('items.variant');
+        $order->load(['items' => fn ($query) => $query->orderBy('id'), 'items.variant']);
 
         $returned = $returnsService->returnedQuantities($order);
         $items = $order->items->map(fn (OrderItem $item) => $this->lineSummary($item, (int) $returned->get($item->id, 0)))->values();

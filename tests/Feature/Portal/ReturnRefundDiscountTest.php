@@ -58,7 +58,7 @@ class ReturnRefundDiscountTest extends TestCase
             'total' => 108,
         ])->save();
 
-        return [$org, $contact, $order->fresh('items')];
+        return [$org, $contact, $order->fresh()->load(['items' => fn ($q) => $q->orderBy('id')])];
     }
 
     public function test_portal_return_refunds_the_discounted_price_paid(): void
