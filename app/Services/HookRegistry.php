@@ -130,7 +130,7 @@ final class HookRegistry
                 'example' => "add_action('stock_adjusted', function (\$stock_adjustment, \$product) { /* ... */ });",
             ],
             'low_stock_alert' => [
-                'description' => 'Fired when product stock drops to or below its minimum',
+                'description' => 'Fired when product stock drops to or below its minimum (for a product sold by variant, the sum of its active variants)',
                 'parameters' => ['$product'],
                 'example' => "add_action('low_stock_alert', function (\$product) { /* ... */ });",
             ],
@@ -138,6 +138,11 @@ final class HookRegistry
                 'description' => 'Fired when product stock reaches zero',
                 'parameters' => ['$product'],
                 'example' => "add_action('out_of_stock_alert', function (\$product) { /* ... */ });",
+            ],
+            'variant_low_stock_alert' => [
+                'description' => 'Fired when a variant with its own minimum stock drops to or below it (variants without one count toward the product low_stock_alert)',
+                'parameters' => ['$variant'],
+                'example' => "add_action('variant_low_stock_alert', function (\$variant) { /* ... */ });",
             ],
             'warehouse_low_stock_alert' => [
                 'description' => 'Fired when a product\'s on-hand quantity in one warehouse drops to or below its minimum stock level for that warehouse',
