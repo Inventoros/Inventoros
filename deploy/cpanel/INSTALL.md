@@ -49,6 +49,13 @@ real folder.
    ```
    Set `APP_PUBLIC_PATH=../public_html` (the web installer does this for
    you) so command-line tasks write to the same web root the site serves.
+   For a live site set `APP_ENV=production` and `APP_DEBUG=false`.
+
+   Using the web installer instead? Leave the database lines as shipped,
+   run step 4, then open `https://yourdomain.com/install` (skip step 5).
+   It writes the database settings you enter to `.env`, creates the
+   tables in that database, and when it finishes sets `APP_ENV=production`
+   and `APP_DEBUG=false`.
 
 4. **Generate Application Key**
    ```bash

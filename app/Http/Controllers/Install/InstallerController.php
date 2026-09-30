@@ -433,11 +433,17 @@ class InstallerController extends Controller
             SystemSetting::set('installed_at', now()->toDateTimeString(), 'string', 'Installation date');
             SystemSetting::set('app_version', config('app.version', '0.1.0'), 'string', 'Application version');
 
-            // Switch back to database sessions now that tables exist
+            // Switch back to database sessions now that tables exist, and
+            // leave the development defaults of .env.example: in debug mode
+            // every error page shows a stack trace (paths, queries, settings)
+            // to whoever hit it. APP_URL and SESSION_SECURE_COOKIE (set on
+            // the database step) are left as they are.
             $this->updateEnvFile([
                 'SESSION_DRIVER' => 'database',
                 'CACHE_STORE' => 'database',
                 'QUEUE_CONNECTION' => 'database',
+                'APP_ENV' => 'production',
+                'APP_DEBUG' => 'false',
             ]);
 
             DB::commit();
