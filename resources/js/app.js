@@ -6,6 +6,7 @@ import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
 import { createApp, h } from 'vue';
 import { ZiggyVue } from 'ziggy-js';
 import i18n, { applyServerLocale } from './i18n';
+import { applyRegionalProp } from './lib/formatSettings';
 import { installPluginRuntime, loadPluginAssets, resolveRuntimePage } from './plugins/runtime';
 
 const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
@@ -53,6 +54,10 @@ createInertiaApp({
         // visit that changed it (saving the language preference).
         applyServerLocale(props.initialPage?.props?.locale);
         router.on('navigate', (event) => applyServerLocale(event.detail.page.props.locale));
+
+        // Money and dates follow the organization's regional settings.
+        applyRegionalProp(props.initialPage?.props?.regional);
+        router.on('navigate', (event) => applyRegionalProp(event.detail.page.props.regional));
 
         // Import the UI bundles of active plugins, and any newly activated one.
         loadPluginAssets(props.initialPage?.props?.pluginAssets);

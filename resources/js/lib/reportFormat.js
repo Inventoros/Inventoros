@@ -1,11 +1,13 @@
 import { formatCalendarDate, formatDateValue, formatInstantDate } from './dates.js';
-import { formatMoney } from './money.js';
+import { formatLocale } from './formatSettings.js';
+import { formatMoney, formatNumber as formatPlainNumber } from './money.js';
 
 // Shared number formatting for the report pages. Figures come from the
-// server already rounded, so these only present them. Money goes through the
-// app's one formatter (lib/money) in the currency given, USD when none is.
+// server already rounded, so these only present them, in the active UI
+// locale. Money goes through the app's one formatter (lib/money) in the
+// currency given, the organization's when none is.
 
-export const formatCurrency = (value, currency = 'USD') => formatMoney(value, currency, 'en-US');
+export const formatCurrency = (value, currency = undefined) => formatMoney(value, currency);
 
 // "Plus EUR 10.00, USD 50.00": the totals in currencies other than `base`,
 // listed beside a headline figure instead of being added into it.
@@ -15,16 +17,22 @@ export const otherCurrencyTotals = (values, base) =>
         .map((row) => formatCurrency(row.amount, row.currency))
         .join(', ');
 
-export const formatNumber = (value) => new Intl.NumberFormat('en-US').format(Number(value) || 0);
+export const formatNumber = (value) => formatPlainNumber(value);
+
+// Percentages arrive as 12.5 for 12.5%, one decimal.
+const percent = (value, signDisplay) =>
+    new Intl.NumberFormat(formatLocale(), {
+        style: 'percent',
+        minimumFractionDigits: 1,
+        maximumFractionDigits: 1,
+        signDisplay,
+    }).format((Number(value) || 0) / 100);
 
 export const formatPercent = (value) =>
-    value === null || value === undefined ? '-' : `${Number(value).toFixed(1)}%`;
+    value === null || value === undefined ? '-' : percent(value, 'auto');
 
-export const formatDelta = (value) => {
-    if (value === null || value === undefined) return '-';
-    const n = Number(value);
-    return `${n > 0 ? '+' : ''}${n.toFixed(1)}%`;
-};
+export const formatDelta = (value) =>
+    value === null || value === undefined ? '-' : percent(value, 'exceptZero');
 
 export const deltaTone = (value) => {
     if (value === null || value === undefined || Number(value) === 0) return 'neutral';

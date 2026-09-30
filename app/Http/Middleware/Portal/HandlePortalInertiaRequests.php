@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Http\Middleware\Portal;
 
+use App\Http\Middleware\HandleInertiaRequests;
+use App\Models\Auth\Organization;
 use App\Models\CustomerContact;
 use App\Support\Portal\PortalContext;
 use Closure;
@@ -51,6 +53,7 @@ final class HandlePortalInertiaRequests extends Middleware
                 'permissions' => [],
             ],
             'locale' => app()->getLocale(),
+            'regional' => HandleInertiaRequests::regional($organization instanceof Organization ? $organization : null),
             'flash' => [
                 'success' => $request->session()->get('success'),
                 'error' => $request->session()->get('error'),

@@ -34,3 +34,24 @@ test('otherCurrencyTotals lists the other currencies without adding them to the 
     assert.equal(otherCurrencyTotals([{ currency: 'CAD', amount: 1 }], 'CAD'), '');
     assert.equal(otherCurrencyTotals(undefined, 'CAD'), '');
 });
+
+test('report figures follow the active UI locale and the organization currency', async () => {
+    const { applyFormatSettings } = await import('../../resources/js/lib/formatSettings.js');
+    const { formatNumber, formatPercent, formatDelta } = await import('../../resources/js/lib/reportFormat.js');
+    const plain = (s) => s.replace(/[\u202f\u00a0]/g, ' ');
+    try {
+        applyFormatSettings({ locale: 'de', currency: 'EUR' });
+        assert.equal(plain(formatCurrency(1234.5)), '1.234,50 €');
+        assert.equal(formatNumber(12345), '12.345');
+        assert.equal(plain(formatPercent(12.5)), '12,5 %');
+        assert.equal(plain(formatDelta(-3.25)), '-3,3 %');
+        applyFormatSettings({ locale: 'fr' });
+        assert.equal(plain(formatPercent(12.5)), '12,5 %');
+        applyFormatSettings({ locale: 'en' });
+        assert.equal(formatPercent(12.5), '12.5%');
+        assert.equal(formatDelta(3.25), '+3.3%');
+        assert.equal(formatPercent(null), '-');
+    } finally {
+        applyFormatSettings({ locale: 'en', currency: 'USD', dateFormat: null });
+    }
+});
