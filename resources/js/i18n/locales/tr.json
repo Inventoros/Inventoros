@@ -1,4 +1,8 @@
 {
+  "auditLabels": {
+    "notCounted": "Sayılmadı",
+    "never": "Hiç"
+  },
   "salesUnits": {
     "sold": "{count} birim satıldı | {count} birim satıldı"
   },

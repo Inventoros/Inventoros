@@ -23,6 +23,7 @@ import {
     ScanLine,
 } from 'lucide-vue-next';
 import { usePermissions } from '@/composables/usePermissions';
+import { auditItemStatus } from '@/lib/auditItemStatus';
 
 const { canVisit } = usePermissions();
 
@@ -68,6 +69,7 @@ const itemStatusVariant = (status) =>
     }[status] || 'neutral');
 
 const getItemStatusLabel = (status) => {
+    if (status === 'not_counted') return t('auditLabels.notCounted');
     const labels = {
         'pending': t('stockAudits.itemStatuses.pending'),
         'counted': t('stockAudits.itemStatuses.counted'),
@@ -483,8 +485,8 @@ const thClass = 'px-6 py-3 text-left text-xs font-medium uppercase tracking-wide
                                     {{ getDiscrepancyText(item) }}
                                 </td>
                                 <td class="whitespace-nowrap px-6 py-4">
-                                    <Badge :variant="itemStatusVariant(item.status)" size="sm">
-                                        {{ getItemStatusLabel(item.status) }}
+                                    <Badge :variant="itemStatusVariant(auditItemStatus(item.status, audit.status))" size="sm">
+                                        {{ getItemStatusLabel(auditItemStatus(item.status, audit.status)) }}
                                     </Badge>
                                 </td>
                                 <td class="whitespace-nowrap px-6 py-4 text-sm text-text-secondary">

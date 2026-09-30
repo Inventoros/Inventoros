@@ -1,4 +1,8 @@
 {
+  "auditLabels": {
+    "notCounted": "未盘点",
+    "never": "从未"
+  },
   "salesUnits": {
     "sold": "已售 {count} 件 | 已售 {count} 件"
   },

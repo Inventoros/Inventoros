@@ -1,4 +1,8 @@
 {
+  "auditLabels": {
+    "notCounted": "미집계",
+    "never": "없음"
+  },
   "salesUnits": {
     "sold": "{count}개 판매 | {count}개 판매"
   },

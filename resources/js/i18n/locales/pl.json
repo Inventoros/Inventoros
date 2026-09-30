@@ -1,4 +1,8 @@
 {
+  "auditLabels": {
+    "notCounted": "Nie policzono",
+    "never": "Nigdy"
+  },
   "salesUnits": {
     "sold": "{count} sprzedana jednostka | {count} sprzedanych jednostek"
   },

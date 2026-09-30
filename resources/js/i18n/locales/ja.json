@@ -1,4 +1,8 @@
 {
+  "auditLabels": {
+    "notCounted": "未カウント",
+    "never": "なし"
+  },
   "salesUnits": {
     "sold": "{count}個販売 | {count}個販売"
   },

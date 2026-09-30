@@ -1,4 +1,8 @@
 {
+  "auditLabels": {
+    "notCounted": "لم يُعدّ",
+    "never": "أبدًا"
+  },
   "salesUnits": {
     "sold": "بيعت {count} وحدة | بيعت {count} وحدات"
   },

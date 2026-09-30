@@ -98,7 +98,7 @@ const destroy = (schedule) => {
                                     <Link v-if="schedule.last_audit" :href="route('stock-audits.show', schedule.last_audit.id)" class="text-brand hover:underline">
                                         {{ schedule.last_audit.audit_number }}
                                     </Link>
-                                    <span v-else>-</span>
+                                    <span v-else>{{ t('auditLabels.never') }}</span>
                                     <span v-if="schedule.last_run_at"> ({{ formatDate(schedule.last_run_at) }})</span>
                                 </dd>
                             </div>
