@@ -240,6 +240,26 @@ class UntrackedPaymentStatusTest extends TestCase
             );
     }
 
+    /**
+     * The "Mark older orders paid" date defaulted to today, which left out
+     * the orders placed today although the dialog counted them. It now
+     * defaults to the day after the latest untracked order, and the count
+     * leaves out cancelled orders, which the action skips.
+     */
+    public function test_the_mark_paid_date_defaults_to_the_day_after_the_latest_untracked_order(): void
+    {
+        $this->legacyOrder('OLD-1', '2026-01-10');
+        $this->legacyOrder('OLD-2', now()->toDateString());
+        $this->legacyOrder('OLD-3', now()->addDays(3)->toDateString(), 50, 'cancelled');
+
+        $this->actingAs($this->admin)->get(route('orders.index'))
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('untrackedOrderCount', 2)
+                ->where('markPaidBefore', now()->addDay()->toDateString())
+                ->etc()
+            );
+    }
+
     // ------------------------------------------------------------ bulk action
 
     public function test_mark_before_date_as_paid_records_a_reconciling_payment(): void

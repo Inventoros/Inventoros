@@ -30,12 +30,14 @@ const props = defineProps({
     paymentStatuses: { type: Array, default: () => [] },
     canRecordPayments: Boolean,
     untrackedOrderCount: { type: Number, default: 0 },
+    // The day after the latest untracked order, so the default date covers them all.
+    markPaidBefore: { type: String, default: null },
     pluginComponents: Object,
 });
 
 // Orders placed before payment tracking can be marked paid in bulk.
 const showMarkPaidModal = ref(false);
-const markPaidForm = useForm({ before: todayIsoDate() });
+const markPaidForm = useForm({ before: props.markPaidBefore || todayIsoDate() });
 const submitMarkPaid = () => {
     markPaidForm.post(route('orders.payments.mark-pre-tracking-paid'), {
         preserveScroll: true,

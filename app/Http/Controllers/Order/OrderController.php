@@ -93,6 +93,19 @@ class OrderController extends Controller
         // frontend pager depends on.
         $orders->through(fn (Order $order) => (new OrderResource($order))->resolve($request));
 
+        // Orders from before payment tracking, offered a bulk "mark paid":
+        // how many (cancelled ones are skipped by the action, so not
+        // counted) and the day after the latest, the default "placed
+        // before" date that includes every one of them.
+        $untracked = $canViewPayments
+            ? Order::where('organization_id', $request->user()->organization_id)
+                ->where('payment_status', PaymentStatus::UNTRACKED->value)
+                ->where('status', '!=', OrderStatus::CANCELLED->value)
+                ->toBase()
+                ->selectRaw('COUNT(*) as count, MAX(order_date) as latest')
+                ->first()
+            : null;
+
         $activeWarehouse = $activeWarehouseId
             ? Warehouse::find($activeWarehouseId)
             : null;
@@ -104,12 +117,10 @@ class OrderController extends Controller
             'canViewPayments' => $canViewPayments,
             'paymentStatuses' => $canViewPayments ? PaymentStatus::values() : [],
             'canRecordPayments' => $request->user()->hasPermission(Permission::RECORD_PAYMENTS),
-            // Orders from before payment tracking, offered a bulk "mark paid".
-            'untrackedOrderCount' => $canViewPayments
-                ? Order::where('organization_id', $request->user()->organization_id)
-                    ->where('payment_status', PaymentStatus::UNTRACKED->value)
-                    ->count()
-                : 0,
+            'untrackedOrderCount' => (int) ($untracked->count ?? 0),
+            'markPaidBefore' => filled($untracked->latest ?? null)
+                ? \Illuminate\Support\Carbon::parse($untracked->latest)->addDay()->toDateString()
+                : null,
             'sources' => ['manual', 'ebay', 'shopify', 'amazon'],
             'activeWarehouse' => $activeWarehouse,
             'pluginComponents' => [
