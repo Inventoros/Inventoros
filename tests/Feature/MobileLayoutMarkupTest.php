@@ -66,6 +66,19 @@ class MobileLayoutMarkupTest extends TestCase
     }
 
     /**
+     * On a phone the purchase order's items table scrolled sideways, hiding
+     * the unit cost and total behind the scroll. Like order lines, the items
+     * are cards below the sm breakpoint and the table from sm up.
+     */
+    public function test_purchase_order_items_are_cards_on_phones(): void
+    {
+        $page = $this->source('Pages/PurchaseOrders/Show.vue');
+
+        $this->assertMatchesRegularExpression('/<ul class="[^"]*sm:hidden[^"]*"[^>]*>\s*<li\s+v-for="item in purchaseOrder\.items"/', $page);
+        $this->assertMatchesRegularExpression('/<div class="(?=[^"]*hidden)(?=[^"]*sm:block)(?=[^"]*overflow-x-auto)[^"]*">\s*<table/', $page);
+    }
+
+    /**
      * The guard for the next table that gets added by hand: if a page grows a
      * raw <table>, it needs its own scroll container, because it is not getting
      * one from DataTable.
