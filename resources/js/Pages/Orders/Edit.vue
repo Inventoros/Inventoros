@@ -9,7 +9,8 @@ import { useOrderTotals, lineNetCents } from '@/composables/useOrderTotals';
 import { Head, Link, useForm } from '@inertiajs/vue3';
 import { ref } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { toIsoDate } from '@/lib/dates';
+import { displayDateTime, toIsoDate } from '@/lib/dates';
+import { formatMoney } from '@/lib/money';
 import { ArrowLeft, Plus, Trash2, PackageOpen } from 'lucide-vue-next';
 
 const { t } = useI18n();
@@ -135,7 +136,7 @@ const fieldError = 'mt-1 text-xs text-status-danger';
             </div>
         </template>
 
-        <PageHeader :title="t('orders.edit.title')" :description="`Order #${order.order_number}`">
+        <PageHeader :title="t('orders.edit.title')" :description="t('orders.edit.orderNumber', { number: order.order_number })">
             <template #actions>
                 <Button variant="secondary" size="sm" as="Link" :href="route('orders.index')">
                     <ArrowLeft :size="14" />
@@ -228,7 +229,7 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                                                 >
                                                     <option :value="null">{{ t('orders.create.chooseVariant') }}</option>
                                                     <option v-for="variant in variantsFor(item)" :key="variant.id" :value="variant.id">
-                                                        {{ variant.title }}<template v-if="variant.sku"> ({{ variant.sku }})</template> - {{ t('orders.create.stockCount', { count: variant.stock }) }} - ${{ variant.price }}
+                                                        {{ variant.title }}<template v-if="variant.sku"> ({{ variant.sku }})</template> - {{ t('orders.create.stockCount', { count: variant.stock }) }} - {{ formatMoney(variant.price, order.currency) }}
                                                     </option>
                                                 </select>
                                             </template>
@@ -276,7 +277,7 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                                             <label :class="fieldLabel">{{ t('common.subtotal') }}</label>
                                             <div class="flex h-9 items-center rounded-md border border-border-subtle bg-surface-sunken px-3">
                                                 <span class="text-sm font-semibold tabular-nums text-text-primary">
-                                                    ${{ (lineNetCents(item) / 100).toFixed(2) }}
+                                                    {{ formatMoney(lineNetCents(item) / 100, order.currency) }}
                                                 </span>
                                             </div>
                                         </div>
@@ -287,7 +288,7 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                                                 type="button"
                                                 @click="removeItem(index)"
                                                 class="rounded-md p-1.5 text-text-tertiary transition-colors hover:bg-surface-sunken hover:text-status-danger"
-                                                title="Remove item"
+                                                :title="t('orders.edit.removeItem')"
                                             >
                                                 <Trash2 :size="16" />
                                             </button>
@@ -335,12 +336,12 @@ const fieldError = 'mt-1 text-xs text-status-danger';
 
                             <div v-if="order.shipped_at" class="text-sm">
                                 <p class="text-text-tertiary">{{ t('orders.edit.shippedAt') }}</p>
-                                <p class="font-medium text-text-primary">{{ new Date(order.shipped_at).toLocaleString() }}</p>
+                                <p class="font-medium text-text-primary">{{ displayDateTime(order.shipped_at) }}</p>
                             </div>
 
                             <div v-if="order.delivered_at" class="text-sm">
                                 <p class="text-text-tertiary">{{ t('orders.edit.deliveredAt') }}</p>
-                                <p class="font-medium text-text-primary">{{ new Date(order.delivered_at).toLocaleString() }}</p>
+                                <p class="font-medium text-text-primary">{{ displayDateTime(order.delivered_at) }}</p>
                             </div>
 
                             <div>
@@ -357,11 +358,11 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                         <div class="space-y-3 p-5">
                             <div class="flex justify-between text-sm">
                                 <span class="text-text-secondary">{{ t('common.subtotal') }}</span>
-                                <span class="font-medium tabular-nums text-text-primary">${{ totals.subtotal.toFixed(2) }}</span>
+                                <span class="font-medium tabular-nums text-text-primary">{{ formatMoney(totals.subtotal, order.currency) }}</span>
                             </div>
                             <div v-if="totals.lineDiscounts > 0" class="flex justify-between text-sm">
                                 <span class="text-text-secondary">{{ t('discounts.lineDiscounts') }}</span>
-                                <span class="font-medium tabular-nums text-text-primary">-${{ totals.lineDiscounts.toFixed(2) }}</span>
+                                <span class="font-medium tabular-nums text-text-primary">-{{ formatMoney(totals.lineDiscounts, order.currency) }}</span>
                             </div>
                             <div>
                                 <DiscountInput
@@ -375,7 +376,7 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                             </div>
                             <div v-if="totals.orderDiscount > 0" class="flex justify-between text-sm">
                                 <span class="text-text-secondary">{{ t('discounts.orderDiscount') }}</span>
-                                <span class="font-medium tabular-nums text-text-primary">-${{ totals.orderDiscount.toFixed(2) }}</span>
+                                <span class="font-medium tabular-nums text-text-primary">-{{ formatMoney(totals.orderDiscount, order.currency) }}</span>
                             </div>
                             <div>
                                 <label for="tax" class="mb-1 block text-sm text-text-secondary">{{ t('common.tax') }}</label>
@@ -389,7 +390,7 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                             </div>
                             <div class="flex items-center justify-between border-t border-border-subtle pt-3">
                                 <span class="text-sm font-semibold text-text-primary">{{ t('common.total') }}</span>
-                                <span class="text-xl font-bold text-brand">${{ totals.total.toFixed(2) }}</span>
+                                <span class="text-xl font-bold text-brand">{{ formatMoney(totals.total, order.currency) }}</span>
                             </div>
                             <p v-if="form.errors.total" :class="fieldError">{{ form.errors.total }}</p>
                             <p class="text-xs text-text-tertiary">{{ t('discounts.totalsComputedOnSave') }}</p>

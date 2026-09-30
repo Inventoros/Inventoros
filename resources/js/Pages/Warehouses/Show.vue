@@ -27,7 +27,7 @@ const makeDefault = () => {
 };
 
 const deleteWarehouse = () => {
-    if (confirm(`Are you sure you want to delete "${props.warehouse.name}"? This action cannot be undone.`)) {
+    if (confirm(t('warehouses.confirmDelete', { name: props.warehouse.name }))) {
         router.delete(route('warehouses.destroy', props.warehouse.id));
     }
 };
@@ -49,13 +49,13 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-t
             </div>
         </template>
 
-        <PageHeader :title="warehouse.name" :description="`Code: ${warehouse.code}`">
+        <PageHeader :title="warehouse.name" :description="t('warehouses.show.codeLabel', { code: warehouse.code })">
             <template #actions>
                 <Badge :variant="warehouse.is_active ? 'success' : 'neutral'" size="sm" dot>
-                    {{ warehouse.is_active ? 'Active' : 'Inactive' }}
+                    {{ warehouse.is_active ? t('common.active') : t('common.inactive') }}
                 </Badge>
                 <Badge v-if="warehouse.is_default" variant="info" size="sm">
-                    Default Warehouse
+                    {{ t('warehouses.default.badge') }}
                 </Badge>
                 <Button
                     v-if="hasPermission('edit_warehouses')"
@@ -65,11 +65,11 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-t
                     :href="route('warehouses.edit', warehouse.id)"
                 >
                     <Pencil :size="14" />
-                    Edit
+                    {{ t('common.edit') }}
                 </Button>
                 <Button variant="secondary" size="sm" as="Link" :href="route('warehouses.index')">
                     <ArrowLeft :size="14" />
-                    Back
+                    {{ t('common.back') }}
                 </Button>
             </template>
         </PageHeader>
@@ -77,21 +77,21 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-t
         <!-- Key metrics -->
         <section class="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
             <StatTile
-                label="Total Locations"
+                :label="t('warehouses.show.totalLocations')"
                 :value="stats?.locations_count || 0"
                 icon-tone="brand"
             >
                 <template #icon><MapPin :size="18" /></template>
             </StatTile>
             <StatTile
-                label="Total Products Stored"
+                :label="t('warehouses.show.totalProductsStored')"
                 :value="stats?.products_count || 0"
                 icon-tone="success"
             >
                 <template #icon><Boxes :size="18" /></template>
             </StatTile>
             <StatTile
-                label="Assigned Users"
+                :label="t('warehouses.show.assignedUsers')"
                 :value="assignedUsers?.length || 0"
                 icon-tone="violet"
             >
@@ -114,15 +114,15 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-t
             <div class="space-y-4 lg:col-span-2">
                 <!-- Warehouse Details -->
                 <Card :padded="false">
-                    <div class="px-5 pt-5"><h3 class="text-sm font-semibold text-text-primary">Warehouse Details</h3></div>
+                    <div class="px-5 pt-5"><h3 class="text-sm font-semibold text-text-primary">{{ t('warehouses.show.details') }}</h3></div>
                     <div class="p-5">
                         <dl class="grid grid-cols-1 gap-x-4 gap-y-6 sm:grid-cols-2">
                             <div>
-                                <dt class="text-xs text-text-tertiary">Manager</dt>
+                                <dt class="text-xs text-text-tertiary">{{ t('warehouses.show.manager') }}</dt>
                                 <dd class="mt-1 text-sm text-text-primary">{{ warehouse.manager_name || '-' }}</dd>
                             </div>
                             <div>
-                                <dt class="text-xs text-text-tertiary">Email</dt>
+                                <dt class="text-xs text-text-tertiary">{{ t('warehouses.fields.email') }}</dt>
                                 <dd class="mt-1 text-sm text-text-primary">
                                     <a v-if="warehouse.email" :href="`mailto:${warehouse.email}`" class="text-brand hover:underline">
                                         {{ warehouse.email }}
@@ -131,23 +131,23 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-t
                                 </dd>
                             </div>
                             <div>
-                                <dt class="text-xs text-text-tertiary">Phone</dt>
+                                <dt class="text-xs text-text-tertiary">{{ t('warehouses.fields.phone') }}</dt>
                                 <dd class="mt-1 text-sm text-text-primary">{{ warehouse.phone || '-' }}</dd>
                             </div>
                             <div>
-                                <dt class="text-xs text-text-tertiary">Timezone</dt>
+                                <dt class="text-xs text-text-tertiary">{{ t('warehouses.fields.timezone') }}</dt>
                                 <dd class="mt-1 text-sm text-text-primary">{{ warehouse.timezone || '-' }}</dd>
                             </div>
                             <div>
-                                <dt class="text-xs text-text-tertiary">Currency</dt>
+                                <dt class="text-xs text-text-tertiary">{{ t('warehouses.fields.currency') }}</dt>
                                 <dd class="mt-1 text-sm text-text-primary">{{ warehouse.currency || '-' }}</dd>
                             </div>
                             <div>
-                                <dt class="text-xs text-text-tertiary">Priority</dt>
+                                <dt class="text-xs text-text-tertiary">{{ t('warehouses.fields.priority') }}</dt>
                                 <dd class="mt-1 text-sm text-text-primary">{{ warehouse.priority ?? 0 }}</dd>
                             </div>
                             <div v-if="warehouse.description" class="sm:col-span-2">
-                                <dt class="text-xs text-text-tertiary">Description</dt>
+                                <dt class="text-xs text-text-tertiary">{{ t('warehouses.fields.description') }}</dt>
                                 <dd class="mt-1 whitespace-pre-wrap text-sm text-text-primary">{{ warehouse.description }}</dd>
                             </div>
                         </dl>
@@ -156,7 +156,7 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-t
 
                 <!-- Address -->
                 <Card :padded="false">
-                    <div class="px-5 pt-5"><h3 class="text-sm font-semibold text-text-primary">Address</h3></div>
+                    <div class="px-5 pt-5"><h3 class="text-sm font-semibold text-text-primary">{{ t('warehouses.sections.address') }}</h3></div>
                     <div class="p-5">
                         <p class="text-sm text-text-primary">
                             <template v-if="warehouse.address_line_1 || warehouse.city || warehouse.province || warehouse.postal_code || warehouse.country">
@@ -168,7 +168,7 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-t
                                 <span v-if="warehouse.country">{{ warehouse.country }}</span>
                             </template>
                             <template v-else>
-                                <span class="text-text-tertiary">No address provided</span>
+                                <span class="text-text-tertiary">{{ t('warehouses.show.noAddress') }}</span>
                             </template>
                         </p>
                     </div>
@@ -176,15 +176,15 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-t
 
                 <!-- Locations -->
                 <Card :padded="false">
-                    <div class="px-5 pt-5"><h3 class="text-sm font-semibold text-text-primary">Locations ({{ locations?.length || 0 }})</h3></div>
+                    <div class="px-5 pt-5"><h3 class="text-sm font-semibold text-text-primary">{{ t('warehouses.show.locationsCount', { count: locations?.length || 0 }) }}</h3></div>
                     <div class="p-5">
                         <div v-if="locations && locations.length > 0" class="w-full overflow-x-auto rounded-lg border border-border-subtle">
                             <table class="w-full text-sm">
                                 <thead>
                                     <tr class="border-b border-border-subtle">
-                                        <th :class="thClass">Name</th>
-                                        <th :class="thClass">Code</th>
-                                        <th :class="thClass">Products</th>
+                                        <th :class="thClass">{{ t('warehouses.columns.name') }}</th>
+                                        <th :class="thClass">{{ t('warehouses.columns.code') }}</th>
+                                        <th :class="thClass">{{ t('warehouses.show.products') }}</th>
                                         <th :class="thClass">{{ t('warehouses.columns.onHand') }}</th>
                                         <th :class="thClass">{{ t('warehouses.capacity.column') }}</th>
                                     </tr>
@@ -222,7 +222,7 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-t
                         </div>
                         <div v-else class="flex flex-col items-center gap-2 py-8 text-center">
                             <MapPin :size="22" class="text-text-tertiary" />
-                            <p class="text-sm text-text-tertiary">No locations in this warehouse</p>
+                            <p class="text-sm text-text-tertiary">{{ t('warehouses.show.noLocations') }}</p>
                         </div>
                     </div>
                 </Card>
@@ -232,7 +232,7 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-t
             <div class="space-y-4">
                 <!-- Assigned Users -->
                 <Card :padded="false">
-                    <div class="px-5 pt-5"><h3 class="text-sm font-semibold text-text-primary">Assigned Users ({{ assignedUsers?.length || 0 }})</h3></div>
+                    <div class="px-5 pt-5"><h3 class="text-sm font-semibold text-text-primary">{{ t('warehouses.users.assigned', { count: assignedUsers?.length || 0 }) }}</h3></div>
                     <div class="p-5">
                         <div v-if="assignedUsers && assignedUsers.length > 0" class="space-y-3">
                             <div
@@ -266,7 +266,7 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-t
 
                 <!-- Actions -->
                 <Card v-if="hasPermission('edit_warehouses') || (hasPermission('delete_warehouses') && !warehouse.is_default)" :padded="false">
-                    <div class="px-5 pt-5"><h3 class="text-sm font-semibold text-text-primary">Actions</h3></div>
+                    <div class="px-5 pt-5"><h3 class="text-sm font-semibold text-text-primary">{{ t('common.actions') }}</h3></div>
                     <div class="space-y-3 p-5">
                         <Button
                             v-if="hasPermission('edit_warehouses')"
@@ -276,7 +276,7 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-t
                             :href="route('warehouses.edit', warehouse.id)"
                         >
                             <Pencil :size="16" />
-                            Edit Warehouse
+                            {{ t('warehouses.editWarehouse') }}
                         </Button>
                         <template v-if="hasPermission('edit_warehouses') && !warehouse.is_default">
                             <Button variant="secondary" class="w-full" @click="makeDefault">
@@ -290,14 +290,14 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-t
 
                 <!-- Danger Zone -->
                 <Card v-if="hasPermission('delete_warehouses') && !warehouse.is_default" :padded="false">
-                    <div class="px-5 pt-5"><h3 class="text-sm font-semibold text-text-primary">Danger Zone</h3></div>
+                    <div class="px-5 pt-5"><h3 class="text-sm font-semibold text-text-primary">{{ t('warehouses.show.dangerZone') }}</h3></div>
                     <div class="p-5">
                         <Button variant="danger" class="w-full" @click="deleteWarehouse">
                             <Trash2 :size="16" />
-                            Delete Warehouse
+                            {{ t('warehouses.show.deleteWarehouse') }}
                         </Button>
                         <p class="mt-2 text-xs text-text-tertiary">
-                            This action cannot be undone.
+                            {{ t('warehouses.show.cannotUndo') }}
                         </p>
                     </div>
                 </Card>

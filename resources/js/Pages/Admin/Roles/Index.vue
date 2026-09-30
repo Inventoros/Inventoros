@@ -6,6 +6,7 @@ import Button from '@/Components/ui/Button.vue';
 import Badge from '@/Components/ui/Badge.vue';
 import { Head, Link } from '@inertiajs/vue3';
 import { useI18n } from 'vue-i18n';
+import { roleDescription, roleName } from '@/lib/permissionLabels';
 import { Plus, Users, ShieldCheck } from 'lucide-vue-next';
 
 defineProps({
@@ -13,7 +14,8 @@ defineProps({
     filters: Object,
 });
 
-const { t } = useI18n();
+const { t, te } = useI18n();
+const i18n = { t, te };
 </script>
 
 <template>
@@ -29,8 +31,8 @@ const { t } = useI18n();
         </template>
 
         <PageHeader
-            title="Roles & Permissions"
-            description="Manage roles and permissions for your organization. Create custom roles with specific permission sets to control access across the application."
+            :title="t('admin.roles.title')"
+            :description="t('admin.roles.description')"
         >
             <template #actions>
                 <Button variant="default" size="sm" as="Link" :href="route('roles.create')">
@@ -45,20 +47,20 @@ const { t } = useI18n();
             <Card v-for="role in roles?.data" :key="role.id">
                 <div class="mb-4 flex items-start justify-between">
                     <div class="min-w-0">
-                        <h3 class="text-sm font-semibold text-text-primary">{{ role.name }}</h3>
-                        <p v-if="role.description" class="mt-1 text-sm text-text-secondary">{{ role.description }}</p>
+                        <h3 class="text-sm font-semibold text-text-primary">{{ roleName(role, i18n) }}</h3>
+                        <p v-if="role.description" class="mt-1 text-sm text-text-secondary">{{ roleDescription(role, i18n) }}</p>
                     </div>
-                    <Badge v-if="role.is_system" variant="brand" size="sm">System</Badge>
+                    <Badge v-if="role.is_system" variant="brand" size="sm">{{ t('admin.roles.systemBadge') }}</Badge>
                 </div>
 
                 <div class="mb-4 space-y-2">
                     <div class="flex items-center gap-2 text-sm text-text-secondary">
                         <Users :size="16" class="text-text-tertiary" />
-                        <span>{{ role.users_count || 0 }} users</span>
+                        <span>{{ t('admin.roles.usersCount', { count: role.users_count || 0 }) }}</span>
                     </div>
                     <div class="flex items-center gap-2 text-sm text-text-secondary">
                         <ShieldCheck :size="16" class="text-text-tertiary" />
-                        <span>{{ role.permissions ? role.permissions.length : 0 }} permissions</span>
+                        <span>{{ t('admin.roles.permissionsCount', { count: role.permissions ? role.permissions.length : 0 }) }}</span>
                     </div>
                 </div>
 
@@ -79,9 +81,9 @@ const { t } = useI18n();
                     <span
                         v-else
                         class="inline-flex h-8 flex-1 cursor-not-allowed items-center justify-center rounded-md border border-border-subtle px-3 text-xs font-medium text-text-tertiary"
-                        title="Administrator role cannot be edited"
+                        :title="t('admin.roles.adminLocked')"
                     >
-                        Locked
+                        {{ t('common.locked') }}
                     </span>
                 </div>
             </Card>
@@ -91,7 +93,7 @@ const { t } = useI18n();
                 <Card>
                     <div class="flex flex-col items-center gap-3 py-10 text-center">
                         <ShieldCheck :size="22" class="text-text-tertiary" />
-                        <p class="text-sm text-text-tertiary">No roles found. Click "Create Role" to define your first custom role.</p>
+                        <p class="text-sm text-text-tertiary">{{ t('admin.roles.noRolesFound') }}</p>
                         <Button variant="default" size="sm" as="Link" :href="route('roles.create')">
                             <Plus :size="14" />
                             {{ t('admin.createRole') }}

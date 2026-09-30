@@ -7,6 +7,7 @@ import Badge from '@/Components/ui/Badge.vue';
 import { Head, Link } from '@inertiajs/vue3';
 import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
+import { displayDate } from '@/lib/dates';
 import { usePermissions } from '@/composables/usePermissions';
 import {
     DollarSign,
@@ -25,7 +26,7 @@ import {
     Wallet,
 } from 'lucide-vue-next';
 
-const { t } = useI18n();
+const { t, te } = useI18n();
 const { hasAllPermissions } = usePermissions();
 
 const props = defineProps({
@@ -185,10 +186,10 @@ const visibleReportCards = computed(() =>
                                     </Link>
                                 </td>
                                 <td class="px-6 py-4">
-                                    <Badge variant="info" size="sm">{{ report.data_source }}</Badge>
+                                    <Badge variant="info" size="sm">{{ te(`reports.index.dataSources.${report.data_source}`) ? t(`reports.index.dataSources.${report.data_source}`) : report.data_source }}</Badge>
                                 </td>
                                 <td class="px-6 py-4 text-sm text-text-secondary">{{ report.creator?.name || '-' }}</td>
-                                <td class="px-6 py-4 text-sm text-text-secondary">{{ new Date(report.created_at).toLocaleDateString() }}</td>
+                                <td class="px-6 py-4 text-sm text-text-secondary">{{ displayDate(report.created_at) }}</td>
                                 <td class="px-6 py-4 text-right">
                                     <Link :href="route('reports.builder.show', report.id)" class="text-sm text-brand transition-colors hover:text-brand-hover">
                                         {{ t('reportBuilder.actions.view') }}

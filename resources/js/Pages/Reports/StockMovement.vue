@@ -9,6 +9,7 @@ import ExportMenu from '@/Components/Reports/ExportMenu.vue';
 import { Head, Link, router } from '@inertiajs/vue3';
 import { ref } from 'vue';
 import { useI18n } from 'vue-i18n';
+import { displayDate } from '@/lib/dates';
 import {
     ArrowLeftRight,
     TrendingUp,
@@ -187,7 +188,7 @@ const thClass =
                         class="border-b border-border-subtle transition-colors last:border-b-0 hover:bg-surface-overlay"
                     >
                         <td class="whitespace-nowrap px-4 py-3 text-text-secondary">
-                            {{ new Date(adj.created_at).toLocaleDateString() }}
+                            {{ displayDate(adj.created_at) }}
                         </td>
                         <td class="px-4 py-3">
                             <div class="font-medium text-text-primary">{{ adj.product.name }}</div>

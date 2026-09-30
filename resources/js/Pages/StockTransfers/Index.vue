@@ -8,6 +8,7 @@ import { Head, Link, router } from '@inertiajs/vue3';
 import { ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { Plus, Search, Eye, ArrowLeftRight } from 'lucide-vue-next';
+import { displayDate } from '@/lib/dates';
 
 const { t } = useI18n();
 
@@ -40,22 +41,15 @@ const statusVariant = (status) =>
 
 const getStatusLabel = (status) => {
     const labels = {
-        'pending': 'Pending',
-        'in_transit': 'In Transit',
-        'completed': 'Completed',
-        'cancelled': 'Cancelled',
+        'pending': t('stockTransfers.statuses.pending'),
+        'in_transit': t('stockTransfers.statuses.in_transit'),
+        'completed': t('stockTransfers.statuses.completed'),
+        'cancelled': t('stockTransfers.statuses.cancelled'),
     };
     return labels[status] || status;
 };
 
-const formatDate = (dateStr) => {
-    if (!dateStr) return '-';
-    return new Date(dateStr).toLocaleDateString('en-US', {
-        year: 'numeric',
-        month: 'short',
-        day: 'numeric',
-    });
-};
+const formatDate = (dateStr) => displayDate(dateStr);
 
 const selectClass =
     'h-9 w-full rounded-md border border-border-subtle bg-surface-canvas px-3 text-sm text-text-primary ds-focus-ring';
@@ -64,7 +58,7 @@ const thClass =
 </script>
 
 <template>
-    <Head title="Stock Transfers" />
+    <Head :title="t('stockTransfers.title')" />
 
     <AppLayout>
         <template #header>
@@ -75,11 +69,11 @@ const thClass =
             </div>
         </template>
 
-        <PageHeader title="Stock Transfers" description="Transfer inventory between locations.">
+        <PageHeader :title="t('stockTransfers.title')" :description="t('stockTransfers.subtitle')">
             <template #actions>
                 <Button variant="default" size="sm" as="Link" :href="route('stock-transfers.create')">
                     <Plus :size="14" />
-                    New Transfer
+                    {{ t('stockTransfers.newTransfer') }}
                 </Button>
             </template>
         </PageHeader>
@@ -89,35 +83,35 @@ const thClass =
             <form @submit.prevent="applyFilters" class="space-y-4">
                 <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
                     <div class="sm:col-span-2">
-                        <label for="search" class="mb-1 block text-xs font-medium text-text-secondary">Search</label>
+                        <label for="search" class="mb-1 block text-xs font-medium text-text-secondary">{{ t('common.search') }}</label>
                         <div class="relative">
                             <Search :size="15" class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-text-tertiary" />
                             <input
                                 id="search"
                                 v-model="search"
                                 type="text"
-                                placeholder="Search by transfer number..."
+                                :placeholder="t('stockTransfers.index.searchPlaceholder')"
                                 class="h-9 w-full rounded-md border border-border-subtle bg-surface-canvas pl-9 pr-3 text-sm text-text-primary placeholder:text-text-tertiary ds-focus-ring"
                             />
                         </div>
                     </div>
                     <div>
-                        <label for="status" class="mb-1 block text-xs font-medium text-text-secondary">Status</label>
+                        <label for="status" class="mb-1 block text-xs font-medium text-text-secondary">{{ t('common.status') }}</label>
                         <select id="status" v-model="selectedStatus" :class="selectClass" @change="applyFilters">
-                            <option value="">All Statuses</option>
-                            <option value="pending">Pending</option>
-                            <option value="in_transit">In Transit</option>
-                            <option value="completed">Completed</option>
-                            <option value="cancelled">Cancelled</option>
+                            <option value="">{{ t('common.allStatuses') }}</option>
+                            <option value="pending">{{ t('stockTransfers.statuses.pending') }}</option>
+                            <option value="in_transit">{{ t('stockTransfers.statuses.in_transit') }}</option>
+                            <option value="completed">{{ t('stockTransfers.statuses.completed') }}</option>
+                            <option value="cancelled">{{ t('stockTransfers.statuses.cancelled') }}</option>
                         </select>
                     </div>
                 </div>
                 <div class="flex items-center gap-2">
                     <Button type="submit" variant="default" size="sm">
                         <Search :size="14" />
-                        Filter
+                        {{ t('stockTransfers.index.filter') }}
                     </Button>
-                    <Button type="button" variant="secondary" size="sm" @click="clearFilters">Clear</Button>
+                    <Button type="button" variant="secondary" size="sm" @click="clearFilters">{{ t('common.clear') }}</Button>
                 </div>
             </form>
         </Card>
@@ -127,13 +121,13 @@ const thClass =
             <table class="w-full text-sm">
                 <thead>
                     <tr class="border-b border-border-subtle">
-                        <th :class="thClass">Transfer #</th>
-                        <th :class="thClass">From</th>
-                        <th :class="thClass">To</th>
-                        <th :class="thClass">Status</th>
-                        <th :class="thClass">Items</th>
-                        <th :class="thClass">Date</th>
-                        <th :class="[thClass, 'text-right']">Actions</th>
+                        <th :class="thClass">{{ t('stockTransfers.index.transferNumber') }}</th>
+                        <th :class="thClass">{{ t('stockTransfers.index.from') }}</th>
+                        <th :class="thClass">{{ t('stockTransfers.index.to') }}</th>
+                        <th :class="thClass">{{ t('common.status') }}</th>
+                        <th :class="thClass">{{ t('stockTransfers.index.items') }}</th>
+                        <th :class="thClass">{{ t('common.date') }}</th>
+                        <th :class="[thClass, 'text-right']">{{ t('common.actions') }}</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -141,10 +135,10 @@ const thClass =
                         <td colspan="7" class="px-4 py-12 text-center">
                             <div class="flex flex-col items-center gap-3">
                                 <ArrowLeftRight :size="22" class="text-text-tertiary" />
-                                <p class="text-sm text-text-tertiary">No stock transfers found. Create your first transfer to move inventory between locations.</p>
+                                <p class="text-sm text-text-tertiary">{{ t('stockTransfers.index.empty') }}</p>
                                 <Button variant="default" size="sm" as="Link" :href="route('stock-transfers.create')">
                                     <Plus :size="14" />
-                                    New Transfer
+                                    {{ t('stockTransfers.newTransfer') }}
                                 </Button>
                             </div>
                         </td>
@@ -165,14 +159,14 @@ const thClass =
                             <Badge :variant="statusVariant(transfer.status)" size="sm" dot>{{ getStatusLabel(transfer.status) }}</Badge>
                         </td>
                         <td class="px-4 py-3">
-                            <span class="tabular-nums text-text-secondary">{{ transfer.items?.length || 0 }} item(s)</span>
+                            <span class="tabular-nums text-text-secondary">{{ t('stockTransfers.index.itemCount', { count: transfer.items?.length || 0 }, transfer.items?.length || 0) }}</span>
                         </td>
                         <td class="px-4 py-3">
                             <span class="text-text-secondary">{{ formatDate(transfer.created_at) }}</span>
                         </td>
                         <td class="px-4 py-3">
                             <div class="flex items-center justify-end gap-1">
-                                <Link :href="route('stock-transfers.show', transfer.id)" class="rounded-md p-1.5 text-text-tertiary transition-colors hover:bg-surface-overlay hover:text-brand" title="View"><Eye :size="16" /></Link>
+                                <Link :href="route('stock-transfers.show', transfer.id)" class="rounded-md p-1.5 text-text-tertiary transition-colors hover:bg-surface-overlay hover:text-brand" :title="t('common.view')"><Eye :size="16" /></Link>
                             </div>
                         </td>
                     </tr>
@@ -183,9 +177,7 @@ const thClass =
         <!-- Pagination -->
         <div v-if="transfers.links && transfers.links.length > 3" class="mt-4 flex flex-col items-center justify-between gap-3 sm:flex-row">
             <p class="text-xs text-text-tertiary">
-                Showing <span class="font-medium text-text-secondary">{{ transfers.from }}</span>
-                to <span class="font-medium text-text-secondary">{{ transfers.to }}</span>
-                of <span class="font-medium text-text-secondary">{{ transfers.total }}</span> transfers
+                {{ t('stockTransfers.index.showingTransfers', { from: transfers.from, to: transfers.to, total: transfers.total }) }}
             </p>
             <nav class="inline-flex items-center gap-1">
                 <template v-for="link in transfers.links" :key="link.label">

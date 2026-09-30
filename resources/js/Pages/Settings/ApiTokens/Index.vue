@@ -6,6 +6,7 @@ import Badge from '@/Components/ui/Badge.vue';
 import { Head, Link, useForm, router, usePage } from '@inertiajs/vue3';
 import { ref, computed } from 'vue';
 import { useI18n } from 'vue-i18n';
+import { displayDateTime } from '@/lib/dates';
 import { Plus, KeyRound, Trash2, X, Info } from 'lucide-vue-next';
 
 const props = defineProps({
@@ -93,7 +94,7 @@ const revoke = (token) => {
     }
 };
 
-const formatDate = (value) => (value ? new Date(value).toLocaleString() : t('settings.apiTokens.never'));
+const formatDate = (value) => (value ? displayDateTime(value) : t('settings.apiTokens.never'));
 
 const abilitySummary = (token) => {
     const abilities = token.abilities || [];

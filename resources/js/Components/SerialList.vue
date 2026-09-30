@@ -1,6 +1,7 @@
 <script setup>
 import { ref, computed } from 'vue';
 import axios from 'axios';
+import { useI18n } from 'vue-i18n';
 
 const props = defineProps({
     productId: Number,
@@ -9,6 +10,8 @@ const props = defineProps({
         default: () => [],
     },
 });
+
+const { t } = useI18n();
 
 const emit = defineEmits(['serial-created', 'serial-updated']);
 
@@ -62,7 +65,7 @@ const createSerial = async () => {
         if (err.response?.data?.errors) {
             error.value = Object.values(err.response.data.errors).flat().join(', ');
         } else {
-            error.value = err.response?.data?.message || 'Failed to create serial';
+            error.value = err.response?.data?.message || t('components.serialList.createFailed');
         }
     } finally {
         loading.value = false;
@@ -80,7 +83,7 @@ const updateStatus = async (serial, newStatus) => {
         }
         emit('serial-updated', response.data.data);
     } catch (err) {
-        alert(err.response?.data?.message || 'Failed to update status');
+        alert(err.response?.data?.message || t('components.serialList.updateFailed'));
     }
 };
 
@@ -99,7 +102,7 @@ const statusBadgeClass = (status) => {
     <div>
         <div class="flex items-center justify-between mb-4">
             <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">
-                Serial Number Tracking
+                {{ t('components.serialList.title') }}
             </h3>
             <button
                 @click="showForm = !showForm"
@@ -108,7 +111,7 @@ const statusBadgeClass = (status) => {
                 <svg v-if="!showForm" class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
                 </svg>
-                {{ showForm ? 'Cancel' : 'Add Serial' }}
+                {{ showForm ? t('common.cancel') : t('components.serialList.addSerial') }}
             </button>
         </div>
 
@@ -123,7 +126,7 @@ const statusBadgeClass = (status) => {
                         : 'border-gray-200 dark:border-border-subtle text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-surface-canvas/50'
                 ]"
             >
-                All ({{ localSerials.length }})
+                {{ t('components.serialList.all') }} ({{ localSerials.length }})
             </button>
             <button
                 v-for="(count, status) in statusCounts"
@@ -136,7 +139,7 @@ const statusBadgeClass = (status) => {
                         : 'border-gray-200 dark:border-border-subtle text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-surface-canvas/50'
                 ]"
             >
-                {{ status }} ({{ count }})
+                {{ t(`components.serialList.statuses.${status}`) }} ({{ count }})
             </button>
         </div>
 
@@ -147,7 +150,7 @@ const statusBadgeClass = (status) => {
             </div>
             <div class="grid grid-cols-2 gap-3 mb-3">
                 <div>
-                    <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Serial Number *</label>
+                    <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">{{ t('components.serialList.serialNumber') }} *</label>
                     <input
                         v-model="form.serial_number"
                         type="text"
@@ -157,20 +160,20 @@ const statusBadgeClass = (status) => {
                     />
                 </div>
                 <div>
-                    <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Status</label>
+                    <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">{{ t('common.status') }}</label>
                     <select
                         v-model="form.status"
                         class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-border-subtle rounded-md bg-white dark:bg-surface-raised text-gray-900 dark:text-gray-100 focus:ring-brand focus:border-brand"
                     >
-                        <option value="available">Available</option>
-                        <option value="sold">Sold</option>
-                        <option value="reserved">Reserved</option>
-                        <option value="damaged">Damaged</option>
+                        <option value="available">{{ t('components.serialList.statuses.available') }}</option>
+                        <option value="sold">{{ t('components.serialList.statuses.sold') }}</option>
+                        <option value="reserved">{{ t('components.serialList.statuses.reserved') }}</option>
+                        <option value="damaged">{{ t('components.serialList.statuses.damaged') }}</option>
                     </select>
                 </div>
             </div>
             <div class="mb-3">
-                <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Notes</label>
+                <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">{{ t('common.notes') }}</label>
                 <textarea
                     v-model="form.notes"
                     rows="2"
@@ -182,7 +185,7 @@ const statusBadgeClass = (status) => {
                 :disabled="loading || !form.serial_number"
                 class="px-4 py-2 bg-brand text-white text-sm font-medium rounded-md hover:bg-brand-hover transition disabled:opacity-50"
             >
-                {{ loading ? 'Creating...' : 'Create Serial' }}
+                {{ loading ? t('common.creating') : t('components.serialList.createSerial') }}
             </button>
         </div>
 
@@ -191,10 +194,10 @@ const statusBadgeClass = (status) => {
             <table class="w-full text-sm">
                 <thead>
                     <tr class="border-b border-gray-200 dark:border-border-subtle">
-                        <th class="text-left py-2 px-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Serial #</th>
-                        <th class="text-left py-2 px-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Status</th>
-                        <th class="text-left py-2 px-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Notes</th>
-                        <th class="text-left py-2 px-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Actions</th>
+                        <th class="text-left py-2 px-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">{{ t('components.serialList.columns.serialNumber') }}</th>
+                        <th class="text-left py-2 px-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">{{ t('common.status') }}</th>
+                        <th class="text-left py-2 px-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">{{ t('common.notes') }}</th>
+                        <th class="text-left py-2 px-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">{{ t('common.actions') }}</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -206,7 +209,7 @@ const statusBadgeClass = (status) => {
                         <td class="py-2 px-3 font-mono text-gray-900 dark:text-gray-100">{{ serial.serial_number }}</td>
                         <td class="py-2 px-3">
                             <span :class="['px-2 py-0.5 text-xs font-medium rounded-full capitalize', statusBadgeClass(serial.status)]">
-                                {{ serial.status }}
+                                {{ t(`components.serialList.statuses.${serial.status}`) }}
                             </span>
                         </td>
                         <td class="py-2 px-3 text-gray-600 dark:text-gray-400 max-w-[200px] truncate">{{ serial.notes || '-' }}</td>
@@ -216,33 +219,33 @@ const statusBadgeClass = (status) => {
                                     v-if="serial.status === 'available'"
                                     @click="updateStatus(serial, 'sold')"
                                     class="px-2 py-0.5 text-xs bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded hover:bg-blue-200 dark:hover:bg-blue-900/50 transition"
-                                    title="Mark as sold"
+                                    :title="t('components.serialList.markAsSold')"
                                 >
-                                    Sold
+                                    {{ t('components.serialList.statuses.sold') }}
                                 </button>
                                 <button
                                     v-if="serial.status === 'available'"
                                     @click="updateStatus(serial, 'reserved')"
                                     class="px-2 py-0.5 text-xs bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 rounded hover:bg-amber-200 dark:hover:bg-amber-900/50 transition"
-                                    title="Mark as reserved"
+                                    :title="t('components.serialList.markAsReserved')"
                                 >
-                                    Reserve
+                                    {{ t('components.serialList.reserve') }}
                                 </button>
                                 <button
                                     v-if="serial.status !== 'damaged'"
                                     @click="updateStatus(serial, 'damaged')"
                                     class="px-2 py-0.5 text-xs bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 rounded hover:bg-red-200 dark:hover:bg-red-900/50 transition"
-                                    title="Mark as damaged"
+                                    :title="t('components.serialList.markAsDamaged')"
                                 >
-                                    Damaged
+                                    {{ t('components.serialList.statuses.damaged') }}
                                 </button>
                                 <button
                                     v-if="serial.status !== 'available'"
                                     @click="updateStatus(serial, 'available')"
                                     class="px-2 py-0.5 text-xs bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 rounded hover:bg-green-200 dark:hover:bg-green-900/50 transition"
-                                    title="Mark as available"
+                                    :title="t('components.serialList.markAsAvailable')"
                                 >
-                                    Available
+                                    {{ t('components.serialList.statuses.available') }}
                                 </button>
                             </div>
                         </td>
@@ -255,12 +258,12 @@ const statusBadgeClass = (status) => {
             <svg class="w-12 h-12 mx-auto mb-3 text-gray-300 dark:text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
             </svg>
-            <p>No serial numbers recorded yet.</p>
-            <p class="text-sm mt-1">Click "Add Serial" to register the first serial number.</p>
+            <p>{{ t('components.serialList.empty') }}</p>
+            <p class="text-sm mt-1">{{ t('components.serialList.emptyHint') }}</p>
         </div>
 
         <div v-else class="text-center py-4 text-gray-500 dark:text-gray-400 text-sm">
-            No serials matching the selected filter.
+            {{ t('components.serialList.noMatches') }}
         </div>
     </div>
 </template>

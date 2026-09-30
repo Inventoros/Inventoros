@@ -1,7 +1,8 @@
 <script setup>
 import { ref } from 'vue';
 import axios from 'axios';
-import { formatCalendarDate, isBeforeToday } from '@/lib/dates';
+import { useI18n } from 'vue-i18n';
+import { displayCalendarDate, isBeforeToday } from '@/lib/dates';
 
 const props = defineProps({
     productId: Number,
@@ -10,6 +11,8 @@ const props = defineProps({
         default: () => [],
     },
 });
+
+const { t } = useI18n();
 
 const emit = defineEmits(['batch-created']);
 
@@ -59,7 +62,7 @@ const createBatch = async () => {
         if (err.response?.data?.errors) {
             error.value = Object.values(err.response.data.errors).flat().join(', ');
         } else {
-            error.value = err.response?.data?.message || 'Failed to create batch';
+            error.value = err.response?.data?.message || t('components.batchList.createFailed');
         }
     } finally {
         loading.value = false;
@@ -68,7 +71,7 @@ const createBatch = async () => {
 
 // Batches seeded from the page props are serialized models (ISO datetimes);
 // batches returned by the endpoint are plain dates. Both are calendar days.
-const formatDate = (value) => formatCalendarDate(value);
+const formatDate = (value) => displayCalendarDate(value);
 
 // An expiry date is a calendar day: a batch expiring today is not expired
 // yet, in any timezone.
@@ -79,7 +82,7 @@ const isExpired = (expiryDate) => isBeforeToday(expiryDate);
     <div>
         <div class="flex items-center justify-between mb-4">
             <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">
-                Batch Tracking
+                {{ t('components.batchList.title') }}
             </h3>
             <button
                 @click="showForm = !showForm"
@@ -88,7 +91,7 @@ const isExpired = (expiryDate) => isBeforeToday(expiryDate);
                 <svg v-if="!showForm" class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
                 </svg>
-                {{ showForm ? 'Cancel' : 'Add Batch' }}
+                {{ showForm ? t('common.cancel') : t('components.batchList.addBatch') }}
             </button>
         </div>
 
@@ -99,7 +102,7 @@ const isExpired = (expiryDate) => isBeforeToday(expiryDate);
             </div>
             <div class="grid grid-cols-2 gap-3 mb-3">
                 <div>
-                    <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Batch Number (auto-generated if empty)</label>
+                    <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">{{ t('components.batchList.batchNumberLabel') }}</label>
                     <input
                         v-model="form.batch_number"
                         type="text"
@@ -108,7 +111,7 @@ const isExpired = (expiryDate) => isBeforeToday(expiryDate);
                     />
                 </div>
                 <div>
-                    <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Quantity *</label>
+                    <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">{{ t('common.quantity') }} *</label>
                     <input
                         v-model="form.quantity"
                         type="number"
@@ -118,7 +121,7 @@ const isExpired = (expiryDate) => isBeforeToday(expiryDate);
                     />
                 </div>
                 <div>
-                    <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Manufactured Date</label>
+                    <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">{{ t('components.batchList.manufacturedDate') }}</label>
                     <input
                         v-model="form.manufactured_date"
                         type="date"
@@ -126,7 +129,7 @@ const isExpired = (expiryDate) => isBeforeToday(expiryDate);
                     />
                 </div>
                 <div>
-                    <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Expiry Date</label>
+                    <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">{{ t('components.batchList.expiryDate') }}</label>
                     <input
                         v-model="form.expiry_date"
                         type="date"
@@ -135,7 +138,7 @@ const isExpired = (expiryDate) => isBeforeToday(expiryDate);
                 </div>
             </div>
             <div class="mb-3">
-                <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Notes</label>
+                <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">{{ t('common.notes') }}</label>
                 <textarea
                     v-model="form.notes"
                     rows="2"
@@ -147,7 +150,7 @@ const isExpired = (expiryDate) => isBeforeToday(expiryDate);
                 :disabled="loading || !form.quantity"
                 class="px-4 py-2 bg-brand text-white text-sm font-medium rounded-md hover:bg-brand-hover transition disabled:opacity-50"
             >
-                {{ loading ? 'Creating...' : 'Create Batch' }}
+                {{ loading ? t('common.creating') : t('components.batchList.createBatch') }}
             </button>
         </div>
 
@@ -156,11 +159,11 @@ const isExpired = (expiryDate) => isBeforeToday(expiryDate);
             <table class="w-full text-sm">
                 <thead>
                     <tr class="border-b border-gray-200 dark:border-border-subtle">
-                        <th class="text-left py-2 px-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Batch #</th>
-                        <th class="text-left py-2 px-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Qty</th>
-                        <th class="text-left py-2 px-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Manufactured</th>
-                        <th class="text-left py-2 px-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Expiry</th>
-                        <th class="text-left py-2 px-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Notes</th>
+                        <th class="text-left py-2 px-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">{{ t('components.batchList.columns.batchNumber') }}</th>
+                        <th class="text-left py-2 px-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">{{ t('components.batchList.columns.quantity') }}</th>
+                        <th class="text-left py-2 px-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">{{ t('components.batchList.columns.manufactured') }}</th>
+                        <th class="text-left py-2 px-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">{{ t('components.batchList.columns.expiry') }}</th>
+                        <th class="text-left py-2 px-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">{{ t('common.notes') }}</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -179,7 +182,7 @@ const isExpired = (expiryDate) => isBeforeToday(expiryDate);
                                     : 'text-gray-600 dark:text-gray-400'
                             ]">
                                 {{ formatDate(batch.expiry_date) }}
-                                <span v-if="isExpired(batch.expiry_date)" class="text-xs ml-1">(expired)</span>
+                                <span v-if="isExpired(batch.expiry_date)" class="text-xs ml-1">{{ t('components.batchList.expired') }}</span>
                             </span>
                             <span v-else class="text-gray-400">-</span>
                         </td>
@@ -193,8 +196,8 @@ const isExpired = (expiryDate) => isBeforeToday(expiryDate);
             <svg class="w-12 h-12 mx-auto mb-3 text-gray-300 dark:text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
             </svg>
-            <p>No batches recorded yet.</p>
-            <p class="text-sm mt-1">Click "Add Batch" to record the first batch.</p>
+            <p>{{ t('components.batchList.empty') }}</p>
+            <p class="text-sm mt-1">{{ t('components.batchList.emptyHint') }}</p>
         </div>
     </div>
 </template>

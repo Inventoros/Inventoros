@@ -7,6 +7,7 @@ import Badge from '@/Components/ui/Badge.vue';
 import { Head, Link, useForm } from '@inertiajs/vue3';
 import { ref } from 'vue';
 import { ShieldCheck } from 'lucide-vue-next';
+import { useI18n } from 'vue-i18n';
 
 const props = defineProps({
     qrCodeSvg: String,
@@ -15,6 +16,7 @@ const props = defineProps({
     enabled: Boolean,
 });
 
+const { t } = useI18n();
 const showRecoveryCodes = ref(false);
 
 const enableForm = useForm({
@@ -49,7 +51,7 @@ const fieldError = 'mt-1 text-xs text-status-danger';
 </script>
 
 <template>
-    <Head title="Two-Factor Authentication Setup" />
+    <Head :title="t('auth.twoFactor.setupTitle')" />
 
     <AppLayout>
         <template #header>
@@ -62,9 +64,9 @@ const fieldError = 'mt-1 text-xs text-status-danger';
             </div>
         </template>
 
-        <PageHeader title="Two-Factor Authentication" description="Add an extra layer of security to your account with an authenticator app.">
+        <PageHeader :title="t('auth.twoFactor.title')" :description="t('auth.twoFactor.description')">
             <template v-if="enabled" #actions>
-                <Badge variant="success" dot>Enabled</Badge>
+                <Badge variant="success" dot>{{ t('auth.twoFactor.enabled') }}</Badge>
             </template>
         </PageHeader>
 
@@ -75,18 +77,17 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                     <ShieldCheck :size="20" class="mt-0.5 shrink-0 text-status-success" />
                     <div>
                         <h3 class="text-sm font-semibold text-text-primary">
-                            Two-Factor Authentication is Enabled
+                            {{ t('auth.twoFactor.enabledTitle') }}
                         </h3>
                         <p class="mt-1 text-sm text-text-secondary">
-                            Two-factor authentication is currently active on your account.
-                            Enter your password to disable it.
+                            {{ t('auth.twoFactor.enabledHint') }}
                         </p>
                     </div>
                 </div>
 
                 <form @submit.prevent="submitDisable" class="space-y-4">
                     <div>
-                        <label for="password" :class="fieldLabel">Password</label>
+                        <label for="password" :class="fieldLabel">{{ t('auth.twoFactor.password') }}</label>
                         <input
                             id="password"
                             v-model="disableForm.password"
@@ -99,7 +100,7 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                     </div>
 
                     <Button type="submit" variant="danger" :loading="disableForm.processing" :disabled="disableForm.processing">
-                        Disable Two-Factor Authentication
+                        {{ t('auth.twoFactor.disable') }}
                     </Button>
                 </form>
             </div>
@@ -108,11 +109,10 @@ const fieldError = 'mt-1 text-xs text-status-danger';
             <div v-else class="space-y-6">
                 <div>
                     <h3 class="text-sm font-semibold text-text-primary">
-                        Enable Two-Factor Authentication
+                        {{ t('auth.twoFactor.enable') }}
                     </h3>
                     <p class="mt-1 text-sm text-text-secondary">
-                        Scan the QR code below with your authenticator app (Google Authenticator,
-                        Authy, etc.), then enter the verification code to enable 2FA.
+                        {{ t('auth.twoFactor.scanHint') }}
                     </p>
                 </div>
 
@@ -126,7 +126,7 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                 <!-- Secret key for manual entry -->
                 <div>
                     <p class="mb-2 text-sm text-text-secondary">
-                        Or enter this key manually:
+                        {{ t('auth.twoFactor.manualKey') }}
                     </p>
                     <code class="block select-all rounded-lg bg-surface-sunken p-3 font-mono text-sm text-text-primary">
                         {{ secret }}
@@ -136,7 +136,7 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                 <!-- Verification form -->
                 <form @submit.prevent="submitEnable" class="space-y-4">
                     <div>
-                        <label for="code" :class="fieldLabel">Verification Code</label>
+                        <label for="code" :class="fieldLabel">{{ t('auth.twoFactor.verificationCode') }}</label>
                         <input
                             id="code"
                             v-model="enableForm.code"
@@ -144,27 +144,26 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                             :class="fieldInput"
                             required
                             maxlength="6"
-                            placeholder="Enter 6-digit code"
+                            :placeholder="t('auth.twoFactorChallenge.codePlaceholder')"
                             autocomplete="one-time-code"
                         />
                         <p v-if="enableForm.errors.code" :class="fieldError">{{ enableForm.errors.code }}</p>
                     </div>
 
                     <Button type="submit" variant="default" :loading="enableForm.processing" :disabled="enableForm.processing">
-                        Enable Two-Factor Authentication
+                        {{ t('auth.twoFactor.enable') }}
                     </Button>
                 </form>
 
                 <!-- Recovery Codes -->
                 <div class="border-t border-border-subtle pt-6">
                     <Button variant="link" size="sm" @click="showRecoveryCodes = !showRecoveryCodes">
-                        {{ showRecoveryCodes ? 'Hide' : 'Show' }} Recovery Codes
+                        {{ showRecoveryCodes ? t('auth.twoFactor.hideRecoveryCodes') : t('auth.twoFactor.showRecoveryCodes') }}
                     </Button>
 
                     <div v-if="showRecoveryCodes" class="mt-4">
                         <p class="mb-3 text-sm text-text-secondary">
-                            Save these recovery codes in a safe place. They can be used
-                            to access your account if you lose your authenticator device.
+                            {{ t('auth.twoFactor.recoveryHint') }}
                         </p>
                         <div class="rounded-lg bg-surface-sunken p-3 font-mono text-sm text-text-primary">
                             <div class="grid grid-cols-2 gap-2">

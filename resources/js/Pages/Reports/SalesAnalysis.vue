@@ -11,7 +11,8 @@ import { formatDelta, deltaTone } from '@/lib/reportFormat';
 import { Head, Link, router } from '@inertiajs/vue3';
 import { computed, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { formatCalendarDate } from '@/lib/dates';
+import { displayCalendarDate } from '@/lib/dates';
+import { formatMoney } from '@/lib/money';
 import {
     ArrowLeft,
     ShoppingCart,
@@ -56,12 +57,7 @@ const applyFilters = () => {
     });
 };
 
-const formatCurrency = (value) => {
-    return new Intl.NumberFormat('en-US', {
-        style: 'currency',
-        currency: 'USD',
-    }).format(value);
-};
+const formatCurrency = (value) => formatMoney(value);
 
 const statusVariant = (status) =>
     ({
@@ -288,7 +284,7 @@ const thClass =
                                 :key="day.date"
                                 class="border-b border-border-subtle transition-colors last:border-b-0 hover:bg-surface-overlay"
                             >
-                                <td class="px-4 py-3 text-text-primary">{{ formatCalendarDate(day.date) }}</td>
+                                <td class="px-4 py-3 text-text-primary">{{ displayCalendarDate(day.date) }}</td>
                                 <td class="px-4 py-3 text-right tabular-nums text-text-secondary">{{ day.orders }}</td>
                                 <td class="px-4 py-3 text-right font-medium tabular-nums text-status-success">{{ formatCurrency(day.revenue) }}</td>
                             </tr>

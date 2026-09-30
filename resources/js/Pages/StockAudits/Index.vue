@@ -7,6 +7,7 @@ import Badge from '@/Components/ui/Badge.vue';
 import { Head, Link, router } from '@inertiajs/vue3';
 import { ref } from 'vue';
 import { useI18n } from 'vue-i18n';
+import { displayDate } from '@/lib/dates';
 import { Plus, Search, Eye, ClipboardList, CalendarClock } from 'lucide-vue-next';
 
 const { t } = useI18n();
@@ -46,14 +47,7 @@ const statusVariant = (status) =>
 const typeVariant = (type) =>
     ({ full: 'brand', cycle: 'info', spot: 'warning' }[type] || 'brand');
 
-const formatDate = (dateStr) => {
-    if (!dateStr) return '-';
-    return new Date(dateStr).toLocaleDateString('en-US', {
-        year: 'numeric',
-        month: 'short',
-        day: 'numeric',
-    });
-};
+const formatDate = (dateStr) => displayDate(dateStr);
 
 const selectClass =
     'h-9 w-full rounded-md border border-border-subtle bg-surface-canvas px-3 text-sm text-text-primary ds-focus-ring';
@@ -62,7 +56,7 @@ const thClass =
 </script>
 
 <template>
-    <Head title="Stock Audits" />
+    <Head :title="t('nav.stockAudits')" />
 
     <AppLayout>
         <template #header>
@@ -73,7 +67,7 @@ const thClass =
             </div>
         </template>
 
-        <PageHeader title="Stock Audits" description="Manage stock audits and cycle counts.">
+        <PageHeader :title="t('nav.stockAudits')" :description="t('stockAudits.index.description')">
             <template #actions>
                 <Button variant="secondary" size="sm" as="Link" :href="route('cycle-counts.index')">
                     <CalendarClock :size="14" />
@@ -81,7 +75,7 @@ const thClass =
                 </Button>
                 <Button variant="default" size="sm" as="Link" :href="route('stock-audits.create')">
                     <Plus :size="14" />
-                    New Audit
+                    {{ t('stockAudits.index.newAudit') }}
                 </Button>
             </template>
         </PageHeader>
@@ -91,39 +85,39 @@ const thClass =
             <form @submit.prevent="applyFilters" class="space-y-4">
                 <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
                     <div class="sm:col-span-2">
-                        <label for="search" class="mb-1 block text-xs font-medium text-text-secondary">Search</label>
+                        <label for="search" class="mb-1 block text-xs font-medium text-text-secondary">{{ t('common.search') }}</label>
                         <div class="relative">
                             <Search :size="15" class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-text-tertiary" />
                             <input
                                 id="search"
                                 v-model="search"
                                 type="text"
-                                placeholder="Search by audit number or name..."
+                                :placeholder="t('stockAudits.index.searchPlaceholder')"
                                 class="h-9 w-full rounded-md border border-border-subtle bg-surface-canvas pl-9 pr-3 text-sm text-text-primary placeholder:text-text-tertiary ds-focus-ring"
                             />
                         </div>
                     </div>
                     <div>
-                        <label for="status" class="mb-1 block text-xs font-medium text-text-secondary">Status</label>
+                        <label for="status" class="mb-1 block text-xs font-medium text-text-secondary">{{ t('common.status') }}</label>
                         <select id="status" v-model="selectedStatus" :class="selectClass">
-                            <option value="">All Statuses</option>
-                            <option v-for="(label, value) in statuses" :key="value" :value="value">{{ label }}</option>
+                            <option value="">{{ t('common.allStatuses') }}</option>
+                            <option v-for="(label, value) in statuses" :key="value" :value="value">{{ t(`stockAudits.statuses.${value}`) }}</option>
                         </select>
                     </div>
                     <div>
-                        <label for="audit_type" class="mb-1 block text-xs font-medium text-text-secondary">Audit Type</label>
+                        <label for="audit_type" class="mb-1 block text-xs font-medium text-text-secondary">{{ t('stockAudits.fields.auditType') }}</label>
                         <select id="audit_type" v-model="selectedType" :class="selectClass">
-                            <option value="">All Types</option>
-                            <option v-for="(label, value) in auditTypes" :key="value" :value="value">{{ label }}</option>
+                            <option value="">{{ t('common.allTypes') }}</option>
+                            <option v-for="(label, value) in auditTypes" :key="value" :value="value">{{ t(`stockAudits.types.${value}`) }}</option>
                         </select>
                     </div>
                 </div>
                 <div class="flex items-center gap-2">
                     <Button type="submit" variant="default" size="sm">
                         <Search :size="14" />
-                        Apply Filters
+                        {{ t('common.applyFilters') }}
                     </Button>
-                    <Button type="button" variant="secondary" size="sm" @click="clearFilters">Clear Filters</Button>
+                    <Button type="button" variant="secondary" size="sm" @click="clearFilters">{{ t('common.clearFilters') }}</Button>
                 </div>
             </form>
         </Card>
@@ -133,15 +127,15 @@ const thClass =
             <table class="w-full text-sm">
                 <thead>
                     <tr class="border-b border-border-subtle">
-                        <th :class="thClass">Audit #</th>
-                        <th :class="thClass">Name</th>
-                        <th :class="thClass">Type</th>
-                        <th :class="thClass">Status</th>
-                        <th :class="thClass">Location</th>
-                        <th :class="[thClass, 'text-right']">Items</th>
-                        <th :class="thClass">Created By</th>
-                        <th :class="thClass">Date</th>
-                        <th :class="[thClass, 'text-right']">Actions</th>
+                        <th :class="thClass">{{ t('stockAudits.columns.auditNumber') }}</th>
+                        <th :class="thClass">{{ t('common.name') }}</th>
+                        <th :class="thClass">{{ t('common.type') }}</th>
+                        <th :class="thClass">{{ t('common.status') }}</th>
+                        <th :class="thClass">{{ t('stockAudits.columns.location') }}</th>
+                        <th :class="[thClass, 'text-right']">{{ t('stockAudits.columns.items') }}</th>
+                        <th :class="thClass">{{ t('stockAudits.columns.createdBy') }}</th>
+                        <th :class="thClass">{{ t('common.date') }}</th>
+                        <th :class="[thClass, 'text-right']">{{ t('common.actions') }}</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -149,10 +143,10 @@ const thClass =
                         <td colspan="9" class="px-4 py-12 text-center">
                             <div class="flex flex-col items-center gap-3">
                                 <ClipboardList :size="22" class="text-text-tertiary" />
-                                <p class="text-sm text-text-tertiary">No stock audits found</p>
+                                <p class="text-sm text-text-tertiary">{{ t('stockAudits.index.empty') }}</p>
                                 <Button variant="default" size="sm" as="Link" :href="route('stock-audits.create')">
                                     <Plus :size="14" />
-                                    Create First Audit
+                                    {{ t('stockAudits.index.createFirst') }}
                                 </Button>
                             </div>
                         </td>
@@ -167,16 +161,16 @@ const thClass =
                         </td>
                         <td class="px-4 py-3">
                             <Badge :variant="typeVariant(audit.audit_type)" size="sm">
-                                {{ auditTypes[audit.audit_type] || audit.audit_type }}
+                                {{ auditTypes[audit.audit_type] ? t(`stockAudits.types.${audit.audit_type}`) : audit.audit_type }}
                             </Badge>
                         </td>
                         <td class="px-4 py-3">
                             <Badge :variant="statusVariant(audit.status)" size="sm" dot>
-                                {{ statuses[audit.status] || audit.status }}
+                                {{ statuses[audit.status] ? t(`stockAudits.statuses.${audit.status}`) : audit.status }}
                             </Badge>
                         </td>
                         <td class="px-4 py-3 text-text-secondary">
-                            {{ audit.warehouse_location?.name || 'All Locations' }}
+                            {{ audit.warehouse_location?.name || t('products.allLocations') }}
                         </td>
                         <td class="px-4 py-3 text-right tabular-nums text-text-secondary">
                             {{ audit.items_count || 0 }}
@@ -189,7 +183,7 @@ const thClass =
                         </td>
                         <td class="px-4 py-3">
                             <div class="flex items-center justify-end gap-1">
-                                <Link :href="route('stock-audits.show', audit.id)" class="rounded-md p-1.5 text-text-tertiary transition-colors hover:bg-surface-overlay hover:text-brand" title="View"><Eye :size="16" /></Link>
+                                <Link :href="route('stock-audits.show', audit.id)" class="rounded-md p-1.5 text-text-tertiary transition-colors hover:bg-surface-overlay hover:text-brand" :title="t('common.view')"><Eye :size="16" /></Link>
                             </div>
                         </td>
                     </tr>

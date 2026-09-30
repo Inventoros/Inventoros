@@ -6,6 +6,7 @@ import Button from '@/Components/ui/Button.vue';
 import { Head, Link, useForm } from '@inertiajs/vue3';
 
 import { useI18n } from 'vue-i18n';
+import { roleDescription, roleName } from '@/lib/permissionLabels';
 import { ArrowLeft } from 'lucide-vue-next';
 
 const props = defineProps({
@@ -14,7 +15,8 @@ const props = defineProps({
 });
 
 
-const { t } = useI18n();
+const { t, te } = useI18n();
+const i18n = { t, te };
 const form = useForm({
     name: props.user.name,
     email: props.user.email,
@@ -35,7 +37,7 @@ const fieldError = 'mt-1 text-xs text-status-danger';
 </script>
 
 <template>
-    <Head :title="`Edit ${user.name}`" />
+    <Head :title="t('common.editWithName', { name: user.name })" />
 
     <AppLayout>
         <template #header>
@@ -48,11 +50,11 @@ const fieldError = 'mt-1 text-xs text-status-danger';
             </div>
         </template>
 
-        <PageHeader :title="`Edit User: ${user.name}`" description="Update account details, base role, and custom role assignments.">
+        <PageHeader :title="t('admin.users.edit.titleWithName', { name: user.name })" :description="t('admin.users.edit.subtitle')">
             <template #actions>
                 <Button variant="secondary" size="sm" as="Link" :href="route('users.index')">
                     <ArrowLeft :size="14" />
-                    Back to Users
+                    {{ t('admin.users.create.backToUsers') }}
                 </Button>
             </template>
         </PageHeader>
@@ -62,7 +64,7 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                 <div class="space-y-6 p-5">
                     <!-- Name -->
                     <div>
-                        <label for="name" :class="fieldLabel">Name</label>
+                        <label for="name" :class="fieldLabel">{{ t('common.name') }}</label>
                         <input
                             id="name"
                             v-model="form.name"
@@ -76,7 +78,7 @@ const fieldError = 'mt-1 text-xs text-status-danger';
 
                     <!-- Email -->
                     <div>
-                        <label for="email" :class="fieldLabel">Email</label>
+                        <label for="email" :class="fieldLabel">{{ t('common.email') }}</label>
                         <input
                             id="email"
                             v-model="form.email"
@@ -89,7 +91,7 @@ const fieldError = 'mt-1 text-xs text-status-danger';
 
                     <!-- Password -->
                     <div>
-                        <label for="password" :class="fieldLabel">New Password (leave blank to keep current)</label>
+                        <label for="password" :class="fieldLabel">{{ t('admin.users.edit.newPassword') }}</label>
                         <input
                             id="password"
                             v-model="form.password"
@@ -99,13 +101,13 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                         />
                         <p v-if="form.errors.password" :class="fieldError">{{ form.errors.password }}</p>
                         <p class="mt-1 text-xs text-text-tertiary">
-                            Only fill this in if you want to change the user's password
+                            {{ t('admin.users.edit.passwordHint') }}
                         </p>
                     </div>
 
                     <!-- Password Confirmation -->
                     <div v-if="form.password">
-                        <label for="password_confirmation" :class="fieldLabel">Confirm New Password</label>
+                        <label for="password_confirmation" :class="fieldLabel">{{ t('admin.users.edit.confirmNewPassword') }}</label>
                         <input
                             id="password_confirmation"
                             v-model="form.password_confirmation"
@@ -118,29 +120,29 @@ const fieldError = 'mt-1 text-xs text-status-danger';
 
                     <!-- Base Role -->
                     <div>
-                        <label for="role" :class="fieldLabel">Base Role</label>
+                        <label for="role" :class="fieldLabel">{{ t('admin.users.create.baseRole') }}</label>
                         <select
                             id="role"
                             v-model="form.role"
                             :class="fieldInput"
                             required
                         >
-                            <option value="">Select a role</option>
-                            <option value="admin">Admin</option>
-                            <option value="manager">Manager</option>
-                            <option value="member">Member</option>
+                            <option value="">{{ t('admin.users.edit.selectRole') }}</option>
+                            <option value="admin">{{ t('admin.users.edit.admin') }}</option>
+                            <option value="manager">{{ t('admin.users.create.manager') }}</option>
+                            <option value="member">{{ t('admin.users.create.member') }}</option>
                         </select>
                         <p v-if="form.errors.role" :class="fieldError">{{ form.errors.role }}</p>
                         <p class="mt-1 text-xs text-text-tertiary">
-                            The base role determines core access level. Admins have full access.
+                            {{ t('admin.users.edit.roleHint') }}
                         </p>
                     </div>
 
                     <!-- Additional Custom Roles -->
                     <div v-if="roles && roles.length > 0">
-                        <label :class="fieldLabel">Additional Custom Roles (Optional)</label>
+                        <label :class="fieldLabel">{{ t('admin.users.edit.customRoles') }}</label>
                         <p class="mb-4 mt-1 text-sm text-text-tertiary">
-                            Assign custom roles created for your organization to grant specific permissions.
+                            {{ t('admin.users.edit.customRolesHint') }}
                         </p>
 
                         <div class="max-h-64 space-y-2 overflow-y-auto rounded-lg border border-border-subtle bg-surface-canvas p-4">
@@ -156,10 +158,10 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                                     class="mt-1 rounded border-border-subtle bg-surface-canvas text-brand ds-focus-ring"
                                 />
                                 <div class="flex-1">
-                                    <div class="text-sm font-medium text-text-primary">{{ role.name }}</div>
-                                    <div class="text-xs text-text-tertiary" v-if="role.description">{{ role.description }}</div>
+                                    <div class="text-sm font-medium text-text-primary">{{ roleName(role, i18n) }}</div>
+                                    <div class="text-xs text-text-tertiary" v-if="role.description">{{ roleDescription(role, i18n) }}</div>
                                     <div class="mt-1 text-xs text-text-tertiary">
-                                        {{ role.permissions ? role.permissions.length : 0 }} permissions
+                                        {{ t('admin.roles.permissionsCount', { count: role.permissions ? role.permissions.length : 0 }) }}
                                     </div>
                                 </div>
                             </label>
@@ -169,7 +171,7 @@ const fieldError = 'mt-1 text-xs text-status-danger';
 
                         <div class="mt-3 rounded-md border border-brand/20 bg-brand-soft p-3">
                             <p class="text-sm text-brand">
-                                <strong>{{ form.role_ids.length }}</strong> custom role(s) selected
+                                {{ t('admin.users.edit.customRolesSelected', { count: form.role_ids.length }) }}
                             </p>
                         </div>
                     </div>
@@ -177,7 +179,7 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                     <!-- Actions -->
                     <div class="flex items-center gap-4 border-t border-border-subtle pt-4">
                         <Button type="submit" variant="default" :loading="form.processing" :disabled="form.processing">
-                            Update User
+                            {{ t('admin.users.edit.updateUser') }}
                         </Button>
 
                         <Button variant="secondary" as="Link" :href="route('users.index')">
@@ -191,7 +193,7 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                             leave-to-class="opacity-0"
                         >
                             <p v-if="form.recentlySuccessful" class="text-sm text-status-success">
-                                User updated successfully.
+                                {{ t('admin.users.edit.success') }}
                             </p>
                         </Transition>
                     </div>

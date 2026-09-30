@@ -7,6 +7,7 @@ import Badge from '@/Components/ui/Badge.vue';
 import { Head, Link, router } from '@inertiajs/vue3';
 import { ref } from 'vue';
 import { useI18n } from 'vue-i18n';
+import { displayDateTime } from '@/lib/dates';
 import {
     AlertTriangle,
     AlertCircle,
@@ -41,7 +42,7 @@ const markAsRead = (notification) => {
 };
 
 const markAllAsRead = () => {
-    if (confirm('Mark all notifications as read?')) {
+    if (confirm(t('notifications.confirmMarkAllRead'))) {
         router.post(route('notifications.mark-all-read'), {}, {
             preserveState: true,
             preserveScroll: true,
@@ -50,7 +51,7 @@ const markAllAsRead = () => {
 };
 
 const deleteNotification = (notification) => {
-    if (confirm('Delete this notification?')) {
+    if (confirm(t('notifications.confirmDelete'))) {
         router.delete(route('notifications.destroy', notification.id), {
             preserveState: true,
             preserveScroll: true,
@@ -59,7 +60,7 @@ const deleteNotification = (notification) => {
 };
 
 const clearRead = () => {
-    if (confirm('Clear all read notifications?')) {
+    if (confirm(t('notifications.confirmClearRead'))) {
         router.delete(route('notifications.clear-read'), {
             preserveState: true,
             preserveScroll: true,
@@ -102,7 +103,7 @@ const getPriorityVariant = (priority) => {
 };
 
 const formatDate = (date) => {
-    return new Date(date).toLocaleString();
+    return displayDateTime(date);
 };
 
 const filterTabClass = (filter) => [
@@ -127,13 +128,13 @@ const currentFilterMatches = (filter) => props.currentFilter === filter;
             </div>
         </template>
 
-        <PageHeader :title="t('nav.notifications')" description="Manage your notifications and alerts.">
+        <PageHeader :title="t('nav.notifications')" :description="t('notifications.subtitle')">
             <template #actions>
                 <Button v-if="stats.unread > 0" variant="default" size="sm" @click="markAllAsRead">
-                    Mark All Read
+                    {{ t('notifications.markAllRead') }}
                 </Button>
                 <Button v-if="stats.read > 0" variant="secondary" size="sm" @click="clearRead">
-                    Clear Read
+                    {{ t('notifications.clearRead') }}
                 </Button>
             </template>
         </PageHeader>
@@ -145,11 +146,11 @@ const currentFilterMatches = (filter) => props.currentFilter === filter;
                 <p class="mt-2 text-2xl font-semibold tabular-nums text-text-primary">{{ stats.total }}</p>
             </Card>
             <Card>
-                <p class="text-xs font-medium text-text-tertiary">Unread</p>
+                <p class="text-xs font-medium text-text-tertiary">{{ t('notifications.unread') }}</p>
                 <p class="mt-2 text-2xl font-semibold tabular-nums text-brand">{{ stats.unread }}</p>
             </Card>
             <Card>
-                <p class="text-xs font-medium text-text-tertiary">Read</p>
+                <p class="text-xs font-medium text-text-tertiary">{{ t('notifications.read') }}</p>
                 <p class="mt-2 text-2xl font-semibold tabular-nums text-text-primary">{{ stats.read }}</p>
             </Card>
         </div>
@@ -157,13 +158,13 @@ const currentFilterMatches = (filter) => props.currentFilter === filter;
         <!-- Filter Tabs -->
         <div class="mt-4 inline-flex items-center gap-1 rounded-lg border border-border-subtle bg-surface-raised p-1">
             <button type="button" :class="filterTabClass('all')" @click="filterNotifications('all')">
-                All ({{ stats.total }})
+                {{ t('notifications.allCount', { count: stats.total }) }}
             </button>
             <button type="button" :class="filterTabClass('unread')" @click="filterNotifications('unread')">
-                Unread ({{ stats.unread }})
+                {{ t('notifications.unreadCount', { count: stats.unread }) }}
             </button>
             <button type="button" :class="filterTabClass('read')" @click="filterNotifications('read')">
-                Read ({{ stats.read }})
+                {{ t('notifications.readCount', { count: stats.read }) }}
             </button>
         </div>
 
@@ -196,7 +197,7 @@ const currentFilterMatches = (filter) => props.currentFilter === filter;
                                     </p>
                                 </div>
                                 <Badge :variant="getPriorityVariant(notification.priority)" size="sm" class="shrink-0 capitalize">
-                                    {{ notification.priority }}
+                                    {{ notification.priority && t(`notifications.priorities.${notification.priority}`) }}
                                 </Badge>
                             </div>
 
@@ -205,7 +206,7 @@ const currentFilterMatches = (filter) => props.currentFilter === filter;
                                     {{ formatDate(notification.created_at) }}
                                 </p>
                                 <Badge v-if="!notification.read_at" variant="brand" size="sm" dot>
-                                    New
+                                    {{ t('notifications.new') }}
                                 </Badge>
                             </div>
 
@@ -219,7 +220,7 @@ const currentFilterMatches = (filter) => props.currentFilter === filter;
                                     :href="notification.action_url"
                                     @click="markAsRead(notification)"
                                 >
-                                    View Details
+                                    {{ t('notifications.viewDetailsLabel') }}
                                     <ArrowRight :size="14" />
                                 </Button>
                                 <Button
@@ -228,7 +229,7 @@ const currentFilterMatches = (filter) => props.currentFilter === filter;
                                     size="sm"
                                     @click="markAsRead(notification)"
                                 >
-                                    Mark as Read
+                                    {{ t('notifications.markAsRead') }}
                                 </Button>
                                 <Button variant="ghost" size="sm" @click="deleteNotification(notification)">
                                     {{ t('common.delete') }}
@@ -243,7 +244,7 @@ const currentFilterMatches = (filter) => props.currentFilter === filter;
             <div v-else class="flex flex-col items-center gap-3 px-6 py-16 text-center">
                 <Bell :size="28" class="text-text-tertiary" />
                 <p class="text-sm font-medium text-text-primary">{{ t('notifications.noNotifications') }}</p>
-                <p class="text-sm text-text-tertiary">You're all caught up!</p>
+                <p class="text-sm text-text-tertiary">{{ t('notifications.allCaughtUp') }}</p>
             </div>
 
             <!-- Pagination -->

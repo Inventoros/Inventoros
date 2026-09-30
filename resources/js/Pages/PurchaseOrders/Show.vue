@@ -10,7 +10,8 @@ import ApprovalPanel from '@/Components/ApprovalPanel.vue';
 import { Head, Link, router } from '@inertiajs/vue3';
 import { computed, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { formatCalendarDate } from '@/lib/dates';
+import { displayCalendarDate, displayDate } from '@/lib/dates';
+import { formatMoney } from '@/lib/money';
 import { ArrowLeft, Pencil, Download, Eye, Send, PackageCheck, Ban, Trash2 } from 'lucide-vue-next';
 
 const { t } = useI18n();
@@ -31,25 +32,18 @@ const awaitingApproval = computed(() =>
 const lockedForApproval = computed(() => props.purchaseOrder.approval_status === 'pending');
 
 const formatCurrency = (value) => {
-    return new Intl.NumberFormat('en-US', {
-        style: 'currency',
-        currency: props.purchaseOrder.currency || 'USD',
-    }).format(value || 0);
+    return formatMoney(value, props.purchaseOrder.currency);
 };
 
 // sent_at is an instant, shown in the viewer's timezone.
 const formatDate = (dateString) => {
     if (!dateString) return '-';
-    return new Date(dateString).toLocaleDateString('en-US', {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric',
-    });
+    return displayDate(dateString);
 };
 
 // order_date, expected_date and received_date are calendar days (date columns).
 const formatDay = (dateString) =>
-    formatCalendarDate(dateString, { year: 'numeric', month: 'long', day: 'numeric' }, 'en-US');
+    displayCalendarDate(dateString);
 
 const statusVariant = (status) =>
     ({
@@ -61,11 +55,11 @@ const statusVariant = (status) =>
     }[status] || 'neutral');
 
 const statusLabels = {
-    draft: 'Draft',
-    sent: 'Sent',
-    partial: 'Partial',
-    received: 'Received',
-    cancelled: 'Cancelled',
+    draft: t('purchaseOrders.status.draft'),
+    sent: t('purchaseOrders.status.sent'),
+    partial: t('purchaseOrders.status.partial'),
+    received: t('purchaseOrders.status.received'),
+    cancelled: t('purchaseOrders.status.cancelled'),
 };
 
 const showSendModal = ref(false);
@@ -91,13 +85,13 @@ const sentSummary = computed(() => {
 });
 
 const cancelPO = () => {
-    if (confirm('Are you sure you want to cancel this purchase order?')) {
+    if (confirm(t('purchaseOrders.show.confirmCancel'))) {
         router.post(route('purchase-orders.cancel', props.purchaseOrder.id));
     }
 };
 
 const deletePO = () => {
-    if (confirm(`Are you sure you want to delete "${props.purchaseOrder.po_number}"?`)) {
+    if (confirm(t('purchaseOrders.confirmDelete', { number: props.purchaseOrder.po_number }))) {
         router.delete(route('purchase-orders.destroy', props.purchaseOrder.id));
     }
 };
@@ -121,7 +115,7 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-t
 
         <PageHeader
             :title="purchaseOrder.po_number"
-            :description="`Order date ${formatDay(purchaseOrder.order_date)}`"
+            :description="t('purchaseOrders.show.orderDateOn', { date: formatDay(purchaseOrder.order_date) })"
         >
             <template #actions>
                 <Badge :variant="statusVariant(purchaseOrder.status)" size="sm" dot>
@@ -134,7 +128,7 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-t
                     :href="route('purchase-orders.invoice.download', purchaseOrder.id)"
                 >
                     <Download :size="14" />
-                    Download PDF
+                    {{ t('purchaseOrders.show.downloadPdf') }}
                 </Button>
                 <Button
                     variant="secondary"
@@ -144,7 +138,7 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-t
                     target="_blank"
                 >
                     <Eye :size="14" />
-                    Preview PDF
+                    {{ t('purchaseOrders.show.previewPdf') }}
                 </Button>
                 <Button
                     v-if="purchaseOrder.status === 'draft' && !lockedForApproval"
@@ -154,7 +148,7 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-t
                     :href="route('purchase-orders.edit', purchaseOrder.id)"
                 >
                     <Pencil :size="14" />
-                    Edit
+                    {{ t('common.edit') }}
                 </Button>
                 <Button
                     v-if="purchaseOrder.status === 'sent' || purchaseOrder.status === 'partial'"
@@ -164,11 +158,11 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-t
                     :href="route('purchase-orders.receive', purchaseOrder.id)"
                 >
                     <PackageCheck :size="14" />
-                    Receive Items
+                    {{ t('purchaseOrders.show.receiveItems') }}
                 </Button>
                 <Button variant="secondary" size="sm" as="Link" :href="route('purchase-orders.index')">
                     <ArrowLeft :size="14" />
-                    Back
+                    {{ t('common.back') }}
                 </Button>
             </template>
         </PageHeader>
@@ -196,11 +190,11 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-t
             <div class="space-y-4 lg:col-span-2">
                 <!-- Order Details -->
                 <Card :padded="false">
-                    <div class="px-5 pt-5"><h3 class="text-sm font-semibold text-text-primary">Order Details</h3></div>
+                    <div class="px-5 pt-5"><h3 class="text-sm font-semibold text-text-primary">{{ t('purchaseOrders.show.orderDetails') }}</h3></div>
                     <div class="p-5">
                         <dl class="grid grid-cols-1 gap-x-4 gap-y-6 sm:grid-cols-2">
                             <div>
-                                <dt class="text-xs text-text-tertiary">Supplier</dt>
+                                <dt class="text-xs text-text-tertiary">{{ t('purchaseOrders.supplier') }}</dt>
                                 <dd class="mt-1 text-sm text-text-primary">
                                     <Link v-if="purchaseOrder.supplier" :href="route('suppliers.show', purchaseOrder.supplier.id)" class="text-brand hover:underline">
                                         {{ purchaseOrder.supplier.name }}
@@ -209,28 +203,28 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-t
                                 </dd>
                             </div>
                             <div>
-                                <dt class="text-xs text-text-tertiary">Created By</dt>
+                                <dt class="text-xs text-text-tertiary">{{ t('purchaseOrders.show.createdBy') }}</dt>
                                 <dd class="mt-1 text-sm text-text-primary">{{ purchaseOrder.creator?.name || '-' }}</dd>
                             </div>
                             <div>
-                                <dt class="text-xs text-text-tertiary">Order Date</dt>
+                                <dt class="text-xs text-text-tertiary">{{ t('purchaseOrders.orderDate') }}</dt>
                                 <dd class="mt-1 text-sm text-text-primary">{{ formatDay(purchaseOrder.order_date) }}</dd>
                             </div>
                             <div>
-                                <dt class="text-xs text-text-tertiary">Expected Delivery</dt>
+                                <dt class="text-xs text-text-tertiary">{{ t('purchaseOrders.show.expectedDelivery') }}</dt>
                                 <dd class="mt-1 text-sm text-text-primary">{{ formatDay(purchaseOrder.expected_date) }}</dd>
                             </div>
                             <div v-if="purchaseOrder.received_date">
-                                <dt class="text-xs text-text-tertiary">Received Date</dt>
+                                <dt class="text-xs text-text-tertiary">{{ t('purchaseOrders.show.receivedDate') }}</dt>
                                 <dd class="mt-1 text-sm text-text-primary">{{ formatDay(purchaseOrder.received_date) }}</dd>
                             </div>
                             <div>
-                                <dt class="text-xs text-text-tertiary">Currency</dt>
+                                <dt class="text-xs text-text-tertiary">{{ t('common.currency') }}</dt>
                                 <dd class="mt-1 text-sm text-text-primary">{{ purchaseOrder.currency }}</dd>
                             </div>
                         </dl>
                         <div v-if="purchaseOrder.notes" class="mt-6">
-                            <dt class="text-xs text-text-tertiary">Notes</dt>
+                            <dt class="text-xs text-text-tertiary">{{ t('common.notes') }}</dt>
                             <dd class="mt-1 whitespace-pre-wrap text-sm text-text-secondary">{{ purchaseOrder.notes }}</dd>
                         </div>
                     </div>
@@ -238,18 +232,18 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-t
 
                 <!-- Items -->
                 <Card :padded="false">
-                    <div class="px-5 pt-5"><h3 class="text-sm font-semibold text-text-primary">Items ({{ purchaseOrder.items?.length || 0 }})</h3></div>
+                    <div class="px-5 pt-5"><h3 class="text-sm font-semibold text-text-primary">{{ t('purchaseOrders.show.itemsCount', { count: purchaseOrder.items?.length || 0 }) }}</h3></div>
                     <div class="p-5">
                         <div class="w-full overflow-x-auto rounded-lg border border-border-subtle">
                             <table class="w-full text-sm">
                                 <thead>
                                     <tr class="border-b border-border-subtle">
-                                        <th :class="thClass">Product</th>
+                                        <th :class="thClass">{{ t('common.product') }}</th>
                                         <th :class="thClass">SKU</th>
-                                        <th :class="thClass">Ordered</th>
-                                        <th :class="thClass">Received</th>
-                                        <th :class="thClass">Unit Cost</th>
-                                        <th :class="thClass">Total</th>
+                                        <th :class="thClass">{{ t('purchaseOrders.show.ordered') }}</th>
+                                        <th :class="thClass">{{ t('purchaseOrders.show.received') }}</th>
+                                        <th :class="thClass">{{ t('purchaseOrders.create.unitCost') }}</th>
+                                        <th :class="thClass">{{ t('common.total') }}</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -264,7 +258,7 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-t
                                         <td class="whitespace-nowrap px-4 py-3 text-sm text-text-tertiary">
                                             {{ item.sku || '-' }}
                                             <span v-if="item.supplier_sku" class="block text-xs text-text-tertiary">
-                                                Supplier: {{ item.supplier_sku }}
+                                                {{ t('purchaseOrders.show.supplierSkuLine', { sku: item.supplier_sku }) }}
                                             </span>
                                         </td>
                                         <td class="px-4 py-3 text-sm tabular-nums text-text-primary">
@@ -291,19 +285,19 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-t
                                 </tbody>
                                 <tfoot>
                                     <tr class="border-t border-border-subtle">
-                                        <td colspan="5" class="px-4 py-3 text-right text-sm font-medium text-text-secondary">Subtotal:</td>
+                                        <td colspan="5" class="px-4 py-3 text-right text-sm font-medium text-text-secondary">{{ t('common.subtotal') }}:</td>
                                         <td class="px-4 py-3 text-sm font-medium tabular-nums text-text-primary">{{ formatCurrency(purchaseOrder.subtotal) }}</td>
                                     </tr>
                                     <tr v-if="purchaseOrder.tax > 0">
-                                        <td colspan="5" class="px-4 py-3 text-right text-sm font-medium text-text-secondary">Tax:</td>
+                                        <td colspan="5" class="px-4 py-3 text-right text-sm font-medium text-text-secondary">{{ t('common.tax') }}:</td>
                                         <td class="px-4 py-3 text-sm tabular-nums text-text-primary">{{ formatCurrency(purchaseOrder.tax) }}</td>
                                     </tr>
                                     <tr v-if="purchaseOrder.shipping > 0">
-                                        <td colspan="5" class="px-4 py-3 text-right text-sm font-medium text-text-secondary">Shipping:</td>
+                                        <td colspan="5" class="px-4 py-3 text-right text-sm font-medium text-text-secondary">{{ t('common.shipping') }}:</td>
                                         <td class="px-4 py-3 text-sm tabular-nums text-text-primary">{{ formatCurrency(purchaseOrder.shipping) }}</td>
                                     </tr>
                                     <tr class="border-t border-border-subtle">
-                                        <td colspan="5" class="px-4 py-3 text-right text-sm font-bold text-text-primary">Total:</td>
+                                        <td colspan="5" class="px-4 py-3 text-right text-sm font-bold text-text-primary">{{ t('common.total') }}:</td>
                                         <td class="px-4 py-3 text-sm font-bold tabular-nums text-brand">{{ formatCurrency(purchaseOrder.total) }}</td>
                                     </tr>
                                 </tfoot>
@@ -320,7 +314,7 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-t
 
                 <!-- Status -->
                 <Card :padded="false">
-                    <div class="px-5 pt-5"><h3 class="text-sm font-semibold text-text-primary">Status</h3></div>
+                    <div class="px-5 pt-5"><h3 class="text-sm font-semibold text-text-primary">{{ t('common.status') }}</h3></div>
                     <div class="p-5">
                         <Badge :variant="statusVariant(purchaseOrder.status)" size="md" dot>
                             {{ statusLabels[purchaseOrder.status] || purchaseOrder.status }}
@@ -331,24 +325,24 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-t
 
                 <!-- Order Summary -->
                 <Card :padded="false">
-                    <div class="px-5 pt-5"><h3 class="text-sm font-semibold text-text-primary">Order Summary</h3></div>
+                    <div class="px-5 pt-5"><h3 class="text-sm font-semibold text-text-primary">{{ t('orders.show.orderSummary') }}</h3></div>
                     <div class="p-5">
                         <dl class="space-y-3">
                             <div class="flex justify-between text-sm">
-                                <dt class="text-text-secondary">Subtotal</dt>
+                                <dt class="text-text-secondary">{{ t('common.subtotal') }}</dt>
                                 <dd class="font-medium tabular-nums text-text-primary">{{ formatCurrency(purchaseOrder.subtotal) }}</dd>
                             </div>
                             <div v-if="purchaseOrder.tax > 0" class="flex justify-between text-sm">
-                                <dt class="text-text-secondary">Tax</dt>
+                                <dt class="text-text-secondary">{{ t('common.tax') }}</dt>
                                 <dd class="font-medium tabular-nums text-text-primary">{{ formatCurrency(purchaseOrder.tax) }}</dd>
                             </div>
                             <div v-if="purchaseOrder.shipping > 0" class="flex justify-between text-sm">
-                                <dt class="text-text-secondary">Shipping</dt>
+                                <dt class="text-text-secondary">{{ t('common.shipping') }}</dt>
                                 <dd class="font-medium tabular-nums text-text-primary">{{ formatCurrency(purchaseOrder.shipping) }}</dd>
                             </div>
                             <div class="border-t border-border-subtle pt-3">
                                 <div class="flex items-center justify-between">
-                                    <dt class="text-sm font-semibold text-text-primary">Total</dt>
+                                    <dt class="text-sm font-semibold text-text-primary">{{ t('common.total') }}</dt>
                                     <dd class="text-xl font-bold tabular-nums text-brand">{{ formatCurrency(purchaseOrder.total) }}</dd>
                                 </div>
                             </div>
@@ -361,7 +355,7 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-t
                     v-if="purchaseOrder.status === 'draft' || purchaseOrder.status === 'sent' || purchaseOrder.status === 'partial'"
                     :padded="false"
                 >
-                    <div class="px-5 pt-5"><h3 class="text-sm font-semibold text-text-primary">Actions</h3></div>
+                    <div class="px-5 pt-5"><h3 class="text-sm font-semibold text-text-primary">{{ t('common.actions') }}</h3></div>
                     <div class="space-y-3 p-5">
                         <Button
                             v-if="canSend"
@@ -383,7 +377,7 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-t
                             :href="route('purchase-orders.receive', purchaseOrder.id)"
                         >
                             <PackageCheck :size="16" />
-                            Receive Items
+                            {{ t('purchaseOrders.show.receiveItems') }}
                         </Button>
                         <Button
                             v-if="purchaseOrder.status === 'draft' && !lockedForApproval"
@@ -393,7 +387,7 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-t
                             :href="route('purchase-orders.edit', purchaseOrder.id)"
                         >
                             <Pencil :size="16" />
-                            Edit Purchase Order
+                            {{ t('purchaseOrders.show.editPo') }}
                         </Button>
                         <Button
                             v-if="purchaseOrder.status === 'draft' || purchaseOrder.status === 'sent'"
@@ -402,21 +396,21 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-t
                             @click="cancelPO"
                         >
                             <Ban :size="16" />
-                            Cancel Order
+                            {{ t('purchaseOrders.show.cancelOrder') }}
                         </Button>
                     </div>
                 </Card>
 
                 <!-- Danger Zone -->
                 <Card v-if="purchaseOrder.status === 'draft'" :padded="false">
-                    <div class="px-5 pt-5"><h3 class="text-sm font-semibold text-text-primary">Danger Zone</h3></div>
+                    <div class="px-5 pt-5"><h3 class="text-sm font-semibold text-text-primary">{{ t('orders.show.dangerZone') }}</h3></div>
                     <div class="p-5">
                         <Button variant="danger" class="w-full" @click="deletePO">
                             <Trash2 :size="16" />
-                            Delete Order
+                            {{ t('purchaseOrders.show.deleteOrder') }}
                         </Button>
                         <p class="mt-2 text-xs text-text-tertiary">
-                            This action cannot be undone.
+                            {{ t('purchaseOrders.show.cannotUndo') }}
                         </p>
                     </div>
                 </Card>

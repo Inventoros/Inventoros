@@ -59,7 +59,7 @@ const thClass =
 
         <PluginSlot slot="header" :components="pluginComponents?.header" />
 
-        <PageHeader :title="t('suppliers.title')" description="Your vendors and the products they supply.">
+        <PageHeader :title="t('suppliers.title')" :description="t('suppliers.index.description')">
             <template #actions>
                 <Button variant="default" size="sm" as="Link" :href="route('suppliers.create')">
                     <Plus :size="14" />

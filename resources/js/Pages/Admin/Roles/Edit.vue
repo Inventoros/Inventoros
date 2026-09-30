@@ -7,13 +7,15 @@ import { Head, Link, useForm } from '@inertiajs/vue3';
 import { ArrowLeft, Eye } from 'lucide-vue-next';
 
 import { useI18n } from 'vue-i18n';
+import { permissionCategoryLabel, permissionDescription, permissionLabel, roleName } from '@/lib/permissionLabels';
 const props = defineProps({
     role: Object,
     permissions: Object,
 });
 
 
-const { t } = useI18n();
+const { t, te } = useI18n();
+const i18n = { t, te };
 const form = useForm({
     name: props.role.name,
     description: props.role.description || '',
@@ -50,7 +52,7 @@ const fieldError = 'mt-1 text-xs text-status-danger';
 </script>
 
 <template>
-    <Head :title="`Edit ${role.name}`" />
+    <Head :title="t('common.editWithName', { name: roleName(role, i18n) })" />
 
     <AppLayout>
         <template #header>
@@ -59,22 +61,22 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                 <span class="text-text-tertiary">/</span>
                 <Link :href="route('roles.index')" class="text-text-tertiary hover:text-text-primary">{{ t('nav.roles') }}</Link>
                 <span class="text-text-tertiary">/</span>
-                <span class="font-medium text-text-primary">{{ t('common.editWithName', { name: role.name }) }}</span>
+                <span class="font-medium text-text-primary">{{ t('common.editWithName', { name: roleName(role, i18n) }) }}</span>
             </div>
         </template>
 
         <PageHeader
-            :title="`Edit Role: ${role.name}`"
-            :description="role.is_system ? 'System role - name and description cannot be changed' : 'Update the role details and permissions.'"
+            :title="t('admin.roles.edit.titleWithName', { name: roleName(role, i18n) })"
+            :description="role.is_system ? t('admin.roles.edit.systemHint') : t('admin.roles.edit.subtitle')"
         >
             <template #actions>
                 <Button variant="secondary" size="sm" as="Link" :href="route('roles.show', role.id)">
                     <Eye :size="14" />
-                    View Role
+                    {{ t('admin.roles.edit.viewRole') }}
                 </Button>
                 <Button variant="secondary" size="sm" as="Link" :href="route('roles.index')">
                     <ArrowLeft :size="14" />
-                    Back to Roles
+                    {{ t('admin.roles.edit.backToRoles') }}
                 </Button>
             </template>
         </PageHeader>
@@ -82,11 +84,11 @@ const fieldError = 'mt-1 text-xs text-status-danger';
         <form @submit.prevent="submit" class="mt-6 space-y-4">
             <!-- Role Details -->
             <Card :padded="false">
-                <div class="px-5 pt-5"><h3 class="text-sm font-semibold text-text-primary">Role Details</h3></div>
+                <div class="px-5 pt-5"><h3 class="text-sm font-semibold text-text-primary">{{ t('admin.roles.create.roleDetails') }}</h3></div>
                 <div class="space-y-4 p-5">
                     <!-- Name (disabled for system roles) -->
                     <div>
-                        <label for="name" :class="fieldLabel">Role Name</label>
+                        <label for="name" :class="fieldLabel">{{ t('admin.roles.create.roleName') }}</label>
                         <input
                             id="name"
                             v-model="form.name"
@@ -97,13 +99,13 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                         />
                         <p v-if="form.errors.name" :class="fieldError">{{ form.errors.name }}</p>
                         <p v-if="role.is_system" class="mt-1 text-xs text-text-tertiary">
-                            System role names cannot be changed
+                            {{ t('admin.roles.edit.systemNameHint') }}
                         </p>
                     </div>
 
                     <!-- Description (disabled for system roles) -->
                     <div>
-                        <label for="description" :class="fieldLabel">Description</label>
+                        <label for="description" :class="fieldLabel">{{ t('common.description') }}</label>
                         <textarea
                             id="description"
                             v-model="form.description"
@@ -113,7 +115,7 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                         ></textarea>
                         <p v-if="form.errors.description" :class="fieldError">{{ form.errors.description }}</p>
                         <p v-if="role.is_system" class="mt-1 text-xs text-text-tertiary">
-                            System role descriptions cannot be changed
+                            {{ t('admin.roles.edit.systemDescHint') }}
                         </p>
                     </div>
                 </div>
@@ -121,10 +123,10 @@ const fieldError = 'mt-1 text-xs text-status-danger';
 
             <!-- Permissions (editable for all roles) -->
             <Card :padded="false">
-                <div class="px-5 pt-5"><h3 class="text-sm font-semibold text-text-primary">Permissions</h3></div>
+                <div class="px-5 pt-5"><h3 class="text-sm font-semibold text-text-primary">{{ t('admin.roles.edit.permissions') }}</h3></div>
                 <div class="p-5">
                     <p class="mb-4 text-sm text-text-secondary">
-                        Customize the permissions for this role. Click category names to select/deselect all permissions in that category.
+                        {{ t('admin.roles.edit.permissionsHint') }}
                     </p>
 
                     <div class="space-y-6">
@@ -134,7 +136,7 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                         >
                             <!-- Category Header -->
                             <div class="mb-3 flex items-center justify-between">
-                                <h4 class="text-xs font-medium uppercase tracking-wider text-text-tertiary">{{ category }}</h4>
+                                <h4 class="text-xs font-medium uppercase tracking-wider text-text-tertiary">{{ permissionCategoryLabel(category, i18n) }}</h4>
                                 <button
                                     type="button"
                                     @click="toggleCategory(category)"
@@ -143,7 +145,7 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                                         ? 'bg-brand-soft text-brand hover:opacity-90'
                                         : 'bg-surface-overlay text-text-secondary hover:bg-surface-sunken'"
                                 >
-                                    {{ isCategorySelected(category) ? 'Deselect All' : 'Select All' }}
+                                    {{ isCategorySelected(category) ? t('admin.roles.create.deselectAll') : t('admin.roles.create.selectAll') }}
                                 </button>
                             </div>
 
@@ -161,8 +163,8 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                                         class="mt-0.5 rounded border-border-strong bg-surface-canvas text-brand ds-focus-ring"
                                     />
                                     <div class="min-w-0">
-                                        <p class="text-sm font-medium text-text-primary">{{ permission.label }}</p>
-                                        <p class="text-xs text-text-tertiary">{{ permission.description }}</p>
+                                        <p class="text-sm font-medium text-text-primary">{{ permissionLabel(permission, i18n) }}</p>
+                                        <p class="text-xs text-text-tertiary">{{ permissionDescription(permission, i18n) }}</p>
                                     </div>
                                 </label>
                             </div>
@@ -173,7 +175,7 @@ const fieldError = 'mt-1 text-xs text-status-danger';
 
                     <div class="mt-4 rounded-lg border border-brand/20 bg-brand-soft p-3">
                         <p class="text-sm text-brand">
-                            <strong>{{ form.permissions.length }}</strong> permission(s) selected
+                            {{ t('admin.roles.edit.permissionsSelected', { count: form.permissions.length }) }}
                         </p>
                     </div>
                 </div>
@@ -182,7 +184,7 @@ const fieldError = 'mt-1 text-xs text-status-danger';
             <!-- Actions -->
             <div class="flex items-center gap-3">
                 <Button type="submit" variant="default" :loading="form.processing" :disabled="form.processing">
-                    Update Role
+                    {{ t('admin.roles.edit.updateRole') }}
                 </Button>
                 <Button variant="secondary" as="Link" :href="route('roles.index')">
                     {{ t('common.cancel') }}
@@ -195,7 +197,7 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                     leave-to-class="opacity-0"
                 >
                     <p v-if="form.recentlySuccessful" class="text-sm text-status-success">
-                        Role updated successfully.
+                        {{ t('admin.roles.edit.success') }}
                     </p>
                 </Transition>
             </div>

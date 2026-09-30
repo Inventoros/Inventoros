@@ -58,7 +58,7 @@ const fieldError = 'mt-1 text-xs text-status-danger';
             </div>
         </template>
 
-        <PageHeader :title="t('suppliers.create.title')" description="Add a supplier and its contact, address, and business details.">
+        <PageHeader :title="t('suppliers.create.title')" :description="t('suppliers.create.description')">
             <template #actions>
                 <Button variant="secondary" size="sm" as="Link" :href="route('suppliers.index')">
                     <ArrowLeft :size="14" />

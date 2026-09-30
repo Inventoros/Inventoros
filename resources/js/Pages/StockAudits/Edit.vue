@@ -34,7 +34,7 @@ const fieldError = 'mt-1 text-xs text-status-danger';
 </script>
 
 <template>
-    <Head title="Edit Stock Audit" />
+    <Head :title="t('stockAudits.edit.title')" />
 
     <AppLayout>
         <template #header>
@@ -47,26 +47,26 @@ const fieldError = 'mt-1 text-xs text-status-danger';
             </div>
         </template>
 
-        <PageHeader title="Edit Stock Audit" :description="`${audit.audit_number} - ${audit.name}`">
+        <PageHeader :title="t('stockAudits.edit.title')" :description="`${audit.audit_number} - ${audit.name}`">
             <template #actions>
                 <Button variant="secondary" size="sm" as="Link" :href="route('stock-audits.show', audit.id)">
                     <ArrowLeft :size="14" />
-                    Back to Audit
+                    {{ t('stockAudits.edit.backToAudit') }}
                 </Button>
                 <Button variant="secondary" size="sm" as="Link" :href="route('stock-audits.show', audit.id)">
                     <Eye :size="14" />
-                    View
+                    {{ t('common.view') }}
                 </Button>
             </template>
         </PageHeader>
 
         <form @submit.prevent="submit" class="mt-6 max-w-3xl">
             <Card :padded="false">
-                <div class="px-5 pt-5"><h3 class="text-sm font-semibold text-text-primary">Audit Details</h3></div>
+                <div class="px-5 pt-5"><h3 class="text-sm font-semibold text-text-primary">{{ t('stockAudits.auditDetails') }}</h3></div>
                 <div class="space-y-4 p-5">
                     <!-- Name -->
                     <div>
-                        <label for="name" :class="fieldLabel">Audit Name <span class="text-status-danger">*</span></label>
+                        <label for="name" :class="fieldLabel">{{ t('stockAudits.fields.name') }} <span class="text-status-danger">*</span></label>
                         <input
                             id="name"
                             v-model="form.name"
@@ -80,14 +80,14 @@ const fieldError = 'mt-1 text-xs text-status-danger';
 
                     <!-- Description -->
                     <div>
-                        <label for="description" :class="fieldLabel">Description</label>
+                        <label for="description" :class="fieldLabel">{{ t('common.description') }}</label>
                         <textarea
                             id="description"
                             v-model="form.description"
                             rows="3"
                             maxlength="1000"
                             :class="fieldArea"
-                            placeholder="Describe the purpose of this audit..."
+                            :placeholder="t('stockAudits.fields.descriptionPlaceholder')"
                         ></textarea>
                         <p v-if="form.errors.description" :class="fieldError">{{ form.errors.description }}</p>
                     </div>
@@ -95,27 +95,27 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                     <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
                         <!-- Audit Type -->
                         <div>
-                            <label for="audit_type" :class="fieldLabel">Audit Type <span class="text-status-danger">*</span></label>
+                            <label for="audit_type" :class="fieldLabel">{{ t('stockAudits.fields.auditType') }} <span class="text-status-danger">*</span></label>
                             <select
                                 id="audit_type"
                                 v-model="form.audit_type"
                                 required
                                 :class="fieldInput"
                             >
-                                <option v-for="(label, value) in auditTypes" :key="value" :value="value">{{ label }}</option>
+                                <option v-for="(label, value) in auditTypes" :key="value" :value="value">{{ t(`stockAudits.types.${value}`) }}</option>
                             </select>
                             <p v-if="form.errors.audit_type" :class="fieldError">{{ form.errors.audit_type }}</p>
                         </div>
 
                         <!-- Location -->
                         <div>
-                            <label for="warehouse_location_id" :class="fieldLabel">Warehouse Location</label>
+                            <label for="warehouse_location_id" :class="fieldLabel">{{ t('stockAudits.fields.location') }}</label>
                             <select
                                 id="warehouse_location_id"
                                 v-model="form.warehouse_location_id"
                                 :class="fieldInput"
                             >
-                                <option value="">All Locations</option>
+                                <option value="">{{ t('products.allLocations') }}</option>
                                 <option v-for="location in locations" :key="location.id" :value="location.id">
                                     {{ location.name }}
                                     <span v-if="location.code">({{ location.code }})</span>
@@ -127,14 +127,14 @@ const fieldError = 'mt-1 text-xs text-status-danger';
 
                     <!-- Notes -->
                     <div>
-                        <label for="notes" :class="fieldLabel">Notes</label>
+                        <label for="notes" :class="fieldLabel">{{ t('common.notes') }}</label>
                         <textarea
                             id="notes"
                             v-model="form.notes"
                             rows="3"
                             maxlength="2000"
                             :class="fieldArea"
-                            placeholder="Additional notes or instructions..."
+                            :placeholder="t('stockAudits.edit.notesPlaceholder')"
                         ></textarea>
                         <p v-if="form.errors.notes" :class="fieldError">{{ form.errors.notes }}</p>
                     </div>
@@ -142,9 +142,9 @@ const fieldError = 'mt-1 text-xs text-status-danger';
 
                 <!-- Actions -->
                 <div class="flex justify-end gap-3 border-t border-border-subtle p-5">
-                    <Button variant="secondary" as="Link" :href="route('stock-audits.show', audit.id)">Cancel</Button>
+                    <Button variant="secondary" as="Link" :href="route('stock-audits.show', audit.id)">{{ t('common.cancel') }}</Button>
                     <Button type="submit" variant="default" :loading="form.processing" :disabled="form.processing || !form.name">
-                        {{ form.processing ? 'Saving...' : 'Update Audit' }}
+                        {{ form.processing ? t('common.saving') : t('stockAudits.edit.submit') }}
                     </Button>
                 </div>
             </Card>

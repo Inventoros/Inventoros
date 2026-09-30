@@ -50,7 +50,7 @@ const makeDefault = (warehouse) => {
 };
 
 const deleteWarehouse = (warehouse) => {
-    if (confirm(`Are you sure you want to delete "${warehouse.name}"? This action cannot be undone.`)) {
+    if (confirm(t('warehouses.confirmDelete', { name: warehouse.name }))) {
         router.delete(route('warehouses.destroy', warehouse.id));
     }
 };
@@ -60,7 +60,7 @@ const thClass =
 </script>
 
 <template>
-    <Head title="Warehouses" />
+    <Head :title="t('warehouses.title')" />
 
     <AppLayout>
         <template #header>
@@ -71,11 +71,11 @@ const thClass =
             </div>
         </template>
 
-        <PageHeader title="Warehouses" description="Your storage locations and stock distribution.">
+        <PageHeader :title="t('warehouses.title')" :description="t('warehouses.subtitle')">
             <template #actions>
                 <Button v-if="hasPermission('create_warehouses')" variant="default" size="sm" as="Link" :href="route('warehouses.create')">
                     <Plus :size="14" />
-                    Add Warehouse
+                    {{ t('warehouses.addWarehouse') }}
                 </Button>
             </template>
         </PageHeader>
@@ -102,14 +102,14 @@ const thClass =
             <form @submit.prevent="searchWarehouses" class="space-y-4">
                 <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
                     <div class="sm:col-span-2">
-                        <label for="search" class="mb-1 block text-xs font-medium text-text-secondary">Search Warehouses</label>
+                        <label for="search" class="mb-1 block text-xs font-medium text-text-secondary">{{ t('warehouses.index.searchLabel') }}</label>
                         <div class="relative">
                             <Search :size="15" class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-text-tertiary" />
                             <input
                                 id="search"
                                 v-model="search"
                                 type="text"
-                                placeholder="Search warehouses by name, code, or city..."
+                                :placeholder="t('warehouses.searchPlaceholder')"
                                 class="h-9 w-full rounded-md border border-border-subtle bg-surface-canvas pl-9 pr-3 text-sm text-text-primary placeholder:text-text-tertiary ds-focus-ring"
                             />
                         </div>
@@ -118,9 +118,9 @@ const thClass =
                 <div class="flex items-center gap-2">
                     <Button type="submit" variant="default" size="sm">
                         <Search :size="14" />
-                        Search
+                        {{ t('common.search') }}
                     </Button>
-                    <Button type="button" variant="secondary" size="sm" @click="clearFilters">Clear</Button>
+                    <Button type="button" variant="secondary" size="sm" @click="clearFilters">{{ t('common.clear') }}</Button>
                 </div>
             </form>
         </Card>
@@ -130,13 +130,13 @@ const thClass =
             <table class="w-full text-sm">
                 <thead>
                     <tr class="border-b border-border-subtle">
-                        <th :class="thClass">Name</th>
-                        <th :class="thClass">Code</th>
-                        <th :class="thClass">City / Province</th>
-                        <th :class="thClass">Locations</th>
-                        <th :class="thClass">Status</th>
-                        <th :class="thClass">Default</th>
-                        <th :class="[thClass, 'text-right']">Actions</th>
+                        <th :class="thClass">{{ t('warehouses.columns.name') }}</th>
+                        <th :class="thClass">{{ t('warehouses.columns.code') }}</th>
+                        <th :class="thClass">{{ t('warehouses.columns.cityProvince') }}</th>
+                        <th :class="thClass">{{ t('warehouses.columns.locations') }}</th>
+                        <th :class="thClass">{{ t('warehouses.columns.status') }}</th>
+                        <th :class="thClass">{{ t('warehouses.columns.default') }}</th>
+                        <th :class="[thClass, 'text-right']">{{ t('warehouses.columns.actions') }}</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -144,11 +144,11 @@ const thClass =
                         <td colspan="7" class="px-4 py-12 text-center">
                             <div class="flex flex-col items-center gap-3">
                                 <Warehouse :size="22" class="text-text-tertiary" />
-                                <p class="text-sm font-medium text-text-primary">No warehouses found</p>
-                                <p class="text-sm text-text-tertiary">Get started by creating your first warehouse.</p>
+                                <p class="text-sm font-medium text-text-primary">{{ t('warehouses.noWarehouses') }}</p>
+                                <p class="text-sm text-text-tertiary">{{ t('warehouses.noWarehousesHint') }}</p>
                                 <Button v-if="hasPermission('create_warehouses')" variant="default" size="sm" as="Link" :href="route('warehouses.create')">
                                     <Plus :size="14" />
-                                    Add Warehouse
+                                    {{ t('warehouses.addWarehouse') }}
                                 </Button>
                             </div>
                         </td>
@@ -174,16 +174,16 @@ const thClass =
                         </td>
                         <td class="px-4 py-3">
                             <Badge :variant="warehouse.is_active ? 'success' : 'neutral'" size="sm">
-                                {{ warehouse.is_active ? 'Active' : 'Inactive' }}
+                                {{ warehouse.is_active ? t('common.active') : t('common.inactive') }}
                             </Badge>
                         </td>
                         <td class="px-4 py-3">
-                            <Badge v-if="warehouse.is_default" variant="info" size="sm">Default</Badge>
+                            <Badge v-if="warehouse.is_default" variant="info" size="sm">{{ t('warehouses.default.label') }}</Badge>
                         </td>
                         <td class="px-4 py-3">
                             <div class="flex items-center justify-end gap-1">
-                                <Link :href="route('warehouses.show', warehouse.id)" class="rounded-md p-1.5 text-text-tertiary transition-colors hover:bg-surface-overlay hover:text-brand" title="View"><Eye :size="16" /></Link>
-                                <Link v-if="hasPermission('edit_warehouses')" :href="route('warehouses.edit', warehouse.id)" class="rounded-md p-1.5 text-text-tertiary transition-colors hover:bg-surface-overlay hover:text-status-success" title="Edit"><Pencil :size="16" /></Link>
+                                <Link :href="route('warehouses.show', warehouse.id)" class="rounded-md p-1.5 text-text-tertiary transition-colors hover:bg-surface-overlay hover:text-brand" :title="t('common.view')"><Eye :size="16" /></Link>
+                                <Link v-if="hasPermission('edit_warehouses')" :href="route('warehouses.edit', warehouse.id)" class="rounded-md p-1.5 text-text-tertiary transition-colors hover:bg-surface-overlay hover:text-status-success" :title="t('common.edit')"><Pencil :size="16" /></Link>
                                 <button
                                     v-if="hasPermission('edit_warehouses') && !warehouse.is_default"
                                     type="button"
@@ -198,7 +198,7 @@ const thClass =
                                     v-if="hasPermission('delete_warehouses')"
                                     @click="deleteWarehouse(warehouse)"
                                     class="rounded-md p-1.5 text-text-tertiary transition-colors hover:bg-surface-overlay hover:text-status-danger"
-                                    title="Delete"
+                                    :title="t('common.delete')"
                                     :disabled="warehouse.is_default"
                                     :class="{ 'cursor-not-allowed opacity-50': warehouse.is_default }"
                                 >
@@ -214,9 +214,7 @@ const thClass =
         <!-- Pagination -->
         <div v-if="warehouses.data.length > 0" class="mt-4 flex flex-col items-center justify-between gap-3 sm:flex-row">
             <p class="text-xs text-text-tertiary">
-                Showing <span class="font-medium text-text-secondary">{{ warehouses.from }}</span>
-                to <span class="font-medium text-text-secondary">{{ warehouses.to }}</span>
-                of <span class="font-medium text-text-secondary">{{ warehouses.total }}</span> results
+                {{ t('common.showingResults', { from: warehouses.from, to: warehouses.to, total: warehouses.total }) }}
             </p>
             <nav class="inline-flex items-center gap-1">
                 <template v-for="link in warehouses.links" :key="link.label">

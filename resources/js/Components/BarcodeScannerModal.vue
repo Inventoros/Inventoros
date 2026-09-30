@@ -60,15 +60,15 @@ const lookupBarcode = async (code) => {
             foundVariant.value = response.data.variant ?? null;
             emit('product-found', response.data.product, foundVariant.value);
         } else {
-            errorMessage.value = 'Product not found';
+            errorMessage.value = t('components.barcodeScanner.notFound');
         }
     } catch (err) {
         if (err.response?.status === 404) {
-            errorMessage.value = 'No product found with this barcode or SKU';
+            errorMessage.value = t('components.barcodeScanner.notFoundDesc');
         } else if (err.response?.status === 401) {
-            errorMessage.value = 'Authentication required';
+            errorMessage.value = t('components.barcodeScanner.authRequired');
         } else {
-            errorMessage.value = err.response?.data?.message || 'Failed to lookup barcode';
+            errorMessage.value = err.response?.data?.message || t('components.barcodeScanner.lookupFailed');
         }
         emit('error', errorMessage.value);
     } finally {
@@ -155,7 +155,7 @@ const selectProduct = () => {
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
                                 </svg>
-                                Camera
+                                {{ t('components.barcodeScanner.camera') }}
                             </button>
                             <button
                                 @click="toggleMode"
@@ -169,7 +169,7 @@ const selectProduct = () => {
                                 <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                                 </svg>
-                                Manual Entry
+                                {{ t('components.barcodeScanner.manualEntry') }}
                             </button>
                         </div>
 
@@ -187,12 +187,12 @@ const selectProduct = () => {
                         <!-- Manual Entry -->
                         <div v-else class="space-y-3">
                             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                                Enter Barcode or SKU
+                                {{ t('components.barcodeScanner.inputLabel') }}
                             </label>
                             <input
                                 v-model="manualCode"
                                 type="text"
-                                placeholder="Enter barcode or SKU..."
+                                :placeholder="t('components.barcodeScanner.inputPlaceholder')"
                                 class="block w-full rounded-md bg-gray-50 dark:bg-surface-canvas border-gray-200 dark:border-border-subtle text-gray-900 dark:text-gray-100 placeholder-gray-500 shadow-sm focus:border-brand focus:ring-brand"
                                 @keyup.enter="submitManualCode"
                             />
@@ -205,7 +205,7 @@ const selectProduct = () => {
                                     <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                                     <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                                 </svg>
-                                Lookup
+                                {{ t('components.barcodeScanner.lookup') }}
                             </button>
                         </div>
 
@@ -215,7 +215,7 @@ const selectProduct = () => {
                                 <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                                 <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                             </svg>
-                            <p class="mt-2 text-sm">Looking up product...</p>
+                            <p class="mt-2 text-sm">{{ t('components.barcodeScanner.lookingUp') }}</p>
                         </div>
 
                         <!-- Error Message -->
@@ -225,10 +225,10 @@ const selectProduct = () => {
 
                         <!-- Found Product -->
                         <div v-if="foundProduct" class="p-4 bg-green-50 dark:bg-green-900/30 border border-green-200 dark:border-green-800 rounded-md">
-                            <h4 class="font-medium text-green-800 dark:text-green-400 mb-2">Product Found</h4>
+                            <h4 class="font-medium text-green-800 dark:text-green-400 mb-2">{{ t('components.barcodeScanner.productFound') }}</h4>
                             <dl class="text-sm space-y-1">
                                 <div class="flex justify-between">
-                                    <dt class="text-gray-600 dark:text-gray-400">Name:</dt>
+                                    <dt class="text-gray-600 dark:text-gray-400">{{ t('common.name') }}:</dt>
                                     <dd class="text-gray-900 dark:text-gray-100 font-medium">{{ foundProduct.name }}</dd>
                                 </div>
                                 <div v-if="foundVariant" class="flex justify-between">
@@ -240,7 +240,7 @@ const selectProduct = () => {
                                     <dd class="text-gray-900 dark:text-gray-100">{{ (foundVariant ? foundVariant.sku : foundProduct.sku) || '-' }}</dd>
                                 </div>
                                 <div class="flex justify-between">
-                                    <dt class="text-gray-600 dark:text-gray-400">Stock:</dt>
+                                    <dt class="text-gray-600 dark:text-gray-400">{{ t('components.barcodeScanner.stock') }}:</dt>
                                     <dd class="text-gray-900 dark:text-gray-100">{{ foundVariant ? foundVariant.stock : foundProduct.stock }}</dd>
                                 </div>
                             </dl>
@@ -248,7 +248,7 @@ const selectProduct = () => {
                                 @click="selectProduct"
                                 class="mt-3 w-full inline-flex justify-center items-center px-4 py-2 bg-green-500 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-green-600"
                             >
-                                Select Product
+                                {{ t('components.barcodeScanner.selectProduct') }}
                             </button>
                         </div>
 
@@ -258,7 +258,7 @@ const selectProduct = () => {
                             <p class="text-sm font-medium text-text-primary">{{ foundLocation.name }}</p>
                             <p v-if="foundLocation.code" class="font-mono text-xs text-text-secondary">{{ foundLocation.code }}</p>
                             <p class="mt-1 text-xs text-text-tertiary">
-                                {{ [foundLocation.warehouse, foundLocation.aisle && `Aisle ${foundLocation.aisle}`, foundLocation.shelf && `Shelf ${foundLocation.shelf}`, foundLocation.bin && `Bin ${foundLocation.bin}`].filter(Boolean).join(' / ') }}
+                                {{ [foundLocation.warehouse, foundLocation.aisle && t('components.barcodeScanner.aisle', { value: foundLocation.aisle }), foundLocation.shelf && t('components.barcodeScanner.shelf', { value: foundLocation.shelf }), foundLocation.bin && t('components.barcodeScanner.bin', { value: foundLocation.bin })].filter(Boolean).join(' / ') }}
                             </p>
                             <p class="mt-1 text-xs text-text-secondary">{{ t('components.barcodeScanner.productsHere', { count: foundLocation.product_count }) }}</p>
                             <a
@@ -271,7 +271,7 @@ const selectProduct = () => {
 
                         <!-- Instructions -->
                         <p v-if="scannerMode === 'camera' && !errorMessage && !foundProduct && !foundLocation && !isLoading" class="text-center text-sm text-gray-500 dark:text-gray-400">
-                            Point your camera at a barcode to scan
+                            {{ t('components.barcodeScanner.cameraHint') }}
                         </p>
                     </div>
                 </div>

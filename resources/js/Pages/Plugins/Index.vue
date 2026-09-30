@@ -8,6 +8,7 @@ import Input from '@/Components/ui/Input.vue';
 import { Head, Link, useForm, router } from '@inertiajs/vue3';
 import { ref } from 'vue';
 import { useI18n } from 'vue-i18n';
+import { formatMoney } from '@/lib/money';
 import { UploadCloud, Loader2, Puzzle, ExternalLink, ShieldCheck, Store } from 'lucide-vue-next';
 import { usePermissions } from '@/composables/usePermissions';
 
@@ -72,7 +73,7 @@ const priceLabel = (plugin) => {
     if (plugin.is_free || plugin.pricing_type === 'free') {
         return t('plugins.marketplace.free');
     }
-    const price = `$${Number(plugin.price ?? 0).toFixed(2)}`;
+    const price = formatMoney(plugin.price, plugin.currency || 'USD');
     if (plugin.pricing_type === 'subscription') {
         return plugin.billing_interval === 'year'
             ? t('plugins.marketplace.perYear', { price })
@@ -131,7 +132,7 @@ const deactivatePlugin = (slug) => {
 };
 
 const deletePlugin = (slug, name) => {
-    if (confirm(`Are you sure you want to delete "${name}"? This action cannot be undone.`)) {
+    if (confirm(t('plugins.confirmDelete', { name }))) {
         router.delete(route('plugins.destroy', slug), {
             preserveScroll: true,
         });
@@ -151,7 +152,7 @@ const deletePlugin = (slug, name) => {
             </div>
         </template>
 
-        <PageHeader :title="t('plugins.title')" description="Extend your workspace with installable plugins." />
+        <PageHeader :title="t('plugins.title')" :description="t('plugins.subtitle')" />
 
         <nav class="mt-6 flex gap-1 overflow-x-auto overflow-y-hidden border-b border-border-subtle" :aria-label="t('plugins.pageSections')">
             <Link
@@ -302,7 +303,7 @@ const deletePlugin = (slug, name) => {
 
         <!-- Upload Section -->
         <Card v-else-if="canManage" class="mt-6">
-            <h3 class="text-sm font-semibold text-text-primary">Upload New Plugin</h3>
+            <h3 class="text-sm font-semibold text-text-primary">{{ t('plugins.uploadPlugin') }}</h3>
             <div
                 @dragover.prevent="isDragging = true"
                 @dragleave.prevent="isDragging = false"
@@ -320,9 +321,9 @@ const deletePlugin = (slug, name) => {
                         for="plugin-upload"
                         class="cursor-pointer font-medium text-brand transition-colors hover:text-brand-hover"
                     >
-                        Choose a ZIP file
+                        {{ t('plugins.chooseZip') }}
                     </label>
-                    <span class="text-text-secondary"> or drag and drop</span>
+                    <span class="text-text-secondary"> {{ t('plugins.dragDrop') }}</span>
                     <input
                         ref="fileInput"
                         id="plugin-upload"
@@ -332,12 +333,12 @@ const deletePlugin = (slug, name) => {
                         @change="handleFileSelect"
                     />
                 </div>
-                <p class="mt-2 text-xs text-text-tertiary">ZIP files only, max 50MB</p>
+                <p class="mt-2 text-xs text-text-tertiary">{{ t('plugins.zipOnly') }}</p>
             </div>
             <div v-if="uploadForm.processing" class="mt-4 text-center">
                 <div class="inline-flex items-center gap-2 rounded-md bg-brand-soft px-4 py-2 text-sm text-brand">
                     <Loader2 :size="16" class="animate-spin" />
-                    <span>Uploading plugin...</span>
+                    <span>{{ t('plugins.uploading') }}</span>
                 </div>
             </div>
         </Card>
@@ -352,15 +353,15 @@ const deletePlugin = (slug, name) => {
                                 {{ plugin.name }}
                             </h3>
                             <Badge :variant="plugin.is_active ? 'success' : 'neutral'" size="sm" dot>
-                                {{ plugin.is_active ? 'Active' : 'Inactive' }}
+                                {{ plugin.is_active ? t('common.active') : t('common.inactive') }}
                             </Badge>
                         </div>
                         <p class="mb-3 text-sm text-text-secondary">
                             {{ plugin.description }}
                         </p>
                         <div class="flex flex-wrap gap-x-4 gap-y-1 text-xs text-text-tertiary">
-                            <span>Version: {{ plugin.version }}</span>
-                            <span class="inline-flex items-center gap-1">Author:
+                            <span>{{ t('plugins.versionLabel', { version: plugin.version }) }}</span>
+                            <span class="inline-flex items-center gap-1">{{ t('plugins.authorLabel') }}
                                 <a
                                     v-if="isWebUrl(plugin.author_url)"
                                     :href="plugin.author_url"
@@ -373,7 +374,7 @@ const deletePlugin = (slug, name) => {
                                 </a>
                                 <span v-else>{{ plugin.author }}</span>
                             </span>
-                            <span>Requires: {{ plugin.requires }}</span>
+                            <span>{{ t('plugins.requiresLabel', { requires: plugin.requires }) }}</span>
                         </div>
                     </div>
                     <div v-if="canManage" class="flex shrink-0 flex-wrap gap-2">
@@ -383,7 +384,7 @@ const deletePlugin = (slug, name) => {
                             size="sm"
                             @click="activatePlugin(plugin.slug)"
                         >
-                            Activate
+                            {{ t('plugins.activate') }}
                         </Button>
                         <Button
                             v-else
@@ -391,7 +392,7 @@ const deletePlugin = (slug, name) => {
                             size="sm"
                             @click="deactivatePlugin(plugin.slug)"
                         >
-                            Deactivate
+                            {{ t('plugins.deactivate') }}
                         </Button>
                         <Button
                             variant="danger"
@@ -409,9 +410,9 @@ const deletePlugin = (slug, name) => {
             <Card v-if="plugins.length === 0">
                 <div class="flex flex-col items-center gap-3 py-12 text-center">
                     <Puzzle :size="28" class="text-text-tertiary" />
-                    <h3 class="text-sm font-medium text-text-primary">No plugins installed</h3>
+                    <h3 class="text-sm font-medium text-text-primary">{{ t('plugins.noPlugins') }}</h3>
                     <p class="text-sm text-text-tertiary">
-                        Get started by uploading your first plugin above.
+                        {{ t('plugins.getStarted') }}
                     </p>
                 </div>
             </Card>

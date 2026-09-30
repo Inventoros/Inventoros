@@ -87,7 +87,7 @@ const updateLocation = () => {
 };
 
 const deleteLocation = (location) => {
-    if (confirm(`Are you sure you want to delete "${location.name}"? This action cannot be undone.`)) {
+    if (confirm(t('locations.confirmDelete', { name: location.name }))) {
         router.delete(route('locations.destroy', location.id));
     }
 };
@@ -111,7 +111,7 @@ const labelClass = 'mb-1 block text-xs font-medium text-text-secondary';
 
         <PluginSlot slot="header" :components="pluginComponents?.header" />
 
-        <PageHeader title="Warehouse Locations" description="Physical places where your stock lives.">
+        <PageHeader :title="t('locations.title')" :description="t('locations.subtitle')">
             <template #actions>
                 <Button v-if="locations.data.length > 0" variant="secondary" size="sm" as="a" :href="route('locations.qr.bulk-print')" target="_blank">
                     <QrCode :size="14" />
@@ -135,7 +135,7 @@ const labelClass = 'mb-1 block text-xs font-medium text-text-secondary';
                             id="search"
                             v-model="search"
                             type="text"
-                            placeholder="Search locations by name or code..."
+                            :placeholder="t('locations.searchPlaceholder')"
                             class="h-9 w-full rounded-md border border-border-subtle bg-surface-canvas pl-9 pr-3 text-sm text-text-primary placeholder:text-text-tertiary ds-focus-ring"
                         />
                     </div>
@@ -145,7 +145,7 @@ const labelClass = 'mb-1 block text-xs font-medium text-text-secondary';
                         <Search :size="14" />
                         {{ t('common.search') }}
                     </Button>
-                    <Button type="button" variant="secondary" size="sm" @click="clearFilters">Clear</Button>
+                    <Button type="button" variant="secondary" size="sm" @click="clearFilters">{{ t('common.clear') }}</Button>
                 </div>
             </form>
         </Card>
@@ -177,7 +177,7 @@ const labelClass = 'mb-1 block text-xs font-medium text-text-secondary';
                             {{ t('locations.capacityValue', { capacity: location.capacity }) }}
                         </p>
                     </div>
-                    <Badge variant="warning" size="sm">{{ location.products_count }} products</Badge>
+                    <Badge variant="warning" size="sm">{{ t('locations.productsCount', { count: location.products_count }, location.products_count) }}</Badge>
                 </div>
 
                 <div class="mt-4 flex items-center gap-1 border-t border-border-subtle pt-4">
@@ -218,7 +218,7 @@ const labelClass = 'mb-1 block text-xs font-medium text-text-secondary';
                         <p class="text-sm text-text-tertiary">{{ t('locations.noLocationsFound') }}</p>
                         <Button variant="default" size="sm" @click="openCreateModal">
                             <Plus :size="14" />
-                            Create Your First Location
+                            {{ t('locations.createFirst') }}
                         </Button>
                     </div>
                 </Card>
@@ -228,9 +228,7 @@ const labelClass = 'mb-1 block text-xs font-medium text-text-secondary';
         <!-- Pagination -->
         <div v-if="locations.data.length > 0" class="mt-4 flex flex-col items-center justify-between gap-3 sm:flex-row">
             <p class="text-xs text-text-tertiary">
-                Showing <span class="font-medium text-text-secondary">{{ locations.from }}</span>
-                to <span class="font-medium text-text-secondary">{{ locations.to }}</span>
-                of <span class="font-medium text-text-secondary">{{ locations.total }}</span> results
+                {{ t('common.showingResults', { from: locations.from, to: locations.to, total: locations.total }) }}
             </p>
             <nav class="inline-flex items-center gap-1">
                 <template v-for="link in locations.links" :key="link.label">
@@ -260,12 +258,12 @@ const labelClass = 'mb-1 block text-xs font-medium text-text-secondary';
                 <div class="relative mx-4 w-full max-w-md rounded-xl border border-border-subtle bg-surface-raised p-6 shadow-lg">
                     <div class="mb-4 flex items-center justify-between">
                         <h3 class="text-base font-semibold text-text-primary">
-                            Create Location
+                            {{ t('locations.createLocation') }}
                         </h3>
                         <button
                             @click="showCreateModal = false"
                             class="rounded-md p-1.5 text-text-tertiary transition-colors hover:bg-surface-overlay hover:text-text-primary"
-                            aria-label="Close"
+                            :aria-label="t('locations.close')"
                         >
                             <X :size="18" />
                         </button>
@@ -274,26 +272,26 @@ const labelClass = 'mb-1 block text-xs font-medium text-text-secondary';
                     <form @submit.prevent="createLocation" class="space-y-4">
                         <div>
                             <label :class="labelClass">
-                                Location Name <span class="text-status-danger">*</span>
+                                {{ t('locations.locationName') }} <span class="text-status-danger">*</span>
                             </label>
                             <input
                                 v-model="locationForm.name"
                                 type="text"
                                 :class="inputClass"
-                                placeholder="e.g., Warehouse A"
+                                :placeholder="t('locations.namePlaceholder')"
                                 required
                             />
                         </div>
 
                         <div>
                             <label :class="labelClass">
-                                Location Code <span class="text-status-danger">*</span>
+                                {{ t('locations.locationCode') }} <span class="text-status-danger">*</span>
                             </label>
                             <input
                                 v-model="locationForm.code"
                                 type="text"
                                 :class="inputClass"
-                                placeholder="e.g., WH-A"
+                                :placeholder="t('locations.codePlaceholder')"
                                 required
                             />
                         </div>
@@ -306,7 +304,7 @@ const labelClass = 'mb-1 block text-xs font-medium text-text-secondary';
                                 v-model="locationForm.description"
                                 rows="3"
                                 class="w-full rounded-md border border-border-subtle bg-surface-canvas px-3 py-2 text-sm text-text-primary placeholder:text-text-tertiary ds-focus-ring"
-                                placeholder="Optional description..."
+                                :placeholder="t('locations.descPlaceholder')"
                             ></textarea>
                         </div>
 
@@ -334,7 +332,7 @@ const labelClass = 'mb-1 block text-xs font-medium text-text-secondary';
 
                         <div class="mt-6 flex justify-end gap-2">
                             <Button type="button" variant="secondary" size="sm" @click="showCreateModal = false">{{ t('common.cancel') }}</Button>
-                            <Button type="submit" variant="default" size="sm">Create Location</Button>
+                            <Button type="submit" variant="default" size="sm">{{ t('locations.createLocation') }}</Button>
                         </div>
                     </form>
                 </div>
@@ -348,12 +346,12 @@ const labelClass = 'mb-1 block text-xs font-medium text-text-secondary';
                 <div class="relative mx-4 w-full max-w-md rounded-xl border border-border-subtle bg-surface-raised p-6 shadow-lg">
                     <div class="mb-4 flex items-center justify-between">
                         <h3 class="text-base font-semibold text-text-primary">
-                            Edit Location
+                            {{ t('locations.editLocation') }}
                         </h3>
                         <button
                             @click="showEditModal = false"
                             class="rounded-md p-1.5 text-text-tertiary transition-colors hover:bg-surface-overlay hover:text-text-primary"
-                            aria-label="Close"
+                            :aria-label="t('locations.close')"
                         >
                             <X :size="18" />
                         </button>
@@ -362,7 +360,7 @@ const labelClass = 'mb-1 block text-xs font-medium text-text-secondary';
                     <form @submit.prevent="updateLocation" class="space-y-4">
                         <div>
                             <label :class="labelClass">
-                                Location Name <span class="text-status-danger">*</span>
+                                {{ t('locations.locationName') }} <span class="text-status-danger">*</span>
                             </label>
                             <input
                                 v-model="locationForm.name"
@@ -374,7 +372,7 @@ const labelClass = 'mb-1 block text-xs font-medium text-text-secondary';
 
                         <div>
                             <label :class="labelClass">
-                                Location Code <span class="text-status-danger">*</span>
+                                {{ t('locations.locationCode') }} <span class="text-status-danger">*</span>
                             </label>
                             <input
                                 v-model="locationForm.code"
@@ -419,7 +417,7 @@ const labelClass = 'mb-1 block text-xs font-medium text-text-secondary';
 
                         <div class="mt-6 flex justify-end gap-2">
                             <Button type="button" variant="secondary" size="sm" @click="showEditModal = false">{{ t('common.cancel') }}</Button>
-                            <Button type="submit" variant="default" size="sm">Update Location</Button>
+                            <Button type="submit" variant="default" size="sm">{{ t('locations.updateLocation') }}</Button>
                         </div>
                     </form>
                 </div>

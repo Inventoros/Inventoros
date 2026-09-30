@@ -8,6 +8,8 @@ import { Head, Link, router } from '@inertiajs/vue3';
 import { ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { Search, Eye, RotateCcw } from 'lucide-vue-next';
+import { formatMoney, formatNumber } from '@/lib/money';
+import { displayDate } from '@/lib/dates';
 
 const { t } = useI18n();
 
@@ -47,14 +49,7 @@ const statusVariant = (status) =>
 
 const typeVariant = (type) => (type === 'exchange' ? 'info' : 'warning');
 
-const formatDate = (date) => {
-    if (!date) return '-';
-    return new Date(date).toLocaleDateString('en-US', {
-        year: 'numeric',
-        month: 'short',
-        day: 'numeric',
-    });
-};
+const formatDate = (date) => displayDate(date);
 
 const totalItems = (returnOrder) => {
     if (!returnOrder.items) return 0;
@@ -69,7 +64,7 @@ const selectClass =
 </script>
 
 <template>
-    <Head title="Returns & Exchanges" />
+    <Head :title="t('returns.index.title')" />
 
     <AppLayout>
         <template #header>
@@ -80,11 +75,11 @@ const selectClass =
             </div>
         </template>
 
-        <PageHeader title="Returns & Exchanges" description="Track returns, exchanges, and refunds across every order.">
+        <PageHeader :title="t('returns.index.title')" :description="t('returns.index.description')">
             <template #actions>
                 <Button variant="default" size="sm" as="Link" :href="route('returns.create')">
                     <RotateCcw :size="14" />
-                    New Return
+                    {{ t('returns.index.newReturn') }}
                 </Button>
             </template>
         </PageHeader>
@@ -94,33 +89,33 @@ const selectClass =
             <form @submit.prevent="applyFilters" class="space-y-4">
                 <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
                     <div class="sm:col-span-2">
-                        <label for="search" class="mb-1 block text-xs font-medium text-text-secondary">Search</label>
+                        <label for="search" class="mb-1 block text-xs font-medium text-text-secondary">{{ t('common.search') }}</label>
                         <div class="relative">
                             <Search :size="15" class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-text-tertiary" />
                             <input
                                 id="search"
                                 v-model="search"
                                 type="text"
-                                placeholder="Search by return number, order number, or customer..."
+                                :placeholder="t('returns.index.searchPlaceholder')"
                                 class="h-9 w-full rounded-md border border-border-subtle bg-surface-canvas pl-9 pr-3 text-sm text-text-primary placeholder:text-text-tertiary ds-focus-ring"
                             />
                         </div>
                     </div>
                     <div>
-                        <label for="status" class="mb-1 block text-xs font-medium text-text-secondary">Status</label>
+                        <label for="status" class="mb-1 block text-xs font-medium text-text-secondary">{{ t('common.status') }}</label>
                         <select id="status" v-model="statusFilter" :class="selectClass">
-                            <option value="">All Statuses</option>
+                            <option value="">{{ t('common.allStatuses') }}</option>
                             <option v-for="status in statuses" :key="status" :value="status">
-                                {{ status.charAt(0).toUpperCase() + status.slice(1) }}
+                                {{ t(`portal.statuses.${status}`) }}
                             </option>
                         </select>
                     </div>
                     <div>
-                        <label for="type" class="mb-1 block text-xs font-medium text-text-secondary">Type</label>
+                        <label for="type" class="mb-1 block text-xs font-medium text-text-secondary">{{ t('common.type') }}</label>
                         <select id="type" v-model="typeFilter" :class="selectClass">
-                            <option value="">All Types</option>
+                            <option value="">{{ t('common.allTypes') }}</option>
                             <option v-for="type in types" :key="type" :value="type">
-                                {{ type.charAt(0).toUpperCase() + type.slice(1) }}
+                                {{ t(`portal.returns.types.${type}`) }}
                             </option>
                         </select>
                     </div>
@@ -133,14 +128,14 @@ const selectClass =
             <table class="w-full text-sm">
                 <thead>
                     <tr class="border-b border-border-subtle">
-                        <th :class="thClass">Return #</th>
-                        <th :class="thClass">Order #</th>
-                        <th :class="thClass">Type</th>
-                        <th :class="thClass">Status</th>
-                        <th :class="thClass">Items</th>
-                        <th :class="thClass">Refund</th>
-                        <th :class="thClass">Date</th>
-                        <th :class="[thClass, 'text-right']">Actions</th>
+                        <th :class="thClass">{{ t('returns.index.returnNumber') }}</th>
+                        <th :class="thClass">{{ t('returns.index.orderNumber') }}</th>
+                        <th :class="thClass">{{ t('common.type') }}</th>
+                        <th :class="thClass">{{ t('common.status') }}</th>
+                        <th :class="thClass">{{ t('returns.index.items') }}</th>
+                        <th :class="thClass">{{ t('returns.index.refund') }}</th>
+                        <th :class="thClass">{{ t('common.date') }}</th>
+                        <th :class="[thClass, 'text-right']">{{ t('common.actions') }}</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -148,7 +143,7 @@ const selectClass =
                         <td colspan="8" class="px-4 py-12 text-center">
                             <div class="flex flex-col items-center gap-3">
                                 <RotateCcw :size="22" class="text-text-tertiary" />
-                                <p class="text-sm text-text-tertiary">No returns found.</p>
+                                <p class="text-sm text-text-tertiary">{{ t('returns.index.empty') }}</p>
                             </div>
                         </td>
                     </tr>
@@ -163,16 +158,16 @@ const selectClass =
                             <span v-else class="text-text-secondary">-</span>
                         </td>
                         <td class="px-4 py-3">
-                            <Badge :variant="typeVariant(returnOrder.type)" size="sm">{{ returnOrder.type }}</Badge>
+                            <Badge :variant="typeVariant(returnOrder.type)" size="sm">{{ t(`portal.returns.types.${returnOrder.type}`) }}</Badge>
                         </td>
                         <td class="px-4 py-3">
-                            <Badge :variant="statusVariant(returnOrder.status)" size="sm" dot>{{ returnOrder.status }}</Badge>
+                            <Badge :variant="statusVariant(returnOrder.status)" size="sm" dot>{{ t(`portal.statuses.${returnOrder.status}`) }}</Badge>
                         </td>
                         <td class="px-4 py-3">
-                            <span class="tabular-nums text-text-secondary">{{ totalItems(returnOrder) }}</span>
+                            <span class="tabular-nums text-text-secondary">{{ formatNumber(totalItems(returnOrder)) }}</span>
                         </td>
                         <td class="px-4 py-3">
-                            <span class="font-medium tabular-nums text-text-primary">${{ parseFloat(returnOrder.refund_amount || 0).toFixed(2) }}</span>
+                            <span class="font-medium tabular-nums text-text-primary">{{ formatMoney(returnOrder.refund_amount, returnOrder.order?.currency) }}</span>
                         </td>
                         <td class="px-4 py-3">
                             <span class="text-text-secondary">{{ formatDate(returnOrder.created_at) }}</span>
@@ -190,9 +185,7 @@ const selectClass =
         <!-- Pagination -->
         <div v-if="returns.links && returns.links.length > 3" class="mt-4 flex flex-col items-center justify-between gap-3 sm:flex-row">
             <p class="text-xs text-text-tertiary">
-                Showing <span class="font-medium text-text-secondary">{{ returns.from }}</span>
-                to <span class="font-medium text-text-secondary">{{ returns.to }}</span>
-                of <span class="font-medium text-text-secondary">{{ returns.total }}</span> results
+                {{ t('common.showingResults', { from: returns.from, to: returns.to, total: returns.total }) }}
             </p>
             <nav class="inline-flex items-center gap-1">
                 <template v-for="link in returns.links" :key="link.label">

@@ -9,6 +9,8 @@ import InputError from '@/Components/InputError.vue';
 import { Head, Link, router, useForm } from '@inertiajs/vue3';
 import { computed, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
+import { formatMoney } from '@/lib/money';
+import { displayDate } from '@/lib/dates';
 import { Pencil, ArrowLeft, Trash2, ShoppingCart, Wallet, PackageOpen, UserPlus, Send, Ban, ExternalLink } from 'lucide-vue-next';
 
 const { t } = useI18n();
@@ -25,13 +27,9 @@ const totalSpend = computed(() =>
     orders.value.reduce((sum, o) => sum + parseFloat(o.total || 0), 0)
 );
 
-const formatCurrency = (value) =>
-    new Intl.NumberFormat('en-US', {
-        style: 'currency',
-        currency: props.customer.currency || 'USD',
-    }).format(value || 0);
+const formatCurrency = (value) => formatMoney(value, props.customer.currency);
 
-const formatDate = (date) => (date ? new Date(date).toLocaleDateString() : '-');
+const formatDate = (date) => displayDate(date);
 
 const statusVariant = (status) =>
     ({
@@ -75,7 +73,7 @@ const revokeContact = (contact) => {
 
 const contactVariant = (status) => ({ active: 'success', invited: 'warning', revoked: 'neutral' }[status] || 'neutral');
 
-const contactStatusLabel = (status) => t('portal.staff.statuses.' + status);
+const contactStatusLabel = (status) => t(`portal.staff.statuses.${status}`);
 
 const contactDetail = (contact) => {
     if (contact.status === 'invited') {
@@ -111,7 +109,7 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-t
 
         <PageHeader
             :title="customer.name"
-            :description="customer.code ? `Code: ${customer.code}` : customer.company_name || null"
+            :description="customer.code ? t('customers.show.code', { code: customer.code }) : customer.company_name || null"
         >
             <template #actions>
                 <Badge :variant="customer.is_active ? 'success' : 'neutral'" size="sm" dot>
@@ -250,7 +248,7 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-t
                                         <td class="px-4 py-3 text-text-tertiary">{{ formatDate(order.created_at) }}</td>
                                         <td class="px-4 py-3">
                                             <Badge v-if="order.status" :variant="statusVariant(order.status)" size="sm" dot class="capitalize">
-                                                {{ order.status }}
+                                                {{ t(`orders.status.${order.status}`) }}
                                             </Badge>
                                             <span v-else class="text-text-tertiary">-</span>
                                         </td>
@@ -292,7 +290,7 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-t
                             <div>
                                 <dt class="text-xs text-text-tertiary">{{ t('customers.show.creditLimit') }}</dt>
                                 <dd class="mt-1 text-sm text-text-primary">
-                                    {{ customer.credit_limit ? `${customer.currency} ${Number(customer.credit_limit).toLocaleString()}` : '-' }}
+                                    {{ customer.credit_limit ? formatMoney(customer.credit_limit, customer.currency) : '-' }}
                                 </dd>
                             </div>
                             <div>

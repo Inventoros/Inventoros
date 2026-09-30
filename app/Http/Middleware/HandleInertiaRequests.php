@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Middleware;
 
+use App\Models\Auth\Organization;
 use App\Services\ApprovalService;
 use App\Services\PluginService;
 use App\Services\PluginUIService;
@@ -60,6 +61,9 @@ class HandleInertiaRequests extends Middleware
             // each entry so ZIP-installed plugins get UI without an npm build.
             'pluginAssets' => fn () => $user ? app(PluginService::class)->runtimeAssets() : [],
             'locale' => app()->getLocale(),
+            // The organization's regional settings, so the frontend formats
+            // money in its currency and date-only values in its date format.
+            'regional' => fn () => self::regional($user?->organization),
             'flash' => [
                 // Controllers redirect with ->with('success'|'error'|...) in
                 // hundreds of places, and none of it reached the browser
@@ -109,6 +113,20 @@ class HandleInertiaRequests extends Middleware
 
                 return $canApprove ? app(ApprovalService::class)->pendingCountFor($user) : 0;
             },
+        ];
+    }
+
+    /**
+     * The regional settings the frontend formatters honour.
+     *
+     * @return array{currency: string, date_format: string|null, time_format: string|null}
+     */
+    public static function regional(?Organization $organization): array
+    {
+        return [
+            'currency' => $organization?->currency ?: 'USD',
+            'date_format' => $organization?->date_format ?: null,
+            'time_format' => $organization?->time_format ?: null,
         ];
     }
 }

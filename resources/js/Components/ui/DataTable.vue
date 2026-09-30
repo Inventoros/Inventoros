@@ -2,6 +2,7 @@
 import { computed } from 'vue';
 import { Link } from '@inertiajs/vue3';
 import { cn } from '@/lib/utils';
+import { useI18n } from 'vue-i18n';
 
 /**
  * Linear-style data table.
@@ -20,6 +21,8 @@ const props = defineProps({
     loading: { type: Boolean, default: false },
     dense: { type: Boolean, default: false },
 });
+
+const { t } = useI18n();
 
 const emit = defineEmits(['row-click']);
 
@@ -91,7 +94,7 @@ const cellPadding = computed(() => (props.dense ? 'px-3 py-2' : 'px-4 py-3'));
                 <tr v-if="rows.length === 0">
                     <td :colspan="columns.length" class="px-4 py-12 text-center">
                         <slot name="empty">
-                            <p class="text-sm text-text-tertiary">No data.</p>
+                            <p class="text-sm text-text-tertiary">{{ t('components.dataTable.noData') }}</p>
                         </slot>
                     </td>
                 </tr>

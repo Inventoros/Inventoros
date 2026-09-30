@@ -1,7 +1,102 @@
 {
   "stockAudits": {
     "completeConfirm": "هل تريد إكمال هذا الجرد؟ سيتم إنشاء تعديلات مخزون لكل فرق.",
-    "completeUncountedConfirm": "لم يتم عدّ {uncounted} من أصل {total} صنفًا. هل تريد إكمال الجرد على أي حال؟ تحتفظ الأصناف غير المعدودة بمخزونها الحالي، ويُعدَّل المعدود فقط."
+    "completeUncountedConfirm": "لم يتم عدّ {uncounted} من أصل {total} صنفًا. هل تريد إكمال الجرد على أي حال؟ تحتفظ الأصناف غير المعدودة بمخزونها الحالي، ويُعدَّل المعدود فقط.",
+    "backToList": "العودة إلى القائمة",
+    "auditDetails": "تفاصيل الجرد",
+    "types": {
+      "full": "جرد كامل",
+      "cycle": "جرد دوري",
+      "spot": "فحص عشوائي"
+    },
+    "statuses": {
+      "draft": "مسودة",
+      "in_progress": "قيد التنفيذ",
+      "completed": "مكتمل",
+      "cancelled": "ملغى"
+    },
+    "itemStatuses": {
+      "pending": "معلق",
+      "counted": "تم العد",
+      "verified": "تم التحقق",
+      "adjusted": "تم التعديل"
+    },
+    "fields": {
+      "name": "اسم الجرد",
+      "namePlaceholder": "مثال: الجرد الدوري للمستودع للربع الأول 2026",
+      "descriptionPlaceholder": "صف الغرض من هذا الجرد...",
+      "auditType": "نوع الجرد",
+      "typeHints": {
+        "full": "عدّ جميع المنتجات في المستودع",
+        "cycle": "عدّ مجموعة فرعية من المنتجات وفق جدول دوري",
+        "spot": "فحص سريع لمنتجات محددة"
+      },
+      "location": "موقع المستودع",
+      "locationHint": "اتركه فارغاً لتضمين المنتجات من جميع المواقع"
+    },
+    "columns": {
+      "auditNumber": "رقم الجرد",
+      "location": "الموقع",
+      "items": "الأصناف",
+      "createdBy": "أُنشئ بواسطة",
+      "systemQty": "كمية النظام",
+      "countedQty": "الكمية المعدودة",
+      "discrepancy": "الفرق",
+      "countedBy": "عُدّ بواسطة"
+    },
+    "index": {
+      "description": "إدارة جرد المخزون والجرد الدوري.",
+      "newAudit": "جرد جديد",
+      "searchPlaceholder": "البحث برقم الجرد أو الاسم...",
+      "empty": "لم يتم العثور على عمليات جرد للمخزون",
+      "createFirst": "إنشاء أول جرد"
+    },
+    "create": {
+      "title": "إنشاء جرد مخزون",
+      "description": "إعداد جرد مخزون جديد أو جرد دوري.",
+      "notesPlaceholder": "ملاحظات أو تعليمات إضافية لفريق الجرد...",
+      "selectProducts": "اختيار المنتجات",
+      "selectProductsHint": "اختر المنتجات المراد تضمينها في هذا الجرد. اتركه فارغاً لتضمين جميع المنتجات.",
+      "selectProductsHintAtLocation": "اختر المنتجات المراد تضمينها في هذا الجرد. اتركه فارغاً لتضمين جميع المنتجات في الموقع المحدد.",
+      "searchProducts": "البحث في المنتجات بالاسم أو SKU...",
+      "selectAll": "تحديد الكل ({count} منتج) | تحديد الكل ({count} منتجات)",
+      "inStock": "في المخزون",
+      "fullAuditInfo": "سيتم تضمين جميع المنتجات النشطة تلقائياً في هذا الجرد. يمكنك مراجعة الأصناف بعد الإنشاء.",
+      "fullAuditInfoAtLocation": "سيتم تضمين جميع المنتجات النشطة في الموقع المحدد تلقائياً في هذا الجرد. يمكنك مراجعة الأصناف بعد الإنشاء.",
+      "submit": "إنشاء الجرد"
+    },
+    "edit": {
+      "title": "تعديل جرد المخزون",
+      "backToAudit": "العودة إلى الجرد",
+      "notesPlaceholder": "ملاحظات أو تعليمات إضافية...",
+      "submit": "تحديث الجرد"
+    },
+    "show": {
+      "pageTitle": "الجرد {number}",
+      "totalItems": "إجمالي الأصناف",
+      "progress": "التقدم",
+      "discrepancies": "الفروقات",
+      "started": "تاريخ البدء",
+      "completed": "تاريخ الإكمال",
+      "auditItems": "أصناف الجرد",
+      "countedProgress": "(تم عدّ {counted} من أصل {total})",
+      "count": "عدّ",
+      "recount": "إعادة العد",
+      "countNotesPlaceholder": "ملاحظات (اختياري)",
+      "noItems": "لا توجد أصناف في هذا الجرد",
+      "processing": "جارٍ المعالجة...",
+      "startAudit": "بدء الجرد",
+      "completeAudit": "إكمال الجرد",
+      "deleteAudit": "حذف الجرد",
+      "startHint": "سيؤدي بدء الجرد إلى تسجيل مستويات المخزون الحالية في النظام والسماح ببدء العد.",
+      "completeHint": "سيؤدي إكمال الجرد إلى إنشاء تعديلات مخزون لأي فروقات بين كميات النظام والكميات المعدودة.",
+      "dangerZone": "منطقة الخطر",
+      "deleteHint": "حذف هذا الجرد نهائي ولا يمكن التراجع عنه.",
+      "startConfirm": "هل أنت متأكد من بدء هذا الجرد؟ سيتم تسجيل كميات النظام بمستوياتها الحالية.",
+      "deleteConfirm": "هل أنت متأكد من حذف هذا الجرد؟ لا يمكن التراجع عن هذا الإجراء.",
+      "updateCountFailed": "تعذّر تحديث العد",
+      "saveCountError": "حدث خطأ أثناء حفظ العد"
+    }
   },
   "common": {
     "save": "حفظ",
@@ -192,6 +287,32 @@
       "queueBacklog": "مهام في قائمة الانتظار منذ أكثر من 15 دقيقة: {count}. لا يتم إرسال الرسائل وخطافات الويب.",
       "failedJobs": "مهام الخلفية التي فشلت خلال آخر 24 ساعة: {count}.",
       "help": "تحقق من أن مهمة cron تشغّل php artisan schedule:run كل دقيقة. راجع دليل cPanel للتفاصيل."
+    },
+    "description": "لمحة عن المخزون والطلبات وأولويات إعادة الطلب.",
+    "customize": "تخصيص",
+    "hints": {
+      "activeInCatalog": "نشط في الكتالوج",
+      "belowMinimum": "دون الحد الأدنى",
+      "allTime": "منذ البداية"
+    },
+    "widgets": {
+      "statsOverview": "نظرة عامة على الإحصائيات",
+      "revenueChart": "الإيرادات والإحصائيات الثانوية",
+      "stockMovements": "حركات المخزون",
+      "lowStockAlerts": "تنبيهات المخزون المنخفض",
+      "topProducts": "أفضل المنتجات",
+      "stockByCategory": "المخزون حسب الفئة",
+      "reorderSuggestions": "اقتراحات إعادة الطلب"
+    },
+    "reorderSuggestions": {
+      "title": "اقتراحات إعادة الطلب",
+      "subtitle": "دون نقطة إعادة الطلب. تأتي الكمية المقترحة من إعدادات المنتج والحد الأدنى للطلب لدى المورد.",
+      "reorderAt": "إعادة الطلب عند"
+    },
+    "customizeModal": {
+      "title": "تخصيص لوحة التحكم",
+      "help": "فعّل الأدوات أو عطّلها لإظهارها أو إخفائها في لوحة التحكم.",
+      "savePreferences": "حفظ التفضيلات"
     }
   },
   "products": {
@@ -241,7 +362,8 @@
       "variantHint": "أضف خيارات مثل الحجم أو اللون لبيع إصدارات مختلفة من هذا المنتج. كل تركيبة تنشئ متغيراً بسعره ومخزونه الخاص.",
       "variantStockHint": "يتم تتبع المخزون لكل متغير عند تفعيل المتغيرات.",
       "notesPlaceholder": "ملاحظات إضافية حول هذا المنتج...",
-      "createProduct": "إنشاء المنتج"
+      "createProduct": "إنشاء المنتج",
+      "subtitle": "أنشئ منتجاً مع التسعير والمخزون والمتغيرات والصور."
     },
     "edit": {
       "title": "تعديل المنتج",
@@ -288,7 +410,34 @@
       "outOfStock": "نفد من المخزون",
       "lowStock": "مخزون منخفض",
       "inStock": "متوفر في المخزون",
-      "activityHistory": "سجل النشاط"
+      "activityHistory": "سجل النشاط",
+      "minHint": "الحد الأدنى {count}",
+      "stockAtPrice": "المخزون بالسعر",
+      "barcodeValue": "الباركود: {barcode}",
+      "currencyValue": "العملة: {currency}",
+      "confirmGenerateRandom": "هل تريد توليد باركود عشوائي جديد لهذا المنتج؟",
+      "generateBarcodeFailed": "تعذّر توليد الباركود",
+      "confirmGenerateFromSku": "هل تريد توليد باركود من SKU؟",
+      "generateFromSkuFailed": "تعذّر توليد الباركود من SKU",
+      "bom": {
+        "title": "قائمة المواد",
+        "addComponent": "إضافة مكوّن",
+        "availableKitStock": "مخزون الطقم المتاح (محدود بأقل مكوّن)",
+        "searchProduct": "البحث عن منتج",
+        "searchPlaceholder": "البحث بالاسم أو SKU...",
+        "stockInline": "(المخزون: {count})",
+        "searching": "جارٍ البحث...",
+        "qtyRequired": "الكمية المطلوبة",
+        "availableStock": "المخزون المتاح",
+        "unknown": "غير معروف",
+        "remove": "إزالة",
+        "empty": "لم تتم إضافة أي مكونات بعد.",
+        "emptyHint": "انقر \"إضافة مكوّن\" لبناء قائمة المواد.",
+        "addFailed": "تعذّرت إضافة المكوّن",
+        "updateQuantityFailed": "تعذّر تحديث الكمية",
+        "confirmRemove": "هل تريد إزالة هذا المكوّن من قائمة المواد؟",
+        "removeFailed": "تعذّرت إزالة المكوّن"
+      }
     },
     "quickAddCategory": {
       "title": "إضافة فئة سريعة",
@@ -303,6 +452,56 @@
       "locationCode": "رمز الموقع",
       "codePlaceholder": "مثال: WH-A",
       "descPlaceholder": "وصف اختياري..."
+    },
+    "subtitle": "الكتالوج ومستويات المخزون وحدود إعادة الطلب.",
+    "duplicate": "تكرار",
+    "printBarcode": "طباعة الباركود",
+    "variantsCount": "{count} متغير | {count} متغيرات",
+    "types": {
+      "standard": "قياسي",
+      "kit": "طقم",
+      "assembly": "تجميع"
+    },
+    "trackingTypes": {
+      "none": "بدون تتبع",
+      "batch": "تتبع الدفعات",
+      "serial": "تتبع الأرقام التسلسلية"
+    },
+    "form": {
+      "productType": "نوع المنتج",
+      "productTypeHint": "تجمع الأطقم مكونات للبيع معاً. تتطلب التجميعات أوامر عمل لإنتاجها.",
+      "additionalCurrencies": "عملات إضافية",
+      "selectCurrency": "اختر العملة...",
+      "addPriceInCurrency": "+ إضافة سعر بعملة أخرى",
+      "reorderPoint": "نقطة إعادة الطلب",
+      "reorderPointHint": "مستوى المخزون الذي يُطلق إعادة الطلب التلقائية",
+      "reorderQuantity": "كمية إعادة الطلب",
+      "reorderQuantityHint": "الكمية المطلوب طلبها عندما يصل المخزون إلى نقطة إعادة الطلب",
+      "leaveEmptyToDisable": "اتركه فارغاً للتعطيل",
+      "inventoryTracking": "تتبع المخزون",
+      "inventoryTrackingHint": "اختر طريقة تتبع الوحدات الفردية لهذا المنتج.",
+      "createCategoryFailed": "تعذّر إنشاء الفئة. يرجى المحاولة مرة أخرى.",
+      "createLocationFailed": "تعذّر إنشاء الموقع. يرجى المحاولة مرة أخرى."
+    },
+    "index": {
+      "selectedCount": "تم تحديد {count} منتج | تم تحديد {count} منتجات",
+      "confirmBulkDelete": "هل أنت متأكد من حذف {count} منتج؟ لا يمكن التراجع عن هذا الإجراء. | هل أنت متأكد من حذف {count} منتجات؟ لا يمكن التراجع عن هذا الإجراء."
+    },
+    "bulk": {
+      "changeCategory": "تغيير الفئة",
+      "updateCategoryFor": "تحديث الفئة لـ {count} منتج محدد. | تحديث الفئة لـ {count} منتجات محددة.",
+      "selectCategory": "اختر فئة...",
+      "updateCategory": "تحديث الفئة",
+      "adjustPrice": "تعديل السعر",
+      "adjustPriceFor": "تعديل السعر لـ {count} منتج محدد. | تعديل السعر لـ {count} منتجات محددة.",
+      "adjustmentType": "نوع التعديل",
+      "percentage": "نسبة مئوية (%)",
+      "fixedAmount": "مبلغ ثابت ($)",
+      "value": "القيمة",
+      "useNegative": "(استخدم قيمة سالبة للتخفيض)",
+      "percentagePlaceholder": "مثال: 10 لـ +10%، و-20 لـ -20%",
+      "fixedPlaceholder": "مثال: 5.00 أو -3.50",
+      "applyPriceChange": "تطبيق تغيير السعر"
     }
   },
   "orders": {
@@ -372,7 +571,9 @@
       "searchingCustomers": "جارٍ البحث...",
       "noCustomersFound": "لا يوجد عملاء مطابقون. أدخل البيانات أدناه لعميل لمرة واحدة.",
       "linkedCustomer": "مرتبط بالعميل المحفوظ {name}",
-      "clearCustomer": "استخدام عميل لمرة واحدة"
+      "clearCustomer": "استخدام عميل لمرة واحدة",
+      "description": "أضف طلب عميل وبنوده.",
+      "addAtLeastOneProduct": "يرجى إضافة منتج واحد على الأقل إلى الطلب."
     },
     "show": {
       "orderNumber": "طلب #{number}",
@@ -415,7 +616,10 @@
       "approvalNotesPlaceholder": "ملاحظات اختيارية حول هذه الموافقة...",
       "rejectionNotesPlaceholder": "سبب الرفض...",
       "approve": "موافقة",
-      "reject": "رفض"
+      "reject": "رفض",
+      "downloadInvoice": "تنزيل الفاتورة",
+      "previewInvoice": "معاينة الفاتورة",
+      "createReturn": "إنشاء مرتجع"
     },
     "edit": {
       "title": "تعديل الطلب",
@@ -432,7 +636,11 @@
       "deliveredAt": "تاريخ التسليم:",
       "updatingOrder": "جارٍ تحديث الطلب...",
       "updateOrder": "تحديث الطلب",
-      "viewDetails": "عرض تفاصيل الطلب"
+      "viewDetails": "عرض تفاصيل الطلب",
+      "removeItem": "إزالة البند"
+    },
+    "index": {
+      "description": "طلبات العملاء من جميع القنوات."
     }
   },
   "purchaseOrders": {
@@ -465,13 +673,15 @@
       "unitCost": "تكلفة الوحدة",
       "supplierSku": "SKU المورد",
       "orderItems": "عناصر الطلب ({count})",
-      "createPo": "إنشاء أمر الشراء"
+      "createPo": "إنشاء أمر الشراء",
+      "description": "أنشئ أمر شراء وأضف العناصر المراد استلامها."
     },
     "edit": {
       "title": "تعديل أمر الشراء",
       "backToPo": "العودة إلى أوامر الشراء",
       "updatePo": "تحديث أمر الشراء",
-      "viewDetails": "عرض التفاصيل"
+      "viewDetails": "عرض التفاصيل",
+      "poNumber": "أمر الشراء #{number}"
     },
     "show": {
       "receiveItems": "استلام العناصر",
@@ -484,7 +694,14 @@
       "sendToSupplier": "إرسال إلى المورد",
       "editPo": "تعديل أمر الشراء",
       "cancelOrder": "إلغاء الطلب",
-      "deleteOrder": "حذف الطلب"
+      "deleteOrder": "حذف الطلب",
+      "confirmCancel": "هل أنت متأكد من إلغاء أمر الشراء هذا؟",
+      "orderDateOn": "تاريخ الطلب {date}",
+      "downloadPdf": "تنزيل PDF",
+      "previewPdf": "معاينة PDF",
+      "itemsCount": "العناصر ({count})",
+      "supplierSkuLine": "المورد: {sku}",
+      "cannotUndo": "لا يمكن التراجع عن هذا الإجراء."
     },
     "receive": {
       "title": "استلام العناصر - {poNumber}",
@@ -497,7 +714,11 @@
       "complete": "مكتمل",
       "readyToReceive": "جاهز لاستلام {count} عنصر",
       "selectQuantities": "اختر الكميات المراد استلامها",
-      "confirmReceiving": "تأكيد الاستلام"
+      "confirmReceiving": "تأكيد الاستلام",
+      "receive": "استلام",
+      "headTitle": "استلام - {poNumber}",
+      "description": "سجّل الكميات المستلمة مقابل أمر الشراء هذا.",
+      "readyToReceiveCount": "جاهز لاستلام {count} عنصر | جاهز لاستلام {count} عناصر"
     },
     "currencies": {
       "usd": "USD - دولار أمريكي",
@@ -505,7 +726,12 @@
       "gbp": "GBP - جنيه بريطاني",
       "cad": "CAD - دولار كندي",
       "aud": "AUD - دولار أسترالي"
-    }
+    },
+    "index": {
+      "description": "طلبات إعادة التزويد إلى مورديك."
+    },
+    "confirmDelete": "هل أنت متأكد من حذف \"{number}\"؟",
+    "noSku": "بدون SKU"
   },
   "productSuppliers": {
     "title": "الموردون",
@@ -568,7 +794,8 @@
       "businessDetails": "تفاصيل العمل",
       "paymentTerms": "شروط الدفع",
       "paymentTermsPlaceholder": "مثال: صافي 30 يوماً",
-      "createSupplier": "إنشاء المورد"
+      "createSupplier": "إنشاء المورد",
+      "description": "أضف مورداً وتفاصيل الاتصال والعنوان والنشاط التجاري الخاصة به."
     },
     "edit": {
       "title": "تعديل المورد",
@@ -587,7 +814,14 @@
       "supplierCode": "رمز المورد",
       "paymentTerms": "شروط الدفع",
       "editSupplier": "تعديل المورد",
-      "deleteSupplier": "حذف المورد"
+      "deleteSupplier": "حذف المورد",
+      "code": "الرمز: {code}",
+      "supplierDetails": "تفاصيل المورد",
+      "products": "المنتجات",
+      "deleteWarning": "سيؤدي هذا إلى إزالة المورد نهائياً ولا يمكن التراجع عنه."
+    },
+    "index": {
+      "description": "مورّدوك والمنتجات التي يوردونها."
     }
   },
   "customers": {
@@ -614,7 +848,8 @@
       "paymentTerms": "شروط الدفع",
       "paymentTermsPlaceholder": "مثال: صافي 30 يوماً",
       "creditLimit": "حد الائتمان",
-      "createCustomer": "إنشاء العميل"
+      "createCustomer": "إنشاء العميل",
+      "description": "أضف عميلاً وتفاصيل الفوترة والشحن والنشاط التجاري الخاصة به."
     },
     "edit": {
       "title": "تعديل العميل",
@@ -637,6 +872,9 @@
       "recentOrders": "الطلبات الأخيرة",
       "noOrdersYet": "لا توجد طلبات بعد",
       "deleteCustomer": "حذف العميل"
+    },
+    "index": {
+      "description": "عملاؤك والطلبات التي يقدمونها."
     }
   },
   "categories": {
@@ -650,7 +888,13 @@
     "editCategory": "تعديل الفئة",
     "categoryName": "اسم الفئة",
     "namePlaceholder": "مثال: إلكترونيات",
-    "descPlaceholder": "وصف اختياري..."
+    "descPlaceholder": "وصف اختياري...",
+    "index": {
+      "description": "نظّم الكتالوج الخاص بك في فئات."
+    },
+    "confirmDelete": "هل أنت متأكد من حذف \"{name}\"؟ لا يمكن التراجع عن هذا الإجراء.",
+    "productsCount": "{count} منتج | {count} منتجات",
+    "updateCategory": "تحديث الفئة"
   },
   "locations": {
     "title": "مواقع المستودعات",
@@ -672,7 +916,12 @@
     "noWarehouse": "لا يوجد مستودع",
     "capacity": "السعة (وحدات)",
     "capacityHint": "اختياري. يُستخدم لعرض مدى امتلاء الموقع.",
-    "capacityValue": "السعة: {capacity} وحدة"
+    "capacityValue": "السعة: {capacity} وحدة",
+    "subtitle": "الأماكن الفعلية التي يُخزَّن فيها مخزونك.",
+    "close": "إغلاق",
+    "productsCount": "{count} منتج | {count} منتجات",
+    "updateLocation": "تحديث الموقع",
+    "confirmDelete": "هل أنت متأكد من حذف \"{name}\"؟ لا يمكن التراجع عن هذا الإجراء."
   },
   "reports": {
     "title": "التقارير والتحليلات",
@@ -740,7 +989,9 @@
       "current": "الحالي",
       "deficit": "العجز",
       "allWellStocked": "جميع المنتجات متوفرة بكميات كافية!",
-      "noProductsBelowMin": "لا توجد منتجات أقل من الحد الأدنى للمخزون"
+      "noProductsBelowMin": "لا توجد منتجات أقل من الحد الأدنى للمخزون",
+      "min": "الحد الأدنى",
+      "max": "الحد الأقصى"
     },
     "categoryPerformance": {
       "title": "تقرير أداء الفئات",
@@ -889,6 +1140,16 @@
       "loss": "فقدان",
       "return": "إرجاع",
       "correction": "تصحيح"
+    },
+    "index": {
+      "dataSources": {
+        "products": "المنتجات",
+        "orders": "الطلبات",
+        "stock_adjustments": "تعديلات المخزون",
+        "customers": "العملاء",
+        "suppliers": "الموردون",
+        "purchase_orders": "أوامر الشراء"
+      }
     }
   },
   "stockAdjustments": {
@@ -919,7 +1180,13 @@
       "negativeWarningMsg": "سيؤدي هذا التعديل إلى مخزون سالب. يرجى التحقق من الكمية.",
       "createAdjustment": "إنشاء التعديل",
       "stockIncrease": "زيادة المخزون",
-      "stockDecrease": "نقص المخزون"
+      "stockDecrease": "نقص المخزون",
+      "currentStockValue": "المخزون الحالي: {stock}",
+      "locationOptional": "الموقع (اختياري)",
+      "noSpecificLocation": "بدون موقع محدد",
+      "locationHint": "طبّق هذا التعديل على موقع محدد ليبقى توزيع المخزون حسب الموقع متوافقاً. اتركه فارغاً لتعديل الإجمالي فقط.",
+      "quantityPlaceholder": "أدخل رقماً موجباً للإضافة، وسالباً للخصم",
+      "negativeWarningValue": "سيؤدي هذا التعديل إلى مخزون سالب ({stock}). يرجى التحقق من الكمية."
     },
     "show": {
       "title": "تفاصيل تعديل المخزون",
@@ -939,7 +1206,30 @@
       "finalStock": "المخزون النهائي",
       "manualAdjustment": "تعديل يدوي",
       "stockRecount": "إعادة جرد المخزون",
-      "order": "طلب"
+      "order": "طلب",
+      "unitsCount": "{count} وحدة | {count} وحدات"
+    },
+    "variantAdjuster": {
+      "title": "تعديل المخزون: {name}",
+      "failed": "تعذّر تعديل المخزون"
+    },
+    "types": {
+      "manual": "تعديل يدوي",
+      "order": "طلب",
+      "return": "إرجاع",
+      "damage": "تلف",
+      "loss": "فقدان",
+      "recount": "إعادة جرد المخزون",
+      "correction": "تصحيح",
+      "opening_stock": "المخزون الافتتاحي"
+    },
+    "index": {
+      "allProducts": "جميع المنتجات",
+      "dateFrom": "من تاريخ",
+      "dateTo": "إلى تاريخ",
+      "before": "قبل",
+      "change": "التغيير",
+      "after": "بعد"
     }
   },
   "importExport": {
@@ -967,7 +1257,8 @@
       "includeNames": "أسماء المنتجات و SKU والباركود",
       "includePricing": "معلومات التسعير والعملة",
       "includeStock": "مستويات المخزون والحد الأدنى للمخزون",
-      "includeCategories": "الفئات والمواقع"
+      "includeCategories": "الفئات والمواقع",
+      "exportIncludesLabel": "يتضمن التصدير:"
     },
     "import": {
       "title": "استيراد المنتجات",
@@ -991,7 +1282,14 @@
       "noteUpdate": "سيتم تحديث المنتجات الموجودة (المطابقة بـ SKU)",
       "noteCreate": "سيتم إنشاء الفئات والمواقع إذا لم تكن موجودة",
       "noteCurrency": "العملة الافتراضية هي USD إذا لم يتم تحديدها",
-      "noteSkip": "سيتم تخطي الصفوف غير الصالحة والإبلاغ عنها"
+      "noteSkip": "سيتم تخطي الصفوف غير الصالحة والإبلاغ عنها",
+      "templateHelpLabel": "تحتاج مساعدة؟ نزّل ملف القالب مع بيانات نموذجية:",
+      "requiredFieldsLabel": "الحقول المطلوبة:",
+      "importantNotesLabel": "ملاحظات مهمة:",
+      "fieldNameDesc": "اسم المنتج",
+      "fieldSkuDesc": "معرّف SKU فريد",
+      "fieldPriceDesc": "سعر البيع",
+      "fieldStockDesc": "كمية المخزون الحالية"
     },
     "pageDescription": "استيراد وتصدير المنتجات والطلبات والمستخدمين بشكل مجمّع.",
     "tabs": {
@@ -1064,7 +1362,21 @@
       "ruleEscalation": "يمكنك فقط تعيين الأدوار المسموح لك بتعيينها: غير المسؤولين يمكنهم استيراد الأعضاء فقط، بأدوار لا تتجاوز صلاحياتهم."
     },
     "exportProducts": "تصدير المنتجات",
-    "importProducts": "استيراد المنتجات"
+    "importProducts": "استيراد المنتجات",
+    "exports": {
+      "title": "عمليات التصدير الخاصة بك",
+      "description": "يتم تجهيز عمليات التصدير الكبيرة في الخلفية. ستتلقى إشعاراً عندما يصبح كل منها جاهزاً للتنزيل.",
+      "file": "الملف",
+      "rows": "الصفوف",
+      "action": "الإجراء",
+      "download": "تنزيل",
+      "statuses": {
+        "pending": "معلق",
+        "processing": "قيد المعالجة",
+        "completed": "مكتمل",
+        "failed": "فشل"
+      }
+    }
   },
   "notifications": {
     "title": "الإشعارات",
@@ -1081,7 +1393,20 @@
     "noNotifications": "لا توجد إشعارات",
     "allCaughtUp": "أنت على اطلاع بكل شيء!",
     "noNewNotifications": "لا توجد إشعارات جديدة",
-    "viewAllNotifications": "عرض الكل"
+    "viewAllNotifications": "عرض الكل",
+    "confirmMarkAllRead": "هل تريد تعيين جميع الإشعارات كمقروءة؟",
+    "confirmDelete": "هل تريد حذف هذا الإشعار؟",
+    "confirmClearRead": "هل تريد مسح جميع الإشعارات المقروءة؟",
+    "allCount": "الكل ({count})",
+    "unreadCount": "غير مقروء ({count})",
+    "readCount": "مقروء ({count})",
+    "viewDetailsLabel": "عرض التفاصيل",
+    "priorities": {
+      "low": "منخفضة",
+      "normal": "عادية",
+      "high": "عالية",
+      "urgent": "عاجلة"
+    }
   },
   "plugins": {
     "title": "الإضافات",
@@ -1132,7 +1457,12 @@
       "notOwned": "حسابك المتصل لا يملك هذه الإضافة بعد.",
       "viewOnMarketplace": "عرض على inventoros.com",
       "readOnly": "يمكنك تصفح المتجر. يتطلب تثبيت الإضافات صلاحية إدارة الإضافات."
-    }
+    },
+    "confirmDelete": "هل أنت متأكد من حذف \"{name}\"؟ لا يمكن التراجع عن هذا الإجراء.",
+    "subtitle": "وسّع مساحة عملك بإضافات قابلة للتثبيت.",
+    "versionLabel": "الإصدار: {version}",
+    "authorLabel": "المؤلف:",
+    "requiresLabel": "يتطلب: {requires}"
   },
   "settings": {
     "title": "الإعدادات",
@@ -1147,7 +1477,8 @@
       "dateFormat": "تنسيق التاريخ",
       "timeFormat": "تنسيق الوقت",
       "userMgmtHint": "وظيفة إدارة المستخدمين متاحة في قسم المستخدمين.",
-      "goToUserMgmt": "الانتقال إلى إدارة المستخدمين"
+      "goToUserMgmt": "الانتقال إلى إدارة المستخدمين",
+      "description": "أدِر ملف مؤسستك وتفضيلاتها الإقليمية."
     },
     "account": {
       "title": "إعدادات الحساب",
@@ -1179,7 +1510,8 @@
       "dark": "داكن",
       "auto": "تلقائي",
       "language": "اللغة",
-      "itemsPerPage": "العناصر لكل صفحة"
+      "itemsPerPage": "العناصر لكل صفحة",
+      "description": "أدِر ملفك الشخصي وكلمة المرور والإشعارات والتفضيلات."
     },
     "email": {
       "title": "إعدادات البريد الإلكتروني",
@@ -1213,7 +1545,9 @@
       "sendTest": "إرسال بريد اختباري",
       "sending": "جارٍ الإرسال...",
       "saveSettings": "حفظ إعدادات البريد الإلكتروني",
-      "testSuccess": "تم إرسال البريد الإلكتروني التجريبي بنجاح."
+      "testSuccess": "تم إرسال البريد الإلكتروني التجريبي بنجاح.",
+      "description": "اضبط طريقة إرسال مساحة عملك للبريد الإلكتروني والإشعارات.",
+      "fromNamePlaceholder": "اسم شركتك"
     },
     "notificationPreferences": {
       "title": "تفضيلات إشعارات البريد الإلكتروني",
@@ -1290,8 +1624,46 @@
         "deleteWebhook": "حذف Webhook",
         "integrationGuide": "دليل التكامل",
         "signatureHeader": "رأس التوقيع",
-        "verification": "التحقق"
-      }
+        "verification": "التحقق",
+        "headTitle": "Webhook: {name}",
+        "description": "إعدادات Webhook ونشاط التسليم.",
+        "sendTestShort": "إرسال اختبار",
+        "secretHidden": "مخفي لأسباب أمنية. أعد توليد المفتاح السري لإصدار مفتاح جديد؛ يُعرض مرة واحدة فقط.",
+        "createdAt": "تاريخ الإنشاء",
+        "subscribedEventsCount": "الأحداث المشترك بها ({count})",
+        "deliveryStatuses": {
+          "success": "نجاح",
+          "pending": "معلق",
+          "failed": "فشل"
+        },
+        "noResponseBody": "لا يوجد نص للاستجابة",
+        "otherGroup": "أخرى",
+        "signatureHeaderDesc": "تتضمن جميع حمولات Webhook توقيعاً في الرأس {header}.",
+        "verificationDesc": "تحقق من التوقيع بحساب HMAC-SHA256 لنص الطلب الخام باستخدام مفتاحك السري.",
+        "responseDesc": "أعِد رمز حالة 2xx لتأكيد الاستلام. ستُعاد محاولة التسليمات الفاشلة حتى 5 مرات.",
+        "deleteDesc": "احذف هذا Webhook وجميع سجلات التسليم الخاصة به نهائياً. لا يمكن التراجع عن هذا الإجراء.",
+        "confirmDelete": "هل أنت متأكد من حذف \"{name}\"؟ لا يمكن التراجع عن هذا الإجراء.",
+        "confirmRegenerate": "هل أنت متأكد من إعادة توليد المفتاح السري؟ ستحتاج إلى تحديث المفتاح السري في التطبيق المستقبِل."
+      },
+      "description": "الخدمات الخارجية التي تتلقى إشعارات الأحداث في الوقت الفعلي.",
+      "signingSecret": "مفتاح التوقيع السري",
+      "secretShownOnce": "انسخه الآن. لأسباب أمنية يُعرض مرة واحدة فقط ولا يمكن استرداده لاحقاً.",
+      "confirmDelete": "هل أنت متأكد من حذف \"{name}\"؟",
+      "createdByName": "أنشأه {name}",
+      "unknownCreator": "غير معروف",
+      "eventCount": "{count} حدث | {count} أحداث",
+      "deliveriesTotal": "{count} إجمالاً",
+      "namePlaceholder": "Webhook الخاص بي"
+    },
+    "description": "أدِر مساحة العمل والحساب والتكاملات.",
+    "hub": {
+      "accountDescription": "حدّث ملفك الشخصي وكلمة المرور وتفضيلاتك الشخصية، بما في ذلك اللغة.",
+      "notificationsDescription": "اختر إشعارات البريد الإلكتروني والإشعارات داخل التطبيق التي تتلقاها.",
+      "twoFactorTitle": "المصادقة الثنائية",
+      "twoFactorDescription": "احمِ حسابك برمز لمرة واحدة من تطبيق مصادقة.",
+      "emailDescription": "اضبط طريقة إرسال مؤسستك للبريد الإلكتروني (SMTP أو Mailgun أو SendGrid).",
+      "webhooksDescription": "اربط الخدمات الخارجية وأرسل إشعارات الأحداث في الوقت الفعلي.",
+      "updatesDescription": "تحقق من الإصدارات الجديدة، وحدّث التطبيق، وأدِر النسخ الاحتياطية."
     }
   },
   "admin": {
@@ -1317,7 +1689,8 @@
         "additionalRoles": "أدوار إضافية (اختياري)",
         "additionalRolesHint": "تعيين أدوار مخصصة بمجموعات صلاحيات محددة.",
         "createUser": "إنشاء المستخدم",
-        "success": "تم إنشاء المستخدم بنجاح."
+        "success": "تم إنشاء المستخدم بنجاح.",
+        "subtitle": "أنشئ حساب مستخدم جديداً وعيّن الأدوار."
       },
       "edit": {
         "title": "تعديل المستخدم",
@@ -1329,7 +1702,11 @@
         "customRoles": "أدوار مخصصة إضافية (اختياري)",
         "customRolesHint": "تعيين أدوار مخصصة أُنشئت لمؤسستك لمنح صلاحيات محددة.",
         "updateUser": "تحديث المستخدم",
-        "success": "تم تحديث المستخدم بنجاح."
+        "success": "تم تحديث المستخدم بنجاح.",
+        "titleWithName": "تعديل المستخدم: {name}",
+        "subtitle": "حدّث تفاصيل الحساب والدور الأساسي وتعيينات الأدوار المخصصة.",
+        "admin": "مسؤول",
+        "customRolesSelected": "{count} دور (أدوار) مخصص محدد"
       },
       "show": {
         "title": "تفاصيل المستخدم",
@@ -1349,7 +1726,16 @@
         "notVerified": "لم يتم التحقق",
         "deleteUser": "حذف المستخدم",
         "confirmDelete": "هل أنت متأكد من حذف {name}؟",
-        "cannotUndo": "لا يمكن التراجع عن هذا الإجراء."
+        "cannotUndo": "لا يمكن التراجع عن هذا الإجراء.",
+        "titleWithName": "المستخدم: {name}"
+      },
+      "subtitle": "أدِر المستخدمين في مؤسستك، وعيّن الأدوار والصلاحيات.",
+      "noUsersTitle": "لم يتم العثور على مستخدمين.",
+      "noUsersHint": "انقر \"إضافة مستخدم\" لإنشاء أول مستخدم.",
+      "roles": {
+        "admin": "مسؤول",
+        "manager": "مدير",
+        "member": "عضو"
       }
     },
     "roles": {
@@ -1375,7 +1761,12 @@
         "deselectAll": "إلغاء تحديد الكل",
         "totalPermissions": "{count} صلاحية (صلاحيات) إجمالاً",
         "createRole": "إنشاء الدور",
-        "success": "تم إنشاء الدور بنجاح."
+        "success": "تم إنشاء الدور بنجاح.",
+        "subtitle": "عرّف دوراً وعيّن صلاحياته.",
+        "roleDetails": "تفاصيل الدور",
+        "namePlaceholder": "مثال: مدير المستودع",
+        "descriptionPlaceholder": "صف الغرض من هذا الدور ومسؤولياته...",
+        "permissionBreakdown": "({direct} مباشرة + {fromSets} من {sets} مجموعة (مجموعات))"
       },
       "edit": {
         "title": "تعديل الدور",
@@ -1387,7 +1778,10 @@
         "permissionsHint": "قم بتخصيص صلاحيات هذا الدور. انقر على أسماء الفئات لتحديد/إلغاء تحديد جميع الصلاحيات في تلك الفئة.",
         "permissionsSelected": "{count} صلاحية (صلاحيات) محددة",
         "updateRole": "تحديث الدور",
-        "success": "تم تحديث الدور بنجاح."
+        "success": "تم تحديث الدور بنجاح.",
+        "titleWithName": "تعديل الدور: {name}",
+        "subtitle": "حدّث تفاصيل الدور وصلاحياته.",
+        "viewRole": "عرض الدور"
       },
       "show": {
         "title": "تفاصيل الدور والصلاحيات",
@@ -1407,7 +1801,15 @@
         "deleteRole": "حذف الدور",
         "reassignFirst": "أعد تعيين المستخدمين قبل الحذف",
         "systemRoleHint": "هذا دور نظام ولا يمكن تعديله أو حذفه.",
-        "confirmDelete": "هل أنت متأكد من حذف دور {name}؟ لا يمكن التراجع عن هذا الإجراء."
+        "confirmDelete": "هل أنت متأكد من حذف دور {name}؟ لا يمكن التراجع عن هذا الإجراء.",
+        "otherCategory": "أخرى",
+        "titleWithName": "الدور: {name}",
+        "permissionsWithCount": "الصلاحيات ({count})",
+        "noPermissions": "لا توجد صلاحيات معيّنة لهذا الدور.",
+        "usersCountValue": "{count} مستخدم | {count} مستخدمين",
+        "cannotDeleteWithUsers": "لا يمكن حذف دور معيّن لمستخدمين",
+        "deleteRoleTooltip": "حذف الدور",
+        "confirmDeleteRole": "هل أنت متأكد من حذف دور {name}؟"
       }
     },
     "activityLog": {
@@ -1473,7 +1875,16 @@
       "allCategories": "جميع الفئات",
       "securityBadge": "الأمان",
       "securityShortcut": "أحداث الأمان",
-      "viewDetails": "عرض التفاصيل"
+      "viewDetails": "عرض التفاصيل",
+      "description": "سجل تدقيق لكل تغيير في مساحة العمل الخاصة بك.",
+      "exportCsv": "تصدير CSV",
+      "exportXlsx": "تصدير XLSX",
+      "searchDescription": "البحث في الوصف",
+      "unknownUser": "مستخدم غير معروف",
+      "viewChanges": "عرض {count} تغيير | عرض {count} تغييرات",
+      "daysAgo": "منذ {count} يوم | منذ {count} أيام",
+      "hoursAgo": "منذ {count} ساعة | منذ {count} ساعات",
+      "minutesAgo": "منذ {count} دقيقة | منذ {count} دقائق"
     },
     "update": {
       "title": "تحديث النظام",
@@ -1507,11 +1918,335 @@
       "onGithub": "على GitHub",
       "autoBackup": "يتم إنشاء نسخة احتياطية تلقائياً قبل كل تحديث",
       "maintenanceMode": "سيكون التطبيق في وضع الصيانة أثناء التحديثات",
-      "autoMigrations": "يتم تشغيل ترحيلات قاعدة البيانات تلقائياً أثناء التحديثات"
+      "autoMigrations": "يتم تشغيل ترحيلات قاعدة البيانات تلقائياً أثناء التحديثات",
+      "checkFailed": "تعذّر التحقق من التحديثات. يرجى المحاولة مرة أخرى.",
+      "confirmUpdate": "هل أنت متأكد من تحديث التطبيق؟ سيتم إنشاء نسخة احتياطية تلقائياً.",
+      "updateFailed": "فشل التحديث. يرجى مراجعة السجلات.",
+      "confirmBackup": "هل تريد إنشاء نسخة احتياطية من التثبيت الحالي؟",
+      "backupCreated": "تم إنشاء النسخة الاحتياطية بنجاح!",
+      "backupFailed": "تعذّر إنشاء النسخة الاحتياطية. يرجى مراجعة السجلات.",
+      "confirmRestore": "هل أنت متأكد من الاستعادة من {file}؟ سيؤدي ذلك إلى استبدال التثبيت الحالي.",
+      "restoreCompleted": "اكتملت الاستعادة بنجاح!",
+      "restoreFailed": "فشلت الاستعادة.",
+      "restoreError": "تعذّرت استعادة النسخة الاحتياطية. يرجى مراجعة السجلات.",
+      "confirmDeleteBackup": "هل أنت متأكد من حذف {file}؟",
+      "deleteBackupFailed": "تعذّر حذف النسخة الاحتياطية. يرجى المحاولة مرة أخرى.",
+      "managerTitle": "مدير التحديثات",
+      "subtitle": "تحقق من الإصدارات الجديدة، وثبّت التحديثات، وأدِر النسخ الاحتياطية للتثبيت.",
+      "upToDateBadge": "محدّث",
+      "fetchedFromRepo": "يتم جلب التحديثات من {repo} على GitHub."
     },
     "createRole": "إنشاء دور",
     "createUser": "إنشاء مستخدم",
-    "userDetails": "تفاصيل المستخدم"
+    "userDetails": "تفاصيل المستخدم",
+    "permissionCatalog": {
+      "permissions": {
+        "view_users": {
+          "label": "عرض المستخدمين",
+          "description": "يمكنه عرض قائمة المستخدمين وتفاصيلهم"
+        },
+        "create_users": {
+          "label": "إنشاء المستخدمين",
+          "description": "يمكنه إنشاء مستخدمين جدد"
+        },
+        "edit_users": {
+          "label": "تعديل المستخدمين",
+          "description": "يمكنه تعديل المستخدمين الحاليين"
+        },
+        "delete_users": {
+          "label": "حذف المستخدمين",
+          "description": "يمكنه حذف المستخدمين"
+        },
+        "view_roles": {
+          "label": "عرض الأدوار",
+          "description": "يمكنه عرض الأدوار والصلاحيات"
+        },
+        "create_roles": {
+          "label": "إنشاء الأدوار",
+          "description": "يمكنه إنشاء أدوار جديدة"
+        },
+        "edit_roles": {
+          "label": "تعديل الأدوار",
+          "description": "يمكنه تعديل الأدوار الحالية"
+        },
+        "delete_roles": {
+          "label": "حذف الأدوار",
+          "description": "يمكنه حذف الأدوار"
+        },
+        "view_products": {
+          "label": "عرض المنتجات",
+          "description": "يمكنه عرض مخزون المنتجات"
+        },
+        "create_products": {
+          "label": "إنشاء المنتجات",
+          "description": "يمكنه إضافة منتجات جديدة"
+        },
+        "edit_products": {
+          "label": "تعديل المنتجات",
+          "description": "يمكنه تعديل تفاصيل المنتجات"
+        },
+        "delete_products": {
+          "label": "حذف المنتجات",
+          "description": "يمكنه إزالة المنتجات"
+        },
+        "manage_stock": {
+          "label": "إدارة المخزون",
+          "description": "يمكنه تعديل مستويات المخزون وإدارة حركات المخزون"
+        },
+        "transfer_stock": {
+          "label": "تحويل المخزون",
+          "description": "يمكنه إنشاء وإدارة تحويلات المخزون بين المواقع"
+        },
+        "manage_categories": {
+          "label": "إدارة الفئات",
+          "description": "يمكنه إنشاء وإدارة فئات المنتجات"
+        },
+        "manage_locations": {
+          "label": "إدارة المواقع",
+          "description": "يمكنه إنشاء وإدارة مواقع التخزين"
+        },
+        "view_customers": {
+          "label": "عرض العملاء",
+          "description": "يمكنه عرض قائمة العملاء وتفاصيلهم"
+        },
+        "create_customers": {
+          "label": "إنشاء العملاء",
+          "description": "يمكنه إنشاء عملاء جدد"
+        },
+        "edit_customers": {
+          "label": "تعديل العملاء",
+          "description": "يمكنه تعديل العملاء الحاليين"
+        },
+        "delete_customers": {
+          "label": "حذف العملاء",
+          "description": "يمكنه حذف العملاء"
+        },
+        "view_suppliers": {
+          "label": "عرض الموردين",
+          "description": "يمكنه عرض قائمة الموردين وتفاصيلهم"
+        },
+        "create_suppliers": {
+          "label": "إنشاء الموردين",
+          "description": "يمكنه إنشاء موردين جدد"
+        },
+        "edit_suppliers": {
+          "label": "تعديل الموردين",
+          "description": "يمكنه تعديل الموردين الحاليين"
+        },
+        "delete_suppliers": {
+          "label": "حذف الموردين",
+          "description": "يمكنه حذف الموردين"
+        },
+        "view_purchase_orders": {
+          "label": "عرض أوامر الشراء",
+          "description": "يمكنه عرض أوامر الشراء"
+        },
+        "create_purchase_orders": {
+          "label": "إنشاء أوامر الشراء",
+          "description": "يمكنه إنشاء أوامر شراء جديدة"
+        },
+        "edit_purchase_orders": {
+          "label": "تعديل أوامر الشراء",
+          "description": "يمكنه تعديل أوامر الشراء"
+        },
+        "delete_purchase_orders": {
+          "label": "حذف أوامر الشراء",
+          "description": "يمكنه حذف أوامر الشراء"
+        },
+        "receive_purchase_orders": {
+          "label": "استلام أوامر الشراء",
+          "description": "يمكنه استلام الأصناف من أوامر الشراء"
+        },
+        "approve_purchase_orders": {
+          "label": "اعتماد أوامر الشراء",
+          "description": "يمكنه الموافقة على أوامر الشراء التي تتطلب موافقة قبل إرسالها أو رفضها"
+        },
+        "view_orders": {
+          "label": "عرض الطلبات",
+          "description": "يمكنه عرض الطلبات"
+        },
+        "create_orders": {
+          "label": "إنشاء الطلبات",
+          "description": "يمكنه إنشاء طلبات جديدة"
+        },
+        "edit_orders": {
+          "label": "تعديل الطلبات",
+          "description": "يمكنه تعديل الطلبات"
+        },
+        "delete_orders": {
+          "label": "حذف الطلبات",
+          "description": "يمكنه حذف الطلبات"
+        },
+        "approve_orders": {
+          "label": "اعتماد الطلبات",
+          "description": "يمكنه الموافقة على الطلبات أو رفضها"
+        },
+        "view_payments": {
+          "label": "عرض المدفوعات",
+          "description": "يمكنه عرض مدفوعات الطلبات والأرصدة المستحقة والذمم المدينة"
+        },
+        "record_payments": {
+          "label": "تسجيل المدفوعات",
+          "description": "يمكنه تسجيل مدفوعات الطلبات وإلغاؤها واستردادها"
+        },
+        "view_settings": {
+          "label": "عرض الإعدادات",
+          "description": "يمكنه عرض إعدادات النظام"
+        },
+        "edit_settings": {
+          "label": "تعديل الإعدادات",
+          "description": "يمكنه تعديل إعدادات النظام"
+        },
+        "manage_organization": {
+          "label": "إدارة المؤسسة",
+          "description": "يمكنه إدارة تفاصيل المؤسسة"
+        },
+        "view_plugins": {
+          "label": "عرض الإضافات",
+          "description": "يمكنه عرض الإضافات المثبتة"
+        },
+        "manage_plugins": {
+          "label": "إدارة الإضافات",
+          "description": "يمكنه تثبيت الإضافات وتفعيلها وحذفها"
+        },
+        "view_stock_audits": {
+          "label": "عرض عمليات جرد المخزون",
+          "description": "يمكنه عرض عمليات جرد المخزون والجرد الدوري"
+        },
+        "create_stock_audits": {
+          "label": "إنشاء عمليات جرد المخزون",
+          "description": "يمكنه إنشاء عمليات جرد مخزون جديدة"
+        },
+        "manage_stock_audits": {
+          "label": "إدارة عمليات جرد المخزون",
+          "description": "يمكنه إدارة عمليات جرد المخزون وبدؤها وإكمالها وتعديل الكميات المعدودة"
+        },
+        "approve_stock_adjustments": {
+          "label": "اعتماد تعديلات المخزون",
+          "description": "يمكنه الموافقة على تعديلات المخزون التي تتطلب موافقة قبل تغيير المخزون أو رفضها"
+        },
+        "approve_stock_transfers": {
+          "label": "اعتماد تحويلات المخزون",
+          "description": "يمكنه الموافقة على تحويلات المخزون التي تتطلب موافقة قبل شحنها أو رفضها"
+        },
+        "view_warehouses": {
+          "label": "عرض المستودعات",
+          "description": "يمكنه عرض قائمة المستودعات وتفاصيلها"
+        },
+        "create_warehouses": {
+          "label": "إنشاء المستودعات",
+          "description": "يمكنه إنشاء مستودعات جديدة"
+        },
+        "edit_warehouses": {
+          "label": "تعديل المستودعات",
+          "description": "يمكنه تعديل إعدادات المستودعات"
+        },
+        "delete_warehouses": {
+          "label": "حذف المستودعات",
+          "description": "يمكنه حذف المستودعات"
+        },
+        "manage_warehouse_users": {
+          "label": "إدارة مستخدمي المستودعات",
+          "description": "يمكنه تعيين المستخدمين للمستودعات وإزالتهم منها"
+        },
+        "access_all_warehouses": {
+          "label": "الوصول إلى جميع المستودعات",
+          "description": "يمكنه عرض المخزون والتصرف فيه في كل مستودع، حتى عند تعيينه لمستودعات محددة"
+        },
+        "manage_returns": {
+          "label": "إدارة المرتجعات",
+          "description": "يمكنه إنشاء وإدارة المرتجعات والاستبدالات"
+        },
+        "view_shipments": {
+          "label": "عرض الشحنات",
+          "description": "يمكنه عرض شحنات الطلبات والتتبع وملصقات الشحن"
+        },
+        "create_shipments": {
+          "label": "إنشاء الشحنات",
+          "description": "يمكنه إنشاء الشحنات وشراء ملصقات الشحن وإلغاؤها وتحديد الطلبات كمشحونة"
+        },
+        "view_reports": {
+          "label": "عرض التقارير",
+          "description": "يمكنه عرض تقارير النظام"
+        },
+        "export_data": {
+          "label": "تصدير البيانات",
+          "description": "يمكنه تصدير البيانات من النظام"
+        },
+        "import_data": {
+          "label": "استيراد البيانات",
+          "description": "يمكنه استيراد البيانات إلى النظام"
+        },
+        "view_activity_log": {
+          "label": "عرض سجل النشاط",
+          "description": "يمكنه عرض سجلات النشاط والتدقيق"
+        }
+      },
+      "categories": {
+        "userManagement": "إدارة المستخدمين",
+        "roleManagement": "إدارة الأدوار",
+        "inventoryManagement": "إدارة المخزون",
+        "customerManagement": "إدارة العملاء",
+        "supplierManagement": "إدارة الموردين",
+        "purchaseOrderManagement": "إدارة أوامر الشراء",
+        "orderManagement": "إدارة الطلبات",
+        "payments": "المدفوعات",
+        "settings": "الإعدادات",
+        "plugins": "الإضافات",
+        "warehouseManagement": "إدارة المستودعات",
+        "returnsManagement": "إدارة المرتجعات",
+        "shipping": "الشحن",
+        "reportsData": "التقارير والبيانات"
+      },
+      "sets": {
+        "inventoryManager": {
+          "name": "مدير المخزون",
+          "description": "وصول كامل إلى إدارة المخزون بما في ذلك المنتجات والفئات والمواقع."
+        },
+        "orderProcessor": {
+          "name": "معالج الطلبات",
+          "description": "إدارة الطلبات من الإنشاء حتى الإكمال."
+        },
+        "warehouseStaff": {
+          "name": "موظفو المستودع",
+          "description": "عرض المنتجات وإدارة مستويات المخزون."
+        },
+        "purchasingAgent": {
+          "name": "مسؤول المشتريات",
+          "description": "إدارة الموردين وأوامر الشراء."
+        },
+        "approver": {
+          "name": "المعتمِد",
+          "description": "الموافقة على أوامر الشراء وتعديلات المخزون وتحويلات المخزون التي تتطلب اعتماداً أو رفضها."
+        },
+        "readOnlyAuditor": {
+          "name": "مدقق (قراءة فقط)",
+          "description": "وصول للعرض فقط إلى جميع البيانات لأغراض التدقيق."
+        },
+        "userAdministrator": {
+          "name": "مسؤول المستخدمين",
+          "description": "إدارة المستخدمين وصلاحيات الوصول الخاصة بهم."
+        },
+        "reportsViewer": {
+          "name": "مستعرض التقارير",
+          "description": "الوصول إلى التقارير ووظيفة تصدير البيانات."
+        }
+      },
+      "roles": {
+        "systemAdministrator": {
+          "name": "مسؤول",
+          "description": "وصول كامل إلى النظام بجميع الصلاحيات."
+        },
+        "systemManager": {
+          "name": "مدير",
+          "description": "يمكنه إدارة المخزون والطلبات والفئات وعرض التقارير."
+        },
+        "systemMember": {
+          "name": "عضو",
+          "description": "وصول أساسي لعرض المهام المعيّنة وإدارتها."
+        }
+      }
+    }
   },
   "auth": {
     "login": {
@@ -1556,6 +2291,35 @@
       "linkSent": "تم إرسال رابط تحقق جديد إلى عنوان البريد الإلكتروني الذي قدمته أثناء التسجيل.",
       "resend": "إعادة إرسال بريد التحقق",
       "logOut": "تسجيل الخروج"
+    },
+    "twoFactorChallenge": {
+      "title": "التحقق بخطوتين",
+      "codeHint": "يرجى إدخال رمز المصادقة من تطبيق المصادقة.",
+      "recoveryHint": "يرجى إدخال أحد رموز الاسترداد الخاصة بك.",
+      "code": "رمز المصادقة",
+      "codePlaceholder": "أدخل الرمز المكوّن من 6 أرقام",
+      "recoveryCode": "رمز الاسترداد",
+      "recoveryPlaceholder": "أدخل رمز الاسترداد",
+      "useCode": "استخدام رمز المصادقة",
+      "useRecovery": "استخدام رمز استرداد",
+      "verify": "تحقق"
+    },
+    "twoFactor": {
+      "setupTitle": "إعداد المصادقة الثنائية",
+      "title": "المصادقة الثنائية",
+      "description": "أضف طبقة أمان إضافية إلى حسابك باستخدام تطبيق مصادقة.",
+      "enabled": "مفعّلة",
+      "enabledTitle": "المصادقة الثنائية مفعّلة",
+      "enabledHint": "المصادقة الثنائية مفعّلة حالياً على حسابك. أدخل كلمة المرور لتعطيلها.",
+      "password": "كلمة المرور",
+      "disable": "تعطيل المصادقة الثنائية",
+      "enable": "تفعيل المصادقة الثنائية",
+      "scanHint": "امسح رمز QR أدناه باستخدام تطبيق المصادقة (Google Authenticator أو Authy وغيرهما)، ثم أدخل رمز التحقق لتفعيل المصادقة الثنائية.",
+      "manualKey": "أو أدخل هذا المفتاح يدوياً:",
+      "verificationCode": "رمز التحقق",
+      "showRecoveryCodes": "إظهار رموز الاسترداد",
+      "hideRecoveryCodes": "إخفاء رموز الاسترداد",
+      "recoveryHint": "احفظ رموز الاسترداد هذه في مكان آمن. يمكن استخدامها للوصول إلى حسابك إذا فقدت جهاز المصادقة."
     }
   },
   "profile": {
@@ -1582,7 +2346,8 @@
       "confirmTitle": "هل أنت متأكد من حذف حسابك؟",
       "confirmDescription": "بمجرد حذف حسابك، سيتم حذف جميع موارده وبياناته بشكل دائم. يرجى إدخال كلمة المرور لتأكيد رغبتك في حذف حسابك نهائياً.",
       "password": "كلمة المرور"
-    }
+    },
+    "description": "أدِر معلومات حسابك وكلمة المرور وحذف الحساب."
   },
   "install": {
     "welcome": {
@@ -1634,7 +2399,9 @@
       "testing": "جارٍ اختبار الاتصال...",
       "dbExistsHint": "تأكد من وجود قاعدة البيانات قبل المتابعة. سيقوم المثبت بإنشاء الجداول اللازمة.",
       "installDatabase": "تثبيت قاعدة البيانات",
-      "installing": "جارٍ التثبيت..."
+      "installing": "جارٍ التثبيت...",
+      "testFailed": "تعذّر اختبار الاتصال: {error}",
+      "installFailed": "فشل التثبيت: {error}"
     },
     "admin": {
       "title": "إنشاء حساب المسؤول",
@@ -1650,7 +2417,10 @@
       "confirmPasswordHint": "أكّد كلمة المرور",
       "accessNote": "سيكون لحساب المسؤول هذا صلاحية وصول كاملة إلى تثبيت Inventoros الخاص بك.",
       "completeInstallation": "إكمال التثبيت",
-      "creatingAccount": "جارٍ إنشاء الحساب..."
+      "creatingAccount": "جارٍ إنشاء الحساب...",
+      "orgNamePlaceholder": "شركة أكمي",
+      "fullNamePlaceholder": "محمد أحمد",
+      "createFailed": "تعذّر إنشاء حساب المسؤول: {error}"
     },
     "complete": {
       "title": "اكتمل التثبيت!",
@@ -1689,7 +2459,10 @@
       "availableVars": "المتغيرات المتاحة",
       "preview": "معاينة",
       "generating": "جارٍ التوليد...",
-      "applySku": "تطبيق SKU"
+      "applySku": "تطبيق SKU",
+      "or": "أو",
+      "patternExample": "مثال: {example}",
+      "previewError": "خطأ في توليد المعاينة"
     },
     "variantManager": {
       "productOptions": "خيارات المنتج",
@@ -1705,7 +2478,10 @@
       "autoGenerate": "توليد تلقائي",
       "enableAll": "تفعيل الكل",
       "disableAll": "تعطيل الكل",
-      "addOptionsHint": "أضف خيارات مثل الحجم أو اللون لإنشاء متغيرات المنتج"
+      "addOptionsHint": "أضف خيارات مثل الحجم أو اللون لإنشاء متغيرات المنتج",
+      "optionName": "اسم الخيار",
+      "optionValues": "قيم الخيار (مفصولة بفواصل)",
+      "addOptionButton": "إضافة خيار (مثل الحجم، اللون)"
     },
     "variantsTable": {
       "variant": "المتغير",
@@ -1750,20 +2526,34 @@
       "cameraHint": "وجّه الكاميرا نحو الباركود للمسح",
       "locationFound": "تم العثور على الموقع",
       "productsHere": "{count} منتج هنا",
-      "viewProductsHere": "عرض المنتجات هنا"
+      "viewProductsHere": "عرض المنتجات هنا",
+      "lookupFailed": "تعذّر البحث عن الباركود",
+      "stock": "المخزون",
+      "aisle": "الممر {value}",
+      "shelf": "الرف {value}",
+      "bin": "الحاوية {value}"
     },
     "activityTimeline": {
       "noActivity": "لم يتم تسجيل أي نشاط بعد",
       "system": "النظام",
       "thisProduct": "هذا المنتج",
-      "moreChanges": "+{count} تغييرات أخرى"
+      "moreChanges": "+{count} تغييرات أخرى",
+      "actionOnProduct": {
+        "created": "أنشأ هذا المنتج",
+        "updated": "حدّث هذا المنتج",
+        "deleted": "حذف هذا المنتج",
+        "viewed": "اطّلع على هذا المنتج",
+        "other": "{action} هذا المنتج"
+      }
     },
     "themeToggle": {
       "switchToLight": "التبديل إلى الوضع الفاتح",
       "switchToDark": "التبديل إلى الوضع الداكن"
     },
     "imageGallery": {
-      "noImages": "لا توجد صور متاحة"
+      "noImages": "لا توجد صور متاحة",
+      "close": "إغلاق",
+      "imageAlt": "{name} - الصورة {number}"
     },
     "imageUploader": {
       "dragDrop": "اسحب وأفلت الصور هنا، أو انقر للتصفح",
@@ -1775,6 +2565,62 @@
       "moveRight": "نقل لليمين",
       "remove": "إزالة",
       "noImagesHint": "لم يتم رفع صور بعد. سيتم استخدام الصورة الأولى كصورة المنتج الرئيسية."
+    },
+    "relativeTime": {
+      "justNow": "الآن",
+      "minutesAgo": "منذ {count} د",
+      "hoursAgo": "منذ {count} س",
+      "daysAgo": "منذ {count} ي"
+    },
+    "batchList": {
+      "title": "تتبع الدفعات",
+      "addBatch": "إضافة دفعة",
+      "createFailed": "تعذّر إنشاء الدفعة",
+      "batchNumberLabel": "رقم الدفعة (يُولَّد تلقائياً إذا تُرك فارغاً)",
+      "manufacturedDate": "تاريخ التصنيع",
+      "expiryDate": "تاريخ انتهاء الصلاحية",
+      "createBatch": "إنشاء دفعة",
+      "columns": {
+        "batchNumber": "رقم الدفعة",
+        "quantity": "الكمية",
+        "manufactured": "التصنيع",
+        "expiry": "الانتهاء"
+      },
+      "expired": "(منتهية الصلاحية)",
+      "empty": "لم يتم تسجيل أي دفعات بعد.",
+      "emptyHint": "انقر \"إضافة دفعة\" لتسجيل أول دفعة."
+    },
+    "languageSwitcher": {
+      "ariaLabel": "اللغة: {name}"
+    },
+    "dataTable": {
+      "noData": "لا توجد بيانات."
+    },
+    "serialList": {
+      "title": "تتبع الأرقام التسلسلية",
+      "addSerial": "إضافة رقم تسلسلي",
+      "createFailed": "تعذّر إنشاء الرقم التسلسلي",
+      "updateFailed": "تعذّر تحديث الحالة",
+      "all": "الكل",
+      "statuses": {
+        "available": "متاح",
+        "sold": "مُباع",
+        "reserved": "محجوز",
+        "damaged": "تالف"
+      },
+      "serialNumber": "الرقم التسلسلي",
+      "createSerial": "إنشاء رقم تسلسلي",
+      "columns": {
+        "serialNumber": "الرقم التسلسلي"
+      },
+      "markAsSold": "تعيين كمُباع",
+      "markAsReserved": "تعيين كمحجوز",
+      "markAsDamaged": "تعيين كتالف",
+      "markAsAvailable": "تعيين كمتاح",
+      "reserve": "حجز",
+      "empty": "لم يتم تسجيل أي أرقام تسلسلية بعد.",
+      "emptyHint": "انقر \"إضافة رقم تسلسلي\" لتسجيل أول رقم تسلسلي.",
+      "noMatches": "لا توجد أرقام تسلسلية تطابق عامل التصفية المحدد."
     }
   },
   "warehouses": {
@@ -1854,7 +2700,8 @@
       "badge": "المستودع الافتراضي",
       "makeDefault": "تعيين كافتراضي",
       "confirm": "هل تريد تعيين \"{name}\" كمستودع افتراضي؟",
-      "hint": "يتم تحديد المستودع الافتراضي مسبقاً للطلبات الجديدة."
+      "hint": "يتم تحديد المستودع الافتراضي مسبقاً للطلبات الجديدة.",
+      "label": "افتراضي"
     },
     "capacity": {
       "utilisation": "نسبة الإشغال",
@@ -1877,6 +2724,41 @@
       "reorder": "إعادة الطلب",
       "shortIn": "نقص في {names}",
       "save": "حفظ مستويات المستودع"
+    },
+    "subtitle": "مواقع التخزين وتوزيع المخزون.",
+    "updateWarehouse": "تحديث المستودع",
+    "index": {
+      "searchLabel": "البحث في المستودعات"
+    },
+    "create": {
+      "subtitle": "أضف موقع مستودع وإعداداته."
+    },
+    "edit": {
+      "title": "تعديل المستودع: {name}",
+      "subtitle": "حدّث تفاصيل المستودع ومعلومات الاتصال وصلاحيات وصول المستخدمين."
+    },
+    "timezoneOptions": {
+      "stJohns": "نيوفاوندلاند (سانت جونز)",
+      "halifax": "الأطلسي (هاليفاكس)",
+      "toronto": "الشرقي (تورونتو)",
+      "winnipeg": "المركزي (وينيبيغ)",
+      "edmonton": "الجبلي (إدمونتون)",
+      "vancouver": "المحيط الهادئ (فانكوفر)"
+    },
+    "show": {
+      "codeLabel": "الرمز: {code}",
+      "totalLocations": "إجمالي المواقع",
+      "totalProductsStored": "إجمالي المنتجات المخزنة",
+      "assignedUsers": "المستخدمون المعيّنون",
+      "details": "تفاصيل المستودع",
+      "manager": "المدير",
+      "noAddress": "لم يتم تقديم عنوان",
+      "locationsCount": "المواقع ({count})",
+      "products": "المنتجات",
+      "noLocations": "لا توجد مواقع في هذا المستودع",
+      "dangerZone": "منطقة الخطر",
+      "deleteWarehouse": "حذف المستودع",
+      "cannotUndo": "لا يمكن التراجع عن هذا الإجراء."
     }
   },
   "workOrders": {
@@ -1932,7 +2814,8 @@
       "ready": "جاهز",
       "noComponents": "لم يتم تسجيل أي مكونات لأمر العمل هذا.",
       "noComponentsDefined": "لا توجد مكونات محددة لهذا المنتج المُجمّع. أضف المكونات في صفحة تفاصيل المنتج قبل إنشاء أمر عمل.",
-      "insufficientWarning": "بعض المكونات مخزونها غير كافٍ. لا يزال بإمكانك إنشاء أمر العمل، لكن لا يمكن بدء الإنتاج حتى يتم تجديد المخزون."
+      "insufficientWarning": "بعض المكونات مخزونها غير كافٍ. لا يزال بإمكانك إنشاء أمر العمل، لكن لا يمكن بدء الإنتاج حتى يتم تجديد المخزون.",
+      "unknown": "غير معروف"
     },
     "actions": {
       "startProduction": "بدء الإنتاج",
@@ -1955,7 +2838,19 @@
       "cancelled": "تاريخ الإلغاء",
       "lastUpdated": "آخر تحديث"
     },
-    "cancelledBanner": "تم إلغاء أمر العمل هذا."
+    "cancelledBanner": "تم إلغاء أمر العمل هذا.",
+    "create": {
+      "materialsNeeded": "المواد اللازمة لإنتاج {count} وحدة من {name} | المواد اللازمة لإنتاج {count} وحدات من {name}"
+    },
+    "index": {
+      "filter": "تصفية"
+    },
+    "show": {
+      "headTitle": "أمر العمل {number}",
+      "deleteConfirm": "هل تريد حذف أمر العمل هذا؟ لا يمكن التراجع عن ذلك.",
+      "dangerZone": "منطقة الخطر",
+      "releaseHint": "سيتم تحرير أي مكونات محجوزة وإعادتها إلى المخزون."
+    }
   },
   "reportBuilder": {
     "title": "التقارير المخصصة",
@@ -2454,6 +3349,78 @@
       "save": "حفظ البنود",
       "cancel": "إلغاء",
       "hint": "غيّر ما يُعاد إلى الرف. لا يتحرك المخزون إلا عند استلام المرتجع."
+    },
+    "index": {
+      "title": "المرتجعات والاستبدالات",
+      "description": "تتبّع المرتجعات والاستبدالات والمبالغ المستردة عبر جميع الطلبات.",
+      "newReturn": "مرتجع جديد",
+      "searchPlaceholder": "البحث برقم المرتجع أو رقم الطلب أو العميل...",
+      "returnNumber": "رقم المرتجع",
+      "orderNumber": "رقم الطلب",
+      "items": "الأصناف",
+      "refund": "المبلغ المسترد",
+      "empty": "لم يتم العثور على مرتجعات."
+    },
+    "columns": {
+      "qty": "الكمية",
+      "condition": "الحالة",
+      "restock": "إعادة إلى المخزون"
+    },
+    "conditions": {
+      "new": "جديد (غير مفتوح)",
+      "used": "مستعمل (مفتوح)",
+      "damaged": "تالف"
+    },
+    "create": {
+      "headTitle": "إنشاء مرتجع - الطلب #{number}",
+      "title": "إنشاء مرتجع / استبدال",
+      "fromOrder": "من الطلب #{number}",
+      "backToOrder": "العودة إلى الطلب",
+      "details": "تفاصيل المرتجع",
+      "typeReturn": "إرجاع (استرداد)",
+      "reasonRequired": "السبب *",
+      "reasonPlaceholder": "سبب الإرجاع أو الاستبدال...",
+      "notesOptional": "ملاحظات (اختياري)",
+      "notesPlaceholder": "ملاحظات إضافية...",
+      "selectItems": "اختر الأصناف المراد إرجاعها",
+      "ordered": "المطلوب: {count}",
+      "alreadyReturned": "(تم إرجاع {count} مسبقاً)",
+      "maxReturnable": "الحد الأقصى للإرجاع: {count}",
+      "selectedSummary": "تم تحديد {count} صنف لـ {type} | تم تحديد {count} أصناف لـ {type}",
+      "estimatedRefund": "المبلغ المسترد التقديري:",
+      "processing": "جارٍ المعالجة...",
+      "submit": "إرسال طلب الإرجاع"
+    },
+    "show": {
+      "headTitle": "المرتجع {number}",
+      "title": "المرتجع #{number}",
+      "createdOn": "تاريخ الإنشاء {date}",
+      "approve": "الموافقة على المرتجع",
+      "markReceived": "تعيين كمُستلم",
+      "complete": "إكمال المرتجع",
+      "reject": "رفض المرتجع",
+      "backToReturns": "العودة إلى المرتجعات",
+      "items": "أصناف المرتجع",
+      "unknownProduct": "منتج غير معروف",
+      "conditionFor": "حالة {name}",
+      "restockFor": "إعادة {name} إلى المخزون",
+      "noItems": "لا توجد أصناف في هذا المرتجع.",
+      "details": "التفاصيل",
+      "reason": "السبب",
+      "forOrder": "للطلب",
+      "summary": "الملخص",
+      "returnNumber": "رقم المرتجع",
+      "completed": "تاريخ الإكمال",
+      "processedBy": "تمت المعالجة بواسطة",
+      "refundAmount": "المبلغ المسترد",
+      "pendingHint": "وافق للمتابعة أو ارفض المرتجع.",
+      "approvedHint": "عيّنه كمُستلم عند وصول الأصناف. ستُعاد الأصناف المحددة لإعادة التخزين إلى المخزون.",
+      "receivedHint": "أكمل المرتجع لإنهاء العملية.",
+      "dangerZone": "منطقة الخطر",
+      "rejectWarning": "يؤدي الرفض إلى إغلاق هذا المرتجع. لا يمكن التراجع عن ذلك.",
+      "rejectReason": "سبب الرفض",
+      "rejectPlaceholder": "لماذا يتم رفض هذا المرتجع؟",
+      "rejecting": "جارٍ الرفض..."
     }
   },
   "portal": {
@@ -2677,5 +3644,60 @@
   "legal": {
     "licensedUnder": "مرخّص بموجب {license}",
     "sourceCode": "الشيفرة المصدرية"
+  },
+  "stockTransfers": {
+    "title": "تحويلات المخزون",
+    "subtitle": "نقل المخزون بين المواقع.",
+    "newTransfer": "تحويل جديد",
+    "backToList": "العودة إلى القائمة",
+    "transferDetails": "تفاصيل التحويل",
+    "transferItems": "أصناف التحويل",
+    "fromLocation": "من الموقع",
+    "toLocation": "إلى الموقع",
+    "statuses": {
+      "pending": "معلق",
+      "in_transit": "قيد النقل",
+      "completed": "مكتمل",
+      "cancelled": "ملغى"
+    },
+    "create": {
+      "title": "إنشاء تحويل مخزون",
+      "selectSource": "اختر موقع المصدر",
+      "selectDestination": "اختر موقع الوجهة",
+      "notesPlaceholder": "أضف أي ملاحظات حول هذا التحويل...",
+      "addItem": "إضافة صنف",
+      "selectProduct": "اختر منتجاً",
+      "productOption": "{name} ({sku}) - المخزون: {stock}",
+      "qty": "الكمية",
+      "available": "المتاح: {count}",
+      "itemNotesPlaceholder": "ملاحظات الصنف...",
+      "totalProducts": "إجمالي الأصناف: {count} منتج | إجمالي الأصناف: {count} منتجات",
+      "totalUnits": "إجمالي الكمية: {count} وحدة | إجمالي الكمية: {count} وحدات",
+      "createTransfer": "إنشاء التحويل"
+    },
+    "index": {
+      "searchPlaceholder": "البحث برقم التحويل...",
+      "filter": "تصفية",
+      "transferNumber": "رقم التحويل",
+      "from": "من",
+      "to": "إلى",
+      "items": "الأصناف",
+      "empty": "لم يتم العثور على تحويلات مخزون. أنشئ أول تحويل لنقل المخزون بين المواقع.",
+      "itemCount": "{count} صنف | {count} أصناف",
+      "showingTransfers": "عرض {from} إلى {to} من أصل {total} تحويل"
+    },
+    "show": {
+      "headTitle": "التحويل {number}",
+      "subtitle": "تفاصيل تحويل المخزون",
+      "transferNumber": "رقم التحويل",
+      "transferredBy": "تم التحويل بواسطة",
+      "completedAt": "تاريخ الإكمال",
+      "processing": "جارٍ المعالجة...",
+      "completeTransfer": "إكمال التحويل",
+      "cancelTransfer": "إلغاء التحويل",
+      "completeHint": "سيؤدي إكمال التحويل إلى خصم المخزون من موقع المصدر وإضافته إلى موقع الوجهة.",
+      "confirmComplete": "هل أنت متأكد من إكمال هذا التحويل؟ سيتم تعديل مستويات المخزون.",
+      "confirmCancel": "هل أنت متأكد من إلغاء هذا التحويل؟"
+    }
   }
 }

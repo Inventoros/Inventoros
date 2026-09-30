@@ -100,10 +100,10 @@ const formatDate = (date) => {
     const notifDate = new Date(date);
     const diffInMinutes = Math.floor((now - notifDate) / 1000 / 60);
 
-    if (diffInMinutes < 1) return 'Just now';
-    if (diffInMinutes < 60) return `${diffInMinutes}m ago`;
-    if (diffInMinutes < 1440) return `${Math.floor(diffInMinutes / 60)}h ago`;
-    return `${Math.floor(diffInMinutes / 1440)}d ago`;
+    if (diffInMinutes < 1) return t('components.relativeTime.justNow');
+    if (diffInMinutes < 60) return t('components.relativeTime.minutesAgo', { count: diffInMinutes });
+    if (diffInMinutes < 1440) return t('components.relativeTime.hoursAgo', { count: Math.floor(diffInMinutes / 60) });
+    return t('components.relativeTime.daysAgo', { count: Math.floor(diffInMinutes / 1440) });
 };
 
 onMounted(() => {

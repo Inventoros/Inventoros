@@ -3,6 +3,7 @@ import { computed } from 'vue';
 import VariantStockAdjuster from './VariantStockAdjuster.vue';
 
 import { useI18n } from 'vue-i18n';
+import { formatMoney } from '@/lib/money';
 const props = defineProps({
     variants: {
         type: Array,
@@ -33,7 +34,7 @@ const emit = defineEmits(['variant-updated']);
 
 const formatPrice = (price) => {
     if (price === null || price === undefined) return '-';
-    return `${props.currencySymbol}${parseFloat(price).toFixed(2)}`;
+    return formatMoney(price);
 };
 
 const hasOwnPrice = (variant) => variant.price !== null && variant.price !== undefined && variant.price !== '';
@@ -41,9 +42,9 @@ const effectivePrice = (variant) => (hasOwnPrice(variant) ? variant.price : prop
 
 const getStatusBadge = (variant) => {
     if (!variant.is_active) {
-        return { text: 'Inactive', class: 'bg-gray-100 dark:bg-gray-900/30 text-gray-600 dark:text-gray-400' };
+        return { text: t('common.inactive'), class: 'bg-gray-100 dark:bg-gray-900/30 text-gray-600 dark:text-gray-400' };
     }
-    return { text: 'Active', class: 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300' };
+    return { text: t('common.active'), class: 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300' };
 };
 
 const onVariantUpdated = (updatedVariant) => {
@@ -57,16 +58,16 @@ const onVariantUpdated = (updatedVariant) => {
             <thead class="bg-gray-50 dark:bg-surface-canvas">
                 <tr>
                     <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                        Variant
+                        {{ t('components.variantsTable.variant') }}
                     </th>
                     <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                         SKU
                     </th>
                     <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                        Price
+                        {{ t('components.variantsTable.price') }}
                     </th>
                     <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                        Stock
+                        {{ t('components.variantsTable.stock') }}
                     </th>
                     <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                         {{ t('common.status') }}
@@ -115,7 +116,7 @@ const onVariantUpdated = (updatedVariant) => {
                 </tr>
                 <tr v-if="variants.length === 0">
                     <td colspan="5" class="px-4 py-8 text-center text-gray-500 dark:text-gray-400">
-                        No variants found
+                        {{ t('components.variantsTable.noVariants') }}
                     </td>
                 </tr>
             </tbody>
@@ -124,10 +125,10 @@ const onVariantUpdated = (updatedVariant) => {
         <!-- Summary Row -->
         <div v-if="variants.length > 0" class="mt-3 px-4 py-2 bg-gray-50 dark:bg-surface-canvas rounded-lg flex items-center justify-between text-sm">
             <span class="text-gray-600 dark:text-gray-400">
-                Total Variants: <span class="font-medium text-gray-900 dark:text-gray-100">{{ variants.length }}</span>
+                {{ t('components.variantsTable.totalVariants') }}: <span class="font-medium text-gray-900 dark:text-gray-100">{{ variants.length }}</span>
             </span>
             <span class="text-gray-600 dark:text-gray-400">
-                Total Stock: <span class="font-medium text-gray-900 dark:text-gray-100">{{ variants.reduce((sum, v) => sum + (v.stock || 0), 0) }}</span>
+                {{ t('components.variantsTable.totalStock') }}: <span class="font-medium text-gray-900 dark:text-gray-100">{{ variants.reduce((sum, v) => sum + (v.stock || 0), 0) }}</span>
             </span>
         </div>
     </div>

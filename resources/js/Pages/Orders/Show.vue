@@ -11,7 +11,7 @@ import ShipmentsPanel from '@/Components/Shipping/ShipmentsPanel.vue';
 import { Head, Link, router, useForm } from '@inertiajs/vue3';
 import { computed, ref } from 'vue';
 import { usePermissions } from '@/composables/usePermissions';
-import { formatCalendarDate, todayIsoDate } from '@/lib/dates';
+import { displayCalendarDate, displayDateTime, todayIsoDate } from '@/lib/dates';
 import { formatMoney } from '@/lib/money';
 import { approvalStatusLabel, approvalStatusVariant, orderSourceLabel, orderStatusLabel, orderStatusVariant } from '@/lib/orderLabels';
 import { useI18n } from 'vue-i18n';
@@ -156,24 +156,18 @@ const deleteOrder = () => {
 
 const formatDate = (date) => {
     if (!date) return '-';
-    return new Date(date).toLocaleDateString('en-US', {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit'
-    });
+    return displayDateTime(date);
 };
 
 // A payment is recorded on a day (stored as UTC midnight): format it as that
 // calendar day, not as an instant, or it shows a day early west of UTC.
 const formatPaymentDate = (date) =>
-    formatCalendarDate(date, { year: 'numeric', month: 'short', day: 'numeric' }, 'en-US');
+    displayCalendarDate(date);
 
 // order_date names a calendar day; formatting it as an instant showed the
 // day before for anyone west of UTC.
 const formatOrderDate = (date, long = false) =>
-    formatCalendarDate(date, { year: 'numeric', month: long ? 'long' : 'short', day: 'numeric' }, 'en-US');
+    displayCalendarDate(date);
 </script>
 
 <template>
@@ -191,8 +185,8 @@ const formatOrderDate = (date, long = false) =>
         </template>
 
         <PageHeader
-            :title="`Order #${order.order_number}`"
-            :description="`Created on ${formatOrderDate(order.order_date)}`"
+            :title="t('orders.show.orderNumber', { number: order.order_number })"
+            :description="t('orders.show.createdOn', { date: formatOrderDate(order.order_date) })"
         >
             <template #actions>
                 <Badge :variant="statusVariant(order.status)" size="sm" dot>{{ statusText(order.status) }}</Badge>
@@ -206,7 +200,7 @@ const formatOrderDate = (date, long = false) =>
                     :href="route('orders.invoice.download', order.id)"
                 >
                     <Download :size="14" />
-                    Download Invoice
+                    {{ t('orders.show.downloadInvoice') }}
                 </Button>
                 <Button
                     v-if="hasPermission('view_orders')"
@@ -217,7 +211,7 @@ const formatOrderDate = (date, long = false) =>
                     target="_blank"
                 >
                     <Eye :size="14" />
-                    Preview Invoice
+                    {{ t('orders.show.previewInvoice') }}
                 </Button>
                 <Button
                     v-if="hasPermission('edit_orders')"
@@ -236,7 +230,7 @@ const formatOrderDate = (date, long = false) =>
                     :href="route('returns.create', { order_id: order.id })"
                 >
                     <Undo2 :size="14" />
-                    Create Return
+                    {{ t('orders.show.createReturn') }}
                 </Button>
                 <Button
                     v-if="hasPermission('edit_orders')"
@@ -773,7 +767,7 @@ const formatOrderDate = (date, long = false) =>
 
                     <div class="mb-6">
                         <p class="mb-4 text-sm text-text-secondary">
-                            Are you sure you want to delete order <strong class="text-text-primary">#{{ order.order_number }}</strong>?
+                            {{ t('orders.show.confirmDelete', { number: order.order_number }) }}
                         </p>
                         <div class="rounded-lg border border-status-warning/20 bg-status-warning-soft p-4">
                             <div class="flex items-start gap-3">

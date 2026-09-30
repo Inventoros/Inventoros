@@ -1,4 +1,5 @@
 import { createI18n } from 'vue-i18n'
+import { applyFormatSettings } from '../lib/formatSettings.js'
 
 import en from './locales/en.json'
 import es from './locales/es.json'
@@ -40,6 +41,9 @@ const i18n = createI18n({
     },
 })
 
+// Money, number and date formatting follows the UI language (lib/formatSettings).
+applyFormatSettings({ locale: i18n.global.locale.value })
+
 export const availableLocales = [
     { code: 'en', name: 'English', flag: '\uD83C\uDDFA\uD83C\uDDF8' },
     { code: 'es', name: 'Espa\u00f1ol', flag: '\uD83C\uDDEA\uD83C\uDDF8' },
@@ -66,11 +70,13 @@ export function applyServerLocale(locale) {
     if (!locale || !availableLocales.some((l) => l.code === locale)) return
     if (i18n.global.locale.value === locale) return
     i18n.global.locale.value = locale
+    applyFormatSettings({ locale })
     document.documentElement.lang = locale
 }
 
 export function setLocale(locale) {
     i18n.global.locale.value = locale
+    applyFormatSettings({ locale })
     localStorage.setItem('locale', locale)
     document.documentElement.lang = locale
     document.cookie = `locale=${locale};path=/;max-age=${60 * 60 * 24 * 365};SameSite=Lax`

@@ -1,5 +1,5 @@
 <script setup>
-import { formatInstantDate } from '@/lib/dates';
+import { displayDate } from '@/lib/dates';
 import { formatMoney as formatAppMoney } from '@/lib/money';
 import Card from '@/Components/ui/Card.vue';
 import Button from '@/Components/ui/Button.vue';
@@ -57,7 +57,7 @@ const post = (name, shipment, confirmMessage = null) => {
 
 // Shipment dates are instants (the viewer's day); amounts use the app-wide
 // money formatter. A blank cost stays blank.
-const formatDate = (date) => (date ? formatInstantDate(date, { year: 'numeric', month: 'short', day: 'numeric' }) : '');
+const formatDate = (date) => displayDate(date);
 
 const formatMoney = (amount, currency) =>
     amount === null || amount === undefined || amount === '' ? '' : formatAppMoney(amount, currency);

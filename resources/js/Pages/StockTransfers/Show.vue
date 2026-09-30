@@ -10,6 +10,7 @@ import { computed, defineAsyncComponent, ref } from 'vue';
 import { useBarcodeWedge, useBarcodeLookup } from '@/composables/useBarcodeWedge';
 import { useI18n } from 'vue-i18n';
 import { ArrowLeft, CheckCircle2, XCircle, ScanLine, RotateCcw } from 'lucide-vue-next';
+import { displayDateTime } from '@/lib/dates';
 
 const BarcodeScannerModal = defineAsyncComponent(() => import('@/Components/BarcodeScannerModal.vue'));
 
@@ -35,30 +36,21 @@ const statusVariant = (status) =>
 
 const getStatusLabel = (status) => {
     const labels = {
-        'pending': 'Pending',
-        'in_transit': 'In Transit',
-        'completed': 'Completed',
-        'cancelled': 'Cancelled',
+        'pending': t('stockTransfers.statuses.pending'),
+        'in_transit': t('stockTransfers.statuses.in_transit'),
+        'completed': t('stockTransfers.statuses.completed'),
+        'cancelled': t('stockTransfers.statuses.cancelled'),
     };
     return labels[status] || status;
 };
 
-const formatDate = (dateStr) => {
-    if (!dateStr) return '-';
-    return new Date(dateStr).toLocaleDateString('en-US', {
-        year: 'numeric',
-        month: 'short',
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit',
-    });
-};
+const formatDate = (dateStr) => displayDateTime(dateStr);
 
 const canComplete = ['pending', 'in_transit'].includes(props.transfer.status) && !awaitingApproval;
 const canCancel = ['pending', 'in_transit'].includes(props.transfer.status);
 
 const completeTransfer = () => {
-    if (!confirm('Are you sure you want to complete this transfer? Stock levels will be adjusted.')) return;
+    if (!confirm(t('stockTransfers.show.confirmComplete'))) return;
     processing.value = true;
     router.post(route('stock-transfers.complete', props.transfer.id), {}, {
         onFinish: () => { processing.value = false; },
@@ -66,7 +58,7 @@ const completeTransfer = () => {
 };
 
 const cancelTransfer = () => {
-    if (!confirm('Are you sure you want to cancel this transfer?')) return;
+    if (!confirm(t('stockTransfers.show.confirmCancel'))) return;
     processing.value = true;
     router.post(route('stock-transfers.cancel', props.transfer.id), {}, {
         onFinish: () => { processing.value = false; },
@@ -141,7 +133,7 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-t
 </script>
 
 <template>
-    <Head :title="`Transfer ${transfer.transfer_number}`" />
+    <Head :title="t('stockTransfers.show.headTitle', { number: transfer.transfer_number })" />
 
     <AppLayout>
         <template #header>
@@ -154,12 +146,12 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-t
             </div>
         </template>
 
-        <PageHeader :title="transfer.transfer_number" description="Stock transfer details">
+        <PageHeader :title="transfer.transfer_number" :description="t('stockTransfers.show.subtitle')">
             <template #actions>
                 <Badge :variant="statusVariant(transfer.status)" size="md" dot>{{ getStatusLabel(transfer.status) }}</Badge>
                 <Button variant="secondary" size="sm" as="Link" :href="route('stock-transfers.index')">
                     <ArrowLeft :size="14" />
-                    Back to List
+                    {{ t('stockTransfers.backToList') }}
                 </Button>
             </template>
         </PageHeader>
@@ -178,45 +170,45 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-t
             <!-- Transfer Info -->
             <Card :padded="false">
                 <div class="flex items-center justify-between px-5 pt-5">
-                    <h3 class="text-sm font-semibold text-text-primary">Transfer Details</h3>
+                    <h3 class="text-sm font-semibold text-text-primary">{{ t('stockTransfers.transferDetails') }}</h3>
                     <Badge :variant="statusVariant(transfer.status)" size="md" dot>{{ getStatusLabel(transfer.status) }}</Badge>
                 </div>
                 <div class="p-5">
                     <dl class="grid grid-cols-1 gap-6 md:grid-cols-2">
                         <div>
-                            <dt class="mb-1 text-xs text-text-tertiary">Transfer Number</dt>
+                            <dt class="mb-1 text-xs text-text-tertiary">{{ t('stockTransfers.show.transferNumber') }}</dt>
                             <dd class="text-sm font-medium text-text-primary">{{ transfer.transfer_number }}</dd>
                         </div>
                         <div>
-                            <dt class="mb-1 text-xs text-text-tertiary">Transferred By</dt>
+                            <dt class="mb-1 text-xs text-text-tertiary">{{ t('stockTransfers.show.transferredBy') }}</dt>
                             <dd class="text-sm font-medium text-text-primary">{{ transfer.transferred_by_user?.name || '-' }}</dd>
                         </div>
                         <div>
-                            <dt class="mb-1 text-xs text-text-tertiary">From Location</dt>
+                            <dt class="mb-1 text-xs text-text-tertiary">{{ t('stockTransfers.fromLocation') }}</dt>
                             <dd class="text-sm font-medium text-text-primary">
                                 {{ transfer.from_location?.name }}
                                 <span v-if="transfer.from_location?.code" class="text-text-tertiary">({{ transfer.from_location.code }})</span>
                             </dd>
                         </div>
                         <div>
-                            <dt class="mb-1 text-xs text-text-tertiary">To Location</dt>
+                            <dt class="mb-1 text-xs text-text-tertiary">{{ t('stockTransfers.toLocation') }}</dt>
                             <dd class="text-sm font-medium text-text-primary">
                                 {{ transfer.to_location?.name }}
                                 <span v-if="transfer.to_location?.code" class="text-text-tertiary">({{ transfer.to_location.code }})</span>
                             </dd>
                         </div>
                         <div>
-                            <dt class="mb-1 text-xs text-text-tertiary">Created</dt>
+                            <dt class="mb-1 text-xs text-text-tertiary">{{ t('common.createdAt') }}</dt>
                             <dd class="text-sm font-medium text-text-primary">{{ formatDate(transfer.created_at) }}</dd>
                         </div>
                         <div v-if="transfer.completed_at">
-                            <dt class="mb-1 text-xs text-text-tertiary">Completed</dt>
+                            <dt class="mb-1 text-xs text-text-tertiary">{{ t('stockTransfers.show.completedAt') }}</dt>
                             <dd class="text-sm font-medium text-text-primary">{{ formatDate(transfer.completed_at) }}</dd>
                         </div>
                     </dl>
 
                     <div v-if="transfer.notes" class="mt-6 border-t border-border-subtle pt-6">
-                        <p class="mb-1 text-xs text-text-tertiary">Notes</p>
+                        <p class="mb-1 text-xs text-text-tertiary">{{ t('common.notes') }}</p>
                         <p class="text-sm text-text-primary">{{ transfer.notes }}</p>
                     </div>
                 </div>
@@ -224,16 +216,16 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-t
 
             <!-- Transfer Items -->
             <Card :padded="false">
-                <div class="px-5 pt-5"><h3 class="text-sm font-semibold text-text-primary">Transfer Items</h3></div>
+                <div class="px-5 pt-5"><h3 class="text-sm font-semibold text-text-primary">{{ t('stockTransfers.transferItems') }}</h3></div>
                 <div class="p-5">
                     <div class="w-full overflow-x-auto rounded-lg border border-border-subtle">
                         <table class="min-w-full">
                             <thead>
                                 <tr class="border-b border-border-subtle">
-                                    <th :class="thClass">Product</th>
+                                    <th :class="thClass">{{ t('common.product') }}</th>
                                     <th :class="thClass">SKU</th>
-                                    <th :class="[thClass, 'text-right']">Quantity</th>
-                                    <th :class="thClass">Notes</th>
+                                    <th :class="[thClass, 'text-right']">{{ t('common.quantity') }}</th>
+                                    <th :class="thClass">{{ t('common.notes') }}</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -254,7 +246,7 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-t
                             </tbody>
                             <tfoot>
                                 <tr class="border-t border-border-subtle">
-                                    <td colspan="2" class="px-4 py-3 text-sm font-medium text-text-primary">Total</td>
+                                    <td colspan="2" class="px-4 py-3 text-sm font-medium text-text-primary">{{ t('common.total') }}</td>
                                     <td class="px-4 py-3 text-right text-sm font-bold tabular-nums text-text-primary">
                                         {{ transfer.items?.reduce((sum, item) => sum + item.quantity, 0) || 0 }}
                                     </td>
@@ -340,7 +332,7 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-t
 
             <!-- Actions -->
             <Card v-if="canComplete || canCancel" :padded="false">
-                <div class="px-5 pt-5"><h3 class="text-sm font-semibold text-text-primary">Actions</h3></div>
+                <div class="px-5 pt-5"><h3 class="text-sm font-semibold text-text-primary">{{ t('common.actions') }}</h3></div>
                 <div class="p-5">
                     <div class="flex flex-wrap gap-3">
                         <Button
@@ -351,7 +343,7 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-t
                             @click="completeTransfer"
                         >
                             <CheckCircle2 :size="16" />
-                            {{ processing ? 'Processing...' : 'Complete Transfer' }}
+                            {{ processing ? t('stockTransfers.show.processing') : t('stockTransfers.show.completeTransfer') }}
                         </Button>
                         <Button
                             v-if="canCancel"
@@ -361,11 +353,11 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-t
                             @click="cancelTransfer"
                         >
                             <XCircle :size="16" />
-                            {{ processing ? 'Processing...' : 'Cancel Transfer' }}
+                            {{ processing ? t('stockTransfers.show.processing') : t('stockTransfers.show.cancelTransfer') }}
                         </Button>
                     </div>
                     <p v-if="canComplete" class="mt-3 text-xs text-text-tertiary">
-                        Completing the transfer will deduct stock from the source location and add it to the destination location.
+                        {{ t('stockTransfers.show.completeHint') }}
                     </p>
                 </div>
             </Card>

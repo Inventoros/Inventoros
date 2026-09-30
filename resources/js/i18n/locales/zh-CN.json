@@ -1,7 +1,102 @@
 {
   "stockAudits": {
     "completeConfirm": "完成此次盘点？将为每个差异创建库存调整。",
-    "completeUncountedConfirm": "{total} 件商品中有 {uncounted} 件尚未盘点。仍要完成盘点吗？未盘点的商品保持当前库存，只调整已盘点的商品。"
+    "completeUncountedConfirm": "{total} 件商品中有 {uncounted} 件尚未盘点。仍要完成盘点吗？未盘点的商品保持当前库存，只调整已盘点的商品。",
+    "backToList": "返回列表",
+    "auditDetails": "盘点详情",
+    "types": {
+      "full": "全面盘点",
+      "cycle": "循环盘点",
+      "spot": "抽查"
+    },
+    "statuses": {
+      "draft": "草稿",
+      "in_progress": "进行中",
+      "completed": "已完成",
+      "cancelled": "已取消"
+    },
+    "itemStatuses": {
+      "pending": "待盘点",
+      "counted": "已盘点",
+      "verified": "已核实",
+      "adjusted": "已调整"
+    },
+    "fields": {
+      "name": "盘点名称",
+      "namePlaceholder": "例如：2026 年第一季度仓库循环盘点",
+      "descriptionPlaceholder": "描述此次盘点的目的...",
+      "auditType": "盘点类型",
+      "typeHints": {
+        "full": "盘点仓库中的所有产品",
+        "cycle": "按轮换计划盘点部分产品",
+        "spot": "快速检查指定产品"
+      },
+      "location": "仓库库位",
+      "locationHint": "留空则包含所有库位的产品"
+    },
+    "columns": {
+      "auditNumber": "盘点单号",
+      "location": "库位",
+      "items": "项目",
+      "createdBy": "创建人",
+      "systemQty": "系统数量",
+      "countedQty": "盘点数量",
+      "discrepancy": "差异",
+      "countedBy": "盘点人"
+    },
+    "index": {
+      "description": "管理库存盘点和循环盘点。",
+      "newAudit": "新建盘点",
+      "searchPlaceholder": "按盘点单号或名称搜索...",
+      "empty": "未找到库存盘点",
+      "createFirst": "创建第一个盘点"
+    },
+    "create": {
+      "title": "创建库存盘点",
+      "description": "设置新的库存盘点或循环盘点。",
+      "notesPlaceholder": "给盘点人员的其他备注或说明...",
+      "selectProducts": "选择产品",
+      "selectProductsHint": "选择要纳入此次盘点的产品。留空则包含所有产品。",
+      "selectProductsHintAtLocation": "选择要纳入此次盘点的产品。留空则包含所选库位的所有产品。",
+      "searchProducts": "按名称或 SKU 搜索产品...",
+      "selectAll": "全选（{count} 个产品） | 全选（{count} 个产品）",
+      "inStock": "库存",
+      "fullAuditInfo": "所有启用的产品将自动纳入此次盘点。创建后可查看盘点项目。",
+      "fullAuditInfoAtLocation": "所选库位的所有启用产品将自动纳入此次盘点。创建后可查看盘点项目。",
+      "submit": "创建盘点"
+    },
+    "edit": {
+      "title": "编辑库存盘点",
+      "backToAudit": "返回盘点",
+      "notesPlaceholder": "其他备注或说明...",
+      "submit": "更新盘点"
+    },
+    "show": {
+      "pageTitle": "盘点 {number}",
+      "totalItems": "项目总数",
+      "progress": "进度",
+      "discrepancies": "差异",
+      "started": "开始时间",
+      "completed": "完成时间",
+      "auditItems": "盘点项目",
+      "countedProgress": "（已盘点 {counted} / {total}）",
+      "count": "盘点",
+      "recount": "重新盘点",
+      "countNotesPlaceholder": "备注（选填）",
+      "noItems": "此盘点中没有项目",
+      "processing": "处理中...",
+      "startAudit": "开始盘点",
+      "completeAudit": "完成盘点",
+      "deleteAudit": "删除盘点",
+      "startHint": "开始盘点时将记录当前系统库存水平，然后即可开始盘点。",
+      "completeHint": "完成盘点时，将为系统数量与盘点数量之间的所有差异创建库存调整。",
+      "dangerZone": "危险操作",
+      "deleteHint": "删除此盘点是永久性的，无法撤销。",
+      "startConfirm": "确定要开始此次盘点吗？系统数量将按当前水平记录。",
+      "deleteConfirm": "确定要删除此次盘点吗？此操作无法撤销。",
+      "updateCountFailed": "更新盘点数量失败",
+      "saveCountError": "保存盘点数量时出错"
+    }
   },
   "common": {
     "save": "保存",
@@ -192,6 +287,32 @@
       "queueBacklog": "在队列中等待超过 15 分钟的任务：{count}。邮件和 Webhook 没有发出。",
       "failedJobs": "过去 24 小时内失败的后台任务：{count}。",
       "help": "请检查 cron 任务是否每分钟运行 php artisan schedule:run。详情请参阅 cPanel 指南。"
+    },
+    "description": "库存、订单和补货优先级概览。",
+    "customize": "自定义",
+    "hints": {
+      "activeInCatalog": "目录中启用",
+      "belowMinimum": "低于最低库存",
+      "allTime": "全部时间"
+    },
+    "widgets": {
+      "statsOverview": "统计概览",
+      "revenueChart": "营收及其他统计",
+      "stockMovements": "库存变动",
+      "lowStockAlerts": "库存不足提醒",
+      "topProducts": "热门产品",
+      "stockByCategory": "按分类统计库存",
+      "reorderSuggestions": "补货建议"
+    },
+    "reorderSuggestions": {
+      "title": "补货建议",
+      "subtitle": "已低于补货点。建议数量来自产品设置和供应商最低订购量。",
+      "reorderAt": "补货点"
+    },
+    "customizeModal": {
+      "title": "自定义仪表盘",
+      "help": "切换小组件以在仪表盘上显示或隐藏。",
+      "savePreferences": "保存偏好设置"
     }
   },
   "products": {
@@ -241,7 +362,8 @@
       "variantHint": "添加尺寸或颜色等选项，以销售此产品的不同版本。每种组合都会创建一个具有独立价格和库存的变体。",
       "variantStockHint": "启用变体后，库存将按变体分别跟踪。",
       "notesPlaceholder": "关于此产品的补充说明...",
-      "createProduct": "创建产品"
+      "createProduct": "创建产品",
+      "subtitle": "创建包含定价、库存、变体和图片的产品。"
     },
     "edit": {
       "title": "编辑产品",
@@ -288,7 +410,34 @@
       "outOfStock": "缺货",
       "lowStock": "库存不足",
       "inStock": "有库存",
-      "activityHistory": "活动记录"
+      "activityHistory": "活动记录",
+      "minHint": "最低 {count}",
+      "stockAtPrice": "按价格计库存",
+      "barcodeValue": "条形码：{barcode}",
+      "currencyValue": "货币：{currency}",
+      "confirmGenerateRandom": "要为此产品生成新的随机条形码吗？",
+      "generateBarcodeFailed": "生成条形码失败",
+      "confirmGenerateFromSku": "要根据 SKU 生成条形码吗？",
+      "generateFromSkuFailed": "根据 SKU 生成条形码失败",
+      "bom": {
+        "title": "物料清单",
+        "addComponent": "添加组件",
+        "availableKitStock": "套件可用库存（受库存最少的组件限制）",
+        "searchProduct": "搜索产品",
+        "searchPlaceholder": "按名称或 SKU 搜索...",
+        "stockInline": "（库存：{count}）",
+        "searching": "搜索中...",
+        "qtyRequired": "需求数量",
+        "availableStock": "可用库存",
+        "unknown": "未知",
+        "remove": "移除",
+        "empty": "尚未添加组件。",
+        "emptyHint": "点击“添加组件”建立物料清单。",
+        "addFailed": "添加组件失败",
+        "updateQuantityFailed": "更新数量失败",
+        "confirmRemove": "要从物料清单中移除此组件吗？",
+        "removeFailed": "移除组件失败"
+      }
     },
     "quickAddCategory": {
       "title": "快速添加分类",
@@ -303,6 +452,56 @@
       "locationCode": "库位编码",
       "codePlaceholder": "例如：WH-A",
       "descPlaceholder": "可选描述..."
+    },
+    "subtitle": "您的目录、库存水平和补货阈值。",
+    "duplicate": "复制",
+    "printBarcode": "打印条形码",
+    "variantsCount": "{count} 个变体 | {count} 个变体",
+    "types": {
+      "standard": "标准",
+      "kit": "套件",
+      "assembly": "组装件"
+    },
+    "trackingTypes": {
+      "none": "不跟踪",
+      "batch": "批次跟踪",
+      "serial": "序列号跟踪"
+    },
+    "form": {
+      "productType": "产品类型",
+      "productTypeHint": "套件将多个组件捆绑销售。组装件需要通过工单生产。",
+      "additionalCurrencies": "其他货币",
+      "selectCurrency": "选择货币...",
+      "addPriceInCurrency": "+ 添加其他货币价格",
+      "reorderPoint": "补货点",
+      "reorderPointHint": "触发自动补货的库存水平",
+      "reorderQuantity": "补货数量",
+      "reorderQuantityHint": "库存达到补货点时的订购数量",
+      "leaveEmptyToDisable": "留空则停用",
+      "inventoryTracking": "库存跟踪",
+      "inventoryTrackingHint": "选择如何跟踪此产品的单件商品。",
+      "createCategoryFailed": "创建分类失败。请重试。",
+      "createLocationFailed": "创建库位失败。请重试。"
+    },
+    "index": {
+      "selectedCount": "已选择 {count} 个产品 | 已选择 {count} 个产品",
+      "confirmBulkDelete": "确定要删除 {count} 个产品吗？此操作无法撤销。 | 确定要删除 {count} 个产品吗？此操作无法撤销。"
+    },
+    "bulk": {
+      "changeCategory": "更改分类",
+      "updateCategoryFor": "为所选的 {count} 个产品更新分类。 | 为所选的 {count} 个产品更新分类。",
+      "selectCategory": "选择分类...",
+      "updateCategory": "更新分类",
+      "adjustPrice": "调整价格",
+      "adjustPriceFor": "为所选的 {count} 个产品调整价格。 | 为所选的 {count} 个产品调整价格。",
+      "adjustmentType": "调整类型",
+      "percentage": "百分比（%）",
+      "fixedAmount": "固定金额（$）",
+      "value": "数值",
+      "useNegative": "（使用负数表示降低）",
+      "percentagePlaceholder": "例如：10 表示 +10%，-20 表示 -20%",
+      "fixedPlaceholder": "例如：5.00 或 -3.50",
+      "applyPriceChange": "应用价格调整"
     }
   },
   "orders": {
@@ -372,7 +571,9 @@
       "searchingCustomers": "搜索中...",
       "noCustomersFound": "没有匹配的客户。请在下方输入临时客户的信息。",
       "linkedCustomer": "已关联已保存的客户 {name}",
-      "clearCustomer": "使用临时客户"
+      "clearCustomer": "使用临时客户",
+      "description": "添加客户订单及其订单行。",
+      "addAtLeastOneProduct": "请至少向订单添加一个产品。"
     },
     "show": {
       "orderNumber": "订单 #{number}",
@@ -415,7 +616,10 @@
       "approvalNotesPlaceholder": "关于此审批的备注（选填）...",
       "rejectionNotesPlaceholder": "拒绝原因...",
       "approve": "批准",
-      "reject": "拒绝"
+      "reject": "拒绝",
+      "downloadInvoice": "下载发票",
+      "previewInvoice": "预览发票",
+      "createReturn": "创建退货"
     },
     "edit": {
       "title": "编辑订单",
@@ -432,7 +636,11 @@
       "deliveredAt": "送达时间：",
       "updatingOrder": "更新订单中...",
       "updateOrder": "更新订单",
-      "viewDetails": "查看订单详情"
+      "viewDetails": "查看订单详情",
+      "removeItem": "移除商品"
+    },
+    "index": {
+      "description": "来自所有渠道的客户订单。"
     }
   },
   "purchaseOrders": {
@@ -465,13 +673,15 @@
       "unitCost": "单位成本",
       "supplierSku": "供应商 SKU",
       "orderItems": "订单商品（{count}）",
-      "createPo": "创建采购订单"
+      "createPo": "创建采购订单",
+      "description": "创建采购订单并添加待收货的商品。"
     },
     "edit": {
       "title": "编辑采购订单",
       "backToPo": "返回采购订单",
       "updatePo": "更新采购订单",
-      "viewDetails": "查看详情"
+      "viewDetails": "查看详情",
+      "poNumber": "采购单 #{number}"
     },
     "show": {
       "receiveItems": "收货",
@@ -484,7 +694,14 @@
       "sendToSupplier": "发送给供应商",
       "editPo": "编辑采购订单",
       "cancelOrder": "取消订单",
-      "deleteOrder": "删除订单"
+      "deleteOrder": "删除订单",
+      "confirmCancel": "确定要取消此采购订单吗？",
+      "orderDateOn": "订单日期 {date}",
+      "downloadPdf": "下载 PDF",
+      "previewPdf": "预览 PDF",
+      "itemsCount": "商品（{count}）",
+      "supplierSkuLine": "供应商：{sku}",
+      "cannotUndo": "此操作无法撤销。"
     },
     "receive": {
       "title": "收货 - {poNumber}",
@@ -497,7 +714,11 @@
       "complete": "完成",
       "readyToReceive": "准备收货 {count} 件商品",
       "selectQuantities": "选择收货数量",
-      "confirmReceiving": "确认收货"
+      "confirmReceiving": "确认收货",
+      "receive": "收货",
+      "headTitle": "收货 - {poNumber}",
+      "description": "根据此采购订单记录收货数量。",
+      "readyToReceiveCount": "准备收货 {count} 件商品 | 准备收货 {count} 件商品"
     },
     "currencies": {
       "usd": "USD - 美元",
@@ -505,7 +726,12 @@
       "gbp": "GBP - 英镑",
       "cad": "CAD - 加拿大元",
       "aud": "AUD - 澳大利亚元"
-    }
+    },
+    "index": {
+      "description": "向供应商发出的补货订单。"
+    },
+    "confirmDelete": "确定要删除“{number}”吗？",
+    "noSku": "无 SKU"
   },
   "productSuppliers": {
     "title": "供应商",
@@ -568,7 +794,8 @@
       "businessDetails": "商业信息",
       "paymentTerms": "付款条件",
       "paymentTermsPlaceholder": "例如：30天内付款",
-      "createSupplier": "创建供应商"
+      "createSupplier": "创建供应商",
+      "description": "添加供应商及其联系人、地址和业务信息。"
     },
     "edit": {
       "title": "编辑供应商",
@@ -587,7 +814,14 @@
       "supplierCode": "供应商编码",
       "paymentTerms": "付款条件",
       "editSupplier": "编辑供应商",
-      "deleteSupplier": "删除供应商"
+      "deleteSupplier": "删除供应商",
+      "code": "编码：{code}",
+      "supplierDetails": "供应商详情",
+      "products": "产品",
+      "deleteWarning": "此操作将永久删除该供应商，且无法撤销。"
+    },
+    "index": {
+      "description": "您的供应商及其供应的产品。"
     }
   },
   "customers": {
@@ -614,7 +848,8 @@
       "paymentTerms": "付款条件",
       "paymentTermsPlaceholder": "例如：30天内付款",
       "creditLimit": "信用额度",
-      "createCustomer": "创建客户"
+      "createCustomer": "创建客户",
+      "description": "添加客户及其账单、收货和业务信息。"
     },
     "edit": {
       "title": "编辑客户",
@@ -637,6 +872,9 @@
       "recentOrders": "最近订单",
       "noOrdersYet": "暂无订单",
       "deleteCustomer": "删除客户"
+    },
+    "index": {
+      "description": "您的客户及其下的订单。"
     }
   },
   "categories": {
@@ -650,7 +888,13 @@
     "editCategory": "编辑分类",
     "categoryName": "分类名称",
     "namePlaceholder": "例如：电子产品",
-    "descPlaceholder": "可选描述..."
+    "descPlaceholder": "可选描述...",
+    "index": {
+      "description": "将您的目录整理为分类。"
+    },
+    "confirmDelete": "确定要删除“{name}”吗？此操作无法撤销。",
+    "productsCount": "{count} 个产品 | {count} 个产品",
+    "updateCategory": "更新分类"
   },
   "locations": {
     "title": "仓库库位",
@@ -672,7 +916,12 @@
     "noWarehouse": "无仓库",
     "capacity": "容量（件）",
     "capacityHint": "选填。用于显示库位的占用程度。",
-    "capacityValue": "容量：{capacity} 件"
+    "capacityValue": "容量：{capacity} 件",
+    "subtitle": "存放库存的实际位置。",
+    "close": "关闭",
+    "productsCount": "{count} 个产品 | {count} 个产品",
+    "updateLocation": "更新库位",
+    "confirmDelete": "确定要删除“{name}”吗？此操作无法撤销。"
   },
   "reports": {
     "title": "报表与分析",
@@ -740,7 +989,9 @@
       "current": "当前",
       "deficit": "缺口",
       "allWellStocked": "所有产品库存充足！",
-      "noProductsBelowMin": "没有产品低于最低库存水平"
+      "noProductsBelowMin": "没有产品低于最低库存水平",
+      "min": "最低",
+      "max": "最高"
     },
     "categoryPerformance": {
       "title": "分类绩效报告",
@@ -889,6 +1140,16 @@
       "loss": "丢失",
       "return": "退货",
       "correction": "纠正"
+    },
+    "index": {
+      "dataSources": {
+        "products": "产品",
+        "orders": "订单",
+        "stock_adjustments": "库存调整",
+        "customers": "客户",
+        "suppliers": "供应商",
+        "purchase_orders": "采购订单"
+      }
     }
   },
   "stockAdjustments": {
@@ -919,7 +1180,13 @@
       "negativeWarningMsg": "此次调整将导致库存为负数。请核实数量。",
       "createAdjustment": "创建调整",
       "stockIncrease": "库存增加",
-      "stockDecrease": "库存减少"
+      "stockDecrease": "库存减少",
+      "currentStockValue": "当前库存：{stock}",
+      "locationOptional": "库位（选填）",
+      "noSpecificLocation": "不指定库位",
+      "locationHint": "将此调整应用到指定库位，使各库位库存明细保持同步。留空则仅调整总库存。",
+      "quantityPlaceholder": "输入正数增加，负数减少",
+      "negativeWarningValue": "此次调整将导致库存为负数（{stock}）。请核实数量。"
     },
     "show": {
       "title": "库存调整详情",
@@ -939,7 +1206,30 @@
       "finalStock": "最终库存",
       "manualAdjustment": "手动调整",
       "stockRecount": "库存盘点",
-      "order": "订单"
+      "order": "订单",
+      "unitsCount": "{count} 件 | {count} 件"
+    },
+    "variantAdjuster": {
+      "title": "调整库存：{name}",
+      "failed": "调整库存失败"
+    },
+    "types": {
+      "manual": "手动调整",
+      "order": "订单",
+      "return": "退货",
+      "damage": "损坏",
+      "loss": "丢失",
+      "recount": "库存盘点",
+      "correction": "更正",
+      "opening_stock": "期初库存"
+    },
+    "index": {
+      "allProducts": "所有产品",
+      "dateFrom": "开始日期",
+      "dateTo": "结束日期",
+      "before": "调整前",
+      "change": "变动",
+      "after": "调整后"
     }
   },
   "importExport": {
@@ -967,7 +1257,8 @@
       "includeNames": "产品名称、SKU 和条形码",
       "includePricing": "定价和货币信息",
       "includeStock": "库存水平和最低库存",
-      "includeCategories": "分类和库位"
+      "includeCategories": "分类和库位",
+      "exportIncludesLabel": "导出包含："
     },
     "import": {
       "title": "导入产品",
@@ -991,7 +1282,14 @@
       "noteUpdate": "已有产品（SKU 匹配）将被更新",
       "noteCreate": "不存在的分类和库位将自动创建",
       "noteCurrency": "未指定时默认货币为 USD",
-      "noteSkip": "无效行将被跳过并报告"
+      "noteSkip": "无效行将被跳过并报告",
+      "templateHelpLabel": "需要帮助？下载包含示例数据的模板文件：",
+      "requiredFieldsLabel": "必填字段：",
+      "importantNotesLabel": "重要说明：",
+      "fieldNameDesc": "产品名称",
+      "fieldSkuDesc": "唯一 SKU 标识符",
+      "fieldPriceDesc": "销售价格",
+      "fieldStockDesc": "当前库存数量"
     },
     "pageDescription": "批量导入和导出产品、订单和用户。",
     "tabs": {
@@ -1064,7 +1362,21 @@
       "ruleEscalation": "您只能分配您有权分配的角色：非管理员只能导入成员，且角色权限不能超出其自身权限。"
     },
     "exportProducts": "导出产品",
-    "importProducts": "导入产品"
+    "importProducts": "导入产品",
+    "exports": {
+      "title": "您的导出",
+      "description": "大型导出会在后台准备。每个导出可供下载时，您都会收到通知。",
+      "file": "文件",
+      "rows": "行数",
+      "action": "操作",
+      "download": "下载",
+      "statuses": {
+        "pending": "待处理",
+        "processing": "处理中",
+        "completed": "已完成",
+        "failed": "失败"
+      }
+    }
   },
   "notifications": {
     "title": "通知",
@@ -1081,7 +1393,20 @@
     "noNotifications": "没有通知",
     "allCaughtUp": "您已查看所有通知！",
     "noNewNotifications": "没有新通知",
-    "viewAllNotifications": "查看全部"
+    "viewAllNotifications": "查看全部",
+    "confirmMarkAllRead": "要将所有通知标为已读吗？",
+    "confirmDelete": "要删除此通知吗？",
+    "confirmClearRead": "要清除所有已读通知吗？",
+    "allCount": "全部（{count}）",
+    "unreadCount": "未读（{count}）",
+    "readCount": "已读（{count}）",
+    "viewDetailsLabel": "查看详情",
+    "priorities": {
+      "low": "低",
+      "normal": "普通",
+      "high": "高",
+      "urgent": "紧急"
+    }
   },
   "plugins": {
     "title": "插件",
@@ -1132,7 +1457,12 @@
       "notOwned": "您连接的账户尚未拥有此插件。",
       "viewOnMarketplace": "在 inventoros.com 上查看",
       "readOnly": "您可以浏览插件市场。安装插件需要“管理插件”权限。"
-    }
+    },
+    "confirmDelete": "确定要删除“{name}”吗？此操作无法撤销。",
+    "subtitle": "通过可安装的插件扩展您的工作区。",
+    "versionLabel": "版本：{version}",
+    "authorLabel": "作者：",
+    "requiresLabel": "依赖：{requires}"
   },
   "settings": {
     "title": "设置",
@@ -1147,7 +1477,8 @@
       "dateFormat": "日期格式",
       "timeFormat": "时间格式",
       "userMgmtHint": "用户管理功能在用户板块中可用。",
-      "goToUserMgmt": "前往用户管理"
+      "goToUserMgmt": "前往用户管理",
+      "description": "管理组织的资料和区域偏好设置。"
     },
     "account": {
       "title": "账户设置",
@@ -1179,7 +1510,8 @@
       "dark": "深色",
       "auto": "自动",
       "language": "语言",
-      "itemsPerPage": "每页显示数量"
+      "itemsPerPage": "每页显示数量",
+      "description": "管理您的个人资料、密码、通知和偏好设置。"
     },
     "email": {
       "title": "邮件设置",
@@ -1213,7 +1545,9 @@
       "sendTest": "发送测试邮件",
       "sending": "发送中...",
       "saveSettings": "保存邮件设置",
-      "testSuccess": "测试邮件发送成功。"
+      "testSuccess": "测试邮件发送成功。",
+      "description": "配置工作区发送邮件和通知的方式。",
+      "fromNamePlaceholder": "您的公司名称"
     },
     "notificationPreferences": {
       "title": "邮件通知偏好",
@@ -1290,8 +1624,46 @@
         "deleteWebhook": "删除 Webhook",
         "integrationGuide": "集成指南",
         "signatureHeader": "签名头",
-        "verification": "验证"
-      }
+        "verification": "验证",
+        "headTitle": "Webhook：{name}",
+        "description": "Webhook 配置和投递活动。",
+        "sendTestShort": "发送测试",
+        "secretHidden": "出于安全考虑已隐藏。重新生成密钥可签发新密钥，新密钥仅显示一次。",
+        "createdAt": "创建时间",
+        "subscribedEventsCount": "已订阅事件（{count}）",
+        "deliveryStatuses": {
+          "success": "成功",
+          "pending": "待处理",
+          "failed": "失败"
+        },
+        "noResponseBody": "无响应正文",
+        "otherGroup": "其他",
+        "signatureHeaderDesc": "所有 Webhook 负载都会在 {header} 请求头中包含签名。",
+        "verificationDesc": "使用您的密钥对原始请求正文计算 HMAC-SHA256 以验证签名。",
+        "responseDesc": "返回 2xx 状态码以确认已接收。投递失败时最多重试 5 次。",
+        "deleteDesc": "永久删除此 Webhook 及其所有投递日志。此操作无法撤销。",
+        "confirmDelete": "确定要删除“{name}”吗？此操作无法撤销。",
+        "confirmRegenerate": "确定要重新生成密钥吗？您需要在接收端应用程序中更新密钥。"
+      },
+      "description": "接收实时事件通知的外部服务。",
+      "signingSecret": "签名密钥",
+      "secretShownOnce": "请立即复制。出于安全考虑，密钥仅显示一次，之后无法再次获取。",
+      "confirmDelete": "确定要删除“{name}”吗？",
+      "createdByName": "由 {name} 创建",
+      "unknownCreator": "未知",
+      "eventCount": "{count} 个事件 | {count} 个事件",
+      "deliveriesTotal": "共 {count} 次",
+      "namePlaceholder": "我的 Webhook"
+    },
+    "description": "管理您的工作区、账户和集成。",
+    "hub": {
+      "accountDescription": "更新您的个人资料、密码和个人偏好设置（包括语言）。",
+      "notificationsDescription": "选择您要接收的邮件和应用内通知。",
+      "twoFactorTitle": "双重验证",
+      "twoFactorDescription": "使用身份验证器应用生成的一次性验证码保护您的账户。",
+      "emailDescription": "配置组织发送邮件的方式（SMTP、Mailgun 或 SendGrid）。",
+      "webhooksDescription": "连接外部服务并发送实时事件通知。",
+      "updatesDescription": "检查新版本、更新应用程序并管理备份。"
     }
   },
   "admin": {
@@ -1317,7 +1689,8 @@
         "additionalRoles": "附加角色（选填）",
         "additionalRolesHint": "分配具有特定权限集的自定义角色。",
         "createUser": "创建用户",
-        "success": "用户创建成功。"
+        "success": "用户创建成功。",
+        "subtitle": "创建新用户账户并分配角色。"
       },
       "edit": {
         "title": "编辑用户",
@@ -1329,7 +1702,11 @@
         "customRoles": "附加自定义角色（选填）",
         "customRolesHint": "分配为您的组织创建的自定义角色以授予特定权限。",
         "updateUser": "更新用户",
-        "success": "用户更新成功。"
+        "success": "用户更新成功。",
+        "titleWithName": "编辑用户：{name}",
+        "subtitle": "更新账户详情、基础角色和自定义角色分配。",
+        "admin": "管理员",
+        "customRolesSelected": "已选择 {count} 个自定义角色"
       },
       "show": {
         "title": "用户详情",
@@ -1349,7 +1726,16 @@
         "notVerified": "未验证",
         "deleteUser": "删除用户",
         "confirmDelete": "确定要删除 {name} 吗？",
-        "cannotUndo": "此操作无法撤销。"
+        "cannotUndo": "此操作无法撤销。",
+        "titleWithName": "用户：{name}"
+      },
+      "subtitle": "管理组织中的用户，分配角色和权限。",
+      "noUsersTitle": "未找到用户。",
+      "noUsersHint": "点击“添加用户”创建第一个用户。",
+      "roles": {
+        "admin": "管理员",
+        "manager": "经理",
+        "member": "成员"
       }
     },
     "roles": {
@@ -1375,7 +1761,12 @@
         "deselectAll": "取消全选",
         "totalPermissions": "共 {count} 项权限",
         "createRole": "创建角色",
-        "success": "角色创建成功。"
+        "success": "角色创建成功。",
+        "subtitle": "定义角色并分配其权限。",
+        "roleDetails": "角色详情",
+        "namePlaceholder": "例如：仓库经理",
+        "descriptionPlaceholder": "描述此角色的用途和职责...",
+        "permissionBreakdown": "（{direct} 项直接权限 + 来自 {sets} 个权限集的 {fromSets} 项）"
       },
       "edit": {
         "title": "编辑角色",
@@ -1387,7 +1778,10 @@
         "permissionsHint": "自定义此角色的权限。点击分类名称可以选择/取消选择该分类下的所有权限。",
         "permissionsSelected": "已选择 {count} 项权限",
         "updateRole": "更新角色",
-        "success": "角色更新成功。"
+        "success": "角色更新成功。",
+        "titleWithName": "编辑角色：{name}",
+        "subtitle": "更新角色详情和权限。",
+        "viewRole": "查看角色"
       },
       "show": {
         "title": "角色详情与权限",
@@ -1407,7 +1801,15 @@
         "deleteRole": "删除角色",
         "reassignFirst": "删除前请先重新分配用户",
         "systemRoleHint": "这是系统角色，不可修改或删除。",
-        "confirmDelete": "确定要删除 {name} 角色吗？此操作无法撤销。"
+        "confirmDelete": "确定要删除 {name} 角色吗？此操作无法撤销。",
+        "otherCategory": "其他",
+        "titleWithName": "角色：{name}",
+        "permissionsWithCount": "权限（{count}）",
+        "noPermissions": "此角色未分配任何权限。",
+        "usersCountValue": "{count} 个用户 | {count} 个用户",
+        "cannotDeleteWithUsers": "无法删除已分配用户的角色",
+        "deleteRoleTooltip": "删除角色",
+        "confirmDeleteRole": "确定要删除 {name} 角色吗？"
       }
     },
     "activityLog": {
@@ -1473,7 +1875,16 @@
       "allCategories": "所有分类",
       "securityBadge": "安全",
       "securityShortcut": "安全事件",
-      "viewDetails": "查看详情"
+      "viewDetails": "查看详情",
+      "description": "工作区内所有更改的审计记录。",
+      "exportCsv": "导出 CSV",
+      "exportXlsx": "导出 XLSX",
+      "searchDescription": "搜索描述",
+      "unknownUser": "未知用户",
+      "viewChanges": "查看 {count} 项更改 | 查看 {count} 项更改",
+      "daysAgo": "{count} 天前 | {count} 天前",
+      "hoursAgo": "{count} 小时前 | {count} 小时前",
+      "minutesAgo": "{count} 分钟前 | {count} 分钟前"
     },
     "update": {
       "title": "系统更新",
@@ -1507,11 +1918,335 @@
       "onGithub": "GitHub",
       "autoBackup": "每次更新前会自动创建备份",
       "maintenanceMode": "更新期间应用程序将进入维护模式",
-      "autoMigrations": "更新期间将自动运行数据库迁移"
+      "autoMigrations": "更新期间将自动运行数据库迁移",
+      "checkFailed": "检查更新失败。请重试。",
+      "confirmUpdate": "确定要更新应用程序吗？系统将自动创建备份。",
+      "updateFailed": "更新失败。请查看日志。",
+      "confirmBackup": "要为当前安装创建备份吗？",
+      "backupCreated": "备份创建成功！",
+      "backupFailed": "创建备份失败。请查看日志。",
+      "confirmRestore": "确定要从 {file} 恢复吗？这将覆盖当前安装。",
+      "restoreCompleted": "恢复成功！",
+      "restoreFailed": "恢复失败。",
+      "restoreError": "恢复备份失败。请查看日志。",
+      "confirmDeleteBackup": "确定要删除 {file} 吗？",
+      "deleteBackupFailed": "删除备份失败。请重试。",
+      "managerTitle": "更新管理",
+      "subtitle": "检查新版本、安装更新并管理安装备份。",
+      "upToDateBadge": "已是最新",
+      "fetchedFromRepo": "更新从 GitHub 上的 {repo} 获取。"
     },
     "createRole": "创建角色",
     "createUser": "创建用户",
-    "userDetails": "用户详情"
+    "userDetails": "用户详情",
+    "permissionCatalog": {
+      "permissions": {
+        "view_users": {
+          "label": "查看用户",
+          "description": "可以查看用户列表和详情"
+        },
+        "create_users": {
+          "label": "创建用户",
+          "description": "可以创建新用户"
+        },
+        "edit_users": {
+          "label": "编辑用户",
+          "description": "可以编辑现有用户"
+        },
+        "delete_users": {
+          "label": "删除用户",
+          "description": "可以删除用户"
+        },
+        "view_roles": {
+          "label": "查看角色",
+          "description": "可以查看角色和权限"
+        },
+        "create_roles": {
+          "label": "创建角色",
+          "description": "可以创建新角色"
+        },
+        "edit_roles": {
+          "label": "编辑角色",
+          "description": "可以编辑现有角色"
+        },
+        "delete_roles": {
+          "label": "删除角色",
+          "description": "可以删除角色"
+        },
+        "view_products": {
+          "label": "查看产品",
+          "description": "可以查看产品库存"
+        },
+        "create_products": {
+          "label": "创建产品",
+          "description": "可以添加新产品"
+        },
+        "edit_products": {
+          "label": "编辑产品",
+          "description": "可以修改产品详情"
+        },
+        "delete_products": {
+          "label": "删除产品",
+          "description": "可以移除产品"
+        },
+        "manage_stock": {
+          "label": "管理库存",
+          "description": "可以调整库存水平并管理库存变动"
+        },
+        "transfer_stock": {
+          "label": "调拨库存",
+          "description": "可以创建和管理库位之间的库存调拨"
+        },
+        "manage_categories": {
+          "label": "管理分类",
+          "description": "可以创建和管理产品分类"
+        },
+        "manage_locations": {
+          "label": "管理库位",
+          "description": "可以创建和管理存储库位"
+        },
+        "view_customers": {
+          "label": "查看客户",
+          "description": "可以查看客户列表和详情"
+        },
+        "create_customers": {
+          "label": "创建客户",
+          "description": "可以创建新客户"
+        },
+        "edit_customers": {
+          "label": "编辑客户",
+          "description": "可以编辑现有客户"
+        },
+        "delete_customers": {
+          "label": "删除客户",
+          "description": "可以删除客户"
+        },
+        "view_suppliers": {
+          "label": "查看供应商",
+          "description": "可以查看供应商列表和详情"
+        },
+        "create_suppliers": {
+          "label": "创建供应商",
+          "description": "可以创建新供应商"
+        },
+        "edit_suppliers": {
+          "label": "编辑供应商",
+          "description": "可以编辑现有供应商"
+        },
+        "delete_suppliers": {
+          "label": "删除供应商",
+          "description": "可以删除供应商"
+        },
+        "view_purchase_orders": {
+          "label": "查看采购订单",
+          "description": "可以查看采购订单"
+        },
+        "create_purchase_orders": {
+          "label": "创建采购订单",
+          "description": "可以创建新采购订单"
+        },
+        "edit_purchase_orders": {
+          "label": "编辑采购订单",
+          "description": "可以编辑采购订单"
+        },
+        "delete_purchase_orders": {
+          "label": "删除采购订单",
+          "description": "可以删除采购订单"
+        },
+        "receive_purchase_orders": {
+          "label": "采购订单收货",
+          "description": "可以接收采购订单中的商品"
+        },
+        "approve_purchase_orders": {
+          "label": "审批采购订单",
+          "description": "可以批准或拒绝发送前需要审批的采购订单"
+        },
+        "view_orders": {
+          "label": "查看订单",
+          "description": "可以查看订单"
+        },
+        "create_orders": {
+          "label": "创建订单",
+          "description": "可以创建新订单"
+        },
+        "edit_orders": {
+          "label": "编辑订单",
+          "description": "可以修改订单"
+        },
+        "delete_orders": {
+          "label": "删除订单",
+          "description": "可以删除订单"
+        },
+        "approve_orders": {
+          "label": "审批订单",
+          "description": "可以批准或拒绝订单"
+        },
+        "view_payments": {
+          "label": "查看付款",
+          "description": "可以查看订单付款、应付余额和应收账款"
+        },
+        "record_payments": {
+          "label": "记录付款",
+          "description": "可以记录、作废和退还订单付款"
+        },
+        "view_settings": {
+          "label": "查看设置",
+          "description": "可以查看系统设置"
+        },
+        "edit_settings": {
+          "label": "编辑设置",
+          "description": "可以修改系统设置"
+        },
+        "manage_organization": {
+          "label": "管理组织",
+          "description": "可以管理组织详情"
+        },
+        "view_plugins": {
+          "label": "查看插件",
+          "description": "可以查看已安装的插件"
+        },
+        "manage_plugins": {
+          "label": "管理插件",
+          "description": "可以安装、启用和删除插件"
+        },
+        "view_stock_audits": {
+          "label": "查看库存盘点",
+          "description": "可以查看库存盘点和循环盘点"
+        },
+        "create_stock_audits": {
+          "label": "创建库存盘点",
+          "description": "可以创建新的库存盘点"
+        },
+        "manage_stock_audits": {
+          "label": "管理库存盘点",
+          "description": "可以管理库存盘点，包括开始、完成和调整盘点数量"
+        },
+        "approve_stock_adjustments": {
+          "label": "审批库存调整",
+          "description": "可以批准或拒绝库存变更前需要审批的库存调整"
+        },
+        "approve_stock_transfers": {
+          "label": "审批库存调拨",
+          "description": "可以批准或拒绝发运前需要审批的库存调拨"
+        },
+        "view_warehouses": {
+          "label": "查看仓库",
+          "description": "可以查看仓库列表和详情"
+        },
+        "create_warehouses": {
+          "label": "创建仓库",
+          "description": "可以创建新仓库"
+        },
+        "edit_warehouses": {
+          "label": "编辑仓库",
+          "description": "可以编辑仓库设置"
+        },
+        "delete_warehouses": {
+          "label": "删除仓库",
+          "description": "可以删除仓库"
+        },
+        "manage_warehouse_users": {
+          "label": "管理仓库用户",
+          "description": "可以为仓库分配和移除用户"
+        },
+        "access_all_warehouses": {
+          "label": "访问所有仓库",
+          "description": "即使已分配到特定仓库，也可以查看和操作所有仓库的库存"
+        },
+        "manage_returns": {
+          "label": "管理退货",
+          "description": "可以创建和管理退货与换货"
+        },
+        "view_shipments": {
+          "label": "查看发货",
+          "description": "可以查看订单发货、物流跟踪和面单"
+        },
+        "create_shipments": {
+          "label": "创建发货",
+          "description": "可以创建发货、购买和作废面单，并将订单标记为已发货"
+        },
+        "view_reports": {
+          "label": "查看报表",
+          "description": "可以查看系统报表"
+        },
+        "export_data": {
+          "label": "导出数据",
+          "description": "可以从系统导出数据"
+        },
+        "import_data": {
+          "label": "导入数据",
+          "description": "可以向系统导入数据"
+        },
+        "view_activity_log": {
+          "label": "查看活动日志",
+          "description": "可以查看活动日志和审计日志"
+        }
+      },
+      "categories": {
+        "userManagement": "用户管理",
+        "roleManagement": "角色管理",
+        "inventoryManagement": "库存管理",
+        "customerManagement": "客户管理",
+        "supplierManagement": "供应商管理",
+        "purchaseOrderManagement": "采购订单管理",
+        "orderManagement": "订单管理",
+        "payments": "付款",
+        "settings": "设置",
+        "plugins": "插件",
+        "warehouseManagement": "仓库管理",
+        "returnsManagement": "退货管理",
+        "shipping": "发货",
+        "reportsData": "报表与数据"
+      },
+      "sets": {
+        "inventoryManager": {
+          "name": "库存经理",
+          "description": "拥有库存管理的完全访问权限，包括产品、分类和库位。"
+        },
+        "orderProcessor": {
+          "name": "订单处理员",
+          "description": "管理订单从创建到完成的全过程。"
+        },
+        "warehouseStaff": {
+          "name": "仓库员工",
+          "description": "查看产品并管理库存水平。"
+        },
+        "purchasingAgent": {
+          "name": "采购员",
+          "description": "管理供应商和采购订单。"
+        },
+        "approver": {
+          "name": "审批人",
+          "description": "批准或拒绝需要签核的采购订单、库存调整和库存调拨。"
+        },
+        "readOnlyAuditor": {
+          "name": "只读审计员",
+          "description": "出于审计目的，对所有数据拥有只读访问权限。"
+        },
+        "userAdministrator": {
+          "name": "用户管理员",
+          "description": "管理用户及其访问权限。"
+        },
+        "reportsViewer": {
+          "name": "报表查看者",
+          "description": "可访问报表和数据导出功能。"
+        }
+      },
+      "roles": {
+        "systemAdministrator": {
+          "name": "管理员",
+          "description": "拥有全部权限的完全系统访问权限。"
+        },
+        "systemManager": {
+          "name": "经理",
+          "description": "可以管理库存、订单、分类并查看报表。"
+        },
+        "systemMember": {
+          "name": "成员",
+          "description": "查看和管理所分配任务的基本访问权限。"
+        }
+      }
+    }
   },
   "auth": {
     "login": {
@@ -1556,6 +2291,35 @@
       "linkSent": "新的验证链接已发送到您注册时提供的邮箱地址。",
       "resend": "重新发送验证邮件",
       "logOut": "退出登录"
+    },
+    "twoFactorChallenge": {
+      "title": "双重验证",
+      "codeHint": "请输入身份验证器应用中的验证码。",
+      "recoveryHint": "请输入一个恢复码。",
+      "code": "验证码",
+      "codePlaceholder": "输入 6 位验证码",
+      "recoveryCode": "恢复码",
+      "recoveryPlaceholder": "输入恢复码",
+      "useCode": "使用验证码",
+      "useRecovery": "使用恢复码",
+      "verify": "验证"
+    },
+    "twoFactor": {
+      "setupTitle": "设置双重验证",
+      "title": "双重验证",
+      "description": "使用身份验证器应用为您的账户增加一层安全保护。",
+      "enabled": "已启用",
+      "enabledTitle": "双重验证已启用",
+      "enabledHint": "您的账户当前已启用双重验证。输入密码即可停用。",
+      "password": "密码",
+      "disable": "停用双重验证",
+      "enable": "启用双重验证",
+      "scanHint": "使用身份验证器应用（Google Authenticator、Authy 等）扫描下方二维码，然后输入验证码以启用双重验证。",
+      "manualKey": "或手动输入此密钥：",
+      "verificationCode": "验证码",
+      "showRecoveryCodes": "显示恢复码",
+      "hideRecoveryCodes": "隐藏恢复码",
+      "recoveryHint": "请将这些恢复码保存在安全的地方。如果您丢失了身份验证设备，可以使用它们访问您的账户。"
     }
   },
   "profile": {
@@ -1582,7 +2346,8 @@
       "confirmTitle": "确定要删除您的账户吗？",
       "confirmDescription": "账户删除后，所有资源和数据将被永久删除。请输入密码以确认您要永久删除账户。",
       "password": "密码"
-    }
+    },
+    "description": "管理您的账户信息、密码和账户删除。"
   },
   "install": {
     "welcome": {
@@ -1634,7 +2399,9 @@
       "testing": "正在测试连接...",
       "dbExistsHint": "请在继续之前确保数据库已存在。安装程序将创建必要的表。",
       "installDatabase": "安装数据库",
-      "installing": "安装中..."
+      "installing": "安装中...",
+      "testFailed": "测试连接失败：{error}",
+      "installFailed": "安装失败：{error}"
     },
     "admin": {
       "title": "创建管理员账户",
@@ -1650,7 +2417,10 @@
       "confirmPasswordHint": "请确认您的密码",
       "accessNote": "此管理员账户将拥有 Inventoros 安装的完全访问权限。",
       "completeInstallation": "完成安装",
-      "creatingAccount": "正在创建账户..."
+      "creatingAccount": "正在创建账户...",
+      "orgNamePlaceholder": "某某有限公司",
+      "fullNamePlaceholder": "张三",
+      "createFailed": "创建管理员账户失败：{error}"
     },
     "complete": {
       "title": "安装完成！",
@@ -1689,7 +2459,10 @@
       "availableVars": "可用变量",
       "preview": "预览",
       "generating": "生成中...",
-      "applySku": "应用 SKU"
+      "applySku": "应用 SKU",
+      "or": "或",
+      "patternExample": "例如：{example}",
+      "previewError": "生成预览时出错"
     },
     "variantManager": {
       "productOptions": "产品选项",
@@ -1705,7 +2478,10 @@
       "autoGenerate": "自动生成",
       "enableAll": "全部启用",
       "disableAll": "全部停用",
-      "addOptionsHint": "添加尺寸或颜色等选项以创建产品变体"
+      "addOptionsHint": "添加尺寸或颜色等选项以创建产品变体",
+      "optionName": "选项名称",
+      "optionValues": "选项值（以逗号分隔）",
+      "addOptionButton": "添加选项（例如尺寸、颜色）"
     },
     "variantsTable": {
       "variant": "变体",
@@ -1750,20 +2526,34 @@
       "cameraHint": "将摄像头对准条形码进行扫描",
       "locationFound": "已找到库位",
       "productsHere": "此处有 {count} 个产品",
-      "viewProductsHere": "查看此处产品"
+      "viewProductsHere": "查看此处产品",
+      "lookupFailed": "查找条形码失败",
+      "stock": "库存",
+      "aisle": "通道 {value}",
+      "shelf": "货架 {value}",
+      "bin": "货位 {value}"
     },
     "activityTimeline": {
       "noActivity": "暂无活动记录",
       "system": "系统",
       "thisProduct": "此产品",
-      "moreChanges": "+ 另外 {count} 项更改"
+      "moreChanges": "+ 另外 {count} 项更改",
+      "actionOnProduct": {
+        "created": "创建了此产品",
+        "updated": "更新了此产品",
+        "deleted": "删除了此产品",
+        "viewed": "查看了此产品",
+        "other": "对此产品执行了 {action}"
+      }
     },
     "themeToggle": {
       "switchToLight": "切换到浅色模式",
       "switchToDark": "切换到深色模式"
     },
     "imageGallery": {
-      "noImages": "暂无图片"
+      "noImages": "暂无图片",
+      "close": "关闭",
+      "imageAlt": "{name} - 图片 {number}"
     },
     "imageUploader": {
       "dragDrop": "将图片拖放到此处，或点击浏览",
@@ -1775,6 +2565,62 @@
       "moveRight": "右移",
       "remove": "删除",
       "noImagesHint": "尚未上传图片。第一张图片将作为产品主图。"
+    },
+    "relativeTime": {
+      "justNow": "刚刚",
+      "minutesAgo": "{count} 分钟前",
+      "hoursAgo": "{count} 小时前",
+      "daysAgo": "{count} 天前"
+    },
+    "batchList": {
+      "title": "批次跟踪",
+      "addBatch": "添加批次",
+      "createFailed": "创建批次失败",
+      "batchNumberLabel": "批次号（留空则自动生成）",
+      "manufacturedDate": "生产日期",
+      "expiryDate": "到期日期",
+      "createBatch": "创建批次",
+      "columns": {
+        "batchNumber": "批次号",
+        "quantity": "数量",
+        "manufactured": "生产日期",
+        "expiry": "到期日期"
+      },
+      "expired": "（已过期）",
+      "empty": "暂无批次记录。",
+      "emptyHint": "点击“添加批次”记录第一个批次。"
+    },
+    "languageSwitcher": {
+      "ariaLabel": "语言：{name}"
+    },
+    "dataTable": {
+      "noData": "暂无数据。"
+    },
+    "serialList": {
+      "title": "序列号跟踪",
+      "addSerial": "添加序列号",
+      "createFailed": "创建序列号失败",
+      "updateFailed": "更新状态失败",
+      "all": "全部",
+      "statuses": {
+        "available": "可用",
+        "sold": "已售出",
+        "reserved": "已预留",
+        "damaged": "已损坏"
+      },
+      "serialNumber": "序列号",
+      "createSerial": "创建序列号",
+      "columns": {
+        "serialNumber": "序列号"
+      },
+      "markAsSold": "标记为已售出",
+      "markAsReserved": "标记为已预留",
+      "markAsDamaged": "标记为已损坏",
+      "markAsAvailable": "标记为可用",
+      "reserve": "预留",
+      "empty": "暂无序列号记录。",
+      "emptyHint": "点击“添加序列号”登记第一个序列号。",
+      "noMatches": "没有符合所选筛选条件的序列号。"
     }
   },
   "warehouses": {
@@ -1854,7 +2700,8 @@
       "badge": "默认仓库",
       "makeDefault": "设为默认",
       "confirm": "要将“{name}”设为默认仓库吗？",
-      "hint": "新订单将预先选中默认仓库。"
+      "hint": "新订单将预先选中默认仓库。",
+      "label": "默认"
     },
     "capacity": {
       "utilisation": "使用率",
@@ -1877,6 +2724,41 @@
       "reorder": "需补货",
       "shortIn": "{names} 库存不足",
       "save": "保存仓库库存水平"
+    },
+    "subtitle": "您的存储地点和库存分布。",
+    "updateWarehouse": "更新仓库",
+    "index": {
+      "searchLabel": "搜索仓库"
+    },
+    "create": {
+      "subtitle": "添加仓库地点及其设置。"
+    },
+    "edit": {
+      "title": "编辑仓库：{name}",
+      "subtitle": "更新仓库详情、联系信息和用户访问权限。"
+    },
+    "timezoneOptions": {
+      "stJohns": "纽芬兰时间（圣约翰斯）",
+      "halifax": "大西洋时间（哈利法克斯）",
+      "toronto": "东部时间（多伦多）",
+      "winnipeg": "中部时间（温尼伯）",
+      "edmonton": "山地时间（埃德蒙顿）",
+      "vancouver": "太平洋时间（温哥华）"
+    },
+    "show": {
+      "codeLabel": "编码：{code}",
+      "totalLocations": "库位总数",
+      "totalProductsStored": "存储产品总数",
+      "assignedUsers": "已分配用户",
+      "details": "仓库详情",
+      "manager": "负责人",
+      "noAddress": "未提供地址",
+      "locationsCount": "库位（{count}）",
+      "products": "产品",
+      "noLocations": "此仓库中没有库位",
+      "dangerZone": "危险操作",
+      "deleteWarehouse": "删除仓库",
+      "cannotUndo": "此操作无法撤销。"
     }
   },
   "workOrders": {
@@ -1932,7 +2814,8 @@
       "ready": "就绪",
       "noComponents": "此工单未记录组件。",
       "noComponentsDefined": "此组装产品尚未定义组件。请先在产品详情页面添加组件，再创建工单。",
-      "insufficientWarning": "部分组件库存不足。您仍可创建工单，但在补足库存之前无法开始生产。"
+      "insufficientWarning": "部分组件库存不足。您仍可创建工单，但在补足库存之前无法开始生产。",
+      "unknown": "未知"
     },
     "actions": {
       "startProduction": "开始生产",
@@ -1955,7 +2838,19 @@
       "cancelled": "取消时间",
       "lastUpdated": "最后更新"
     },
-    "cancelledBanner": "此工单已取消。"
+    "cancelledBanner": "此工单已取消。",
+    "create": {
+      "materialsNeeded": "生产 {count} 件 {name} 所需的物料 | 生产 {count} 件 {name} 所需的物料"
+    },
+    "index": {
+      "filter": "筛选"
+    },
+    "show": {
+      "headTitle": "工单 {number}",
+      "deleteConfirm": "要删除此工单吗？此操作无法撤销。",
+      "dangerZone": "危险操作",
+      "releaseHint": "所有已预留的组件将被释放回库存。"
+    }
   },
   "reportBuilder": {
     "title": "自定义报表",
@@ -2454,6 +3349,78 @@
       "save": "保存明细",
       "cancel": "取消",
       "hint": "修改放回货架的商品。只有在收到退货时库存才会变动。"
+    },
+    "index": {
+      "title": "退货与换货",
+      "description": "跟踪所有订单的退货、换货和退款。",
+      "newReturn": "新建退货",
+      "searchPlaceholder": "按退货单号、订单号或客户搜索...",
+      "returnNumber": "退货单号",
+      "orderNumber": "订单号",
+      "items": "商品",
+      "refund": "退款",
+      "empty": "未找到退货记录。"
+    },
+    "columns": {
+      "qty": "数量",
+      "condition": "状况",
+      "restock": "重新入库"
+    },
+    "conditions": {
+      "new": "全新（未拆封）",
+      "used": "已使用（已拆封）",
+      "damaged": "已损坏"
+    },
+    "create": {
+      "headTitle": "创建退货 - 订单 #{number}",
+      "title": "创建退货 / 换货",
+      "fromOrder": "来自订单 #{number}",
+      "backToOrder": "返回订单",
+      "details": "退货详情",
+      "typeReturn": "退货（退款）",
+      "reasonRequired": "原因 *",
+      "reasonPlaceholder": "退货或换货原因...",
+      "notesOptional": "备注（选填）",
+      "notesPlaceholder": "其他备注...",
+      "selectItems": "选择要退回的商品",
+      "ordered": "已订购：{count}",
+      "alreadyReturned": "（已退回 {count}）",
+      "maxReturnable": "最多可退：{count}",
+      "selectedSummary": "已选择 {count} 件商品进行{type} | 已选择 {count} 件商品进行{type}",
+      "estimatedRefund": "预计退款：",
+      "processing": "处理中...",
+      "submit": "提交退货申请"
+    },
+    "show": {
+      "headTitle": "退货 {number}",
+      "title": "退货 #{number}",
+      "createdOn": "创建于 {date}",
+      "approve": "批准退货",
+      "markReceived": "标记为已收到",
+      "complete": "完成退货",
+      "reject": "拒绝退货",
+      "backToReturns": "返回退货列表",
+      "items": "退货商品",
+      "unknownProduct": "未知产品",
+      "conditionFor": "{name} 的状况",
+      "restockFor": "重新入库 {name}",
+      "noItems": "此退货没有商品。",
+      "details": "详情",
+      "reason": "原因",
+      "forOrder": "关联订单",
+      "summary": "摘要",
+      "returnNumber": "退货单号",
+      "completed": "完成时间",
+      "processedBy": "处理人",
+      "refundAmount": "退款金额",
+      "pendingHint": "批准以继续处理，或拒绝此退货。",
+      "approvedHint": "商品到达后标记为已收到。标记为重新入库的商品将重新计入库存。",
+      "receivedHint": "完成退货以结束流程。",
+      "dangerZone": "危险操作",
+      "rejectWarning": "拒绝后此退货将被关闭。此操作无法撤销。",
+      "rejectReason": "拒绝原因",
+      "rejectPlaceholder": "为什么拒绝此退货？",
+      "rejecting": "拒绝中..."
     }
   },
   "portal": {
@@ -2677,5 +3644,60 @@
   "legal": {
     "licensedUnder": "基于 {license} 许可",
     "sourceCode": "源代码"
+  },
+  "stockTransfers": {
+    "title": "库存调拨",
+    "subtitle": "在库位之间调拨库存。",
+    "newTransfer": "新建调拨",
+    "backToList": "返回列表",
+    "transferDetails": "调拨详情",
+    "transferItems": "调拨商品",
+    "fromLocation": "调出库位",
+    "toLocation": "调入库位",
+    "statuses": {
+      "pending": "待处理",
+      "in_transit": "运输中",
+      "completed": "已完成",
+      "cancelled": "已取消"
+    },
+    "create": {
+      "title": "创建库存调拨",
+      "selectSource": "选择调出库位",
+      "selectDestination": "选择调入库位",
+      "notesPlaceholder": "添加关于此次调拨的备注...",
+      "addItem": "添加商品",
+      "selectProduct": "选择产品",
+      "productOption": "{name}（{sku}）- 库存：{stock}",
+      "qty": "数量",
+      "available": "可用：{count}",
+      "itemNotesPlaceholder": "商品备注...",
+      "totalProducts": "商品总数：{count} 个产品 | 商品总数：{count} 个产品",
+      "totalUnits": "总数量：{count} 件 | 总数量：{count} 件",
+      "createTransfer": "创建调拨"
+    },
+    "index": {
+      "searchPlaceholder": "按调拨单号搜索...",
+      "filter": "筛选",
+      "transferNumber": "调拨单号",
+      "from": "调出",
+      "to": "调入",
+      "items": "商品",
+      "empty": "未找到库存调拨。创建第一个调拨，在库位之间转移库存。",
+      "itemCount": "{count} 件商品 | {count} 件商品",
+      "showingTransfers": "显示第 {from} 至 {to} 条，共 {total} 条调拨"
+    },
+    "show": {
+      "headTitle": "调拨 {number}",
+      "subtitle": "库存调拨详情",
+      "transferNumber": "调拨单号",
+      "transferredBy": "调拨人",
+      "completedAt": "完成时间",
+      "processing": "处理中...",
+      "completeTransfer": "完成调拨",
+      "cancelTransfer": "取消调拨",
+      "completeHint": "完成调拨后，将从调出库位扣减库存并添加到调入库位。",
+      "confirmComplete": "确定要完成此调拨吗？库存水平将被调整。",
+      "confirmCancel": "确定要取消此调拨吗？"
+    }
   }
 }

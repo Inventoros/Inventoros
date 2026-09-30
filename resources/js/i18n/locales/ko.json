@@ -1,7 +1,102 @@
 {
   "stockAudits": {
     "completeConfirm": "이 실사를 완료할까요? 차이가 있는 항목마다 재고 조정이 생성됩니다.",
-    "completeUncountedConfirm": "{total}개 중 {uncounted}개 품목을 세지 않았습니다. 그래도 실사를 완료할까요? 세지 않은 품목은 현재 재고를 유지하며, 센 품목만 조정됩니다."
+    "completeUncountedConfirm": "{total}개 중 {uncounted}개 품목을 세지 않았습니다. 그래도 실사를 완료할까요? 세지 않은 품목은 현재 재고를 유지하며, 센 품목만 조정됩니다.",
+    "backToList": "목록으로 돌아가기",
+    "auditDetails": "실사 상세",
+    "types": {
+      "full": "전체 실사",
+      "cycle": "순환 실사",
+      "spot": "부분 점검"
+    },
+    "statuses": {
+      "draft": "초안",
+      "in_progress": "진행 중",
+      "completed": "완료됨",
+      "cancelled": "취소됨"
+    },
+    "itemStatuses": {
+      "pending": "대기 중",
+      "counted": "집계됨",
+      "verified": "확인됨",
+      "adjusted": "조정됨"
+    },
+    "fields": {
+      "name": "실사명",
+      "namePlaceholder": "예: 2026년 1분기 창고 순환 실사",
+      "descriptionPlaceholder": "이 실사의 목적을 설명하세요...",
+      "auditType": "실사 유형",
+      "typeHints": {
+        "full": "창고의 모든 제품을 집계합니다",
+        "cycle": "순환 일정에 따라 일부 제품을 집계합니다",
+        "spot": "특정 제품을 빠르게 점검합니다"
+      },
+      "location": "창고 위치",
+      "locationHint": "모든 위치의 제품을 포함하려면 비워 두세요"
+    },
+    "columns": {
+      "auditNumber": "실사 #",
+      "location": "위치",
+      "items": "품목",
+      "createdBy": "생성자",
+      "systemQty": "시스템 수량",
+      "countedQty": "실사 수량",
+      "discrepancy": "차이",
+      "countedBy": "집계자"
+    },
+    "index": {
+      "description": "재고 실사와 순환 실사를 관리합니다.",
+      "newAudit": "새 실사",
+      "searchPlaceholder": "실사 번호 또는 이름으로 검색...",
+      "empty": "재고 실사를 찾을 수 없습니다",
+      "createFirst": "첫 실사 생성"
+    },
+    "create": {
+      "title": "재고 실사 생성",
+      "description": "새 재고 실사 또는 순환 실사를 설정합니다.",
+      "notesPlaceholder": "실사 담당자를 위한 추가 메모 또는 지침...",
+      "selectProducts": "제품 선택",
+      "selectProductsHint": "이 실사에 포함할 제품을 선택하세요. 비워 두면 모든 제품이 포함됩니다.",
+      "selectProductsHintAtLocation": "이 실사에 포함할 제품을 선택하세요. 비워 두면 선택한 위치의 모든 제품이 포함됩니다.",
+      "searchProducts": "이름 또는 SKU로 제품 검색...",
+      "selectAll": "전체 선택 (제품 {count}개) | 전체 선택 (제품 {count}개)",
+      "inStock": "재고",
+      "fullAuditInfo": "모든 활성 제품이 이 실사에 자동으로 포함됩니다. 생성 후 품목을 검토할 수 있습니다.",
+      "fullAuditInfoAtLocation": "선택한 위치의 모든 활성 제품이 이 실사에 자동으로 포함됩니다. 생성 후 품목을 검토할 수 있습니다.",
+      "submit": "실사 생성"
+    },
+    "edit": {
+      "title": "재고 실사 편집",
+      "backToAudit": "실사로 돌아가기",
+      "notesPlaceholder": "추가 메모 또는 지침...",
+      "submit": "실사 업데이트"
+    },
+    "show": {
+      "pageTitle": "실사 {number}",
+      "totalItems": "전체 품목",
+      "progress": "진행률",
+      "discrepancies": "차이",
+      "started": "시작일",
+      "completed": "완료일",
+      "auditItems": "실사 품목",
+      "countedProgress": "({total}개 중 {counted}개 집계됨)",
+      "count": "집계",
+      "recount": "재집계",
+      "countNotesPlaceholder": "메모 (선택사항)",
+      "noItems": "이 실사에 품목이 없습니다",
+      "processing": "처리 중...",
+      "startAudit": "실사 시작",
+      "completeAudit": "실사 완료",
+      "deleteAudit": "실사 삭제",
+      "startHint": "실사를 시작하면 현재 시스템 재고 수준이 기록되고 집계를 시작할 수 있습니다.",
+      "completeHint": "실사를 완료하면 시스템 수량과 실사 수량 간 차이에 대해 재고 조정이 생성됩니다.",
+      "dangerZone": "위험 구역",
+      "deleteHint": "이 실사를 삭제하면 영구적으로 제거되며 되돌릴 수 없습니다.",
+      "startConfirm": "이 실사를 시작하시겠습니까? 시스템 수량이 현재 수준으로 기록됩니다.",
+      "deleteConfirm": "이 실사를 정말 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.",
+      "updateCountFailed": "집계 업데이트에 실패했습니다",
+      "saveCountError": "집계를 저장하는 중 오류가 발생했습니다"
+    }
   },
   "common": {
     "save": "저장",
@@ -192,6 +287,32 @@
       "queueBacklog": "15분 넘게 대기 중인 큐 작업: {count}. 이메일과 웹훅이 발송되지 않고 있습니다.",
       "failedJobs": "지난 24시간 동안 실패한 백그라운드 작업: {count}.",
       "help": "cron 작업이 매분 php artisan schedule:run을 실행하는지 확인하세요. 자세한 내용은 cPanel 가이드를 참고하세요."
+    },
+    "description": "재고, 주문 및 재주문 우선순위 요약입니다.",
+    "customize": "사용자 지정",
+    "hints": {
+      "activeInCatalog": "카탈로그에서 활성",
+      "belowMinimum": "최소 수준 미만",
+      "allTime": "전체 기간"
+    },
+    "widgets": {
+      "statsOverview": "통계 개요",
+      "revenueChart": "매출 및 보조 통계",
+      "stockMovements": "재고 변동",
+      "lowStockAlerts": "재고 부족 알림",
+      "topProducts": "인기 제품",
+      "stockByCategory": "카테고리별 재고",
+      "reorderSuggestions": "재주문 제안"
+    },
+    "reorderSuggestions": {
+      "title": "재주문 제안",
+      "subtitle": "재주문점 미만인 제품입니다. 제안 수량은 제품 설정과 공급업체 최소 주문량을 기준으로 합니다.",
+      "reorderAt": "재주문 기준"
+    },
+    "customizeModal": {
+      "title": "대시보드 사용자 지정",
+      "help": "위젯을 켜거나 꺼서 대시보드에 표시하거나 숨기세요.",
+      "savePreferences": "환경설정 저장"
     }
   },
   "products": {
@@ -241,7 +362,8 @@
       "variantHint": "크기나 색상 같은 옵션을 추가하여 이 제품의 다양한 버전을 판매할 수 있습니다. 각 조합은 자체 가격과 재고를 가진 옵션으로 생성됩니다.",
       "variantStockHint": "옵션이 활성화되면 재고가 옵션별로 추적됩니다.",
       "notesPlaceholder": "이 제품에 대한 추가 메모...",
-      "createProduct": "제품 생성"
+      "createProduct": "제품 생성",
+      "subtitle": "가격, 재고, 옵션, 이미지와 함께 제품을 생성합니다."
     },
     "edit": {
       "title": "제품 편집",
@@ -288,7 +410,34 @@
       "outOfStock": "품절",
       "lowStock": "재고 부족",
       "inStock": "재고 있음",
-      "activityHistory": "활동 내역"
+      "activityHistory": "활동 내역",
+      "minHint": "최소 {count}",
+      "stockAtPrice": "재고 (가격 기준)",
+      "barcodeValue": "바코드: {barcode}",
+      "currencyValue": "통화: {currency}",
+      "confirmGenerateRandom": "이 제품의 새 랜덤 바코드를 생성하시겠습니까?",
+      "generateBarcodeFailed": "바코드 생성에 실패했습니다",
+      "confirmGenerateFromSku": "SKU에서 바코드를 생성하시겠습니까?",
+      "generateFromSkuFailed": "SKU에서 바코드 생성에 실패했습니다",
+      "bom": {
+        "title": "자재 명세서",
+        "addComponent": "구성품 추가",
+        "availableKitStock": "키트 가용 재고 (가장 적은 구성품 기준)",
+        "searchProduct": "제품 검색",
+        "searchPlaceholder": "이름 또는 SKU로 검색...",
+        "stockInline": "(재고: {count})",
+        "searching": "검색 중...",
+        "qtyRequired": "필요 수량",
+        "availableStock": "가용 재고",
+        "unknown": "알 수 없음",
+        "remove": "제거",
+        "empty": "아직 추가된 구성품이 없습니다.",
+        "emptyHint": "\"구성품 추가\"를 클릭하여 자재 명세서를 작성하세요.",
+        "addFailed": "구성품 추가에 실패했습니다",
+        "updateQuantityFailed": "수량 업데이트에 실패했습니다",
+        "confirmRemove": "자재 명세서에서 이 구성품을 제거하시겠습니까?",
+        "removeFailed": "구성품 제거에 실패했습니다"
+      }
     },
     "quickAddCategory": {
       "title": "빠른 카테고리 추가",
@@ -303,6 +452,56 @@
       "locationCode": "위치 코드",
       "codePlaceholder": "예: WH-A",
       "descPlaceholder": "선택적 설명..."
+    },
+    "subtitle": "카탈로그, 재고 수준 및 재주문 기준입니다.",
+    "duplicate": "복제",
+    "printBarcode": "바코드 인쇄",
+    "variantsCount": "옵션 {count}개 | 옵션 {count}개",
+    "types": {
+      "standard": "일반",
+      "kit": "키트",
+      "assembly": "조립품"
+    },
+    "trackingTypes": {
+      "none": "추적 안 함",
+      "batch": "배치 추적",
+      "serial": "일련번호 추적"
+    },
+    "form": {
+      "productType": "제품 유형",
+      "productTypeHint": "키트는 구성품을 묶어 판매합니다. 조립품은 생산하려면 작업 지시가 필요합니다.",
+      "additionalCurrencies": "추가 통화",
+      "selectCurrency": "통화 선택...",
+      "addPriceInCurrency": "+ 다른 통화로 가격 추가",
+      "reorderPoint": "재주문점",
+      "reorderPointHint": "자동 재주문을 트리거하는 재고 수준",
+      "reorderQuantity": "재주문 수량",
+      "reorderQuantityHint": "재고가 재주문점에 도달했을 때 주문할 수량",
+      "leaveEmptyToDisable": "비활성화하려면 비워 두세요",
+      "inventoryTracking": "재고 추적",
+      "inventoryTrackingHint": "이 제품의 개별 단위를 추적할 방법을 선택하세요.",
+      "createCategoryFailed": "카테고리 생성에 실패했습니다. 다시 시도해 주세요.",
+      "createLocationFailed": "위치 생성에 실패했습니다. 다시 시도해 주세요."
+    },
+    "index": {
+      "selectedCount": "제품 {count}개 선택됨 | 제품 {count}개 선택됨",
+      "confirmBulkDelete": "제품 {count}개를 정말 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다. | 제품 {count}개를 정말 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다."
+    },
+    "bulk": {
+      "changeCategory": "카테고리 변경",
+      "updateCategoryFor": "선택한 제품 {count}개의 카테고리를 업데이트합니다. | 선택한 제품 {count}개의 카테고리를 업데이트합니다.",
+      "selectCategory": "카테고리 선택...",
+      "updateCategory": "카테고리 업데이트",
+      "adjustPrice": "가격 조정",
+      "adjustPriceFor": "선택한 제품 {count}개의 가격을 조정합니다. | 선택한 제품 {count}개의 가격을 조정합니다.",
+      "adjustmentType": "조정 유형",
+      "percentage": "백분율 (%)",
+      "fixedAmount": "고정 금액 ($)",
+      "value": "값",
+      "useNegative": "(감소하려면 음수 사용)",
+      "percentagePlaceholder": "예: +10%는 10, -20%는 -20",
+      "fixedPlaceholder": "예: 5.00 또는 -3.50",
+      "applyPriceChange": "가격 변경 적용"
     }
   },
   "orders": {
@@ -372,7 +571,9 @@
       "searchingCustomers": "검색 중...",
       "noCustomersFound": "일치하는 고객이 없습니다. 일회성 고객의 정보를 아래에 입력하세요.",
       "linkedCustomer": "저장된 고객 {name}에 연결됨",
-      "clearCustomer": "일회성 고객 사용"
+      "clearCustomer": "일회성 고객 사용",
+      "description": "고객 주문과 주문 품목을 추가합니다.",
+      "addAtLeastOneProduct": "주문에 제품을 하나 이상 추가해 주세요."
     },
     "show": {
       "orderNumber": "주문 #{number}",
@@ -415,7 +616,10 @@
       "approvalNotesPlaceholder": "승인에 대한 메모 (선택)...",
       "rejectionNotesPlaceholder": "거부 사유...",
       "approve": "승인",
-      "reject": "거부"
+      "reject": "거부",
+      "downloadInvoice": "청구서 다운로드",
+      "previewInvoice": "청구서 미리보기",
+      "createReturn": "반품 생성"
     },
     "edit": {
       "title": "주문 편집",
@@ -432,7 +636,11 @@
       "deliveredAt": "배달일:",
       "updatingOrder": "주문 업데이트 중...",
       "updateOrder": "주문 업데이트",
-      "viewDetails": "주문 상세 보기"
+      "viewDetails": "주문 상세 보기",
+      "removeItem": "품목 제거"
+    },
+    "index": {
+      "description": "모든 채널의 고객 주문입니다."
     }
   },
   "purchaseOrders": {
@@ -465,13 +673,15 @@
       "unitCost": "단가",
       "supplierSku": "공급업체 SKU",
       "orderItems": "주문 품목 ({count})",
-      "createPo": "발주 생성"
+      "createPo": "발주 생성",
+      "description": "발주를 생성하고 입고할 품목을 추가합니다."
     },
     "edit": {
       "title": "발주 편집",
       "backToPo": "발주로 돌아가기",
       "updatePo": "발주 업데이트",
-      "viewDetails": "상세 보기"
+      "viewDetails": "상세 보기",
+      "poNumber": "발주 #{number}"
     },
     "show": {
       "receiveItems": "입고 처리",
@@ -484,7 +694,14 @@
       "sendToSupplier": "공급업체에 발송",
       "editPo": "발주 편집",
       "cancelOrder": "주문 취소",
-      "deleteOrder": "주문 삭제"
+      "deleteOrder": "주문 삭제",
+      "confirmCancel": "이 발주를 정말 취소하시겠습니까?",
+      "orderDateOn": "주문일 {date}",
+      "downloadPdf": "PDF 다운로드",
+      "previewPdf": "PDF 미리보기",
+      "itemsCount": "품목 ({count})",
+      "supplierSkuLine": "공급업체: {sku}",
+      "cannotUndo": "이 작업은 되돌릴 수 없습니다."
     },
     "receive": {
       "title": "입고 처리 - {poNumber}",
@@ -497,7 +714,11 @@
       "complete": "완료",
       "readyToReceive": "{count}개 품목 입고 준비 완료",
       "selectQuantities": "입고 수량을 선택하세요",
-      "confirmReceiving": "입고 확인"
+      "confirmReceiving": "입고 확인",
+      "receive": "입고",
+      "headTitle": "입고 처리 - {poNumber}",
+      "description": "이 발주에 대해 입고된 수량을 기록합니다.",
+      "readyToReceiveCount": "{count}개 품목 입고 준비 완료 | {count}개 품목 입고 준비 완료"
     },
     "currencies": {
       "usd": "USD - 미국 달러",
@@ -505,7 +726,12 @@
       "gbp": "GBP - 영국 파운드",
       "cad": "CAD - 캐나다 달러",
       "aud": "AUD - 호주 달러"
-    }
+    },
+    "index": {
+      "description": "공급업체에 보내는 재입고 주문입니다."
+    },
+    "confirmDelete": "\"{number}\"을(를) 정말 삭제하시겠습니까?",
+    "noSku": "SKU 없음"
   },
   "productSuppliers": {
     "title": "공급업체",
@@ -568,7 +794,8 @@
       "businessDetails": "사업 정보",
       "paymentTerms": "결제 조건",
       "paymentTermsPlaceholder": "예: 30일 이내",
-      "createSupplier": "공급업체 생성"
+      "createSupplier": "공급업체 생성",
+      "description": "공급업체와 연락처, 주소, 사업 정보를 추가합니다."
     },
     "edit": {
       "title": "공급업체 편집",
@@ -587,7 +814,14 @@
       "supplierCode": "공급업체 코드",
       "paymentTerms": "결제 조건",
       "editSupplier": "공급업체 편집",
-      "deleteSupplier": "공급업체 삭제"
+      "deleteSupplier": "공급업체 삭제",
+      "code": "코드: {code}",
+      "supplierDetails": "공급업체 상세",
+      "products": "제품",
+      "deleteWarning": "공급업체가 영구적으로 삭제되며 되돌릴 수 없습니다."
+    },
+    "index": {
+      "description": "공급업체와 공급하는 제품입니다."
     }
   },
   "customers": {
@@ -614,7 +848,8 @@
       "paymentTerms": "결제 조건",
       "paymentTermsPlaceholder": "예: 30일 이내",
       "creditLimit": "신용 한도",
-      "createCustomer": "고객 생성"
+      "createCustomer": "고객 생성",
+      "description": "고객과 청구, 배송, 사업 정보를 추가합니다."
     },
     "edit": {
       "title": "고객 편집",
@@ -637,6 +872,9 @@
       "recentOrders": "최근 주문",
       "noOrdersYet": "아직 주문이 없습니다",
       "deleteCustomer": "고객 삭제"
+    },
+    "index": {
+      "description": "고객과 고객이 주문한 내역입니다."
     }
   },
   "categories": {
@@ -650,7 +888,13 @@
     "editCategory": "카테고리 편집",
     "categoryName": "카테고리명",
     "namePlaceholder": "예: 전자제품",
-    "descPlaceholder": "선택적 설명..."
+    "descPlaceholder": "선택적 설명...",
+    "index": {
+      "description": "카탈로그를 카테고리별로 정리하세요."
+    },
+    "confirmDelete": "\"{name}\"을(를) 정말 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.",
+    "productsCount": "제품 {count}개 | 제품 {count}개",
+    "updateCategory": "카테고리 업데이트"
   },
   "locations": {
     "title": "창고 위치",
@@ -672,7 +916,12 @@
     "noWarehouse": "창고 없음",
     "capacity": "용량 (단위)",
     "capacityHint": "선택사항. 위치가 얼마나 찼는지 표시하는 데 사용됩니다.",
-    "capacityValue": "용량: {capacity}개"
+    "capacityValue": "용량: {capacity}개",
+    "subtitle": "재고가 보관되는 실제 장소입니다.",
+    "close": "닫기",
+    "productsCount": "제품 {count}개 | 제품 {count}개",
+    "updateLocation": "위치 업데이트",
+    "confirmDelete": "\"{name}\"을(를) 정말 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다."
   },
   "reports": {
     "title": "보고서 및 분석",
@@ -740,7 +989,9 @@
       "current": "현재",
       "deficit": "부족분",
       "allWellStocked": "모든 제품의 재고가 충분합니다!",
-      "noProductsBelowMin": "최소 재고 수준 이하인 제품이 없습니다"
+      "noProductsBelowMin": "최소 재고 수준 이하인 제품이 없습니다",
+      "min": "최소",
+      "max": "최대"
     },
     "categoryPerformance": {
       "title": "카테고리 성과 보고서",
@@ -889,6 +1140,16 @@
       "loss": "분실",
       "return": "반품",
       "correction": "수정"
+    },
+    "index": {
+      "dataSources": {
+        "products": "제품",
+        "orders": "주문",
+        "stock_adjustments": "재고 조정",
+        "customers": "고객",
+        "suppliers": "공급업체",
+        "purchase_orders": "발주"
+      }
     }
   },
   "stockAdjustments": {
@@ -919,7 +1180,13 @@
       "negativeWarningMsg": "이 조정으로 인해 재고가 마이너스가 됩니다. 수량을 확인해 주세요.",
       "createAdjustment": "조정 생성",
       "stockIncrease": "재고 증가",
-      "stockDecrease": "재고 감소"
+      "stockDecrease": "재고 감소",
+      "currentStockValue": "현재 재고: {stock}",
+      "locationOptional": "위치 (선택사항)",
+      "noSpecificLocation": "특정 위치 없음",
+      "locationHint": "위치별 재고 내역이 일치하도록 이 조정을 특정 위치에 적용하세요. 총 재고만 조정하려면 비워 두세요.",
+      "quantityPlaceholder": "추가하려면 양수, 차감하려면 음수를 입력하세요",
+      "negativeWarningValue": "이 조정으로 재고가 마이너스({stock})가 됩니다. 수량을 확인해 주세요."
     },
     "show": {
       "title": "재고 조정 상세",
@@ -939,7 +1206,30 @@
       "finalStock": "최종 재고",
       "manualAdjustment": "수동 조정",
       "stockRecount": "재고 실사",
-      "order": "주문"
+      "order": "주문",
+      "unitsCount": "{count}개 | {count}개"
+    },
+    "variantAdjuster": {
+      "title": "재고 조정: {name}",
+      "failed": "재고 조정에 실패했습니다"
+    },
+    "types": {
+      "manual": "수동 조정",
+      "order": "주문",
+      "return": "반품",
+      "damage": "파손",
+      "loss": "분실",
+      "recount": "재고 실사",
+      "correction": "정정",
+      "opening_stock": "기초 재고"
+    },
+    "index": {
+      "allProducts": "모든 제품",
+      "dateFrom": "시작일",
+      "dateTo": "종료일",
+      "before": "이전",
+      "change": "변동",
+      "after": "이후"
     }
   },
   "importExport": {
@@ -967,7 +1257,8 @@
       "includeNames": "제품명, SKU 및 바코드",
       "includePricing": "가격 및 통화 정보",
       "includeStock": "재고 수준 및 최소 재고",
-      "includeCategories": "카테고리 및 위치"
+      "includeCategories": "카테고리 및 위치",
+      "exportIncludesLabel": "내보내기 포함 항목:"
     },
     "import": {
       "title": "제품 가져오기",
@@ -991,7 +1282,14 @@
       "noteUpdate": "기존 제품(SKU 일치)은 업데이트됩니다",
       "noteCreate": "카테고리와 위치가 없으면 자동으로 생성됩니다",
       "noteCurrency": "미지정 시 기본 통화는 USD입니다",
-      "noteSkip": "유효하지 않은 행은 건너뛰고 보고됩니다"
+      "noteSkip": "유효하지 않은 행은 건너뛰고 보고됩니다",
+      "templateHelpLabel": "도움이 필요하신가요? 예시 데이터가 포함된 템플릿 파일을 다운로드하세요:",
+      "requiredFieldsLabel": "필수 필드:",
+      "importantNotesLabel": "중요 참고 사항:",
+      "fieldNameDesc": "제품명",
+      "fieldSkuDesc": "고유 SKU 식별자",
+      "fieldPriceDesc": "판매가",
+      "fieldStockDesc": "현재 재고 수량"
     },
     "pageDescription": "제품, 주문 및 사용자를 일괄 가져오기 및 내보내기합니다.",
     "tabs": {
@@ -1064,7 +1362,21 @@
       "ruleEscalation": "할당 권한이 있는 역할만 할당할 수 있습니다. 관리자가 아닌 사용자는 member만 가져올 수 있으며, 자신의 권한보다 넓은 역할은 부여할 수 없습니다."
     },
     "exportProducts": "제품 내보내기",
-    "importProducts": "제품 가져오기"
+    "importProducts": "제품 가져오기",
+    "exports": {
+      "title": "내 내보내기",
+      "description": "대용량 내보내기는 백그라운드에서 준비됩니다. 각 파일을 다운로드할 준비가 되면 알림을 보내 드립니다.",
+      "file": "파일",
+      "rows": "행",
+      "action": "작업",
+      "download": "다운로드",
+      "statuses": {
+        "pending": "대기 중",
+        "processing": "처리 중",
+        "completed": "완료됨",
+        "failed": "실패"
+      }
+    }
   },
   "notifications": {
     "title": "알림",
@@ -1081,7 +1393,20 @@
     "noNotifications": "알림 없음",
     "allCaughtUp": "모든 알림을 확인했습니다!",
     "noNewNotifications": "새 알림이 없습니다",
-    "viewAllNotifications": "전체 보기"
+    "viewAllNotifications": "전체 보기",
+    "confirmMarkAllRead": "모든 알림을 읽음으로 표시하시겠습니까?",
+    "confirmDelete": "이 알림을 삭제하시겠습니까?",
+    "confirmClearRead": "읽은 알림을 모두 지우시겠습니까?",
+    "allCount": "전체 ({count})",
+    "unreadCount": "읽지 않음 ({count})",
+    "readCount": "읽음 ({count})",
+    "viewDetailsLabel": "상세 보기",
+    "priorities": {
+      "low": "낮음",
+      "normal": "보통",
+      "high": "높음",
+      "urgent": "긴급"
+    }
   },
   "plugins": {
     "title": "플러그인",
@@ -1132,7 +1457,12 @@
       "notOwned": "연결된 계정에 아직 이 플러그인이 없습니다.",
       "viewOnMarketplace": "inventoros.com에서 보기",
       "readOnly": "마켓플레이스를 둘러볼 수 있습니다. 플러그인을 설치하려면 플러그인 관리 권한이 필요합니다."
-    }
+    },
+    "confirmDelete": "\"{name}\"을(를) 정말 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.",
+    "subtitle": "설치 가능한 플러그인으로 워크스페이스를 확장하세요.",
+    "versionLabel": "버전: {version}",
+    "authorLabel": "작성자:",
+    "requiresLabel": "요구 사항: {requires}"
   },
   "settings": {
     "title": "설정",
@@ -1147,7 +1477,8 @@
       "dateFormat": "날짜 형식",
       "timeFormat": "시간 형식",
       "userMgmtHint": "사용자 관리 기능은 사용자 섹션에서 이용할 수 있습니다.",
-      "goToUserMgmt": "사용자 관리로 이동"
+      "goToUserMgmt": "사용자 관리로 이동",
+      "description": "조직의 프로필과 지역 환경설정을 관리합니다."
     },
     "account": {
       "title": "계정 설정",
@@ -1179,7 +1510,8 @@
       "dark": "다크",
       "auto": "자동",
       "language": "언어",
-      "itemsPerPage": "페이지당 항목 수"
+      "itemsPerPage": "페이지당 항목 수",
+      "description": "프로필, 비밀번호, 알림 및 환경설정을 관리합니다."
     },
     "email": {
       "title": "이메일 설정",
@@ -1213,7 +1545,9 @@
       "sendTest": "테스트 이메일 발송",
       "sending": "발송 중...",
       "saveSettings": "이메일 설정 저장",
-      "testSuccess": "테스트 이메일을 보냈습니다."
+      "testSuccess": "테스트 이메일을 보냈습니다.",
+      "description": "워크스페이스의 이메일 및 알림 발송 방식을 구성합니다.",
+      "fromNamePlaceholder": "회사 이름"
     },
     "notificationPreferences": {
       "title": "이메일 알림 설정",
@@ -1290,8 +1624,46 @@
         "deleteWebhook": "Webhook 삭제",
         "integrationGuide": "통합 가이드",
         "signatureHeader": "서명 헤더",
-        "verification": "검증"
-      }
+        "verification": "검증",
+        "headTitle": "Webhook: {name}",
+        "description": "Webhook 구성 및 전달 활동입니다.",
+        "sendTestShort": "테스트 발송",
+        "secretHidden": "보안을 위해 숨겨져 있습니다. 새 시크릿을 발급하려면 재생성하세요. 한 번만 표시됩니다.",
+        "createdAt": "생성일",
+        "subscribedEventsCount": "구독된 이벤트 ({count})",
+        "deliveryStatuses": {
+          "success": "성공",
+          "pending": "대기 중",
+          "failed": "실패"
+        },
+        "noResponseBody": "응답 본문 없음",
+        "otherGroup": "기타",
+        "signatureHeaderDesc": "모든 Webhook 페이로드는 {header} 헤더에 서명을 포함합니다.",
+        "verificationDesc": "시크릿을 사용해 원본 요청 본문의 HMAC-SHA256을 계산하여 서명을 검증하세요.",
+        "responseDesc": "수신 확인을 위해 2xx 상태 코드를 반환하세요. 실패한 전달은 최대 5회까지 재시도됩니다.",
+        "deleteDesc": "이 Webhook과 모든 전달 로그를 영구적으로 삭제합니다. 이 작업은 되돌릴 수 없습니다.",
+        "confirmDelete": "\"{name}\"을(를) 정말 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.",
+        "confirmRegenerate": "시크릿을 정말 재생성하시겠습니까? 수신 애플리케이션의 시크릿도 업데이트해야 합니다."
+      },
+      "description": "실시간 이벤트 알림을 받는 외부 서비스입니다.",
+      "signingSecret": "서명 시크릿",
+      "secretShownOnce": "지금 복사하세요. 보안을 위해 한 번만 표시되며 나중에 다시 확인할 수 없습니다.",
+      "confirmDelete": "\"{name}\"을(를) 정말 삭제하시겠습니까?",
+      "createdByName": "생성자: {name}",
+      "unknownCreator": "알 수 없음",
+      "eventCount": "이벤트 {count}개 | 이벤트 {count}개",
+      "deliveriesTotal": "총 {count}건",
+      "namePlaceholder": "내 Webhook"
+    },
+    "description": "워크스페이스, 계정 및 통합을 관리합니다.",
+    "hub": {
+      "accountDescription": "언어를 포함한 프로필, 비밀번호 및 개인 환경설정을 업데이트합니다.",
+      "notificationsDescription": "받을 이메일 및 앱 내 알림을 선택합니다.",
+      "twoFactorTitle": "2단계 인증",
+      "twoFactorDescription": "인증 앱의 일회용 코드로 계정을 보호합니다.",
+      "emailDescription": "조직의 이메일 발송 방식(SMTP, Mailgun 또는 SendGrid)을 구성합니다.",
+      "webhooksDescription": "외부 서비스를 연결하고 실시간 이벤트 알림을 전달합니다.",
+      "updatesDescription": "새 버전을 확인하고, 애플리케이션을 업데이트하고, 백업을 관리합니다."
     }
   },
   "admin": {
@@ -1317,7 +1689,8 @@
         "additionalRoles": "추가 역할 (선택사항)",
         "additionalRolesHint": "특정 권한 세트가 있는 사용자 정의 역할을 할당합니다.",
         "createUser": "사용자 생성",
-        "success": "사용자가 성공적으로 생성되었습니다."
+        "success": "사용자가 성공적으로 생성되었습니다.",
+        "subtitle": "새 사용자 계정을 생성하고 역할을 할당합니다."
       },
       "edit": {
         "title": "사용자 편집",
@@ -1329,7 +1702,11 @@
         "customRoles": "추가 사용자 정의 역할 (선택사항)",
         "customRolesHint": "조직을 위해 생성된 사용자 정의 역할을 할당하여 특정 권한을 부여합니다.",
         "updateUser": "사용자 업데이트",
-        "success": "사용자가 성공적으로 업데이트되었습니다."
+        "success": "사용자가 성공적으로 업데이트되었습니다.",
+        "titleWithName": "사용자 편집: {name}",
+        "subtitle": "계정 상세, 기본 역할 및 사용자 정의 역할 할당을 업데이트합니다.",
+        "admin": "관리자",
+        "customRolesSelected": "사용자 정의 역할 {count}개 선택됨"
       },
       "show": {
         "title": "사용자 상세",
@@ -1349,7 +1726,16 @@
         "notVerified": "미인증",
         "deleteUser": "사용자 삭제",
         "confirmDelete": "{name}을(를) 정말 삭제하시겠습니까?",
-        "cannotUndo": "이 작업은 되돌릴 수 없습니다."
+        "cannotUndo": "이 작업은 되돌릴 수 없습니다.",
+        "titleWithName": "사용자: {name}"
+      },
+      "subtitle": "조직의 사용자를 관리하고 역할과 권한을 할당합니다.",
+      "noUsersTitle": "사용자를 찾을 수 없습니다.",
+      "noUsersHint": "\"사용자 추가\"를 클릭하여 첫 사용자를 생성하세요.",
+      "roles": {
+        "admin": "관리자",
+        "manager": "매니저",
+        "member": "멤버"
       }
     },
     "roles": {
@@ -1375,7 +1761,12 @@
         "deselectAll": "모두 해제",
         "totalPermissions": "총 {count}개 권한",
         "createRole": "역할 생성",
-        "success": "역할이 성공적으로 생성되었습니다."
+        "success": "역할이 성공적으로 생성되었습니다.",
+        "subtitle": "역할을 정의하고 권한을 할당합니다.",
+        "roleDetails": "역할 상세",
+        "namePlaceholder": "예: 창고 관리자",
+        "descriptionPlaceholder": "이 역할의 목적과 책임을 설명하세요...",
+        "permissionBreakdown": "(직접 {direct}개 + 세트 {sets}개에서 {fromSets}개)"
       },
       "edit": {
         "title": "역할 편집",
@@ -1387,7 +1778,10 @@
         "permissionsHint": "이 역할의 권한을 사용자 정의하세요. 카테고리명을 클릭하면 해당 카테고리의 모든 권한을 선택/해제할 수 있습니다.",
         "permissionsSelected": "{count}개 권한 선택됨",
         "updateRole": "역할 업데이트",
-        "success": "역할이 성공적으로 업데이트되었습니다."
+        "success": "역할이 성공적으로 업데이트되었습니다.",
+        "titleWithName": "역할 편집: {name}",
+        "subtitle": "역할 상세 정보와 권한을 업데이트합니다.",
+        "viewRole": "역할 보기"
       },
       "show": {
         "title": "역할 상세 및 권한",
@@ -1407,7 +1801,15 @@
         "deleteRole": "역할 삭제",
         "reassignFirst": "삭제 전 사용자를 재할당하세요",
         "systemRoleHint": "이것은 시스템 역할이므로 수정하거나 삭제할 수 없습니다.",
-        "confirmDelete": "{name} 역할을 정말 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다."
+        "confirmDelete": "{name} 역할을 정말 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.",
+        "otherCategory": "기타",
+        "titleWithName": "역할: {name}",
+        "permissionsWithCount": "권한 ({count})",
+        "noPermissions": "이 역할에 할당된 권한이 없습니다.",
+        "usersCountValue": "사용자 {count}명 | 사용자 {count}명",
+        "cannotDeleteWithUsers": "사용자가 할당된 역할은 삭제할 수 없습니다",
+        "deleteRoleTooltip": "역할 삭제",
+        "confirmDeleteRole": "{name} 역할을 정말 삭제하시겠습니까?"
       }
     },
     "activityLog": {
@@ -1473,7 +1875,16 @@
       "allCategories": "모든 카테고리",
       "securityBadge": "보안",
       "securityShortcut": "보안 이벤트",
-      "viewDetails": "상세 보기"
+      "viewDetails": "상세 보기",
+      "description": "워크스페이스 전체의 모든 변경 사항에 대한 감사 기록입니다.",
+      "exportCsv": "CSV 내보내기",
+      "exportXlsx": "XLSX 내보내기",
+      "searchDescription": "설명 검색",
+      "unknownUser": "알 수 없는 사용자",
+      "viewChanges": "변경 {count}건 보기 | 변경 {count}건 보기",
+      "daysAgo": "{count}일 전 | {count}일 전",
+      "hoursAgo": "{count}시간 전 | {count}시간 전",
+      "minutesAgo": "{count}분 전 | {count}분 전"
     },
     "update": {
       "title": "시스템 업데이트",
@@ -1507,11 +1918,335 @@
       "onGithub": "GitHub에서 가져옵니다",
       "autoBackup": "각 업데이트 전에 자동으로 백업이 생성됩니다",
       "maintenanceMode": "업데이트 중에는 애플리케이션이 유지보수 모드에 들어갑니다",
-      "autoMigrations": "업데이트 중 데이터베이스 마이그레이션이 자동으로 실행됩니다"
+      "autoMigrations": "업데이트 중 데이터베이스 마이그레이션이 자동으로 실행됩니다",
+      "checkFailed": "업데이트 확인에 실패했습니다. 다시 시도해 주세요.",
+      "confirmUpdate": "애플리케이션을 업데이트하시겠습니까? 백업이 자동으로 생성됩니다.",
+      "updateFailed": "업데이트에 실패했습니다. 로그를 확인해 주세요.",
+      "confirmBackup": "현재 설치본의 백업을 생성하시겠습니까?",
+      "backupCreated": "백업이 생성되었습니다!",
+      "backupFailed": "백업 생성에 실패했습니다. 로그를 확인해 주세요.",
+      "confirmRestore": "{file}에서 복원하시겠습니까? 현재 설치본을 덮어씁니다.",
+      "restoreCompleted": "복원이 완료되었습니다!",
+      "restoreFailed": "복원에 실패했습니다.",
+      "restoreError": "백업 복원에 실패했습니다. 로그를 확인해 주세요.",
+      "confirmDeleteBackup": "{file}을(를) 정말 삭제하시겠습니까?",
+      "deleteBackupFailed": "백업 삭제에 실패했습니다. 다시 시도해 주세요.",
+      "managerTitle": "업데이트 관리자",
+      "subtitle": "새 릴리스를 확인하고, 업데이트를 설치하고, 설치 백업을 관리합니다.",
+      "upToDateBadge": "최신 버전",
+      "fetchedFromRepo": "업데이트는 GitHub의 {repo}에서 가져옵니다."
     },
     "createRole": "역할 생성",
     "createUser": "사용자 생성",
-    "userDetails": "사용자 상세"
+    "userDetails": "사용자 상세",
+    "permissionCatalog": {
+      "permissions": {
+        "view_users": {
+          "label": "사용자 보기",
+          "description": "사용자 목록과 상세 정보를 볼 수 있습니다"
+        },
+        "create_users": {
+          "label": "사용자 생성",
+          "description": "새 사용자를 생성할 수 있습니다"
+        },
+        "edit_users": {
+          "label": "사용자 편집",
+          "description": "기존 사용자를 편집할 수 있습니다"
+        },
+        "delete_users": {
+          "label": "사용자 삭제",
+          "description": "사용자를 삭제할 수 있습니다"
+        },
+        "view_roles": {
+          "label": "역할 보기",
+          "description": "역할과 권한을 볼 수 있습니다"
+        },
+        "create_roles": {
+          "label": "역할 생성",
+          "description": "새 역할을 생성할 수 있습니다"
+        },
+        "edit_roles": {
+          "label": "역할 편집",
+          "description": "기존 역할을 편집할 수 있습니다"
+        },
+        "delete_roles": {
+          "label": "역할 삭제",
+          "description": "역할을 삭제할 수 있습니다"
+        },
+        "view_products": {
+          "label": "제품 보기",
+          "description": "제품 재고를 볼 수 있습니다"
+        },
+        "create_products": {
+          "label": "제품 생성",
+          "description": "새 제품을 추가할 수 있습니다"
+        },
+        "edit_products": {
+          "label": "제품 편집",
+          "description": "제품 상세 정보를 수정할 수 있습니다"
+        },
+        "delete_products": {
+          "label": "제품 삭제",
+          "description": "제품을 삭제할 수 있습니다"
+        },
+        "manage_stock": {
+          "label": "재고 수준 관리",
+          "description": "재고 수준을 조정하고 재고 이동 내역을 관리할 수 있습니다"
+        },
+        "transfer_stock": {
+          "label": "재고 이동",
+          "description": "위치 간 재고 이동을 생성하고 관리할 수 있습니다"
+        },
+        "manage_categories": {
+          "label": "카테고리 관리",
+          "description": "제품 카테고리를 생성하고 관리할 수 있습니다"
+        },
+        "manage_locations": {
+          "label": "위치 관리",
+          "description": "보관 위치를 생성하고 관리할 수 있습니다"
+        },
+        "view_customers": {
+          "label": "고객 보기",
+          "description": "고객 목록과 상세 정보를 볼 수 있습니다"
+        },
+        "create_customers": {
+          "label": "고객 생성",
+          "description": "새 고객을 생성할 수 있습니다"
+        },
+        "edit_customers": {
+          "label": "고객 편집",
+          "description": "기존 고객을 편집할 수 있습니다"
+        },
+        "delete_customers": {
+          "label": "고객 삭제",
+          "description": "고객을 삭제할 수 있습니다"
+        },
+        "view_suppliers": {
+          "label": "공급업체 보기",
+          "description": "공급업체 목록과 상세 정보를 볼 수 있습니다"
+        },
+        "create_suppliers": {
+          "label": "공급업체 생성",
+          "description": "새 공급업체를 생성할 수 있습니다"
+        },
+        "edit_suppliers": {
+          "label": "공급업체 편집",
+          "description": "기존 공급업체를 편집할 수 있습니다"
+        },
+        "delete_suppliers": {
+          "label": "공급업체 삭제",
+          "description": "공급업체를 삭제할 수 있습니다"
+        },
+        "view_purchase_orders": {
+          "label": "발주 보기",
+          "description": "발주를 볼 수 있습니다"
+        },
+        "create_purchase_orders": {
+          "label": "발주 생성",
+          "description": "새 발주를 생성할 수 있습니다"
+        },
+        "edit_purchase_orders": {
+          "label": "발주 편집",
+          "description": "발주를 편집할 수 있습니다"
+        },
+        "delete_purchase_orders": {
+          "label": "발주 삭제",
+          "description": "발주를 삭제할 수 있습니다"
+        },
+        "receive_purchase_orders": {
+          "label": "발주 입고",
+          "description": "발주 품목을 입고할 수 있습니다"
+        },
+        "approve_purchase_orders": {
+          "label": "발주 승인",
+          "description": "발송 전 승인이 필요한 발주를 승인하거나 거부할 수 있습니다"
+        },
+        "view_orders": {
+          "label": "주문 보기",
+          "description": "주문을 볼 수 있습니다"
+        },
+        "create_orders": {
+          "label": "주문 생성",
+          "description": "새 주문을 생성할 수 있습니다"
+        },
+        "edit_orders": {
+          "label": "주문 편집",
+          "description": "주문을 수정할 수 있습니다"
+        },
+        "delete_orders": {
+          "label": "주문 삭제",
+          "description": "주문을 삭제할 수 있습니다"
+        },
+        "approve_orders": {
+          "label": "주문 승인",
+          "description": "주문을 승인하거나 거부할 수 있습니다"
+        },
+        "view_payments": {
+          "label": "결제 보기",
+          "description": "주문 결제, 미결제 잔액 및 미수금을 볼 수 있습니다"
+        },
+        "record_payments": {
+          "label": "결제 기록",
+          "description": "주문 결제를 기록, 무효화 및 환불할 수 있습니다"
+        },
+        "view_settings": {
+          "label": "설정 보기",
+          "description": "시스템 설정을 볼 수 있습니다"
+        },
+        "edit_settings": {
+          "label": "설정 편집",
+          "description": "시스템 설정을 수정할 수 있습니다"
+        },
+        "manage_organization": {
+          "label": "조직 관리",
+          "description": "조직 상세 정보를 관리할 수 있습니다"
+        },
+        "view_plugins": {
+          "label": "플러그인 보기",
+          "description": "설치된 플러그인을 볼 수 있습니다"
+        },
+        "manage_plugins": {
+          "label": "플러그인 관리",
+          "description": "플러그인을 설치, 활성화 및 삭제할 수 있습니다"
+        },
+        "view_stock_audits": {
+          "label": "재고 실사 보기",
+          "description": "재고 실사와 순환 실사를 볼 수 있습니다"
+        },
+        "create_stock_audits": {
+          "label": "재고 실사 생성",
+          "description": "새 재고 실사를 생성할 수 있습니다"
+        },
+        "manage_stock_audits": {
+          "label": "재고 실사 관리",
+          "description": "재고 실사를 관리하고 시작, 완료 및 수량 조정을 할 수 있습니다"
+        },
+        "approve_stock_adjustments": {
+          "label": "재고 조정 승인",
+          "description": "재고 변경 전 승인이 필요한 재고 조정을 승인하거나 거부할 수 있습니다"
+        },
+        "approve_stock_transfers": {
+          "label": "재고 이동 승인",
+          "description": "출고 전 승인이 필요한 재고 이동을 승인하거나 거부할 수 있습니다"
+        },
+        "view_warehouses": {
+          "label": "창고 보기",
+          "description": "창고 목록과 상세 정보를 볼 수 있습니다"
+        },
+        "create_warehouses": {
+          "label": "창고 생성",
+          "description": "새 창고를 생성할 수 있습니다"
+        },
+        "edit_warehouses": {
+          "label": "창고 편집",
+          "description": "창고 설정을 편집할 수 있습니다"
+        },
+        "delete_warehouses": {
+          "label": "창고 삭제",
+          "description": "창고를 삭제할 수 있습니다"
+        },
+        "manage_warehouse_users": {
+          "label": "창고 사용자 관리",
+          "description": "창고에 사용자를 할당하거나 제외할 수 있습니다"
+        },
+        "access_all_warehouses": {
+          "label": "모든 창고 접근",
+          "description": "특정 창고에 할당된 경우에도 모든 창고의 재고를 조회하고 처리할 수 있습니다"
+        },
+        "manage_returns": {
+          "label": "반품 관리",
+          "description": "반품 및 교환을 생성하고 관리할 수 있습니다"
+        },
+        "view_shipments": {
+          "label": "배송 보기",
+          "description": "주문 배송, 추적 정보 및 배송 라벨을 볼 수 있습니다"
+        },
+        "create_shipments": {
+          "label": "배송 생성",
+          "description": "배송을 생성하고, 배송 라벨을 구매 및 무효화하고, 주문을 배송됨으로 표시할 수 있습니다"
+        },
+        "view_reports": {
+          "label": "보고서 보기",
+          "description": "시스템 보고서를 볼 수 있습니다"
+        },
+        "export_data": {
+          "label": "데이터 내보내기",
+          "description": "시스템에서 데이터를 내보낼 수 있습니다"
+        },
+        "import_data": {
+          "label": "데이터 가져오기",
+          "description": "시스템으로 데이터를 가져올 수 있습니다"
+        },
+        "view_activity_log": {
+          "label": "활동 로그 보기",
+          "description": "활동 및 감사 로그를 볼 수 있습니다"
+        }
+      },
+      "categories": {
+        "userManagement": "사용자 관리",
+        "roleManagement": "역할 관리",
+        "inventoryManagement": "재고 관리",
+        "customerManagement": "고객 관리",
+        "supplierManagement": "공급업체 관리",
+        "purchaseOrderManagement": "발주 관리",
+        "orderManagement": "주문 관리",
+        "payments": "결제",
+        "settings": "설정",
+        "plugins": "플러그인",
+        "warehouseManagement": "창고 관리",
+        "returnsManagement": "반품 관리",
+        "shipping": "배송",
+        "reportsData": "보고서 및 데이터"
+      },
+      "sets": {
+        "inventoryManager": {
+          "name": "재고 관리자",
+          "description": "제품, 카테고리, 위치를 포함한 재고 관리 전체 접근 권한."
+        },
+        "orderProcessor": {
+          "name": "주문 처리 담당자",
+          "description": "생성부터 완료까지 주문을 관리합니다."
+        },
+        "warehouseStaff": {
+          "name": "창고 직원",
+          "description": "제품을 조회하고 재고 수준을 관리합니다."
+        },
+        "purchasingAgent": {
+          "name": "구매 담당자",
+          "description": "공급업체와 발주를 관리합니다."
+        },
+        "approver": {
+          "name": "승인자",
+          "description": "결재가 필요한 발주, 재고 조정 및 재고 이동을 승인하거나 거부합니다."
+        },
+        "readOnlyAuditor": {
+          "name": "읽기 전용 감사자",
+          "description": "감사 목적으로 모든 데이터에 대한 조회 전용 접근 권한."
+        },
+        "userAdministrator": {
+          "name": "사용자 관리자",
+          "description": "사용자와 사용자의 접근 권한을 관리합니다."
+        },
+        "reportsViewer": {
+          "name": "보고서 조회자",
+          "description": "보고서 및 데이터 내보내기 기능에 대한 접근 권한."
+        }
+      },
+      "roles": {
+        "systemAdministrator": {
+          "name": "관리자",
+          "description": "모든 권한을 가진 전체 시스템 접근."
+        },
+        "systemManager": {
+          "name": "매니저",
+          "description": "재고, 주문, 카테고리를 관리하고 보고서를 볼 수 있습니다."
+        },
+        "systemMember": {
+          "name": "멤버",
+          "description": "할당된 작업을 조회하고 관리할 수 있는 기본 접근 권한."
+        }
+      }
+    }
   },
   "auth": {
     "login": {
@@ -1556,6 +2291,35 @@
       "linkSent": "가입 시 제공하신 이메일 주소로 새 인증 링크가 발송되었습니다.",
       "resend": "인증 이메일 재발송",
       "logOut": "로그아웃"
+    },
+    "twoFactorChallenge": {
+      "title": "2단계 인증 확인",
+      "codeHint": "인증 앱에 표시된 인증 코드를 입력해 주세요.",
+      "recoveryHint": "복구 코드 중 하나를 입력해 주세요.",
+      "code": "인증 코드",
+      "codePlaceholder": "6자리 코드 입력",
+      "recoveryCode": "복구 코드",
+      "recoveryPlaceholder": "복구 코드 입력",
+      "useCode": "인증 코드 사용",
+      "useRecovery": "복구 코드 사용",
+      "verify": "확인"
+    },
+    "twoFactor": {
+      "setupTitle": "2단계 인증 설정",
+      "title": "2단계 인증",
+      "description": "인증 앱으로 계정에 보안 계층을 한 단계 더 추가하세요.",
+      "enabled": "활성화됨",
+      "enabledTitle": "2단계 인증이 활성화되어 있습니다",
+      "enabledHint": "현재 계정에 2단계 인증이 활성화되어 있습니다. 비활성화하려면 비밀번호를 입력하세요.",
+      "password": "비밀번호",
+      "disable": "2단계 인증 비활성화",
+      "enable": "2단계 인증 활성화",
+      "scanHint": "인증 앱(Google Authenticator, Authy 등)으로 아래 QR 코드를 스캔한 다음, 인증 코드를 입력하여 2단계 인증을 활성화하세요.",
+      "manualKey": "또는 이 키를 직접 입력하세요:",
+      "verificationCode": "인증 코드",
+      "showRecoveryCodes": "복구 코드 표시",
+      "hideRecoveryCodes": "복구 코드 숨기기",
+      "recoveryHint": "이 복구 코드를 안전한 곳에 보관하세요. 인증 기기를 분실한 경우 계정에 접근하는 데 사용할 수 있습니다."
     }
   },
   "profile": {
@@ -1582,7 +2346,8 @@
       "confirmTitle": "정말 계정을 삭제하시겠습니까?",
       "confirmDescription": "계정이 삭제되면 모든 리소스와 데이터가 영구적으로 삭제됩니다. 계정을 영구적으로 삭제하려면 비밀번호를 입력해 주세요.",
       "password": "비밀번호"
-    }
+    },
+    "description": "계정 정보, 비밀번호 및 계정 삭제를 관리합니다."
   },
   "install": {
     "welcome": {
@@ -1634,7 +2399,9 @@
       "testing": "연결 테스트 중...",
       "dbExistsHint": "계속하기 전에 데이터베이스가 존재하는지 확인하세요. 설치 프로그램이 필요한 테이블을 생성합니다.",
       "installDatabase": "데이터베이스 설치",
-      "installing": "설치 중..."
+      "installing": "설치 중...",
+      "testFailed": "연결 테스트 실패: {error}",
+      "installFailed": "설치 실패: {error}"
     },
     "admin": {
       "title": "관리자 계정 생성",
@@ -1650,7 +2417,10 @@
       "confirmPasswordHint": "비밀번호를 확인하세요",
       "accessNote": "이 관리자 계정은 Inventoros 설치에 대한 전체 접근 권한을 갖습니다.",
       "completeInstallation": "설치 완료",
-      "creatingAccount": "계정 생성 중..."
+      "creatingAccount": "계정 생성 중...",
+      "orgNamePlaceholder": "예시 주식회사",
+      "fullNamePlaceholder": "홍길동",
+      "createFailed": "관리자 계정 생성 실패: {error}"
     },
     "complete": {
       "title": "설치 완료!",
@@ -1689,7 +2459,10 @@
       "availableVars": "사용 가능한 변수",
       "preview": "미리보기",
       "generating": "생성 중...",
-      "applySku": "SKU 적용"
+      "applySku": "SKU 적용",
+      "or": "또는",
+      "patternExample": "예: {example}",
+      "previewError": "미리보기 생성 중 오류가 발생했습니다"
     },
     "variantManager": {
       "productOptions": "제품 옵션",
@@ -1705,7 +2478,10 @@
       "autoGenerate": "자동 생성",
       "enableAll": "모두 활성화",
       "disableAll": "모두 비활성화",
-      "addOptionsHint": "크기나 색상 같은 옵션을 추가하여 제품 옵션을 생성하세요"
+      "addOptionsHint": "크기나 색상 같은 옵션을 추가하여 제품 옵션을 생성하세요",
+      "optionName": "옵션명",
+      "optionValues": "옵션 값 (쉼표로 구분)",
+      "addOptionButton": "옵션 추가 (예: 크기, 색상)"
     },
     "variantsTable": {
       "variant": "옵션",
@@ -1750,20 +2526,34 @@
       "cameraHint": "바코드에 카메라를 맞춰주세요",
       "locationFound": "위치를 찾았습니다",
       "productsHere": "이곳의 제품 {count}개",
-      "viewProductsHere": "이곳의 제품 보기"
+      "viewProductsHere": "이곳의 제품 보기",
+      "lookupFailed": "바코드 조회에 실패했습니다",
+      "stock": "재고",
+      "aisle": "통로 {value}",
+      "shelf": "선반 {value}",
+      "bin": "빈 {value}"
     },
     "activityTimeline": {
       "noActivity": "아직 기록된 활동이 없습니다",
       "system": "시스템",
       "thisProduct": "이 제품",
-      "moreChanges": "+{count}개 변경 더 보기"
+      "moreChanges": "+{count}개 변경 더 보기",
+      "actionOnProduct": {
+        "created": "이 제품을 생성함",
+        "updated": "이 제품을 업데이트함",
+        "deleted": "이 제품을 삭제함",
+        "viewed": "이 제품을 조회함",
+        "other": "이 제품: {action}"
+      }
     },
     "themeToggle": {
       "switchToLight": "라이트 모드로 전환",
       "switchToDark": "다크 모드로 전환"
     },
     "imageGallery": {
-      "noImages": "이미지가 없습니다"
+      "noImages": "이미지가 없습니다",
+      "close": "닫기",
+      "imageAlt": "{name} - 이미지 {number}"
     },
     "imageUploader": {
       "dragDrop": "이미지를 여기에 끌어다 놓거나 클릭하여 찾아보기",
@@ -1775,6 +2565,62 @@
       "moveRight": "오른쪽으로 이동",
       "remove": "삭제",
       "noImagesHint": "아직 업로드된 이미지가 없습니다. 첫 번째 이미지가 대표 제품 이미지로 사용됩니다."
+    },
+    "relativeTime": {
+      "justNow": "방금 전",
+      "minutesAgo": "{count}분 전",
+      "hoursAgo": "{count}시간 전",
+      "daysAgo": "{count}일 전"
+    },
+    "batchList": {
+      "title": "배치 추적",
+      "addBatch": "배치 추가",
+      "createFailed": "배치 생성에 실패했습니다",
+      "batchNumberLabel": "배치 번호 (비워 두면 자동 생성)",
+      "manufacturedDate": "제조일",
+      "expiryDate": "유효기간",
+      "createBatch": "배치 생성",
+      "columns": {
+        "batchNumber": "배치 #",
+        "quantity": "수량",
+        "manufactured": "제조일",
+        "expiry": "유효기간"
+      },
+      "expired": "(만료됨)",
+      "empty": "아직 기록된 배치가 없습니다.",
+      "emptyHint": "\"배치 추가\"를 클릭하여 첫 배치를 기록하세요."
+    },
+    "languageSwitcher": {
+      "ariaLabel": "언어: {name}"
+    },
+    "dataTable": {
+      "noData": "데이터가 없습니다."
+    },
+    "serialList": {
+      "title": "일련번호 추적",
+      "addSerial": "일련번호 추가",
+      "createFailed": "일련번호 생성에 실패했습니다",
+      "updateFailed": "상태 업데이트에 실패했습니다",
+      "all": "전체",
+      "statuses": {
+        "available": "사용 가능",
+        "sold": "판매됨",
+        "reserved": "예약됨",
+        "damaged": "파손됨"
+      },
+      "serialNumber": "일련번호",
+      "createSerial": "일련번호 생성",
+      "columns": {
+        "serialNumber": "일련번호 #"
+      },
+      "markAsSold": "판매됨으로 표시",
+      "markAsReserved": "예약됨으로 표시",
+      "markAsDamaged": "파손됨으로 표시",
+      "markAsAvailable": "사용 가능으로 표시",
+      "reserve": "예약",
+      "empty": "아직 기록된 일련번호가 없습니다.",
+      "emptyHint": "\"일련번호 추가\"를 클릭하여 첫 일련번호를 등록하세요.",
+      "noMatches": "선택한 필터와 일치하는 일련번호가 없습니다."
     }
   },
   "warehouses": {
@@ -1854,7 +2700,8 @@
       "badge": "기본 창고",
       "makeDefault": "기본으로 설정",
       "confirm": "\"{name}\"을(를) 기본 창고로 설정하시겠습니까?",
-      "hint": "새 주문에는 기본 창고가 미리 선택됩니다."
+      "hint": "새 주문에는 기본 창고가 미리 선택됩니다.",
+      "label": "기본"
     },
     "capacity": {
       "utilisation": "사용률",
@@ -1877,6 +2724,41 @@
       "reorder": "재주문",
       "shortIn": "{names}에서 부족",
       "save": "창고 수준 저장"
+    },
+    "subtitle": "보관 장소와 재고 분포입니다.",
+    "updateWarehouse": "창고 업데이트",
+    "index": {
+      "searchLabel": "창고 검색"
+    },
+    "create": {
+      "subtitle": "창고 위치와 설정을 추가합니다."
+    },
+    "edit": {
+      "title": "창고 편집: {name}",
+      "subtitle": "창고 상세, 연락처 정보 및 사용자 접근 권한을 업데이트합니다."
+    },
+    "timezoneOptions": {
+      "stJohns": "뉴펀들랜드 (세인트존스)",
+      "halifax": "대서양 (핼리팩스)",
+      "toronto": "동부 (토론토)",
+      "winnipeg": "중부 (위니펙)",
+      "edmonton": "산악 (에드먼턴)",
+      "vancouver": "태평양 (밴쿠버)"
+    },
+    "show": {
+      "codeLabel": "코드: {code}",
+      "totalLocations": "전체 위치",
+      "totalProductsStored": "보관 중인 전체 제품",
+      "assignedUsers": "할당된 사용자",
+      "details": "창고 상세",
+      "manager": "관리자",
+      "noAddress": "주소가 제공되지 않았습니다",
+      "locationsCount": "위치 ({count})",
+      "products": "제품",
+      "noLocations": "이 창고에 위치가 없습니다",
+      "dangerZone": "위험 구역",
+      "deleteWarehouse": "창고 삭제",
+      "cannotUndo": "이 작업은 되돌릴 수 없습니다."
     }
   },
   "workOrders": {
@@ -1932,7 +2814,8 @@
       "ready": "준비됨",
       "noComponents": "이 작업 지시에 기록된 구성품이 없습니다.",
       "noComponentsDefined": "이 조립 제품에 정의된 구성품이 없습니다. 작업 지시를 생성하기 전에 제품 상세 페이지에서 구성품을 추가하세요.",
-      "insufficientWarning": "일부 구성품의 재고가 부족합니다. 작업 지시는 생성할 수 있지만 재고가 보충될 때까지 생산을 시작할 수 없습니다."
+      "insufficientWarning": "일부 구성품의 재고가 부족합니다. 작업 지시는 생성할 수 있지만 재고가 보충될 때까지 생산을 시작할 수 없습니다.",
+      "unknown": "알 수 없음"
     },
     "actions": {
       "startProduction": "생산 시작",
@@ -1955,7 +2838,19 @@
       "cancelled": "취소일",
       "lastUpdated": "최종 수정일"
     },
-    "cancelledBanner": "이 작업 지시는 취소되었습니다."
+    "cancelledBanner": "이 작업 지시는 취소되었습니다.",
+    "create": {
+      "materialsNeeded": "{name} {count}개 생산에 필요한 자재 | {name} {count}개 생산에 필요한 자재"
+    },
+    "index": {
+      "filter": "필터"
+    },
+    "show": {
+      "headTitle": "작업 지시 {number}",
+      "deleteConfirm": "이 작업 지시를 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.",
+      "dangerZone": "위험 구역",
+      "releaseHint": "예약된 구성품은 모두 재고로 반환됩니다."
+    }
   },
   "reportBuilder": {
     "title": "사용자 지정 보고서",
@@ -2454,6 +3349,78 @@
       "save": "품목 저장",
       "cancel": "취소",
       "hint": "선반에 다시 넣을 항목을 변경합니다. 재고는 반품이 입고될 때만 이동합니다."
+    },
+    "index": {
+      "title": "반품 및 교환",
+      "description": "모든 주문의 반품, 교환 및 환불을 추적합니다.",
+      "newReturn": "새 반품",
+      "searchPlaceholder": "반품 번호, 주문 번호 또는 고객으로 검색...",
+      "returnNumber": "반품 #",
+      "orderNumber": "주문 #",
+      "items": "품목",
+      "refund": "환불",
+      "empty": "반품을 찾을 수 없습니다."
+    },
+    "columns": {
+      "qty": "수량",
+      "condition": "상태",
+      "restock": "재입고"
+    },
+    "conditions": {
+      "new": "새 제품 (미개봉)",
+      "used": "사용됨 (개봉)",
+      "damaged": "파손됨"
+    },
+    "create": {
+      "headTitle": "반품 생성 - 주문 #{number}",
+      "title": "반품 / 교환 생성",
+      "fromOrder": "주문 #{number}에서",
+      "backToOrder": "주문으로 돌아가기",
+      "details": "반품 상세",
+      "typeReturn": "반품 (환불)",
+      "reasonRequired": "사유 *",
+      "reasonPlaceholder": "반품 또는 교환 사유...",
+      "notesOptional": "메모 (선택사항)",
+      "notesPlaceholder": "추가 메모...",
+      "selectItems": "반품할 품목 선택",
+      "ordered": "주문 수량: {count}",
+      "alreadyReturned": "({count}개 이미 반품됨)",
+      "maxReturnable": "최대 반품 가능: {count}",
+      "selectedSummary": "{type} 대상 품목 {count}개 선택됨 | {type} 대상 품목 {count}개 선택됨",
+      "estimatedRefund": "예상 환불액:",
+      "processing": "처리 중...",
+      "submit": "반품 요청 제출"
+    },
+    "show": {
+      "headTitle": "반품 {number}",
+      "title": "반품 #{number}",
+      "createdOn": "{date}에 생성됨",
+      "approve": "반품 승인",
+      "markReceived": "입고됨으로 표시",
+      "complete": "반품 완료",
+      "reject": "반품 거부",
+      "backToReturns": "반품으로 돌아가기",
+      "items": "반품 품목",
+      "unknownProduct": "알 수 없는 제품",
+      "conditionFor": "{name} 상태",
+      "restockFor": "{name} 재입고",
+      "noItems": "이 반품에 품목이 없습니다.",
+      "details": "상세",
+      "reason": "사유",
+      "forOrder": "대상 주문",
+      "summary": "요약",
+      "returnNumber": "반품 번호",
+      "completed": "완료일",
+      "processedBy": "처리자",
+      "refundAmount": "환불 금액",
+      "pendingHint": "반품을 승인하여 진행하거나 거부하세요.",
+      "approvedHint": "품목이 도착하면 입고됨으로 표시하세요. 재입고로 표시된 품목은 재고에 다시 추가됩니다.",
+      "receivedHint": "반품을 완료하여 절차를 마무리하세요.",
+      "dangerZone": "위험 구역",
+      "rejectWarning": "거부하면 이 반품이 종료됩니다. 이 작업은 되돌릴 수 없습니다.",
+      "rejectReason": "거부 사유",
+      "rejectPlaceholder": "이 반품을 거부하는 이유는 무엇입니까?",
+      "rejecting": "거부 중..."
     }
   },
   "portal": {
@@ -2677,5 +3644,60 @@
   "legal": {
     "licensedUnder": "{license}에 따라 라이선스 부여",
     "sourceCode": "소스 코드"
+  },
+  "stockTransfers": {
+    "title": "재고 이동",
+    "subtitle": "위치 간 재고를 이동합니다.",
+    "newTransfer": "새 이동",
+    "backToList": "목록으로 돌아가기",
+    "transferDetails": "이동 상세",
+    "transferItems": "이동 품목",
+    "fromLocation": "출발 위치",
+    "toLocation": "도착 위치",
+    "statuses": {
+      "pending": "대기 중",
+      "in_transit": "이동 중",
+      "completed": "완료됨",
+      "cancelled": "취소됨"
+    },
+    "create": {
+      "title": "재고 이동 생성",
+      "selectSource": "출발 위치 선택",
+      "selectDestination": "도착 위치 선택",
+      "notesPlaceholder": "이 이동에 대한 메모를 추가하세요...",
+      "addItem": "품목 추가",
+      "selectProduct": "제품 선택",
+      "productOption": "{name} ({sku}) - 재고: {stock}",
+      "qty": "수량",
+      "available": "가용: {count}",
+      "itemNotesPlaceholder": "품목 메모...",
+      "totalProducts": "전체 품목: 제품 {count}개 | 전체 품목: 제품 {count}개",
+      "totalUnits": "전체 수량: {count}개 | 전체 수량: {count}개",
+      "createTransfer": "이동 생성"
+    },
+    "index": {
+      "searchPlaceholder": "이동 번호로 검색...",
+      "filter": "필터",
+      "transferNumber": "이동 #",
+      "from": "출발",
+      "to": "도착",
+      "items": "품목",
+      "empty": "재고 이동을 찾을 수 없습니다. 첫 이동을 생성하여 위치 간 재고를 옮기세요.",
+      "itemCount": "품목 {count}개 | 품목 {count}개",
+      "showingTransfers": "이동 {total}건 중 {from}~{to} 표시"
+    },
+    "show": {
+      "headTitle": "이동 {number}",
+      "subtitle": "재고 이동 상세",
+      "transferNumber": "이동 번호",
+      "transferredBy": "이동 처리자",
+      "completedAt": "완료일",
+      "processing": "처리 중...",
+      "completeTransfer": "이동 완료",
+      "cancelTransfer": "이동 취소",
+      "completeHint": "이동을 완료하면 출발 위치에서 재고가 차감되고 도착 위치에 추가됩니다.",
+      "confirmComplete": "이 이동을 완료하시겠습니까? 재고 수준이 조정됩니다.",
+      "confirmCancel": "이 이동을 정말 취소하시겠습니까?"
+    }
   }
 }

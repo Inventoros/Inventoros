@@ -15,6 +15,8 @@
  * those as local time. Use toInstant()/formatInstantDate() for them.
  */
 
+import { formatLocale, orgDateFormat } from './formatSettings.js';
+
 const DATE_PREFIX = /^(\d{4})-(\d{2})-(\d{2})/;
 const DATE_ONLY = /^\d{4}-\d{2}-\d{2}$/;
 // A date and time with no Z or offset: the server's own (UTC) wall time.
@@ -49,7 +51,7 @@ export function toCalendarDate(value) {
  * @param {Intl.DateTimeFormatOptions} [options]
  * @param {string|string[]} [locale]
  */
-export function formatCalendarDate(value, options = undefined, locale = undefined) {
+export function formatCalendarDate(value, options = undefined, locale = formatLocale()) {
     const date = toCalendarDate(value);
 
     return date ? date.toLocaleDateString(locale, options) : '-';
@@ -86,7 +88,7 @@ export function toInstant(value) {
  * @param {Intl.DateTimeFormatOptions} [options]
  * @param {string|string[]} [locale]
  */
-export function formatInstantDate(value, options = undefined, locale = undefined) {
+export function formatInstantDate(value, options = undefined, locale = formatLocale()) {
     const date = toInstant(value);
 
     return date ? date.toLocaleDateString(locale, options) : '-';
@@ -105,6 +107,17 @@ export function toIsoDate(value) {
 }
 
 /**
+ * Whether a raw value names a calendar day: a date-only string, or a
+ * zone-less server value at exactly midnight (how date columns and the
+ * order_date timestamp come out of a raw query).
+ *
+ * @param {unknown} value
+ */
+export function isCalendarDayValue(value) {
+    return typeof value === 'string' && (DATE_ONLY.test(value.trim()) || ZONELESS_MIDNIGHT.test(value.trim()));
+}
+
+/**
  * Format a value that may be either a calendar date or a timestamp (report
  * columns mix both):
  *  - a date-only string, or a zone-less server value at exactly midnight
@@ -116,10 +129,10 @@ export function toIsoDate(value) {
  * @param {Intl.DateTimeFormatOptions} [options]
  * @param {string|string[]} [locale]
  */
-export function formatDateValue(value, options = undefined, locale = undefined) {
+export function formatDateValue(value, options = undefined, locale = formatLocale()) {
     if (!value) return '-';
 
-    if (typeof value === 'string' && (DATE_ONLY.test(value.trim()) || ZONELESS_MIDNIGHT.test(value.trim()))) {
+    if (isCalendarDayValue(value)) {
         return formatCalendarDate(value, options, locale);
     }
 
@@ -151,4 +164,92 @@ export function isBeforeToday(value, now = new Date()) {
     if (!date) return false;
 
     return date < toCalendarDate(now);
+}
+
+// --- Display helpers: what pages call -------------------------------------
+//
+// A value shown as a day honours the organization's date format (Settings >
+// Organization > Regional, a PHP-style pattern such as "Y-m-d" or "d.m.Y"),
+// in the active UI locale for month and weekday names. With no format set it
+// is the locale's own medium date ("Aug 17, 2026", "17.08.2026"). A value shown
+// with its time is locale-aware.
+
+const pad2 = (n) => String(n).padStart(2, '0');
+
+/**
+ * Format a Date with a PHP date() pattern. Supports the day, weekday, month
+ * and year tokens (d D j l N w m M n F Y y); a backslash escapes a character
+ * and anything else is copied as is.
+ *
+ * @param {Date} date
+ * @param {string} pattern
+ * @param {string|string[]} [locale]
+ */
+export function formatPhpDate(date, pattern, locale = formatLocale()) {
+    const name = (options) => date.toLocaleDateString(locale, options);
+    let out = '';
+
+    for (let i = 0; i < pattern.length; i++) {
+        const ch = pattern[i];
+        if (ch === '\\') {
+            out += pattern[++i] ?? '';
+            continue;
+        }
+        switch (ch) {
+            case 'd': out += pad2(date.getDate()); break;
+            case 'j': out += String(date.getDate()); break;
+            case 'D': out += name({ weekday: 'short' }); break;
+            case 'l': out += name({ weekday: 'long' }); break;
+            case 'N': out += String(date.getDay() || 7); break;
+            case 'w': out += String(date.getDay()); break;
+            case 'm': out += pad2(date.getMonth() + 1); break;
+            case 'n': out += String(date.getMonth() + 1); break;
+            case 'M': out += name({ month: 'short' }); break;
+            case 'F': out += name({ month: 'long' }); break;
+            case 'Y': out += String(date.getFullYear()); break;
+            case 'y': out += pad2(date.getFullYear() % 100); break;
+            default: out += ch;
+        }
+    }
+
+    return out;
+}
+
+function displayDay(date) {
+    if (!date) return '-';
+    const pattern = orgDateFormat();
+
+    return pattern ? formatPhpDate(date, pattern) : date.toLocaleDateString(formatLocale(), { dateStyle: 'medium' });
+}
+
+/**
+ * A calendar-date field (order_date, expected_date, a payment's paid_at,
+ * a batch expiry) in the organization's date format. '-' when empty.
+ *
+ * @param {string|Date|null|undefined} value
+ */
+export function displayCalendarDate(value) {
+    return displayDay(toCalendarDate(value));
+}
+
+/**
+ * A timestamp (created_at, shipped_at) shown as the viewer's day, in the
+ * organization's date format. '-' when empty.
+ *
+ * @param {string|Date|null|undefined} value
+ */
+export function displayDate(value) {
+    return displayDay(toInstant(value));
+}
+
+/**
+ * A timestamp with its time, locale-aware, in the viewer's timezone.
+ * '-' when empty.
+ *
+ * @param {string|Date|null|undefined} value
+ */
+export function displayDateTime(value) {
+    const date = toInstant(value);
+
+    return date ? date.toLocaleString(formatLocale(), { dateStyle: 'medium', timeStyle: 'short' }) : '-';
 }

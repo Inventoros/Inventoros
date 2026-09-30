@@ -12,6 +12,7 @@ const BarcodeScannerModal = defineAsyncComponent(() => import('@/Components/Barc
 import { useI18n } from 'vue-i18n';
 import { defaultSupplierSku, defaultUnitCost } from '@/lib/purchaseOrderLine';
 import { todayIsoDate } from '@/lib/dates';
+import { formatMoney } from '@/lib/money';
 
 const { t } = useI18n();
 
@@ -164,10 +165,7 @@ const submit = () => {
 };
 
 const formatCurrency = (value) => {
-    return new Intl.NumberFormat('en-US', {
-        style: 'currency',
-        currency: form.currency || 'USD',
-    }).format(value || 0);
+    return formatMoney(value, form.currency);
 };
 
 const fieldLabel = 'mb-1 block text-sm font-medium text-text-secondary';
@@ -190,7 +188,7 @@ const fieldError = 'mt-1 text-xs text-status-danger';
             </div>
         </template>
 
-        <PageHeader :title="t('purchaseOrders.create.title')" description="Create a purchase order and add the items to receive.">
+        <PageHeader :title="t('purchaseOrders.create.title')" :description="t('purchaseOrders.create.description')">
             <template #actions>
                 <Button variant="secondary" size="sm" as="Link" :href="route('purchase-orders.index')">
                     <ArrowLeft :size="14" />
@@ -269,7 +267,7 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                                 <select id="product" v-model="selectedProductId" @change="onProductSelected" :class="fieldInput">
                                     <option value="">{{ t('purchaseOrders.create.selectProduct') }}</option>
                                     <option v-for="product in products" :key="product.id" :value="product.id">
-                                        {{ product.name }} ({{ product.sku || 'No SKU' }})
+                                        {{ product.name }} ({{ product.sku || t('purchaseOrders.noSku') }})
                                     </option>
                                 </select>
                             </div>

@@ -10,6 +10,7 @@ import { usePermissions } from '@/composables/usePermissions';
 import { Head, useForm, usePage } from '@inertiajs/vue3';
 import { ref, computed, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
+import { formatNumber } from '@/lib/money';
 import {
     Upload,
     Download,
@@ -200,7 +201,7 @@ const code = 'rounded bg-surface-overlay px-1 py-0.5 font-mono text-xs text-text
         </template>
 
         <div>
-            <PageHeader title="Import / Export" :description="t('importExport.pageDescription')" />
+            <PageHeader :title="t('importExport.title')" :description="t('importExport.pageDescription')" />
 
             <ImportResult v-if="importResult" :result="importResult" class="mt-6" @dismiss="importResult = null" />
 
@@ -237,12 +238,12 @@ const code = 'rounded bg-surface-overlay px-1 py-0.5 font-mono text-xs text-text
                             </span>
                             <div>
                                 <h3 class="text-sm font-semibold text-text-primary">{{ t('importExport.exportProducts') }}</h3>
-                                <p class="text-sm text-text-tertiary">Download your inventory data</p>
+                                <p class="text-sm text-text-tertiary">{{ t('importExport.export.subtitle') }}</p>
                             </div>
                         </div>
 
                         <p class="mb-6 text-sm text-text-secondary">
-                            Export all your products to an Excel file. The export includes product details, pricing, stock levels, categories, and locations.
+                            {{ t('importExport.export.description') }}
                         </p>
 
                         <div class="space-y-3">
@@ -253,23 +254,23 @@ const code = 'rounded bg-surface-overlay px-1 py-0.5 font-mono text-xs text-text
                                 @click="showExportFilters = !showExportFilters"
                             >
                                 <SlidersHorizontal :size="14" />
-                                {{ showExportFilters ? 'Hide Filters' : 'Show Filters' }}
+                                {{ showExportFilters ? t('importExport.export.hideFilters') : t('importExport.export.showFilters') }}
                                 <Badge v-if="hasActiveFilters" variant="brand" size="sm">{{ Object.values(exportFilters).filter(v => v).length }}</Badge>
                             </Button>
 
                             <div v-if="showExportFilters" class="space-y-3 rounded-lg border border-border-subtle bg-surface-canvas p-4">
                                 <div>
-                                    <label for="export_category" :class="fieldLabel">Category</label>
+                                    <label for="export_category" :class="fieldLabel">{{ t('products.category') }}</label>
                                     <select id="export_category" v-model="exportFilters.category_id" :class="fieldInput">
-                                        <option value="">All Categories</option>
+                                        <option value="">{{ t('products.allCategories') }}</option>
                                         <option v-for="category in categories" :key="category.id" :value="category.id">{{ category.name }}</option>
                                     </select>
                                 </div>
 
                                 <div>
-                                    <label for="export_location" :class="fieldLabel">Location</label>
+                                    <label for="export_location" :class="fieldLabel">{{ t('products.location') }}</label>
                                     <select id="export_location" v-model="exportFilters.location_id" :class="fieldInput">
-                                        <option value="">All Locations</option>
+                                        <option value="">{{ t('products.allLocations') }}</option>
                                         <option v-for="location in locations" :key="location.id" :value="location.id">{{ location.name }}</option>
                                     </select>
                                 </div>
@@ -280,13 +281,13 @@ const code = 'rounded bg-surface-overlay px-1 py-0.5 font-mono text-xs text-text
                                         <option value="">{{ t('common.allStatuses') }}</option>
                                         <option value="active">{{ t('common.active') }}</option>
                                         <option value="inactive">{{ t('common.inactive') }}</option>
-                                        <option value="discontinued">Discontinued</option>
+                                        <option value="discontinued">{{ t('importExport.export.discontinued') }}</option>
                                     </select>
                                 </div>
 
                                 <div class="flex items-center">
                                     <input id="low_stock" v-model="exportFilters.low_stock" type="checkbox" :class="checkbox" />
-                                    <label for="low_stock" class="ml-2 text-sm font-medium text-text-secondary">Low Stock Only</label>
+                                    <label for="low_stock" class="ml-2 text-sm font-medium text-text-secondary">{{ t('importExport.export.lowStockOnly') }}</label>
                                 </div>
 
                                 <Button
@@ -297,33 +298,33 @@ const code = 'rounded bg-surface-overlay px-1 py-0.5 font-mono text-xs text-text
                                     class="w-full"
                                     @click="clearFilters"
                                 >
-                                    Clear All Filters
+                                    {{ t('importExport.export.clearAllFilters') }}
                                 </Button>
                             </div>
 
                             <Button type="button" variant="default" size="lg" class="w-full" @click="exportProducts">
                                 <Download :size="16" />
-                                Export to Excel
+                                {{ t('importExport.export.exportToExcel') }}
                             </Button>
 
                             <div class="border-t border-border-subtle pt-4">
-                                <h4 class="mb-2 text-sm font-medium text-text-secondary">Export includes:</h4>
+                                <h4 class="mb-2 text-sm font-medium text-text-secondary">{{ t('importExport.export.exportIncludesLabel') }}</h4>
                                 <ul class="space-y-1 text-sm text-text-tertiary">
                                     <li class="flex items-center gap-2">
                                         <Check :size="16" class="text-status-success" />
-                                        Product names, SKUs, and barcodes
+                                        {{ t('importExport.export.includeNames') }}
                                     </li>
                                     <li class="flex items-center gap-2">
                                         <Check :size="16" class="text-status-success" />
-                                        Pricing and currency information
+                                        {{ t('importExport.export.includePricing') }}
                                     </li>
                                     <li class="flex items-center gap-2">
                                         <Check :size="16" class="text-status-success" />
-                                        Stock levels and minimum stock
+                                        {{ t('importExport.export.includeStock') }}
                                     </li>
                                     <li class="flex items-center gap-2">
                                         <Check :size="16" class="text-status-success" />
-                                        Categories and locations
+                                        {{ t('importExport.export.includeCategories') }}
                                     </li>
                                 </ul>
                             </div>
@@ -338,12 +339,12 @@ const code = 'rounded bg-surface-overlay px-1 py-0.5 font-mono text-xs text-text
                             </span>
                             <div>
                                 <h3 class="text-sm font-semibold text-text-primary">{{ t('importExport.importProducts') }}</h3>
-                                <p class="text-sm text-text-tertiary">Upload inventory data in bulk</p>
+                                <p class="text-sm text-text-tertiary">{{ t('importExport.import.subtitle') }}</p>
                             </div>
                         </div>
 
                         <p class="mb-6 text-sm text-text-secondary">
-                            Import products from a CSV or Excel file. Download the template below to ensure your file has the correct format.
+                            {{ t('importExport.import.description') }}
                         </p>
 
                         <form class="space-y-4" @submit.prevent="submitProductImport">
@@ -361,17 +362,17 @@ const code = 'rounded bg-surface-overlay px-1 py-0.5 font-mono text-xs text-text
                                 :loading="productImport.processing"
                                 :disabled="!productImport.file || productImport.processing"
                             >
-                                <span v-if="productImport.processing">Importing...</span>
+                                <span v-if="productImport.processing">{{ t('importExport.import.importing') }}</span>
                                 <span v-else>{{ t('importExport.importProducts') }}</span>
                             </Button>
 
                             <div class="border-t border-border-subtle pt-4">
                                 <p class="mb-3 text-sm text-text-tertiary">
-                                    Need help? Download our template file with example data:
+                                    {{ t('importExport.import.templateHelpLabel') }}
                                 </p>
                                 <Button as="a" variant="secondary" class="w-full" :href="route('import-export.download-template')">
                                     <Download :size="14" />
-                                    Download Template
+                                    {{ t('importExport.import.downloadTemplate') }}
                                 </Button>
                             </div>
                         </form>
@@ -379,45 +380,45 @@ const code = 'rounded bg-surface-overlay px-1 py-0.5 font-mono text-xs text-text
                 </div>
 
                 <Card v-if="canImport" class="mt-4">
-                    <h3 class="mb-4 text-sm font-semibold text-text-primary">Import Instructions</h3>
+                    <h3 class="mb-4 text-sm font-semibold text-text-primary">{{ t('importExport.import.instructions') }}</h3>
 
                     <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
                         <div>
-                            <h4 class="mb-2 text-sm font-medium text-text-secondary">Required Fields:</h4>
+                            <h4 class="mb-2 text-sm font-medium text-text-secondary">{{ t('importExport.import.requiredFieldsLabel') }}</h4>
                             <ul class="space-y-1 text-sm text-text-tertiary">
                                 <li class="flex items-start gap-2">
                                     <span class="text-status-danger">*</span>
-                                    <span><strong class="text-text-secondary">name</strong> - Product name</span>
+                                    <span><strong class="text-text-secondary">{{ 'name' }}</strong> - {{ t('importExport.import.fieldNameDesc') }}</span>
                                 </li>
                                 <li class="flex items-start gap-2">
                                     <span class="text-status-danger">*</span>
-                                    <span><strong class="text-text-secondary">sku</strong> - Unique SKU identifier</span>
+                                    <span><strong class="text-text-secondary">{{ 'sku' }}</strong> - {{ t('importExport.import.fieldSkuDesc') }}</span>
                                 </li>
                                 <li class="flex items-start gap-2">
                                     <span class="text-status-danger">*</span>
-                                    <span><strong class="text-text-secondary">price</strong> - Selling price</span>
+                                    <span><strong class="text-text-secondary">{{ 'price' }}</strong> - {{ t('importExport.import.fieldPriceDesc') }}</span>
                                 </li>
                                 <li class="flex items-start gap-2">
                                     <span class="text-status-danger">*</span>
-                                    <span><strong class="text-text-secondary">stock</strong> - Current stock quantity</span>
+                                    <span><strong class="text-text-secondary">{{ 'stock' }}</strong> - {{ t('importExport.import.fieldStockDesc') }}</span>
                                 </li>
                             </ul>
                         </div>
 
                         <div>
-                            <h4 class="mb-2 text-sm font-medium text-text-secondary">Important Notes:</h4>
+                            <h4 class="mb-2 text-sm font-medium text-text-secondary">{{ t('importExport.import.importantNotesLabel') }}</h4>
                             <ul class="space-y-1 text-sm text-text-tertiary">
                                 <li class="flex items-start gap-2">
                                     <Info :size="16" class="mt-0.5 shrink-0 text-brand" />
-                                    <span>Existing products (matching SKU) will be updated</span>
+                                    <span>{{ t('importExport.import.noteUpdate') }}</span>
                                 </li>
                                 <li class="flex items-start gap-2">
                                     <Info :size="16" class="mt-0.5 shrink-0 text-brand" />
-                                    <span>Categories and locations will be created if they don't exist</span>
+                                    <span>{{ t('importExport.import.noteCreate') }}</span>
                                 </li>
                                 <li class="flex items-start gap-2">
                                     <Info :size="16" class="mt-0.5 shrink-0 text-brand" />
-                                    <span>Default currency is USD if not specified</span>
+                                    <span>{{ t('importExport.import.noteCurrency') }}</span>
                                 </li>
                                 <li class="flex items-start gap-2">
                                     <Info :size="16" class="mt-0.5 shrink-0 text-brand" />
@@ -431,7 +432,7 @@ const code = 'rounded bg-surface-overlay px-1 py-0.5 font-mono text-xs text-text
                                 </li>
                                 <li class="flex items-start gap-2">
                                     <Info :size="16" class="mt-0.5 shrink-0 text-brand" />
-                                    <span>Invalid rows will be skipped and reported</span>
+                                    <span>{{ t('importExport.import.noteSkip') }}</span>
                                 </li>
                             </ul>
                         </div>
@@ -479,7 +480,7 @@ const code = 'rounded bg-surface-overlay px-1 py-0.5 font-mono text-xs text-text
                                     <label for="order_export_status" :class="fieldLabel">{{ t('common.status') }}</label>
                                     <select id="order_export_status" v-model="orderExport.status" :class="fieldInput">
                                         <option value="">{{ t('common.allStatuses') }}</option>
-                                        <option v-for="status in orderStatuses" :key="status" :value="status" class="capitalize">{{ status }}</option>
+                                        <option v-for="status in orderStatuses" :key="status" :value="status" class="capitalize">{{ t(`orders.status.${status}`) }}</option>
                                     </select>
                                 </div>
                                 <div>
@@ -676,20 +677,20 @@ const code = 'rounded bg-surface-overlay px-1 py-0.5 font-mono text-xs text-text
             <!-- Recent Exports (queued downloads) -->
             <section v-if="props.exports.length" class="mt-8">
                 <div class="mb-1">
-                    <h3 class="text-sm font-semibold text-text-primary">Your exports</h3>
+                    <h3 class="text-sm font-semibold text-text-primary">{{ t('importExport.exports.title') }}</h3>
                 </div>
                 <p class="mb-4 text-sm text-text-tertiary">
-                    Large exports are prepared in the background. You'll be notified when each is ready to download.
+                    {{ t('importExport.exports.description') }}
                 </p>
                 <div class="w-full overflow-x-auto rounded-lg border border-border-subtle bg-surface-raised">
                     <table class="w-full text-sm">
                         <thead>
                             <tr class="border-b border-border-subtle">
-                                <th :class="thClass">File</th>
-                                <th :class="thClass">Type</th>
-                                <th :class="thClass">Rows</th>
-                                <th :class="thClass">Status</th>
-                                <th :class="[thClass, 'text-right']">Action</th>
+                                <th :class="thClass">{{ t('importExport.exports.file') }}</th>
+                                <th :class="thClass">{{ t('common.type') }}</th>
+                                <th :class="thClass">{{ t('importExport.exports.rows') }}</th>
+                                <th :class="thClass">{{ t('common.status') }}</th>
+                                <th :class="[thClass, 'text-right']">{{ t('importExport.exports.action') }}</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -701,7 +702,7 @@ const code = 'rounded bg-surface-overlay px-1 py-0.5 font-mono text-xs text-text
                                     </div>
                                 </td>
                                 <td class="px-4 py-3 text-text-secondary">{{ exportTypeLabels[e.type] || e.type }}</td>
-                                <td class="px-4 py-3 tabular-nums text-text-secondary">{{ e.row_count ?? '-' }}</td>
+                                <td class="px-4 py-3 tabular-nums text-text-secondary">{{ e.row_count != null ? formatNumber(e.row_count) : '-' }}</td>
                                 <td class="px-4 py-3">
                                     <Badge
                                         :variant="{
@@ -712,7 +713,7 @@ const code = 'rounded bg-surface-overlay px-1 py-0.5 font-mono text-xs text-text
                                         }[e.status] || 'neutral'"
                                         size="sm"
                                     >
-                                        {{ e.status }}
+                                        {{ t(`importExport.exports.statuses.${e.status}`) }}
                                     </Badge>
                                 </td>
                                 <td class="px-4 py-3 text-right">
@@ -720,7 +721,7 @@ const code = 'rounded bg-surface-overlay px-1 py-0.5 font-mono text-xs text-text
                                         v-if="e.status === 'completed'"
                                         :href="route('import-export.download', e.id)"
                                         class="font-medium text-brand transition-colors hover:text-brand-hover"
-                                    >Download</a>
+                                    >{{ t('importExport.exports.download') }}</a>
                                     <span v-else class="text-text-tertiary">-</span>
                                 </td>
                             </tr>

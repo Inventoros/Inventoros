@@ -8,6 +8,7 @@ import Badge from '@/Components/ui/Badge.vue';
 import { Head, Link, useForm } from '@inertiajs/vue3';
 import { defineAsyncComponent, ref, computed } from 'vue';
 import { useI18n } from 'vue-i18n';
+import { formatMoney } from '@/lib/money';
 import { ArrowLeft, ScanLine, PackageCheck } from 'lucide-vue-next';
 
 const BarcodeScannerModal = defineAsyncComponent(() => import('@/Components/BarcodeScannerModal.vue'));
@@ -81,10 +82,7 @@ const submit = () => {
 };
 
 const formatCurrency = (value) => {
-    return new Intl.NumberFormat('en-US', {
-        style: 'currency',
-        currency: props.purchaseOrder.currency || 'USD',
-    }).format(value || 0);
+    return formatMoney(value, props.purchaseOrder.currency);
 };
 
 const statusVariant = (status) =>
@@ -97,11 +95,11 @@ const statusVariant = (status) =>
     }[status] || 'neutral');
 
 const statusLabels = {
-    draft: 'Draft',
-    sent: 'Sent',
-    partial: 'Partial',
-    received: 'Received',
-    cancelled: 'Cancelled',
+    draft: t('purchaseOrders.status.draft'),
+    sent: t('purchaseOrders.status.sent'),
+    partial: t('purchaseOrders.status.partial'),
+    received: t('purchaseOrders.status.received'),
+    cancelled: t('purchaseOrders.status.cancelled'),
 };
 
 const fieldLabel = 'mb-1 block text-sm font-medium text-text-secondary';
@@ -113,7 +111,7 @@ const thClassCenter = 'px-4 py-2.5 text-center text-xs font-medium tracking-tigh
 </script>
 
 <template>
-    <Head :title="`Receive - ${purchaseOrder.po_number}`" />
+    <Head :title="t('purchaseOrders.receive.headTitle', { poNumber: purchaseOrder.po_number })" />
 
     <AppLayout>
         <template #header>
@@ -129,17 +127,17 @@ const thClassCenter = 'px-4 py-2.5 text-center text-xs font-medium tracking-tigh
         </template>
 
         <PageHeader
-            :title="`Receive Items - ${purchaseOrder.po_number}`"
-            description="Record received quantities against this purchase order."
+            :title="t('purchaseOrders.receive.title', { poNumber: purchaseOrder.po_number })"
+            :description="t('purchaseOrders.receive.description')"
         >
             <template #actions>
                 <Button variant="secondary" size="sm" @click="showScanner = true">
                     <ScanLine :size="14" />
-                    Scan Barcode
+                    {{ t('components.barcodeScanner.title') }}
                 </Button>
                 <Button variant="secondary" size="sm" as="Link" :href="route('purchase-orders.show', purchaseOrder.id)">
                     <ArrowLeft :size="14" />
-                    Back
+                    {{ t('common.back') }}
                 </Button>
             </template>
         </PageHeader>
@@ -155,7 +153,7 @@ const thClassCenter = 'px-4 py-2.5 text-center text-xs font-medium tracking-tigh
                         {{ purchaseOrder.supplier?.name }}
                     </h3>
                     <p class="mt-1 text-sm text-text-secondary">
-                        Order Total: {{ formatCurrency(purchaseOrder.total) }}
+                        {{ t('purchaseOrders.receive.orderTotal', { total: formatCurrency(purchaseOrder.total) }) }}
                     </p>
                 </div>
                 <Badge :variant="statusVariant(purchaseOrder.status)" size="md" dot>
@@ -168,13 +166,13 @@ const thClassCenter = 'px-4 py-2.5 text-center text-xs font-medium tracking-tigh
         <form @submit.prevent="submit" class="mt-4">
             <Card :padded="false">
                 <div class="flex items-center justify-between px-5 pt-5">
-                    <h3 class="text-sm font-semibold text-text-primary">Items to Receive</h3>
+                    <h3 class="text-sm font-semibold text-text-primary">{{ t('purchaseOrders.receive.itemsToReceive') }}</h3>
                     <div class="flex items-center gap-2">
                         <Button type="button" variant="default" size="sm" @click="receiveAllItems">
-                            Receive All
+                            {{ t('purchaseOrders.receive.receiveAll') }}
                         </Button>
                         <Button type="button" variant="secondary" size="sm" @click="clearAll">
-                            Clear
+                            {{ t('common.clear') }}
                         </Button>
                     </div>
                 </div>
@@ -183,13 +181,13 @@ const thClassCenter = 'px-4 py-2.5 text-center text-xs font-medium tracking-tigh
                         <table class="w-full text-sm">
                             <thead>
                                 <tr class="border-b border-border-subtle">
-                                    <th :class="thClass">Product</th>
+                                    <th :class="thClass">{{ t('common.product') }}</th>
                                     <th :class="thClass">SKU</th>
-                                    <th :class="thClassCenter">Ordered</th>
-                                    <th :class="thClassCenter">Already Received</th>
-                                    <th :class="thClassCenter">Remaining</th>
-                                    <th :class="thClassCenter">Receive Now</th>
-                                    <th :class="thClassCenter">Actions</th>
+                                    <th :class="thClassCenter">{{ t('purchaseOrders.show.ordered') }}</th>
+                                    <th :class="thClassCenter">{{ t('purchaseOrders.receive.alreadyReceived') }}</th>
+                                    <th :class="thClassCenter">{{ t('purchaseOrders.receive.remaining') }}</th>
+                                    <th :class="thClassCenter">{{ t('purchaseOrders.receive.receiveNow') }}</th>
+                                    <th :class="thClassCenter">{{ t('common.actions') }}</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -239,7 +237,7 @@ const thClassCenter = 'px-4 py-2.5 text-center text-xs font-medium tracking-tigh
                                             :class="[fieldInput, 'w-20 text-center']"
                                         />
                                         <Badge v-else variant="success" size="sm">
-                                            Complete
+                                            {{ t('purchaseOrders.receive.complete') }}
                                         </Badge>
                                     </td>
                                     <td class="px-4 py-3 text-center">
@@ -250,7 +248,7 @@ const thClassCenter = 'px-4 py-2.5 text-center text-xs font-medium tracking-tigh
                                             size="sm"
                                             @click="receiveAll(index)"
                                         >
-                                            Receive All
+                                            {{ t('purchaseOrders.receive.receiveAll') }}
                                         </Button>
                                     </td>
                                 </tr>
@@ -264,15 +262,15 @@ const thClassCenter = 'px-4 py-2.5 text-center text-xs font-medium tracking-tigh
                 <div class="flex items-center justify-between border-t border-border-subtle px-5 py-4">
                     <div class="text-sm text-text-secondary">
                         <span v-if="hasItemsToReceive">
-                            Ready to receive <strong class="text-text-primary">{{ totalItemsToReceive }}</strong> items
+                            {{ t('purchaseOrders.receive.readyToReceiveCount', { count: totalItemsToReceive }, totalItemsToReceive) }}
                         </span>
                         <span v-else>
-                            Select quantities to receive
+                            {{ t('purchaseOrders.receive.selectQuantities') }}
                         </span>
                     </div>
                     <div class="flex items-center gap-3">
                         <Button variant="secondary" as="Link" :href="route('purchase-orders.show', purchaseOrder.id)">
-                            Cancel
+                            {{ t('common.cancel') }}
                         </Button>
                         <Button
                             type="submit"
@@ -281,7 +279,7 @@ const thClassCenter = 'px-4 py-2.5 text-center text-xs font-medium tracking-tigh
                             :disabled="form.processing || !hasItemsToReceive"
                         >
                             <PackageCheck :size="16" />
-                            Receive
+                            {{ t('purchaseOrders.receive.receive') }}
                         </Button>
                     </div>
                 </div>

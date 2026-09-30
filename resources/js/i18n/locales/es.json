@@ -1,7 +1,102 @@
 {
   "stockAudits": {
     "completeConfirm": "¿Completar esta auditoría? Se crearán ajustes de stock para cada discrepancia.",
-    "completeUncountedConfirm": "{uncounted} de {total} artículos no se han contado. ¿Completar la auditoría de todos modos? Los artículos sin contar mantienen su stock actual; solo se ajustan los contados."
+    "completeUncountedConfirm": "{uncounted} de {total} artículos no se han contado. ¿Completar la auditoría de todos modos? Los artículos sin contar mantienen su stock actual; solo se ajustan los contados.",
+    "backToList": "Volver a la lista",
+    "auditDetails": "Detalles de la auditoría",
+    "types": {
+      "full": "Auditoría completa",
+      "cycle": "Conteo cíclico",
+      "spot": "Verificación puntual"
+    },
+    "statuses": {
+      "draft": "Borrador",
+      "in_progress": "En curso",
+      "completed": "Completada",
+      "cancelled": "Cancelada"
+    },
+    "itemStatuses": {
+      "pending": "Pendiente",
+      "counted": "Contado",
+      "verified": "Verificado",
+      "adjusted": "Ajustado"
+    },
+    "fields": {
+      "name": "Nombre de la auditoría",
+      "namePlaceholder": "Ej., Conteo cíclico del almacén T1 2026",
+      "descriptionPlaceholder": "Describe el propósito de esta auditoría...",
+      "auditType": "Tipo de auditoría",
+      "typeHints": {
+        "full": "Contar todos los productos del almacén",
+        "cycle": "Contar un subconjunto de productos de forma rotativa",
+        "spot": "Verificación rápida de productos específicos"
+      },
+      "location": "Ubicación del almacén",
+      "locationHint": "Déjalo en blanco para incluir productos de todas las ubicaciones"
+    },
+    "columns": {
+      "auditNumber": "Auditoría #",
+      "location": "Ubicación",
+      "items": "Artículos",
+      "createdBy": "Creada por",
+      "systemQty": "Cant. en sistema",
+      "countedQty": "Cant. contada",
+      "discrepancy": "Discrepancia",
+      "countedBy": "Contado por"
+    },
+    "index": {
+      "description": "Gestiona las auditorías de stock y los conteos cíclicos.",
+      "newAudit": "Nueva auditoría",
+      "searchPlaceholder": "Buscar por número o nombre de auditoría...",
+      "empty": "No se encontraron auditorías de stock",
+      "createFirst": "Crear primera auditoría"
+    },
+    "create": {
+      "title": "Crear auditoría de stock",
+      "description": "Configura una nueva auditoría de stock o un conteo cíclico.",
+      "notesPlaceholder": "Notas o instrucciones adicionales para el personal de auditoría...",
+      "selectProducts": "Seleccionar productos",
+      "selectProductsHint": "Elige qué productos incluir en esta auditoría. Déjalo vacío para incluir todos los productos.",
+      "selectProductsHintAtLocation": "Elige qué productos incluir en esta auditoría. Déjalo vacío para incluir todos los productos de la ubicación seleccionada.",
+      "searchProducts": "Buscar productos por nombre o SKU...",
+      "selectAll": "Seleccionar todo ({count} producto) | Seleccionar todo ({count} productos)",
+      "inStock": "en stock",
+      "fullAuditInfo": "Todos los productos activos se incluirán automáticamente en esta auditoría. Puedes revisar los artículos después de crearla.",
+      "fullAuditInfoAtLocation": "Todos los productos activos de la ubicación seleccionada se incluirán automáticamente en esta auditoría. Puedes revisar los artículos después de crearla.",
+      "submit": "Crear auditoría"
+    },
+    "edit": {
+      "title": "Editar auditoría de stock",
+      "backToAudit": "Volver a la auditoría",
+      "notesPlaceholder": "Notas o instrucciones adicionales...",
+      "submit": "Actualizar auditoría"
+    },
+    "show": {
+      "pageTitle": "Auditoría {number}",
+      "totalItems": "Total de artículos",
+      "progress": "Progreso",
+      "discrepancies": "Discrepancias",
+      "started": "Iniciada",
+      "completed": "Completada",
+      "auditItems": "Artículos de la auditoría",
+      "countedProgress": "({counted} de {total} contados)",
+      "count": "Contar",
+      "recount": "Volver a contar",
+      "countNotesPlaceholder": "Notas (opcional)",
+      "noItems": "No hay artículos en esta auditoría",
+      "processing": "Procesando...",
+      "startAudit": "Iniciar auditoría",
+      "completeAudit": "Completar auditoría",
+      "deleteAudit": "Eliminar auditoría",
+      "startHint": "Al iniciar la auditoría se registrarán los niveles de stock actuales del sistema y se podrá comenzar el conteo.",
+      "completeHint": "Al completar la auditoría se crearán ajustes de stock para cada discrepancia entre las cantidades del sistema y las contadas.",
+      "dangerZone": "Zona de peligro",
+      "deleteHint": "Eliminar esta auditoría es permanente y no se puede deshacer.",
+      "startConfirm": "¿Estás seguro de que deseas iniciar esta auditoría? Las cantidades del sistema se registrarán con los niveles actuales.",
+      "deleteConfirm": "¿Estás seguro de que deseas eliminar esta auditoría? Esta acción no se puede deshacer.",
+      "updateCountFailed": "No se pudo actualizar el conteo",
+      "saveCountError": "Se produjo un error al guardar el conteo"
+    }
   },
   "common": {
     "save": "Guardar",
@@ -192,6 +287,32 @@
       "queueBacklog": "Trabajos en cola esperando más de 15 minutos: {count}. Los correos y webhooks no se están enviando.",
       "failedJobs": "Trabajos en segundo plano que fallaron en las últimas 24 horas: {count}.",
       "help": "Compruebe que la tarea cron ejecuta php artisan schedule:run cada minuto. Consulte la guía de cPanel para más detalles."
+    },
+    "description": "Resumen del inventario, los pedidos y las prioridades de reabastecimiento.",
+    "customize": "Personalizar",
+    "hints": {
+      "activeInCatalog": "activos en el catálogo",
+      "belowMinimum": "por debajo del mínimo",
+      "allTime": "histórico"
+    },
+    "widgets": {
+      "statsOverview": "Resumen de estadísticas",
+      "revenueChart": "Ingresos y estadísticas secundarias",
+      "stockMovements": "Movimientos de stock",
+      "lowStockAlerts": "Alertas de stock bajo",
+      "topProducts": "Productos principales",
+      "stockByCategory": "Stock por categoría",
+      "reorderSuggestions": "Sugerencias de reabastecimiento"
+    },
+    "reorderSuggestions": {
+      "title": "Sugerencias de reabastecimiento",
+      "subtitle": "Por debajo del punto de reorden. La cantidad sugerida proviene de la configuración del producto y del pedido mínimo del proveedor.",
+      "reorderAt": "Reordenar en"
+    },
+    "customizeModal": {
+      "title": "Personalizar panel de control",
+      "help": "Activa o desactiva widgets para mostrarlos u ocultarlos en tu panel de control.",
+      "savePreferences": "Guardar preferencias"
     }
   },
   "products": {
@@ -241,7 +362,8 @@
       "variantHint": "Agrega opciones como Talla o Color para vender diferentes versiones de este producto. Cada combinaci\u00f3n crea una variante con su propio precio y stock.",
       "variantStockHint": "El stock se rastrea por variante cuando las variantes est\u00e1n habilitadas.",
       "notesPlaceholder": "Notas adicionales sobre este producto...",
-      "createProduct": "Crear producto"
+      "createProduct": "Crear producto",
+      "subtitle": "Crea un producto con precios, stock, variantes e imágenes."
     },
     "edit": {
       "title": "Editar producto",
@@ -288,7 +410,34 @@
       "outOfStock": "Sin stock",
       "lowStock": "Stock bajo",
       "inStock": "En stock",
-      "activityHistory": "Historial de actividad"
+      "activityHistory": "Historial de actividad",
+      "minHint": "mín. {count}",
+      "stockAtPrice": "stock a precio",
+      "barcodeValue": "Código de barras: {barcode}",
+      "currencyValue": "Moneda: {currency}",
+      "confirmGenerateRandom": "¿Generar un nuevo código de barras aleatorio para este producto?",
+      "generateBarcodeFailed": "No se pudo generar el código de barras",
+      "confirmGenerateFromSku": "¿Generar el código de barras a partir del SKU?",
+      "generateFromSkuFailed": "No se pudo generar el código de barras a partir del SKU",
+      "bom": {
+        "title": "Lista de materiales",
+        "addComponent": "Agregar componente",
+        "availableKitStock": "Stock disponible del kit (limitado por el componente con menos stock)",
+        "searchProduct": "Buscar producto",
+        "searchPlaceholder": "Buscar por nombre o SKU...",
+        "stockInline": "(Stock: {count})",
+        "searching": "Buscando...",
+        "qtyRequired": "Cant. requerida",
+        "availableStock": "Stock disponible",
+        "unknown": "Desconocido",
+        "remove": "Quitar",
+        "empty": "Aún no se han agregado componentes.",
+        "emptyHint": "Haz clic en \"Agregar componente\" para crear la lista de materiales.",
+        "addFailed": "No se pudo agregar el componente",
+        "updateQuantityFailed": "No se pudo actualizar la cantidad",
+        "confirmRemove": "¿Quitar este componente de la lista de materiales?",
+        "removeFailed": "No se pudo quitar el componente"
+      }
     },
     "quickAddCategory": {
       "title": "Agregar categor\u00eda r\u00e1pida",
@@ -303,6 +452,56 @@
       "locationCode": "C\u00f3digo de ubicaci\u00f3n",
       "codePlaceholder": "Ej., ALM-A",
       "descPlaceholder": "Descripci\u00f3n opcional..."
+    },
+    "subtitle": "Tu catálogo, niveles de stock y umbrales de reorden.",
+    "duplicate": "Duplicar",
+    "printBarcode": "Imprimir código de barras",
+    "variantsCount": "{count} variante | {count} variantes",
+    "types": {
+      "standard": "Estándar",
+      "kit": "Kit",
+      "assembly": "Ensamblaje"
+    },
+    "trackingTypes": {
+      "none": "Sin seguimiento",
+      "batch": "Seguimiento por lotes",
+      "serial": "Seguimiento por número de serie"
+    },
+    "form": {
+      "productType": "Tipo de producto",
+      "productTypeHint": "Los kits agrupan componentes para la venta. Los ensamblajes requieren órdenes de trabajo para producirse.",
+      "additionalCurrencies": "Monedas adicionales",
+      "selectCurrency": "Seleccionar moneda...",
+      "addPriceInCurrency": "+ Agregar precio en otra moneda",
+      "reorderPoint": "Punto de reorden",
+      "reorderPointHint": "Nivel de stock que activa el reabastecimiento automático",
+      "reorderQuantity": "Cantidad de reorden",
+      "reorderQuantityHint": "Cantidad a pedir cuando el stock alcanza el punto de reorden",
+      "leaveEmptyToDisable": "Déjalo vacío para desactivar",
+      "inventoryTracking": "Seguimiento de inventario",
+      "inventoryTrackingHint": "Elige cómo hacer el seguimiento de las unidades individuales de este producto.",
+      "createCategoryFailed": "No se pudo crear la categoría. Inténtalo de nuevo.",
+      "createLocationFailed": "No se pudo crear la ubicación. Inténtalo de nuevo."
+    },
+    "index": {
+      "selectedCount": "{count} producto seleccionado | {count} productos seleccionados",
+      "confirmBulkDelete": "¿Estás seguro de que deseas eliminar {count} producto? Esta acción no se puede deshacer. | ¿Estás seguro de que deseas eliminar {count} productos? Esta acción no se puede deshacer."
+    },
+    "bulk": {
+      "changeCategory": "Cambiar categoría",
+      "updateCategoryFor": "Actualizar la categoría de {count} producto seleccionado. | Actualizar la categoría de {count} productos seleccionados.",
+      "selectCategory": "Selecciona una categoría...",
+      "updateCategory": "Actualizar categoría",
+      "adjustPrice": "Ajustar precio",
+      "adjustPriceFor": "Ajustar el precio de {count} producto seleccionado. | Ajustar el precio de {count} productos seleccionados.",
+      "adjustmentType": "Tipo de ajuste",
+      "percentage": "Porcentaje (%)",
+      "fixedAmount": "Monto fijo ($)",
+      "value": "Valor",
+      "useNegative": "(usa un valor negativo para disminuir)",
+      "percentagePlaceholder": "ej. 10 para +10%, -20 para -20%",
+      "fixedPlaceholder": "ej. 5.00 o -3.50",
+      "applyPriceChange": "Aplicar cambio de precio"
     }
   },
   "orders": {
@@ -372,7 +571,9 @@
       "searchingCustomers": "Buscando...",
       "noCustomersFound": "No hay clientes que coincidan. Escribe los datos abajo para un cliente ocasional.",
       "linkedCustomer": "Vinculado al cliente guardado {name}",
-      "clearCustomer": "Usar un cliente ocasional"
+      "clearCustomer": "Usar un cliente ocasional",
+      "description": "Agrega un pedido de cliente y sus líneas.",
+      "addAtLeastOneProduct": "Agrega al menos un producto al pedido."
     },
     "show": {
       "orderNumber": "Pedido #{number}",
@@ -415,7 +616,10 @@
       "approvalNotesPlaceholder": "Notas opcionales sobre esta aprobaci\u00f3n...",
       "rejectionNotesPlaceholder": "Motivo del rechazo...",
       "approve": "Aprobar",
-      "reject": "Rechazar"
+      "reject": "Rechazar",
+      "downloadInvoice": "Descargar factura",
+      "previewInvoice": "Vista previa de la factura",
+      "createReturn": "Crear devolución"
     },
     "edit": {
       "title": "Editar pedido",
@@ -432,7 +636,11 @@
       "deliveredAt": "Entregado el:",
       "updatingOrder": "Actualizando pedido...",
       "updateOrder": "Actualizar pedido",
-      "viewDetails": "Ver detalles del pedido"
+      "viewDetails": "Ver detalles del pedido",
+      "removeItem": "Quitar artículo"
+    },
+    "index": {
+      "description": "Pedidos de clientes de todos los canales."
     }
   },
   "purchaseOrders": {
@@ -465,13 +673,15 @@
       "unitCost": "Costo unitario",
       "supplierSku": "SKU del proveedor",
       "orderItems": "Art\u00edculos del pedido ({count})",
-      "createPo": "Crear orden de compra"
+      "createPo": "Crear orden de compra",
+      "description": "Crea una orden de compra y agrega los artículos por recibir."
     },
     "edit": {
       "title": "Editar orden de compra",
       "backToPo": "Volver a \u00f3rdenes de compra",
       "updatePo": "Actualizar orden de compra",
-      "viewDetails": "Ver detalles"
+      "viewDetails": "Ver detalles",
+      "poNumber": "OC #{number}"
     },
     "show": {
       "receiveItems": "Recibir art\u00edculos",
@@ -484,7 +694,14 @@
       "sendToSupplier": "Enviar al proveedor",
       "editPo": "Editar orden de compra",
       "cancelOrder": "Cancelar pedido",
-      "deleteOrder": "Eliminar pedido"
+      "deleteOrder": "Eliminar pedido",
+      "confirmCancel": "¿Estás seguro de que deseas cancelar esta orden de compra?",
+      "orderDateOn": "Fecha del pedido: {date}",
+      "downloadPdf": "Descargar PDF",
+      "previewPdf": "Vista previa del PDF",
+      "itemsCount": "Artículos ({count})",
+      "supplierSkuLine": "Proveedor: {sku}",
+      "cannotUndo": "Esta acción no se puede deshacer."
     },
     "receive": {
       "title": "Recibir art\u00edculos - {poNumber}",
@@ -497,7 +714,11 @@
       "complete": "Completo",
       "readyToReceive": "Listo para recibir {count} art\u00edculos",
       "selectQuantities": "Seleccionar cantidades a recibir",
-      "confirmReceiving": "Confirmar recepci\u00f3n"
+      "confirmReceiving": "Confirmar recepci\u00f3n",
+      "receive": "Recibir",
+      "headTitle": "Recibir - {poNumber}",
+      "description": "Registra las cantidades recibidas de esta orden de compra.",
+      "readyToReceiveCount": "Listo para recibir {count} artículo | Listo para recibir {count} artículos"
     },
     "currencies": {
       "usd": "USD - D\u00f3lar estadounidense",
@@ -505,7 +726,12 @@
       "gbp": "GBP - Libra esterlina",
       "cad": "CAD - D\u00f3lar canadiense",
       "aud": "AUD - D\u00f3lar australiano"
-    }
+    },
+    "index": {
+      "description": "Pedidos de reabastecimiento a tus proveedores."
+    },
+    "confirmDelete": "¿Estás seguro de que deseas eliminar \"{number}\"?",
+    "noSku": "Sin SKU"
   },
   "productSuppliers": {
     "title": "Proveedores",
@@ -568,7 +794,8 @@
       "businessDetails": "Detalles comerciales",
       "paymentTerms": "Condiciones de pago",
       "paymentTermsPlaceholder": "Ej., Neto 30",
-      "createSupplier": "Crear proveedor"
+      "createSupplier": "Crear proveedor",
+      "description": "Agrega un proveedor con sus datos de contacto, dirección y empresa."
     },
     "edit": {
       "title": "Editar proveedor",
@@ -587,7 +814,14 @@
       "supplierCode": "C\u00f3digo del proveedor",
       "paymentTerms": "Condiciones de pago",
       "editSupplier": "Editar proveedor",
-      "deleteSupplier": "Eliminar proveedor"
+      "deleteSupplier": "Eliminar proveedor",
+      "code": "Código: {code}",
+      "supplierDetails": "Detalles del proveedor",
+      "products": "Productos",
+      "deleteWarning": "Esto elimina el proveedor de forma permanente y no se puede deshacer."
+    },
+    "index": {
+      "description": "Tus proveedores y los productos que suministran."
     }
   },
   "customers": {
@@ -614,7 +848,8 @@
       "paymentTerms": "Condiciones de pago",
       "paymentTermsPlaceholder": "Ej., Neto 30",
       "creditLimit": "L\u00edmite de cr\u00e9dito",
-      "createCustomer": "Crear cliente"
+      "createCustomer": "Crear cliente",
+      "description": "Agrega un cliente con sus datos de facturación, envío y empresa."
     },
     "edit": {
       "title": "Editar cliente",
@@ -637,6 +872,9 @@
       "recentOrders": "Pedidos recientes",
       "noOrdersYet": "A\u00fan no hay pedidos",
       "deleteCustomer": "Eliminar cliente"
+    },
+    "index": {
+      "description": "Tus clientes y los pedidos que realizan."
     }
   },
   "categories": {
@@ -650,7 +888,13 @@
     "editCategory": "Editar categor\u00eda",
     "categoryName": "Nombre de la categor\u00eda",
     "namePlaceholder": "Ej., Electr\u00f3nica",
-    "descPlaceholder": "Descripci\u00f3n opcional..."
+    "descPlaceholder": "Descripci\u00f3n opcional...",
+    "index": {
+      "description": "Organiza tu catálogo en categorías."
+    },
+    "confirmDelete": "¿Estás seguro de que deseas eliminar \"{name}\"? Esta acción no se puede deshacer.",
+    "productsCount": "{count} producto | {count} productos",
+    "updateCategory": "Actualizar categoría"
   },
   "locations": {
     "title": "Ubicaciones de almac\u00e9n",
@@ -672,7 +916,12 @@
     "noWarehouse": "Sin almac\u00e9n",
     "capacity": "Capacidad (unidades)",
     "capacityHint": "Opcional. Se usa para mostrar qu\u00e9 tan llena est\u00e1 la ubicaci\u00f3n.",
-    "capacityValue": "Capacidad: {capacity} unidades"
+    "capacityValue": "Capacidad: {capacity} unidades",
+    "subtitle": "Lugares físicos donde se guarda tu stock.",
+    "close": "Cerrar",
+    "productsCount": "{count} producto | {count} productos",
+    "updateLocation": "Actualizar ubicación",
+    "confirmDelete": "¿Estás seguro de que deseas eliminar \"{name}\"? Esta acción no se puede deshacer."
   },
   "reports": {
     "title": "Informes y an\u00e1lisis",
@@ -740,7 +989,9 @@
       "current": "Actual",
       "deficit": "D\u00e9ficit",
       "allWellStocked": "\u00a1Todos los productos est\u00e1n bien abastecidos!",
-      "noProductsBelowMin": "Ning\u00fan producto est\u00e1 por debajo de los niveles m\u00ednimos de stock"
+      "noProductsBelowMin": "Ning\u00fan producto est\u00e1 por debajo de los niveles m\u00ednimos de stock",
+      "min": "Mín.",
+      "max": "Máx."
     },
     "categoryPerformance": {
       "title": "Informe de rendimiento por categor\u00eda",
@@ -889,6 +1140,16 @@
       "loss": "P\u00e9rdida",
       "return": "Devoluci\u00f3n",
       "correction": "Correcci\u00f3n"
+    },
+    "index": {
+      "dataSources": {
+        "products": "Productos",
+        "orders": "Pedidos",
+        "stock_adjustments": "Ajustes de stock",
+        "customers": "Clientes",
+        "suppliers": "Proveedores",
+        "purchase_orders": "Órdenes de compra"
+      }
     }
   },
   "stockAdjustments": {
@@ -919,7 +1180,13 @@
       "negativeWarningMsg": "Este ajuste resultar\u00e1 en stock negativo. Por favor verifica la cantidad.",
       "createAdjustment": "Crear ajuste",
       "stockIncrease": "Aumento de stock",
-      "stockDecrease": "Disminuci\u00f3n de stock"
+      "stockDecrease": "Disminuci\u00f3n de stock",
+      "currentStockValue": "Stock actual: {stock}",
+      "locationOptional": "Ubicación (opcional)",
+      "noSpecificLocation": "Sin ubicación específica",
+      "locationHint": "Aplica este ajuste a una ubicación específica para que el desglose por ubicación siga cuadrando. Déjalo en blanco para ajustar solo el total.",
+      "quantityPlaceholder": "Ingresa un número positivo para sumar o negativo para restar",
+      "negativeWarningValue": "Este ajuste resultará en stock negativo ({stock}). Por favor verifica la cantidad."
     },
     "show": {
       "title": "Detalles del ajuste de stock",
@@ -939,7 +1206,30 @@
       "finalStock": "Stock final",
       "manualAdjustment": "Ajuste manual",
       "stockRecount": "Recuento de stock",
-      "order": "Pedido"
+      "order": "Pedido",
+      "unitsCount": "{count} unidad | {count} unidades"
+    },
+    "variantAdjuster": {
+      "title": "Ajustar stock: {name}",
+      "failed": "No se pudo ajustar el stock"
+    },
+    "types": {
+      "manual": "Ajuste manual",
+      "order": "Pedido",
+      "return": "Devolución",
+      "damage": "Daño",
+      "loss": "Pérdida",
+      "recount": "Recuento de stock",
+      "correction": "Corrección",
+      "opening_stock": "Stock inicial"
+    },
+    "index": {
+      "allProducts": "Todos los productos",
+      "dateFrom": "Fecha desde",
+      "dateTo": "Fecha hasta",
+      "before": "Antes",
+      "change": "Cambio",
+      "after": "Después"
     }
   },
   "importExport": {
@@ -967,7 +1257,8 @@
       "includeNames": "Nombres de productos, SKUs y c\u00f3digos de barras",
       "includePricing": "Informaci\u00f3n de precios y monedas",
       "includeStock": "Niveles de stock y stock m\u00ednimo",
-      "includeCategories": "Categor\u00edas y ubicaciones"
+      "includeCategories": "Categor\u00edas y ubicaciones",
+      "exportIncludesLabel": "La exportación incluye:"
     },
     "import": {
       "title": "Importar productos",
@@ -991,7 +1282,14 @@
       "noteUpdate": "Los productos existentes (SKU coincidente) se actualizar\u00e1n",
       "noteCreate": "Las categor\u00edas y ubicaciones se crear\u00e1n si no existen",
       "noteCurrency": "La moneda predeterminada es USD si no se especifica",
-      "noteSkip": "Las filas inv\u00e1lidas se omitir\u00e1n y se reportar\u00e1n"
+      "noteSkip": "Las filas inv\u00e1lidas se omitir\u00e1n y se reportar\u00e1n",
+      "templateHelpLabel": "¿Necesitas ayuda? Descarga nuestra plantilla con datos de ejemplo:",
+      "requiredFieldsLabel": "Campos obligatorios:",
+      "importantNotesLabel": "Notas importantes:",
+      "fieldNameDesc": "Nombre del producto",
+      "fieldSkuDesc": "Identificador SKU único",
+      "fieldPriceDesc": "Precio de venta",
+      "fieldStockDesc": "Cantidad de stock actual"
     },
     "pageDescription": "Importa y exporta productos, pedidos y usuarios de forma masiva.",
     "tabs": {
@@ -1064,7 +1362,21 @@
       "ruleEscalation": "Solo puedes asignar los roles que tienes permitido asignar: quienes no son administradores solo pueden importar miembros, con roles no m\u00e1s amplios que sus propios permisos."
     },
     "exportProducts": "Exportar productos",
-    "importProducts": "Importar productos"
+    "importProducts": "Importar productos",
+    "exports": {
+      "title": "Tus exportaciones",
+      "description": "Las exportaciones grandes se preparan en segundo plano. Te avisaremos cuando cada una esté lista para descargar.",
+      "file": "Archivo",
+      "rows": "Filas",
+      "action": "Acción",
+      "download": "Descargar",
+      "statuses": {
+        "pending": "Pendiente",
+        "processing": "Procesando",
+        "completed": "Completada",
+        "failed": "Fallida"
+      }
+    }
   },
   "notifications": {
     "title": "Notificaciones",
@@ -1081,7 +1393,20 @@
     "noNotifications": "Sin notificaciones",
     "allCaughtUp": "\u00a1Est\u00e1s al d\u00eda!",
     "noNewNotifications": "Sin notificaciones nuevas",
-    "viewAllNotifications": "Ver todas"
+    "viewAllNotifications": "Ver todas",
+    "confirmMarkAllRead": "¿Marcar todas las notificaciones como leídas?",
+    "confirmDelete": "¿Eliminar esta notificación?",
+    "confirmClearRead": "¿Borrar todas las notificaciones leídas?",
+    "allCount": "Todas ({count})",
+    "unreadCount": "Sin leer ({count})",
+    "readCount": "Leídas ({count})",
+    "viewDetailsLabel": "Ver detalles",
+    "priorities": {
+      "low": "Baja",
+      "normal": "Normal",
+      "high": "Alta",
+      "urgent": "Urgente"
+    }
   },
   "plugins": {
     "title": "Plugins",
@@ -1132,7 +1457,12 @@
       "notOwned": "Tu cuenta conectada a\u00fan no tiene este plugin.",
       "viewOnMarketplace": "Ver en inventoros.com",
       "readOnly": "Puedes explorar el marketplace. Para instalar plugins necesitas el permiso Administrar plugins."
-    }
+    },
+    "confirmDelete": "¿Estás seguro de que deseas eliminar \"{name}\"? Esta acción no se puede deshacer.",
+    "subtitle": "Amplía tu espacio de trabajo con plugins instalables.",
+    "versionLabel": "Versión: {version}",
+    "authorLabel": "Autor:",
+    "requiresLabel": "Requiere: {requires}"
   },
   "settings": {
     "title": "Configuraci\u00f3n",
@@ -1147,7 +1477,8 @@
       "dateFormat": "Formato de fecha",
       "timeFormat": "Formato de hora",
       "userMgmtHint": "La funcionalidad de gesti\u00f3n de usuarios est\u00e1 disponible en la secci\u00f3n de Usuarios.",
-      "goToUserMgmt": "Ir a gesti\u00f3n de usuarios"
+      "goToUserMgmt": "Ir a gesti\u00f3n de usuarios",
+      "description": "Gestiona el perfil de tu organización y las preferencias regionales."
     },
     "account": {
       "title": "Configuraci\u00f3n de la cuenta",
@@ -1179,7 +1510,8 @@
       "dark": "Oscuro",
       "auto": "Autom\u00e1tico",
       "language": "Idioma",
-      "itemsPerPage": "Elementos por p\u00e1gina"
+      "itemsPerPage": "Elementos por p\u00e1gina",
+      "description": "Gestiona tu perfil, contraseña, notificaciones y preferencias."
     },
     "email": {
       "title": "Configuraci\u00f3n de correo",
@@ -1213,7 +1545,9 @@
       "sendTest": "Enviar correo de prueba",
       "sending": "Enviando...",
       "saveSettings": "Guardar configuraci\u00f3n de correo",
-      "testSuccess": "Correo de prueba enviado correctamente."
+      "testSuccess": "Correo de prueba enviado correctamente.",
+      "description": "Configura cómo tu espacio de trabajo envía correos y notificaciones.",
+      "fromNamePlaceholder": "Nombre de tu empresa"
     },
     "notificationPreferences": {
       "title": "Preferencias de notificaciones por correo",
@@ -1290,8 +1624,46 @@
         "deleteWebhook": "Eliminar webhook",
         "integrationGuide": "Gu\u00eda de integraci\u00f3n",
         "signatureHeader": "Encabezado de firma",
-        "verification": "Verificaci\u00f3n"
-      }
+        "verification": "Verificaci\u00f3n",
+        "headTitle": "Webhook: {name}",
+        "description": "Configuración del webhook y actividad de entregas.",
+        "sendTestShort": "Enviar prueba",
+        "secretHidden": "Oculto por seguridad. Regenera el secreto para emitir uno nuevo; solo se muestra una vez.",
+        "createdAt": "Fecha de creación",
+        "subscribedEventsCount": "Eventos suscritos ({count})",
+        "deliveryStatuses": {
+          "success": "Correcta",
+          "pending": "Pendiente",
+          "failed": "Fallida"
+        },
+        "noResponseBody": "Sin cuerpo de respuesta",
+        "otherGroup": "Otros",
+        "signatureHeaderDesc": "Todas las cargas de webhooks incluyen una firma en el encabezado {header}.",
+        "verificationDesc": "Verifica la firma calculando el HMAC-SHA256 del cuerpo sin procesar de la solicitud con tu secreto.",
+        "responseDesc": "Devuelve un código de estado 2xx para confirmar la recepción. Las entregas fallidas se reintentarán hasta 5 veces.",
+        "deleteDesc": "Elimina de forma permanente este webhook y todos sus registros de entrega. Esta acción no se puede deshacer.",
+        "confirmDelete": "¿Estás seguro de que deseas eliminar \"{name}\"? Esta acción no se puede deshacer.",
+        "confirmRegenerate": "¿Estás seguro de que deseas regenerar el secreto? Tendrás que actualizar el secreto en la aplicación receptora."
+      },
+      "description": "Servicios externos que reciben notificaciones de eventos en tiempo real.",
+      "signingSecret": "Secreto de firma",
+      "secretShownOnce": "Cópialo ahora. Por seguridad, solo se muestra una vez y no se puede recuperar después.",
+      "confirmDelete": "¿Estás seguro de que deseas eliminar \"{name}\"?",
+      "createdByName": "Creado por {name}",
+      "unknownCreator": "Desconocido",
+      "eventCount": "{count} evento | {count} eventos",
+      "deliveriesTotal": "{count} en total",
+      "namePlaceholder": "Mi webhook"
+    },
+    "description": "Gestiona tu espacio de trabajo, tu cuenta y las integraciones.",
+    "hub": {
+      "accountDescription": "Actualiza tu perfil, tu contraseña y tus preferencias personales, incluido el idioma.",
+      "notificationsDescription": "Elige qué notificaciones por correo y dentro de la aplicación recibes.",
+      "twoFactorTitle": "Autenticación de dos factores",
+      "twoFactorDescription": "Protege tu cuenta con un código de un solo uso de una aplicación de autenticación.",
+      "emailDescription": "Configura cómo tu organización envía correos (SMTP, Mailgun o SendGrid).",
+      "webhooksDescription": "Conecta servicios externos y envía notificaciones de eventos en tiempo real.",
+      "updatesDescription": "Busca nuevas versiones, actualiza la aplicación y gestiona las copias de seguridad."
     }
   },
   "admin": {
@@ -1317,7 +1689,8 @@
         "additionalRoles": "Roles adicionales (Opcional)",
         "additionalRolesHint": "Asignar roles personalizados con conjuntos de permisos espec\u00edficos.",
         "createUser": "Crear usuario",
-        "success": "Usuario creado exitosamente."
+        "success": "Usuario creado exitosamente.",
+        "subtitle": "Crea una nueva cuenta de usuario y asigna roles."
       },
       "edit": {
         "title": "Editar usuario",
@@ -1329,7 +1702,11 @@
         "customRoles": "Roles personalizados adicionales (Opcional)",
         "customRolesHint": "Asigna roles personalizados creados para tu organizaci\u00f3n para otorgar permisos espec\u00edficos.",
         "updateUser": "Actualizar usuario",
-        "success": "Usuario actualizado exitosamente."
+        "success": "Usuario actualizado exitosamente.",
+        "titleWithName": "Editar usuario: {name}",
+        "subtitle": "Actualiza los detalles de la cuenta, el rol base y los roles personalizados asignados.",
+        "admin": "Administrador",
+        "customRolesSelected": "{count} rol(es) personalizado(s) seleccionado(s)"
       },
       "show": {
         "title": "Detalles del usuario",
@@ -1349,7 +1726,16 @@
         "notVerified": "No verificado",
         "deleteUser": "Eliminar usuario",
         "confirmDelete": "\u00bfEst\u00e1s seguro de que deseas eliminar a {name}?",
-        "cannotUndo": "Esta acci\u00f3n no se puede deshacer."
+        "cannotUndo": "Esta acci\u00f3n no se puede deshacer.",
+        "titleWithName": "Usuario: {name}"
+      },
+      "subtitle": "Gestiona los usuarios de tu organización y asigna roles y permisos.",
+      "noUsersTitle": "No se encontraron usuarios.",
+      "noUsersHint": "Haz clic en \"Agregar usuario\" para crear tu primer usuario.",
+      "roles": {
+        "admin": "Administrador",
+        "manager": "Gerente",
+        "member": "Miembro"
       }
     },
     "roles": {
@@ -1375,7 +1761,12 @@
         "deselectAll": "Deseleccionar todos",
         "totalPermissions": "{count} permiso(s) en total",
         "createRole": "Crear rol",
-        "success": "Rol creado exitosamente."
+        "success": "Rol creado exitosamente.",
+        "subtitle": "Define un rol y asigna sus permisos.",
+        "roleDetails": "Detalles del rol",
+        "namePlaceholder": "Ej., Gerente de almacén",
+        "descriptionPlaceholder": "Describe el propósito y las responsabilidades de este rol...",
+        "permissionBreakdown": "({direct} directos + {fromSets} de {sets} conjunto(s))"
       },
       "edit": {
         "title": "Editar rol",
@@ -1387,7 +1778,10 @@
         "permissionsHint": "Personaliza los permisos de este rol. Haz clic en los nombres de categor\u00eda para seleccionar/deseleccionar todos los permisos de esa categor\u00eda.",
         "permissionsSelected": "{count} permiso(s) seleccionados",
         "updateRole": "Actualizar rol",
-        "success": "Rol actualizado exitosamente."
+        "success": "Rol actualizado exitosamente.",
+        "titleWithName": "Editar rol: {name}",
+        "subtitle": "Actualiza los detalles y permisos del rol.",
+        "viewRole": "Ver rol"
       },
       "show": {
         "title": "Detalles del rol y permisos",
@@ -1407,7 +1801,15 @@
         "deleteRole": "Eliminar rol",
         "reassignFirst": "Reasigna los usuarios antes de eliminar",
         "systemRoleHint": "Este es un rol del sistema y no se puede modificar ni eliminar.",
-        "confirmDelete": "\u00bfEst\u00e1s seguro de que deseas eliminar el rol {name}? Esta acci\u00f3n no se puede deshacer."
+        "confirmDelete": "\u00bfEst\u00e1s seguro de que deseas eliminar el rol {name}? Esta acci\u00f3n no se puede deshacer.",
+        "otherCategory": "Otros",
+        "titleWithName": "Rol: {name}",
+        "permissionsWithCount": "Permisos ({count})",
+        "noPermissions": "No hay permisos asignados a este rol.",
+        "usersCountValue": "{count} usuario | {count} usuarios",
+        "cannotDeleteWithUsers": "No se puede eliminar un rol con usuarios asignados",
+        "deleteRoleTooltip": "Eliminar rol",
+        "confirmDeleteRole": "¿Estás seguro de que deseas eliminar el rol {name}?"
       }
     },
     "activityLog": {
@@ -1473,7 +1875,16 @@
       "allCategories": "Todas las categor\u00edas",
       "securityBadge": "Seguridad",
       "securityShortcut": "Eventos de seguridad",
-      "viewDetails": "Ver detalles"
+      "viewDetails": "Ver detalles",
+      "description": "Registro de auditoría de todos los cambios en tu espacio de trabajo.",
+      "exportCsv": "Exportar CSV",
+      "exportXlsx": "Exportar XLSX",
+      "searchDescription": "Buscar descripción",
+      "unknownUser": "Usuario desconocido",
+      "viewChanges": "Ver {count} cambio | Ver {count} cambios",
+      "daysAgo": "hace {count} día | hace {count} días",
+      "hoursAgo": "hace {count} hora | hace {count} horas",
+      "minutesAgo": "hace {count} minuto | hace {count} minutos"
     },
     "update": {
       "title": "Actualizaci\u00f3n del sistema",
@@ -1507,11 +1918,335 @@
       "onGithub": "en GitHub",
       "autoBackup": "Se crea autom\u00e1ticamente una copia de seguridad antes de cada actualizaci\u00f3n",
       "maintenanceMode": "La aplicaci\u00f3n estar\u00e1 en modo de mantenimiento durante las actualizaciones",
-      "autoMigrations": "Las migraciones de base de datos se ejecutan autom\u00e1ticamente durante las actualizaciones"
+      "autoMigrations": "Las migraciones de base de datos se ejecutan autom\u00e1ticamente durante las actualizaciones",
+      "checkFailed": "No se pudieron buscar actualizaciones. Inténtalo de nuevo.",
+      "confirmUpdate": "¿Estás seguro de que deseas actualizar la aplicación? Se creará una copia de seguridad automáticamente.",
+      "updateFailed": "La actualización falló. Revisa los registros.",
+      "confirmBackup": "¿Crear una copia de seguridad de la instalación actual?",
+      "backupCreated": "¡Copia de seguridad creada correctamente!",
+      "backupFailed": "No se pudo crear la copia de seguridad. Revisa los registros.",
+      "confirmRestore": "¿Estás seguro de que deseas restaurar desde {file}? Esto sobrescribirá la instalación actual.",
+      "restoreCompleted": "¡Restauración completada correctamente!",
+      "restoreFailed": "La restauración falló.",
+      "restoreError": "No se pudo restaurar la copia de seguridad. Revisa los registros.",
+      "confirmDeleteBackup": "¿Estás seguro de que deseas eliminar {file}?",
+      "deleteBackupFailed": "No se pudo eliminar la copia de seguridad. Inténtalo de nuevo.",
+      "managerTitle": "Gestor de actualizaciones",
+      "subtitle": "Busca nuevas versiones, instala actualizaciones y gestiona las copias de seguridad de la instalación.",
+      "upToDateBadge": "Actualizado",
+      "fetchedFromRepo": "Las actualizaciones se obtienen de {repo} en GitHub."
     },
     "createRole": "Crear rol",
     "createUser": "Crear usuario",
-    "userDetails": "Detalles del usuario"
+    "userDetails": "Detalles del usuario",
+    "permissionCatalog": {
+      "permissions": {
+        "view_users": {
+          "label": "Ver usuarios",
+          "description": "Puede ver la lista y los detalles de los usuarios"
+        },
+        "create_users": {
+          "label": "Crear usuarios",
+          "description": "Puede crear nuevos usuarios"
+        },
+        "edit_users": {
+          "label": "Editar usuarios",
+          "description": "Puede editar usuarios existentes"
+        },
+        "delete_users": {
+          "label": "Eliminar usuarios",
+          "description": "Puede eliminar usuarios"
+        },
+        "view_roles": {
+          "label": "Ver roles",
+          "description": "Puede ver roles y permisos"
+        },
+        "create_roles": {
+          "label": "Crear roles",
+          "description": "Puede crear nuevos roles"
+        },
+        "edit_roles": {
+          "label": "Editar roles",
+          "description": "Puede editar roles existentes"
+        },
+        "delete_roles": {
+          "label": "Eliminar roles",
+          "description": "Puede eliminar roles"
+        },
+        "view_products": {
+          "label": "Ver productos",
+          "description": "Puede ver el inventario de productos"
+        },
+        "create_products": {
+          "label": "Crear productos",
+          "description": "Puede agregar nuevos productos"
+        },
+        "edit_products": {
+          "label": "Editar productos",
+          "description": "Puede modificar los detalles de los productos"
+        },
+        "delete_products": {
+          "label": "Eliminar productos",
+          "description": "Puede eliminar productos"
+        },
+        "manage_stock": {
+          "label": "Gestionar stock",
+          "description": "Puede ajustar los niveles de stock y gestionar los movimientos de stock"
+        },
+        "transfer_stock": {
+          "label": "Transferir stock",
+          "description": "Puede crear y gestionar transferencias de stock entre ubicaciones"
+        },
+        "manage_categories": {
+          "label": "Gestionar categorías",
+          "description": "Puede crear y gestionar categorías de productos"
+        },
+        "manage_locations": {
+          "label": "Gestionar ubicaciones",
+          "description": "Puede crear y gestionar ubicaciones de almacenamiento"
+        },
+        "view_customers": {
+          "label": "Ver clientes",
+          "description": "Puede ver la lista y los detalles de los clientes"
+        },
+        "create_customers": {
+          "label": "Crear clientes",
+          "description": "Puede crear nuevos clientes"
+        },
+        "edit_customers": {
+          "label": "Editar clientes",
+          "description": "Puede editar clientes existentes"
+        },
+        "delete_customers": {
+          "label": "Eliminar clientes",
+          "description": "Puede eliminar clientes"
+        },
+        "view_suppliers": {
+          "label": "Ver proveedores",
+          "description": "Puede ver la lista y los detalles de los proveedores"
+        },
+        "create_suppliers": {
+          "label": "Crear proveedores",
+          "description": "Puede crear nuevos proveedores"
+        },
+        "edit_suppliers": {
+          "label": "Editar proveedores",
+          "description": "Puede editar proveedores existentes"
+        },
+        "delete_suppliers": {
+          "label": "Eliminar proveedores",
+          "description": "Puede eliminar proveedores"
+        },
+        "view_purchase_orders": {
+          "label": "Ver órdenes de compra",
+          "description": "Puede ver órdenes de compra"
+        },
+        "create_purchase_orders": {
+          "label": "Crear órdenes de compra",
+          "description": "Puede crear nuevas órdenes de compra"
+        },
+        "edit_purchase_orders": {
+          "label": "Editar órdenes de compra",
+          "description": "Puede editar órdenes de compra"
+        },
+        "delete_purchase_orders": {
+          "label": "Eliminar órdenes de compra",
+          "description": "Puede eliminar órdenes de compra"
+        },
+        "receive_purchase_orders": {
+          "label": "Recibir órdenes de compra",
+          "description": "Puede recibir artículos de órdenes de compra"
+        },
+        "approve_purchase_orders": {
+          "label": "Aprobar órdenes de compra",
+          "description": "Puede aprobar o rechazar órdenes de compra que requieren aprobación antes de enviarse"
+        },
+        "view_orders": {
+          "label": "Ver pedidos",
+          "description": "Puede ver pedidos"
+        },
+        "create_orders": {
+          "label": "Crear pedidos",
+          "description": "Puede crear nuevos pedidos"
+        },
+        "edit_orders": {
+          "label": "Editar pedidos",
+          "description": "Puede modificar pedidos"
+        },
+        "delete_orders": {
+          "label": "Eliminar pedidos",
+          "description": "Puede eliminar pedidos"
+        },
+        "approve_orders": {
+          "label": "Aprobar pedidos",
+          "description": "Puede aprobar o rechazar pedidos"
+        },
+        "view_payments": {
+          "label": "Ver pagos",
+          "description": "Puede ver los pagos de pedidos, los saldos pendientes y las cuentas por cobrar"
+        },
+        "record_payments": {
+          "label": "Registrar pagos",
+          "description": "Puede registrar, anular y reembolsar pagos de pedidos"
+        },
+        "view_settings": {
+          "label": "Ver configuración",
+          "description": "Puede ver la configuración del sistema"
+        },
+        "edit_settings": {
+          "label": "Editar configuración",
+          "description": "Puede modificar la configuración del sistema"
+        },
+        "manage_organization": {
+          "label": "Gestionar organización",
+          "description": "Puede gestionar los detalles de la organización"
+        },
+        "view_plugins": {
+          "label": "Ver plugins",
+          "description": "Puede ver los plugins instalados"
+        },
+        "manage_plugins": {
+          "label": "Gestionar plugins",
+          "description": "Puede instalar, activar y eliminar plugins"
+        },
+        "view_stock_audits": {
+          "label": "Ver auditorías de stock",
+          "description": "Puede ver auditorías de stock y conteos cíclicos"
+        },
+        "create_stock_audits": {
+          "label": "Crear auditorías de stock",
+          "description": "Puede crear nuevas auditorías de stock"
+        },
+        "manage_stock_audits": {
+          "label": "Gestionar auditorías de stock",
+          "description": "Puede gestionar auditorías de stock: iniciarlas, completarlas y ajustar conteos"
+        },
+        "approve_stock_adjustments": {
+          "label": "Aprobar ajustes de stock",
+          "description": "Puede aprobar o rechazar ajustes de stock que requieren aprobación antes de modificar el stock"
+        },
+        "approve_stock_transfers": {
+          "label": "Aprobar transferencias de stock",
+          "description": "Puede aprobar o rechazar transferencias de stock que requieren aprobación antes de enviarse"
+        },
+        "view_warehouses": {
+          "label": "Ver almacenes",
+          "description": "Puede ver la lista y los detalles de los almacenes"
+        },
+        "create_warehouses": {
+          "label": "Crear almacenes",
+          "description": "Puede crear nuevos almacenes"
+        },
+        "edit_warehouses": {
+          "label": "Editar almacenes",
+          "description": "Puede editar la configuración de los almacenes"
+        },
+        "delete_warehouses": {
+          "label": "Eliminar almacenes",
+          "description": "Puede eliminar almacenes"
+        },
+        "manage_warehouse_users": {
+          "label": "Gestionar usuarios de almacén",
+          "description": "Puede asignar y quitar usuarios de los almacenes"
+        },
+        "access_all_warehouses": {
+          "label": "Acceder a todos los almacenes",
+          "description": "Puede ver y operar el stock de todos los almacenes, incluso si está asignado a almacenes específicos"
+        },
+        "manage_returns": {
+          "label": "Gestionar devoluciones",
+          "description": "Puede crear y gestionar devoluciones y cambios"
+        },
+        "view_shipments": {
+          "label": "Ver envíos",
+          "description": "Puede ver los envíos de pedidos, el seguimiento y las etiquetas de envío"
+        },
+        "create_shipments": {
+          "label": "Crear envíos",
+          "description": "Puede crear envíos, comprar y anular etiquetas de envío y marcar pedidos como enviados"
+        },
+        "view_reports": {
+          "label": "Ver informes",
+          "description": "Puede ver los informes del sistema"
+        },
+        "export_data": {
+          "label": "Exportar datos",
+          "description": "Puede exportar datos del sistema"
+        },
+        "import_data": {
+          "label": "Importar datos",
+          "description": "Puede importar datos al sistema"
+        },
+        "view_activity_log": {
+          "label": "Ver registro de actividad",
+          "description": "Puede ver los registros de actividad y de auditoría"
+        }
+      },
+      "categories": {
+        "userManagement": "Gestión de usuarios",
+        "roleManagement": "Gestión de roles",
+        "inventoryManagement": "Gestión de inventario",
+        "customerManagement": "Gestión de clientes",
+        "supplierManagement": "Gestión de proveedores",
+        "purchaseOrderManagement": "Gestión de órdenes de compra",
+        "orderManagement": "Gestión de pedidos",
+        "payments": "Pagos",
+        "settings": "Configuración",
+        "plugins": "Plugins",
+        "warehouseManagement": "Gestión de almacenes",
+        "returnsManagement": "Gestión de devoluciones",
+        "shipping": "Envíos",
+        "reportsData": "Informes y datos"
+      },
+      "sets": {
+        "inventoryManager": {
+          "name": "Gerente de inventario",
+          "description": "Acceso completo a la gestión de inventario, incluidos productos, categorías y ubicaciones."
+        },
+        "orderProcessor": {
+          "name": "Procesador de pedidos",
+          "description": "Gestiona los pedidos desde su creación hasta su finalización."
+        },
+        "warehouseStaff": {
+          "name": "Personal de almacén",
+          "description": "Ve productos y gestiona los niveles de stock."
+        },
+        "purchasingAgent": {
+          "name": "Agente de compras",
+          "description": "Gestiona proveedores y órdenes de compra."
+        },
+        "approver": {
+          "name": "Aprobador",
+          "description": "Aprueba o rechaza órdenes de compra, ajustes de stock y transferencias de stock que requieren autorización."
+        },
+        "readOnlyAuditor": {
+          "name": "Auditor de solo lectura",
+          "description": "Acceso de solo lectura a todos los datos con fines de auditoría."
+        },
+        "userAdministrator": {
+          "name": "Administrador de usuarios",
+          "description": "Gestiona los usuarios y sus permisos de acceso."
+        },
+        "reportsViewer": {
+          "name": "Visor de informes",
+          "description": "Acceso a los informes y a la exportación de datos."
+        }
+      },
+      "roles": {
+        "systemAdministrator": {
+          "name": "Administrador",
+          "description": "Acceso completo al sistema con todos los permisos."
+        },
+        "systemManager": {
+          "name": "Gerente",
+          "description": "Puede gestionar inventario, pedidos y categorías, y ver informes."
+        },
+        "systemMember": {
+          "name": "Miembro",
+          "description": "Acceso básico para ver y gestionar las tareas asignadas."
+        }
+      }
+    }
   },
   "auth": {
     "login": {
@@ -1556,6 +2291,35 @@
       "linkSent": "Se ha enviado un nuevo enlace de verificaci\u00f3n a la direcci\u00f3n de correo electr\u00f3nico que proporcionaste durante el registro.",
       "resend": "Reenviar correo de verificaci\u00f3n",
       "logOut": "Cerrar sesi\u00f3n"
+    },
+    "twoFactorChallenge": {
+      "title": "Verificación en dos pasos",
+      "codeHint": "Ingresa el código de autenticación de tu aplicación de autenticación.",
+      "recoveryHint": "Ingresa uno de tus códigos de recuperación.",
+      "code": "Código de autenticación",
+      "codePlaceholder": "Ingresa el código de 6 dígitos",
+      "recoveryCode": "Código de recuperación",
+      "recoveryPlaceholder": "Ingresa el código de recuperación",
+      "useCode": "Usar código de autenticación",
+      "useRecovery": "Usar un código de recuperación",
+      "verify": "Verificar"
+    },
+    "twoFactor": {
+      "setupTitle": "Configuración de la autenticación de dos factores",
+      "title": "Autenticación de dos factores",
+      "description": "Agrega una capa adicional de seguridad a tu cuenta con una aplicación de autenticación.",
+      "enabled": "Activada",
+      "enabledTitle": "La autenticación de dos factores está activada",
+      "enabledHint": "La autenticación de dos factores está activa en tu cuenta. Ingresa tu contraseña para desactivarla.",
+      "password": "Contraseña",
+      "disable": "Desactivar la autenticación de dos factores",
+      "enable": "Activar la autenticación de dos factores",
+      "scanHint": "Escanea el código QR con tu aplicación de autenticación (Google Authenticator, Authy, etc.) y luego ingresa el código de verificación para activar la 2FA.",
+      "manualKey": "O ingresa esta clave manualmente:",
+      "verificationCode": "Código de verificación",
+      "showRecoveryCodes": "Mostrar códigos de recuperación",
+      "hideRecoveryCodes": "Ocultar códigos de recuperación",
+      "recoveryHint": "Guarda estos códigos de recuperación en un lugar seguro. Puedes usarlos para acceder a tu cuenta si pierdes tu dispositivo de autenticación."
     }
   },
   "profile": {
@@ -1582,7 +2346,8 @@
       "confirmTitle": "\u00bfEst\u00e1s seguro de que deseas eliminar tu cuenta?",
       "confirmDescription": "Una vez que tu cuenta sea eliminada, todos sus recursos y datos ser\u00e1n eliminados permanentemente. Por favor ingresa tu contrase\u00f1a para confirmar que deseas eliminar tu cuenta permanentemente.",
       "password": "Contrase\u00f1a"
-    }
+    },
+    "description": "Gestiona la información de tu cuenta, tu contraseña y la eliminación de la cuenta."
   },
   "install": {
     "welcome": {
@@ -1634,7 +2399,9 @@
       "testing": "Probando conexi\u00f3n...",
       "dbExistsHint": "Aseg\u00farate de que tu base de datos exista antes de continuar. El instalador crear\u00e1 las tablas necesarias.",
       "installDatabase": "Instalar base de datos",
-      "installing": "Instalando..."
+      "installing": "Instalando...",
+      "testFailed": "No se pudo probar la conexión: {error}",
+      "installFailed": "La instalación falló: {error}"
     },
     "admin": {
       "title": "Crear cuenta de administrador",
@@ -1650,7 +2417,10 @@
       "confirmPasswordHint": "Confirma tu contrase\u00f1a",
       "accessNote": "Esta cuenta de administrador tendr\u00e1 acceso completo a tu instalaci\u00f3n de Inventoros.",
       "completeInstallation": "Completar instalaci\u00f3n",
-      "creatingAccount": "Creando cuenta..."
+      "creatingAccount": "Creando cuenta...",
+      "orgNamePlaceholder": "Acme S.A.",
+      "fullNamePlaceholder": "Juan Pérez",
+      "createFailed": "No se pudo crear la cuenta de administrador: {error}"
     },
     "complete": {
       "title": "\u00a1Instalaci\u00f3n completada!",
@@ -1689,7 +2459,10 @@
       "availableVars": "Variables disponibles",
       "preview": "Vista previa",
       "generating": "Generando...",
-      "applySku": "Aplicar SKU"
+      "applySku": "Aplicar SKU",
+      "or": "O",
+      "patternExample": "ej., {example}",
+      "previewError": "Error al generar la vista previa"
     },
     "variantManager": {
       "productOptions": "Opciones del producto",
@@ -1705,7 +2478,10 @@
       "autoGenerate": "Autogenerar",
       "enableAll": "Habilitar todas",
       "disableAll": "Deshabilitar todas",
-      "addOptionsHint": "Agrega opciones como Talla o Color para crear variantes de producto"
+      "addOptionsHint": "Agrega opciones como Talla o Color para crear variantes de producto",
+      "optionName": "Nombre de la opción",
+      "optionValues": "Valores de la opción (separados por comas)",
+      "addOptionButton": "Agregar opción (ej., Talla, Color)"
     },
     "variantsTable": {
       "variant": "Variante",
@@ -1750,20 +2526,34 @@
       "cameraHint": "Apunta tu c\u00e1mara a un c\u00f3digo de barras para escanear",
       "locationFound": "Ubicaci\u00f3n encontrada",
       "productsHere": "{count} productos aqu\u00ed",
-      "viewProductsHere": "Ver productos aqu\u00ed"
+      "viewProductsHere": "Ver productos aqu\u00ed",
+      "lookupFailed": "No se pudo buscar el código de barras",
+      "stock": "Stock",
+      "aisle": "Pasillo {value}",
+      "shelf": "Estante {value}",
+      "bin": "Contenedor {value}"
     },
     "activityTimeline": {
       "noActivity": "A\u00fan no hay actividad registrada",
       "system": "Sistema",
       "thisProduct": "este producto",
-      "moreChanges": "+{count} cambios m\u00e1s"
+      "moreChanges": "+{count} cambios m\u00e1s",
+      "actionOnProduct": {
+        "created": "creó este producto",
+        "updated": "actualizó este producto",
+        "deleted": "eliminó este producto",
+        "viewed": "vio este producto",
+        "other": "{action} este producto"
+      }
     },
     "themeToggle": {
       "switchToLight": "Cambiar a modo claro",
       "switchToDark": "Cambiar a modo oscuro"
     },
     "imageGallery": {
-      "noImages": "No hay im\u00e1genes disponibles"
+      "noImages": "No hay im\u00e1genes disponibles",
+      "close": "Cerrar",
+      "imageAlt": "{name} - Imagen {number}"
     },
     "imageUploader": {
       "dragDrop": "Arrastra y suelta im\u00e1genes aqu\u00ed, o haz clic para explorar",
@@ -1775,6 +2565,62 @@
       "moveRight": "Mover a la derecha",
       "remove": "Eliminar",
       "noImagesHint": "A\u00fan no se han subido im\u00e1genes. La primera imagen se usar\u00e1 como imagen principal del producto."
+    },
+    "relativeTime": {
+      "justNow": "Justo ahora",
+      "minutesAgo": "hace {count} min",
+      "hoursAgo": "hace {count} h",
+      "daysAgo": "hace {count} d"
+    },
+    "batchList": {
+      "title": "Seguimiento de lotes",
+      "addBatch": "Agregar lote",
+      "createFailed": "No se pudo crear el lote",
+      "batchNumberLabel": "Número de lote (se genera automáticamente si está vacío)",
+      "manufacturedDate": "Fecha de fabricación",
+      "expiryDate": "Fecha de vencimiento",
+      "createBatch": "Crear lote",
+      "columns": {
+        "batchNumber": "Lote #",
+        "quantity": "Cant.",
+        "manufactured": "Fabricación",
+        "expiry": "Vencimiento"
+      },
+      "expired": "(vencido)",
+      "empty": "Aún no hay lotes registrados.",
+      "emptyHint": "Haz clic en \"Agregar lote\" para registrar el primer lote."
+    },
+    "languageSwitcher": {
+      "ariaLabel": "Idioma: {name}"
+    },
+    "dataTable": {
+      "noData": "Sin datos."
+    },
+    "serialList": {
+      "title": "Seguimiento de números de serie",
+      "addSerial": "Agregar número de serie",
+      "createFailed": "No se pudo crear el número de serie",
+      "updateFailed": "No se pudo actualizar el estado",
+      "all": "Todos",
+      "statuses": {
+        "available": "Disponible",
+        "sold": "Vendido",
+        "reserved": "Reservado",
+        "damaged": "Dañado"
+      },
+      "serialNumber": "Número de serie",
+      "createSerial": "Crear número de serie",
+      "columns": {
+        "serialNumber": "N.º de serie"
+      },
+      "markAsSold": "Marcar como vendido",
+      "markAsReserved": "Marcar como reservado",
+      "markAsDamaged": "Marcar como dañado",
+      "markAsAvailable": "Marcar como disponible",
+      "reserve": "Reservar",
+      "empty": "Aún no hay números de serie registrados.",
+      "emptyHint": "Haz clic en \"Agregar número de serie\" para registrar el primero.",
+      "noMatches": "Ningún número de serie coincide con el filtro seleccionado."
     }
   },
   "warehouses": {
@@ -1854,7 +2700,8 @@
       "badge": "Almac\u00e9n predeterminado",
       "makeDefault": "Establecer como predeterminado",
       "confirm": "\u00bfEstablecer \"{name}\" como almac\u00e9n predeterminado?",
-      "hint": "El almac\u00e9n predeterminado se preselecciona en los pedidos nuevos."
+      "hint": "El almac\u00e9n predeterminado se preselecciona en los pedidos nuevos.",
+      "label": "Predeterminado"
     },
     "capacity": {
       "utilisation": "Ocupaci\u00f3n",
@@ -1877,6 +2724,41 @@
       "reorder": "Reordenar",
       "shortIn": "Faltante en {names}",
       "save": "Guardar niveles del almac\u00e9n"
+    },
+    "subtitle": "Tus ubicaciones de almacenamiento y la distribución del stock.",
+    "updateWarehouse": "Actualizar almacén",
+    "index": {
+      "searchLabel": "Buscar almacenes"
+    },
+    "create": {
+      "subtitle": "Agrega un almacén y su configuración."
+    },
+    "edit": {
+      "title": "Editar almacén: {name}",
+      "subtitle": "Actualiza los detalles del almacén, los datos de contacto y el acceso de usuarios."
+    },
+    "timezoneOptions": {
+      "stJohns": "Terranova (St. John's)",
+      "halifax": "Atlántico (Halifax)",
+      "toronto": "Este (Toronto)",
+      "winnipeg": "Centro (Winnipeg)",
+      "edmonton": "Montaña (Edmonton)",
+      "vancouver": "Pacífico (Vancouver)"
+    },
+    "show": {
+      "codeLabel": "Código: {code}",
+      "totalLocations": "Total de ubicaciones",
+      "totalProductsStored": "Total de productos almacenados",
+      "assignedUsers": "Usuarios asignados",
+      "details": "Detalles del almacén",
+      "manager": "Gerente",
+      "noAddress": "No se proporcionó dirección",
+      "locationsCount": "Ubicaciones ({count})",
+      "products": "Productos",
+      "noLocations": "No hay ubicaciones en este almacén",
+      "dangerZone": "Zona de peligro",
+      "deleteWarehouse": "Eliminar almacén",
+      "cannotUndo": "Esta acción no se puede deshacer."
     }
   },
   "workOrders": {
@@ -1932,7 +2814,8 @@
       "ready": "Listo",
       "noComponents": "No hay componentes registrados para esta orden de trabajo.",
       "noComponentsDefined": "Este producto ensamblado no tiene componentes definidos. Agrega componentes en la p\u00e1gina de detalles del producto antes de crear una orden de trabajo.",
-      "insufficientWarning": "Algunos componentes no tienen stock suficiente. A\u00fan puedes crear la orden de trabajo, pero la producci\u00f3n no puede comenzar hasta que se reponga el stock."
+      "insufficientWarning": "Algunos componentes no tienen stock suficiente. A\u00fan puedes crear la orden de trabajo, pero la producci\u00f3n no puede comenzar hasta que se reponga el stock.",
+      "unknown": "Desconocido"
     },
     "actions": {
       "startProduction": "Iniciar producci\u00f3n",
@@ -1955,7 +2838,19 @@
       "cancelled": "Cancelada",
       "lastUpdated": "\u00daltima actualizaci\u00f3n"
     },
-    "cancelledBanner": "Esta orden de trabajo fue cancelada."
+    "cancelledBanner": "Esta orden de trabajo fue cancelada.",
+    "create": {
+      "materialsNeeded": "Materiales necesarios para producir {count} unidad de {name} | Materiales necesarios para producir {count} unidades de {name}"
+    },
+    "index": {
+      "filter": "Filtrar"
+    },
+    "show": {
+      "headTitle": "Orden de trabajo {number}",
+      "deleteConfirm": "¿Eliminar esta orden de trabajo? Esta acción no se puede deshacer.",
+      "dangerZone": "Zona de peligro",
+      "releaseHint": "Los componentes reservados se devolverán al stock."
+    }
   },
   "reportBuilder": {
     "title": "Informes personalizados",
@@ -2454,6 +3349,78 @@
       "save": "Guardar l\u00edneas",
       "cancel": "Cancelar",
       "hint": "Cambia lo que se devuelve al estante. El stock solo se mueve cuando se recibe la devoluci\u00f3n."
+    },
+    "index": {
+      "title": "Devoluciones y cambios",
+      "description": "Haz seguimiento de devoluciones, cambios y reembolsos de todos los pedidos.",
+      "newReturn": "Nueva devolución",
+      "searchPlaceholder": "Buscar por número de devolución, número de pedido o cliente...",
+      "returnNumber": "Devolución #",
+      "orderNumber": "Pedido #",
+      "items": "Artículos",
+      "refund": "Reembolso",
+      "empty": "No se encontraron devoluciones."
+    },
+    "columns": {
+      "qty": "Cant.",
+      "condition": "Estado",
+      "restock": "Reponer"
+    },
+    "conditions": {
+      "new": "Nuevo (sin abrir)",
+      "used": "Usado (abierto)",
+      "damaged": "Dañado"
+    },
+    "create": {
+      "headTitle": "Crear devolución - Pedido #{number}",
+      "title": "Crear devolución / cambio",
+      "fromOrder": "Del pedido #{number}",
+      "backToOrder": "Volver al pedido",
+      "details": "Detalles de la devolución",
+      "typeReturn": "Devolución (reembolso)",
+      "reasonRequired": "Motivo *",
+      "reasonPlaceholder": "Motivo de la devolución o el cambio...",
+      "notesOptional": "Notas (opcional)",
+      "notesPlaceholder": "Notas adicionales...",
+      "selectItems": "Selecciona los artículos a devolver",
+      "ordered": "Pedido: {count}",
+      "alreadyReturned": "({count} ya devueltos)",
+      "maxReturnable": "Máximo a devolver: {count}",
+      "selectedSummary": "{count} artículo seleccionado para {type} | {count} artículos seleccionados para {type}",
+      "estimatedRefund": "Reembolso estimado:",
+      "processing": "Procesando...",
+      "submit": "Enviar solicitud de devolución"
+    },
+    "show": {
+      "headTitle": "Devolución {number}",
+      "title": "Devolución #{number}",
+      "createdOn": "Creada el {date}",
+      "approve": "Aprobar devolución",
+      "markReceived": "Marcar como recibida",
+      "complete": "Completar devolución",
+      "reject": "Rechazar devolución",
+      "backToReturns": "Volver a devoluciones",
+      "items": "Artículos de la devolución",
+      "unknownProduct": "Producto desconocido",
+      "conditionFor": "Estado de {name}",
+      "restockFor": "Reponer {name}",
+      "noItems": "No hay artículos en esta devolución.",
+      "details": "Detalles",
+      "reason": "Motivo",
+      "forOrder": "Del pedido",
+      "summary": "Resumen",
+      "returnNumber": "Número de devolución",
+      "completed": "Completada",
+      "processedBy": "Procesada por",
+      "refundAmount": "Monto del reembolso",
+      "pendingHint": "Aprueba para continuar o rechaza la devolución.",
+      "approvedHint": "Márcala como recibida cuando lleguen los artículos. Los artículos marcados para reponer se volverán a agregar al inventario.",
+      "receivedHint": "Completa la devolución para finalizar el proceso.",
+      "dangerZone": "Zona de peligro",
+      "rejectWarning": "Al rechazarla, esta devolución se cierra. No se puede deshacer.",
+      "rejectReason": "Motivo del rechazo",
+      "rejectPlaceholder": "¿Por qué se rechaza esta devolución?",
+      "rejecting": "Rechazando..."
     }
   },
   "portal": {
@@ -2677,5 +3644,60 @@
   "legal": {
     "licensedUnder": "Distribuido bajo la licencia {license}",
     "sourceCode": "C\u00f3digo fuente"
+  },
+  "stockTransfers": {
+    "title": "Transferencias de stock",
+    "subtitle": "Transfiere inventario entre ubicaciones.",
+    "newTransfer": "Nueva transferencia",
+    "backToList": "Volver a la lista",
+    "transferDetails": "Detalles de la transferencia",
+    "transferItems": "Artículos de la transferencia",
+    "fromLocation": "Ubicación de origen",
+    "toLocation": "Ubicación de destino",
+    "statuses": {
+      "pending": "Pendiente",
+      "in_transit": "En tránsito",
+      "completed": "Completada",
+      "cancelled": "Cancelada"
+    },
+    "create": {
+      "title": "Crear transferencia de stock",
+      "selectSource": "Selecciona la ubicación de origen",
+      "selectDestination": "Selecciona la ubicación de destino",
+      "notesPlaceholder": "Agrega notas sobre esta transferencia...",
+      "addItem": "Agregar artículo",
+      "selectProduct": "Seleccionar producto",
+      "productOption": "{name} ({sku}) - Stock: {stock}",
+      "qty": "Cant.",
+      "available": "Disponible: {count}",
+      "itemNotesPlaceholder": "Notas del artículo...",
+      "totalProducts": "Total de artículos: {count} producto | Total de artículos: {count} productos",
+      "totalUnits": "Cantidad total: {count} unidad | Cantidad total: {count} unidades",
+      "createTransfer": "Crear transferencia"
+    },
+    "index": {
+      "searchPlaceholder": "Buscar por número de transferencia...",
+      "filter": "Filtrar",
+      "transferNumber": "Transferencia #",
+      "from": "Origen",
+      "to": "Destino",
+      "items": "Artículos",
+      "empty": "No se encontraron transferencias de stock. Crea tu primera transferencia para mover inventario entre ubicaciones.",
+      "itemCount": "{count} artículo | {count} artículos",
+      "showingTransfers": "Mostrando {from} a {to} de {total} transferencias"
+    },
+    "show": {
+      "headTitle": "Transferencia {number}",
+      "subtitle": "Detalles de la transferencia de stock",
+      "transferNumber": "Número de transferencia",
+      "transferredBy": "Transferida por",
+      "completedAt": "Completada",
+      "processing": "Procesando...",
+      "completeTransfer": "Completar transferencia",
+      "cancelTransfer": "Cancelar transferencia",
+      "completeHint": "Al completar la transferencia se descontará el stock de la ubicación de origen y se agregará a la ubicación de destino.",
+      "confirmComplete": "¿Estás seguro de que deseas completar esta transferencia? Se ajustarán los niveles de stock.",
+      "confirmCancel": "¿Estás seguro de que deseas cancelar esta transferencia?"
+    }
   }
 }

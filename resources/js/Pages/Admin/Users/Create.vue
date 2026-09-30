@@ -5,6 +5,7 @@ import Card from '@/Components/ui/Card.vue';
 import Button from '@/Components/ui/Button.vue';
 import { Head, Link, useForm } from '@inertiajs/vue3';
 import { useI18n } from 'vue-i18n';
+import { roleDescription, roleName } from '@/lib/permissionLabels';
 import { ArrowLeft } from 'lucide-vue-next';
 
 const props = defineProps({
@@ -12,7 +13,8 @@ const props = defineProps({
 });
 
 
-const { t } = useI18n();
+const { t, te } = useI18n();
+const i18n = { t, te };
 const form = useForm({
     name: '',
     email: '',
@@ -48,11 +50,11 @@ const fieldError = 'mt-1 text-xs text-status-danger';
             </div>
         </template>
 
-        <PageHeader :title="t('admin.createUser')" description="Create a new user account and assign roles.">
+        <PageHeader :title="t('admin.createUser')" :description="t('admin.users.create.subtitle')">
             <template #actions>
                 <Button variant="secondary" size="sm" as="Link" :href="route('users.index')">
                     <ArrowLeft :size="14" />
-                    Back to Users
+                    {{ t('admin.users.create.backToUsers') }}
                 </Button>
             </template>
         </PageHeader>
@@ -62,7 +64,7 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                 <div class="space-y-6 p-6">
                     <!-- Name -->
                     <div>
-                        <label for="name" :class="fieldLabel">Full Name</label>
+                        <label for="name" :class="fieldLabel">{{ t('admin.users.create.fullName') }}</label>
                         <input
                             id="name"
                             v-model="form.name"
@@ -77,7 +79,7 @@ const fieldError = 'mt-1 text-xs text-status-danger';
 
                     <!-- Email -->
                     <div>
-                        <label for="email" :class="fieldLabel">Email Address</label>
+                        <label for="email" :class="fieldLabel">{{ t('admin.users.create.emailAddress') }}</label>
                         <input
                             id="email"
                             v-model="form.email"
@@ -91,7 +93,7 @@ const fieldError = 'mt-1 text-xs text-status-danger';
 
                     <!-- Password -->
                     <div>
-                        <label for="password" :class="fieldLabel">Password</label>
+                        <label for="password" :class="fieldLabel">{{ t('admin.users.create.password') }}</label>
                         <input
                             id="password"
                             v-model="form.password"
@@ -101,12 +103,12 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                             autocomplete="new-password"
                         />
                         <p v-if="form.errors.password" :class="fieldError">{{ form.errors.password }}</p>
-                        <p class="mt-1 text-sm text-text-tertiary">Minimum 8 characters</p>
+                        <p class="mt-1 text-sm text-text-tertiary">{{ t('admin.users.create.minChars') }}</p>
                     </div>
 
                     <!-- Confirm Password -->
                     <div>
-                        <label for="password_confirmation" :class="fieldLabel">Confirm Password</label>
+                        <label for="password_confirmation" :class="fieldLabel">{{ t('admin.users.create.confirmPassword') }}</label>
                         <input
                             id="password_confirmation"
                             v-model="form.password_confirmation"
@@ -120,26 +122,26 @@ const fieldError = 'mt-1 text-xs text-status-danger';
 
                     <!-- Role -->
                     <div>
-                        <label for="role" :class="fieldLabel">Base Role</label>
+                        <label for="role" :class="fieldLabel">{{ t('admin.users.create.baseRole') }}</label>
                         <select
                             id="role"
                             v-model="form.role"
                             :class="fieldInput"
                             required
                         >
-                            <option value="member">Member</option>
-                            <option value="manager">Manager</option>
-                            <option value="admin">Administrator</option>
+                            <option value="member">{{ t('admin.users.create.member') }}</option>
+                            <option value="manager">{{ t('admin.users.create.manager') }}</option>
+                            <option value="admin">{{ t('admin.users.create.administrator') }}</option>
                         </select>
                         <p v-if="form.errors.role" :class="fieldError">{{ form.errors.role }}</p>
                         <p class="mt-1 text-sm text-text-tertiary">
-                            Base organizational role. Admins have access to all features.
+                            {{ t('admin.users.create.roleHint') }}
                         </p>
                     </div>
 
                     <!-- Additional Roles (if any custom roles exist) -->
                     <div v-if="roles && roles.length > 0">
-                        <label :class="fieldLabel">Additional Roles (Optional)</label>
+                        <label :class="fieldLabel">{{ t('admin.users.create.additionalRoles') }}</label>
                         <div class="mt-2 max-h-48 space-y-2 overflow-y-auto rounded-md border border-border-subtle bg-surface-canvas p-4">
                             <label
                                 v-for="role in roles"
@@ -153,16 +155,16 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                                     class="rounded border-border-subtle bg-surface-canvas text-brand ds-focus-ring"
                                 />
                                 <div class="flex-1">
-                                    <div class="text-sm font-medium text-text-secondary">{{ role.name }}</div>
-                                    <div class="text-xs text-text-tertiary" v-if="role.description">{{ role.description }}</div>
+                                    <div class="text-sm font-medium text-text-secondary">{{ roleName(role, i18n) }}</div>
+                                    <div class="text-xs text-text-tertiary" v-if="role.description">{{ roleDescription(role, i18n) }}</div>
                                 </div>
                                 <span class="text-xs text-text-tertiary">
-                                    {{ role.permissions ? role.permissions.length : 0 }} permissions
+                                    {{ t('admin.roles.permissionsCount', { count: role.permissions ? role.permissions.length : 0 }) }}
                                 </span>
                             </label>
                         </div>
                         <p class="mt-1 text-sm text-text-tertiary">
-                            Assign custom roles with specific permission sets.
+                            {{ t('admin.users.create.additionalRolesHint') }}
                         </p>
                     </div>
 
@@ -183,7 +185,7 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                             leave-to-class="opacity-0"
                         >
                             <p v-if="form.recentlySuccessful" class="text-sm text-status-success">
-                                User created successfully.
+                                {{ t('admin.users.create.success') }}
                             </p>
                         </Transition>
                     </div>

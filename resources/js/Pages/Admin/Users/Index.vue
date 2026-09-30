@@ -30,15 +30,15 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium text-text-secondary';
             <div class="flex items-center gap-2 text-xs">
                 <span class="text-text-tertiary">{{ t('nav.sections.workspace') }}</span>
                 <span class="text-text-tertiary">/</span>
-                <span class="font-medium text-text-primary">{{ t('admin.users') }}</span>
+                <span class="font-medium text-text-primary">{{ t('admin.users.title') }}</span>
             </div>
         </template>
 
-        <PageHeader :title="t('admin.users')" description="Manage users in your organization, assign roles and permissions.">
+        <PageHeader :title="t('admin.users.title')" :description="t('admin.users.subtitle')">
             <template #actions>
                 <Button variant="default" size="sm" as="Link" :href="route('users.create')">
                     <Plus :size="14" />
-                    {{ t('common.add') }} {{ t('nav.users') }}
+                    {{ t('admin.users.addUser') }}
                 </Button>
             </template>
         </PageHeader>
@@ -50,7 +50,7 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium text-text-secondary';
                     <tr class="border-b border-border-subtle">
                         <th :class="thClass">{{ t('common.name') }}</th>
                         <th :class="thClass">{{ t('common.email') }}</th>
-                        <th :class="thClass">Role</th>
+                        <th :class="thClass">{{ t('admin.users.role') }}</th>
                         <th :class="[thClass, 'text-right']">{{ t('common.actions') }}</th>
                     </tr>
                 </thead>
@@ -59,11 +59,11 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium text-text-secondary';
                         <td colspan="4" class="px-4 py-12 text-center">
                             <div class="flex flex-col items-center gap-3">
                                 <Users :size="22" class="text-text-tertiary" />
-                                <p class="text-sm font-medium text-text-primary">No users found.</p>
-                                <p class="text-sm text-text-tertiary">Click "Add User" to create your first user.</p>
+                                <p class="text-sm font-medium text-text-primary">{{ t('admin.users.noUsersTitle') }}</p>
+                                <p class="text-sm text-text-tertiary">{{ t('admin.users.noUsersHint') }}</p>
                                 <Button variant="default" size="sm" as="Link" :href="route('users.create')">
                                     <Plus :size="14" />
-                                    {{ t('common.add') }} {{ t('nav.users') }}
+                                    {{ t('admin.users.addUser') }}
                                 </Button>
                             </div>
                         </td>
@@ -80,7 +80,7 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium text-text-secondary';
                             <span class="text-text-secondary">{{ user.email }}</span>
                         </td>
                         <td class="px-4 py-3">
-                            <Badge :variant="roleVariant(user.role)" size="sm">{{ user.role }}</Badge>
+                            <Badge :variant="roleVariant(user.role)" size="sm">{{ t(`admin.users.roles.${user.role}`) }}</Badge>
                         </td>
                         <td class="px-4 py-3">
                             <div class="flex items-center justify-end gap-1">

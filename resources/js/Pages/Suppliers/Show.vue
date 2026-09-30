@@ -8,6 +8,7 @@ import Badge from '@/Components/ui/Badge.vue';
 import SupplierRating from '@/Components/SupplierRating.vue';
 import { Head, Link, router } from '@inertiajs/vue3';
 import { useI18n } from 'vue-i18n';
+import { formatMoney } from '@/lib/money';
 import { Pencil, ArrowLeft, Trash2, PackageOpen } from 'lucide-vue-next';
 
 const { t } = useI18n();
@@ -24,10 +25,7 @@ const deleteSupplier = () => {
 };
 
 const formatCurrency = (value) => {
-    return new Intl.NumberFormat('en-US', {
-        style: 'currency',
-        currency: props.supplier.currency || 'USD',
-    }).format(value || 0);
+    return formatMoney(value, props.supplier.currency);
 };
 
 const thClass = 'px-4 py-2.5 text-left text-xs font-medium text-text-secondary';
@@ -47,7 +45,7 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium text-text-secondary';
             </div>
         </template>
 
-        <PageHeader :title="supplier.name" :description="supplier.code ? `Code: ${supplier.code}` : 'Supplier details'">
+        <PageHeader :title="supplier.name" :description="supplier.code ? t('suppliers.show.code', { code: supplier.code }) : t('suppliers.show.supplierDetails')">
             <template #actions>
                 <Badge :variant="supplier.is_active ? 'success' : 'neutral'" size="sm" dot>
                     {{ supplier.is_active ? t('common.active') : t('common.inactive') }}
@@ -71,15 +69,15 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium text-text-secondary';
             <div class="space-y-4 lg:col-span-2">
                 <!-- Contact Information -->
                 <Card :padded="false">
-                    <div class="px-5 pt-5"><h3 class="text-sm font-semibold text-text-primary">Contact Information</h3></div>
+                    <div class="px-5 pt-5"><h3 class="text-sm font-semibold text-text-primary">{{ t('suppliers.show.contactInfo') }}</h3></div>
                     <div class="p-5">
                         <dl class="grid grid-cols-1 gap-x-4 gap-y-6 sm:grid-cols-2">
                             <div>
-                                <dt class="text-xs text-text-tertiary">Contact Person</dt>
+                                <dt class="text-xs text-text-tertiary">{{ t('suppliers.show.contactPerson') }}</dt>
                                 <dd class="mt-1 text-sm text-text-primary">{{ supplier.contact_name || '-' }}</dd>
                             </div>
                             <div>
-                                <dt class="text-xs text-text-tertiary">Email</dt>
+                                <dt class="text-xs text-text-tertiary">{{ t('common.email') }}</dt>
                                 <dd class="mt-1 text-sm text-text-primary">
                                     <a v-if="supplier.email" :href="`mailto:${supplier.email}`" class="text-brand hover:underline">
                                         {{ supplier.email }}
@@ -88,11 +86,11 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium text-text-secondary';
                                 </dd>
                             </div>
                             <div>
-                                <dt class="text-xs text-text-tertiary">Phone</dt>
+                                <dt class="text-xs text-text-tertiary">{{ t('common.phone') }}</dt>
                                 <dd class="mt-1 text-sm text-text-primary">{{ supplier.phone || '-' }}</dd>
                             </div>
                             <div>
-                                <dt class="text-xs text-text-tertiary">Website</dt>
+                                <dt class="text-xs text-text-tertiary">{{ t('suppliers.show.website') }}</dt>
                                 <dd class="mt-1 text-sm text-text-primary">
                                     <a v-if="supplier.website" :href="supplier.website" target="_blank" class="text-brand hover:underline">
                                         {{ supplier.website }}
@@ -106,7 +104,7 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium text-text-secondary';
 
                 <!-- Address -->
                 <Card :padded="false">
-                    <div class="px-5 pt-5"><h3 class="text-sm font-semibold text-text-primary">Address</h3></div>
+                    <div class="px-5 pt-5"><h3 class="text-sm font-semibold text-text-primary">{{ t('common.address') }}</h3></div>
                     <div class="p-5">
                         <p class="text-sm text-text-primary">
                             <template v-if="supplier.address || supplier.city || supplier.state || supplier.zip_code || supplier.country">
@@ -117,7 +115,7 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium text-text-secondary';
                                 <span v-if="supplier.country">{{ supplier.country }}</span>
                             </template>
                             <template v-else>
-                                <span class="text-text-tertiary">No address provided</span>
+                                <span class="text-text-tertiary">{{ t('suppliers.show.noAddress') }}</span>
                             </template>
                         </p>
                     </div>
@@ -126,7 +124,7 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium text-text-secondary';
                 <!-- Products -->
                 <Card :padded="false">
                     <div class="flex items-center justify-between px-5 pt-5">
-                        <h3 class="text-sm font-semibold text-text-primary">Products</h3>
+                        <h3 class="text-sm font-semibold text-text-primary">{{ t('suppliers.show.products') }}</h3>
                         <Badge variant="brand" size="sm">{{ supplier.products?.length || 0 }}</Badge>
                     </div>
                     <div class="p-5">
@@ -134,10 +132,10 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium text-text-secondary';
                             <table class="min-w-full text-sm">
                                 <thead>
                                     <tr class="border-b border-border-subtle">
-                                        <th :class="thClass">Product</th>
+                                        <th :class="thClass">{{ t('common.product') }}</th>
                                         <th :class="thClass">SKU</th>
-                                        <th :class="thClass">Supplier SKU</th>
-                                        <th :class="[thClass, 'text-right']">Cost Price</th>
+                                        <th :class="thClass">{{ t('suppliers.show.supplierSku') }}</th>
+                                        <th :class="[thClass, 'text-right']">{{ t('suppliers.show.costPrice') }}</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -159,7 +157,7 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium text-text-secondary';
                         </div>
                         <div v-else class="flex flex-col items-center gap-2 py-8 text-center">
                             <PackageOpen :size="22" class="text-text-tertiary" />
-                            <p class="text-sm text-text-tertiary">No products linked to this supplier</p>
+                            <p class="text-sm text-text-tertiary">{{ t('suppliers.show.noProducts') }}</p>
                         </div>
                     </div>
                 </Card>
@@ -169,7 +167,7 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium text-text-secondary';
             <div class="space-y-4">
                 <!-- Business Details Card -->
                 <Card :padded="false">
-                    <div class="px-5 pt-5"><h3 class="text-sm font-semibold text-text-primary">Business Details</h3></div>
+                    <div class="px-5 pt-5"><h3 class="text-sm font-semibold text-text-primary">{{ t('suppliers.show.businessDetails') }}</h3></div>
                     <div class="p-5">
                         <dl class="space-y-3">
                             <div>
@@ -177,15 +175,15 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium text-text-secondary';
                                 <dd class="mt-1"><SupplierRating :model-value="supplier.rating" /></dd>
                             </div>
                             <div>
-                                <dt class="text-xs text-text-tertiary">Supplier Code</dt>
+                                <dt class="text-xs text-text-tertiary">{{ t('suppliers.show.supplierCode') }}</dt>
                                 <dd class="mt-1 text-sm text-text-primary">{{ supplier.code || '-' }}</dd>
                             </div>
                             <div>
-                                <dt class="text-xs text-text-tertiary">Payment Terms</dt>
+                                <dt class="text-xs text-text-tertiary">{{ t('suppliers.show.paymentTerms') }}</dt>
                                 <dd class="mt-1 text-sm text-text-primary">{{ supplier.payment_terms || '-' }}</dd>
                             </div>
                             <div>
-                                <dt class="text-xs text-text-tertiary">Currency</dt>
+                                <dt class="text-xs text-text-tertiary">{{ t('common.currency') }}</dt>
                                 <dd class="mt-1 text-sm text-text-primary">{{ supplier.currency || 'USD' }}</dd>
                             </div>
                         </dl>
@@ -194,7 +192,7 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium text-text-secondary';
 
                 <!-- Notes Card -->
                 <Card v-if="supplier.notes" :padded="false">
-                    <div class="px-5 pt-5"><h3 class="text-sm font-semibold text-text-primary">Notes</h3></div>
+                    <div class="px-5 pt-5"><h3 class="text-sm font-semibold text-text-primary">{{ t('common.notes') }}</h3></div>
                     <div class="p-5">
                         <p class="whitespace-pre-wrap text-sm text-text-secondary">{{ supplier.notes }}</p>
                     </div>
@@ -202,14 +200,14 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium text-text-secondary';
 
                 <!-- Danger Zone -->
                 <Card :padded="false">
-                    <div class="px-5 pt-5"><h3 class="text-sm font-semibold text-text-primary">Danger Zone</h3></div>
+                    <div class="px-5 pt-5"><h3 class="text-sm font-semibold text-text-primary">{{ t('orders.show.dangerZone') }}</h3></div>
                     <div class="p-5">
                         <Button variant="danger" class="w-full" @click="deleteSupplier">
                             <Trash2 :size="14" />
-                            Delete Supplier
+                            {{ t('suppliers.show.deleteSupplier') }}
                         </Button>
                         <p class="mt-2 text-xs text-text-tertiary">
-                            This permanently removes the supplier and cannot be undone.
+                            {{ t('suppliers.show.deleteWarning') }}
                         </p>
                     </div>
                 </Card>

@@ -6,6 +6,7 @@ import Button from '@/Components/ui/Button.vue';
 import { Head, Link, router } from '@inertiajs/vue3';
 import { ref, computed } from 'vue';
 import { useI18n } from 'vue-i18n';
+import { displayDate } from '@/lib/dates';
 import { Plus, Search, Eye, Pencil, Trash2, Download, FileSpreadsheet } from 'lucide-vue-next';
 
 const { t } = useI18n();
@@ -133,7 +134,7 @@ const thClass =
                             <span v-else class="text-xs text-text-tertiary">{{ t('reportBuilder.private') }}</span>
                         </td>
                         <td class="px-4 py-3 text-text-secondary">
-                            {{ new Date(report.created_at).toLocaleDateString() }}
+                            {{ displayDate(report.created_at) }}
                         </td>
                         <td class="px-4 py-3">
                             <div class="flex items-center justify-end gap-1">

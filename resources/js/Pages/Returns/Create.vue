@@ -7,6 +7,7 @@ import { Head, Link, useForm } from '@inertiajs/vue3';
 import { ref, computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { ArrowLeft, Trash2 } from 'lucide-vue-next';
+import { formatMoney } from '@/lib/money';
 
 const { t } = useI18n();
 
@@ -103,7 +104,7 @@ const fieldError = 'mt-1 text-xs text-status-danger';
 </script>
 
 <template>
-    <Head :title="`Create Return - Order #${order.order_number}`" />
+    <Head :title="t('returns.create.headTitle', { number: order.order_number })" />
 
     <AppLayout>
         <template #header>
@@ -116,11 +117,11 @@ const fieldError = 'mt-1 text-xs text-status-danger';
             </div>
         </template>
 
-        <PageHeader title="Create Return / Exchange" :description="`From Order #${order.order_number}`">
+        <PageHeader :title="t('returns.create.title')" :description="t('returns.create.fromOrder', { number: order.order_number })">
             <template #actions>
                 <Button variant="secondary" size="sm" as="Link" :href="route('orders.show', order.id)">
                     <ArrowLeft :size="14" />
-                    Back to Order
+                    {{ t('returns.create.backToOrder') }}
                 </Button>
             </template>
         </PageHeader>
@@ -128,37 +129,37 @@ const fieldError = 'mt-1 text-xs text-status-danger';
         <form @submit.prevent="submit" class="mt-6 space-y-4">
             <!-- Return Type & Reason -->
             <Card :padded="false">
-                <div class="px-5 pt-5"><h3 class="text-sm font-semibold text-text-primary">Return Details</h3></div>
+                <div class="px-5 pt-5"><h3 class="text-sm font-semibold text-text-primary">{{ t('returns.create.details') }}</h3></div>
                 <div class="space-y-4 p-5">
                     <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
                         <div>
-                            <label :class="fieldLabel">Type</label>
+                            <label :class="fieldLabel">{{ t('common.type') }}</label>
                             <select v-model="form.type" :class="fieldInput">
-                                <option value="return">Return (Refund)</option>
-                                <option value="exchange">Exchange</option>
+                                <option value="return">{{ t('returns.create.typeReturn') }}</option>
+                                <option value="exchange">{{ t('portal.returns.types.exchange') }}</option>
                             </select>
                             <p v-if="form.errors.type" :class="fieldError">{{ form.errors.type }}</p>
                         </div>
                     </div>
 
                     <div>
-                        <label :class="fieldLabel">Reason *</label>
+                        <label :class="fieldLabel">{{ t('returns.create.reasonRequired') }}</label>
                         <textarea
                             v-model="form.reason"
                             rows="2"
                             :class="fieldArea"
-                            placeholder="Reason for return or exchange..."
+                            :placeholder="t('returns.create.reasonPlaceholder')"
                         ></textarea>
                         <p v-if="form.errors.reason" :class="fieldError">{{ form.errors.reason }}</p>
                     </div>
 
                     <div>
-                        <label :class="fieldLabel">Notes (optional)</label>
+                        <label :class="fieldLabel">{{ t('returns.create.notesOptional') }}</label>
                         <textarea
                             v-model="form.notes"
                             rows="2"
                             :class="fieldArea"
-                            placeholder="Additional notes..."
+                            :placeholder="t('returns.create.notesPlaceholder')"
                         ></textarea>
                     </div>
                 </div>
@@ -166,7 +167,7 @@ const fieldError = 'mt-1 text-xs text-status-danger';
 
             <!-- Select Items -->
             <Card :padded="false">
-                <div class="px-5 pt-5"><h3 class="text-sm font-semibold text-text-primary">Select Items to Return</h3></div>
+                <div class="px-5 pt-5"><h3 class="text-sm font-semibold text-text-primary">{{ t('returns.create.selectItems') }}</h3></div>
                 <div class="p-5">
                     <div class="space-y-3">
                         <div
@@ -191,11 +192,11 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                                     <p class="font-medium text-text-primary">{{ item.product_name }}</p>
                                     <p class="text-sm text-text-tertiary">SKU: {{ item.sku }}</p>
                                     <p class="text-xs text-text-tertiary mt-1">
-                                        Ordered: {{ item.ordered_quantity }}
+                                        {{ t('returns.create.ordered', { count: item.ordered_quantity }) }}
                                         <span v-if="item.already_returned > 0" class="text-status-warning">
-                                            ({{ item.already_returned }} already returned)
+                                            {{ t('returns.create.alreadyReturned', { count: item.already_returned }) }}
                                         </span>
-                                        | Max returnable: {{ maxReturnable(item) }}
+                                        | {{ t('returns.create.maxReturnable', { count: maxReturnable(item) }) }}
                                     </p>
                                 </div>
 
@@ -203,7 +204,7 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                                 <div v-if="item.selected" class="flex items-center gap-4">
                                     <!-- Quantity -->
                                     <div class="w-20">
-                                        <label :class="fieldLabel">Qty</label>
+                                        <label :class="fieldLabel">{{ t('returns.columns.qty') }}</label>
                                         <input
                                             type="number"
                                             v-model.number="item.quantity"
@@ -215,21 +216,21 @@ const fieldError = 'mt-1 text-xs text-status-danger';
 
                                     <!-- Condition -->
                                     <div class="w-36">
-                                        <label :class="fieldLabel">Condition</label>
+                                        <label :class="fieldLabel">{{ t('returns.columns.condition') }}</label>
                                         <select
                                             v-model="item.condition"
                                             @change="updateCondition(item)"
                                             :class="fieldInput"
                                         >
-                                            <option value="new">New (Unopened)</option>
-                                            <option value="used">Used (Opened)</option>
-                                            <option value="damaged">Damaged</option>
+                                            <option value="new">{{ t('returns.conditions.new') }}</option>
+                                            <option value="used">{{ t('returns.conditions.used') }}</option>
+                                            <option value="damaged">{{ t('returns.conditions.damaged') }}</option>
                                         </select>
                                     </div>
 
                                     <!-- Restock -->
                                     <div class="text-center">
-                                        <label :class="fieldLabel">Restock</label>
+                                        <label :class="fieldLabel">{{ t('returns.columns.restock') }}</label>
                                         <input
                                             type="checkbox"
                                             v-model="item.restock"
@@ -256,15 +257,15 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                     <div class="flex items-center justify-between">
                         <div>
                             <p class="text-sm text-text-tertiary">
-                                {{ selectedItems.length }} item(s) selected for {{ form.type }}
+                                {{ t('returns.create.selectedSummary', { count: selectedItems.length, type: t(`portal.returns.types.${form.type}`) }, selectedItems.length) }}
                             </p>
                             <p class="text-lg font-semibold text-text-primary">
-                                Estimated Refund: <span class="text-brand">${{ estimatedRefund.toFixed(2) }}</span>
+                                {{ t('returns.create.estimatedRefund') }} <span class="text-brand">{{ formatMoney(estimatedRefund, order.currency) }}</span>
                             </p>
                         </div>
                         <div class="flex gap-3">
                             <Button variant="secondary" as="Link" :href="route('orders.show', order.id)">
-                                Cancel
+                                {{ t('common.cancel') }}
                             </Button>
                             <Button
                                 type="submit"
@@ -272,7 +273,7 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                                 :loading="form.processing"
                                 :disabled="form.processing || selectedItems.length === 0"
                             >
-                                {{ form.processing ? 'Processing...' : 'Submit Return Request' }}
+                                {{ form.processing ? t('returns.create.processing') : t('returns.create.submit') }}
                             </Button>
                         </div>
                     </div>

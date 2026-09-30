@@ -9,11 +9,9 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { formatDate, formatDay } from '../../resources/js/lib/portal.js';
 
-const opts = { year: 'numeric', month: 'short', day: 'numeric' };
-
 test('formatDay shows the calendar day the server wrote', () => {
-    assert.equal(formatDay('2026-09-28T00:00:00+00:00'), new Date(2026, 8, 28).toLocaleDateString(undefined, opts));
-    assert.equal(formatDay('2026-09-28'), new Date(2026, 8, 28).toLocaleDateString(undefined, opts));
+    assert.equal(formatDay('2026-09-28T00:00:00+00:00'), 'Sep 28, 2026');
+    assert.equal(formatDay('2026-09-28'), 'Sep 28, 2026');
 });
 
 test('formatDay returns a dash when there is no date', () => {
@@ -23,6 +21,19 @@ test('formatDay returns a dash when there is no date', () => {
 
 test('formatDate still shifts a real instant into the viewer timezone', () => {
     // 03:00 UTC on Sept 28 is the evening of Sept 27 in Los Angeles.
-    assert.equal(formatDate('2026-09-28T03:00:00+00:00'), new Date(2026, 8, 27).toLocaleDateString(undefined, opts));
+    assert.equal(formatDate('2026-09-28T03:00:00+00:00'), 'Sep 27, 2026');
     assert.equal(formatDate(null), '-');
+});
+
+test('portal dates honour the organization date format and UI locale', async () => {
+    const { applyFormatSettings } = await import('../../resources/js/lib/formatSettings.js');
+    try {
+        applyFormatSettings({ locale: 'en', dateFormat: 'd/m/Y' });
+        assert.equal(formatDay('2026-09-28T00:00:00+00:00'), '28/09/2026');
+        assert.equal(formatDate('2026-09-28T03:00:00+00:00'), '27/09/2026');
+        applyFormatSettings({ locale: 'de', dateFormat: null });
+        assert.equal(formatDay('2026-09-28'), '28.09.2026');
+    } finally {
+        applyFormatSettings({ locale: 'en', dateFormat: null });
+    }
 });

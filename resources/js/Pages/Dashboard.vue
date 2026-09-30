@@ -12,8 +12,8 @@ import { Head, Link } from '@inertiajs/vue3';
 import { ref, reactive, computed } from 'vue';
 import { useQuickReorder } from '@/composables/useQuickReorder';
 import { useI18n } from 'vue-i18n';
-import { formatCalendarDate } from '@/lib/dates';
-import { formatCompactMoney, formatMoney } from '@/lib/money';
+import { displayCalendarDate, displayDateTime } from '@/lib/dates';
+import { formatCompactMoney, formatMoney, formatNumber as formatPlainNumber } from '@/lib/money';
 import { orderStatusLabel, orderStatusVariant } from '@/lib/orderLabels';
 import axios from 'axios';
 import {
@@ -54,7 +54,7 @@ const props = defineProps({
 const systemWarningMessage = (warning) => {
     if (warning.type === 'scheduler_stale') {
         return warning.last_run
-            ? t('dashboard.systemHealth.schedulerStale', { date: new Date(warning.last_run).toLocaleString() })
+            ? t('dashboard.systemHealth.schedulerStale', { date: displayDateTime(warning.last_run) })
             : t('dashboard.systemHealth.schedulerNeverRan');
     }
     if (warning.type === 'queue_backlog') return t('dashboard.systemHealth.queueBacklog', { count: warning.count });
@@ -66,15 +66,15 @@ const showCustomizeModal = ref(false);
 const saving = ref(false);
 
 const widgetLabels = {
-    stats_overview: 'Stats Overview',
-    revenue_chart: 'Revenue & Secondary Stats',
-    stock_movements: 'Stock Movements',
-    low_stock_alerts: 'Low Stock Alerts',
-    recent_orders: 'Recent Orders',
-    recent_products: 'Recent Products',
-    top_products: 'Top Products',
-    stock_by_category: 'Stock by Category',
-    reorder_suggestions: 'Reorder Suggestions',
+    stats_overview: t('dashboard.widgets.statsOverview'),
+    revenue_chart: t('dashboard.widgets.revenueChart'),
+    stock_movements: t('dashboard.widgets.stockMovements'),
+    low_stock_alerts: t('dashboard.widgets.lowStockAlerts'),
+    recent_orders: t('dashboard.recentOrders'),
+    recent_products: t('dashboard.recentProducts'),
+    top_products: t('dashboard.widgets.topProducts'),
+    stock_by_category: t('dashboard.widgets.stockByCategory'),
+    reorder_suggestions: t('dashboard.widgets.reorderSuggestions'),
 };
 
 const widgets = reactive({ ...(props.widgetPreferences || {}) });
@@ -98,10 +98,7 @@ const saveWidgetPreferences = async () => {
 const formatCurrency = (value, currency = props.currency) => formatMoney(value, currency);
 
 const formatNumber = (value) => {
-    const v = Number(value ?? 0);
-    if (v >= 1000000) return (v / 1000000).toFixed(1).replace(/\.0$/, '') + 'M';
-    if (v >= 1000) return (v / 1000).toFixed(1).replace(/\.0$/, '') + 'K';
-    return v.toString();
+    return formatPlainNumber(value ?? 0, { notation: 'compact', maximumFractionDigits: 1 });
 };
 
 const formatCompactCurrency = (value, currency = props.currency) => formatCompactMoney(value, currency);
@@ -152,12 +149,12 @@ const secondaryStats = () => [
 
         <PageHeader
             :title="t('dashboard.title')"
-            description="Snapshot of inventory, orders, and reorder priorities."
+            :description="t('dashboard.description')"
         >
             <template #actions>
                 <Button variant="secondary" size="sm" @click="showCustomizeModal = true">
                     <Settings2 :size="14" />
-                    Customize
+                    {{ t('dashboard.customize') }}
                 </Button>
                 <Button variant="default" size="sm" as="Link" :href="route('orders.create')">
                     <Plus :size="14" />
@@ -191,7 +188,7 @@ const secondaryStats = () => [
                 v-if="stats.totalProducts !== undefined"
                 :label="t('dashboard.totalProducts')"
                 :value="formatNumber(stats.totalProducts)"
-                hint="active in catalog"
+                :hint="t('dashboard.hints.activeInCatalog')"
                 icon-tone="brand"
             >
                 <template #icon><Boxes :size="20" :stroke-width="1.5" /></template>
@@ -211,7 +208,7 @@ const secondaryStats = () => [
                 :value="formatNumber(stats.lowStockProducts)"
                 :delta="stats.lowStockProducts > 0 ? 'attention' : null"
                 :delta-tone="stats.lowStockProducts > 0 ? 'down' : 'neutral'"
-                hint="below minimum"
+                :hint="t('dashboard.hints.belowMinimum')"
                 icon-tone="warning"
             >
                 <template #icon><AlertTriangle :size="20" :stroke-width="1.5" /></template>
@@ -220,7 +217,7 @@ const secondaryStats = () => [
                 v-if="stats.totalOrders !== undefined"
                 :label="t('dashboard.totalOrders')"
                 :value="formatNumber(stats.totalOrders)"
-                hint="all time"
+                :hint="t('dashboard.hints.allTime')"
                 icon-tone="violet"
             >
                 <template #icon><ShoppingCart :size="20" :stroke-width="1.5" /></template>
@@ -291,7 +288,7 @@ const secondaryStats = () => [
                                 </div>
                                 <div class="shrink-0 text-right">
                                     <p class="text-sm font-semibold tabular-nums text-text-primary">{{ formatCurrency(order.total, order.currency) }}</p>
-                                    <p class="text-[11px] text-text-tertiary">{{ formatCalendarDate(order.order_date) }}</p>
+                                    <p class="text-[11px] text-text-tertiary">{{ displayCalendarDate(order.order_date) }}</p>
                                 </div>
                             </Link>
                         </li>
@@ -375,7 +372,7 @@ const secondaryStats = () => [
         <section v-if="reorderSuggestions && reorderSuggestions.length > 0" class="mt-4">
             <Card :padded="false">
                 <div class="px-5 pt-5">
-                    <CardHeader title="Reorder suggestions" subtitle="Below reorder point. Suggested quantity comes from product config and the supplier minimum order.">
+                    <CardHeader :title="t('dashboard.reorderSuggestions.title')" :subtitle="t('dashboard.reorderSuggestions.subtitle')">
                         <template #actions>
                             <Badge variant="warning" size="sm">{{ reorderSuggestions.length }}</Badge>
                             <Link :href="route('products.index', { low_stock: true })" class="text-xs text-text-tertiary transition-colors hover:text-text-primary">
@@ -399,10 +396,10 @@ const secondaryStats = () => [
                                             @change="quickReorder.toggleAll()"
                                         />
                                     </th>
-                                    <th :class="reorderThClass">Product</th>
-                                    <th :class="reorderThClass">Supplier</th>
-                                    <th :class="[reorderThClass, 'text-right']">Stock</th>
-                                    <th :class="[reorderThClass, 'text-right']">Reorder at</th>
+                                    <th :class="reorderThClass">{{ t('common.product') }}</th>
+                                    <th :class="reorderThClass">{{ t('purchaseOrders.supplier') }}</th>
+                                    <th :class="[reorderThClass, 'text-right']">{{ t('products.stock') }}</th>
+                                    <th :class="[reorderThClass, 'text-right']">{{ t('dashboard.reorderSuggestions.reorderAt') }}</th>
                                     <th :class="[reorderThClass, 'text-right']">{{ t('quickReorder.suggestedQty') }}</th>
                                     <th v-if="quickReorder.canCreatePo.value" :class="[reorderThClass, 'text-right']"><span class="sr-only">{{ t('common.actions') }}</span></th>
                                 </tr>
@@ -571,13 +568,13 @@ const secondaryStats = () => [
                 <div class="fixed inset-0 bg-black/50" @click="showCustomizeModal = false"></div>
                 <div class="relative mx-4 w-full max-w-md rounded-xl border border-border-subtle bg-surface-raised p-6 shadow-lg">
                     <div class="mb-6 flex items-center justify-between">
-                        <h3 class="text-base font-semibold text-text-primary">Customize dashboard</h3>
+                        <h3 class="text-base font-semibold text-text-primary">{{ t('dashboard.customizeModal.title') }}</h3>
                         <button @click="showCustomizeModal = false" class="text-text-tertiary transition-colors hover:text-text-primary">
                             <X :size="18" />
                         </button>
                     </div>
 
-                    <p class="mb-4 text-sm text-text-secondary">Toggle widgets to show or hide them on your dashboard.</p>
+                    <p class="mb-4 text-sm text-text-secondary">{{ t('dashboard.customizeModal.help') }}</p>
 
                     <div class="ds-scroll max-h-80 space-y-2 overflow-y-auto">
                         <label
@@ -596,9 +593,9 @@ const secondaryStats = () => [
 
                     <div class="mt-6 flex gap-3">
                         <Button variant="default" class="flex-1" :loading="saving" @click="saveWidgetPreferences">
-                            {{ saving ? 'Saving…' : 'Save preferences' }}
+                            {{ saving ? t('common.saving') : t('dashboard.customizeModal.savePreferences') }}
                         </Button>
-                        <Button variant="secondary" @click="showCustomizeModal = false">Cancel</Button>
+                        <Button variant="secondary" @click="showCustomizeModal = false">{{ t('common.cancel') }}</Button>
                     </div>
                 </div>
             </div>

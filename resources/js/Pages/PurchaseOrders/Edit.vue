@@ -9,6 +9,7 @@ import { ref, computed, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { defaultSupplierSku, defaultUnitCost } from '@/lib/purchaseOrderLine';
 import { toIsoDate } from '@/lib/dates';
+import { formatMoney } from '@/lib/money';
 import { ArrowLeft, Plus, Trash2 } from 'lucide-vue-next';
 
 const { t } = useI18n();
@@ -158,10 +159,7 @@ const submit = () => {
 };
 
 const formatCurrency = (value) => {
-    return new Intl.NumberFormat('en-US', {
-        style: 'currency',
-        currency: form.currency || 'USD',
-    }).format(value || 0);
+    return formatMoney(value, form.currency);
 };
 
 const fieldLabel = 'mb-1 block text-sm font-medium text-text-secondary';
@@ -186,7 +184,7 @@ const fieldError = 'mt-1 text-xs text-status-danger';
             </div>
         </template>
 
-        <PageHeader :title="t('purchaseOrders.edit.title')" :description="`PO #${purchaseOrder.po_number}`">
+        <PageHeader :title="t('purchaseOrders.edit.title')" :description="t('purchaseOrders.edit.poNumber', { number: purchaseOrder.po_number })">
             <template #actions>
                 <Button variant="secondary" size="sm" as="Link" :href="route('purchase-orders.show', purchaseOrder.id)">
                     {{ t('purchaseOrders.edit.viewDetails') }}
@@ -238,14 +236,14 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                         </div>
 
                         <div>
-                            <label for="expected_date" :class="fieldLabel">Expected Delivery Date</label>
+                            <label for="expected_date" :class="fieldLabel">{{ t('purchaseOrders.create.expectedDelivery') }}</label>
                             <input id="expected_date" v-model="form.expected_date" type="date" :class="fieldInput" />
                             <p v-if="form.errors.expected_date" :class="fieldError">{{ form.errors.expected_date }}</p>
                         </div>
                     </div>
 
                     <div>
-                        <label for="notes" :class="fieldLabel">Notes</label>
+                        <label for="notes" :class="fieldLabel">{{ t('common.notes') }}</label>
                         <textarea id="notes" v-model="form.notes" rows="3" :class="fieldArea"></textarea>
                         <p v-if="form.errors.notes" :class="fieldError">{{ form.errors.notes }}</p>
                     </div>
@@ -255,17 +253,17 @@ const fieldError = 'mt-1 text-xs text-status-danger';
             <!-- Add Items -->
             <Card :padded="false">
                 <div class="px-5 pt-5">
-                    <h3 class="text-sm font-semibold text-text-primary">Add Items</h3>
+                    <h3 class="text-sm font-semibold text-text-primary">{{ t('purchaseOrders.create.addItems') }}</h3>
                 </div>
                 <div class="space-y-4 p-5">
                     <div class="rounded-lg border border-border-subtle bg-surface-canvas p-4">
                         <div class="grid grid-cols-1 gap-3" :class="chosenProduct?.has_variants ? 'md:grid-cols-8' : 'md:grid-cols-6'">
                             <div class="md:col-span-2">
-                                <label for="product" :class="fieldLabel">Product</label>
+                                <label for="product" :class="fieldLabel">{{ t('common.product') }}</label>
                                 <select id="product" v-model="selectedProductId" @change="onProductSelected" :class="fieldInput">
-                                    <option value="">Select a product</option>
+                                    <option value="">{{ t('purchaseOrders.create.selectProduct') }}</option>
                                     <option v-for="product in products" :key="product.id" :value="product.id">
-                                        {{ product.name }} ({{ product.sku || 'No SKU' }})
+                                        {{ product.name }} ({{ product.sku || t('purchaseOrders.noSku') }})
                                     </option>
                                 </select>
                             </div>
@@ -282,23 +280,23 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                             </div>
 
                             <div>
-                                <label for="quantity" :class="fieldLabel">Quantity</label>
+                                <label for="quantity" :class="fieldLabel">{{ t('common.quantity') }}</label>
                                 <input id="quantity" v-model.number="quantity" type="number" min="1" :class="fieldInput" />
                             </div>
 
                             <div>
-                                <label for="unit_cost" :class="fieldLabel">Unit Cost</label>
+                                <label for="unit_cost" :class="fieldLabel">{{ t('purchaseOrders.create.unitCost') }}</label>
                                 <input id="unit_cost" v-model.number="unitCost" type="number" step="0.01" min="0" :class="fieldInput" />
                             </div>
 
                             <div>
-                                <label for="supplier_sku" :class="fieldLabel">Supplier SKU</label>
-                                <input id="supplier_sku" v-model="supplierSku" type="text" :class="fieldInput" placeholder="Optional" />
+                                <label for="supplier_sku" :class="fieldLabel">{{ t('purchaseOrders.create.supplierSku') }}</label>
+                                <input id="supplier_sku" v-model="supplierSku" type="text" :class="fieldInput" :placeholder="t('common.optional')" />
                             </div>
 
                             <div class="flex items-end">
                                 <Button type="button" variant="default" class="w-full" :disabled="!selectedProductId" @click="addItem">
-                                    <Plus :size="14" />Add
+                                    <Plus :size="14" />{{ t('orders.create.add') }}
                                 </Button>
                             </div>
                         </div>
@@ -311,7 +309,7 @@ const fieldError = 'mt-1 text-xs text-status-danger';
             <!-- Items -->
             <Card v-if="form.items.length > 0" :padded="false">
                 <div class="px-5 pt-5">
-                    <h3 class="text-sm font-semibold text-text-primary">Order Items ({{ form.items.length }})</h3>
+                    <h3 class="text-sm font-semibold text-text-primary">{{ t('purchaseOrders.create.orderItems', { count: form.items.length }) }}</h3>
                 </div>
                 <div class="space-y-3 p-5">
                     <div
@@ -323,7 +321,7 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                             <div class="md:col-span-4">
                                 <p class="text-sm font-medium text-text-primary">{{ item.product_name }}</p>
                                 <p class="text-xs text-text-tertiary">SKU: {{ item.sku || '-' }}</p>
-                                <p class="text-xs text-text-tertiary">Supplier SKU: {{ item.supplier_sku || '-' }}</p>
+                                <p class="text-xs text-text-tertiary">{{ t('purchaseOrders.create.supplierSku') }}: {{ item.supplier_sku || '-' }}</p>
                                 <template v-if="productFor(item.product_id)?.has_variants">
                                     <label :for="`line-variant-${index}`" class="mb-1 mt-2 block text-[11px] text-text-tertiary">{{ t('orders.create.variant') }}</label>
                                     <select :id="`line-variant-${index}`" v-model="item.product_variant_id" @change="onLineVariantChange(index)" :class="fieldInput" required>
@@ -337,7 +335,7 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                             </div>
 
                             <div class="md:col-span-2">
-                                <label :for="`quantity-${index}`" :class="fieldLabel">Quantity</label>
+                                <label :for="`quantity-${index}`" :class="fieldLabel">{{ t('common.quantity') }}</label>
                                 <input
                                     :id="`quantity-${index}`"
                                     type="number"
@@ -349,7 +347,7 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                             </div>
 
                             <div class="md:col-span-2">
-                                <label :for="`cost-${index}`" :class="fieldLabel">Unit Cost</label>
+                                <label :for="`cost-${index}`" :class="fieldLabel">{{ t('purchaseOrders.create.unitCost') }}</label>
                                 <input
                                     :id="`cost-${index}`"
                                     type="number"
@@ -362,7 +360,7 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                             </div>
 
                             <div class="md:col-span-3">
-                                <label :class="fieldLabel">Subtotal</label>
+                                <label :class="fieldLabel">{{ t('common.subtotal') }}</label>
                                 <div class="flex h-9 items-center rounded-md border border-border-subtle bg-surface-sunken px-3">
                                     <span class="text-sm font-semibold tabular-nums text-text-primary">
                                         {{ formatCurrency(item.quantity * item.unit_cost) }}
@@ -375,7 +373,7 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                                     type="button"
                                     @click="removeItem(index)"
                                     class="rounded-md p-1.5 text-text-tertiary transition-colors hover:bg-surface-sunken hover:text-status-danger"
-                                    title="Remove item"
+                                    :title="t('orders.edit.removeItem')"
                                 >
                                     <Trash2 :size="16" />
                                 </button>
@@ -387,19 +385,19 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                     <div class="flex justify-end pt-2">
                         <div class="w-full max-w-xs space-y-3 border-t border-border-subtle pt-3">
                             <div class="flex justify-between text-sm">
-                                <span class="text-text-secondary">Subtotal</span>
+                                <span class="text-text-secondary">{{ t('common.subtotal') }}</span>
                                 <span class="font-medium tabular-nums text-text-primary">{{ formatCurrency(subtotal) }}</span>
                             </div>
                             <div>
-                                <label for="tax" class="mb-1 block text-sm text-text-secondary">Tax</label>
+                                <label for="tax" class="mb-1 block text-sm text-text-secondary">{{ t('common.tax') }}</label>
                                 <input id="tax" v-model.number="form.tax" type="number" step="0.01" min="0" :class="fieldInput" />
                             </div>
                             <div>
-                                <label for="shipping" class="mb-1 block text-sm text-text-secondary">Shipping</label>
+                                <label for="shipping" class="mb-1 block text-sm text-text-secondary">{{ t('common.shipping') }}</label>
                                 <input id="shipping" v-model.number="form.shipping" type="number" step="0.01" min="0" :class="fieldInput" />
                             </div>
                             <div class="flex items-center justify-between border-t border-border-subtle pt-3">
-                                <span class="text-sm font-semibold text-text-primary">Total</span>
+                                <span class="text-sm font-semibold text-text-primary">{{ t('common.total') }}</span>
                                 <span class="text-xl font-bold text-brand">{{ formatCurrency(total) }}</span>
                             </div>
                         </div>
@@ -410,7 +408,7 @@ const fieldError = 'mt-1 text-xs text-status-danger';
             <!-- Actions -->
             <div class="flex items-center justify-end gap-2">
                 <Button variant="secondary" size="lg" as="Link" :href="route('purchase-orders.show', purchaseOrder.id)">
-                    Cancel
+                    {{ t('common.cancel') }}
                 </Button>
                 <Button
                     type="submit"
@@ -419,7 +417,7 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                     :loading="form.processing"
                     :disabled="form.processing || form.items.length === 0"
                 >
-                    Update Purchase Order
+                    {{ t('purchaseOrders.edit.updatePo') }}
                 </Button>
             </div>
         </form>

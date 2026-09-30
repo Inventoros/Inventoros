@@ -29,19 +29,19 @@ const error = ref('');
 const pendingNotice = ref('');
 
 const adjustTypes = [
-    { value: 'increase', label: 'Increase', icon: '+' },
-    { value: 'decrease', label: 'Decrease', icon: '-' },
-    { value: 'recount', label: 'Recount', icon: '=' },
-    { value: 'damage', label: 'Damage', icon: '!' },
-    { value: 'return', label: 'Return', icon: 'R' },
+    { value: 'increase', label: t('components.stockAdjuster.increase'), icon: '+' },
+    { value: 'decrease', label: t('components.stockAdjuster.decrease'), icon: '-' },
+    { value: 'recount', label: t('reports.adjustmentTypes.recount'), icon: '=' },
+    { value: 'damage', label: t('reports.adjustmentTypes.damage'), icon: '!' },
+    { value: 'return', label: t('reports.adjustmentTypes.return'), icon: 'R' },
 ];
 
 const stockStatus = computed(() => {
     if (props.variant.stock <= 0) {
-        return { text: 'Out', class: 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300' };
+        return { text: t('components.stockAdjuster.out'), class: 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300' };
     }
     if (props.variant.stock <= props.variant.min_stock) {
-        return { text: 'Low', class: 'bg-amber-100 dark:bg-amber-900/30 text-amber-800 dark:text-amber-300' };
+        return { text: t('components.stockAdjuster.low'), class: 'bg-amber-100 dark:bg-amber-900/30 text-amber-800 dark:text-amber-300' };
     }
     return null;
 });
@@ -101,7 +101,7 @@ const adjustStock = async () => {
         emit('updated', response.data.data);
         closePopover();
     } catch (err) {
-        error.value = err.response?.data?.message || 'Failed to adjust stock';
+        error.value = err.response?.data?.message || t('stockAdjustments.variantAdjuster.failed');
     } finally {
         loading.value = false;
     }
@@ -139,7 +139,7 @@ const adjustStock = async () => {
                 type="button"
                 @click="openPopover('increase')"
                 class="p-1 text-green-600 dark:text-green-400 hover:bg-green-100 dark:hover:bg-green-900/30 rounded transition"
-                title="Increase stock"
+                :title="t('components.stockAdjuster.increaseStock')"
             >
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v12m6-6H6" />
@@ -149,7 +149,7 @@ const adjustStock = async () => {
                 type="button"
                 @click="openPopover('decrease')"
                 class="p-1 text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/30 rounded transition"
-                title="Decrease stock"
+                :title="t('components.stockAdjuster.decreaseStock')"
             >
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 12H6" />
@@ -169,13 +169,13 @@ const adjustStock = async () => {
                     @click.stop
                 >
                     <h4 class="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-3">
-                        Adjust Stock: {{ variant.title }}
+                        {{ t('stockAdjustments.variantAdjuster.title', { name: variant.title }) }}
                     </h4>
 
                     <!-- Type Selection -->
                     <div class="mb-3">
                         <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
-                            Adjustment Type
+                            {{ t('components.stockAdjuster.adjustmentType') }}
                         </label>
                         <select
                             v-model="adjustType"
@@ -203,12 +203,12 @@ const adjustStock = async () => {
                     <!-- Reason -->
                     <div class="mb-3">
                         <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
-                            Reason (optional)
+                            {{ t('components.stockAdjuster.reasonOptional') }}
                         </label>
                         <input
                             v-model="reason"
                             type="text"
-                            placeholder="e.g., Restock, Damaged goods"
+                            :placeholder="t('components.stockAdjuster.reasonPlaceholder')"
                             class="w-full text-sm rounded-md bg-gray-50 dark:bg-surface-canvas border-gray-200 dark:border-border-subtle text-gray-900 dark:text-gray-100"
                         />
                     </div>
@@ -232,7 +232,7 @@ const adjustStock = async () => {
                             class="flex-1 px-3 py-1.5 text-sm bg-brand text-white rounded-md hover:bg-brand-hover disabled:opacity-50"
                         >
                             <span v-if="loading">...</span>
-                            <span v-else>Apply</span>
+                            <span v-else>{{ t('components.stockAdjuster.apply') }}</span>
                         </button>
                     </div>
                 </div>

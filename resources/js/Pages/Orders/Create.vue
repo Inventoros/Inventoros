@@ -11,6 +11,7 @@ import { ref, computed, defineAsyncComponent } from 'vue';
 import { useBarcodeWedge, useBarcodeLookup } from '@/composables/useBarcodeWedge';
 import { useI18n } from 'vue-i18n';
 import { todayIsoDate } from '@/lib/dates';
+import { formatMoney } from '@/lib/money';
 import { ArrowLeft, Plus, Trash2, PackageOpen, ScanLine } from 'lucide-vue-next';
 
 const BarcodeScannerModal = defineAsyncComponent(() => import('@/Components/BarcodeScannerModal.vue'));
@@ -214,7 +215,7 @@ const totals = useOrderTotals(form);
 
 const submit = () => {
     if (form.items.length === 0) {
-        alert('Please add at least one product to the order.');
+        alert(t('orders.create.addAtLeastOneProduct'));
         return;
     }
     form.post(route('orders.store'), { preserveScroll: true });
@@ -246,7 +247,7 @@ const fieldError = 'mt-1 text-xs text-status-danger';
             </div>
         </template>
 
-        <PageHeader :title="t('orders.create.title')" description="Add a customer order and its line items.">
+        <PageHeader :title="t('orders.create.title')" :description="t('orders.create.description')">
             <template #actions>
                 <Button variant="secondary" size="sm" as="Link" :href="route('orders.index')">
                     <ArrowLeft :size="14" />
@@ -318,7 +319,7 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                                             <option :value="null">{{ t('orders.create.chooseProduct') }}</option>
                                             <option v-for="product in availableProducts" :key="product.id" :value="product.id">
                                                 <template v-if="product.has_variants">{{ product.name }} ({{ product.sku }})</template>
-                                                <template v-else>{{ product.name }} ({{ product.sku }}) - {{ t('orders.create.stockCount', { count: product.stock }) }} - ${{ product.price }}</template>
+                                                <template v-else>{{ product.name }} ({{ product.sku }}) - {{ t('orders.create.stockCount', { count: product.stock }) }} - {{ formatMoney(product.price) }}</template>
                                             </option>
                                         </select>
                                     </div>
@@ -327,7 +328,7 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                                         <select id="add_variant" v-model="selectedVariant" :class="fieldInput" @change="variantError = ''">
                                             <option :value="null">{{ t('orders.create.chooseVariant') }}</option>
                                             <option v-for="variant in availableVariants" :key="variant.id" :value="variant.id">
-                                                {{ variant.title }}<template v-if="variant.sku"> ({{ variant.sku }})</template> - {{ t('orders.create.stockCount', { count: variant.stock }) }} - ${{ variant.price }}
+                                                {{ variant.title }}<template v-if="variant.sku"> ({{ variant.sku }})</template> - {{ t('orders.create.stockCount', { count: variant.stock }) }} - {{ formatMoney(variant.price) }}
                                             </option>
                                         </select>
                                         <p v-if="variantError" :class="fieldError">{{ variantError }}</p>
@@ -364,7 +365,7 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                                     </div>
                                     <div class="w-24 text-right">
                                         <label class="mb-1 block text-[11px] text-text-tertiary">{{ t('common.total') }}</label>
-                                        <p class="font-semibold tabular-nums text-text-primary">${{ (lineNetCents(item) / 100).toFixed(2) }}</p>
+                                        <p class="font-semibold tabular-nums text-text-primary">{{ formatMoney(lineNetCents(item) / 100) }}</p>
                                     </div>
                                     <button type="button" @click="removeItem(index)" class="mt-4 rounded-md p-1.5 text-text-tertiary transition-colors hover:bg-surface-sunken hover:text-status-danger"><Trash2 :size="16" /></button>
                                 </div>
@@ -424,11 +425,11 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                         <div class="space-y-3 p-5">
                             <div class="flex justify-between text-sm">
                                 <span class="text-text-secondary">{{ t('common.subtotal') }}</span>
-                                <span class="font-medium tabular-nums text-text-primary">${{ totals.subtotal.toFixed(2) }}</span>
+                                <span class="font-medium tabular-nums text-text-primary">{{ formatMoney(totals.subtotal) }}</span>
                             </div>
                             <div v-if="totals.lineDiscounts > 0" class="flex justify-between text-sm">
                                 <span class="text-text-secondary">{{ t('discounts.lineDiscounts') }}</span>
-                                <span class="font-medium tabular-nums text-text-primary">-${{ totals.lineDiscounts.toFixed(2) }}</span>
+                                <span class="font-medium tabular-nums text-text-primary">-{{ formatMoney(totals.lineDiscounts) }}</span>
                             </div>
                             <div>
                                 <DiscountInput
@@ -442,7 +443,7 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                             </div>
                             <div v-if="totals.orderDiscount > 0" class="flex justify-between text-sm">
                                 <span class="text-text-secondary">{{ t('discounts.orderDiscount') }}</span>
-                                <span class="font-medium tabular-nums text-text-primary">-${{ totals.orderDiscount.toFixed(2) }}</span>
+                                <span class="font-medium tabular-nums text-text-primary">-{{ formatMoney(totals.orderDiscount) }}</span>
                             </div>
                             <div>
                                 <label for="tax" class="mb-1 block text-sm text-text-secondary">{{ t('common.tax') }}</label>
@@ -456,7 +457,7 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                             </div>
                             <div class="flex items-center justify-between border-t border-border-subtle pt-3">
                                 <span class="text-sm font-semibold text-text-primary">{{ t('common.total') }}</span>
-                                <span class="text-xl font-bold text-brand">${{ totals.total.toFixed(2) }}</span>
+                                <span class="text-xl font-bold text-brand">{{ formatMoney(totals.total) }}</span>
                             </div>
                             <p v-if="form.errors.total" :class="fieldError">{{ form.errors.total }}</p>
                             <p class="text-xs text-text-tertiary">{{ t('discounts.totalsComputedOnSave') }}</p>

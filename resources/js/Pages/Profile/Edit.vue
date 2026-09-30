@@ -32,7 +32,7 @@ defineProps({
             </div>
         </template>
 
-        <PageHeader :title="t('profile.title')" description="Manage your account information, password, and account removal." />
+        <PageHeader :title="t('profile.title')" :description="t('profile.description')" />
 
         <div class="mt-6 space-y-4">
             <Card>

@@ -9,6 +9,7 @@ import { ref, computed } from 'vue';
 import { Plus, Info, Eye, Pencil, Trash2, Webhook, X } from 'lucide-vue-next';
 
 import { useI18n } from 'vue-i18n';
+import { formatNumber } from '@/lib/money';
 const props = defineProps({
     webhooks: Array,
     availableEvents: Array,
@@ -100,7 +101,7 @@ const submitEdit = () => {
 };
 
 const deleteWebhook = (webhook) => {
-    if (confirm(`Are you sure you want to delete "${webhook.name}"?`)) {
+    if (confirm(t('settings.webhooks.confirmDelete', { name: webhook.name }))) {
         router.delete(route('webhooks.destroy', webhook.id));
     }
 };
@@ -184,11 +185,11 @@ const fieldError = 'mt-1 text-xs text-status-danger';
             </div>
         </template>
 
-        <PageHeader :title="t('settings.webhooks.title')" description="External services that receive real-time event notifications.">
+        <PageHeader :title="t('settings.webhooks.title')" :description="t('settings.webhooks.description')">
             <template #actions>
                 <Button variant="default" size="sm" @click="openCreateModal">
                     <Plus :size="14" />
-                    Add Webhook
+                    {{ t('settings.webhooks.addWebhook') }}
                 </Button>
             </template>
         </PageHeader>
@@ -200,14 +201,14 @@ const fieldError = 'mt-1 text-xs text-status-danger';
         >
             <Info :size="18" class="mt-0.5 shrink-0 text-amber-500" />
             <div class="min-w-0 flex-1">
-                <h3 class="text-sm font-medium text-text-primary">Signing secret</h3>
+                <h3 class="text-sm font-medium text-text-primary">{{ t('settings.webhooks.signingSecret') }}</h3>
                 <p class="mt-1 text-sm text-text-secondary">
-                    Copy this now. For security it is shown only once and cannot be retrieved later.
+                    {{ t('settings.webhooks.secretShownOnce') }}
                 </p>
                 <div class="mt-2 flex items-center gap-3">
                     <code class="min-w-0 flex-1 break-all rounded-md bg-slate-900 p-3 font-mono text-xs text-slate-300">{{ revealedSecret }}</code>
                     <button @click="copySecret" class="shrink-0 text-xs text-brand hover:underline">
-                        {{ copiedSecret ? 'Copied!' : 'Copy' }}
+                        {{ copiedSecret ? t('common.copied') : t('common.copy') }}
                     </button>
                 </div>
             </div>
@@ -217,10 +218,10 @@ const fieldError = 'mt-1 text-xs text-status-danger';
         <div class="mt-6 flex items-start gap-3 rounded-lg border border-status-info/20 bg-status-info-soft p-4">
             <Info :size="18" class="mt-0.5 shrink-0 text-status-info" />
             <div>
-                <h3 class="text-sm font-medium text-text-primary">About Webhooks</h3>
+                <h3 class="text-sm font-medium text-text-primary">{{ t('settings.webhooks.aboutWebhooks') }}</h3>
                 <p class="mt-1 text-sm text-text-secondary">
-                    Webhooks allow external services to receive real-time notifications when events occur in your organization.
-                    All webhook payloads are signed with HMAC-SHA256 for security verification.
+                    {{ t('settings.webhooks.aboutDesc') }}
+                    {{ t('settings.webhooks.signedDesc') }}
                 </p>
             </div>
         </div>
@@ -231,10 +232,10 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                 <thead>
                     <tr class="border-b border-border-subtle">
                         <th :class="thClass">{{ t('common.name') }}</th>
-                        <th :class="thClass">URL</th>
-                        <th :class="thClass">Events</th>
+                        <th :class="thClass">{{ t('settings.webhooks.url') }}</th>
+                        <th :class="thClass">{{ t('settings.webhooks.events') }}</th>
                         <th :class="thClass">{{ t('common.status') }}</th>
-                        <th :class="thClass">Deliveries</th>
+                        <th :class="thClass">{{ t('settings.webhooks.deliveries') }}</th>
                         <th :class="[thClass, 'text-right']">{{ t('common.actions') }}</th>
                     </tr>
                 </thead>
@@ -243,10 +244,10 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                         <td colspan="6" class="px-4 py-12 text-center">
                             <div class="flex flex-col items-center gap-3">
                                 <Webhook :size="22" class="text-text-tertiary" />
-                                <p class="text-sm text-text-tertiary">No webhooks configured</p>
+                                <p class="text-sm text-text-tertiary">{{ t('settings.webhooks.noWebhooks') }}</p>
                                 <Button variant="default" size="sm" @click="openCreateModal">
                                     <Plus :size="14" />
-                                    Create Your First Webhook
+                                    {{ t('settings.webhooks.createFirst') }}
                                 </Button>
                             </div>
                         </td>
@@ -254,27 +255,27 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                     <tr v-for="webhook in webhooks" :key="webhook.id" class="border-b border-border-subtle transition-colors last:border-b-0 hover:bg-surface-overlay">
                         <td class="px-4 py-3">
                             <div class="font-medium text-text-primary">{{ webhook.name }}</div>
-                            <div class="text-xs text-text-tertiary">Created by {{ webhook.creator?.name || 'Unknown' }}</div>
+                            <div class="text-xs text-text-tertiary">{{ t('settings.webhooks.createdByName', { name: webhook.creator?.name || t('settings.webhooks.unknownCreator') }) }}</div>
                         </td>
                         <td class="px-4 py-3">
                             <div class="font-mono text-sm text-text-primary" :title="webhook.url">{{ truncateUrl(webhook.url) }}</div>
                         </td>
                         <td class="px-4 py-3">
-                            <Badge variant="brand" size="sm">{{ webhook.events?.length || 0 }} events</Badge>
+                            <Badge variant="brand" size="sm">{{ t('settings.webhooks.eventCount', { count: webhook.events?.length || 0 }, webhook.events?.length || 0) }}</Badge>
                         </td>
                         <td class="px-4 py-3">
                             <Badge :variant="webhook.is_active ? 'success' : 'neutral'" size="sm">
-                                {{ webhook.is_active ? 'Active' : 'Inactive' }}
+                                {{ webhook.is_active ? t('common.active') : t('common.inactive') }}
                             </Badge>
                         </td>
                         <td class="px-4 py-3">
-                            <span class="tabular-nums text-text-secondary">{{ getDeliveryStats(webhook).total }} total</span>
+                            <span class="tabular-nums text-text-secondary">{{ t('settings.webhooks.deliveriesTotal', { count: formatNumber(getDeliveryStats(webhook).total) }) }}</span>
                         </td>
                         <td class="px-4 py-3">
                             <div class="flex items-center justify-end gap-1">
-                                <Link :href="route('webhooks.show', webhook.id)" class="rounded-md p-1.5 text-text-tertiary transition-colors hover:bg-surface-overlay hover:text-brand" title="View Details"><Eye :size="16" /></Link>
-                                <button @click="openEditModal(webhook)" class="rounded-md p-1.5 text-text-tertiary transition-colors hover:bg-surface-overlay hover:text-status-success" title="Edit"><Pencil :size="16" /></button>
-                                <button @click="deleteWebhook(webhook)" class="rounded-md p-1.5 text-text-tertiary transition-colors hover:bg-surface-overlay hover:text-status-danger" title="Delete"><Trash2 :size="16" /></button>
+                                <Link :href="route('webhooks.show', webhook.id)" class="rounded-md p-1.5 text-text-tertiary transition-colors hover:bg-surface-overlay hover:text-brand" :title="t('settings.webhooks.viewDetails')"><Eye :size="16" /></Link>
+                                <button @click="openEditModal(webhook)" class="rounded-md p-1.5 text-text-tertiary transition-colors hover:bg-surface-overlay hover:text-status-success" :title="t('common.edit')"><Pencil :size="16" /></button>
+                                <button @click="deleteWebhook(webhook)" class="rounded-md p-1.5 text-text-tertiary transition-colors hover:bg-surface-overlay hover:text-status-danger" :title="t('common.delete')"><Trash2 :size="16" /></button>
                             </div>
                         </td>
                     </tr>
@@ -299,20 +300,20 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                     <form @submit.prevent="submitCreate" class="space-y-6">
                         <!-- Name -->
                         <div>
-                            <label for="create-name" :class="fieldLabel">Name</label>
+                            <label for="create-name" :class="fieldLabel">{{ t('common.name') }}</label>
                             <input
                                 id="create-name"
                                 v-model="createForm.name"
                                 type="text"
                                 :class="fieldInput"
-                                placeholder="My Webhook"
+                                :placeholder="t('settings.webhooks.namePlaceholder')"
                             />
                             <p v-if="createForm.errors.name" :class="fieldError">{{ createForm.errors.name }}</p>
                         </div>
 
                         <!-- URL -->
                         <div>
-                            <label for="create-url" :class="fieldLabel">Endpoint URL</label>
+                            <label for="create-url" :class="fieldLabel">{{ t('settings.webhooks.endpointUrl') }}</label>
                             <input
                                 id="create-url"
                                 v-model="createForm.url"
@@ -325,9 +326,9 @@ const fieldError = 'mt-1 text-xs text-status-danger';
 
                         <!-- Events -->
                         <div>
-                            <label :class="fieldLabel">Events</label>
+                            <label :class="fieldLabel">{{ t('settings.webhooks.events') }}</label>
                             <p class="mb-3 text-sm text-text-tertiary">
-                                Select the events you want to receive notifications for.
+                                {{ t('settings.webhooks.selectEvents') }}
                             </p>
                             <div class="max-h-64 space-y-4 overflow-y-auto rounded-md border border-border-subtle p-4">
                                 <div v-for="(events, group) in eventGroups" :key="group" class="space-y-2">
@@ -376,7 +377,7 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                                 {{ t('common.active') }}
                             </label>
                             <span class="ml-2 text-xs text-text-tertiary">
-                                (Inactive webhooks will not receive any deliveries)
+                                {{ t('settings.webhooks.inactiveHint') }}
                             </span>
                         </div>
 
@@ -386,7 +387,7 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                                 {{ t('common.cancel') }}
                             </Button>
                             <Button type="submit" variant="default" size="sm" :loading="createForm.processing" :disabled="createForm.processing">
-                                <span v-if="createForm.processing">Creating...</span>
+                                <span v-if="createForm.processing">{{ t('common.creating') }}</span>
                                 <span v-else>{{ t('settings.webhooks.createWebhook') }}</span>
                             </Button>
                         </div>
@@ -402,7 +403,7 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                 <div class="relative mx-4 my-8 max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-xl border border-border-subtle bg-surface-raised p-6 shadow-lg">
                     <div class="mb-6 flex items-center justify-between">
                         <h3 class="text-base font-semibold text-text-primary">
-                            Edit Webhook
+                            {{ t('settings.webhooks.editWebhook') }}
                         </h3>
                         <button @click="closeEditModal" class="rounded-md p-1.5 text-text-tertiary transition-colors hover:bg-surface-overlay hover:text-text-primary">
                             <X :size="18" />
@@ -412,20 +413,20 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                     <form @submit.prevent="submitEdit" class="space-y-6">
                         <!-- Name -->
                         <div>
-                            <label for="edit-name" :class="fieldLabel">Name</label>
+                            <label for="edit-name" :class="fieldLabel">{{ t('common.name') }}</label>
                             <input
                                 id="edit-name"
                                 v-model="editForm.name"
                                 type="text"
                                 :class="fieldInput"
-                                placeholder="My Webhook"
+                                :placeholder="t('settings.webhooks.namePlaceholder')"
                             />
                             <p v-if="editForm.errors.name" :class="fieldError">{{ editForm.errors.name }}</p>
                         </div>
 
                         <!-- URL -->
                         <div>
-                            <label for="edit-url" :class="fieldLabel">Endpoint URL</label>
+                            <label for="edit-url" :class="fieldLabel">{{ t('settings.webhooks.endpointUrl') }}</label>
                             <input
                                 id="edit-url"
                                 v-model="editForm.url"
@@ -438,9 +439,9 @@ const fieldError = 'mt-1 text-xs text-status-danger';
 
                         <!-- Events -->
                         <div>
-                            <label :class="fieldLabel">Events</label>
+                            <label :class="fieldLabel">{{ t('settings.webhooks.events') }}</label>
                             <p class="mb-3 text-sm text-text-tertiary">
-                                Select the events you want to receive notifications for.
+                                {{ t('settings.webhooks.selectEvents') }}
                             </p>
                             <div class="max-h-64 space-y-4 overflow-y-auto rounded-md border border-border-subtle p-4">
                                 <div v-for="(events, group) in eventGroups" :key="group" class="space-y-2">
@@ -489,7 +490,7 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                                 {{ t('common.active') }}
                             </label>
                             <span class="ml-2 text-xs text-text-tertiary">
-                                (Inactive webhooks will not receive any deliveries)
+                                {{ t('settings.webhooks.inactiveHint') }}
                             </span>
                         </div>
 
@@ -499,8 +500,8 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                                 {{ t('common.cancel') }}
                             </Button>
                             <Button type="submit" variant="default" size="sm" :loading="editForm.processing" :disabled="editForm.processing">
-                                <span v-if="editForm.processing">Saving...</span>
-                                <span v-else>Save Changes</span>
+                                <span v-if="editForm.processing">{{ t('common.saving') }}</span>
+                                <span v-else>{{ t('common.saveChanges') }}</span>
                             </Button>
                         </div>
                     </form>

@@ -9,6 +9,7 @@ import { Head, Link, router } from '@inertiajs/vue3';
 import axios from 'axios';
 import { ref, computed, nextTick, defineAsyncComponent } from 'vue';
 import { useI18n } from 'vue-i18n';
+import { displayDateTime } from '@/lib/dates';
 import { useBarcodeWedge, useBarcodeLookup } from '@/composables/useBarcodeWedge';
 import {
     Pencil,
@@ -47,10 +48,10 @@ const statusVariant = (status) =>
 
 const getStatusLabel = (status) => {
     const labels = {
-        'draft': 'Draft',
-        'in_progress': 'In Progress',
-        'completed': 'Completed',
-        'cancelled': 'Cancelled',
+        'draft': t('stockAudits.statuses.draft'),
+        'in_progress': t('stockAudits.statuses.in_progress'),
+        'completed': t('stockAudits.statuses.completed'),
+        'cancelled': t('stockAudits.statuses.cancelled'),
     };
     return labels[status] || status;
 };
@@ -65,30 +66,21 @@ const itemStatusVariant = (status) =>
 
 const getItemStatusLabel = (status) => {
     const labels = {
-        'pending': 'Pending',
-        'counted': 'Counted',
-        'verified': 'Verified',
-        'adjusted': 'Adjusted',
+        'pending': t('stockAudits.itemStatuses.pending'),
+        'counted': t('stockAudits.itemStatuses.counted'),
+        'verified': t('stockAudits.itemStatuses.verified'),
+        'adjusted': t('stockAudits.itemStatuses.adjusted'),
     };
     return labels[status] || status;
 };
 
-const typeLabels = {
-    'full': 'Full Audit',
-    'cycle': 'Cycle Count',
-    'spot': 'Spot Check',
-};
+const typeLabels = computed(() => ({
+    'full': t('stockAudits.types.full'),
+    'cycle': t('stockAudits.types.cycle'),
+    'spot': t('stockAudits.types.spot'),
+}));
 
-const formatDate = (dateStr) => {
-    if (!dateStr) return '-';
-    return new Date(dateStr).toLocaleDateString('en-US', {
-        year: 'numeric',
-        month: 'short',
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit',
-    });
-};
+const formatDate = (dateStr) => displayDateTime(dateStr);
 
 const canStart = computed(() => props.audit.status === 'draft');
 const canComplete = computed(() => props.audit.status === 'in_progress');
@@ -97,7 +89,7 @@ const canDelete = computed(() => props.audit.status === 'draft');
 const canCount = computed(() => props.audit.status === 'in_progress');
 
 const startAudit = () => {
-    if (!confirm('Are you sure you want to start this audit? System quantities will be recorded at current levels.')) return;
+    if (!confirm(t('stockAudits.show.startConfirm'))) return;
     processing.value = true;
     router.post(route('stock-audits.start', props.audit.id), {}, {
         onFinish: () => { processing.value = false; },
@@ -122,7 +114,7 @@ const completeAudit = () => {
 };
 
 const deleteAudit = () => {
-    if (!confirm('Are you sure you want to delete this audit? This action cannot be undone.')) return;
+    if (!confirm(t('stockAudits.show.deleteConfirm'))) return;
     processing.value = true;
     router.delete(route('stock-audits.destroy', props.audit.id), {
         onFinish: () => { processing.value = false; },
@@ -163,10 +155,10 @@ const saveCount = async (item) => {
             editingItemId.value = null;
         } else {
             const data = await response.json();
-            alert(data.message || 'Failed to update count');
+            alert(data.message || t('stockAudits.show.updateCountFailed'));
         }
     } catch (error) {
-        alert('An error occurred while saving the count');
+        alert(t('stockAudits.show.saveCountError'));
     } finally {
         savingCount.value = false;
     }
@@ -279,7 +271,7 @@ const thClass = 'px-6 py-3 text-left text-xs font-medium uppercase tracking-wide
 </script>
 
 <template>
-    <Head :title="`Audit ${audit.audit_number}`" />
+    <Head :title="t('stockAudits.show.pageTitle', { number: audit.audit_number })" />
 
     <AppLayout>
         <template #header>
@@ -303,11 +295,11 @@ const thClass = 'px-6 py-3 text-left text-xs font-medium uppercase tracking-wide
                     :href="route('stock-audits.edit', audit.id)"
                 >
                     <Pencil :size="14" />
-                    Edit
+                    {{ t('common.edit') }}
                 </Button>
                 <Button variant="secondary" size="sm" as="Link" :href="route('stock-audits.index')">
                     <ArrowLeft :size="14" />
-                    Back to List
+                    {{ t('stockAudits.backToList') }}
                 </Button>
             </template>
         </PageHeader>
@@ -315,13 +307,13 @@ const thClass = 'px-6 py-3 text-left text-xs font-medium uppercase tracking-wide
         <!-- Summary metrics -->
         <section class="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
             <div class="rounded-lg border border-border-subtle bg-surface-raised p-4 transition-colors hover:border-border-strong">
-                <p class="text-xs font-medium uppercase tracking-wider text-text-tertiary">Status</p>
+                <p class="text-xs font-medium uppercase tracking-wider text-text-tertiary">{{ t('common.status') }}</p>
                 <div class="mt-2">
                     <Badge :variant="statusVariant(audit.status)" size="md" dot>{{ getStatusLabel(audit.status) }}</Badge>
                 </div>
             </div>
             <StatTile
-                label="Total Items"
+                :label="t('stockAudits.show.totalItems')"
                 :value="summary.total_items"
                 icon-tone="brand"
             >
@@ -329,7 +321,7 @@ const thClass = 'px-6 py-3 text-left text-xs font-medium uppercase tracking-wide
             </StatTile>
             <div class="rounded-lg border border-border-subtle bg-surface-raised p-4 transition-colors hover:border-border-strong">
                 <div class="flex items-start justify-between gap-2">
-                    <p class="text-xs font-medium uppercase tracking-wider text-text-tertiary">Progress</p>
+                    <p class="text-xs font-medium uppercase tracking-wider text-text-tertiary">{{ t('stockAudits.show.progress') }}</p>
                     <span class="shrink-0 text-status-info">
                         <ListChecks :size="20" :stroke-width="1.5" />
                     </span>
@@ -343,7 +335,7 @@ const thClass = 'px-6 py-3 text-left text-xs font-medium uppercase tracking-wide
                 </div>
             </div>
             <StatTile
-                label="Discrepancies"
+                :label="t('stockAudits.show.discrepancies')"
                 :value="summary.discrepancies"
                 :icon-tone="summary.discrepancies > 0 ? 'warning' : 'success'"
             >
@@ -353,44 +345,44 @@ const thClass = 'px-6 py-3 text-left text-xs font-medium uppercase tracking-wide
 
         <!-- Audit Details -->
         <Card :padded="false" class="mt-4">
-            <div class="px-5 pt-5"><h3 class="text-sm font-semibold text-text-primary">Audit Details</h3></div>
+            <div class="px-5 pt-5"><h3 class="text-sm font-semibold text-text-primary">{{ t('stockAudits.auditDetails') }}</h3></div>
             <div class="p-5">
                 <div class="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
                     <div>
-                        <p class="mb-1 text-xs text-text-tertiary">Audit Type</p>
+                        <p class="mb-1 text-xs text-text-tertiary">{{ t('stockAudits.fields.auditType') }}</p>
                         <p class="text-sm font-medium text-text-primary">{{ typeLabels[audit.audit_type] || audit.audit_type }}</p>
                     </div>
                     <div>
-                        <p class="mb-1 text-xs text-text-tertiary">Location</p>
+                        <p class="mb-1 text-xs text-text-tertiary">{{ t('stockAudits.columns.location') }}</p>
                         <p class="text-sm font-medium text-text-primary">
-                            {{ audit.warehouse_location?.name || 'All Locations' }}
+                            {{ audit.warehouse_location?.name || t('products.allLocations') }}
                         </p>
                     </div>
                     <div>
-                        <p class="mb-1 text-xs text-text-tertiary">Created By</p>
+                        <p class="mb-1 text-xs text-text-tertiary">{{ t('stockAudits.columns.createdBy') }}</p>
                         <p class="text-sm font-medium text-text-primary">{{ audit.creator?.name || '-' }}</p>
                     </div>
                     <div>
-                        <p class="mb-1 text-xs text-text-tertiary">Created</p>
+                        <p class="mb-1 text-xs text-text-tertiary">{{ t('common.createdAt') }}</p>
                         <p class="text-sm font-medium text-text-primary">{{ formatDate(audit.created_at) }}</p>
                     </div>
                     <div v-if="audit.started_at">
-                        <p class="mb-1 text-xs text-text-tertiary">Started</p>
+                        <p class="mb-1 text-xs text-text-tertiary">{{ t('stockAudits.show.started') }}</p>
                         <p class="text-sm font-medium text-text-primary">{{ formatDate(audit.started_at) }}</p>
                     </div>
                     <div v-if="audit.completed_at">
-                        <p class="mb-1 text-xs text-text-tertiary">Completed</p>
+                        <p class="mb-1 text-xs text-text-tertiary">{{ t('stockAudits.show.completed') }}</p>
                         <p class="text-sm font-medium text-text-primary">{{ formatDate(audit.completed_at) }}</p>
                     </div>
                 </div>
 
                 <div v-if="audit.description" class="mt-6 border-t border-border-subtle pt-6">
-                    <p class="mb-1 text-xs text-text-tertiary">Description</p>
+                    <p class="mb-1 text-xs text-text-tertiary">{{ t('common.description') }}</p>
                     <p class="text-sm text-text-primary">{{ audit.description }}</p>
                 </div>
 
                 <div v-if="audit.notes" class="mt-4">
-                    <p class="mb-1 text-xs text-text-tertiary">Notes</p>
+                    <p class="mb-1 text-xs text-text-tertiary">{{ t('common.notes') }}</p>
                     <p class="whitespace-pre-line text-sm text-text-primary">{{ audit.notes }}</p>
                 </div>
             </div>
@@ -400,9 +392,9 @@ const thClass = 'px-6 py-3 text-left text-xs font-medium uppercase tracking-wide
         <Card :padded="false" class="mt-4">
             <div class="px-5 pt-5">
                 <h3 class="text-sm font-semibold text-text-primary">
-                    Audit Items
+                    {{ t('stockAudits.show.auditItems') }}
                     <span class="text-xs font-normal text-text-tertiary">
-                        ({{ summary.counted_items }} of {{ summary.total_items }} counted)
+                        {{ t('stockAudits.show.countedProgress', { counted: summary.counted_items, total: summary.total_items }) }}
                     </span>
                 </h3>
 
@@ -457,14 +449,14 @@ const thClass = 'px-6 py-3 text-left text-xs font-medium uppercase tracking-wide
                 <table class="min-w-full">
                     <thead>
                         <tr class="border-b border-border-subtle">
-                            <th :class="thClass">Product</th>
-                            <th :class="thClass">Location</th>
-                            <th :class="[thClass, 'text-right']">System Qty</th>
-                            <th :class="[thClass, 'text-right']">Counted Qty</th>
-                            <th :class="[thClass, 'text-right']">Discrepancy</th>
-                            <th :class="thClass">Status</th>
-                            <th :class="thClass">Counted By</th>
-                            <th v-if="canCount" :class="thClass">Actions</th>
+                            <th :class="thClass">{{ t('common.product') }}</th>
+                            <th :class="thClass">{{ t('stockAudits.columns.location') }}</th>
+                            <th :class="[thClass, 'text-right']">{{ t('stockAudits.columns.systemQty') }}</th>
+                            <th :class="[thClass, 'text-right']">{{ t('stockAudits.columns.countedQty') }}</th>
+                            <th :class="[thClass, 'text-right']">{{ t('stockAudits.columns.discrepancy') }}</th>
+                            <th :class="thClass">{{ t('common.status') }}</th>
+                            <th :class="thClass">{{ t('stockAudits.columns.countedBy') }}</th>
+                            <th v-if="canCount" :class="thClass">{{ t('common.actions') }}</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -500,7 +492,7 @@ const thClass = 'px-6 py-3 text-left text-xs font-medium uppercase tracking-wide
                                         @click="startCounting(item)"
                                         class="text-sm font-medium text-brand hover:underline"
                                     >
-                                        {{ item.counted_quantity !== null ? 'Recount' : 'Count' }}
+                                        {{ item.counted_quantity !== null ? t('stockAudits.show.recount') : t('stockAudits.show.count') }}
                                     </button>
                                 </td>
                             </tr>
@@ -536,7 +528,7 @@ const thClass = 'px-6 py-3 text-left text-xs font-medium uppercase tracking-wide
                                     <input
                                         v-model="countNotes"
                                         type="text"
-                                        placeholder="Notes (optional)"
+                                        :placeholder="t('stockAudits.show.countNotesPlaceholder')"
                                         class="block h-9 w-full rounded-md border border-border-subtle bg-surface-canvas px-3 text-sm text-text-primary placeholder:text-text-tertiary ds-focus-ring"
                                         @keyup.enter="saveCount(item)"
                                     />
@@ -549,14 +541,14 @@ const thClass = 'px-6 py-3 text-left text-xs font-medium uppercase tracking-wide
                                             :disabled="savingCount"
                                             @click="saveCount(item)"
                                         >
-                                            {{ savingCount ? '...' : 'Save' }}
+                                            {{ savingCount ? '...' : t('common.save') }}
                                         </Button>
                                         <Button
                                             variant="secondary"
                                             size="sm"
                                             @click="cancelCounting"
                                         >
-                                            Cancel
+                                            {{ t('common.cancel') }}
                                         </Button>
                                     </div>
                                 </td>
@@ -565,7 +557,7 @@ const thClass = 'px-6 py-3 text-left text-xs font-medium uppercase tracking-wide
 
                         <tr v-if="!audit.items || audit.items.length === 0">
                             <td :colspan="canCount ? 8 : 7" class="px-6 py-12 text-center">
-                                <p class="text-sm text-text-tertiary">No items in this audit</p>
+                                <p class="text-sm text-text-tertiary">{{ t('stockAudits.show.noItems') }}</p>
                             </td>
                         </tr>
                     </tbody>
@@ -575,7 +567,7 @@ const thClass = 'px-6 py-3 text-left text-xs font-medium uppercase tracking-wide
 
         <!-- Actions -->
         <Card v-if="canStart || canComplete" :padded="false" class="mt-4">
-            <div class="px-5 pt-5"><h3 class="text-sm font-semibold text-text-primary">Actions</h3></div>
+            <div class="px-5 pt-5"><h3 class="text-sm font-semibold text-text-primary">{{ t('common.actions') }}</h3></div>
             <div class="p-5">
                 <div class="flex flex-wrap gap-3">
                     <Button
@@ -585,7 +577,7 @@ const thClass = 'px-6 py-3 text-left text-xs font-medium uppercase tracking-wide
                         @click="startAudit"
                     >
                         <Play :size="16" />
-                        {{ processing ? 'Processing...' : 'Start Audit' }}
+                        {{ processing ? t('stockAudits.show.processing') : t('stockAudits.show.startAudit') }}
                     </Button>
                     <Button
                         v-if="canComplete"
@@ -594,21 +586,21 @@ const thClass = 'px-6 py-3 text-left text-xs font-medium uppercase tracking-wide
                         @click="completeAudit"
                     >
                         <CheckCircle2 :size="16" />
-                        {{ processing ? 'Processing...' : 'Complete Audit' }}
+                        {{ processing ? t('stockAudits.show.processing') : t('stockAudits.show.completeAudit') }}
                     </Button>
                 </div>
                 <p v-if="canStart" class="mt-3 text-xs text-text-tertiary">
-                    Starting the audit will record current system stock levels and allow counting to begin.
+                    {{ t('stockAudits.show.startHint') }}
                 </p>
                 <p v-if="canComplete" class="mt-3 text-xs text-text-tertiary">
-                    Completing the audit will create stock adjustments for any discrepancies between system and counted quantities.
+                    {{ t('stockAudits.show.completeHint') }}
                 </p>
             </div>
         </Card>
 
         <!-- Danger Zone -->
         <Card v-if="canDelete" :padded="false" class="mt-4">
-            <div class="px-5 pt-5"><h3 class="text-sm font-semibold text-text-primary">Danger Zone</h3></div>
+            <div class="px-5 pt-5"><h3 class="text-sm font-semibold text-text-primary">{{ t('stockAudits.show.dangerZone') }}</h3></div>
             <div class="p-5">
                 <Button
                     variant="danger"
@@ -617,10 +609,10 @@ const thClass = 'px-6 py-3 text-left text-xs font-medium uppercase tracking-wide
                     @click="deleteAudit"
                 >
                     <Trash2 :size="16" />
-                    {{ processing ? 'Processing...' : 'Delete Audit' }}
+                    {{ processing ? t('stockAudits.show.processing') : t('stockAudits.show.deleteAudit') }}
                 </Button>
                 <p class="mt-2 text-xs text-text-tertiary">
-                    Deleting this audit is permanent and cannot be undone.
+                    {{ t('stockAudits.show.deleteHint') }}
                 </p>
             </div>
         </Card>
