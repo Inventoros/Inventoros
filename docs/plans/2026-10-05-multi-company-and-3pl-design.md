@@ -53,7 +53,12 @@ Neither can be built safely in a plugin alone: who the user is "working as" is d
 
 All checks read the active organization: the base role is the membership's role, custom roles are those assigned in that organization, warehouse assignments are filtered by the warehouses' organization (as they already were), and `auth.permissions`, `api.permission`, the web `permission` middleware, GraphQL and MCP gates follow. A user who is an administrator at home and a plain member elsewhere is a plain member there.
 
-The home organization owns the account. Its administrators edit, reset and delete the user on the existing Users screens, which keep listing home users only. Memberships of other organizations are granted and withdrawn through `OrganizationMembershipService` (the multi-company plugin provides the screens), which refuses the home organization and the last administrator, removes the user's roles, warehouse assignments and API tokens in that organization with the membership, writes the security log in that organization and fires `organization_member_added` / `organization_member_removed`.
+The home organization owns the account. Its administrators edit, reset and delete the user on the existing Users screens, which keep listing home users only, with two limits once the account also works elsewhere (`RoleAssignmentGuard`):
+
+- A non-admin (a delegated user manager) may manage a user only if that user holds no admin or manager role, and no permission the manager lacks, in ANY organization they belong to. Without this, a user manager could reset the password of a home user who administers another organization and sign in there.
+- Changing the email or password of, or deleting, an account that belongs to other organizations needs an administrator of each of them (an organization's last administrator is never deleted). The name and the home base role stay editable by home administrators. The user changes their own email and password from their profile as before.
+
+Organizations themselves can be disabled (`is_active`): nobody works in a disabled or deleted organization, home included. A session lands in another organization the user belongs to (or in none, with no tenant data and no role), and tokens bound to it, and legacy tokens of its users, stop authenticating. Memberships of other organizations are granted and withdrawn through `OrganizationMembershipService` (the multi-company plugin provides the screens), which refuses the home organization and the last administrator, removes the user's roles, warehouse assignments and API tokens in that organization with the membership, writes the security log in that organization and fires `organization_member_added` / `organization_member_removed`.
 
 ### Sessions and the browser
 
@@ -66,6 +71,9 @@ The home organization owns the account. Its administrators edit, reset and delet
 - Organization-wide notifications (low stock, new orders, returns), scheduled report recipients and assignee pickers address home users. Members added from other organizations are not recipients in this version; the Multi-Company plugin can add them through the hooks.
 - After-commit hooks fired by a core service called inside `runAs()` (`stock_changed`, `stock_adjusted`, ...) run in the request's active organization. Listeners must use the record's own `organization_id`, which they already must in queued jobs.
 - Core has no screens to add members or create organizations; that is the Multi-Company plugin's job (`OrganizationMembershipService::add()`, `createOrganization()`).
+- Activity log entries belong to the organization of their subject (a user account's entries to its home organization; work done inside `runAs()` to that organization), not to the organization the actor happened to have active.
+- A request already in flight when the user switches in another tab finishes in the organization it started in, and with the array, file or database session drivers it may write the old session data back after the switch (Laravel saves the whole session at the end of each request). The stored choice is re-checked against the memberships on the next request, so this can never reach an organization the user does not belong to; at worst the next page shows the previous organization again.
+- The stale-tab guard compares the header with the active organization. After an Inertia reload the tab adopts the new organization and its header with it, so a form re-submitted from that page is sent to the new organization; its records then answer 404 there (they belong to the previous one) rather than being changed. The guard is a safety net for writes, not an isolation boundary: the boundary is the scope and the membership checks.
 
 ### Isolation test inventory
 
@@ -92,7 +100,10 @@ The home organization owns the account. Its administrators edit, reset and delet
 | Queued jobs | `BackgroundOrganizationContextTest::test_a_queued_order_import_runs_in_the_organization_it_was_started_in`, `..._fails_once_the_membership_is_withdrawn` |
 | Scheduled reports | `test_a_scheduled_report_runs_as_its_owner_in_the_schedule_organization`, `..._is_skipped_once_its_owner_left_the_organization` |
 | Service context | `test_run_as_confines_scoped_queries_and_new_rows_to_the_organization`, `..._restores_the_scope_when_the_callback_throws`, `..._scopes_queued_work_that_has_no_signed_in_user`, `..._refuses_non_members_and_missing_permissions`, `test_the_context_override_is_per_request_and_job` |
-| Account integrity | `OrganizationMembershipTest` (home membership sync, switched instance never writes the home row, backfill) |
+| Account integrity | `OrganizationMembershipTest` (home membership sync, switched instance never writes the home row, one assignment per role, user and organization, backfill) |
+| Account takeover across organizations | `CrossOrganizationAccountTest` (user manager vs an admin elsewhere, on web and REST; permissions held elsewhere; home administrator vs credentials, email and deletion; administrator of every organization may; another organization's last administrator) |
+| Disabled organizations | `OrganizationSwitchingTest::test_a_disabled_home_organization_holds_no_data_for_its_users`, `TokenOrganizationBindingTest::test_tokens_of_a_disabled_home_organization_stop_authenticating` |
+| Logs, settings, licences, approvals | `BackgroundOrganizationContextTest::test_work_inside_run_as_is_logged_and_configured_in_that_organization`, `test_changes_to_a_user_account_are_logged_in_its_home_organization`, `test_an_approval_decision_reaches_the_requester_in_the_request_organization`, `test_a_queued_product_import_fails_once_the_membership_is_withdrawn` |
 | Broadcasts | Not applicable: core registers no broadcast channels. Notifications are database rows, covered above. |
 
 ## Decision 2: inter-company transfers are a paired, audited core operation

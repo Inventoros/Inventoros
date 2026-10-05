@@ -29,7 +29,8 @@ Full release notes, with the pull request behind each change, are on [GitHub Rel
 
 - Role assignments belong to one organization: a custom role, or the Administrator system role, held in one organization grants nothing in another. Existing assignments and API tokens belong to the user's organization after upgrading.
 - A write sent from a browser tab still showing another organization (after switching in a second tab) is refused instead of being saved in the active organization.
-- A queued order import, and a scheduled report, run as the user in the organization they were started in, and are refused once that user is no longer a member of it.
+- Changing the email or password of, or deleting, a user who also belongs to other organizations needs an administrator of each of them, and a delegated user manager may only manage users who hold no admin, manager or extra permission in any organization. Approval decisions, activity log entries and settings follow the organization the work happened in.
+- A queued order or product import, and a scheduled report, run as the user in the organization they were started in, and are refused once that user is no longer a member of it.
 
 - `supplier_created`, `supplier_updated`, `supplier_before_delete` and `supplier_deleted` fire from every surface (web, REST, GraphQL), after commit, instead of only from the web screens.
 - A stock adjustment without a location keeps the location bins in step: a decrease drains the bins in fulfilment order and an increase lands in the product's primary location (before, the total moved and the bins did not). `StockAdjustment::adjust()` takes `syncBins: false` for callers that move the bins themselves.
