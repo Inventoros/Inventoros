@@ -332,6 +332,7 @@ add_action('stock_changed', function ($product, $variant, array $change) {
 | `webhook_delivery_attempted` | `$delivery`, `$webhook`, `$result` | Once per outbound webhook delivery attempt: success, HTTP error, refused private destination or connection failure. `$result` is `[successful, status, duration_ms, error, attempt, will_retry]`. See [Outbound webhook events](#outbound-webhook-events). |
 | `organization_switched` | `$user`, `$from_organization_id`, `$to_organization_id` | A signed-in user switched their session to another organization they belong to. `$user` already works in the new one. See [Organizations and memberships](#organizations-and-memberships). |
 | `organization_member_added` | `$membership`, `$actor` | A user was given a membership of an organization other than their home one (after commit). |
+| `inter_company_transfer_completed` | `$transfer`, `$actor` | Stock moved between two organizations (after commit). `$transfer` is an `InterCompanyTransfer` with `from_organization_id`, `to_organization_id` and its `lines`, each with the adjustment booked on each side. |
 | `organization_member_removed` | `$organization_id`, `$user`, `$actor` | A membership was withdrawn (after commit). The user's roles, warehouse assignments and API tokens in that organization are already gone. |
 
 ## Filter reference
@@ -783,6 +784,18 @@ $organizations->authorize($actor, $organization->id, Permission::MANAGE_ORGANIZA
 app(OrganizationMembershipService::class)->add($organization, $user, 'member', $actor);
 ```
 
+### Moving stock between organizations
+
+`InterCompanyTransferService::transfer($actor, $fromOrganizationId, $toOrganizationId, $lines, $notes, $idempotencyKey)` moves stock as one atomic operation: an `inter_company_out` adjustment in the source organization (never below zero) and an `inter_company_in` adjustment in the destination, both referencing one `InterCompanyTransfer`, so each organization's ledger shows its side. The actor must be a member of both organizations holding `transfer_stock` in each, with warehouse access to every location named (a user restricted to some warehouses must name a location on both sides, and cannot move variant stock, which has no locations). Each line names `from_product_id`, `to_product_id` and `quantity`, and optionally the variants (required for a product sold by variant) and the locations on each side; products and locations of the wrong organization are refused as not found, and serial or batch tracked products and kits are refused. Pass an idempotency key so a retried call returns the first transfer instead of moving the stock twice. Read transfers with `InterCompanyTransfer::involving($organizationId)`, never unfiltered.
+
+```php
+use App\Services\Organizations\InterCompanyTransferService;
+
+$transfer = app(InterCompanyTransferService::class)->transfer($user, $holdingId, $subsidiaryId, [
+    ['from_product_id' => $source->id, 'to_product_id' => $target->id, 'quantity' => 12],
+], notes: 'Inter-company order IC-1042', idempotencyKey: 'ic-order-1042');
+```
+
 Hooks that a core service fires after commit (`stock_changed`, `stock_adjusted` and the other domain hooks) run in the request's active organization, which can differ from the record's when the change was made inside `runAs()`. Listeners must use the record's own `organization_id`, as they already must in queued jobs.
 
 ## Core PHP API
@@ -804,6 +817,7 @@ Resolve services from the container (`app(OrderService::class)`). Methods that t
 | `App\Services\ReorderService` | `primarySupplier()`, `suggestedQuantity()`, `createDraftPurchaseOrder()` |
 | `App\Services\Organizations\OrganizationMembershipService` | `isMember()`, `roleIn()`, `organizationsFor()`, `members()`, `add()`, `changeRole()`, `remove()`, `createOrganization()` |
 | `App\Services\Organizations\ActiveOrganization` | `userIn()`, `runAs()`, `authorize()` |
+| `App\Services\Organizations\InterCompanyTransferService` | `transfer()` |
 
 Check a method's docblock for its rules (locks it takes, exceptions it throws, which hooks it fires). On an older core, feature-detect a newer parameter with `(new \ReflectionMethod(OrderService::class, 'cancel'))->getNumberOfParameters()`.
 

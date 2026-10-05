@@ -114,6 +114,9 @@ final class CorePhpApiContractTest extends TestCase
         'App\Services\Organizations\ActiveOrganization::runAs' => ['returns' => 'mixed', 'params' => [
             'App\Models\User $user', 'int $organizationId', 'App\Enums\Permission|array|string $permissions', 'callable $callback',
         ]],
+        'App\Services\Organizations\InterCompanyTransferService::transfer' => ['returns' => 'App\Models\Inventory\InterCompanyTransfer', 'params' => [
+            'App\Models\User $actor', 'int $fromOrganizationId', 'int $toOrganizationId', 'array $lines', '?string $notes = NULL', '?string $idempotencyKey = NULL',
+        ]],
         'App\Services\Organizations\ActiveOrganization::authorize' => ['returns' => 'App\Models\User', 'params' => [
             'App\Models\User $user', 'int $organizationId', "App\\Enums\\Permission|array|string \$permissions = array (\n)",
         ]],
