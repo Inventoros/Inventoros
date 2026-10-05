@@ -313,6 +313,7 @@ add_action('stock_changed', function ($product, $variant, array $change) {
 | `dashboard_viewed` | `$user` | The dashboard is viewed. |
 | `email_notification_sent` | `$type`, `$user`, `$data` | A notification email is queued. |
 | `email_notification_failed` | `$type`, `$user`, `$data`, `$exception` | Queueing a notification email failed. |
+| `webhook_delivery_attempted` | `$delivery`, `$webhook`, `$result` | Once per outbound webhook delivery attempt: success, HTTP error, refused private destination or connection failure. `$result` is `[successful, status, duration_ms, error, attempt, will_retry]`. See [Outbound webhook events](#outbound-webhook-events). |
 
 ## Filter reference
 
@@ -347,6 +348,9 @@ A filter callback receives the value first, then the listed context, and must re
 | `email_mailable_class` | `$mailable_class`, `$type`, `$data` | Supply a Mailable class for a custom notification type. |
 | `report_data_sources` | `$sources` | Register extra data sources for the report builder. |
 | `report_query_{source}` | `$rows`, `$organization_id`, `$columns`, `$filters`, `$sort` | Return the rows (a Collection) for a data source you registered, for example `report_query_my_source`. |
+| `webhook_should_deliver` | `$deliver`, `$webhook`, `$event`, `$payload` | Return false to skip one subscribed webhook for one event. Nothing is logged or sent for it. |
+| `webhook_delivery_request` | `$request`, `$delivery`, `$webhook` | The outbound request before it is signed: `[body, headers, timeout]`. Core signs the body you return and keeps the URL and its private-address checks. |
+| `webhook_delivery_retry_policy` | `$policy`, `$delivery`, `$webhook` | Tries and back-off for a delivery when it is queued: `[tries, backoff]`. |
 
 A `user_permissions` filter is deliberately not offered: letting plugins rewrite a user's permissions would be a privilege-escalation path.
 
@@ -647,6 +651,40 @@ dispatch_webhook_event('cycle-counts.session_completed', [
 - Dispatching an event that is not registered throws. A deactivated plugin's events are no longer offered and nothing sends them; existing subscriptions keep the name and resume when it is reactivated.
 
 On Inventoros versions without this, check `function_exists('register_webhook_event')`.
+
+### Shaping and observing deliveries
+
+Four hooks let a plugin filter, reshape and observe every outbound delivery, core and plugin events alike, without taking it over. Core keeps the destination URL, the HMAC signature, the private and loopback address checks at send time, and the redirect refusal.
+
+```php
+// Skip an endpoint for one event: nothing is logged or sent for it.
+add_filter('webhook_should_deliver', function (bool $deliver, $webhook, string $event, array $payload) {
+    return $deliver && ($payload['data']['warehouse_id'] ?? null) === 3;
+});
+
+// Change the body, add headers or shorten the timeout. Core signs the body you return.
+add_filter('webhook_delivery_request', function (array $request, $delivery, $webhook) {
+    $request['body'] = json_encode(['sku' => $delivery->payload['data']['sku'] ?? null]);
+    $request['headers']['Authorization'] = 'Bearer ...';
+    $request['timeout'] = 10;
+
+    return $request;
+});
+
+// Tries and back-off (seconds) for a delivery, read when it is queued.
+add_filter('webhook_delivery_retry_policy', fn (array $policy, $delivery, $webhook) => ['tries' => 3, 'backoff' => [30, 300]]);
+
+// Once per attempt, for dashboards and circuit breakers.
+add_action('webhook_delivery_attempted', function ($delivery, $webhook, array $result) {
+    // $result: successful, status (null when no response), duration_ms, error, attempt, will_retry
+});
+```
+
+- `webhook_delivery_request` may not set `X-Webhook-Signature`, `X-Webhook-Event`, `X-Webhook-Delivery`, `Host`, `Content-Type`, `Content-Length` or other transport headers; header names must be tokens and values may not contain line breaks (anything else is dropped), at most 20 extra headers. A body that is not a string is ignored. The timeout is clamped to 1 to 30 seconds.
+- `webhook_delivery_retry_policy` allows at most 10 tries, each back-off between 1 second and 24 hours; malformed values keep the default (5 tries: 1 minute, 5 minutes, 30 minutes, 2 hours, 24 hours).
+- A filter or listener that throws is logged and ignored: the delivery goes ahead as if it were not there.
+
+On Inventoros versions without these hooks, check `array_key_exists('webhook_delivery_request', \App\Services\HookRegistry::getFilters())`.
 
 ## Building and packaging a plugin
 
