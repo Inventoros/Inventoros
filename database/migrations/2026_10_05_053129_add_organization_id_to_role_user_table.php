@@ -21,6 +21,15 @@ return new class extends Migration
 
         $this->backfill();
 
+        // An assignment always names its organization, so the unique index
+        // below holds (NULLs never collide in a unique index). Assignments of
+        // users with no organization granted nothing they could use: drop them.
+        DB::table('role_user')->whereNull('organization_id')->delete();
+
+        Schema::table('role_user', function (Blueprint $table) {
+            $table->unsignedBigInteger('organization_id')->nullable(false)->change();
+        });
+
         // The same role (a system role, for instance) may now be held in two
         // organizations. Add the wider index first: on MySQL the role_id
         // foreign key needs an index that starts with role_id at all times.

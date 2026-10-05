@@ -282,6 +282,24 @@ final class OrganizationMembershipTest extends TestCase
         $this->assertDatabaseHas('role_user', ['role_id' => $administrator->id, 'user_id' => $user->id, 'organization_id' => $b->id]);
     }
 
+    public function test_a_role_assignment_always_names_one_organization_and_is_held_once(): void
+    {
+        $a = $this->organization('Alpha');
+        $user = $this->homeUser($a);
+        $role = $this->grantInOrganization($user, $a, ['view_products']);
+        $row = ['role_id' => $role->id, 'user_id' => $user->id, 'created_at' => now(), 'updated_at' => now()];
+
+        foreach ([$row + ['organization_id' => null], $row + ['organization_id' => null], $row + ['organization_id' => $a->id]] as $attempt) {
+            try {
+                DB::table('role_user')->insert($attempt);
+            } catch (\Illuminate\Database\QueryException) {
+                continue;
+            }
+        }
+
+        $this->assertSame(1, DB::table('role_user')->where('role_id', $role->id)->where('user_id', $user->id)->count());
+    }
+
     public function test_eager_loaded_roles_are_the_home_organization_roles(): void
     {
         $a = $this->organization('Alpha');
@@ -296,7 +314,7 @@ final class OrganizationMembershipTest extends TestCase
         $this->assertSame([$roleA->id], $loaded->roles->pluck('id')->all());
     }
 
-    public function test_the_backfill_gives_every_existing_user_their_home_membership_and_binds_roles_and_tokens(): void
+    public function test_the_backfill_gives_every_existing_user_their_home_membership_and_binds_tokens(): void
     {
         $a = $this->organization('Alpha');
         $b = $this->organization('Beta');
@@ -305,14 +323,14 @@ final class OrganizationMembershipTest extends TestCase
         $role = $this->grantInOrganization($user, $a, ['view_products']);
         $token = $user->createToken('legacy');
 
-        // The state before the upgrade: no memberships, unbound assignments and tokens.
+        // The state before the upgrade: no memberships and unbound tokens.
+        // (Role assignments cannot be unbound in the new schema; the
+        // migration test runs their backfill on the real column.)
         DB::table('organization_user')->delete();
-        DB::table('role_user')->update(['organization_id' => null]);
         DB::table('personal_access_tokens')->update(['organization_id' => null]);
 
         foreach ([
             '2026_10_05_053128_create_organization_user_table.php',
-            '2026_10_05_053129_add_organization_id_to_role_user_table.php',
             '2026_10_05_053130_add_organization_id_to_personal_access_tokens_table.php',
         ] as $file) {
             $migration = require database_path('migrations/'.$file);

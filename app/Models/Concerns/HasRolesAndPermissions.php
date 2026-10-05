@@ -6,6 +6,7 @@ namespace App\Models\Concerns;
 
 use App\Enums\Permission;
 use App\Models\Role;
+use App\Models\RoleAssignment;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
@@ -31,10 +32,11 @@ trait HasRolesAndPermissions
      */
     public function roles(): BelongsToMany
     {
-        $relation = $this->belongsToMany(Role::class, 'role_user')->withPivot('organization_id');
+        $relation = $this->belongsToMany(Role::class, 'role_user')->using(RoleAssignment::class)->withPivot('organization_id');
 
         if ($this->exists) {
-            // A user without an organization keeps only unscoped assignments.
+            // A user without an organization holds no roles (an assignment
+            // always names its organization; attaching one fails).
             return $this->organization_id === null
                 ? $relation->wherePivotNull('organization_id')
                 : $relation->withPivotValue('organization_id', (int) $this->organization_id);
