@@ -120,6 +120,21 @@ final class BackgroundOrganizationContextTest extends TestCase
         $this->assertSame($this->alpha->id, $log->organization_id);
     }
 
+    public function test_an_approval_decision_reaches_the_requester_in_the_request_organization(): void
+    {
+        $this->addMember($this->beta, $this->user, 'admin');
+        $approver = User::where('organization_id', $this->beta->id)->firstOrFail();
+        $requester = $this->organizations()->userIn($this->user, $this->beta->id);
+        $product = Product::withoutGlobalScope(OrganizationScope::class)->where('sku', 'BETA-1')->firstOrFail();
+
+        $request = app(\App\Services\ApprovalService::class)->requestStockAdjustment($requester, $product, null, -2, 'damage', 'Dropped');
+        $this->actingAs($approver);
+        app(\App\Services\ApprovalService::class)->approve($approver, 'stock_adjustment', $request->id);
+
+        $notification = \App\Models\Notification::where('user_id', $this->user->id)->where('type', 'approval_approved')->sole();
+        $this->assertSame($this->beta->id, $notification->organization_id);
+    }
+
     public function test_run_as_restores_the_scope_when_the_callback_throws(): void
     {
         $this->addMember($this->beta, $this->user, 'admin');
