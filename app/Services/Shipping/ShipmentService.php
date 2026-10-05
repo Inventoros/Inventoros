@@ -72,6 +72,8 @@ final class ShipmentService
      *
      * @throws ShippingException
      * @throws AuthorizationException when a warehouse-restricted user ships from a warehouse they were not given
+     *
+     * @api
      */
     public function create(Order $order, array $data, ?User $user = null): Shipment
     {
@@ -250,6 +252,8 @@ final class ShipmentService
      * Hand the shipment to the carrier.
      *
      * @throws ShippingException
+     *
+     * @api
      */
     public function markShipped(Shipment $shipment, ?User $user = null, ?Carbon $at = null): Shipment
     {
@@ -278,6 +282,8 @@ final class ShipmentService
      * shipped_at. A delivered shipment stays delivered; a cancelled one, or
      * one whose order was cancelled (its stock already went back), ignores
      * updates.
+     *
+     * @api
      */
     public function applyTrackingStatus(Shipment $shipment, ShipmentStatus $status, ?string $detail = null, ?Carbon $at = null): Shipment
     {
@@ -325,6 +331,10 @@ final class ShipmentService
 
         if (! $wasLeft && $shipment->status->hasLeft()) {
             DB::afterCommit(fn () => $this->notifyCustomer($shipment));
+            // Fires once per shipment, the first time it leaves the
+            // warehouse, however it left: marked shipped on any surface, or
+            // a carrier update that skipped straight to in transit/delivered.
+            DB::afterCommit(fn () => do_action('shipment_shipped', $shipment));
         }
 
         if ($deliveredNow) {
@@ -339,6 +349,8 @@ final class ShipmentService
      * first when one was bought. If the void fails nothing changes.
      *
      * @throws ShippingException
+     *
+     * @api
      */
     public function cancel(Shipment $shipment): Shipment
     {
@@ -360,6 +372,8 @@ final class ShipmentService
             $locked->forceFill(['status' => ShipmentStatus::CANCELLED])->save();
 
             $shipment->setRawAttributes($locked->getAttributes(), true);
+
+            DB::afterCommit(fn () => do_action('shipment_cancelled', $shipment));
 
             return $shipment;
         });
@@ -413,6 +427,8 @@ final class ShipmentService
      * Units of each order line not yet in a non-cancelled shipment.
      *
      * @return array<int, int> order_item_id => remaining quantity
+     *
+     * @api
      */
     public function remainingQuantities(Order $order): array
     {

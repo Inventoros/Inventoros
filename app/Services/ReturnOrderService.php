@@ -176,6 +176,8 @@ final class ReturnOrderService
      * Quantities already returned per order item (excluding rejected returns).
      *
      * @return Collection<int, int|string>
+     *
+     * @api
      */
     public function returnedQuantities(Order $order): Collection
     {
@@ -198,6 +200,8 @@ final class ReturnOrderService
      *                           still need access to approve and receive it).
      *
      * @throws ValidationException when a line exceeds its returnable quantity
+     *
+     * @api
      */
     public function create(int $organizationId, ?User $actor, array $data): ReturnOrder
     {
@@ -310,6 +314,8 @@ final class ReturnOrderService
 
     /**
      * Approve a pending return.
+     *
+     * @api
      */
     public function approve(ReturnOrder $returnOrder, User $actor): ReturnOrder
     {
@@ -342,6 +348,8 @@ final class ReturnOrderService
      * @throws InvalidStateException when the return is no longer pending or approved
      * @throws ValidationException when a line is not on this return
      * @throws AuthorizationException when a changed line restocks outside the actor's warehouses
+     *
+     * @api
      */
     public function updateLines(ReturnOrder $returnOrder, User $actor, array $lines): ReturnOrder
     {
@@ -414,17 +422,33 @@ final class ReturnOrderService
 
     /**
      * Receive an approved return, restocking every line marked for restock.
+     *
+     * @param  User|null  $actor  Who receives it: their warehouse access is enforced and the
+     *                           restock ledger rows are attributed to them. Callers outside a
+     *                           request (a queued job, a command, a plugin's sync) pass one
+     *                           explicitly. Without one the signed-in user is used; with
+     *                           nobody signed in either, the return is received as a system
+     *                           action (no warehouse restriction applies) and the ledger
+     *                           records whoever approved it, else the order's creator, else
+     *                           the organization's first user.
+     *
+     * @api
      */
-    public function receive(ReturnOrder $returnOrder, User $actor): ReturnOrder
+    public function receive(ReturnOrder $returnOrder, ?User $actor = null): ReturnOrder
     {
-        $this->authorizeView($returnOrder, $actor);
+        $signedIn = auth()->user();
+        $actor ??= $signedIn instanceof User ? $signedIn : null;
 
-        // Receiving books stock into each restocked line's location, so every
-        // one of them must be in the actor's warehouses.
-        $returnOrder->loadMissing('items.product');
-        foreach ($returnOrder->items as $item) {
-            if ($item->restock) {
-                $this->warehouseAccess->authorizeLocation($actor, $item->product?->location_id);
+        if ($actor !== null) {
+            $this->authorizeView($returnOrder, $actor);
+
+            // Receiving books stock into each restocked line's location, so every
+            // one of them must be in the actor's warehouses.
+            $returnOrder->loadMissing('items.product');
+            foreach ($returnOrder->items as $item) {
+                if ($item->restock) {
+                    $this->warehouseAccess->authorizeLocation($actor, $item->product?->location_id);
+                }
             }
         }
 
@@ -449,6 +473,10 @@ final class ReturnOrderService
 
             $this->assertReceivable($locked);
 
+            // stock_adjustments.user_id is required, so the restock must
+            // never depend on a session being present.
+            $ledgerActor = $actor ?? $this->systemActor($locked);
+
             foreach ($locked->items as $item) {
                 // A line sold as a variant decremented the variant, so the
                 // return credits the variant back (lines raised before the
@@ -464,6 +492,7 @@ final class ReturnOrderService
                         'Return restock',
                         "Restocked from return {$locked->return_number}",
                         $locked,
+                        actor: $ledgerActor,
                     );
 
                     if ($item->orderItem !== null) {
@@ -477,6 +506,7 @@ final class ReturnOrderService
                         'Return restock',
                         "Restocked from return {$locked->return_number}",
                         $locked,
+                        actor: $ledgerActor,
                         // Book the returned units into the product's location
                         // bin so the per-location breakdown rises with the
                         // total instead of drifting into "unassigned" — the
@@ -500,11 +530,25 @@ final class ReturnOrderService
 
             $locked->update([
                 'status' => 'received',
-                'processed_by' => $actor->id,
+                'processed_by' => $ledgerActor?->id ?? $locked->processed_by,
             ]);
 
             return $locked;
         });
+    }
+
+    /**
+     * Who a return received with no actor and nobody signed in is attributed
+     * to: whoever approved it, else the order's creator, else the
+     * organization's first user.
+     */
+    private function systemActor(ReturnOrder $locked): ?User
+    {
+        $createdBy = Order::withoutGlobalScopes()->whereKey($locked->order_id)->value('created_by');
+
+        return ($locked->processed_by !== null ? User::withoutGlobalScopes()->find($locked->processed_by) : null)
+            ?? ($createdBy !== null ? User::withoutGlobalScopes()->find($createdBy) : null)
+            ?? User::withoutGlobalScopes()->where('organization_id', $locked->organization_id)->orderBy('id')->first();
     }
 
     /**
@@ -587,6 +631,8 @@ final class ReturnOrderService
 
     /**
      * Complete a received return.
+     *
+     * @api
      */
     public function complete(ReturnOrder $returnOrder, User $actor): ReturnOrder
     {
@@ -607,6 +653,8 @@ final class ReturnOrderService
 
     /**
      * Reject a pending return, appending the reason to its notes.
+     *
+     * @api
      */
     public function reject(ReturnOrder $returnOrder, User $actor, ?string $reason = null): ReturnOrder
     {

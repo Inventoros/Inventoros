@@ -23,6 +23,8 @@ final class ProductLocationStockService
 {
     /**
      * On-hand quantity of a product at a single location (0 if unbinned there).
+     *
+     * @api
      */
     public function quantityAt(Product $product, int $locationId): int
     {
@@ -37,6 +39,8 @@ final class ProductLocationStockService
      * been binned as holding its whole stock at its primary location (which
      * is what ensureBinned() would seed). Use this, not quantityAt(), when
      * the answer feeds a write that will bin the product.
+     *
+     * @api
      */
     public function onHandAt(Product $product, int $locationId): int
     {
@@ -55,6 +59,8 @@ final class ProductLocationStockService
      * warehouses they may access are returned.
      *
      * @return Collection<int, ProductLocationStock>
+     *
+     * @api
      */
     public function breakdown(Product $product, ?User $viewer = null): Collection
     {
@@ -70,6 +76,8 @@ final class ProductLocationStockService
      * Total quantity assigned to locations for a product. Equals
      * $product->stock once every unit has been binned; less if some stock is
      * still unassigned.
+     *
+     * @api
      */
     public function totalAssigned(Product $product): int
     {
@@ -91,6 +99,8 @@ final class ProductLocationStockService
      * product, so concurrent transfers of the same product serialize.
      *
      * @throws \RuntimeException when the source bin is short
+     *
+     * @api
      */
     public function move(Product $product, int $fromLocationId, int $toLocationId, int $quantity): void
     {
@@ -130,6 +140,11 @@ final class ProductLocationStockService
      * then the fullest bins. Keeps SUM(bins) in step with a falling
      * products.stock so a bin never claims more than exists.
      *
+     * $preferWarehouseId (an order's fulfilling warehouse) puts that
+     * warehouse's bins ahead of everything else, in the same order among
+     * themselves; once they are empty the rest drain in the order above.
+     * Null, or a warehouse holding none of the product, changes nothing.
+     *
      * Best-effort: an unbinned product is lazily seeded from its assigned
      * location first; a product with no location is left alone (its stock has
      * no bins to move). Any shortfall beyond what the bins hold simply came
@@ -137,8 +152,10 @@ final class ProductLocationStockService
      * lazy seed reads the pre-decrement total.
      *
      * Must run inside the caller's product-locked transaction.
+     *
+     * @api
      */
-    public function consume(Product $product, int $quantity): void
+    public function consume(Product $product, int $quantity, ?int $preferWarehouseId = null): void
     {
         if ($quantity <= 0) {
             return;
@@ -149,8 +166,13 @@ final class ProductLocationStockService
         $bins = ProductLocationStock::query()
             ->where('product_id', $product->id)
             ->where('quantity', '>', 0)
-            // Preferred warehouse first, then the primary location, then the
-            // fullest bins.
+            // The fulfilling warehouse's bins first, when one is named.
+            ->when($preferWarehouseId !== null, fn ($query) => $query->orderByRaw(
+                'case when product_location_stocks.location_id in (select product_locations.id from product_locations where product_locations.warehouse_id = ?) then 0 else 1 end',
+                [$preferWarehouseId],
+            ))
+            // Then the highest-priority warehouse, then the primary location,
+            // then the fullest bins.
             ->orderByDesc(
                 DB::table('product_locations')
                     ->leftJoin('warehouses', function ($join) {
@@ -191,6 +213,8 @@ final class ProductLocationStockService
      * units and the rest of the on-hand would drop into "unassigned".
      *
      * Must run inside the caller's product-locked transaction.
+     *
+     * @api
      */
     public function receive(Product $product, int $quantity, ?int $locationId = null): void
     {
@@ -224,6 +248,8 @@ final class ProductLocationStockService
      * below zero.
      *
      * @throws InsufficientStockException when the bin would go negative
+     *
+     * @api
      */
     public function applyDelta(Product $product, int $locationId, int $delta, bool $allowNegativeBin = false): int
     {

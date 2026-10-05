@@ -189,6 +189,8 @@ class StockAdjustment extends Model
      * around this call (order creation, work orders, the product import).
      *
      * @return static
+     *
+     * @api
      */
     public static function adjust(
         Product $product,
@@ -284,6 +286,8 @@ class StockAdjustment extends Model
      * Create a stock adjustment for a product variant.
      *
      * @return static
+     *
+     * @api
      */
     public static function adjustVariant(
         ProductVariant $variant,
