@@ -294,7 +294,7 @@ final class OrderService
                 // more than exists. Products only (bins are per-product; variant
                 // stock has no location breakdown).
                 if ($target instanceof Product) {
-                    $locationStock->consume($target, $totalQty);
+                    $locationStock->consume($target, $totalQty, $this->fulfillingWarehouseId($order));
                 }
 
                 $target->decrement('stock', $totalQty);
@@ -576,6 +576,16 @@ final class OrderService
             // from — a deliberate simplification; totals stay correct.)
             app(ProductLocationStockService::class)->receive($item->product, $quantity);
         }
+    }
+
+    /**
+     * The warehouse an order is fulfilled from, whose bins its lines draw
+     * down first (ProductLocationStockService::consume). Null when the order
+     * names none; the attribute is uncast, so a posted string is normalised.
+     */
+    private function fulfillingWarehouseId(Order $order): ?int
+    {
+        return $order->warehouse_id === null || $order->warehouse_id === '' ? null : (int) $order->warehouse_id;
     }
 
     /**
@@ -887,7 +897,7 @@ final class OrderService
             } else {
                 // consume() before adjust() so the lazy bin seed reads the
                 // pre-decrement total; allocate after the item exists.
-                $locationStock->consume($product, $qty);
+                $locationStock->consume($product, $qty, $this->fulfillingWarehouseId($order));
                 StockAdjustment::adjust(
                     $product, -$qty, 'order_fulfillment',
                     "Order {$order->order_number} edited", null, $order, allowNegative: false,

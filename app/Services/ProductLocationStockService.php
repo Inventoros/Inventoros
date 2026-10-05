@@ -130,6 +130,11 @@ final class ProductLocationStockService
      * then the fullest bins. Keeps SUM(bins) in step with a falling
      * products.stock so a bin never claims more than exists.
      *
+     * $preferWarehouseId (an order's fulfilling warehouse) puts that
+     * warehouse's bins ahead of everything else, in the same order among
+     * themselves; once they are empty the rest drain in the order above.
+     * Null, or a warehouse holding none of the product, changes nothing.
+     *
      * Best-effort: an unbinned product is lazily seeded from its assigned
      * location first; a product with no location is left alone (its stock has
      * no bins to move). Any shortfall beyond what the bins hold simply came
@@ -138,7 +143,7 @@ final class ProductLocationStockService
      *
      * Must run inside the caller's product-locked transaction.
      */
-    public function consume(Product $product, int $quantity): void
+    public function consume(Product $product, int $quantity, ?int $preferWarehouseId = null): void
     {
         if ($quantity <= 0) {
             return;
@@ -149,8 +154,13 @@ final class ProductLocationStockService
         $bins = ProductLocationStock::query()
             ->where('product_id', $product->id)
             ->where('quantity', '>', 0)
-            // Preferred warehouse first, then the primary location, then the
-            // fullest bins.
+            // The fulfilling warehouse's bins first, when one is named.
+            ->when($preferWarehouseId !== null, fn ($query) => $query->orderByRaw(
+                'case when product_location_stocks.location_id in (select product_locations.id from product_locations where product_locations.warehouse_id = ?) then 0 else 1 end',
+                [$preferWarehouseId],
+            ))
+            // Then the highest-priority warehouse, then the primary location,
+            // then the fullest bins.
             ->orderByDesc(
                 DB::table('product_locations')
                     ->leftJoin('warehouses', function ($join) {

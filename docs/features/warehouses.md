@@ -60,3 +60,5 @@ Warehouses and locations have an optional capacity in units. The warehouse page 
 ## Fulfilment priority
 
 When stock is consumed (orders, work orders, reconciliation), `ProductLocationStockService::consume()` drains bins in the highest-priority warehouse first (higher `priority` wins; a location with no warehouse counts as 0). Within equal priority the product's primary location goes first, then the fullest bins. With every warehouse at the same priority the order is exactly what it was before.
+
+An order that names a warehouse (`orders.warehouse_id`) draws its lines from that warehouse's bins first, in the same order among themselves (primary location, then the fullest bin). Only when they run out does the rest come from the other bins in the priority order above, so an order never fails for being short in its own warehouse. An order with no warehouse, or one whose warehouse holds none of the product, drains purely by priority. Cancelling or editing an order still returns its units to the product's primary location.
