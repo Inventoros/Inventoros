@@ -105,7 +105,7 @@ While the plugin is active, Inventoros copies `dist/` to `public/plugin-assets/m
 
 A plugin can also add a page of its own with `register_page()`, which the bundle supplies with `plugin.registerPage()`, and a dashboard card with `register_dashboard_widget()`. Bundles get the app's layout, Inertia helpers, core UI components (forms, tables, dialogs, the barcode scanner) and translations from `window.Inventoros`, so plugin pages look like the rest of the app and follow the user's language.
 
-Every placement, menu item, widget and page accepts a `permission`. It is checked on the server: users without it never receive the entry, or get a 403 for a page. Data passed as a closure is only computed for users who may see it. A plugin can add permissions of its own with `register_permission('my-plugin.manage', 'Manage My Plugin')`; they appear in the role editor like core permissions and are removed from roles when the plugin is deleted.
+Components can be placed on the dashboard, the product, order, purchase order, supplier, customer, warehouse, stock audit, cycle count, transfer, return and work order pages, and as a card on the settings hub (the full list of pages and slots is in the plugin development guide). Every placement, menu item, widget and page accepts a `permission`. It is checked on the server: users without it never receive the entry, or get a 403 for a page. Data passed as a closure is only computed for users who may see it. A plugin can add permissions of its own with `register_permission('my-plugin.manage', 'Manage My Plugin')`; they appear in the role editor like core permissions and are removed from roles when the plugin is deleted.
 
 ### MCP tools and webhook events
 

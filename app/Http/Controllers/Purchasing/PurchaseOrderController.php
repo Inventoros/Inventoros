@@ -147,6 +147,7 @@ class PurchaseOrderController extends Controller
             ],
             'pluginComponents' => [
                 'header' => get_page_components('purchase-orders.show', 'header'),
+                'actions' => get_page_components('purchase-orders.show', 'actions'),
                 'sidebar' => get_page_components('purchase-orders.show', 'sidebar'),
                 'footer' => get_page_components('purchase-orders.show', 'footer'),
             ],

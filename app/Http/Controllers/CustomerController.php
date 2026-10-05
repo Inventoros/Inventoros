@@ -45,6 +45,7 @@ class CustomerController extends Controller
         $customers = $query->paginate(config('limits.pagination.default'))->withQueryString();
 
         return Inertia::render('Customers/Index', [
+            'pluginComponents' => plugin_slots('customers.index', ['header', 'footer']),
             'customers' => $customers,
             'filters' => $request->only(['search', 'is_active']),
         ]);
@@ -102,6 +103,7 @@ class CustomerController extends Controller
         $organization = $customer->organization;
 
         return Inertia::render('Customers/Show', [
+            'pluginComponents' => plugin_slots('customers.show', ['header', 'actions', 'footer']),
             'customer' => $customer,
             'contacts' => $customer->contacts()
                 ->orderBy('id')

@@ -263,6 +263,7 @@ class OrderController extends Controller
             ...app(OrderShippingPanel::class)->forOrder($order, auth()->user()),
             'pluginComponents' => [
                 'header' => get_page_components('orders.show', 'header'),
+                'actions' => get_page_components('orders.show', 'actions'),
                 'sidebar' => get_page_components('orders.show', 'sidebar'),
                 'tabs' => get_page_components('orders.show', 'tabs'),
                 'footer' => get_page_components('orders.show', 'footer'),

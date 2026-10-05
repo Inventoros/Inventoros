@@ -1,4 +1,5 @@
 <script setup>
+import PluginSlot from '@/Components/PluginSlot.vue';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import PageHeader from '@/Components/ui/PageHeader.vue';
 import Card from '@/Components/ui/Card.vue';
@@ -19,6 +20,7 @@ const { canVisit } = usePermissions();
 const { t } = useI18n();
 
 const props = defineProps({
+    pluginComponents: Object,
     customer: Object,
     contacts: { type: Array, default: () => [] },
     portal: { type: Object, default: () => ({ enabled: false, canManageContacts: false, login_url: null }) },
@@ -115,6 +117,7 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-t
             :description="customer.code ? t('customers.show.code', { code: customer.code }) : customer.company_name || null"
         >
             <template #actions>
+                <PluginSlot slot="actions" :components="pluginComponents?.actions" />
                 <Badge :variant="customer.is_active ? 'success' : 'neutral'" size="sm" dot>
                     {{ customer.is_active ? t('common.active') : t('common.inactive') }}
                 </Badge>
@@ -128,6 +131,9 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-t
                 </Button>
             </template>
         </PageHeader>
+
+        <!-- Plugin Slot: Header -->
+        <PluginSlot slot="header" :components="pluginComponents?.header" />
 
         <!-- Key metrics -->
         <section class="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-2">
@@ -428,5 +434,8 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-t
                 </Card>
             </div>
         </div>
+
+        <!-- Plugin Slot: Footer -->
+        <PluginSlot slot="footer" :components="pluginComponents?.footer" />
     </AppLayout>
 </template>

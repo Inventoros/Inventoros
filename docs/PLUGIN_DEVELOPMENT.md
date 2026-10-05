@@ -417,16 +417,21 @@ Pages and slots that render plugin components:
 |------|-------|
 | `dashboard` | `header`, `before-stats`, `after-stats`, `before-content`, `widgets`, `after-content`, `footer` |
 | `products.index` | `header`, `before-table`, `footer` |
-| `products.show` | `header`, `sidebar`, `tabs`, `footer` |
+| `products.show` | `header`, `actions`, `sidebar`, `tabs`, `footer` |
 | `products.create`, `products.edit` | `header`, `before-form`, `after-form` |
 | `orders.index` | `header`, `before-table`, `footer` |
-| `orders.show` | `header`, `sidebar`, `tabs`, `footer` |
+| `orders.show` | `header`, `actions`, `sidebar`, `tabs`, `footer` |
 | `purchase-orders.index` | `header`, `before-table`, `footer` |
-| `purchase-orders.show` | `header`, `sidebar`, `footer` |
+| `purchase-orders.show` | `header`, `actions`, `sidebar`, `footer` |
 | `purchase-orders.create`, `purchase-orders.edit`, `purchase-orders.receive` | `header`, `footer` |
 | `suppliers.index` | `header`, `before-table`, `footer` |
 | `suppliers.show`, `suppliers.create`, `suppliers.edit` | `header`, `footer` |
 | `categories.index`, `locations.index` | `header`, `footer` |
+| `customers.index`, `warehouses.index`, `stock-audits.index`, `cycle-counts.index`, `stock-transfers.index`, `returns.index`, `work-orders.index` | `header`, `footer` |
+| `customers.show`, `warehouses.show`, `stock-audits.show`, `stock-transfers.show`, `returns.show`, `work-orders.show` | `header`, `actions`, `footer` |
+| `settings.index` | `header`, `sections`, `footer` |
+
+`actions` renders inside the page header's action bar, before the page's own buttons: keep it to small buttons or links. On the settings hub, each component in `sections` is one card in the grid of settings pages; render a `Card` linking to your settings page (the hub does not check the link, so give the placement the same `permission` as the page). Pages without plugin placements render exactly as before.
 
 ### Tabs on detail pages
 

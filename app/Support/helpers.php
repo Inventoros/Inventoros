@@ -267,6 +267,28 @@ if (!function_exists('dispatch_webhook_event')) {
     }
 }
 
+if (!function_exists('plugin_slots')) {
+    /**
+     * The plugin components the current user may see for several slots of a
+     * page, keyed in camelCase ("before-table" => "beforeTable") as the
+     * pages' `pluginComponents` prop expects.
+     *
+     * @param string $page Page identifier, e.g. "customers.show"
+     * @param array<int, string> $slots Slot names
+     * @return array<string, array>
+     */
+    function plugin_slots(string $page, array $slots): array
+    {
+        $components = [];
+
+        foreach ($slots as $slot) {
+            $components[\Illuminate\Support\Str::camel($slot)] = get_page_components($page, $slot);
+        }
+
+        return $components;
+    }
+}
+
 if (!function_exists('get_page_components')) {
     /**
      * Get the components for a page slot that the current user may see:

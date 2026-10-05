@@ -276,6 +276,7 @@ class ProductController extends Controller
             'warehouseStockLevels' => app(WarehouseStockLevelService::class)->levelsForProduct($product, auth()->user()),
             'pluginComponents' => [
                 'header' => get_page_components('products.show', 'header'),
+                'actions' => get_page_components('products.show', 'actions'),
                 'sidebar' => get_page_components('products.show', 'sidebar'),
                 'tabs' => get_page_components('products.show', 'tabs'),
                 'footer' => get_page_components('products.show', 'footer'),

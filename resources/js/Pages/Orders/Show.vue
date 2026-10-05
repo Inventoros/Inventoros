@@ -184,6 +184,7 @@ const formatOrderDate = (date, long = false) =>
             :description="t('orders.show.createdOn', { date: formatOrderDate(order.order_date) })"
         >
             <template #actions>
+                <PluginSlot slot="actions" :components="pluginComponents?.actions" />
                 <Badge :variant="statusVariant(order.status)" size="sm" dot>{{ statusText(order.status) }}</Badge>
                 <Badge v-if="approvalRequired && order.approval_status" :variant="approvalStatusVariant(order.approval_status)" size="sm" dot>{{ approvalText(order.approval_status) }}</Badge>
                 <Badge v-if="order.payment_status" :variant="paymentStatusVariant(order.payment_status)" size="sm" dot>{{ t(`payments.status.${order.payment_status}`) }}</Badge>

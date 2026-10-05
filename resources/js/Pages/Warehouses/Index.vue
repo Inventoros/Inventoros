@@ -1,4 +1,5 @@
 <script setup>
+import PluginSlot from '@/Components/PluginSlot.vue';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import PageHeader from '@/Components/ui/PageHeader.vue';
 import Card from '@/Components/ui/Card.vue';
@@ -14,6 +15,7 @@ const { t } = useI18n();
 const { hasPermission } = usePermissions();
 
 const props = defineProps({
+    pluginComponents: Object,
     warehouses: Object,
     filters: Object,
     restrictToAssigned: { type: Boolean, default: false },
@@ -79,6 +81,9 @@ const thClass =
                 </Button>
             </template>
         </PageHeader>
+
+        <!-- Plugin Slot: Header -->
+        <PluginSlot slot="header" :components="pluginComponents?.header" />
 
         <!-- Access policy -->
         <Card v-if="hasPermission('manage_warehouse_users')" class="mt-6">
@@ -233,5 +238,8 @@ const thClass =
                 </template>
             </nav>
         </div>
+
+        <!-- Plugin Slot: Footer -->
+        <PluginSlot slot="footer" :components="pluginComponents?.footer" />
     </AppLayout>
 </template>

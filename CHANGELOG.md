@@ -11,6 +11,7 @@ Full release notes, with the pull request behind each change, are on [GitHub Rel
 - Plugins: `product_updated`, `product_deleted` and the new `variant_created`, `variant_updated`, `variant_deleted`, `order_deleted`, `purchase_order_updated`, `purchase_order_deleted` and `stock_changed` actions fire from every surface (web, bulk actions, REST, GraphQL, MCP, imports and commands), once per record per transaction and only after it commits.
 - Plugins: `plugin_licence($slug)` reports a paid plugin's runtime licence (`valid`, `expired`, `missing` or `unknown`) from entitlements the marketplace signs for each organization, refreshed daily in the background (`marketplace:refresh-entitlements`), verified with the marketplace public key, and honoured for 14 days past expiry while offline (`INVENTOROS_MARKETPLACE_ENTITLEMENT_GRACE_DAYS`).
 - Plugins: `register_mcp_tool()` adds tools to the MCP server, named after the plugin slug and listed and callable only for users and tokens that hold the tool's permission.
+- Plugins: page slots on customers, warehouses, stock audits, cycle counts, stock transfers, returns and work orders (`header`, `footer`, and `actions` on detail pages), an `actions` slot on the product, order and purchase order pages, and `header`, `sections` and `footer` on the settings hub. All are permission-gated on the server.
 - Plugins: `register_webhook_event()` adds `{slug}.{event}` events to the webhook event picker, and `dispatch_webhook_event()` sends them after commit through the signed, retried webhook delivery.
 
 ### Changed

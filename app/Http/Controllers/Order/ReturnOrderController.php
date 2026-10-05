@@ -56,6 +56,7 @@ class ReturnOrderController extends Controller
             ->withQueryString();
 
         return Inertia::render('Returns/Index', [
+            'pluginComponents' => plugin_slots('returns.index', ['header', 'footer']),
             'returns' => $returns,
             'filters' => $request->only(['search', 'status', 'type']),
             'statuses' => ['pending', 'approved', 'received', 'completed', 'rejected'],
@@ -143,6 +144,7 @@ class ReturnOrderController extends Controller
         $returnOrder->load(['order.items.product', 'items.product', 'items.variant', 'items.orderItem', 'processor']);
 
         return Inertia::render('Returns/Show', [
+            'pluginComponents' => plugin_slots('returns.show', ['header', 'actions', 'footer']),
             'returnOrder' => $returnOrder,
         ]);
     }

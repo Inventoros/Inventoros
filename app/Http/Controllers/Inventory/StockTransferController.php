@@ -65,6 +65,7 @@ class StockTransferController extends Controller
         $transfers = $query->paginate(20)->withQueryString();
 
         return Inertia::render('StockTransfers/Index', [
+            'pluginComponents' => plugin_slots('stock-transfers.index', ['header', 'footer']),
             'transfers' => $transfers,
             'filters' => $request->only(['search', 'status']),
         ]);
@@ -137,6 +138,7 @@ class StockTransferController extends Controller
         $stockTransfer->load(['fromLocation', 'toLocation', 'transferredBy', 'completer', 'items.product', 'approver']);
 
         return Inertia::render('StockTransfers/Show', [
+            'pluginComponents' => plugin_slots('stock-transfers.show', ['header', 'actions', 'footer']),
             'transfer' => $stockTransfer,
             'approval' => [
                 'can_decide' => $stockTransfer->approval_status === StockTransfer::APPROVAL_PENDING

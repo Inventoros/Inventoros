@@ -1,4 +1,5 @@
 <script setup>
+import PluginSlot from '@/Components/PluginSlot.vue';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import PageHeader from '@/Components/ui/PageHeader.vue';
 import Card from '@/Components/ui/Card.vue';
@@ -14,6 +15,7 @@ const { t } = useI18n();
 const { hasPermission } = usePermissions();
 
 const props = defineProps({
+    pluginComponents: Object,
     warehouse: Object,
     locations: Array,
     assignedUsers: Array,
@@ -51,6 +53,7 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-t
 
         <PageHeader :title="warehouse.name" :description="t('warehouses.show.codeLabel', { code: warehouse.code })">
             <template #actions>
+                <PluginSlot slot="actions" :components="pluginComponents?.actions" />
                 <Badge :variant="warehouse.is_active ? 'success' : 'neutral'" size="sm" dot>
                     {{ warehouse.is_active ? t('common.active') : t('common.inactive') }}
                 </Badge>
@@ -73,6 +76,9 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-t
                 </Button>
             </template>
         </PageHeader>
+
+        <!-- Plugin Slot: Header -->
+        <PluginSlot slot="header" :components="pluginComponents?.header" />
 
         <!-- Key metrics -->
         <section class="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
@@ -303,5 +309,8 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-t
                 </Card>
             </div>
         </div>
+
+        <!-- Plugin Slot: Footer -->
+        <PluginSlot slot="footer" :components="pluginComponents?.footer" />
     </AppLayout>
 </template>

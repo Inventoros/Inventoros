@@ -1,4 +1,5 @@
 <script setup>
+import PluginSlot from '@/Components/PluginSlot.vue';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import PageHeader from '@/Components/ui/PageHeader.vue';
 import Card from '@/Components/ui/Card.vue';
@@ -17,6 +18,7 @@ const BarcodeScannerModal = defineAsyncComponent(() => import('@/Components/Barc
 const { t } = useI18n();
 
 const props = defineProps({
+    pluginComponents: Object,
     transfer: Object,
     approval: { type: Object, default: () => ({}) },
 });
@@ -148,6 +150,7 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-t
 
         <PageHeader :title="transfer.transfer_number" :description="t('stockTransfers.show.subtitle')">
             <template #actions>
+                <PluginSlot slot="actions" :components="pluginComponents?.actions" />
                 <Badge :variant="statusVariant(transfer.status)" size="md" dot>{{ getStatusLabel(transfer.status) }}</Badge>
                 <Button variant="secondary" size="sm" as="Link" :href="route('stock-transfers.index')">
                     <ArrowLeft :size="14" />
@@ -155,6 +158,9 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-t
                 </Button>
             </template>
         </PageHeader>
+
+        <!-- Plugin Slot: Header -->
+        <PluginSlot slot="header" :components="pluginComponents?.header" />
 
         <div class="mt-6 space-y-4">
             <ApprovalPanel
@@ -373,5 +379,8 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-t
             @close="showScanner = false"
             @product-found="onVerifyProduct"
         />
+
+        <!-- Plugin Slot: Footer -->
+        <PluginSlot slot="footer" :components="pluginComponents?.footer" />
     </AppLayout>
 </template>

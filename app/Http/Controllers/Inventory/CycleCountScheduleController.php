@@ -38,6 +38,7 @@ class CycleCountScheduleController extends Controller
         $options = $this->options($request->user()->organization_id);
 
         return Inertia::render('StockAudits/CycleCounts/Index', [
+            'pluginComponents' => plugin_slots('cycle-counts.index', ['header', 'footer']),
             'schedules' => $schedules->map(fn (CycleCountSchedule $s) => [
                 'id' => $s->id,
                 'name' => $s->name,

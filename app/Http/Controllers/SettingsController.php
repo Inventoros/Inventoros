@@ -37,7 +37,9 @@ class SettingsController extends Controller
      */
     public function hub(): Response
     {
-        return Inertia::render('Settings/Index');
+        return Inertia::render('Settings/Index', [
+            'pluginComponents' => plugin_slots('settings.index', ['header', 'sections', 'footer']),
+        ]);
     }
 
     /**

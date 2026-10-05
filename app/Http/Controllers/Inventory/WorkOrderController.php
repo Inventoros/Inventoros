@@ -61,6 +61,7 @@ class WorkOrderController extends Controller
         $workOrders = $query->paginate(20)->withQueryString();
 
         return Inertia::render('WorkOrders/Index', [
+            'pluginComponents' => plugin_slots('work-orders.index', ['header', 'footer']),
             'workOrders' => $workOrders,
             'filters' => $request->only(['search', 'status']),
         ]);
@@ -176,6 +177,7 @@ class WorkOrderController extends Controller
         });
 
         return Inertia::render('WorkOrders/Show', [
+            'pluginComponents' => plugin_slots('work-orders.show', ['header', 'actions', 'footer']),
             'workOrder' => $workOrder,
             'items' => $items,
             'allComponentsSufficient' => $items->every(fn ($item) => $item->is_sufficient),

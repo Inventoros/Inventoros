@@ -1,4 +1,5 @@
 <script setup>
+import PluginSlot from '@/Components/PluginSlot.vue';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import PageHeader from '@/Components/ui/PageHeader.vue';
 import Card from '@/Components/ui/Card.vue';
@@ -16,6 +17,7 @@ const { t } = useI18n();
 const { hasPermission, canVisit } = usePermissions();
 
 const props = defineProps({
+    pluginComponents: Object,
     returnOrder: Object,
 });
 
@@ -116,6 +118,7 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-t
             :description="t('returns.show.createdOn', { date: formatDate(returnOrder.created_at) })"
         >
             <template #actions>
+                <PluginSlot slot="actions" :components="pluginComponents?.actions" />
                 <Badge :variant="typeVariant(returnOrder.type)" size="sm" class="capitalize">{{ t(`portal.returns.types.${returnOrder.type}`) }}</Badge>
                 <Badge :variant="statusVariant(returnOrder.status)" size="sm" dot class="capitalize">{{ t(`portal.statuses.${returnOrder.status}`) }}</Badge>
 
@@ -165,6 +168,9 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-t
                 </Button>
             </template>
         </PageHeader>
+
+        <!-- Plugin Slot: Header -->
+        <PluginSlot slot="header" :components="pluginComponents?.header" />
 
         <div class="mt-6 grid grid-cols-1 gap-4 lg:grid-cols-3">
             <!-- Left Column: Items & Details -->
@@ -423,5 +429,8 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-t
                 </div>
             </div>
         </Teleport>
+
+        <!-- Plugin Slot: Footer -->
+        <PluginSlot slot="footer" :components="pluginComponents?.footer" />
     </AppLayout>
 </template>

@@ -60,6 +60,7 @@ class StockAuditController extends Controller
         $audits = $query->paginate(20)->withQueryString();
 
         return Inertia::render('StockAudits/Index', [
+            'pluginComponents' => plugin_slots('stock-audits.index', ['header', 'footer']),
             'audits' => $audits,
             'filters' => $request->only(['search', 'status', 'audit_type']),
             'statuses' => [
@@ -155,6 +156,7 @@ class StockAuditController extends Controller
             ->count();
 
         return Inertia::render('StockAudits/Show', [
+            'pluginComponents' => plugin_slots('stock-audits.show', ['header', 'actions', 'footer']),
             'audit' => $stockAudit,
             'summary' => [
                 'total_items' => $totalItems,
