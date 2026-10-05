@@ -95,3 +95,24 @@ export function createPluginI18n(composer, slug, locale) {
         },
     });
 }
+
+/**
+ * The text for a plugin menu item or widget title: its `label_key` (a key
+ * under `plugins.{slug}.`, from the plugin's own messages, in the app locale
+ * or the fallback locale) when the plugin's bundle has supplied it, otherwise
+ * the plain `label`. A key outside `plugins.` never resolves, so a plugin
+ * cannot borrow (or spoof) a core string.
+ *
+ * @param {Function} t              vue-i18n t()
+ * @param {Function} te             vue-i18n te(key, locale?)
+ * @param {string|null} key         The plugin's label_key / title_key.
+ * @param {string|null} fallback    The plain label.
+ * @param {string} fallbackLocale   Checked when the app locale lacks the key.
+ */
+export function pluginLabel(t, te, key, fallback, fallbackLocale = 'en') {
+    if (typeof key === 'string' && key.startsWith('plugins.') && (te(key) || te(key, fallbackLocale))) {
+        return t(key);
+    }
+
+    return typeof fallback === 'string' ? fallback : '';
+}

@@ -42,7 +42,7 @@ hello-world/
 
 The widget works the same way through `register_dashboard_widget()` (with a
 `view_products` permission, so its data is only computed for users who can see
-it). The page is `register_page('hello-world.index', 'Plugin::hello-world/Hello', ...)`
+it). The page is `register_page('plg.hello-world.index', 'Plugin::hello-world/Hello', ...)`
 on the server and `plugin.registerPage('Hello', ...)` in the bundle; it uses the
 app's layout from `window.Inventoros.layouts.AppLayout`.
 

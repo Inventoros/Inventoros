@@ -301,7 +301,9 @@ class WorkOrderController extends Controller
                             "Consumed for work order {$workOrder->work_order_number}",
                             "Assembly of {$workOrder->product->name}",
                             $workOrder,
-                            allowNegative: false
+                            allowNegative: false,
+                            // The bins were drawn down just above.
+                            syncBins: false,
                         );
 
                         $item->update(['quantity_consumed' => $targetConsumed]);
@@ -316,7 +318,9 @@ class WorkOrderController extends Controller
                     'assembly_production',
                     "Produced from work order {$workOrder->work_order_number}",
                     "Assembled {$quantityProduced} units",
-                    $workOrder
+                    $workOrder,
+                    // Booked into the primary bin just below.
+                    syncBins: false,
                 );
 
                 // Book the assembled units into the product's primary bin.
@@ -381,7 +385,9 @@ class WorkOrderController extends Controller
                                 'assembly_reversal',
                                 "Reversed for cancelled work order {$workOrder->work_order_number}",
                                 'Work order cancelled - restoring consumed stock',
-                                $workOrder
+                                $workOrder,
+                                // Booked into the primary bin just below.
+                                syncBins: false,
                             );
 
                             // Return the components to their primary bin.

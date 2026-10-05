@@ -170,11 +170,11 @@ final class PluginRoutesSurviveRouteCacheTest extends TestCase
 
         $cached = $this->cacheRoutesInProcess();
 
-        $this->assertStringContainsString('hello-world.index', $cached, 'The plugin page route must be in the cached route table.');
+        $this->assertStringContainsString('plg.hello-world.index', $cached, 'The plugin page route must be in the cached route table.');
 
         $this->useCachedRoutes();
 
-        $this->actingAs($this->staff)->get('/hello-world')
+        $this->actingAs($this->staff)->get('/p/hello-world')
             ->assertOk()
             ->assertInertia(fn ($page) => $page->component('Plugin::hello-world/Hello'));
     }
@@ -186,13 +186,13 @@ final class PluginRoutesSurviveRouteCacheTest extends TestCase
         $this->cacheRoutesInProcess();
         $cached = $this->cacheRoutesInProcess();
 
-        $this->assertStringContainsString('hello-world.index', $cached);
+        $this->assertStringContainsString('plg.hello-world.index', $cached);
     }
 
     public function test_the_rebuild_after_activation_caches_the_new_plugins_pages(): void
     {
         // A cached table from before the plugin was active.
-        $this->assertStringNotContainsString('hello-world.index', $this->cacheRoutesInProcess());
+        $this->assertStringNotContainsString('plg.hello-world.index', $this->cacheRoutesInProcess());
         $this->app->forgetInstance('routes.cached');
         $this->assertTrue($this->app->routesAreCached());
 
@@ -210,10 +210,10 @@ final class PluginRoutesSurviveRouteCacheTest extends TestCase
 
         app(PluginService::class)->activatePlugin('hello-world');
 
-        $this->assertStringContainsString('hello-world.index', (string) File::get($this->routeCache));
+        $this->assertStringContainsString('plg.hello-world.index', (string) File::get($this->routeCache));
 
         $this->useCachedRoutes();
-        $this->actingAs($this->staff)->get('/hello-world')->assertOk();
+        $this->actingAs($this->staff)->get('/p/hello-world')->assertOk();
     }
 
     public function test_a_plugin_that_returns_a_registration_closure_registers_in_every_application(): void

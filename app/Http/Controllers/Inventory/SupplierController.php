@@ -105,10 +105,9 @@ class SupplierController extends Controller
         // Hook: Before supplier creation
         $validated = apply_filters('supplier_before_create', $validated, $request);
 
+        // supplier_created fires from SupplierObserver after commit, on
+        // every surface.
         $supplier = Supplier::create($validated);
-
-        // Hook: After supplier creation
-        do_action('supplier_created', $supplier, $request->user());
 
         if ($request->wantsJson()) {
             return response()->json([
@@ -192,10 +191,8 @@ class SupplierController extends Controller
         // Hook: Before supplier update
         $validated = apply_filters('supplier_before_update', $validated, $supplier, $request);
 
+        // supplier_updated fires from SupplierObserver after commit.
         $supplier->update($validated);
-
-        // Hook: After supplier update
-        do_action('supplier_updated', $supplier, $request->user());
 
         if ($request->wantsJson()) {
             return response()->json([
@@ -247,13 +244,9 @@ class SupplierController extends Controller
             return redirect()->route('suppliers.index')->with('error', $message);
         }
 
-        // Hook: Before supplier deletion
-        do_action('supplier_before_delete', $supplier, $request->user());
-
+        // supplier_before_delete and supplier_deleted fire from
+        // SupplierObserver, on every surface.
         $supplier->delete();
-
-        // Hook: After supplier deletion
-        do_action('supplier_deleted', $supplier, $request->user());
 
         if ($request->wantsJson()) {
             return response()->json([

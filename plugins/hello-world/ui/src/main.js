@@ -18,6 +18,6 @@ export default function setup(plugin) {
     // Implements add_page_component('products.show', 'tabs', [... 'component' => 'HelloWorldTab']).
     plugin.registerComponent('HelloWorldTab', HelloWorldTab);
 
-    // Supplies Inertia::render('Plugin::hello-world/Hello') for register_page('hello-world.index', ...).
+    // Supplies Inertia::render('Plugin::hello-world/Hello') for register_page('plg.hello-world.index', ...).
     plugin.registerPage('Hello', HelloWorldPage);
 }

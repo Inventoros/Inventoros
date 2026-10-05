@@ -7,6 +7,7 @@ namespace App\Services;
 use App\Exceptions\InvalidStateException;
 use App\Models\Inventory\Product;
 use App\Models\Inventory\ProductLocation;
+use App\Models\Inventory\ProductLocationStock;
 use App\Models\Inventory\StockAdjustment;
 use App\Models\Inventory\StockAudit;
 use App\Models\Inventory\StockAuditItem;
@@ -23,7 +24,21 @@ use Illuminate\Support\Facades\DB;
  */
 final class StockAuditService
 {
-    public function __construct(private readonly WarehouseAccessService $warehouseAccess) {}
+    public function __construct(
+        private readonly WarehouseAccessService $warehouseAccess,
+        private readonly ProductLocationStockService $locationStock,
+    ) {}
+
+    /**
+     * What the system says is on hand for an audit line: the audited bin's
+     * quantity for a location-scoped audit, the product's total otherwise.
+     */
+    private function systemQuantity(StockAudit $audit, Product $product): int
+    {
+        return $audit->warehouse_location_id !== null
+            ? $this->locationStock->onHandAt($product, (int) $audit->warehouse_location_id)
+            : (int) $product->stock;
+    }
 
     /**
      * Create a draft audit and seed one item per product in scope.
@@ -63,16 +78,26 @@ final class StockAuditService
                 // Specific products selected
                 $productQuery->whereIn('id', $data['product_ids']);
             } elseif (! empty($data['warehouse_location_id'])) {
-                // Filter by location
-                $productQuery->where('location_id', $data['warehouse_location_id']);
+                // Products assigned to the location, and products that have
+                // stock binned there although their primary location is
+                // elsewhere.
+                $locationId = (int) $data['warehouse_location_id'];
+                $productQuery->where(fn ($q) => $q
+                    ->where('location_id', $locationId)
+                    ->orWhereIn('id', ProductLocationStock::query()
+                        ->select('product_id')
+                        ->where('location_id', $locationId)
+                        ->where('quantity', '>', 0)));
             }
 
             foreach ($productQuery->get() as $product) {
                 StockAuditItem::create([
                     'stock_audit_id' => $audit->id,
                     'product_id' => $product->id,
-                    'location_id' => $product->location_id,
-                    'system_quantity' => $product->stock,
+                    // A location-scoped audit counts that bin; otherwise the
+                    // line shows the product's primary location.
+                    'location_id' => $audit->warehouse_location_id ?? $product->location_id,
+                    'system_quantity' => $this->systemQuantity($audit, $product),
                     'status' => 'pending',
                 ]);
             }
@@ -99,7 +124,7 @@ final class StockAuditService
         // Refresh system quantities from current stock levels
         DB::transaction(function () use ($stockAudit) {
             foreach ($stockAudit->items as $item) {
-                $item->update(['system_quantity' => $item->product->stock]);
+                $item->update(['system_quantity' => $this->systemQuantity($stockAudit, $item->product)]);
             }
 
             $stockAudit->update([
@@ -142,6 +167,11 @@ final class StockAuditService
      * Complete an in-progress audit, booking a recount adjustment for every
      * counted item whose count differs from the system quantity.
      *
+     * The location bins move with the total: a location-scoped audit books
+     * each variance into the audited bin; an organization-wide audit lets
+     * StockAdjustment::adjust() drain a shortfall from the bins in
+     * fulfilment order and put an overage in the primary bin.
+     *
      * Lines nobody counted never adjust stock. Completing while any are left
      * is refused unless the caller confirms it with $allowUncounted, so an
      * audit cannot be closed at 0% by accident.
@@ -149,6 +179,7 @@ final class StockAuditService
      * @return int the number of stock adjustments created
      *
      * @throws InvalidStateException uncounted_items when lines are uncounted and not allowed
+     * @throws InvalidStateException completion_vetoed when a stock_audit_completing filter refuses
      */
     public function complete(StockAudit $stockAudit, User $actor, bool $allowUncounted = false): int
     {
@@ -160,7 +191,7 @@ final class StockAuditService
 
         $adjustmentsCreated = 0;
 
-        DB::transaction(function () use ($stockAudit, $allowUncounted, &$adjustmentsCreated) {
+        DB::transaction(function () use ($stockAudit, $actor, $allowUncounted, &$adjustmentsCreated) {
             // Lock and re-read the audit so two concurrent completions
             // serialize on this row; the second waits, then sees the
             // 'completed' status and is rejected below — otherwise both
@@ -178,6 +209,20 @@ final class StockAuditService
                 throw new InvalidStateException(
                     "{$uncounted} of {$locked->items->count()} item(s) have not been counted. Count them, or confirm completing without them (uncounted items are left unchanged).",
                     'uncounted_items',
+                );
+            }
+
+            // Plugins may refuse (or hold) the completion: true allows it, a
+            // string is the reason it is refused, false a generic refusal.
+            // Runs under the audit lock, before anything is booked.
+            $verdict = apply_filters('stock_audit_completing', true, $locked, $actor, $allowUncounted);
+
+            if ($verdict !== true) {
+                throw new InvalidStateException(
+                    is_string($verdict) && trim($verdict) !== ''
+                        ? $verdict
+                        : 'An installed plugin is not allowing this audit to be completed yet.',
+                    'completion_vetoed',
                 );
             }
 
@@ -203,6 +248,8 @@ final class StockAuditService
                         reason: "Stock audit: {$locked->audit_number}",
                         notes: "Audit '{$locked->name}' - System: {$item->system_quantity}, Counted: {$item->counted_quantity}",
                         reference: $locked,
+                        actor: $actor,
+                        locationId: $locked->warehouse_location_id,
                     );
 
                     $adjustmentsCreated++;

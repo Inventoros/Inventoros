@@ -42,10 +42,12 @@ add_page_component('products.show', 'tabs', [
     'data' => fn ($user) => ['sku' => request()->route('product')?->sku],
 ]);
 
-// A page of its own at /hello-world. The component comes from the bundle
+// A page of its own at /p/hello-world. Plugin routes are named plg.{slug}.*
+// and live under /p/{slug}/, which core never uses, so they cannot collide
+// with an application route. The component comes from the bundle
 // (plugin.registerPage('Hello', ...)); props are computed per request.
-register_page('hello-world.index', 'Plugin::hello-world/Hello', [
-    'uri' => '/hello-world',
+register_page('plg.hello-world.index', 'Plugin::hello-world/Hello', [
+    'uri' => '/p/hello-world',
     'title' => 'Hello World',
     'props' => fn ($request, $user) => [
         'name' => $user->name,
@@ -58,7 +60,7 @@ register_page('hello-world.index', 'Plugin::hello-world/Hello', [
 // A sidebar link to that page.
 register_menu_item([
     'label' => 'Hello World',
-    'route' => 'hello-world.index',
+    'route' => 'plg.hello-world.index',
     'position' => 999,
 ]);
 

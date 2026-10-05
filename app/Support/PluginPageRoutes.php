@@ -25,6 +25,11 @@ use Illuminate\Support\Facades\Route;
  * not reuse an existing route name or URI, and may not live under a reserved
  * prefix, so a plugin cannot take over a core route, the customer portal
  * (registered after these routes), the API, the installer or sign-in.
+ *
+ * Activation refuses a plugin whose pages or routes collide in the first
+ * place (PluginRouteGuard), with a message naming the conflict; the checks
+ * here keep an already-active plugin from taking over a route core adds
+ * later.
  */
 final class PluginPageRoutes
 {
@@ -51,9 +56,7 @@ final class PluginPageRoutes
                 continue;
             }
 
-            $uri = is_string($page['uri'] ?? null) && trim($page['uri'], '/') !== ''
-                ? trim($page['uri'], '/')
-                : str_replace('.', '/', $name);
+            $uri = self::uriFor($name, $page);
 
             if (self::isReserved($uri) || self::isTaken($uri)) {
                 Log::warning('Plugin page skipped: the URI is reserved or already used by the application', ['route' => $name, 'uri' => $uri]);
@@ -73,7 +76,20 @@ final class PluginPageRoutes
         }
     }
 
-    private static function isReserved(string $uri): bool
+    /**
+     * The URI a page is served at: its `uri`, or the route name with dots as
+     * slashes.
+     *
+     * @param  array<string, mixed>  $page
+     */
+    public static function uriFor(string $name, array $page): string
+    {
+        return is_string($page['uri'] ?? null) && trim($page['uri'], '/') !== ''
+            ? trim($page['uri'], '/')
+            : str_replace('.', '/', $name);
+    }
+
+    public static function isReserved(string $uri): bool
     {
         $first = strtolower(explode('/', $uri)[0]);
 
@@ -81,8 +97,10 @@ final class PluginPageRoutes
     }
 
     /**
-     * Whether an application route already answers this URI (a GET for it
-     * would never reach the plugin, or the plugin would shadow a later one).
+     * Whether an application route already answers a GET for this URI (the
+     * request would never reach the plugin page, or the page would shadow a
+     * later route). Routes for other methods (a plugin's own PUT on the
+     * page's URI, say) do not count: Laravel matches the method first.
      */
     private static function isTaken(string $uri): bool
     {
@@ -91,6 +109,10 @@ final class PluginPageRoutes
         foreach (Route::getRoutes()->getRoutes() as $route) {
             /** @var RoutingRoute $route */
             if (array_key_exists(self::PAGE_PARAMETER, $route->defaults)) {
+                continue;
+            }
+
+            if (! in_array('GET', $route->methods(), true)) {
                 continue;
             }
 

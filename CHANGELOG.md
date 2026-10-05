@@ -13,9 +13,17 @@ Full release notes, with the pull request behind each change, are on [GitHub Rel
 - Plugins: `register_mcp_tool()` adds tools to the MCP server, named after the plugin slug and listed and callable only for users and tokens that hold the tool's permission.
 - Plugins: page slots on customers, warehouses, stock audits, cycle counts, stock transfers, returns and work orders (`header`, `footer`, and `actions` on detail pages), an `actions` slot on the product, order and purchase order pages, and `header`, `sections` and `footer` on the settings hub. All are permission-gated on the server.
 - Plugins: `register_webhook_event()` adds `{slug}.{event}` events to the webhook event picker, and `dispatch_webhook_event()` sends them after commit through the signed, retried webhook delivery.
+- Plugins: new `category_created/_updated/_deleted`, `location_created/_updated/_deleted` and `warehouse_created/_updated/_deleted` actions, fired from every surface after commit.
+- Plugins: a `stock_audit_completing` filter can refuse (or hold) the completion of a stock audit with a reason; the audit page shows it and the API answers 422 `completion_vetoed`.
+- Plugins: menu items, submenu items and dashboard widgets take a `label_key` / `title_key` under `plugins.{slug}.`, shown in the user's language from the plugin's own messages, with the plain label as the fallback.
+- Plugins: activation refuses a plugin whose pages or routes collide with an application route (same name, same method and URI, or inside a URI prefix the application uses) and says which route; plugin routes are namespaced `plg.{slug}.*` under `/p/{slug}/`.
+- `OrderService::cancel()`, `restockForDeletion()` and `replaceItems()` take an optional `$actor` for the restock ledger rows, so queued jobs, commands and plugin syncs can cancel or edit orders without a signed-in user.
 
 ### Changed
 
+- `supplier_created`, `supplier_updated`, `supplier_before_delete` and `supplier_deleted` fire from every surface (web, REST, GraphQL), after commit, instead of only from the web screens.
+- A stock adjustment without a location keeps the location bins in step: a decrease drains the bins in fulfilment order and an increase lands in the product's primary location (before, the total moved and the bins did not). `StockAdjustment::adjust()` takes `syncBins: false` for callers that move the bins themselves.
+- A location-scoped stock audit counts the audited location only: it lists the products stocked there, snapshots what that location holds, and books each difference into it.
 - `product_created`, `order_updated`, `purchase_order_created` and the customer hooks fire once per record per transaction, after commit; `order_updated` no longer fires while an order is being created, and `product_created` now runs after the product's options and variants are saved. The `product.updated` and `product.deleted` webhooks now fire for changes made through REST, GraphQL, imports and bulk actions too.
 - Products saved as USD only because none was given (API, GraphQL, MCP and products import in 1.0.x) move to their organization's currency when upgrading, and new products without a currency take the organization's. See [UPGRADE.md](UPGRADE.md#currencies-and-money).
 - Orders default to the organization's currency on every surface, and an order line without a unit price is priced in the order's currency or rejected when the product has no price in it.
@@ -24,6 +32,10 @@ Full release notes, with the pull request behind each change, are on [GitHub Rel
 
 ### Fixed
 
+- Completing a stock audit lowered or raised on-hand stock without touching the location bins, so after a shortfall the locations claimed more than was on hand. Recount adjustments now move the bins with the total, and so do tracked-stock reconciliation and manual adjustments made without a location.
+- Completing a stock audit outside a web request (a queued job or a plugin) failed because the recount adjustments had no user; they are attributed to the user completing the audit.
+- Order restocks from a queued job or command failed for want of a signed-in user; they fall back to the order's creator.
+- A plugin page was silently left out when any route, of any method, used its URI (for example a page under `/cycle-counts/` hidden by `PUT /cycle-counts/{id}`); only routes answering GET count now, and activation reports real conflicts.
 - Order, return, transfer, purchase order and work order numbers kept repeating after the 9,999th of the day, so every further create failed until midnight.
 - An order import on MySQL could fail with "Failed to allocate a unique sequence number" when another order took the same number at the same moment.
 - A failing row in an import no longer aborts the rest of the file on PostgreSQL.

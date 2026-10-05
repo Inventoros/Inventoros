@@ -339,11 +339,16 @@ final class OrderService
      * restock inventory that already left the warehouse. Shared by the web,
      * REST, and GraphQL surfaces (MCP exposes no order mutation).
      *
+     * @param  User|null  $actor  Who the restock ledger rows are attributed to.
+     *                            Pass it from queued jobs, commands and plugin
+     *                            syncs; defaults to the signed-in user, then the
+     *                            order's creator (see restockActor()).
+     *
      * @throws \RuntimeException When the order has already shipped/delivered.
      */
-    public function cancel(Order $order): Order
+    public function cancel(Order $order, ?User $actor = null): Order
     {
-        return DB::transaction(function () use ($order) {
+        return DB::transaction(function () use ($order, $actor) {
             $locked = Order::whereKey($order->getKey())->lockForUpdate()->firstOrFail();
 
             if ($locked->status === OrderStatus::CANCELLED) {
@@ -357,7 +362,7 @@ final class OrderService
                 );
             }
 
-            $this->releaseStock($locked, 'cancel', "Order {$locked->order_number} cancelled");
+            $this->releaseStock($locked, 'cancel', "Order {$locked->order_number} cancelled", $actor);
 
             $locked->update(['status' => OrderStatus::CANCELLED]);
 
@@ -434,7 +439,7 @@ final class OrderService
             // and the reorder logic over-purchases. Refused, like cancel,
             // once any of its goods have left the warehouse.
             try {
-                $this->releaseStock($locked, 'reject', "Order {$locked->order_number} rejected");
+                $this->releaseStock($locked, 'reject', "Order {$locked->order_number} rejected", $approver);
             } catch (InvalidStateException $e) {
                 throw $e;
             } catch (BusinessRuleException $e) {
@@ -474,10 +479,13 @@ final class OrderService
      * ship/cancel cannot slip a phantom restock past the guard. The caller is
      * responsible for deleting the order itself (web soft-deletes, REST hard-
      * deletes its items first) within the same transaction.
+     *
+     * @param  User|null  $actor  Who the restock ledger rows are attributed to
+     *                            (see cancel()).
      */
-    public function restockForDeletion(Order $order): void
+    public function restockForDeletion(Order $order, ?User $actor = null): void
     {
-        DB::transaction(function () use ($order) {
+        DB::transaction(function () use ($order, $actor) {
             $locked = Order::whereKey($order->getKey())->lockForUpdate()->firstOrFail();
 
             // Returns are recorded against the order's lines and are the
@@ -497,7 +505,7 @@ final class OrderService
 
             // Partially shipped: restocking every line would re-inject the
             // units that already left, so releaseStock() refuses.
-            $this->releaseStock($locked, 'delete', "Order {$locked->order_number} deleted");
+            $this->releaseStock($locked, 'delete', "Order {$locked->order_number} deleted", $actor);
         });
     }
 
@@ -513,7 +521,7 @@ final class OrderService
      * The caller must have loaded the item's `product` (and `variant` for
      * variant lines).
      */
-    private function restockItem(OrderItem $item, string $reason, Order $order, int $quantity): void
+    private function restockItem(OrderItem $item, string $reason, Order $order, int $quantity, ?User $actor = null): void
     {
         if ($quantity <= 0) {
             return;
@@ -542,7 +550,8 @@ final class OrderService
                 'order_cancellation',
                 $reason,
                 null,
-                $order
+                $order,
+                actor: $this->restockActor($order, $actor),
             );
 
             return;
@@ -555,7 +564,10 @@ final class OrderService
                 'order_cancellation',
                 $reason,
                 null,
-                $order
+                $order,
+                actor: $this->restockActor($order, $actor),
+                // Booked into the primary bin just below.
+                syncBins: false,
             );
 
             // Return the units to the product's primary location bin so the
@@ -564,6 +576,23 @@ final class OrderService
             // from — a deliberate simplification; totals stay correct.)
             app(ProductLocationStockService::class)->receive($item->product, $quantity);
         }
+    }
+
+    /**
+     * Who a ledger row written for $order is attributed to: the caller's
+     * $actor, else the signed-in user, else (a queued job or command that
+     * passed none) the order's creator, else the organization's first user.
+     * stock_adjustments.user_id is required, so a restock must never depend on
+     * a session being present.
+     */
+    private function restockActor(Order $order, ?User $actor): ?User
+    {
+        $signedIn = auth()->user();
+
+        return $actor
+            ?? ($signedIn instanceof User ? $signedIn : null)
+            ?? ($order->created_by !== null ? User::withoutGlobalScopes()->find($order->created_by) : null)
+            ?? User::withoutGlobalScopes()->where('organization_id', $order->organization_id)->orderBy('id')->first();
     }
 
     /**
@@ -607,7 +636,7 @@ final class OrderService
      *
      * @throws \RuntimeException
      */
-    private function releaseStock(Order $locked, string $action, string $reason): void
+    private function releaseStock(Order $locked, string $action, string $reason, ?User $actor = null): void
     {
         // A partially shipped order is still pending/processing, but some of
         // its goods have left: restocking every line would invent them.
@@ -637,7 +666,7 @@ final class OrderService
         $restockable = $this->restockableQuantities($locked);
 
         foreach ($locked->items as $item) {
-            $this->restockItem($item, $reason, $locked, $restockable[$item->id] ?? 0);
+            $this->restockItem($item, $reason, $locked, $restockable[$item->id] ?? 0, $actor);
         }
     }
 
@@ -691,7 +720,7 @@ final class OrderService
      * @param  array<int, array{product_id:int, product_variant_id?:int|null, quantity:int, unit_price?:mixed, discount_type?:string|null, discount_value?:mixed}>  $items
      * @return string the recomputed gross subtotal (Money string)
      */
-    public function replaceItems(Order $order, array $items): string
+    public function replaceItems(Order $order, array $items, ?User $actor = null): string
     {
         $order->load('items.product', 'items.variant');
 
@@ -745,7 +774,7 @@ final class OrderService
         }
 
         foreach ($order->items as $existing) {
-            $this->restockItem($existing, "Order {$order->order_number} edited", $order, $restockable[$existing->id] ?? 0);
+            $this->restockItem($existing, "Order {$order->order_number} edited", $order, $restockable[$existing->id] ?? 0, $actor);
             $existing->delete();
         }
 
@@ -851,6 +880,7 @@ final class OrderService
                 StockAdjustment::adjustVariant(
                     $variant, -$qty, 'order_fulfillment',
                     "Order {$order->order_number} edited", null, $order, allowNegative: false,
+                    actor: $this->restockActor($order, $actor),
                 );
             } else {
                 // consume() before adjust() so the lazy bin seed reads the
@@ -859,6 +889,8 @@ final class OrderService
                 StockAdjustment::adjust(
                     $product, -$qty, 'order_fulfillment',
                     "Order {$order->order_number} edited", null, $order, allowNegative: false,
+                    actor: $this->restockActor($order, $actor),
+                    syncBins: false,
                 );
                 $allocator->allocateForOrderItem($product, $qty, $orderItem);
             }

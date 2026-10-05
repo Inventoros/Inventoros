@@ -55,8 +55,9 @@ import ThemeToggle from '@/Components/Layout/ThemeToggle.vue';
 import WarehouseSwitcher from '@/Components/WarehouseSwitcher.vue';
 import LanguageSwitcher from '@/Components/LanguageSwitcher.vue';
 import LegalFooter from '@/Components/LegalFooter.vue';
+import { pluginLabel } from '@/plugins/pluginI18n';
 
-const { t } = useI18n();
+const { t, te } = useI18n();
 const page = usePage();
 const { hasPermission, hasAnyPermission } = usePermissions();
 
@@ -173,7 +174,9 @@ const sections = computed(() => [
 /**
  * Menu items registered by active plugins (register_menu_item()), shared as
  * the `pluginMenuItems` prop. A plugin names either a route or a URL; items
- * whose route is not registered are dropped rather than throwing.
+ * whose route is not registered are dropped rather than throwing. A
+ * `label_key` (plugins.{slug}.*) is shown in the user's language once the
+ * plugin's bundle has added its messages; until then, the plain label.
  */
 const pluginNavItems = computed(() =>
     (page.props.pluginMenuItems || [])
@@ -184,7 +187,7 @@ const pluginNavItems = computed(() =>
 
             return {
                 icon: Puzzle,
-                name: item.label,
+                name: pluginLabel(t, te, item.label_key, item.label),
                 href,
                 active,
                 perm: item.permission || undefined,

@@ -1,8 +1,12 @@
 <script setup>
 import { computed } from 'vue';
+import { useI18n } from 'vue-i18n';
 import Card from '@/Components/ui/Card.vue';
 import CardHeader from '@/Components/ui/CardHeader.vue';
 import { resolvePluginComponent } from '@/plugins/runtime';
+import { pluginLabel } from '@/plugins/pluginI18n';
+
+const { t, te } = useI18n();
 
 /**
  * Dashboard widgets registered by plugins (register_dashboard_widget()).
@@ -26,7 +30,12 @@ const widthClass = {
 // out and appears as soon as the bundle loads.
 const rendered = computed(() =>
     (props.widgets ?? [])
-        .map((widget) => ({ ...widget, is: resolvePluginComponent(widget.plugin, widget.component) }))
+        .map((widget) => ({
+            ...widget,
+            is: resolvePluginComponent(widget.plugin, widget.component),
+            // title_key (plugins.{slug}.*) in the user's language, else the plain title.
+            heading: pluginLabel(t, te, widget.title_key, widget.title),
+        }))
         .filter((widget) => widget.is),
 );
 </script>
@@ -40,7 +49,7 @@ const rendered = computed(() =>
             :class="widthClass[widget.width] ?? widthClass.full"
         >
             <div class="px-5 pt-5">
-                <CardHeader :title="widget.title" />
+                <CardHeader :title="widget.heading" />
             </div>
             <div class="p-5">
                 <component :is="widget.is" v-bind="widget.data || {}" />

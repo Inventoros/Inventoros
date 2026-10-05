@@ -33,6 +33,23 @@ final class ProductLocationStockService
     }
 
     /**
+     * What a product holds at one location, counting a product that has never
+     * been binned as holding its whole stock at its primary location (which
+     * is what ensureBinned() would seed). Use this, not quantityAt(), when
+     * the answer feeds a write that will bin the product.
+     */
+    public function onHandAt(Product $product, int $locationId): int
+    {
+        $binned = ProductLocationStock::query()->where('product_id', $product->id)->exists();
+
+        if (! $binned) {
+            return $product->location_id === $locationId ? (int) $product->stock : 0;
+        }
+
+        return $this->quantityAt($product, $locationId);
+    }
+
+    /**
      * The product's on-hand quantity per location, richest first, with the
      * location eager-loaded for display. Given a viewer, only the bins in
      * warehouses they may access are returned.

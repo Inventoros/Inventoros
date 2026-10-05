@@ -13,6 +13,7 @@ use App\Services\Plugins\PluginMainFile;
 use App\Services\Plugins\PluginPermissionRegistry;
 use App\Services\Plugins\PluginRequirements;
 use App\Support\ArtisanProcess;
+use App\Support\PluginRouteGuard;
 use App\Support\ReleaseSignatureVerifier;
 use App\Support\SafeZipExtractor;
 use Illuminate\Support\Facades\Artisan;
@@ -157,7 +158,18 @@ final class PluginService
         $ui = $this->assets->uiFor($slug, $manifest);
 
         try {
+            // Its pages and routes may not collide with the application's (or
+            // another plugin's); checked the first time its main file runs in
+            // this application, which is when it registers them.
+            $firstLoad = ! PluginMainFile::isLoaded(app(), $slug);
+            $routesBefore = PluginRouteGuard::snapshot();
+
             $this->loadPlugin($slug, strict: true);
+
+            if ($firstLoad) {
+                PluginRouteGuard::assertNoConflicts($slug, $routesBefore);
+            }
+
             $this->runLifecycleFile($slug, 'activate');
 
             if ($ui !== null) {
@@ -872,7 +884,12 @@ final class PluginService
         }
 
         try {
-            PluginMainFile::load(app(), $slug, $pluginFile, $manifest);
+            // Attribute what the main file registers (pages, menu items,
+            // widgets) to this plugin.
+            app(PluginUIService::class)->whileLoading(
+                $slug,
+                fn () => PluginMainFile::load(app(), $slug, $pluginFile, $manifest),
+            );
 
             // Run the plugin's init action if it exists
             do_action('plugin_loaded', $slug, $manifest);

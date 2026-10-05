@@ -59,7 +59,7 @@ require_once __DIR__.'/src/helpers.php';   // named functions and classes: load 
 return function (string $slug, array $manifest): void {
     add_action('product_created', fn ($product, $user) => my_plugin_log($product));
 
-    register_page('my-plugin.index', 'Plugin::my-plugin/Index', ['uri' => '/my-plugin']);
+    register_page('plg.my-plugin.index', 'Plugin::my-plugin/Index', ['uri' => '/p/my-plugin']);
 };
 ```
 
@@ -226,7 +226,7 @@ Schema::dropIfExists('my_plugin_notes');
 
 ### Domain change hooks
 
-The created, updated and deleted hooks of products, variants, orders, purchase orders and customers, and `stock_changed`, fire from the model layer, so they fire the same way whichever surface made the change: the web screens, bulk actions, REST, GraphQL, MCP, imports, console and scheduled commands. Use them, not the web form hooks, for anything that must see every change (channel sync, accounting, outbound integrations).
+The created, updated and deleted hooks of products, variants, orders, purchase orders, customers, suppliers, categories, locations and warehouses, and `stock_changed`, fire from the model layer, so they fire the same way whichever surface made the change: the web screens, bulk actions, REST, GraphQL, MCP, imports, console and scheduled commands. Use them, not the web form hooks, for anything that must see every change (channel sync, accounting, outbound integrations).
 
 - They fire **after the transaction commits**, and never when it rolls back.
 - They fire **once per record per transaction**. A product saved three times in one request, or an order whose totals are written after its items, is announced once, with the final values.
@@ -305,10 +305,19 @@ add_action('stock_changed', function ($product, $variant, array $change) {
 | `approval_requested` | `$approval`, `$subject`, `$user` | A purchase order, stock adjustment or stock transfer is waiting for approval, on any surface, after commit. `$approval` is the `ApprovalService::describe()` array (type, id, reference, title, summary, amount, url, requester). Sales orders waiting for approval are announced by `order_created` with `approval_status` pending. |
 | `approval_decided` | `$approval`, `$subject`, `$decision`, `$user`, `$notes` | One of those requests is approved or rejected (`$decision`), on any surface, after commit. Sales orders: `order_approved`, `order_rejected`. |
 | `import_finished` | `$type`, `$organization_id`, `$user`, `$result` | A product, order or user import from the Import/Export page finished, inline or queued. `$result` is `['status' => 'completed' or 'failed', 'queued' => bool, 'stats' => [...]]`. |
-| `supplier_created` | `$supplier`, `$user` | A supplier is created from the web UI. |
-| `supplier_updated` | `$supplier`, `$user` | A supplier is updated from the web UI. |
-| `supplier_before_delete` | `$supplier`, `$user` | Before a supplier is deleted from the web UI. |
-| `supplier_deleted` | `$supplier`, `$user` | After a supplier is deleted from the web UI. |
+| `supplier_created` | `$supplier`, `$user` | A supplier is created on any surface (web, REST, GraphQL), after commit. |
+| `supplier_updated` | `$supplier`, `$user` | A supplier is updated on any surface, once per transaction, after commit. |
+| `supplier_before_delete` | `$supplier`, `$user` | Just before a supplier is deleted, on any surface. |
+| `supplier_deleted` | `$supplier`, `$user` | A supplier is deleted on any surface, after commit. |
+| `category_created` | `$category`, `$user` | A product category is created on any surface (web, REST, product import), after commit. |
+| `category_updated` | `$category`, `$user` | A product category is updated on any surface, once per transaction, after commit. |
+| `category_deleted` | `$category`, `$user` | A product category is deleted on any surface, after commit. |
+| `location_created` | `$location`, `$user` | A location (bin) is created on any surface (web, REST, product import), after commit. |
+| `location_updated` | `$location`, `$user` | A location is updated on any surface, once per transaction, after commit. |
+| `location_deleted` | `$location`, `$user` | A location is deleted on any surface, after commit. |
+| `warehouse_created` | `$warehouse`, `$user` | A warehouse is created on any surface (web, REST), after commit. |
+| `warehouse_updated` | `$warehouse`, `$user` | A warehouse is updated on any surface, once per transaction, after commit. |
+| `warehouse_deleted` | `$warehouse`, `$user` | A warehouse is deleted on any surface, after commit. |
 | `supplier_viewed` | `$supplier`, `$user` | The supplier detail page is viewed. |
 | `supplier_list_viewed` | `$suppliers`, `$user` | The supplier list page is viewed. |
 | `dashboard_stats_calculated` | `$stats`, `$user` | The dashboard statistics are calculated (after the `dashboard_stats_data` filter). |
@@ -336,6 +345,7 @@ A filter callback receives the value first, then the listed context, and must re
 | `product_store_response` | `$response`, `$product`, `$request` | The response after a product is created from the web form. |
 | `product_update_validation_rules` | `$rules`, `$product`, `$request` | Validation rules of the web product edit form. |
 | `product_update_data` | `$validated_data`, `$product`, `$request` | Validated data before a product is updated from the web form. |
+| `stock_audit_completing` | `$allowed`, `$stock_audit`, `$user`, `$allow_uncounted` | Whether a stock audit may be completed, on every surface (web, REST), under the audit's row lock and before any recount is booked. Return `true` to allow it; return a reason string to refuse it (the web page shows it as the error, the REST API answers 422 with `"error": "completion_vetoed"` and the reason as `message`), or `false` for a generic refusal. Pass `$allowed` through when you have no objection, so another plugin's refusal stands. See [Holding a stock audit](#holding-a-stock-audit). |
 | `order_total_calculation` | `$total`, `$order` | The order total, each time `OrderService` computes it (on create and on every edit, from every surface), after line and order discounts, tax and shipping. `$total` is a 2-decimal string (`subtotal - discount_amount + tax + shipping`); `$order` already holds those parts and, on create, has no `id` yet. Return a number or numeric string. A negative total, or one below what the customer has already paid, is rejected with a validation error. Changing it breaks the `subtotal - discount + tax + shipping = total` identity on the stored order, so prefer adjusting the inputs where you can. |
 | `supplier_list_query` | `$query`, `$request` | The supplier list query. The organization scope is re-applied afterwards. |
 | `supplier_list_data` | `$suppliers`, `$request` | The paginated suppliers before the list page renders. |
@@ -352,6 +362,24 @@ A filter callback receives the value first, then the listed context, and must re
 | `report_query_{source}` | `$rows`, `$organization_id`, `$columns`, `$filters`, `$sort` | Return the rows (a Collection) for a data source you registered, for example `report_query_my_source`. |
 
 A `user_permissions` filter is deliberately not offered: letting plugins rewrite a user's permissions would be a privilege-escalation path.
+
+### Holding a stock audit
+
+```php
+add_filter('stock_audit_completing', function ($allowed, $audit, $user, $allowUncounted) {
+    if ($allowed !== true) {
+        return $allowed; // another plugin already refused
+    }
+
+    $waiting = my_plugin_lines_awaiting_recount($audit->id);
+
+    return $waiting > 0
+        ? "{$waiting} line(s) are waiting for a supervisor recount."
+        : true;
+});
+```
+
+Nothing is booked when completion is refused: the audit stays in progress and stock is unchanged. The callback runs inside the completion transaction, so a write it makes is rolled back with a refusal.
 
 ## Permissions
 
@@ -383,14 +411,17 @@ Every server-side UI registration takes an optional `permission`: a permission n
 
 ```php
 register_menu_item([
-    'label' => 'My Plugin',
-    'route' => 'my-plugin.settings',   // or 'url' => 'https://...'
-    'permission' => 'manage_plugins',  // optional
+    'label' => 'My Plugin',                          // shown until (or unless) the key resolves
+    'label_key' => 'plugins.my-plugin.nav.title',    // optional translation key
+    'route' => 'plg.my-plugin.settings',             // or 'url' => 'https://...'
+    'permission' => 'manage_plugins',                // optional
     'position' => 100,
 ]);
 ```
 
-Items whose route does not exist are dropped. Submenu entries (`'submenu' => [[...], ...]`) are filtered by their own `permission` the same way.
+Items whose route does not exist are dropped. Submenu entries (`'submenu' => [[...], ...]`) are filtered by their own `permission` the same way, and take a `label_key` too.
+
+`label_key` translates the item: the browser shows the key from your bundle's messages (`plugin.i18n.addMessages('en', { nav: { title: 'My Plugin' } })`, see [Translations](#translations)) in the user's language, falling back to English, and shows `label` until your bundle has loaded or when the key is missing. The key must sit under `plugins.{your-slug}.`; any other key is ignored (and logged), so a plugin cannot borrow or spoof a core string. Plain `label` strings keep working on their own. On cores without this, `label_key` is ignored and `label` is shown.
 
 ### Components in existing pages
 
@@ -461,6 +492,7 @@ A widget is a titled card on the dashboard, below the built-in cards:
 register_dashboard_widget([
     'id' => 'my-plugin-margins',          // unique
     'title' => 'Gross margin',
+    'title_key' => 'plugins.my-plugin.widgets.margin',   // optional, like a menu item's label_key
     'plugin' => 'my-plugin',
     'component' => 'MarginWidget',        // registered by your bundle
     'width' => 'half',                    // full, half, third or quarter
@@ -477,8 +509,8 @@ Widgets are gated like the dashboard's own figures. A widget the user may not se
 `register_page()` gives your plugin a page of its own: a GET route that renders a `Plugin::` Inertia page, which your bundle supplies with `registerPage()`.
 
 ```php
-register_page('my-plugin.settings', 'Plugin::my-plugin/Settings', [
-    'uri' => '/my-plugin/settings',       // default: the route name with dots as slashes
+register_page('plg.my-plugin.settings', 'Plugin::my-plugin/Settings', [
+    'uri' => '/p/my-plugin/settings',     // default: the route name with dots as slashes
     'title' => 'My Plugin settings',      // passed to the page as the `title` prop
     'permission' => 'manage_plugins',     // users without it get 403
     'props' => fn ($request, $user) => [  // or a plain array
@@ -493,7 +525,26 @@ register_page('my-plugin.settings', 'Plugin::my-plugin/Settings', [
 plugin.registerPage('Settings', SettingsPage);   // becomes 'Plugin::my-plugin/Settings'
 ```
 
-The route is added after all core routes and always requires sign-in: your `middleware` is added after `auth`, never instead of it. A page cannot reuse a route name or URI the application already uses, and cannot live under a reserved prefix (`api`, `portal`, `install`, `graphql`, `mcp`, `webhooks`, `plugins`, `plugin-assets`, the sign-in and password pages, and similar); such a page is skipped and logged, so a plugin cannot take over a core route, link or the customer portal. Link to it by name as usual (`route('my-plugin.settings')`), for example from a menu item.
+The route is added after all core routes and always requires sign-in: your `middleware` is added after `auth`, never instead of it. Link to it by name as usual (`route('plg.my-plugin.settings')`), for example from a menu item.
+
+#### Route names and URIs
+
+Everything a plugin routes lives in its own namespace, which core never uses:
+
+| What | Names | URIs |
+|------|-------|------|
+| Pages and web routes (`register_page()`, `Route::middleware(['web', 'auth'])`) | `plg.{slug}.*` | `/p/{slug}/...` (writes under `/p/{slug}/actions/...`) |
+| API routes (add `auth:sanctum` and `api.permission`) | `plg.{slug}.api.*` | `/api/v1/plugins/{slug}/...` |
+| Inbound webhooks (outside the `web` group) | `plg.{slug}.webhooks.*` | `/webhooks/plugins/{slug}/...` |
+
+Activation refuses a plugin whose page or route collides with a route the application (or another active plugin) already has, and says why, for example: *The page "plg.cycle-counts.sessions" uses /cycle-counts/sessions, inside /cycle-counts/, which the application route "cycle-counts.index" uses.* A page or route conflicts when it:
+
+- reuses an existing route name, or uses another plugin's `plg.{slug}.` names;
+- answers a method and URI an existing route answers (a page answers GET; a write route on your own page's URI is fine);
+- lives under a first URI segment an existing route uses (such as `/cycle-counts/...` or `/reports/...`), unless it is inside your own `/p/{slug}/`, `/api/v1/plugins/{slug}/` or `/webhooks/plugins/{slug}/`; or
+- (pages only) sits under a reserved prefix: `api`, `portal`, `install`, `graphql`, `mcp`, `webhooks`, `plugins`, `plugin-assets`, the sign-in and password pages, and similar.
+
+A plugin that was activated before this check, and whose page later collides with a route core adds, keeps working without that page: the page is skipped and logged rather than taking over the core route.
 
 If you cache routes (`php artisan route:cache`), rebuild the cache after activating or deactivating a plugin that registers pages. A cached route whose plugin is no longer active answers 404.
 
@@ -870,7 +921,8 @@ Schema::dropIfExists('plugin_analytics_views');
 - **Scope data by organization.** Inventoros is multi-tenant: store `organization_id` on every row you create and filter by it when you read.
 - **Make `activate.php` idempotent** (`Schema::hasTable` before `Schema::create`) and clean up everything in `uninstall.php`.
 - **Catch your own errors** in hooks that talk to other systems, so a failing mail server does not break product saves.
-- **Namespace your PHP classes** (`namespace MyPlugin;`) and prefix custom hook names and tables with your slug.
+- **Namespace your PHP classes** (`namespace MyPlugin;`) and prefix custom hook names and tables with your slug. Name routes `plg.{slug}.*` under `/p/{slug}/` (see [Route names and URIs](#route-names-and-uris)).
+- **Change stock only through `StockAdjustment::adjust()`** (or `StockAuditService`, `OrderService` and the other core services). It keeps the location bins in step with the on-hand total: pass `locationId` to book one bin; without it a decrease drains the bins in the order fulfilment uses (warehouse priority, then the primary location, then the fullest bin) and an increase lands in the primary bin. Pass `syncBins: false` only if you move the bins yourself with `ProductLocationStockService`.
 - **Return a registration closure from `Plugin.php`**, and keep named functions and classes in files you `require_once` (see [The main file](#the-main-file)).
 - **Declare `requires`** with the lowest Inventoros version you tested against.
 
