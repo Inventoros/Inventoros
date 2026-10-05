@@ -1,6 +1,6 @@
 # Multi-company and 3PL: core design
 
-Status: memberships and switching implemented (this change); inter-company transfers implemented in the follow-up change; 3PL needs no further core primitive (decision below). Plugin SDK gap G11, and the core capability the Multi-Company (`multi-company`) and 3PL Management (`3pl`) plugins depend on.
+Status: memberships and switching implemented (Inventoros#257); inter-company transfers implemented in the change stacked on it; 3PL needs no further core primitive (decision below). Plugin SDK gap G11, and the core capability the Multi-Company (`multi-company`) and 3PL Management (`3pl`) plugins depend on.
 
 ## Why
 
@@ -110,7 +110,7 @@ Organizations themselves can be disabled (`is_active`): nobody works in a disabl
 
 Moving stock between two organizations must be atomic (both sides or neither), checked in both organizations, and visible in both ledgers. A plugin cannot do that safely from outside: it would have to reach into the second organization's rows past `OrganizationScope`.
 
-`App\Services\Organizations\InterCompanyTransferService::transfer($actor, $from, $to, $lines, ...)` (follow-up change):
+`App\Services\Organizations\InterCompanyTransferService::transfer($actor, $from, $to, $lines, $notes, $idempotencyKey)`, tested in `tests/Feature/Organizations/InterCompanyTransferServiceTest.php` (both ledgers, bins, variants, all-or-nothing, membership and `transfer_stock` on each side, wrong-organization records, warehouse access, idempotency, a request in either organization, webhooks of both organizations):
 
 - Authorizes the actor in BOTH organizations (membership plus `transfer_stock` in each, and warehouse access to the named locations in each), checks every product, variant and location belongs to the organization named for it, and refuses serial- or batch-tracked products (their units would need their own transfer).
 - Locks every product and variant involved in ascending id order, then, in one transaction, books an `inter_company_out` adjustment in the source organization (inside `runAs($from)`, never below zero) and an `inter_company_in` adjustment in the destination (inside `runAs($to)`). Both adjustments reference the same `inter_company_transfers` row, which records both organizations, the actor, the lines and both adjustment ids. Bins move with the totals, as for any adjustment.
