@@ -9,6 +9,7 @@ use App\Models\Webhook;
 use App\Models\WebhookDelivery;
 use App\Services\Plugins\PluginWebhookEventRegistry;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
 /**
@@ -45,6 +46,12 @@ final class WebhookService
                 'data' => $data,
             ];
 
+            // HOOK: let plugins skip this endpoint for this event (filters,
+            // pauses). Nothing is logged or sent for a skipped endpoint.
+            if (! self::shouldDeliver($webhook, $event, $payload)) {
+                continue;
+            }
+
             $delivery = WebhookDelivery::create([
                 'webhook_id' => $webhook->id,
                 'event' => $event,
@@ -53,6 +60,28 @@ final class WebhookService
             ]);
 
             WebhookDeliveryJob::dispatch($delivery);
+        }
+    }
+
+    /**
+     * Ask the webhook_should_deliver filter whether this endpoint receives
+     * this event. A filter that throws is logged and ignored: a broken plugin
+     * must not silently stop core deliveries.
+     *
+     * @param  array<string, mixed>  $payload
+     */
+    private static function shouldDeliver(Webhook $webhook, string $event, array $payload): bool
+    {
+        try {
+            return apply_filters('webhook_should_deliver', true, $webhook, $event, $payload) !== false;
+        } catch (\Throwable $e) {
+            Log::warning('webhook_should_deliver filter failed; delivering anyway', [
+                'webhook_id' => $webhook->id,
+                'event' => $event,
+                'error' => $e->getMessage(),
+            ]);
+
+            return true;
         }
     }
 

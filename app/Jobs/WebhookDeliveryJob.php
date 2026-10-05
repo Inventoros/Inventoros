@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Jobs;
 
+use App\Models\Webhook;
 use App\Models\WebhookDelivery;
 use App\Services\WebhookService;
 use App\Support\PublicHostGuard;
@@ -27,6 +28,26 @@ final class WebhookDeliveryJob implements ShouldQueue
     public const RESPONSE_BODY_LIMIT = 5000;
 
     private const BACKOFF_DELAYS = [60, 300, 1800, 7200, 86400];
+
+    /**
+     * Upper bounds for what the webhook_delivery_retry_policy filter may ask
+     * for: at most 10 tries, each back-off between 1 second and 24 hours.
+     */
+    public const MAX_POLICY_TRIES = 10;
+    public const MAX_POLICY_BACKOFF_SECONDS = 86400;
+
+    /**
+     * Headers a webhook_delivery_request filter may not set: core's own
+     * signature and identification headers, and transport headers that
+     * would change where or how the request is sent.
+     */
+    private const RESERVED_HEADERS = [
+        'x-webhook-signature', 'x-webhook-event', 'x-webhook-delivery',
+        'host', 'content-type', 'content-length', 'transfer-encoding',
+        'connection', 'expect', 'te', 'upgrade', 'proxy-authorization',
+    ];
+
+    private const MAX_EXTRA_HEADERS = 20;
 
     use Dispatchable;
     use InteractsWithQueue;
@@ -56,6 +77,146 @@ final class WebhookDeliveryJob implements ShouldQueue
     public function __construct(
         public WebhookDelivery $delivery
     ) {
+        $this->applyRetryPolicy();
+    }
+
+    /**
+     * HOOK: webhook_delivery_retry_policy lets a plugin choose the number of
+     * tries and the back-off for this delivery, within MAX_POLICY_TRIES and
+     * MAX_POLICY_BACKOFF_SECONDS. Anything malformed keeps the defaults.
+     */
+    private function applyRetryPolicy(): void
+    {
+        $webhook = $this->delivery->webhook;
+
+        if ($webhook === null) {
+            return;
+        }
+
+        try {
+            $policy = apply_filters('webhook_delivery_retry_policy', [
+                'tries' => $this->tries,
+                'backoff' => $this->backoff,
+            ], $this->delivery, $webhook);
+        } catch (Throwable $e) {
+            Log::warning('webhook_delivery_retry_policy filter failed; using the default policy', [
+                'delivery_id' => $this->delivery->id,
+                'error' => $e->getMessage(),
+            ]);
+
+            return;
+        }
+
+        if (! is_array($policy)) {
+            return;
+        }
+
+        if (isset($policy['tries']) && is_int($policy['tries'])) {
+            $this->tries = max(1, min(self::MAX_POLICY_TRIES, $policy['tries']));
+        }
+
+        if (isset($policy['backoff']) && is_array($policy['backoff'])) {
+            $backoff = [];
+            foreach (array_slice(array_values($policy['backoff']), 0, self::MAX_POLICY_TRIES) as $seconds) {
+                if (is_int($seconds)) {
+                    $backoff[] = max(1, min(self::MAX_POLICY_BACKOFF_SECONDS, $seconds));
+                }
+            }
+
+            if ($backoff !== []) {
+                $this->backoff = $backoff;
+            }
+        }
+    }
+
+    /**
+     * Clamp a requested timeout to 1..TIMEOUT_SECONDS.
+     */
+    public static function clampTimeout(int $seconds): int
+    {
+        return max(1, min(self::TIMEOUT_SECONDS, $seconds));
+    }
+
+    /**
+     * HOOK: webhook_delivery_request lets a plugin replace the body (for
+     * example a payload template), add headers (for example an
+     * Authorization header) and shorten the timeout. It cannot change the
+     * URL, override core's headers or the content type, or inject header
+     * lines; core signs whatever body comes back.
+     *
+     * @return array{body: string, headers: array<string, string>, timeout: int}
+     */
+    private function request(Webhook $webhook, string $payloadJson): array
+    {
+        $default = ['body' => $payloadJson, 'headers' => [], 'timeout' => self::TIMEOUT_SECONDS];
+
+        try {
+            $request = apply_filters('webhook_delivery_request', $default, $this->delivery, $webhook);
+        } catch (Throwable $e) {
+            Log::warning('webhook_delivery_request filter failed; sending the standard request', [
+                'delivery_id' => $this->delivery->id,
+                'error' => $e->getMessage(),
+            ]);
+
+            return $default;
+        }
+
+        if (! is_array($request)) {
+            return $default;
+        }
+
+        $headers = [];
+        foreach (is_array($request['headers'] ?? null) ? $request['headers'] : [] as $name => $value) {
+            if (count($headers) >= self::MAX_EXTRA_HEADERS) {
+                break;
+            }
+            if (! is_string($name) || preg_match('/^[A-Za-z0-9!#$%&\'*+.^_`|~-]{1,128}$/', $name) !== 1) {
+                continue;
+            }
+            if (in_array(strtolower($name), self::RESERVED_HEADERS, true)) {
+                continue;
+            }
+            if (! is_string($value) && ! is_int($value)) {
+                continue;
+            }
+            $value = (string) $value;
+            if (strlen($value) > 8192 || preg_match('/[\r\n\0]/', $value) === 1) {
+                continue;
+            }
+            $headers[$name] = $value;
+        }
+
+        return [
+            'body' => is_string($request['body'] ?? null) ? $request['body'] : $payloadJson,
+            'headers' => $headers,
+            'timeout' => is_int($request['timeout'] ?? null) ? self::clampTimeout($request['timeout']) : self::TIMEOUT_SECONDS,
+        ];
+    }
+
+    /**
+     * HOOK: webhook_delivery_attempted, once per attempt (success, HTTP
+     * error, refused destination or connection failure). A listener that
+     * throws is logged and ignored.
+     */
+    private function reportAttempt(Webhook $webhook, bool $successful, ?int $status, int $startedAt, ?string $error): void
+    {
+        $attempt = (int) $this->delivery->attempts;
+
+        try {
+            do_action('webhook_delivery_attempted', $this->delivery, $webhook, [
+                'successful' => $successful,
+                'status' => $status,
+                'duration_ms' => (int) round((hrtime(true) - $startedAt) / 1_000_000),
+                'error' => $error === null ? null : Str::limit($error, 1000),
+                'attempt' => $attempt,
+                'will_retry' => ! $successful && $attempt < $this->tries,
+            ]);
+        } catch (Throwable $e) {
+            Log::warning('webhook_delivery_attempted listener failed', [
+                'delivery_id' => $this->delivery->id,
+                'error' => $e->getMessage(),
+            ]);
+        }
     }
 
     /**
@@ -85,10 +246,13 @@ final class WebhookDeliveryJob implements ShouldQueue
         // — signatures sporadically mismatched for receivers that hashed
         // the raw body (the standard pattern, and the one our own
         // WebhookService::verifySignature documents).
-        $payloadJson = json_encode($this->delivery->payload, JSON_UNESCAPED_SLASHES);
+        $request = $this->request($webhook, json_encode($this->delivery->payload, JSON_UNESCAPED_SLASHES));
+        $payloadJson = $request['body'];
         $signature = WebhookService::sign($payloadJson, $webhook->secret);
 
         $this->delivery->increment('attempts');
+        $startedAt = hrtime(true);
+        $reported = false;
 
         try {
             // Resolve the URL's host at delivery time and reject any non-
@@ -102,7 +266,8 @@ final class WebhookDeliveryJob implements ShouldQueue
             // Disable redirect following so a 302 from an allowlisted host
             // cannot smuggle the request to a private/metadata URL.
             $response = Http::withOptions(['allow_redirects' => false])
-                ->timeout(30)
+                ->timeout($request['timeout'])
+                ->withHeaders($request['headers'])
                 ->withHeaders([
                     'X-Webhook-Signature' => $signature,
                     'X-Webhook-Event' => $this->delivery->event,
@@ -123,6 +288,9 @@ final class WebhookDeliveryJob implements ShouldQueue
                 // was dead code — every row's next_retry_at was NULL.
                 'next_retry_at' => $response->successful() ? null : $this->nextRetryAt(),
             ]);
+
+            $this->reportAttempt($webhook, $response->successful(), $response->status(), $startedAt, $response->successful() ? null : "Webhook returned {$response->status()}");
+            $reported = true;
 
             if ($response->successful()) {
                 Log::info('Webhook delivered successfully', [
@@ -146,6 +314,10 @@ final class WebhookDeliveryJob implements ShouldQueue
                 'response_body' => Str::limit($e->getMessage(), 5000),
                 'next_retry_at' => $this->nextRetryAt(),
             ]);
+
+            if (! $reported) {
+                $this->reportAttempt($webhook, false, null, $startedAt, $e->getMessage());
+            }
 
             Log::warning('Webhook delivery exception', [
                 'delivery_id' => $this->delivery->id,
@@ -193,12 +365,13 @@ final class WebhookDeliveryJob implements ShouldQueue
         // $this->delivery->attempts has just been incremented for the
         // current run. attempts=1 means we just made the first try and
         // the next retry uses BACKOFF_DELAYS[0]=60s. Index = attempts - 1.
+        $delays = is_array($this->backoff) && $this->backoff !== [] ? array_values($this->backoff) : self::BACKOFF_DELAYS;
         $idx = max(0, $this->delivery->attempts - 1);
-        if ($idx >= count(self::BACKOFF_DELAYS)) {
+        if ($idx >= count($delays)) {
             return null;
         }
 
-        return now()->addSeconds(self::BACKOFF_DELAYS[$idx]);
+        return now()->addSeconds($delays[$idx]);
     }
 
     /**

@@ -456,6 +456,15 @@ final class HookRegistry
                 'parameters' => ['$type', '$user', '$data', '$exception'],
                 'example' => "add_action('email_notification_failed', function (\$type, \$user, \$data, \$exception) { /* ... */ });",
             ],
+
+            // ========================================
+            // OUTBOUND WEBHOOK HOOKS
+            // ========================================
+            'webhook_delivery_attempted' => [
+                'description' => 'Fired once per outbound webhook delivery attempt (success, HTTP error, refused private destination or connection failure). $result is [successful, status, duration_ms, error, attempt, will_retry]',
+                'parameters' => ['$delivery', '$webhook', '$result'],
+                'example' => "add_action('webhook_delivery_attempted', function (\$delivery, \$webhook, \$result) { /* ... */ });",
+            ],
         ];
     }
 
@@ -638,6 +647,25 @@ final class HookRegistry
                 'description' => 'Return the rows (a Collection) for a plugin-registered report data source',
                 'parameters' => ['$rows', '$organization_id', '$columns', '$filters', '$sort'],
                 'example' => "add_filter('report_query_my_source', function (\$rows, \$organization_id, \$columns, \$filters, \$sort) { return collect(); });",
+            ],
+
+            // ========================================
+            // OUTBOUND WEBHOOK FILTERS
+            // ========================================
+            'webhook_should_deliver' => [
+                'description' => 'Return false to skip one subscribed webhook for one event (nothing is logged or sent for it). $payload is the full envelope [id, event, timestamp, organization_id, data]',
+                'parameters' => ['$deliver', '$webhook', '$event', '$payload'],
+                'example' => "add_filter('webhook_should_deliver', function (\$deliver, \$webhook, \$event, \$payload) { return \$deliver; });",
+            ],
+            'webhook_delivery_request' => [
+                'description' => 'Change an outbound webhook request before it is signed and sent: [body (string), headers, timeout]. Core signs the returned body, keeps the URL and its private-address checks, ignores its own and transport headers, and caps the timeout at 30 seconds',
+                'parameters' => ['$request', '$delivery', '$webhook'],
+                'example' => "add_filter('webhook_delivery_request', function (\$request, \$delivery, \$webhook) { \$request['headers']['X-Source'] = 'inventoros'; return \$request; });",
+            ],
+            'webhook_delivery_retry_policy' => [
+                'description' => 'Set the tries and back-off (seconds) for an outbound webhook delivery when it is queued: [tries, backoff]. At most 10 tries; each back-off between 1 second and 24 hours',
+                'parameters' => ['$policy', '$delivery', '$webhook'],
+                'example' => "add_filter('webhook_delivery_retry_policy', function (\$policy, \$delivery, \$webhook) { return ['tries' => 3, 'backoff' => [30, 120]]; });",
             ],
         ];
     }
