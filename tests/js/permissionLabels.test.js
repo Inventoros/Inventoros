@@ -75,3 +75,19 @@ test('seeded roles and sets are translated only while unchanged', () => {
     assert.equal(roleName({ slug: 'custom-123', name: 'Packers' }, fr), 'Packers');
     assert.equal(permissionSetName({ slug: 'warehouse-staff', name: 'Warehouse Staff' }, fr), lookup('fr', 'admin.permissionCatalog.sets.warehouseStaff.name'));
 });
+
+test('a plugin permission is translated from the plugin namespace, else shown as the server sent it', () => {
+    const tree = {
+        plugins: { 'cycle-counts': { permissions: { approve: { label: 'Approuver les comptages', description: 'Peut approuver' } } } },
+    };
+    const get = (key) => key.split('.').reduce((node, part) => (node == null ? undefined : node[part]), tree);
+    const i18n = { te: (key) => typeof get(key) === 'string', t: (key) => get(key) };
+
+    const translated = { value: 'cycle-counts.approve', label: 'Approve counts', description: 'Can approve counts' };
+    assert.equal(permissionLabel(translated, i18n), 'Approuver les comptages');
+    assert.equal(permissionDescription(translated, i18n), 'Peut approuver');
+
+    const untranslated = { value: 'cycle-counts.schedule', label: 'Schedule counts', description: 'Can schedule counts' };
+    assert.equal(permissionLabel(untranslated, i18n), 'Schedule counts');
+    assert.equal(permissionDescription(untranslated, i18n), 'Can schedule counts');
+});
