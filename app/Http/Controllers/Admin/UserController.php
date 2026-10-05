@@ -182,8 +182,10 @@ class UserController extends Controller
         }
 
         // A delegated user administrator may not delete someone more
-        // privileged than themselves (for example an administrator).
-        RoleAssignmentGuard::authorizeTarget($user, $currentUser);
+        // privileged than themselves (for example an administrator), and
+        // nobody deletes an account that works in organizations they do not
+        // administer, or another organization's last administrator.
+        RoleAssignmentGuard::authorizeDeletion($user, $currentUser);
 
         // Don't allow deleting yourself
         if ($user->id === $currentUser->id) {

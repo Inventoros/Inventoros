@@ -6,6 +6,7 @@ namespace App\Support;
 
 use App\Models\Role;
 use App\Models\User;
+use App\Services\Organizations\OrganizationMembershipService;
 
 /**
  * Prevents privilege escalation through role assignment.
@@ -69,26 +70,45 @@ final class RoleAssignmentGuard
      * Checking only the roles being assigned is not enough: a delegated user
      * administrator could otherwise set a new password or email on an admin
      * and sign in as them. A non-admin may only manage users who hold no
-     * more privilege than they do: never an admin or manager (base role or
-     * system role), and never someone with a permission the actor lacks.
+     * more privilege than they do, in ANY organization the user belongs to:
+     * never an admin or manager (base role or system role), and never someone
+     * with a permission the actor lacks.
+     *
+     * The home organization owns the account, but an account that also works
+     * in other organizations carries their access: changing its email or
+     * password, or deleting it ($changesAccount), needs an administrator of
+     * every one of those organizations, so no organization's administrators
+     * can take over (or remove) access to another they do not run.
      */
-    public static function targetViolation(User $target, User $actor): ?string
+    public static function targetViolation(User $target, User $actor, bool $changesAccount = true): ?string
     {
-        if ($actor->isAdmin()) {
-            return null;
+        $outside = self::outsideMembers($target, $actor->organization_id === null ? null : (int) $actor->organization_id);
+
+        if (! $actor->isAdmin()) {
+            foreach (array_merge([$target], array_values($outside)) as $member) {
+                if ($member->isAdmin()) {
+                    return 'You do not have permission to manage an administrator.';
+                }
+
+                if ($member->role === 'manager' || $member->hasRole('system-manager')) {
+                    return 'You do not have permission to manage a manager.';
+                }
+
+                foreach ($member->getAllPermissions() as $permission) {
+                    if (! $actor->hasPermission($permission)) {
+                        return 'You cannot manage a user who holds permissions you do not.';
+                    }
+                }
+            }
         }
 
-        if ($target->isAdmin()) {
-            return 'You do not have permission to manage an administrator.';
-        }
+        if ($changesAccount) {
+            foreach (array_keys($outside) as $organizationId) {
+                $actorThere = self::memberIn($actor, $organizationId);
 
-        if ($target->role === 'manager' || $target->hasRole('system-manager')) {
-            return 'You do not have permission to manage a manager.';
-        }
-
-        foreach ($target->getAllPermissions() as $permission) {
-            if (! $actor->hasPermission($permission)) {
-                return 'You cannot manage a user who holds permissions you do not.';
+                if ($actorThere === null || ! $actorThere->isAdmin()) {
+                    return 'This user also works in other organizations. Only an administrator of each of them can change their email or password or delete the account.';
+                }
             }
         }
 
@@ -96,11 +116,77 @@ final class RoleAssignmentGuard
     }
 
     /**
+     * The reason the actor may not delete this user, or null when allowed:
+     * the management rules above, and never the last administrator of
+     * another organization the user belongs to.
+     */
+    public static function deletionViolation(User $target, User $actor): ?string
+    {
+        if (($violation = self::targetViolation($target, $actor)) !== null) {
+            return $violation;
+        }
+
+        $memberships = app(OrganizationMembershipService::class);
+
+        foreach (self::outsideMembers($target, $actor->organization_id === null ? null : (int) $actor->organization_id) as $organizationId => $member) {
+            if ($member->role === 'admin' && $memberships->isLastAdministrator($organizationId, $target)) {
+                return 'This user is the last administrator of another organization.';
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Copies of $user working in each organization they belong to besides
+     * $except and their home, whether or not that organization is active.
+     *
+     * @return array<int, User>
+     */
+    private static function outsideMembers(User $user, ?int $except): array
+    {
+        $members = [];
+
+        foreach (app(OrganizationMembershipService::class)->allMemberships($user) as $organizationId => $role) {
+            if ($organizationId !== $except && $organizationId !== $user->homeOrganizationId()) {
+                $members[$organizationId] = (clone $user)->useOrganization($organizationId, $role);
+            }
+        }
+
+        return $members;
+    }
+
+    private static function memberIn(User $user, int $organizationId): ?User
+    {
+        if ($organizationId === $user->homeOrganizationId()) {
+            return (clone $user)->useOrganization($organizationId, $user->homeRole());
+        }
+
+        $memberships = app(OrganizationMembershipService::class)->allMemberships($user);
+
+        return array_key_exists($organizationId, $memberships)
+            ? (clone $user)->useOrganization($organizationId, $memberships[$organizationId])
+            : null;
+    }
+
+    /**
+     * Abort with 403 when the actor may not delete this user.
+     */
+    public static function authorizeDeletion(User $target, User $actor): void
+    {
+        $violation = self::deletionViolation($target, $actor);
+
+        if ($violation !== null) {
+            abort(403, $violation);
+        }
+    }
+
+    /**
      * Abort with 403 when the actor may not manage this existing user.
      */
-    public static function authorizeTarget(User $target, User $actor): void
+    public static function authorizeTarget(User $target, User $actor, bool $changesAccount = true): void
     {
-        $violation = self::targetViolation($target, $actor);
+        $violation = self::targetViolation($target, $actor, $changesAccount);
 
         if ($violation !== null) {
             abort(403, $violation);

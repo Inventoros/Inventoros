@@ -274,6 +274,40 @@ final class OrganizationMembershipService
         });
     }
 
+    /**
+     * Every organization the user holds a membership row for (home
+     * included), with the base role there, whether or not the organization
+     * is active; deleted organizations are left out. For checks that must
+     * consider access the user could regain, not only what they can use now.
+     *
+     * @return array<int, string|null>
+     */
+    public function allMemberships(User $user): array
+    {
+        return OrganizationMembership::query()
+            ->where('user_id', $user->getKey())
+            ->whereHas('organization')
+            ->pluck('role', 'organization_id')
+            ->mapWithKeys(fn ($role, $organizationId) => [(int) $organizationId => $role])
+            ->all();
+    }
+
+    /**
+     * Whether $user is the only administrator of the organization.
+     */
+    public function isLastAdministrator(Organization|int $organization, User $user): bool
+    {
+        $organization = $organization instanceof Organization ? $organization : Organization::withTrashed()->findOrFail($organization);
+
+        try {
+            $this->assertNotLastAdmin($organization, $user);
+
+            return false;
+        } catch (ValidationException) {
+            return true;
+        }
+    }
+
     private function lockedMembership(Organization $organization, User $user): OrganizationMembership
     {
         $membership = OrganizationMembership::query()
