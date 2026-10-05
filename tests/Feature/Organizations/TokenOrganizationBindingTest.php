@@ -165,6 +165,19 @@ final class TokenOrganizationBindingTest extends TestCase
         $this->api($beta)->getJson('/api/v1/user')->assertUnauthorized();
     }
 
+    public function test_tokens_of_a_disabled_home_organization_stop_authenticating(): void
+    {
+        $home = $this->tokenFor($this->alpha);
+        $legacy = $this->user->createToken('legacy');
+        DB::table('personal_access_tokens')->where('id', $legacy->accessToken->id)->update(['organization_id' => null]);
+
+        $this->alpha->update(['is_active' => false]);
+
+        $this->api($home)->getJson('/api/v1/user')->assertUnauthorized();
+        $this->api($legacy->plainTextToken)->getJson('/api/v1/products')->assertUnauthorized();
+        $this->postJson('/api/v1/login', ['email' => $this->user->email, 'password' => 'password'])->assertUnprocessable();
+    }
+
     public function test_a_legacy_token_without_an_organization_works_in_the_home_organization(): void
     {
         $token = $this->user->createToken('legacy');

@@ -41,8 +41,8 @@ final class OrganizationMembershipService
     public function __construct(private readonly SecurityEventLogger $security) {}
 
     /**
-     * Whether $user may work in $organizationId: their home organization, or
-     * an active, not deleted organization they hold a membership of.
+     * Whether $user may work in $organizationId: their home organization or
+     * another they hold a membership of, either way active and not deleted.
      *
      * @api
      */
@@ -70,7 +70,10 @@ final class OrganizationMembershipService
     public function resolve(User $user, int $organizationId): ?array
     {
         if ($organizationId === $user->homeOrganizationId()) {
-            return ['organization_id' => $organizationId, 'role' => $user->homeRole()];
+            // A disabled (or deleted) home organization is worked in by nobody.
+            return Organization::query()->whereKey($organizationId)->where('is_active', true)->exists()
+                ? ['organization_id' => $organizationId, 'role' => $user->homeRole()]
+                : null;
         }
 
         $membership = OrganizationMembership::query()
@@ -94,9 +97,9 @@ final class OrganizationMembershipService
         $home = $user->homeOrganizationId();
 
         $organizations = Organization::query()
+            ->where('is_active', true)
             ->where(function (Builder $q) use ($user, $home): void {
-                $q->whereIn('id', OrganizationMembership::query()->select('organization_id')->where('user_id', $user->getKey()))
-                    ->where('is_active', true);
+                $q->whereIn('id', OrganizationMembership::query()->select('organization_id')->where('user_id', $user->getKey()));
 
                 if ($home !== null) {
                     $q->orWhere('id', $home);

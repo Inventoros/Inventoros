@@ -237,7 +237,7 @@ final class ActiveOrganization
 
         if ($organizationId === null || ! $this->activate($user, $organizationId)) {
             // Fail closed: no organization, no tenant data.
-            $user->useOrganization(0, null);
+            $user->useOrganization(null, null);
         }
     }
 
@@ -251,20 +251,50 @@ final class ActiveOrganization
             return false;
         }
 
-        if (! $token instanceof PersonalAccessToken || $token->organization_id === null) {
+        if (! $token instanceof PersonalAccessToken) {
             return true;
         }
 
         $user = $token->tokenable;
 
-        return $user instanceof User && $this->memberships->isMember($user, (int) $token->organization_id);
+        if (! $user instanceof User) {
+            return false;
+        }
+
+        // A token from before organizations were bound works at home.
+        $organizationId = $token->organization_id === null ? $user->homeOrganizationId() : (int) $token->organization_id;
+
+        return $organizationId === null || $this->memberships->isMember($user, $organizationId);
     }
 
+    /**
+     * Back to the home organization. When it is disabled (or deleted), the
+     * first other organization the user may work in, else none at all: the
+     * user then reaches no tenant data and holds no role.
+     */
     private function restoreHome(User $user): void
     {
-        if ($user->isInGuestOrganization()) {
-            $user->useOrganization($user->homeOrganizationId(), $user->homeRole());
+        $home = $user->homeOrganizationId();
+
+        if ($home === null) {
+            if ($user->isInGuestOrganization()) {
+                $user->useOrganization(null, $user->homeRole());
+            }
+
+            return;
         }
+
+        if ($this->activate($user, $home)) {
+            return;
+        }
+
+        foreach ($this->memberships->organizationsFor($user) as $organization) {
+            if ($this->activate($user, (int) $organization->id)) {
+                return;
+            }
+        }
+
+        $user->useOrganization(null, null);
     }
 
     private function session(): ?Session

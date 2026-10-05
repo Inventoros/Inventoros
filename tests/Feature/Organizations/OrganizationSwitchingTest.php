@@ -270,6 +270,30 @@ final class OrganizationSwitchingTest extends TestCase
         $this->assertSame(['ALPHA-1'], $this->listedSkus());
     }
 
+    public function test_a_disabled_home_organization_holds_no_data_for_its_users(): void
+    {
+        $this->alpha->update(['is_active' => false]);
+
+        // Someone who belongs nowhere else works in no organization at all.
+        $this->signIn($this->homeUser($this->alpha, 'admin', 'Solo'));
+        $this->get(route('products.index'))->assertForbidden();
+        $this->nextRequest();
+        $this->assertContains($this->get(route('products.show', $this->alphaProduct))->status(), [403, 404]);
+        $this->nextRequest();
+        $this->post('/logout');
+        $this->nextRequest();
+
+        // A member of another organization lands there instead.
+        $this->addMember($this->beta, $this->user, 'admin');
+        $this->signIn();
+        $this->assertSame(['BETA-1'], $this->listedSkus());
+        $this->get(route('products.show', $this->alphaProduct))->assertNotFound();
+        $this->nextRequest();
+        $this->get(route('dashboard'))->assertInertia(fn ($page) => $page
+            ->where('auth.organization.id', $this->beta->id)
+            ->has('auth.organizations', 1));
+    }
+
     public function test_signing_in_always_starts_in_the_home_organization(): void
     {
         $this->addMember($this->beta, $this->user, 'admin');

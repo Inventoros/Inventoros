@@ -75,6 +75,14 @@ class AuthController extends Controller
             ]);
         }
 
+        // A disabled home organization issues no tokens.
+        if (! $request->filled('organization_id') && $user->homeOrganizationId() !== null
+            && ! app(ActiveOrganization::class)->activate($user, $user->homeOrganizationId())) {
+            throw ValidationException::withMessages([
+                'organization_id' => ['Your organization is disabled. Sign in to another organization you belong to.'],
+            ]);
+        }
+
         event(new Login('sanctum', $user, false));
 
         $deviceName = $request->device_name ?? 'api-token';
