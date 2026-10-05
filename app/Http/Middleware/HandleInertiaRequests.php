@@ -6,6 +6,7 @@ namespace App\Http\Middleware;
 
 use App\Models\Auth\Organization;
 use App\Services\ApprovalService;
+use App\Services\Organizations\OrganizationMembershipService;
 use App\Services\PluginService;
 use App\Services\PluginUIService;
 use Illuminate\Http\Request;
@@ -55,6 +56,18 @@ class HandleInertiaRequests extends Middleware
             'auth' => [
                 'user' => $user,
                 'permissions' => $user ? $user->getAllPermissions() : [],
+                // The organization this page was rendered for (sent back on
+                // writes, see EnsureActiveOrganizationMatches) and the ones the
+                // user can switch to; the switcher shows only with two or more.
+                'organization' => fn () => $user?->organization_id
+                    ? ['id' => (int) $user->organization_id, 'name' => $user->organization?->name]
+                    : null,
+                'organizations' => fn () => $user
+                    ? app(OrganizationMembershipService::class)->organizationsFor($user)
+                        ->map(fn (Organization $o) => ['id' => (int) $o->id, 'name' => $o->name])
+                        ->values()
+                        ->all()
+                    : [],
             ],
             'pluginMenuItems' => $pluginMenuItems,
             // Pre-built runtime UI bundles of active plugins; app.js import()s

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Services;
 
 use App\Models\Setting;
+use App\Support\Tenancy\OrganizationContext;
 use Illuminate\Contracts\Encryption\DecryptException;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Crypt;
@@ -39,7 +40,8 @@ final class SettingsService
         // Without this a background job — e.g. a product import that pushes
         // stock across the low-stock threshold and fires a notification — throws
         // "User must be authenticated" and fails.
-        $organizationId ??= auth()->user()?->organization_id;
+        // The organization the work runs in (see OrganizationContext).
+        $organizationId ??= app(OrganizationContext::class)->id();
         if (! $organizationId) {
             throw new RuntimeException('User must be authenticated to access settings');
         }
@@ -94,7 +96,7 @@ final class SettingsService
      */
     public static function set(string $key, $value, bool $encrypted = false): void
     {
-        $organizationId = auth()->user()?->organization_id;
+        $organizationId = app(OrganizationContext::class)->id();
         if (! $organizationId) {
             throw new RuntimeException('User must be authenticated to access settings');
         }

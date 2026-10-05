@@ -90,6 +90,10 @@ class NotificationController extends Controller
             abort(403, 'Unauthorized access to notification');
         }
 
+        // ...and to the organization they are working in: a user who belongs
+        // to several sees each organization's notifications only there.
+        abort_if((int) $notification->organization_id !== (int) $user->organization_id, 404);
+
         $notification->markAsRead();
 
         // Redirect to action URL if provided
@@ -133,6 +137,10 @@ class NotificationController extends Controller
         if ($notification->user_id !== $user->id) {
             abort(403, 'Unauthorized access to notification');
         }
+
+        // ...and to the organization they are working in: a user who belongs
+        // to several sees each organization's notifications only there.
+        abort_if((int) $notification->organization_id !== (int) $user->organization_id, 404);
 
         $notification->delete();
 

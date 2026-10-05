@@ -3,6 +3,7 @@
 use App\Http\Middleware\CheckApiPermission;
 use App\Http\Middleware\CheckInstallation;
 use App\Http\Middleware\CheckPermission;
+use App\Http\Middleware\EnsureActiveOrganizationMatches;
 use App\Http\Middleware\EnsureTenantOwnership;
 use App\Http\Middleware\EnsureTwoFactorVerified;
 use App\Http\Middleware\EnsureUserIsAdmin;
@@ -74,6 +75,7 @@ $app = Application::configure(basePath: dirname(__DIR__))
             HandleInertiaRequests::class,
             SecurityHeaders::class,
             EnsureTwoFactorVerified::class,
+            EnsureActiveOrganizationMatches::class,
             LogAccessDenied::class,
         ]);
 

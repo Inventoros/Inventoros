@@ -2639,6 +2639,11 @@
     "languageSwitcher": {
       "ariaLabel": "اللغة: {name}"
     },
+    "organizationSwitcher": {
+      "ariaLabel": "المؤسسة: {name}",
+      "listLabel": "المؤسسات",
+      "heading": "تبديل المؤسسة"
+    },
     "dataTable": {
       "noData": "لا توجد بيانات."
     },

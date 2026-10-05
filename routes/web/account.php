@@ -5,14 +5,21 @@ declare(strict_types=1);
 use App\Http\Controllers\Auth\TwoFactorController;
 use App\Http\Controllers\Import\ImportExportController;
 use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\OrganizationSwitchController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\SearchController;
 use Illuminate\Support\Facades\Route;
 
 /*
- * Per-user routes: search, two-factor, profile, notifications, import/export.
- * Loaded inside the `auth` group in routes/web.php.
+ * Per-user routes: organization switcher, search, two-factor, profile,
+ * notifications, import/export. Loaded inside the `auth` group in
+ * routes/web.php.
  */
+
+// Organization switcher (users who belong to more than one organization)
+Route::post('/organizations/switch', OrganizationSwitchController::class)
+    ->middleware('throttle:30,1')
+    ->name('organizations.switch');
 
 // Global Search
 Route::get('/search', [SearchController::class, 'search'])->name('search');

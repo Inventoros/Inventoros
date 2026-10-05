@@ -2639,6 +2639,11 @@
     "languageSwitcher": {
       "ariaLabel": "言語: {name}"
     },
+    "organizationSwitcher": {
+      "ariaLabel": "組織: {name}",
+      "listLabel": "組織",
+      "heading": "組織を切り替え"
+    },
     "dataTable": {
       "noData": "データがありません。"
     },

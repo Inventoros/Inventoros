@@ -93,6 +93,30 @@ final class CorePhpApiContractTest extends TestCase
         'App\Services\ReorderService::createDraftPurchaseOrder' => ['returns' => 'App\Models\Purchasing\PurchaseOrder', 'params' => [
             'int $organizationId', 'int $supplierId', 'array $products', '?int $userId', 'string $notes', 'string $activityAction', 'string $activityDescription',
         ]],
+
+        'App\Services\Organizations\OrganizationMembershipService::isMember' => ['returns' => 'bool', 'params' => ['App\Models\User $user', 'int $organizationId']],
+        'App\Services\Organizations\OrganizationMembershipService::roleIn' => ['returns' => '?string', 'params' => ['App\Models\User $user', 'int $organizationId']],
+        'App\Services\Organizations\OrganizationMembershipService::organizationsFor' => ['returns' => 'Illuminate\Database\Eloquent\Collection', 'params' => ['App\Models\User $user']],
+        'App\Services\Organizations\OrganizationMembershipService::members' => ['returns' => 'Illuminate\Database\Eloquent\Builder', 'params' => ['App\Models\Auth\Organization|int $organization']],
+        'App\Services\Organizations\OrganizationMembershipService::add' => ['returns' => 'App\Models\Auth\OrganizationMembership', 'params' => [
+            'App\Models\Auth\Organization $organization', 'App\Models\User $user', "string \$role = 'member'", '?App\Models\User $actor = NULL',
+        ]],
+        'App\Services\Organizations\OrganizationMembershipService::changeRole' => ['returns' => 'App\Models\Auth\OrganizationMembership', 'params' => [
+            'App\Models\Auth\Organization $organization', 'App\Models\User $user', 'string $role', '?App\Models\User $actor = NULL',
+        ]],
+        'App\Services\Organizations\OrganizationMembershipService::remove' => ['returns' => 'void', 'params' => [
+            'App\Models\Auth\Organization $organization', 'App\Models\User $user', '?App\Models\User $actor = NULL',
+        ]],
+        'App\Services\Organizations\OrganizationMembershipService::createOrganization' => ['returns' => 'App\Models\Auth\Organization', 'params' => [
+            'array $attributes', 'App\Models\User $admin', '?App\Models\User $actor = NULL',
+        ]],
+        'App\Services\Organizations\ActiveOrganization::userIn' => ['returns' => '?App\Models\User', 'params' => ['App\Models\User|int $user', 'int $organizationId']],
+        'App\Services\Organizations\ActiveOrganization::runAs' => ['returns' => 'mixed', 'params' => [
+            'App\Models\User $user', 'int $organizationId', 'App\Enums\Permission|array|string $permissions', 'callable $callback',
+        ]],
+        'App\Services\Organizations\ActiveOrganization::authorize' => ['returns' => 'App\Models\User', 'params' => [
+            'App\Models\User $user', 'int $organizationId', "App\\Enums\\Permission|array|string \$permissions = array (\n)",
+        ]],
     ];
 
     private static function type(?ReflectionType $type, ReflectionMethod $method): string

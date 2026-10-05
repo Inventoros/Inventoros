@@ -2639,6 +2639,11 @@
     "languageSwitcher": {
       "ariaLabel": "Sprache: {name}"
     },
+    "organizationSwitcher": {
+      "ariaLabel": "Organisation: {name}",
+      "listLabel": "Organisationen",
+      "heading": "Organisation wechseln"
+    },
     "dataTable": {
       "noData": "Keine Daten."
     },

@@ -21,6 +21,7 @@ use App\Models\Order\Order;
 use App\Models\Purchasing\PurchaseOrder;
 use App\Models\Scopes\OrganizationScope;
 use App\Models\User;
+use App\Services\Organizations\ActiveOrganization;
 use App\Support\ApprovalSettings;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
@@ -746,7 +747,11 @@ final class ApprovalService
     private function notifyRequester(string $type, Model $subject, User $approver, string $status, ?string $notes): void
     {
         $requesterId = $this->requesterId($type, $subject);
-        $requester = $requesterId ? User::find($requesterId) : null;
+        // The requester working in the request's organization (its settings,
+        // mail and notification list), or nobody once they left it.
+        $requester = $requesterId
+            ? app(ActiveOrganization::class)->userIn((int) $requesterId, (int) $subject->getAttribute('organization_id'))
+            : null;
 
         if (! $requester) {
             return;

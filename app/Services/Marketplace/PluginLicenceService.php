@@ -9,6 +9,7 @@ use App\Models\Auth\Organization;
 use App\Models\System\MarketplaceEntitlement;
 use App\Models\System\SystemSetting;
 use App\Support\ReleaseSignatureVerifier;
+use App\Support\Tenancy\OrganizationContext;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
@@ -193,9 +194,10 @@ final class PluginLicenceService
             return Organization::find($organization);
         }
 
-        $user = auth()->user();
+        // The organization the work runs in (see OrganizationContext).
+        $organizationId = app(OrganizationContext::class)->id();
 
-        return $user?->organization_id ? Organization::find($user->organization_id) : null;
+        return $organizationId ? Organization::find($organizationId) : null;
     }
 
     private function document(int $organizationId): ?MarketplaceEntitlement

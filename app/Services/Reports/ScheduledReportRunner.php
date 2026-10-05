@@ -11,6 +11,7 @@ use App\Models\ReportSchedule;
 use App\Models\SavedReport;
 use App\Models\Scopes\OrganizationScope;
 use App\Models\User;
+use App\Services\Organizations\ActiveOrganization;
 use App\Services\ReportDataService;
 use Carbon\CarbonInterface;
 use Illuminate\Auth\Access\AuthorizationException;
@@ -178,7 +179,11 @@ class ScheduledReportRunner
     private function resolveOwner(ReportSchedule $schedule): array
     {
         $report = $schedule->savedReport()->withoutGlobalScope(OrganizationScope::class)->first();
-        $owner = $report !== null ? User::query()->find($report->created_by) : null;
+        // The owner working in the schedule's organization (not necessarily
+        // their home one), or null once they are no longer a member of it.
+        $owner = $report !== null
+            ? app(ActiveOrganization::class)->userIn((int) $report->created_by, (int) $schedule->organization_id)
+            : null;
 
         if ($report === null || $owner === null
             || (int) $report->organization_id !== (int) $schedule->organization_id

@@ -7,7 +7,9 @@ namespace App\Jobs;
 use App\Imports\ProductsImport;
 use App\Models\User;
 use App\Services\NotificationService;
+use App\Services\Organizations\ActiveOrganization;
 use Illuminate\Bus\Queueable;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
@@ -59,7 +61,10 @@ final class ProcessProductImportJob implements ShouldQueue
 
     public function handle(): void
     {
-        $importer = User::withoutGlobalScopes()->find($this->userId);
+        // Working in the import's organization (not necessarily their home
+        // one), and only while they are still a member of it.
+        $importer = app(ActiveOrganization::class)->userIn($this->userId, $this->organizationId)
+            ?? throw (new ModelNotFoundException)->setModel(User::class, [$this->userId]);
         $import = new ProductsImport($this->organizationId, $importer);
         Excel::import($import, $this->path, $this->disk, $this->readerType);
 

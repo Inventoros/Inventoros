@@ -475,6 +475,25 @@ final class HookRegistry
                 'parameters' => ['$delivery', '$webhook', '$result'],
                 'example' => "add_action('webhook_delivery_attempted', function (\$delivery, \$webhook, \$result) { /* ... */ });",
             ],
+
+            // ========================================
+            // ORGANIZATION HOOKS
+            // ========================================
+            'organization_switched' => [
+                'description' => 'Fired after a signed-in user switches their session to another organization they belong to. $user already works in $to_organization_id',
+                'parameters' => ['$user', '$from_organization_id', '$to_organization_id'],
+                'example' => "add_action('organization_switched', function (\$user, \$from_organization_id, \$to_organization_id) { /* ... */ });",
+            ],
+            'organization_member_added' => [
+                'description' => 'Fired after commit when a user is given a membership of an organization other than their home one (OrganizationMembershipService::add)',
+                'parameters' => ['$membership', '$actor'],
+                'example' => "add_action('organization_member_added', function (\$membership, \$actor) { /* ... */ });",
+            ],
+            'organization_member_removed' => [
+                'description' => 'Fired after commit when a membership is withdrawn; the user\'s roles, warehouse assignments and API tokens in that organization are already gone',
+                'parameters' => ['$organization_id', '$user', '$actor'],
+                'example' => "add_action('organization_member_removed', function (\$organization_id, \$user, \$actor) { /* ... */ });",
+            ],
         ];
     }
 

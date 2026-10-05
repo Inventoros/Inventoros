@@ -2540,6 +2540,11 @@
     "languageSwitcher": {
       "ariaLabel": "Language: {name}"
     },
+    "organizationSwitcher": {
+      "ariaLabel": "Organization: {name}",
+      "listLabel": "Organizations",
+      "heading": "Switch organization"
+    },
     "dataTable": {
       "noData": "No data."
     },

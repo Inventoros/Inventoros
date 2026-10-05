@@ -58,7 +58,11 @@ final class UserManagementService
         // Check the TARGET before anything is written: the role check below
         // only covers what is being assigned, so without this a delegated
         // user administrator could reset an admin's password or email.
-        RoleAssignmentGuard::authorizeTarget($user, $actor);
+        // Changing the email or password of an account that also works in
+        // other organizations needs an administrator of each of them.
+        $changesAccount = ! empty($data['password'])
+            || mb_strtolower((string) $data['email']) !== mb_strtolower((string) $user->email);
+        RoleAssignmentGuard::authorizeTarget($user, $actor, $changesAccount);
 
         $this->assertCanAssignRoles($data['role_ids'] ?? [], $actor, $data['role']);
 

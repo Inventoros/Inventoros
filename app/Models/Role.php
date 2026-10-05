@@ -62,7 +62,8 @@ class Role extends Model
      */
     public function users(): BelongsToMany
     {
-        return $this->belongsToMany(User::class, 'role_user');
+        // Each assignment names its organization (see RoleAssignment).
+        return $this->belongsToMany(User::class, 'role_user')->using(RoleAssignment::class)->withPivot('organization_id');
     }
 
     /**

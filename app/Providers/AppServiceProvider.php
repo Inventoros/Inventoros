@@ -84,6 +84,9 @@ class AppServiceProvider extends ServiceProvider
         $this->app->singleton(\App\Services\Hooks\DomainHooks::class);
         // Scoped: its per-request document cache must not outlive a queued job.
         $this->app->scoped(\App\Services\Marketplace\PluginLicenceService::class);
+        // Scoped: an organization override (ActiveOrganization::runAs) must
+        // never outlive the request or job that set it.
+        $this->app->scoped(\App\Support\Tenancy\OrganizationContext::class);
     }
 
     /**
@@ -137,6 +140,16 @@ class AppServiceProvider extends ServiceProvider
 
         // Register webhook event subscriber
         WebhookEventSubscriber::subscribe();
+
+        // The active organization: the one picked with the organization
+        // switcher (session) or the one an API token is bound to; a token
+        // of a withdrawn membership no longer authenticates.
+        Event::listen(\Illuminate\Auth\Events\Login::class, [\App\Services\Organizations\ActiveOrganization::class, 'handleLogin']);
+        Event::listen(\Illuminate\Auth\Events\Authenticated::class, [\App\Services\Organizations\ActiveOrganization::class, 'handleAuthenticated']);
+        \Laravel\Sanctum\Sanctum::usePersonalAccessTokenModel(\App\Models\PersonalAccessToken::class);
+        \Laravel\Sanctum\Sanctum::authenticateAccessTokensUsing(
+            fn ($token, bool $isValid): bool => app(\App\Services\Organizations\ActiveOrganization::class)->tokenIsUsable($token, $isValid)
+        );
 
         // Security audit trail: sign-ins, 2FA, API tokens, account and role changes
         Event::subscribe(SecurityEventSubscriber::class);
