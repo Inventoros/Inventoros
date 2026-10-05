@@ -14,13 +14,14 @@ Everything in this guide is backed by code and tests: the hook tables are checke
 6. [Lifecycle files](#lifecycle-files)
 7. [Action reference](#action-reference)
 8. [Filter reference](#filter-reference)
-9. [Plugin UI](#plugin-ui)
-10. [Building and packaging a plugin](#building-and-packaging-a-plugin)
-11. [Publishing to the marketplace](#publishing-to-the-marketplace)
-12. [Examples](#examples)
-13. [Best practices](#best-practices)
-14. [Security notes](#security-notes)
-15. [Debugging](#debugging)
+9. [Permissions](#permissions)
+10. [Plugin UI](#plugin-ui)
+11. [Building and packaging a plugin](#building-and-packaging-a-plugin)
+12. [Publishing to the marketplace](#publishing-to-the-marketplace)
+13. [Examples](#examples)
+14. [Best practices](#best-practices)
+15. [Security notes](#security-notes)
+16. [Debugging](#debugging)
 
 ## Plugin structure
 
@@ -110,7 +111,7 @@ Versions may be written `1.2`, `1.2.3`, `v1.2.3` or `1.2.3-beta`. A value that i
 
   Over SSH the same lifecycle runs with `php artisan plugin:activate {slug}` and `php artisan plugin:deactivate {slug}`.
 - **Deactivate**: fires `plugin_deactivated` and `plugin_deactivated_{slug}`, runs `hooks/deactivate.php`, marks the plugin inactive and removes `public/plugin-assets/{slug}/`. The plugin is deactivated even if its own code throws; the page then shows a warning.
-- **Delete**: fires `plugin_uninstalling` and `plugin_uninstalling_{slug}`, deactivates the plugin, runs `hooks/uninstall.php` (whether or not the plugin was active), then removes its published files, its database record and its folder. The files are removed even if the plugin's cleanup throws; the page then shows a warning.
+- **Delete**: fires `plugin_uninstalling` and `plugin_uninstalling_{slug}`, deactivates the plugin, runs `hooks/uninstall.php` (whether or not the plugin was active), then removes the plugin's permissions (`{slug}.*`, see [Permissions](#permissions)) from every role and permission set, its published files, its database record and its folder. The files are removed even if the plugin's cleanup throws; the page then shows a warning.
 
 ## Installing from the marketplace
 
@@ -314,9 +315,31 @@ A filter callback receives the value first, then the listed context, and must re
 
 A `user_permissions` filter is deliberately not offered: letting plugins rewrite a user's permissions would be a privilege-escalation path.
 
+## Permissions
+
+A plugin can check any core permission from `app/Enums/Permission.php`, and can register permissions of its own from its main file:
+
+```php
+register_permission('my-plugin.manage', 'Manage My Plugin', 'Can change My Plugin settings', 'My Plugin');
+```
+
+| Argument | Meaning |
+|----------|---------|
+| `$name` | `{plugin-slug}.{ability}`: the slug (lowercase letters, digits, hyphens), a dot, then the ability (lowercase letters, digits, underscores). Core permission names never contain a dot, so a plugin cannot redefine one. Anything else throws `InvalidArgumentException`. |
+| `$label`, `$description` | Shown in the role editor. |
+| `$category` | The role editor group. Defaults to `Plugins`. |
+
+A registered permission works like a core one: it is listed when roles and permission sets are edited and when API tokens are created, admins hold it, and `$user->hasPermission()`, a page, menu item, placement or widget `permission`, and token abilities all accept it. Registering the same name again replaces its label.
+
+Registrations last while the plugin is active. A deactivated plugin's permissions are not listed and cannot be put on new API tokens; grants already saved on roles stay and apply again when the plugin is reactivated. Deleting the plugin removes every `{slug}.*` name from roles and permission sets.
+
+To translate the label in the role editor, add `permissions.{ability}.label` and `permissions.{ability}.description` to the plugin's runtime messages (see [Translations](#translations)); without them the label you registered is shown.
+
+On Inventoros versions without `register_permission()`, check `function_exists('register_permission')` and fall back to the closest core permission.
+
 ## Plugin UI
 
-Every server-side UI registration takes an optional `permission`: a permission name from `app/Enums/Permission.php`, or a list of names meaning "any of". It is enforced on the server. A user who lacks it never receives the entry, and an entry with a permission is hidden from guests. Where an entry takes `data` or `props`, you can pass a closure instead of an array. The closure only runs for users who pass the permission check, so a figure they may not see is never computed.
+Every server-side UI registration takes an optional `permission`: a permission name from `app/Enums/Permission.php` or one registered with `register_permission()`, or a list of names meaning "any of". It is enforced on the server. A user who lacks it never receives the entry, and an entry with a permission is hidden from guests. Where an entry takes `data` or `props`, you can pass a closure instead of an array. The closure only runs for users who pass the permission check, so a figure they may not see is never computed.
 
 ### Menu items
 
@@ -467,12 +490,32 @@ export default function setup(plugin) {
 | `plugin.Vue` | The app's Vue (same as `window.Inventoros.Vue`). |
 | `plugin.Inertia` | The app's `Head`, `Link`, `router`, `useForm` and `usePage`. Use these, not your own copy of `@inertiajs/vue3`, which would not see the current page. |
 | `plugin.layouts.AppLayout` | The application layout (sidebar, header, flash messages), for plugin pages. |
-| `plugin.ui` | Core building blocks: `PageHeader`, `Card`, `CardHeader`, `Button`, `Badge`. |
+| `plugin.ui` | Core building blocks: `PageHeader`, `Card`, `CardHeader`, `Button`, `Badge`; since `apiVersion` 2 also `Input`, `DataTable`, `StatTile`, `Modal`, `Checkbox`, `TextInput`, `InputLabel`, `InputError`, `PrimaryButton`, `SecondaryButton`, `DangerButton`, and the camera `BarcodeScanner` and `BarcodeScannerModal` (loaded on first use). |
+| `plugin.i18n` | Since `apiVersion` 2. `addMessages(locale, messages)`, `t(key, params)`, `te(key)` and the read-only `locale`, on the app's own translations and scoped to the plugin. See [Translations](#translations). |
 | `plugin.registerComponent(name, component)` | Provide the component for a server placement (`add_page_component()`) or a dashboard widget. |
 | `plugin.registerPage(page, component)` | Provide the page component rendered by `register_page(..., 'Plugin::{slug}/{page}')`. |
 | `plugin.registerSlotComponent(slot, component, { position, props, label })` | Render a component in a slot without a server placement. `slot` is `"<page>:<slot>"`, for example `"products.show:sidebar"`. For a `tabs` slot, `label` is the tab label. |
 
-The same members are available globally on `window.Inventoros`, where the register functions take the slug explicitly: `registerComponent(slug, name, component)`, `registerSlotComponent(slot, component, options)` and `registerPage('Plugin::slug/Page', component)`. `window.Inventoros.plugin(slug)` returns the scoped SDK.
+The same members are available globally on `window.Inventoros`, where the register functions take the slug explicitly: `registerComponent(slug, name, component)`, `registerSlotComponent(slot, component, options)` and `registerPage('Plugin::slug/Page', component)`. `window.Inventoros.plugin(slug)` returns the scoped SDK. `window.Inventoros.i18n` is read-only (`t`, `te` and `locale` on the app's own keys). `window.Inventoros.apiVersion` is `2` on installs that offer the members marked "since `apiVersion` 2"; check it, or that a member exists (`plugin.ui.Input ?? fallback`), when a plugin supports older installs.
+
+#### Translations
+
+A plugin's strings live under `plugins.{slug}` in the app's translations. `addMessages()` can only write there, and `t()` and `te()` read keys relative to it, so a plugin cannot change the app's strings or another plugin's. Ship a JSON file per locale and add each one; untranslated keys fall back to English:
+
+```js
+// ui/src/main.js
+import en from './locales/en.json';
+import fr from './locales/fr.json';
+
+export default function setup(plugin) {
+    plugin.i18n.addMessages('en', en);   // { "settings": { "title": "My Plugin" } }
+    plugin.i18n.addMessages('fr', fr);
+}
+
+// In a component: plugin.i18n.t('settings.title') reads plugins.my-plugin.settings.title
+```
+
+Messages may contain strings and nested objects only.
 
 A plugin page, using the shared layout and helpers:
 
