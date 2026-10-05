@@ -16,6 +16,7 @@ use App\Jobs\ProcessProductImportJob;
 use App\Models\DataExport;
 use App\Models\Inventory\ProductCategory;
 use App\Models\Inventory\ProductLocation;
+use App\Models\User;
 use App\Support\ProductCurrencyColumns;
 use App\Support\SpreadsheetReaderType;
 use Illuminate\Database\QueryException;
@@ -197,6 +198,7 @@ class ImportExportController extends Controller
             Excel::import($import, $file, null, $readerType);
 
             $stats = $import->getStats();
+            $this->announceImport('products', $request->user(), 'completed', $stats);
 
             return $this->redirectWithImportResult(
                 'products',
@@ -207,6 +209,7 @@ class ImportExportController extends Controller
             // Raw SQL is not for the banner; the error handler logs it.
             throw $e;
         } catch (\Exception $e) {
+            $this->announceImport('products', $request->user(), 'failed');
             Log::error('Product import failed', [
                 'user_id' => $request->user()->id,
                 'organization_id' => $request->user()->organization_id,
@@ -257,6 +260,7 @@ class ImportExportController extends Controller
             $import = new UsersImport($user, $request->boolean('send_invites', true));
             Excel::import($import, $request->file('file'), null, SpreadsheetReaderType::forPath((string) $request->file('file')->getRealPath()));
             $stats = $import->getStats();
+            $this->announceImport('users', $user, 'completed', $stats);
 
             return $this->redirectWithImportResult(
                 'users',
@@ -267,6 +271,7 @@ class ImportExportController extends Controller
             // Raw SQL is not for the banner; the error handler logs it.
             throw $e;
         } catch (\Exception $e) {
+            $this->announceImport('users', $user, 'failed');
             Log::error('User import failed', [
                 'user_id' => $user->id,
                 'organization_id' => $user->organization_id,
@@ -347,6 +352,7 @@ class ImportExportController extends Controller
 
             $import = (new OrdersImport($user, $historical, $notifyIntegrations))->importFile($file, null, $readerType);
             $stats = $import->getStats();
+            $this->announceImport('orders', $user, 'completed', $stats);
 
             return $this->redirectWithImportResult(
                 'orders',
@@ -357,6 +363,7 @@ class ImportExportController extends Controller
             // Raw SQL is not for the banner; the error handler logs it.
             throw $e;
         } catch (\Exception $e) {
+            $this->announceImport('orders', $user, 'failed');
             Log::error('Order import failed', [
                 'user_id' => $user->id,
                 'organization_id' => $user->organization_id,
@@ -367,6 +374,23 @@ class ImportExportController extends Controller
             return redirect()->route('import-export.index')
                 ->with('error', 'Import failed: '.$e->getMessage());
         }
+    }
+
+    /**
+     * Tell plugins that an import run inside the request finished (queued
+     * imports announce themselves from their job).
+     *
+     * @param  array<string, mixed>  $stats
+     */
+    private function announceImport(string $type, ?User $user, string $status, array $stats = []): void
+    {
+        if ($user === null) {
+            return;
+        }
+
+        do_action('import_finished', $type, (int) $user->organization_id, $user, [
+            'status' => $status, 'queued' => false, 'stats' => $stats,
+        ]);
     }
 
     /**

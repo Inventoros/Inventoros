@@ -302,6 +302,9 @@ add_action('stock_changed', function ($product, $variant, array $change) {
 | `transfer_completed` | `$transfer`, `$user` | A stock transfer is completed. |
 | `stock_audit_completed` | `$stock_audit`, `$user` | A stock audit is completed. |
 | `work_order_completed` | `$work_order`, `$user` | A work order is completed. |
+| `approval_requested` | `$approval`, `$subject`, `$user` | A purchase order, stock adjustment or stock transfer is waiting for approval, on any surface, after commit. `$approval` is the `ApprovalService::describe()` array (type, id, reference, title, summary, amount, url, requester). Sales orders waiting for approval are announced by `order_created` with `approval_status` pending. |
+| `approval_decided` | `$approval`, `$subject`, `$decision`, `$user`, `$notes` | One of those requests is approved or rejected (`$decision`), on any surface, after commit. Sales orders: `order_approved`, `order_rejected`. |
+| `import_finished` | `$type`, `$organization_id`, `$user`, `$result` | A product, order or user import from the Import/Export page finished, inline or queued. `$result` is `['status' => 'completed' or 'failed', 'queued' => bool, 'stats' => [...]]`. |
 | `supplier_created` | `$supplier`, `$user` | A supplier is created from the web UI. |
 | `supplier_updated` | `$supplier`, `$user` | A supplier is updated from the web UI. |
 | `supplier_before_delete` | `$supplier`, `$user` | Before a supplier is deleted from the web UI. |
