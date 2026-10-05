@@ -569,6 +569,15 @@ final class HookRegistry
             ],
 
             // ========================================
+            // BATCH FILTERS
+            // ========================================
+            'batch_allocatable_quantity' => [
+                'description' => 'How many units of a batch first-expiry-first-out allocation may draw on when an order line for a batch-tracked product is fulfilled, on every surface. Return fewer than $quantity to hold units back (a quarantined or recalled lot); held units are skipped, do not count toward covering the line, and stay in the batch. Answers are clamped to 0..$quantity; anything that is not a number is ignored. Keep the previous value when you have no objection',
+                'parameters' => ['$quantity', '$batch', '$product', '$order_item'],
+                'example' => "add_filter('batch_allocatable_quantity', function (\$quantity, \$batch, \$product, \$orderItem) { return is_on_hold(\$batch) ? 0 : \$quantity; });",
+            ],
+
+            // ========================================
             // SUPPLIER FILTERS
             // ========================================
             'supplier_list_query' => [

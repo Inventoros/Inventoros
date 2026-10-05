@@ -149,7 +149,15 @@ final class TrackedStockAllocationService
             ->lockForUpdate()
             ->get();
 
-        $totalAvailable = (int) $batches->sum('quantity');
+        // A plugin may hold units of a batch back from allocation (a
+        // quarantined or recalled lot) through batch_allocatable_quantity;
+        // held units neither count toward coverage nor get consumed.
+        $allocatable = [];
+        foreach ($batches as $batch) {
+            $allocatable[$batch->id] = $this->allocatableQuantity($batch, $product, $orderItem);
+        }
+
+        $totalAvailable = array_sum($allocatable);
 
         if ($totalAvailable < $quantity) {
             if ($this->strictMode()) {
@@ -168,7 +176,12 @@ final class TrackedStockAllocationService
                 break;
             }
 
-            $take = min($remaining, (int) $batch->quantity);
+            $take = min($remaining, $allocatable[$batch->id]);
+
+            if ($take <= 0) {
+                continue;
+            }
+
             $batch->decrement('quantity', $take);
 
             OrderItemBatchAllocation::create([
@@ -182,6 +195,23 @@ final class TrackedStockAllocationService
         }
 
         return $quantity;
+    }
+
+    /**
+     * How many of a batch's units FEFO may draw on: the batch quantity unless
+     * a batch_allocatable_quantity filter holds some back. The answer is
+     * clamped to 0..quantity; anything that is not a number is ignored.
+     */
+    private function allocatableQuantity(ProductBatch $batch, Product $product, OrderItem $orderItem): int
+    {
+        $quantity = (int) $batch->quantity;
+        $answer = apply_filters('batch_allocatable_quantity', $quantity, $batch, $product, $orderItem);
+
+        if (! is_int($answer) && ! (is_string($answer) && is_numeric($answer)) && ! is_float($answer)) {
+            return $quantity;
+        }
+
+        return max(0, min($quantity, (int) $answer));
     }
 
     private function releaseBatches(OrderItem $orderItem, ?int $limit = null): int
