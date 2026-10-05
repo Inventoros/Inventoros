@@ -186,6 +186,10 @@ Tools live in `app/Mcp/Tools/` in the Inventoros codebase. To add one:
 5. Register the class in `app/Mcp/Servers/InventorosServer.php`'s `$tools` array.
 6. Add a test in `tests/Feature/Mcp/InventorosMcpServerTest.php`.
 
+### Plugin tools
+
+Active plugins can add tools with `register_mcp_tool()`. Their names start with the plugin slug in snake case (for example `stock_insights_summary` from the `stock-insights` plugin), so they never replace a core tool. A plugin tool appears in `tools/list` and can be called only when the user holds the permission the plugin attached to it and the token's abilities allow it.
+
 ### Tool names in v2.0.0
 
 Before v2.0.0 the tools were exposed under kebab-case class names such as `list-orders-tool`. They now carry the snake_case names listed above. Update any client configuration or allow-list that names tools; the full mapping is in `UPGRADE.md`.

@@ -16,13 +16,15 @@ Everything in this guide is backed by code and tests: the hook tables are checke
 8. [Filter reference](#filter-reference)
 9. [Permissions](#permissions)
 10. [Plugin UI](#plugin-ui)
-11. [Building and packaging a plugin](#building-and-packaging-a-plugin)
-12. [Publishing to the marketplace](#publishing-to-the-marketplace)
-13. [Licences for paid plugins](#licences-for-paid-plugins)
-14. [Examples](#examples)
-15. [Best practices](#best-practices)
-16. [Security notes](#security-notes)
-17. [Debugging](#debugging)
+11. [MCP tools](#mcp-tools)
+12. [Outbound webhook events](#outbound-webhook-events)
+13. [Building and packaging a plugin](#building-and-packaging-a-plugin)
+14. [Publishing to the marketplace](#publishing-to-the-marketplace)
+15. [Licences for paid plugins](#licences-for-paid-plugins)
+16. [Examples](#examples)
+17. [Best practices](#best-practices)
+18. [Security notes](#security-notes)
+19. [Debugging](#debugging)
 
 ## Plugin structure
 
@@ -595,6 +597,51 @@ Available tokens include `--surface-canvas`, `--surface-base`, `--surface-raised
 ### Build-time components (source installs only)
 
 Installs that build the frontend themselves also pick up `plugins/{slug}/resources/js/Components/{Name}.vue` and `plugins/{slug}/resources/js/Pages/**/*.vue` at `npm run build` time. That route does not work for uploaded plugins or the cPanel release, so prefer the runtime bundle.
+
+## MCP tools
+
+A plugin can add tools to the Inventoros MCP server (`/mcp`, see the MCP server docs) from its main file:
+
+```php
+register_mcp_tool(string $slug, Laravel\Mcp\Server\Tool|string $tool, string|array $permission): void
+```
+
+```php
+register_mcp_tool('stock-insights', \Inventoros\Plugins\StockInsights\Mcp\SummaryTool::class, 'stock-insights.view');
+```
+
+The tool is an ordinary `laravel/mcp` tool class from your plugin (`schema()`, `handle(Request $request)`, attributes such as `#[IsReadOnly]`), with an explicit snake_case `$name` that starts with your slug in snake case: plugin `stock-insights` registers `stock_insights_summary`. Registering a name without that prefix, one that a core tool uses, a class that is not a `Tool`, or no permission throws `InvalidArgumentException`.
+
+Core, not your tool, decides who may use it. `$permission` is a permission name (core or one you registered with `register_permission()`) or a list meaning "any of". The tool is listed in `tools/list` and runs on `tools/call` only when the user holds one of them **and** the bearer token's abilities allow it (a token limited to `view_products` cannot reach a tool gated on `stock-insights.view`). Everyone else neither sees nor can call it. Inside `handle()`, `$request->user()` is the acting user; scope every query to `$request->user()->organization_id`, and follow the core tools' conventions: integer quantities, decimal-string money, `Response::error()` for failures, and an explicit confirmation step in the description for anything that writes.
+
+Tools are registered while the plugin is active. On Inventoros versions without this, check `function_exists('register_mcp_tool')`.
+
+## Outbound webhook events
+
+Users subscribe webhooks to events in Settings > Webhooks. A plugin can add its own events and send them through core's delivery, which signs every payload (`X-Webhook-Signature`), retries failures with back-off, refuses private and loopback targets, and logs each delivery:
+
+```php
+register_webhook_event(string $event, string $description, ?string $group = null): void
+dispatch_webhook_event(string $event, array $data, Organization|int $organization): void
+```
+
+```php
+// Plugin.php
+register_webhook_event('cycle-counts.session_completed', 'When a count session is completed', 'Cycle counts');
+
+// When it happens (inside or outside a transaction):
+dispatch_webhook_event('cycle-counts.session_completed', [
+    'session_id' => $session->id,
+    'counted' => $session->counted_lines,
+], $session->organization_id);
+```
+
+- The name is `{plugin-slug}.{event}` (lowercase letters, digits and underscores after the dot). Core events begin with a core resource (`product.`, `order.`, ...), which a plugin cannot use. Anything else throws `InvalidArgumentException`.
+- Registered events appear in the webhook event picker under `$group` (by default your slug as a title, "Cycle Counts") and are accepted in webhook subscriptions over the web and REST API.
+- `dispatch_webhook_event()` sends to the organization's active webhooks subscribed to that event, and only after the surrounding transaction commits; nothing is sent if it rolls back. The payload has the same envelope as core events: `id`, `event`, `timestamp`, `organization_id` and your `data`. Never put secrets or another organization's data in it.
+- Dispatching an event that is not registered throws. A deactivated plugin's events are no longer offered and nothing sends them; existing subscriptions keep the name and resume when it is reactivated.
+
+On Inventoros versions without this, check `function_exists('register_webhook_event')`.
 
 ## Building and packaging a plugin
 

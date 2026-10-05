@@ -107,6 +107,12 @@ A plugin can also add a page of its own with `register_page()`, which the bundle
 
 Every placement, menu item, widget and page accepts a `permission`. It is checked on the server: users without it never receive the entry, or get a 403 for a page. Data passed as a closure is only computed for users who may see it. A plugin can add permissions of its own with `register_permission('my-plugin.manage', 'Manage My Plugin')`; they appear in the role editor like core permissions and are removed from roles when the plugin is deleted.
 
+### MCP tools and webhook events
+
+`register_mcp_tool('my-plugin', MyTool::class, 'my-plugin.view')` adds a tool to the MCP server. Its name must start with the slug in snake case (`my_plugin_...`), and it is listed and callable only for users who hold the permission and whose token allows it.
+
+`register_webhook_event('my-plugin.report_sent', 'When a report is sent')` adds an event to the webhook event picker, and `dispatch_webhook_event('my-plugin.report_sent', $data, $organizationId)` sends it, after the transaction commits, through the same signed and retried delivery as core events.
+
 Activate or deactivate a plugin over SSH with `php artisan plugin:activate my-plugin` and `php artisan plugin:deactivate my-plugin`.
 
 ### Installing from the marketplace

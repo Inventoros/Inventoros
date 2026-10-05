@@ -204,6 +204,69 @@ if (!function_exists('register_permission')) {
     }
 }
 
+if (!function_exists('register_mcp_tool')) {
+    /**
+     * Add a tool to the Inventoros MCP server. The tool is a laravel/mcp Tool
+     * class from the plugin, named in snake_case starting with the plugin slug
+     * ("my-plugin" registers "my_plugin_..."). It is listed and callable only
+     * for users who hold one of $permission and whose token allows it.
+     *
+     * @param string $slug The plugin slug
+     * @param \Laravel\Mcp\Server\Tool|class-string<\Laravel\Mcp\Server\Tool> $tool
+     * @param string|array<int, string> $permission Permission name(s), any of
+     * @return void
+     *
+     * @throws \InvalidArgumentException When the name, class or permission is not acceptable
+     */
+    function register_mcp_tool(string $slug, \Laravel\Mcp\Server\Tool|string $tool, string|array $permission): void
+    {
+        app(\App\Services\Plugins\PluginMcpToolRegistry::class)->register($slug, $tool, $permission);
+    }
+}
+
+if (!function_exists('register_webhook_event')) {
+    /**
+     * Add an outbound webhook event, named "{plugin-slug}.{event}". It is
+     * listed in the webhook event picker (under $group, by default the plugin
+     * name) and can be sent with dispatch_webhook_event().
+     *
+     * @param string $event "{plugin-slug}.{event}", for example "cycle-counts.session_completed"
+     * @param string $description Shown under the event in the picker
+     * @param string|null $group Picker group; defaults to the plugin slug as a title
+     * @return void
+     *
+     * @throws \InvalidArgumentException When the name is not "{slug}.{event}" or uses a core prefix
+     */
+    function register_webhook_event(string $event, string $description, ?string $group = null): void
+    {
+        app(\App\Services\Plugins\PluginWebhookEventRegistry::class)
+            ->register($event, $description, $group, \App\Services\WebhookService::corePrefixes());
+    }
+}
+
+if (!function_exists('dispatch_webhook_event')) {
+    /**
+     * Send a registered plugin webhook event to one organization's subscribed
+     * webhooks, after the current transaction commits. Core signs, delivers,
+     * retries and SSRF-checks it like its own events.
+     *
+     * @param string $event A name registered with register_webhook_event()
+     * @param array<string, mixed> $data The payload's `data`
+     * @param \App\Models\Auth\Organization|int $organization
+     * @return void
+     *
+     * @throws \InvalidArgumentException When the event is not registered
+     */
+    function dispatch_webhook_event(string $event, array $data, \App\Models\Auth\Organization|int $organization): void
+    {
+        \App\Services\WebhookService::dispatchPluginEvent(
+            $event,
+            $data,
+            $organization instanceof \App\Models\Auth\Organization ? (int) $organization->id : $organization,
+        );
+    }
+}
+
 if (!function_exists('get_page_components')) {
     /**
      * Get the components for a page slot that the current user may see:

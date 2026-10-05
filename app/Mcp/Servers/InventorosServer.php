@@ -37,7 +37,9 @@ use App\Mcp\Tools\SendPurchaseOrderTool;
 use App\Mcp\Tools\StartWorkOrderTool;
 use App\Mcp\Tools\SubmitPurchaseOrderForApprovalTool;
 use App\Mcp\Tools\WhoAmITool;
+use App\Services\Plugins\PluginMcpToolRegistry;
 use Laravel\Mcp\Server;
+use Laravel\Mcp\Server\ServerContext;
 
 class InventorosServer extends Server
 {
@@ -121,6 +123,28 @@ class InventorosServer extends Server
         // Catalog writes
         CreateProductTool::class,
     ];
+
+    /**
+     * The tools core ships, without plugin tools.
+     *
+     * @return array<int, class-string>
+     */
+    public static function coreTools(): array
+    {
+        return (new \ReflectionClass(self::class))->getDefaultProperties()['tools'];
+    }
+
+    /**
+     * Plugin tools (register_mcp_tool()) are added per request, after the
+     * core ones; each is listed and callable only for users and tokens that
+     * hold its permission.
+     */
+    public function createContext(): ServerContext
+    {
+        $this->tools = [...self::coreTools(), ...app(PluginMcpToolRegistry::class)->tools()];
+
+        return parent::createContext();
+    }
 
     /** @var array<int, class-string> */
     protected array $resources = [
