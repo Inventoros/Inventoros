@@ -18,14 +18,27 @@
  * or calls the same functions on `window.Inventoros` directly.
  */
 import * as Vue from 'vue';
-import { defineAsyncComponent, markRaw, reactive } from 'vue';
+import { defineAsyncComponent, markRaw, reactive, readonly } from 'vue';
 import { Head, Link, router, useForm, usePage } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import Badge from '@/Components/ui/Badge.vue';
 import Button from '@/Components/ui/Button.vue';
 import Card from '@/Components/ui/Card.vue';
 import CardHeader from '@/Components/ui/CardHeader.vue';
+import DataTable from '@/Components/ui/DataTable.vue';
+import Input from '@/Components/ui/Input.vue';
 import PageHeader from '@/Components/ui/PageHeader.vue';
+import StatTile from '@/Components/ui/StatTile.vue';
+import Checkbox from '@/Components/Checkbox.vue';
+import DangerButton from '@/Components/DangerButton.vue';
+import InputError from '@/Components/InputError.vue';
+import InputLabel from '@/Components/InputLabel.vue';
+import Modal from '@/Components/Modal.vue';
+import PrimaryButton from '@/Components/PrimaryButton.vue';
+import SecondaryButton from '@/Components/SecondaryButton.vue';
+import TextInput from '@/Components/TextInput.vue';
+import i18n from '@/i18n';
+import { createPluginI18n, createReadonlyI18n } from './pluginI18n.js';
 
 const components = reactive({});
 const slotComponents = reactive({});
@@ -54,8 +67,27 @@ const shared = Object.freeze({
         Card: markRaw(Card),
         CardHeader: markRaw(CardHeader),
         PageHeader: markRaw(PageHeader),
+        // Since apiVersion 2: forms, tables, figures and dialogs.
+        Input: markRaw(Input),
+        DataTable: markRaw(DataTable),
+        StatTile: markRaw(StatTile),
+        Modal: markRaw(Modal),
+        Checkbox: markRaw(Checkbox),
+        TextInput: markRaw(TextInput),
+        InputLabel: markRaw(InputLabel),
+        InputError: markRaw(InputError),
+        PrimaryButton: markRaw(PrimaryButton),
+        SecondaryButton: markRaw(SecondaryButton),
+        DangerButton: markRaw(DangerButton),
+        // The camera scanner pulls in a barcode library, so it is only
+        // downloaded when a plugin renders it.
+        BarcodeScanner: markRaw(defineAsyncComponent(() => import('@/Components/BarcodeScanner.vue'))),
+        BarcodeScannerModal: markRaw(defineAsyncComponent(() => import('@/Components/BarcodeScannerModal.vue'))),
     }),
 });
+
+// The app locale, read-only for plugins (the language switcher owns it).
+const appLocale = readonly(i18n.global.locale);
 
 const componentKey = (plugin, name) => `${plugin}/${name}`;
 
@@ -116,6 +148,7 @@ function scopedTo(slug) {
     return Object.freeze({
         slug,
         ...shared,
+        i18n: createPluginI18n(i18n.global, slug, appLocale),
         registerComponent: (name, component) => registerComponent(slug, name, component),
         registerSlotComponent: (slot, component, options = {}) =>
             registerSlotComponent(slot, component, { ...options, plugin: slug }),
@@ -125,8 +158,9 @@ function scopedTo(slug) {
 
 export function installPluginRuntime() {
     window.Inventoros = Object.freeze({
-        apiVersion: 1,
+        apiVersion: 2,
         ...shared,
+        i18n: createReadonlyI18n(i18n.global, appLocale),
         registerComponent,
         registerSlotComponent,
         registerPage,
