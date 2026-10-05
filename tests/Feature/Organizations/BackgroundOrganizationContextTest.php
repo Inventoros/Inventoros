@@ -81,6 +81,45 @@ final class BackgroundOrganizationContextTest extends TestCase
         $this->assertSame(['ALPHA-1'], Product::pluck('sku')->all());
     }
 
+    public function test_work_inside_run_as_is_logged_and_configured_in_that_organization(): void
+    {
+        $this->addMember($this->beta, $this->user, 'admin');
+        \App\Models\Setting::create(['organization_id' => $this->alpha->id, 'key' => 'feature.flag', 'value' => 'alpha', 'encrypted' => false]);
+        \App\Models\Setting::create(['organization_id' => $this->beta->id, 'key' => 'feature.flag', 'value' => 'beta', 'encrypted' => false]);
+        $this->actingAs($this->user);
+
+        [$setting, $licensed] = $this->organizations()->runAs($this->user, $this->beta->id, [], function () {
+            Product::where('sku', 'BETA-1')->first()->update(['name' => 'Renamed in Beta']);
+            \App\Services\SettingsService::set('written.inside', 'yes');
+
+            return [
+                \App\Services\SettingsService::get('feature.flag'),
+                (new \ReflectionMethod(\App\Services\Marketplace\PluginLicenceService::class, 'organization'))
+                    ->invoke(app(\App\Services\Marketplace\PluginLicenceService::class), null)?->id,
+            ];
+        });
+
+        $this->assertSame('beta', $setting);
+        $this->assertSame($this->beta->id, $licensed);
+        $this->assertDatabaseHas('settings', ['organization_id' => $this->beta->id, 'key' => 'written.inside']);
+        $this->assertDatabaseMissing('settings', ['organization_id' => $this->alpha->id, 'key' => 'written.inside']);
+
+        $log = \App\Models\ActivityLog::where('subject_type', Product::class)->where('action', 'updated')->sole();
+        $this->assertSame($this->beta->id, $log->organization_id);
+    }
+
+    public function test_changes_to_a_user_account_are_logged_in_its_home_organization(): void
+    {
+        $this->addMember($this->beta, $this->user, 'admin');
+        $this->actingAs($this->user);
+        $this->organizations()->activate(auth()->user(), $this->beta->id);
+
+        auth()->user()->update(['name' => 'Renamed']);
+
+        $log = \App\Models\ActivityLog::where('subject_type', User::class)->where('subject_id', $this->user->id)->where('action', 'updated')->sole();
+        $this->assertSame($this->alpha->id, $log->organization_id);
+    }
+
     public function test_run_as_restores_the_scope_when_the_callback_throws(): void
     {
         $this->addMember($this->beta, $this->user, 'admin');

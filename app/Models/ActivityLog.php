@@ -6,6 +6,7 @@ namespace App\Models;
 
 use App\Models\Auth\Organization;
 use Illuminate\Database\Eloquent\Model;
+use App\Support\Tenancy\OrganizationContext;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 
@@ -174,6 +175,27 @@ class ActivityLog extends Model
     }
 
     /**
+     * The organization an entry about $subject belongs in: a user account's
+     * home organization (which owns it), else the subject's own organization,
+     * else the one the work runs in (the active organization, or the one a
+     * core service runs inside with ActiveOrganization::runAs()).
+     */
+    private static function organizationFor(Model $subject): ?int
+    {
+        if ($subject instanceof User && $subject->homeOrganizationId() !== null) {
+            return $subject->homeOrganizationId();
+        }
+
+        $own = $subject->getAttribute('organization_id');
+
+        if ($own !== null && ! $subject instanceof User) {
+            return (int) $own;
+        }
+
+        return app(OrganizationContext::class)->id();
+    }
+
+    /**
      * Log an activity.
      *
      * @param string $action
@@ -202,7 +224,7 @@ class ActivityLog extends Model
         }
 
         return self::create([
-            'organization_id' => $user->organization_id,
+            'organization_id' => self::organizationFor($subject),
             'user_id' => $user->id,
             'subject_type' => get_class($subject),
             'subject_id' => $subject->id ?? $subject->getKey(),
