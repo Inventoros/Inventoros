@@ -489,6 +489,11 @@ final class HookRegistry
                 'parameters' => ['$membership', '$actor'],
                 'example' => "add_action('organization_member_added', function (\$membership, \$actor) { /* ... */ });",
             ],
+            'inter_company_transfer_completed' => [
+                'description' => 'Fired after commit when stock moved between two organizations (InterCompanyTransferService::transfer). $transfer holds both organization ids and its lines with both adjustment ids',
+                'parameters' => ['$transfer', '$actor'],
+                'example' => "add_action('inter_company_transfer_completed', function (\$transfer, \$actor) { /* ... */ });",
+            ],
             'organization_member_removed' => [
                 'description' => 'Fired after commit when a membership is withdrawn; the user\'s roles, warehouse assignments and API tokens in that organization are already gone',
                 'parameters' => ['$organization_id', '$user', '$actor'],
