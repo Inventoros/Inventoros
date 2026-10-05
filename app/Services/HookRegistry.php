@@ -315,6 +315,25 @@ final class HookRegistry
             ],
 
             // ========================================
+            // APPROVAL AND IMPORT HOOKS
+            // ========================================
+            'approval_requested' => [
+                'description' => 'Fired after a purchase order, stock adjustment or stock transfer is put in front of approvers, on any surface, after commit. $approval is ApprovalService::describe() (type, id, reference, title, summary, amount, url, requester). Sales orders use order_created (approval_status pending) instead',
+                'parameters' => ['$approval', '$subject', '$user'],
+                'example' => "add_action('approval_requested', function (\$approval, \$subject, \$user) { /* ... */ });",
+            ],
+            'approval_decided' => [
+                'description' => 'Fired after a purchase order, stock adjustment or stock transfer request is approved or rejected, on any surface, after commit. $decision is approved or rejected. Sales orders use order_approved and order_rejected',
+                'parameters' => ['$approval', '$subject', '$decision', '$user', '$notes'],
+                'example' => "add_action('approval_decided', function (\$approval, \$subject, \$decision, \$user, \$notes) { /* ... */ });",
+            ],
+            'import_finished' => [
+                'description' => 'Fired when a product, order or user import from the Import/Export page finishes, inline or queued. $result is [status => completed|failed, queued => bool, stats => the importer stats]',
+                'parameters' => ['$type', '$organization_id', '$user', '$result'],
+                'example' => "add_action('import_finished', function (\$type, \$organization_id, \$user, \$result) { /* ... */ });",
+            ],
+
+            // ========================================
             // SUPPLIER HOOKS
             // ========================================
             'supplier_created' => [

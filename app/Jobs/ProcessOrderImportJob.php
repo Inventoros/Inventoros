@@ -67,6 +67,10 @@ final class ProcessOrderImportJob implements ShouldQueue
             'order',
         );
 
+        do_action('import_finished', 'orders', $this->organizationId, $importer, [
+            'status' => 'completed', 'queued' => true, 'stats' => $import->getStats(),
+        ]);
+
         Storage::disk($this->disk)->delete($this->path);
     }
 
@@ -79,5 +83,9 @@ final class ProcessOrderImportJob implements ShouldQueue
             $this->userId,
             'order',
         );
+
+        do_action('import_finished', 'orders', $this->organizationId, User::withoutGlobalScopes()->find($this->userId), [
+            'status' => 'failed', 'queued' => true, 'stats' => [],
+        ]);
     }
 }

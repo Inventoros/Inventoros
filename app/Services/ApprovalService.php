@@ -129,6 +129,7 @@ final class ApprovalService
         });
 
         DB::afterCommit(fn () => $this->notifyApprovers(self::PURCHASE_ORDER, $purchaseOrder, $user));
+        DB::afterCommit(fn () => $this->announceRequest(self::PURCHASE_ORDER, $purchaseOrder, $user));
 
         return $purchaseOrder;
     }
@@ -154,6 +155,7 @@ final class ApprovalService
         $this->log($transfer, $user, 'approval_requested', "Transfer {$transfer->transfer_number} is waiting for approval");
 
         DB::afterCommit(fn () => $this->notifyApprovers(self::STOCK_TRANSFER, $transfer, $user));
+        DB::afterCommit(fn () => $this->announceRequest(self::STOCK_TRANSFER, $transfer, $user));
 
         return $transfer;
     }
@@ -264,6 +266,7 @@ final class ApprovalService
         });
 
         DB::afterCommit(fn () => $this->notifyApprovers(self::STOCK_ADJUSTMENT, $request, $user));
+        DB::afterCommit(fn () => $this->announceRequest(self::STOCK_ADJUSTMENT, $request, $user));
 
         return $request;
     }
@@ -353,6 +356,7 @@ final class ApprovalService
         });
 
         DB::afterCommit(fn () => $this->notifyRequester($type, $decided, $user, $status, $notes));
+        DB::afterCommit(fn () => do_action('approval_decided', $this->describe($type, $decided), $decided, $status, $user, $notes));
 
         return $decided;
     }
@@ -724,6 +728,19 @@ final class ApprovalService
             ->values();
 
         NotificationService::createApprovalRequestedNotifications($this->describe($type, $subject->fresh() ?? $subject), $approvers, $requester);
+    }
+
+    /**
+     * Fire `approval_requested` for plugins (chat notifications, ticketing)
+     * once the request is committed. Sales orders are announced by
+     * `order_created` (with approval_status pending), `order_approved` and
+     * `order_rejected` instead, since the order page decides them too.
+     */
+    private function announceRequest(string $type, Model $subject, User $requester): void
+    {
+        $subject = $subject->fresh() ?? $subject;
+
+        do_action('approval_requested', $this->describe($type, $subject), $subject, $requester);
     }
 
     private function notifyRequester(string $type, Model $subject, User $approver, string $status, ?string $notes): void

@@ -59,7 +59,8 @@ final class ProcessProductImportJob implements ShouldQueue
 
     public function handle(): void
     {
-        $import = new ProductsImport($this->organizationId, User::withoutGlobalScopes()->find($this->userId));
+        $importer = User::withoutGlobalScopes()->find($this->userId);
+        $import = new ProductsImport($this->organizationId, $importer);
         Excel::import($import, $this->path, $this->disk, $this->readerType);
 
         NotificationService::createImportCompleteNotification(
@@ -67,6 +68,10 @@ final class ProcessProductImportJob implements ShouldQueue
             $this->userId,
             $import->getStats(),
         );
+
+        do_action('import_finished', 'products', $this->organizationId, $importer, [
+            'status' => 'completed', 'queued' => true, 'stats' => $import->getStats(),
+        ]);
 
         // Only remove the upload once the import has fully succeeded; a
         // retryable failure must leave the file in place for the next attempt.
@@ -82,5 +87,9 @@ final class ProcessProductImportJob implements ShouldQueue
             $this->organizationId,
             $this->userId,
         );
+
+        do_action('import_finished', 'products', $this->organizationId, User::withoutGlobalScopes()->find($this->userId), [
+            'status' => 'failed', 'queued' => true, 'stats' => [],
+        ]);
     }
 }
