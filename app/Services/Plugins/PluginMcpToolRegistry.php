@@ -23,7 +23,10 @@ final class PluginMcpToolRegistry
 {
     private const SLUG_PATTERN = '/^[a-z0-9][a-z0-9-]{0,63}$/';
 
-    private const NAME_PATTERN = '/^[a-z][a-z0-9]*(_[a-z0-9]+)*$/';
+    // Lowercase snake_case. A leading digit is allowed (MCP tool names may
+    // start with one) because slugs may: plugin "3pl" registers "3pl_...".
+    // The slug prefix check below is what namespaces the name.
+    private const NAME_PATTERN = '/^[a-z0-9][a-z0-9]*(_[a-z0-9]+)*$/';
 
     /** @var array<string, PluginTool> keyed by tool name */
     private array $tools = [];

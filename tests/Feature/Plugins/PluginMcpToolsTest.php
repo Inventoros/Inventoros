@@ -182,6 +182,36 @@ final class PluginMcpToolsTest extends TestCase
         register_mcp_tool('other-plugin', StockInsightsSummaryTool::class, 'view_products');
     }
 
+    public function test_a_plugin_whose_slug_starts_with_a_digit_can_register_a_tool(): void
+    {
+        // Slugs may start with a digit ("3pl"), so the required prefix does
+        // too; MCP tool names allow a leading digit.
+        register_mcp_tool('3pl', DigitSlugSummaryTool::class, 'view_products');
+        Sanctum::actingAs($this->user(), ['*']);
+
+        $this->assertContains('3pl_client_summary', $this->listedNames());
+
+        $response = $this->rpc('tools/call', ['name' => '3pl_client_summary', 'arguments' => (object) []]);
+
+        $this->assertFalse((bool) $response->json('result.isError'));
+        $this->assertSame('ok', $response->json('result.content.0.text'));
+    }
+
+    public function test_a_letter_slug_still_needs_its_own_prefix_and_snake_case(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+
+        register_mcp_tool('stock-insights', new class extends Tool
+        {
+            protected string $name = 'stock_insights__Bad';
+
+            public function handle(Request $request): Response
+            {
+                return Response::text('bad');
+            }
+        }, 'view_products');
+    }
+
     public function test_a_tool_cannot_replace_a_core_tool(): void
     {
         $this->expectException(InvalidArgumentException::class);
@@ -229,6 +259,18 @@ final class StockInsightsSummaryTool extends Tool
         $days = (int) $request->get('days', 30);
 
         return Response::text("Summary for {$days} days in organization ".$request->user()?->organization_id);
+    }
+}
+
+final class DigitSlugSummaryTool extends Tool
+{
+    protected string $name = '3pl_client_summary';
+
+    protected string $description = 'Summarise a client.';
+
+    public function handle(Request $request): Response
+    {
+        return Response::text('ok');
     }
 }
 
