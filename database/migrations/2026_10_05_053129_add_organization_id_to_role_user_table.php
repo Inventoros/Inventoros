@@ -53,8 +53,11 @@ return new class extends Migration
             ->whereRaw('organization_id <> coalesce((select users.organization_id from users where users.id = role_user.user_id), 0)')
             ->delete();
 
+        // MySQL dropped the index it made for the user_id foreign key when
+        // the (user_id, organization_id) index arrived; give it one back first.
         Schema::table('role_user', function (Blueprint $table) {
             $table->unique(['role_id', 'user_id']);
+            $table->index('user_id');
         });
 
         Schema::table('role_user', function (Blueprint $table) {
