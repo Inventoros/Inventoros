@@ -7,6 +7,8 @@ namespace App\Jobs;
 use App\Imports\OrdersImport;
 use App\Models\User;
 use App\Services\NotificationService;
+use App\Services\Organizations\ActiveOrganization;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -55,7 +57,11 @@ final class ProcessOrderImportJob implements ShouldQueue
 
     public function handle(): void
     {
-        $importer = User::where('organization_id', $this->organizationId)->findOrFail($this->userId);
+        // The importer as they were when they queued the import: working in
+        // that organization (which need not be their home one), and only
+        // while they are still a member of it.
+        $importer = app(ActiveOrganization::class)->userIn($this->userId, $this->organizationId)
+            ?? throw (new ModelNotFoundException)->setModel(User::class, [$this->userId]);
 
         $import = (new OrdersImport($importer, $this->historical, $this->notifyIntegrations))
             ->importFile($this->path, $this->disk, $this->readerType);
