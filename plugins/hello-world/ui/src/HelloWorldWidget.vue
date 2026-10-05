@@ -14,7 +14,7 @@ defineProps({
     <div class="hw-widget">
         <p class="hw-widget__value">{{ productCount }}</p>
         <p class="hw-widget__label">products say hello</p>
-        <Link href="/hello-world" class="hw-widget__link">Open the Hello World page</Link>
+        <Link href="/p/hello-world" class="hw-widget__link">Open the Hello World page</Link>
     </div>
 </template>
 

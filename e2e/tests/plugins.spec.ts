@@ -65,7 +65,7 @@ test.describe('Runtime plugin UI', () => {
     test('a registered plugin page renders on a full page load', async ({ page }) => {
         const problems = await watchForProblems(page);
 
-        await page.goto('/hello-world');
+        await page.goto('/p/hello-world');
 
         await expect(page.getByRole('heading', { level: 1, name: 'Hello World' })).toBeVisible();
         await expect(page.getByText(/registered with plugin\.registerPage\(\)/)).toBeVisible();
@@ -99,7 +99,7 @@ test.describe('Runtime plugin UI', () => {
         await page.goto('/dashboard');
         await page.getByRole('link', { name: 'Open the Hello World page' }).click();
 
-        await expect(page).toHaveURL(/\/hello-world$/);
+        await expect(page).toHaveURL(/\/p\/hello-world$/);
         await expect(page.getByRole('heading', { level: 1, name: 'Hello World' })).toBeVisible();
 
         await page.getByRole('link', { name: 'Back to the dashboard' }).click();
