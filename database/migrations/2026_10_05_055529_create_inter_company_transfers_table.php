@@ -30,7 +30,8 @@ return new class extends Migration
             $table->timestamp('completed_at')->nullable();
             $table->timestamps();
 
-            $table->unique(['from_organization_id', 'idempotency_key']);
+            // Named: the generated name passes MySQL's 64-character limit.
+            $table->unique(['from_organization_id', 'idempotency_key'], 'inter_company_transfers_idempotency_unique');
             $table->index('to_organization_id');
         });
 
