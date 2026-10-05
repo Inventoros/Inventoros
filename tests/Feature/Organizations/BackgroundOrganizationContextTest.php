@@ -171,6 +171,25 @@ final class BackgroundOrganizationContextTest extends TestCase
         $this->assertFalse(Order::withoutGlobalScope(OrganizationScope::class)->where('external_reference', 'J-2')->exists());
     }
 
+    public function test_a_queued_product_import_fails_once_the_membership_is_withdrawn(): void
+    {
+        $this->addMember($this->beta, $this->user, 'admin');
+        Storage::fake('local');
+        Storage::disk('local')->put('imports/products.csv', "sku,name,price,stock\nLATE-1,Widget,5,10\n");
+        $job = new \App\Jobs\ProcessProductImportJob($this->beta->id, $this->user->id, 'local', 'imports/products.csv');
+
+        app(OrganizationMembershipService::class)->remove($this->beta, $this->user);
+
+        try {
+            $job->handle();
+            $this->fail('The import must not run.');
+        } catch (ModelNotFoundException) {
+            // expected
+        }
+
+        $this->assertFalse(Product::withoutGlobalScope(OrganizationScope::class)->where('sku', 'LATE-1')->exists());
+    }
+
     public function test_a_scheduled_report_runs_as_its_owner_in_the_schedule_organization(): void
     {
         CarbonImmutable::setTestNow('2026-06-30 12:00:00');
