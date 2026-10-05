@@ -139,6 +139,8 @@ final class ProductsImport implements SkipsOnFailure, ToCollection, WithChunkRea
                 'Product import',
                 "Stock set to {$target} by import",
                 actor: $this->actor,
+                // The bins move just above and below.
+                syncBins: false,
             );
 
             if ($delta > 0) {

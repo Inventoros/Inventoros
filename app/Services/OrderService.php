@@ -555,7 +555,9 @@ final class OrderService
                 'order_cancellation',
                 $reason,
                 null,
-                $order
+                $order,
+                // Booked into the primary bin just below.
+                syncBins: false,
             );
 
             // Return the units to the product's primary location bin so the
@@ -859,6 +861,7 @@ final class OrderService
                 StockAdjustment::adjust(
                     $product, -$qty, 'order_fulfillment',
                     "Order {$order->order_number} edited", null, $order, allowNegative: false,
+                    syncBins: false,
                 );
                 $allocator->allocateForOrderItem($product, $qty, $orderItem);
             }

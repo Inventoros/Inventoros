@@ -300,7 +300,7 @@ class StockAdjustmentApiTest extends TestCase
             ->where('location_id', $this->location->id)->value('quantity'));
     }
 
-    public function test_adjustment_without_a_location_leaves_the_breakdown_untouched(): void
+    public function test_adjustment_without_a_location_lands_in_the_primary_bin(): void
     {
         Sanctum::actingAs($this->admin);
 
@@ -313,8 +313,12 @@ class StockAdjustmentApiTest extends TestCase
 
         $response->assertStatus(201);
         $this->assertSame(125, $this->product->fresh()->stock);
-        // Backward-compatible: no location named, so no bin rows are created.
-        $this->assertSame(0, ProductLocationStock::where('product_id', $this->product->id)->count());
+        // No location named: the product is binned at its primary location
+        // (seeded with its 100 on hand) and the 25 land there, so the
+        // breakdown keeps matching the total.
+        $this->assertSame(125, ProductLocationStock::where('product_id', $this->product->id)
+            ->where('location_id', $this->location->id)->value('quantity'));
+        $this->assertSame(1, ProductLocationStock::where('product_id', $this->product->id)->count());
     }
 
     public function test_adjustment_cannot_remove_more_than_a_location_bin_holds(): void

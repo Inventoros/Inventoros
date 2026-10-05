@@ -57,7 +57,7 @@ final class LocationBinReceiveSeedTest extends TestCase
         $product->update(['location_id' => $location->id]);
 
         // Callers raise the total first, then book the units into a bin.
-        StockAdjustment::adjust($product, 3, 'order_cancellation', 'Restock');
+        StockAdjustment::adjust($product, 3, 'order_cancellation', 'Restock', syncBins: false);
         app(ProductLocationStockService::class)->receive($product, 3);
 
         $this->assertSame(13, (int) $product->fresh()->stock);
@@ -71,7 +71,7 @@ final class LocationBinReceiveSeedTest extends TestCase
         $other = $this->location($product->organization_id, 'O');
         $product->update(['location_id' => $primary->id]);
 
-        StockAdjustment::adjust($product, 4, 'return', 'Restock');
+        StockAdjustment::adjust($product, 4, 'return', 'Restock', syncBins: false);
         app(ProductLocationStockService::class)->receive($product, 4, $other->id);
 
         $this->assertSame(10, app(ProductLocationStockService::class)->quantityAt($product, $primary->id));
@@ -88,7 +88,7 @@ final class LocationBinReceiveSeedTest extends TestCase
             'location_id' => $location->id, 'quantity' => 10,
         ]);
 
-        StockAdjustment::adjust($product, 2, 'return', 'Restock');
+        StockAdjustment::adjust($product, 2, 'return', 'Restock', syncBins: false);
         app(ProductLocationStockService::class)->receive($product, 2);
 
         $this->assertSame(12, (int) ProductLocationStock::where('product_id', $product->id)->sum('quantity'));

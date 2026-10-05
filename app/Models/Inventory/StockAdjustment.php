@@ -176,6 +176,18 @@ class StockAdjustment extends Model
     /**
      * Create a stock adjustment and update product stock.
      *
+     * The per-location bins always move with the total, so SUM(bins) never
+     * claims more than products.stock:
+     *
+     * - with $locationId, the delta lands in that bin;
+     * - without one, a decrement drains the bins in fulfilment order
+     *   (ProductLocationStockService::consume: warehouse priority, then the
+     *   primary location, then the fullest bin) and an increment lands in the
+     *   product's primary bin (ProductLocationStockService::receive).
+     *
+     * Pass $syncBins = false only when the caller books the bins itself
+     * around this call (order creation, work orders, the product import).
+     *
      * @return static
      */
     public static function adjust(
@@ -187,9 +199,10 @@ class StockAdjustment extends Model
         ?Model $reference = null,
         bool $allowNegative = true,
         ?User $actor = null,
-        ?int $locationId = null
+        ?int $locationId = null,
+        bool $syncBins = true,
     ): self {
-        return DB::transaction(function () use ($product, $quantity, $type, $reason, $notes, $reference, $allowNegative, $actor, $locationId) {
+        return DB::transaction(function () use ($product, $quantity, $type, $reason, $notes, $reference, $allowNegative, $actor, $locationId, $syncBins) {
             // Re-fetch the product with a row lock so concurrent adjustments
             // serialize on this row; otherwise two callers can both read
             // the same pre-image, compute different "after" values, and
@@ -230,12 +243,26 @@ class StockAdjustment extends Model
             // delta would be counted twice). Runs under the same product row
             // lock; a short bin with allowNegative=false throws and rolls the
             // whole adjustment back.
+            $bins = app(ProductLocationStockService::class);
+
             if ($locationId !== null) {
-                app(ProductLocationStockService::class)
-                    ->applyDelta($locked, $locationId, $quantity, allowNegativeBin: $allowNegative);
+                $bins->applyDelta($locked, $locationId, $quantity, allowNegativeBin: $allowNegative);
+            } elseif ($syncBins && $quantity < 0) {
+                // No bin named: draw the units out of the bins the way order
+                // fulfilment does, before the total drops (the lazy seed reads
+                // the pre-adjustment stock).
+                $bins->consume($locked, -$quantity);
             }
 
             $locked->update(['stock' => $quantityAfter]);
+
+            if ($locationId === null && $syncBins && $quantity > 0) {
+                // No bin named: book the units into the primary bin, after the
+                // total rose (receive() seeds an unbinned product with its
+                // pre-adjustment stock). No primary location: they stay
+                // unassigned.
+                $bins->receive($locked, $quantity);
+            }
 
             // Sync the caller's in-memory instance so $product->stock reflects
             // the new value without an extra query.
