@@ -137,10 +137,10 @@ final class ActiveOrganization
 
     /**
      * Switch the signed-in browser session to another organization the user
-     * is a member of. The session id and CSRF token are regenerated (so a
-     * session id or form captured before the switch is useless after it) and
-     * the active warehouse, which belongs to the previous organization, is
-     * cleared.
+     * is a member of. The session id and CSRF token are regenerated and the
+     * old session destroyed (so a session id or form captured before the
+     * switch is useless after it), and the active warehouse, which belongs
+     * to the previous organization, is cleared.
      *
      * @throws AuthorizationException when the user is not a member
      */
@@ -155,7 +155,9 @@ final class ActiveOrganization
         $session = $request->session();
         $session->forget('active_warehouse_id');
         $session->put(self::SESSION_KEY, ['user_id' => (int) $user->getKey(), 'organization_id' => $organizationId]);
-        $session->regenerate();
+        // Destroy the old session: an id captured before the switch must
+        // not keep a signed-in session alive.
+        $session->regenerate(true);
         $session->regenerateToken();
 
         if ($from !== $organizationId) {

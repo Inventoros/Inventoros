@@ -186,6 +186,23 @@ final class OrganizationSwitchingTest extends TestCase
         $this->assertSame(2, ActivityLog::where('action', SecurityEvent::ORGANIZATION_SWITCHED->value)->count());
     }
 
+    public function test_the_session_from_before_the_switch_no_longer_signs_anyone_in(): void
+    {
+        $this->addMember($this->beta, $this->user, 'admin');
+        $this->signIn();
+        $before = session()->getId();
+
+        $this->switchTo($this->beta);
+
+        // Someone presenting the id captured before the switch: the test
+        // client keeps session data in memory, so drop it and read the store.
+        session()->flush();
+        $this->app['auth']->forgetGuards();
+        $this->withCookie(config('session.cookie'), $before)
+            ->get(route('products.index'))
+            ->assertRedirect(route('login'));
+    }
+
     public function test_the_organization_switched_hook_fires(): void
     {
         $this->addMember($this->beta, $this->user, 'admin');

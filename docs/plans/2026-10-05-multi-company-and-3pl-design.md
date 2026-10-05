@@ -57,7 +57,7 @@ The home organization owns the account. Its administrators edit, reset and delet
 
 ### Sessions and the browser
 
-- `POST /organizations/switch` checks the membership, stores the choice, clears `active_warehouse_id` (it belongs to the previous organization), regenerates the session id and the CSRF token (a session id or form captured before the switch is useless after it), logs `organization.switched` in both organizations, fires `organization_switched` and lands on the dashboard (the page the user was on belongs to the previous organization).
+- `POST /organizations/switch` checks the membership, stores the choice, clears `active_warehouse_id` (it belongs to the previous organization), regenerates the session id and the CSRF token and destroys the old session (a session id or form captured before the switch is useless after it), logs `organization.switched` in both organizations, fires `organization_switched` and lands on the dashboard (the page the user was on belongs to the previous organization).
 - The top bar shows the organization switcher only to members of two or more organizations.
 - A switch applies to the whole session, so a second tab opened earlier still shows the previous organization's forms. Every Inertia visit and axios request carries the organization its page was rendered for (`X-Inventoros-Organization`); `EnsureActiveOrganizationMatches` refuses a write whose header names another organization (409 for JSON, otherwise back to the dashboard with a warning) instead of letting it land in the active one. Switching and signing out work from any tab.
 
@@ -76,7 +76,7 @@ The home organization owns the account. Its administrators edit, reset and delet
 | Web pages, reads | `OrganizationSwitchingTest::test_switching_confines_every_page_to_the_chosen_organization` (index, show of the other organization's record: 404) |
 | Web writes | same test: update and delete of the other organization's record 404 and change nothing; a new record lands in the active organization |
 | Shared props, regional settings | same test (`auth.organization`, `auth.user.organization_id`, `regional.currency`) |
-| Session fixation and renewal | `test_switching_renews_the_session_and_csrf_token_and_forgets_the_warehouse`, `test_signing_in_always_starts_in_the_home_organization`, `test_an_active_organization_stored_for_another_user_is_ignored`, `test_a_user_cannot_switch_into_an_organization_they_do_not_belong_to` |
+| Session fixation and renewal | `test_switching_renews_the_session_and_csrf_token_and_forgets_the_warehouse`, `test_the_session_from_before_the_switch_no_longer_signs_anyone_in`, `test_signing_in_always_starts_in_the_home_organization`, `test_an_active_organization_stored_for_another_user_is_ignored`, `test_a_user_cannot_switch_into_an_organization_they_do_not_belong_to` |
 | Membership changes mid-session | `test_a_withdrawn_membership_ends_on_the_next_request`, `test_a_disabled_organization_ends_the_session_there_on_the_next_request`, `test_disabled_and_deleted_organizations_cannot_be_switched_to` |
 | Permissions per organization | `test_permissions_are_those_held_in_the_active_organization`; `OrganizationMembershipTest::test_roles_are_held_per_organization` (custom role, Administrator system role, a relation eager-loaded for home) |
 | Stale browser tab | `test_a_write_from_a_tab_still_showing_the_previous_organization_is_refused` |
