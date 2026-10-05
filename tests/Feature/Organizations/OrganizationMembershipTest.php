@@ -291,7 +291,8 @@ final class OrganizationMembershipTest extends TestCase
 
         foreach ([$row + ['organization_id' => null], $row + ['organization_id' => null], $row + ['organization_id' => $a->id]] as $attempt) {
             try {
-                DB::table('role_user')->insert($attempt);
+                // A savepoint, so PostgreSQL carries on after the refused insert.
+                DB::transaction(fn () => DB::table('role_user')->insert($attempt));
             } catch (\Illuminate\Database\QueryException) {
                 continue;
             }
