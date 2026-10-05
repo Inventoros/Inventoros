@@ -72,6 +72,8 @@ class AppServiceProvider extends ServiceProvider
         // Permissions registered by active plugins (register_permission()).
         $this->app->singleton(\App\Services\Plugins\PluginPermissionRegistry::class);
         $this->app->singleton(\App\Services\Hooks\DomainHooks::class);
+        // Scoped: its per-request document cache must not outlive a queued job.
+        $this->app->scoped(\App\Services\Marketplace\PluginLicenceService::class);
     }
 
     /**

@@ -5,9 +5,11 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Jobs\RefreshMarketplaceEntitlementsJob;
 use App\Services\Marketplace\MarketplaceClient;
 use App\Services\Marketplace\MarketplaceException;
 use App\Services\Marketplace\MarketplaceInstaller;
+use App\Services\Marketplace\PluginLicenceService;
 use App\Services\PluginService;
 use App\Support\PluginAdministration;
 use Illuminate\Http\RedirectResponse;
@@ -113,6 +115,10 @@ class PluginMarketplaceController extends Controller
             ],
         ])->save();
 
+        // Fetch the account's signed paid-plugin licences for this
+        // organization in the background (plugin_licence()).
+        RefreshMarketplaceEntitlementsJob::dispatch((int) $request->user()->organization_id);
+
         return redirect()->route('plugins.marketplace')
             ->with('success', 'Connected to your inventoros.com account.');
     }
@@ -123,6 +129,7 @@ class PluginMarketplaceController extends Controller
             'marketplace_token' => null,
             'marketplace_account' => null,
         ])->save();
+        app(PluginLicenceService::class)->forget($request->user()->organization);
 
         return redirect()->route('plugins.marketplace')
             ->with('success', 'Disconnected from inventoros.com.');

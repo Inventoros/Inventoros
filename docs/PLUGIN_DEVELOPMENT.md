@@ -18,10 +18,11 @@ Everything in this guide is backed by code and tests: the hook tables are checke
 10. [Plugin UI](#plugin-ui)
 11. [Building and packaging a plugin](#building-and-packaging-a-plugin)
 12. [Publishing to the marketplace](#publishing-to-the-marketplace)
-13. [Examples](#examples)
-14. [Best practices](#best-practices)
-15. [Security notes](#security-notes)
-16. [Debugging](#debugging)
+13. [Licences for paid plugins](#licences-for-paid-plugins)
+14. [Examples](#examples)
+15. [Best practices](#best-practices)
+16. [Security notes](#security-notes)
+17. [Debugging](#debugging)
 
 ## Plugin structure
 
@@ -632,6 +633,46 @@ Anyone can publish a plugin on [inventoros.com/marketplace](https://inventoros.c
 **Versioning.** To release a new version, bump `version` in `plugin.json` (use semantic versions such as `1.4.0`), rebuild and re-zip, and submit it as a new version of your plugin. Installs see it as an available update once it is approved. Raise `requires` when the plugin starts depending on a newer Inventoros.
 
 **Pricing.** Third-party plugins are listed as free for now. Selling third-party plugins (and developer payouts) is not supported yet.
+
+## Licences for paid plugins
+
+The marketplace only serves a paid plugin's package to an organization whose connected inventoros.com account owns it. At runtime, a paid plugin checks its licence with `plugin_licence()`:
+
+```php
+plugin_licence(string $slug, Organization|int|null $organization = null): App\Services\Marketplace\PluginLicence
+```
+
+```php
+$licence = plugin_licence('insights');                 // the signed-in user's organization
+$licence = plugin_licence('insights', $organizationId); // queued jobs, commands, schedules
+
+if (! $licence->allowsWrites()) {
+    // Open read-only: show a notice with a link to renew, refuse writes,
+    // skip syncs. Keep the plugin's data.
+}
+```
+
+`PluginLicence` carries `status`, `reason`, `expiresAt`, `graceUntil`, `inGrace` and `checkedAt`, plus `isValid()`, `allowsWrites()` (the same) and `toArray()`:
+
+| `status` | `reason` | Meaning |
+|----------|----------|---------|
+| `valid` | `active` | A signed entitlement covers today. |
+| `valid` | `offline_grace` | The entitlement ran out while the marketplace could not be reached; it keeps counting until `graceUntil` (14 days after `expiresAt` by default). `inGrace` is true. |
+| `expired` | `expired` | The entitlement ran out (a cancelled or lapsed subscription, or offline past the grace period). |
+| `missing` | `not_connected`, `not_owned` | The organization has no marketplace connection, or its account does not own the plugin. |
+| `unknown` | `not_checked`, `no_public_key`, `invalid_signature`, `install_mismatch`, `no_organization`, `error` | Nothing verifiable yet. |
+
+How it works:
+
+- When an organization connects its inventoros.com account, and daily after that (`marketplace:refresh-entitlements`, scheduled), Inventoros fetches `GET /api/v1/marketplace/entitlements?install_id=...` with the organization's marketplace token. Each owned paid plugin comes back with an `expires_at` and an Ed25519 signature over `inventoros-marketplace-entitlement-v1`, the install id, the slug and `expires_at`, one per line.
+- The install id is a random id generated once per installation, plus the organization id, so an entitlement copied to another installation or organization does not verify.
+- The document is stored per organization and every entry is verified against `INVENTOROS_MARKETPLACE_PUBLIC_KEY` each time it is read: editing the stored row grants nothing. A refresh whose document does not verify is rejected and the previous one is kept.
+- `plugin_licence()` never contacts the marketplace. When the stored document is older than `INVENTOROS_MARKETPLACE_ENTITLEMENT_REFRESH_HOURS` (24), it queues a refresh, at most once an hour per organization.
+- `INVENTOROS_MARKETPLACE_ENTITLEMENT_GRACE_DAYS` (14) sets the offline grace period.
+
+**Fail safe.** The check never throws and never blocks a request. Only `valid` unlocks paid features; in every other state the plugin degrades to read-only. A plugin must never, in any state, block or slow a core page, change or hide core records (stock, orders, products), delete its own data, or call the marketplace itself on each request. The check is ordinary readable PHP: the protection is the signed entitlement and the licence terms, not hidden code.
+
+On Inventoros versions without it, check `function_exists('plugin_licence')`.
 
 ## Examples
 

@@ -155,6 +155,10 @@ Sign a plugin with `php artisan update:sign my-plugin.zip`. For production deplo
 4. Check `storage/logs/laravel.log` and the browser console for errors.
 5. Deactivate and verify cleanup, then delete and verify complete removal.
 
+### Paid plugin licences
+
+A paid plugin checks its licence at runtime with `plugin_licence('slug')` (or `plugin_licence('slug', $organizationId)` in jobs and commands). The marketplace signs each organization's entitlements; Inventoros refreshes them daily in the background, verifies them with the marketplace public key and keeps them valid for 14 days past expiry while the marketplace cannot be reached (`INVENTOROS_MARKETPLACE_ENTITLEMENT_GRACE_DAYS`). The status is `valid`, `expired`, `missing` or `unknown`; anything but `valid` makes the plugin read-only. The check never blocks Inventoros itself.
+
 ### Publishing to the marketplace
 
 1. Create an inventoros.com account and apply to become a developer from your account page; an Inventoros admin approves developer accounts.

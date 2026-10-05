@@ -219,3 +219,20 @@ if (!function_exists('get_page_components')) {
         return app(\App\Services\PluginUIService::class)->getVisiblePageComponents(auth()->user(), $page, $slot);
     }
 }
+
+if (!function_exists('plugin_licence')) {
+    /**
+     * The runtime licence of a paid plugin for an organization (the signed-in
+     * user's when none is given). Never contacts the marketplace and never
+     * throws: check ->isValid() before paid features, and degrade to
+     * read-only otherwise.
+     *
+     * @param string $slug The plugin's marketplace slug
+     * @param \App\Models\Auth\Organization|int|null $organization Defaults to the signed-in user's organization
+     * @return \App\Services\Marketplace\PluginLicence status valid, expired, missing or unknown
+     */
+    function plugin_licence(string $slug, \App\Models\Auth\Organization|int|null $organization = null): \App\Services\Marketplace\PluginLicence
+    {
+        return app(\App\Services\Marketplace\PluginLicenceService::class)->licence($slug, $organization);
+    }
+}
