@@ -4,19 +4,23 @@ declare(strict_types=1);
 
 namespace App\Models\Scopes;
 
+use App\Support\Tenancy\OrganizationContext;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Scope;
 
 /**
  * Global scope that constrains every query for a tenant-owned model to the
- * authenticated user's organization.
+ * authenticated user's ACTIVE organization (see OrganizationContext): their
+ * home organization, the one picked with the organization switcher, or the
+ * one their API token is bound to.
  *
  * Skips entirely when there is no authenticated user (background jobs, the
  * scheduler, console commands, the installer, and login itself), so those
- * contexts keep their existing cross-tenant or payload-driven behaviour. When
- * a script genuinely needs to reach across tenants while authenticated, it can
- * opt out per query with `Model::withoutGlobalScope(OrganizationScope::class)`.
+ * contexts keep their existing cross-tenant or payload-driven behaviour,
+ * unless a core service runs them inside one organization. When a script
+ * genuinely needs to reach across tenants while authenticated, it can opt
+ * out per query with `Model::withoutGlobalScope(OrganizationScope::class)`.
  */
 final class OrganizationScope implements Scope
 {
@@ -25,11 +29,13 @@ final class OrganizationScope implements Scope
         // auth()->check() resolves the session user via the provider, which
         // queries the User model — User deliberately does NOT use this scope,
         // so there is no resolution recursion.
-        if (! auth()->check()) {
+        $context = app(OrganizationContext::class);
+
+        if (! $context->isScoped()) {
             return;
         }
 
-        $organizationId = auth()->user()->organization_id;
+        $organizationId = $context->id();
 
         if ($organizationId === null) {
             // An authenticated user with no organization owns no tenant data.

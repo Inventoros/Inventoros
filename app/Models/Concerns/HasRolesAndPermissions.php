@@ -6,6 +6,7 @@ namespace App\Models\Concerns;
 
 use App\Enums\Permission;
 use App\Models\Role;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 /**
@@ -17,13 +18,57 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 trait HasRolesAndPermissions
 {
     /**
-     * Get the roles that belong to the user.
+     * Get the roles the user holds in their active organization.
+     *
+     * Role assignments are per organization (role_user.organization_id): a
+     * role held in one organization grants nothing in another the user is
+     * also a member of. On a loaded user the relation reads, attaches, syncs
+     * and detaches within the active organization only. Eager loading
+     * (`User::with('roles')`) builds the relation without a user, so it
+     * matches each user's stored home organization instead.
      *
      * @return BelongsToMany<Role, $this>
      */
     public function roles(): BelongsToMany
     {
-        return $this->belongsToMany(Role::class, 'role_user');
+        $relation = $this->belongsToMany(Role::class, 'role_user')->withPivot('organization_id');
+
+        if ($this->exists) {
+            // A user without an organization keeps only unscoped assignments.
+            return $this->organization_id === null
+                ? $relation->wherePivotNull('organization_id')
+                : $relation->withPivotValue('organization_id', (int) $this->organization_id);
+        }
+
+        return $relation->whereExists(function ($query): void {
+            $query->selectRaw('1')
+                ->from('users as role_user_owner')
+                ->whereColumn('role_user_owner.id', 'role_user.user_id')
+                ->whereColumn('role_user_owner.organization_id', 'role_user.organization_id');
+        });
+    }
+
+    /**
+     * Roles held in a guest organization, per organization id, so permission
+     * checks never read a relation eager-loaded for the home organization.
+     *
+     * @var array<int, Collection<int, Role>>
+     */
+    private array $guestOrganizationRoles = [];
+
+    /**
+     * The roles that count for permission checks: those held in the active
+     * organization.
+     *
+     * @return Collection<int, Role>
+     */
+    protected function rolesInActiveOrganization(): Collection
+    {
+        if (method_exists($this, 'isInGuestOrganization') && $this->isInGuestOrganization()) {
+            return $this->guestOrganizationRoles[(int) $this->organization_id] ??= $this->roles()->get();
+        }
+
+        return $this->roles;
     }
 
     /**
@@ -93,7 +138,7 @@ trait HasRolesAndPermissions
         }
 
         // Check custom roles for the permission
-        return $this->roles->contains(function ($role) use ($permissionValue) {
+        return $this->rolesInActiveOrganization()->contains(function ($role) use ($permissionValue) {
             return $role->hasPermission($permissionValue);
         });
     }
@@ -163,7 +208,7 @@ trait HasRolesAndPermissions
         }
 
         // Get permissions from custom roles
-        foreach ($this->roles as $role) {
+        foreach ($this->rolesInActiveOrganization() as $role) {
             if ($role->permissions) {
                 $permissions = array_merge($permissions, $role->permissions);
             }

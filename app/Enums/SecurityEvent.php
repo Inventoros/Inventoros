@@ -37,6 +37,10 @@ enum SecurityEvent: string
     case PORTAL_LOGIN_FAILED = 'portal.failed';
     case PORTAL_INVITE_SENT = 'portal.invite_sent';
     case PORTAL_ACCESS_REVOKED = 'portal.access_revoked';
+    case ORGANIZATION_SWITCHED = 'organization.switched';
+    case MEMBERSHIP_ADDED = 'membership.added';
+    case MEMBERSHIP_ROLE_CHANGED = 'membership.role_changed';
+    case MEMBERSHIP_REMOVED = 'membership.removed';
 
     /**
      * Human-readable label for display.
@@ -66,6 +70,10 @@ enum SecurityEvent: string
             self::PORTAL_LOGIN_FAILED => 'Failed customer portal sign-in',
             self::PORTAL_INVITE_SENT => 'Customer portal invitation sent',
             self::PORTAL_ACCESS_REVOKED => 'Customer portal access revoked',
+            self::ORGANIZATION_SWITCHED => 'Switched organization',
+            self::MEMBERSHIP_ADDED => 'Organization member added',
+            self::MEMBERSHIP_ROLE_CHANGED => 'Organization member role changed',
+            self::MEMBERSHIP_REMOVED => 'Organization member removed',
         };
     }
 

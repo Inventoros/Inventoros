@@ -18,14 +18,15 @@ Everything in this guide is backed by code and tests: the hook tables are checke
 10. [Plugin UI](#plugin-ui)
 11. [MCP tools](#mcp-tools)
 12. [Outbound webhook events](#outbound-webhook-events)
-13. [Core PHP API](#core-php-api)
-14. [Building and packaging a plugin](#building-and-packaging-a-plugin)
-15. [Publishing to the marketplace](#publishing-to-the-marketplace)
-16. [Licences for paid plugins](#licences-for-paid-plugins)
-17. [Examples](#examples)
-18. [Best practices](#best-practices)
-19. [Security notes](#security-notes)
-20. [Debugging](#debugging)
+13. [Organizations and memberships](#organizations-and-memberships)
+14. [Core PHP API](#core-php-api)
+15. [Building and packaging a plugin](#building-and-packaging-a-plugin)
+16. [Publishing to the marketplace](#publishing-to-the-marketplace)
+17. [Licences for paid plugins](#licences-for-paid-plugins)
+18. [Examples](#examples)
+19. [Best practices](#best-practices)
+20. [Security notes](#security-notes)
+21. [Debugging](#debugging)
 
 ## Plugin structure
 
@@ -329,6 +330,9 @@ add_action('stock_changed', function ($product, $variant, array $change) {
 | `email_notification_sent` | `$type`, `$user`, `$data` | A notification email is queued. |
 | `email_notification_failed` | `$type`, `$user`, `$data`, `$exception` | Queueing a notification email failed. |
 | `webhook_delivery_attempted` | `$delivery`, `$webhook`, `$result` | Once per outbound webhook delivery attempt: success, HTTP error, refused private destination or connection failure. `$result` is `[successful, status, duration_ms, error, attempt, will_retry]`. See [Outbound webhook events](#outbound-webhook-events). |
+| `organization_switched` | `$user`, `$from_organization_id`, `$to_organization_id` | A signed-in user switched their session to another organization they belong to. `$user` already works in the new one. See [Organizations and memberships](#organizations-and-memberships). |
+| `organization_member_added` | `$membership`, `$actor` | A user was given a membership of an organization other than their home one (after commit). |
+| `organization_member_removed` | `$organization_id`, `$user`, `$actor` | A membership was withdrawn (after commit). The user's roles, warehouse assignments and API tokens in that organization are already gone. |
 
 ## Filter reference
 
@@ -744,6 +748,43 @@ add_action('webhook_delivery_attempted', function ($delivery, $webhook, array $r
 
 On Inventoros versions without these hooks, check `array_key_exists('webhook_delivery_request', \App\Services\HookRegistry::getFilters())`.
 
+## Organizations and memberships
+
+The organization is the tenant boundary: every tenant row carries `organization_id`, and every query, check and new row follows the organization the user is working in. A user can belong to several organizations.
+
+- **Home organization**: `users.organization_id`, with the base role `users.role`. It owns the account; its administrators edit and delete the user on the Users screens.
+- **Memberships**: further organizations the account may work in, each with its own base role (`admin`, `manager` or `member`), its own custom roles and its own warehouse assignments. Roles held in one organization grant nothing in another.
+- **Active organization**: `$user->organization_id` on the signed-in user is the organization they work in now, so every existing check applies to it. A browser session starts in the home organization and changes with the organization switcher in the top bar (shown only to members of two or more); the session id and CSRF token are regenerated and the active warehouse is cleared on every switch. An API token (REST, GraphQL, MCP) works in the organization that was active when it was created, whatever the browser later switches to, and stops working when that membership is withdrawn. `POST /api/v1/login` takes an optional `organization_id`; `GET /api/v1/user` lists the user's `organizations`.
+- `$user->homeOrganizationId()` and `$user->homeRole()` read the stored home values; `$user->isInGuestOrganization()` says whether the user works outside their home organization.
+
+Users and installs with one organization see no change: the switcher is hidden, and every existing user was given a membership of their home organization when upgrading.
+
+### Rules for plugins
+
+1. **Never trust a stored user row for the organization.** `User::find($id)->organization_id` is the home organization. In a queued job, record the organization the user acted in when you dispatch, and load the user into it with `app(ActiveOrganization::class)->userIn($userId, $organizationId)`, which returns null once they are no longer a member.
+2. **Work in another organization only through `runAs()` or `authorize()`.** They check the membership and the permissions in that organization, and `runAs()` confines every scoped query, and every new tenant row, to it for the duration of the callback. Pass the user the callback receives to core services; never read `auth()->user()` inside it.
+3. **Change memberships only through `OrganizationMembershipService`.** It refuses to touch the home organization (that is the user screens' job) or to remove an organization's last administrator, cleans up roles, warehouse assignments and tokens, writes the security log and fires the `organization_member_*` actions. Who may add or remove members is the caller's decision: check it first (for example `manage_organization` in the target organization through `authorize()`).
+4. **Key caches and stored state by organization**, and pass the organization explicitly to everything that runs outside a request.
+
+```php
+use App\Enums\Permission;
+use App\Services\Organizations\ActiveOrganization;
+use App\Services\Organizations\OrganizationMembershipService;
+
+$organizations = app(ActiveOrganization::class);
+
+// Read stock in a sister company the user also belongs to.
+$onHand = $organizations->runAs($user, $sisterId, Permission::VIEW_PRODUCTS, function ($member) use ($sku) {
+    return \App\Models\Inventory\Product::where('sku', $sku)->value('stock'); // scoped to $sisterId
+});
+
+// Add a member (the caller must be allowed to manage that organization).
+$organizations->authorize($actor, $organization->id, Permission::MANAGE_ORGANIZATION);
+app(OrganizationMembershipService::class)->add($organization, $user, 'member', $actor);
+```
+
+Hooks that a core service fires after commit (`stock_changed`, `stock_adjusted` and the other domain hooks) run in the request's active organization, which can differ from the record's when the change was made inside `runAs()`. Listeners must use the record's own `organization_id`, as they already must in queued jobs.
+
 ## Core PHP API
 
 Plugins change data through the same services the web screens, REST, GraphQL and MCP use, so stock, bins, tracked units, ledgers and hooks stay consistent. The methods below are the supported PHP API: each carries an `@api` tag in its docblock, and `tests/Feature/CorePhpApiContractTest.php` fails if one disappears or changes incompatibly. Between releases they only gain trailing optional parameters; anything else is a breaking change called out in the changelog. Every other public method in `app/` is internal and may change without notice.
@@ -761,6 +802,8 @@ Resolve services from the container (`app(OrderService::class)`). Methods that t
 | `App\Services\TrackedStockAllocationService` | `allocateForOrderItem()`, `releaseForOrderItem()` |
 | `App\Services\ScanLookupService` | `resolve()`, `locationSummary()` |
 | `App\Services\ReorderService` | `primarySupplier()`, `suggestedQuantity()`, `createDraftPurchaseOrder()` |
+| `App\Services\Organizations\OrganizationMembershipService` | `isMember()`, `roleIn()`, `organizationsFor()`, `members()`, `add()`, `changeRole()`, `remove()`, `createOrganization()` |
+| `App\Services\Organizations\ActiveOrganization` | `userIn()`, `runAs()`, `authorize()` |
 
 Check a method's docblock for its rules (locks it takes, exceptions it throws, which hooks it fires). On an older core, feature-detect a newer parameter with `(new \ReflectionMethod(OrderService::class, 'cancel'))->getNumberOfParameters()`.
 
