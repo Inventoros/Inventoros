@@ -7,7 +7,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { createPluginI18n, createReadonlyI18n, sanitizeMessages } from '../../resources/js/plugins/pluginI18n.js';
+import { createPluginI18n, createReadonlyI18n, pluginLabel, sanitizeMessages } from '../../resources/js/plugins/pluginI18n.js';
 
 const root = join(import.meta.dirname, '..', '..');
 const runtime = readFileSync(join(root, 'resources', 'js', 'plugins', 'runtime.js'), 'utf8');
@@ -109,4 +109,23 @@ test('the global i18n is read-only', () => {
     assert.equal(global.te('common.save'), true);
     assert.equal('addMessages' in global, false);
     assert.ok(Object.isFrozen(global));
+});
+
+test('a plugin label key resolves from the plugin messages and falls back to the plain label', () => {
+    const composer = fakeComposer('fr');
+    createPluginI18n(composer, 'cycle-counts', composer.locale).addMessages('en', { nav: { counts: 'Cycle counts' } });
+    const te = (key, code) => composer.te(key, code);
+
+    // Not translated into French: the English message, through the fallback locale.
+    assert.equal(pluginLabel(composer.t, te, 'plugins.cycle-counts.nav.counts', 'Counts'), 'Cycle counts');
+
+    createPluginI18n(composer, 'cycle-counts', composer.locale).addMessages('fr', { nav: { counts: 'Inventaires tournants' } });
+    assert.equal(pluginLabel(composer.t, te, 'plugins.cycle-counts.nav.counts', 'Counts'), 'Inventaires tournants');
+
+    // The bundle has not loaded (or has no such key): the plain label.
+    assert.equal(pluginLabel(composer.t, te, 'plugins.cycle-counts.nav.missing', 'Counts'), 'Counts');
+    // No key, or a key outside plugins.*: the plain label; never a core string.
+    assert.equal(pluginLabel(composer.t, te, null, 'Docs'), 'Docs');
+    assert.equal(pluginLabel(composer.t, te, 'common.save', 'Docs'), 'Docs');
+    assert.equal(pluginLabel(composer.t, te, undefined, undefined), '');
 });

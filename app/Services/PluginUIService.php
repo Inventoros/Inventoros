@@ -37,15 +37,92 @@ final class PluginUIService
     protected array $pageComponents = [];
 
     /**
+     * The plugin whose main file is running (see whileLoading()), so what it
+     * registers can be attributed to it.
+     */
+    protected ?string $loadingPlugin = null;
+
+    /**
+     * Run a plugin's registrations, attributing the pages, menu items and
+     * widgets they add to $slug.
+     *
+     * @template T
+     *
+     * @param  callable(): T  $register
+     * @return T
+     */
+    public function whileLoading(string $slug, callable $register): mixed
+    {
+        $previous = $this->loadingPlugin;
+        $this->loadingPlugin = $slug;
+
+        try {
+            return $register();
+        } finally {
+            $this->loadingPlugin = $previous;
+        }
+    }
+
+    /**
+     * A translation key a plugin may label its UI with: a string under
+     * "plugins.{slug}." (its own slug when known, any plugin namespace
+     * otherwise). Anything else is dropped, so a plugin cannot borrow or
+     * spoof a core string; the browser then shows the plain label.
+     */
+    protected function labelKey(mixed $key): ?string
+    {
+        if ($key === null) {
+            return null;
+        }
+
+        $prefix = $this->loadingPlugin !== null ? 'plugins.'.$this->loadingPlugin.'.' : 'plugins.';
+
+        if (! is_string($key) || ! str_starts_with($key, $prefix) || ! preg_match('/^plugins\.[a-z0-9][a-z0-9-]*\.[A-Za-z0-9_.-]+$/', $key)) {
+            Log::warning('Plugin UI translation key ignored: it must be a string under '.$prefix, [
+                'plugin' => $this->loadingPlugin,
+                'key' => is_scalar($key) ? (string) $key : get_debug_type($key),
+            ]);
+
+            return null;
+        }
+
+        return $key;
+    }
+
+    /**
+     * @param  array<string, mixed>  $item
+     * @return array<string, mixed>
+     */
+    protected function normaliseSubmenuItem(array $item): array
+    {
+        $item = array_merge([
+            'label' => 'Submenu Item',
+            'label_key' => null,
+            'route' => null,
+            'url' => null,
+            'icon' => null,
+            'permission' => null,
+            'active_routes' => [],
+        ], $item);
+        $item['label_key'] = $this->labelKey($item['label_key']);
+
+        return $item;
+    }
+
+    /**
      * Register a custom menu item.
      *
-     * @param array $item Menu item configuration (label, route, url, icon, permission, position, parent, badge, active_routes, submenu)
+     * `label_key` names a translation under plugins.{slug}. that the browser
+     * shows instead of `label` once the plugin's bundle has added it.
+     *
+     * @param array $item Menu item configuration (label, label_key, route, url, icon, permission, position, parent, badge, active_routes, submenu)
      * @return void
      */
     public function addMenuItem(array $item): void
     {
         $defaults = [
             'label' => 'Custom Item',
+            'label_key' => null,
             'route' => null,
             'url' => null,
             'icon' => null,
@@ -57,7 +134,14 @@ final class PluginUIService
             'submenu' => [], // Array of submenu items
         ];
 
-        $this->menuItems[] = array_merge($defaults, $item);
+        $item = array_merge($defaults, $item);
+        $item['label_key'] = $this->labelKey($item['label_key']);
+        $item['submenu'] = array_map(
+            fn ($sub) => is_array($sub) ? $this->normaliseSubmenuItem($sub) : $sub,
+            is_array($item['submenu']) ? $item['submenu'] : [],
+        );
+
+        $this->menuItems[] = $item;
     }
 
     /**
@@ -82,16 +166,7 @@ final class PluginUIService
      */
     public function addSubmenuItem(string $parentLabel, array $submenuItem): void
     {
-        $defaults = [
-            'label' => 'Submenu Item',
-            'route' => null,
-            'url' => null,
-            'icon' => null,
-            'permission' => null,
-            'active_routes' => [],
-        ];
-
-        $submenuItem = array_merge($defaults, $submenuItem);
+        $submenuItem = $this->normaliseSubmenuItem($submenuItem);
 
         // Find the parent menu item and add the submenu item
         foreach ($this->menuItems as &$menuItem) {
@@ -141,7 +216,11 @@ final class PluginUIService
         $this->customPages[$route] = array_merge($defaults, [
             'route' => $route,
             'component' => $component,
-        ], $options);
+        ], $options, [
+            // The plugin that registered it, for the route conflict check at
+            // activation (null when registered outside a plugin's main file).
+            'owner' => $this->loadingPlugin,
+        ]);
     }
 
     /**
@@ -157,7 +236,10 @@ final class PluginUIService
     /**
      * Register a dashboard widget.
      *
-     * @param array $widget Widget configuration (id, title, component, data, position, width, permission)
+     * `title_key` names a translation under plugins.{slug}. shown instead of
+     * `title` once the plugin's bundle has added it.
+     *
+     * @param array $widget Widget configuration (id, title, title_key, component, data, position, width, permission)
      * @return void
      */
     public function addDashboardWidget(array $widget): void
@@ -165,6 +247,7 @@ final class PluginUIService
         $defaults = [
             'id' => uniqid('widget_'),
             'title' => 'Custom Widget',
+            'title_key' => null,
             'component' => null,
             'data' => [],
             'position' => 100,
@@ -172,7 +255,10 @@ final class PluginUIService
             'permission' => null,
         ];
 
-        $this->dashboardWidgets[] = array_merge($defaults, $widget);
+        $widget = array_merge($defaults, $widget);
+        $widget['title_key'] = $this->labelKey($widget['title_key']);
+
+        $this->dashboardWidgets[] = $widget;
     }
 
     /**
@@ -328,7 +414,7 @@ final class PluginUIService
      * absent rather than empty, and its data is never computed. Widgets
      * without a component are skipped.
      *
-     * @return array<int, array{id: string, title: string, plugin: string|null, component: string, data: array, width: string, position: int}>
+     * @return array<int, array{id: string, title: string, title_key: string|null, plugin: string|null, component: string, data: array, width: string, position: int}>
      */
     public function getVisibleDashboardWidgets(?User $user): array
     {
@@ -348,6 +434,7 @@ final class PluginUIService
             $widgets[] = [
                 'id' => (string) $widget['id'],
                 'title' => (string) $widget['title'],
+                'title_key' => $widget['title_key'] ?? null,
                 'plugin' => $widget['plugin'] ?? null,
                 'component' => $widget['component'],
                 'data' => $this->resolveData($widget['data'] ?? [], $user, 'dashboard widget '.$widget['id']),

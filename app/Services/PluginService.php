@@ -872,7 +872,12 @@ final class PluginService
         }
 
         try {
-            PluginMainFile::load(app(), $slug, $pluginFile, $manifest);
+            // Attribute what the main file registers (pages, menu items,
+            // widgets) to this plugin.
+            app(PluginUIService::class)->whileLoading(
+                $slug,
+                fn () => PluginMainFile::load(app(), $slug, $pluginFile, $manifest),
+            );
 
             // Run the plugin's init action if it exists
             do_action('plugin_loaded', $slug, $manifest);
