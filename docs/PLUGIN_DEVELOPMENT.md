@@ -16,12 +16,15 @@ Everything in this guide is backed by code and tests: the hook tables are checke
 8. [Filter reference](#filter-reference)
 9. [Permissions](#permissions)
 10. [Plugin UI](#plugin-ui)
-11. [Building and packaging a plugin](#building-and-packaging-a-plugin)
-12. [Publishing to the marketplace](#publishing-to-the-marketplace)
-13. [Examples](#examples)
-14. [Best practices](#best-practices)
-15. [Security notes](#security-notes)
-16. [Debugging](#debugging)
+11. [MCP tools](#mcp-tools)
+12. [Outbound webhook events](#outbound-webhook-events)
+13. [Building and packaging a plugin](#building-and-packaging-a-plugin)
+14. [Publishing to the marketplace](#publishing-to-the-marketplace)
+15. [Licences for paid plugins](#licences-for-paid-plugins)
+16. [Examples](#examples)
+17. [Best practices](#best-practices)
+18. [Security notes](#security-notes)
+19. [Debugging](#debugging)
 
 ## Plugin structure
 
@@ -219,7 +222,32 @@ Schema::dropIfExists('my_plugin_notes');
 
 ## Action reference
 
-"Web form" and "web UI" hooks fire only from the Inertia screens; the REST, GraphQL and MCP surfaces do not fire them. `product_created` fires on every surface.
+"Web form" and "web UI" hooks fire only from the Inertia screens; the REST, GraphQL and MCP surfaces do not fire them.
+
+### Domain change hooks
+
+The created, updated and deleted hooks of products, variants, orders, purchase orders and customers, and `stock_changed`, fire from the model layer, so they fire the same way whichever surface made the change: the web screens, bulk actions, REST, GraphQL, MCP, imports, console and scheduled commands. Use them, not the web form hooks, for anything that must see every change (channel sync, accounting, outbound integrations).
+
+- They fire **after the transaction commits**, and never when it rolls back.
+- They fire **once per record per transaction**. A product saved three times in one request, or an order whose totals are written after its items, is announced once, with the final values.
+- A record created in a transaction is announced by its `*_created` hook only; the saves that complete it are not `*_updated` edits.
+- `$user` is the signed-in user, or null for queued jobs and commands.
+- A change of on-hand stock alone is not a `product_updated` or `variant_updated`: it fires `stock_changed`.
+
+`stock_changed` receives the product, the variant (or null) and the change:
+
+```php
+add_action('stock_changed', function ($product, $variant, array $change) {
+    // $change = [
+    //     'before' => 20,                 // on-hand before the first change in the transaction
+    //     'after' => 17,                  // and after the last one
+    //     'locations' => [                // bins that moved, by location id
+    //         4 => ['before' => 12, 'after' => 9],
+    //     ],
+    // ];
+    // A move between two bins leaves before === after and lists both bins.
+    my_plugin_queue_inventory_push($product->id, $variant?->id);
+});
 
 | Action | Arguments | When |
 |--------|-----------|------|
@@ -230,24 +258,29 @@ Schema::dropIfExists('my_plugin_notes');
 | `plugin_deactivated_{slug}` | none | A specific plugin is deactivated. |
 | `plugin_uninstalling` | `$slug` | Any plugin is about to be deleted, before its `hooks/uninstall.php` runs. |
 | `plugin_uninstalling_{slug}` | none | A specific plugin is about to be deleted. |
-| `product_created` | `$product`, `$user` | A product is created on any surface (web, REST, GraphQL, MCP, import). `$user` may be null. |
+| `product_created` | `$product`, `$user` | A product is created on any surface (web, REST, GraphQL, MCP, import), once it and its options and variants are committed. `$user` may be null. |
 | `product_before_create` | `$validated_data`, `$request` | Before a product is created from the web form. |
 | `product_after_create` | `$product`, `$request` | After a product is created from the web form. |
 | `product_before_update` | `$product`, `$validated_data`, `$request` | Before a product is updated from the web form. `$product` still holds the old values. |
-| `product_updated` | `$product`, `$user` | After a product is updated from the web form. |
+| `product_updated` | `$product`, `$user` | A product is edited on any surface (web, bulk edit, REST, GraphQL, import), once per transaction, after commit. Stock moves alone fire `stock_changed` instead. |
 | `product_after_update` | `$product`, `$request` | After a product is updated from the web form. |
 | `product_before_delete` | `$product`, `$request` | Before a product is deleted from the web UI. |
-| `product_deleted` | `$product`, `$user` | After a product is deleted from the web UI. |
+| `product_deleted` | `$product`, `$user` | A product is deleted on any surface (web, bulk delete, REST, GraphQL), after commit. |
 | `product_after_delete` | `$product`, `$request` | After a product is deleted from the web UI. |
 | `product_viewed` | `$product`, `$user` | The product detail page is viewed. |
 | `product_list_viewed` | `$products`, `$user` | The product list page is viewed (`$products` is the paginator). |
+| `variant_created` | `$variant`, `$user` | A product variant is created on any surface, after commit. |
+| `variant_updated` | `$variant`, `$user` | A product variant is edited on any surface, once per transaction, after commit. Stock moves alone fire `stock_changed` instead. |
+| `variant_deleted` | `$variant`, `$user` | A product variant is deleted on any surface, after commit. |
+| `stock_changed` | `$product`, `$variant`, `$change` | A product's or variant's on-hand stock, or one of the product's location bins, changed on any surface (adjustments, orders, receipts, transfers, returns, audits, imports, commands). Once per product or variant per transaction, after commit. See [Domain change hooks](#domain-change-hooks). |
 | `stock_adjusted` | `$stock_adjustment`, `$product` | A stock adjustment is committed. `$product` is null for a variant adjustment. |
 | `low_stock_alert` | `$product` | A product's stock drops to or below its minimum. |
 | `out_of_stock_alert` | `$product` | A product's stock reaches zero. |
 | `variant_low_stock_alert` | `$variant` | A variant with its own minimum stock drops to or below it. Variants without one count toward the product's `low_stock_alert`. |
 | `warehouse_low_stock_alert` | `$product`, `$warehouse`, `$on_hand` | A product's on-hand quantity in one warehouse drops to or below its minimum stock level for that warehouse. |
 | `order_created` | `$order`, `$user` | An order and all its items are created. |
-| `order_updated` | `$order`, `$user` | An order is saved. |
+| `order_updated` | `$order`, `$user` | An existing order is saved on any surface, once per transaction, after commit. Not fired while the order is being created. |
+| `order_deleted` | `$order`, `$user` | An order is deleted on any surface, after commit. |
 | `order_status_changed` | `$order`, `$old_status`, `$new_status`, `$user` | An order's status changes. |
 | `order_approved` | `$order`, `$user` | An order is approved. |
 | `order_rejected` | `$order`, `$user` | An order is rejected. |
@@ -255,11 +288,13 @@ Schema::dropIfExists('my_plugin_notes');
 | `payment_voided` | `$payment`, `$order`, `$user` | A payment or refund is voided (after commit). |
 | `shipment_created` | `$shipment`, `$user` | A shipment is created for an order (after commit). |
 | `shipment_delivered` | `$shipment` | A shipment is reported delivered (after commit). |
-| `purchase_order_created` | `$purchase_order`, `$user` | A purchase order is created. |
+| `purchase_order_created` | `$purchase_order`, `$user` | A purchase order is created on any surface (web, REST, GraphQL, MCP, reorder suggestions), after commit. |
+| `purchase_order_updated` | `$purchase_order`, `$user` | A purchase order is edited, sent, received or cancelled on any surface, once per transaction, after commit. |
+| `purchase_order_deleted` | `$purchase_order`, `$user` | A purchase order is deleted on any surface, after commit. |
 | `purchase_order_received` | `$purchase_order`, `$user` | A purchase order becomes fully received. |
 | `purchase_order_cancelled` | `$purchase_order`, `$user` | A purchase order is cancelled. |
-| `customer_created` | `$customer`, `$user` | A customer is created on any surface. |
-| `customer_updated` | `$customer`, `$user` | A customer is updated on any surface. |
+| `customer_created` | `$customer`, `$user` | A customer is created on any surface (web, REST, GraphQL, order import), after commit. |
+| `customer_updated` | `$customer`, `$user` | A customer is updated on any surface, once per transaction, after commit. |
 | `customer_deleted` | `$customer`, `$user` | A customer is deleted on any surface. |
 | `return_created` | `$return_order`, `$user` | A return is created. |
 | `return_received` | `$return_order`, `$user` | A return is marked received. |
@@ -382,16 +417,21 @@ Pages and slots that render plugin components:
 |------|-------|
 | `dashboard` | `header`, `before-stats`, `after-stats`, `before-content`, `widgets`, `after-content`, `footer` |
 | `products.index` | `header`, `before-table`, `footer` |
-| `products.show` | `header`, `sidebar`, `tabs`, `footer` |
+| `products.show` | `header`, `actions`, `sidebar`, `tabs`, `footer` |
 | `products.create`, `products.edit` | `header`, `before-form`, `after-form` |
 | `orders.index` | `header`, `before-table`, `footer` |
-| `orders.show` | `header`, `sidebar`, `tabs`, `footer` |
+| `orders.show` | `header`, `actions`, `sidebar`, `tabs`, `footer` |
 | `purchase-orders.index` | `header`, `before-table`, `footer` |
-| `purchase-orders.show` | `header`, `sidebar`, `footer` |
+| `purchase-orders.show` | `header`, `actions`, `sidebar`, `footer` |
 | `purchase-orders.create`, `purchase-orders.edit`, `purchase-orders.receive` | `header`, `footer` |
 | `suppliers.index` | `header`, `before-table`, `footer` |
 | `suppliers.show`, `suppliers.create`, `suppliers.edit` | `header`, `footer` |
 | `categories.index`, `locations.index` | `header`, `footer` |
+| `customers.index`, `warehouses.index`, `stock-audits.index`, `cycle-counts.index`, `stock-transfers.index`, `returns.index`, `work-orders.index` | `header`, `footer` |
+| `customers.show`, `warehouses.show`, `stock-audits.show`, `stock-transfers.show`, `returns.show`, `work-orders.show` | `header`, `actions`, `footer` |
+| `settings.index` | `header`, `sections`, `footer` |
+
+`actions` renders inside the page header's action bar, before the page's own buttons: keep it to small buttons or links. On the settings hub, each component in `sections` is one card in the grid of settings pages; render a `Card` linking to your settings page (the hub does not check the link, so give the placement the same `permission` as the page). Pages without plugin placements render exactly as before.
 
 ### Tabs on detail pages
 
@@ -563,6 +603,51 @@ Available tokens include `--surface-canvas`, `--surface-base`, `--surface-raised
 
 Installs that build the frontend themselves also pick up `plugins/{slug}/resources/js/Components/{Name}.vue` and `plugins/{slug}/resources/js/Pages/**/*.vue` at `npm run build` time. That route does not work for uploaded plugins or the cPanel release, so prefer the runtime bundle.
 
+## MCP tools
+
+A plugin can add tools to the Inventoros MCP server (`/mcp`, see the MCP server docs) from its main file:
+
+```php
+register_mcp_tool(string $slug, Laravel\Mcp\Server\Tool|string $tool, string|array $permission): void
+```
+
+```php
+register_mcp_tool('stock-insights', \Inventoros\Plugins\StockInsights\Mcp\SummaryTool::class, 'stock-insights.view');
+```
+
+The tool is an ordinary `laravel/mcp` tool class from your plugin (`schema()`, `handle(Request $request)`, attributes such as `#[IsReadOnly]`), with an explicit snake_case `$name` that starts with your slug in snake case: plugin `stock-insights` registers `stock_insights_summary`. Registering a name without that prefix, one that a core tool uses, a class that is not a `Tool`, or no permission throws `InvalidArgumentException`.
+
+Core, not your tool, decides who may use it. `$permission` is a permission name (core or one you registered with `register_permission()`) or a list meaning "any of". The tool is listed in `tools/list` and runs on `tools/call` only when the user holds one of them **and** the bearer token's abilities allow it (a token limited to `view_products` cannot reach a tool gated on `stock-insights.view`). Everyone else neither sees nor can call it. Inside `handle()`, `$request->user()` is the acting user; scope every query to `$request->user()->organization_id`, and follow the core tools' conventions: integer quantities, decimal-string money, `Response::error()` for failures, and an explicit confirmation step in the description for anything that writes.
+
+Tools are registered while the plugin is active. On Inventoros versions without this, check `function_exists('register_mcp_tool')`.
+
+## Outbound webhook events
+
+Users subscribe webhooks to events in Settings > Webhooks. A plugin can add its own events and send them through core's delivery, which signs every payload (`X-Webhook-Signature`), retries failures with back-off, refuses private and loopback targets, and logs each delivery:
+
+```php
+register_webhook_event(string $event, string $description, ?string $group = null): void
+dispatch_webhook_event(string $event, array $data, Organization|int $organization): void
+```
+
+```php
+// Plugin.php
+register_webhook_event('cycle-counts.session_completed', 'When a count session is completed', 'Cycle counts');
+
+// When it happens (inside or outside a transaction):
+dispatch_webhook_event('cycle-counts.session_completed', [
+    'session_id' => $session->id,
+    'counted' => $session->counted_lines,
+], $session->organization_id);
+```
+
+- The name is `{plugin-slug}.{event}` (lowercase letters, digits and underscores after the dot). Core events begin with a core resource (`product.`, `order.`, ...), which a plugin cannot use. Anything else throws `InvalidArgumentException`.
+- Registered events appear in the webhook event picker under `$group` (by default your slug as a title, "Cycle Counts") and are accepted in webhook subscriptions over the web and REST API.
+- `dispatch_webhook_event()` sends to the organization's active webhooks subscribed to that event, and only after the surrounding transaction commits; nothing is sent if it rolls back. The payload has the same envelope as core events: `id`, `event`, `timestamp`, `organization_id` and your `data`. Never put secrets or another organization's data in it.
+- Dispatching an event that is not registered throws. A deactivated plugin's events are no longer offered and nothing sends them; existing subscriptions keep the name and resume when it is reactivated.
+
+On Inventoros versions without this, check `function_exists('register_webhook_event')`.
+
 ## Building and packaging a plugin
 
 1. Copy `plugins/hello-world/ui/vite.config.js` and `ui/package.json` into your plugin's `ui/` folder and put your entry in `ui/src/main.js`. The config maps every `import ... from 'vue'` to `window.Inventoros.Vue`, writes `dist/plugin.js` and `dist/plugin.css`, and ignores the app's PostCSS setup.
@@ -600,6 +685,46 @@ Anyone can publish a plugin on [inventoros.com/marketplace](https://inventoros.c
 **Versioning.** To release a new version, bump `version` in `plugin.json` (use semantic versions such as `1.4.0`), rebuild and re-zip, and submit it as a new version of your plugin. Installs see it as an available update once it is approved. Raise `requires` when the plugin starts depending on a newer Inventoros.
 
 **Pricing.** Third-party plugins are listed as free for now. Selling third-party plugins (and developer payouts) is not supported yet.
+
+## Licences for paid plugins
+
+The marketplace only serves a paid plugin's package to an organization whose connected inventoros.com account owns it. At runtime, a paid plugin checks its licence with `plugin_licence()`:
+
+```php
+plugin_licence(string $slug, Organization|int|null $organization = null): App\Services\Marketplace\PluginLicence
+```
+
+```php
+$licence = plugin_licence('insights');                 // the signed-in user's organization
+$licence = plugin_licence('insights', $organizationId); // queued jobs, commands, schedules
+
+if (! $licence->allowsWrites()) {
+    // Open read-only: show a notice with a link to renew, refuse writes,
+    // skip syncs. Keep the plugin's data.
+}
+```
+
+`PluginLicence` carries `status`, `reason`, `expiresAt`, `graceUntil`, `inGrace` and `checkedAt`, plus `isValid()`, `allowsWrites()` (the same) and `toArray()`:
+
+| `status` | `reason` | Meaning |
+|----------|----------|---------|
+| `valid` | `active` | A signed entitlement covers today. |
+| `valid` | `offline_grace` | The entitlement ran out while the marketplace could not be reached; it keeps counting until `graceUntil` (14 days after `expiresAt` by default). `inGrace` is true. |
+| `expired` | `expired` | The entitlement ran out (a cancelled or lapsed subscription, or offline past the grace period). |
+| `missing` | `not_connected`, `not_owned` | The organization has no marketplace connection, or its account does not own the plugin. |
+| `unknown` | `not_checked`, `no_public_key`, `invalid_signature`, `install_mismatch`, `no_organization`, `error` | Nothing verifiable yet. |
+
+How it works:
+
+- When an organization connects its inventoros.com account, and daily after that (`marketplace:refresh-entitlements`, scheduled), Inventoros fetches `GET /api/v1/marketplace/entitlements?install_id=...` with the organization's marketplace token. Each owned paid plugin comes back with an `expires_at` and an Ed25519 signature over `inventoros-marketplace-entitlement-v1`, the install id, the slug and `expires_at`, one per line.
+- The install id is a random id generated once per installation, plus the organization id, so an entitlement copied to another installation or organization does not verify.
+- The document is stored per organization and every entry is verified against `INVENTOROS_MARKETPLACE_PUBLIC_KEY` each time it is read: editing the stored row grants nothing. A refresh whose document does not verify is rejected and the previous one is kept.
+- `plugin_licence()` never contacts the marketplace. When the stored document is older than `INVENTOROS_MARKETPLACE_ENTITLEMENT_REFRESH_HOURS` (24), it queues a refresh, at most once an hour per organization.
+- `INVENTOROS_MARKETPLACE_ENTITLEMENT_GRACE_DAYS` (14) sets the offline grace period.
+
+**Fail safe.** The check never throws and never blocks a request. Only `valid` unlocks paid features; in every other state the plugin degrades to read-only. A plugin must never, in any state, block or slow a core page, change or hide core records (stock, orders, products), delete its own data, or call the marketplace itself on each request. The check is ordinary readable PHP: the protection is the signed entitlement and the licence terms, not hidden code.
+
+On Inventoros versions without it, check `function_exists('plugin_licence')`.
 
 ## Examples
 

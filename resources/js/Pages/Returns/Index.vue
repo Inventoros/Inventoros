@@ -1,4 +1,5 @@
 <script setup>
+import PluginSlot from '@/Components/PluginSlot.vue';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import PageHeader from '@/Components/ui/PageHeader.vue';
 import Card from '@/Components/ui/Card.vue';
@@ -17,6 +18,7 @@ const { canVisit } = usePermissions();
 const { t } = useI18n();
 
 const props = defineProps({
+    pluginComponents: Object,
     returns: Object,
     filters: Object,
     statuses: Array,
@@ -86,6 +88,9 @@ const selectClass =
                 </Button>
             </template>
         </PageHeader>
+
+        <!-- Plugin Slot: Header -->
+        <PluginSlot slot="header" :components="pluginComponents?.header" />
 
         <!-- Filters -->
         <Card class="mt-6">
@@ -208,5 +213,8 @@ const selectClass =
                 </template>
             </nav>
         </div>
+
+        <!-- Plugin Slot: Footer -->
+        <PluginSlot slot="footer" :components="pluginComponents?.footer" />
     </AppLayout>
 </template>

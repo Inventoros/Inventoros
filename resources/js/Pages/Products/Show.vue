@@ -299,6 +299,7 @@ const fieldInput = 'h-9 w-full rounded-md border border-border-subtle bg-surface
 
         <PageHeader :title="product.display_name ?? product.name" :description="`SKU: ${product.sku}`">
             <template #actions>
+                <PluginSlot slot="actions" :components="pluginComponents?.actions" />
                 <Button variant="secondary" size="sm" @click="duplicateProduct">
                     <Copy :size="14" />
                     {{ t('products.duplicate') }}

@@ -71,6 +71,11 @@ class AppServiceProvider extends ServiceProvider
 
         // Permissions registered by active plugins (register_permission()).
         $this->app->singleton(\App\Services\Plugins\PluginPermissionRegistry::class);
+        $this->app->singleton(\App\Services\Plugins\PluginMcpToolRegistry::class);
+        $this->app->singleton(\App\Services\Plugins\PluginWebhookEventRegistry::class);
+        $this->app->singleton(\App\Services\Hooks\DomainHooks::class);
+        // Scoped: its per-request document cache must not outlive a queued job.
+        $this->app->scoped(\App\Services\Marketplace\PluginLicenceService::class);
     }
 
     /**
@@ -129,6 +134,7 @@ class AppServiceProvider extends ServiceProvider
         // A purchase order, invoice or shipment email is "sent" when it is
         // delivered, not when it is queued.
         Event::listen(MessageSent::class, [DocumentEmailDelivered::class, 'record']);
+        Event::listen(\Illuminate\Database\Events\TransactionRolledBack::class, [\App\Services\Hooks\DomainHooks::class, 'handleRollback']);
 
         // Scramble API documentation - Bearer token security
         Scramble::afterOpenApiGenerated(function (OpenApi $openApi) {

@@ -121,6 +121,7 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-t
             :description="t('purchaseOrders.show.orderDateOn', { date: formatDay(purchaseOrder.order_date) })"
         >
             <template #actions>
+                <PluginSlot slot="actions" :components="pluginComponents?.actions" />
                 <Badge :variant="statusVariant(purchaseOrder.status)" size="sm" dot>
                     {{ statusLabels[purchaseOrder.status] || purchaseOrder.status }}
                 </Badge>

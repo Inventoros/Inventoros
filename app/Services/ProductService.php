@@ -11,6 +11,7 @@ use App\Models\Inventory\StockAdjustment;
 use App\Models\Inventory\Supplier;
 use App\Models\Inventory\SupplierPriceHistory;
 use App\Models\User;
+use App\Observers\ProductObserver;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
@@ -116,6 +117,10 @@ final class ProductService
 
         DB::transaction(function () use ($product, $data, $options, $variants, $syncOptions, $syncVariants, $disablingVariants, $syncSuppliers, $suppliers) {
             $product->update($data);
+
+            // An edit that only touched options, variants or suppliers leaves
+            // the product row unchanged; it is still a product edit.
+            app(ProductObserver::class)->announceUpdate($product);
 
             if ($syncSuppliers) {
                 $this->syncSuppliers($product, $suppliers);
@@ -633,11 +638,13 @@ final class ProductService
         $keep = $this->variantIdsInUse($variantIds);
         $delete = array_values(array_diff($variantIds, $keep));
 
+        // Model by model, so each variant fires variant_updated or
+        // variant_deleted.
         if ($keep !== []) {
-            ProductVariant::query()->whereIn('id', $keep)->update(['is_active' => false]);
+            ProductVariant::query()->whereIn('id', $keep)->get()->each->update(['is_active' => false]);
         }
         if ($delete !== []) {
-            ProductVariant::query()->whereIn('id', $delete)->delete();
+            ProductVariant::query()->whereIn('id', $delete)->get()->each->delete();
         }
     }
 

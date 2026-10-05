@@ -1,4 +1,5 @@
 <script setup>
+import PluginSlot from '@/Components/PluginSlot.vue';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import PageHeader from '@/Components/ui/PageHeader.vue';
 import Card from '@/Components/ui/Card.vue';
@@ -14,6 +15,7 @@ import { ArrowLeft, Play, CheckCircle2, X, Boxes, PackageCheck, Check, AlertTria
 const { t } = useI18n();
 
 const props = defineProps({
+    pluginComponents: Object,
     workOrder: Object,
 });
 
@@ -133,6 +135,7 @@ const fieldInput = 'h-9 w-full rounded-md border border-border-subtle bg-surface
 
         <PageHeader :title="workOrder.wo_number" :description="t('workOrders.detailsSubtitle')">
             <template #actions>
+                <PluginSlot slot="actions" :components="pluginComponents?.actions" />
                 <Badge :variant="statusVariant(workOrder.status)" size="sm" dot>{{ getStatusLabel(workOrder.status) }}</Badge>
                 <Button
                     v-if="canStart"
@@ -170,6 +173,9 @@ const fieldInput = 'h-9 w-full rounded-md border border-border-subtle bg-surface
                 </Button>
             </template>
         </PageHeader>
+
+        <!-- Plugin Slot: Header -->
+        <PluginSlot slot="header" :components="pluginComponents?.header" />
 
         <!-- Status Timeline -->
         <Card v-if="workOrder.status !== 'cancelled'" :padded="false" class="mt-6">
@@ -416,5 +422,8 @@ const fieldInput = 'h-9 w-full rounded-md border border-border-subtle bg-surface
                 </Card>
             </div>
         </div>
+
+        <!-- Plugin Slot: Footer -->
+        <PluginSlot slot="footer" :components="pluginComponents?.footer" />
     </AppLayout>
 </template>

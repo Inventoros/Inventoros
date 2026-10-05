@@ -48,6 +48,23 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Paid plugin licences (plugin_licence())
+    |--------------------------------------------------------------------------
+    |
+    | The marketplace signs each organization's paid plugin entitlements with
+    | the key above. They are refreshed in the background once they are older
+    | than `entitlement_refresh_hours`, and keep counting for
+    | `entitlement_grace_days` after they expire while the marketplace cannot
+    | be reached. See docs/PLUGIN_DEVELOPMENT.md, "Licences for paid plugins".
+    |
+    */
+
+    'entitlement_refresh_hours' => (int) env('INVENTOROS_MARKETPLACE_ENTITLEMENT_REFRESH_HOURS', 24),
+
+    'entitlement_grace_days' => (int) env('INVENTOROS_MARKETPLACE_ENTITLEMENT_GRACE_DAYS', 14),
+
+    /*
+    |--------------------------------------------------------------------------
     | Catalog cache and download limits
     |--------------------------------------------------------------------------
     */

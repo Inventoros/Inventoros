@@ -44,3 +44,7 @@ Schedule::command('shipping:track')->everyThirtyMinutes()->withoutOverlapping();
 // deliveries; operators can override per their compliance policy.
 Schedule::command('activity-logs:prune')->dailyAt('03:00');
 Schedule::command('webhooks:prune')->dailyAt('03:30');
+
+// Paid plugin licences: refresh each connected organization's signed
+// entitlements from the marketplace once a day.
+Schedule::command('marketplace:refresh-entitlements')->dailyAt('04:15')->withoutOverlapping();

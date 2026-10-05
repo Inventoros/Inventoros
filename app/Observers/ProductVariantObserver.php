@@ -6,6 +6,7 @@ namespace App\Observers;
 
 use App\Models\Inventory\Product;
 use App\Models\Inventory\ProductVariant;
+use App\Services\Hooks\DomainHooks;
 use App\Services\NotificationService;
 use Illuminate\Support\Facades\DB;
 
@@ -18,14 +19,53 @@ use Illuminate\Support\Facades\DB;
  * variants, as the dashboard counts it) is checked against the product's
  * minimum. Both fire only when the threshold is crossed, after the stock
  * transaction commits.
+ *
+ * It also fires the variant_created, variant_updated and variant_deleted
+ * hooks and records variant stock moves for stock_changed, once per variant
+ * per transaction, from every surface.
  */
 final class ProductVariantObserver
 {
+    /**
+     * Attributes whose change alone is not a variant edit (stock moves are
+     * reported by stock_changed).
+     */
+    private const NOT_AN_EDIT = ['stock', 'updated_at', 'created_at', 'deleted_at'];
+
+    public function __construct(private readonly DomainHooks $hooks) {}
+
+    public function created(ProductVariant $variant): void
+    {
+        $user = auth()->user();
+
+        $this->hooks->afterCommit('variant_created', $variant, fn () => do_action('variant_created', $variant, $user));
+
+        if ((int) $variant->stock !== 0) {
+            $this->hooks->totalStockChanged($variant, (int) $variant->product_id, (int) $variant->id, 0, (int) $variant->stock);
+        }
+    }
+
+    public function deleted(ProductVariant $variant): void
+    {
+        $user = auth()->user();
+
+        $this->hooks->afterCommit('variant_deleted', $variant, fn () => do_action('variant_deleted', $variant, $user));
+    }
+
     public function updated(ProductVariant $variant): void
     {
+        if (array_diff(array_keys($variant->getChanges()), self::NOT_AN_EDIT) !== []
+            && ! $this->hooks->isPending('variant_created', $variant)) {
+            $user = auth()->user();
+
+            $this->hooks->afterCommit('variant_updated', $variant, fn () => do_action('variant_updated', $variant, $user));
+        }
+
         if (! $variant->wasChanged('stock')) {
             return;
         }
+
+        $this->hooks->totalStockChanged($variant, (int) $variant->product_id, (int) $variant->id, (int) $variant->getOriginal('stock'), (int) $variant->stock);
 
         $old = (int) $variant->getOriginal('stock');
         $new = (int) $variant->stock;

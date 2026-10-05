@@ -1,4 +1,5 @@
 <script setup>
+import PluginSlot from '@/Components/PluginSlot.vue';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import PageHeader from '@/Components/ui/PageHeader.vue';
 import Card from '@/Components/ui/Card.vue';
@@ -18,6 +19,10 @@ import {
     RefreshCw,
     ChevronRight,
 } from 'lucide-vue-next';
+
+defineProps({
+    pluginComponents: Object,
+});
 
 const { t } = useI18n();
 const page = usePage();
@@ -114,6 +119,9 @@ const settingsSections = computed(() =>
             :description="t('settings.description')"
         />
 
+        <!-- Plugin Slot: Header -->
+        <PluginSlot slot="header" :components="pluginComponents?.header" />
+
         <!-- Settings sections -->
         <div class="mt-6 grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
             <Link
@@ -134,6 +142,12 @@ const settingsSections = computed(() =>
                     </div>
                 </Card>
             </Link>
+
+            <!-- Plugin Slot: Sections (each component is one card in the grid) -->
+            <PluginSlot slot="sections" :components="pluginComponents?.sections" />
         </div>
+
+        <!-- Plugin Slot: Footer -->
+        <PluginSlot slot="footer" :components="pluginComponents?.footer" />
     </AppLayout>
 </template>

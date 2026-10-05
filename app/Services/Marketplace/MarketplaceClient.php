@@ -154,6 +154,49 @@ final class MarketplaceClient
     }
 
     /**
+     * The signed runtime entitlements of the token's account for this
+     * installation (see EntitlementStatement). The caller verifies every
+     * signature; this only checks the shape.
+     *
+     * @return array{install_id: string, issued_at: string|null, entitlements: array<int, array{slug: string, expires_at: string, signature: string}>}
+     *
+     * @throws MarketplaceException When the token is rejected, the marketplace is unreachable or the answer is malformed.
+     */
+    public function entitlements(string $token, string $installId): array
+    {
+        if (! EntitlementStatement::isValidInstallId($installId)) {
+            throw new MarketplaceException('Invalid installation id.');
+        }
+
+        $response = $this->get('/entitlements?install_id='.rawurlencode($installId), $token);
+
+        if (in_array($response->status(), [401, 403], true)) {
+            throw new MarketplaceException('The marketplace rejected the connection token of this organization.', 401);
+        }
+
+        $data = $this->json($response, 'check plugin licences')['data'] ?? null;
+
+        if (! is_array($data) || ($data['install_id'] ?? null) !== $installId || ! is_array($data['entitlements'] ?? null)) {
+            throw new MarketplaceException('The marketplace returned an unexpected answer for plugin licences.');
+        }
+
+        $entries = array_values(array_filter($data['entitlements'], fn ($entry) => is_array($entry)
+            && is_string($entry['slug'] ?? null) && self::isValidSlug($entry['slug'])
+            && is_string($entry['expires_at'] ?? null) && EntitlementStatement::isValidExpiresAt($entry['expires_at'])
+            && is_string($entry['signature'] ?? null)));
+
+        return [
+            'install_id' => $installId,
+            'issued_at' => is_string($data['issued_at'] ?? null) ? $data['issued_at'] : null,
+            'entitlements' => array_map(fn (array $entry) => [
+                'slug' => $entry['slug'],
+                'expires_at' => $entry['expires_at'],
+                'signature' => $entry['signature'],
+            ], $entries),
+        ];
+    }
+
+    /**
      * Download a plugin's latest package to a temporary file. The caller
      * verifies it and must delete the file.
      *

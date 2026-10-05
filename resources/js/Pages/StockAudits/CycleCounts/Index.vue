@@ -1,4 +1,5 @@
 <script setup>
+import PluginSlot from '@/Components/PluginSlot.vue';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import PageHeader from '@/Components/ui/PageHeader.vue';
 import Card from '@/Components/ui/Card.vue';
@@ -15,6 +16,7 @@ const { canVisit } = usePermissions();
 const { t } = useI18n();
 
 defineProps({
+    pluginComponents: Object,
     schedules: { type: Array, default: () => [] },
     canManage: { type: Boolean, default: false },
 });
@@ -63,6 +65,9 @@ const destroy = (schedule) => {
                 </Button>
             </template>
         </PageHeader>
+
+        <!-- Plugin Slot: Header -->
+        <PluginSlot slot="header" page="cycle-counts.index" :components="pluginComponents?.header" />
 
         <div class="mt-6 space-y-3">
             <Card v-if="schedules.length === 0">
@@ -121,5 +126,8 @@ const destroy = (schedule) => {
                 </div>
             </Card>
         </div>
+
+        <!-- Plugin Slot: Footer -->
+        <PluginSlot slot="footer" page="cycle-counts.index" :components="pluginComponents?.footer" />
     </AppLayout>
 </template>

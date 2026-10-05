@@ -6,8 +6,17 @@ Full release notes, with the pull request behind each change, are on [GitHub Rel
 
 ## [Unreleased]
 
+### Added
+
+- Plugins: `product_updated`, `product_deleted` and the new `variant_created`, `variant_updated`, `variant_deleted`, `order_deleted`, `purchase_order_updated`, `purchase_order_deleted` and `stock_changed` actions fire from every surface (web, bulk actions, REST, GraphQL, MCP, imports and commands), once per record per transaction and only after it commits.
+- Plugins: `plugin_licence($slug)` reports a paid plugin's runtime licence (`valid`, `expired`, `missing` or `unknown`) from entitlements the marketplace signs for each organization, refreshed daily in the background (`marketplace:refresh-entitlements`), verified with the marketplace public key, and honoured for 14 days past expiry while offline (`INVENTOROS_MARKETPLACE_ENTITLEMENT_GRACE_DAYS`).
+- Plugins: `register_mcp_tool()` adds tools to the MCP server, named after the plugin slug and listed and callable only for users and tokens that hold the tool's permission.
+- Plugins: page slots on customers, warehouses, stock audits, cycle counts, stock transfers, returns and work orders (`header`, `footer`, and `actions` on detail pages), an `actions` slot on the product, order and purchase order pages, and `header`, `sections` and `footer` on the settings hub. All are permission-gated on the server.
+- Plugins: `register_webhook_event()` adds `{slug}.{event}` events to the webhook event picker, and `dispatch_webhook_event()` sends them after commit through the signed, retried webhook delivery.
+
 ### Changed
 
+- `product_created`, `order_updated`, `purchase_order_created` and the customer hooks fire once per record per transaction, after commit; `order_updated` no longer fires while an order is being created, and `product_created` now runs after the product's options and variants are saved. The `product.updated` and `product.deleted` webhooks now fire for changes made through REST, GraphQL, imports and bulk actions too.
 - Products saved as USD only because none was given (API, GraphQL, MCP and products import in 1.0.x) move to their organization's currency when upgrading, and new products without a currency take the organization's. See [UPGRADE.md](UPGRADE.md#currencies-and-money).
 - Orders default to the organization's currency on every surface, and an order line without a unit price is priced in the order's currency or rejected when the product has no price in it.
 - Money amounts accept at most two decimal places everywhere, and calculated amounts round half up to the cent instead of truncating.

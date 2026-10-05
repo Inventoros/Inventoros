@@ -68,6 +68,14 @@ add_filter('product_price_display', function ($price, $product) {
 
 Priority sets the order; lower numbers run first (default 10). Commonly used actions include `product_created`, `product_updated`, `order_created`, `order_status_changed`, `low_stock_alert` and `dashboard_stats`. Common filters include `product_display_name`, `product_price_display`, `product_search_query`, `order_total_calculation` and `dashboard_stats_data`.
 
+The created, updated and deleted hooks of products, variants, orders, purchase orders and customers, and `stock_changed`, fire from every surface (web, bulk actions, REST, GraphQL, MCP, imports and commands), once per record per transaction and only after it commits. Use them for integrations that must see every change:
+
+```php
+add_action('stock_changed', function ($product, $variant, $change) {
+    // $change['before'], $change['after'], and $change['locations'][$locationId]['before'|'after'].
+});
+```
+
 ### Lifecycle files
 
 `hooks/activate.php` runs after the plugin loads on activation; create tables and defaults there. If it throws, the plugin stays inactive and the Plugins page shows the error. `hooks/deactivate.php` runs on deactivation and `hooks/uninstall.php` when the plugin is deleted. If either throws, the plugin is still deactivated or removed and the page shows a warning.
@@ -97,7 +105,13 @@ While the plugin is active, Inventoros copies `dist/` to `public/plugin-assets/m
 
 A plugin can also add a page of its own with `register_page()`, which the bundle supplies with `plugin.registerPage()`, and a dashboard card with `register_dashboard_widget()`. Bundles get the app's layout, Inertia helpers, core UI components (forms, tables, dialogs, the barcode scanner) and translations from `window.Inventoros`, so plugin pages look like the rest of the app and follow the user's language.
 
-Every placement, menu item, widget and page accepts a `permission`. It is checked on the server: users without it never receive the entry, or get a 403 for a page. Data passed as a closure is only computed for users who may see it. A plugin can add permissions of its own with `register_permission('my-plugin.manage', 'Manage My Plugin')`; they appear in the role editor like core permissions and are removed from roles when the plugin is deleted.
+Components can be placed on the dashboard, the product, order, purchase order, supplier, customer, warehouse, stock audit, cycle count, transfer, return and work order pages, and as a card on the settings hub (the full list of pages and slots is in the plugin development guide). Every placement, menu item, widget and page accepts a `permission`. It is checked on the server: users without it never receive the entry, or get a 403 for a page. Data passed as a closure is only computed for users who may see it. A plugin can add permissions of its own with `register_permission('my-plugin.manage', 'Manage My Plugin')`; they appear in the role editor like core permissions and are removed from roles when the plugin is deleted.
+
+### MCP tools and webhook events
+
+`register_mcp_tool('my-plugin', MyTool::class, 'my-plugin.view')` adds a tool to the MCP server. Its name must start with the slug in snake case (`my_plugin_...`), and it is listed and callable only for users who hold the permission and whose token allows it.
+
+`register_webhook_event('my-plugin.report_sent', 'When a report is sent')` adds an event to the webhook event picker, and `dispatch_webhook_event('my-plugin.report_sent', $data, $organizationId)` sends it, after the transaction commits, through the same signed and retried delivery as core events.
 
 Activate or deactivate a plugin over SSH with `php artisan plugin:activate my-plugin` and `php artisan plugin:deactivate my-plugin`.
 
@@ -146,6 +160,10 @@ Sign a plugin with `php artisan update:sign my-plugin.zip`. For production deplo
 3. Test all functionality thoroughly.
 4. Check `storage/logs/laravel.log` and the browser console for errors.
 5. Deactivate and verify cleanup, then delete and verify complete removal.
+
+### Paid plugin licences
+
+A paid plugin checks its licence at runtime with `plugin_licence('slug')` (or `plugin_licence('slug', $organizationId)` in jobs and commands). The marketplace signs each organization's entitlements; Inventoros refreshes them daily in the background, verifies them with the marketplace public key and keeps them valid for 14 days past expiry while the marketplace cannot be reached (`INVENTOROS_MARKETPLACE_ENTITLEMENT_GRACE_DAYS`). The status is `valid`, `expired`, `missing` or `unknown`; anything but `valid` makes the plugin read-only. The check never blocks Inventoros itself.
 
 ### Publishing to the marketplace
 

@@ -50,6 +50,7 @@ class WarehouseController extends Controller
             ->withQueryString();
 
         return Inertia::render('Warehouses/Index', [
+            'pluginComponents' => plugin_slots('warehouses.index', ['header', 'footer']),
             'warehouses' => $warehouses,
             'filters' => [
                 'search' => $request->input('search', ''),
@@ -180,6 +181,7 @@ class WarehouseController extends Controller
             ->get();
 
         return Inertia::render('Warehouses/Show', [
+            'pluginComponents' => plugin_slots('warehouses.show', ['header', 'actions', 'footer']),
             'warehouse' => $warehouse,
             'locations' => $locations,
             'assignedUsers' => $assignedUsers,

@@ -1,4 +1,5 @@
 <script setup>
+import PluginSlot from '@/Components/PluginSlot.vue';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import PageHeader from '@/Components/ui/PageHeader.vue';
 import Card from '@/Components/ui/Card.vue';
@@ -32,6 +33,7 @@ const BarcodeScannerModal = defineAsyncComponent(() => import('@/Components/Barc
 const { t } = useI18n();
 
 const props = defineProps({
+    pluginComponents: Object,
     audit: Object,
     summary: Object,
 });
@@ -291,6 +293,7 @@ const thClass = 'px-6 py-3 text-left text-xs font-medium uppercase tracking-wide
 
         <PageHeader :title="audit.audit_number" :description="audit.name">
             <template #actions>
+                <PluginSlot slot="actions" :components="pluginComponents?.actions" />
                 <Badge :variant="statusVariant(audit.status)" size="sm" dot>{{ getStatusLabel(audit.status) }}</Badge>
                 <Button
                     v-if="(canEdit) && canVisit('stock-audits.edit')"
@@ -308,6 +311,9 @@ const thClass = 'px-6 py-3 text-left text-xs font-medium uppercase tracking-wide
                 </Button>
             </template>
         </PageHeader>
+
+        <!-- Plugin Slot: Header -->
+        <PluginSlot slot="header" :components="pluginComponents?.header" />
 
         <!-- Summary metrics -->
         <section class="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
@@ -628,5 +634,8 @@ const thClass = 'px-6 py-3 text-left text-xs font-medium uppercase tracking-wide
             @close="showScanner = false"
             @product-found="onScannedProduct"
         />
+
+        <!-- Plugin Slot: Footer -->
+        <PluginSlot slot="footer" :components="pluginComponents?.footer" />
     </AppLayout>
 </template>

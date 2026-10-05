@@ -66,7 +66,7 @@ final class HookRegistry
             // PRODUCT HOOKS
             // ========================================
             'product_created' => [
-                'description' => 'Fired after a product is created on any surface (web, REST, GraphQL, MCP, import)',
+                'description' => 'Fired once after a product is created and committed, on any surface (web, REST, GraphQL, MCP, import)',
                 'parameters' => ['$product', '$user'],
                 'example' => "add_action('product_created', function (\$product, \$user) { /* ... */ });",
             ],
@@ -86,7 +86,7 @@ final class HookRegistry
                 'example' => "add_action('product_before_update', function (\$product, \$validated_data, \$request) { /* ... */ });",
             ],
             'product_updated' => [
-                'description' => 'Fired after a product is updated from the web form',
+                'description' => 'Fired once per transaction after a product is edited and committed, on any surface (web, bulk edit, REST, GraphQL, import). Stock moves alone fire stock_changed instead',
                 'parameters' => ['$product', '$user'],
                 'example' => "add_action('product_updated', function (\$product, \$user) { /* ... */ });",
             ],
@@ -101,7 +101,7 @@ final class HookRegistry
                 'example' => "add_action('product_before_delete', function (\$product, \$request) { /* ... */ });",
             ],
             'product_deleted' => [
-                'description' => 'Fired after a product is deleted from the web UI',
+                'description' => 'Fired after a product is deleted and committed, on any surface (web, bulk delete, REST, GraphQL)',
                 'parameters' => ['$product', '$user'],
                 'example' => "add_action('product_deleted', function (\$product, \$user) { /* ... */ });",
             ],
@@ -122,8 +122,32 @@ final class HookRegistry
             ],
 
             // ========================================
+            // VARIANT HOOKS
+            // ========================================
+            'variant_created' => [
+                'description' => 'Fired once after a product variant is created and committed, on any surface',
+                'parameters' => ['$variant', '$user'],
+                'example' => "add_action('variant_created', function (\$variant, \$user) { /* ... */ });",
+            ],
+            'variant_updated' => [
+                'description' => 'Fired once per transaction after a product variant is edited and committed, on any surface. Stock moves alone fire stock_changed instead',
+                'parameters' => ['$variant', '$user'],
+                'example' => "add_action('variant_updated', function (\$variant, \$user) { /* ... */ });",
+            ],
+            'variant_deleted' => [
+                'description' => 'Fired after a product variant is deleted and committed, on any surface',
+                'parameters' => ['$variant', '$user'],
+                'example' => "add_action('variant_deleted', function (\$variant, \$user) { /* ... */ });",
+            ],
+
+            // ========================================
             // STOCK HOOKS
             // ========================================
+            'stock_changed' => [
+                'description' => 'Fired once per product (or variant) per transaction after its on-hand stock or a location bin changed, on any surface (adjustments, orders, receipts, transfers, returns, audits, imports, commands). $change is [before, after, locations => [location_id => [before, after]]]',
+                'parameters' => ['$product', '$variant', '$change'],
+                'example' => "add_action('stock_changed', function (\$product, \$variant, \$change) { /* ... */ });",
+            ],
             'stock_adjusted' => [
                 'description' => 'Fired after a stock adjustment is committed ($product is null for a variant adjustment)',
                 'parameters' => ['$stock_adjustment', '$product'],
@@ -159,9 +183,14 @@ final class HookRegistry
                 'example' => "add_action('order_created', function (\$order, \$user) { /* ... */ });",
             ],
             'order_updated' => [
-                'description' => 'Fired after an order is saved',
+                'description' => 'Fired once per transaction after an existing order is saved, on any surface (not while it is being created)',
                 'parameters' => ['$order', '$user'],
                 'example' => "add_action('order_updated', function (\$order, \$user) { /* ... */ });",
+            ],
+            'order_deleted' => [
+                'description' => 'Fired after an order is deleted and committed, on any surface',
+                'parameters' => ['$order', '$user'],
+                'example' => "add_action('order_deleted', function (\$order, \$user) { /* ... */ });",
             ],
             'order_status_changed' => [
                 'description' => 'Fired when an order status changes',
@@ -203,9 +232,19 @@ final class HookRegistry
             // PURCHASE ORDER HOOKS
             // ========================================
             'purchase_order_created' => [
-                'description' => 'Fired after a purchase order is created',
+                'description' => 'Fired once after a purchase order is created and committed, on any surface (web, REST, GraphQL, MCP, reorder suggestions)',
                 'parameters' => ['$purchase_order', '$user'],
                 'example' => "add_action('purchase_order_created', function (\$purchase_order, \$user) { /* ... */ });",
+            ],
+            'purchase_order_updated' => [
+                'description' => 'Fired once per transaction after a purchase order is edited, received or changes status, on any surface',
+                'parameters' => ['$purchase_order', '$user'],
+                'example' => "add_action('purchase_order_updated', function (\$purchase_order, \$user) { /* ... */ });",
+            ],
+            'purchase_order_deleted' => [
+                'description' => 'Fired after a purchase order is deleted and committed, on any surface',
+                'parameters' => ['$purchase_order', '$user'],
+                'example' => "add_action('purchase_order_deleted', function (\$purchase_order, \$user) { /* ... */ });",
             ],
             'purchase_order_received' => [
                 'description' => 'Fired when a purchase order becomes fully received',
@@ -222,12 +261,12 @@ final class HookRegistry
             // CUSTOMER HOOKS
             // ========================================
             'customer_created' => [
-                'description' => 'Fired after a customer is created on any surface',
+                'description' => 'Fired once after a customer is created and committed, on any surface (web, REST, GraphQL, order import)',
                 'parameters' => ['$customer', '$user'],
                 'example' => "add_action('customer_created', function (\$customer, \$user) { /* ... */ });",
             ],
             'customer_updated' => [
-                'description' => 'Fired after a customer is updated on any surface',
+                'description' => 'Fired once per transaction after a customer is updated and committed, on any surface',
                 'parameters' => ['$customer', '$user'],
                 'example' => "add_action('customer_updated', function (\$customer, \$user) { /* ... */ });",
             ],

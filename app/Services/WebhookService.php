@@ -7,6 +7,8 @@ namespace App\Services;
 use App\Jobs\WebhookDeliveryJob;
 use App\Models\Webhook;
 use App\Models\WebhookDelivery;
+use App\Services\Plugins\PluginWebhookEventRegistry;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
 /**
@@ -82,11 +84,50 @@ final class WebhookService
     }
 
     /**
-     * Get the list of all available webhook events.
+     * Send a plugin's own event (register_webhook_event()) to the
+     * organization's subscribed webhooks, after the surrounding transaction
+     * commits, through the same signed, retried, SSRF-checked delivery as
+     * core events.
+     *
+     * @param  array<string, mixed>  $data
+     *
+     * @throws \InvalidArgumentException When the event is not registered by an active plugin
+     */
+    public static function dispatchPluginEvent(string $event, array $data, int $organizationId): void
+    {
+        if (! app(PluginWebhookEventRegistry::class)->has($event)) {
+            throw new \InvalidArgumentException("Webhook event \"{$event}\" is not registered. Call register_webhook_event() first.");
+        }
+
+        DB::afterCommit(fn () => self::dispatch($event, $data, $organizationId));
+    }
+
+    /**
+     * Get the list of all available webhook events: core events, then those
+     * registered by active plugins.
      *
      * @return array<string> List of event names
      */
     public static function availableEvents(): array
+    {
+        return [...self::coreEvents(), ...app(PluginWebhookEventRegistry::class)->names()];
+    }
+
+    /**
+     * The first segment of every core event name ("product", "order", ...),
+     * which plugin events may not use.
+     *
+     * @return array<int, string>
+     */
+    public static function corePrefixes(): array
+    {
+        return array_values(array_unique(array_map(fn (string $event) => explode('.', $event)[0], self::coreEvents())));
+    }
+
+    /**
+     * @return array<string>
+     */
+    private static function coreEvents(): array
     {
         return [
             // Product events
@@ -141,11 +182,25 @@ final class WebhookService
     }
 
     /**
-     * Get event groups for UI display.
+     * Get event groups for UI display: the core groups, then plugin groups.
      *
      * @return array<string, array<string, string>> Grouped events with descriptions
      */
     public static function eventGroups(): array
+    {
+        $groups = self::coreEventGroups();
+
+        foreach (app(PluginWebhookEventRegistry::class)->groups() as $group => $events) {
+            $groups[$group] = ($groups[$group] ?? []) + $events;
+        }
+
+        return $groups;
+    }
+
+    /**
+     * @return array<string, array<string, string>>
+     */
+    private static function coreEventGroups(): array
     {
         return [
             'Product' => [
