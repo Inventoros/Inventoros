@@ -29,7 +29,7 @@ final class StorePermissionSetRequest extends FormRequest
             'category' => ['nullable', 'string', 'max:50'],
             'icon' => ['nullable', 'string', 'max:50'],
             'permissions' => ['required', 'array', 'min:1'],
-            'permissions.*' => ['string', Rule::in(array_column(Permission::cases(), 'value'))],
+            'permissions.*' => ['string', Rule::in(Permission::values())],
         ];
     }
 }

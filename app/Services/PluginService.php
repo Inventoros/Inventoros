@@ -5,9 +5,12 @@ declare(strict_types=1);
 namespace App\Services;
 
 use App\Exceptions\PluginHookFailed;
+use App\Models\PermissionSet;
 use App\Models\Plugin;
+use App\Models\Role;
 use App\Services\Plugins\PluginAssetPublisher;
 use App\Services\Plugins\PluginMainFile;
+use App\Services\Plugins\PluginPermissionRegistry;
 use App\Services\Plugins\PluginRequirements;
 use App\Support\ArtisanProcess;
 use App\Support\ReleaseSignatureVerifier;
@@ -297,6 +300,12 @@ final class PluginService
             $failures[] = $e;
         }
 
+        try {
+            $this->removePluginPermissions($slug);
+        } catch (\Throwable $e) {
+            $failures[] = $e;
+        }
+
         $this->assets->remove($slug);
 
         if ($plugin) {
@@ -319,6 +328,30 @@ final class PluginService
         }
 
         return true;
+    }
+
+    /**
+     * Remove a deleted plugin's permissions ("{slug}.{ability}", see
+     * register_permission()) from every role and permission set. Nothing else
+     * on those records changes.
+     */
+    protected function removePluginPermissions(string $slug): void
+    {
+        foreach ([Role::class, PermissionSet::class] as $model) {
+            // Roles and permission sets are few per installation, and the
+            // JSON column is matched in PHP so every database behaves alike.
+            $model::query()
+                ->whereNotNull('permissions')
+                ->each(function ($record) use ($slug): void {
+                    $permissions = $record->permissions ?? [];
+                    $kept = PluginPermissionRegistry::withoutPluginPermissions($permissions, $slug);
+
+                    if (count($kept) !== count($permissions)) {
+                        $record->permissions = $kept;
+                        $record->save();
+                    }
+                });
+        }
     }
 
     /**
