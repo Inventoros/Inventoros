@@ -7,6 +7,7 @@ namespace App\Observers;
 use App\Enums\OrderApprovalStatus;
 use App\Enums\OrderStatus;
 use App\Models\Order\Order;
+use App\Services\Hooks\DomainHooks;
 use App\Services\NotificationService;
 use Illuminate\Support\Facades\DB;
 
@@ -18,11 +19,19 @@ use Illuminate\Support\Facades\DB;
  */
 final class OrderObserver
 {
+    public function __construct(private readonly DomainHooks $hooks) {}
+
     /**
      * Handle the Order "created" event.
+     *
+     * OrderService announces a new order with `order_created` once its items
+     * are committed; the saves that fill in its totals in the same
+     * transaction are part of the creation, not `order_updated` edits.
      */
     public function created(Order $order): void
     {
+        $this->hooks->suppressUntilCommit('order_updated', $order);
+
         // A bulk order import would otherwise raise one "new order" alert per
         // imported (often historical) order. The importer gets a single
         // summary instead.
@@ -34,14 +43,26 @@ final class OrderObserver
     }
 
     /**
+     * Fires `order_deleted` from every surface, after the delete commits.
+     */
+    public function deleted(Order $order): void
+    {
+        $user = auth()->user();
+
+        $this->hooks->afterCommit('order_deleted', $order, fn () => do_action('order_deleted', $order, $user));
+    }
+
+    /**
      * Handle the Order "updated" event.
      * Check for status changes.
      */
     public function updated(Order $order): void
     {
         // Every update is an order.updated webhook event. Fire it post-commit
-        // so subscribers never observe a change that was rolled back.
-        DB::afterCommit(fn () => do_action('order_updated', $order, auth()->user()));
+        // so subscribers never observe a change that was rolled back, and once
+        // per transaction however many times the order is saved in it.
+        $user = auth()->user();
+        $this->hooks->afterCommit('order_updated', $order, fn () => do_action('order_updated', $order, $user));
 
         // Only check if status changed
         if ($order->isDirty('status')) {

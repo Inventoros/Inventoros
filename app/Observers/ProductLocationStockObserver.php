@@ -7,6 +7,7 @@ namespace App\Observers;
 use App\Models\Inventory\ProductLocation;
 use App\Models\Inventory\ProductLocationStock;
 use App\Models\Inventory\WarehouseReorderPoint;
+use App\Services\Hooks\DomainHooks;
 use App\Services\NotificationService;
 use App\Services\WarehouseStockLevelService;
 use Illuminate\Support\Facades\DB;
@@ -19,10 +20,14 @@ use Illuminate\Support\Facades\DB;
  */
 class ProductLocationStockObserver
 {
-    public function __construct(private readonly WarehouseStockLevelService $levels) {}
+    public function __construct(
+        private readonly WarehouseStockLevelService $levels,
+        private readonly DomainHooks $hooks,
+    ) {}
 
     public function created(ProductLocationStock $bin): void
     {
+        $this->recordForStockChanged($bin, 0);
         $this->check($bin, 0);
     }
 
@@ -32,7 +37,25 @@ class ProductLocationStockObserver
             return;
         }
 
+        $this->recordForStockChanged($bin, (int) $bin->getOriginal('quantity'));
         $this->check($bin, (int) $bin->getOriginal('quantity'));
+    }
+
+    public function deleted(ProductLocationStock $bin): void
+    {
+        $this->hooks->locationStockChanged($bin, (int) $bin->product_id, (int) $bin->location_id, (int) $bin->getOriginal('quantity'), 0);
+    }
+
+    /**
+     * Bin moves are reported by the product's stock_changed hook (in
+     * `locations`), so a move between two bins, which leaves the total
+     * unchanged, is still announced.
+     */
+    private function recordForStockChanged(ProductLocationStock $bin, int $before): void
+    {
+        if ($before !== (int) $bin->quantity) {
+            $this->hooks->locationStockChanged($bin, (int) $bin->product_id, (int) $bin->location_id, $before, (int) $bin->quantity);
+        }
     }
 
     private function check(ProductLocationStock $bin, int $before): void

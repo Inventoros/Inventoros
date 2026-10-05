@@ -219,7 +219,32 @@ Schema::dropIfExists('my_plugin_notes');
 
 ## Action reference
 
-"Web form" and "web UI" hooks fire only from the Inertia screens; the REST, GraphQL and MCP surfaces do not fire them. `product_created` fires on every surface.
+"Web form" and "web UI" hooks fire only from the Inertia screens; the REST, GraphQL and MCP surfaces do not fire them.
+
+### Domain change hooks
+
+The created, updated and deleted hooks of products, variants, orders, purchase orders and customers, and `stock_changed`, fire from the model layer, so they fire the same way whichever surface made the change: the web screens, bulk actions, REST, GraphQL, MCP, imports, console and scheduled commands. Use them, not the web form hooks, for anything that must see every change (channel sync, accounting, outbound integrations).
+
+- They fire **after the transaction commits**, and never when it rolls back.
+- They fire **once per record per transaction**. A product saved three times in one request, or an order whose totals are written after its items, is announced once, with the final values.
+- A record created in a transaction is announced by its `*_created` hook only; the saves that complete it are not `*_updated` edits.
+- `$user` is the signed-in user, or null for queued jobs and commands.
+- A change of on-hand stock alone is not a `product_updated` or `variant_updated`: it fires `stock_changed`.
+
+`stock_changed` receives the product, the variant (or null) and the change:
+
+```php
+add_action('stock_changed', function ($product, $variant, array $change) {
+    // $change = [
+    //     'before' => 20,                 // on-hand before the first change in the transaction
+    //     'after' => 17,                  // and after the last one
+    //     'locations' => [                // bins that moved, by location id
+    //         4 => ['before' => 12, 'after' => 9],
+    //     ],
+    // ];
+    // A move between two bins leaves before === after and lists both bins.
+    my_plugin_queue_inventory_push($product->id, $variant?->id);
+});
 
 | Action | Arguments | When |
 |--------|-----------|------|
@@ -230,24 +255,29 @@ Schema::dropIfExists('my_plugin_notes');
 | `plugin_deactivated_{slug}` | none | A specific plugin is deactivated. |
 | `plugin_uninstalling` | `$slug` | Any plugin is about to be deleted, before its `hooks/uninstall.php` runs. |
 | `plugin_uninstalling_{slug}` | none | A specific plugin is about to be deleted. |
-| `product_created` | `$product`, `$user` | A product is created on any surface (web, REST, GraphQL, MCP, import). `$user` may be null. |
+| `product_created` | `$product`, `$user` | A product is created on any surface (web, REST, GraphQL, MCP, import), once it and its options and variants are committed. `$user` may be null. |
 | `product_before_create` | `$validated_data`, `$request` | Before a product is created from the web form. |
 | `product_after_create` | `$product`, `$request` | After a product is created from the web form. |
 | `product_before_update` | `$product`, `$validated_data`, `$request` | Before a product is updated from the web form. `$product` still holds the old values. |
-| `product_updated` | `$product`, `$user` | After a product is updated from the web form. |
+| `product_updated` | `$product`, `$user` | A product is edited on any surface (web, bulk edit, REST, GraphQL, import), once per transaction, after commit. Stock moves alone fire `stock_changed` instead. |
 | `product_after_update` | `$product`, `$request` | After a product is updated from the web form. |
 | `product_before_delete` | `$product`, `$request` | Before a product is deleted from the web UI. |
-| `product_deleted` | `$product`, `$user` | After a product is deleted from the web UI. |
+| `product_deleted` | `$product`, `$user` | A product is deleted on any surface (web, bulk delete, REST, GraphQL), after commit. |
 | `product_after_delete` | `$product`, `$request` | After a product is deleted from the web UI. |
 | `product_viewed` | `$product`, `$user` | The product detail page is viewed. |
 | `product_list_viewed` | `$products`, `$user` | The product list page is viewed (`$products` is the paginator). |
+| `variant_created` | `$variant`, `$user` | A product variant is created on any surface, after commit. |
+| `variant_updated` | `$variant`, `$user` | A product variant is edited on any surface, once per transaction, after commit. Stock moves alone fire `stock_changed` instead. |
+| `variant_deleted` | `$variant`, `$user` | A product variant is deleted on any surface, after commit. |
+| `stock_changed` | `$product`, `$variant`, `$change` | A product's or variant's on-hand stock, or one of the product's location bins, changed on any surface (adjustments, orders, receipts, transfers, returns, audits, imports, commands). Once per product or variant per transaction, after commit. See [Domain change hooks](#domain-change-hooks). |
 | `stock_adjusted` | `$stock_adjustment`, `$product` | A stock adjustment is committed. `$product` is null for a variant adjustment. |
 | `low_stock_alert` | `$product` | A product's stock drops to or below its minimum. |
 | `out_of_stock_alert` | `$product` | A product's stock reaches zero. |
 | `variant_low_stock_alert` | `$variant` | A variant with its own minimum stock drops to or below it. Variants without one count toward the product's `low_stock_alert`. |
 | `warehouse_low_stock_alert` | `$product`, `$warehouse`, `$on_hand` | A product's on-hand quantity in one warehouse drops to or below its minimum stock level for that warehouse. |
 | `order_created` | `$order`, `$user` | An order and all its items are created. |
-| `order_updated` | `$order`, `$user` | An order is saved. |
+| `order_updated` | `$order`, `$user` | An existing order is saved on any surface, once per transaction, after commit. Not fired while the order is being created. |
+| `order_deleted` | `$order`, `$user` | An order is deleted on any surface, after commit. |
 | `order_status_changed` | `$order`, `$old_status`, `$new_status`, `$user` | An order's status changes. |
 | `order_approved` | `$order`, `$user` | An order is approved. |
 | `order_rejected` | `$order`, `$user` | An order is rejected. |
@@ -255,11 +285,13 @@ Schema::dropIfExists('my_plugin_notes');
 | `payment_voided` | `$payment`, `$order`, `$user` | A payment or refund is voided (after commit). |
 | `shipment_created` | `$shipment`, `$user` | A shipment is created for an order (after commit). |
 | `shipment_delivered` | `$shipment` | A shipment is reported delivered (after commit). |
-| `purchase_order_created` | `$purchase_order`, `$user` | A purchase order is created. |
+| `purchase_order_created` | `$purchase_order`, `$user` | A purchase order is created on any surface (web, REST, GraphQL, MCP, reorder suggestions), after commit. |
+| `purchase_order_updated` | `$purchase_order`, `$user` | A purchase order is edited, sent, received or cancelled on any surface, once per transaction, after commit. |
+| `purchase_order_deleted` | `$purchase_order`, `$user` | A purchase order is deleted on any surface, after commit. |
 | `purchase_order_received` | `$purchase_order`, `$user` | A purchase order becomes fully received. |
 | `purchase_order_cancelled` | `$purchase_order`, `$user` | A purchase order is cancelled. |
-| `customer_created` | `$customer`, `$user` | A customer is created on any surface. |
-| `customer_updated` | `$customer`, `$user` | A customer is updated on any surface. |
+| `customer_created` | `$customer`, `$user` | A customer is created on any surface (web, REST, GraphQL, order import), after commit. |
+| `customer_updated` | `$customer`, `$user` | A customer is updated on any surface, once per transaction, after commit. |
 | `customer_deleted` | `$customer`, `$user` | A customer is deleted on any surface. |
 | `return_created` | `$return_order`, `$user` | A return is created. |
 | `return_received` | `$return_order`, `$user` | A return is marked received. |

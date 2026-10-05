@@ -35,13 +35,14 @@ class BulkProductController extends Controller
 
         $organizationId = $request->user()->organization_id;
 
-        $count = Product::forOrganization($organizationId)
+        $products = Product::forOrganization($organizationId)
             ->whereIn('id', $validated['ids'])
-            ->count();
+            ->get();
+        $count = $products->count();
 
-        Product::forOrganization($organizationId)
-            ->whereIn('id', $validated['ids'])
-            ->delete();
+        // One model at a time, so each deletion fires product_deleted (and is
+        // logged) like a single delete does.
+        DB::transaction(fn () => $products->each->delete());
 
         return redirect()->route('products.index')
             ->with('success', "{$count} product(s) deleted successfully.");
@@ -65,9 +66,13 @@ class BulkProductController extends Controller
             'category_id' => ['required', 'integer', Rule::exists('product_categories', 'id')->where('organization_id', $organizationId)],
         ]);
 
-        $count = Product::forOrganization($organizationId)
+        $products = Product::forOrganization($organizationId)
             ->whereIn('id', $validated['ids'])
-            ->update(['category_id' => $validated['category_id']]);
+            ->get();
+        $count = $products->count();
+
+        // Saved model by model so each change fires product_updated.
+        DB::transaction(fn () => $products->each->update(['category_id' => $validated['category_id']]));
 
         return redirect()->route('products.index')
             ->with('success', "{$count} product(s) category updated successfully.");

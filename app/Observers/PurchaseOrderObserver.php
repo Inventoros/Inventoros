@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Observers;
 
 use App\Models\Purchasing\PurchaseOrder;
+use App\Services\Hooks\DomainHooks;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -15,11 +16,31 @@ use Illuminate\Support\Facades\DB;
 final class PurchaseOrderObserver
 {
     /**
+     * Attributes whose change alone is not an edit.
+     */
+    private const NOT_AN_EDIT = ['updated_at', 'created_at', 'deleted_at'];
+
+    public function __construct(private readonly DomainHooks $hooks) {}
+
+    /**
      * Handle the PurchaseOrder "created" event.
      */
     public function created(PurchaseOrder $purchaseOrder): void
     {
-        DB::afterCommit(fn () => do_action('purchase_order_created', $purchaseOrder, auth()->user()));
+        $user = auth()->user();
+
+        $this->hooks->afterCommit('purchase_order_created', $purchaseOrder, fn () => do_action('purchase_order_created', $purchaseOrder, $user));
+    }
+
+    /**
+     * Fires `purchase_order_deleted` from every surface, after the delete
+     * commits.
+     */
+    public function deleted(PurchaseOrder $purchaseOrder): void
+    {
+        $user = auth()->user();
+
+        $this->hooks->afterCommit('purchase_order_deleted', $purchaseOrder, fn () => do_action('purchase_order_deleted', $purchaseOrder, $user));
     }
 
     /**
@@ -30,6 +51,16 @@ final class PurchaseOrderObserver
      */
     public function updated(PurchaseOrder $purchaseOrder): void
     {
+        // Any edit (header fields, totals after its lines change, status) is
+        // one purchase_order_updated per transaction. A purchase order created
+        // in the same transaction is announced by purchase_order_created alone.
+        if (array_diff(array_keys($purchaseOrder->getChanges()), self::NOT_AN_EDIT) !== []
+            && ! $this->hooks->isPending('purchase_order_created', $purchaseOrder)) {
+            $user = auth()->user();
+
+            $this->hooks->afterCommit('purchase_order_updated', $purchaseOrder, fn () => do_action('purchase_order_updated', $purchaseOrder, $user));
+        }
+
         if (! $purchaseOrder->isDirty('status')) {
             return;
         }

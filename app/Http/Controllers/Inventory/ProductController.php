@@ -367,8 +367,8 @@ class ProductController extends Controller
 
         $this->productService->update($product, $validated);
 
-        // Action: After update
-        do_action('product_updated', $product, $request->user());
+        // Action: After update (product_updated is fired by ProductObserver
+        // for every surface, once the edit commits).
         do_action('product_after_update', $product, $request);
 
         return redirect()->route('products.index')
@@ -431,8 +431,8 @@ class ProductController extends Controller
 
         $product->delete();
 
-        // Action: After delete
-        do_action('product_deleted', $product, $request->user());
+        // Action: After delete (product_deleted is fired by ProductObserver
+        // for every surface).
         do_action('product_after_delete', $product, $request);
 
         return redirect()->route('products.index')

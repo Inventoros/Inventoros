@@ -68,6 +68,14 @@ add_filter('product_price_display', function ($price, $product) {
 
 Priority sets the order; lower numbers run first (default 10). Commonly used actions include `product_created`, `product_updated`, `order_created`, `order_status_changed`, `low_stock_alert` and `dashboard_stats`. Common filters include `product_display_name`, `product_price_display`, `product_search_query`, `order_total_calculation` and `dashboard_stats_data`.
 
+The created, updated and deleted hooks of products, variants, orders, purchase orders and customers, and `stock_changed`, fire from every surface (web, bulk actions, REST, GraphQL, MCP, imports and commands), once per record per transaction and only after it commits. Use them for integrations that must see every change:
+
+```php
+add_action('stock_changed', function ($product, $variant, $change) {
+    // $change['before'], $change['after'], and $change['locations'][$locationId]['before'|'after'].
+});
+```
+
 ### Lifecycle files
 
 `hooks/activate.php` runs after the plugin loads on activation; create tables and defaults there. If it throws, the plugin stays inactive and the Plugins page shows the error. `hooks/deactivate.php` runs on deactivation and `hooks/uninstall.php` when the plugin is deleted. If either throws, the plugin is still deactivated or removed and the page shows a warning.
