@@ -696,6 +696,8 @@ final class OrderService
 
         foreach ($open as $shipment) {
             $shipment->forceFill(['status' => ShipmentStatus::CANCELLED])->save();
+
+            DB::afterCommit(fn () => do_action('shipment_cancelled', $shipment));
         }
     }
 

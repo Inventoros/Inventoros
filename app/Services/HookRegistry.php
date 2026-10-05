@@ -222,10 +222,20 @@ final class HookRegistry
                 'parameters' => ['$shipment', '$user'],
                 'example' => "add_action('shipment_created', function (\$shipment, \$user) { /* ... */ });",
             ],
+            'shipment_shipped' => [
+                'description' => 'Fired once when a shipment first leaves the warehouse (after commit): marked shipped on any surface, or a carrier tracking update that reports it in transit or delivered',
+                'parameters' => ['$shipment'],
+                'example' => "add_action('shipment_shipped', function (\$shipment) { /* ... */ });",
+            ],
             'shipment_delivered' => [
                 'description' => 'Fired after the carrier (or a user) reports a shipment delivered (after commit)',
                 'parameters' => ['$shipment'],
                 'example' => "add_action('shipment_delivered', function (\$shipment) { /* ... */ });",
+            ],
+            'shipment_cancelled' => [
+                'description' => 'Fired after a shipment is cancelled (after commit), on its own (its label voided) or because its order was cancelled, rejected or deleted',
+                'parameters' => ['$shipment'],
+                'example' => "add_action('shipment_cancelled', function (\$shipment) { /* ... */ });",
             ],
 
             // ========================================

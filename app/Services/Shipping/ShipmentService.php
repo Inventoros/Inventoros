@@ -325,6 +325,10 @@ final class ShipmentService
 
         if (! $wasLeft && $shipment->status->hasLeft()) {
             DB::afterCommit(fn () => $this->notifyCustomer($shipment));
+            // Fires once per shipment, the first time it leaves the
+            // warehouse, however it left: marked shipped on any surface, or
+            // a carrier update that skipped straight to in transit/delivered.
+            DB::afterCommit(fn () => do_action('shipment_shipped', $shipment));
         }
 
         if ($deliveredNow) {
@@ -360,6 +364,8 @@ final class ShipmentService
             $locked->forceFill(['status' => ShipmentStatus::CANCELLED])->save();
 
             $shipment->setRawAttributes($locked->getAttributes(), true);
+
+            DB::afterCommit(fn () => do_action('shipment_cancelled', $shipment));
 
             return $shipment;
         });

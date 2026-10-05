@@ -287,7 +287,9 @@ add_action('stock_changed', function ($product, $variant, array $change) {
 | `payment_recorded` | `$payment`, `$order`, `$user` | A payment or refund is recorded against an order (after commit). |
 | `payment_voided` | `$payment`, `$order`, `$user` | A payment or refund is voided (after commit). |
 | `shipment_created` | `$shipment`, `$user` | A shipment is created for an order (after commit). |
+| `shipment_shipped` | `$shipment` | A shipment first leaves the warehouse (after commit, once per shipment): marked shipped on any surface, or a carrier tracking update that reports it in transit or delivered. |
 | `shipment_delivered` | `$shipment` | A shipment is reported delivered (after commit). |
+| `shipment_cancelled` | `$shipment` | A shipment is cancelled (after commit), on its own or because its order was cancelled, rejected or deleted. |
 | `purchase_order_created` | `$purchase_order`, `$user` | A purchase order is created on any surface (web, REST, GraphQL, MCP, reorder suggestions), after commit. |
 | `purchase_order_updated` | `$purchase_order`, `$user` | A purchase order is edited, sent, received or cancelled on any surface, once per transaction, after commit. |
 | `purchase_order_deleted` | `$purchase_order`, `$user` | A purchase order is deleted on any surface, after commit. |

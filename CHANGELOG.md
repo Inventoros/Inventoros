@@ -18,6 +18,8 @@ Full release notes, with the pull request behind each change, are on [GitHub Rel
 - Plugins: menu items, submenu items and dashboard widgets take a `label_key` / `title_key` under `plugins.{slug}.`, shown in the user's language from the plugin's own messages, with the plain label as the fallback.
 - Plugins: activation refuses a plugin whose pages or routes collide with an application route (same name, same method and URI, or inside a URI prefix the application uses) and says which route; plugin routes are namespaced `plg.{slug}.*` under `/p/{slug}/`.
 - `OrderService::cancel()`, `restockForDeletion()` and `replaceItems()` take an optional `$actor` for the restock ledger rows, so queued jobs, commands and plugin syncs can cancel or edit orders without a signed-in user.
+- `ReturnOrderService::receive()` takes an optional `$actor`: a queued job, command or plugin sync can receive a return without a signed-in user, and the restock ledger rows record that actor (else the signed-in user, else whoever approved the return).
+- Plugins: new `shipment_shipped` action, fired once after commit when a shipment first leaves the warehouse (marked shipped on any surface, or a carrier tracking update), and `shipment_cancelled`, fired after commit when a shipment is cancelled on its own or with its order.
 
 ### Changed
 
@@ -35,6 +37,7 @@ Full release notes, with the pull request behind each change, are on [GitHub Rel
 - Completing a stock audit lowered or raised on-hand stock without touching the location bins, so after a shortfall the locations claimed more than was on hand. Recount adjustments now move the bins with the total, and so do tracked-stock reconciliation and manual adjustments made without a location.
 - Completing a stock audit outside a web request (a queued job or a plugin) failed because the recount adjustments had no user; they are attributed to the user completing the audit.
 - Order restocks from a queued job or command failed for want of a signed-in user; they fall back to the order's creator.
+- Receiving a return outside a web request (a queued job, command or plugin) failed because the restock ledger rows had no user.
 - A plugin page was silently left out when any route, of any method, used its URI (for example a page under `/cycle-counts/` hidden by `PUT /cycle-counts/{id}`); only routes answering GET count now, and activation reports real conflicts.
 - Order, return, transfer, purchase order and work order numbers kept repeating after the 9,999th of the day, so every further create failed until midnight.
 - An order import on MySQL could fail with "Failed to allocate a unique sequence number" when another order took the same number at the same moment.
