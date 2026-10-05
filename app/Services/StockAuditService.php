@@ -179,6 +179,7 @@ final class StockAuditService
      * @return int the number of stock adjustments created
      *
      * @throws InvalidStateException uncounted_items when lines are uncounted and not allowed
+     * @throws InvalidStateException completion_vetoed when a stock_audit_completing filter refuses
      */
     public function complete(StockAudit $stockAudit, User $actor, bool $allowUncounted = false): int
     {
@@ -208,6 +209,20 @@ final class StockAuditService
                 throw new InvalidStateException(
                     "{$uncounted} of {$locked->items->count()} item(s) have not been counted. Count them, or confirm completing without them (uncounted items are left unchanged).",
                     'uncounted_items',
+                );
+            }
+
+            // Plugins may refuse (or hold) the completion: true allows it, a
+            // string is the reason it is refused, false a generic refusal.
+            // Runs under the audit lock, before anything is booked.
+            $verdict = apply_filters('stock_audit_completing', true, $locked, $actor, $allowUncounted);
+
+            if ($verdict !== true) {
+                throw new InvalidStateException(
+                    is_string($verdict) && trim($verdict) !== ''
+                        ? $verdict
+                        : 'An installed plugin is not allowing this audit to be completed yet.',
+                    'completion_vetoed',
                 );
             }
 

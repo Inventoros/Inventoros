@@ -494,6 +494,15 @@ final class HookRegistry
             ],
 
             // ========================================
+            // STOCK AUDIT FILTERS
+            // ========================================
+            'stock_audit_completing' => [
+                'description' => 'Allow or refuse completing a stock audit, on every surface, under the audit lock and before any recount is booked. Return true to allow; return a reason string (shown to the user and returned by the API as error "completion_vetoed") or false to refuse. Keep the previous value when you have no objection',
+                'parameters' => ['$allowed', '$stock_audit', '$user', '$allow_uncounted'],
+                'example' => "add_filter('stock_audit_completing', function (\$allowed, \$stock_audit, \$user, \$allow_uncounted) { return \$allowed === true && needs_recount(\$stock_audit) ? 'Two lines are waiting for a recount.' : \$allowed; });",
+            ],
+
+            // ========================================
             // SUPPLIER FILTERS
             // ========================================
             'supplier_list_query' => [
