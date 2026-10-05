@@ -176,6 +176,8 @@ final class ReturnOrderService
      * Quantities already returned per order item (excluding rejected returns).
      *
      * @return Collection<int, int|string>
+     *
+     * @api
      */
     public function returnedQuantities(Order $order): Collection
     {
@@ -198,6 +200,8 @@ final class ReturnOrderService
      *                           still need access to approve and receive it).
      *
      * @throws ValidationException when a line exceeds its returnable quantity
+     *
+     * @api
      */
     public function create(int $organizationId, ?User $actor, array $data): ReturnOrder
     {
@@ -310,6 +314,8 @@ final class ReturnOrderService
 
     /**
      * Approve a pending return.
+     *
+     * @api
      */
     public function approve(ReturnOrder $returnOrder, User $actor): ReturnOrder
     {
@@ -342,6 +348,8 @@ final class ReturnOrderService
      * @throws InvalidStateException when the return is no longer pending or approved
      * @throws ValidationException when a line is not on this return
      * @throws AuthorizationException when a changed line restocks outside the actor's warehouses
+     *
+     * @api
      */
     public function updateLines(ReturnOrder $returnOrder, User $actor, array $lines): ReturnOrder
     {
@@ -423,6 +431,8 @@ final class ReturnOrderService
      *                           action (no warehouse restriction applies) and the ledger
      *                           records whoever approved it, else the order's creator, else
      *                           the organization's first user.
+     *
+     * @api
      */
     public function receive(ReturnOrder $returnOrder, ?User $actor = null): ReturnOrder
     {
@@ -621,6 +631,8 @@ final class ReturnOrderService
 
     /**
      * Complete a received return.
+     *
+     * @api
      */
     public function complete(ReturnOrder $returnOrder, User $actor): ReturnOrder
     {
@@ -641,6 +653,8 @@ final class ReturnOrderService
 
     /**
      * Reject a pending return, appending the reason to its notes.
+     *
+     * @api
      */
     public function reject(ReturnOrder $returnOrder, User $actor, ?string $reason = null): ReturnOrder
     {

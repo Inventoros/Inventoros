@@ -61,6 +61,8 @@ final class ReorderService
     /**
      * The product's primary supplier (with its pivot), when one is linked.
      * Uses the loaded relation when present.
+     *
+     * @api
      */
     public function primarySupplier(Product $product): ?Supplier
     {
@@ -79,6 +81,8 @@ final class ReorderService
      * configured reorder quantity when it has one, else the gap up to
      * max_stock (falling back to reorder_point, then min_stock). At least one
      * unit, and never below the primary supplier's minimum order.
+     *
+     * @api
      */
     public function suggestedQuantity(Product $product, ?Supplier $primary = null): int
     {
@@ -146,6 +150,8 @@ final class ReorderService
      * @param  array<int, Product>  $products  with their primary supplier loaded
      * @param  string  $activityAction  e.g. 'auto_reorder' or 'quick_reorder'
      * @param  string  $activityDescription  prefix; the PO number and product names are appended
+     *
+     * @api
      */
     public function createDraftPurchaseOrder(
         int $organizationId,

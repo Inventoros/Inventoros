@@ -18,13 +18,14 @@ Everything in this guide is backed by code and tests: the hook tables are checke
 10. [Plugin UI](#plugin-ui)
 11. [MCP tools](#mcp-tools)
 12. [Outbound webhook events](#outbound-webhook-events)
-13. [Building and packaging a plugin](#building-and-packaging-a-plugin)
-14. [Publishing to the marketplace](#publishing-to-the-marketplace)
-15. [Licences for paid plugins](#licences-for-paid-plugins)
-16. [Examples](#examples)
-17. [Best practices](#best-practices)
-18. [Security notes](#security-notes)
-19. [Debugging](#debugging)
+13. [Core PHP API](#core-php-api)
+14. [Building and packaging a plugin](#building-and-packaging-a-plugin)
+15. [Publishing to the marketplace](#publishing-to-the-marketplace)
+16. [Licences for paid plugins](#licences-for-paid-plugins)
+17. [Examples](#examples)
+18. [Best practices](#best-practices)
+19. [Security notes](#security-notes)
+20. [Debugging](#debugging)
 
 ## Plugin structure
 
@@ -742,6 +743,26 @@ add_action('webhook_delivery_attempted', function ($delivery, $webhook, array $r
 - A filter or listener that throws is logged and ignored: the delivery goes ahead as if it were not there.
 
 On Inventoros versions without these hooks, check `array_key_exists('webhook_delivery_request', \App\Services\HookRegistry::getFilters())`.
+
+## Core PHP API
+
+Plugins change data through the same services the web screens, REST, GraphQL and MCP use, so stock, bins, tracked units, ledgers and hooks stay consistent. The methods below are the supported PHP API: each carries an `@api` tag in its docblock, and `tests/Feature/CorePhpApiContractTest.php` fails if one disappears or changes incompatibly. Between releases they only gain trailing optional parameters; anything else is a breaking change called out in the changelog. Every other public method in `app/` is internal and may change without notice.
+
+Resolve services from the container (`app(OrderService::class)`). Methods that take an actor (`$actor`, `$user`, `$creator`, `$approver`) attribute ledger rows and activity to that user and, where it applies, enforce their warehouse access; a queued job, command or sync passes one explicitly rather than signing someone in. Where the actor is optional, leaving it out uses the signed-in user and then the documented fallback.
+
+| Class | Methods |
+|-------|---------|
+| `App\Models\Inventory\StockAdjustment` | `adjust()`, `adjustVariant()` (static) |
+| `App\Services\OrderService` | `create()`, `cancel()`, `approve()`, `reject()`, `restockForDeletion()`, `replaceItems()`, `transitionStatus()`, `restockableQuantities()` |
+| `App\Services\ReturnOrderService` | `create()`, `approve()`, `updateLines()`, `receive()`, `complete()`, `reject()`, `returnedQuantities()` |
+| `App\Services\Shipping\ShipmentService` | `create()`, `markShipped()`, `applyTrackingStatus()`, `cancel()`, `remainingQuantities()` |
+| `App\Services\StockAuditService` | `create()`, `start()`, `recordCount()`, `complete()` |
+| `App\Services\ProductLocationStockService` | `quantityAt()`, `onHandAt()`, `breakdown()`, `totalAssigned()`, `move()`, `consume()`, `receive()`, `applyDelta()` |
+| `App\Services\TrackedStockAllocationService` | `allocateForOrderItem()`, `releaseForOrderItem()` |
+| `App\Services\ScanLookupService` | `resolve()`, `locationSummary()` |
+| `App\Services\ReorderService` | `primarySupplier()`, `suggestedQuantity()`, `createDraftPurchaseOrder()` |
+
+Check a method's docblock for its rules (locks it takes, exceptions it throws, which hooks it fires). On an older core, feature-detect a newer parameter with `(new \ReflectionMethod(OrderService::class, 'cancel'))->getNumberOfParameters()`.
 
 ## Building and packaging a plugin
 

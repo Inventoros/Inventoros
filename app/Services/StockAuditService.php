@@ -44,6 +44,8 @@ final class StockAuditService
      * Create a draft audit and seed one item per product in scope.
      *
      * @param  array{name: string, description?: string|null, audit_type: string, warehouse_location_id?: int|null, notes?: string|null, product_ids?: array<int, int>|null}  $data
+     *
+     * @api
      */
     public function create(int $organizationId, User $actor, array $data): StockAudit
     {
@@ -108,6 +110,8 @@ final class StockAuditService
 
     /**
      * Start a draft audit, snapshotting current system quantities.
+     *
+     * @api
      */
     public function start(StockAudit $stockAudit, User $actor): StockAudit
     {
@@ -138,6 +142,8 @@ final class StockAuditService
 
     /**
      * Record the physical count for one audit item.
+     *
+     * @api
      */
     public function recordCount(StockAudit $stockAudit, StockAuditItem $item, User $actor, int $countedQuantity, ?string $notes = null): StockAuditItem
     {
@@ -180,6 +186,8 @@ final class StockAuditService
      *
      * @throws InvalidStateException uncounted_items when lines are uncounted and not allowed
      * @throws InvalidStateException completion_vetoed when a stock_audit_completing filter refuses
+     *
+     * @api
      */
     public function complete(StockAudit $stockAudit, User $actor, bool $allowUncounted = false): int
     {

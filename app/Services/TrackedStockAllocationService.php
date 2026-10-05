@@ -36,6 +36,8 @@ final class TrackedStockAllocationService
      * product; the tracking records are additionally locked here.
      *
      * @return int the number of units allocated (0 when skipped)
+     *
+     * @api
      */
     public function allocateForOrderItem(Product $product, int $quantity, OrderItem $orderItem): int
     {
@@ -61,6 +63,8 @@ final class TrackedStockAllocationService
      * stay allocated to the still-open order.
      *
      * @return int the number of units released
+     *
+     * @api
      */
     public function releaseForOrderItem(OrderItem $orderItem, ?int $limit = null): int
     {

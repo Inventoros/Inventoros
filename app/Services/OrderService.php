@@ -97,6 +97,8 @@ final class OrderService
      *
      * @throws \Exception When a product is missing or stock is insufficient.
      * @throws QueryException On unrecoverable DB errors.
+     *
+     * @api
      */
     public function create(array $data, User $creator, string $source = 'manual', bool $adjustStock = true, bool $announce = true): Order
     {
@@ -345,6 +347,8 @@ final class OrderService
      *                            order's creator (see restockActor()).
      *
      * @throws \RuntimeException When the order has already shipped/delivered.
+     *
+     * @api
      */
     public function cancel(Order $order, ?User $actor = null): Order
     {
@@ -377,6 +381,8 @@ final class OrderService
      * pass the pending check. Shared by the web and REST surfaces.
      *
      * @throws InvalidStateException When the order was already approved/rejected.
+     *
+     * @api
      */
     public function approve(Order $order, User $approver, ?string $notes = null): Order
     {
@@ -413,6 +419,8 @@ final class OrderService
      * the stock that was decremented when it was created.
      *
      * @throws InvalidStateException When the order was already approved/rejected.
+     *
+     * @api
      */
     public function reject(Order $order, User $approver, string $notes): Order
     {
@@ -482,6 +490,8 @@ final class OrderService
      *
      * @param  User|null  $actor  Who the restock ledger rows are attributed to
      *                            (see cancel()).
+     *
+     * @api
      */
     public function restockForDeletion(Order $order, ?User $actor = null): void
     {
@@ -616,6 +626,8 @@ final class OrderService
      * historical import) took nothing, so every line is 0.
      *
      * @return array<int, int> order_item_id => units
+     *
+     * @api
      */
     public function restockableQuantities(Order $order): array
     {
@@ -731,6 +743,8 @@ final class OrderService
      *
      * @param  array<int, array{product_id:int, product_variant_id?:int|null, quantity:int, unit_price?:mixed, discount_type?:string|null, discount_value?:mixed}>  $items
      * @return string the recomputed gross subtotal (Money string)
+     *
+     * @api
      */
     public function replaceItems(Order $order, array $items, ?User $actor = null): string
     {
@@ -973,6 +987,8 @@ final class OrderService
      * path, cancel().
      *
      * @throws \RuntimeException When the order is cancelled.
+     *
+     * @api
      */
     public function transitionStatus(Order $order, OrderStatus $to): Order
     {

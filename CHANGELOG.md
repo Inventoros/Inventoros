@@ -19,6 +19,7 @@ Full release notes, with the pull request behind each change, are on [GitHub Rel
 - Plugins: activation refuses a plugin whose pages or routes collide with an application route (same name, same method and URI, or inside a URI prefix the application uses) and says which route; plugin routes are namespaced `plg.{slug}.*` under `/p/{slug}/`.
 - `OrderService::cancel()`, `restockForDeletion()` and `replaceItems()` take an optional `$actor` for the restock ledger rows, so queued jobs, commands and plugin syncs can cancel or edit orders without a signed-in user.
 - `ReturnOrderService::receive()` takes an optional `$actor`: a queued job, command or plugin sync can receive a return without a signed-in user, and the restock ledger rows record that actor (else the signed-in user, else whoever approved the return).
+- Plugins: a documented core PHP API ("Core PHP API" in the plugin guide): the `StockAdjustment`, order, return, shipment, stock audit, location stock, tracked stock, scan lookup and reorder methods plugins may call are tagged `@api` and guarded by a contract test, so they only gain trailing optional parameters between releases.
 - Plugins: new `shipment_shipped` action, fired once after commit when a shipment first leaves the warehouse (marked shipped on any surface, or a carrier tracking update), and `shipment_cancelled`, fired after commit when a shipment is cancelled on its own or with its order.
 
 ### Changed

@@ -27,6 +27,8 @@ final class ScanLookupService
 {
     /**
      * @return array{type: 'product', product: Product, variant: ProductVariant|null}|array{type: 'location', location: ProductLocation}|null
+     *
+     * @api
      */
     public function resolve(int $organizationId, string $code): ?array
     {
@@ -68,6 +70,8 @@ final class ScanLookupService
      * Serializable summary of a location for scanner responses.
      *
      * @return array<string, mixed>
+     *
+     * @api
      */
     public function locationSummary(ProductLocation $location): array
     {
