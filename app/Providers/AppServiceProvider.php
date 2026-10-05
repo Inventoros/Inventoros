@@ -9,18 +9,24 @@ use App\Listeners\SecurityEventSubscriber;
 use App\Listeners\WebhookEventSubscriber;
 use App\Models\Customer;
 use App\Models\Inventory\Product;
+use App\Models\Inventory\ProductCategory;
+use App\Models\Inventory\ProductLocation;
 use App\Models\Inventory\ProductLocationStock;
 use App\Models\Inventory\ProductVariant;
 use App\Models\Inventory\StockAudit;
 use App\Models\Inventory\StockTransfer;
+use App\Models\Inventory\Supplier;
 use App\Models\Inventory\WorkOrder;
 use App\Models\Order\Order;
 use App\Models\Order\ReturnOrder;
 use App\Models\Purchasing\PurchaseOrder;
 use App\Models\Role;
 use App\Models\User;
+use App\Models\Warehouse;
 use App\Observers\CustomerObserver;
 use App\Observers\OrderObserver;
+use App\Observers\ProductCategoryObserver;
+use App\Observers\ProductLocationObserver;
 use App\Observers\ProductLocationStockObserver;
 use App\Observers\ProductObserver;
 use App\Observers\ProductVariantObserver;
@@ -29,7 +35,9 @@ use App\Observers\ReturnOrderObserver;
 use App\Observers\RoleSecurityObserver;
 use App\Observers\StockAuditObserver;
 use App\Observers\StockTransferObserver;
+use App\Observers\SupplierObserver;
 use App\Observers\UserSecurityObserver;
+use App\Observers\WarehouseObserver;
 use App\Observers\WorkOrderObserver;
 use App\Services\PluginService;
 use App\Services\PluginUIService;
@@ -106,6 +114,10 @@ class AppServiceProvider extends ServiceProvider
         StockTransfer::observe(StockTransferObserver::class);
         WorkOrder::observe(WorkOrderObserver::class);
         StockAudit::observe(StockAuditObserver::class);
+        Supplier::observe(SupplierObserver::class);
+        ProductCategory::observe(ProductCategoryObserver::class);
+        ProductLocation::observe(ProductLocationObserver::class);
+        Warehouse::observe(WarehouseObserver::class);
 
         // Load active plugins
         if (file_exists(base_path('plugins'))) {

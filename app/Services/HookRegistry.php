@@ -277,6 +277,63 @@ final class HookRegistry
             ],
 
             // ========================================
+            // CATEGORY HOOKS
+            // ========================================
+            'category_created' => [
+                'description' => 'Fired once after a product category is created and committed, on any surface (web, REST, product import)',
+                'parameters' => ['$category', '$user'],
+                'example' => "add_action('category_created', function (\$category, \$user) { /* ... */ });",
+            ],
+            'category_updated' => [
+                'description' => 'Fired once per transaction after a product category is updated and committed, on any surface',
+                'parameters' => ['$category', '$user'],
+                'example' => "add_action('category_updated', function (\$category, \$user) { /* ... */ });",
+            ],
+            'category_deleted' => [
+                'description' => 'Fired after a product category is deleted and committed, on any surface',
+                'parameters' => ['$category', '$user'],
+                'example' => "add_action('category_deleted', function (\$category, \$user) { /* ... */ });",
+            ],
+
+            // ========================================
+            // LOCATION HOOKS
+            // ========================================
+            'location_created' => [
+                'description' => 'Fired once after a location is created and committed, on any surface (web, REST, product import)',
+                'parameters' => ['$location', '$user'],
+                'example' => "add_action('location_created', function (\$location, \$user) { /* ... */ });",
+            ],
+            'location_updated' => [
+                'description' => 'Fired once per transaction after a location is updated and committed, on any surface',
+                'parameters' => ['$location', '$user'],
+                'example' => "add_action('location_updated', function (\$location, \$user) { /* ... */ });",
+            ],
+            'location_deleted' => [
+                'description' => 'Fired after a location is deleted and committed, on any surface',
+                'parameters' => ['$location', '$user'],
+                'example' => "add_action('location_deleted', function (\$location, \$user) { /* ... */ });",
+            ],
+
+            // ========================================
+            // WAREHOUSE HOOKS
+            // ========================================
+            'warehouse_created' => [
+                'description' => 'Fired once after a warehouse is created and committed, on any surface (web, REST)',
+                'parameters' => ['$warehouse', '$user'],
+                'example' => "add_action('warehouse_created', function (\$warehouse, \$user) { /* ... */ });",
+            ],
+            'warehouse_updated' => [
+                'description' => 'Fired once per transaction after a warehouse is updated and committed, on any surface',
+                'parameters' => ['$warehouse', '$user'],
+                'example' => "add_action('warehouse_updated', function (\$warehouse, \$user) { /* ... */ });",
+            ],
+            'warehouse_deleted' => [
+                'description' => 'Fired after a warehouse is deleted and committed, on any surface',
+                'parameters' => ['$warehouse', '$user'],
+                'example' => "add_action('warehouse_deleted', function (\$warehouse, \$user) { /* ... */ });",
+            ],
+
+            // ========================================
             // RETURN HOOKS
             // ========================================
             'return_created' => [
@@ -337,22 +394,22 @@ final class HookRegistry
             // SUPPLIER HOOKS
             // ========================================
             'supplier_created' => [
-                'description' => 'Fired after a supplier is created from the web UI',
+                'description' => 'Fired once after a supplier is created and committed, on any surface (web, REST, GraphQL)',
                 'parameters' => ['$supplier', '$user'],
                 'example' => "add_action('supplier_created', function (\$supplier, \$user) { /* ... */ });",
             ],
             'supplier_updated' => [
-                'description' => 'Fired after a supplier is updated from the web UI',
+                'description' => 'Fired once per transaction after a supplier is updated and committed, on any surface',
                 'parameters' => ['$supplier', '$user'],
                 'example' => "add_action('supplier_updated', function (\$supplier, \$user) { /* ... */ });",
             ],
             'supplier_before_delete' => [
-                'description' => 'Fired before a supplier is deleted from the web UI',
+                'description' => 'Fired before a supplier is deleted, on any surface',
                 'parameters' => ['$supplier', '$user'],
                 'example' => "add_action('supplier_before_delete', function (\$supplier, \$user) { /* ... */ });",
             ],
             'supplier_deleted' => [
-                'description' => 'Fired after a supplier is deleted from the web UI',
+                'description' => 'Fired after a supplier is deleted and committed, on any surface',
                 'parameters' => ['$supplier', '$user'],
                 'example' => "add_action('supplier_deleted', function (\$supplier, \$user) { /* ... */ });",
             ],
