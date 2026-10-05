@@ -2639,6 +2639,11 @@
     "languageSwitcher": {
       "ariaLabel": "언어: {name}"
     },
+    "organizationSwitcher": {
+      "ariaLabel": "조직: {name}",
+      "listLabel": "조직",
+      "heading": "조직 전환"
+    },
     "dataTable": {
       "noData": "데이터가 없습니다."
     },

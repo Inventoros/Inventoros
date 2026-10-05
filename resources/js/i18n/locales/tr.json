@@ -2639,6 +2639,11 @@
     "languageSwitcher": {
       "ariaLabel": "Dil: {name}"
     },
+    "organizationSwitcher": {
+      "ariaLabel": "Kuruluş: {name}",
+      "listLabel": "Kuruluşlar",
+      "heading": "Kuruluş değiştir"
+    },
     "dataTable": {
       "noData": "Veri yok."
     },

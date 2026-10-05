@@ -53,6 +53,7 @@ import GlobalSearch from '@/Components/Layout/GlobalSearch.vue';
 import NotificationDropdown from '@/Components/Layout/NotificationDropdown.vue';
 import ThemeToggle from '@/Components/Layout/ThemeToggle.vue';
 import WarehouseSwitcher from '@/Components/WarehouseSwitcher.vue';
+import OrganizationSwitcher from '@/Components/OrganizationSwitcher.vue';
 import LanguageSwitcher from '@/Components/LanguageSwitcher.vue';
 import LegalFooter from '@/Components/LegalFooter.vue';
 import { pluginLabel } from '@/plugins/pluginI18n';
@@ -346,6 +347,7 @@ const isActive = (item) => item.active.some((pattern) => route().current(pattern
                     </slot>
                 </div>
                 <div class="flex items-center gap-1 shrink-0">
+                    <OrganizationSwitcher />
                     <WarehouseSwitcher />
                     <LanguageSwitcher />
                     <ThemeToggle />

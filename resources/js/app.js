@@ -7,6 +7,7 @@ import { createApp, h } from 'vue';
 import { ZiggyVue } from 'ziggy-js';
 import i18n, { applyServerLocale } from './i18n';
 import { applyRegionalProp } from './lib/formatSettings';
+import { applyActiveOrganization, withOrganizationHeader } from './lib/activeOrganization';
 import { installPluginRuntime, loadPluginAssets, resolveRuntimePage } from './plugins/runtime';
 
 const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
@@ -58,6 +59,14 @@ createInertiaApp({
         // Money and dates follow the organization's regional settings.
         applyRegionalProp(props.initialPage?.props?.regional);
         router.on('navigate', (event) => applyRegionalProp(event.detail.page.props.regional));
+
+        // Send the organization each page was rendered for with every
+        // request, so a stale tab cannot write into another organization.
+        applyActiveOrganization(props.initialPage?.props?.auth);
+        router.on('navigate', (event) => applyActiveOrganization(event.detail.page.props.auth));
+        router.on('before', (event) => {
+            event.detail.visit.headers = withOrganizationHeader(event.detail.visit.headers);
+        });
 
         // Import the UI bundles of active plugins, and any newly activated one.
         loadPluginAssets(props.initialPage?.props?.pluginAssets);

@@ -2639,6 +2639,11 @@
     "languageSwitcher": {
       "ariaLabel": "Taal: {name}"
     },
+    "organizationSwitcher": {
+      "ariaLabel": "Organisatie: {name}",
+      "listLabel": "Organisaties",
+      "heading": "Wisselen van organisatie"
+    },
     "dataTable": {
       "noData": "Geen gegevens."
     },
