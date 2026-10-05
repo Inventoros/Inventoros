@@ -255,6 +255,14 @@ final class InterCompanyTransferService
 
         $locationId = $line["{$side}_location_id"];
 
+        // Without a location the units drain from (or land in) whichever bins
+        // hold them, as for any adjustment: a user restricted to some
+        // warehouses must name an accessible location (see
+        // WarehouseAccessService::authorizeLocation(null)).
+        if ($locationId === null && ! $this->warehouses->canAccessLocation($member, null)) {
+            throw new AuthorizationException('You can only move stock you have warehouse access to: name a location.');
+        }
+
         if ($locationId !== null) {
             $location = $locations[$locationId] ?? null;
 

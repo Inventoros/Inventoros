@@ -280,6 +280,51 @@ final class InterCompanyTransferServiceTest extends TestCase
         ]), AuthorizationException::class);
     }
 
+    public function test_a_restricted_clerk_cannot_move_stock_without_naming_a_location(): void
+    {
+        // The clerk may work in one Alpha warehouse only, and in none of Beta's.
+        $allowed = Warehouse::factory()->create(['organization_id' => $this->alpha->id]);
+        $forbidden = Warehouse::factory()->create(['organization_id' => $this->alpha->id]);
+        $forbiddenBin = ProductLocation::withoutGlobalScope(OrganizationScope::class)->create(['organization_id' => $this->alpha->id, 'warehouse_id' => $forbidden->id, 'name' => 'F1', 'code' => 'F1', 'is_active' => true]);
+        ProductLocationStock::create(['organization_id' => $this->alpha->id, 'product_id' => $this->alphaWidget->id, 'location_id' => $forbiddenBin->id, 'quantity' => 50]);
+
+        $clerk = $this->homeUser($this->alpha, 'member', 'Clerk');
+        $this->grantInOrganization($clerk, $this->alpha, ['transfer_stock']);
+        $clerk->warehouses()->attach($allowed->id);
+        $this->addMember($this->beta, $clerk, 'member');
+        $this->grantInOrganization($clerk, $this->beta, ['transfer_stock']);
+        app(WarehouseAccessService::class)->setOrganizationRestrictsToAssigned($this->alpha->id, true);
+        app(WarehouseAccessService::class)->setOrganizationRestrictsToAssigned($this->beta->id, true);
+
+        // Without a location the units would drain from the bin the clerk may not touch.
+        $this->assertRefused(fn () => $this->service()->transfer($clerk, $this->alpha->id, $this->beta->id, [
+            $this->line($this->alphaWidget, $this->betaWidget, 50),
+        ]), AuthorizationException::class);
+        $this->assertSame(50, (int) ProductLocationStock::where('location_id', $forbiddenBin->id)->value('quantity'));
+
+        // Variant stock has no bins: a restricted clerk cannot move it either.
+        $alphaShirt = $this->product($this->alpha, 'SHIRT', ['has_variants' => true, 'stock' => 0]);
+        $betaShirt = $this->product($this->beta, 'SHIRT', ['has_variants' => true, 'stock' => 0]);
+        $alphaLarge = ProductVariant::create(['product_id' => $alphaShirt->id, 'organization_id' => $this->alpha->id, 'sku' => 'SHIRT-L', 'option_values' => ['Size' => 'L'], 'stock' => 12, 'min_stock' => 0, 'is_active' => true, 'position' => 0]);
+        $betaLarge = ProductVariant::create(['product_id' => $betaShirt->id, 'organization_id' => $this->beta->id, 'sku' => 'SHIRT-L', 'option_values' => ['Size' => 'L'], 'stock' => 1, 'min_stock' => 0, 'is_active' => true, 'position' => 0]);
+
+        $this->assertRefused(fn () => $this->service()->transfer($clerk, $this->alpha->id, $this->beta->id, [
+            $this->line($alphaShirt, $betaShirt, 4, ['from_variant_id' => $alphaLarge->id, 'to_variant_id' => $betaLarge->id]),
+        ]), AuthorizationException::class);
+        $this->assertSame(12, $alphaLarge->fresh()->stock);
+    }
+
+    public function test_each_side_is_logged_in_its_own_organization(): void
+    {
+        $this->actingAs($this->user);
+
+        $this->service()->transfer($this->user, $this->alpha->id, $this->beta->id, [$this->line($this->alphaWidget, $this->betaWidget, 3)]);
+
+        $logs = \App\Models\ActivityLog::where('subject_type', Product::class)->where('action', 'updated')->get()->keyBy('subject_id');
+        $this->assertSame($this->alpha->id, $logs[$this->alphaWidget->id]->organization_id);
+        $this->assertSame($this->beta->id, $logs[$this->betaWidget->id]->organization_id);
+    }
+
     public function test_a_retry_with_the_same_key_moves_the_stock_once(): void
     {
         $first = $this->service()->transfer($this->user, $this->alpha->id, $this->beta->id, [$this->line($this->alphaWidget, $this->betaWidget, 10)], null, 'sync-42');
