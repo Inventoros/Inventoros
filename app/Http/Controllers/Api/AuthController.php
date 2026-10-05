@@ -10,6 +10,8 @@ use App\Http\Controllers\Auth\TwoFactorController;
 use App\Http\Controllers\Controller;
 use App\Http\Middleware\CheckApiPermission;
 use App\Models\User;
+use App\Services\Organizations\ActiveOrganization;
+use App\Services\Organizations\OrganizationMembershipService;
 use App\Services\SecurityEventLogger;
 use Illuminate\Auth\Events\Failed;
 use Illuminate\Auth\Events\Login;
@@ -43,6 +45,9 @@ class AuthController extends Controller
             'device_name' => ['nullable', 'string', 'max:255'],
             'code' => ['nullable', 'string'],
             'recovery_code' => ['nullable', 'string'],
+            // Bind the token to another organization the user belongs to
+            // (default: their home organization).
+            'organization_id' => ['nullable', 'integer', 'min:1'],
         ]);
 
         $user = User::where('email', $request->email)->first();
@@ -59,6 +64,15 @@ class AuthController extends Controller
 
         if ($user->two_factor_enabled) {
             $this->verifyTwoFactor($request, $user);
+        }
+
+        // Checked after the password (and second factor), so membership of an
+        // organization is never disclosed to someone without the credentials.
+        if ($request->filled('organization_id')
+            && ! app(ActiveOrganization::class)->activate($user, (int) $request->input('organization_id'))) {
+            throw ValidationException::withMessages([
+                'organization_id' => ['You are not a member of that organization.'],
+            ]);
         }
 
         event(new Login('sanctum', $user, false));
@@ -179,6 +193,11 @@ class AuthController extends Controller
                 'id' => $user->organization->id,
                 'name' => $user->organization->name,
             ] : null,
+            // Every organization the user belongs to; a token works in one
+            // (organization above): sign in with organization_id for another.
+            'organizations' => app(OrganizationMembershipService::class)->organizationsFor($user)
+                ->map(fn ($organization) => ['id' => (int) $organization->id, 'name' => $organization->name])
+                ->values(),
             'permissions' => $user->getAllPermissions(),
         ]);
     }
@@ -269,7 +288,8 @@ class AuthController extends Controller
      */
     public function revokeToken(Request $request, int $tokenId): JsonResponse
     {
-        $token = $request->user()->tokens()->find($tokenId);
+        // Only tokens of the organization this token works in.
+        $token = $request->user()->organizationTokens()->find($tokenId);
 
         if (!$token) {
             return response()->json([

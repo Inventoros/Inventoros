@@ -27,7 +27,9 @@ class ApiTokenController extends Controller
     {
         $user = $request->user();
 
-        $tokens = $user->tokens()
+        // Tokens of the active organization: a token works in the
+        // organization it was created in, so each one lists its own.
+        $tokens = $user->organizationTokens()
             ->latest()
             ->latest('id')
             ->get()
@@ -68,7 +70,7 @@ class ApiTokenController extends Controller
 
     public function destroy(Request $request, int $tokenId): RedirectResponse
     {
-        $token = $request->user()->tokens()->whereKey($tokenId)->first();
+        $token = $request->user()->organizationTokens()->whereKey($tokenId)->first();
 
         abort_if($token === null, 404);
 
