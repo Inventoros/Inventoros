@@ -24,11 +24,23 @@ const translated = (key, fallback, { t, te } = {}) => (t && te && te(key) ? t(ke
 // The English a seeded record started with, read from the en locale.
 const seededText = (key, { t, te } = {}) => (t && te && te(key, 'en') ? t(key, {}, { locale: 'en' }) : undefined);
 
+// A plugin permission is named "{slug}.{ability}" (register_permission()).
+// Its translation lives in the plugin's own messages, which its runtime bundle
+// adds under plugins.{slug} (plugin.i18n.addMessages()).
+function permissionKey(value, field) {
+    const name = String(value ?? '');
+    const dot = name.indexOf('.');
+
+    return dot > 0
+        ? `plugins.${name.slice(0, dot)}.permissions.${name.slice(dot + 1)}.${field}`
+        : `${PREFIX}.permissions.${name}.${field}`;
+}
+
 export const permissionLabel = (permission, i18n) =>
-    translated(`${PREFIX}.permissions.${permission?.value}.label`, permission?.label ?? '', i18n);
+    translated(permissionKey(permission?.value, 'label'), permission?.label ?? '', i18n);
 
 export const permissionDescription = (permission, i18n) =>
-    translated(`${PREFIX}.permissions.${permission?.value}.description`, permission?.description ?? '', i18n);
+    translated(permissionKey(permission?.value, 'description'), permission?.description ?? '', i18n);
 
 export const permissionCategoryLabel = (category, i18n) =>
     translated(`${PREFIX}.categories.${catalogKey(category)}`, category ?? '', i18n);

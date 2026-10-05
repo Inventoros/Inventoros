@@ -194,9 +194,10 @@ class AuthController extends Controller
         $user = $request->user();
         $isAdmin = $user->isAdmin();
 
-        // Allowlist of valid token abilities: every Permission enum case
-        // plus the wildcard '*' which only admins may request.
-        $allowedAbilities = array_column(Permission::cases(), 'value');
+        // Allowlist of valid token abilities: every Permission enum case and
+        // every permission an active plugin registered, plus the wildcard '*'
+        // which only admins may request.
+        $allowedAbilities = Permission::values();
         $allowedAbilities[] = '*';
 
         $request->validate([

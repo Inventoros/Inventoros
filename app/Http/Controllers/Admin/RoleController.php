@@ -11,6 +11,7 @@ use App\Http\Requests\Admin\Role\StoreRoleRequest;
 use App\Http\Requests\Admin\Role\UpdateRoleRequest;
 use App\Models\PermissionSet;
 use App\Models\Role;
+use App\Services\Plugins\PluginPermissionRegistry;
 use App\Services\SecurityEventLogger;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -133,19 +134,22 @@ class RoleController extends Controller
 
         // Get permission details (direct permissions)
         $rolePermissions = [];
+        $pluginPermissions = app(PluginPermissionRegistry::class);
         foreach ($role->permissions ?? [] as $permissionValue) {
-            try {
-                $permission = Permission::from($permissionValue);
+            $permission = is_string($permissionValue) ? Permission::tryFrom($permissionValue) : null;
+
+            if ($permission !== null) {
                 $rolePermissions[] = [
                     'value' => $permission->value,
                     'label' => $permission->label(),
                     'description' => $permission->description(),
                     'category' => $permission->category(),
                 ];
-            } catch (\ValueError $e) {
-                // Skip invalid permissions
-                continue;
+            } elseif (is_string($permissionValue) && ($registered = $pluginPermissions->get($permissionValue)) !== null) {
+                // A permission of an active plugin (register_permission()).
+                $rolePermissions[] = $registered;
             }
+            // Anything else (a removed or inactive plugin's permission) is skipped.
         }
 
         // Get all effective permissions (including from sets)

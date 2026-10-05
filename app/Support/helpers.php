@@ -183,6 +183,27 @@ if (!function_exists('add_page_component')) {
     }
 }
 
+if (!function_exists('register_permission')) {
+    /**
+     * Register a plugin permission, named "{plugin-slug}.{ability}" (for
+     * example "cycle-counts.approve"). It is listed in the role editor and
+     * the API token picker, admins hold it, and it can be checked like any
+     * core permission ($user->hasPermission(), a page or menu `permission`).
+     *
+     * @param string $name "{plugin-slug}.{ability}"
+     * @param string $label Shown in the role editor
+     * @param string $description Shown under the label
+     * @param string|null $category Role editor group; defaults to "Plugins"
+     * @return void
+     *
+     * @throws \InvalidArgumentException When the name is not "{slug}.{ability}"
+     */
+    function register_permission(string $name, string $label, string $description = '', ?string $category = null): void
+    {
+        app(\App\Services\Plugins\PluginPermissionRegistry::class)->register($name, $label, $description, $category);
+    }
+}
+
 if (!function_exists('get_page_components')) {
     /**
      * Get the components for a page slot that the current user may see:

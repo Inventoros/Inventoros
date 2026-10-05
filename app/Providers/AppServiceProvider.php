@@ -68,6 +68,9 @@ class AppServiceProvider extends ServiceProvider
         $this->app->singleton(PluginUIService::class, function ($app) {
             return new PluginUIService();
         });
+
+        // Permissions registered by active plugins (register_permission()).
+        $this->app->singleton(\App\Services\Plugins\PluginPermissionRegistry::class);
     }
 
     /**

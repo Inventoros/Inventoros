@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Enums;
 
+use App\Services\Plugins\PluginPermissionRegistry;
+
 /**
  * Enum defining all available permissions in the system.
  *
@@ -323,6 +325,42 @@ enum Permission: string
                 'description' => $permission->description(),
             ];
         }
+
+        // Permissions registered by active plugins (register_permission()),
+        // after the core ones; a plugin's own category becomes a new group.
+        foreach (self::pluginRegistry()?->grouped() ?? [] as $category => $permissions) {
+            $grouped[$category] = [...($grouped[$category] ?? []), ...$permissions];
+        }
+
         return $grouped;
+    }
+
+    /**
+     * Every grantable permission name: the core cases, then the permissions
+     * registered by active plugins.
+     *
+     * @return array<int, string>
+     */
+    public static function values(): array
+    {
+        return [
+            ...array_column(self::cases(), 'value'),
+            ...(self::pluginRegistry()?->names() ?? []),
+        ];
+    }
+
+    /**
+     * Whether a name is a core permission or one an active plugin registered.
+     */
+    public static function isKnown(string $name): bool
+    {
+        return self::tryFrom($name) !== null || (self::pluginRegistry()?->has($name) ?? false);
+    }
+
+    private static function pluginRegistry(): ?PluginPermissionRegistry
+    {
+        return function_exists('app') && app()->bound(PluginPermissionRegistry::class)
+            ? app(PluginPermissionRegistry::class)
+            : null;
     }
 }

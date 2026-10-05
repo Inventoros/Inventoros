@@ -149,7 +149,7 @@ trait HasRolesAndPermissions
     {
         // Admins have all permissions
         if ($this->isAdmin()) {
-            return array_map(fn ($p) => $p->value, Permission::cases());
+            return Permission::values();
         }
 
         $permissions = [];
