@@ -1,5 +1,7 @@
 <p align="center">
-  <img src="public/images/brand/inventoros_icon_transparent_512.png" alt="Inventoros" width="120" height="120">
+  <a href="https://inventoros.com">
+    <img src="public/images/brand/inventoros_icon_transparent_512.png" alt="Inventoros" width="120" height="120">
+  </a>
 </p>
 
 <h1 align="center">Inventoros</h1>
