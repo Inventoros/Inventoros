@@ -123,6 +123,32 @@ The admin dashboard warns when the scheduler has not run for 10 minutes, when qu
 - **VPS:** run a dedicated worker so jobs are processed as soon as they are queued. Install the systemd units in `deploy/systemd/` (`inventoros-worker.service`, plus `inventoros-scheduler.timer` if you prefer it to cron). See [installation-vps.md](docs/site/sections/installation-vps.md#scheduler-and-queue-worker). Run `php artisan queue:restart` after each deploy.
 - **Docker:** `docker-compose.prod.yml` already runs `worker` and `scheduler` containers (and sets `QUEUE_RUN_VIA_SCHEDULER=false`).
 
+Before an update or restore, stop accepting writes and let in-flight requests
+and queue jobs finish. Imports, exports and scheduled reports can take up to
+600 seconds. Maintenance mode prevents new ordinary work but does not stop a
+job already executing. The updater now enters maintenance before taking its
+rollback backup and restarts workers after a successful update or restore.
+If restoration fails, it keeps the site in maintenance for operator recovery;
+do not bring it back online until the files and database are consistent.
+
+Queue reservations now default to 660 seconds. Remove old 90-second overrides,
+or set `DB_QUEUE_RETRY_AFTER`, `REDIS_QUEUE_RETRY_AFTER` and
+`BEANSTALKD_QUEUE_RETRY_AFTER` above 600. SQS users must set visibility timeout
+above 600 in AWS. Refresh cached configuration and restart workers after
+changing these values.
+
+Updates and installation-wide backups are restricted to administrators of the
+installation owner organization, selected by `INVENTOROS_PLUGIN_ADMIN_ORG`
+(the first organization by default). Administrators of other organizations
+continue to manage their own organization but cannot restore or replace the
+whole installation.
+
+Work orders support untracked, non-variant products only. Serial/batch-tracked
+products, variants and virtual kits are refused as components or output, because
+work orders do not yet record production against those individual stock records.
+Existing work orders using those products cannot start or complete until their
+inventory workflow is migrated to a supported operation.
+
 ### New environment variables
 
 All are optional. `.env.example` lists each one with its default.

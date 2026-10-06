@@ -2,10 +2,12 @@
 
 namespace Tests\Feature;
 
+use App\Exceptions\InvalidStateException;
 use App\Models\Auth\Organization;
 use App\Models\Inventory\Product;
 use App\Models\Inventory\ProductCategory;
 use App\Models\Inventory\ProductLocation;
+use App\Models\Inventory\StockAdjustment;
 use App\Models\Order\Order;
 use App\Models\Order\OrderItem;
 use App\Models\Order\ReturnOrder;
@@ -13,6 +15,7 @@ use App\Models\Order\ReturnOrderItem;
 use App\Models\Role;
 use App\Models\System\SystemSetting;
 use App\Models\User;
+use App\Services\ReturnOrderService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -21,10 +24,15 @@ class ReturnOrderConcurrencyTest extends TestCase
     use RefreshDatabase;
 
     protected User $admin;
+
     protected Organization $organization;
+
     protected Product $product;
+
     protected ProductCategory $category;
+
     protected ProductLocation $location;
+
     protected ReturnOrder $return;
 
     protected function setUp(): void
@@ -96,7 +104,7 @@ class ReturnOrderConcurrencyTest extends TestCase
 
         $order = Order::create([
             'organization_id' => $this->organization->id,
-            'order_number' => 'ORD-' . now()->format('Ymd') . '-0001',
+            'order_number' => 'ORD-'.now()->format('Ymd').'-0001',
             'source' => 'manual',
             'customer_name' => 'Test Customer',
             'customer_email' => 'customer@test.com',
@@ -154,5 +162,29 @@ class ReturnOrderConcurrencyTest extends TestCase
         $response = $this->actingAs($this->admin)->post(route('returns.receive', $this->return));
         $response->assertSessionHas('error');
         $this->assertSame(105, $this->product->fresh()->stock); // not double-restocked
+    }
+
+    public function test_stale_approval_and_rejection_cannot_change_a_received_return(): void
+    {
+        $this->actingAs($this->admin);
+        $this->return->update(['status' => 'pending']);
+        $stale = $this->return->fresh();
+        $service = app(ReturnOrderService::class);
+        $approved = $service->approve($this->return->fresh(), $this->admin);
+        $service->receive($approved, $this->admin);
+
+        foreach (['approve', 'reject'] as $transition) {
+            try {
+                $service->{$transition}($stale, $this->admin);
+                $this->fail('A stale '.$transition.' must not change a received return.');
+            } catch (InvalidStateException) {
+                // Receiving and every other transition share the return lock.
+            }
+        }
+
+        $this->assertSame('received', $stale->fresh()->status);
+        $this->assertSame(105, $this->product->fresh()->stock);
+        $this->assertSame(1, StockAdjustment::where('reference_type', ReturnOrder::class)->where('reference_id', $stale->id)->count());
+        $this->assertSame(5, (int) $service->returnedQuantities($stale->order)->sum());
     }
 }

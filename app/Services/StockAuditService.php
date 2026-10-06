@@ -117,27 +117,34 @@ final class StockAuditService
     {
         $this->warehouseAccess->authorizeLocation($actor, $stockAudit->warehouse_location_id);
 
-        if ($stockAudit->status !== 'draft') {
-            throw new InvalidStateException('Only draft audits can be started.', 'invalid_status');
-        }
+        return DB::transaction(function () use ($stockAudit, $actor) {
+            $locked = StockAudit::whereKey($stockAudit->getKey())->lockForUpdate()->firstOrFail();
+            $this->warehouseAccess->authorizeLocation($actor, $locked->warehouse_location_id);
 
-        if ($stockAudit->items()->count() === 0) {
-            throw new InvalidStateException('Cannot start an audit with no items.', 'no_items');
-        }
-
-        // Refresh system quantities from current stock levels
-        DB::transaction(function () use ($stockAudit) {
-            foreach ($stockAudit->items as $item) {
-                $item->update(['system_quantity' => $this->systemQuantity($stockAudit, $item->product)]);
+            if ($locked->status !== 'draft') {
+                throw new InvalidStateException('Only draft audits can be started.', 'invalid_status');
             }
 
-            $stockAudit->update([
+            $locked->load('items.product');
+            if ($locked->items->isEmpty()) {
+                throw new InvalidStateException('Cannot start an audit with no items.', 'no_items');
+            }
+
+            // Snapshot only after claiming the draft under the same lock
+            // completion and counting use. A stale start cannot reopen it.
+            foreach ($locked->items as $item) {
+                $item->update(['system_quantity' => $this->systemQuantity($locked, $item->product)]);
+            }
+
+            $locked->update([
                 'status' => 'in_progress',
                 'started_at' => now(),
             ]);
-        });
+            $stockAudit->setRawAttributes($locked->getAttributes(), true);
+            $stockAudit->setRelation('items', $locked->items);
 
-        return $stockAudit;
+            return $stockAudit;
+        });
     }
 
     /**
@@ -149,24 +156,33 @@ final class StockAuditService
     {
         $this->warehouseAccess->authorizeLocation($actor, $stockAudit->warehouse_location_id);
 
-        if ($stockAudit->status !== 'in_progress') {
-            throw new InvalidStateException('Audit is not in progress', 'invalid_status');
-        }
+        return DB::transaction(function () use ($stockAudit, $item, $actor, $countedQuantity, $notes) {
+            // Parent before item: serialize counts with completion so no
+            // count can overwrite the evidence after its stock was booked.
+            $locked = StockAudit::whereKey($stockAudit->getKey())->lockForUpdate()->firstOrFail();
+            $this->warehouseAccess->authorizeLocation($actor, $locked->warehouse_location_id);
 
-        if ($item->stock_audit_id !== $stockAudit->id) {
-            throw new InvalidStateException('Item does not belong to this audit', 'item_mismatch');
-        }
+            if ($locked->status !== 'in_progress') {
+                throw new InvalidStateException('Audit is not in progress', 'invalid_status');
+            }
 
-        $item->update([
-            'counted_quantity' => $countedQuantity,
-            'discrepancy' => $countedQuantity - $item->system_quantity,
-            'status' => 'counted',
-            'counted_by' => $actor->id,
-            'counted_at' => now(),
-            'notes' => $notes ?? $item->notes,
-        ]);
+            $lockedItem = StockAuditItem::whereKey($item->getKey())->lockForUpdate()->firstOrFail();
+            if ($lockedItem->stock_audit_id !== $locked->id) {
+                throw new InvalidStateException('Item does not belong to this audit', 'item_mismatch');
+            }
 
-        return $item;
+            $lockedItem->update([
+                'counted_quantity' => $countedQuantity,
+                'discrepancy' => $countedQuantity - $lockedItem->system_quantity,
+                'status' => 'counted',
+                'counted_by' => $actor->id,
+                'counted_at' => now(),
+                'notes' => $notes ?? $lockedItem->notes,
+            ]);
+            $item->setRawAttributes($lockedItem->getAttributes(), true);
+
+            return $item;
+        });
     }
 
     /**

@@ -16,6 +16,7 @@ use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\ShippingSettingsController;
 use App\Http\Controllers\WebhookController;
 use App\Http\Middleware\EnsurePluginAdministrator;
+use App\Http\Middleware\EnsureUpdateAdministrator;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -139,7 +140,7 @@ Route::get('/activity-log/export', [ActivityLogController::class, 'export'])
     ->name('activity-log.export');
 
 // System Update - Admin only
-Route::prefix('admin/update')->name('admin.update.')->middleware('permission:manage_organization')->group(function () {
+Route::prefix('admin/update')->name('admin.update.')->middleware(['permission:manage_organization', EnsureUpdateAdministrator::class])->group(function () {
     Route::get('/', [UpdateController::class, 'index'])->name('index');
     Route::get('/check', [UpdateController::class, 'check'])->name('check');
     Route::post('/perform', [UpdateController::class, 'update'])->name('perform');

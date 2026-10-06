@@ -29,6 +29,7 @@ const { t } = useI18n();
 const props = defineProps({
     products: Array,
     summary: Object,
+    truncated: Boolean,
 });
 
 const formatCurrency = (value) => formatMoney(value);
@@ -64,6 +65,8 @@ const thClassRight = 'px-4 py-2.5 text-right text-xs font-medium tracking-tight 
                 </Button>
             </template>
         </PageHeader>
+
+        <p v-if="truncated" class="mt-4 text-xs text-status-warning">{{ t('reports.common.truncated', { count: products.length }) }}</p>
 
         <!-- Summary metrics -->
         <section class="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">

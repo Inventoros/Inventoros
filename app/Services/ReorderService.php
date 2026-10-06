@@ -53,9 +53,9 @@ final class ReorderService
      *
      * @return array<int, array{warehouse_id: int, warehouse_name: string, on_hand: int, reorder_point: int, suggested_quantity: int}>
      */
-    public function warehouseShortfalls(Product $product): array
+    public function warehouseShortfalls(Product $product, ?array $warehouseOnHand = null): array
     {
-        return $this->warehouseLevels->shortfalls($product);
+        return $this->warehouseLevels->shortfalls($product, $warehouseOnHand);
     }
 
     /**
@@ -84,9 +84,9 @@ final class ReorderService
      *
      * @api
      */
-    public function suggestedQuantity(Product $product, ?Supplier $primary = null): int
+    public function suggestedQuantity(Product $product, ?Supplier $primary = null, ?array $warehouseOnHand = null): int
     {
-        $shortfalls = $this->warehouseShortfalls($product);
+        $shortfalls = $this->warehouseShortfalls($product, $warehouseOnHand);
 
         if ($shortfalls !== []) {
             $quantity = array_sum(array_column($shortfalls, 'suggested_quantity'));

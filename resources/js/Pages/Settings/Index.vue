@@ -28,11 +28,9 @@ const { t } = useI18n();
 const page = usePage();
 const { hasPermission } = usePermissions();
 
-const isAdmin = computed(() => page.props.auth?.user?.role === 'admin');
-
 /**
- * Every settings page. `perm` mirrors the route middleware; `adminOnly`
- * mirrors controllers that additionally require the admin role.
+ * Every settings page. Permissions and installation administration mirror
+ * the server's route guards.
  */
 const allSections = [
     {
@@ -93,12 +91,12 @@ const allSections = [
         title: t('nav.updates'),
         description: t('settings.hub.updatesDescription'),
         perm: 'manage_organization',
-        adminOnly: true,
+        updatesOnly: true,
     },
 ];
 
 const settingsSections = computed(() =>
-    allSections.filter((s) => (!s.perm || hasPermission(s.perm)) && (!s.adminOnly || isAdmin.value))
+    allSections.filter((s) => (!s.perm || hasPermission(s.perm)) && (!s.updatesOnly || page.props.auth?.canManageUpdates))
 );
 </script>
 

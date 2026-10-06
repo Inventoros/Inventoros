@@ -14,6 +14,7 @@ use App\Models\Order\Order;
 use App\Models\Order\OrderPayment;
 use App\Models\Order\ReturnOrder;
 use App\Models\Purchasing\PurchaseOrder;
+use App\Models\Scopes\OrganizationScope;
 use App\Models\Shipping\Shipment;
 use App\Models\User;
 use App\Services\WebhookService;
@@ -29,65 +30,59 @@ final class WebhookEventSubscriber
 {
     /**
      * Register the listeners for the subscriber.
-     *
-     * @return void
      */
     public static function subscribe(): void
     {
         // Product events
-        add_action('product_created', [static::class, 'onProductCreated'], 100);
-        add_action('product_updated', [static::class, 'onProductUpdated'], 100);
-        add_action('product_deleted', [static::class, 'onProductDeleted'], 100);
-        add_action('low_stock_alert', [static::class, 'onLowStock'], 100);
-        add_action('out_of_stock_alert', [static::class, 'onOutOfStock'], 100);
+        add_action('product_created', [self::class, 'onProductCreated'], 100);
+        add_action('product_updated', [self::class, 'onProductUpdated'], 100);
+        add_action('product_deleted', [self::class, 'onProductDeleted'], 100);
+        add_action('low_stock_alert', [self::class, 'onLowStock'], 100);
+        add_action('out_of_stock_alert', [self::class, 'onOutOfStock'], 100);
 
         // Stock events
-        add_action('stock_adjusted', [static::class, 'onStockAdjusted'], 100);
+        add_action('stock_adjusted', [self::class, 'onStockAdjusted'], 100);
 
         // Order events - these need to be added to the OrderController
-        add_action('order_created', [static::class, 'onOrderCreated'], 100);
-        add_action('order_updated', [static::class, 'onOrderUpdated'], 100);
-        add_action('order_status_changed', [static::class, 'onOrderStatusChanged'], 100);
-        add_action('order_approved', [static::class, 'onOrderApproved'], 100);
-        add_action('order_rejected', [static::class, 'onOrderRejected'], 100);
+        add_action('order_created', [self::class, 'onOrderCreated'], 100);
+        add_action('order_updated', [self::class, 'onOrderUpdated'], 100);
+        add_action('order_status_changed', [self::class, 'onOrderStatusChanged'], 100);
+        add_action('order_approved', [self::class, 'onOrderApproved'], 100);
+        add_action('order_rejected', [self::class, 'onOrderRejected'], 100);
 
         // Payment events (refunds are recorded payments of type "refund")
-        add_action('payment_recorded', [static::class, 'onPaymentRecorded'], 100);
-        add_action('payment_voided', [static::class, 'onPaymentVoided'], 100);
+        add_action('payment_recorded', [self::class, 'onPaymentRecorded'], 100);
+        add_action('payment_voided', [self::class, 'onPaymentVoided'], 100);
 
         // Shipment events (fired by ShipmentService after commit)
-        add_action('shipment_created', [static::class, 'onShipmentCreated'], 100);
-        add_action('shipment_delivered', [static::class, 'onShipmentDelivered'], 100);
+        add_action('shipment_created', [self::class, 'onShipmentCreated'], 100);
+        add_action('shipment_delivered', [self::class, 'onShipmentDelivered'], 100);
 
         // Purchase order events
-        add_action('purchase_order_created', [static::class, 'onPurchaseOrderCreated'], 100);
-        add_action('purchase_order_received', [static::class, 'onPurchaseOrderReceived'], 100);
-        add_action('purchase_order_cancelled', [static::class, 'onPurchaseOrderCancelled'], 100);
+        add_action('purchase_order_created', [self::class, 'onPurchaseOrderCreated'], 100);
+        add_action('purchase_order_received', [self::class, 'onPurchaseOrderReceived'], 100);
+        add_action('purchase_order_cancelled', [self::class, 'onPurchaseOrderCancelled'], 100);
 
         // Customer events
-        add_action('customer_created', [static::class, 'onCustomerCreated'], 100);
-        add_action('customer_updated', [static::class, 'onCustomerUpdated'], 100);
-        add_action('customer_deleted', [static::class, 'onCustomerDeleted'], 100);
+        add_action('customer_created', [self::class, 'onCustomerCreated'], 100);
+        add_action('customer_updated', [self::class, 'onCustomerUpdated'], 100);
+        add_action('customer_deleted', [self::class, 'onCustomerDeleted'], 100);
 
         // Return (RMA) events
-        add_action('return_created', [static::class, 'onReturnCreated'], 100);
-        add_action('return_received', [static::class, 'onReturnReceived'], 100);
+        add_action('return_created', [self::class, 'onReturnCreated'], 100);
+        add_action('return_received', [self::class, 'onReturnReceived'], 100);
 
         // Stock transfer events
-        add_action('transfer_created', [static::class, 'onTransferCreated'], 100);
-        add_action('transfer_completed', [static::class, 'onTransferCompleted'], 100);
+        add_action('transfer_created', [self::class, 'onTransferCreated'], 100);
+        add_action('transfer_completed', [self::class, 'onTransferCompleted'], 100);
 
         // Work order and stock audit events
-        add_action('work_order_completed', [static::class, 'onWorkOrderCompleted'], 100);
-        add_action('stock_audit_completed', [static::class, 'onStockAuditCompleted'], 100);
+        add_action('work_order_completed', [self::class, 'onWorkOrderCompleted'], 100);
+        add_action('stock_audit_completed', [self::class, 'onStockAuditCompleted'], 100);
     }
 
     /**
      * Handle product created event.
-     *
-     * @param Product $product
-     * @param User|null $user
-     * @return void
      */
     public static function onProductCreated(Product $product, ?User $user = null): void
     {
@@ -107,10 +102,6 @@ final class WebhookEventSubscriber
 
     /**
      * Handle product updated event.
-     *
-     * @param Product $product
-     * @param User|null $user
-     * @return void
      */
     public static function onProductUpdated(Product $product, ?User $user = null): void
     {
@@ -130,10 +121,6 @@ final class WebhookEventSubscriber
 
     /**
      * Handle product deleted event.
-     *
-     * @param Product $product
-     * @param User|null $user
-     * @return void
      */
     public static function onProductDeleted(Product $product, ?User $user = null): void
     {
@@ -153,9 +140,6 @@ final class WebhookEventSubscriber
 
     /**
      * Handle low stock alert event.
-     *
-     * @param Product $product
-     * @return void
      */
     public static function onLowStock(Product $product): void
     {
@@ -180,9 +164,6 @@ final class WebhookEventSubscriber
 
     /**
      * Handle out of stock alert event.
-     *
-     * @param Product $product
-     * @return void
      */
     public static function onOutOfStock(Product $product): void
     {
@@ -205,15 +186,16 @@ final class WebhookEventSubscriber
 
     /**
      * Handle stock adjusted event.
-     *
-     * @param StockAdjustment $adjustment
-     * @param Product|null $product
-     * @return void
      */
     public static function onStockAdjusted(StockAdjustment $adjustment, ?Product $product = null): void
     {
         try {
-            $product = $product ?? $adjustment->product;
+            // An inter-company variant adjustment fires after its organization
+            // context has ended. Resolve in the adjustment's organization,
+            // not the browser's current one, or the other side loses its SKU.
+            $product = $product ?? Product::withoutGlobalScope(OrganizationScope::class)
+                ->where('organization_id', $adjustment->organization_id)
+                ->find($adjustment->product_id);
 
             WebhookService::dispatch(
                 'stock.adjusted',
@@ -247,10 +229,6 @@ final class WebhookEventSubscriber
 
     /**
      * Handle order created event.
-     *
-     * @param Order $order
-     * @param User|null $user
-     * @return void
      */
     public static function onOrderCreated(Order $order, ?User $user = null): void
     {
@@ -270,10 +248,6 @@ final class WebhookEventSubscriber
 
     /**
      * Handle order updated event.
-     *
-     * @param Order $order
-     * @param User|null $user
-     * @return void
      */
     public static function onOrderUpdated(Order $order, ?User $user = null): void
     {
@@ -293,12 +267,6 @@ final class WebhookEventSubscriber
 
     /**
      * Handle order status changed event.
-     *
-     * @param Order $order
-     * @param string $oldStatus
-     * @param string $newStatus
-     * @param User|null $user
-     * @return void
      */
     public static function onOrderStatusChanged(Order $order, string $oldStatus, string $newStatus, ?User $user = null): void
     {
@@ -362,10 +330,6 @@ final class WebhookEventSubscriber
 
     /**
      * Handle order approved event.
-     *
-     * @param Order $order
-     * @param User|null $approver
-     * @return void
      */
     public static function onOrderApproved(Order $order, ?User $approver = null): void
     {
@@ -397,10 +361,6 @@ final class WebhookEventSubscriber
 
     /**
      * Handle order rejected event.
-     *
-     * @param Order $order
-     * @param User|null $rejector
-     * @return void
      */
     public static function onOrderRejected(Order $order, ?User $rejector = null): void
     {
@@ -432,10 +392,6 @@ final class WebhookEventSubscriber
 
     /**
      * Handle purchase order created event.
-     *
-     * @param PurchaseOrder $purchaseOrder
-     * @param User|null $user
-     * @return void
      */
     public static function onPurchaseOrderCreated(PurchaseOrder $purchaseOrder, ?User $user = null): void
     {
@@ -455,10 +411,6 @@ final class WebhookEventSubscriber
 
     /**
      * Handle purchase order received event.
-     *
-     * @param PurchaseOrder $purchaseOrder
-     * @param User|null $user
-     * @return void
      */
     public static function onPurchaseOrderReceived(PurchaseOrder $purchaseOrder, ?User $user = null): void
     {
@@ -478,10 +430,6 @@ final class WebhookEventSubscriber
 
     /**
      * Handle purchase order cancelled event.
-     *
-     * @param PurchaseOrder $purchaseOrder
-     * @param User|null $user
-     * @return void
      */
     public static function onPurchaseOrderCancelled(PurchaseOrder $purchaseOrder, ?User $user = null): void
     {
@@ -692,10 +640,6 @@ final class WebhookEventSubscriber
 
     /**
      * Format product data for webhook payload.
-     *
-     * @param Product $product
-     * @param User|null $user
-     * @return array
      */
     private static function formatProductData(Product $product, ?User $user = null): array
     {
@@ -730,8 +674,6 @@ final class WebhookEventSubscriber
     /**
      * Format order data for webhook payload.
      *
-     * @param Order $order
-     * @param User|null $user
      * @return array
      */
     /**
@@ -833,10 +775,6 @@ final class WebhookEventSubscriber
 
     /**
      * Format purchase order data for webhook payload.
-     *
-     * @param PurchaseOrder $purchaseOrder
-     * @param User|null $user
-     * @return array
      */
     private static function formatPurchaseOrderData(PurchaseOrder $purchaseOrder, ?User $user = null): array
     {

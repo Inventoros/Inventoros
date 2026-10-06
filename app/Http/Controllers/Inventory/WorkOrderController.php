@@ -121,6 +121,12 @@ class WorkOrderController extends Controller
                 ->withInput();
         }
 
+        try {
+            app(WorkOrderService::class)->assertProductsSupported($components->pluck('componentProduct')->prepend($product));
+        } catch (InvalidStateException $e) {
+            return redirect()->back()->with('error', $e->getMessage());
+        }
+
         // Retry on a work_order_number unique collision (concurrent creates in
         // the same org read the same MAX+1); nothing serialises them otherwise.
         $workOrder = SequenceNumberRetry::create(fn () => DB::transaction(function () use ($validated, $organizationId, $request, $components) {
@@ -198,26 +204,11 @@ class WorkOrderController extends Controller
     {
         $this->authorizeWorkOrder($request, $workOrder);
 
-        if (! in_array($workOrder->status, ['draft', 'pending'])) {
-            return redirect()->route('work-orders.show', $workOrder)
-                ->with('error', 'Only draft or pending work orders can be started.');
+        try {
+            app(WorkOrderService::class)->start($workOrder);
+        } catch (BusinessRuleException $e) {
+            return redirect()->route('work-orders.show', $workOrder)->with('error', $e->getMessage());
         }
-
-        // Check component stock availability
-        $workOrder->load('items.product');
-
-        foreach ($workOrder->items as $item) {
-            $remaining = $item->quantity_required - $item->quantity_consumed;
-            if ($item->product->stock < $remaining) {
-                return redirect()->route('work-orders.show', $workOrder)
-                    ->with('error', "Insufficient stock for component '{$item->product->name}'. Available: {$item->product->stock}, Required: {$remaining}.");
-            }
-        }
-
-        $workOrder->update([
-            'status' => 'in_progress',
-            'started_at' => now(),
-        ]);
 
         return redirect()->route('work-orders.show', $workOrder)
             ->with('success', 'Work order started successfully.');
@@ -273,10 +264,16 @@ class WorkOrderController extends Controller
                     ->unique()
                     ->sort()
                     ->values();
-                Product::whereIn('id', $productIds)
+                $products = Product::whereIn('id', $productIds)
                     ->where('organization_id', $workOrder->organization_id)
+                    ->orderBy('id')
                     ->lockForUpdate()
                     ->get();
+
+                if ($products->count() !== $productIds->count()) {
+                    throw new InvalidStateException('A work order product is no longer available.', 'invalid_product');
+                }
+                app(WorkOrderService::class)->assertProductsSupported($products);
 
                 // Decrement component stock in proportion to what was actually
                 // produced, not the full planned quantity — a partial completion

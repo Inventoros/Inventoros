@@ -27,6 +27,7 @@ RestartSec=5
 ExecStart=/usr/bin/php artisan queue:work --tries=3 --max-time=3600 --sleep=3
 # Stop accepting new jobs and finish the current one on shutdown/redeploy.
 ExecStop=/usr/bin/php artisan queue:restart
+TimeoutStopSec=660
 
 [Install]
 WantedBy=multi-user.target

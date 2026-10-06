@@ -54,7 +54,15 @@ docker compose -f docker-compose.prod.yml up -d
 | `scheduler` | `php artisan schedule:work` | Reorder-point checks, retention pruning and other scheduled jobs |
 | `db` | PostgreSQL 17 | Data in the `db-data` volume |
 
-Uploads, logs and backups live in `/app/storage`, which is the `storage` volume shared by the three Inventoros containers. Back up both the `storage` and `db-data` volumes.
+Uploads, logs and backups live in `/app/storage`, which is the `storage` volume shared by the three Inventoros containers. Installed plugin code lives in the shared `plugins` volume (`/app/plugins`) and published plugin UI assets in `plugin-assets` (`/app/public/plugin-assets`). Back up these three volumes and `db-data`. Keeping plugin code shared lets queued jobs and the scheduler use the same plugins as the web app, and preserves installations when containers are recreated.
+
+After installing, updating, activating or deactivating a plugin, restart the worker and scheduler so their long-running processes load the current plugin code:
+
+```bash
+docker compose -f docker-compose.prod.yml restart worker scheduler
+```
+
+If you previously ran the compose file without plugin volumes, copy `/app/plugins` and `/app/public/plugin-assets` out of the existing app container before recreating it, then restore them into the new volumes. Existing container files are not automatically migrated into a new named volume.
 
 ### Configuration
 

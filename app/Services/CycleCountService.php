@@ -12,6 +12,8 @@ use App\Models\Inventory\StockAudit;
 use App\Models\Inventory\StockAuditItem;
 use App\Models\Scopes\OrganizationScope;
 use App\Models\User;
+use App\Services\Organizations\ActiveOrganization;
+use App\Services\Organizations\OrganizationMembershipService;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
@@ -197,16 +199,26 @@ final class CycleCountService
      */
     private function creatorFor(CycleCountSchedule $schedule): ?User
     {
+        $activeOrganization = app(ActiveOrganization::class);
+
         foreach ([$schedule->created_by, $schedule->assigned_to] as $id) {
-            if ($id && ($user = User::where('organization_id', $schedule->organization_id)->find($id))) {
+            if ($id && ($user = $activeOrganization->userIn($id, (int) $schedule->organization_id))) {
                 return $user;
             }
         }
 
-        return User::where('organization_id', $schedule->organization_id)
-            ->orderByRaw("CASE WHEN role = 'admin' THEN 0 ELSE 1 END")
+        $fallback = null;
+        foreach (app(OrganizationMembershipService::class)->members((int) $schedule->organization_id)
             ->orderBy('id')
-            ->first();
+            ->cursor() as $user) {
+            $member = $activeOrganization->userIn($user, (int) $schedule->organization_id);
+            if ($member?->role === 'admin') {
+                return $member;
+            }
+            $fallback ??= $member;
+        }
+
+        return $fallback;
     }
 
     /**
@@ -232,7 +244,9 @@ final class CycleCountService
                 'stock_audit_id' => $audit->id,
                 'product_id' => $product->id,
                 'location_id' => $schedule->scope_type === 'location' ? $schedule->scope_id : $product->location_id,
-                'system_quantity' => (int) $product->stock,
+                'system_quantity' => $schedule->scope_type === 'location'
+                    ? app(ProductLocationStockService::class)->onHandAt($product, (int) $schedule->scope_id)
+                    : (int) $product->stock,
                 'status' => 'pending',
             ]);
         }

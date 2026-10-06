@@ -124,7 +124,8 @@ RUN set -eux; \
              storage/framework/views storage/logs bootstrap/cache; \
     # The web installer writes DB settings to .env; it must exist and be writable.
     touch .env; \
-    chown -R app:app storage bootstrap/cache .env public; \
+    mkdir -p plugins public/plugin-assets; \
+    chown -R app:app storage bootstrap/cache .env public plugins; \
     su app -s /bin/sh -c "php artisan package:discover --ansi"
 
 USER app

@@ -89,6 +89,39 @@ class PluginHookSecurityTest extends TestCase
         $this->assertNotContains('manage_organization', $member->getAllPermissions());
     }
 
+    public function test_plugin_ungrouped_or_query_is_confined_to_the_current_organization(): void
+    {
+        $match = Product::factory()->create(['organization_id' => $this->orgA->id, 'name' => 'Included']);
+        Product::factory()->create(['organization_id' => $this->orgA->id, 'name' => 'Excluded']);
+        Product::factory()->create(['organization_id' => $this->orgB->id, 'name' => 'Included']);
+
+        add_filter('product_list_query', fn ($query) => Product::withoutGlobalScopes()
+            ->where('organization_id', $this->orgB->id)
+            ->orWhere('name', 'Included'));
+
+        $this->actingAs($this->userA)->get(route('products.index'))
+            ->assertOk()
+            ->assertInertia(fn ($page) => $page
+                ->has('products.data', 1)
+                ->where('products.data.0.id', $match->id));
+    }
+
+    public function test_plugin_union_query_cannot_append_another_organizations_rows(): void
+    {
+        $match = Product::factory()->create(['organization_id' => $this->orgA->id]);
+        Product::factory()->create(['organization_id' => $this->orgB->id]);
+
+        add_filter('product_list_query', fn ($query) => Product::withoutGlobalScopes()
+            ->where('organization_id', $this->orgA->id)
+            ->unionAll(Product::withoutGlobalScopes()->where('organization_id', $this->orgB->id)));
+
+        $this->actingAs($this->userA)->get(route('products.index'))
+            ->assertOk()
+            ->assertInertia(fn ($page) => $page
+                ->has('products.data', 1)
+                ->where('products.data.0.id', $match->id));
+    }
+
     public function test_user_permissions_hook_is_not_advertised(): void
     {
         $this->assertArrayNotHasKey('user_permissions', HookRegistry::getFilters());

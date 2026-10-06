@@ -309,6 +309,14 @@ If you prefer cron to the scheduler timer, add this to the web user's crontab (`
 
 After each deploy, run `php artisan queue:restart` so the worker picks up the new code.
 
+Imports, exports and scheduled reports can run for up to 600 seconds. Queue
+reservations must last longer, or another worker can pick up a job that is still
+running. Database, Redis and Beanstalkd queues default to 660 seconds; keep any
+`DB_QUEUE_RETRY_AFTER`, `REDIS_QUEUE_RETRY_AFTER` or
+`BEANSTALKD_QUEUE_RETRY_AFTER` override above 600. For SQS, set the queue's
+visibility timeout above 600 seconds in AWS. After changing these settings,
+rebuild the configuration cache and restart workers.
+
 ### SSL certificate
 
 Ubuntu / Debian:

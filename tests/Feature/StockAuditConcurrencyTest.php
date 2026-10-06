@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Exceptions\InvalidStateException;
 use App\Models\Auth\Organization;
 use App\Models\Inventory\Product;
 use App\Models\Inventory\ProductCategory;
@@ -10,6 +11,7 @@ use App\Models\Inventory\StockAudit;
 use App\Models\Inventory\StockAuditItem;
 use App\Models\System\SystemSetting;
 use App\Models\User;
+use App\Services\StockAuditService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Notification;
@@ -20,10 +22,15 @@ class StockAuditConcurrencyTest extends TestCase
     use RefreshDatabase;
 
     protected User $admin;
+
     protected Organization $organization;
+
     protected ProductCategory $category;
+
     protected ProductLocation $location;
+
     protected Product $product;
+
     protected StockAudit $audit;
 
     protected function setUp(): void
@@ -120,5 +127,46 @@ class StockAuditConcurrencyTest extends TestCase
         $response = $this->actingAs($this->admin)->post(route('stock-audits.complete', $this->audit));
         $response->assertSessionHas('error');
         $this->assertSame(90, $this->product->fresh()->stock);
+    }
+
+    public function test_a_stale_start_cannot_reopen_a_completed_audit(): void
+    {
+        $this->actingAs($this->admin);
+        $this->audit->update(['status' => 'draft']);
+        $stale = $this->audit->fresh();
+        $service = app(StockAuditService::class);
+        $started = $service->start($this->audit->fresh(), $this->admin);
+        $service->complete($started, $this->admin);
+
+        try {
+            $service->start($stale, $this->admin);
+            $this->fail('A stale start must not reopen a completed audit.');
+        } catch (InvalidStateException) {
+            // expected
+        }
+
+        $this->assertSame('completed', $this->audit->fresh()->status);
+        $this->assertSame(90, $this->product->fresh()->stock);
+        $this->assertSame(100, $this->audit->items()->sole()->system_quantity);
+    }
+
+    public function test_a_stale_count_cannot_rewrite_a_completed_audit(): void
+    {
+        $this->actingAs($this->admin);
+        $stale = $this->audit->fresh();
+        $item = $stale->items()->sole();
+        $service = app(StockAuditService::class);
+        $service->complete($this->audit->fresh(), $this->admin);
+
+        try {
+            $service->recordCount($stale, $item, $this->admin, 70, 'Too late');
+            $this->fail('A stale count must not alter completed audit evidence.');
+        } catch (InvalidStateException) {
+            // expected
+        }
+
+        $this->assertSame(90, $this->product->fresh()->stock);
+        $this->assertSame(90, $item->fresh()->counted_quantity);
+        $this->assertSame('adjusted', $item->fresh()->status);
     }
 }

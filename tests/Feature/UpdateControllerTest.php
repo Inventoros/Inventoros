@@ -6,6 +6,8 @@ use App\Models\Auth\Organization;
 use App\Models\Role;
 use App\Models\System\SystemSetting;
 use App\Models\User;
+use App\Services\Update\DatabaseBackupFailedException;
+use App\Services\UpdateService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -14,7 +16,9 @@ class UpdateControllerTest extends TestCase
     use RefreshDatabase;
 
     protected User $admin;
+
     protected User $member;
+
     protected Organization $organization;
 
     protected function setUp(): void
@@ -153,7 +157,7 @@ class UpdateControllerTest extends TestCase
 
     public function test_backup_response_reports_the_database_backup_method(): void
     {
-        $this->mock(\App\Services\UpdateService::class, function ($mock) {
+        $this->mock(UpdateService::class, function ($mock) {
             $mock->shouldReceive('createBackup')->once()->andReturn('/backups/backup_x.zip');
             $mock->shouldReceive('lastDatabaseBackupMethod')->andReturn('pg_dump');
         });
@@ -167,9 +171,9 @@ class UpdateControllerTest extends TestCase
 
     public function test_backup_response_surfaces_a_database_backup_failure(): void
     {
-        $this->mock(\App\Services\UpdateService::class, function ($mock) {
+        $this->mock(UpdateService::class, function ($mock) {
             $mock->shouldReceive('createBackup')->once()->andThrow(
-                new \App\Services\Update\DatabaseBackupFailedException('Could not back up the database with any available method')
+                new DatabaseBackupFailedException('Could not back up the database with any available method')
             );
         });
 
@@ -177,5 +181,59 @@ class UpdateControllerTest extends TestCase
 
         $response->assertStatus(500)->assertJson(['success' => false]);
         $this->assertStringContainsString('Could not back up the database', $response->json('message'));
+    }
+
+    public function test_another_tenants_admin_cannot_access_any_installation_update_or_backup_route(): void
+    {
+        $tenant = Organization::create(['name' => 'Other tenant', 'currency' => 'USD', 'timezone' => 'UTC']);
+        $admin = User::create([
+            'name' => 'Tenant admin', 'email' => 'tenant-admin@test.com', 'password' => bcrypt('password'),
+            'organization_id' => $tenant->id, 'role' => 'admin',
+        ]);
+        $this->mock(UpdateService::class, function ($mock) {
+            foreach (['getCurrentVersion', 'getLatestRelease', 'isUpdateAvailable', 'listBackups', 'update', 'createBackup', 'restoreFromBackup'] as $method) {
+                $mock->shouldNotReceive($method);
+            }
+        });
+        $this->actingAs($admin);
+
+        foreach (['index', 'check', 'backups.list'] as $route) {
+            $this->get(route('admin.update.'.$route))->assertForbidden();
+        }
+        foreach (['perform', 'backup', 'restore'] as $route) {
+            $this->postJson(route('admin.update.'.$route), ['backup_file' => 'backup_known.zip'])->assertForbidden();
+        }
+        $this->deleteJson(route('admin.update.backup.delete'), ['backup_file' => 'backup_known.zip'])->assertForbidden();
+
+        $this->get(route('settings.index'))->assertInertia(fn ($page) => $page
+            ->where('auth.canManageUpdates', false));
+    }
+
+    public function test_the_configured_installation_administrator_can_manage_updates(): void
+    {
+        $tenant = Organization::create(['name' => 'Configured owner', 'currency' => 'USD', 'timezone' => 'UTC']);
+        $admin = User::create([
+            'name' => 'Owner admin', 'email' => 'owner-admin@test.com', 'password' => bcrypt('password'),
+            'organization_id' => $tenant->id, 'role' => 'admin',
+        ]);
+        config(['plugins.admin_organization_id' => $tenant->id]);
+        $this->mock(UpdateService::class, function ($mock) {
+            $mock->shouldReceive('listBackups')->once()->andReturn([]);
+            $mock->shouldReceive('update')->once()->andReturn(['success' => true]);
+        });
+
+        $this->actingAs($this->admin)->get(route('admin.update.backups.list'))->assertForbidden();
+        $this->actingAs($admin)->get(route('admin.update.backups.list'))->assertOk();
+        $this->postJson(route('admin.update.perform'))->assertOk()->assertJson(['success' => true]);
+        $this->get(route('settings.index'))->assertInertia(fn ($page) => $page
+            ->where('auth.canManageUpdates', true));
+    }
+
+    public function test_a_non_admin_with_manage_organization_cannot_list_installation_backups(): void
+    {
+        $this->member->roles()->attach(Role::where('slug', 'system-administrator')->firstOrFail());
+        $this->mock(UpdateService::class, fn ($mock) => $mock->shouldNotReceive('listBackups'));
+
+        $this->actingAs($this->member)->get(route('admin.update.backups.list'))->assertForbidden();
     }
 }

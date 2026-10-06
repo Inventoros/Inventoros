@@ -5,10 +5,12 @@ declare(strict_types=1);
 namespace Tests\Feature;
 
 use App\Models\Auth\Organization;
+use App\Models\Inventory\Product;
 use App\Models\System\SystemSetting;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Event;
 use Inertia\Testing\AssertableInertia as Assert;
 use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\TestCase;
@@ -166,6 +168,85 @@ class FixedReportExportsTest extends TestCase
 
         $this->assertStringContainsString('VAL-B', $body);   // stock 4 <= min 20
         $this->assertStringNotContainsString('VAL-A', $body); // stock 10 > min 1
+    }
+
+    public function test_low_stock_caps_hydration_but_keeps_full_summary_totals(): void
+    {
+        config(['reports.max_rows' => 1]);
+        $out = $this->product('Empty', 'EMPTY', 0, 5, 2, null, null, 3);
+        $hydrated = [];
+        Event::listen('eloquent.retrieved: '.Product::class, function (Product $product) use (&$hydrated) {
+            $hydrated[] = $product->id;
+        });
+
+        $this->actingAs($this->admin)->get(route('reports.low-stock'))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->has('products', 1)
+                ->where('products.0.id', $out)
+                ->where('summary.total_low_stock', 2)
+                ->where('summary.out_of_stock', 1)
+                ->where('summary.low_stock', 1)
+                ->where('summary.total_reorder_cost', 102) // (20-4)*6 + (3-0)*2
+                ->where('truncated', true)
+            );
+
+        $this->assertSame([$out], $hydrated, 'Rows beyond the cap must never be hydrated.');
+    }
+
+    public function test_low_stock_export_uses_the_same_bounded_product_list(): void
+    {
+        config(['reports.max_rows' => 1]);
+        $this->product('Empty', 'EMPTY', 0, 5, 2, null, null, 3);
+
+        $body = $this->actingAs($this->admin)->get(route('reports.low-stock', ['export' => 'csv']))->streamedContent();
+
+        $this->assertStringContainsString('EMPTY', $body);
+        $this->assertStringNotContainsString('VAL-B', $body);
+    }
+
+    public function test_low_stock_warehouse_suggestions_load_balances_in_one_query(): void
+    {
+        $warehouse = DB::table('warehouses')->insertGetId([
+            'organization_id' => $this->org->id, 'name' => 'Main', 'code' => 'MAIN',
+            'is_active' => true, 'created_at' => now(), 'updated_at' => now(),
+        ]);
+        $location = DB::table('product_locations')->insertGetId([
+            'organization_id' => $this->org->id, 'warehouse_id' => $warehouse, 'name' => 'Bin',
+            'code' => 'BIN', 'is_active' => true, 'created_at' => now(), 'updated_at' => now(),
+        ]);
+        for ($i = 0; $i < 4; $i++) {
+            $product = $this->product('Warehouse '.$i, 'WH-'.$i, 100, 10, 2, null, $location, 0);
+            DB::table('warehouse_reorder_points')->insert([
+                'organization_id' => $this->org->id, 'product_id' => $product, 'warehouse_id' => $warehouse,
+                'min_stock' => 5, 'reorder_point' => 10, 'max_stock' => 20,
+                'created_at' => now(), 'updated_at' => now(),
+            ]);
+            DB::table('product_location_stocks')->insert([
+                'organization_id' => $this->org->id, 'product_id' => $product, 'location_id' => $location,
+                'quantity' => 1, 'created_at' => now(), 'updated_at' => now(),
+            ]);
+        }
+
+        $balanceQueries = [];
+        DB::listen(function ($query) use (&$balanceQueries) {
+            if (str_contains(strtolower($query->sql), 'sum(pls.quantity) as on_hand')) {
+                $balanceQueries[] = $query->sql;
+            }
+        });
+
+        $this->actingAs($this->admin)->get(route('reports.low-stock'))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->has('products', 5)
+                ->where('summary.total_low_stock', 5)
+                ->where('products', fn ($products) => collect($products)
+                    ->filter(fn ($product) => str_starts_with($product['sku'], 'WH-'))
+                    ->every(fn ($product) => $product['suggested_quantity'] === 19))
+                ->where('truncated', false)
+            );
+
+        $this->assertCount(1, $balanceQueries);
     }
 
     public function test_sales_analysis_compares_with_the_previous_period(): void

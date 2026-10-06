@@ -28,6 +28,11 @@
         "tailwindcss-animate": "^1.0.7",
         "vite": "^7.3.6"
     },
+    "overrides": {
+        "concurrently": {
+            "shell-quote": "^1.12.0"
+        }
+    },
     "dependencies": {
         "@inertiajs/vue3": "^3.0.0",
         "axios": "^1.14.0",

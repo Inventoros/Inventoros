@@ -9,6 +9,7 @@ use App\Services\ApprovalService;
 use App\Services\Organizations\OrganizationMembershipService;
 use App\Services\PluginService;
 use App\Services\PluginUIService;
+use App\Support\UpdateAdministration;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 
@@ -56,6 +57,7 @@ class HandleInertiaRequests extends Middleware
             'auth' => [
                 'user' => $user,
                 'permissions' => $user ? $user->getAllPermissions() : [],
+                'canManageUpdates' => fn () => UpdateAdministration::canManage($user),
                 // The organization this page was rendered for (sent back on
                 // writes, see EnsureActiveOrganizationMatches) and the ones the
                 // user can switch to; the switcher shows only with two or more.
