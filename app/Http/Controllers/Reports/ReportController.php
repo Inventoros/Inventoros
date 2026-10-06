@@ -19,6 +19,7 @@ use App\Services\Reports\InventoryAnalyticsService;
 use App\Services\Reports\ReportExporter;
 use App\Services\Reports\ReportPeriod;
 use App\Services\WarehouseAccessService;
+use App\Services\WarehouseStockLevelService;
 use App\Support\CurrencyTotals;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -616,56 +617,76 @@ class ReportController extends Controller
 
         $reorder = app(ReorderService::class);
 
-        $products = Product::forOrganization($organizationId)
-            ->with(array_merge(['category', 'location'], ReorderService::primarySupplierEagerLoad()))
+        $base = Product::forOrganization($organizationId)
             ->where('is_active', true)
             // Low in total, or low in a warehouse with its own minimum.
-            ->lowStock()
+            ->lowStock();
+
+        // Headline figures cover all matching products, without hydrating
+        // the entire catalogue or querying warehouse balances for each row.
+        $summaryBase = (clone $base)
+            ->select(['products.min_stock', 'products.max_stock', 'products.reorder_point', 'products.purchase_price', 'products.price'])
+            ->withEffectiveStock();
+        $totals = DB::query()->fromSub($summaryBase->toBase(), 'low_stock')
+            ->selectRaw('COUNT(*) as total_low_stock,
+                COALESCE(SUM(CASE WHEN effective_stock <= 0 THEN 1 ELSE 0 END), 0) as out_of_stock,
+                COALESCE(SUM(CASE WHEN effective_stock > 0 THEN 1 ELSE 0 END), 0) as low_stock,
+                COALESCE(SUM(CASE WHEN COALESCE(max_stock, reorder_point, min_stock, 0) > effective_stock
+                    THEN (COALESCE(max_stock, reorder_point, min_stock, 0) - effective_stock) * COALESCE(purchase_price, price, 0)
+                    ELSE 0 END), 0) as total_reorder_cost')
+            ->first();
+        $summary = [
+            'total_low_stock' => (int) $totals->total_low_stock,
+            'out_of_stock' => (int) $totals->out_of_stock,
+            'low_stock' => (int) $totals->low_stock,
+            'total_reorder_cost' => (float) $totals->total_reorder_cost,
+        ];
+
+        $products = (clone $base)
+            ->with(array_merge(['category', 'location'], ReorderService::primarySupplierEagerLoad()))
             ->withEffectiveStock()
             ->orderBy('effective_stock', 'asc')
-            ->get()
-            ->map(function ($product) use ($reorder) {
-                // A product sold by variant counts its active variants.
-                $stock = $product->total_stock;
+            ->orderBy('products.id')
+            ->limit($this->analytics->maxRows())
+            ->get();
+        $warehouseOnHand = app(WarehouseStockLevelService::class)->onHandByProducts(
+            $products->filter(fn (Product $product) => $product->warehouseReorderPoints->isNotEmpty())->modelKeys()
+        );
+        $products = $products->map(function ($product) use ($reorder, $warehouseOnHand) {
+            // A product sold by variant counts its active variants.
+            $stock = $product->total_stock;
 
-                $primarySupplier = $reorder->primarySupplier($product);
+            $primarySupplier = $reorder->primarySupplier($product);
 
-                return [
-                    'id' => $product->id,
-                    'name' => $product->name,
-                    'sku' => $product->sku,
-                    'category' => $product->category?->name,
-                    'location' => $product->location?->name,
-                    'current_stock' => $stock,
-                    'min_stock' => $product->min_stock,
-                    'max_stock' => $product->max_stock,
-                    'deficit' => max(0, $product->min_stock - $stock),
-                    'status' => $stock <= 0 ? 'out_of_stock' : 'low_stock',
-                    'price' => $product->price,
-                    'supplier' => $primarySupplier?->name,
-                    'supplier_id' => $primarySupplier?->id,
-                    'suggested_quantity' => $reorder->suggestedQuantity($product, $primarySupplier),
-                    // Reorder up to max_stock; fall back to reorder_point /
-                    // min_stock when it's null, and never let a null or
-                    // already-satisfied target produce a negative cost.
-                    'reorder_cost' => max(0, ($product->max_stock ?? $product->reorder_point ?? $product->min_stock ?? 0) - $stock)
-                        * ($product->purchase_price ?? $product->price),
-                ];
-            });
-
-        $summary = [
-            'total_low_stock' => $products->count(),
-            'out_of_stock' => $products->where('status', 'out_of_stock')->count(),
-            'low_stock' => $products->where('status', 'low_stock')->count(),
-            'total_reorder_cost' => $products->sum('reorder_cost'),
-        ];
+            return [
+                'id' => $product->id,
+                'name' => $product->name,
+                'sku' => $product->sku,
+                'category' => $product->category?->name,
+                'location' => $product->location?->name,
+                'current_stock' => $stock,
+                'min_stock' => $product->min_stock,
+                'max_stock' => $product->max_stock,
+                'deficit' => max(0, $product->min_stock - $stock),
+                'status' => $stock <= 0 ? 'out_of_stock' : 'low_stock',
+                'price' => $product->price,
+                'supplier' => $primarySupplier?->name,
+                'supplier_id' => $primarySupplier?->id,
+                'suggested_quantity' => $reorder->suggestedQuantity($product, $primarySupplier, $warehouseOnHand[$product->id] ?? []),
+                // Reorder up to max_stock; fall back to reorder_point /
+                // min_stock when it's null, and never let a null or
+                // already-satisfied target produce a negative cost.
+                'reorder_cost' => max(0, ($product->max_stock ?? $product->reorder_point ?? $product->min_stock ?? 0) - $stock)
+                    * ($product->purchase_price ?? $product->price),
+            ];
+        });
 
         if ($format = ReportExporter::requestedFormat($request)) {
             return $this->exporter->download(
                 $format,
                 'Low Stock',
                 ['Product', 'SKU', 'Category', 'Location', 'Current stock', 'Min stock', 'Max stock', 'Deficit', 'Status', 'Supplier', 'Suggested quantity', 'Reorder cost'],
-                $products->take($this->analytics->maxRows())->map(fn (array $r) => [
+                $products->map(fn (array $r) => [
                     $r['name'], $r['sku'], $r['category'], $r['location'], (int) $r['current_stock'], (int) $r['min_stock'],
                     $r['max_stock'] === null ? null : (int) $r['max_stock'], (int) $r['deficit'], $r['status'],
                     $r['supplier'], $r['suggested_quantity'] === null ? null : (int) $r['suggested_quantity'], (float) $r['reorder_cost'],
@@ -676,6 +697,7 @@ class ReportController extends Controller
         return Inertia::render('Reports/LowStock', [
             'products' => $products,
             'summary' => $summary,
+            'truncated' => $summary['total_low_stock'] > $products->count(),
         ]);
     }
 

@@ -157,7 +157,13 @@ final class UpdateServiceRollbackTest extends TestCase
 
         $backups->shouldReceive('createBackup')->once()->andReturn('/tmp/backup_test.zip');
         $backups->shouldReceive('lastDatabaseBackupMethod')->andReturn('php-dump');
-        $files->shouldReceive('downloadRelease')->andThrow(new \RuntimeException('stop here'));
+        $files->shouldReceive('downloadRelease')->once()->andReturn('/tmp/update.zip');
+        $files->shouldReceive('verifyArchiveSignature')->once();
+        $files->shouldReceive('extractZip')->once()->andReturn('/tmp/extracted');
+        $files->shouldReceive('validateRelease')->once()->andReturn(['version' => '9.9.9']);
+        $files->shouldReceive('installRelease')->once();
+        $files->shouldReceive('writeVersion')->once();
+        $files->shouldReceive('cleanup')->once();
 
         $messages = [];
         (new UpdateService($github, $backups, $files))->update(
@@ -172,9 +178,9 @@ final class UpdateServiceRollbackTest extends TestCase
 
     public function test_update_refuses_to_proceed_when_the_database_backup_fails(): void
     {
-        // The app is never taken down (only the defensive 'up' in the error path runs).
-        Artisan::shouldReceive('call')->with('down', Mockery::any())->never();
-        Artisan::shouldReceive('call')->with('up')->andReturn(0);
+        // Backup failure changes no live files/schema, so maintenance ends.
+        Artisan::shouldReceive('call')->with('down', Mockery::any())->once()->andReturn(0);
+        Artisan::shouldReceive('call')->with('up')->once()->andReturn(0);
 
         $github = Mockery::mock(GitHubReleaseService::class);
         $backups = Mockery::mock(BackupService::class);
@@ -182,7 +188,11 @@ final class UpdateServiceRollbackTest extends TestCase
 
         $backups->shouldReceive('createBackup')->once()
             ->andThrow(new DatabaseBackupFailedException('Could not back up the database'));
-        $files->shouldReceive('downloadRelease')->never();
+        $files->shouldReceive('downloadRelease')->once()->andReturn('/tmp/update.zip');
+        $files->shouldReceive('verifyArchiveSignature')->once();
+        $files->shouldReceive('extractZip')->once()->andReturn('/tmp/extracted');
+        $files->shouldReceive('validateRelease')->once()->andReturn(['version' => '9.9.9']);
+        $files->shouldReceive('installRelease')->never();
         $files->shouldReceive('replaceFiles')->never();
 
         $result = (new UpdateService($github, $backups, $files))
@@ -190,5 +200,71 @@ final class UpdateServiceRollbackTest extends TestCase
 
         $this->assertFalse($result['success']);
         $this->assertStringContainsString('Could not back up the database', $result['message']);
+    }
+
+    public function test_backup_is_taken_after_download_validation_and_maintenance(): void
+    {
+        $events = [];
+        Artisan::shouldReceive('call')->andReturnUsing(function (string $command) use (&$events) {
+            $events[] = $command;
+
+            return 0;
+        });
+
+        $github = Mockery::mock(GitHubReleaseService::class);
+        $backups = Mockery::mock(BackupService::class);
+        $files = Mockery::mock(FileUpdateService::class);
+        $files->shouldReceive('downloadRelease')->once()->andReturnUsing(function () use (&$events) {
+            $events[] = 'download';
+
+            return '/tmp/update.zip';
+        });
+        $files->shouldReceive('verifyArchiveSignature')->once();
+        $files->shouldReceive('extractZip')->once()->andReturn('/tmp/extracted');
+        $files->shouldReceive('validateRelease')->once()->andReturnUsing(function () use (&$events) {
+            $events[] = 'validate';
+
+            return ['version' => '9.9.9'];
+        });
+        $backups->shouldReceive('createBackup')->once()->andReturnUsing(function () use (&$events) {
+            $events[] = 'backup';
+
+            return '/tmp/backup.zip';
+        });
+        $backups->shouldReceive('lastDatabaseBackupMethod')->andReturn('php-dump');
+        $files->shouldReceive('installRelease')->once();
+        $files->shouldReceive('writeVersion')->once();
+        $files->shouldReceive('cleanup')->once();
+
+        $result = (new UpdateService($github, $backups, $files))->update('https://github.com/Inventoros/Inventoros/releases/download/v9.9.9/x.zip');
+
+        $this->assertTrue($result['success']);
+        $this->assertSame(['download', 'validate', 'down', 'backup', 'optimize:clear', 'migrate', 'optimize', 'queue:restart', 'up'], $events);
+    }
+
+    public function test_failed_rollback_keeps_the_application_in_maintenance(): void
+    {
+        Artisan::shouldReceive('call')->with('down', Mockery::any())->once()->andReturn(0);
+        Artisan::shouldReceive('call')->with('up')->never();
+
+        $github = Mockery::mock(GitHubReleaseService::class);
+        $backups = Mockery::mock(BackupService::class);
+        $files = Mockery::mock(FileUpdateService::class);
+        $backups->shouldReceive('createBackup')->once()->andReturn('/tmp/backup.zip');
+        $backups->shouldReceive('lastDatabaseBackupMethod')->andReturn('php-dump');
+        $files->shouldReceive('downloadRelease')->once()->andReturn('/tmp/update.zip');
+        $files->shouldReceive('verifyArchiveSignature')->once();
+        $files->shouldReceive('extractZip')->once()->andReturn('/tmp/extracted');
+        $files->shouldReceive('validateRelease')->once()->andReturn(['version' => '9.9.9']);
+        $files->shouldReceive('installRelease')->once()->andThrow(new \RuntimeException('disk full'));
+
+        $service = Mockery::mock(UpdateService::class, [$github, $backups, $files])->makePartial();
+        $service->shouldReceive('restoreFromBackup')->once()->andReturn(['success' => false, 'message' => 'database restore failed']);
+
+        $result = $service->update('https://github.com/Inventoros/Inventoros/releases/download/v9.9.9/x.zip');
+
+        $this->assertFalse($result['success']);
+        $this->assertStringContainsString('remains in maintenance mode', $result['message']);
+        $this->assertStringContainsString('database restore failed', $result['message']);
     }
 }

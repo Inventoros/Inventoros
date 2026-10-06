@@ -12,6 +12,7 @@ use App\Models\SavedReport;
 use App\Models\Scopes\OrganizationScope;
 use App\Models\User;
 use App\Services\Organizations\ActiveOrganization;
+use App\Services\Organizations\OrganizationMembershipService;
 use App\Services\ReportDataService;
 use Carbon\CarbonInterface;
 use Illuminate\Auth\Access\AuthorizationException;
@@ -125,9 +126,24 @@ class ScheduledReportRunner
             return 'skipped';
         }
 
+        if (! $schedule->is_active) {
+            return $this->record($schedule, $this->skip($schedule, 'schedule_paused'));
+        }
+
         [$report, $owner, $skip] = $this->resolveOwner($schedule);
         if ($skip !== null) {
             return $this->record($schedule, $skip);
+        }
+
+        // A queued address is not lasting authorization: the schedule,
+        // membership, email or permissions may have changed while waiting.
+        // Intersect so newly added recipients also wait for the next run.
+        $recipients = array_values(array_intersect(
+            $this->currentRecipients($schedule, $report->data_source),
+            $recipients,
+        ));
+        if ($recipients === []) {
+            return $this->record($schedule, $this->skip($schedule, 'no_recipients'));
         }
 
         try {
@@ -238,12 +254,12 @@ class ScheduledReportRunner
             return [];
         }
 
-        return User::query()
-            ->where('organization_id', $schedule->organization_id)
+        return app(OrganizationMembershipService::class)->members((int) $schedule->organization_id)
             ->whereIn(DB::raw('LOWER(email)'), $wanted)
             ->orderBy('id')
             ->get()
-            ->filter(fn (User $user): bool => $user->hasAllPermissions($required))
+            ->filter(fn (User $user): bool => app(ActiveOrganization::class)
+                ->userIn($user, (int) $schedule->organization_id)?->hasAllPermissions($required) ?? false)
             ->pluck('email')
             ->unique()
             ->values()

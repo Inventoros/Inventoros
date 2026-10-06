@@ -9,6 +9,7 @@ use App\Models\Inventory\CycleCountSchedule;
 use App\Models\Inventory\Product;
 use App\Models\Inventory\ProductCategory;
 use App\Models\Inventory\ProductLocation;
+use App\Models\Inventory\ProductLocationStock;
 use App\Models\Inventory\StockAudit;
 use App\Models\Inventory\StockAuditItem;
 use App\Models\Notification;
@@ -17,6 +18,8 @@ use App\Models\System\SystemSetting;
 use App\Models\User;
 use App\Models\Warehouse;
 use App\Services\CycleCountService;
+use App\Services\Organizations\OrganizationMembershipService;
+use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Mail;
@@ -124,6 +127,39 @@ class CycleCountScheduleTest extends TestCase
     }
 
     // ==================== DUE LOGIC ====================
+
+    public function test_a_schedule_in_an_organization_with_only_guest_members_still_creates_an_audit(): void
+    {
+        $company = Organization::create(['name' => 'Guest company', 'currency' => 'USD', 'timezone' => 'UTC', 'is_active' => true]);
+        app(OrganizationMembershipService::class)->add($company, $this->manager, 'admin');
+        $this->product('GUEST-COUNT', ['organization_id' => $company->id, 'location_id' => null]);
+        $schedule = $this->schedule(['organization_id' => $company->id, 'assigned_to' => null]);
+
+        $audit = app(CycleCountService::class)->run($schedule);
+
+        $this->assertNotNull($audit);
+        $this->assertSame($company->id, $audit->organization_id);
+        $this->assertSame($this->manager->id, $audit->created_by);
+        $this->assertSame(1, $audit->items()->count());
+        $this->assertSame($this->org->id, $this->manager->fresh()->organization_id);
+    }
+
+    public function test_location_cycle_count_draft_snapshots_the_bin_not_the_product_total(): void
+    {
+        $product = $this->product('BIN-COUNT');
+        foreach ([[$this->aisleA, 3], [$this->aisleB, 7]] as [$location, $quantity]) {
+            ProductLocationStock::create([
+                'organization_id' => $this->org->id, 'product_id' => $product->id,
+                'location_id' => $location->id, 'quantity' => $quantity,
+            ]);
+        }
+        $schedule = $this->schedule(['scope_type' => 'location', 'scope_id' => $this->aisleA->id]);
+
+        $audit = app(CycleCountService::class)->run($schedule);
+
+        $this->assertSame(3, $audit->items()->sole()->system_quantity);
+        $this->assertSame(10, $product->fresh()->stock);
+    }
 
     public function test_a_schedule_is_due_once_its_next_run_time_has_passed(): void
     {
@@ -285,7 +321,7 @@ class CycleCountScheduleTest extends TestCase
 
     public function test_the_command_is_scheduled(): void
     {
-        $events = collect(app(\Illuminate\Console\Scheduling\Schedule::class)->events());
+        $events = collect(app(Schedule::class)->events());
 
         $this->assertTrue($events->contains(fn ($e) => str_contains((string) $e->command, 'inventory:run-cycle-counts')));
     }

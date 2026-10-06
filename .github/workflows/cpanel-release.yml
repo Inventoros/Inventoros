@@ -73,17 +73,27 @@ jobs:
 
       - name: Determine version
         id: version
+        env:
+          REQUESTED_VERSION: ${{ github.event.inputs.version }}
         run: |
-          if [[ "${{ github.event_name }}" == "push" && "${{ github.ref_type }}" == "tag" ]]; then
+          if [[ "$GITHUB_EVENT_NAME" == "push" && "$GITHUB_REF_TYPE" == "tag" ]]; then
             echo "version=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
             echo "tag_name=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
-          elif [[ -n "${{ github.event.inputs.version }}" && "${{ github.event.inputs.version }}" != "dev" ]]; then
-            echo "version=${{ github.event.inputs.version }}" >> $GITHUB_OUTPUT
-            echo "tag_name=v${{ github.event.inputs.version }}" >> $GITHUB_OUTPUT
+          elif [[ -n "$REQUESTED_VERSION" && "$REQUESTED_VERSION" != "dev" ]]; then
+            echo "version=$REQUESTED_VERSION" >> $GITHUB_OUTPUT
+            echo "tag_name=v$REQUESTED_VERSION" >> $GITHUB_OUTPUT
           else
             echo "version=dev-$(date +%Y%m%d%H%M%S)" >> $GITHUB_OUTPUT
             echo "tag_name=dev" >> $GITHUB_OUTPUT
           fi
+
+      - name: Check release version and notes
+        if: (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')) || (github.event_name == 'workflow_dispatch' && github.event.inputs.version != 'dev')
+        env:
+          RELEASE_VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          test "$(tr -d '\r\n' < VERSION)" = "$RELEASE_VERSION"
+          test -s "docs/releases/$RELEASE_VERSION.md"
 
       - name: Build the cPanel package
         # deploy/cpanel/build-release.php lays out inventoros/ + public_html/,
@@ -109,17 +119,21 @@ jobs:
         env:
           INVENTOROS_UPDATE_SECRET_KEY: ${{ secrets.INVENTOROS_UPDATE_SECRET_KEY }}
           RELEASE_ZIP: inventoros-cpanel-${{ steps.version.outputs.version }}.zip
+          RELEASE_TAG: ${{ steps.version.outputs.tag_name }}
         run: |
           if [ -n "$INVENTOROS_UPDATE_SECRET_KEY" ]; then
             # Detached Ed25519 signature over the exact zip bytes, base64-encoded
             # into <zip>.sig — the format App\Support\ReleaseSignatureVerifier
             # expects. Done with raw libsodium (no Laravel boot needed in CI).
-            php -r '$s = base64_decode(trim(getenv("INVENTOROS_UPDATE_SECRET_KEY")), true); if ($s === false || strlen($s) !== SODIUM_CRYPTO_SIGN_SECRETKEYBYTES) { fwrite(STDERR, "Invalid INVENTOROS_UPDATE_SECRET_KEY\n"); exit(1); } $f = getenv("RELEASE_ZIP"); $sig = sodium_crypto_sign_detached(file_get_contents($f), $s); file_put_contents($f . ".sig", base64_encode($sig));'
+            php -r '$s = base64_decode(trim(getenv("INVENTOROS_UPDATE_SECRET_KEY")), true); if ($s === false || strlen($s) !== SODIUM_CRYPTO_SIGN_SECRETKEYBYTES) { fwrite(STDERR, "Invalid INVENTOROS_UPDATE_SECRET_KEY\n"); exit(1); } preg_match("/^INVENTOROS_UPDATE_PUBLIC_KEY=(.+)$/m", file_get_contents(".env.example"), $m); $p = base64_decode(trim($m[1] ?? ""), true); if ($p !== sodium_crypto_sign_publickey_from_secretkey($s)) { fwrite(STDERR, "Signing key does not match the public key shipped to users\n"); exit(1); } $f = getenv("RELEASE_ZIP"); $sig = sodium_crypto_sign_detached(file_get_contents($f), $s); file_put_contents($f . ".sig", base64_encode($sig));'
             echo "Signed $RELEASE_ZIP -> $RELEASE_ZIP.sig"
             # Only the core package is signed with the update key. The example
             # plugin is NOT: anything signed with this key passes the core
             # updater's signature check. The marketplace signs the plugin with
             # its own key when it imports it (marketplace:import-release-asset).
+          elif [ "$RELEASE_TAG" != "dev" ]; then
+            echo "::error::INVENTOROS_UPDATE_SECRET_KEY is required to publish a signed release."
+            exit 1
           else
             echo "::warning::INVENTOROS_UPDATE_SECRET_KEY is not set; release will be unsigned and in-app updates with signature verification enabled will reject it."
           fi
@@ -145,28 +159,7 @@ jobs:
             inventoros-cpanel-${{ steps.version.outputs.version }}.zip.sig
             hello-world-plugin.zip
           name: Release ${{ steps.version.outputs.tag_name }}
-          body: |
-            ## Inventoros ${{ steps.version.outputs.tag_name }}
-
-            ### cPanel Installation Package
-
-            This release includes a pre-built package optimized for cPanel shared hosting.
-
-            **Download:** `inventoros-cpanel-${{ steps.version.outputs.version }}.zip`
-
-            See `INSTALL.md` inside the zip for installation instructions.
-
-            In-app updates (Admin > Updates) install this exact file and check its `release.json` manifest. Coming from 1.0.x? Its updater cannot follow GitHub's download redirect, so upgrade by hand once: see UPGRADE.md.
-
-            ### What's Included
-            - Pre-compiled frontend assets (no npm required on server)
-            - Production-optimized Composer dependencies
-            - cPanel-compatible directory structure
-            - Modified index.php for split directory setup
-
-            ### Example plugin
-
-            **Download:** `hello-world-plugin.zip`, a free example plugin (hooks, lifecycle files and a runtime UI bundle). Install it from Plugins > Marketplace once the marketplace lists this version (no upload flag needed, the marketplace copy is signed), or upload this ZIP from Admin > Plugins with `INVENTOROS_ALLOW_PLUGIN_UPLOADS=true`.
+          body_path: docs/releases/${{ steps.version.outputs.version }}.md
           draft: false
           prerelease: false
         env:

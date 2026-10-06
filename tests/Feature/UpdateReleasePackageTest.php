@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Http;
 use Mockery;
+use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\TestCase;
 use ZipArchive;
 
@@ -276,7 +277,7 @@ final class UpdateReleasePackageTest extends TestCase
         $this->assertSame('# customised by the operator', File::get($this->web.'/.htaccess'));
 
         // Caches are cleared before migrating and rebuilt after.
-        $this->assertSame(['down', 'optimize:clear', 'migrate', 'optimize', 'up'], $this->artisanCalls);
+        $this->assertSame(['down', 'optimize:clear', 'migrate', 'optimize', 'queue:restart', 'up'], $this->artisanCalls);
     }
 
     public function test_index_php_points_at_the_real_app_directory_when_it_is_not_named_inventoros(): void
@@ -311,7 +312,7 @@ final class UpdateReleasePackageTest extends TestCase
     /**
      * @param  array<string, mixed>|null  $manifest
      */
-    #[\PHPUnit\Framework\Attributes\DataProvider('invalidPackages')]
+    #[DataProvider('invalidPackages')]
     public function test_an_invalid_package_is_refused_before_maintenance_mode(?array $manifest, string $reason): void
     {
         $this->fakeGitHub($this->makeRelease($manifest));

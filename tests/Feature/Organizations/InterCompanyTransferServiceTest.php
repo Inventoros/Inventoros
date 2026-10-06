@@ -6,6 +6,7 @@ namespace Tests\Feature\Organizations;
 
 use App\Exceptions\InsufficientStockException;
 use App\Jobs\WebhookDeliveryJob;
+use App\Models\ActivityLog;
 use App\Models\Auth\Organization;
 use App\Models\Inventory\InterCompanyTransfer;
 use App\Models\Inventory\Product;
@@ -320,7 +321,7 @@ final class InterCompanyTransferServiceTest extends TestCase
 
         $this->service()->transfer($this->user, $this->alpha->id, $this->beta->id, [$this->line($this->alphaWidget, $this->betaWidget, 3)]);
 
-        $logs = \App\Models\ActivityLog::where('subject_type', Product::class)->where('action', 'updated')->get()->keyBy('subject_id');
+        $logs = ActivityLog::where('subject_type', Product::class)->where('action', 'updated')->get()->keyBy('subject_id');
         $this->assertSame($this->alpha->id, $logs[$this->alphaWidget->id]->organization_id);
         $this->assertSame($this->beta->id, $logs[$this->betaWidget->id]->organization_id);
     }
@@ -370,5 +371,29 @@ final class InterCompanyTransferServiceTest extends TestCase
         $this->assertSame(1, WebhookDelivery::where('webhook_id', $alphaHook->id)->count());
         $this->assertSame(1, WebhookDelivery::where('webhook_id', $betaHook->id)->count());
         $this->assertSame($this->beta->id, WebhookDelivery::where('webhook_id', $betaHook->id)->sole()->payload['organization_id']);
+    }
+
+    public function test_variant_transfer_webhooks_include_each_organizations_product(): void
+    {
+        Queue::fake([WebhookDeliveryJob::class]);
+        $alphaHook = Webhook::create(['organization_id' => $this->alpha->id, 'name' => 'Alpha', 'url' => 'https://alpha.example.test/hook', 'events' => ['stock.adjusted'], 'is_active' => true]);
+        $betaHook = Webhook::create(['organization_id' => $this->beta->id, 'name' => 'Beta', 'url' => 'https://beta.example.test/hook', 'events' => ['stock.adjusted'], 'is_active' => true]);
+        $alphaShirt = $this->product($this->alpha, 'ALPHA-SHIRT', ['has_variants' => true, 'stock' => 0]);
+        $betaShirt = $this->product($this->beta, 'BETA-SHIRT', ['has_variants' => true, 'stock' => 0]);
+        $alphaLarge = ProductVariant::create(['product_id' => $alphaShirt->id, 'organization_id' => $this->alpha->id, 'sku' => 'ALPHA-L', 'option_values' => ['Size' => 'L'], 'stock' => 12, 'is_active' => true]);
+        $betaLarge = ProductVariant::create(['product_id' => $betaShirt->id, 'organization_id' => $this->beta->id, 'sku' => 'BETA-L', 'option_values' => ['Size' => 'L'], 'stock' => 1, 'is_active' => true]);
+        $this->actingAs($this->user);
+
+        $this->service()->transfer($this->user, $this->alpha->id, $this->beta->id, [
+            $this->line($alphaShirt, $betaShirt, 3, ['from_variant_id' => $alphaLarge->id, 'to_variant_id' => $betaLarge->id]),
+        ]);
+
+        foreach ([[$alphaHook, $alphaShirt], [$betaHook, $betaShirt]] as [$hook, $product]) {
+            $payload = WebhookDelivery::where('webhook_id', $hook->id)->sole()->payload;
+            $this->assertSame($product->organization_id, $payload['organization_id']);
+            $this->assertSame($product->id, $payload['data']['product']['product']['id']);
+            $this->assertSame($product->sku, $payload['data']['product']['product']['sku']);
+        }
+        $this->assertSame($this->alpha->id, auth()->user()->organization_id);
     }
 }

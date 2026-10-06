@@ -114,27 +114,34 @@ final class StockTransferService
     {
         $this->authorizeTransfer($actor, $transfer);
 
-        if ($transfer->status !== 'pending') {
-            throw new InvalidStateException('Only pending transfers can be marked as in transit.', 'invalid_status');
-        }
+        return DB::transaction(function () use ($transfer, $actor, $data) {
+            $locked = StockTransfer::whereKey($transfer->getKey())->lockForUpdate()->firstOrFail();
+            $this->authorizeTransfer($actor, $locked);
 
-        // A transfer held for approval (or rejected) may not ship.
-        $this->approvals->assertTransferMayProceed($transfer);
-
-        $updateData = [
-            'status' => 'in_transit',
-            'shipped_at' => now(),
-        ];
-
-        foreach (['shipping_method', 'tracking_number', 'estimated_arrival'] as $field) {
-            if (isset($data[$field])) {
-                $updateData[$field] = $data[$field];
+            if ($locked->status !== 'pending') {
+                throw new InvalidStateException('Only pending transfers can be marked as in transit.', 'invalid_status');
             }
-        }
 
-        $transfer->update($updateData);
+            // Serialize with completion and approval decisions. A stale ship
+            // request must never reopen a transfer whose stock already moved.
+            $this->approvals->assertTransferMayProceed($locked);
 
-        return $transfer;
+            $updateData = [
+                'status' => 'in_transit',
+                'shipped_at' => now(),
+            ];
+
+            foreach (['shipping_method', 'tracking_number', 'estimated_arrival'] as $field) {
+                if (isset($data[$field])) {
+                    $updateData[$field] = $data[$field];
+                }
+            }
+
+            $locked->update($updateData);
+            $transfer->setRawAttributes($locked->getAttributes(), true);
+
+            return $transfer;
+        });
     }
 
     /**
@@ -246,13 +253,19 @@ final class StockTransferService
     {
         $this->authorizeTransfer($actor, $transfer);
 
-        if (! in_array($transfer->status, ['pending', 'in_transit'], true)) {
-            throw new InvalidStateException('Only pending or in-transit transfers can be cancelled.', 'invalid_status');
-        }
+        return DB::transaction(function () use ($transfer, $actor) {
+            $locked = StockTransfer::whereKey($transfer->getKey())->lockForUpdate()->firstOrFail();
+            $this->authorizeTransfer($actor, $locked);
 
-        $transfer->update(['status' => 'cancelled']);
+            if (! in_array($locked->status, ['pending', 'in_transit'], true)) {
+                throw new InvalidStateException('Only pending or in-transit transfers can be cancelled.', 'invalid_status');
+            }
 
-        return $transfer;
+            $locked->update(['status' => 'cancelled']);
+            $transfer->setRawAttributes($locked->getAttributes(), true);
+
+            return $transfer;
+        });
     }
 
     /**

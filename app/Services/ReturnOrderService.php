@@ -193,11 +193,10 @@ final class ReturnOrderService
      * Create a pending return against an order.
      *
      * @param  array{order_id: int, type: string, reason: string, notes?: string|null, items: array<int, array{order_item_id: int, quantity: int, condition: string, restock: bool}>}  $data
-     *
      * @param  User|null  $actor  The staff user raising it, whose warehouse access is enforced;
-     *                           null for a customer's own request from the customer portal,
-     *                           which staff warehouse restrictions do not apply to (staff
-     *                           still need access to approve and receive it).
+     *                            null for a customer's own request from the customer portal,
+     *                            which staff warehouse restrictions do not apply to (staff
+     *                            still need access to approve and receive it).
      *
      * @throws ValidationException when a line exceeds its returnable quantity
      *
@@ -321,16 +320,21 @@ final class ReturnOrderService
     {
         $this->authorizeView($returnOrder, $actor);
 
-        if ($returnOrder->status !== 'pending') {
-            throw new InvalidStateException('Only pending returns can be approved.', 'invalid_status');
-        }
+        return DB::transaction(function () use ($returnOrder, $actor) {
+            $locked = ReturnOrder::whereKey($returnOrder->getKey())->lockForUpdate()->firstOrFail();
 
-        $returnOrder->update([
-            'status' => 'approved',
-            'processed_by' => $actor->id,
-        ]);
+            if ($locked->status !== 'pending') {
+                throw new InvalidStateException('Only pending returns can be approved.', 'invalid_status');
+            }
 
-        return $returnOrder;
+            $locked->update([
+                'status' => 'approved',
+                'processed_by' => $actor->id,
+            ]);
+            $returnOrder->setRawAttributes($locked->getAttributes(), true);
+
+            return $returnOrder;
+        });
     }
 
     /**
@@ -424,13 +428,13 @@ final class ReturnOrderService
      * Receive an approved return, restocking every line marked for restock.
      *
      * @param  User|null  $actor  Who receives it: their warehouse access is enforced and the
-     *                           restock ledger rows are attributed to them. Callers outside a
-     *                           request (a queued job, a command, a plugin's sync) pass one
-     *                           explicitly. Without one the signed-in user is used; with
-     *                           nobody signed in either, the return is received as a system
-     *                           action (no warehouse restriction applies) and the ledger
-     *                           records whoever approved it, else the order's creator, else
-     *                           the organization's first user.
+     *                            restock ledger rows are attributed to them. Callers outside a
+     *                            request (a queued job, a command, a plugin's sync) pass one
+     *                            explicitly. Without one the signed-in user is used; with
+     *                            nobody signed in either, the return is received as a system
+     *                            action (no warehouse restriction applies) and the ledger
+     *                            records whoever approved it, else the order's creator, else
+     *                            the organization's first user.
      *
      * @api
      */
@@ -638,17 +642,22 @@ final class ReturnOrderService
     {
         $this->authorizeView($returnOrder, $actor);
 
-        if ($returnOrder->status !== 'received') {
-            throw new InvalidStateException('Only received returns can be completed.', 'invalid_status');
-        }
+        return DB::transaction(function () use ($returnOrder, $actor) {
+            $locked = ReturnOrder::whereKey($returnOrder->getKey())->lockForUpdate()->firstOrFail();
 
-        $returnOrder->update([
-            'status' => 'completed',
-            'completed_at' => now(),
-            'processed_by' => $actor->id,
-        ]);
+            if ($locked->status !== 'received') {
+                throw new InvalidStateException('Only received returns can be completed.', 'invalid_status');
+            }
 
-        return $returnOrder;
+            $locked->update([
+                'status' => 'completed',
+                'completed_at' => now(),
+                'processed_by' => $actor->id,
+            ]);
+            $returnOrder->setRawAttributes($locked->getAttributes(), true);
+
+            return $returnOrder;
+        });
     }
 
     /**
@@ -660,18 +669,23 @@ final class ReturnOrderService
     {
         $this->authorizeView($returnOrder, $actor);
 
-        if ($returnOrder->status !== 'pending') {
-            throw new InvalidStateException('Only pending returns can be rejected.', 'invalid_status');
-        }
+        return DB::transaction(function () use ($returnOrder, $actor, $reason) {
+            $locked = ReturnOrder::whereKey($returnOrder->getKey())->lockForUpdate()->firstOrFail();
 
-        $returnOrder->update([
-            'status' => 'rejected',
-            'processed_by' => $actor->id,
-            'notes' => $returnOrder->notes
-                ? $returnOrder->notes."\n\nRejection reason: ".($reason ?? 'No reason provided')
-                : 'Rejection reason: '.($reason ?? 'No reason provided'),
-        ]);
+            if ($locked->status !== 'pending') {
+                throw new InvalidStateException('Only pending returns can be rejected.', 'invalid_status');
+            }
 
-        return $returnOrder;
+            $locked->update([
+                'status' => 'rejected',
+                'processed_by' => $actor->id,
+                'notes' => $locked->notes
+                    ? $locked->notes."\n\nRejection reason: ".($reason ?? 'No reason provided')
+                    : 'Rejection reason: '.($reason ?? 'No reason provided'),
+            ]);
+            $returnOrder->setRawAttributes($locked->getAttributes(), true);
+
+            return $returnOrder;
+        });
     }
 }

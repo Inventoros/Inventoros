@@ -12,8 +12,9 @@ Artisan::command('inspire', function () {
 Schedule::command('inventory:check-reorder-points')->dailyAt('06:00');
 
 // Drain the database queue (mail, webhooks) on hosts with no queue worker.
-// Each run exits once the queue is empty or after 50 seconds, so it never
-// outlives its minute. See config/queue.php `run_via_scheduler`.
+// Each run stops taking new jobs after 50 seconds, then finishes its current
+// job (which may take up to 600 seconds). withoutOverlapping prevents another
+// scheduled worker starting meanwhile. See config/queue.php `run_via_scheduler`.
 Schedule::command('queue:work --stop-when-empty --max-time=50')
     ->everyMinute()
     ->withoutOverlapping()

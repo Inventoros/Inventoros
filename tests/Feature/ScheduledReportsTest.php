@@ -14,6 +14,8 @@ use App\Models\SavedReport;
 use App\Models\Setting;
 use App\Models\System\SystemSetting;
 use App\Models\User;
+use App\Services\Organizations\ActiveOrganization;
+use App\Services\Organizations\OrganizationMembershipService;
 use App\Services\Reports\ScheduledReportRunner;
 use Carbon\CarbonImmutable;
 use Illuminate\Console\Scheduling\Schedule;
@@ -218,12 +220,104 @@ class ScheduledReportsTest extends TestCase
         });
     }
 
+    /** @return array<string, array{0: string}> */
+    public static function changesBeforeDelivery(): array
+    {
+        return [
+            'permissions revoked' => ['permissions'],
+            'home organization changed' => ['organization'],
+            'account deleted' => ['deleted'],
+            'email changed' => ['email'],
+            'recipient removed' => ['recipients'],
+            'schedule paused' => ['paused'],
+        ];
+    }
+
+    #[DataProvider('changesBeforeDelivery')]
+    public function test_delivery_rechecks_access_and_schedule_after_queueing(string $change): void
+    {
+        Queue::fake();
+        Mail::fake();
+        $schedule = $this->schedule();
+        $this->runner()->runDue(now());
+        $job = null;
+        Queue::assertPushed(DeliverScheduledReportJob::class, function ($queued) use (&$job) {
+            $job = $queued;
+
+            return true;
+        });
+
+        match ($change) {
+            'permissions' => $this->colleague->roles()->detach(),
+            'organization' => $this->colleague->update(['organization_id' => Organization::create(['name' => 'Other', 'currency' => 'USD', 'timezone' => 'UTC'])->id]),
+            'deleted' => $this->colleague->delete(),
+            'email' => $this->colleague->update(['email' => 'new-address@acme.test']),
+            'recipients' => $schedule->update(['recipients' => []]),
+            'paused' => $schedule->update(['is_active' => false]),
+        };
+
+        $job->handle($this->runner());
+
+        Mail::assertNothingOutgoing();
+        $this->assertSame('skipped', $schedule->fresh()->last_status);
+    }
+
+    public function test_delivery_keeps_only_still_authorized_queued_recipients(): void
+    {
+        Queue::fake();
+        Mail::fake();
+        $schedule = $this->schedule(['recipients' => [$this->colleague->email, $this->owner->email]]);
+        $this->runner()->runDue(now());
+        $job = null;
+        Queue::assertPushed(DeliverScheduledReportJob::class, function ($queued) use (&$job) {
+            $job = $queued;
+
+            return true;
+        });
+        $this->colleague->roles()->detach();
+
+        $job->handle($this->runner());
+
+        Mail::assertSent(ScheduledReportEmail::class, 1);
+        Mail::assertSent(ScheduledReportEmail::class, fn ($mail) => $mail->hasTo($this->owner->email));
+        $this->assertSame('sent', $schedule->fresh()->last_status);
+    }
+
+    public function test_delivery_rechecks_a_guest_recipients_membership(): void
+    {
+        Queue::fake();
+        Mail::fake();
+        $other = Organization::create(['name' => 'Guest home', 'currency' => 'USD', 'timezone' => 'UTC']);
+        $guest = User::create([
+            'name' => 'Guest reader', 'email' => 'guest@other.test', 'password' => bcrypt('x'),
+            'organization_id' => $other->id, 'role' => 'member',
+        ]);
+        $memberships = app(OrganizationMembershipService::class);
+        $memberships->add($this->org->fresh(), $guest);
+        $member = app(ActiveOrganization::class)->userIn($guest, $this->org->id);
+        $member->roles()->attach($this->ownerRole->id);
+        $schedule = $this->schedule(['recipients' => [$guest->email]]);
+        $this->assertSame(1, $this->runner()->runDue(now())['sent']);
+        $job = null;
+        Queue::assertPushed(DeliverScheduledReportJob::class, function ($queued) use (&$job) {
+            $job = $queued;
+
+            return true;
+        });
+
+        $memberships->remove($this->org, $guest);
+        $job->handle($this->runner());
+
+        Mail::assertNothingOutgoing();
+        $this->assertSame('skipped', $schedule->fresh()->last_status);
+    }
+
     public function test_a_scheduled_report_email_refuses_to_be_queued(): void
     {
         $this->expectException(\LogicException::class);
 
-        (new ScheduledReportEmail($this->org->id, 'Stock acme', 'weekly', 'stock.csv', 'text/csv; charset=UTF-8', "a,b
-"))
+        (new ScheduledReportEmail($this->org->id, 'Stock acme', 'weekly', 'stock.csv', 'text/csv; charset=UTF-8', 'a,b
+'))
             ->queue(app('queue'));
     }
 

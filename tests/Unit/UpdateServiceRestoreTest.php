@@ -45,7 +45,7 @@ final class UpdateServiceRestoreTest extends TestCase
      */
     private function service(): array
     {
-        Artisan::shouldReceive('call')->andReturn(0);
+        Artisan::shouldReceive('call')->andReturn(0)->byDefault();
 
         $github = Mockery::mock(GitHubReleaseService::class);
         $backups = Mockery::mock(BackupService::class);
@@ -80,11 +80,30 @@ final class UpdateServiceRestoreTest extends TestCase
     public function test_restore_fails_loudly_when_the_database_cannot_be_restored(): void
     {
         [$service, $backups] = $this->service();
+        Artisan::shouldReceive('call')->with('up')->never();
         $backups->shouldReceive('restoreDatabase')->once()->andThrow(new \RuntimeException('psql exited with code 3'));
 
         $result = $service->restoreFromBackup($this->makeBackupZip(withDatabase: true));
 
         $this->assertFalse($result['success']);
         $this->assertStringContainsString('psql exited with code 3', $result['message']);
+        $this->assertStringContainsString('remains in maintenance mode', $result['message']);
+    }
+
+    public function test_file_restore_failure_keeps_the_application_in_maintenance(): void
+    {
+        Artisan::shouldReceive('call')->with('down')->once()->andReturn(0);
+        Artisan::shouldReceive('call')->with('up')->never();
+        $files = Mockery::mock(FileUpdateService::class);
+        $files->shouldReceive('getTempPath')->andReturn(storage_path('app/testing'));
+        $files->shouldReceive('replaceFiles')->once()->andThrow(new \RuntimeException('disk full'));
+        $backups = Mockery::mock(BackupService::class);
+        $backups->shouldReceive('restoreDatabase')->never();
+
+        $result = (new UpdateService(Mockery::mock(GitHubReleaseService::class), $backups, $files))
+            ->restoreFromBackup($this->makeBackupZip(withDatabase: true));
+
+        $this->assertFalse($result['success']);
+        $this->assertStringContainsString('remains in maintenance mode', $result['message']);
     }
 }

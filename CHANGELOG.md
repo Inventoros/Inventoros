@@ -6,6 +6,27 @@ Full release notes, with the pull request behind each change, are on [GitHub Rel
 
 ## [Unreleased]
 
+## [2.0.0] - 2026-10-06
+
+Upgrading from 1.0.x: read [UPGRADE.md](UPGRADE.md) first. Every 1.0.x install must be upgraded by hand once: the in-app updater in 1.0.8 and earlier refuses the redirect GitHub uses for release downloads, so it cannot install any release. From 2.0.0 on, the updater works.
+
+Before upgrading: take a database backup you have checked, run `php artisan optimize:clear` before migrating (stale 1.0.x caches fail with `Auth guard [customer] is not defined`), and on MySQL or PostgreSQL preview with `php artisan migrate --pretend --force` (without `--force` it waits at a production confirmation prompt). The 1.0.x backup silently leaves the database out when `mysqldump` or `pg_dump` is missing, so take your own dump.
+
+### Breaking
+
+- Work orders now refuse serial/batch-tracked products, variants and virtual kits, including existing work orders, because their individual stock records are not yet supported by production allocation. Installation-wide updates and backups require an administrator of the installation owner organization (`INVENTOROS_PLUGIN_ADMIN_ORG`, or the first organization).
+
+- MCP tools are named in snake_case (`list_orders`) instead of the kebab-case class names (`list-orders-tool`). Client configurations and allow-lists that name tools must be updated.
+- Published plugin UI assets moved from `public/plugins/{slug}` to `public/plugin-assets/{slug}`. cPanel installs must replace `public_html/index.php`.
+- The API reference at `/docs/api` requires a signed-in user outside the `local` environment. Set `API_DOCS_PUBLIC=true` to make it public.
+- `/api/v1` accepts bearer tokens only; browser sessions are no longer accepted there.
+- Inventoros is licensed under AGPL-3.0-only. Releases up to and including 1.0.8 remain MIT.
+- PHP 8.4.1 or newer is required (8.4 and 8.5 are supported). The 1.0.8 package already needed 8.4.1, so most hosts are unaffected. Building assets needs Node.js 20.19+ or 22.12+.
+- The `schedule:run` cron entry is required. It also processes the database queue every minute, so shared hosting needs no separate worker; VPS and Docker installs should run one.
+- Users with warehouse assignments on Member or custom roles are limited to those warehouses for locations, stock adjustments, audits, transfers, returns, purchase order receiving, shipments and the matching approvals and per-location reports, unless the role has the new `access_all_warehouses` permission. The order list, customers, purchase orders and other reports are not filtered by warehouse.
+- Orders created before 2.0.0 show the payment status "Not tracked" and are left out of receivables, the portal balance and the invoice balance line; users with `record_payments` can mark them paid in bulk (Orders > Mark older orders paid).
+- Purchase order, invoice and shipment emails show "Queued" until they are delivered. `sent_at`, `invoice_sent_at` and `customer_notified_at` are set on delivery, not when queued; the new `*_queued_at` columns record the queueing.
+
 ### Added
 
 - Plugins: `product_updated`, `product_deleted` and the new `variant_created`, `variant_updated`, `variant_deleted`, `order_deleted`, `purchase_order_updated`, `purchase_order_deleted` and `stock_changed` actions fire from every surface (web, bulk actions, REST, GraphQL, MCP, imports and commands), once per record per transaction and only after it commits.
@@ -26,55 +47,6 @@ Full release notes, with the pull request behind each change, are on [GitHub Rel
 - Inter-company transfers: `InterCompanyTransferService::transfer()` moves stock from one organization to another as one atomic operation, booking an `inter_company_out` adjustment in the source and an `inter_company_in` adjustment in the destination that both reference the transfer. The actor needs `transfer_stock` and warehouse access in both organizations; records of the wrong organization, tracked products and kits are refused; an idempotency key makes retries safe. Fires `inter_company_transfer_completed`.
 - Plugins: `OrganizationMembershipService` (`add()`, `changeRole()`, `remove()`, `createOrganization()`, `members()`, `organizationsFor()`) and `ActiveOrganization` (`userIn()`, `runAs()`, `authorize()`) join the core PHP API, with the new `organization_switched`, `organization_member_added` and `organization_member_removed` actions. See "Organizations and memberships" in the plugin guide.
 
-### Changed
-
-- Role assignments belong to one organization: a custom role, or the Administrator system role, held in one organization grants nothing in another. Existing assignments and API tokens belong to the user's organization after upgrading.
-- A write sent from a browser tab still showing another organization (after switching in a second tab) is refused instead of being saved in the active organization.
-- Changing the email or password of, or deleting, a user who also belongs to other organizations needs an administrator of each of them, and a delegated user manager may only manage users who hold no admin, manager or extra permission in any organization. Approval decisions, activity log entries and settings follow the organization the work happened in.
-- A queued order or product import, and a scheduled report, run as the user in the organization they were started in, and are refused once that user is no longer a member of it.
-
-- `supplier_created`, `supplier_updated`, `supplier_before_delete` and `supplier_deleted` fire from every surface (web, REST, GraphQL), after commit, instead of only from the web screens.
-- A stock adjustment without a location keeps the location bins in step: a decrease drains the bins in fulfilment order and an increase lands in the product's primary location (before, the total moved and the bins did not). `StockAdjustment::adjust()` takes `syncBins: false` for callers that move the bins themselves.
-- An order that names a warehouse draws its units from that warehouse's location bins first, then falls back to the other bins by warehouse priority; before, the bins drained by priority whatever the order's warehouse. `ProductLocationStockService::consume()` takes an optional preferred warehouse.
-- A location-scoped stock audit counts the audited location only: it lists the products stocked there, snapshots what that location holds, and books each difference into it.
-- `product_created`, `order_updated`, `purchase_order_created` and the customer hooks fire once per record per transaction, after commit; `order_updated` no longer fires while an order is being created, and `product_created` now runs after the product's options and variants are saved. The `product.updated` and `product.deleted` webhooks now fire for changes made through REST, GraphQL, imports and bulk actions too.
-- Products saved as USD only because none was given (API, GraphQL, MCP and products import in 1.0.x) move to their organization's currency when upgrading, and new products without a currency take the organization's. See [UPGRADE.md](UPGRADE.md#currencies-and-money).
-- Orders default to the organization's currency on every surface, and an order line without a unit price is priced in the order's currency or rejected when the product has no price in it.
-- Money amounts accept at most two decimal places everywhere, and calculated amounts round half up to the cent instead of truncating.
-- Outstanding Balances, dead stock, inventory valuation and category performance reports and the dashboard show totals per currency instead of adding currencies together; their exports carry a Currency column.
-
-### Fixed
-
-- Completing a stock audit lowered or raised on-hand stock without touching the location bins, so after a shortfall the locations claimed more than was on hand. Recount adjustments now move the bins with the total, and so do tracked-stock reconciliation and manual adjustments made without a location.
-- Completing a stock audit outside a web request (a queued job or a plugin) failed because the recount adjustments had no user; they are attributed to the user completing the audit.
-- Order restocks from a queued job or command failed for want of a signed-in user; they fall back to the order's creator.
-- Receiving a return outside a web request (a queued job, command or plugin) failed because the restock ledger rows had no user.
-- A plugin page was silently left out when any route, of any method, used its URI (for example a page under `/cycle-counts/` hidden by `PUT /cycle-counts/{id}`); only routes answering GET count now, and activation reports real conflicts.
-- Order, return, transfer, purchase order and work order numbers kept repeating after the 9,999th of the day, so every further create failed until midnight.
-- An order import on MySQL could fail with "Failed to allocate a unique sequence number" when another order took the same number at the same moment.
-- A failing row in an import no longer aborts the rest of the file on PostgreSQL.
-
-## [2.0.0]
-
-Upgrading from 1.0.x: read [UPGRADE.md](UPGRADE.md) first. Every 1.0.x install must be upgraded by hand once: the in-app updater in 1.0.8 and earlier refuses the redirect GitHub uses for release downloads, so it cannot install any release. From 2.0.0 on, the updater works.
-
-Before upgrading: take a database backup you have checked, run `php artisan optimize:clear` before migrating (stale 1.0.x caches fail with `Auth guard [customer] is not defined`), and on MySQL or PostgreSQL preview with `php artisan migrate --pretend --force` (without `--force` it waits at a production confirmation prompt). The 1.0.x backup silently leaves the database out when `mysqldump` or `pg_dump` is missing, so take your own dump.
-
-### Breaking
-
-- MCP tools are named in snake_case (`list_orders`) instead of the kebab-case class names (`list-orders-tool`). Client configurations and allow-lists that name tools must be updated.
-- Published plugin UI assets moved from `public/plugins/{slug}` to `public/plugin-assets/{slug}`. cPanel installs must replace `public_html/index.php`.
-- The API reference at `/docs/api` requires a signed-in user outside the `local` environment. Set `API_DOCS_PUBLIC=true` to make it public.
-- `/api/v1` accepts bearer tokens only; browser sessions are no longer accepted there.
-- Inventoros is licensed under AGPL-3.0-only. Releases up to and including 1.0.8 remain MIT.
-- PHP 8.4.1 or newer is required (8.4 and 8.5 are supported). The 1.0.8 package already needed 8.4.1, so most hosts are unaffected. Building assets needs Node.js 20.19+ or 22.12+.
-- The `schedule:run` cron entry is required. It also processes the database queue every minute, so shared hosting needs no separate worker; VPS and Docker installs should run one.
-- Users with warehouse assignments on Member or custom roles are limited to those warehouses for locations, stock adjustments, audits, transfers, returns, purchase order receiving, shipments and the matching approvals and per-location reports, unless the role has the new `access_all_warehouses` permission. The order list, customers, purchase orders and other reports are not filtered by warehouse.
-- Orders created before 2.0.0 show the payment status "Not tracked" and are left out of receivables, the portal balance and the invoice balance line; users with `record_payments` can mark them paid in bulk (Orders > Mark older orders paid).
-- Purchase order, invoice and shipment emails show "Queued" until they are delivered. `sent_at`, `invoice_sent_at` and `customer_notified_at` are set on delivery, not when queued; the new `*_queued_at` columns record the queueing.
-
-### Added
-
 - Shipping and fulfilment: several shipments per order, EasyPost rates, labels, tracking and voids, manual shipments, and an optional shipment email to the customer.
 - Customer portal at `/portal/{org-slug}` where invited customer contacts see orders, shipments, payments and invoices, and request returns.
 - Approval workflows for purchase orders, stock adjustments and stock transfers, each off by default, with a Pending approvals page.
@@ -94,7 +66,42 @@ Before upgrading: take a database backup you have checked, run `php artisan opti
 - `APP_PUBLIC_PATH` gives command-line tasks the web root of a split (cPanel) install; the installer and updater set it.
 - A plain "requires PHP 8.4.1" message from `index.php` and `artisan` on older PHP.
 
+### Changed
+
+- Role assignments belong to one organization: a custom role, or the Administrator system role, held in one organization grants nothing in another. Existing assignments and API tokens belong to the user's organization after upgrading.
+- A write sent from a browser tab still showing another organization (after switching in a second tab) is refused instead of being saved in the active organization.
+- Changing the email or password of, or deleting, a user who also belongs to other organizations needs an administrator of each of them, and a delegated user manager may only manage users who hold no admin, manager or extra permission in any organization. Approval decisions, activity log entries and settings follow the organization the work happened in.
+- A queued order or product import, and a scheduled report, run as the user in the organization they were started in, and are refused once that user is no longer a member of it.
+
+- `supplier_created`, `supplier_updated`, `supplier_before_delete` and `supplier_deleted` fire from every surface (web, REST, GraphQL), after commit, instead of only from the web screens.
+- A stock adjustment without a location keeps the location bins in step: a decrease drains the bins in fulfilment order and an increase lands in the product's primary location (before, the total moved and the bins did not). `StockAdjustment::adjust()` takes `syncBins: false` for callers that move the bins themselves.
+- An order that names a warehouse draws its units from that warehouse's location bins first, then falls back to the other bins by warehouse priority; before, the bins drained by priority whatever the order's warehouse. `ProductLocationStockService::consume()` takes an optional preferred warehouse.
+- A location-scoped stock audit counts the audited location only: it lists the products stocked there, snapshots what that location holds, and books each difference into it.
+- `product_created`, `order_updated`, `purchase_order_created` and the customer hooks fire once per record per transaction, after commit; `order_updated` no longer fires while an order is being created, and `product_created` now runs after the product's options and variants are saved. The `product.updated` and `product.deleted` webhooks now fire for changes made through REST, GraphQL, imports and bulk actions too.
+- Products saved as USD only because none was given (API, GraphQL, MCP and products import in 1.0.x) move to their organization's currency when upgrading, and new products without a currency take the organization's. See [UPGRADE.md](UPGRADE.md#currencies-and-money).
+- Orders default to the organization's currency on every surface, and an order line without a unit price is priced in the order's currency or rejected when the product has no price in it.
+- Money amounts accept at most two decimal places everywhere, and calculated amounts round half up to the cent instead of truncating.
+- Outstanding Balances, dead stock, inventory valuation and category performance reports and the dashboard show totals per currency instead of adding currencies together; their exports carry a Currency column.
+
 ### Fixed
+
+- Stale transfer, return, work-order and stock-audit requests can no longer reopen completed operations or change completed count evidence; transitions lock and recheck current state.
+- Queue reservations outlast the 600-second import/export/report job timeout, preventing overlapping execution. Worker shutdown grace periods allow those jobs to finish.
+- The updater takes its rollback backup after entering maintenance and leaves the application in maintenance if restoration fails. Successful updates/restores restart queue workers.
+- Docker persists plugin code and UI assets in volumes shared by web, worker and scheduler containers.
+- Low-stock report rows are capped before hydration, summaries retain full totals and warehouse stock is fetched in a batch.
+- Cycle counts work in organizations with only guest members, and location-scoped drafts snapshot the selected bin.
+- Inter-company variant adjustment webhooks include the product from the correct organization.
+- The README logo links to inventoros.com and the license includes Inventoros project information.
+
+- Completing a stock audit lowered or raised on-hand stock without touching the location bins, so after a shortfall the locations claimed more than was on hand. Recount adjustments now move the bins with the total, and so do tracked-stock reconciliation and manual adjustments made without a location.
+- Completing a stock audit outside a web request (a queued job or a plugin) failed because the recount adjustments had no user; they are attributed to the user completing the audit.
+- Order restocks from a queued job or command failed for want of a signed-in user; they fall back to the order's creator.
+- Receiving a return outside a web request (a queued job, command or plugin) failed because the restock ledger rows had no user.
+- A plugin page was silently left out when any route, of any method, used its URI (for example a page under `/cycle-counts/` hidden by `PUT /cycle-counts/{id}`); only routes answering GET count now, and activation reports real conflicts.
+- Order, return, transfer, purchase order and work order numbers kept repeating after the 9,999th of the day, so every further create failed until midnight.
+- An order import on MySQL could fail with "Failed to allocate a unique sequence number" when another order took the same number at the same moment.
+- A failing row in an import no longer aborts the rest of the file on PostgreSQL.
 
 - Server-side validation, sign-in, password reset and pagination messages were always English. Laravel's messages now ship in `lang/` for all 14 languages, and the user's language (then the language cookie, then the default) applies to web and REST responses.
 - Low-stock and out-of-stock alerts never fired for products sold by variant. A variant with its own minimum alerts when it crosses it; otherwise the product alerts when the sum of its active variants crosses the product's minimum. Low-stock alert emails and the `product.low_stock` webhook report that summed stock.
@@ -124,6 +131,12 @@ Before upgrading: take a database backup you have checked, run `php artisan opti
 - `php artisan db:seed` on a release install (no dev dependencies) no longer fails, and never creates the development test login in production. The cPanel package no longer ships the end-to-end test and screenshot seeders.
 
 ### Security
+
+- Tenant administrators cannot operate installation-wide updates, restores or backups outside the installation owner organization.
+- Queued scheduled reports recheck recipient membership, permissions, email and schedule activity at delivery.
+- Plugin query guards constrain all OR branches and reject unsafe union builders.
+- Vue 3.5.43 and source-map-js 1.2.2 address production dependency advisories; a scoped shell-quote 1.12.0 override addresses the critical development-tool advisory. Remaining Tailwind 3 development-only findings are documented in the release audit.
+- Published cPanel packages require a signing key matching the public key distributed to installations, plus matching version and release notes.
 
 - Dashboard figures, GraphQL and MCP check the real permission for each screen and token.
 - Stored mail and EasyPost secrets are never sent to the browser.

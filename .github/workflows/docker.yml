@@ -53,6 +53,7 @@ jobs:
             type=semver,pattern={{major}}.{{minor}}
             type=semver,pattern={{major}},enable=${{ !startsWith(github.ref, 'refs/tags/v0.') }}
             type=ref,event=pr
+            type=sha,enable=${{ github.event_name == 'workflow_dispatch' }}
           flavor: |
             latest=auto
 
@@ -69,13 +70,18 @@ jobs:
 
       - name: Smoke test the image
         if: ${{ !startsWith(github.ref, 'refs/tags/v') }}
+        env:
+          IMAGE_TAGS: ${{ steps.meta.outputs.tags }}
         run: |
           set -eux
+          image="$(printf '%s\n' "$IMAGE_TAGS" | head -n1)"
           docker run -d --name inventoros-smoke -p 8080:8080 \
+            -v inventoros-smoke-plugins:/app/plugins \
+            -v inventoros-smoke-plugin-assets:/app/public/plugin-assets \
             -e APP_KEY="base64:$(openssl rand -base64 32)" \
             -e DB_CONNECTION=sqlite -e DB_DATABASE=/tmp/smoke.sqlite \
             -e SESSION_DRIVER=file -e CACHE_STORE=file -e QUEUE_CONNECTION=sync \
-            "$(echo '${{ steps.meta.outputs.tags }}' | head -n1)"
+            "$image"
           for i in $(seq 1 30); do
             if curl -fsS http://127.0.0.1:8080/up >/dev/null; then break; fi
             sleep 2
@@ -83,6 +89,16 @@ jobs:
           curl -fsS -o /dev/null -w '%{http_code}\n' http://127.0.0.1:8080/up
           test "$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:8080/install)" = "200"
           docker exec inventoros-smoke whoami | grep -qx app
+
+          # The unprivileged web process can install plugins, and a fresh
+          # worker/container sees the same files after the web container is gone.
+          docker exec inventoros-smoke sh -c 'printf plugin > /app/plugins/persistence-check.txt; printf asset > /app/public/plugin-assets/persistence-check.txt'
+          docker stop inventoros-smoke
+          docker rm inventoros-smoke
+          docker run --rm --entrypoint sh \
+            -v inventoros-smoke-plugins:/app/plugins \
+            -v inventoros-smoke-plugin-assets:/app/public/plugin-assets \
+            "$image" -c 'test "$(cat /app/plugins/persistence-check.txt)" = plugin && test "$(cat /app/public/plugin-assets/persistence-check.txt)" = asset && test "$(whoami)" = app'
 
       - name: Container logs
         if: failure()

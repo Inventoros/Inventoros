@@ -10,16 +10,21 @@ The barcode scanning feature enables quick product lookup and selection using de
 - **Access:** Floating blue button (bottom-right corner)
 - **Keyboard Shortcut:** `Ctrl+B` (Windows/Linux) or `Cmd+B` (Mac)
 - **Behavior:** Scan → Navigate to product Show page
-- **Permission Required:** `products.view`
+- **Permission Required:** `view_products`
 
 ### 2. Stock Adjustments Create Page
 - **Access:** Scan icon next to product dropdown field
 - **Behavior:** Scan → Auto-fill product selection → Focus quantity field
-- **Permission Required:** `stock_adjustments.create`
+- **Permissions Required:** `manage_stock` and `view_products` for barcode lookup
 
 ### 3. Purchase Orders (Already Implemented)
 - **Access:** Scan icon in receive workflow
 - **Behavior:** Scan → Auto-fill received items
+
+### 4. Order Create Page
+- **Access:** Scan button in the order items section
+- **Behavior:** Scan a product or variant barcode to add the matching order line
+- **Permissions Required:** `create_orders` and `view_products` for barcode lookup
 
 ## How to Use
 
@@ -56,7 +61,7 @@ The barcode scanning feature enables quick product lookup and selection using de
 - Check product exists and is not deleted
 
 ### Scanner Won't Open
-- Check user permissions (products.view or stock_adjustments.create)
+- Check `view_products` for barcode lookup and the permission for the page (`manage_stock` or `create_orders`)
 - Verify JavaScript is enabled
 - Try refreshing the page
 
@@ -64,8 +69,8 @@ The barcode scanning feature enables quick product lookup and selection using de
 
 - **Component:** `resources/js/Components/BarcodeScannerModal.vue`
 - **Library:** html5-qrcode
-- **API Endpoint:** `GET /api/v1/barcode/{code}`
-- **Authentication:** Sanctum token required
+- **Browser Endpoint:** `GET /barcode/lookup?code=...`, using the signed-in browser session
+- **API Endpoint:** `GET /api/v1/barcode/{code}`, using a Sanctum bearer token
 - **Multi-tenant:** Scoped to user's organization
 
 ## Browser Compatibility
@@ -80,7 +85,6 @@ The barcode scanning feature enables quick product lookup and selection using de
 
 ## Future Enhancements
 
-- Order Create page integration
 - Batch scanning mode
 - Custom keyboard shortcuts
 - Scan history/recent scans

@@ -38,6 +38,36 @@ final class WarehouseStockLevelService
             ->all();
     }
 
+    /**
+     * Warehouse balances for a bounded product list, loaded together instead
+     * of issuing an aggregate query for every reorder suggestion.
+     *
+     * @param  array<int, int>  $productIds
+     * @return array<int, array<int, int>> product id => warehouse id => on-hand
+     */
+    public function onHandByProducts(array $productIds): array
+    {
+        if ($productIds === []) {
+            return [];
+        }
+
+        $balances = DB::table('product_location_stocks as pls')
+            ->join('product_locations as pl', 'pl.id', '=', 'pls.location_id')
+            ->whereIntegerInRaw('pls.product_id', $productIds)
+            ->whereNotNull('pl.warehouse_id')
+            ->whereNull('pl.deleted_at')
+            ->groupBy('pls.product_id', 'pl.warehouse_id')
+            ->selectRaw('pls.product_id, pl.warehouse_id, sum(pls.quantity) as on_hand')
+            ->get();
+
+        $result = [];
+        foreach ($balances as $balance) {
+            $result[(int) $balance->product_id][(int) $balance->warehouse_id] = (int) $balance->on_hand;
+        }
+
+        return $result;
+    }
+
     public function onHandInWarehouse(int $productId, int $warehouseId): int
     {
         return (int) DB::table('product_location_stocks as pls')
@@ -118,7 +148,7 @@ final class WarehouseStockLevelService
      *
      * @return array<int, array{warehouse_id: int, warehouse_name: string, on_hand: int, reorder_point: int, suggested_quantity: int}>
      */
-    public function shortfalls(Product $product): array
+    public function shortfalls(Product $product, ?array $onHand = null): array
     {
         $rows = $product->relationLoaded('warehouseReorderPoints')
             ? $product->warehouseReorderPoints
@@ -129,7 +159,7 @@ final class WarehouseStockLevelService
         }
 
         $rows->loadMissing('warehouse:id,name,priority');
-        $onHand = $this->onHandByWarehouse($product);
+        $onHand ??= $this->onHandByWarehouse($product);
         $shortfalls = [];
 
         foreach ($rows->sortByDesc(fn ($row) => $row->warehouse?->priority ?? 0) as $row) {

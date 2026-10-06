@@ -10,8 +10,8 @@
 # The image is pulled from GHCR. To build from this checkout instead:
 #   docker compose -f docker-compose.prod.yml up -d --build
 #
-# All three PHP services share one image, one environment and one storage
-# volume. Only `app` runs migrations (RUN_MIGRATIONS=true); worker and
+# All three PHP services share one image, one environment, and persistent
+# storage, plugin code and plugin assets. Only `app` runs migrations; worker and
 # scheduler wait for it to be healthy so they never race on the schema.
 
 x-inventoros: &inventoros
@@ -51,6 +51,8 @@ x-inventoros: &inventoros
     RUN_MIGRATIONS: "false"
   volumes:
     - storage:/app/storage
+    - plugins:/app/plugins
+    - plugin-assets:/app/public/plugin-assets
   depends_on:
     db:
       condition: service_healthy
@@ -66,6 +68,8 @@ services:
 
   worker:
     <<: *inventoros
+    # Let a running import/export finish before Docker sends SIGKILL.
+    stop_grace_period: 660s
     command: ["php", "artisan", "queue:work", "--tries=3", "--max-time=3600", "--sleep=3"]
     healthcheck:
       disable: true
@@ -99,4 +103,6 @@ services:
 
 volumes:
   storage:
+  plugins:
+  plugin-assets:
   db-data:

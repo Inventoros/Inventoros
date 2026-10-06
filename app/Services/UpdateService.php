@@ -128,6 +128,10 @@ class UpdateService
             ];
         }
 
+        $maintenanceStarted = false;
+        $wasInMaintenance = app()->isDownForMaintenance();
+        $safeToResume = true;
+
         try {
             $this->log($progressCallback, 'Starting update process...');
 
@@ -155,14 +159,7 @@ class UpdateService
                 $expectedVersion = null;
             }
 
-            // Step 2: Create backup
-            $this->log($progressCallback, 'Creating backup...');
-            // createBackup() throws when the database could not be captured,
-            // which aborts the update here, before anything is touched.
-            $backupPath = $this->backupService->createBackup();
-            $this->log($progressCallback, 'Database backed up using '.$this->backupService->lastDatabaseBackupMethod());
-
-            // Step 3: Download release
+            // Download and validate before taking the site offline.
             $this->log($progressCallback, 'Downloading update...');
             $zipPath = $this->fileService->downloadRelease($downloadUrl);
 
@@ -189,81 +186,85 @@ class UpdateService
 
             // Step 5: Put application in maintenance mode
             $this->log($progressCallback, 'Enabling maintenance mode...');
-            Artisan::call('down', ['--retry' => 60]);
+            if (Artisan::call('down', ['--retry' => self::MAINTENANCE_RETRY_SECONDS]) !== 0) {
+                throw new Exception('Could not enable maintenance mode; the update was not applied.');
+            }
+            $maintenanceStarted = true;
 
+            // The rollback snapshot must include every write accepted before
+            // maintenance. Taking it before the download would lose intervening
+            // orders/payments if a migration fails. Operators must still drain
+            // in-flight requests/jobs; maintenance only prevents new normal jobs.
+            $this->log($progressCallback, 'Creating backup...');
+            $backupPath = $this->backupService->createBackup();
+            $this->log($progressCallback, 'Database backed up using '.$this->backupService->lastDatabaseBackupMethod());
+
+            // Steps 6-9 mutate the live installation: first the files, then the
+            // database schema, then caches + the version marker. If ANY of them
+            // fails the install is left in a broken half-state — most importantly
+            // new application files running against the OLD schema when a migration
+            // throws, or the old files against a partially-migrated schema. Restore
+            // the pre-update backup (files AND the database dump) on any failure in
+            // this block, not just a file-replacement failure.
             try {
-                // Steps 6-9 mutate the live installation: first the files, then the
-                // database schema, then caches + the version marker. If ANY of them
-                // fails the install is left in a broken half-state — most importantly
-                // new application files running against the OLD schema when a migration
-                // throws, or the old files against a partially-migrated schema. Restore
-                // the pre-update backup (files AND the database dump) on any failure in
-                // this block, not just a file-replacement failure.
-                try {
-                    // Step 6: Install the package files (app + web root)
-                    $this->log($progressCallback, 'Replacing application files...');
-                    $this->fileService->installRelease($extractPath);
+                $safeToResume = false;
+                // Step 6: Install the package files (app + web root)
+                $this->log($progressCallback, 'Replacing application files...');
+                $this->fileService->installRelease($extractPath);
 
-                    // Step 7: Drop caches compiled against the old code
-                    // (config, routes, package manifest) before anything boots
-                    // the new files.
-                    $this->log($progressCallback, 'Clearing caches...');
-                    $this->artisan('optimize:clear');
+                // Step 7: Drop caches compiled against the old code
+                // (config, routes, package manifest) before anything boots
+                // the new files.
+                $this->log($progressCallback, 'Clearing caches...');
+                $this->artisan('optimize:clear');
 
-                    // Step 8: Run migrations
-                    $this->log($progressCallback, 'Running database migrations...');
-                    $this->artisan('migrate', ['--force' => true]);
+                // Step 8: Run migrations
+                $this->log($progressCallback, 'Running database migrations...');
+                $this->artisan('migrate', ['--force' => true]);
 
-                    // Step 9: Rebuild caches
-                    $this->log($progressCallback, 'Rebuilding caches...');
-                    $this->artisan('optimize');
+                // Step 9: Rebuild caches
+                $this->log($progressCallback, 'Rebuilding caches...');
+                $this->artisan('optimize');
+                // Long-lived workers must boot the new code before their
+                // next job. This signal does not drain already-running jobs.
+                $this->artisan('queue:restart');
 
-                    // Step 10: Record the new version last, once everything
-                    // above succeeded.
-                    $this->fileService->writeVersion($newVersion);
-                } catch (\Throwable $applyError) {
-                    // The install is now half-updated (files and/or schema); restore
-                    // the backup taken in Step 2 before surfacing the failure.
-                    Log::error('Update failed after mutating the installation; restoring from backup', [
-                        'error' => $applyError->getMessage(),
-                        'backup' => $backupPath,
-                    ]);
-                    $this->log($progressCallback, 'Update failed; restoring previous version...');
-                    $restore = $this->restoreFromBackup($backupPath);
+                // Step 10: Record the new version last, once everything
+                // above succeeded.
+                $this->fileService->writeVersion($newVersion);
+                $safeToResume = true;
+            } catch (\Throwable $applyError) {
+                // The install is now half-updated (files and/or schema); restore
+                // the maintenance-mode backup before surfacing the failure.
+                Log::error('Update failed after mutating the installation; restoring from backup', [
+                    'error' => $applyError->getMessage(),
+                    'backup' => $backupPath,
+                ]);
+                $this->log($progressCallback, 'Update failed; restoring previous version...');
+                $restore = $this->restoreFromBackup($backupPath);
 
-                    if (! ($restore['success'] ?? false)) {
-                        throw new Exception(
-                            'Update failed ('.$applyError->getMessage().') and restoring the backup also failed ('
-                            .($restore['message'] ?? 'unknown error').'). Restore '.$backupPath.' by hand.',
-                            0,
-                            $applyError
-                        );
-                    }
-
+                if (! ($restore['success'] ?? false)) {
                     throw new Exception(
-                        'Update failed and the previous version was restored: '
-                        .$applyError->getMessage(),
+                        'Update failed ('.$applyError->getMessage().') and restoring the backup also failed ('
+                        .($restore['message'] ?? 'unknown error').'). The application remains in maintenance mode. Restore '.$backupPath.' by hand.',
                         0,
                         $applyError
                     );
                 }
+                $safeToResume = true;
 
-                // Step 11: Cleanup temp files. Benign — these are temp artifacts only,
-                // so a cleanup failure must not roll back an otherwise-successful update.
-                $this->log($progressCallback, 'Cleaning up temporary files...');
-                $this->fileService->cleanup($zipPath, $extractPath);
-
-            } finally {
-                // Always bring the application back up. A failure here must not
-                // replace the exception that explains why the update failed.
-                $this->log($progressCallback, 'Disabling maintenance mode...');
-                try {
-                    Artisan::call('up');
-                } catch (\Throwable $upError) {
-                    Log::error('Failed to bring the application up after the update', ['error' => $upError->getMessage()]);
-                    $this->log($progressCallback, 'Could not disable maintenance mode: run php artisan up.');
-                }
+                throw new Exception(
+                    'Update failed and the previous version was restored: '
+                    .$applyError->getMessage(),
+                    0,
+                    $applyError
+                );
             }
+
+            // Step 11: Cleanup temp files. Benign — these are temp artifacts only,
+            // so a cleanup failure must not roll back an otherwise-successful update.
+            $this->log($progressCallback, 'Cleaning up temporary files...');
+            $this->fileService->cleanup($zipPath, $extractPath);
 
             $this->log($progressCallback, 'Update completed successfully!');
 
@@ -274,7 +275,7 @@ class UpdateService
                 'new_version' => $newVersion,
             ];
 
-        } catch (Exception $e) {
+        } catch (\Throwable $e) {
             Log::error('Update failed', ['error' => $e->getMessage(), 'trace' => $e->getTraceAsString()]);
 
             // The rollback path already words its message as "Update failed
@@ -285,19 +286,21 @@ class UpdateService
 
             $this->log($progressCallback, $message);
 
-            // Attempt to bring the application back up if it's down
-            try {
-                Artisan::call('up');
-            } catch (Exception $upException) {
-                Log::error('Failed to bring application up after error', ['error' => $upException->getMessage()]);
-            }
-
             return [
                 'success' => false,
                 'message' => $message,
                 'error' => $e->getMessage(),
             ];
         } finally {
+            if ($maintenanceStarted && $safeToResume && ! $wasInMaintenance) {
+                $this->log($progressCallback, 'Disabling maintenance mode...');
+                try {
+                    Artisan::call('up');
+                } catch (\Throwable $upError) {
+                    Log::error('Failed to bring the application up after the update', ['error' => $upError->getMessage()]);
+                    $this->log($progressCallback, 'Could not disable maintenance mode: run php artisan up.');
+                }
+            }
             $lock->release();
         }
     }
@@ -310,13 +313,20 @@ class UpdateService
      */
     public function restoreFromBackup(string $backupPath): array
     {
+        $maintenanceStarted = false;
+        $wasInMaintenance = app()->isDownForMaintenance();
+        $safeToResume = true;
+
         try {
             if (! File::exists($backupPath)) {
                 throw new Exception('Backup file not found');
             }
 
             // Put application in maintenance mode
-            Artisan::call('down');
+            if (Artisan::call('down') !== 0) {
+                throw new Exception('Could not enable maintenance mode; the backup was not restored.');
+            }
+            $maintenanceStarted = true;
 
             $extractPath = $this->fileService->getTempPath().'/restore_'.time();
             File::makeDirectory($extractPath, 0755, true, true);
@@ -339,6 +349,7 @@ class UpdateService
             }
 
             // Restore files
+            $safeToResume = false;
             $this->fileService->replaceFiles($extractPath);
 
             // Restore the database the same way it was captured (the archive's
@@ -352,34 +363,33 @@ class UpdateService
             // classes from the files that were just rolled back).
             $this->artisan('optimize:clear');
             $this->artisan('optimize');
+            $this->artisan('queue:restart');
+            $safeToResume = true;
 
             // Cleanup
             File::deleteDirectory($extractPath);
-
-            // Bring application back up
-            Artisan::call('up');
 
             return [
                 'success' => true,
                 'message' => 'Backup restored successfully',
             ];
 
-        } catch (Exception $e) {
+        } catch (\Throwable $e) {
             Log::error('Restore failed', ['error' => $e->getMessage()]);
-
-            try {
-                Artisan::call('up');
-            } catch (Exception $upException) {
-                Log::error('Failed to bring application up after restore error', [
-                    'error' => $upException->getMessage(),
-                ]);
-            }
 
             return [
                 'success' => false,
-                'message' => 'Restore failed: '.$e->getMessage(),
+                'message' => 'Restore failed: '.$e->getMessage().($safeToResume ? '' : ' The application remains in maintenance mode; finish restoring it before running php artisan up.'),
                 'error' => $e->getMessage(),
             ];
+        } finally {
+            if ($maintenanceStarted && $safeToResume && ! $wasInMaintenance) {
+                try {
+                    Artisan::call('up');
+                } catch (\Throwable $upException) {
+                    Log::error('Failed to bring application up after restore', ['error' => $upException->getMessage()]);
+                }
+            }
         }
     }
 

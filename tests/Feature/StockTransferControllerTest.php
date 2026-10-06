@@ -2,6 +2,8 @@
 
 namespace Tests\Feature;
 
+use App\Exceptions\ApprovalException;
+use App\Exceptions\InvalidStateException;
 use App\Models\Auth\Organization;
 use App\Models\Inventory\Product;
 use App\Models\Inventory\ProductCategory;
@@ -13,6 +15,7 @@ use App\Models\Inventory\StockTransferItem;
 use App\Models\Role;
 use App\Models\System\SystemSetting;
 use App\Models\User;
+use App\Services\StockTransferService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -205,6 +208,37 @@ class StockTransferControllerTest extends TestCase
         ]);
 
         return $transfer;
+    }
+
+    public function test_stale_ship_and_cancel_cannot_reopen_or_erase_a_completed_transfer(): void
+    {
+        $this->actingAs($this->admin);
+        $stale = $this->createTransfer();
+        $service = app(StockTransferService::class);
+        $service->complete($stale->fresh(), $this->admin);
+
+        foreach (['ship', 'cancel'] as $transition) {
+            try {
+                $service->{$transition}($stale, $this->admin);
+                $this->fail('A stale '.$transition.' must not change a completed transfer.');
+            } catch (InvalidStateException) {
+                // The state must be checked again under the completion lock.
+            }
+        }
+
+        $this->assertSame('completed', $stale->fresh()->status);
+        $this->assertSame(90, (int) ProductLocationStock::where('product_id', $this->product->id)->where('location_id', $this->locationA->id)->value('quantity'));
+        $this->assertSame(10, (int) ProductLocationStock::where('product_id', $this->product->id)->where('location_id', $this->locationB->id)->value('quantity'));
+        $this->assertSame(1, StockAdjustment::where('reference_type', StockTransfer::class)->where('reference_id', $stale->id)->count());
+    }
+
+    public function test_stale_ship_rechecks_an_approval_hold(): void
+    {
+        $stale = $this->createTransfer();
+        StockTransfer::whereKey($stale->id)->update(['approval_status' => StockTransfer::APPROVAL_PENDING]);
+
+        $this->expectException(ApprovalException::class);
+        app(StockTransferService::class)->ship($stale, $this->admin);
     }
 
     // ==================== INDEX TESTS ====================

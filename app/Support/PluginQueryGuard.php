@@ -19,7 +19,8 @@ use Illuminate\Database\Eloquent\Builder;
  * is idempotent when the query is already correctly scoped.
  *
  * If the filter returned something other than a builder for the expected model,
- * the original value is discarded and a fresh, safely-scoped query is built.
+ * or a union (whose branches may read different tables), the original value is
+ * discarded and a fresh, safely-scoped query is built.
  */
 final class PluginQueryGuard
 {
@@ -32,11 +33,24 @@ final class PluginQueryGuard
      */
     public static function organizationScoped(mixed $query, string $model, int $organizationId): Builder
     {
-        if (! $query instanceof Builder || ! $query->getModel() instanceof $model) {
+        if (! $query instanceof Builder || ! $query->getModel() instanceof $model || ! empty($query->getQuery()->unions)) {
             $query = $model::query();
         }
 
         $table = $query->getModel()->getTable();
+        $base = $query->getQuery();
+
+        // Appending AND to an ungrouped OR only constrains its last branch.
+        // Preserve the entire filtered expression and its bindings inside one
+        // group before imposing the organization on every matching row.
+        if (! empty($base->wheres)) {
+            $nested = $base->forNestedWhere();
+            $nested->wheres = $base->wheres;
+            $nested->setBindings($base->getRawBindings()['where'], 'where');
+            $base->wheres = [];
+            $base->setBindings([], 'where');
+            $base->addNestedWhereQuery($nested);
+        }
 
         return $query->where($table.'.organization_id', $organizationId);
     }
