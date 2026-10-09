@@ -48,7 +48,7 @@ const control = 'h-9 rounded-md border border-border-subtle bg-surface-canvas px
                 :class="[control, 'min-w-0 flex-1']"
                 @input="rate = null"
             />
-            <div class="relative w-28 shrink-0">
+            <div class="flex w-28 shrink-0 items-center gap-1.5">
                 <input
                     :id="`${id}_rate`"
                     :value="rate ?? ''"
@@ -58,10 +58,10 @@ const control = 'h-9 rounded-md border border-border-subtle bg-surface-canvas px
                     max="100"
                     :placeholder="t('tax.rate')"
                     :aria-label="t('tax.rate')"
-                    :class="[control, 'w-full pr-7']"
+                    :class="[control, 'w-full min-w-0']"
                     @input="onRateInput"
                 />
-                <span class="pointer-events-none absolute inset-y-0 right-2.5 flex items-center text-sm text-text-tertiary">%</span>
+                <span class="text-sm text-text-tertiary" aria-hidden="true">%</span>
             </div>
         </div>
         <p class="mt-1 text-xs text-text-tertiary">{{ t('tax.rateHint') }}</p>
