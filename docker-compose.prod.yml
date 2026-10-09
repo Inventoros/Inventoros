@@ -2,13 +2,22 @@
 #
 #   1. Create a .env next to this file with at least:
 #        APP_KEY=base64:...        (echo "base64:$(openssl rand -base64 32)")
-#        APP_URL=https://inventory.example.com
+#        APP_URL=https://inventory.example.com   (the address people type)
 #        DB_PASSWORD=a-long-random-password
+#      Optional: APP_PORT=8088 publishes the app on another host port
+#      (default 8080). Change APP_PORT only; the container keeps listening
+#      on 8080 inside, and SERVER_NAME stays as it is.
 #   2. docker compose -f docker-compose.prod.yml up -d
 #   3. Open APP_URL/install to create the first organization and admin.
 #
-# The image is pulled from GHCR. To build from this checkout instead:
+# The image is pulled from GHCR (ghcr.io/inventoros/inventoros, published for
+# every release; pin one with INVENTOROS_IMAGE=ghcr.io/inventoros/inventoros:2.0.0).
+# To build from this checkout instead:
 #   docker compose -f docker-compose.prod.yml up -d --build
+#
+# Behind a reverse proxy (nginx, Traefik, Caddy) that terminates TLS, point
+# the proxy at APP_PORT and set APP_URL to the public https:// address.
+# Proxies on private networks are trusted by default (TRUSTED_PROXIES).
 #
 # All three PHP services share one image, one environment, and persistent
 # storage, plugin code and plugin assets. Only `app` runs migrations; worker and
@@ -25,7 +34,7 @@ x-inventoros: &inventoros
     APP_ENV: production
     APP_DEBUG: "false"
     APP_KEY: ${APP_KEY:?Set APP_KEY in .env (echo "base64:$(openssl rand -base64 32)")}
-    APP_URL: ${APP_URL:-http://localhost:8080}
+    APP_URL: ${APP_URL:-http://localhost:${APP_PORT:-8080}}
     LOG_CHANNEL: stderr
     LOG_LEVEL: ${LOG_LEVEL:-warning}
     DB_CONNECTION: pgsql
@@ -35,7 +44,14 @@ x-inventoros: &inventoros
     DB_USERNAME: ${DB_USERNAME:-inventoros}
     DB_PASSWORD: ${DB_PASSWORD:?Set DB_PASSWORD in .env}
     SESSION_DRIVER: database
-    SESSION_SECURE_COOKIE: ${SESSION_SECURE_COOKIE:-true}
+    # "null" (the default) marks the session cookie Secure exactly when the
+    # request arrived over https, directly or via a trusted proxy. A forced
+    # "true" breaks every form (419) when the app is opened over plain http.
+    SESSION_SECURE_COOKIE: ${SESSION_SECURE_COOKIE:-null}
+    # Reverse proxies whose X-Forwarded-* headers are believed (comma-separated
+    # IPs/CIDRs). The default trusts private networks, which covers a proxy in
+    # another container or on the Docker host. See config/trustedproxy.php.
+    TRUSTED_PROXIES: ${TRUSTED_PROXIES:-private_ranges}
     CACHE_STORE: database
     QUEUE_CONNECTION: database
     # The `worker` service processes the queue; the scheduler need not.

@@ -26,7 +26,8 @@ x-php: &php-base
       PHP_VERSION: "8.4"
   image: inventoros:dev
   environment: &php-env
-    APP_URL: http://localhost:${APP_PORT:-8080}
+    APP_URL: ${APP_URL:-http://localhost:${APP_PORT:-8080}}
+    TRUSTED_PROXIES: ${TRUSTED_PROXIES:-private_ranges}
     MAIL_MAILER: smtp
     MAIL_HOST: mailpit
     MAIL_PORT: 1025
@@ -67,6 +68,11 @@ services:
       <<: *php-env
       RUN_MIGRATIONS: "false"
     command: ["php", "artisan", "queue:work", "--tries=3", "--max-time=3600", "--sleep=3"]
+    # No web server runs here. Without this the container inherits the
+    # FrankenPHP base image's health check (Caddy's admin port) and is
+    # reported unhealthy.
+    healthcheck:
+      disable: true
     depends_on:
       app:
         condition: service_healthy
@@ -80,6 +86,8 @@ services:
       <<: *php-env
       RUN_MIGRATIONS: "false"
     command: ["sh", "-c", "while true; do php artisan schedule:run --no-interaction; sleep 60; done"]
+    healthcheck:
+      disable: true
     depends_on:
       app:
         condition: service_healthy
