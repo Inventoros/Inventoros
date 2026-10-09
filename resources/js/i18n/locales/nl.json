@@ -3750,5 +3750,10 @@
       "confirmComplete": "Weet u zeker dat u deze overboeking wilt voltooien? De voorraadniveaus worden aangepast.",
       "confirmCancel": "Weet u zeker dat u deze overboeking wilt annuleren?"
     }
+  },
+  "tax": {
+    "amount": "Belastingbedrag",
+    "rate": "Tarief",
+    "rateHint": "Optioneel: voer een belastingtarief in om het bedrag te berekenen op basis van het subtotaal na kortingen. Alleen het bedrag wordt opgeslagen."
   }
 }

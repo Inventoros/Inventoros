@@ -3750,5 +3750,10 @@
       "confirmComplete": "Êtes-vous sûr de vouloir terminer ce transfert ? Les niveaux de stock seront ajustés.",
       "confirmCancel": "Êtes-vous sûr de vouloir annuler ce transfert ?"
     }
+  },
+  "tax": {
+    "amount": "Montant de la taxe",
+    "rate": "Taux",
+    "rateHint": "Facultatif : saisissez un taux de taxe pour calculer le montant à partir du sous-total après remises. Seul le montant est enregistré."
   }
 }

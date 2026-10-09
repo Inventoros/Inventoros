@@ -3750,5 +3750,10 @@
       "confirmComplete": "Sind Sie sicher, dass Sie diese Umlagerung abschließen möchten? Die Bestände werden angepasst.",
       "confirmCancel": "Sind Sie sicher, dass Sie diese Umlagerung stornieren möchten?"
     }
+  },
+  "tax": {
+    "amount": "Steuerbetrag",
+    "rate": "Satz",
+    "rateHint": "Optional: Geben Sie einen Steuersatz ein, um den Betrag aus der Zwischensumme nach Rabatten zu berechnen. Gespeichert wird nur der Betrag."
   }
 }

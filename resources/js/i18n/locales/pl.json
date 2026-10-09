@@ -3750,5 +3750,10 @@
       "confirmComplete": "Czy na pewno chcesz zakończyć to przesunięcie? Stany magazynowe zostaną skorygowane.",
       "confirmCancel": "Czy na pewno chcesz anulować to przesunięcie?"
     }
+  },
+  "tax": {
+    "amount": "Kwota podatku",
+    "rate": "Stawka",
+    "rateHint": "Opcjonalnie: wpisz stawkę podatku, aby obliczyć kwotę od sumy częściowej po rabatach. Zapisywana jest tylko kwota."
   }
 }
