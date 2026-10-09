@@ -6,6 +6,18 @@ Full release notes, with the pull request behind each change, are on [GitHub Rel
 
 ## [Unreleased]
 
+### Added
+
+- `TRUSTED_PROXIES` names the reverse proxies (nginx, Traefik, Caddy, a load balancer) whose `X-Forwarded-*` headers are believed, so the app builds https URLs and Secure cookies behind a TLS-terminating proxy. No proxy is trusted unless configured; the Docker image and compose files default to `private_ranges`.
+- Order and purchase order forms have an optional tax rate (%) beside the tax amount, which fills the amount in from the subtotal after discounts. Only the amount is saved, as before.
+
+### Fixed
+
+- Docker: behind a reverse proxy the page loaded its scripts over http and the browser blocked them, leaving a blank page (#261).
+- Docker: the development stack's worker and scheduler were always reported unhealthy, and the production image's health check failed whenever `SERVER_NAME` was changed (#261).
+- Docker: the production compose file forced Secure session cookies, so every form answered 419 when the app was opened over plain http. The cookie now follows the request scheme (#261).
+- Docker: `APP_URL` defaults to the published `APP_PORT`.
+
 ## [2.0.0] - 2026-10-06
 
 Upgrading from 1.0.x: read [UPGRADE.md](UPGRADE.md) first. Every 1.0.x install must be upgraded by hand once: the in-app updater in 1.0.8 and earlier refuses the redirect GitHub uses for release downloads, so it cannot install any release. From 2.0.0 on, the updater works.

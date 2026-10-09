@@ -3,6 +3,7 @@ import AppLayout from '@/Layouts/AppLayout.vue';
 import PageHeader from '@/Components/ui/PageHeader.vue';
 import Card from '@/Components/ui/Card.vue';
 import Button from '@/Components/ui/Button.vue';
+import TaxInput from '@/Components/TaxInput.vue';
 import CustomerPicker from '@/Components/CustomerPicker.vue';
 import DiscountInput from '@/Components/DiscountInput.vue';
 import { useOrderTotals, lineNetCents } from '@/composables/useOrderTotals';
@@ -378,11 +379,7 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                                 <span class="text-text-secondary">{{ t('discounts.orderDiscount') }}</span>
                                 <span class="font-medium tabular-nums text-text-primary">-{{ formatMoney(totals.orderDiscount, order.currency) }}</span>
                             </div>
-                            <div>
-                                <label for="tax" class="mb-1 block text-sm text-text-secondary">{{ t('common.tax') }}</label>
-                                <input id="tax" v-model.number="form.tax" type="number" step="0.01" min="0" :class="fieldInput" />
-                                <p v-if="form.errors.tax" :class="fieldError">{{ form.errors.tax }}</p>
-                            </div>
+                            <TaxInput v-model="form.tax" :base="totals.taxable" :error="form.errors.tax" />
                             <div>
                                 <label for="shipping" class="mb-1 block text-sm text-text-secondary">{{ t('common.shipping') }}</label>
                                 <input id="shipping" v-model.number="form.shipping" type="number" step="0.01" min="0" :class="fieldInput" />

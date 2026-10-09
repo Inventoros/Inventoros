@@ -3750,5 +3750,10 @@
       "confirmComplete": "¿Estás seguro de que deseas completar esta transferencia? Se ajustarán los niveles de stock.",
       "confirmCancel": "¿Estás seguro de que deseas cancelar esta transferencia?"
     }
+  },
+  "tax": {
+    "amount": "Importe del impuesto",
+    "rate": "Tasa",
+    "rateHint": "Opcional: introduzca un tipo impositivo para calcular el importe a partir del subtotal después de los descuentos. Solo se guarda el importe."
   }
 }

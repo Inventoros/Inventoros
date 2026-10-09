@@ -3750,5 +3750,10 @@
       "confirmComplete": "Bu transferi tamamlamak istediğinize emin misiniz? Stok seviyeleri düzeltilecektir.",
       "confirmCancel": "Bu transferi iptal etmek istediğinize emin misiniz?"
     }
+  },
+  "tax": {
+    "amount": "Vergi tutarı",
+    "rate": "Oran",
+    "rateHint": "İsteğe bağlı: tutarı indirimlerden sonraki ara toplamdan hesaplamak için bir vergi oranı girin. Yalnızca tutar kaydedilir."
   }
 }

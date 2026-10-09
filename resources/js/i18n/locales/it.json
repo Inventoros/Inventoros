@@ -3750,5 +3750,10 @@
       "confirmComplete": "Sei sicuro di voler completare questo trasferimento? I livelli di scorte verranno modificati.",
       "confirmCancel": "Sei sicuro di voler annullare questo trasferimento?"
     }
+  },
+  "tax": {
+    "amount": "Importo dell'imposta",
+    "rate": "Aliquota",
+    "rateHint": "Facoltativo: inserisci un'aliquota per calcolare l'importo dal subtotale dopo gli sconti. Viene salvato solo l'importo."
   }
 }

@@ -88,6 +88,7 @@ ENV APP_ENV=production \
     LOG_CHANNEL=stderr \
     LOG_LEVEL=warning \
     SERVER_NAME=:8080 \
+    TRUSTED_PROXIES=private_ranges \
     XDG_CONFIG_HOME=/config \
     XDG_DATA_HOME=/data \
     RUN_MIGRATIONS=false
@@ -113,6 +114,7 @@ RUN set -eux; \
 
 COPY docker/Caddyfile.prod /etc/caddy/Caddyfile
 COPY --chmod=755 docker/entrypoint.prod.sh /usr/local/bin/inventoros-entrypoint
+COPY --chmod=755 docker/healthcheck.sh /usr/local/bin/inventoros-healthcheck
 
 COPY --chown=app:app . /app
 COPY --from=vendor --chown=app:app /app/vendor /app/vendor
@@ -134,8 +136,9 @@ VOLUME ["/app/storage"]
 
 EXPOSE 8080
 
+# Probes /up wherever SERVER_NAME makes Caddy listen (docker/healthcheck.sh).
 HEALTHCHECK --interval=30s --timeout=5s --start-period=60s --retries=5 \
-    CMD curl -fsS http://127.0.0.1:8080/up || exit 1
+    CMD ["inventoros-healthcheck"]
 
 ENTRYPOINT ["inventoros-entrypoint"]
 CMD ["frankenphp", "run", "--config", "/etc/caddy/Caddyfile"]

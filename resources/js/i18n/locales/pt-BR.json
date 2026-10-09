@@ -3750,5 +3750,10 @@
       "confirmComplete": "Tem certeza de que deseja concluir esta transferência? Os níveis de estoque serão ajustados.",
       "confirmCancel": "Tem certeza de que deseja cancelar esta transferência?"
     }
+  },
+  "tax": {
+    "amount": "Valor do imposto",
+    "rate": "Alíquota",
+    "rateHint": "Opcional: informe uma alíquota para calcular o valor a partir do subtotal após os descontos. Somente o valor é salvo."
   }
 }

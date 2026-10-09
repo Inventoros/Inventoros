@@ -3750,5 +3750,10 @@
       "confirmComplete": "Are you sure you want to complete this transfer? Stock levels will be adjusted.",
       "confirmCancel": "Are you sure you want to cancel this transfer?"
     }
+  },
+  "tax": {
+    "amount": "Tax amount",
+    "rate": "Rate",
+    "rateHint": "Optional: enter a tax rate to calculate the amount from the subtotal after discounts. Only the amount is saved."
   }
 }

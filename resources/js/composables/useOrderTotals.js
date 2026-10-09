@@ -24,6 +24,20 @@ export function discountCents(baseCents, type, value) {
     return Math.min(toCents(amount), baseCents);
 }
 
+/**
+ * The tax amount for a rate (in percent) of a taxable base, both in currency
+ * units, rounded half up to the cent. Orders store tax as an amount; this
+ * only fills that amount in. An empty or invalid rate gives 0, and a rate
+ * over 100% is capped at 100%.
+ */
+export function taxFromRate(base, rate) {
+    const baseCents = toCents(base);
+    const percent = parseFloat(rate);
+    if (!(percent > 0) || baseCents <= 0) return 0;
+
+    return fromCents(Math.round((baseCents * Math.min(percent, 100)) / 100));
+}
+
 export function lineGrossCents(item) {
     return toCents(item.unit_price) * (parseInt(item.quantity, 10) || 0);
 }
@@ -49,6 +63,8 @@ export function useOrderTotals(form) {
             subtotal: fromCents(subtotal),
             lineDiscounts: fromCents(lineDiscounts),
             orderDiscount: fromCents(orderDiscount),
+            // What a tax rate applies to: merchandise after every discount.
+            taxable: fromCents(net - orderDiscount),
             tax: fromCents(tax),
             shipping: fromCents(shipping),
             total: fromCents(net - orderDiscount + tax + shipping),
