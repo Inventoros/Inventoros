@@ -28,6 +28,7 @@ use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Foundation\Http\Middleware\ValidateCsrfToken;
 use Illuminate\Http\Middleware\AddLinkHeadersForPreloadedAssets;
+use Illuminate\Http\Request;
 use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Session\Middleware\StartSession;
 use Illuminate\Support\Facades\Route;
@@ -51,6 +52,16 @@ $app = Application::configure(basePath: dirname(__DIR__))
         },
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        // Behind a TLS-terminating reverse proxy, believe the proxy's
+        // X-Forwarded-* headers so URLs, redirects and Secure cookies use the
+        // public scheme and host. Which proxies are trusted comes from
+        // config/trustedproxy.php (TRUSTED_PROXIES); none by default.
+        // X-Forwarded-Prefix is deliberately not trusted.
+        $middleware->trustProxies(headers: Request::HEADER_X_FORWARDED_FOR
+            | Request::HEADER_X_FORWARDED_HOST
+            | Request::HEADER_X_FORWARDED_PORT
+            | Request::HEADER_X_FORWARDED_PROTO);
+
         // 404 for non-numeric ids before route-model binding hits the
         // database (PostgreSQL errors on `id = 'abc'` against a bigint).
         $middleware->web(prepend: [RejectNonNumericModelKeys::class]);
