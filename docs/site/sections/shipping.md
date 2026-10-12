@@ -1,6 +1,6 @@
 Inventoros ships sales orders in one or more shipments. Each shipment records which order lines (and how many units of each) went in the box, the carrier and tracking number, the label, the cost, and where it is now. You can enter tracking by hand for labels bought elsewhere, or connect EasyPost to compare rates and buy labels for USPS, UPS, FedEx, Canada Post, DHL and more from the order page.
 
-### How shipments move an order
+## How shipments move an order
 
 Stock leaves inventory when the order is created. Shipping never changes stock; it records what physically went out, and moves the order through its normal statuses (so the usual order notifications and `order.status_changed` webhooks fire):
 
@@ -8,15 +8,15 @@ Stock leaves inventory when the order is created. Shipping never changes stock; 
 |---|---|
 | Some units have shipped, others have not | `pending` becomes `processing` |
 | Every unit is in a shipment that has left | `shipped` |
-| Every shipment that left has been delivered | `delivered` |
+| Every unit has shipped and every shipment that left has been delivered | `delivered` |
 
 There is no separate "partially shipped" order status. `processing` already means "in fulfilment", and the order status is matched by filters, validation and integrations across the web app, REST, GraphQL and MCP, so a new value would break them. The order page shows exactly what is left to ship per line.
 
 Shipment statuses: `pending` (lines allocated), `label_created` (a label is bought and can still be voided), `shipped`, `in_transit`, `delivered`, `exception` (returned, failed or lost) and `cancelled` (voided or abandoned before leaving; its units can be shipped again).
 
-Once any of an order's shipments has left the warehouse, the order can no longer be cancelled or deleted, and its line items cannot be changed while it has open shipments. This stops Inventoros from restocking units that are already with the carrier.
+Once any of an order's shipments has left the warehouse, the order can no longer be cancelled or deleted. While a shipment has a bought label that has not shipped, cancelling or deleting the order is refused until you void that label; other shipments that have not left are cancelled with the order. An order's line items cannot be changed while it has any shipment that is not cancelled. This stops Inventoros from restocking units that are already with the carrier.
 
-### Setting up EasyPost
+## Setting up EasyPost
 
 1. Create an account at [easypost.com](https://www.easypost.com) and connect the carrier accounts you want to use.
 2. In Inventoros, open **Settings > Shipping** (needs `manage_organization`).
@@ -25,7 +25,7 @@ Once any of an order's shipments has left the warehouse, the order can no longer
 5. Set the **default ship-from warehouse**, and optionally a **ship-from address** (otherwise the warehouse's address is used) and a **default parcel** (weight in ounces, dimensions in inches, as EasyPost expects).
 6. Optionally tick **Email customers their tracking details by default**.
 
-#### Tracking webhooks
+### Tracking webhooks
 
 Tracking updates arrive in two ways:
 
@@ -34,7 +34,7 @@ Tracking updates arrive in two ways:
 
 When the carrier reports delivery, the shipment and (once every shipment is delivered) the order are marked delivered.
 
-### Shipping an order
+## Shipping an order
 
 On the order page, the **Shipments** card lists every shipment with its status, tracking link and label. Click **Ship** (needs `create_shipments`):
 
@@ -45,15 +45,15 @@ On the order page, the **Shipments** card lists every shipment with its status, 
    - **Enter tracking manually**: type the carrier, service, tracking number and cost. The tracking link is built automatically for USPS, UPS, FedEx, DHL, Canada Post and Purolator when you leave it blank. Tick **Mark as shipped now** if it has already gone.
 4. Tick **Email tracking details** to send the customer a tracking email when the shipment leaves.
 
-From the Shipments card you can **Mark shipped** a pending or labelled shipment, **Void label** on a bought label that has not shipped (EasyPost requests a refund from the carrier; if the refund is refused nothing changes), or **Cancel shipment** for a manual one.
+From the Shipments card you can **Mark shipped** a pending or labelled shipment, **Void label** on a bought label that has not shipped (EasyPost requests a refund from the carrier; if the refund is refused nothing changes), or **Cancel shipment** for any other shipment that has not shipped yet (a pending one, or a manual one).
 
 A bought label is saved (tracking number, label link and EasyPost's full response) before the PDF is downloaded, so a paid label is never lost. If the download fails, the label is fetched again the next time you open it. Label files are stored on the private disk and are only served to users with `view_shipments`.
 
-### Customer emails
+## Customer emails
 
 The shipment email goes to the order's customer email once, when the shipment first leaves (marked shipped, or the carrier reports it moving). It lists the carrier, tracking number, the items in the box and a tracking link, has a plain-text part, is queued, and is sent with your organization's email settings and name.
 
-### Permissions
+## Permissions
 
 | Permission | Allows |
 |---|---|
@@ -63,7 +63,7 @@ The shipment email goes to the order's customer email once, when the shipment fi
 
 Administrators have both. Upgrading grants both to the Manager role and the Order Processor and Warehouse Staff templates, and `view_shipments` to the Read-Only Auditor template.
 
-### REST API
+## REST API
 
 All paths are relative to `/api/v1` and need a Sanctum token.
 
@@ -88,20 +88,20 @@ Omit `items` to ship every unit not yet in a shipment. Refusals (over-shipping, 
 
 To buy a label over the API, create the shipment with `"carrier": "easypost"` (and `weight_oz`), call `rates`, then `buy-label` with one of the returned rate ids. The label file is downloaded from the order page.
 
-### GraphQL
+## GraphQL
 
-`Order.shipments` lists an order's shipments (carrier, service, tracking number and link, status, cost, `shipped_at`, `delivered_at`, and `items` with the packed quantities). It is `null` unless the user holds `view_shipments` and the token allows it. The `shipments(order_id, status, carrier, limit)` query lists shipments newest first and needs `view_shipments` on both the role and the token.
+`Order.shipments` lists an order's shipments (carrier, service, tracking number and link, status, cost, `shipped_at`, `delivered_at`, and `items` with the packed quantities). It is `null` unless the user holds `view_shipments` and the token allows it. The `shipments(order_id, status, carrier, limit)` query lists shipments newest first (`limit` defaults to 50, at most 100) and needs `view_shipments` on both the role and the token.
 
 ```graphql
 { order(id: 42) { status shipments { carrier_name tracking_number tracking_url status items { product_name quantity } } } }
 ```
 
-### MCP tools
+## MCP tools
 
 - `list_shipments` (`view_shipments`). Paginated shipments, optionally for one order or status.
 - `create_shipment` (`create_shipments`). Record a shipment with manual tracking, optionally marking it shipped. Destructive; confirm first.
 
-### Webhook events
+## Webhook events
 
 Subscribe to these in **Settings > Webhooks**:
 

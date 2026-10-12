@@ -32,15 +32,16 @@ class SiteDocsMarkdownTest extends TestCase
             $markdown = (string) file_get_contents($sectionPath);
 
             $this->assertGreaterThan(20, substr_count($markdown, "\n"), "{$slug}.md must keep real markdown line breaks.");
-            $this->assertMatchesRegularExpression('/^###\s+\S/m', $markdown, "{$slug}.md should include section headings.");
+            $this->assertMatchesRegularExpression('/^#{2,3}\s+\S/m', $markdown, "{$slug}.md should include section headings.");
+            $this->assertDoesNotMatchRegularExpression('/\A\s*#\s/', $markdown, "{$slug}.md must not start with an h1; the page renders the label as the h1.");
 
             $html = Str::markdown($markdown, [
                 'html_input' => 'strip',
                 'allow_unsafe_links' => false,
             ]);
 
-            $this->assertStringContainsString('<h3>', $html, "{$slug}.md headings should render as HTML headings.");
-            $this->assertStringNotContainsString('### ', $html, "{$slug}.md contains markdown headings that did not render.");
+            $this->assertMatchesRegularExpression('/<h[23]>/', $html, "{$slug}.md headings should render as HTML headings.");
+            $this->assertDoesNotMatchRegularExpression('/(^|>)#{2,3} /m', $html, "{$slug}.md contains markdown headings that did not render.");
             $this->assertStringNotContainsString('```', $html, "{$slug}.md contains fenced code blocks that did not render.");
             $this->assertStringNotContainsString('<script', strtolower($html), "{$slug}.md must not render unsafe HTML.");
         }

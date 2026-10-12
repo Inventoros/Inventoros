@@ -1,6 +1,6 @@
 The customer portal lets the people at your business customers sign in to see their own orders, download invoices and request returns, without an Inventoros staff account. Each organization has its own portal, and it is off until an administrator turns it on.
 
-### Turning the portal on
+## Turning the portal on
 
 Open Settings, then Organization, then the Customer Portal tab. An administrator can turn the portal on or off there. The tab also shows the portal's sign-in address, which is based on your organization's slug:
 
@@ -10,7 +10,7 @@ https://your-inventoros.example.com/portal/your-organization-slug/login
 
 While the portal is off, every page under `/portal/your-organization-slug` answers Not Found, the same as an address that does not exist.
 
-### Inviting contacts
+## Inviting contacts
 
 A customer company can have several contacts. To invite one, open the customer's page and use Invite contact in the Portal access card. You need the Edit Customers permission.
 
@@ -20,9 +20,9 @@ A customer company can have several contacts. To invite one, open the customer's
 - Revoke access signs the contact out on their next request, clears their password and blocks sign-in. The contact stays listed as Revoked so the history is kept. Resending an invitation to a revoked contact restores access once they set a new password.
 - An email address can belong to only one contact within an organization. The same person can be a contact at another organization, and the two accounts are independent.
 
-Contacts who already set a password use Forgot your password on the portal sign-in page. Reset links are only sent to active contacts, and the page gives the same answer for any email, so it cannot be used to find out who has an account.
+Contacts who already set a password use Forgot your password on the portal sign-in page. Only active contacts of an active customer can sign in. Reset links are only sent to active contacts, and the page gives the same answer for any email, so it cannot be used to find out who has an account.
 
-### What contacts can see and do
+## What contacts can see and do
 
 Once signed in, a contact sees only records that belong to their own customer in your organization:
 
@@ -34,17 +34,17 @@ Once signed in, a contact sees only records that belong to their own customer in
 - Return requests for delivered orders. The contact picks the lines, quantities and each item's condition, and gives a reason. Quantities are capped at what was ordered minus what is already on a return.
 - The status of their returns, with the reason and any notes added when staff process it.
 
-### Handling portal returns
+## Handling portal returns
 
-A portal return request is created as a pending return, exactly like one entered by staff, and appears under Returns. Everyone in the organization with the Manage Returns permission (and administrators) gets a notification linking to it. Nothing changes in stock until staff approve and receive the return, and staff decide whether items are restocked. Items the customer marks as damaged are set not to restock by default. Until the return is received, staff can change each line's restock flag and condition with Edit lines on the return page (or `PATCH /api/v1/returns/{id}/items`); the change is recorded in the activity log.
+A portal return request is created as a pending return, exactly like one entered by staff, and appears under Returns. Everyone in the organization with the Manage Returns permission (and administrators) gets a notification linking to it, unless they have turned order notifications off. Nothing changes in stock until staff approve and receive the return, and staff decide whether items are restocked. Items the customer marks as damaged are set not to restock by default. Until the return is received, staff can change each line's restock flag and condition with Edit lines on the return page (or `PATCH /api/v1/returns/{id}/items`); the change is recorded in the activity log.
 
-### Security model
+## Security model
 
 - Contacts sign in on a separate `customer` authentication guard with their own password broker and reset-token table. A contact session never satisfies a staff page, and a staff session never satisfies a portal page, even in the same browser.
 - Every portal query is scoped explicitly to the contact's organization and customer. Another customer's order, invoice or return answers Not Found.
 - Sign-in is throttled per organization, email and IP address.
 - Portal sign-ins, failed sign-ins for known contacts, invitations and revocations are written to the activity log under the security category. Portal return requests are written to the audit log.
 
-### Not included yet
+## Not included yet
 
 Contacts cannot place orders or reorder from the portal. Creating an order reserves stock straight away, so a portal reorder needs its own staff approval step first.

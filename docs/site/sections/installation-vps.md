@@ -1,6 +1,6 @@
-This guide installs Inventoros from source on a VPS with full root access. Examples cover Ubuntu 22.04+, CentOS / RHEL, and Debian, then the scheduler and queue worker, SSL and firewall setup. Inventoros needs PHP 8.4.1 or newer (8.4 and 8.5) and Node.js 20.19+ or 22.12+ to build the frontend.
+This guide installs Inventoros from source on a VPS with full root access. Examples cover Ubuntu 22.04+, CentOS / RHEL, and Debian, then the scheduler and queue worker, SSL and firewall setup. Inventoros needs PHP 8.4.1 or newer (8.4 and 8.5) and Node.js 22.12 or newer to build the frontend.
 
-### Ubuntu 22.04+
+## Ubuntu 22.04+
 
 1. Update system packages:
 
@@ -65,10 +65,15 @@ sudo nano .env
 APP_ENV=production
 APP_DEBUG=false
 APP_URL=http://your-domain.com
+DB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_PORT=3306
 DB_DATABASE=inventoros
 DB_USERNAME=inventoros
 DB_PASSWORD=secure_password
 ```
+
+`.env.example` ships with `DB_CONNECTION=sqlite` and the other `DB_` lines commented out, so set all six (remove the leading `#`). If you finish setup with the web installer (step 10), its database step writes these values for you.
 
 8. Set permissions:
 
@@ -131,14 +136,14 @@ http://your-domain.com/install
 
 The database step writes the connection you enter to `.env` (`DB_CONNECTION`, host, database and credentials) and creates the tables in that database. Finishing the installer (creating the admin account) sets `APP_ENV=production` and `APP_DEBUG=false`, so a site set up with the example `.env` does not stay in debug mode.
 
-### CentOS / RHEL
+## CentOS / RHEL
 
 1. Update the system and enable EPEL and Remi:
 
 ```bash
 sudo dnf update -y
 sudo dnf install -y epel-release
-sudo dnf install -y https://rpms.remirepo.net/enterprise/remi-release-8.rpm
+sudo dnf install -y https://rpms.remirepo.net/enterprise/remi-release-$(rpm -E %rhel).rpm
 ```
 
 2. Install PHP 8.4:
@@ -147,8 +152,10 @@ sudo dnf install -y https://rpms.remirepo.net/enterprise/remi-release-8.rpm
 sudo dnf module reset php
 sudo dnf module enable php:remi-8.4
 sudo dnf install -y php php-cli php-fpm php-mysqlnd php-mbstring \
-    php-xml php-bcmath php-curl php-zip php-gd php-intl
+    php-xml php-bcmath php-curl php-zip php-gd php-intl php-sodium
 ```
+
+Remi packages Sodium separately as `php-sodium`; the in-app updater needs it to verify signed releases.
 
 3. Install MySQL and Nginx:
 
@@ -208,11 +215,11 @@ sudo chcon -R -t httpd_sys_rw_content_t /var/www/inventoros/storage
 sudo chcon -R -t httpd_sys_rw_content_t /var/www/inventoros/bootstrap/cache
 ```
 
-9. Configure Nginx. Use the same server block as Ubuntu in `/etc/nginx/conf.d/inventoros.conf`, but change the PHP-FPM socket to `fastcgi_pass unix:/run/php-fpm/www.sock;`. Then:
+9. Configure Nginx. Use the same server block as Ubuntu in `/etc/nginx/conf.d/inventoros.conf`, but change the PHP-FPM socket to `fastcgi_pass unix:/run/php-fpm/www.sock;`. PHP-FPM's default pool runs as `apache`, so set `user = nginx` and `group = nginx` in `/etc/php-fpm.d/www.conf` to match the file ownership from step 8. Then:
 
 ```bash
 sudo nginx -t
-sudo systemctl restart nginx
+sudo systemctl restart php-fpm nginx
 ```
 
 10. Configure the firewall:
@@ -223,7 +230,7 @@ sudo firewall-cmd --permanent --add-service=https
 sudo firewall-cmd --reload
 ```
 
-### Debian
+## Debian
 
 1. Update system packages:
 
@@ -286,7 +293,7 @@ sudo cp .env.example .env
 sudo php artisan key:generate
 ```
 
-### Scheduler and queue worker
+## Scheduler and queue worker
 
 Every install needs the Laravel scheduler and a queue worker. The scheduler runs low-stock checks, scheduled cycle counts, scheduled report emails, shipment tracking and log pruning. The worker sends webhook deliveries and queued emails (purchase orders, invoices, approvals, shipment notices). Without them these jobs pile up and never run.
 
@@ -300,6 +307,8 @@ sudo systemctl daemon-reload
 sudo systemctl enable --now inventoros-worker
 sudo systemctl enable --now inventoros-scheduler.timer
 ```
+
+With the worker running, set `QUEUE_RUN_VIA_SCHEDULER=false` in `.env`. Otherwise the scheduler also starts a short-lived queue worker every minute (the fallback for shared hosts that have no worker).
 
 If you prefer cron to the scheduler timer, add this to the web user's crontab (`sudo crontab -u www-data -e`) instead:
 
@@ -317,7 +326,7 @@ running. Database, Redis and Beanstalkd queues default to 660 seconds; keep any
 visibility timeout above 600 seconds in AWS. After changing these settings,
 rebuild the configuration cache and restart workers.
 
-### SSL certificate
+## SSL certificate
 
 Ubuntu / Debian:
 
@@ -335,7 +344,9 @@ sudo certbot --nginx -d your-domain.com
 sudo systemctl restart nginx
 ```
 
-### Firewall
+Once the site answers over HTTPS, set `APP_URL=https://your-domain.com` and `SESSION_SECURE_COOKIE=true` in `.env` (the installer leaves it `false` when it ran over plain HTTP), then run `php artisan config:cache` if you cache the configuration.
+
+## Firewall
 
 Ubuntu / Debian (UFW):
 
