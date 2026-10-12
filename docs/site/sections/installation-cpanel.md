@@ -1,6 +1,6 @@
 Inventoros runs on cPanel shared hosting using a release package built specifically for the split directory layout cPanel expects.
 
-### What the cPanel release includes
+## What the cPanel release includes
 
 The cPanel release packages are specially built and include:
 
@@ -9,27 +9,29 @@ The cPanel release packages are specially built and include:
 - A cPanel-compatible directory structure
 - A modified `index.php` for the split directory setup
 
-### Prerequisites
+## Prerequisites
 
 - Access to your cPanel control panel
-- PHP 8.4.1 or newer enabled for your domain (8.4 and 8.5)
-- A MySQL database available
+- PHP 8.4.1 or newer enabled for your domain (8.4 and 8.5), with the extensions listed in [Getting Started](getting-started#system-requirements)
+- A MySQL database available (PostgreSQL also works if your host offers it)
 - SSH access (recommended) or the cPanel Terminal
 - At least 512MB of disk space
 
+## Installation steps
+
 ### Step 1: Download the cPanel release
 
-Download the latest cPanel-specific release package from GitHub. Look for the file named `inventoros-cpanel-X.X.X.zip`.
+Download the latest cPanel-specific release package from GitHub. Look for the file named `inventoros-cpanel-X.X.X.zip` (the `.zip.sig` file next to it is the release signature the in-app updater checks; you do not need it for a manual install).
 
 Latest release: https://github.com/Inventoros/Inventoros/releases/latest
 
-The package contains:
+The ZIP contains:
 
 ```text
-inventoros-cpanel-X.X.X/
-  inventoros/      # Laravel application files
-  public_html/     # Web-accessible files
-  INSTALL.md       # Quick reference
+inventoros/      # Laravel application files
+public_html/     # Web-accessible files
+INSTALL.md       # Quick reference
+release.json     # Release manifest read by the in-app updater
 ```
 
 ### Step 2: Create the database
@@ -113,9 +115,13 @@ DB_USERNAME=cpaneluser_invuser
 DB_PASSWORD=your_password
 
 SESSION_SECURE_COOKIE=true
+
+APP_PUBLIC_PATH=../public_html
 ```
 
-Prefer the web installer? Leave the database lines of `.env.example` as they are, run `php artisan key:generate`, and open `https://yourdomain.com/install`. The database step writes the MySQL settings you enter to `.env` and creates the tables in that database; finishing the installer (creating the admin account) sets `APP_ENV=production` and `APP_DEBUG=false`. Skip the `migrate` command in Step 6 in that case.
+`APP_PUBLIC_PATH` tells command-line tasks (plugin activation, `php artisan app:update`) where the web root is, relative to `~/inventoros`, so they write to the folder the site actually serves. The web installer sets it for you.
+
+Prefer the web installer? Leave the database lines of `.env.example` as they are, run `php artisan key:generate`, and open `https://yourdomain.com/install`. The database step writes the database settings you enter (and `APP_PUBLIC_PATH`) to `.env` and creates the tables in that database; finishing the installer (creating the admin account) sets `APP_ENV=production` and `APP_DEBUG=false`. Skip the `migrate` command in Step 6 in that case.
 
 Serve the site over HTTPS (Step 8) and keep `SESSION_SECURE_COOKIE=true`. It is `false` in `.env.example` so the web installer also works over plain HTTP, and the installer sets it to `true` when the site is served over HTTPS (or `APP_URL` starts with `https://`). Over plain HTTP a secure session cookie is never sent back, so every form fails with "419 Page Expired".
 
@@ -164,7 +170,7 @@ Secure your installation:
 2. Install a free SSL certificate for your domain.
 3. Ensure `APP_URL` in `.env` uses `https://`.
 
-### Installing on a subdomain or addon domain
+## Installing on a subdomain or addon domain
 
 Installing on a subdomain or addon domain requires adjusting the paths.
 
@@ -173,20 +179,22 @@ For subdomains, if your subdomain points to `~/inventory_public`:
 1. Upload the `inventoros` folder to `~/inventoros/`.
 2. Upload the `public_html` contents to `~/inventory_public/`.
 3. Update the `index.php` path if needed: `$laravelPath = __DIR__ . '/../inventoros';`
+4. Set `APP_PUBLIC_PATH=../inventory_public` in `~/inventoros/.env` (the web installer does this for you).
 
 For addon domains, if your addon domain points to `~/yourdomain.com`:
 
 1. Upload the `inventoros` folder to `~/inventoros_yourdomain/`.
 2. Upload the `public_html` contents to `~/yourdomain.com/`.
 3. Update `index.php`: `$laravelPath = __DIR__ . '/../inventoros_yourdomain';`
+4. Set `APP_PUBLIC_PATH=../yourdomain.com` in `~/inventoros_yourdomain/.env` (the web installer does this for you).
 
-### Troubleshooting
+## Troubleshooting
 
 - 500 Internal Server Error. Check storage and bootstrap/cache permissions, verify `.env` exists, and check `~/inventoros/storage/logs/laravel.log` for errors.
 - Assets not loading (CSS / JS broken). Ensure the `build/` folder was uploaded to `public_html` and `.htaccess` is present. Check that `APP_URL` matches your domain.
 - Database connection failed. Verify the credentials in `.env`. Test the same credentials in phpMyAdmin. Ensure the database user has privileges.
 - "Table already exists" when the web installer creates the tables. An earlier attempt stopped part-way (for example at the host's PHP time limit). The installer lifts the limit where the host allows it; on the database step it now offers **Reset database and install**, which deletes every table in that database and starts again. Only use it on a database that holds nothing but Inventoros. From SSH, `php artisan migrate --force` resumes after the last completed migration.
-- PHP version issues. In cPanel, open MultiPHP Manager or Select PHP Version and ensure PHP 8.4 (8.4.1 or newer) is selected for your domain.
+- PHP version issues, or the page says "Inventoros requires PHP 8.4.1 or newer". In cPanel, open MultiPHP Manager or Select PHP Version and ensure PHP 8.4 (8.4.1 or newer) is selected for your domain.
 - Storage link issues. If uploaded files are not accessible, verify the symlink with `ls -la ~/public_html/storage` and recreate it if needed.
 
 Report an issue: https://github.com/Inventoros/Inventoros/issues
