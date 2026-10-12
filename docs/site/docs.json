@@ -1,14 +1,14 @@
 {
     "sections": [
-        { "slug": "getting-started", "label": "Getting Started", "anchor": "getting-started" },
-        { "slug": "installation-cpanel", "label": "Install on cPanel", "anchor": "installation-cpanel" },
-        { "slug": "installation-vps", "label": "Install on a VPS", "anchor": "installation-vps" },
-        { "slug": "installation-docker", "label": "Install with Docker", "anchor": "installation-docker" },
-        { "slug": "customer-portal", "label": "Customer Portal", "anchor": "customer-portal" },
-        { "slug": "rest-api", "label": "REST & GraphQL API", "anchor": "rest-api" },
-        { "slug": "mcp-server", "label": "MCP Server", "anchor": "mcp-server" },
-        { "slug": "shipping", "label": "Shipping & Carriers", "anchor": "shipping" },
-        { "slug": "plugins", "label": "Plugin Development", "anchor": "plugins" },
-        { "slug": "updates", "label": "Updates & Backups", "anchor": "updates" }
+        { "slug": "getting-started", "label": "Getting Started", "anchor": "getting-started", "group": "Get started", "description": "System requirements, the web installer and how to choose an installation method." },
+        { "slug": "installation-cpanel", "label": "Install on cPanel", "anchor": "installation-cpanel", "group": "Installation", "description": "Install the pre-built release package on cPanel shared hosting, step by step." },
+        { "slug": "installation-vps", "label": "Install on a VPS", "anchor": "installation-vps", "group": "Installation", "description": "Install from source on Ubuntu, Debian or CentOS / RHEL with Nginx and PHP-FPM." },
+        { "slug": "installation-docker", "label": "Install with Docker", "anchor": "installation-docker", "group": "Installation", "description": "Run the official production image with Docker Compose, a queue worker, a scheduler and PostgreSQL." },
+        { "slug": "customer-portal", "label": "Customer Portal", "anchor": "customer-portal", "group": "Use", "description": "Give customer contacts a sign-in to see their orders, download invoices and request returns." },
+        { "slug": "rest-api", "label": "REST & GraphQL API", "anchor": "rest-api", "group": "Integrate", "description": "Authentication, permissions, rate limits, pagination, endpoints, webhooks and GraphQL." },
+        { "slug": "mcp-server", "label": "MCP Server", "anchor": "mcp-server", "group": "Integrate", "description": "Connect AI clients to Inventoros over the Model Context Protocol, with the full tool catalog." },
+        { "slug": "shipping", "label": "Shipping & Carriers", "anchor": "shipping", "group": "Use", "description": "Ship orders, buy labels through EasyPost, track shipments and email customers." },
+        { "slug": "plugins", "label": "Plugin Development", "anchor": "plugins", "group": "Extend", "description": "Build, test and publish plugins with the manifest, hooks, filters and UI extension points." },
+        { "slug": "updates", "label": "Updates & Backups", "anchor": "updates", "group": "Operate", "description": "Update from the admin panel with signed releases, and back up and restore your installation." }
     ]
 }
