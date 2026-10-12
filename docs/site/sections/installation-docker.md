@@ -7,17 +7,17 @@ ghcr.io/inventoros/inventoros:2.0      # newest patch of a minor line
 ghcr.io/inventoros/inventoros:2        # newest release of a major line
 ```
 
-There is no image for releases before v2.0.0. If `docker compose pull` cannot fetch the image (for example `unauthorized` or `denied`), build it from a checkout instead: see "Building the image yourself".
+There is no image for releases before v2.0.0. If `docker compose pull` cannot fetch the image (for example `unauthorized` or `denied`), build it from a checkout instead: see [Building the image yourself](#building-the-image-yourself).
 
 The image runs PHP 8.4 under FrankenPHP (Caddy and PHP in one process), serves the app on port 8080 as a non-root user, and ships with production settings: `APP_ENV=production`, `APP_DEBUG=false`, OPcache on, and config, route, view and event caches built at start. The `mysqldump`, `pg_dump` and `sqlite3` clients are included so the built-in backups can capture the database.
 
-### Prerequisites
+## Prerequisites
 
 - Docker 24.0 or higher
 - Docker Compose v2
 - At least 1GB RAM and 5GB disk space
 
-### Quick start with Docker Compose
+## Quick start with Docker Compose
 
 The repository contains a ready-to-use `docker-compose.prod.yml` that runs four containers: the web app, a queue worker, the scheduler, and PostgreSQL 17.
 
@@ -48,7 +48,7 @@ docker compose -f docker-compose.prod.yml up -d
 
 4. Open `APP_URL/install` (or http://localhost:8080/install) and complete the web installer. On the database step enter host `db`, port `5432`, database `inventoros`, user `inventoros` and the `DB_PASSWORD` from your `.env`.
 
-### What runs where
+## What runs where
 
 | Service | Command | Notes |
 |---|---|---|
@@ -69,9 +69,13 @@ docker compose -f docker-compose.prod.yml restart worker scheduler
 
 If you previously ran the compose file without plugin volumes, copy `/app/plugins` and `/app/public/plugin-assets` out of the existing app container before recreating it, then restore them into the new volumes. Existing container files are not automatically migrated into a new named volume.
 
-### Configuration
+## Configuration
 
-Every Laravel setting can be passed as an environment variable. The ones specific to the image:
+Every Laravel setting can be passed to the containers as an environment variable. With `docker-compose.prod.yml`, the `.env` next to the compose file only fills in the variables the compose file names: `APP_NAME`, `APP_KEY`, `APP_URL`, `APP_PORT`, `LOG_LEVEL`, `DB_DATABASE`, `DB_USERNAME`, `DB_PASSWORD`, `SESSION_SECURE_COOKIE`, `TRUSTED_PROXIES`, `SERVER_NAME`, `INVENTOROS_IMAGE` and the `MAIL_` settings. To pass anything else (for example `INVENTOROS_MARKETPLACE_PUBLIC_KEY`), add it to the shared `environment` block in the compose file.
+
+Mail is logged rather than sent until you set `MAIL_MAILER` (for example `smtp`) with `MAIL_HOST`, `MAIL_PORT`, `MAIL_USERNAME`, `MAIL_PASSWORD` and `MAIL_FROM_ADDRESS` in `.env`.
+
+The settings specific to the image:
 
 | Variable | Default | Purpose |
 |---|---|---|
@@ -79,13 +83,14 @@ Every Laravel setting can be passed as an environment variable. The ones specifi
 | `RUN_MIGRATIONS` | `false` | Run `php artisan migrate --force` before starting. Enable it on one service only |
 | `CACHE_ON_START` | `true` | Build config, route, view and event caches at start |
 | `APP_URL` | `http://localhost:${APP_PORT}` | The address people type to reach Inventoros, including `https://` and any port (see below) |
-| `APP_PORT` | `8080` | Host port the `app` service is published on (compose file only; see "Changing the port") |
-| `SERVER_NAME` | `:8080` | Caddy site address inside the container. Leave it alone unless the container should obtain HTTPS certificates itself (see "HTTPS without a proxy") |
-| `TRUSTED_PROXIES` | `private_ranges` | Reverse proxies whose `X-Forwarded-*` headers are believed (see "Behind a reverse proxy") |
+| `APP_PORT` | `8080` | Host port the `app` service is published on (compose file only; see [Changing the port](#changing-the-port)) |
+| `SERVER_NAME` | `:8080` | Caddy site address inside the container. Leave it alone unless the container should obtain HTTPS certificates itself (see [HTTPS without a proxy](#https-without-a-proxy)) |
+| `TRUSTED_PROXIES` | `private_ranges` | Reverse proxies whose `X-Forwarded-*` headers are believed (see [Behind a reverse proxy](#behind-a-reverse-proxy)) |
 | `DB_WAIT_SECONDS` | `60` | How long to wait for the database port before starting |
+| `INVENTOROS_IMAGE` | `ghcr.io/inventoros/inventoros:latest` | Image the compose file runs; set an exact tag to pin a release (compose file only) |
 | `SESSION_SECURE_COOKIE` | follows the request | Unset, the session cookie is marked Secure exactly when the request arrived over HTTPS (directly or through a trusted proxy). Set `true` to force it once the site is HTTPS-only |
 
-To use MySQL instead of PostgreSQL, replace the `db` service with a `mysql:8.0` container and set `DB_CONNECTION=mysql`, `DB_PORT=3306` in the shared environment block.
+To use MySQL instead of PostgreSQL, replace the `db` service with a `mysql:8.0` container (with `MYSQL_DATABASE`, `MYSQL_USER`, `MYSQL_PASSWORD` and a health check, because the Inventoros containers wait for `db` to be healthy) and set `DB_CONNECTION: mysql` and `DB_PORT: "3306"` in the shared environment block.
 
 ### Changing the port
 
@@ -104,13 +109,15 @@ Then run `docker compose -f docker-compose.prod.yml up -d` again. Change only `A
 
 After changing `APP_URL`, recreate the containers (`docker compose -f docker-compose.prod.yml up -d`); the configuration is cached when a container starts.
 
-### Behind a reverse proxy
+## Behind a reverse proxy
 
 The usual setup runs nginx, Traefik, Caddy or a cloud load balancer in front of Inventoros: the proxy holds the domain and the TLS certificate and forwards plain HTTP to the container. Three things must line up:
 
 1. `APP_URL` is the public `https://` address.
 2. The proxy sends the standard forwarding headers: `Host`, `X-Forwarded-For`, `X-Forwarded-Proto`, `X-Forwarded-Host` and `X-Forwarded-Port`.
 3. Inventoros trusts the proxy, so it believes those headers. `TRUSTED_PROXIES` defaults to `private_ranges`, which covers a proxy running on the Docker host or in another container. For a proxy elsewhere, set its address: `TRUSTED_PROXIES=203.0.113.20`, or a comma-separated list of addresses and CIDR ranges.
+
+`TRUSTED_PROXIES` support landed after v2.0.0: the published `2.0.0` image does not read it and trusts no proxy, so behind a TLS-terminating proxy it builds `http://` URLs. Until the next release is published, [build the image yourself](#building-the-image-yourself) from the main branch.
 
 If the proxy is not trusted, the app sees plain HTTP: the page's scripts and styles are requested over `http://`, the browser blocks them as mixed content, and you see an empty page (or only the browser tab icon) with "Mixed Content" errors in the browser console.
 
@@ -154,11 +161,11 @@ Caddy (`reverse_proxy 127.0.0.1:8080`) and Traefik send these headers by default
 
 `TRUSTED_PROXIES` decides whose forwarding headers are believed, including the client IP used for login rate limiting and the activity log. With `private_ranges`, a machine on your private network that can reach the container directly could claim another client IP. Where that matters, set the proxy's exact address. `*` trusts every caller and is only safe when nothing but the proxy can reach the container.
 
-### HTTPS without a proxy
+## HTTPS without a proxy
 
-By default the container speaks plain HTTP on port 8080, which suits the reverse proxy setup above. To let the container handle TLS on its own, set `SERVER_NAME=inventory.example.com` and `APP_URL=https://inventory.example.com`, and publish ports `80:80` and `443:443` on the `app` service. Caddy then obtains and renews a Let's Encrypt certificate, which needs the domain's DNS pointing at the server and ports 80 and 443 reachable from the internet. The container health check follows `SERVER_NAME`, and reports the app unhealthy until the certificate has been issued.
+By default the container speaks plain HTTP on port 8080, which suits the reverse proxy setup above. To let the container handle TLS on its own, set `SERVER_NAME=inventory.example.com` and `APP_URL=https://inventory.example.com`, and publish ports `80:80` and `443:443` on the `app` service. Caddy then obtains and renews a Let's Encrypt certificate, which needs the domain's DNS pointing at the server and ports 80 and 443 reachable from the internet. The container health check follows `SERVER_NAME`, and reports the app unhealthy until the certificate has been issued. (The `2.0.0` image always probes port 8080, so with `SERVER_NAME` set to a domain it stays unhealthy and the worker and scheduler never start; build the image from the main branch for this setup.)
 
-### Updating
+## Updating
 
 Pull the new image and recreate the containers. The `app` container applies migrations on start:
 
@@ -169,7 +176,7 @@ docker compose -f docker-compose.prod.yml up -d
 
 Pin a version with `INVENTOROS_IMAGE=ghcr.io/inventoros/inventoros:2.0.0` in `.env` if you prefer to upgrade deliberately. Do not use the in-app updater inside a container: it replaces files in the running container, and those changes are lost when the container is recreated.
 
-### Building the image yourself
+## Building the image yourself
 
 ```bash
 git clone https://github.com/Inventoros/Inventoros.git
@@ -179,14 +186,14 @@ docker build -t inventoros .
 
 `docker compose -f docker-compose.prod.yml up -d --build` builds from the checkout instead of pulling from GHCR. Run it from the repository root, with your `.env` there.
 
-### Troubleshooting
+## Troubleshooting
 
-- **Only a blank page (or the tab icon) behind a proxy, with "Mixed Content" in the browser console.** The app does not trust the proxy, or `APP_URL` is not the `https://` address. See "Behind a reverse proxy".
+- **Only a blank page (or the tab icon) behind a proxy, with "Mixed Content" in the browser console.** The app does not trust the proxy, or `APP_URL` is not the `https://` address. See [Behind a reverse proxy](#behind-a-reverse-proxy).
 - **Every form answers "419 Page Expired".** The session cookie is not coming back. This happens when `SESSION_SECURE_COOKIE=true` while the app is opened over plain HTTP; leave it unset.
 - **A container shows `unhealthy`.** `docker inspect --format '{{json .State.Health}}' <container>` shows the failing probe. The `app` health check requests `/up` at the address `SERVER_NAME` makes Caddy listen on; with `SERVER_NAME` set to a domain it fails until Caddy has a certificate. Images up to v2.0.0 always probed port 8080, so changing `SERVER_NAME` marked them unhealthy. In the development stack (`docker-compose.yml`), older checkouts showed `worker` and `scheduler` as unhealthy because they inherited the web server's health check; update your checkout.
 - **`docker compose up` reports `dependency failed to start: container ... is unhealthy`.** The worker and scheduler wait for `app` to be healthy. `docker compose -f docker-compose.prod.yml logs app` shows why it is not (usually the database password or `APP_KEY`).
 
-### Development stack
+## Development stack
 
 `docker-compose.yml` in the repository is a development environment, not a deployment: it bind-mounts the source, enables `APP_DEBUG`, uses SQLite and includes Mailpit. Start it with `docker compose up --build` and see `docker/README.md` for details.
 
