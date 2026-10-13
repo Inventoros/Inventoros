@@ -223,6 +223,9 @@ export const ROUTE_PERMISSIONS = {
     "reports.stock-movement": [
         "view_reports"
     ],
+    "reservations.index": [
+        "view_products"
+    ],
     "returns.create": [
         "manage_returns"
     ],

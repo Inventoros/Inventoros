@@ -13,6 +13,7 @@ use App\Models\Inventory\StockAdjustment;
 use App\Models\Inventory\WorkOrder;
 use App\Models\Inventory\WorkOrderItem;
 use App\Services\ProductLocationStockService;
+use App\Services\StockReservationService;
 use App\Services\WorkOrderService;
 use App\Support\SequenceNumberRetry;
 use Illuminate\Http\RedirectResponse;
@@ -175,8 +176,10 @@ class WorkOrderController extends Controller
         ]);
 
         // Calculate component availability for each item
-        $items = $workOrder->items->map(function ($item) {
-            $item->available_stock = $item->product->stock ?? 0;
+        // Available = on hand less stock reservations, what start() checks.
+        $reservations = app(StockReservationService::class);
+        $items = $workOrder->items->map(function ($item) use ($reservations) {
+            $item->available_stock = $item->product ? $reservations->available($item->product) : 0;
             $item->is_sufficient = $item->available_stock >= ($item->quantity_required - $item->quantity_consumed);
 
             return $item;

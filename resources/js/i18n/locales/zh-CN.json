@@ -237,6 +237,7 @@
     "webhooks": "Webhooks",
     "warehouses": "仓库",
     "workOrders": "工单",
+    "reservations": "预留",
     "account": "账户",
     "profile": "个人资料",
     "logOut": "退出登录",
@@ -435,6 +436,10 @@
       "variantCount": "{count} 个变体",
       "variantStockTracked": "库存按变体分别跟踪。变体库存合计",
       "stockInfo": "库存信息",
+      "reservedStock": "已预留",
+      "availableStock": "可用",
+      "reservationsHint": "已预留的数量已被承诺，其他人不能销售、移动或报损。",
+      "viewReservations": "查看预留",
       "currentStock": "当前库存",
       "minStock": "最低库存",
       "maxStock": "最高库存",
@@ -2536,6 +2541,8 @@
       "sku": "SKU",
       "price": "价格",
       "stock": "库存",
+      "reserved": "已预留",
+      "available": "可用",
       "noVariants": "未找到变体",
       "totalVariants": "变体总数",
       "totalStock": "总库存"
@@ -3698,6 +3705,42 @@
   "legal": {
     "licensedUnder": "基于 {license} 许可",
     "sourceCode": "源代码"
+  },
+  "reservations": {
+    "title": "库存预留",
+    "subtitle": "为订单、插件或预订保留的现有库存，不能销售或移动。",
+    "searchPlaceholder": "按参考号搜索",
+    "owner": "所有者",
+    "allOwners": "所有所有者",
+    "filter": "筛选",
+    "product": "产品",
+    "quantity": "预留数量",
+    "heldIn": "预留位置",
+    "productTotal": "产品总量",
+    "serial": "序列号 {number}",
+    "batch": "批次 {number}",
+    "reference": "参考号",
+    "expires": "到期",
+    "noExpiry": "不过期",
+    "release": "释放",
+    "confirmRelease": "释放 {owner} 的预留 {reference}？这些数量将重新可用。",
+    "empty": "没有匹配的预留。",
+    "forProduct": "{product} 的预留",
+    "allProducts": "所有产品",
+    "showing": "第 {from} 至 {to} 条，共 {total} 条",
+    "statuses": {
+      "active": "有效",
+      "expired": "已过期",
+      "consumed": "已消耗",
+      "released": "已释放",
+      "all": "全部"
+    },
+    "reasons": {
+      "released": "所有者已释放",
+      "admin": "管理员已释放",
+      "expired": "已过期",
+      "uninstalled": "插件已卸载"
+    }
   },
   "stockTransfers": {
     "title": "库存调拨",

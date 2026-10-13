@@ -237,6 +237,7 @@
     "webhooks": "Webhook",
     "warehouses": "Magazzini",
     "workOrders": "Ordini di lavoro",
+    "reservations": "Prenotazioni",
     "account": "Account",
     "profile": "Profilo",
     "logOut": "Disconnetti",
@@ -435,6 +436,10 @@
       "variantCount": "{count} varianti",
       "variantStockTracked": "Le scorte vengono tracciate per variante. Scorte totali delle varianti",
       "stockInfo": "Informazioni sulle scorte",
+      "reservedStock": "Riservato",
+      "availableStock": "Disponibile",
+      "reservationsHint": "Le unità riservate sono impegnate e nessun altro può venderle, spostarle o stornarle.",
+      "viewReservations": "Vedi prenotazioni",
       "currentStock": "Scorte attuali",
       "minStock": "Scorte minime",
       "maxStock": "Scorte massime",
@@ -2536,6 +2541,8 @@
       "sku": "SKU",
       "price": "Prezzo",
       "stock": "Scorte",
+      "reserved": "Riservato",
+      "available": "Disponibile",
       "noVariants": "Nessuna variante trovata",
       "totalVariants": "Varianti totali",
       "totalStock": "Scorte totali"
@@ -3698,6 +3705,42 @@
   "legal": {
     "licensedUnder": "Distribuito con licenza {license}",
     "sourceCode": "Codice sorgente"
+  },
+  "reservations": {
+    "title": "Prenotazioni di magazzino",
+    "subtitle": "Unità a magazzino impegnate per un ordine, un plugin o una prenotazione, quindi non disponibili per la vendita o lo spostamento.",
+    "searchPlaceholder": "Cerca per riferimento",
+    "owner": "Titolare",
+    "allOwners": "Tutti i titolari",
+    "filter": "Filtra",
+    "product": "Prodotto",
+    "quantity": "Riservato",
+    "heldIn": "Riservato in",
+    "productTotal": "Totale prodotto",
+    "serial": "Seriale {number}",
+    "batch": "Lotto {number}",
+    "reference": "Riferimento",
+    "expires": "Scade",
+    "noExpiry": "Nessuna scadenza",
+    "release": "Rilascia",
+    "confirmRelease": "Rilasciare la prenotazione {reference} di {owner}? Le unità tornano disponibili.",
+    "empty": "Nessuna prenotazione corrispondente.",
+    "forProduct": "Prenotazioni per {product}",
+    "allProducts": "Tutti i prodotti",
+    "showing": "Da {from} a {to} di {total}",
+    "statuses": {
+      "active": "Attiva",
+      "expired": "Scaduta",
+      "consumed": "Consumata",
+      "released": "Rilasciata",
+      "all": "Tutte"
+    },
+    "reasons": {
+      "released": "Rilasciata dal titolare",
+      "admin": "Rilasciata da un amministratore",
+      "expired": "Scaduta",
+      "uninstalled": "Plugin disinstallato"
+    }
   },
   "stockTransfers": {
     "title": "Trasferimenti di scorte",
