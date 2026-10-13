@@ -12,10 +12,13 @@ Full release notes, with the pull request behind each change, are on [GitHub Rel
 - Order and purchase order forms have an optional tax rate (%) beside the tax amount, which fills the amount in from the subtotal after discounts. Only the amount is saved, as before.
 - Queued exports now expire after `EXPORT_RETENTION_DAYS` (default 7): the download link says the export has expired, and a nightly `exports:prune` deletes the file and its record.
 - Inter-company transfers move serial- and batch-tracked stock and kits. Serial lines name the serials: the source keeps them with the new status `transferred` and the destination gets the same serial numbers (a clash fails the whole transfer). Batch lines name the source batches and quantities: the destination gets the same lot number and dates. A kit moves as its components, matched to the destination kit's by SKU. Each moved serial and batch is linked to its transfer line.
+- Plugins: `ActiveOrganization::membersIn($organizationId, $permissions)` returns an organization's members (home users and members added from other organizations), each loaded into it and holding the given permissions there. `User::query()->memberOf($organizationId)` is the same set as a query, and the `App\Rules\OrganizationMember` rule validates a picked user id.
 
 ### Changed
 
 - Creating and starting a stock audit takes a fixed number of queries however many products it covers. The lines are seeded with one `INSERT ... SELECT` and re-snapshotted on start with one `UPDATE`, instead of a save per product; a 20,000-product count went from about 20,000 queries and 7 to 10 seconds per step to under 10 queries and well under a second (SQLite benchmark). Snapshot values and the start lock are unchanged. Scheduled cycle counts use the same path. Benchmark: `php artisan test --group=performance`.
+- Members added from other organizations now receive the organization's notifications (low and out of stock, variant and per-warehouse stock alerts, new orders, portal return requests, approval requests, account activity alerts), can be scheduled report recipients, and appear in the cycle count assignee, warehouse assignment, stock adjustment and activity log user pickers. A withdrawn member stops receiving them and leaves the pickers. Permissions are those held in the organization concerned, and the Users screens still list home users only.
+- Stock and new order notifications go to everyone holding `manage_stock` or `view_orders` in the organization, including through their base role (Administrator, Manager, Member). Before, only assigned roles counted.
 
 ### Fixed
 
