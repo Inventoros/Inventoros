@@ -2659,7 +2659,8 @@
         "available": "利用可能",
         "sold": "販売済み",
         "reserved": "予約済み",
-        "damaged": "破損"
+        "damaged": "破損",
+        "transferred": "移管済み"
       },
       "serialNumber": "シリアル番号",
       "createSerial": "シリアルを作成",

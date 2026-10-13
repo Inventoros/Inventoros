@@ -2659,7 +2659,8 @@
         "available": "متاح",
         "sold": "مُباع",
         "reserved": "محجوز",
-        "damaged": "تالف"
+        "damaged": "تالف",
+        "transferred": "منقول"
       },
       "serialNumber": "الرقم التسلسلي",
       "createSerial": "إنشاء رقم تسلسلي",

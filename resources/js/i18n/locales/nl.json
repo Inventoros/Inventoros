@@ -2659,7 +2659,8 @@
         "available": "Beschikbaar",
         "sold": "Verkocht",
         "reserved": "Gereserveerd",
-        "damaged": "Beschadigd"
+        "damaged": "Beschadigd",
+        "transferred": "Overgedragen"
       },
       "serialNumber": "Serienummer",
       "createSerial": "Serienummer aanmaken",

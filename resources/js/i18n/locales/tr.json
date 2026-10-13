@@ -2659,7 +2659,8 @@
         "available": "Mevcut",
         "sold": "Satıldı",
         "reserved": "Rezerve",
-        "damaged": "Hasarlı"
+        "damaged": "Hasarlı",
+        "transferred": "Aktarıldı"
       },
       "serialNumber": "Seri Numarası",
       "createSerial": "Seri No Oluştur",

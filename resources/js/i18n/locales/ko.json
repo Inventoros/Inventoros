@@ -2659,7 +2659,8 @@
         "available": "사용 가능",
         "sold": "판매됨",
         "reserved": "예약됨",
-        "damaged": "파손됨"
+        "damaged": "파손됨",
+        "transferred": "이전됨"
       },
       "serialNumber": "일련번호",
       "createSerial": "일련번호 생성",
