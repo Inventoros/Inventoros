@@ -295,7 +295,7 @@ sudo php artisan key:generate
 
 ## Scheduler and queue worker
 
-Every install needs the Laravel scheduler and a queue worker. The scheduler runs low-stock checks, scheduled cycle counts, scheduled report emails, shipment tracking and log pruning. The worker sends webhook deliveries and queued emails (purchase orders, invoices, approvals, shipment notices). Without them these jobs pile up and never run.
+Every install needs the Laravel scheduler and a queue worker. The scheduler runs low-stock checks, scheduled cycle counts, scheduled report emails, shipment tracking, log pruning and removal of expired export files. The worker sends webhook deliveries and queued emails (purchase orders, invoices, approvals, shipment notices). Without them these jobs pile up and never run.
 
 The repository ships systemd units in `deploy/systemd/`. Edit `User`, `Group` and `WorkingDirectory` in each file to match your server (`nginx` instead of `www-data` on CentOS / RHEL), then install them:
 
@@ -325,6 +325,12 @@ running. Database, Redis and Beanstalkd queues default to 660 seconds; keep any
 `BEANSTALKD_QUEUE_RETRY_AFTER` override above 600. For SQS, set the queue's
 visibility timeout above 600 seconds in AWS. After changing these settings,
 rebuild the configuration cache and restart workers.
+
+Large exports are written to `EXPORT_DISK` and can be downloaded for
+`EXPORT_RETENTION_DAYS` (default 7) after they finish. After that the download
+link reports the export as expired, and the nightly `exports:prune` command
+deletes the file and its record, at most 1000 per run. Set
+`EXPORT_RETENTION_DAYS=0` to keep exports forever.
 
 ## SSL certificate
 
