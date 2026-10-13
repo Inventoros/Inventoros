@@ -20,6 +20,7 @@ use App\Models\User;
 use App\Support\ProductCurrencyColumns;
 use App\Support\SpreadsheetReaderType;
 use Illuminate\Database\QueryException;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -66,7 +67,12 @@ class ImportExportController extends Controller
         $exports = DataExport::where('user_id', $request->user()->id)
             ->latest()
             ->limit(15)
-            ->get(['id', 'type', 'filename', 'status', 'row_count', 'completed_at', 'created_at']);
+            ->get(['id', 'type', 'filename', 'status', 'row_count', 'completed_at', 'created_at'])
+            ->map(fn (DataExport $export) => [
+                ...$export->toArray(),
+                'expired' => $export->isExpired(),
+                'expires_at' => $export->expiresAt()?->toIso8601String(),
+            ]);
 
         return Inertia::render('ImportExport/Index', [
             'categories' => $categories,
@@ -498,26 +504,39 @@ class ImportExportController extends Controller
     /**
      * Download a previously generated, queued export file.
      *
-     * @return StreamedResponse
+     * @return StreamedResponse|RedirectResponse|JsonResponse
      */
     public function download(Request $request, DataExport $dataExport)
     {
         // Route-model binding is org-scoped by the global scope, so a
-        // cross-tenant id already 404s; guard the file state explicitly.
-        abort_unless($dataExport->isDownloadable(), 404);
-
-        // A user export needs view_users to create (see the route), so the
-        // stored file needs it to download too.
-        abort_if(
-            $dataExport->type === 'users' && ! $request->user()->hasPermission('view_users'),
-            403,
-        );
+        // cross-tenant id already 404s.
 
         // An export belongs to whoever requested it (it may hold data they
         // filtered for themselves); only they or an admin may fetch it. 404
         // rather than 403 so ids of colleagues' exports are not confirmed.
         $user = $request->user();
         abort_unless((int) $dataExport->user_id === (int) $user->id || $user->isAdmin(), 404);
+
+        // A user export needs view_users to create (see the route), so the
+        // stored file needs it to download too.
+        abort_if(
+            $dataExport->type === 'users' && ! $user->hasPermission('view_users'),
+            403,
+        );
+
+        // Past config('exports.retention_days') the file is no longer served,
+        // even if exports:prune has not removed it yet.
+        if ($dataExport->isExpired()) {
+            $message = 'This export has expired. Run the export again to get a fresh file.';
+
+            if ($request->expectsJson()) {
+                return response()->json(['message' => $message, 'error' => 'export_expired'], 410);
+            }
+
+            return redirect()->route('import-export.index')->with('error', $message);
+        }
+
+        abort_unless($dataExport->isDownloadable(), 404);
 
         return Storage::disk($dataExport->disk)->download($dataExport->path, $dataExport->filename);
     }
