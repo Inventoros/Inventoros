@@ -124,6 +124,15 @@ class SerialTrackingController extends Controller
             // the same physical serial to different orders.
             $locked = ProductSerial::whereKey($serial->getKey())->lockForUpdate()->firstOrFail();
 
+            // The unit now belongs to another organization: changing this row
+            // back would count it in both.
+            if ($locked->status === ProductSerial::STATUS_TRANSFERRED) {
+                return response()->json([
+                    'message' => 'This serial number was transferred to another organization.',
+                    'error' => 'transferred',
+                ], 409);
+            }
+
             $target = $validated['status'];
             $allocating = in_array($target, [ProductSerial::STATUS_SOLD, ProductSerial::STATUS_RESERVED], true);
             $alreadyAllocated = in_array($locked->status, [ProductSerial::STATUS_SOLD, ProductSerial::STATUS_RESERVED], true);

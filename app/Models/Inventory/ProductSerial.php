@@ -38,6 +38,15 @@ class ProductSerial extends Model
 
     public const STATUS_DAMAGED = 'damaged';
 
+    /**
+     * The unit left for another organization by an inter-company transfer.
+     * The row stays for history; the unit lives on as a serial of the
+     * destination organization. Set only by InterCompanyTransferService, so
+     * it is not one of the VALID_STATUSES a user may choose, and a
+     * transferred serial cannot be changed.
+     */
+    public const STATUS_TRANSFERRED = 'transferred';
+
     public const VALID_STATUSES = [
         self::STATUS_AVAILABLE,
         self::STATUS_SOLD,
