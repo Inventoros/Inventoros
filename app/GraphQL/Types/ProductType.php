@@ -61,6 +61,16 @@ class ProductType extends GraphQLType
                 'description' => 'Total stock including variants',
                 'resolve' => fn (Product $product) => $product->total_stock,
             ],
+            'reserved_stock' => [
+                'type' => Type::int(),
+                'description' => 'Units held by active stock reservations',
+                'resolve' => fn (Product $product) => $product->reserved_stock,
+            ],
+            'available_stock' => [
+                'type' => Type::int(),
+                'description' => 'Available to promise: on hand (total_stock) less reserved_stock',
+                'resolve' => fn (Product $product) => $product->available_stock,
+            ],
             'min_stock' => [
                 'type' => Type::int(),
                 'description' => 'Minimum stock threshold',

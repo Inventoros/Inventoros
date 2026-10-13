@@ -61,6 +61,16 @@ class ProductVariantType extends GraphQLType
                 'type' => Type::nonNull(Type::int()),
                 'description' => 'Current stock quantity',
             ],
+            'reserved_stock' => [
+                'type' => Type::int(),
+                'description' => 'Units held by active stock reservations',
+                'resolve' => fn (ProductVariant $variant) => $variant->reserved_stock,
+            ],
+            'available_stock' => [
+                'type' => Type::int(),
+                'description' => 'Available to promise: stock less reserved_stock',
+                'resolve' => fn (ProductVariant $variant) => $variant->available_stock,
+            ],
             'min_stock' => [
                 'type' => Type::int(),
                 'description' => 'Minimum stock threshold',

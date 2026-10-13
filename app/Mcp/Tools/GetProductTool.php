@@ -56,6 +56,8 @@ class GetProductTool extends Tool
             'currency' => $product->currency,
             'stock' => $product->stock,
             'total_stock' => $product->total_stock,
+            'reserved_stock' => $product->reserved_stock,
+            'available_stock' => $product->available_stock,
             'min_stock' => $product->min_stock,
             'max_stock' => $product->max_stock,
             'reorder_point' => $product->reorder_point,
@@ -74,7 +76,10 @@ class GetProductTool extends Tool
                 'is_primary' => (bool) $s->pivot?->is_primary,
             ])->all(),
             'options' => $product->options->map(fn ($o) => $o->only(['id', 'name', 'values']))->all(),
-            'active_variants' => $product->activeVariants->map(fn ($v) => $v->only(['id', 'sku', 'stock', 'price']))->all(),
+            'active_variants' => $product->activeVariants->map(fn ($v) => $v->only(['id', 'sku', 'stock', 'price']) + [
+                'reserved_stock' => $v->reserved_stock,
+                'available_stock' => $v->available_stock,
+            ])->all(),
             'created_at' => $product->created_at?->toIso8601String(),
             'updated_at' => $product->updated_at?->toIso8601String(),
         ]);
