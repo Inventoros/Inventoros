@@ -7,9 +7,9 @@ import Button from '@/Components/ui/Button.vue';
 import Badge from '@/Components/ui/Badge.vue';
 import StatTile from '@/Components/ui/StatTile.vue';
 import { Head, Link, router } from '@inertiajs/vue3';
-import { ref } from 'vue';
+import { computed, reactive, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { displayDateTime } from '@/lib/dates';
+import { displayCalendarDate, displayDateTime } from '@/lib/dates';
 import { ArrowLeft, Play, CheckCircle2, X, Boxes, PackageCheck, Check, AlertTriangle, Trash2 } from 'lucide-vue-next';
 
 const { t } = useI18n();
@@ -17,6 +17,9 @@ const { t } = useI18n();
 const props = defineProps({
     pluginComponents: Object,
     workOrder: Object,
+    items: { type: Array, default: () => [] },
+    outputTrackingType: { type: String, default: 'none' },
+    allComponentsSufficient: Boolean,
 });
 
 const processing = ref(false);
@@ -60,17 +63,27 @@ const getStatusLabel = (status) => {
     return labels[status] || status;
 };
 
-const componentStatusVariant = (comp) => {
-    if ((comp.quantity_consumed || 0) >= comp.quantity_required) return 'success';
-    if ((comp.component?.stock || 0) >= comp.quantity_required) return 'warning';
+const required = (item) => Number(item.quantity_required);
+const consumed = (item) => Number(item.quantity_consumed || 0);
+
+const componentStatusVariant = (item) => {
+    if (consumed(item) >= required(item)) return 'success';
+    if (item.is_sufficient) return 'warning';
     return 'danger';
 };
 
-const componentStatusLabel = (comp) => {
-    if ((comp.quantity_consumed || 0) >= comp.quantity_required) return t('workOrders.components.consumed');
-    if ((comp.component?.stock || 0) >= comp.quantity_required) return t('workOrders.components.ready');
+const componentStatusLabel = (item) => {
+    if (consumed(item) >= required(item)) return t('workOrders.components.consumed');
+    if (item.is_sufficient) return t('workOrders.components.ready');
     return t('workOrders.components.insufficient');
 };
+
+const trackingLabel = (type) => ({
+    serial: t('workOrders.tracking.serial'),
+    batch: t('workOrders.tracking.batch'),
+}[type] ?? null);
+
+const variantLabel = (variant) => variant ? (variant.title || variant.sku) : null;
 
 const formatDate = (dateStr) => displayDateTime(dateStr);
 
@@ -80,6 +93,56 @@ const canCancel = ['draft', 'pending', 'in_progress'].includes(props.workOrder.s
 const isReadOnly = ['completed', 'cancelled'].includes(props.workOrder.status);
 // Only orders that never moved stock can be deleted (mirrors WorkOrderController::destroy).
 const canDelete = ['draft', 'cancelled'].includes(props.workOrder.status);
+
+// ---- Allocation of tracked components and output (completion only) ----
+
+const trackedItems = computed(() => props.items.filter(item => ['serial', 'batch'].includes(item.tracking_type)));
+
+// Units a line will consume for the quantity being produced, mirroring the
+// server: ceil(required * produced / planned) minus what is already consumed.
+const unitsNeeded = (item) => {
+    const produced = Number(quantityProduced.value) || 0;
+    return Math.max(0, Math.ceil(required(item) * produced / props.workOrder.quantity) - consumed(item));
+};
+
+// item id -> serial ids ticked
+const chosenSerials = reactive(Object.fromEntries(trackedItems.value.map(item => [item.id, []])));
+// item id -> { batch id: quantity }
+const chosenBatches = reactive(Object.fromEntries(trackedItems.value.map(item => [item.id, {}])));
+
+const batchTotal = (item) => Object.values(chosenBatches[item.id] || {}).reduce((sum, qty) => sum + (Number(qty) || 0), 0);
+
+const output = reactive({ serialNumbers: '', batchNumber: '', expiryDate: '' });
+
+const outputSerials = computed(() => output.serialNumbers.split('\n').map(s => s.trim()).filter(Boolean));
+
+const allocationPayload = () => trackedItems.value
+    .map(item => {
+        if (item.tracking_type === 'serial' && chosenSerials[item.id].length > 0) {
+            return { work_order_item_id: item.id, serial_ids: chosenSerials[item.id] };
+        }
+        if (item.tracking_type === 'batch' && batchTotal(item) > 0) {
+            const batches = Object.entries(chosenBatches[item.id])
+                .filter(([, qty]) => Number(qty) > 0)
+                .map(([batchId, qty]) => ({ product_batch_id: Number(batchId), quantity: Number(qty) }));
+            return { work_order_item_id: item.id, batches };
+        }
+        return null;
+    })
+    .filter(Boolean);
+
+const outputPayload = () => {
+    if (props.outputTrackingType === 'serial') {
+        return { serial_numbers: outputSerials.value };
+    }
+    if (props.outputTrackingType === 'batch') {
+        return {
+            batch_number: output.batchNumber || null,
+            expiry_date: output.expiryDate || null,
+        };
+    }
+    return null;
+};
 
 const startProduction = () => {
     if (!confirm(t('workOrders.actions.startConfirm'))) return;
@@ -92,9 +155,11 @@ const startProduction = () => {
 const completeProduction = () => {
     if (!confirm(t('workOrders.actions.completeConfirm', { count: quantityProduced.value }, quantityProduced.value))) return;
     processing.value = true;
-    router.post(route('work-orders.complete', props.workOrder.id), {
-        quantity_produced: quantityProduced.value,
-    }, {
+    const payload = { quantity_produced: quantityProduced.value, allocations: allocationPayload() };
+    const out = outputPayload();
+    if (out) payload.output = out;
+    router.post(route('work-orders.complete', props.workOrder.id), payload, {
+        preserveScroll: true,
         onFinish: () => { processing.value = false; },
     });
 };
@@ -116,11 +181,13 @@ const deleteWorkOrder = () => {
 };
 
 const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-text-secondary';
+const fieldLabel = 'block text-sm font-medium text-text-secondary';
 const fieldInput = 'h-9 w-full rounded-md border border-border-subtle bg-surface-canvas px-3 text-sm text-text-primary placeholder:text-text-tertiary ds-focus-ring';
+const fieldArea = 'w-full rounded-md border border-border-subtle bg-surface-canvas px-3 py-2 text-sm text-text-primary placeholder:text-text-tertiary ds-focus-ring';
 </script>
 
 <template>
-    <Head :title="t('workOrders.show.headTitle', { number: workOrder.wo_number })" />
+    <Head :title="t('workOrders.show.headTitle', { number: workOrder.work_order_number })" />
 
     <AppLayout>
         <template #header>
@@ -129,11 +196,11 @@ const fieldInput = 'h-9 w-full rounded-md border border-border-subtle bg-surface
                 <span class="text-text-tertiary">/</span>
                 <Link :href="route('work-orders.index')" class="text-text-tertiary hover:text-text-primary">{{ t('nav.workOrders') }}</Link>
                 <span class="text-text-tertiary">/</span>
-                <span class="font-medium text-text-primary">{{ workOrder.wo_number }}</span>
+                <span class="font-medium text-text-primary">{{ workOrder.work_order_number }}</span>
             </div>
         </template>
 
-        <PageHeader :title="workOrder.wo_number" :description="t('workOrders.detailsSubtitle')">
+        <PageHeader :title="workOrder.work_order_number" :description="t('workOrders.detailsSubtitle')">
             <template #actions>
                 <PluginSlot slot="actions" :components="pluginComponents?.actions" />
                 <Badge :variant="statusVariant(workOrder.status)" size="sm" dot>{{ getStatusLabel(workOrder.status) }}</Badge>
@@ -194,7 +261,7 @@ const fieldInput = 'h-9 w-full rounded-md border border-border-subtle bg-surface
                                 <span v-else>{{ index + 1 }}</span>
                             </div>
                             <span
-                                class="ml-2 text-sm font-medium"
+                                class="ml-2 hidden text-sm font-medium sm:inline"
                                 :class="isStepCurrent(step.key) ? 'text-brand' : isStepCompleted(step.key) ? 'text-text-primary' : 'text-text-tertiary'"
                             >
                                 {{ step.label }}
@@ -263,6 +330,14 @@ const fieldInput = 'h-9 w-full rounded-md border border-border-subtle bg-surface
                                     <Badge :variant="statusVariant(workOrder.status)" size="sm" dot>{{ getStatusLabel(workOrder.status) }}</Badge>
                                 </dd>
                             </div>
+                            <div v-if="workOrder.variant">
+                                <dt class="mb-1 text-xs text-text-tertiary">{{ t('workOrders.fields.outputVariant') }}</dt>
+                                <dd class="text-sm text-text-primary">{{ variantLabel(workOrder.variant) }}</dd>
+                            </div>
+                            <div v-if="trackingLabel(outputTrackingType)">
+                                <dt class="mb-1 text-xs text-text-tertiary">{{ t('workOrders.output.title') }}</dt>
+                                <dd><Badge variant="neutral" size="sm">{{ trackingLabel(outputTrackingType) }}</Badge></dd>
+                            </div>
                             <div>
                                 <dt class="mb-1 text-xs text-text-tertiary">{{ t('workOrders.fields.quantityToProduce') }}</dt>
                                 <dd class="text-lg font-bold tabular-nums text-text-primary">{{ workOrder.quantity }}</dd>
@@ -302,37 +377,50 @@ const fieldInput = 'h-9 w-full rounded-md border border-border-subtle bg-surface
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <tr v-for="comp in (workOrder.components || [])" :key="comp.id" class="border-b border-border-subtle transition-colors last:border-b-0 hover:bg-surface-overlay">
+                                    <tr v-for="item in items" :key="item.id" class="border-b border-border-subtle align-top transition-colors last:border-b-0 hover:bg-surface-overlay">
                                         <td class="px-4 py-3">
                                             <Link
-                                                v-if="comp.component"
-                                                :href="route('products.show', comp.component.id)"
+                                                v-if="item.product"
+                                                :href="route('products.show', item.product.id)"
                                                 class="text-sm font-medium text-brand hover:underline"
                                             >
-                                                {{ comp.component.name }}
+                                                {{ item.product.name }}
                                             </Link>
                                             <span v-else class="text-sm text-text-tertiary">{{ t('workOrders.components.unknown') }}</span>
+                                            <div class="mt-1 flex flex-wrap gap-1">
+                                                <Badge v-if="item.variant" variant="brand" size="sm">{{ variantLabel(item.variant) }}</Badge>
+                                                <Badge v-if="item.kit" variant="info" size="sm">{{ t('workOrders.components.fromKit', { name: item.kit.name }) }}</Badge>
+                                                <Badge v-if="trackingLabel(item.tracking_type)" variant="neutral" size="sm">{{ trackingLabel(item.tracking_type) }}</Badge>
+                                            </div>
+                                            <p v-if="item.allocations && item.allocations.length" class="mt-1 text-xs text-text-tertiary">
+                                                {{ t('workOrders.allocation.used') }}:
+                                                <template v-for="(allocation, index) in item.allocations" :key="allocation.id">
+                                                    <span v-if="index > 0">, </span>
+                                                    <span v-if="allocation.serial">{{ allocation.serial.serial_number }}</span>
+                                                    <span v-else-if="allocation.batch">{{ allocation.batch.batch_number }} &times; {{ allocation.quantity }}</span>
+                                                </template>
+                                            </p>
                                         </td>
                                         <td class="px-4 py-3 text-sm text-text-tertiary">
-                                            {{ comp.component?.sku || '-' }}
+                                            {{ item.variant?.sku || item.product?.sku || '-' }}
                                         </td>
                                         <td class="px-4 py-3 text-center text-sm font-medium tabular-nums text-text-primary">
-                                            {{ comp.quantity_required }}
+                                            {{ required(item) }}
                                         </td>
                                         <td class="px-4 py-3 text-center text-sm tabular-nums text-text-primary">
-                                            {{ comp.quantity_consumed || 0 }}
+                                            {{ consumed(item) }}
                                         </td>
-                                        <td class="px-4 py-3 text-center text-sm tabular-nums" :class="(comp.component?.stock || 0) >= comp.quantity_required ? 'text-status-success' : 'text-status-danger'">
-                                            {{ comp.component?.stock || 0 }}
+                                        <td class="px-4 py-3 text-center text-sm tabular-nums" :class="item.is_sufficient ? 'text-status-success' : 'text-status-danger'">
+                                            {{ item.available_stock }}
                                         </td>
                                         <td class="px-4 py-3 text-center">
-                                            <Badge :variant="componentStatusVariant(comp)" size="sm">
-                                                {{ componentStatusLabel(comp) }}
+                                            <Badge :variant="componentStatusVariant(item)" size="sm">
+                                                {{ componentStatusLabel(item) }}
                                             </Badge>
                                         </td>
                                     </tr>
 
-                                    <tr v-if="!workOrder.components || workOrder.components.length === 0">
+                                    <tr v-if="items.length === 0">
                                         <td colspan="6" class="px-4 py-8 text-center text-sm text-text-tertiary">
                                             {{ t('workOrders.components.noComponents') }}
                                         </td>
@@ -342,6 +430,23 @@ const fieldInput = 'h-9 w-full rounded-md border border-border-subtle bg-surface
                         </div>
                     </div>
                 </Card>
+
+                <!-- Output (after completion) -->
+                <Card v-if="workOrder.outputs && workOrder.outputs.length" :padded="false">
+                    <div class="px-5 pt-5"><h3 class="text-sm font-semibold text-text-primary">{{ t('workOrders.output.produced') }}</h3></div>
+                    <div class="p-5">
+                        <ul class="flex flex-wrap gap-2">
+                            <li v-for="row in workOrder.outputs" :key="row.id">
+                                <Badge variant="success" size="md">
+                                    <template v-if="row.serial">{{ row.serial.serial_number }}</template>
+                                    <template v-else-if="row.batch">{{ row.batch.batch_number }} &times; {{ row.quantity }}</template>
+                                    <template v-else-if="row.variant">{{ variantLabel(row.variant) }} &times; {{ row.quantity }}</template>
+                                    <template v-else>{{ workOrder.product?.name }} &times; {{ row.quantity }}</template>
+                                </Badge>
+                            </li>
+                        </ul>
+                    </div>
+                </Card>
             </div>
 
             <!-- Sidebar -->
@@ -349,28 +454,106 @@ const fieldInput = 'h-9 w-full rounded-md border border-border-subtle bg-surface
                 <!-- Complete Production -->
                 <Card v-if="!isReadOnly && canComplete" :padded="false">
                     <div class="px-5 pt-5"><h3 class="text-sm font-semibold text-text-primary">{{ t('workOrders.actions.completeProduction') }}</h3></div>
-                    <div class="p-5">
+                    <div class="space-y-5 p-5">
                         <div class="space-y-2">
-                            <label class="block text-sm font-medium text-text-secondary">
+                            <label for="quantity_produced" :class="fieldLabel">
                                 {{ t('workOrders.fields.quantityProduced') }}
                             </label>
                             <input
+                                id="quantity_produced"
                                 v-model.number="quantityProduced"
                                 type="number"
                                 min="1"
                                 :max="workOrder.quantity"
                                 :class="fieldInput"
                             />
-                            <Button
-                                variant="default"
-                                class="w-full"
-                                :disabled="processing"
-                                @click="completeProduction"
-                            >
-                                <CheckCircle2 :size="16" />
-                                {{ t('workOrders.actions.completeProduction') }}
-                            </Button>
                         </div>
+
+                        <!-- Serials / batches to consume -->
+                        <div v-for="item in trackedItems" :key="item.id" class="space-y-2 border-t border-border-subtle pt-4">
+                            <p class="text-sm font-medium text-text-primary">{{ item.product?.name }}</p>
+
+                            <template v-if="item.tracking_type === 'serial'">
+                                <p class="text-xs text-text-tertiary">
+                                    {{ t('workOrders.allocation.serialsHint', { count: unitsNeeded(item) }) }}
+                                </p>
+                                <p class="text-xs font-medium" :class="chosenSerials[item.id].length === 0 || chosenSerials[item.id].length === unitsNeeded(item) ? 'text-text-secondary' : 'text-status-danger'">
+                                    {{ t('common.selected', { count: chosenSerials[item.id].length }) }}
+                                </p>
+                                <div class="max-h-48 space-y-1 overflow-y-auto rounded-md border border-border-subtle p-2">
+                                    <label v-for="serial in item.available_serials" :key="serial.id" class="flex items-center gap-2 text-sm text-text-primary">
+                                        <input v-model="chosenSerials[item.id]" type="checkbox" :value="serial.id" class="rounded border-border-subtle text-brand ds-focus-ring" />
+                                        <span class="font-mono text-xs">{{ serial.serial_number }}</span>
+                                    </label>
+                                    <p v-if="item.available_serials.length === 0" class="text-xs text-status-danger">{{ t('workOrders.allocation.noneAvailable') }}</p>
+                                </div>
+                            </template>
+
+                            <template v-else>
+                                <p class="text-xs text-text-tertiary">
+                                    {{ t('workOrders.allocation.batchesHint', { count: unitsNeeded(item) }) }}
+                                </p>
+                                <p v-if="batchTotal(item) > 0" class="text-xs font-medium" :class="batchTotal(item) === unitsNeeded(item) ? 'text-text-secondary' : 'text-status-danger'">
+                                    {{ t('workOrders.allocation.batchTotal', { chosen: batchTotal(item), count: unitsNeeded(item) }) }}
+                                </p>
+                                <div class="max-h-48 space-y-2 overflow-y-auto rounded-md border border-border-subtle p-2">
+                                    <div v-for="batch in item.available_batches" :key="batch.id" class="flex items-center gap-2">
+                                        <div class="min-w-0 flex-1">
+                                            <p class="truncate font-mono text-xs text-text-primary">{{ batch.batch_number }}</p>
+                                            <p class="text-xs text-text-tertiary">
+                                                {{ t('workOrders.allocation.available', { count: batch.quantity }) }}
+                                                &middot;
+                                                {{ batch.expiry_date ? t('workOrders.allocation.expires', { date: displayCalendarDate(batch.expiry_date) }) : t('workOrders.allocation.noExpiry') }}
+                                            </p>
+                                        </div>
+                                        <input
+                                            v-model.number="chosenBatches[item.id][batch.id]"
+                                            type="number"
+                                            min="0"
+                                            :max="batch.quantity"
+                                            :aria-label="t('workOrders.allocation.takeFrom', { batch: batch.batch_number })"
+                                            class="h-8 w-20 rounded-md border border-border-subtle bg-surface-canvas px-2 text-sm text-text-primary ds-focus-ring"
+                                        />
+                                    </div>
+                                    <p v-if="item.available_batches.length === 0" class="text-xs text-status-danger">{{ t('workOrders.allocation.noneAvailable') }}</p>
+                                </div>
+                            </template>
+                        </div>
+
+                        <!-- Tracked output -->
+                        <div v-if="outputTrackingType === 'serial'" class="space-y-2 border-t border-border-subtle pt-4">
+                            <label for="output_serials" :class="fieldLabel">{{ t('workOrders.output.serialNumbers') }}</label>
+                            <textarea
+                                id="output_serials"
+                                v-model="output.serialNumbers"
+                                rows="4"
+                                :class="[fieldArea, 'font-mono']"
+                            ></textarea>
+                            <p class="text-xs" :class="outputSerials.length === Number(quantityProduced) ? 'text-text-tertiary' : 'text-status-danger'">
+                                {{ t('workOrders.output.serialNumbersHint', { count: quantityProduced, entered: outputSerials.length }) }}
+                            </p>
+                        </div>
+                        <div v-if="outputTrackingType === 'batch'" class="space-y-3 border-t border-border-subtle pt-4">
+                            <div class="space-y-1">
+                                <label for="output_batch" :class="fieldLabel">{{ t('workOrders.output.batchNumber') }}</label>
+                                <input id="output_batch" v-model="output.batchNumber" type="text" :class="fieldInput" />
+                                <p class="text-xs text-text-tertiary">{{ t('workOrders.output.batchNumberHint') }}</p>
+                            </div>
+                            <div class="space-y-1">
+                                <label for="output_expiry" :class="fieldLabel">{{ t('workOrders.output.expiryDate') }}</label>
+                                <input id="output_expiry" v-model="output.expiryDate" type="date" :class="fieldInput" />
+                            </div>
+                        </div>
+
+                        <Button
+                            variant="default"
+                            class="w-full"
+                            :disabled="processing"
+                            @click="completeProduction"
+                        >
+                            <CheckCircle2 :size="16" />
+                            {{ t('workOrders.actions.completeProduction') }}
+                        </Button>
                     </div>
                 </Card>
 
@@ -381,7 +564,7 @@ const fieldInput = 'h-9 w-full rounded-md border border-border-subtle bg-surface
                         <dl class="space-y-3">
                             <div>
                                 <dt class="mb-1 text-xs text-text-tertiary">{{ t('workOrders.info.createdBy') }}</dt>
-                                <dd class="text-sm text-text-primary">{{ workOrder.created_by?.name || '-' }}</dd>
+                                <dd class="text-sm text-text-primary">{{ workOrder.creator?.name || '-' }}</dd>
                             </div>
                             <div>
                                 <dt class="mb-1 text-xs text-text-tertiary">{{ t('workOrders.info.created') }}</dt>
@@ -394,10 +577,6 @@ const fieldInput = 'h-9 w-full rounded-md border border-border-subtle bg-surface
                             <div v-if="workOrder.completed_at">
                                 <dt class="mb-1 text-xs text-text-tertiary">{{ t('workOrders.info.completed') }}</dt>
                                 <dd class="text-sm text-text-primary">{{ formatDate(workOrder.completed_at) }}</dd>
-                            </div>
-                            <div v-if="workOrder.cancelled_at">
-                                <dt class="mb-1 text-xs text-text-tertiary">{{ t('workOrders.info.cancelled') }}</dt>
-                                <dd class="text-sm text-text-primary">{{ formatDate(workOrder.cancelled_at) }}</dd>
                             </div>
                             <div>
                                 <dt class="mb-1 text-xs text-text-tertiary">{{ t('workOrders.info.lastUpdated') }}</dt>

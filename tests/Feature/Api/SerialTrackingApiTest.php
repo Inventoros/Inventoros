@@ -331,6 +331,29 @@ class SerialTrackingApiTest extends TestCase
         $this->assertDatabaseHas('product_serials', ['id' => $serial->id, 'status' => 'transferred']);
     }
 
+    public function test_a_serial_consumed_by_a_work_order_cannot_change_status(): void
+    {
+        Sanctum::actingAs($this->admin);
+
+        $serial = ProductSerial::create([
+            'organization_id' => $this->organization->id,
+            'product_id' => $this->product->id,
+            'serial_number' => 'SN-BUILT-001',
+            'status' => ProductSerial::STATUS_CONSUMED,
+        ]);
+
+        foreach (['available', 'sold', 'damaged'] as $status) {
+            $this->putJson("/api/v1/products/{$this->product->id}/serials/{$serial->id}", ['status' => $status])
+                ->assertStatus(409)->assertJsonPath('error', 'consumed');
+        }
+        // Nor can a request put a serial into that state itself.
+        $this->putJson("/api/v1/products/{$this->product->id}/serials/{$serial->id}", ['status' => 'consumed'])
+            ->assertStatus(422);
+        $this->postJson("/api/v1/products/{$this->product->id}/serials", ['serial_number' => 'SN-NEW-002', 'status' => 'consumed'])
+            ->assertStatus(422);
+        $this->assertSame('consumed', $serial->fresh()->status);
+    }
+
     public function test_serial_status_must_be_valid(): void
     {
         Sanctum::actingAs($this->admin);

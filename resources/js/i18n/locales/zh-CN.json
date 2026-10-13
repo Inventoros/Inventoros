@@ -2660,7 +2660,8 @@
         "sold": "已售出",
         "reserved": "已预留",
         "damaged": "已损坏",
-        "transferred": "已转移"
+        "transferred": "已转移",
+        "consumed": "已消耗"
       },
       "serialNumber": "序列号",
       "createSerial": "创建序列号",
@@ -2851,7 +2852,8 @@
       "noWarehouse": "不指定仓库",
       "notes": "备注",
       "notesPlaceholder": "可选的生产备注...",
-      "quantityProduced": "已生产数量"
+      "quantityProduced": "已生产数量",
+      "outputVariant": "要生产的规格"
     },
     "components": {
       "title": "所需组件",
@@ -2869,15 +2871,18 @@
       "noComponents": "此工单未记录组件。",
       "noComponentsDefined": "此组装产品尚未定义组件。请先在产品详情页面添加组件，再创建工单。",
       "insufficientWarning": "部分组件库存不足。您仍可创建工单，但在补足库存之前无法开始生产。",
-      "unknown": "未知"
+      "unknown": "未知",
+      "variant": "规格",
+      "fromKit": "来自套件 {name}",
+      "chooseVariant": "{name} 的规格"
     },
     "actions": {
       "startProduction": "开始生产",
-      "startConfirm": "要开始此工单的生产吗？组件将被预留。",
+      "startConfirm": "要开始此工单的生产吗？现在会检查库存，库存在工单完成时才变动。",
       "completeProduction": "完成生产",
       "completeConfirm": "要完成此工单吗？{count} 件将被添加到组装产品库存。 | 要完成此工单吗？{count} 件将被添加到组装产品库存。",
       "cancelWorkOrder": "取消工单",
-      "cancelConfirm": "要取消此工单吗？所有已预留的组件将被释放。",
+      "cancelConfirm": "要取消此工单吗？库存只在完成时变动，因此不会从库存中扣除任何东西。",
       "view": "查看"
     },
     "progress": {
@@ -2903,7 +2908,31 @@
       "headTitle": "工单 {number}",
       "deleteConfirm": "要删除此工单吗？此操作无法撤销。",
       "dangerZone": "危险操作",
-      "releaseHint": "所有已预留的组件将被释放回库存。"
+      "releaseHint": "库存只在工单完成时变动，因此取消不会改变库存。"
+    },
+    "tracking": {
+      "serial": "按序列号跟踪",
+      "batch": "按批次跟踪"
+    },
+    "allocation": {
+      "used": "已使用",
+      "serialsHint": "需要的序列号：{count} 个。勾选要使用的序列号，不勾选则先使用最早的。",
+      "batchesHint": "输入从每个批次取用的数量（共 {count}），留空则先使用最早到期的批次。",
+      "batchTotal": "已选 {chosen} / {count}",
+      "available": "可用 {count}",
+      "expires": "{date} 到期",
+      "noExpiry": "无到期日",
+      "noneAvailable": "没有可用的。",
+      "takeFrom": "从批次 {batch} 取用的数量"
+    },
+    "output": {
+      "title": "产出",
+      "produced": "已生产",
+      "serialNumbers": "所生产单位的序列号",
+      "serialNumbersHint": "每行一个：已输入 {entered} / {count}。",
+      "batchNumber": "批次号",
+      "batchNumberHint": "留空将自动生成。若此产品已有相同编号的批次，则追加到该批次。",
+      "expiryDate": "到期日"
     }
   },
   "reportBuilder": {

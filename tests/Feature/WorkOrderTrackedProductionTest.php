@@ -653,6 +653,52 @@ final class WorkOrderTrackedProductionTest extends TestCase
             ->assertJsonPath('data.outputs.0.serial.serial_number', 'OUT-1');
     }
 
+    public function test_the_create_page_lists_exploded_kit_lines_and_variants(): void
+    {
+        $nut = $this->product(['stock' => 30, 'name' => 'Nut', 'has_variants' => true]);
+        $steel = $this->variant($nut, 'Steel', 7);
+        $kit = $this->product(['type' => 'kit', 'name' => 'Fixing kit']);
+        $this->bom($kit, $nut, 2);
+        $this->bom($this->assembly, $kit, 3);
+        $this->assembly->update(['has_variants' => true, 'tracking_type' => 'serial']);
+        $large = $this->variant($this->assembly, 'Large', 0);
+
+        $this->signedIn('web')->get(route('work-orders.create'))
+            ->assertOk()
+            ->assertInertia(fn ($page) => $page
+                ->component('WorkOrders/Create')
+                ->where('assemblyProducts.0.variants.0.id', $large->id)
+                ->where('assemblyProducts.0.tracking_type', 'serial')
+                ->where('assemblyProducts.0.components.0.product_id', $this->component->id)
+                ->where('assemblyProducts.0.components.1.product_id', $nut->id)
+                ->where('assemblyProducts.0.components.1.quantity', 6)
+                ->where('assemblyProducts.0.components.1.kit.id', $kit->id)
+                ->where('assemblyProducts.0.components.1.variants.0.id', $steel->id)
+            );
+    }
+
+    public function test_the_show_page_offers_the_serials_and_batches_to_allocate(): void
+    {
+        [$s1, $s2] = $this->serialComponent(2);
+        $glue = $this->product(['tracking_type' => 'batch', 'stock' => 5, 'name' => 'Glue']);
+        $lot = $this->batch($glue, 'G1', 5, '2030-01-01');
+        $this->bom($this->assembly, $glue, 1);
+        $this->assembly->update(['tracking_type' => 'batch']);
+        $order = $this->startedOrder('web', 1);
+
+        $this->get(route('work-orders.show', $order))
+            ->assertOk()
+            ->assertInertia(fn ($page) => $page
+                ->component('WorkOrders/Show')
+                ->where('outputTrackingType', 'batch')
+                ->where('items.0.tracking_type', 'serial')
+                ->where('items.0.available_serials.0.id', $s1->id)
+                ->where('items.0.available_serials.1.id', $s2->id)
+                ->where('items.1.tracking_type', 'batch')
+                ->where('items.1.available_batches.0.id', $lot->id)
+            );
+    }
+
     // ==================== HELPERS ====================
 
     private function product(array $attributes = []): Product

@@ -33,7 +33,7 @@ const filteredSerials = computed(() => {
 });
 
 const statusCounts = computed(() => {
-    const counts = { available: 0, sold: 0, reserved: 0, damaged: 0, transferred: 0 };
+    const counts = { available: 0, sold: 0, reserved: 0, damaged: 0, transferred: 0, consumed: 0 };
     localSerials.value.forEach(s => {
         if (counts[s.status] !== undefined) counts[s.status]++;
     });
@@ -96,6 +96,7 @@ const statusBadgeClass = (status) => {
         reserved: 'bg-amber-100 dark:bg-amber-900/30 text-amber-800 dark:text-amber-300',
         damaged: 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300',
         transferred: 'bg-gray-100 dark:bg-gray-800/60 text-gray-700 dark:text-gray-300',
+        consumed: 'bg-gray-100 dark:bg-gray-800/60 text-gray-700 dark:text-gray-300',
     };
     return classes[status] || 'bg-gray-100 text-gray-800';
 };
@@ -217,7 +218,7 @@ const statusBadgeClass = (status) => {
                         </td>
                         <td class="py-2 px-3 text-gray-600 dark:text-gray-400 max-w-[200px] truncate">{{ serial.notes || '-' }}</td>
                         <td class="py-2 px-3">
-                            <span v-if="serial.status === 'transferred'" class="text-xs text-gray-400 dark:text-gray-500">-</span>
+                            <span v-if="serial.status === 'transferred' || serial.status === 'consumed'" class="text-xs text-gray-400 dark:text-gray-500">-</span>
                             <div v-else class="flex gap-1">
                                 <button
                                     v-if="serial.status === 'available'"

@@ -133,6 +133,16 @@ class SerialTrackingController extends Controller
                 ], 409);
             }
 
+            // A serial built into a product by a work order is part of that
+            // work order's record; freeing it here would leave the unit
+            // counted both inside the assembly and on the shelf.
+            if ($locked->status === ProductSerial::STATUS_CONSUMED) {
+                return response()->json([
+                    'message' => 'This serial was consumed by a work order and cannot change status.',
+                    'error' => 'consumed',
+                ], 409);
+            }
+
             $target = $validated['status'];
             $allocating = in_array($target, [ProductSerial::STATUS_SOLD, ProductSerial::STATUS_RESERVED], true);
             $alreadyAllocated = in_array($locked->status, [ProductSerial::STATUS_SOLD, ProductSerial::STATUS_RESERVED], true);

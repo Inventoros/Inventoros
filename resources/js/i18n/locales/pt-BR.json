@@ -2660,7 +2660,8 @@
         "sold": "Vendido",
         "reserved": "Reservado",
         "damaged": "Danificado",
-        "transferred": "Transferido"
+        "transferred": "Transferido",
+        "consumed": "Consumido"
       },
       "serialNumber": "Número de Série",
       "createSerial": "Criar Nº de Série",
@@ -2851,7 +2852,8 @@
       "noWarehouse": "Nenhum depósito específico",
       "notes": "Observações",
       "notesPlaceholder": "Observações de produção opcionais...",
-      "quantityProduced": "Quantidade Produzida"
+      "quantityProduced": "Quantidade Produzida",
+      "outputVariant": "Variante a produzir"
     },
     "components": {
       "title": "Componentes Necessários",
@@ -2869,15 +2871,18 @@
       "noComponents": "Nenhum componente registrado para esta ordem de produção.",
       "noComponentsDefined": "Este produto montado não tem componentes definidos. Adicione componentes na página de detalhes do produto antes de criar uma ordem de produção.",
       "insufficientWarning": "Alguns componentes têm estoque insuficiente. Você ainda pode criar a ordem de produção, mas a produção só poderá começar quando o estoque for reabastecido.",
-      "unknown": "Desconhecido"
+      "unknown": "Desconhecido",
+      "variant": "Variante",
+      "fromKit": "Do kit {name}",
+      "chooseVariant": "Variante de {name}"
     },
     "actions": {
       "startProduction": "Iniciar Produção",
-      "startConfirm": "Iniciar a produção desta ordem? Os componentes serão reservados.",
+      "startConfirm": "Iniciar a produção desta ordem? O estoque é verificado agora e movimentado quando a ordem for concluída.",
       "completeProduction": "Concluir Produção",
       "completeConfirm": "Concluir esta ordem de produção? {count} unidade será adicionada ao estoque do produto montado. | Concluir esta ordem de produção? {count} unidades serão adicionadas ao estoque do produto montado.",
       "cancelWorkOrder": "Cancelar Ordem de Produção",
-      "cancelConfirm": "Cancelar esta ordem de produção? Os componentes reservados serão liberados.",
+      "cancelConfirm": "Cancelar esta ordem? O estoque só é movimentado na conclusão, então nada é retirado do estoque.",
       "view": "Visualizar"
     },
     "progress": {
@@ -2903,7 +2908,31 @@
       "headTitle": "Ordem de Produção {number}",
       "deleteConfirm": "Excluir esta ordem de produção? Isso não pode ser desfeito.",
       "dangerZone": "Zona de Perigo",
-      "releaseHint": "Todos os componentes reservados serão liberados de volta ao estoque."
+      "releaseHint": "O estoque só é movimentado quando uma ordem é concluída, então cancelar não altera o estoque."
+    },
+    "tracking": {
+      "serial": "Rastreado por número de série",
+      "batch": "Rastreado por lote"
+    },
+    "allocation": {
+      "used": "Usados",
+      "serialsHint": "Números de série necessários: {count}. Marque os que serão usados, ou nenhum para usar primeiro os mais antigos.",
+      "batchesHint": "Informe quanto retirar de cada lote ({count} no total), ou deixe em branco para usar primeiro o que vence antes.",
+      "batchTotal": "{chosen} de {count} escolhidos",
+      "available": "{count} disponíveis",
+      "expires": "Vence em {date}",
+      "noExpiry": "Sem validade",
+      "noneAvailable": "Nenhum disponível.",
+      "takeFrom": "Quantidade a retirar do lote {batch}"
+    },
+    "output": {
+      "title": "Produção",
+      "produced": "Produzido",
+      "serialNumbers": "Números de série das unidades produzidas",
+      "serialNumbersHint": "Um por linha: {entered} de {count} informados.",
+      "batchNumber": "Número do lote",
+      "batchNumberHint": "Deixe em branco para gerar um. Um lote existente deste produto com o mesmo número é complementado.",
+      "expiryDate": "Data de validade"
     }
   },
   "reportBuilder": {

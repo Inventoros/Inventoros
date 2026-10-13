@@ -2660,7 +2660,8 @@
         "sold": "Satıldı",
         "reserved": "Rezerve",
         "damaged": "Hasarlı",
-        "transferred": "Aktarıldı"
+        "transferred": "Aktarıldı",
+        "consumed": "Tüketildi"
       },
       "serialNumber": "Seri Numarası",
       "createSerial": "Seri No Oluştur",
@@ -2851,7 +2852,8 @@
       "noWarehouse": "Belirli bir depo yok",
       "notes": "Notlar",
       "notesPlaceholder": "İsteğe bağlı üretim notları...",
-      "quantityProduced": "Üretilen Miktar"
+      "quantityProduced": "Üretilen Miktar",
+      "outputVariant": "Üretilecek varyant"
     },
     "components": {
       "title": "Gerekli Bileşenler",
@@ -2869,15 +2871,18 @@
       "noComponents": "Bu iş emri için kayıtlı bileşen yok.",
       "noComponentsDefined": "Bu montaj ürününün tanımlı bileşeni yok. İş emri oluşturmadan önce ürün detay sayfasından bileşen ekleyin.",
       "insufficientWarning": "Bazı bileşenlerin stoku yetersiz. İş emrini yine de oluşturabilirsiniz, ancak stok yenilenene kadar üretim başlayamaz.",
-      "unknown": "Bilinmiyor"
+      "unknown": "Bilinmiyor",
+      "variant": "Varyant",
+      "fromKit": "{name} kitinden",
+      "chooseVariant": "{name} varyantı"
     },
     "actions": {
       "startProduction": "Üretimi Başlat",
-      "startConfirm": "Bu iş emri için üretim başlatılsın mı? Bileşenler rezerve edilecek.",
+      "startConfirm": "Bu iş emri için üretim başlatılsın mı? Stok şimdi kontrol edilir ve iş emri tamamlandığında hareket eder.",
       "completeProduction": "Üretimi Tamamla",
       "completeConfirm": "Bu iş emri tamamlansın mı? Montaj stokuna {count} birim eklenecek. | Bu iş emri tamamlansın mı? Montaj stokuna {count} birim eklenecek.",
       "cancelWorkOrder": "İş Emrini İptal Et",
-      "cancelConfirm": "Bu iş emri iptal edilsin mi? Rezerve edilen tüm bileşenler serbest bırakılacak.",
+      "cancelConfirm": "Bu iş emri iptal edilsin mi? Stok yalnızca tamamlandığında hareket eder, bu yüzden stoktan hiçbir şey düşülmez.",
       "view": "Görüntüle"
     },
     "progress": {
@@ -2903,7 +2908,31 @@
       "headTitle": "İş Emri {number}",
       "deleteConfirm": "Bu iş emri silinsin mi? Bu işlem geri alınamaz.",
       "dangerZone": "Tehlikeli Bölge",
-      "releaseHint": "Rezerve edilmiş tüm bileşenler stoka geri bırakılacaktır."
+      "releaseHint": "Stok yalnızca iş emri tamamlandığında hareket eder, bu yüzden iptal stoku değiştirmez."
+    },
+    "tracking": {
+      "serial": "Seri numarasıyla izlenir",
+      "batch": "Partiyle izlenir"
+    },
+    "allocation": {
+      "used": "Kullanılan",
+      "serialsHint": "Gereken seri numarası: {count}. Kullanılacakları işaretleyin veya en eskilerin önce kullanılması için hiçbirini işaretlemeyin.",
+      "batchesHint": "Her partiden ne kadar alınacağını girin (toplam {count}) veya son kullanma tarihi en yakın olanın önce kullanılması için boş bırakın.",
+      "batchTotal": "{count} içinden {chosen} seçildi",
+      "available": "{count} mevcut",
+      "expires": "Son kullanma {date}",
+      "noExpiry": "Son kullanma tarihi yok",
+      "noneAvailable": "Mevcut yok.",
+      "takeFrom": "{batch} partisinden alınacak miktar"
+    },
+    "output": {
+      "title": "Üretim çıktısı",
+      "produced": "Üretilen",
+      "serialNumbers": "Üretilen birimlerin seri numaraları",
+      "serialNumbersHint": "Her satıra bir tane: {count} içinden {entered} girildi.",
+      "batchNumber": "Parti numarası",
+      "batchNumberHint": "Otomatik oluşturmak için boş bırakın. Bu ürünün aynı numaralı mevcut partisine eklenir.",
+      "expiryDate": "Son kullanma tarihi"
     }
   },
   "reportBuilder": {
