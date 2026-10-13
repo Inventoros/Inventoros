@@ -1403,11 +1403,13 @@
       "rows": "Filas",
       "action": "Acción",
       "download": "Descargar",
+      "availableUntil": "Disponible hasta el {date}",
       "statuses": {
         "pending": "Pendiente",
         "processing": "Procesando",
         "completed": "Completada",
-        "failed": "Fallida"
+        "failed": "Fallida",
+        "expired": "Caducada"
       }
     }
   },

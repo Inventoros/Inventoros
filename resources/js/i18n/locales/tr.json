@@ -1403,11 +1403,13 @@
       "rows": "Satırlar",
       "action": "İşlem",
       "download": "İndir",
+      "availableUntil": "{date} tarihine kadar kullanılabilir",
       "statuses": {
         "pending": "Beklemede",
         "processing": "İşleniyor",
         "completed": "Tamamlandı",
-        "failed": "Başarısız"
+        "failed": "Başarısız",
+        "expired": "Süresi doldu"
       }
     }
   },

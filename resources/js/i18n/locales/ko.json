@@ -1403,11 +1403,13 @@
       "rows": "행",
       "action": "작업",
       "download": "다운로드",
+      "availableUntil": "{date}까지 다운로드 가능",
       "statuses": {
         "pending": "대기 중",
         "processing": "처리 중",
         "completed": "완료됨",
-        "failed": "실패"
+        "failed": "실패",
+        "expired": "만료됨"
       }
     }
   },

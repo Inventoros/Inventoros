@@ -1403,11 +1403,13 @@
       "rows": "Wiersze",
       "action": "Akcja",
       "download": "Pobierz",
+      "availableUntil": "Dostępne do {date}",
       "statuses": {
         "pending": "Oczekujący",
         "processing": "Przetwarzanie",
         "completed": "Zakończony",
-        "failed": "Nieudany"
+        "failed": "Nieudany",
+        "expired": "Wygasły"
       }
     }
   },

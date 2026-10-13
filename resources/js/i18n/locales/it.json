@@ -1403,11 +1403,13 @@
       "rows": "Righe",
       "action": "Azione",
       "download": "Scarica",
+      "availableUntil": "Disponibile fino al {date}",
       "statuses": {
         "pending": "In attesa",
         "processing": "In elaborazione",
         "completed": "Completata",
-        "failed": "Non riuscita"
+        "failed": "Non riuscita",
+        "expired": "Scaduta"
       }
     }
   },
