@@ -16,6 +16,7 @@ use App\Models\Inventory\StockAdjustment;
 use App\Models\Inventory\WorkOrder;
 use App\Models\Inventory\WorkOrderItem;
 use App\Models\Inventory\WorkOrderOutput;
+use App\Models\Scopes\OrganizationScope;
 use App\Models\User;
 use App\Support\SequenceNumberRetry;
 use Illuminate\Database\UniqueConstraintViolationException;
@@ -115,7 +116,7 @@ final class WorkOrderService
         $organizationId = (int) $creator->organization_id;
         $quantity = (int) $data['quantity'];
 
-        $product = Product::withoutGlobalScopes()
+        $product = Product::withoutGlobalScope(OrganizationScope::class)
             ->whereKey($data['product_id'])
             ->where('organization_id', $organizationId)
             ->firstOrFail();
@@ -393,7 +394,7 @@ final class WorkOrderService
             }
 
             if (in_array($product->id, $path, true) || $depth >= self::MAX_KIT_DEPTH) {
-                throw new InvalidStateException("Kit '{$product->name}' contains itself.", 'invalid_product');
+                throw new InvalidStateException("Kit '{$product->name}' contains itself or is nested too deeply.", 'invalid_product');
             }
 
             $kitComponents = $product->components()->with('componentProduct')->orderBy('sort_order')->orderBy('id')->get();
@@ -451,7 +452,7 @@ final class WorkOrderService
         $items ??= $workOrder->items;
 
         $productIds = $items->pluck('product_id')->push($workOrder->product_id)->filter()->unique()->sort()->values();
-        $products = Product::withoutGlobalScopes()
+        $products = Product::withoutGlobalScope(OrganizationScope::class)
             ->when($withTrashed, fn ($query) => $query->withTrashed())
             ->whereIn('id', $productIds)
             ->where('organization_id', $workOrder->organization_id)

@@ -519,6 +519,16 @@ final class WorkOrderTrackedProductionTest extends TestCase
         $this->assertSame($before, $this->snapshot());
     }
 
+    public function test_a_deleted_component_refuses_completion(): void
+    {
+        $order = $this->startedOrder('api', 1);
+        $this->component->delete();
+        $before = $this->snapshot();
+
+        $this->assertRefused('api', $this->act('api', $order, 'complete'), 'invalid_product');
+        $this->assertSame($before, $this->snapshot());
+    }
+
     // ==================== ATOMICITY, STALENESS, CANCEL ====================
 
     #[DataProvider('surfaces')]
