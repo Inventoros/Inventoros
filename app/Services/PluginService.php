@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Services;
 
 use App\Exceptions\PluginHookFailed;
+use App\Models\Inventory\StockReservation;
 use App\Models\PermissionSet;
 use App\Models\Plugin;
 use App\Models\Role;
@@ -318,6 +319,12 @@ final class PluginService
             $failures[] = $e;
         }
 
+        try {
+            $this->releasePluginReservations($slug);
+        } catch (\Throwable $e) {
+            $failures[] = $e;
+        }
+
         $this->assets->remove($slug);
 
         if ($plugin) {
@@ -340,6 +347,20 @@ final class PluginService
         }
 
         return true;
+    }
+
+    /**
+     * Release every active stock reservation a deleted plugin holds
+     * (owner_type = its slug), in every organization, so stock it promised
+     * becomes available again. Holds of other plugins and of core stay.
+     */
+    protected function releasePluginReservations(string $slug): void
+    {
+        if ($slug === StockReservation::CORE_OWNER) {
+            return;
+        }
+
+        app(StockReservationService::class)->releaseOwner($slug, StockReservation::UNINSTALLED);
     }
 
     /**
