@@ -9,17 +9,11 @@ use App\Exceptions\InsufficientStockException;
 use App\Exceptions\InvalidStateException;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\WorkOrder\StoreWorkOrderRequest;
-use App\Models\Inventory\Product;
-use App\Models\Inventory\StockAdjustment;
 use App\Models\Inventory\WorkOrder;
-use App\Models\Inventory\WorkOrderItem;
-use App\Services\ProductLocationStockService;
 use App\Services\WorkOrderService;
-use App\Support\SequenceNumberRetry;
 use Dedoc\Scramble\Attributes\QueryParameter;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 
 /**
  * @tags Work Orders
@@ -69,72 +63,23 @@ class WorkOrderController extends Controller
      * Store a newly created work order.
      *
      * Creates a work order for an assembly product and auto-populates
-     * items from the product's bill of materials.
+     * items from the product's bill of materials. A virtual kit in the BOM
+     * is exploded into its own components. Name the output variant with
+     * `product_variant_id` and the variant of each component stocked by
+     * variant with `component_variants` (`variant_required` /
+     * `invalid_variant` otherwise).
      *
      * @param  Request  $request  The incoming HTTP request containing work order data
      */
-    public function store(StoreWorkOrderRequest $request): JsonResponse
+    public function store(StoreWorkOrderRequest $request, WorkOrderService $workOrders): JsonResponse
     {
-        $organizationId = $request->user()->organization_id;
-
-        $validated = $request->validated();
-
-        // Verify the product is an assembly type
-        $product = Product::where('id', $validated['product_id'])
-            ->forOrganization($organizationId)
-            ->firstOrFail();
-
-        if ($product->type !== 'assembly') {
-            return response()->json([
-                'message' => 'Work orders can only be created for assembly products.',
-                'error' => 'invalid_product_type',
-            ], 422);
-        }
-
-        // Load the product's components
-        $components = $product->components()->with('componentProduct')->get();
-
-        if ($components->isEmpty()) {
-            return response()->json([
-                'message' => 'This assembly has no components defined. Add components before creating a work order.',
-                'error' => 'no_components',
-            ], 422);
-        }
-
         try {
-            app(WorkOrderService::class)->assertProductsSupported($components->pluck('componentProduct')->prepend($product));
+            $workOrder = $workOrders->create($request->user(), $request->validated());
         } catch (InvalidStateException $e) {
             return response()->json(['message' => $e->getMessage(), 'error' => $e->errorCode], 422);
         }
 
-        // Retry on a work_order_number unique collision (concurrent creates in
-        // the same org read the same MAX+1); nothing serialises them otherwise.
-        $workOrder = SequenceNumberRetry::create(fn () => DB::transaction(function () use ($validated, $organizationId, $request, $components) {
-            $workOrder = WorkOrder::create([
-                'organization_id' => $organizationId,
-                'product_id' => $validated['product_id'],
-                'created_by' => $request->user()->id,
-                'warehouse_id' => $validated['warehouse_id'] ?? null,
-                'work_order_number' => WorkOrder::generateWorkOrderNumber($organizationId),
-                'quantity' => $validated['quantity'],
-                'status' => 'draft',
-                'notes' => $validated['notes'] ?? null,
-            ]);
-
-            // Auto-populate items from the assembly's BOM * requested quantity
-            foreach ($components as $component) {
-                WorkOrderItem::create([
-                    'work_order_id' => $workOrder->id,
-                    'product_id' => $component->component_product_id,
-                    'quantity_required' => $component->quantity * $validated['quantity'],
-                    'quantity_consumed' => 0,
-                ]);
-            }
-
-            return $workOrder;
-        }));
-
-        $workOrder->load(['product:id,name,sku,thumbnail', 'creator:id,name', 'items.product:id,name,sku,stock']);
+        $workOrder->load(['product:id,name,sku,thumbnail', 'variant:id,product_id,title,sku', 'creator:id,name', 'items.product:id,name,sku,stock', 'items.variant:id,product_id,title,sku,stock']);
 
         return response()->json([
             'message' => 'Work order created successfully',
@@ -144,6 +89,10 @@ class WorkOrderController extends Controller
 
     /**
      * Display the specified work order.
+     *
+     * Includes each component line's variant and the serials / batch
+     * quantities it consumed (`items.*.allocations`), and what the order
+     * produced (`outputs`).
      *
      * @param  Request  $request  The incoming HTTP request
      * @param  WorkOrder  $workOrder  The work order to display
@@ -158,9 +107,17 @@ class WorkOrderController extends Controller
         }
 
         $workOrder->load([
-            'product:id,name,sku,thumbnail,type',
+            'product:id,name,sku,thumbnail,type,tracking_type',
+            'variant:id,product_id,title,sku,stock',
             'creator:id,name',
-            'items.product:id,name,sku,stock,thumbnail',
+            'items.product:id,name,sku,stock,thumbnail,tracking_type',
+            'items.variant:id,product_id,title,sku,stock',
+            'items.kit:id,name,sku',
+            'items.allocations.serial:id,serial_number',
+            'items.allocations.batch:id,batch_number,expiry_date',
+            'outputs.variant:id,title,sku',
+            'outputs.serial:id,serial_number',
+            'outputs.batch:id,batch_number,expiry_date',
         ]);
 
         return response()->json([
@@ -172,7 +129,8 @@ class WorkOrderController extends Controller
      * Start a work order.
      *
      * Changes status from draft/pending to in_progress after verifying
-     * all components have sufficient stock.
+     * all components have sufficient stock, and enough available serials or
+     * batch quantity when they are tracked.
      *
      * @param  Request  $request  The incoming HTTP request
      * @param  WorkOrder  $workOrder  The work order to start
@@ -188,10 +146,8 @@ class WorkOrderController extends Controller
 
         try {
             app(WorkOrderService::class)->start($workOrder);
-        } catch (InsufficientStockException $e) {
-            return response()->json(['message' => $e->getMessage(), 'error' => 'insufficient_stock'], 422);
-        } catch (InvalidStateException $e) {
-            return response()->json(['message' => $e->getMessage(), 'error' => $e->errorCode], 422);
+        } catch (BusinessRuleException $e) {
+            return $this->refusal($e);
         }
 
         $workOrder->refresh()->load(['product:id,name,sku,thumbnail', 'creator:id,name']);
@@ -205,7 +161,14 @@ class WorkOrderController extends Controller
     /**
      * Complete a work order.
      *
-     * Decrements component stock and increments assembly product stock.
+     * Consumes components in proportion to `quantity_produced` and receives
+     * the output, all or nothing. For a serial- or batch-tracked component,
+     * `allocations` may name the serials (`serial_ids`) or batch quantities
+     * (`batches`) to consume per line; lines left out are allocated oldest
+     * serial first / first-expiry-first. A serial-tracked output needs one
+     * `output.serial_numbers` entry per unit produced; a batch-tracked output
+     * goes into `output.batch_number` (topped up when it exists, generated
+     * when omitted) with an optional `output.expiry_date`.
      *
      * @param  Request  $request  The incoming HTTP request
      * @param  WorkOrder  $workOrder  The work order to complete
@@ -226,112 +189,15 @@ class WorkOrderController extends Controller
             ], 422);
         }
 
-        $validated = $request->validate([
-            'quantity_produced' => ['nullable', 'integer', 'min:1', 'max:'.$workOrder->quantity],
-        ]);
-
-        $quantityProduced = $validated['quantity_produced'] ?? $workOrder->quantity;
+        $validated = $request->validate(WorkOrderService::completionRules($workOrder->quantity));
 
         try {
-            DB::transaction(function () use ($workOrder, $quantityProduced) {
-                // Lock and re-read the row so a concurrent complete cannot pass
-                // the pre-transaction guard and double-consume/double-produce
-                // stock. Re-assert the status against the locked instance.
-                $locked = WorkOrder::whereKey($workOrder->getKey())->lockForUpdate()->firstOrFail();
-
-                if ($locked->status !== 'in_progress') {
-                    throw new InvalidStateException('Only in-progress work orders can be completed.', 'invalid_status');
-                }
-
-                $locked->load('items.product');
-
-                // Lock every product this completion touches (components +
-                // assembly) up front, ordered by id, BEFORE any bin/stock
-                // mutation, so bin operations run product-locked-first and this
-                // path cannot ABBA-deadlock with a concurrent sale of a
-                // component (order creation locks product then bins).
-                $productIds = $locked->items->pluck('product_id')
-                    ->push($locked->product_id)
-                    ->filter()
-                    ->unique()
-                    ->sort()
-                    ->values();
-                $products = Product::whereIn('id', $productIds)
-                    ->where('organization_id', $locked->organization_id)
-                    ->orderBy('id')
-                    ->lockForUpdate()
-                    ->get();
-
-                if ($products->count() !== $productIds->count()) {
-                    throw new InvalidStateException('A work order product is no longer available.', 'invalid_product');
-                }
-                app(WorkOrderService::class)->assertProductsSupported($products);
-
-                // Decrement component stock, refusing to drive any component
-                // negative — availability may have changed while the WO sat in
-                // progress. A shortfall aborts the whole completion.
-                foreach ($locked->items as $item) {
-                    // Consume in proportion to what was actually produced, not
-                    // the full planned quantity.
-                    $targetConsumed = (int) ceil($item->quantity_required * ($quantityProduced / $locked->quantity));
-                    $consumeQtyInt = $targetConsumed - (int) $item->quantity_consumed;
-
-                    if ($consumeQtyInt > 0) {
-                        // Draw the consumed components out of their location bins
-                        // before the total drops (unbinned components seed from
-                        // their pre-consumption stock).
-                        app(ProductLocationStockService::class)->consume($item->product, $consumeQtyInt);
-
-                        StockAdjustment::adjust(
-                            $item->product,
-                            -$consumeQtyInt,
-                            'assembly_consumption',
-                            "Consumed for work order {$locked->work_order_number}",
-                            "Assembly of {$locked->product->name}",
-                            $locked,
-                            allowNegative: false,
-                            // The bins were drawn down just above.
-                            syncBins: false,
-                        );
-
-                        $item->update(['quantity_consumed' => $targetConsumed]);
-                    }
-                }
-
-                // Increment assembly product stock
-                StockAdjustment::adjust(
-                    $locked->product,
-                    $quantityProduced,
-                    'assembly_production',
-                    "Produced from work order {$locked->work_order_number}",
-                    "Assembled {$quantityProduced} units",
-                    $locked,
-                    // Booked into the primary bin just below.
-                    syncBins: false,
-                );
-
-                // Book the assembled units into the product's primary bin.
-                app(ProductLocationStockService::class)->receive($locked->product, $quantityProduced);
-
-                $locked->update([
-                    'status' => 'completed',
-                    'quantity_produced' => $quantityProduced,
-                    'completed_at' => now(),
-                ]);
-            });
-        } catch (InsufficientStockException $e) {
-            return response()->json([
-                'message' => $e->getMessage(),
-                'error' => 'insufficient_stock',
-            ], 422);
+            $quantityProduced = app(WorkOrderService::class)->complete($workOrder, $validated);
         } catch (BusinessRuleException $e) {
-            return response()->json([
-                'message' => $e->getMessage(),
-                'error' => $e instanceof InvalidStateException ? $e->errorCode : 'invalid_status',
-            ], 422);
+            return $this->refusal($e);
         }
 
-        $workOrder->refresh()->load(['product:id,name,sku,thumbnail', 'creator:id,name']);
+        $workOrder->refresh()->load(['product:id,name,sku,thumbnail', 'creator:id,name', 'items.allocations', 'outputs']);
 
         return response()->json([
             'message' => "Work order completed. {$quantityProduced} units produced.",
@@ -342,7 +208,9 @@ class WorkOrderController extends Controller
     /**
      * Cancel a work order.
      *
-     * If the work order was in progress, restores any consumed component stock.
+     * Stock only moves when a work order completes, so cancelling returns
+     * nothing unless the order recorded consumption (older data), in which
+     * case exactly that is returned. Completed orders cannot be cancelled.
      *
      * @param  Request  $request  The incoming HTTP request
      * @param  WorkOrder  $workOrder  The work order to cancel
@@ -364,49 +232,9 @@ class WorkOrderController extends Controller
         }
 
         try {
-            DB::transaction(function () use ($workOrder) {
-                // Lock and re-read so a cancel can't race a concurrent complete
-                // (each would otherwise act on a stale status).
-                $locked = WorkOrder::whereKey($workOrder->getKey())->lockForUpdate()->firstOrFail();
-
-                if (! in_array($locked->status, ['draft', 'pending', 'in_progress'], true)) {
-                    throw new InvalidStateException('Only draft, pending, or in-progress work orders can be cancelled.', 'invalid_status');
-                }
-
-                // If in_progress, restore any consumed component stock
-                if ($locked->status === 'in_progress') {
-                    $locked->load('items.product');
-
-                    foreach ($locked->items as $item) {
-                        $consumedQty = (int) ceil((float) $item->quantity_consumed);
-
-                        if ($consumedQty > 0) {
-                            StockAdjustment::adjust(
-                                $item->product,
-                                $consumedQty,
-                                'assembly_reversal',
-                                "Reversed for cancelled work order {$locked->work_order_number}",
-                                'Work order cancelled - restoring consumed stock',
-                                $locked,
-                                // Booked into the primary bin just below.
-                                syncBins: false,
-                            );
-
-                            // Return the components to their primary bin.
-                            app(ProductLocationStockService::class)->receive($item->product, $consumedQty);
-
-                            $item->update(['quantity_consumed' => 0]);
-                        }
-                    }
-                }
-
-                $locked->update(['status' => 'cancelled']);
-            });
+            app(WorkOrderService::class)->cancel($workOrder);
         } catch (BusinessRuleException $e) {
-            return response()->json([
-                'message' => $e->getMessage(),
-                'error' => 'invalid_status',
-            ], 422);
+            return $this->refusal($e);
         }
 
         $workOrder->refresh()->load(['product:id,name,sku,thumbnail', 'creator:id,name']);
@@ -439,5 +267,21 @@ class WorkOrderController extends Controller
         }
 
         return response()->json(['message' => 'Work order deleted successfully']);
+    }
+
+    /**
+     * The 422 for a refused transition: insufficient_stock for a shortfall,
+     * otherwise the business rule's own error code.
+     */
+    private function refusal(BusinessRuleException $e): JsonResponse
+    {
+        return response()->json([
+            'message' => $e->getMessage(),
+            'error' => match (true) {
+                $e instanceof InsufficientStockException => 'insufficient_stock',
+                $e instanceof InvalidStateException => $e->errorCode,
+                default => 'invalid_status',
+            },
+        ], 422);
     }
 }

@@ -6,7 +6,10 @@ namespace App\Models\Inventory;
 
 use App\Models\Auth\Organization;
 use App\Models\User;
+use App\Models\Warehouse;
 use App\Support\SequenceNumber;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -18,22 +21,25 @@ use Illuminate\Support\Carbon;
  * @property int $id
  * @property int $organization_id
  * @property int $product_id
+ * @property int|null $product_variant_id
  * @property int $created_by
  * @property int|null $warehouse_id
  * @property string $work_order_number
  * @property int $quantity
  * @property int $quantity_produced
  * @property string $status
- * @property \Illuminate\Support\Carbon|null $started_at
- * @property \Illuminate\Support\Carbon|null $completed_at
+ * @property Carbon|null $started_at
+ * @property Carbon|null $completed_at
  * @property string|null $notes
- * @property \Illuminate\Support\Carbon|null $created_at
- * @property \Illuminate\Support\Carbon|null $updated_at
- * @property-read \App\Models\Auth\Organization $organization
- * @property-read \App\Models\Inventory\Product $product
- * @property-read \App\Models\User $creator
- * @property-read \App\Models\Inventory\Warehouse|null $warehouse
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Inventory\WorkOrderItem[] $items
+ * @property Carbon|null $created_at
+ * @property Carbon|null $updated_at
+ * @property-read Organization $organization
+ * @property-read Product $product
+ * @property-read User $creator
+ * @property-read Warehouse|null $warehouse
+ * @property-read Collection|WorkOrderItem[] $items
+ * @property-read ProductVariant|null $variant
+ * @property-read Collection|WorkOrderOutput[] $outputs
  */
 class WorkOrder extends Model
 {
@@ -45,6 +51,7 @@ class WorkOrder extends Model
     protected $fillable = [
         'organization_id',
         'product_id',
+        'product_variant_id',
         'created_by',
         'warehouse_id',
         'work_order_number',
@@ -74,7 +81,7 @@ class WorkOrder extends Model
     /**
      * Get the organization that owns the work order.
      *
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo<\App\Models\Auth\Organization, $this>
+     * @return BelongsTo<Organization, $this>
      */
     public function organization(): BelongsTo
     {
@@ -84,7 +91,7 @@ class WorkOrder extends Model
     /**
      * Get the assembly product being produced.
      *
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo<\App\Models\Inventory\Product, $this>
+     * @return BelongsTo<Product, $this>
      */
     public function product(): BelongsTo
     {
@@ -92,9 +99,39 @@ class WorkOrder extends Model
     }
 
     /**
+     * Get the variant being produced, when the assembly is sold by variant.
+     *
+     * @return BelongsTo<ProductVariant, $this>
+     */
+    public function variant(): BelongsTo
+    {
+        return $this->belongsTo(ProductVariant::class, 'product_variant_id');
+    }
+
+    /**
+     * Get what the work order produced (variant, serials or batch).
+     *
+     * @return HasMany<WorkOrderOutput, $this>
+     */
+    public function outputs(): HasMany
+    {
+        return $this->hasMany(WorkOrderOutput::class);
+    }
+
+    /**
+     * Get the serials and batch quantities the work order consumed.
+     *
+     * @return HasMany<WorkOrderAllocation, $this>
+     */
+    public function allocations(): HasMany
+    {
+        return $this->hasMany(WorkOrderAllocation::class);
+    }
+
+    /**
      * Get the user who created the work order.
      *
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo<\App\Models\User, $this>
+     * @return BelongsTo<User, $this>
      */
     public function creator(): BelongsTo
     {
@@ -104,7 +141,7 @@ class WorkOrder extends Model
     /**
      * Get the warehouse for this work order.
      *
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo<\App\Models\Inventory\Warehouse, $this>
+     * @return BelongsTo<Warehouse, $this>
      */
     public function warehouse(): BelongsTo
     {
@@ -114,7 +151,7 @@ class WorkOrder extends Model
     /**
      * Get the work order items (component consumption tracking).
      *
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany<\App\Models\Inventory\WorkOrderItem, $this>
+     * @return HasMany<WorkOrderItem, $this>
      */
     public function items(): HasMany
     {
@@ -124,9 +161,9 @@ class WorkOrder extends Model
     /**
      * Scope a query to only include work orders for a specific organization.
      *
-     * @param \Illuminate\Database\Eloquent\Builder<static> $query
-     * @param int $organizationId
-     * @return \Illuminate\Database\Eloquent\Builder<static>
+     * @param  Builder<static>  $query
+     * @param  int  $organizationId
+     * @return Builder<static>
      */
     public function scopeForOrganization($query, $organizationId)
     {
@@ -136,9 +173,8 @@ class WorkOrder extends Model
     /**
      * Scope a query to filter by status.
      *
-     * @param \Illuminate\Database\Eloquent\Builder<static> $query
-     * @param string $status
-     * @return \Illuminate\Database\Eloquent\Builder<static>
+     * @param  Builder<static>  $query
+     * @return Builder<static>
      */
     public function scopeByStatus($query, string $status)
     {
@@ -147,9 +183,6 @@ class WorkOrder extends Model
 
     /**
      * Generate a unique work order number in the format WO-YYYYMMDD-0001.
-     *
-     * @param int $organizationId
-     * @return string
      */
     public static function generateWorkOrderNumber(int $organizationId): string
     {

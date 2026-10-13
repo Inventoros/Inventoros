@@ -4,20 +4,22 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Inventory;
 
+use App\Enums\TrackingType;
 use App\Exceptions\BusinessRuleException;
 use App\Exceptions\InvalidStateException;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\WorkOrder\StoreWorkOrderRequest;
 use App\Models\Inventory\Product;
-use App\Models\Inventory\StockAdjustment;
+use App\Models\Inventory\ProductBatch;
+use App\Models\Inventory\ProductSerial;
+use App\Models\Inventory\ProductVariant;
 use App\Models\Inventory\WorkOrder;
 use App\Models\Inventory\WorkOrderItem;
-use App\Services\ProductLocationStockService;
+use App\Models\Warehouse;
 use App\Services\WorkOrderService;
-use App\Support\SequenceNumberRetry;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Collection;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -25,10 +27,17 @@ use Inertia\Response;
  * Controller for managing assembly work orders.
  *
  * Handles CRUD operations and workflow transitions for work orders
- * including creating, starting, completing, and cancelling.
+ * including creating, starting, completing, and cancelling. Every stock
+ * movement goes through WorkOrderService, shared with the REST API and MCP.
  */
 class WorkOrderController extends Controller
 {
+    /**
+     * How many available serials / batches the completion form lists per
+     * component line.
+     */
+    private const PICKER_LIMIT = 500;
+
     /**
      * Display a listing of work orders.
      *
@@ -70,89 +79,76 @@ class WorkOrderController extends Controller
     /**
      * Show the form for creating a new work order.
      *
+     * Each assembly carries its component lines per unit (virtual kits
+     * exploded the way create() explodes them) and the variants the user can
+     * pick for the output and for components stocked by variant.
+     *
      * @param  Request  $request  The incoming HTTP request
      */
-    public function create(Request $request): Response
+    public function create(Request $request, WorkOrderService $workOrders): Response
     {
         $organizationId = $request->user()->organization_id;
 
-        $assemblyProducts = Product::forOrganization($organizationId)
+        $assemblies = Product::forOrganization($organizationId)
             ->where('type', 'assembly')
             ->active()
             ->orderBy('name')
-            ->get(['id', 'name', 'sku']);
+            ->get(['id', 'name', 'sku', 'stock', 'has_variants', 'tracking_type']);
+
+        $assemblyProducts = $assemblies->map(function (Product $assembly) use ($workOrders) {
+            try {
+                $lines = $workOrders->componentLines($assembly);
+            } catch (InvalidStateException) {
+                $lines = [];
+            }
+
+            return [
+                'id' => $assembly->id,
+                'name' => $assembly->name,
+                'sku' => $assembly->sku,
+                'tracking_type' => $this->trackingValue($assembly),
+                'variants' => $this->variantOptions($assembly),
+                'components' => collect($lines)->values()->map(fn (array $line, int $index) => [
+                    'key' => $index,
+                    'product_id' => $line['product']->id,
+                    'name' => $line['product']->name,
+                    'sku' => $line['product']->sku,
+                    'stock' => (int) $line['product']->stock,
+                    'tracking_type' => $this->trackingValue($line['product']),
+                    'quantity' => round($line['quantity'], 2),
+                    'kit' => $line['kit_id'] === null ? null : Product::whereKey($line['kit_id'])->first(['id', 'name'])?->only(['id', 'name']),
+                    'variants' => $this->variantOptions($line['product']),
+                ])->all(),
+            ];
+        });
 
         return Inertia::render('WorkOrders/Create', [
             'assemblyProducts' => $assemblyProducts,
+            'warehouses' => Warehouse::where('organization_id', $organizationId)->orderBy('name')->get(['id', 'name']),
+            'preselectedProductId' => $request->integer('product_id') ?: null,
         ]);
     }
 
     /**
      * Store a newly created work order.
      *
-     * Auto-generates WO number and populates items from assembly's BOM.
+     * Auto-generates WO number and populates items from the assembly's BOM,
+     * exploding virtual kits into their components.
      *
      * @param  Request  $request  The incoming HTTP request
      * @return RedirectResponse
      */
-    public function store(StoreWorkOrderRequest $request)
+    public function store(StoreWorkOrderRequest $request, WorkOrderService $workOrders)
     {
-        $organizationId = $request->user()->organization_id;
-
-        $validated = $request->validated();
-
-        // Verify the product is an assembly type
-        $product = Product::where('id', $validated['product_id'])
-            ->forOrganization($organizationId)
-            ->firstOrFail();
-
-        if ($product->type !== 'assembly') {
-            return redirect()->back()
-                ->withErrors(['product_id' => 'Work orders can only be created for assembly products.'])
-                ->withInput();
-        }
-
-        // Load the product's components
-        $components = $product->components()->with('componentProduct')->get();
-
-        if ($components->isEmpty()) {
-            return redirect()->back()
-                ->withErrors(['product_id' => 'This assembly has no components defined. Add components before creating a work order.'])
-                ->withInput();
-        }
-
         try {
-            app(WorkOrderService::class)->assertProductsSupported($components->pluck('componentProduct')->prepend($product));
+            $workOrder = $workOrders->create($request->user(), $request->validated());
         } catch (InvalidStateException $e) {
-            return redirect()->back()->with('error', $e->getMessage());
-        }
-
-        // Retry on a work_order_number unique collision (concurrent creates in
-        // the same org read the same MAX+1); nothing serialises them otherwise.
-        $workOrder = SequenceNumberRetry::create(fn () => DB::transaction(function () use ($validated, $organizationId, $request, $components) {
-            $workOrder = WorkOrder::create([
-                'organization_id' => $organizationId,
-                'product_id' => $validated['product_id'],
-                'created_by' => $request->user()->id,
-                'warehouse_id' => $validated['warehouse_id'] ?? null,
-                'work_order_number' => WorkOrder::generateWorkOrderNumber($organizationId),
-                'quantity' => $validated['quantity'],
-                'status' => 'draft',
-                'notes' => $validated['notes'] ?? null,
-            ]);
-
-            // Auto-populate items from the assembly's BOM * requested quantity
-            foreach ($components as $component) {
-                WorkOrderItem::create([
-                    'work_order_id' => $workOrder->id,
-                    'product_id' => $component->component_product_id,
-                    'quantity_required' => $component->quantity * $validated['quantity'],
-                    'quantity_consumed' => 0,
-                ]);
+            if (in_array($e->errorCode, ['invalid_product_type', 'no_components'], true)) {
+                return redirect()->back()->withErrors(['product_id' => $e->getMessage()])->withInput();
             }
 
-            return $workOrder;
-        }));
+            return redirect()->back()->with('error', $e->getMessage())->withInput();
+        }
 
         return redirect()->route('work-orders.show', $workOrder)
             ->with('success', 'Work order created successfully.');
@@ -169,15 +165,33 @@ class WorkOrderController extends Controller
         $this->authorizeWorkOrder($request, $workOrder);
 
         $workOrder->load([
-            'product:id,name,sku,thumbnail,type',
+            'product:id,name,sku,thumbnail,type,stock,tracking_type,has_variants',
+            'variant:id,product_id,title,sku,stock',
             'creator:id,name',
-            'items.product:id,name,sku,stock,thumbnail',
+            'warehouse:id,name',
+            'items.product:id,name,sku,stock,thumbnail,tracking_type,type',
+            'items.variant:id,product_id,title,sku,stock',
+            'items.kit:id,name',
+            'items.allocations.serial:id,serial_number',
+            'items.allocations.batch:id,batch_number,expiry_date',
+            'outputs.serial:id,serial_number',
+            'outputs.batch:id,batch_number,expiry_date',
+            'outputs.variant:id,title,sku',
         ]);
 
-        // Calculate component availability for each item
-        $items = $workOrder->items->map(function ($item) {
-            $item->available_stock = $item->product->stock ?? 0;
-            $item->is_sufficient = $item->available_stock >= ($item->quantity_required - $item->quantity_consumed);
+        $picking = $workOrder->status === 'in_progress';
+
+        // Calculate component availability for each item, and for an order
+        // in progress list the serials / batches the user can allocate.
+        $items = $workOrder->items->map(function (WorkOrderItem $item) use ($picking) {
+            $target = $item->variant ?? $item->product;
+            $tracking = $item->variant === null && $item->product ? $this->trackingValue($item->product) : TrackingType::NONE->value;
+
+            $item->setAttribute('tracking_type', $tracking);
+            $item->setAttribute('available_stock', (int) ($target->stock ?? 0));
+            $item->setAttribute('is_sufficient', ($target->stock ?? 0) >= ((float) $item->quantity_required - (float) $item->quantity_consumed));
+            $item->setAttribute('available_serials', $picking && $tracking === TrackingType::SERIAL->value ? $this->availableSerials($item->product) : []);
+            $item->setAttribute('available_batches', $picking && $tracking === TrackingType::BATCH->value ? $this->availableBatches($item->product) : []);
 
             return $item;
         });
@@ -186,6 +200,9 @@ class WorkOrderController extends Controller
             'pluginComponents' => plugin_slots('work-orders.show', ['header', 'actions', 'footer']),
             'workOrder' => $workOrder,
             'items' => $items,
+            'outputTrackingType' => $workOrder->product_variant_id === null && $workOrder->product
+                ? $this->trackingValue($workOrder->product)
+                : TrackingType::NONE->value,
             'allComponentsSufficient' => $items->every(fn ($item) => $item->is_sufficient),
         ]);
     }
@@ -194,7 +211,7 @@ class WorkOrderController extends Controller
      * Start a work order.
      *
      * Changes status from draft/pending to in_progress after verifying
-     * all components have sufficient stock.
+     * all components have sufficient stock (and tracked units).
      *
      * @param  Request  $request  The incoming HTTP request
      * @param  WorkOrder  $workOrder  The work order to start
@@ -217,7 +234,9 @@ class WorkOrderController extends Controller
     /**
      * Complete a work order.
      *
-     * Decrements component stock and increments assembly product stock.
+     * Consumes the components (with the serials / batches the user chose, or
+     * picked automatically) and receives the output (with its serials or
+     * batch), all or nothing.
      *
      * @param  Request  $request  The incoming HTTP request
      * @param  WorkOrder  $workOrder  The work order to complete
@@ -232,103 +251,10 @@ class WorkOrderController extends Controller
                 ->with('error', 'Only in-progress work orders can be completed.');
         }
 
-        $validated = $request->validate([
-            'quantity_produced' => 'nullable|integer|min:1|max:'.$workOrder->quantity,
-        ]);
-
-        $quantityProduced = $validated['quantity_produced'] ?? $workOrder->quantity;
+        $validated = $request->validate(WorkOrderService::completionRules($workOrder->quantity));
 
         try {
-            DB::transaction(function () use ($workOrder, $quantityProduced) {
-                // Lock and re-read the row so a concurrent complete cannot pass
-                // the pre-transaction guard and double-consume/double-produce
-                // stock. Re-assert the status guard against the locked instance.
-                $workOrder = WorkOrder::whereKey($workOrder->getKey())->lockForUpdate()->firstOrFail();
-
-                if ($workOrder->status !== 'in_progress') {
-                    throw new InvalidStateException('Only in-progress work orders can be completed.', 'invalid_status');
-                }
-
-                $workOrder->load('items.product');
-
-                // Lock every product this completion touches (components +
-                // assembly) up front, ordered by id, BEFORE any bin/stock
-                // mutation. Bin operations (consume/receive) and adjust() must
-                // always run product-locked-first; order creation and transfers
-                // lock the product then the bins, so acquiring the product locks
-                // here first keeps that global order and avoids an ABBA deadlock
-                // when a component is also being sold concurrently.
-                $productIds = $workOrder->items->pluck('product_id')
-                    ->push($workOrder->product_id)
-                    ->filter()
-                    ->unique()
-                    ->sort()
-                    ->values();
-                $products = Product::whereIn('id', $productIds)
-                    ->where('organization_id', $workOrder->organization_id)
-                    ->orderBy('id')
-                    ->lockForUpdate()
-                    ->get();
-
-                if ($products->count() !== $productIds->count()) {
-                    throw new InvalidStateException('A work order product is no longer available.', 'invalid_product');
-                }
-                app(WorkOrderService::class)->assertProductsSupported($products);
-
-                // Decrement component stock in proportion to what was actually
-                // produced, not the full planned quantity — a partial completion
-                // must not burn (and destroy) components for units never made.
-                foreach ($workOrder->items as $item) {
-                    $targetConsumed = (int) ceil($item->quantity_required * ($quantityProduced / $workOrder->quantity));
-                    $consumeQtyInt = $targetConsumed - (int) $item->quantity_consumed;
-
-                    if ($consumeQtyInt > 0) {
-                        // Draw the consumed components out of their location bins
-                        // before the total drops, so an unbinned component seeds
-                        // from its pre-consumption stock.
-                        app(ProductLocationStockService::class)->consume($item->product, $consumeQtyInt);
-
-                        // Re-validate availability under the lock and refuse to
-                        // drive a component negative: stock may have been drained
-                        // (by sales, other WOs) while this WO sat in progress.
-                        StockAdjustment::adjust(
-                            $item->product,
-                            -$consumeQtyInt,
-                            'assembly_consumption',
-                            "Consumed for work order {$workOrder->work_order_number}",
-                            "Assembly of {$workOrder->product->name}",
-                            $workOrder,
-                            allowNegative: false,
-                            // The bins were drawn down just above.
-                            syncBins: false,
-                        );
-
-                        $item->update(['quantity_consumed' => $targetConsumed]);
-                    }
-                }
-
-                // Increment assembly product stock
-                $assemblyProduct = $workOrder->product;
-                StockAdjustment::adjust(
-                    $assemblyProduct,
-                    $quantityProduced,
-                    'assembly_production',
-                    "Produced from work order {$workOrder->work_order_number}",
-                    "Assembled {$quantityProduced} units",
-                    $workOrder,
-                    // Booked into the primary bin just below.
-                    syncBins: false,
-                );
-
-                // Book the assembled units into the product's primary bin.
-                app(ProductLocationStockService::class)->receive($assemblyProduct, $quantityProduced);
-
-                $workOrder->update([
-                    'status' => 'completed',
-                    'quantity_produced' => $quantityProduced,
-                    'completed_at' => now(),
-                ]);
-            });
+            $quantityProduced = app(WorkOrderService::class)->complete($workOrder, $validated);
         } catch (BusinessRuleException $e) {
             return redirect()->route('work-orders.show', $workOrder)
                 ->with('error', $e->getMessage());
@@ -341,7 +267,7 @@ class WorkOrderController extends Controller
     /**
      * Cancel a work order.
      *
-     * If the work order was in progress, restores any consumed component stock.
+     * If the work order recorded any consumption, returns exactly that.
      *
      * @param  Request  $request  The incoming HTTP request
      * @param  WorkOrder  $workOrder  The work order to cancel
@@ -357,46 +283,7 @@ class WorkOrderController extends Controller
         }
 
         try {
-            DB::transaction(function () use ($workOrder) {
-                // Lock and re-read the row so a concurrent cancel (or a cancel
-                // racing a complete) cannot pass the pre-transaction guard and
-                // double-restore consumed stock. Re-assert the guard against the
-                // locked instance.
-                $workOrder = WorkOrder::whereKey($workOrder->getKey())->lockForUpdate()->firstOrFail();
-
-                if (! in_array($workOrder->status, ['draft', 'pending', 'in_progress'], true)) {
-                    throw new InvalidStateException('Only draft, pending, or in-progress work orders can be cancelled.', 'invalid_status');
-                }
-
-                // If in_progress, restore any consumed component stock
-                if ($workOrder->status === 'in_progress') {
-                    $workOrder->load('items.product');
-
-                    foreach ($workOrder->items as $item) {
-                        $consumedQty = (int) ceil((float) $item->quantity_consumed);
-
-                        if ($consumedQty > 0) {
-                            StockAdjustment::adjust(
-                                $item->product,
-                                $consumedQty,
-                                'assembly_reversal',
-                                "Reversed for cancelled work order {$workOrder->work_order_number}",
-                                'Work order cancelled - restoring consumed stock',
-                                $workOrder,
-                                // Booked into the primary bin just below.
-                                syncBins: false,
-                            );
-
-                            // Return the components to their primary bin.
-                            app(ProductLocationStockService::class)->receive($item->product, $consumedQty);
-
-                            $item->update(['quantity_consumed' => 0]);
-                        }
-                    }
-                }
-
-                $workOrder->update(['status' => 'cancelled']);
-            });
+            app(WorkOrderService::class)->cancel($workOrder);
         } catch (BusinessRuleException $e) {
             return redirect()->route('work-orders.show', $workOrder)
                 ->with('error', $e->getMessage());
@@ -441,5 +328,68 @@ class WorkOrderController extends Controller
         if ($workOrder->organization_id !== $request->user()->organization_id) {
             abort(403, 'Unauthorized action.');
         }
+    }
+
+    private function trackingValue(Product $product): string
+    {
+        $type = $product->tracking_type;
+
+        return $type instanceof TrackingType ? $type->value : ($type ?: TrackingType::NONE->value);
+    }
+
+    /**
+     * The variants a product is stocked by, or none when it is not stocked
+     * by variant.
+     *
+     * @return list<array{id:int, title:string|null, sku:string|null, stock:int}>
+     */
+    private function variantOptions(Product $product): array
+    {
+        if (! $product->has_variants) {
+            return [];
+        }
+
+        return ProductVariant::where('product_id', $product->id)
+            ->orderBy('position')
+            ->orderBy('id')
+            ->get(['id', 'title', 'sku', 'stock'])
+            ->map(fn (ProductVariant $variant) => $variant->only(['id', 'title', 'sku', 'stock']))
+            ->all();
+    }
+
+    /**
+     * @return Collection<int, ProductSerial>
+     */
+    private function availableSerials(?Product $product): Collection
+    {
+        if ($product === null) {
+            return collect();
+        }
+
+        return ProductSerial::where('product_id', $product->id)
+            ->where('status', ProductSerial::STATUS_AVAILABLE)
+            ->orderBy('id')
+            ->limit(self::PICKER_LIMIT)
+            ->get(['id', 'serial_number']);
+    }
+
+    /**
+     * Batches in the order automatic allocation would use them.
+     *
+     * @return Collection<int, ProductBatch>
+     */
+    private function availableBatches(?Product $product): Collection
+    {
+        if ($product === null) {
+            return collect();
+        }
+
+        return ProductBatch::where('product_id', $product->id)
+            ->where('quantity', '>', 0)
+            ->orderByRaw('expiry_date is null')
+            ->orderBy('expiry_date')
+            ->orderBy('id')
+            ->limit(self::PICKER_LIMIT)
+            ->get(['id', 'batch_number', 'quantity', 'expiry_date']);
     }
 }

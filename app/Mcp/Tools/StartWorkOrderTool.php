@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace App\Mcp\Tools;
 
+use App\Exceptions\BusinessRuleException;
 use App\Mcp\Concerns\AuthenticatesMcpRequest;
 use App\Models\Inventory\WorkOrder;
+use App\Services\WorkOrderService;
 use Illuminate\Contracts\JsonSchema\JsonSchema;
 use Laravel\Mcp\Request;
 use Laravel\Mcp\Response;
@@ -19,7 +21,7 @@ class StartWorkOrderTool extends Tool
 
     protected string $name = 'start_work_order';
 
-    protected string $description = 'Move a draft or pending work order into "in_progress". Validates that all components have sufficient stock before starting; fails fast otherwise.';
+    protected string $description = 'Move a draft or pending work order into "in_progress". Validates that every component has sufficient stock (and enough available serials or batch quantity when tracked) before starting; fails fast otherwise.';
 
     public function schema(JsonSchema $schema): array
     {
@@ -36,31 +38,21 @@ class StartWorkOrderTool extends Tool
 
         $wo = WorkOrder::query()
             ->forOrganization($this->organizationId())
-            ->with('items.product')
             ->find((int) $request->get('id'));
 
         if (! $wo) {
             return Response::error('Work order not found in this organization.');
         }
 
-        if (! in_array($wo->status, ['draft', 'pending'], true)) {
-            return Response::error("Only draft or pending work orders can be started (current status: {$wo->status}).");
+        // The same checks the web and REST surfaces run: status under a row
+        // lock, variant and kit lines, stock and tracked serials / batches.
+        try {
+            app(WorkOrderService::class)->start($wo);
+        } catch (BusinessRuleException $e) {
+            return Response::error($e->getMessage());
         }
 
-        foreach ($wo->items as $item) {
-            $remaining = $item->quantity_required - $item->quantity_consumed;
-            if ($item->product && $item->product->stock < $remaining) {
-                return Response::error(
-                    "Insufficient stock for component '{$item->product->name}': "
-                    ."available {$item->product->stock}, required {$remaining}."
-                );
-            }
-        }
-
-        $wo->update([
-            'status' => 'in_progress',
-            'started_at' => now(),
-        ]);
+        $wo->refresh();
 
         return Response::json([
             'message' => 'Work order started.',
