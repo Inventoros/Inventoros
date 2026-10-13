@@ -1403,11 +1403,13 @@
       "rows": "行数",
       "action": "操作",
       "download": "ダウンロード",
+      "availableUntil": "{date} までダウンロード可能",
       "statuses": {
         "pending": "保留中",
         "processing": "処理中",
         "completed": "完了",
-        "failed": "失敗"
+        "failed": "失敗",
+        "expired": "期限切れ"
       }
     }
   },

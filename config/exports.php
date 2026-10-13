@@ -29,8 +29,9 @@ return [
     | Retention (days)
     |--------------------------------------------------------------------------
     |
-    | How long a generated export file is kept before a cleanup command may
-    | prune it. Surfaced for the prune routine / UI; not enforced at write time.
+    | How long a finished export can be downloaded. Past this the download
+    | link reports it as expired, and the nightly `exports:prune` command
+    | deletes the file and its record. Zero or less keeps exports forever.
     |
     */
     'retention_days' => (int) env('EXPORT_RETENTION_DAYS', 7),

@@ -1403,11 +1403,13 @@
       "rows": "Строки",
       "action": "Действие",
       "download": "Скачать",
+      "availableUntil": "Доступно до {date}",
       "statuses": {
         "pending": "Ожидает",
         "processing": "Обработка",
         "completed": "Готово",
-        "failed": "Ошибка"
+        "failed": "Ошибка",
+        "expired": "Истёк"
       }
     }
   },

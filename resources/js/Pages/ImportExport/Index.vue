@@ -11,6 +11,7 @@ import { Head, useForm, usePage } from '@inertiajs/vue3';
 import { ref, computed, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { formatNumber } from '@/lib/money';
+import { displayDateTime } from '@/lib/dates';
 import {
     Upload,
     Download,
@@ -705,21 +706,22 @@ const code = 'rounded bg-surface-overlay px-1 py-0.5 font-mono text-xs text-text
                                 <td class="px-4 py-3 tabular-nums text-text-secondary">{{ e.row_count != null ? formatNumber(e.row_count) : '-' }}</td>
                                 <td class="px-4 py-3">
                                     <Badge
-                                        :variant="{
+                                        :variant="e.expired ? 'neutral' : ({
                                             completed: 'success',
                                             pending: 'warning',
                                             processing: 'warning',
                                             failed: 'danger',
-                                        }[e.status] || 'neutral'"
+                                        }[e.status] || 'neutral')"
                                         size="sm"
                                     >
-                                        {{ t(`importExport.exports.statuses.${e.status}`) }}
+                                        {{ t(`importExport.exports.statuses.${e.expired ? 'expired' : e.status}`) }}
                                     </Badge>
                                 </td>
                                 <td class="px-4 py-3 text-right">
                                     <a
-                                        v-if="e.status === 'completed'"
+                                        v-if="e.status === 'completed' && !e.expired"
                                         :href="route('import-export.download', e.id)"
+                                        :title="e.expires_at ? t('importExport.exports.availableUntil', { date: displayDateTime(e.expires_at) }) : undefined"
                                         class="font-medium text-brand transition-colors hover:text-brand-hover"
                                     >{{ t('importExport.exports.download') }}</a>
                                     <span v-else class="text-text-tertiary">-</span>

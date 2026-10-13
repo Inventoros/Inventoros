@@ -1304,11 +1304,13 @@
       "rows": "Rows",
       "action": "Action",
       "download": "Download",
+      "availableUntil": "Available until {date}",
       "statuses": {
         "pending": "Pending",
         "processing": "Processing",
         "completed": "Completed",
-        "failed": "Failed"
+        "failed": "Failed",
+        "expired": "Expired"
       }
     }
   },

@@ -46,6 +46,10 @@ Schedule::command('shipping:track')->everyThirtyMinutes()->withoutOverlapping();
 Schedule::command('activity-logs:prune')->dailyAt('03:00');
 Schedule::command('webhooks:prune')->dailyAt('03:30');
 
+// Queued export files past config('exports.retention_days'); capped per run
+// (see PruneDataExportsCommand) so a backlog clears over several nights.
+Schedule::command('exports:prune')->dailyAt('03:45')->withoutOverlapping();
+
 // Paid plugin licences: refresh each connected organization's signed
 // entitlements from the marketplace once a day.
 Schedule::command('marketplace:refresh-entitlements')->dailyAt('04:15')->withoutOverlapping();

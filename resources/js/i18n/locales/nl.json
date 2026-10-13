@@ -1403,11 +1403,13 @@
       "rows": "Rijen",
       "action": "Actie",
       "download": "Downloaden",
+      "availableUntil": "Beschikbaar tot {date}",
       "statuses": {
         "pending": "In afwachting",
         "processing": "In verwerking",
         "completed": "Voltooid",
-        "failed": "Mislukt"
+        "failed": "Mislukt",
+        "expired": "Verlopen"
       }
     }
   },

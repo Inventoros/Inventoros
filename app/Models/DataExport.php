@@ -84,12 +84,50 @@ class DataExport extends Model
     }
 
     /**
+     * Days a finished export is kept, from config('exports.retention_days').
+     * Zero or less turns expiry (and the exports:prune command) off.
+     */
+    public static function retentionDays(): int
+    {
+        return (int) config('exports.retention_days', 7);
+    }
+
+    /**
+     * When this export stops being downloadable, or null if it never expires
+     * (not completed yet, or retention is turned off).
+     */
+    public function expiresAt(): ?Carbon
+    {
+        $days = self::retentionDays();
+
+        if ($days < 1 || $this->status !== 'completed') {
+            return null;
+        }
+
+        $finishedAt = $this->completed_at ?? $this->created_at;
+
+        return $finishedAt?->copy()->addDays($days);
+    }
+
+    /**
+     * Whether the export is past its retention window. The file may still be
+     * on disk until the next exports:prune run, but it is no longer served.
+     */
+    public function isExpired(): bool
+    {
+        $expiresAt = $this->expiresAt();
+
+        return $expiresAt !== null && $expiresAt->lessThanOrEqualTo(now());
+    }
+
+    /**
      * Whether the generated file exists and can be downloaded.
      */
     public function isDownloadable(): bool
     {
         return $this->status === 'completed'
             && $this->path !== null
+            && ! $this->isExpired()
             && Storage::disk($this->disk)->exists($this->path);
     }
 }

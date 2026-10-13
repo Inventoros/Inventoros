@@ -1403,11 +1403,13 @@
       "rows": "Linhas",
       "action": "Ação",
       "download": "Baixar",
+      "availableUntil": "Disponível até {date}",
       "statuses": {
         "pending": "Pendente",
         "processing": "Processando",
         "completed": "Concluída",
-        "failed": "Falhou"
+        "failed": "Falhou",
+        "expired": "Expirada"
       }
     }
   },

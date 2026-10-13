@@ -1403,11 +1403,13 @@
       "rows": "الصفوف",
       "action": "الإجراء",
       "download": "تنزيل",
+      "availableUntil": "متاح حتى {date}",
       "statuses": {
         "pending": "معلق",
         "processing": "قيد المعالجة",
         "completed": "مكتمل",
-        "failed": "فشل"
+        "failed": "فشل",
+        "expired": "منتهي الصلاحية"
       }
     }
   },
