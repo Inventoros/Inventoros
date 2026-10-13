@@ -52,13 +52,16 @@ const requiredComponents = computed(() => {
             needsVariant,
             required_qty: requiredQty,
             available,
+            // A component stocked by variant has nothing to compare until a
+            // variant is chosen; that is a prompt, not a shortage.
+            awaitingVariant: needsVariant && variant === null,
             sufficient: (!needsVariant || variant !== null) && available >= requiredQty,
         };
     });
 });
 
 const allComponentsSufficient = computed(() => {
-    return requiredComponents.value.length > 0 && requiredComponents.value.every(c => c.sufficient);
+    return requiredComponents.value.length > 0 && requiredComponents.value.every(c => c.sufficient || c.awaitingVariant);
 });
 
 // A product appears once per variant choice even when it is reached through
@@ -238,7 +241,7 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                                     <tr
                                         v-for="comp in requiredComponents"
                                         :key="comp.key"
-                                        :class="!comp.sufficient ? 'bg-status-danger/10' : ''"
+                                        :class="!comp.sufficient && !comp.awaitingVariant ? 'bg-status-danger/10' : ''"
                                     >
                                         <td class="px-4 py-3 text-sm text-text-primary">
                                             <div>{{ comp.name }}</div>
@@ -269,11 +272,14 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                                         <td class="px-4 py-3 text-center text-sm font-medium text-text-primary">
                                             {{ comp.required_qty }}
                                         </td>
-                                        <td class="px-4 py-3 text-center text-sm" :class="comp.sufficient ? 'text-status-success' : 'font-semibold text-status-danger'">
+                                        <td v-if="comp.awaitingVariant" class="px-4 py-3 text-center text-sm text-text-tertiary">-</td>
+                                        <td v-else class="px-4 py-3 text-center text-sm" :class="comp.sufficient ? 'text-status-success' : 'font-semibold text-status-danger'">
                                             {{ comp.available }}
                                         </td>
                                         <td class="px-4 py-3 text-center">
+                                            <Badge v-if="comp.awaitingVariant" variant="warning" size="sm">{{ t('workOrders.components.variantNeeded') }}</Badge>
                                             <span
+                                                v-else
                                                 class="rounded-full px-2 py-0.5 text-xs font-semibold"
                                                 :class="comp.sufficient ? 'bg-status-success/15 text-status-success' : 'bg-status-danger/15 text-status-danger'"
                                             >

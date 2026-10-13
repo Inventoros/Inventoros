@@ -2874,7 +2874,8 @@
       "unknown": "غير معروف",
       "variant": "المتغير",
       "fromKit": "من المجموعة {name}",
-      "chooseVariant": "متغير {name}"
+      "chooseVariant": "متغير {name}",
+      "variantNeeded": "اختر المتغير"
     },
     "actions": {
       "startProduction": "بدء الإنتاج",

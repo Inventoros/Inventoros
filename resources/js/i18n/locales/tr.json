@@ -2874,7 +2874,8 @@
       "unknown": "Bilinmiyor",
       "variant": "Varyant",
       "fromKit": "{name} kitinden",
-      "chooseVariant": "{name} varyantı"
+      "chooseVariant": "{name} varyantı",
+      "variantNeeded": "Varyant seçin"
     },
     "actions": {
       "startProduction": "Üretimi Başlat",

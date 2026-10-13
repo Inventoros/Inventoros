@@ -2874,7 +2874,8 @@
       "unknown": "未知",
       "variant": "规格",
       "fromKit": "来自套件 {name}",
-      "chooseVariant": "{name} 的规格"
+      "chooseVariant": "{name} 的规格",
+      "variantNeeded": "选择规格"
     },
     "actions": {
       "startProduction": "开始生产",

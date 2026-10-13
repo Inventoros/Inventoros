@@ -2874,7 +2874,8 @@
       "unknown": "Desconhecido",
       "variant": "Variante",
       "fromKit": "Do kit {name}",
-      "chooseVariant": "Variante de {name}"
+      "chooseVariant": "Variante de {name}",
+      "variantNeeded": "Escolha a variante"
     },
     "actions": {
       "startProduction": "Iniciar Produção",

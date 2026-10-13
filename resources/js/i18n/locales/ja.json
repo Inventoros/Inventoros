@@ -2874,7 +2874,8 @@
       "unknown": "不明",
       "variant": "バリエーション",
       "fromKit": "キット {name} から",
-      "chooseVariant": "{name} のバリエーション"
+      "chooseVariant": "{name} のバリエーション",
+      "variantNeeded": "バリエーションを選択"
     },
     "actions": {
       "startProduction": "製造を開始",

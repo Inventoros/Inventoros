@@ -2874,7 +2874,8 @@
       "unknown": "Onbekend",
       "variant": "Variant",
       "fromKit": "Uit kit {name}",
-      "chooseVariant": "Variant van {name}"
+      "chooseVariant": "Variant van {name}",
+      "variantNeeded": "Kies variant"
     },
     "actions": {
       "startProduction": "Productie starten",

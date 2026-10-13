@@ -2874,7 +2874,8 @@
       "unknown": "Unbekannt",
       "variant": "Variante",
       "fromKit": "Aus Set {name}",
-      "chooseVariant": "Variante von {name}"
+      "chooseVariant": "Variante von {name}",
+      "variantNeeded": "Variante wählen"
     },
     "actions": {
       "startProduction": "Produktion starten",

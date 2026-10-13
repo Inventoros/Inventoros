@@ -7,7 +7,7 @@ import Button from '@/Components/ui/Button.vue';
 import Badge from '@/Components/ui/Badge.vue';
 import StatTile from '@/Components/ui/StatTile.vue';
 import { Head, Link, router } from '@inertiajs/vue3';
-import { computed, reactive, ref } from 'vue';
+import { computed, reactive, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { displayCalendarDate, displayDateTime } from '@/lib/dates';
 import { ArrowLeft, Play, CheckCircle2, X, Boxes, PackageCheck, Check, AlertTriangle, Trash2 } from 'lucide-vue-next';
@@ -87,12 +87,14 @@ const variantLabel = (variant) => variant ? (variant.title || variant.sku) : nul
 
 const formatDate = (dateStr) => displayDateTime(dateStr);
 
-const canStart = ['draft', 'pending'].includes(props.workOrder.status);
-const canComplete = props.workOrder.status === 'in_progress';
-const canCancel = ['draft', 'pending', 'in_progress'].includes(props.workOrder.status);
-const isReadOnly = ['completed', 'cancelled'].includes(props.workOrder.status);
+// Computed, not constants: after an action Inertia reuses this page instance
+// with fresh props, so a value read once at setup would keep the old status.
+const canStart = computed(() => ['draft', 'pending'].includes(props.workOrder.status));
+const canComplete = computed(() => props.workOrder.status === 'in_progress');
+const canCancel = computed(() => ['draft', 'pending', 'in_progress'].includes(props.workOrder.status));
+const isReadOnly = computed(() => ['completed', 'cancelled'].includes(props.workOrder.status));
 // Only orders that never moved stock can be deleted (mirrors WorkOrderController::destroy).
-const canDelete = ['draft', 'cancelled'].includes(props.workOrder.status);
+const canDelete = computed(() => ['draft', 'cancelled'].includes(props.workOrder.status));
 
 // ---- Allocation of tracked components and output (completion only) ----
 
@@ -106,9 +108,31 @@ const unitsNeeded = (item) => {
 };
 
 // item id -> serial ids ticked
-const chosenSerials = reactive(Object.fromEntries(trackedItems.value.map(item => [item.id, []])));
+const chosenSerials = reactive({});
 // item id -> { batch id: quantity }
-const chosenBatches = reactive(Object.fromEntries(trackedItems.value.map(item => [item.id, {}])));
+const chosenBatches = reactive({});
+
+// Start each tracked line with an empty choice, and drop choices that name a
+// serial or batch the server no longer offers (taken by another order, or a
+// different work order opened in this same page instance).
+watch(trackedItems, (items) => {
+    const previousSerials = { ...chosenSerials };
+    const previousBatches = { ...chosenBatches };
+    for (const key of Object.keys(chosenSerials)) delete chosenSerials[key];
+    for (const key of Object.keys(chosenBatches)) delete chosenBatches[key];
+    for (const item of items) {
+        const offeredSerials = new Set((item.available_serials || []).map(serial => serial.id));
+        const offeredBatches = new Set((item.available_batches || []).map(batch => String(batch.id)));
+        chosenSerials[item.id] = (previousSerials[item.id] || []).filter(id => offeredSerials.has(id));
+        chosenBatches[item.id] = Object.fromEntries(
+            Object.entries(previousBatches[item.id] || {}).filter(([batchId]) => offeredBatches.has(batchId)),
+        );
+    }
+}, { immediate: true });
+
+watch(() => [props.workOrder.id, props.workOrder.quantity], ([, quantity]) => {
+    quantityProduced.value = quantity;
+});
 
 const batchTotal = (item) => Object.values(chosenBatches[item.id] || {}).reduce((sum, qty) => sum + (Number(qty) || 0), 0);
 

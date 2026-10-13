@@ -2874,7 +2874,8 @@
       "unknown": "Неизвестно",
       "variant": "Вариант",
       "fromKit": "Из комплекта {name}",
-      "chooseVariant": "Вариант товара {name}"
+      "chooseVariant": "Вариант товара {name}",
+      "variantNeeded": "Выберите вариант"
     },
     "actions": {
       "startProduction": "Начать производство",

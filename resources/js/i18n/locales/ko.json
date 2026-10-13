@@ -2874,7 +2874,8 @@
       "unknown": "알 수 없음",
       "variant": "옵션",
       "fromKit": "키트 {name}에서",
-      "chooseVariant": "{name}의 옵션"
+      "chooseVariant": "{name}의 옵션",
+      "variantNeeded": "옵션 선택"
     },
     "actions": {
       "startProduction": "생산 시작",
