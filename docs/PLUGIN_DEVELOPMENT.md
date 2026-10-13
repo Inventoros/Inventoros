@@ -332,7 +332,7 @@ add_action('stock_changed', function ($product, $variant, array $change) {
 | `webhook_delivery_attempted` | `$delivery`, `$webhook`, `$result` | Once per outbound webhook delivery attempt: success, HTTP error, refused private destination or connection failure. `$result` is `[successful, status, duration_ms, error, attempt, will_retry]`. See [Outbound webhook events](#outbound-webhook-events). |
 | `organization_switched` | `$user`, `$from_organization_id`, `$to_organization_id` | A signed-in user switched their session to another organization they belong to. `$user` already works in the new one. See [Organizations and memberships](#organizations-and-memberships). |
 | `organization_member_added` | `$membership`, `$actor` | A user was given a membership of an organization other than their home one (after commit). |
-| `inter_company_transfer_completed` | `$transfer`, `$actor` | Stock moved between two organizations (after commit). `$transfer` is an `InterCompanyTransfer` with `from_organization_id`, `to_organization_id` and its `lines`, each with the adjustment booked on each side. |
+| `inter_company_transfer_completed` | `$transfer`, `$actor` | Stock moved between two organizations (after commit). `$transfer` is an `InterCompanyTransfer` with `from_organization_id`, `to_organization_id` and its `lines`, each with the adjustment booked on each side and the `serials` and `batches` it moved. |
 | `organization_member_removed` | `$organization_id`, `$user`, `$actor` | A membership was withdrawn (after commit). The user's roles, warehouse assignments and API tokens in that organization are already gone. |
 
 ## Filter reference
@@ -786,7 +786,7 @@ app(OrganizationMembershipService::class)->add($organization, $user, 'member', $
 
 ### Moving stock between organizations
 
-`InterCompanyTransferService::transfer($actor, $fromOrganizationId, $toOrganizationId, $lines, $notes, $idempotencyKey)` moves stock as one atomic operation: an `inter_company_out` adjustment in the source organization (never below zero) and an `inter_company_in` adjustment in the destination, both referencing one `InterCompanyTransfer`, so each organization's ledger shows its side. The actor must be a member of both organizations holding `transfer_stock` in each, with warehouse access to every location named (a user restricted to some warehouses must name a location on both sides, and cannot move variant stock, which has no locations). Each line names `from_product_id`, `to_product_id` and `quantity`, and optionally the variants (required for a product sold by variant) and the locations on each side; products and locations of the wrong organization are refused as not found, and serial or batch tracked products and kits are refused. Pass an idempotency key so a retried call returns the first transfer instead of moving the stock twice. Read transfers with `InterCompanyTransfer::involving($organizationId)`, never unfiltered.
+`InterCompanyTransferService::transfer($actor, $fromOrganizationId, $toOrganizationId, $lines, $notes, $idempotencyKey)` moves stock as one atomic operation: an `inter_company_out` adjustment in the source organization (never below zero) and an `inter_company_in` adjustment in the destination, both referencing one `InterCompanyTransfer`, so each organization's ledger shows its side. The actor must be a member of both organizations holding `transfer_stock` in each, with warehouse access to every location named (a user restricted to some warehouses must name a location on both sides, and cannot move variant stock, which has no locations). Each line names `from_product_id`, `to_product_id` and `quantity`, and optionally the variants (required for a product sold by variant) and the locations on each side; products and locations of the wrong organization are refused as not found. Pass an idempotency key so a retried call returns the first transfer instead of moving the stock twice. Read transfers with `InterCompanyTransfer::involving($organizationId)`, never unfiltered.
 
 ```php
 use App\Services\Organizations\InterCompanyTransferService;
@@ -794,6 +794,22 @@ use App\Services\Organizations\InterCompanyTransferService;
 $transfer = app(InterCompanyTransferService::class)->transfer($user, $holdingId, $subsidiaryId, [
     ['from_product_id' => $source->id, 'to_product_id' => $target->id, 'quantity' => 12],
 ], notes: 'Inter-company order IC-1042', idempotencyKey: 'ic-order-1042');
+```
+
+Tracked products and kits move too; both sides of a line must be the same kind of product:
+
+- **Serial tracked**: name the units with `serials` (serial numbers of the source product's available serials; `quantity` may be left out). The source serials stay behind with status `transferred` and the destination product gets serials with the same numbers. A serial number that already exists in the destination organization fails the whole transfer, unless it is a serial that earlier left that organization, which is revived. A transferred serial cannot be changed afterwards.
+- **Batch tracked**: name `batches` as `[['batch_id' => ..., 'quantity' => ...]]` (the source product's batches; there is no automatic FEFO pick, so a lot a plugin holds back is never moved by accident). The destination gets the same lot number, manufacture and expiry dates, topping up its batch of that lot or creating one; a destination lot with that number and another expiry date fails the transfer. A batch asked for more than it holds throws `InsufficientStockException`.
+- **Kits**: transfer a kit into a kit whose components have the same SKUs and per-kit quantities. The line is booked as one line per component (each with `from_kit_product_id`, `to_kit_product_id` and `kit_quantity`), whole units only. Kits with serial or batch tracked components, components sold by variant or nested kits are refused: transfer those components as their own lines.
+
+Each line of the returned transfer (and of the one `inter_company_transfer_completed` receives) has `serials` (serial number, `from_serial_id`, `to_serial_id`) and `batches` (lot number, dates, quantity, `from_batch_id`, `to_batch_id`) loaded.
+
+```php
+$transfer = app(InterCompanyTransferService::class)->transfer($user, $holdingId, $subsidiaryId, [
+    ['from_product_id' => $phone->id, 'to_product_id' => $theirPhone->id, 'serials' => ['SN-1001', 'SN-1002']],
+    ['from_product_id' => $milk->id, 'to_product_id' => $theirMilk->id, 'batches' => [['batch_id' => $lot->id, 'quantity' => 40]]],
+    ['from_product_id' => $starterKit->id, 'to_product_id' => $theirStarterKit->id, 'quantity' => 5],
+], idempotencyKey: 'ic-order-1043');
 ```
 
 Hooks that a core service fires after commit (`stock_changed`, `stock_adjusted` and the other domain hooks) run in the request's active organization, which can differ from the record's when the change was made inside `runAs()`. Listeners must use the record's own `organization_id`, as they already must in queued jobs.

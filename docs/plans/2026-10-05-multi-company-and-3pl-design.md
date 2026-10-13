@@ -1,6 +1,6 @@
 # Multi-company and 3PL: core design
 
-Status: memberships and switching implemented (Inventoros#257); inter-company transfers implemented in the change stacked on it; 3PL needs no further core primitive (decision below). Plugin SDK gap G11, and the core capability the Multi-Company (`multi-company`) and 3PL Management (`3pl`) plugins depend on.
+Status: memberships and switching implemented (Inventoros#257); inter-company transfers implemented in the change stacked on it (#258), extended to serial- and batch-tracked units and kits for 2.1; 3PL needs no further core primitive (decision below). Plugin SDK gap G11, and the core capability the Multi-Company (`multi-company`) and 3PL Management (`3pl`) plugins depend on.
 
 ## Why
 
@@ -110,12 +110,29 @@ Organizations themselves can be disabled (`is_active`): nobody works in a disabl
 
 Moving stock between two organizations must be atomic (both sides or neither), checked in both organizations, and visible in both ledgers. A plugin cannot do that safely from outside: it would have to reach into the second organization's rows past `OrganizationScope`.
 
-`App\Services\Organizations\InterCompanyTransferService::transfer($actor, $from, $to, $lines, $notes, $idempotencyKey)`, tested in `tests/Feature/Organizations/InterCompanyTransferServiceTest.php` (both ledgers, bins, variants, all-or-nothing, membership and `transfer_stock` on each side, wrong-organization records, warehouse access, idempotency, a request in either organization, webhooks of both organizations):
+`App\Services\Organizations\InterCompanyTransferService::transfer($actor, $from, $to, $lines, $notes, $idempotencyKey)`, tested in `tests/Feature/Organizations/InterCompanyTransferServiceTest.php` (both ledgers, bins, variants, all-or-nothing, membership and `transfer_stock` on each side, wrong-organization records, warehouse access, idempotency, a request in either organization, webhooks of both organizations) and `InterCompanyTrackedTransferTest.php` (serials, batches, kits):
 
-- Authorizes the actor in BOTH organizations (membership plus `transfer_stock` in each, and warehouse access to the named locations in each; a user restricted to some warehouses must name accessible locations on both sides, so variant stock, which has no locations, is out of reach for them), checks every product, variant and location belongs to the organization named for it, and refuses serial- or batch-tracked products (their units would need their own transfer).
-- Locks every product and variant involved in ascending id order, then, in one transaction, books an `inter_company_out` adjustment in the source organization (inside `runAs($from)`, never below zero) and an `inter_company_in` adjustment in the destination (inside `runAs($to)`). Both adjustments reference the same `inter_company_transfers` row, which records both organizations, the actor, the lines and both adjustment ids. Bins move with the totals, as for any adjustment.
+- Authorizes the actor in BOTH organizations (membership plus `transfer_stock` in each, and warehouse access to the named locations in each; a user restricted to some warehouses must name accessible locations on both sides, so variant stock, which has no locations, is out of reach for them), checks every product, variant, location, serial and batch belongs to the organization named for it, and that both sides of a line are the same kind of product (tracked the same way, kit into kit).
+- Locks every product (kit components included) and variant involved in ascending id order, then the serials and batches of both organizations in ascending id order (the order order fulfilment uses), then, in one transaction, books an `inter_company_out` adjustment in the source organization (inside `runAs($from)`, never below zero) and an `inter_company_in` adjustment in the destination (inside `runAs($to)`). Both adjustments reference the same `inter_company_transfers` row, which records both organizations, the actor, the lines and both adjustment ids. Bins move with the totals, as for any adjustment.
 - An optional idempotency key makes a retried call return the first transfer instead of moving stock twice.
-- Fires `inter_company_transfer_completed` after commit.
+- Fires `inter_company_transfer_completed` after commit, with the lines' serials and batches loaded.
+
+### Tracked units and kits
+
+The units of a tracked product are tenant rows (`product_serials`, `product_batches`, each with `organization_id`, serial numbers unique per organization), so they cannot simply change hands: each side keeps its own rows, and the transfer links them.
+
+| Kind | Caller names | Source | Destination | Linked in |
+|------|--------------|--------|-------------|-----------|
+| Serial tracked | `serials`: serial numbers of the source product's `available` serials | Each serial stays, with the new status `transferred` (kept for history, no longer counted as stock by the reconciliation, and refused by the serial API's status changes) | A serial with the same number on the destination product, `available`. If the destination organization already has that number the whole transfer fails, unless that row is `transferred` (the unit left it earlier and is coming back), in which case that row is revived on the destination product. | `inter_company_transfer_serials` (line, serial number, `from_serial_id`, `to_serial_id`) |
+| Batch tracked | `batches`: `{batch_id, quantity}` of the source product's batches | Each batch's quantity is decremented (several lines drawing on one batch count together; more than it holds is `InsufficientStockException`) | The destination product's batch with the same lot number and expiry date is topped up, or one is created with the same lot number, manufacture and expiry dates. A destination lot with that number and another expiry date fails the transfer. | `inter_company_transfer_batches` (line, lot number, dates, quantity, `from_batch_id`, `to_batch_id`) |
+
+`quantity` may be left out of a tracked line; when given it must equal the units named. Batches are named, never picked first-expiry-first-out: FEFO allocation consults `batch_allocatable_quantity` with an order line, which a transfer does not have, and moving a held (quarantined, recalled) lot to another company by accident is worse than asking the caller to choose. Tracked units move by product, not variant (serial and batch rows carry no variant).
+
+The product totals still move through the `inter_company_out` / `inter_company_in` adjustments, so after a transfer each side's tracking records and recorded stock agree exactly as well as they did before it.
+
+**Kits.** A virtual kit holds no stock of its own (its availability is derived from its components). A kit line is exploded server-side into one line per component: the source kit's bill of materials is matched, by component SKU, to the destination kit's, which must list the same SKUs in the same per-kit quantities. Each component line moves quantity x per-kit quantity units (whole units only; a fractional result is refused), is checked like any other line (organizations, warehouse access, bins) and records `from_kit_product_id`, `to_kit_product_id` and `kit_quantity`. Components that are serial or batch tracked, sold by variant or kits themselves are refused rather than guessed: the caller transfers them as their own lines. The bills of materials are read before the products are locked and compared again after, so a kit edited mid-transfer fails instead of moving the wrong components.
+
+Options rejected for kits: moving the kit as a unit (it has no stock to move); letting the caller map each component (more surface, and a wrong map moves the wrong stock); matching components by position (BOM order is cosmetic).
 
 The Multi-Company plugin builds its documents (inter-company sale, purchase, in transit, pricing) on top and calls the service for the stock movement.
 

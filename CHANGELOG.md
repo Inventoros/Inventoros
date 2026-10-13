@@ -11,6 +11,7 @@ Full release notes, with the pull request behind each change, are on [GitHub Rel
 - `TRUSTED_PROXIES` names the reverse proxies (nginx, Traefik, Caddy, a load balancer) whose `X-Forwarded-*` headers are believed, so the app builds https URLs and Secure cookies behind a TLS-terminating proxy. No proxy is trusted unless configured; the Docker image and compose files default to `private_ranges`.
 - Order and purchase order forms have an optional tax rate (%) beside the tax amount, which fills the amount in from the subtotal after discounts. Only the amount is saved, as before.
 - Queued exports now expire after `EXPORT_RETENTION_DAYS` (default 7): the download link says the export has expired, and a nightly `exports:prune` deletes the file and its record.
+- Inter-company transfers move serial- and batch-tracked stock and kits. Serial lines name the serials: the source keeps them with the new status `transferred` and the destination gets the same serial numbers (a clash fails the whole transfer). Batch lines name the source batches and quantities: the destination gets the same lot number and dates. A kit moves as its components, matched to the destination kit's by SKU. Each moved serial and batch is linked to its transfer line.
 
 ### Changed
 
