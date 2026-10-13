@@ -490,7 +490,7 @@ final class HookRegistry
                 'example' => "add_action('organization_member_added', function (\$membership, \$actor) { /* ... */ });",
             ],
             'inter_company_transfer_completed' => [
-                'description' => 'Fired after commit when stock moved between two organizations (InterCompanyTransferService::transfer). $transfer holds both organization ids and its lines with both adjustment ids',
+                'description' => 'Fired after commit when stock moved between two organizations (InterCompanyTransferService::transfer). $transfer holds both organization ids and its lines with both adjustment ids and the serials and batches each moved',
                 'parameters' => ['$transfer', '$actor'],
                 'example' => "add_action('inter_company_transfer_completed', function (\$transfer, \$actor) { /* ... */ });",
             ],

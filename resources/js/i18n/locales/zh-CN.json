@@ -2659,7 +2659,8 @@
         "available": "可用",
         "sold": "已售出",
         "reserved": "已预留",
-        "damaged": "已损坏"
+        "damaged": "已损坏",
+        "transferred": "已转移"
       },
       "serialNumber": "序列号",
       "createSerial": "创建序列号",

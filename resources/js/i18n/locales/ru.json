@@ -2659,7 +2659,8 @@
         "available": "Доступен",
         "sold": "Продан",
         "reserved": "Зарезервирован",
-        "damaged": "Повреждён"
+        "damaged": "Повреждён",
+        "transferred": "Передан"
       },
       "serialNumber": "Серийный номер",
       "createSerial": "Создать серийный номер",

@@ -257,7 +257,7 @@ final class InterCompanyTransferServiceTest extends TestCase
         }
     }
 
-    public function test_tracked_products_and_kits_are_refused(): void
+    public function test_tracked_products_and_kits_need_a_destination_of_the_same_kind(): void
     {
         $tracked = $this->product($this->alpha, 'SERIAL-1', ['tracking_type' => 'serial']);
         $kit = $this->product($this->alpha, 'KIT-1', ['type' => 'kit']);

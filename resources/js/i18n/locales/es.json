@@ -2659,7 +2659,8 @@
         "available": "Disponible",
         "sold": "Vendido",
         "reserved": "Reservado",
-        "damaged": "Dañado"
+        "damaged": "Dañado",
+        "transferred": "Transferido"
       },
       "serialNumber": "Número de serie",
       "createSerial": "Crear número de serie",

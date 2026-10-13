@@ -308,6 +308,29 @@ class SerialTrackingApiTest extends TestCase
         ]);
     }
 
+    public function test_a_serial_transferred_to_another_organization_cannot_be_changed(): void
+    {
+        Sanctum::actingAs($this->admin);
+
+        // The unit now lives in the other organization; reviving it here would
+        // count the same physical unit twice.
+        $serial = ProductSerial::create([
+            'organization_id' => $this->organization->id,
+            'product_id' => $this->product->id,
+            'serial_number' => 'SN-MOVED-001',
+            'status' => ProductSerial::STATUS_TRANSFERRED,
+        ]);
+
+        $this->putJson("/api/v1/products/{$this->product->id}/serials/{$serial->id}", ['status' => 'available'])
+            ->assertStatus(409)
+            ->assertJsonPath('error', 'transferred');
+
+        $this->putJson("/api/v1/products/{$this->product->id}/serials/{$serial->id}", ['status' => 'transferred'])
+            ->assertStatus(422);
+
+        $this->assertDatabaseHas('product_serials', ['id' => $serial->id, 'status' => 'transferred']);
+    }
+
     public function test_serial_status_must_be_valid(): void
     {
         Sanctum::actingAs($this->admin);
