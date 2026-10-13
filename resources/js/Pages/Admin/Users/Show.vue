@@ -5,9 +5,9 @@ import Card from '@/Components/ui/Card.vue';
 import Button from '@/Components/ui/Button.vue';
 import Badge from '@/Components/ui/Badge.vue';
 import { Head, Link, router } from '@inertiajs/vue3';
-import { ref } from 'vue';
+import { computed, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { roleName } from '@/lib/permissionLabels';
+import { roleName, permissionLabel, permissionCategoryLabel } from '@/lib/permissionLabels';
 import { displayDate } from '@/lib/dates';
 import { Pencil, ArrowLeft, Trash2, X, AlertTriangle, CheckCircle2 } from 'lucide-vue-next';
 import { usePermissions } from '@/composables/usePermissions';
@@ -16,12 +16,21 @@ const { canVisit } = usePermissions();
 
 const props = defineProps({
     user: Object,
+    permissions: { type: Object, default: () => ({}) },
+    effectivePermissions: { type: Array, default: () => [] },
 });
 
 const { t, te } = useI18n();
 const i18n = { t, te };
 const showDeleteModal = ref(false);
 const deleting = ref(false);
+const permissionSearch = ref('');
+const filteredPermissions = computed(() => Object.entries(props.permissions)
+    .map(([category, permissions]) => [category, permissions.filter((permission) =>
+        `${permission.value} ${permissionLabel(permission, i18n)}`.toLocaleLowerCase()
+            .includes(permissionSearch.value.toLocaleLowerCase()),
+    )])
+    .filter(([, permissions]) => permissions.length));
 
 const deleteUser = () => {
     deleting.value = true;
@@ -108,6 +117,26 @@ const roleVariant = (role) =>
                                 </dd>
                             </div>
                         </dl>
+                    </div>
+                </Card>
+
+                <Card>
+                    <h3 class="text-sm font-semibold text-text-primary">{{ t('admin.users.show.effectivePermissions') }}</h3>
+                    <p class="mt-2 text-sm text-text-secondary">{{ t('admin.users.show.effectivePermissionsHint') }}</p>
+                    <label for="permission-search" class="mt-4 block text-sm text-text-secondary">{{ t('common.search') }}</label>
+                    <input id="permission-search" v-model="permissionSearch" type="search" class="mt-1 h-9 w-full rounded-md border border-border-subtle bg-surface-canvas px-3 text-sm ds-focus-ring" />
+                    <div class="mt-4 max-h-96 overflow-y-auto space-y-4">
+                        <div v-for="[category, permissions] in filteredPermissions" :key="category">
+                            <h4 class="text-xs font-medium text-text-tertiary">{{ permissionCategoryLabel(category, i18n) }}</h4>
+                            <ul class="mt-2 space-y-2">
+                                <li v-for="permission in permissions" :key="permission.value" class="flex items-center justify-between gap-3 text-sm">
+                                    <span>{{ permissionLabel(permission, i18n) }}</span>
+                                    <Badge :variant="effectivePermissions.includes(permission.value) ? 'success' : 'neutral'" size="sm">
+                                        {{ t(effectivePermissions.includes(permission.value) ? 'admin.users.show.allowed' : 'admin.users.show.notGranted') }}
+                                    </Badge>
+                                </li>
+                            </ul>
+                        </div>
                     </div>
                 </Card>
 
