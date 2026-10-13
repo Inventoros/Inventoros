@@ -1133,7 +1133,10 @@ paths:
       description: |
         Auto-populates the work order's items from the assembly product's
         bill of materials. Requires `product.type === 'assembly'` and at
-        least one component.
+        least one component. A virtual kit in the BOM is exploded into its
+        own components (each item records the kit in `kit_product_id`); a
+        kit can never be produced. An assembly or component stocked by
+        variant needs the variant named.
       requestBody:
         required: true
         content:
@@ -1143,12 +1146,22 @@ paths:
               required: [product_id, quantity]
               properties:
                 product_id: { type: integer }
+                product_variant_id: { type: integer, description: "Variant to produce. Required when the assembly is stocked by variant." }
                 quantity: { type: integer, minimum: 1, maximum: 999999 }
                 warehouse_id: { type: integer }
                 notes: { type: string, maxLength: 2000 }
+                component_variants:
+                  type: array
+                  description: "The variant to consume for each component stocked by variant."
+                  items:
+                    type: object
+                    required: [product_id, product_variant_id]
+                    properties:
+                      product_id: { type: integer }
+                      product_variant_id: { type: integer }
       responses:
         '201': { description: Created }
-        '422': { description: "Not assembly, no components, or validation error" }
+        '422': { description: "Validation error, or `error`: `invalid_product_type`, `no_components`, `variant_required`, `invalid_variant`, `unsupported_kit`, `invalid_product`" }
 
   /work-orders/{workOrder}:
     parameters:
@@ -1156,6 +1169,11 @@ paths:
     get:
       tags: [Work Orders]
       summary: Show a work order
+      description: |
+        Includes the output `variant`, each item's `variant`, `kit` and
+        `allocations` (the serials and batch quantities it consumed, with
+        `serial` / `batch`), and `outputs` (what the work order produced:
+        `variant`, `serial` or `batch`, and `quantity`).
       responses: { '200': { description: Work order }, '404': { $ref: '#/components/responses/NotFound' } }
     delete:
       tags: [Work Orders]
@@ -1172,9 +1190,10 @@ paths:
     post:
       tags: [Work Orders]
       summary: Start a work order (verifies component stock)
+      description: "Checks each component's stock (the variant's, when the line names one) and, for serial- or batch-tracked components, the available serials or batch quantity. Nothing is reserved; stock moves on completion."
       responses:
         '200': { description: Started }
-        '422': { description: Invalid status or insufficient component stock }
+        '422': { description: "`invalid_status`, `insufficient_stock`, `variant_required`, `invalid_variant` or `unsupported_kit`" }
 
   /work-orders/{workOrder}/complete:
     parameters:
@@ -1182,6 +1201,15 @@ paths:
     post:
       tags: [Work Orders]
       summary: Complete a work order (consumes components, produces assembly)
+      description: |
+        Consumes components in proportion to `quantity_produced` (rounded up
+        per line) and receives the output, all or nothing. Serial- and
+        batch-tracked component lines left out of `allocations` are
+        allocated automatically: oldest serial first, batches earliest
+        expiry first. A serial-tracked output needs one `output.serial_numbers`
+        entry per unit produced; a batch-tracked output goes into
+        `output.batch_number` (an existing batch of the assembly is topped
+        up, a missing number is generated).
       requestBody:
         content:
           application/json:
@@ -1189,16 +1217,41 @@ paths:
               type: object
               properties:
                 quantity_produced: { type: integer, minimum: 1, description: "Defaults to the work order quantity." }
+                allocations:
+                  type: array
+                  items:
+                    type: object
+                    required: [work_order_item_id]
+                    properties:
+                      work_order_item_id: { type: integer }
+                      serial_ids: { type: array, items: { type: integer }, description: "Exactly the number of units the line consumes." }
+                      batches:
+                        type: array
+                        description: "Quantities totalling what the line consumes."
+                        items:
+                          type: object
+                          required: [product_batch_id, quantity]
+                          properties:
+                            product_batch_id: { type: integer }
+                            quantity: { type: integer, minimum: 1 }
+                output:
+                  type: object
+                  properties:
+                    serial_numbers: { type: array, items: { type: string, maxLength: 255 } }
+                    batch_number: { type: string, maxLength: 255 }
+                    expiry_date: { type: string, format: date }
+                    manufactured_date: { type: string, format: date }
       responses:
         '200': { description: Completed }
-        '422': { description: Only in-progress work orders can be completed }
+        '422': { description: "Validation error, or `error`: `invalid_status`, `insufficient_stock`, `invalid_quantity`, `variant_required`, `invalid_variant`, `unsupported_kit`, `invalid_allocation`, `invalid_serial`, `serial_unavailable`, `serial_count_mismatch`, `invalid_batch`, `batch_quantity_mismatch`, `invalid_output`, `serial_taken` or `batch_expiry_mismatch`" }
 
   /work-orders/{workOrder}/cancel:
     parameters:
       - { name: workOrder, in: path, required: true, schema: { type: integer } }
     post:
       tags: [Work Orders]
-      summary: Cancel a work order (restores consumed stock if in-progress)
+      summary: Cancel a draft, pending or in-progress work order
+      description: "Stock only moves on completion, so cancelling moves nothing. Completed work orders cannot be cancelled."
       responses:
         '200': { description: Cancelled }
         '422': { description: Invalid status }

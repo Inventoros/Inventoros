@@ -2660,7 +2660,8 @@
         "sold": "販売済み",
         "reserved": "予約済み",
         "damaged": "破損",
-        "transferred": "移管済み"
+        "transferred": "移管済み",
+        "consumed": "消費済み"
       },
       "serialNumber": "シリアル番号",
       "createSerial": "シリアルを作成",
@@ -2851,7 +2852,8 @@
       "noWarehouse": "倉庫を指定しない",
       "notes": "メモ",
       "notesPlaceholder": "製造に関するメモ（任意）...",
-      "quantityProduced": "製造済み数量"
+      "quantityProduced": "製造済み数量",
+      "outputVariant": "製造するバリエーション"
     },
     "components": {
       "title": "必要な構成部品",
@@ -2869,15 +2871,19 @@
       "noComponents": "この作業指示に記録された構成部品はありません。",
       "noComponentsDefined": "この組立品には構成部品が定義されていません。作業指示を作成する前に、商品詳細ページで構成部品を追加してください。",
       "insufficientWarning": "一部の構成部品の在庫が不足しています。作業指示は作成できますが、在庫が補充されるまで製造を開始できません。",
-      "unknown": "不明"
+      "unknown": "不明",
+      "variant": "バリエーション",
+      "fromKit": "キット {name} から",
+      "chooseVariant": "{name} のバリエーション",
+      "variantNeeded": "バリエーションを選択"
     },
     "actions": {
       "startProduction": "製造を開始",
-      "startConfirm": "この作業指示の製造を開始しますか？構成部品が引き当てられます。",
+      "startConfirm": "この作業指示の製造を開始しますか？在庫は今確認され、作業指示の完了時に移動します。",
       "completeProduction": "製造を完了",
       "completeConfirm": "この作業指示を完了しますか？組立品の在庫に{count}個が追加されます。 | この作業指示を完了しますか？組立品の在庫に{count}個が追加されます。",
       "cancelWorkOrder": "作業指示をキャンセル",
-      "cancelConfirm": "この作業指示をキャンセルしますか？引き当て済みの構成部品は解放されます。",
+      "cancelConfirm": "この作業指示をキャンセルしますか？在庫は完了時にのみ移動するため、在庫から何も引かれません。",
       "view": "表示"
     },
     "progress": {
@@ -2903,7 +2909,31 @@
       "headTitle": "作業指示 {number}",
       "deleteConfirm": "この作業指示を削除しますか？この操作は元に戻せません。",
       "dangerZone": "危険操作",
-      "releaseHint": "引き当て済みの構成部品はすべて在庫に戻されます。"
+      "releaseHint": "在庫は作業指示の完了時にのみ移動するため、キャンセルしても在庫は変わりません。"
+    },
+    "tracking": {
+      "serial": "シリアル管理",
+      "batch": "ロット管理"
+    },
+    "allocation": {
+      "used": "使用済み",
+      "serialsHint": "必要なシリアル数: {count}。使用するものを選択してください。選択しない場合は古いものから使用します。",
+      "batchesHint": "各ロットから使用する数量を入力してください（合計 {count}）。空欄の場合は有効期限の近いものから使用します。",
+      "batchTotal": "{count} 中 {chosen} を選択",
+      "available": "{count} 利用可能",
+      "expires": "有効期限 {date}",
+      "noExpiry": "有効期限なし",
+      "noneAvailable": "利用可能なものはありません。",
+      "takeFrom": "ロット {batch} から使用する数量"
+    },
+    "output": {
+      "title": "製造品",
+      "produced": "製造済み",
+      "serialNumbers": "製造したユニットのシリアル番号",
+      "serialNumbersHint": "1行に1つ: {count} 中 {entered} を入力済み。",
+      "batchNumber": "ロット番号",
+      "batchNumberHint": "空欄の場合は自動で生成されます。同じ番号のこの製品の既存ロットがあれば、そこに追加されます。",
+      "expiryDate": "有効期限"
     }
   },
   "reportBuilder": {

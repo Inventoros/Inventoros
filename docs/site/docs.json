@@ -7,6 +7,7 @@
         { "slug": "customer-portal", "label": "Customer Portal", "anchor": "customer-portal", "group": "Use", "description": "Give customer contacts a sign-in to see their orders, download invoices and request returns." },
         { "slug": "rest-api", "label": "REST & GraphQL API", "anchor": "rest-api", "group": "Integrate", "description": "Authentication, permissions, rate limits, pagination, endpoints, webhooks and GraphQL." },
         { "slug": "mcp-server", "label": "MCP Server", "anchor": "mcp-server", "group": "Integrate", "description": "Connect AI clients to Inventoros over the Model Context Protocol, with the full tool catalog." },
+        { "slug": "work-orders", "label": "Work Orders", "anchor": "work-orders", "group": "Use", "description": "Build assemblies from their bill of materials, with variants, serial and batch tracking and kits." },
         { "slug": "shipping", "label": "Shipping & Carriers", "anchor": "shipping", "group": "Use", "description": "Ship orders, buy labels through EasyPost, track shipments and email customers." },
         { "slug": "plugins", "label": "Plugin Development", "anchor": "plugins", "group": "Extend", "description": "Build, test and publish plugins with the manifest, hooks, filters and UI extension points." },
         { "slug": "updates", "label": "Updates & Backups", "anchor": "updates", "group": "Operate", "description": "Update from the admin panel with signed releases, and back up and restore your installation." }

@@ -2660,7 +2660,8 @@
         "sold": "Verkauft",
         "reserved": "Reserviert",
         "damaged": "Beschädigt",
-        "transferred": "Übertragen"
+        "transferred": "Übertragen",
+        "consumed": "Verbraucht"
       },
       "serialNumber": "Seriennummer",
       "createSerial": "Seriennummer erstellen",
@@ -2851,7 +2852,8 @@
       "noWarehouse": "Kein bestimmtes Lager",
       "notes": "Notizen",
       "notesPlaceholder": "Optionale Produktionsnotizen...",
-      "quantityProduced": "Produzierte Menge"
+      "quantityProduced": "Produzierte Menge",
+      "outputVariant": "Zu produzierende Variante"
     },
     "components": {
       "title": "Benötigte Komponenten",
@@ -2869,15 +2871,19 @@
       "noComponents": "Für diesen Arbeitsauftrag sind keine Komponenten erfasst.",
       "noComponentsDefined": "Für dieses Baugruppenprodukt sind keine Komponenten definiert. Fügen Sie auf der Produktdetailseite Komponenten hinzu, bevor Sie einen Arbeitsauftrag erstellen.",
       "insufficientWarning": "Einige Komponenten haben unzureichenden Bestand. Sie können den Arbeitsauftrag trotzdem erstellen, die Produktion kann aber erst beginnen, wenn der Bestand aufgefüllt ist.",
-      "unknown": "Unbekannt"
+      "unknown": "Unbekannt",
+      "variant": "Variante",
+      "fromKit": "Aus Set {name}",
+      "chooseVariant": "Variante von {name}",
+      "variantNeeded": "Variante wählen"
     },
     "actions": {
       "startProduction": "Produktion starten",
-      "startConfirm": "Produktion für diesen Arbeitsauftrag starten? Die Komponenten werden reserviert.",
+      "startConfirm": "Produktion für diesen Arbeitsauftrag starten? Der Bestand wird jetzt geprüft und bewegt sich, wenn der Arbeitsauftrag abgeschlossen wird.",
       "completeProduction": "Produktion abschließen",
       "completeConfirm": "Diesen Arbeitsauftrag abschließen? {count} Einheit wird dem Bestand des Baugruppenprodukts hinzugefügt. | Diesen Arbeitsauftrag abschließen? {count} Einheiten werden dem Bestand des Baugruppenprodukts hinzugefügt.",
       "cancelWorkOrder": "Arbeitsauftrag stornieren",
-      "cancelConfirm": "Diesen Arbeitsauftrag stornieren? Reservierte Komponenten werden freigegeben.",
+      "cancelConfirm": "Diesen Arbeitsauftrag stornieren? Bestand bewegt sich erst beim Abschluss, daher wird nichts aus dem Bestand genommen.",
       "view": "Ansehen"
     },
     "progress": {
@@ -2903,7 +2909,31 @@
       "headTitle": "Arbeitsauftrag {number}",
       "deleteConfirm": "Diesen Arbeitsauftrag löschen? Dies kann nicht rückgängig gemacht werden.",
       "dangerZone": "Gefahrenzone",
-      "releaseHint": "Reservierte Komponenten werden wieder für den Bestand freigegeben."
+      "releaseHint": "Bestand bewegt sich erst, wenn ein Arbeitsauftrag abgeschlossen wird; eine Stornierung lässt den Bestand unverändert."
+    },
+    "tracking": {
+      "serial": "Seriennummernverfolgt",
+      "batch": "Chargenverfolgt"
+    },
+    "allocation": {
+      "used": "Verwendet",
+      "serialsHint": "Benötigte Seriennummern: {count}. Wählen Sie die zu verwendenden aus, oder keine, um die ältesten zuerst zu verwenden.",
+      "batchesHint": "Geben Sie an, wie viel aus jeder Charge entnommen wird (insgesamt {count}), oder lassen Sie es leer, um die zuerst ablaufenden zu verwenden.",
+      "batchTotal": "{chosen} von {count} ausgewählt",
+      "available": "{count} verfügbar",
+      "expires": "Läuft ab am {date}",
+      "noExpiry": "Kein Ablaufdatum",
+      "noneAvailable": "Keine verfügbar.",
+      "takeFrom": "Menge aus Charge {batch}"
+    },
+    "output": {
+      "title": "Ergebnis",
+      "produced": "Produziert",
+      "serialNumbers": "Seriennummern der produzierten Einheiten",
+      "serialNumbersHint": "Eine pro Zeile: {entered} von {count} eingegeben.",
+      "batchNumber": "Chargennummer",
+      "batchNumberHint": "Leer lassen, um eine zu erzeugen. Eine vorhandene Charge dieses Produkts mit derselben Nummer wird aufgefüllt.",
+      "expiryDate": "Ablaufdatum"
     }
   },
   "reportBuilder": {

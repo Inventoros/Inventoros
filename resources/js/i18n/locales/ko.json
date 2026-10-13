@@ -2660,7 +2660,8 @@
         "sold": "판매됨",
         "reserved": "예약됨",
         "damaged": "파손됨",
-        "transferred": "이전됨"
+        "transferred": "이전됨",
+        "consumed": "소모됨"
       },
       "serialNumber": "일련번호",
       "createSerial": "일련번호 생성",
@@ -2851,7 +2852,8 @@
       "noWarehouse": "특정 창고 없음",
       "notes": "메모",
       "notesPlaceholder": "선택적 생산 메모...",
-      "quantityProduced": "생산된 수량"
+      "quantityProduced": "생산된 수량",
+      "outputVariant": "생산할 옵션"
     },
     "components": {
       "title": "필요 구성품",
@@ -2869,15 +2871,19 @@
       "noComponents": "이 작업 지시에 기록된 구성품이 없습니다.",
       "noComponentsDefined": "이 조립 제품에 정의된 구성품이 없습니다. 작업 지시를 생성하기 전에 제품 상세 페이지에서 구성품을 추가하세요.",
       "insufficientWarning": "일부 구성품의 재고가 부족합니다. 작업 지시는 생성할 수 있지만 재고가 보충될 때까지 생산을 시작할 수 없습니다.",
-      "unknown": "알 수 없음"
+      "unknown": "알 수 없음",
+      "variant": "옵션",
+      "fromKit": "키트 {name}에서",
+      "chooseVariant": "{name}의 옵션",
+      "variantNeeded": "옵션 선택"
     },
     "actions": {
       "startProduction": "생산 시작",
-      "startConfirm": "이 작업 지시의 생산을 시작하시겠습니까? 구성품이 예약됩니다.",
+      "startConfirm": "이 작업 지시의 생산을 시작하시겠습니까? 재고는 지금 확인되며 작업 지시가 완료될 때 이동합니다.",
       "completeProduction": "생산 완료",
       "completeConfirm": "이 작업 지시를 완료하시겠습니까? 조립 제품 재고에 {count}개가 추가됩니다. | 이 작업 지시를 완료하시겠습니까? 조립 제품 재고에 {count}개가 추가됩니다.",
       "cancelWorkOrder": "작업 지시 취소",
-      "cancelConfirm": "이 작업 지시를 취소하시겠습니까? 예약된 구성품이 모두 해제됩니다.",
+      "cancelConfirm": "이 작업 지시를 취소하시겠습니까? 재고는 완료 시에만 이동하므로 재고에서 빠지는 것은 없습니다.",
       "view": "보기"
     },
     "progress": {
@@ -2903,7 +2909,31 @@
       "headTitle": "작업 지시 {number}",
       "deleteConfirm": "이 작업 지시를 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.",
       "dangerZone": "위험 구역",
-      "releaseHint": "예약된 구성품은 모두 재고로 반환됩니다."
+      "releaseHint": "재고는 작업 지시가 완료될 때만 이동하므로 취소해도 재고는 변하지 않습니다."
+    },
+    "tracking": {
+      "serial": "일련번호 추적",
+      "batch": "배치 추적"
+    },
+    "allocation": {
+      "used": "사용됨",
+      "serialsHint": "필요한 일련번호: {count}개. 사용할 항목을 선택하거나, 선택하지 않으면 오래된 것부터 사용합니다.",
+      "batchesHint": "각 배치에서 가져올 수량을 입력하세요(총 {count}). 비워 두면 유효기간이 가까운 것부터 사용합니다.",
+      "batchTotal": "{count}개 중 {chosen}개 선택됨",
+      "available": "{count}개 사용 가능",
+      "expires": "{date} 만료",
+      "noExpiry": "유효기간 없음",
+      "noneAvailable": "사용 가능한 항목이 없습니다.",
+      "takeFrom": "배치 {batch}에서 가져올 수량"
+    },
+    "output": {
+      "title": "생산품",
+      "produced": "생산됨",
+      "serialNumbers": "생산된 단위의 일련번호",
+      "serialNumbersHint": "한 줄에 하나씩: {count}개 중 {entered}개 입력됨.",
+      "batchNumber": "배치 번호",
+      "batchNumberHint": "비워 두면 자동으로 생성됩니다. 같은 번호의 이 제품 기존 배치가 있으면 수량이 추가됩니다.",
+      "expiryDate": "유효기간"
     }
   },
   "reportBuilder": {

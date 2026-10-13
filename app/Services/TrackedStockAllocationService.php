@@ -6,10 +6,13 @@ namespace App\Services;
 
 use App\Enums\TrackingType;
 use App\Exceptions\InsufficientStockException;
+use App\Exceptions\InvalidStateException;
 use App\Models\Inventory\OrderItemBatchAllocation;
 use App\Models\Inventory\Product;
 use App\Models\Inventory\ProductBatch;
 use App\Models\Inventory\ProductSerial;
+use App\Models\Inventory\WorkOrderAllocation;
+use App\Models\Inventory\WorkOrderItem;
 use App\Models\Order\OrderItem;
 
 /**
@@ -206,10 +209,10 @@ final class TrackedStockAllocationService
      * a batch_allocatable_quantity filter holds some back. The answer is
      * clamped to 0..quantity; anything that is not a number is ignored.
      */
-    private function allocatableQuantity(ProductBatch $batch, Product $product, OrderItem $orderItem): int
+    private function allocatableQuantity(ProductBatch $batch, Product $product, OrderItem|WorkOrderItem $line): int
     {
         $quantity = (int) $batch->quantity;
-        $answer = apply_filters('batch_allocatable_quantity', $quantity, $batch, $product, $orderItem);
+        $answer = apply_filters('batch_allocatable_quantity', $quantity, $batch, $product, $line);
 
         if (! is_int($answer) && ! (is_string($answer) && is_numeric($answer)) && ! is_float($answer)) {
             return $quantity;
@@ -262,6 +265,242 @@ final class TrackedStockAllocationService
         }
 
         return $released;
+    }
+
+    /**
+     * How many tracked units a work order may draw on: available serials for
+     * a serial-tracked product, allocatable batch quantity for a batch-tracked
+     * one. Null for a product that is not tracked.
+     */
+    public function availableForProduction(Product $product, WorkOrderItem $line): ?int
+    {
+        return match ($this->trackingType($product)) {
+            TrackingType::SERIAL => ProductSerial::withoutGlobalScopes()
+                ->where('organization_id', $product->organization_id)
+                ->where('product_id', $product->id)
+                ->where('status', ProductSerial::STATUS_AVAILABLE)
+                ->count(),
+            TrackingType::BATCH => (int) ProductBatch::withoutGlobalScopes()
+                ->where('organization_id', $product->organization_id)
+                ->where('product_id', $product->id)
+                ->where('quantity', '>', 0)
+                ->get()
+                ->sum(fn (ProductBatch $batch) => $this->allocatableQuantity($batch, $product, $line)),
+            default => null,
+        };
+    }
+
+    /**
+     * Consume tracked units for a work order component line and record each
+     * serial / batch quantity against the line. Unlike order allocation this
+     * is always strict: production must say which units it used, so a
+     * tracked component that cannot be fully covered refuses the completion.
+     *
+     * $serialIds / $batches name the units the user chose; null picks them
+     * the same way orders do (oldest serial first; batches first-expiry-first
+     * with undated batches last).
+     *
+     * Runs inside the work order transaction, which already holds the product
+     * row lock; the tracking rows are locked here in ascending id order.
+     *
+     * @param  list<int>|null  $serialIds
+     * @param  list<array{product_batch_id:int, quantity:int}>|null  $batches
+     *
+     * @throws InsufficientStockException when the tracked units cannot cover $quantity
+     * @throws InvalidStateException when a chosen serial or batch is not usable
+     */
+    public function consumeForProduction(Product $product, int $quantity, WorkOrderItem $line, ?array $serialIds = null, ?array $batches = null): void
+    {
+        if ($quantity <= 0) {
+            return;
+        }
+
+        match ($this->trackingType($product)) {
+            TrackingType::SERIAL => $this->consumeSerialsForProduction($product, $quantity, $line, $serialIds),
+            TrackingType::BATCH => $this->consumeBatchesForProduction($product, $quantity, $line, $batches),
+            default => null,
+        };
+    }
+
+    /**
+     * Return whatever a work order line consumed: serials back to available,
+     * batch quantities back to their batches. The allocation rows are removed.
+     *
+     * @return int the number of units released
+     */
+    public function releaseForProduction(WorkOrderItem $line): int
+    {
+        $allocations = WorkOrderAllocation::withoutGlobalScopes()
+            ->where('work_order_item_id', $line->id)
+            ->orderBy('id')
+            ->lockForUpdate()
+            ->get();
+
+        $released = 0;
+
+        foreach ($allocations as $allocation) {
+            if ($allocation->product_serial_id !== null) {
+                ProductSerial::withoutGlobalScopes()
+                    ->whereKey($allocation->product_serial_id)
+                    ->where('status', ProductSerial::STATUS_CONSUMED)
+                    ->update(['status' => ProductSerial::STATUS_AVAILABLE]);
+            } elseif ($allocation->product_batch_id !== null) {
+                ProductBatch::withoutGlobalScopes()
+                    ->whereKey($allocation->product_batch_id)
+                    ->increment('quantity', $allocation->quantity);
+            }
+
+            $released += $allocation->quantity;
+            $allocation->delete();
+        }
+
+        return $released;
+    }
+
+    /**
+     * @param  list<int>|null  $serialIds
+     */
+    private function consumeSerialsForProduction(Product $product, int $quantity, WorkOrderItem $line, ?array $serialIds): void
+    {
+        $query = ProductSerial::withoutGlobalScopes()
+            ->where('organization_id', $product->organization_id)
+            ->where('product_id', $product->id)
+            ->orderBy('id')
+            ->lockForUpdate();
+
+        if ($serialIds === null) {
+            $serials = $query->where('status', ProductSerial::STATUS_AVAILABLE)->limit($quantity)->get();
+
+            if ($serials->count() < $quantity) {
+                throw new InsufficientStockException(
+                    "Not enough serials for {$product->name}: {$serials->count()} available, {$quantity} required."
+                );
+            }
+        } else {
+            $ids = array_map('intval', $serialIds);
+
+            if (count($ids) !== count(array_unique($ids))) {
+                throw new InvalidStateException("The same serial was chosen twice for {$product->name}.", 'invalid_serial');
+            }
+
+            if (count($ids) !== $quantity) {
+                throw new InvalidStateException(
+                    "{$product->name} needs exactly {$quantity} serials; ".count($ids).' were chosen.',
+                    'serial_count_mismatch',
+                );
+            }
+
+            $serials = $query->whereIn('id', $ids)->get();
+
+            // A serial of another product or organization is reported exactly
+            // like one that does not exist.
+            if ($serials->count() !== count($ids)) {
+                throw new InvalidStateException("A chosen serial was not found for {$product->name}.", 'invalid_serial');
+            }
+
+            $unavailable = $serials->first(fn (ProductSerial $serial) => $serial->status !== ProductSerial::STATUS_AVAILABLE);
+            if ($unavailable !== null) {
+                throw new InvalidStateException("Serial {$unavailable->serial_number} is not available.", 'serial_unavailable');
+            }
+        }
+
+        foreach ($serials as $serial) {
+            $serial->status = ProductSerial::STATUS_CONSUMED;
+            $serial->save();
+
+            WorkOrderAllocation::create([
+                'organization_id' => $product->organization_id,
+                'work_order_id' => $line->work_order_id,
+                'work_order_item_id' => $line->id,
+                'product_id' => $product->id,
+                'product_serial_id' => $serial->id,
+                'quantity' => 1,
+            ]);
+        }
+    }
+
+    /**
+     * @param  list<array{product_batch_id:int, quantity:int}>|null  $chosen
+     */
+    private function consumeBatchesForProduction(Product $product, int $quantity, WorkOrderItem $line, ?array $chosen): void
+    {
+        $query = ProductBatch::withoutGlobalScopes()
+            ->where('organization_id', $product->organization_id)
+            ->where('product_id', $product->id)
+            ->lockForUpdate();
+
+        $plan = [];
+
+        if ($chosen === null) {
+            $batches = $query->where('quantity', '>', 0)
+                // Undated batches last; then soonest expiry, then oldest row.
+                ->orderByRaw('expiry_date is null')
+                ->orderBy('expiry_date')
+                ->orderBy('id')
+                ->get();
+
+            $remaining = $quantity;
+            foreach ($batches as $batch) {
+                if ($remaining <= 0) {
+                    break;
+                }
+                $take = min($remaining, $this->allocatableQuantity($batch, $product, $line));
+                if ($take > 0) {
+                    $plan[] = [$batch, $take];
+                    $remaining -= $take;
+                }
+            }
+
+            if ($remaining > 0) {
+                $available = $quantity - $remaining;
+                throw new InsufficientStockException(
+                    "Not enough batch quantity for {$product->name}: {$available} available, {$quantity} required."
+                );
+            }
+        } else {
+            $wanted = [];
+            foreach ($chosen as $row) {
+                $id = (int) $row['product_batch_id'];
+                $wanted[$id] = ($wanted[$id] ?? 0) + (int) $row['quantity'];
+            }
+
+            if (array_sum($wanted) !== $quantity) {
+                throw new InvalidStateException(
+                    "{$product->name} needs exactly {$quantity} units from its batches; ".array_sum($wanted).' were chosen.',
+                    'batch_quantity_mismatch',
+                );
+            }
+
+            $batches = $query->whereIn('id', array_keys($wanted))->orderBy('id')->get();
+
+            if ($batches->count() !== count($wanted)) {
+                throw new InvalidStateException("A chosen batch was not found for {$product->name}.", 'invalid_batch');
+            }
+
+            foreach ($batches as $batch) {
+                $take = $wanted[$batch->id];
+                $allocatable = $this->allocatableQuantity($batch, $product, $line);
+                if ($take > $allocatable) {
+                    throw new InsufficientStockException(
+                        "Batch {$batch->batch_number} has {$allocatable} units available; {$take} were chosen."
+                    );
+                }
+                $plan[] = [$batch, $take];
+            }
+        }
+
+        foreach ($plan as [$batch, $take]) {
+            $batch->decrement('quantity', $take);
+
+            WorkOrderAllocation::create([
+                'organization_id' => $product->organization_id,
+                'work_order_id' => $line->work_order_id,
+                'work_order_item_id' => $line->id,
+                'product_id' => $product->id,
+                'product_batch_id' => $batch->id,
+                'quantity' => $take,
+            ]);
+        }
     }
 
     /**

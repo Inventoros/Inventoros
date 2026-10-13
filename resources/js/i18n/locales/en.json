@@ -2561,7 +2561,8 @@
         "sold": "Sold",
         "reserved": "Reserved",
         "damaged": "Damaged",
-        "transferred": "Transferred"
+        "transferred": "Transferred",
+        "consumed": "Consumed"
       },
       "serialNumber": "Serial Number",
       "createSerial": "Create Serial",
@@ -2752,7 +2753,8 @@
       "noWarehouse": "No specific warehouse",
       "notes": "Notes",
       "notesPlaceholder": "Optional production notes...",
-      "quantityProduced": "Quantity Produced"
+      "quantityProduced": "Quantity Produced",
+      "outputVariant": "Variant to produce"
     },
     "components": {
       "title": "Required Components",
@@ -2770,15 +2772,19 @@
       "noComponents": "No components recorded for this work order.",
       "noComponentsDefined": "This assembly product has no components defined. Add components in the product detail page before creating a work order.",
       "insufficientWarning": "Some components have insufficient stock. You can still create the work order, but production cannot begin until stock is replenished.",
-      "unknown": "Unknown"
+      "unknown": "Unknown",
+      "variant": "Variant",
+      "fromKit": "From kit {name}",
+      "chooseVariant": "Variant of {name}",
+      "variantNeeded": "Choose variant"
     },
     "actions": {
       "startProduction": "Start Production",
-      "startConfirm": "Start production for this work order? Components will be reserved.",
+      "startConfirm": "Start production for this work order? Stock is checked now and moves when the work order is completed.",
       "completeProduction": "Complete Production",
       "completeConfirm": "Complete this work order? {count} unit will be added to assembly stock. | Complete this work order? {count} units will be added to assembly stock.",
       "cancelWorkOrder": "Cancel Work Order",
-      "cancelConfirm": "Cancel this work order? Any reserved components will be released.",
+      "cancelConfirm": "Cancel this work order? Stock only moves on completion, so nothing is taken out of stock.",
       "view": "View"
     },
     "progress": {
@@ -2804,7 +2810,31 @@
       "headTitle": "Work Order {number}",
       "deleteConfirm": "Delete this work order? This cannot be undone.",
       "dangerZone": "Danger Zone",
-      "releaseHint": "Any reserved components will be released back to stock."
+      "releaseHint": "Stock only moves when a work order is completed, so cancelling leaves stock untouched."
+    },
+    "tracking": {
+      "serial": "Serial-tracked",
+      "batch": "Batch-tracked"
+    },
+    "allocation": {
+      "used": "Used",
+      "serialsHint": "Serials needed: {count}. Tick the ones to use, or none to use the oldest first.",
+      "batchesHint": "Enter how many to take from each batch ({count} in total), or leave blank to use the earliest expiry first.",
+      "batchTotal": "{chosen} of {count} chosen",
+      "available": "{count} available",
+      "expires": "Expires {date}",
+      "noExpiry": "No expiry",
+      "noneAvailable": "None available.",
+      "takeFrom": "Quantity to take from batch {batch}"
+    },
+    "output": {
+      "title": "Output",
+      "produced": "Produced",
+      "serialNumbers": "Serial numbers of the units produced",
+      "serialNumbersHint": "One per line: {entered} of {count} entered.",
+      "batchNumber": "Batch number",
+      "batchNumberHint": "Leave blank to generate one. An existing batch of this product with the same number is topped up.",
+      "expiryDate": "Expiry date"
     }
   },
   "reportBuilder": {

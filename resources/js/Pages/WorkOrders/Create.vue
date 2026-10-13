@@ -3,8 +3,9 @@ import AppLayout from '@/Layouts/AppLayout.vue';
 import PageHeader from '@/Components/ui/PageHeader.vue';
 import Card from '@/Components/ui/Card.vue';
 import Button from '@/Components/ui/Button.vue';
+import Badge from '@/Components/ui/Badge.vue';
 import { Head, Link, useForm } from '@inertiajs/vue3';
-import { ref, computed, watch } from 'vue';
+import { computed, reactive, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { ArrowLeft, AlertTriangle } from 'lucide-vue-next';
 
@@ -18,34 +19,71 @@ const props = defineProps({
 
 const form = useForm({
     product_id: props.preselectedProductId || '',
+    product_variant_id: null,
     quantity: 1,
     warehouse_id: '',
     notes: '',
 });
+
+// The variant picked for each component stocked by variant, by product id.
+const componentVariants = reactive({});
 
 const selectedProduct = computed(() => {
     if (!form.product_id) return null;
     return props.assemblyProducts.find(p => p.id == form.product_id);
 });
 
+// Picking another assembly clears the variant choices made for the old one.
+watch(() => form.product_id, () => {
+    form.product_variant_id = null;
+    Object.keys(componentVariants).forEach(key => delete componentVariants[key]);
+});
+
 const requiredComponents = computed(() => {
     if (!selectedProduct.value || !selectedProduct.value.components) return [];
-    return selectedProduct.value.components.map(comp => ({
-        ...comp,
-        required_qty: comp.quantity * form.quantity,
-        available: comp.component?.stock || 0,
-        sufficient: (comp.component?.stock || 0) >= comp.quantity * form.quantity,
-    }));
+    return selectedProduct.value.components.map(comp => {
+        const variant = comp.variants.find(v => v.id === componentVariants[comp.product_id]) ?? null;
+        const needsVariant = comp.variants.length > 0;
+        const available = needsVariant ? (variant?.stock ?? 0) : comp.stock;
+        const requiredQty = Math.ceil(comp.quantity * form.quantity * 100) / 100;
+        return {
+            ...comp,
+            variant,
+            needsVariant,
+            required_qty: requiredQty,
+            available,
+            // A component stocked by variant has nothing to compare until a
+            // variant is chosen; that is a prompt, not a shortage.
+            awaitingVariant: needsVariant && variant === null,
+            sufficient: (!needsVariant || variant !== null) && available >= requiredQty,
+        };
+    });
 });
 
 const allComponentsSufficient = computed(() => {
-    return requiredComponents.value.length > 0 && requiredComponents.value.every(c => c.sufficient);
+    return requiredComponents.value.length > 0 && requiredComponents.value.every(c => c.sufficient || c.awaitingVariant);
 });
 
+// A product appears once per variant choice even when it is reached through
+// more than one kit, so only the first line of each product gets a picker.
+const isFirstLineOf = (comp) => requiredComponents.value.find(c => c.product_id === comp.product_id)?.key === comp.key;
+
+const trackingLabel = (type) => ({
+    serial: t('workOrders.tracking.serial'),
+    batch: t('workOrders.tracking.batch'),
+}[type] ?? null);
+
 const submit = () => {
-    form.post(route('work-orders.store'), {
-        preserveScroll: true,
-    });
+    form
+        .transform(data => ({
+            ...data,
+            component_variants: Object.entries(componentVariants)
+                .filter(([, variantId]) => variantId)
+                .map(([productId, variantId]) => ({ product_id: Number(productId), product_variant_id: variantId })),
+        }))
+        .post(route('work-orders.store'), {
+            preserveScroll: true,
+        });
 };
 
 const fieldLabel = 'mb-1 block text-sm font-medium text-text-secondary';
@@ -98,6 +136,27 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                         </select>
                         <p v-if="form.errors.product_id" :class="fieldError">
                             {{ form.errors.product_id }}
+                        </p>
+                    </div>
+
+                    <!-- Output variant (assemblies stocked by variant) -->
+                    <div v-if="selectedProduct && selectedProduct.variants.length > 0">
+                        <label for="product_variant_id" :class="fieldLabel">
+                            {{ t('workOrders.fields.outputVariant') }} <span class="text-status-danger">*</span>
+                        </label>
+                        <select
+                            id="product_variant_id"
+                            v-model="form.product_variant_id"
+                            :class="fieldInput"
+                            required
+                        >
+                            <option :value="null">{{ t('orders.create.chooseVariant') }}</option>
+                            <option v-for="variant in selectedProduct.variants" :key="variant.id" :value="variant.id">
+                                {{ variant.title }}<template v-if="variant.sku"> ({{ variant.sku }})</template>
+                            </option>
+                        </select>
+                        <p v-if="form.errors.product_variant_id" :class="fieldError">
+                            {{ form.errors.product_variant_id }}
                         </p>
                     </div>
 
@@ -172,6 +231,7 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                                     <tr>
                                         <th class="px-4 py-2 text-left text-xs font-medium uppercase tracking-wider text-text-tertiary">{{ t('workOrders.components.component') }}</th>
                                         <th class="px-4 py-2 text-left text-xs font-medium uppercase tracking-wider text-text-tertiary">{{ t('workOrders.components.sku') }}</th>
+                                        <th class="px-4 py-2 text-left text-xs font-medium uppercase tracking-wider text-text-tertiary">{{ t('workOrders.components.variant') }}</th>
                                         <th class="px-4 py-2 text-center text-xs font-medium uppercase tracking-wider text-text-tertiary">{{ t('workOrders.components.required') }}</th>
                                         <th class="px-4 py-2 text-center text-xs font-medium uppercase tracking-wider text-text-tertiary">{{ t('workOrders.components.available') }}</th>
                                         <th class="px-4 py-2 text-center text-xs font-medium uppercase tracking-wider text-text-tertiary">{{ t('workOrders.components.status') }}</th>
@@ -180,23 +240,46 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                                 <tbody class="divide-y divide-border-subtle">
                                     <tr
                                         v-for="comp in requiredComponents"
-                                        :key="comp.id"
-                                        :class="!comp.sufficient ? 'bg-status-danger/10' : ''"
+                                        :key="comp.key"
+                                        :class="!comp.sufficient && !comp.awaitingVariant ? 'bg-status-danger/10' : ''"
                                     >
                                         <td class="px-4 py-3 text-sm text-text-primary">
-                                            {{ comp.component?.name || t('workOrders.components.unknown') }}
+                                            <div>{{ comp.name }}</div>
+                                            <div class="mt-1 flex flex-wrap gap-1">
+                                                <Badge v-if="comp.kit" variant="info" size="sm">{{ t('workOrders.components.fromKit', { name: comp.kit.name }) }}</Badge>
+                                                <Badge v-if="!comp.needsVariant && trackingLabel(comp.tracking_type)" variant="neutral" size="sm">{{ trackingLabel(comp.tracking_type) }}</Badge>
+                                            </div>
                                         </td>
                                         <td class="px-4 py-3 text-sm text-text-tertiary">
-                                            {{ comp.component?.sku || '-' }}
+                                            {{ comp.sku || '-' }}
+                                        </td>
+                                        <td class="px-4 py-3 text-sm text-text-primary">
+                                            <select
+                                                v-if="comp.needsVariant && isFirstLineOf(comp)"
+                                                v-model="componentVariants[comp.product_id]"
+                                                :aria-label="t('workOrders.components.chooseVariant', { name: comp.name })"
+                                                :class="fieldInput"
+                                                required
+                                            >
+                                                <option :value="undefined">{{ t('orders.create.chooseVariant') }}</option>
+                                                <option v-for="variant in comp.variants" :key="variant.id" :value="variant.id">
+                                                    {{ variant.title }}<template v-if="variant.sku"> ({{ variant.sku }})</template>
+                                                </option>
+                                            </select>
+                                            <span v-else-if="comp.needsVariant">{{ comp.variant?.title ?? '-' }}</span>
+                                            <span v-else class="text-text-tertiary">-</span>
                                         </td>
                                         <td class="px-4 py-3 text-center text-sm font-medium text-text-primary">
                                             {{ comp.required_qty }}
                                         </td>
-                                        <td class="px-4 py-3 text-center text-sm" :class="comp.sufficient ? 'text-status-success' : 'font-semibold text-status-danger'">
+                                        <td v-if="comp.awaitingVariant" class="px-4 py-3 text-center text-sm text-text-tertiary">-</td>
+                                        <td v-else class="px-4 py-3 text-center text-sm" :class="comp.sufficient ? 'text-status-success' : 'font-semibold text-status-danger'">
                                             {{ comp.available }}
                                         </td>
                                         <td class="px-4 py-3 text-center">
+                                            <Badge v-if="comp.awaitingVariant" variant="warning" size="sm">{{ t('workOrders.components.variantNeeded') }}</Badge>
                                             <span
+                                                v-else
                                                 class="rounded-full px-2 py-0.5 text-xs font-semibold"
                                                 :class="comp.sufficient ? 'bg-status-success/15 text-status-success' : 'bg-status-danger/15 text-status-danger'"
                                             >

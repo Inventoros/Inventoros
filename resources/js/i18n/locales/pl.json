@@ -2660,7 +2660,8 @@
         "sold": "Sprzedany",
         "reserved": "Zarezerwowany",
         "damaged": "Uszkodzony",
-        "transferred": "Przeniesiony"
+        "transferred": "Przeniesiony",
+        "consumed": "Zużyty"
       },
       "serialNumber": "Numer seryjny",
       "createSerial": "Utwórz numer seryjny",
@@ -2851,7 +2852,8 @@
       "noWarehouse": "Bez konkretnego magazynu",
       "notes": "Notatki",
       "notesPlaceholder": "Notatki produkcyjne (opcjonalnie)...",
-      "quantityProduced": "Wyprodukowana ilość"
+      "quantityProduced": "Wyprodukowana ilość",
+      "outputVariant": "Wariant do wyprodukowania"
     },
     "components": {
       "title": "Wymagane komponenty",
@@ -2869,15 +2871,19 @@
       "noComponents": "Brak komponentów zarejestrowanych dla tego zlecenia produkcyjnego.",
       "noComponentsDefined": "Ten produkt złożony nie ma zdefiniowanych komponentów. Dodaj komponenty na stronie szczegółów produktu przed utworzeniem zlecenia produkcyjnego.",
       "insufficientWarning": "Niektóre komponenty mają niewystarczający stan. Możesz nadal utworzyć zlecenie produkcyjne, ale produkcja nie może się rozpocząć, dopóki stan nie zostanie uzupełniony.",
-      "unknown": "Nieznany"
+      "unknown": "Nieznany",
+      "variant": "Wariant",
+      "fromKit": "Z zestawu {name}",
+      "chooseVariant": "Wariant produktu {name}",
+      "variantNeeded": "Wybierz wariant"
     },
     "actions": {
       "startProduction": "Rozpocznij produkcję",
-      "startConfirm": "Rozpocząć produkcję dla tego zlecenia? Komponenty zostaną zarezerwowane.",
+      "startConfirm": "Rozpocząć produkcję dla tego zlecenia? Stan jest sprawdzany teraz i zmienia się po zakończeniu zlecenia.",
       "completeProduction": "Zakończ produkcję",
       "completeConfirm": "Zakończyć to zlecenie produkcyjne? Do stanu produktu złożonego zostanie dodanych {count} jedn. | Zakończyć to zlecenie produkcyjne? Do stanu produktu złożonego zostanie dodanych {count} jedn.",
       "cancelWorkOrder": "Anuluj zlecenie produkcyjne",
-      "cancelConfirm": "Anulować to zlecenie produkcyjne? Wszystkie zarezerwowane komponenty zostaną zwolnione.",
+      "cancelConfirm": "Anulować to zlecenie? Stan zmienia się dopiero po zakończeniu, więc nic nie zostanie pobrane ze stanu.",
       "view": "Podgląd"
     },
     "progress": {
@@ -2903,7 +2909,31 @@
       "headTitle": "Zlecenie produkcyjne {number}",
       "deleteConfirm": "Usunąć to zlecenie produkcyjne? Tej operacji nie można cofnąć.",
       "dangerZone": "Strefa niebezpieczna",
-      "releaseHint": "Wszystkie zarezerwowane komponenty zostaną zwolnione z powrotem na stan."
+      "releaseHint": "Stan zmienia się dopiero po zakończeniu zlecenia, więc anulowanie nie zmienia stanu."
+    },
+    "tracking": {
+      "serial": "Śledzony numerem seryjnym",
+      "batch": "Śledzony partią"
+    },
+    "allocation": {
+      "used": "Użyte",
+      "serialsHint": "Potrzebne numery seryjne: {count}. Zaznacz te do użycia lub żadnego, aby najpierw użyć najstarszych.",
+      "batchesHint": "Podaj, ile pobrać z każdej partii (łącznie {count}), lub zostaw puste, aby najpierw użyć partii z najbliższą datą ważności.",
+      "batchTotal": "Wybrano {chosen} z {count}",
+      "available": "Dostępne: {count}",
+      "expires": "Ważne do {date}",
+      "noExpiry": "Bez daty ważności",
+      "noneAvailable": "Brak dostępnych.",
+      "takeFrom": "Ilość do pobrania z partii {batch}"
+    },
+    "output": {
+      "title": "Wynik produkcji",
+      "produced": "Wyprodukowano",
+      "serialNumbers": "Numery seryjne wyprodukowanych jednostek",
+      "serialNumbersHint": "Jeden w wierszu: wpisano {entered} z {count}.",
+      "batchNumber": "Numer partii",
+      "batchNumberHint": "Zostaw puste, aby go wygenerować. Istniejąca partia tego produktu o tym samym numerze zostanie uzupełniona.",
+      "expiryDate": "Data ważności"
     }
   },
   "reportBuilder": {

@@ -2660,7 +2660,8 @@
         "sold": "Vendido",
         "reserved": "Reservado",
         "damaged": "Dañado",
-        "transferred": "Transferido"
+        "transferred": "Transferido",
+        "consumed": "Consumido"
       },
       "serialNumber": "Número de serie",
       "createSerial": "Crear número de serie",
@@ -2851,7 +2852,8 @@
       "noWarehouse": "Sin almac\u00e9n espec\u00edfico",
       "notes": "Notas",
       "notesPlaceholder": "Notas de producci\u00f3n opcionales...",
-      "quantityProduced": "Cantidad producida"
+      "quantityProduced": "Cantidad producida",
+      "outputVariant": "Variante a producir"
     },
     "components": {
       "title": "Componentes requeridos",
@@ -2869,15 +2871,19 @@
       "noComponents": "No hay componentes registrados para esta orden de trabajo.",
       "noComponentsDefined": "Este producto ensamblado no tiene componentes definidos. Agrega componentes en la p\u00e1gina de detalles del producto antes de crear una orden de trabajo.",
       "insufficientWarning": "Algunos componentes no tienen stock suficiente. A\u00fan puedes crear la orden de trabajo, pero la producci\u00f3n no puede comenzar hasta que se reponga el stock.",
-      "unknown": "Desconocido"
+      "unknown": "Desconocido",
+      "variant": "Variante",
+      "fromKit": "Del kit {name}",
+      "chooseVariant": "Variante de {name}",
+      "variantNeeded": "Elija la variante"
     },
     "actions": {
       "startProduction": "Iniciar producci\u00f3n",
-      "startConfirm": "\u00bfIniciar la producci\u00f3n de esta orden de trabajo? Los componentes quedar\u00e1n reservados.",
+      "startConfirm": "¿Iniciar la producción de esta orden de trabajo? El stock se comprueba ahora y se mueve cuando se completa la orden.",
       "completeProduction": "Completar producci\u00f3n",
       "completeConfirm": "¿Completar esta orden de trabajo? Se agregará {count} unidad al stock del ensamblaje. | ¿Completar esta orden de trabajo? Se agregarán {count} unidades al stock del ensamblaje.",
       "cancelWorkOrder": "Cancelar orden de trabajo",
-      "cancelConfirm": "\u00bfCancelar esta orden de trabajo? Se liberar\u00e1n los componentes reservados.",
+      "cancelConfirm": "¿Cancelar esta orden de trabajo? El stock solo se mueve al completarla, así que no se retira nada del stock.",
       "view": "Ver"
     },
     "progress": {
@@ -2903,7 +2909,31 @@
       "headTitle": "Orden de trabajo {number}",
       "deleteConfirm": "¿Eliminar esta orden de trabajo? Esta acción no se puede deshacer.",
       "dangerZone": "Zona de peligro",
-      "releaseHint": "Los componentes reservados se devolverán al stock."
+      "releaseHint": "El stock solo se mueve cuando se completa una orden de trabajo, así que cancelarla no cambia el stock."
+    },
+    "tracking": {
+      "serial": "Con número de serie",
+      "batch": "Con lote"
+    },
+    "allocation": {
+      "used": "Usado",
+      "serialsHint": "Números de serie necesarios: {count}. Marque los que se usarán, o ninguno para usar primero los más antiguos.",
+      "batchesHint": "Indique cuánto tomar de cada lote ({count} en total), o déjelo en blanco para usar primero el que vence antes.",
+      "batchTotal": "{chosen} de {count} elegidos",
+      "available": "{count} disponibles",
+      "expires": "Vence el {date}",
+      "noExpiry": "Sin vencimiento",
+      "noneAvailable": "No hay disponibles.",
+      "takeFrom": "Cantidad a tomar del lote {batch}"
+    },
+    "output": {
+      "title": "Resultado",
+      "produced": "Producido",
+      "serialNumbers": "Números de serie de las unidades producidas",
+      "serialNumbersHint": "Uno por línea: {entered} de {count} introducidos.",
+      "batchNumber": "Número de lote",
+      "batchNumberHint": "Déjelo en blanco para generar uno. Un lote existente de este producto con el mismo número se incrementa.",
+      "expiryDate": "Fecha de vencimiento"
     }
   },
   "reportBuilder": {

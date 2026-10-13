@@ -2660,7 +2660,8 @@
         "sold": "Verkocht",
         "reserved": "Gereserveerd",
         "damaged": "Beschadigd",
-        "transferred": "Overgedragen"
+        "transferred": "Overgedragen",
+        "consumed": "Verbruikt"
       },
       "serialNumber": "Serienummer",
       "createSerial": "Serienummer aanmaken",
@@ -2851,7 +2852,8 @@
       "noWarehouse": "Geen specifiek magazijn",
       "notes": "Notities",
       "notesPlaceholder": "Optionele productienotities...",
-      "quantityProduced": "Geproduceerd aantal"
+      "quantityProduced": "Geproduceerd aantal",
+      "outputVariant": "Te produceren variant"
     },
     "components": {
       "title": "Benodigde componenten",
@@ -2869,15 +2871,19 @@
       "noComponents": "Geen componenten vastgelegd voor deze werkorder.",
       "noComponentsDefined": "Voor dit assemblageproduct zijn geen componenten gedefinieerd. Voeg componenten toe op de productdetailpagina voordat u een werkorder aanmaakt.",
       "insufficientWarning": "Sommige componenten hebben onvoldoende voorraad. U kunt de werkorder nog steeds aanmaken, maar de productie kan pas beginnen wanneer de voorraad is aangevuld.",
-      "unknown": "Onbekend"
+      "unknown": "Onbekend",
+      "variant": "Variant",
+      "fromKit": "Uit kit {name}",
+      "chooseVariant": "Variant van {name}",
+      "variantNeeded": "Kies variant"
     },
     "actions": {
       "startProduction": "Productie starten",
-      "startConfirm": "Productie voor deze werkorder starten? Componenten worden gereserveerd.",
+      "startConfirm": "Productie voor deze werkorder starten? De voorraad wordt nu gecontroleerd en verandert wanneer de werkorder wordt voltooid.",
       "completeProduction": "Productie voltooien",
       "completeConfirm": "Deze werkorder voltooien? {count} eenheid wordt toegevoegd aan de assemblagevoorraad. | Deze werkorder voltooien? {count} eenheden worden toegevoegd aan de assemblagevoorraad.",
       "cancelWorkOrder": "Werkorder annuleren",
-      "cancelConfirm": "Deze werkorder annuleren? Eventueel gereserveerde componenten worden vrijgegeven.",
+      "cancelConfirm": "Deze werkorder annuleren? Voorraad verandert pas bij voltooiing, dus er wordt niets uit de voorraad gehaald.",
       "view": "Bekijken"
     },
     "progress": {
@@ -2903,7 +2909,31 @@
       "headTitle": "Werkorder {number}",
       "deleteConfirm": "Deze werkorder verwijderen? Dit kan niet ongedaan worden gemaakt.",
       "dangerZone": "Gevarenzone",
-      "releaseHint": "Eventueel gereserveerde componenten worden weer vrijgegeven aan de voorraad."
+      "releaseHint": "Voorraad verandert pas wanneer een werkorder wordt voltooid, dus annuleren laat de voorraad ongemoeid."
+    },
+    "tracking": {
+      "serial": "Gevolgd op serienummer",
+      "batch": "Gevolgd op batch"
+    },
+    "allocation": {
+      "used": "Gebruikt",
+      "serialsHint": "Benodigde serienummers: {count}. Vink aan welke u gebruikt, of geen om de oudste eerst te gebruiken.",
+      "batchesHint": "Vul in hoeveel u uit elke batch neemt ({count} in totaal), of laat leeg om de eerst vervallende eerst te gebruiken.",
+      "batchTotal": "{chosen} van {count} gekozen",
+      "available": "{count} beschikbaar",
+      "expires": "Vervalt op {date}",
+      "noExpiry": "Geen vervaldatum",
+      "noneAvailable": "Niets beschikbaar.",
+      "takeFrom": "Aantal uit batch {batch}"
+    },
+    "output": {
+      "title": "Productie",
+      "produced": "Geproduceerd",
+      "serialNumbers": "Serienummers van de geproduceerde eenheden",
+      "serialNumbersHint": "Eén per regel: {entered} van {count} ingevoerd.",
+      "batchNumber": "Batchnummer",
+      "batchNumberHint": "Laat leeg om er een te genereren. Een bestaande batch van dit product met hetzelfde nummer wordt aangevuld.",
+      "expiryDate": "Vervaldatum"
     }
   },
   "reportBuilder": {
