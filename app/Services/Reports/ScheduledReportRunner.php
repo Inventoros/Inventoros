@@ -12,7 +12,6 @@ use App\Models\SavedReport;
 use App\Models\Scopes\OrganizationScope;
 use App\Models\User;
 use App\Services\Organizations\ActiveOrganization;
-use App\Services\Organizations\OrganizationMembershipService;
 use App\Services\ReportDataService;
 use Carbon\CarbonInterface;
 use Illuminate\Auth\Access\AuthorizationException;
@@ -254,12 +253,11 @@ class ScheduledReportRunner
             return [];
         }
 
-        return app(OrganizationMembershipService::class)->members((int) $schedule->organization_id)
-            ->whereIn(DB::raw('LOWER(email)'), $wanted)
-            ->orderBy('id')
-            ->get()
-            ->filter(fn (User $user): bool => app(ActiveOrganization::class)
-                ->userIn($user, (int) $schedule->organization_id)?->hasAllPermissions($required) ?? false)
+        // Members of the schedule's organization, at their current address,
+        // who may see the report there.
+        return app(ActiveOrganization::class)
+            ->membersIn((int) $schedule->organization_id, $required, fn ($query) => $query->whereIn(DB::raw('LOWER(email)'), $wanted))
+            ->sortBy('id')
             ->pluck('email')
             ->unique()
             ->values()

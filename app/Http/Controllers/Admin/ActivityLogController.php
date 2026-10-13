@@ -72,7 +72,7 @@ class ActivityLogController extends Controller
             ->withQueryString();
 
         // Get filter options
-        $users = \App\Models\User::forOrganization($request->user()->organization_id)
+        $users = \App\Models\User::query()->memberOf((int) $request->user()->organization_id)
             ->select('id', 'name')
             ->orderBy('name')
             ->get();

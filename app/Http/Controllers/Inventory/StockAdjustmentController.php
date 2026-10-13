@@ -73,7 +73,7 @@ class StockAdjustmentController extends Controller
             ->orderBy('name')
             ->get(['id', 'name', 'sku']);
 
-        $users = User::forOrganization($organizationId)
+        $users = User::query()->memberOf($organizationId)
             ->orderBy('name')
             ->get(['id', 'name']);
 

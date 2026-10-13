@@ -8,6 +8,7 @@ use App\Http\Controllers\Controller;
 use App\Models\ReportSchedule;
 use App\Models\SavedReport;
 use App\Models\User;
+use App\Services\Organizations\ActiveOrganization;
 use App\Services\ReportDataService;
 use App\Services\Reports\ReportExporter;
 use Illuminate\Http\RedirectResponse;
@@ -112,10 +113,10 @@ class ReportScheduleController extends Controller
             $validated['recipients']
         )));
 
-        $members = User::query()
-            ->where('organization_id', $request->user()->organization_id)
-            ->whereIn(DB::raw('LOWER(email)'), $recipients)
-            ->get();
+        // Members of the report's organization (added ones included), each
+        // loaded into it so their permissions there are checked below.
+        $members = app(ActiveOrganization::class)
+            ->membersIn((int) $savedReport->organization_id, [], fn ($query) => $query->whereIn(DB::raw('LOWER(email)'), $recipients));
 
         $outsiders = array_diff($recipients, $members->map(fn (User $u) => mb_strtolower((string) $u->email))->all());
         if ($outsiders !== []) {

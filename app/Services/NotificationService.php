@@ -21,6 +21,7 @@ use App\Models\Order\Order;
 use App\Models\Order\ReturnOrder;
 use App\Models\User;
 use App\Models\Warehouse;
+use App\Services\Organizations\ActiveOrganization;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
@@ -34,6 +35,32 @@ use Illuminate\Support\Facades\Mail;
  */
 final class NotificationService
 {
+    /**
+     * Members of the organization holding $permission there (home users and
+     * members added from other organizations), each loaded into it, so
+     * permissions, preferences and the mail configuration are that
+     * organization's.
+     *
+     * @return Collection<int, User>
+     */
+    private static function membersWith(int $organizationId, Permission $permission): Collection
+    {
+        return app(ActiveOrganization::class)->membersIn($organizationId, $permission);
+    }
+
+    /**
+     * The user working in the organization, or null when they are not (or
+     * no longer) a member of it.
+     */
+    private static function memberIn(int|string|null $userId, int|string|null $organizationId): ?User
+    {
+        if ($userId === null || $organizationId === null) {
+            return null;
+        }
+
+        return app(ActiveOrganization::class)->userIn((int) $userId, (int) $organizationId);
+    }
+
     /**
      * Check if user wants to receive a specific notification type.
      *
@@ -198,12 +225,8 @@ final class NotificationService
         // On hand: a product sold by variant counts its active variants.
         $onHand = $product->total_stock;
 
-        // Get all users in the organization with manage_stock permission
-        $users = User::where('organization_id', $product->organization_id)
-            ->whereHas('roles', function ($query) {
-                $query->whereJsonContains('permissions', 'manage_stock');
-            })
-            ->get();
+        // Every member of the organization with manage_stock there
+        $users = self::membersWith((int) $product->organization_id, Permission::MANAGE_STOCK);
 
         foreach ($users as $user) {
             // Check if user wants low stock alerts
@@ -262,11 +285,7 @@ final class NotificationService
         $label = "{$product->name} ({$variant->title})";
         $sku = $variant->sku ?: $product->sku;
 
-        $users = User::where('organization_id', $product->organization_id)
-            ->whereHas('roles', function ($query) {
-                $query->whereJsonContains('permissions', 'manage_stock');
-            })
-            ->get();
+        $users = self::membersWith((int) $product->organization_id, Permission::MANAGE_STOCK);
 
         foreach ($users as $user) {
             if (! self::shouldNotifyUser($user, $type)) {
@@ -314,11 +333,7 @@ final class NotificationService
 
         $access = app(WarehouseAccessService::class);
 
-        $users = User::where('organization_id', $product->organization_id)
-            ->whereHas('roles', function ($query) {
-                $query->whereJsonContains('permissions', 'manage_stock');
-            })
-            ->get();
+        $users = self::membersWith((int) $product->organization_id, Permission::MANAGE_STOCK);
 
         foreach ($users as $user) {
             if (! self::shouldNotifyUser($user, 'low_stock') || ! $access->canAccessWarehouse($user, $warehouse->id)) {
@@ -353,12 +368,8 @@ final class NotificationService
      */
     public static function createOutOfStockNotification(Product $product): void
     {
-        // Get all users in the organization with manage_stock permission
-        $users = User::where('organization_id', $product->organization_id)
-            ->whereHas('roles', function ($query) {
-                $query->whereJsonContains('permissions', 'manage_stock');
-            })
-            ->get();
+        // Every member of the organization with manage_stock there
+        $users = self::membersWith((int) $product->organization_id, Permission::MANAGE_STOCK);
 
         foreach ($users as $user) {
             // Check if user wants low stock alerts
@@ -398,13 +409,10 @@ final class NotificationService
      */
     public static function createOrderCreatedNotification(Order $order): void
     {
-        // Get all users in the organization with view_orders permission
-        $users = User::where('organization_id', $order->organization_id)
-            ->whereHas('roles', function ($query) {
-                $query->whereJsonContains('permissions', 'view_orders');
-            })
-            ->where('id', '!=', $order->created_by) // Don't notify the creator
-            ->get();
+        // Every member of the organization with view_orders there, except
+        // the creator.
+        $users = self::membersWith((int) $order->organization_id, Permission::VIEW_ORDERS)
+            ->reject(fn (User $user) => (int) $user->id === (int) $order->created_by);
 
         $creatorName = $order->creator ? $order->creator->name : 'Unknown';
 
@@ -443,7 +451,7 @@ final class NotificationService
     public static function createOrderStatusNotification(Order $order, OrderStatus|string $oldStatus): void
     {
         // Get the user to check preferences
-        $user = User::find($order->created_by);
+        $user = self::memberIn($order->created_by, $order->organization_id);
         if (! $user || ! self::shouldNotifyUser($user, 'order_status_updated')) {
             return;
         }
@@ -484,7 +492,7 @@ final class NotificationService
     public static function createOrderShippedNotification(Order $order): void
     {
         // Get the user to check preferences
-        $user = User::find($order->created_by);
+        $user = self::memberIn($order->created_by, $order->organization_id);
         if (! $user || ! self::shouldNotifyUser($user, 'order_shipped')) {
             return;
         }
@@ -514,7 +522,7 @@ final class NotificationService
     public static function createOrderDeliveredNotification(Order $order): void
     {
         // Get the user to check preferences
-        $user = User::find($order->created_by);
+        $user = self::memberIn($order->created_by, $order->organization_id);
         if (! $user || ! self::shouldNotifyUser($user, 'order_delivered')) {
             return;
         }
@@ -545,7 +553,7 @@ final class NotificationService
     public static function createOrderApprovalNotification(Order $order): void
     {
         // Get the user to check preferences
-        $user = User::find($order->created_by);
+        $user = self::memberIn($order->created_by, $order->organization_id);
         if (! $user) {
             return;
         }
@@ -692,14 +700,12 @@ final class NotificationService
      * Notify staff who handle returns that a customer requested one in the
      * customer portal.
      *
-     * Recipients are the organization's users with manage_returns (admins
-     * included), which is who can act on the pending return.
+     * Recipients are the organization's members with manage_returns there
+     * (admins included), which is who can act on the pending return.
      */
     public static function createPortalReturnRequestedNotification(ReturnOrder $returnOrder, Order $order, CustomerContact $contact): void
     {
-        $users = User::where('organization_id', $returnOrder->organization_id)
-            ->get()
-            ->filter(fn (User $user) => $user->hasPermission(Permission::MANAGE_RETURNS));
+        $users = self::membersWith((int) $returnOrder->organization_id, Permission::MANAGE_RETURNS);
 
         foreach ($users as $user) {
             if (! self::shouldNotifyUser($user, 'portal_return_requested')) {
@@ -733,7 +739,7 @@ final class NotificationService
      */
     public static function createExportReadyNotification(DataExport $export): void
     {
-        $user = User::find($export->user_id);
+        $user = self::memberIn($export->user_id, $export->organization_id);
         if (! $user || ! self::shouldNotifyUser($user, 'export_ready')) {
             return;
         }
@@ -764,7 +770,7 @@ final class NotificationService
      */
     public static function createExportFailedNotification(DataExport $export): void
     {
-        $user = User::find($export->user_id);
+        $user = self::memberIn($export->user_id, $export->organization_id);
         if (! $user || ! self::shouldNotifyUser($user, 'export_failed')) {
             return;
         }
@@ -797,7 +803,7 @@ final class NotificationService
      */
     public static function createImportCompleteNotification(int $organizationId, int $userId, array $stats, string $subject = 'product'): void
     {
-        $user = User::find($userId);
+        $user = self::memberIn($userId, $organizationId);
         if (! $user || ! self::shouldNotifyUser($user, 'import_complete')) {
             return;
         }
@@ -846,7 +852,7 @@ final class NotificationService
      */
     public static function createImportFailedNotification(int $organizationId, int $userId, string $subject = 'product'): void
     {
-        $user = User::find($userId);
+        $user = self::memberIn($userId, $organizationId);
         if (! $user || ! self::shouldNotifyUser($user, 'import_failed')) {
             return;
         }

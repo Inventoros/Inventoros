@@ -721,11 +721,12 @@ final class ApprovalService
     {
         $permission = self::permissionFor($type);
 
-        $approvers = User::query()
-            ->where('organization_id', $subject->getAttribute('organization_id'))
-            ->whereKeyNot($requester->id)
-            ->get()
-            ->filter(fn (User $u) => $u->hasPermission($permission) && $this->canAccessWarehouseOf($u, $type, $subject))
+        // Members of the request's organization (added ones included), with
+        // the permission and warehouse access held THERE.
+        $approvers = app(ActiveOrganization::class)
+            ->membersIn((int) $subject->getAttribute('organization_id'), $permission)
+            ->reject(fn (User $u) => (int) $u->id === (int) $requester->id)
+            ->filter(fn (User $u) => $this->canAccessWarehouseOf($u, $type, $subject))
             ->values();
 
         NotificationService::createApprovalRequestedNotifications($this->describe($type, $subject->fresh() ?? $subject), $approvers, $requester);
