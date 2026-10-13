@@ -271,8 +271,6 @@ final class TrackedStockAllocationService
      * How many tracked units a work order may draw on: available serials for
      * a serial-tracked product, allocatable batch quantity for a batch-tracked
      * one. Null for a product that is not tracked.
-     *
-     * @api
      */
     public function availableForProduction(Product $product, WorkOrderItem $line): ?int
     {
@@ -310,8 +308,6 @@ final class TrackedStockAllocationService
      *
      * @throws InsufficientStockException when the tracked units cannot cover $quantity
      * @throws InvalidStateException when a chosen serial or batch is not usable
-     *
-     * @api
      */
     public function consumeForProduction(Product $product, int $quantity, WorkOrderItem $line, ?array $serialIds = null, ?array $batches = null): void
     {
@@ -331,8 +327,6 @@ final class TrackedStockAllocationService
      * batch quantities back to their batches. The allocation rows are removed.
      *
      * @return int the number of units released
-     *
-     * @api
      */
     public function releaseForProduction(WorkOrderItem $line): int
     {

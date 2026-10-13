@@ -178,7 +178,7 @@ Call `who_am_i` first to confirm the token works.
 | Tool | Permissions | Purpose |
 |---|---|---|
 | `list_work_orders` | `manage_stock` | Paginated work orders with status filter. |
-| `start_work_order` | `manage_stock` | Validate component stock and transition to in_progress. **Destructive**. |
+| `start_work_order` | `manage_stock` | Validate component stock (and available serials or batch quantity for tracked components) and transition to in_progress, through the same service as the web and REST API. **Destructive**. |
 | `delete_work_order` | `manage_stock` | Delete a draft or cancelled work order. **Destructive**. |
 
 ### Catalog (write)
