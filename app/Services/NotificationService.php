@@ -49,6 +49,20 @@ final class NotificationService
     }
 
     /**
+     * Members of the organization holding $permission through a role
+     * assigned to them THERE (the base role does not count), each loaded
+     * into it. Stock and new order alerts go to these, as they always have.
+     *
+     * @return Collection<int, User>
+     */
+    private static function membersWithAssignedRole(int $organizationId, Permission $permission): Collection
+    {
+        return app(ActiveOrganization::class)->membersIn($organizationId)
+            ->filter(fn (User $member) => $member->holdsPermissionThroughAssignedRole($permission))
+            ->values();
+    }
+
+    /**
      * The user working in the organization, or null when they are not (or
      * no longer) a member of it.
      */
@@ -225,8 +239,8 @@ final class NotificationService
         // On hand: a product sold by variant counts its active variants.
         $onHand = $product->total_stock;
 
-        // Every member of the organization with manage_stock there
-        $users = self::membersWith((int) $product->organization_id, Permission::MANAGE_STOCK);
+        // Members holding manage_stock through a role assigned there
+        $users = self::membersWithAssignedRole((int) $product->organization_id, Permission::MANAGE_STOCK);
 
         foreach ($users as $user) {
             // Check if user wants low stock alerts
@@ -285,7 +299,7 @@ final class NotificationService
         $label = "{$product->name} ({$variant->title})";
         $sku = $variant->sku ?: $product->sku;
 
-        $users = self::membersWith((int) $product->organization_id, Permission::MANAGE_STOCK);
+        $users = self::membersWithAssignedRole((int) $product->organization_id, Permission::MANAGE_STOCK);
 
         foreach ($users as $user) {
             if (! self::shouldNotifyUser($user, $type)) {
@@ -333,7 +347,7 @@ final class NotificationService
 
         $access = app(WarehouseAccessService::class);
 
-        $users = self::membersWith((int) $product->organization_id, Permission::MANAGE_STOCK);
+        $users = self::membersWithAssignedRole((int) $product->organization_id, Permission::MANAGE_STOCK);
 
         foreach ($users as $user) {
             if (! self::shouldNotifyUser($user, 'low_stock') || ! $access->canAccessWarehouse($user, $warehouse->id)) {
@@ -368,8 +382,8 @@ final class NotificationService
      */
     public static function createOutOfStockNotification(Product $product): void
     {
-        // Every member of the organization with manage_stock there
-        $users = self::membersWith((int) $product->organization_id, Permission::MANAGE_STOCK);
+        // Members holding manage_stock through a role assigned there
+        $users = self::membersWithAssignedRole((int) $product->organization_id, Permission::MANAGE_STOCK);
 
         foreach ($users as $user) {
             // Check if user wants low stock alerts
@@ -409,9 +423,9 @@ final class NotificationService
      */
     public static function createOrderCreatedNotification(Order $order): void
     {
-        // Every member of the organization with view_orders there, except
+        // Members holding view_orders through a role assigned there, except
         // the creator.
-        $users = self::membersWith((int) $order->organization_id, Permission::VIEW_ORDERS)
+        $users = self::membersWithAssignedRole((int) $order->organization_id, Permission::VIEW_ORDERS)
             ->reject(fn (User $user) => (int) $user->id === (int) $order->created_by);
 
         $creatorName = $order->creator ? $order->creator->name : 'Unknown';

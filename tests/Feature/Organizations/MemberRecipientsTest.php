@@ -205,6 +205,34 @@ final class MemberRecipientsTest extends TestCase
         $this->assertOnlyMembersNotified('order_created');
     }
 
+    public function test_stock_and_new_order_alerts_need_a_role_assigned_in_the_organization(): void
+    {
+        // The Member base role grants view_orders (as RoleSeeder sets it up),
+        // but only roles assigned to a user ever made them a recipient.
+        \App\Models\Role::create([
+            'name' => 'Member', 'slug' => 'system-member', 'organization_id' => null,
+            'is_system' => true, 'permissions' => ['view_products', 'view_orders'],
+        ]);
+        $homeMember = $this->homeUser($this->beta, 'member', 'Plain');
+        $guestMember = $this->homeUser($this->alpha, 'member', 'Visitor');
+        $this->addMember($this->beta, $guestMember);
+        $order = (new Order)->forceFill([
+            'id' => 1, 'organization_id' => $this->beta->id, 'created_by' => $this->leaver->id,
+            'order_number' => 'ORD-1', 'customer_name' => 'Customer', 'total' => 10,
+        ]);
+
+        NotificationService::createOrderCreatedNotification($order);
+        NotificationService::createLowStockNotification($this->betaProduct);
+
+        $this->assertNotNull($this->notifiedIn($this->guest, 'order_created'));
+        foreach ([$homeMember, $guestMember] as $member) {
+            $this->assertNull($this->notifiedIn($member, 'order_created'), 'A base-role member without an assigned role gets no new-order alert.');
+        }
+        // Base-role administrator without an assigned role: no stock alert, as before.
+        $this->assertNull($this->notifiedIn($this->owner, 'low_stock'));
+        $this->assertNull($this->notifiedIn($this->owner, 'order_created'));
+    }
+
     public function test_portal_return_requests_reach_members(): void
     {
         $order = (new Order)->forceFill(['id' => 1, 'organization_id' => $this->beta->id, 'order_number' => 'ORD-1']);
