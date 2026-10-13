@@ -239,17 +239,14 @@ final class CycleCountService
             'created_by' => $creator->id,
         ]);
 
-        foreach ($products as $product) {
-            StockAuditItem::create([
-                'stock_audit_id' => $audit->id,
-                'product_id' => $product->id,
-                'location_id' => $schedule->scope_type === 'location' ? $schedule->scope_id : $product->location_id,
-                'system_quantity' => $schedule->scope_type === 'location'
-                    ? app(ProductLocationStockService::class)->onHandAt($product, (int) $schedule->scope_id)
-                    : (int) $product->stock,
-                'status' => 'pending',
-            ]);
-        }
+        // The audit's warehouse_location_id is the schedule's location scope,
+        // so the snapshot counts that bin, or the product's total otherwise.
+        app(StockAuditSnapshot::class)->seed(
+            $audit,
+            Product::withoutGlobalScope(OrganizationScope::class)
+                ->where('organization_id', $schedule->organization_id)
+                ->whereIntegerInRaw('id', $products->pluck('id')->all()),
+        );
 
         return $audit;
     }
