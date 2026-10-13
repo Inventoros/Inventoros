@@ -26,22 +26,14 @@ final class StockAuditService
 {
     public function __construct(
         private readonly WarehouseAccessService $warehouseAccess,
-        private readonly ProductLocationStockService $locationStock,
+        private readonly StockAuditSnapshot $snapshot,
     ) {}
 
     /**
-     * What the system says is on hand for an audit line: the audited bin's
-     * quantity for a location-scoped audit, the product's total otherwise.
-     */
-    private function systemQuantity(StockAudit $audit, Product $product): int
-    {
-        return $audit->warehouse_location_id !== null
-            ? $this->locationStock->onHandAt($product, (int) $audit->warehouse_location_id)
-            : (int) $product->stock;
-    }
-
-    /**
      * Create a draft audit and seed one item per product in scope.
+     *
+     * The lines are inserted with one INSERT ... SELECT (see
+     * StockAuditSnapshot), so the cost does not grow with the inventory.
      *
      * @param  array{name: string, description?: string|null, audit_type: string, warehouse_location_id?: int|null, notes?: string|null, product_ids?: array<int, int>|null}  $data
      *
@@ -78,7 +70,7 @@ final class StockAuditService
 
             if (! empty($data['product_ids'])) {
                 // Specific products selected
-                $productQuery->whereIn('id', $data['product_ids']);
+                $productQuery->whereIntegerInRaw('id', $data['product_ids']);
             } elseif (! empty($data['warehouse_location_id'])) {
                 // Products assigned to the location, and products that have
                 // stock binned there although their primary location is
@@ -92,17 +84,9 @@ final class StockAuditService
                         ->where('quantity', '>', 0)));
             }
 
-            foreach ($productQuery->get() as $product) {
-                StockAuditItem::create([
-                    'stock_audit_id' => $audit->id,
-                    'product_id' => $product->id,
-                    // A location-scoped audit counts that bin; otherwise the
-                    // line shows the product's primary location.
-                    'location_id' => $audit->warehouse_location_id ?? $product->location_id,
-                    'system_quantity' => $this->systemQuantity($audit, $product),
-                    'status' => 'pending',
-                ]);
-            }
+            // A location-scoped audit counts that bin; otherwise the line
+            // shows the product's primary location.
+            $this->snapshot->seed($audit, $productQuery);
 
             return $audit;
         });
@@ -125,23 +109,22 @@ final class StockAuditService
                 throw new InvalidStateException('Only draft audits can be started.', 'invalid_status');
             }
 
-            $locked->load('items.product');
-            if ($locked->items->isEmpty()) {
+            if (! $locked->items()->exists()) {
                 throw new InvalidStateException('Cannot start an audit with no items.', 'no_items');
             }
 
             // Snapshot only after claiming the draft under the same lock
             // completion and counting use. A stale start cannot reopen it.
-            foreach ($locked->items as $item) {
-                $item->update(['system_quantity' => $this->systemQuantity($locked, $item->product)]);
-            }
+            // One UPDATE re-reads every line, however many there are.
+            $this->snapshot->refresh($locked);
 
             $locked->update([
                 'status' => 'in_progress',
                 'started_at' => now(),
             ]);
             $stockAudit->setRawAttributes($locked->getAttributes(), true);
-            $stockAudit->setRelation('items', $locked->items);
+            // Lines loaded before the snapshot are stale; load them again on use.
+            $stockAudit->unsetRelation('items');
 
             return $stockAudit;
         });

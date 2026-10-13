@@ -12,6 +12,12 @@
             <directory>tests/Feature</directory>
         </testsuite>
     </testsuites>
+    <groups>
+        <exclude>
+            <!-- Benchmarks, run on demand with the performance group. -->
+            <group>performance</group>
+        </exclude>
+    </groups>
     <source>
         <include>
             <directory>app</directory>
