@@ -54,7 +54,7 @@ WORKDIR /app
 COPY package.json package-lock.json ./
 RUN npm ci --no-audit --no-fund
 
-COPY vite.config.js postcss.config.js tailwind.config.js jsconfig.json ./
+COPY vite.config.js jsconfig.json ./
 COPY resources ./resources
 COPY plugins ./plugins
 COPY public ./public
