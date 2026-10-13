@@ -138,6 +138,26 @@ final class StockPathsHonourReservationsTest extends TestCase
         $this->assertSame($before, $this->snapshot());
     }
 
+    public function test_graphql_adjustment_honours_holds(): void
+    {
+        $this->hold(7);
+        Sanctum::actingAs($this->admin, ['*']);
+        $mutation = fn (int $qty, string $type) => sprintf(
+            'mutation { createStockAdjustment(product_id: %d, quantity: %d, type: "%s", reason: "gql") { id } }',
+            $this->product->id, $qty, $type,
+        );
+        $before = $this->snapshot();
+
+        $this->assertNotEmpty($this->postJson('/graphql', ['query' => $mutation(-4, 'manual')])->json('errors'));
+        $this->assertSame($before, $this->snapshot());
+
+        // A write-off records what happened, holds or not.
+        $response = $this->postJson('/graphql', ['query' => $mutation(-4, 'damage')]);
+        $this->assertNull($response->json('errors'), (string) json_encode($response->json('errors')));
+        $this->assertSame(6, $this->stockOf());
+        $this->assertCount(1, $this->shortfalls);
+    }
+
     public function test_physical_corrections_may_take_available_below_zero_and_raise_a_shortfall(): void
     {
         $hold = $this->hold(7);

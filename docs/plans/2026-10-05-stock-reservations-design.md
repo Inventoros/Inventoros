@@ -1,6 +1,6 @@
 # Stock reservations and available-to-promise: design
 
-Status: proposed, not implemented. Plugin SDK gap G4.
+Status: implemented (Inventoros 2.1). Plugin SDK gap G4. The four decisions are settled below ("Decisions"); the plugin guide (docs/PLUGIN_DEVELOPMENT.md, "Stock reservations") is the reference for plugin authors.
 
 ## Why
 
@@ -74,12 +74,39 @@ Each path in the table above compares the request to `available` instead of `on_
 - A hold's own consumer: an order that carries `reservation_reference` checks against `available + that hold`, then consumes it.
 - Physical corrections: a recount or a damage write-off reflects reality and must not be refused because stock is promised. They may take `available` below zero; core then raises a `reservation_shortfall` action so the owning plugin can react (re-plan a wave, warn about a rental).
 
-### Decisions needed before building
+### Decisions
 
-1. Do plain web orders respect holds by default, or only when an organization turns reservations on? (Recommendation: on, because with no holds `available == on_hand` and nothing changes.)
-2. Location-scoped holds: does a product-level hold block a bin transfer when the bin itself is free? (Recommendation: product-level holds constrain totals only; bin holds constrain their bin.)
-3. Serial and batch holds (Rental reserves specific serials): a second table keyed by `product_serial_id`, or a nullable column here.
-4. UI: show "on hand / reserved / available" on product and variant pages and in the REST resource (`available_stock`), with a list of holds and their owners for admins.
+1. Holds are always respected; there is no per-organization toggle. With no holds `available == on_hand`, so installs without reservations behave exactly as before (the whole existing suite passes unchanged).
+2. Product-level holds constrain totals only; bin (location) holds constrain their bin, and count toward the total too. A transfer between bins is limited only by holds in its source bin.
+3. Serial and batch holds are nullable columns on `stock_reservations`: `product_serial_id` (quantity must be 1; the serial must be available and not already held) and `product_batch_id` (at most the batch's unheld quantity). Both count toward the product total. A held serial is skipped by allocation and cannot be marked sold, reserved or damaged through the serial API until its hold is consumed or released; its consumer (an order carrying the reservation) is allocated exactly that serial. Held batch units are not allocatable to anyone but the consumer.
+4. UI: the product page shows on hand / reserved / available, with reserved and available per variant; the REST product and variant resources carry `reserved_stock` and `available_stock`, as do the GraphQL `Product` and `ProductVariant` types and the MCP get, list and barcode lookup payloads. A Reservations page (Stock section) lists holds with owner, reference, scope and expiry, for anyone with `view_products`; releasing one needs the existing `manage_stock` permission (no new permission), is written to the activity log and fires `stock_reservation_released` with `release_reason` `admin`.
+
+### As built
+
+- Table: as above, plus `product_serial_id`, `product_batch_id`, `consumed_by` (morph), `release_reason` (`released`, `admin`, `expired`, `uninstalled`) and `scope_key`. The idempotency index is unique on `(organization_id, owner_type, owner_reference, scope_key)`, where `scope_key` spells out product, variant, location, serial and batch as one non-null string: MySQL, PostgreSQL and SQLite all treat NULLs in a unique index as distinct, so the nullable columns cannot carry it themselves.
+- `reserve()` returns the existing hold for a retried call; a different quantity under the same reference is refused (`reservation_conflict`); a released or expired reference is reactivated; a consumed one is refused (`reservation_consumed`).
+- An expired hold stops counting at `expires_at`. `reservations:release-expired` (scheduled every five minutes) records the release and fires `stock_reservation_released`.
+- Physical corrections are the adjustment types `recount`, `count`, `damage`, `loss` and `correction`. They may take available below zero (never on hand, where the path already refuses negative stock) and then fire `reservation_shortfall($product, $variant, $shortfall)` after commit, for the total, a variant or a bin.
+- Orders carry the reservation as `reservation_owner` and `reservation_reference` in `OrderService::create()` data. The holds are claimed (marked consumed) under the order's locks before the checks, so the checks see available plus that hold; a failed order rolls the claim back. Edits leave a consumed hold consumed.
+- Bin depletion (`ProductLocationStockService::consume()`) draws free units first and leaves held units in their bins; a physical correction draws them last. `applyDelta()` refuses to take a bin below its holds unless the caller says it is a correction. `move()` refuses to move held units out of a bin.
+- The GraphQL `createStockAdjustment` mutation now refuses negative stock like the web, REST and MCP adjustments (it used `allowNegative = true`), so it cannot take promised units either.
+- A plugin's holds are released in every organization when it is deleted (`PluginService::deletePlugin()`).
+
+### Paths and how each checks
+
+| Path | Check |
+|------|-------|
+| Order create (web, REST, GraphQL, MCP, import) | `OrderService::create()`: running balance per product or variant starts at on hand less `reservedTotal()`, read after the product and variant row locks. Bin depletion skips held bin units; allocation skips held serials and batch units. |
+| Order edit | `OrderService::replaceItems()`: same running balance after the old lines are restocked; the per-line `adjust()`/`adjustVariant()` re-check. |
+| Adjustments with `allowNegative = false` | `StockAdjustment::adjust()` / `adjustVariant()` under the row lock, unless a physical correction. Covers manual adjustments on every surface, approval execution, inter-company out and work order consumption. `ApprovalService::requestStockAdjustment()` refuses up front what could never be approved. |
+| Bin moves and depletion | `move()` (source bin holds), `consume()` (free units first), `applyDelta()` (bin holds). |
+| Stock transfers | `StockTransferService::complete()` through `move()`: limited by holds in the source bin only. |
+| Serial and batch allocation | `TrackedStockAllocationService` skips held serials and held batch units; a consumed reservation's serials and batches are allocated first. |
+| Serial status changes | `PUT /api/v1/products/{product}/serials/{serial}` refuses to move a held serial out of available (409 `serial_reserved`). |
+| Work order start | `WorkOrderService::start()` (web, REST and now MCP) compares remaining requirements with `available()`. |
+| Work order completion | Web and REST: `consume()` then `adjust(allowNegative: false)` under the product locks. |
+| Approval execution | `ApprovalService` applies a held adjustment through `adjust(allowNegative: false)`, so it re-checks available at approval time. |
+| Inter-company out | `InterCompanyTransferService` books `inter_company_out` through `adjust(allowNegative: false)`, with the source bin through `applyDelta()`. |
 
 ### Hooks
 

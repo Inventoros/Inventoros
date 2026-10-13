@@ -8,6 +8,8 @@ Full release notes, with the pull request behind each change, are on [GitHub Rel
 
 ### Added
 
+- Stock reservations (available to promise). Plugins and core can hold on-hand stock against a product total, a location bin, a variant, a serial or part of a batch (`StockReservationService`), and every path that takes stock out (orders on every surface, order edits, adjustments, bin moves, transfers, serial and batch allocation, work orders, approvals, inter-company transfers) now checks against on hand less active holds. Recounts and damage or loss write-offs are never refused; when one leaves fewer units than are held, `reservation_shortfall` fires. Products show on hand, reserved and available, the REST, GraphQL and MCP product payloads carry `reserved_stock` and `available_stock`, and a Reservations page lists holds and lets a stock manager release one. Expired holds are released every five minutes, and a plugin's holds are released when it is uninstalled. With no holds nothing changes.
+
 - `TRUSTED_PROXIES` names the reverse proxies (nginx, Traefik, Caddy, a load balancer) whose `X-Forwarded-*` headers are believed, so the app builds https URLs and Secure cookies behind a TLS-terminating proxy. No proxy is trusted unless configured; the Docker image and compose files default to `private_ranges`.
 - Order and purchase order forms have an optional tax rate (%) beside the tax amount, which fills the amount in from the subtotal after discounts. Only the amount is saved, as before.
 - Queued exports now expire after `EXPORT_RETENTION_DAYS` (default 7): the download link says the export has expired, and a nightly `exports:prune` deletes the file and its record.
@@ -18,6 +20,11 @@ Full release notes, with the pull request behind each change, are on [GitHub Rel
 
 - Creating and starting a stock audit takes a fixed number of queries however many products it covers. The lines are seeded with one `INSERT ... SELECT` and re-snapshotted on start with one `UPDATE`, instead of a save per product; a 20,000-product count went from about 20,000 queries and 7 to 10 seconds per step to under 10 queries and well under a second (SQLite benchmark). Snapshot values and the start lock are unchanged. Scheduled cycle counts use the same path. Benchmark: `php artisan test --group=performance`.
 - Members added from other organizations now receive the organization's notifications (low and out of stock, variant and per-warehouse stock alerts, new orders, portal return requests, approval requests, account activity alerts), can be scheduled report recipients, and appear in the cycle count assignee, warehouse assignment, stock adjustment and activity log user pickers. A withdrawn member stops receiving them and leaves the pickers. Permissions are those held in the organization concerned (stock and new order alerts still need a role assigned there that grants `manage_stock` or `view_orders`; the base role alone does not count), and the Users screens still list home users only.
+
+### Changed
+
+- The GraphQL `createStockAdjustment` mutation refuses to take stock below zero, like the web, REST and MCP adjustments.
+- The MCP `start_work_order` tool starts work orders through the same locked check as the web and REST surfaces, so it now also refuses kits and variant, serial or batch tracked products.
 
 ### Fixed
 
