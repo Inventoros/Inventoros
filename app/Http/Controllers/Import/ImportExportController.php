@@ -510,12 +510,7 @@ class ImportExportController extends Controller
     {
         // Route-model binding is org-scoped by the global scope, so a
         // cross-tenant id already 404s.
-
-        // An export belongs to whoever requested it (it may hold data they
-        // filtered for themselves); only they or an admin may fetch it. 404
-        // rather than 403 so ids of colleagues' exports are not confirmed.
         $user = $request->user();
-        abort_unless((int) $dataExport->user_id === (int) $user->id || $user->isAdmin(), 404);
 
         // A user export needs view_users to create (see the route), so the
         // stored file needs it to download too.
@@ -523,6 +518,11 @@ class ImportExportController extends Controller
             $dataExport->type === 'users' && ! $user->hasPermission('view_users'),
             403,
         );
+
+        // An export belongs to whoever requested it (it may hold data they
+        // filtered for themselves); only they or an admin may fetch it. 404
+        // rather than 403 so ids of colleagues' exports are not confirmed.
+        abort_unless((int) $dataExport->user_id === (int) $user->id || $user->isAdmin(), 404);
 
         // Past config('exports.retention_days') the file is no longer served,
         // even if exports:prune has not removed it yet.
