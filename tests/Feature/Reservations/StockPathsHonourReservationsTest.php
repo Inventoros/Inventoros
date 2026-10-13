@@ -194,6 +194,14 @@ final class StockPathsHonourReservationsTest extends TestCase
         $this->assertCount(1, $this->shortfalls);
     }
 
+    public function test_a_bookkeeping_correction_cannot_take_reserved_units(): void
+    {
+        $this->hold(7);
+
+        $this->expectException(InsufficientStockException::class);
+        $this->approvals()->submitStockAdjustment($this->admin, $this->product, null, -4, 'correction', 'Fix a typo');
+    }
+
     public function test_no_shortfall_without_holds_or_within_available(): void
     {
         $this->approvals()->submitStockAdjustment($this->admin, $this->product, null, -2, 'damage', 'Broken');

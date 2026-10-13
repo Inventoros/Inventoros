@@ -47,9 +47,11 @@ final class StockReservationService
 {
     /**
      * Adjustment types that record what physically happened (a count, a
-     * write-off). They are never refused because stock is promised.
+     * damage or loss write-off). They are never refused because stock is
+     * promised. A bookkeeping `correction` is not one of them: it may not
+     * take promised units.
      */
-    public const PHYSICAL_CORRECTION_TYPES = ['recount', 'count', 'damage', 'loss', 'correction'];
+    public const PHYSICAL_CORRECTION_TYPES = ['recount', 'count', 'damage', 'loss'];
 
     public function __construct(private readonly DomainHooks $hooks) {}
 

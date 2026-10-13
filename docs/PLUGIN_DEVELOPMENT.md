@@ -843,7 +843,7 @@ Available is computed under the same row lock as every decrement and never store
 
 Every core path that takes stock out checks against available: order create (web, REST, GraphQL, MCP, import) and edit, adjustments that refuse negative stock (manual adjustments on every surface, inter-company transfers out, work order component consumption, approval execution), bin removals and depletion, stock transfers out of a held bin, serial and batch allocation, and starting a work order. A request above available fails and changes nothing.
 
-Physical corrections are the exception: a recount (`recount`, `count`), a damage or loss write-off (`damage`, `loss`) and a `correction` record what is really on the shelf, so they are never refused because stock is promised. They may take available below zero; core then fires `reservation_shortfall` after commit, and leaves the holds to their owner.
+Physical corrections are the exception: a recount (`recount`, `count`) and a damage or loss write-off (`damage`, `loss`) record what is really on the shelf, so they are never refused because stock is promised (a bookkeeping `correction` is not one of them). They may take available below zero; core then fires `reservation_shortfall` after commit, and leaves the holds to their owner.
 
 ### Reserving, releasing and consuming
 
