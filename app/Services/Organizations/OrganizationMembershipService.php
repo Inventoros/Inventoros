@@ -123,10 +123,7 @@ final class OrganizationMembershipService
     {
         $organizationId = $organization instanceof Organization ? (int) $organization->getKey() : $organization;
 
-        return User::query()->where(function (Builder $q) use ($organizationId): void {
-            $q->where('users.organization_id', $organizationId)
-                ->orWhereIn('users.id', OrganizationMembership::query()->select('user_id')->where('organization_id', $organizationId));
-        });
+        return User::query()->memberOf($organizationId);
     }
 
     /**

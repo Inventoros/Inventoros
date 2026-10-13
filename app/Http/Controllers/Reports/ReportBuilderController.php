@@ -9,6 +9,7 @@ use App\Models\Auth\Organization;
 use App\Models\ReportSchedule;
 use App\Models\SavedReport;
 use App\Models\User;
+use App\Services\Organizations\ActiveOrganization;
 use App\Services\ReportDataService;
 use App\Services\Reports\ReportExporter;
 use App\Services\Reports\SavedReportRenderer;
@@ -226,13 +227,10 @@ class ReportBuilderController extends Controller
                     'last_status' => $s->last_status,
                 ])
                 ->all(),
-            'recipientOptions' => ! $isOwner ? [] : User::query()
-                ->where('organization_id', $savedReport->organization_id)
-                ->with('roles')
-                ->orderBy('name')
-                ->get()
-                // Only people who may see the report themselves can receive it.
-                ->filter(fn (User $u): bool => $u->hasAllPermissions(ReportDataService::viewPermissionsFor((string) $savedReport->data_source)))
+            // Members of the report's organization (added ones included) who
+            // may see the report themselves there.
+            'recipientOptions' => ! $isOwner ? [] : app(ActiveOrganization::class)
+                ->membersIn((int) $savedReport->organization_id, ReportDataService::viewPermissionsFor((string) $savedReport->data_source))
                 ->map(fn (User $u) => ['id' => $u->id, 'name' => $u->name, 'email' => $u->email])
                 ->values()
                 ->all(),

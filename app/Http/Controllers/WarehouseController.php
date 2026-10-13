@@ -10,9 +10,10 @@ use App\Enums\Permission;
 use App\Models\Inventory\ProductLocationStock;
 use App\Models\User;
 use App\Models\Warehouse;
+use App\Rules\OrganizationMember;
+use App\Services\Organizations\ActiveOrganization;
 use App\Services\WarehouseAccessService;
 use Illuminate\Http\Request;
-use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -222,12 +223,11 @@ class WarehouseController extends Controller
 
         $this->warehouseAccess->authorizeWarehouse($request->user(), $warehouse->id);
 
-        // Every org user, flagged when an assignment would not restrict them
-        // (admins and access_all_warehouses holders see every warehouse).
-        $users = User::where('organization_id', $request->user()->organization_id)
-            ->with('roles')
-            ->orderBy('name')
-            ->get(['id', 'name', 'email', 'role'])
+        // Every member of the organization (added members included), flagged
+        // when an assignment would not restrict them: admins and
+        // access_all_warehouses holders, in THIS organization, see every
+        // warehouse.
+        $users = app(ActiveOrganization::class)->membersIn((int) $request->user()->organization_id)
             ->map(fn (User $user) => [
                 'id' => $user->id,
                 'name' => $user->name,
@@ -304,7 +304,7 @@ class WarehouseController extends Controller
         // 'present' (not 'required') so an empty list clears every assignment.
         $validated = $request->validate([
             'user_ids' => ['present', 'array'],
-            'user_ids.*' => ['integer', Rule::exists('users', 'id')->where('organization_id', $request->user()->organization_id)],
+            'user_ids.*' => ['integer', new OrganizationMember($request->user()->organization_id)],
         ]);
 
         $warehouse->users()->sync($validated['user_ids']);

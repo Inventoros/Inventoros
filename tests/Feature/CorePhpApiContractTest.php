@@ -111,6 +111,9 @@ final class CorePhpApiContractTest extends TestCase
             'array $attributes', 'App\Models\User $admin', '?App\Models\User $actor = NULL',
         ]],
         'App\Services\Organizations\ActiveOrganization::userIn' => ['returns' => '?App\Models\User', 'params' => ['App\Models\User|int $user', 'int $organizationId']],
+        'App\Services\Organizations\ActiveOrganization::membersIn' => ['returns' => 'Illuminate\Database\Eloquent\Collection', 'params' => [
+            'int $organizationId', "App\\Enums\\Permission|array|string \$permissions = array (\n)", '?callable $constrain = NULL',
+        ]],
         'App\Services\Organizations\ActiveOrganization::runAs' => ['returns' => 'mixed', 'params' => [
             'App\Models\User $user', 'int $organizationId', 'App\Enums\Permission|array|string $permissions', 'callable $callback',
         ]],

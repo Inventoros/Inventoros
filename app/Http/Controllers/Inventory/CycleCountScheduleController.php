@@ -11,6 +11,7 @@ use App\Models\Inventory\ProductLocation;
 use App\Models\Scopes\OrganizationScope;
 use App\Models\User;
 use App\Models\Warehouse;
+use App\Rules\OrganizationMember;
 use App\Services\CycleCountService;
 use Closure;
 use Illuminate\Http\RedirectResponse;
@@ -180,7 +181,7 @@ class CycleCountScheduleController extends Controller
                 },
             ],
             'products_per_run' => ['required', 'integer', 'min:1', 'max:1000'],
-            'assigned_to' => ['nullable', 'integer', Rule::exists('users', 'id')->where('organization_id', $orgId)],
+            'assigned_to' => ['nullable', 'integer', new OrganizationMember($orgId)],
             'is_active' => ['sometimes', 'boolean'],
             'next_run_at' => ['nullable', 'date'],
         ]);
@@ -195,7 +196,7 @@ class CycleCountScheduleController extends Controller
             'locations' => ProductLocation::forOrganization($organizationId)->active()->orderBy('name')->get(['id', 'name', 'code']),
             'warehouses' => Warehouse::where('organization_id', $organizationId)->orderBy('name')->get(['id', 'name', 'code']),
             'categories' => ProductCategory::where('organization_id', $organizationId)->orderBy('name')->get(['id', 'name']),
-            'users' => User::where('organization_id', $organizationId)->orderBy('name')->get(['id', 'name']),
+            'users' => User::query()->memberOf($organizationId)->orderBy('name')->get(['id', 'name']),
             'frequencies' => CycleCountSchedule::FREQUENCIES,
             'scopes' => CycleCountSchedule::SCOPES,
         ];

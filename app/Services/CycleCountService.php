@@ -88,7 +88,8 @@ final class CycleCountService
             }
 
             if ($audit && $schedule->assigned_to) {
-                $assignee = User::find($schedule->assigned_to);
+                // Only while the assignee is still a member of the organization.
+                $assignee = app(ActiveOrganization::class)->userIn((int) $schedule->assigned_to, (int) $schedule->organization_id);
                 if ($assignee) {
                     DB::afterCommit(fn () => NotificationService::createCycleCountAssignedNotification($audit, $assignee));
                 }

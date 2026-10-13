@@ -146,6 +146,20 @@ trait HasRolesAndPermissions
     }
 
     /**
+     * Whether a role assigned to the user in the active organization lists
+     * $permission itself. The base role (admin, manager, member) does not
+     * count. Used to pick the recipients of stock and new order alerts,
+     * which have always gone to holders of an assigned role only.
+     */
+    public function holdsPermissionThroughAssignedRole(Permission|string $permission): bool
+    {
+        $permissionValue = $permission instanceof Permission ? $permission->value : $permission;
+
+        return $this->rolesInActiveOrganization()
+            ->contains(fn ($role) => in_array($permissionValue, $role->permissions ?? [], true));
+    }
+
+    /**
      * Check if the user has any of the given permissions.
      *
      * @param  array<Permission|string>  $permissions

@@ -766,6 +766,7 @@ Users and installs with one organization see no change: the switcher is hidden, 
 2. **Work in another organization only through `runAs()` or `authorize()`.** They check the membership and the permissions in that organization, and `runAs()` confines every scoped query, and every new tenant row, to it for the duration of the callback. Pass the user the callback receives to core services; never read `auth()->user()` inside it.
 3. **Change memberships only through `OrganizationMembershipService`.** It refuses to touch the home organization (that is the user screens' job) or to remove an organization's last administrator, cleans up roles, warehouse assignments and tokens, writes the security log and fires the `organization_member_*` actions. Who may add or remove members is the caller's decision: check it first (for example `manage_organization` in the target organization through `authorize()`).
 4. **Key caches and stored state by organization**, and pass the organization explicitly to everything that runs outside a request.
+5. **Address an organization's members, not its home users.** To notify, assign or list "the users of an organization", use `app(ActiveOrganization::class)->membersIn($organizationId, $permissions)`: its home users and the members added from other organizations, each loaded into it so the permissions are those held there, with withdrawn members left out. `User::query()->memberOf($organizationId)` is the same set as a query (for a picker of ids and names), and the `App\Rules\OrganizationMember` rule validates a picked id. `User::where('organization_id', ...)` lists home users only, which is what the Users screens show.
 
 ```php
 use App\Enums\Permission;
@@ -832,7 +833,7 @@ Resolve services from the container (`app(OrderService::class)`). Methods that t
 | `App\Services\ScanLookupService` | `resolve()`, `locationSummary()` |
 | `App\Services\ReorderService` | `primarySupplier()`, `suggestedQuantity()`, `createDraftPurchaseOrder()` |
 | `App\Services\Organizations\OrganizationMembershipService` | `isMember()`, `roleIn()`, `organizationsFor()`, `members()`, `add()`, `changeRole()`, `remove()`, `createOrganization()` |
-| `App\Services\Organizations\ActiveOrganization` | `userIn()`, `runAs()`, `authorize()` |
+| `App\Services\Organizations\ActiveOrganization` | `userIn()`, `membersIn()`, `runAs()`, `authorize()` |
 | `App\Services\Organizations\InterCompanyTransferService` | `transfer()` |
 
 Check a method's docblock for its rules (locks it takes, exceptions it throws, which hooks it fires). On an older core, feature-detect a newer parameter with `(new \ReflectionMethod(OrderService::class, 'cancel'))->getNumberOfParameters()`.

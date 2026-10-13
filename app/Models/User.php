@@ -381,4 +381,25 @@ class User extends Authenticatable
     {
         return $query->where('organization_id', $organizationId);
     }
+
+    /**
+     * Scope a query to everyone who can work in the organization: its home
+     * users and the members added from other organizations. A withdrawn
+     * membership drops the user out. For recipients, assignees and pickers;
+     * the Users screens list home users only (scopeForOrganization()).
+     *
+     * The rows are the stored accounts: their organization_id is their home.
+     * To check permissions in $organizationId, load them into it with
+     * ActiveOrganization::membersIn() (or userIn()).
+     *
+     * @param  Builder<static>  $query
+     * @return Builder<static>
+     */
+    public function scopeMemberOf($query, int $organizationId)
+    {
+        return $query->where(function (Builder $q) use ($organizationId): void {
+            $q->where('users.organization_id', $organizationId)
+                ->orWhereIn('users.id', OrganizationMembership::query()->select('user_id')->where('organization_id', $organizationId));
+        });
+    }
 }

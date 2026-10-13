@@ -6,6 +6,8 @@ namespace App\Services\Organizations;
 
 use App\Enums\Permission;
 use App\Enums\SecurityEvent;
+use App\Models\Auth\Organization;
+use App\Models\Auth\OrganizationMembership;
 use App\Models\PersonalAccessToken;
 use App\Models\User;
 use App\Services\SecurityEventLogger;
@@ -14,6 +16,7 @@ use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Auth\Events\Authenticated;
 use Illuminate\Auth\Events\Login;
 use Illuminate\Contracts\Session\Session;
+use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Http\Request;
 
 /**
@@ -82,6 +85,46 @@ final class ActiveOrganization
         }
 
         return $copy;
+    }
+
+    /**
+     * Everyone who can work in $organizationId (home users and members added
+     * from other organizations), each loaded into it as userIn() would, and
+     * holding every one of $permissions THERE: a user who administers their
+     * home organization but is a plain member of this one counts as a plain
+     * member. Ordered by name. Empty when the organization is disabled or
+     * deleted. For notification recipients, assignees and pickers.
+     *
+     * @param  Permission|string|array<int, Permission|string>  $permissions
+     * @param  (callable(\Illuminate\Database\Eloquent\Builder<User>): mixed)|null  $constrain  Narrows the user query (by email, say) before permissions are checked
+     * @return EloquentCollection<int, User>
+     *
+     * @api
+     */
+    public function membersIn(int $organizationId, Permission|string|array $permissions = [], ?callable $constrain = null): EloquentCollection
+    {
+        if (! Organization::query()->whereKey($organizationId)->where('is_active', true)->exists()) {
+            return new EloquentCollection;
+        }
+
+        $permissions = is_array($permissions) ? $permissions : [$permissions];
+        // Base roles of the members who joined from elsewhere, in one query.
+        $roles = OrganizationMembership::query()
+            ->where('organization_id', $organizationId)
+            ->pluck('role', 'user_id');
+
+        return User::query()
+            ->memberOf($organizationId)
+            ->when($constrain !== null, fn ($query) => $constrain($query))
+            ->orderBy('name')
+            ->orderBy('id')
+            ->get()
+            ->map(fn (User $user): User => $user->useOrganization(
+                $organizationId,
+                $user->homeOrganizationId() === $organizationId ? $user->homeRole() : ($roles[$user->getKey()] ?? null),
+            ))
+            ->filter(fn (User $member): bool => $permissions === [] || $member->hasAllPermissions($permissions))
+            ->values();
     }
 
     /**

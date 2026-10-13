@@ -8,6 +8,7 @@ use App\Enums\SecurityEvent;
 use App\Mail\UserActivityAlertEmail;
 use App\Models\ActivityLog;
 use App\Models\User;
+use App\Services\Organizations\ActiveOrganization;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
@@ -150,15 +151,12 @@ final class UserActivityAlertService
      */
     public function recipients(int $organizationId, array $excludeIds = []): Collection
     {
-        // Admins by base role or by the Administrator system role (the same
-        // two routes User::isAdmin() recognises).
-        return User::query()
-            ->where('organization_id', $organizationId)
-            ->where(fn ($q) => $q->where('role', 'admin')
-                ->orWhereHas('roles', fn ($r) => $r->where('slug', 'system-administrator')))
-            ->whereNotIn('id', array_values(array_filter($excludeIds)))
-            ->get()
-            ->filter(fn (User $admin) => self::wantsAlerts($admin))
+        // Members of the organization (added ones included) who administer
+        // it: by base role or by the Administrator system role held THERE
+        // (User::isAdmin() on the member loaded into the organization).
+        return app(ActiveOrganization::class)
+            ->membersIn($organizationId, [], fn ($query) => $query->whereNotIn('users.id', array_values(array_filter($excludeIds))))
+            ->filter(fn (User $member) => self::wantsAlerts($member) && $member->isAdmin())
             ->values();
     }
 

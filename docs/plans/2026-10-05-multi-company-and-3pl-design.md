@@ -68,7 +68,7 @@ Organizations themselves can be disabled (`is_active`): nobody works in a disabl
 
 ### Known limits (deliberate, for the plugins to extend)
 
-- Organization-wide notifications (low stock, new orders, returns), scheduled report recipients and assignee pickers address home users. Members added from other organizations are not recipients in this version; the Multi-Company plugin can add them through the hooks.
+- Organization-wide notifications (low stock, new orders, returns, approval requests, account activity alerts), scheduled report recipients and the user pickers (cycle count assignee, warehouse assignments, stock adjustment and activity log filters) address the organization's members: its home users and the members added from other organizations (`User::scopeMemberOf()`, `ActiveOrganization::membersIn()`, the `OrganizationMember` validation rule). Each recipient is loaded into that organization first, so permission filters use the roles held there (stock and new order alerts, as before, only count roles assigned there, not the base role), notifications are created there and emails use its mail settings and the member's current address. A withdrawn member stops receiving them and leaves the pickers at once. The Users screens still list home users only, since the home organization owns the account.
 - After-commit hooks fired by a core service called inside `runAs()` (`stock_changed`, `stock_adjusted`, ...) run in the request's active organization. Listeners must use the record's own `organization_id`, which they already must in queued jobs.
 - Core has no screens to add members or create organizations; that is the Multi-Company plugin's job (`OrganizationMembershipService::add()`, `createOrganization()`).
 - Activity log entries belong to the organization of their subject (a user account's entries to its home organization; work done inside `runAs()` to that organization), not to the organization the actor happened to have active.
@@ -89,6 +89,7 @@ Organizations themselves can be disabled (`is_active`): nobody works in a disabl
 | Permissions per organization | `test_permissions_are_those_held_in_the_active_organization`; `OrganizationMembershipTest::test_roles_are_held_per_organization` (custom role, Administrator system role, a relation eager-loaded for home) |
 | Stale browser tab | `test_a_write_from_a_tab_still_showing_the_previous_organization_is_refused` |
 | Notifications | `test_notifications_of_another_organization_stay_in_it` |
+| Recipients and pickers | `MemberRecipientsTest` (each organization-wide notification, approval requests, account alerts, scheduled report options, validation and delivery, cycle count, warehouse and filter pickers: members from another organization included, withdrawn members and other organizations' users left out, permissions evaluated in the target organization, Users screen unchanged) |
 | Exports | `test_an_export_made_in_another_organization_cannot_be_downloaded` |
 | Warehouses | `test_the_active_warehouse_must_belong_to_the_active_organization` |
 | Cache keys | `test_cached_settings_follow_the_active_organization` (settings are cached per organization id) |
