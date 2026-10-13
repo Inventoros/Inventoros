@@ -20,6 +20,7 @@ use App\Models\Inventory\ProductSerial;
 use App\Models\Inventory\ProductVariant;
 use App\Models\Inventory\StockAdjustment;
 use App\Models\User;
+use App\Services\StockReservationService;
 use App\Services\WarehouseAccessService;
 use App\Support\Tenancy\OrganizationContext;
 use Illuminate\Auth\Access\AuthorizationException;
@@ -379,6 +380,7 @@ final class InterCompanyTransferService
     private function resolveUnits(array $lines, int $from, int $to, Collection $products): array
     {
         $resolved = ['serials' => [], 'batches' => []];
+        $reservations = app(StockReservationService::class);
 
         $serialNumbers = array_merge([], ...array_map(fn (array $line) => $line['serials'] ?? [], $lines));
 
@@ -401,6 +403,13 @@ final class InterCompanyTransferService
                     // unavailable serials are reported alike.
                     if ($serial === null || (int) $serial->product_id !== $line['from_product_id'] || $serial->status !== ProductSerial::STATUS_AVAILABLE) {
                         throw ValidationException::withMessages([$field => "Serial {$number} is not available on that product in the source organization."]);
+                    }
+
+                    // A serial held by a stock reservation stays in the
+                    // source organization until its hold is consumed or
+                    // released.
+                    if ($reservations->isSerialHeld((int) $serial->id)) {
+                        throw ValidationException::withMessages([$field => "Serial {$number} is reserved in the source organization."]);
                     }
 
                     $existing = $destinationSerials[$number] ?? null;
@@ -460,11 +469,19 @@ final class InterCompanyTransferService
 
             foreach ($demand as $batchId => $quantity) {
                 $batch = $byId[$batchId];
+                $name = $products[(int) $batch->product_id]->name ?? 'the product';
 
                 if ($quantity > (int) $batch->quantity) {
-                    $name = $products[(int) $batch->product_id]->name ?? 'the product';
-
                     throw new InsufficientStockException("Batch {$batch->batch_number} of {$name} holds {$batch->quantity}, {$quantity} requested.");
+                }
+
+                // Units of the batch promised by stock reservations stay.
+                $held = $reservations->reservedByBatch((int) $batch->product_id)[(int) $batch->id] ?? 0;
+
+                if ($held > 0 && $quantity > (int) $batch->quantity - $held) {
+                    throw new InsufficientStockException(
+                        "Batch {$batch->batch_number} of {$name} has ".max(0, (int) $batch->quantity - $held)." available ({$batch->quantity} in the batch, {$held} reserved), {$quantity} requested."
+                    );
                 }
             }
         }

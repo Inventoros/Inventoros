@@ -106,7 +106,7 @@ Each path in the table above compares the request to `available` instead of `on_
 | Work order start | `WorkOrderService::start()` (web, REST and now MCP) compares remaining requirements with `available()`. |
 | Work order completion | Web and REST: `consume()` then `adjust(allowNegative: false)` under the product locks. |
 | Approval execution | `ApprovalService` applies a held adjustment through `adjust(allowNegative: false)`, so it re-checks available at approval time. |
-| Inter-company out | `InterCompanyTransferService` books `inter_company_out` through `adjust(allowNegative: false)`, with the source bin through `applyDelta()`. |
+| Inter-company out | `InterCompanyTransferService` books every source line (plain, serial, batch, and the component lines a kit is exploded into) as `inter_company_out` through `adjust(allowNegative: false)`, with the source bin through `applyDelta()`. A named serial held by a reservation is refused (`lines.N.serials.K`), and a batch line may take only the batch's unheld units. |
 
 ### Hooks
 
