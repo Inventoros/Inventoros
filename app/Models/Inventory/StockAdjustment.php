@@ -8,6 +8,7 @@ use App\Exceptions\InsufficientStockException;
 use App\Models\Auth\Organization;
 use App\Models\User;
 use App\Services\ProductLocationStockService;
+use App\Services\StockReservationService;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -221,6 +222,17 @@ class StockAdjustment extends Model
                 );
             }
 
+            // Stock reservations: a removal that refuses negative stock also
+            // refuses to take promised units, unless it records a physical
+            // correction (a recount, a damage or loss write-off), which
+            // reflects what is really there.
+            $reservations = app(StockReservationService::class);
+            $respectHolds = ! $allowNegative && ! $reservations->isPhysicalCorrection($type);
+
+            if ($quantity < 0 && $respectHolds) {
+                self::assertWithinAvailable($quantity, (int) $quantityBefore, $reservations->reservedTotal((int) $locked->id, null));
+            }
+
             $adjustment = self::create([
                 'organization_id' => $locked->organization_id,
                 'product_id' => $locked->id,
@@ -248,15 +260,20 @@ class StockAdjustment extends Model
             $bins = app(ProductLocationStockService::class);
 
             if ($locationId !== null) {
-                $bins->applyDelta($locked, $locationId, $quantity, allowNegativeBin: $allowNegative);
+                $bins->applyDelta($locked, $locationId, $quantity, allowNegativeBin: $allowNegative, respectHolds: $respectHolds);
             } elseif ($syncBins && $quantity < 0) {
                 // No bin named: draw the units out of the bins the way order
                 // fulfilment does, before the total drops (the lazy seed reads
                 // the pre-adjustment stock).
-                $bins->consume($locked, -$quantity);
+                $bins->consume($locked, -$quantity, respectHolds: $respectHolds);
             }
 
             $locked->update(['stock' => $quantityAfter]);
+
+            if ($quantity < 0) {
+                // A correction that left fewer units than are promised.
+                $reservations->reportShortfall($locked, null, null, (int) $quantityAfter);
+            }
 
             if ($locationId === null && $syncBins && $quantity > 0) {
                 // No bin named: book the units into the primary bin, after the
@@ -280,6 +297,22 @@ class StockAdjustment extends Model
 
             return $adjustment;
         });
+    }
+
+    /**
+     * Refuse a removal that would take units promised by stock reservations.
+     *
+     * @throws InsufficientStockException
+     */
+    private static function assertWithinAvailable(int $quantity, int $onHand, int $reserved): void
+    {
+        if ($reserved > 0 && $onHand + $quantity < $reserved) {
+            $available = max(0, $onHand - $reserved);
+
+            throw new InsufficientStockException(
+                'Cannot remove '.abs($quantity)." units; only {$available} available ({$onHand} on hand, {$reserved} reserved)."
+            );
+        }
     }
 
     /**
@@ -313,6 +346,13 @@ class StockAdjustment extends Model
                 );
             }
 
+            // Same reservation rule as adjust().
+            $reservations = app(StockReservationService::class);
+
+            if ($quantity < 0 && ! $allowNegative && ! $reservations->isPhysicalCorrection($type)) {
+                self::assertWithinAvailable($quantity, (int) $quantityBefore, $reservations->reservedTotal((int) $locked->product_id, (int) $locked->id));
+            }
+
             $adjustment = self::create([
                 'organization_id' => $locked->organization_id,
                 'product_id' => $locked->product_id,
@@ -330,6 +370,14 @@ class StockAdjustment extends Model
             ]);
 
             $locked->update(['stock' => $quantityAfter]);
+
+            if ($quantity < 0) {
+                $product = Product::withoutGlobalScopes()->find($locked->product_id);
+
+                if ($product !== null) {
+                    $reservations->reportShortfall($product, $locked, null, (int) $quantityAfter);
+                }
+            }
 
             $variant->setRawAttributes(
                 array_merge($variant->getAttributes(), ['stock' => $quantityAfter])

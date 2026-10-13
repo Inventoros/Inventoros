@@ -354,6 +354,62 @@ final class StockReservationService
             ->get();
     }
 
+    /**
+     * Load the reserved figures of a list of products (and their loaded
+     * variants) in one query, so `reserved_stock` and `available_stock` do
+     * not query per row.
+     *
+     * @param  iterable<Product>  $products
+     */
+    public function preloadReserved(iterable $products): void
+    {
+        $products = collect($products)->filter(fn ($product) => $product instanceof Product);
+
+        if ($products->isEmpty()) {
+            return;
+        }
+
+        $rows = $this->activeQuery()
+            ->whereIn('product_id', $products->map(fn (Product $product) => $product->getKey())->all())
+            ->selectRaw('product_id, product_variant_id, SUM(quantity) as held')
+            ->groupBy('product_id', 'product_variant_id')
+            ->get();
+
+        $productLevel = [];
+        $byVariant = [];
+        foreach ($rows as $row) {
+            if ($row->product_variant_id === null) {
+                $productLevel[(int) $row->product_id] = (int) $row->held;
+            } else {
+                $byVariant[(int) $row->product_id][(int) $row->product_variant_id] = (int) $row->held;
+            }
+        }
+
+        $activeVariantIds = $byVariant === [] ? [] : ProductVariant::withoutGlobalScopes()
+            ->whereIn('product_id', array_keys($byVariant))
+            ->where('is_active', true)
+            ->pluck('id')
+            ->map(fn ($id) => (int) $id)
+            ->flip()
+            ->all();
+
+        foreach ($products as $product) {
+            $variantHolds = $byVariant[(int) $product->id] ?? [];
+
+            $product->setPreloadedReservedStock($product->has_variants
+                ? array_sum(array_intersect_key($variantHolds, $activeVariantIds))
+                : ($productLevel[(int) $product->id] ?? 0));
+
+            foreach (['variants', 'activeVariants'] as $relation) {
+                if ($product->relationLoaded($relation)) {
+                    foreach ($product->getRelation($relation) as $variant) {
+                        $variant->setPreloadedReservedStock($variantHolds[(int) $variant->id] ?? 0);
+                    }
+                }
+            }
+        }
+    }
+
     // ==================== ADMINISTRATION ====================
 
     /**

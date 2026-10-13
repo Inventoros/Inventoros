@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace App\Mcp\Tools;
 
+use App\Exceptions\BusinessRuleException;
 use App\Mcp\Concerns\AuthenticatesMcpRequest;
 use App\Models\Inventory\WorkOrder;
+use App\Services\WorkOrderService;
 use Illuminate\Contracts\JsonSchema\JsonSchema;
 use Laravel\Mcp\Request;
 use Laravel\Mcp\Response;
@@ -47,20 +49,15 @@ class StartWorkOrderTool extends Tool
             return Response::error("Only draft or pending work orders can be started (current status: {$wo->status}).");
         }
 
-        foreach ($wo->items as $item) {
-            $remaining = $item->quantity_required - $item->quantity_consumed;
-            if ($item->product && $item->product->stock < $remaining) {
-                return Response::error(
-                    "Insufficient stock for component '{$item->product->name}': "
-                    ."available {$item->product->stock}, required {$remaining}."
-                );
-            }
+        // The same locked start the web and REST surfaces use: components
+        // must be available (on hand less stock reservations).
+        try {
+            app(WorkOrderService::class)->start($wo);
+        } catch (BusinessRuleException $e) {
+            return Response::error($e->getMessage());
         }
 
-        $wo->update([
-            'status' => 'in_progress',
-            'started_at' => now(),
-        ]);
+        $wo->refresh();
 
         return Response::json([
             'message' => 'Work order started.',

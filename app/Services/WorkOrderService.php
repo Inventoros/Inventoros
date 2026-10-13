@@ -39,10 +39,15 @@ final class WorkOrderService
             $locked->load(['product', 'items.product']);
             $this->assertProductsSupported($locked->items->pluck('product')->prepend($locked->product));
 
+            // Components must be available: on hand less what stock
+            // reservations promise. Completion re-checks under the product
+            // locks when it consumes them.
+            $reservations = app(StockReservationService::class);
             foreach ($locked->items as $item) {
                 $remaining = $item->quantity_required - $item->quantity_consumed;
-                if ($item->product->stock < $remaining) {
-                    throw new InsufficientStockException("Insufficient stock for component '{$item->product->name}'. Available: {$item->product->stock}, Required: {$remaining}.");
+                $available = $reservations->available($item->product);
+                if ($available < $remaining) {
+                    throw new InsufficientStockException("Insufficient stock for component '{$item->product->name}'. Available: ".max(0, $available).", Required: {$remaining}.");
                 }
             }
 

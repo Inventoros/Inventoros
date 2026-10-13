@@ -9,6 +9,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Resources\ProductSerialResource;
 use App\Models\Inventory\Product;
 use App\Models\Inventory\ProductSerial;
+use App\Services\StockReservationService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
@@ -134,6 +135,18 @@ class SerialTrackingController extends Controller
             }
 
             $target = $validated['status'];
+
+            // A serial held by a stock reservation stays available until its
+            // owner consumes or releases the hold.
+            if ($locked->status === ProductSerial::STATUS_AVAILABLE
+                && $target !== ProductSerial::STATUS_AVAILABLE
+                && app(StockReservationService::class)->isSerialHeld((int) $locked->id)) {
+                return response()->json([
+                    'message' => 'This serial number is reserved. Release its reservation first.',
+                    'error' => 'serial_reserved',
+                ], 409);
+            }
+
             $allocating = in_array($target, [ProductSerial::STATUS_SOLD, ProductSerial::STATUS_RESERVED], true);
             $alreadyAllocated = in_array($locked->status, [ProductSerial::STATUS_SOLD, ProductSerial::STATUS_RESERVED], true);
             // reserved -> sold is the legitimate completion of a reservation.
