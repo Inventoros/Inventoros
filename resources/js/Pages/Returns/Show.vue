@@ -206,7 +206,7 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-t
                                         :key="item.id"
                                         class="border-b border-border-subtle transition-colors last:border-b-0 hover:bg-surface-overlay"
                                     >
-                                        <td class="min-w-[12rem] px-4 py-3 text-sm font-medium text-text-primary">
+                                        <td class="min-w-48 px-4 py-3 text-sm font-medium text-text-primary">
                                             {{ item.product?.name || item.order_item?.product_name || t('returns.show.unknownProduct') }}
                                             <span v-if="item.variant?.title" class="text-text-secondary"> ({{ item.variant.title }})</span>
                                         </td>

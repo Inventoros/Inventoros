@@ -92,7 +92,7 @@ const cellInput = 'h-8 w-24 rounded-md border border-border-subtle bg-surface-ca
                                     <span v-else class="tabular-nums text-text-primary">
                                         {{ level[field] ?? productLevels[field] ?? '-' }}
                                     </span>
-                                    <p v-if="errorFor(index, field)" class="mt-1 max-w-[12rem] text-xs text-status-danger">{{ errorFor(index, field) }}</p>
+                                    <p v-if="errorFor(index, field)" class="mt-1 max-w-48 text-xs text-status-danger">{{ errorFor(index, field) }}</p>
                                 </td>
                             </tr>
                         </tbody>

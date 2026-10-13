@@ -184,7 +184,7 @@ const formatTime = (date) =>
 
                     <!-- Before -->
                     <div class="relative mb-8 flex items-start gap-4">
-                        <div class="relative z-10 flex h-16 w-16 flex-shrink-0 items-center justify-center rounded-full bg-status-info-soft">
+                        <div class="relative z-10 flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-status-info-soft">
                             <Clock :size="28" class="text-status-info" />
                         </div>
                         <div class="flex-1 rounded-lg border border-border-subtle bg-surface-canvas p-4">
@@ -196,7 +196,7 @@ const formatTime = (date) =>
                     <!-- Adjustment -->
                     <div class="relative mb-8 flex items-start gap-4">
                         <div
-                            class="relative z-10 flex h-16 w-16 flex-shrink-0 items-center justify-center rounded-full"
+                            class="relative z-10 flex h-16 w-16 shrink-0 items-center justify-center rounded-full"
                             :class="isIncrease ? 'bg-status-success-soft' : 'bg-status-danger-soft'"
                         >
                             <ArrowUp v-if="isIncrease" :size="28" class="text-status-success" />
@@ -220,7 +220,7 @@ const formatTime = (date) =>
 
                     <!-- After -->
                     <div class="relative flex items-start gap-4">
-                        <div class="relative z-10 flex h-16 w-16 flex-shrink-0 items-center justify-center rounded-full bg-brand-soft">
+                        <div class="relative z-10 flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-brand-soft">
                             <CheckCircle2 :size="28" class="text-brand" />
                         </div>
                         <div class="flex-1 rounded-lg border border-brand/20 bg-brand-soft p-4">

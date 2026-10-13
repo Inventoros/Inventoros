@@ -211,7 +211,7 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                         <!-- Insufficient Stock Warning -->
                         <div v-if="!allComponentsSufficient" class="border-t border-border-subtle bg-status-danger/10 px-4 py-3">
                             <p class="flex items-center text-sm text-status-danger">
-                                <AlertTriangle :size="16" class="mr-2 flex-shrink-0" />
+                                <AlertTriangle :size="16" class="mr-2 shrink-0" />
                                 {{ t('workOrders.components.insufficientWarning') }}
                             </p>
                         </div>

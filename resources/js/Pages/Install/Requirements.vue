@@ -58,7 +58,7 @@ const props = defineProps({
                     >
                         <div class="flex items-center flex-1">
                             <div
-                                class="flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center"
+                                class="shrink-0 w-10 h-10 rounded-full flex items-center justify-center"
                                 :class="requirement.met ? 'bg-status-success-soft' : 'bg-status-danger-soft'"
                             >
                                 <svg

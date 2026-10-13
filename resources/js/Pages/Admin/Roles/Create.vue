@@ -172,7 +172,7 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                             ]"
                         >
                             <div class="flex items-start gap-3">
-                                <div class="flex-shrink-0">
+                                <div class="shrink-0">
                                     <svg class="h-6 w-6 text-brand" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" :d="getCategoryIcon(set.category)" />
                                     </svg>
@@ -185,7 +185,7 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                                         <Badge v-if="set.is_template" variant="info" size="sm">{{ t('admin.roles.create.template') }}</Badge>
                                     </div>
                                 </div>
-                                <div v-if="form.permission_set_ids.includes(set.id)" class="flex-shrink-0">
+                                <div v-if="form.permission_set_ids.includes(set.id)" class="shrink-0">
                                     <Check :size="18" class="text-brand" />
                                 </div>
                             </div>
