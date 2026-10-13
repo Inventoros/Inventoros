@@ -11,6 +11,10 @@ Full release notes, with the pull request behind each change, are on [GitHub Rel
 - `TRUSTED_PROXIES` names the reverse proxies (nginx, Traefik, Caddy, a load balancer) whose `X-Forwarded-*` headers are believed, so the app builds https URLs and Secure cookies behind a TLS-terminating proxy. No proxy is trusted unless configured; the Docker image and compose files default to `private_ranges`.
 - Order and purchase order forms have an optional tax rate (%) beside the tax amount, which fills the amount in from the subtotal after discounts. Only the amount is saved, as before.
 
+### Changed
+
+- Creating and starting a stock audit takes a fixed number of queries however many products it covers. The lines are seeded with one `INSERT ... SELECT` and re-snapshotted on start with one `UPDATE`, instead of a save per product; a 20,000-product count went from about 20,000 queries and 7 to 10 seconds per step to under 10 queries and well under a second (SQLite benchmark). Snapshot values and the start lock are unchanged. Scheduled cycle counts use the same path. Benchmark: `php artisan test --group=performance`.
+
 ### Fixed
 
 - Docker: behind a reverse proxy the page loaded its scripts over http and the browser blocked them, leaving a blank page (#261).
