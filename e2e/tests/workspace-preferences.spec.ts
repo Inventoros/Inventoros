@@ -84,6 +84,7 @@ test('user permission inspection shows granted and ungranted actions', async ({ 
     await signIn(page);
     await page.goto('/users');
     await page.getByRole('row').filter({ hasText: E2E_STAFF_USER.email }).getByRole('link', { name: 'View', exact: true }).click();
+    await page.waitForURL(/\/users\/\d+$/);
     await expect(page.getByRole('heading', { name: 'Effective permissions' })).toBeVisible();
     await page.locator('#permission-search').fill('view_products');
     await expect(page.locator('li').filter({ hasText: 'View Products' })).toContainText('Granted');
