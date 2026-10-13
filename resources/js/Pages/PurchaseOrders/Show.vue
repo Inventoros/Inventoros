@@ -310,7 +310,7 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-t
                                 </thead>
                                 <tbody>
                                     <tr v-for="item in purchaseOrder.items" :key="item.id" class="border-b border-border-subtle transition-colors last:border-b-0 hover:bg-surface-overlay">
-                                        <td class="min-w-48 px-4 py-3 text-sm text-text-primary">
+                                        <td class="min-w-[12rem] px-4 py-3 text-sm text-text-primary">
                                             <span v-if="item.product && !canVisit('products.show')">{{ item.product_name }}</span>
                                             <Link v-else-if="item.product" :href="route('products.show', item.product.id)" class="text-brand hover:underline">
                                                 {{ item.product_name }}

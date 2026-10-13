@@ -111,7 +111,7 @@ const adjustStock = async () => {
 <template>
     <div class="relative inline-flex items-center gap-1">
         <!-- Stock Display -->
-        <span class="font-medium text-gray-900 dark:text-gray-100 min-w-12 text-center">
+        <span class="font-medium text-gray-900 dark:text-gray-100 min-w-[3rem] text-center">
             {{ variant.stock }}
         </span>
 
