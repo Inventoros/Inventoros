@@ -5,14 +5,14 @@ declare(strict_types=1);
 namespace App\Http\Requests\Admin\User;
 
 use App\Models\User;
+use Illuminate\Database\Query\Builder;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Password;
 
 /**
- * Validates updating a user (admin). Rules unchanged from
- * Admin\UserController::update (password optional; email uniqueness ignores
- * the bound user).
+ * Validates updating a user, including tenant-scoped custom roles.
+ * The password is optional and email uniqueness ignores the bound user.
  */
 final class UpdateUserRequest extends FormRequest
 {
@@ -30,7 +30,9 @@ final class UpdateUserRequest extends FormRequest
             'password' => ['nullable', 'confirmed', Password::defaults()],
             'role' => 'required|in:admin,manager,member',
             'role_ids' => 'nullable|array',
-            'role_ids.*' => 'exists:roles,id',
+            'role_ids.*' => ['integer', Rule::exists('roles', 'id')->where(
+                fn (Builder $query) => $query->where('organization_id', $this->user()->organization_id)->orWhereNull('organization_id')
+            )],
         ];
     }
 }

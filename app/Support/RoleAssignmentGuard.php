@@ -30,6 +30,14 @@ final class RoleAssignmentGuard
      */
     public static function violation(array $roleIds, User $actor, ?string $baseRole = null): ?string
     {
+        // Tenant ownership is mandatory even for organization administrators.
+        $roles = Role::whereIn('id', $roleIds)->get();
+        foreach ($roles as $role) {
+            if ($role->organization_id !== null && $role->organization_id !== $actor->organization_id) {
+                return 'You cannot assign a role from another organization.';
+            }
+        }
+
         if ($actor->isAdmin()) {
             return null;
         }
@@ -44,11 +52,7 @@ final class RoleAssignmentGuard
             return 'You do not have permission to assign this role.';
         }
 
-        foreach (Role::whereIn('id', $roleIds)->get() as $role) {
-            if ($role->organization_id !== null && $role->organization_id !== $actor->organization_id) {
-                return 'You cannot assign a role from another organization.';
-            }
-
+        foreach ($roles as $role) {
             if (in_array($role->slug, ['system-administrator', 'system-manager'], true)) {
                 return 'You do not have permission to assign this role.';
             }
