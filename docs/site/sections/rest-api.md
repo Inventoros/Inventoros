@@ -266,6 +266,16 @@ curl -X PATCH "${APP_URL}/api/v1/returns/17/items" \
 
 Subscribe a URL to any of these events under **Settings > Webhooks** or with `POST /api/v1/webhooks`. Each delivery is signed with HMAC-SHA256 of the request body using the webhook's secret, sent in the `X-Webhook-Signature` header (alongside `X-Webhook-Event` and `X-Webhook-Delivery`), and fires only after the change is committed. Active plugins can register events of their own.
 
+Delivery requires the PHP cURL extension with libcurl 7.59 or newer and direct
+outbound access to a public HTTP/HTTPS receiver. Each attempt validates the
+receiver's DNS addresses and pins that answer for its connection, while keeping
+the original hostname for TLS certificate verification. Private, reserved and
+multicast destinations are rejected. Redirects and environment HTTP proxies are
+disabled for webhook delivery so they cannot bypass the checked destination.
+An empty DNS answer fails the attempt in every environment; the normal retry
+policy applies. Local testing should use HTTP fakes and an injected
+`PublicHostResolver`, rather than an internal receiver or permissive DNS fallback.
+
 | Group | Events |
 | --- | --- |
 | Product | `product.created`, `product.updated`, `product.deleted`, `product.low_stock`, `product.out_of_stock` |

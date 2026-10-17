@@ -18,6 +18,13 @@ class WebhookDeliveryJobTest extends TestCase
 {
     use RefreshDatabase;
 
+    protected function setUp(): void
+    {
+        parent::setUp();
+        $this->mock(\App\Support\PublicHostResolver::class)->shouldReceive('resolve')
+            ->with('example.com')->andReturn(['93.184.215.14']);
+    }
+
     public function test_signature_is_computed_over_exact_wire_bytes(): void
     {
         SystemSetting::set('installed', true, 'boolean');

@@ -39,6 +39,9 @@ final class PluginWebhookEventsTest extends TestCase
     {
         parent::setUp();
 
+        $this->mock(\App\Support\PublicHostResolver::class)->shouldReceive('resolve')
+            ->with('example.com')->andReturn(['93.184.215.14']);
+
         SystemSetting::set('installed', true, 'boolean');
         $this->org = Organization::create(['name' => 'Hooks', 'email' => 'h@example.com', 'currency' => 'USD', 'timezone' => 'UTC']);
         $this->admin = User::create([
