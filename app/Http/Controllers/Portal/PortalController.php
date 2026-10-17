@@ -126,7 +126,7 @@ abstract class PortalController extends Controller
     /**
      * @return array<string, mixed>
      */
-    protected function lineSummary(OrderItem $item, int $alreadyReturned): array
+    protected function lineSummary(OrderItem $item, int $alreadyReturned, int $shippedQuantity): array
     {
         return [
             'id' => $item->id,
@@ -140,7 +140,7 @@ abstract class PortalController extends Controller
             'tax' => $item->tax,
             'total' => $item->total,
             'returned_quantity' => $alreadyReturned,
-            'returnable_quantity' => max(0, (int) $item->quantity - $alreadyReturned),
+            'returnable_quantity' => max(0, $shippedQuantity - $alreadyReturned),
         ];
     }
 }

@@ -20,6 +20,7 @@ const backHref = computed(() => (canVisit('orders.show') ? route('orders.show', 
 const props = defineProps({
     order: Object,
     returnedQuantities: Object,
+    returnableQuantities: Object,
     // Per order item id: what was paid for the whole line after line and
     // order discounts. The refund is that share, as the server computes it.
     paidNets: { type: Object, default: () => ({}) },
@@ -38,6 +39,7 @@ const form = useForm({
         variant_title: item.variant?.title ?? null,
         sku: item.variant?.sku || item.sku,
         ordered_quantity: item.quantity,
+        returnable_quantity: Number(props.returnableQuantities?.[item.id] ?? 0),
         already_returned: props.returnedQuantities?.[item.id] || 0,
         quantity: 0,
         condition: 'new',
@@ -49,7 +51,7 @@ const form = useForm({
 const selectedItems = computed(() => form.items.filter(item => item.selected && item.quantity > 0));
 
 const maxReturnable = (item) => {
-    return item.ordered_quantity - item.already_returned;
+    return item.returnable_quantity;
 };
 
 const toggleItem = (item) => {
