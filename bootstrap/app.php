@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Middleware\AuthenticateStaffSession;
 use App\Http\Middleware\CheckApiPermission;
 use App\Http\Middleware\CheckInstallation;
 use App\Http\Middleware\CheckPermission;
@@ -9,13 +10,13 @@ use App\Http\Middleware\EnsureTwoFactorVerified;
 use App\Http\Middleware\EnsureUserIsAdmin;
 use App\Http\Middleware\EnsureUserIsManager;
 use App\Http\Middleware\HandleInertiaRequests;
-use App\Http\Middleware\RejectNonNumericModelKeys;
 use App\Http\Middleware\LogAccessDenied;
 use App\Http\Middleware\Portal\AuthenticatePortalContact;
 use App\Http\Middleware\Portal\HandlePortalInertiaRequests;
 use App\Http\Middleware\Portal\RedirectIfPortalAuthenticated;
 use App\Http\Middleware\Portal\ResolvePortalOrganization;
 use App\Http\Middleware\Portal\UsePortalGuard;
+use App\Http\Middleware\RejectNonNumericModelKeys;
 use App\Http\Middleware\SecurityHeaders;
 use App\Http\Middleware\SetLocale;
 use App\Http\Middleware\UseFileDriversUntilInstalled;
@@ -75,11 +76,12 @@ $app = Application::configure(basePath: dirname(__DIR__))
         );
         $middleware->api(prepend: [RejectNonNumericModelKeys::class]);
         $middleware->prependToPriorityList(
-            before: \Illuminate\Routing\Middleware\SubstituteBindings::class,
+            before: SubstituteBindings::class,
             prepend: RejectNonNumericModelKeys::class,
         );
 
         $middleware->web(append: [
+            AuthenticateStaffSession::class,
             AddLinkHeadersForPreloadedAssets::class,
             CheckInstallation::class,
             SetLocale::class,
