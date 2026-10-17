@@ -60,8 +60,8 @@ final class ProductSpreadsheetRoundTripTest extends TestCase
         $skus = ['@PART-1', "'@PART-1", "''PART-1", '=1+1', '+SKU', '-SKU', "\tTABPART", "\rCRPART", '00123', '1E3', '1.00', "'1E3", 'PLAIN-SKU', 'X","=1+1', "\nLFPART", "\u{FF1D}2+2", "\u{FF0B}WIDE", "\u{FF0D}WIDE", "\u{FF20}WIDE", '@'.str_repeat('X', 254)];
         $products = [];
         foreach ($skus as $index => $sku) {
-            $product = $this->makeProduct($org, $sku);
-            $product->forceFill(['name' => $index % 2 === 0 ? '@Maker' : '123',
+            $product = $this->makeProduct($org, 'ROUNDTRIP-'.$index);
+            $product->forceFill(['sku' => $sku, 'name' => $index % 2 === 0 ? '@Maker' : '123',
                 'barcode' => '1.00', 'description' => '=HYPERLINK("https://example.test")',
                 'notes' => "'Literal note", 'stock' => 0])->save();
             $products[$product->id] = $product->fresh()->only(['sku', 'name', 'barcode', 'description', 'notes']);
