@@ -18,6 +18,7 @@ use Illuminate\Support\Carbon;
  * @property int $order_item_id
  * @property int $product_id
  * @property int|null $product_variant_id
+ * @property string|null $refund_amount
  * @property int $quantity
  * @property string $condition
  * @property bool $restock
@@ -36,6 +37,7 @@ class ReturnOrderItem extends Model
         'product_id',
         'product_variant_id',
         'quantity',
+        'refund_amount',
         'condition',
         'restock',
     ];
@@ -58,6 +60,7 @@ class ReturnOrderItem extends Model
     {
         return [
             'quantity' => 'integer',
+            'refund_amount' => 'decimal:2',
             'restock' => 'boolean',
         ];
     }
