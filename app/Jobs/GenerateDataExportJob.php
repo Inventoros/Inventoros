@@ -15,6 +15,7 @@ use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Str;
 use Maatwebsite\Excel\Facades\Excel;
+use RuntimeException;
 use Throwable;
 
 /**
@@ -44,11 +45,13 @@ final class GenerateDataExportJob implements ShouldQueue
         // no-op here; opt out explicitly to make the cross-context intent clear.
         $export = DataExport::withoutGlobalScope(OrganizationScope::class)->findOrFail($this->exportId);
 
-        $export->update(['status' => 'processing']);
+        $export->update(['status' => 'processing', 'completed_at' => null, 'error' => null]);
 
         $writer = ExportFactory::make($export->type, $export->organization_id, $export->filters ?? []);
 
-        Excel::store($writer, $export->path, $export->disk);
+        if (Excel::store($writer, $export->path, $export->disk) === false) {
+            throw new RuntimeException('The export file could not be stored.');
+        }
 
         $export->update([
             'status' => 'completed',

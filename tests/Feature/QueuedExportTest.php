@@ -8,12 +8,14 @@ use App\Jobs\GenerateDataExportJob;
 use App\Models\Auth\Organization;
 use App\Models\DataExport;
 use App\Models\Inventory\Product;
+use App\Models\Notification;
 use App\Models\Role;
 use App\Models\System\SystemSetting;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\Storage;
+use Maatwebsite\Excel\Facades\Excel;
 use Tests\TestCase;
 
 /**
@@ -277,5 +279,60 @@ class QueuedExportTest extends TestCase
         $this->actingAs($this->exporter)
             ->get(route('import-export.download', $export))
             ->assertNotFound();
+    }
+
+    public function test_false_storage_result_throws_and_never_notifies_that_an_export_is_ready(): void
+    {
+        $export = DataExport::create([
+            'organization_id' => $this->organization->id, 'user_id' => $this->exporter->id,
+            'type' => 'products', 'filename' => 'failed.xlsx', 'disk' => 'local',
+            'path' => 'exports/failed.xlsx', 'status' => 'pending',
+        ]);
+        Excel::shouldReceive('store')->once()->andReturn(false);
+        $job = new GenerateDataExportJob($export->id);
+        $failure = null;
+        try {
+            $job->handle();
+        } catch (\RuntimeException $e) {
+            $failure = $e;
+        }
+        $this->assertInstanceOf(\RuntimeException::class, $failure);
+        $this->assertSame('The export file could not be stored.', $failure->getMessage());
+        $this->assertSame('processing', $export->fresh()->status);
+        $this->assertNull($export->fresh()->completed_at);
+        $this->assertDatabaseMissing('notifications', ['type' => 'export_ready']);
+        $this->assertDatabaseMissing('notifications', ['type' => 'export_failed']);
+
+        // The queue calls failed() only after exhausting the existing retries.
+        $job->failed($failure);
+        $this->assertSame('failed', $export->fresh()->status);
+        $this->assertDatabaseHas('notifications', ['user_id' => $this->exporter->id, 'type' => 'export_failed']);
+    }
+
+    public function test_a_successful_retry_clears_stale_failure_details_and_notifies_once(): void
+    {
+        $export = DataExport::create([
+            'organization_id' => $this->organization->id, 'user_id' => $this->exporter->id,
+            'type' => 'products', 'filename' => 'retry.xlsx', 'disk' => 'local',
+            'path' => 'exports/retry.xlsx', 'status' => 'failed', 'error' => 'Old failure',
+            'completed_at' => now()->subDay(),
+        ]);
+        Excel::shouldReceive('store')->twice()->andReturn(false, true);
+        $job = new GenerateDataExportJob($export->id);
+        $firstAttemptFailed = false;
+        try {
+            $job->handle();
+        } catch (\RuntimeException) {
+            $firstAttemptFailed = true;
+        }
+        $this->assertTrue($firstAttemptFailed);
+        $this->assertNull($export->fresh()->error);
+        $this->assertNull($export->fresh()->completed_at);
+        $job->handle();
+        $this->assertSame('completed', $export->fresh()->status);
+        $this->assertNotNull($export->fresh()->completed_at);
+        $this->assertNull($export->fresh()->error);
+        $this->assertSame(1, Notification::where('type', 'export_ready')->count());
+        $this->assertDatabaseMissing('notifications', ['type' => 'export_failed']);
     }
 }
