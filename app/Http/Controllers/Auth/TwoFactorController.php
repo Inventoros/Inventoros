@@ -16,6 +16,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
 use PragmaRX\Google2FA\Google2FA;
@@ -31,7 +32,7 @@ class TwoFactorController extends Controller
 
     public function __construct()
     {
-        $this->google2fa = new Google2FA();
+        $this->google2fa = new Google2FA;
     }
 
     /**
@@ -40,6 +41,17 @@ class TwoFactorController extends Controller
     public function setup(Request $request): Response
     {
         $user = $request->user();
+
+        if ($user->two_factor_enabled) {
+            $request->session()->forget(['two_factor_secret', 'two_factor_recovery_codes']);
+
+            return Inertia::render('Auth/TwoFactorSetup', [
+                'qrCodeSvg' => null,
+                'secret' => null,
+                'recoveryCodes' => [],
+                'enabled' => true,
+            ]);
+        }
 
         $secret = $this->google2fa->generateSecretKey();
 
@@ -77,27 +89,41 @@ class TwoFactorController extends Controller
 
         $secret = $request->session()->get('two_factor_secret');
 
-        if (!$secret) {
+        if (! $secret) {
             return redirect()->route('two-factor.setup')
                 ->withErrors(['code' => 'Please start the setup process again.']);
         }
 
         $valid = $this->google2fa->verifyKey($secret, $request->input('code'));
 
-        if (!$valid) {
+        if (! $valid) {
             return redirect()->back()
                 ->withErrors(['code' => 'The provided code is invalid.']);
         }
 
         $recoveryCodes = $request->session()->get('two_factor_recovery_codes', $this->generateRecoveryCodes());
 
-        $request->user()->update([
-            'two_factor_secret' => encrypt($secret),
-            'two_factor_enabled' => true,
-            'two_factor_recovery_codes' => encrypt(json_encode(static::hashRecoveryCodes($recoveryCodes))),
-        ]);
+        // Two setup requests may have started before either enabled MFA.
+        // Serialize activation and re-read the authoritative factor state.
+        $enabledUser = DB::transaction(function () use ($request, $secret, $recoveryCodes) {
+            $user = $request->user()->newQuery()->lockForUpdate()->findOrFail($request->user()->getKey());
 
-        app(SecurityEventLogger::class)->record(SecurityEvent::TWO_FACTOR_ENABLED, $request->user(), $request->user());
+            if ($user->two_factor_enabled) {
+                throw ValidationException::withMessages([
+                    'code' => 'Two-factor authentication is already enabled. Disable it with your current password before setting it up again.',
+                ]);
+            }
+
+            $user->update([
+                'two_factor_secret' => encrypt($secret),
+                'two_factor_enabled' => true,
+                'two_factor_recovery_codes' => encrypt(json_encode(static::hashRecoveryCodes($recoveryCodes))),
+            ]);
+
+            return $user;
+        });
+
+        app(SecurityEventLogger::class)->record(SecurityEvent::TWO_FACTOR_ENABLED, $request->user(), $enabledUser);
 
         // Mark session as verified so middleware doesn't redirect
         $request->session()->put('two_factor_verified', true);
@@ -119,7 +145,7 @@ class TwoFactorController extends Controller
             'password' => 'required|string',
         ]);
 
-        if (!Hash::check($request->input('password'), $request->user()->password)) {
+        if (! Hash::check($request->input('password'), $request->user()->password)) {
             return redirect()->back()
                 ->withErrors(['password' => 'The provided password is incorrect.']);
         }
@@ -165,7 +191,7 @@ class TwoFactorController extends Controller
         $secret = decrypt($user->two_factor_secret);
         $valid = $this->google2fa->verifyKey($secret, $request->input('code'));
 
-        if (!$valid) {
+        if (! $valid) {
             app(SecurityEventLogger::class)->record(SecurityEvent::TWO_FACTOR_FAILED, $user, $user, ['method' => 'totp']);
 
             return redirect()->back()
@@ -217,7 +243,7 @@ class TwoFactorController extends Controller
     {
         $renderer = new ImageRenderer(
             new RendererStyle(200),
-            new SvgImageBackEnd()
+            new SvgImageBackEnd
         );
 
         $writer = new Writer($renderer);
@@ -247,7 +273,7 @@ class TwoFactorController extends Controller
      * not directly yield usable codes. The plaintext is shown to the user
      * once at setup; the DB never holds it again.
      *
-     * @param array<string> $codes
+     * @param  array<string>  $codes
      * @return array<string>
      */
     public static function hashRecoveryCodes(array $codes): array
@@ -264,7 +290,7 @@ class TwoFactorController extends Controller
      * entries in $storedCodes are migrated in-place to their hashed form
      * so the next consume cannot leak plaintext via DB read.
      *
-     * @param array<string> $storedCodes Passed by reference so callers see the consumption + migration.
+     * @param  array<string>  $storedCodes  Passed by reference so callers see the consumption + migration.
      */
     public static function findAndConsumeRecoveryCode(string $input, array &$storedCodes): ?int
     {
@@ -283,11 +309,12 @@ class TwoFactorController extends Controller
 
             if ($matched) {
                 unset($storedCodes[$i]);
-                if (!$looksHashed) {
+                if (! $looksHashed) {
                     // Migrate the remaining legacy plaintext entries to
                     // hashed form so the next consume has nothing to leak.
                     $storedCodes = static::hashRecoveryCodes(array_values($storedCodes));
                 }
+
                 return $i;
             }
         }

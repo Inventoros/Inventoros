@@ -7,6 +7,7 @@ use App\Models\System\SystemSetting;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 use PragmaRX\Google2FA\Google2FA;
 use Tests\TestCase;
 
@@ -15,6 +16,7 @@ class TwoFactorAuthTest extends TestCase
     use RefreshDatabase;
 
     protected User $user;
+
     protected Organization $organization;
 
     protected function setUp(): void
@@ -66,7 +68,7 @@ class TwoFactorAuthTest extends TestCase
 
     public function test_user_can_enable_two_factor_with_valid_code(): void
     {
-        $google2fa = new Google2FA();
+        $google2fa = new Google2FA;
         $secret = $google2fa->generateSecretKey();
 
         // Store the secret in session as the setup page would
@@ -86,7 +88,7 @@ class TwoFactorAuthTest extends TestCase
 
     public function test_user_cannot_enable_two_factor_with_invalid_code(): void
     {
-        $google2fa = new Google2FA();
+        $google2fa = new Google2FA;
         $secret = $google2fa->generateSecretKey();
 
         $response = $this->actingAs($this->user)
@@ -189,7 +191,7 @@ class TwoFactorAuthTest extends TestCase
     {
         $this->enableTwoFactorForUser($this->user);
 
-        $google2fa = new Google2FA();
+        $google2fa = new Google2FA;
         $attackerSecret = $google2fa->generateSecretKey();
 
         $response = $this->actingAs($this->user)
@@ -242,7 +244,7 @@ class TwoFactorAuthTest extends TestCase
 
     public function test_user_can_verify_challenge_with_valid_code(): void
     {
-        $google2fa = new Google2FA();
+        $google2fa = new Google2FA;
         $secret = $google2fa->generateSecretKey();
 
         $this->enableTwoFactorForUser($this->user, $secret);
@@ -322,7 +324,7 @@ class TwoFactorAuthTest extends TestCase
 
     public function test_recovery_codes_are_generated_on_enable(): void
     {
-        $google2fa = new Google2FA();
+        $google2fa = new Google2FA;
         $secret = $google2fa->generateSecretKey();
 
         $this->actingAs($this->user)
@@ -349,12 +351,12 @@ class TwoFactorAuthTest extends TestCase
 
     protected function enableTwoFactorForUser(User $user, ?string $secret = null): void
     {
-        $google2fa = new Google2FA();
+        $google2fa = new Google2FA;
         $secret = $secret ?? $google2fa->generateSecretKey();
 
         $recoveryCodes = [];
         for ($i = 0; $i < 8; $i++) {
-            $recoveryCodes[] = \Illuminate\Support\Str::random(10);
+            $recoveryCodes[] = Str::random(10);
         }
 
         $user->update([
@@ -362,5 +364,63 @@ class TwoFactorAuthTest extends TestCase
             'two_factor_enabled' => true,
             'two_factor_recovery_codes' => encrypt(json_encode($recoveryCodes)),
         ]);
+    }
+
+    public function test_enabled_setup_does_not_issue_a_replacement_secret_or_codes(): void
+    {
+        $this->enableTwoFactorForUser($this->user);
+        $original = $this->user->fresh()->two_factor_secret;
+        $response = $this->actingAs($this->user)
+            ->withSession(['two_factor_verified' => true, 'two_factor_secret' => 'obsolete', 'two_factor_recovery_codes' => ['obsolete']])
+            ->get(route('two-factor.setup'));
+        $response->assertOk()->assertInertia(fn ($page) => $page
+            ->component('Auth/TwoFactorSetup')->where('enabled', true)
+            ->where('secret', null)->where('qrCodeSvg', null)->where('recoveryCodes', []));
+        $response->assertSessionMissing('two_factor_secret')->assertSessionMissing('two_factor_recovery_codes');
+        $this->assertSame($original, $this->user->fresh()->two_factor_secret);
+    }
+
+    public function test_verified_session_cannot_replace_an_enabled_factor(): void
+    {
+        $this->enableTwoFactorForUser($this->user);
+        $original = $this->user->fresh()->only(['two_factor_secret', 'two_factor_recovery_codes']);
+        $google2fa = new Google2FA;
+        $replacement = $google2fa->generateSecretKey();
+        $this->actingAs($this->user)->withSession([
+            'two_factor_verified' => true, 'two_factor_secret' => $replacement,
+            'two_factor_recovery_codes' => ['attacker-code'],
+        ])->post(route('two-factor.enable'), ['code' => $google2fa->getCurrentOtp($replacement)])
+            ->assertSessionHasErrors('code');
+        $this->assertSame($original, $this->user->fresh()->only(['two_factor_secret', 'two_factor_recovery_codes']));
+    }
+
+    public function test_enable_rechecks_database_state_when_the_authenticated_user_is_stale(): void
+    {
+        $stale = $this->user->fresh();
+        $otherRequest = $this->user->fresh();
+        $this->enableTwoFactorForUser($otherRequest);
+        $original = $otherRequest->fresh()->two_factor_secret;
+        $google2fa = new Google2FA;
+        $replacement = $google2fa->generateSecretKey();
+        $this->assertFalse($stale->two_factor_enabled);
+        $this->actingAs($stale)->withSession(['two_factor_secret' => $replacement])
+            ->post(route('two-factor.enable'), ['code' => $google2fa->getCurrentOtp($replacement)])
+            ->assertSessionHasErrors('code');
+        $this->assertSame($original, $this->user->fresh()->two_factor_secret);
+    }
+
+    public function test_factor_can_be_changed_after_disabling_with_the_current_password(): void
+    {
+        $this->enableTwoFactorForUser($this->user);
+        $original = $this->user->fresh()->two_factor_secret;
+        $this->actingAs($this->user)->withSession(['two_factor_verified' => true])
+            ->post(route('two-factor.disable'), ['password' => 'password'])
+            ->assertSessionHasNoErrors()->assertRedirect(route('settings.account.index'));
+        $this->get(route('two-factor.setup'))->assertOk();
+        $secret = session('two_factor_secret');
+        $this->post(route('two-factor.enable'), ['code' => (new Google2FA)->getCurrentOtp($secret)])
+            ->assertSessionHasNoErrors()->assertRedirect(route('settings.account.index'));
+        $this->assertTrue($this->user->fresh()->two_factor_enabled);
+        $this->assertNotSame($original, $this->user->fresh()->two_factor_secret);
     }
 }
