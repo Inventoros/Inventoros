@@ -11,8 +11,8 @@ get a notification when they finish. Exports over `exports.sync_row_limit`
 rows are prepared in the background and listed under "Your exports".
 
 Every export neutralises cells that a spreadsheet would run as a formula (a
-leading `=`, `+`, `-`, `@`, tab or CR gets a `'` in front). Imports strip those
-characters from free text.
+leading `=`, `+`, `-`, `@`, tab, CR, LF or a full-width formula prefix gets a
+`'` in front). Unmarked imports strip those characters from free text.
 
 ## Import results
 
@@ -27,6 +27,18 @@ notification.
 
 One row per product, matched by `sku`. Required: `name`, `sku`, `price`,
 `stock`. Download the template for the full column list.
+
+Product exports include an **Inventoros Text Encoding** column. Keep it when
+re-importing an export: it distinguishes protective spreadsheet escaping from
+literal apostrophes and preserves text identifiers such as `@PART`, `'@PART`,
+`00123` and `1E3`. Zero stock remains a real zero in both CSV and XLSX files.
+Numeric price and quantity columns remain numeric.
+
+Unmarked files from other systems keep their existing import behavior. If an
+older export has an escaped SKU that could also identify a different product,
+the row reports an error instead of guessing or creating a duplicate. Export
+the products again to get an unambiguous file. Unknown encoding versions also
+report a row error.
 
 ### Prices in other currencies
 

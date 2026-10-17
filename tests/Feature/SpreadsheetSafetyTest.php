@@ -39,7 +39,7 @@ class SpreadsheetSafetyTest extends TestCase
         $this->assertSame('cmd', SpreadsheetSafety::sanitiseImport('-cmd'));
         $this->assertSame('benign', SpreadsheetSafety::sanitiseImport('benign'));
         // Multiple risky leading chars stacked.
-        $this->assertSame('after', SpreadsheetSafety::sanitiseImport("=+-@after"));
+        $this->assertSame('after', SpreadsheetSafety::sanitiseImport('=+-@after'));
     }
 
     public function test_sanitise_import_leaves_non_strings_untouched(): void
@@ -47,5 +47,13 @@ class SpreadsheetSafetyTest extends TestCase
         $this->assertSame(42, SpreadsheetSafety::sanitiseImport(42));
         $this->assertSame(null, SpreadsheetSafety::sanitiseImport(null));
         $this->assertSame('', SpreadsheetSafety::sanitiseImport(''));
+    }
+
+    public function test_line_feed_and_locale_specific_formula_prefixes_are_neutralised(): void
+    {
+        foreach (["\n", "\u{FF1D}", "\u{FF0B}", "\u{FF0D}", "\u{FF20}"] as $prefix) {
+            $this->assertSame("'".$prefix.'formula', SpreadsheetSafety::neutralise($prefix.'formula'));
+            $this->assertSame('formula', SpreadsheetSafety::sanitiseImport($prefix.$prefix.'formula'));
+        }
     }
 }

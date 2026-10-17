@@ -8,7 +8,7 @@ namespace App\Support;
  * Neutralise cells that would be interpreted as formulas / DDE /
  * HYPERLINK gadgets when an Excel/Sheets user opens an exported CSV
  * or XLSX. Spreadsheet apps evaluate any cell whose first character
- * is one of =, +, -, @, tab, CR, NUL — a value crafted by a tenant
+ * is one of =, +, -, @, tab, CR, LF, NUL or a full-width equivalent — a value crafted by a tenant
  * that runs through our export (product name, order notes, customer
  * email) can leak data, fetch remote payloads, or execute commands
  * on the downloader's machine.
@@ -23,7 +23,7 @@ final class SpreadsheetSafety
      * Characters that, when they appear at position 0, trigger formula
      * evaluation in Excel / LibreOffice Calc / Google Sheets.
      */
-    private const RISKY_LEADING_CHARS = ['=', '+', '-', '@', "\t", "\r", "\0"];
+    private const RISKY_LEADING_CHARS = ['=', '+', '-', '@', "\t", "\r", "\n", "\0", "\u{FF1D}", "\u{FF0B}", "\u{FF0D}", "\u{FF20}"];
 
     /**
      * Neutralise a single cell value for export. Non-string values pass
@@ -31,12 +31,12 @@ final class SpreadsheetSafety
      */
     public static function neutralise(mixed $value): mixed
     {
-        if (!is_string($value) || $value === '') {
+        if (! is_string($value) || $value === '') {
             return $value;
         }
 
-        if (in_array($value[0], self::RISKY_LEADING_CHARS, true)) {
-            return "'" . $value;
+        if (self::riskyPrefix($value) !== null) {
+            return "'".$value;
         }
 
         return $value;
@@ -51,15 +51,26 @@ final class SpreadsheetSafety
      */
     public static function sanitiseImport(mixed $value): mixed
     {
-        if (!is_string($value) || $value === '') {
+        if (! is_string($value) || $value === '') {
             return $value;
         }
 
-        while ($value !== '' && in_array($value[0], self::RISKY_LEADING_CHARS, true)) {
-            $value = substr($value, 1);
+        while ($value !== '' && ($prefix = self::riskyPrefix($value)) !== null) {
+            $value = substr($value, strlen($prefix));
         }
 
         return $value;
+    }
+
+    private static function riskyPrefix(string $value): ?string
+    {
+        foreach (self::RISKY_LEADING_CHARS as $prefix) {
+            if (str_starts_with($value, $prefix)) {
+                return $prefix;
+            }
+        }
+
+        return null;
     }
 
     /**
