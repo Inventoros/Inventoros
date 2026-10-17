@@ -36,7 +36,7 @@ const { t } = useI18n();
                 <!-- Installation Steps -->
                 <div class="space-y-4 mb-8">
                     <div class="flex items-start">
-                        <div class="flex-shrink-0 w-8 h-8 bg-brand-soft rounded-full flex items-center justify-center text-brand font-semibold">
+                        <div class="shrink-0 w-8 h-8 bg-brand-soft rounded-full flex items-center justify-center text-brand font-semibold">
                             1
                         </div>
                         <div class="ml-4">
@@ -46,7 +46,7 @@ const { t } = useI18n();
                     </div>
 
                     <div class="flex items-start">
-                        <div class="flex-shrink-0 w-8 h-8 bg-brand-soft rounded-full flex items-center justify-center text-brand font-semibold">
+                        <div class="shrink-0 w-8 h-8 bg-brand-soft rounded-full flex items-center justify-center text-brand font-semibold">
                             2
                         </div>
                         <div class="ml-4">
@@ -56,7 +56,7 @@ const { t } = useI18n();
                     </div>
 
                     <div class="flex items-start">
-                        <div class="flex-shrink-0 w-8 h-8 bg-brand-soft rounded-full flex items-center justify-center text-brand font-semibold">
+                        <div class="shrink-0 w-8 h-8 bg-brand-soft rounded-full flex items-center justify-center text-brand font-semibold">
                             3
                         </div>
                         <div class="ml-4">
@@ -66,7 +66,7 @@ const { t } = useI18n();
                     </div>
 
                     <div class="flex items-start">
-                        <div class="flex-shrink-0 w-8 h-8 bg-brand-soft rounded-full flex items-center justify-center text-brand font-semibold">
+                        <div class="shrink-0 w-8 h-8 bg-brand-soft rounded-full flex items-center justify-center text-brand font-semibold">
                             4
                         </div>
                         <div class="ml-4">

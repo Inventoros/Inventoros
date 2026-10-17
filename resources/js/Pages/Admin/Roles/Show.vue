@@ -121,7 +121,7 @@ const deleteRole = () => {
                                         :key="user.id"
                                         class="flex items-center gap-3 rounded-lg border border-border-subtle bg-surface-canvas p-3"
                                     >
-                                        <div class="grid h-10 w-10 flex-shrink-0 place-items-center rounded-full bg-brand text-sm font-semibold text-brand-foreground">
+                                        <div class="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-brand text-sm font-semibold text-brand-foreground">
                                             {{ user.name.charAt(0).toUpperCase() }}
                                         </div>
                                         <div class="min-w-0">
@@ -153,7 +153,7 @@ const deleteRole = () => {
                                         :key="permission.value"
                                         class="flex items-start gap-3 rounded-lg border border-border-subtle bg-surface-canvas p-3"
                                     >
-                                        <CheckCircle2 :size="18" class="mt-0.5 flex-shrink-0 text-status-success" />
+                                        <CheckCircle2 :size="18" class="mt-0.5 shrink-0 text-status-success" />
                                         <div class="min-w-0">
                                             <p class="text-sm font-medium text-text-primary">{{ permissionLabel(permission, i18n) }}</p>
                                             <p class="text-xs text-text-tertiary">{{ permissionDescription(permission, i18n) }}</p>
@@ -238,7 +238,7 @@ const deleteRole = () => {
                 <Card v-else :padded="false">
                     <div class="p-5">
                         <div class="flex gap-3 rounded-lg border border-brand/20 bg-brand-soft p-4">
-                            <Info :size="18" class="mt-0.5 flex-shrink-0 text-brand" />
+                            <Info :size="18" class="mt-0.5 shrink-0 text-brand" />
                             <div>
                                 <p class="text-sm font-medium text-text-primary">{{ t('admin.roles.show.systemRole') }}</p>
                                 <p class="mt-1 text-xs text-text-secondary">
@@ -273,7 +273,7 @@ const deleteRole = () => {
                         </p>
                         <div class="rounded-lg border border-status-warning/20 bg-status-warning-soft p-4">
                             <div class="flex items-start gap-3">
-                                <AlertTriangle :size="20" class="mt-0.5 flex-shrink-0 text-status-warning" />
+                                <AlertTriangle :size="20" class="mt-0.5 shrink-0 text-status-warning" />
                                 <div class="text-sm text-status-warning">
                                     <p class="font-semibold">{{ t('admin.users.show.cannotUndo') }}</p>
                                 </div>

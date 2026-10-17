@@ -50,16 +50,11 @@
         /* Focus ring */
         --ring: 217 91% 60%;
 
-        /* Radii */
-        --radius-sm: 4px;
-        --radius-md: 6px;
-        --radius-lg: 8px;
-        --radius-xl: 12px;
-
-        /* Shadows — Linear uses almost none. Subtle, never blurry. */
-        --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.04);
-        --shadow-md: 0 1px 3px 0 rgb(0 0 0 / 0.06), 0 1px 2px -1px rgb(0 0 0 / 0.04);
-        --shadow-lg: 0 4px 12px -2px rgb(0 0 0 / 0.08), 0 2px 6px -2px rgb(0 0 0 / 0.04);
+        /* Shadows — Linear uses almost none. Subtle, never blurry. Read by
+           the shadow-xs/sm/md/lg utilities (@theme in app.css). */
+        --ds-shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.04);
+        --ds-shadow-md: 0 1px 3px 0 rgb(0 0 0 / 0.06), 0 1px 2px -1px rgb(0 0 0 / 0.04);
+        --ds-shadow-lg: 0 4px 12px -2px rgb(0 0 0 / 0.08), 0 2px 6px -2px rgb(0 0 0 / 0.04);
     }
 
     .dark {
@@ -93,9 +88,9 @@
 
         --ring: 213 94% 68%;
 
-        --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.4);
-        --shadow-md: 0 1px 3px 0 rgb(0 0 0 / 0.5), 0 1px 2px -1px rgb(0 0 0 / 0.3);
-        --shadow-lg: 0 4px 12px -2px rgb(0 0 0 / 0.6), 0 2px 6px -2px rgb(0 0 0 / 0.4);
+        --ds-shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.4);
+        --ds-shadow-md: 0 1px 3px 0 rgb(0 0 0 / 0.5), 0 1px 2px -1px rgb(0 0 0 / 0.3);
+        --ds-shadow-lg: 0 4px 12px -2px rgb(0 0 0 / 0.6), 0 2px 6px -2px rgb(0 0 0 / 0.4);
     }
 
     /* Body baseline — Inter-like system stack, antialiased, tight tracking */
@@ -138,8 +133,13 @@
 
     /* Focus ring — used by every interactive primitive */
     .ds-focus-ring {
-        @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2;
+        @apply focus-visible:ring-2 focus-visible:ring-offset-2;
         --tw-ring-color: hsl(var(--ring));
         --tw-ring-offset-color: hsl(var(--surface-canvas));
+
+        &:focus-visible {
+            outline: 2px solid transparent;
+            outline-offset: 2px;
+        }
     }
 }

@@ -209,7 +209,7 @@ const roleVariant = (role) =>
                         </p>
                         <div class="rounded-lg border border-status-warning/20 bg-status-warning-soft p-4">
                             <div class="flex items-start gap-3">
-                                <AlertTriangle :size="20" class="mt-0.5 flex-shrink-0 text-status-warning" />
+                                <AlertTriangle :size="20" class="mt-0.5 shrink-0 text-status-warning" />
                                 <div class="text-sm text-status-warning">
                                     <p class="font-semibold">{{ t('admin.users.show.cannotUndo') }}</p>
                                 </div>

@@ -162,6 +162,7 @@ Inventoros is an open-source Inventory and Warehouse Management System (WMS) bui
 - PHP 8.4.1 or newer (8.4 and 8.5)
 - Composer 2.x
 - Node.js 20.19+ or 22.12+ and npm (Vite 7)
+- Safari 16.4+, Chrome/Edge 111+, or Firefox 128+ for the web interface ([Tailwind CSS 4 browser requirements](https://tailwindcss.com/docs/compatibility))
 - MySQL 8.0+ or PostgreSQL 13+ (SQLite for development)
 - Redis (optional, recommended for production queues)
 

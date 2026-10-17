@@ -53,55 +53,59 @@ const closeModal = () => {
             </p>
         </header>
 
-        <DangerButton @click="confirmUserDeletion">{{ t('profile.deleteAccount.title') }}</DangerButton>
+        <!-- One wrapper so the closed dialog is not a space-y-6 child: Tailwind 4
+             would otherwise put the trailing margin on the button. -->
+        <div>
+            <DangerButton @click="confirmUserDeletion">{{ t('profile.deleteAccount.title') }}</DangerButton>
 
-        <Modal :show="confirmingUserDeletion" @close="closeModal">
-            <div class="p-6">
-                <h2
-                    class="text-lg font-medium text-gray-900 dark:text-gray-900 dark:text-gray-100"
-                >
-                    {{ t('profile.deleteAccount.confirmTitle') }}
-                </h2>
-
-                <p class="mt-1 text-sm text-gray-600 dark:text-gray-500 dark:text-gray-400">
-                    {{ t('profile.deleteAccount.confirmDescription') }}
-                </p>
-
-                <div class="mt-6">
-                    <InputLabel
-                        for="password"
-                        :value="t('profile.deleteAccount.password')"
-                        class="sr-only"
-                    />
-
-                    <TextInput
-                        id="password"
-                        ref="passwordInput"
-                        v-model="form.password"
-                        type="password"
-                        class="mt-1 block w-3/4"
-                        :placeholder="t('profile.deleteAccount.password')"
-                        @keyup.enter="deleteUser"
-                    />
-
-                    <InputError :message="form.errors.password" class="mt-2" />
-                </div>
-
-                <div class="mt-6 flex justify-end">
-                    <SecondaryButton @click="closeModal">
-                        {{ t('common.cancel') }}
-                    </SecondaryButton>
-
-                    <DangerButton
-                        class="ms-3"
-                        :class="{ 'opacity-25': form.processing }"
-                        :disabled="form.processing"
-                        @click="deleteUser"
+            <Modal :show="confirmingUserDeletion" @close="closeModal">
+                <div class="p-6">
+                    <h2
+                        class="text-lg font-medium text-gray-900 dark:text-gray-900 dark:text-gray-100"
                     >
-                        {{ t('profile.deleteAccount.title') }}
-                    </DangerButton>
+                        {{ t('profile.deleteAccount.confirmTitle') }}
+                    </h2>
+
+                    <p class="mt-1 text-sm text-gray-600 dark:text-gray-500 dark:text-gray-400">
+                        {{ t('profile.deleteAccount.confirmDescription') }}
+                    </p>
+
+                    <div class="mt-6">
+                        <InputLabel
+                            for="password"
+                            :value="t('profile.deleteAccount.password')"
+                            class="sr-only"
+                        />
+
+                        <TextInput
+                            id="password"
+                            ref="passwordInput"
+                            v-model="form.password"
+                            type="password"
+                            class="mt-1 block w-3/4"
+                            :placeholder="t('profile.deleteAccount.password')"
+                            @keyup.enter="deleteUser"
+                        />
+
+                        <InputError :message="form.errors.password" class="mt-2" />
+                    </div>
+
+                    <div class="mt-6 flex justify-end">
+                        <SecondaryButton @click="closeModal">
+                            {{ t('common.cancel') }}
+                        </SecondaryButton>
+
+                        <DangerButton
+                            class="ms-3"
+                            :class="{ 'opacity-25': form.processing }"
+                            :disabled="form.processing"
+                            @click="deleteUser"
+                        >
+                            {{ t('profile.deleteAccount.title') }}
+                        </DangerButton>
+                    </div>
                 </div>
-            </div>
-        </Modal>
+            </Modal>
+        </div>
     </section>
 </template>

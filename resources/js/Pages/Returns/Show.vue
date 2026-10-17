@@ -96,7 +96,7 @@ const saveLines = () => {
 
 const selectClass = 'h-8 rounded-md border border-border-subtle bg-surface-canvas px-2 text-xs text-text-primary ds-focus-ring';
 
-const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-text-secondary';
+const thClass = 'px-4 py-2.5 text-xs font-medium tracking-tight text-text-secondary';
 </script>
 
 <template>
@@ -193,8 +193,8 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-t
                             <table class="min-w-full">
                                 <thead>
                                     <tr class="border-b border-border-subtle">
-                                        <th :class="thClass">{{ t('common.product') }}</th>
-                                        <th :class="thClass">SKU</th>
+                                        <th :class="[thClass, 'text-left']">{{ t('common.product') }}</th>
+                                        <th :class="[thClass, 'text-left']">SKU</th>
                                         <th :class="[thClass, 'text-center']">{{ t('returns.columns.qty') }}</th>
                                         <th :class="[thClass, 'text-center']">{{ t('returns.columns.condition') }}</th>
                                         <th :class="[thClass, 'text-center']">{{ t('returns.columns.restock') }}</th>

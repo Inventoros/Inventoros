@@ -57,11 +57,11 @@ onUnmounted(() => {
             :title="buttonLabel"
             class="flex items-center gap-1 lg:gap-2 px-2 lg:px-3 py-2 text-sm text-gray-600 dark:text-gray-300 hover:text-brand hover:bg-gray-100 dark:hover:text-brand dark:hover:bg-surface-raised rounded-lg transition"
         >
-            <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 14v3m4-3v3m4-3v3M3 21h18M3 10h18M3 7l9-4 9 4M4 10h16v11H4V10z" />
             </svg>
             <span class="hidden lg:inline max-w-[140px] truncate">{{ buttonLabel }}</span>
-            <svg class="w-4 h-4 flex-shrink-0 transition-transform duration-200" :class="isOpen ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg class="w-4 h-4 shrink-0 transition-transform duration-200" :class="isOpen ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
             </svg>
         </button>
@@ -82,7 +82,7 @@ onUnmounted(() => {
                             : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-surface-canvas/50'
                     ]"
                 >
-                    <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
                     </svg>
                     <span class="font-medium">{{ $t('warehouses.allWarehouses') }}</span>
@@ -105,14 +105,14 @@ onUnmounted(() => {
                             : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-surface-canvas/50'
                     ]"
                 >
-                    <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 14v3m4-3v3m4-3v3M3 21h18M3 10h18M3 7l9-4 9 4M4 10h16v11H4V10z" />
                     </svg>
                     <div class="flex-1 text-left min-w-0">
                         <div class="font-medium truncate">{{ warehouse.name }}</div>
                         <div class="text-xs text-gray-500 dark:text-gray-400">{{ warehouse.code }}</div>
                     </div>
-                    <svg v-if="activeWarehouseId === warehouse.id" class="w-4 h-4 ml-auto text-brand flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg v-if="activeWarehouseId === warehouse.id" class="w-4 h-4 ml-auto text-brand shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
                     </svg>
                 </button>

@@ -160,7 +160,7 @@ const formatFileSize = (bytes) => {
                     </div>
 
                     <!-- Overlay on hover -->
-                    <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-50 transition flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100">
+                    <div class="absolute inset-0 bg-black/0 group-hover:bg-black/50 transition flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100">
                         <!-- Move Left -->
                         <button
                             v-if="index > 0"
