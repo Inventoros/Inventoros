@@ -131,13 +131,13 @@ final class ReturnOrderService
         $order->loadMissing('items');
 
         $nets = [];
-        foreach ($order->items as $item) {
+        foreach ($order->items->sortBy('id') as $item) {
             $gross = Money::of($item->subtotal);
             if (Money::compare($gross, '0') === 0) {
                 // Rows written before subtotal was maintained.
                 $gross = Money::multiply($item->unit_price, $item->quantity);
             }
-            $nets[$item->id] = Money::subtract($gross, $item->discount_amount ?? 0);
+            $nets[$item->id] = Money::max('0', Money::subtract($gross, $item->discount_amount ?? 0));
         }
 
         $merchandise = Money::add(...array_values($nets ?: ['0']));
@@ -148,29 +148,104 @@ final class ReturnOrderService
             return $nets;
         }
 
-        foreach ($nets as $id => $net) {
-            $share = bcdiv(bcmul($orderDiscount, $net, 8), $merchandise, 8);
-            $nets[$id] = Money::round(bcsub($net, $share, 8));
-        }
-
-        return $nets;
+        return $this->allocateAmount(Money::max('0', Money::subtract($merchandise, $orderDiscount)), $nets);
     }
 
     /**
-     * Refund for returning $quantity units of a line: that share of what the
-     * customer paid for the line (see paidLineNets()).
+     * Allocate a total by weights, retaining every cent in stable key order.
+     * Cumulative rounded shares avoid independently creating or losing cents.
+     *
+     * @param  array<int, string>  $weights
+     * @return array<int, string>
+     */
+    private function allocateAmount(string $amount, array $weights): array
+    {
+        ksort($weights, SORT_NUMERIC);
+        $weightTotal = '0';
+        foreach ($weights as $weight) {
+            $weightTotal = bcadd($weightTotal, $weight, 8);
+        }
+        $cumulative = '0.00';
+        $allocated = '0.00';
+        $result = [];
+        foreach ($weights as $key => $weight) {
+            $cumulative = bcadd($cumulative, $weight, 8);
+            $target = bccomp($weightTotal, '0', 8) === 0 ? '0.00'
+                : Money::round(bcdiv(bcmul($amount, $cumulative, 8), $weightTotal, 8));
+            $result[$key] = Money::subtract($target, $allocated);
+            $allocated = $target;
+        }
+
+        return $result;
+    }
+
+    /**
+     * Refund the cumulative entitlement less the amount already reserved for
+     * this line. Using actual amounts also handles rejection of an earlier
+     * return whose rounding cent differed from another return's.
      *
      * @param  array<int, string>  $paidNets  from paidLineNets()
      */
-    public function refundFor(OrderItem $item, int $quantity, array $paidNets): string
+    public function refundFor(OrderItem $item, int $quantity, array $paidNets, int $alreadyReturned = 0, ?string $alreadyRefunded = null): string
     {
-        if ($quantity <= 0 || (int) $item->quantity <= 0) {
+        $ordered = (int) $item->quantity;
+        if ($quantity <= 0 || $ordered <= 0) {
             return '0.00';
         }
 
-        $net = $paidNets[$item->id] ?? Money::multiply($item->unit_price, $item->quantity);
+        $net = Money::max('0', $paidNets[$item->id] ?? Money::multiply($item->unit_price, $ordered));
+        $priorQuantity = max(0, min($ordered, $alreadyReturned));
+        $afterQuantity = min($ordered, $priorQuantity + $quantity);
+        $entitlement = fn (int $units) => Money::round(bcdiv(bcmul($net, (string) $units, 8), (string) $ordered, 8));
+        $reserved = Money::max('0', $alreadyRefunded ?? $entitlement($priorQuantity));
 
-        return Money::round(bcdiv(bcmul($net, (string) $quantity, 8), (string) (int) $item->quantity, 8));
+        return Money::max('0', Money::min(Money::subtract($entitlement($afterQuantity), $reserved), Money::subtract($net, $reserved)));
+    }
+
+    /**
+     * Actual non-rejected refund amounts per line. New rows carry their exact
+     * amount. Legacy headers are allocated proportionally across their lines
+     * for this calculation only; no historical financial record is rewritten.
+     *
+     * @param  array<int, string>  $paidNets
+     * @return array<int, string>
+     */
+    public function refundedLineAmounts(Order $order, array $paidNets): array
+    {
+        $order->loadMissing('items');
+        $orderItems = $order->items->keyBy('id');
+        $amounts = [];
+        $returns = ReturnOrder::where('order_id', $order->id)->where('status', '!=', 'rejected')->with('items')->get();
+        foreach ($returns as $return) {
+            $known = '0.00';
+            $legacyWeights = [];
+            foreach ($return->items as $item) {
+                if ($item->refund_amount !== null) {
+                    $amount = Money::max('0', $item->refund_amount);
+                    $amounts[$item->order_item_id] = Money::add($amounts[$item->order_item_id] ?? '0', $amount);
+                    $known = Money::add($known, $amount);
+                } elseif (($orderItem = $orderItems->get($item->order_item_id)) !== null) {
+                    $weight = (int) $orderItem->quantity > 0
+                        ? bcdiv(bcmul($paidNets[$orderItem->id] ?? '0', (string) $item->quantity, 8), (string) $orderItem->quantity, 8) : '0';
+                    $legacyWeights[$item->order_item_id] = bcadd($legacyWeights[$item->order_item_id] ?? '0', $weight, 8);
+                }
+            }
+            foreach ($this->allocateAmount(Money::max('0', Money::subtract($return->refund_amount, $known)), $legacyWeights) as $id => $amount) {
+                $amounts[$id] = Money::add($amounts[$id] ?? '0', $amount);
+            }
+        }
+
+        return $amounts;
+    }
+
+    /** The goods-only refund balance, counting existing header amounts exactly. */
+    public function remainingRefundBalance(Order $order, ?array $paidNets = null): string
+    {
+        $paid = Money::add(...array_values(($paidNets ?? $this->paidLineNets($order)) ?: ['0']));
+        $reserved = ReturnOrder::where('order_id', $order->id)->where('status', '!=', 'rejected')
+            ->where('refund_amount', '>', 0)->sum('refund_amount');
+
+        return Money::max('0', Money::subtract($paid, $reserved));
     }
 
     /**
@@ -284,6 +359,12 @@ final class ReturnOrderService
                     continue;
                 }
 
+                if ((int) $item['quantity'] <= 0) {
+                    $errors["items.{$index}.quantity"] = 'Return quantity must be positive.';
+
+                    continue;
+                }
+
                 $requested[$orderItem->id] = ($requested[$orderItem->id] ?? 0) + (int) $item['quantity'];
 
                 $alreadyReturned = (int) $returnedQuantities->get($item['order_item_id'], 0);
@@ -302,10 +383,23 @@ final class ReturnOrderService
             // Refund what the customer paid for the goods: net of the line
             // discount and the line's share of the order-level discount.
             $paidNets = $this->paidLineNets($order);
-            $refundAmount = '0';
-            foreach ($data['items'] as $item) {
+            $refundedAmounts = $this->refundedLineAmounts($order, $paidNets);
+            $refundAmounts = [];
+            foreach ($data['items'] as $index => $item) {
                 $orderItem = $order->items->firstWhere('id', $item['order_item_id']);
-                $refundAmount = Money::add($refundAmount, $this->refundFor($orderItem, (int) $item['quantity'], $paidNets));
+                $priorQuantity = (int) $returnedQuantities->get($orderItem->id, 0);
+                $priorRefund = $refundedAmounts[$orderItem->id] ?? '0.00';
+                $amount = $this->refundFor($orderItem, (int) $item['quantity'], $paidNets, $priorQuantity, $priorRefund);
+                $refundAmounts[$index] = $amount;
+                $returnedQuantities->put($orderItem->id, $priorQuantity + (int) $item['quantity']);
+                $refundedAmounts[$orderItem->id] = Money::add($priorRefund, $amount);
+            }
+
+            $refundAmount = Money::add(...array_values($refundAmounts ?: ['0']));
+            $balance = $this->remainingRefundBalance($order, $paidNets);
+            if (Money::compare($refundAmount, $balance) > 0) {
+                $refundAmounts = $this->allocateAmount($balance, $refundAmounts);
+                $refundAmount = $balance;
             }
 
             $returnOrder = ReturnOrder::create([
@@ -319,7 +413,7 @@ final class ReturnOrderService
                 'refund_amount' => $refundAmount,
             ]);
 
-            foreach ($data['items'] as $item) {
+            foreach ($data['items'] as $index => $item) {
                 // Derive the product from the order line, NOT the client
                 // payload. order_item_id is what caps the return quantity and
                 // computes the refund; taking product_id from the request
@@ -333,6 +427,7 @@ final class ReturnOrderService
                     'order_item_id' => $orderItem->id,
                     'product_id' => $orderItem->product_id,
                     'quantity' => $item['quantity'],
+                    'refund_amount' => $refundAmounts[$index],
                     'condition' => $item['condition'],
                     'restock' => $item['restock'],
                 ]);

@@ -18,6 +18,8 @@ Once any of an order's shipments has left the warehouse, the order can no longer
 
 Returns are limited to the units of each line that have physically shipped, less units already claimed by non-rejected returns. Shipping one line does not make unshipped lines returnable. Pending, labelled and cancelled shipments do not count; receiving a return checks the shipped cap again before restocking. Older orders marked shipped or delivered with no shipment records retain their original full-order allowance.
 
+Refund amounts cover goods after line and order discounts, excluding tax and shipping. Partial requests account for the actual amounts reserved by earlier non-rejected returns, and rejected requests release their allowance. Repeated partial returns cannot reserve more than the discounted goods value.
+
 ## Setting up EasyPost
 
 1. Create an account at [easypost.com](https://www.easypost.com) and connect the carrier accounts you want to use.
