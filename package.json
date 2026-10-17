@@ -31,6 +31,9 @@
     "overrides": {
         "concurrently": {
             "shell-quote": "^1.12.0"
+        },
+        "tailwindcss": {
+            "postcss-selector-parser": "^7.1.6"
         }
     },
     "dependencies": {

@@ -96,6 +96,25 @@ When deploying Inventoros, follow these security best practices:
 - **Monitor security advisories**: Watch for Laravel and package security updates
 - **Review dependency licenses**: Ensure compatibility with your use case
 
+#### Development dependency audit (2026-10-17)
+
+The lockfiles use `symfony/yaml` 8.1.9 and override the Tailwind 3 subtree to
+`postcss-selector-parser` 7.1.6 or newer in its 7.x series. The latter fixes
+[flat-selector CPU exhaustion](https://github.com/postcss/postcss-selector-parser/security/advisories/GHSA-rj75-hqrm-r3gf).
+The production CSS emitted before and after this parser update was byte-identical.
+
+One underlying npm advisory remains open:
+[braces stack exhaustion](https://github.com/advisories/GHSA-vfj7-8cjw-p6xm).
+Tailwind 3 pulls in `braces` through its build-time dependency chain. The latest
+published `braces` release on the audit date is 3.0.3 and remains affected; npm
+reports five affected packages in that chain. Removing it requires a verified
+toolchain migration. The advisory has not been dismissed.
+
+Include development dependencies when checking this status with
+`composer audit --locked` and `npm audit --package-lock-only`. On the audit date,
+the updated Composer lock has no reported advisories and the npm lock retains
+the `braces` chain described above.
+
 ### Access Control
 
 - **Use strong authentication**: Implement multi-factor authentication when possible
