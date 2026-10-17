@@ -377,7 +377,7 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                             v-if="!showCurrencySelect && availableCurrencies.length > 0"
                             type="button"
                             @click="showCurrencySelect = true"
-                            class="text-sm font-medium text-brand hover:text-brand-hover"
+                            class="block text-sm font-medium text-brand hover:text-brand-hover"
                         >
                             {{ t('products.form.addPriceInCurrency') }}
                         </button>

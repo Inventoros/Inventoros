@@ -45,7 +45,7 @@ const maxWidthClass = {
             @click="close"
         >
             <div class="flex items-center justify-center min-h-screen px-4">
-                <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"></div>
+                <div class="fixed inset-0 bg-gray-500/75 transition-opacity"></div>
 
                 <div
                     :class="['relative bg-white dark:bg-surface-raised rounded-lg shadow-xl w-full p-6', maxWidthClass[maxWidth]]"

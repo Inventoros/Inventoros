@@ -81,10 +81,10 @@ jobs:
           php artisan key:generate
           php artisan route:list --path=mcp | grep -q 'mcp'
 
-  # Known-vulnerable production dependencies must not drift back in. The
+  # Known-vulnerable runtime and build dependencies must not drift back in. The
   # full advisory list is always printed; the job fails on high or critical
-  # advisories in the packages that ship (composer --no-dev, npm without
-  # devDependencies). Low and medium ones are reported for the next routine
+  # advisories, including development tools used to build the release.
+  # Low and medium ones are reported for the next routine
   # update rather than blocking unrelated pull requests. Runs weekly as well,
   # because a new advisory can land without any commit touching the lock files.
   dependency-audit:
@@ -100,16 +100,16 @@ jobs:
           php-version: '8.4'
           coverage: none
 
-      - name: Composer audit (production dependencies)
-        run: composer audit --locked --no-dev --abandoned=report --ignore-severity=low --ignore-severity=medium
+      - name: Composer audit (all locked dependencies)
+        run: composer audit --locked --abandoned=report --ignore-severity=low --ignore-severity=medium
 
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
           node-version: '22'
 
-      - name: npm audit (production dependencies)
-        run: npm audit --package-lock-only --omit=dev --audit-level=high
+      - name: npm audit (all locked dependencies)
+        run: npm audit --package-lock-only --audit-level=high
 
   js-unit:
     if: github.event_name != 'schedule'

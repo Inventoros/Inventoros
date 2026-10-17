@@ -163,7 +163,7 @@ if (typeof window !== 'undefined') {
     <Teleport to="body">
         <div
             v-if="showLightbox"
-            class="fixed inset-0 z-[100] bg-black/95 flex items-center justify-center"
+            class="fixed inset-0 z-100 bg-black/95 flex items-center justify-center"
             @click="closeLightbox"
         >
             <!-- Close Button -->

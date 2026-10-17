@@ -119,7 +119,7 @@ const decide = (item) => {
                                 <Badge size="sm">{{ t(`approvals.types.${item.type}`) }}</Badge>
                                 <Badge :variant="statusVariant(item.status)" size="sm" dot>{{ t(`approvals.status.${item.status}`) }}</Badge>
                             </div>
-                            <p class="mt-1 break-words text-sm text-text-secondary">{{ item.summary }}</p>
+                            <p class="mt-1 wrap-break-word text-sm text-text-secondary">{{ item.summary }}</p>
                             <p class="mt-1 text-xs text-text-tertiary">
                                 <span v-if="item.requester">{{ t('approvals.requestedBy', { name: item.requester }) }}</span>
                                 <span v-if="item.requested_at"> · {{ formatDate(item.requested_at) }}</span>
