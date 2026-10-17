@@ -52,7 +52,8 @@ class PortalOrderController extends PortalController
         $order->load(['items' => fn ($query) => $query->orderBy('id'), 'items.variant']);
 
         $returned = $returnsService->returnedQuantities($order);
-        $items = $order->items->map(fn (OrderItem $item) => $this->lineSummary($item, (int) $returned->get($item->id, 0)))->values();
+        $shipped = $returnsService->shippedQuantities($order);
+        $items = $order->items->map(fn (OrderItem $item) => $this->lineSummary($item, (int) $returned->get($item->id, 0), (int) $shipped->get($item->id, 0)))->values();
 
         $returns = $this->returns($contact)
             ->where('order_id', $order->id)
