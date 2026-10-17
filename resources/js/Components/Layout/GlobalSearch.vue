@@ -35,9 +35,9 @@ const flatResults = computed(() => {
     for (const cat of categories) {
         const catResults = results.value[cat.key] || [];
         if (catResults.length > 0) {
-            items.push({ type: 'header', label: cat.label, icon: cat.icon });
+            items.push({ kind: 'header', label: cat.label, icon: cat.icon });
             for (const item of catResults) {
-                items.push({ type: 'result', ...item, categoryIcon: cat.icon });
+                items.push({ ...item, kind: 'result', categoryIcon: cat.icon });
             }
         }
     }
@@ -45,7 +45,7 @@ const flatResults = computed(() => {
 });
 
 const selectableResults = computed(() => {
-    return flatResults.value.filter(item => item.type === 'result');
+    return flatResults.value.filter(item => item.kind === 'result');
 });
 
 const hasResults = computed(() => {
@@ -281,7 +281,7 @@ defineExpose({ open });
                         <div v-if="hasQuery && hasResults" class="py-2">
                             <template v-for="(item, index) in flatResults" :key="index">
                                 <!-- Category Header -->
-                                <div v-if="item.type === 'header'" class="px-4 py-1.5 mt-1 first:mt-0">
+                                <div v-if="item.kind === 'header'" class="px-4 py-1.5 mt-1 first:mt-0">
                                     <p class="text-[11px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider">{{ $t(item.label) }}</p>
                                 </div>
 
