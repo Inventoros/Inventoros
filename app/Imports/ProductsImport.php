@@ -163,10 +163,17 @@ final class ProductsImport implements SkipsOnFailure, ToCollection, WithChunkRea
                 // Validate the row
                 $currencyColumns = $this->currencyColumns($row->keys()->all(), $rowNumber);
 
+                // Spreadsheet rows do not pass through HTTP's empty-string
+                // normalization. Blank optional costs are null, not SQL strings.
+                if (is_string($row->get('purchase_price')) && trim($row->get('purchase_price')) === '') {
+                    $row->put('purchase_price', null);
+                }
+
                 $rules = [
                     'name' => 'required|string|max:255',
                     'sku' => 'required|string|max:255',
                     'price' => 'required|numeric|min:0',
+                    'purchase_price' => 'nullable|numeric|min:0',
                     'stock' => 'required|integer|min:0',
                     'min_stock' => 'nullable|integer|min:0',
                 ];
