@@ -57,6 +57,18 @@ final class InventoryCleanupTest extends TestCase
         $this->assertSoftDeleted($this->warehouseB);
     }
 
+    public function test_warehouse_scoped_counts_block_deletion_even_without_any_locations(): void
+    {
+        if (! \Illuminate\Support\Facades\Schema::hasColumn('stock_audits', 'warehouse_id')) {
+            $this->markTestSkipped('Warehouse-scoped stock audits are not installed.');
+        }
+        $warehouse = \App\Models\Warehouse::factory()->create(['organization_id' => $this->organization->id, 'is_default' => false]);
+        $audit = $this->makeAudit(null, 'Empty warehouse count');
+        $audit->update(['warehouse_id' => $warehouse->id]);
+        $this->actingAs($this->admin)->delete(route('warehouses.destroy', $warehouse))->assertSessionHasErrors('warehouse');
+        $this->assertNotSoftDeleted($warehouse);
+    }
+
     public function test_default_and_inaccessible_warehouses_remain_protected(): void
     {
         $this->actingAs($this->restricted)->delete(route('warehouses.destroy', $this->warehouseB))->assertForbidden();
