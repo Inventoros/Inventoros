@@ -1528,6 +1528,9 @@
   "settings": {
     "title": "設定",
     "organization": {
+      "logoTitle": "会社のロゴ",
+      "logoHint": "PNG、JPEG、WebP。最大2 MB、2048 × 2048ピクセル。",
+      "logoRemove": "ロゴを削除",
       "title": "組織設定",
       "generalInfo": "一般情報",
       "regionalSettings": "地域設定",
@@ -1770,6 +1773,10 @@
         "customRolesSelected": "{count}件のカスタムロールを選択中 | {count}件のカスタムロールを選択中"
       },
       "show": {
+        "effectivePermissions": "有効な権限",
+        "effectivePermissionsHint": "この組織でのロールの権限です。倉庫へのアクセスとレコードの制限は引き続き適用されます。",
+        "allowed": "許可あり",
+        "notGranted": "許可なし",
         "title": "ユーザー詳細",
         "editUser": "ユーザーを編集",
         "backToUsers": "ユーザーに戻る",

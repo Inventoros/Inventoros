@@ -1528,6 +1528,9 @@
   "settings": {
     "title": "설정",
     "organization": {
+      "logoTitle": "회사 로고",
+      "logoHint": "PNG, JPEG 또는 WebP. 최대 2 MB 및 2048 × 2048픽셀.",
+      "logoRemove": "로고 삭제",
       "title": "조직 설정",
       "generalInfo": "일반 정보",
       "regionalSettings": "지역 설정",
@@ -1770,6 +1773,10 @@
         "customRolesSelected": "사용자 정의 역할 {count}개 선택됨 | 사용자 정의 역할 {count}개 선택됨"
       },
       "show": {
+        "effectivePermissions": "유효 권한",
+        "effectivePermissionsHint": "이 조직의 역할 권한입니다. 창고 접근 및 레코드 제한은 계속 적용됩니다.",
+        "allowed": "부여됨",
+        "notGranted": "부여되지 않음",
         "title": "사용자 상세",
         "editUser": "사용자 편집",
         "backToUsers": "사용자로 돌아가기",

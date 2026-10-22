@@ -12,6 +12,8 @@ Full release notes, with the pull request behind each change, are on [GitHub Rel
 - Prepared warehouse transfers reserve source-bin stock, shipping removes it from on-hand, and receiving credits the destination. Transfer lines can name variants. Web, REST, GraphQL and MCP transitions share the same checks; existing in-transit transfers retain their original completion behavior.
 - Variant stock per location and warehouse: opening balances, adjustments, sales, receipts, returns and production keep variant bins in step with variant totals. Product pages show variant location balances; warehouse thresholds use active variant balances.
 - Stock reservations (available to promise). Plugins and core can hold on-hand stock against a product total, a location bin, a variant, a serial or part of a batch (`StockReservationService`), and every path that takes stock out (orders on every surface, order edits, adjustments, bin moves, transfers, serial and batch allocation, work orders, approvals, inter-company transfers) now checks against on hand less active holds. Recounts and damage or loss write-offs are never refused; when one leaves fewer units than are held, `reservation_shortfall` fires. Products show on hand, reserved and available, the REST, GraphQL and MCP product payloads carry `reserved_stock` and `available_stock`, and a Reservations page lists holds and lets a stock manager release one. Expired holds are released every five minutes, and a plugin's holds are released when it is uninstalled. With no holds nothing changes.
+- Organization settings support a company logo in the desktop and mobile workspace header. Inventoros branding remains in the footer. PNG, JPEG and WebP uploads are limited to 2 MB and 2048 × 2048 pixels.
+- User details show searchable effective permission grants from the user's base and custom roles, including plugin permissions.
 - `TRUSTED_PROXIES` names the reverse proxies (nginx, Traefik, Caddy, a load balancer) whose `X-Forwarded-*` headers are believed, so the app builds https URLs and Secure cookies behind a TLS-terminating proxy. No proxy is trusted unless configured; the Docker image and compose files default to `private_ranges`.
 - Order and purchase order forms have an optional tax rate (%) beside the tax amount, which fills the amount in from the subtotal after discounts. Only the amount is saved, as before.
 - Queued exports now expire after `EXPORT_RETENTION_DAYS` (default 7): the download link says the export has expired, and a nightly `exports:prune` deletes the file and its record.
@@ -29,6 +31,8 @@ Full release notes, with the pull request behind each change, are on [GitHub Rel
 
 ### Fixed
 
+- Restored the Log Out button in the authenticated sidebar, including the mobile navigation drawer and accounts with restricted permissions.
+- Customer, supplier and purchase order forms default to the saved organization currency. Currency selectors also include all supported currencies and preserve existing record currencies; customer and supplier creation through the API and imports use the organization default when no currency is supplied.
 - The work order page showed no components, number or creator, and the create form never showed the component preview or warehouse picker.
 - Docker: behind a reverse proxy the page loaded its scripts over http and the browser blocked them, leaving a blank page (#261).
 - Docker: the development stack's worker and scheduler were always reported unhealthy, and the production image's health check failed whenever `SERVER_NAME` was changed (#261).

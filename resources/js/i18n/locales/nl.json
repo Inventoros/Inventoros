@@ -1528,6 +1528,9 @@
   "settings": {
     "title": "Instellingen",
     "organization": {
+      "logoTitle": "Bedrijfslogo",
+      "logoHint": "PNG, JPEG of WebP. Maximaal 2 MB en 2048 × 2048 pixels.",
+      "logoRemove": "Logo verwijderen",
       "title": "Organisatie-instellingen",
       "generalInfo": "Algemene informatie",
       "regionalSettings": "Regionale instellingen",
@@ -1770,6 +1773,10 @@
         "customRolesSelected": "{count} aangepaste rol geselecteerd | {count} aangepaste rollen geselecteerd"
       },
       "show": {
+        "effectivePermissions": "Effectieve rechten",
+        "effectivePermissionsHint": "Rolrechten binnen deze organisatie. Beperkingen voor magazijnen en records blijven gelden.",
+        "allowed": "Toegekend",
+        "notGranted": "Niet toegekend",
         "title": "Gebruikersdetails",
         "editUser": "Gebruiker bewerken",
         "backToUsers": "Terug naar gebruikers",
