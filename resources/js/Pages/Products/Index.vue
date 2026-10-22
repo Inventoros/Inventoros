@@ -6,7 +6,7 @@ import Card from '@/Components/ui/Card.vue';
 import Button from '@/Components/ui/Button.vue';
 import Badge from '@/Components/ui/Badge.vue';
 import { Head, Link, router } from '@inertiajs/vue3';
-import { defineAsyncComponent, ref, onMounted, onUnmounted } from 'vue';
+import { defineAsyncComponent, ref, onMounted, onUnmounted, watch, computed } from 'vue';
 import {
     Plus, Search, Eye, Pencil, Trash2, Copy, Barcode, ScanLine,
     AlertTriangle, Boxes, X, QrCode,
@@ -34,10 +34,14 @@ const props = defineProps({
 const search = ref(props.filters?.search || '');
 const category = ref(props.filters?.category || '');
 const location = ref(props.filters?.location || '');
+const perPage = ref(Number(props.filters?.per_page) || 15);
 
 // Bulk selection
 const selectedProducts = ref([]);
-const selectAll = ref(false);
+const selectAll = computed(() => props.products.data.length > 0 && props.products.data.every(p => selectedProducts.value.includes(p.id)));
+watch(() => props.filters, (value, old) => {
+    if (JSON.stringify(value) !== JSON.stringify(old)) selectedProducts.value = [];
+});
 
 // Bulk operations state
 const showBulkCategoryModal = ref(false);
@@ -83,11 +87,10 @@ onUnmounted(() => {
 });
 
 const toggleSelectAll = () => {
-    if (selectAll.value) {
-        selectedProducts.value = props.products.data.map(p => p.id);
-    } else {
-        selectedProducts.value = [];
-    }
+    const pageIds = props.products.data.map(p => p.id);
+    selectedProducts.value = selectAll.value
+        ? selectedProducts.value.filter(id => !pageIds.includes(id))
+        : [...new Set([...selectedProducts.value, ...pageIds])];
 };
 
 const isSelected = (productId) => selectedProducts.value.includes(productId);
@@ -99,7 +102,6 @@ const toggleSelect = (productId) => {
     } else {
         selectedProducts.value.push(productId);
     }
-    selectAll.value = props.products.data.length > 0 && selectedProducts.value.length === props.products.data.length;
 };
 
 const printSelectedBarcodes = () => {
@@ -130,6 +132,8 @@ const searchProducts = () => {
         search: search.value,
         category: category.value,
         location: location.value,
+        per_page: perPage.value,
+        low_stock: props.filters?.low_stock,
     }, { preserveState: true, preserveScroll: true });
 };
 
@@ -154,7 +158,7 @@ const bulkDelete = () => {
     if (!confirm(t('products.index.confirmBulkDelete', { count: selectedProducts.value.length }, selectedProducts.value.length))) return;
     bulkProcessing.value = true;
     router.post(route('products.bulk.delete'), { ids: selectedProducts.value }, {
-        onSuccess: () => { selectedProducts.value = []; selectAll.value = false; bulkProcessing.value = false; },
+        onSuccess: () => { selectedProducts.value = []; bulkProcessing.value = false; },
         onError: () => { bulkProcessing.value = false; },
     });
 };
@@ -163,7 +167,7 @@ const bulkUpdateCategory = () => {
     if (!bulkCategoryId.value) return;
     bulkProcessing.value = true;
     router.post(route('products.bulk.update-category'), { ids: selectedProducts.value, category_id: bulkCategoryId.value }, {
-        onSuccess: () => { selectedProducts.value = []; selectAll.value = false; showBulkCategoryModal.value = false; bulkCategoryId.value = ''; bulkProcessing.value = false; },
+        onSuccess: () => { selectedProducts.value = []; showBulkCategoryModal.value = false; bulkCategoryId.value = ''; bulkProcessing.value = false; },
         onError: () => { bulkProcessing.value = false; },
     });
 };
@@ -172,7 +176,7 @@ const bulkUpdatePrice = () => {
     if (!bulkPriceValue.value) return;
     bulkProcessing.value = true;
     router.post(route('products.bulk.update-price'), { ids: selectedProducts.value, type: bulkPriceType.value, value: parseFloat(bulkPriceValue.value) }, {
-        onSuccess: () => { selectedProducts.value = []; selectAll.value = false; showBulkPriceModal.value = false; bulkPriceValue.value = 0; bulkProcessing.value = false; },
+        onSuccess: () => { selectedProducts.value = []; showBulkPriceModal.value = false; bulkPriceValue.value = 0; bulkProcessing.value = false; },
         onError: () => { bulkProcessing.value = false; },
     });
 };
@@ -272,7 +276,7 @@ const thClass =
         <div v-if="selectedProducts.length > 0" class="sticky top-12 z-30 mt-4 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-brand/20 bg-brand-soft p-3">
             <div class="flex items-center gap-3">
                 <span class="text-sm font-medium text-text-primary">{{ t('products.index.selectedCount', { count: selectedProducts.length }, selectedProducts.length) }}</span>
-                <button @click="selectedProducts = []; selectAll = false" class="text-xs text-text-tertiary hover:text-text-primary">{{ t('common.clearSelection') }}</button>
+                <button @click="selectedProducts = []" class="text-xs text-text-tertiary hover:text-text-primary">{{ t('common.clearSelection') }}</button>
             </div>
             <div class="flex flex-wrap items-center gap-2">
                 <Button variant="default" size="sm" @click="printSelectedBarcodes"><Barcode :size="14" />{{ t('products.printBarcodes') }}</Button>
@@ -284,13 +288,21 @@ const thClass =
             </div>
         </div>
 
+        <div class="mt-4 flex items-center gap-3 text-sm text-text-secondary">
+            <label for="products_per_page">{{ t('inventoryCleanup.perPage') }}</label>
+            <select id="products_per_page" v-model="perPage" class="rounded-md border border-border-subtle bg-surface-canvas px-3 py-2 ds-focus-ring" @change="searchProducts">
+                <option v-for="size in [15, 25, 50, 100]" :key="size" :value="size">{{ size }}</option>
+            </select>
+            <span>{{ t('inventoryCleanup.selectionHint') }}</span>
+        </div>
+
         <!-- Products table -->
         <div class="mt-4 w-full overflow-x-auto rounded-lg border border-border-subtle bg-surface-raised">
             <table class="w-full text-sm">
                 <thead>
                     <tr class="border-b border-border-subtle">
                         <th class="w-10 px-4 py-2.5">
-                            <input type="checkbox" v-model="selectAll" @change="toggleSelectAll" class="rounded border-border-strong bg-surface-canvas text-brand focus:ring-brand" />
+                            <input type="checkbox" :checked="selectAll" @change="toggleSelectAll" class="rounded border-border-strong bg-surface-canvas text-brand focus:ring-brand" />
                         </th>
                         <th :class="thClass">{{ t('products.productCol') }}</th>
                         <th :class="thClass">{{ t('products.skuBarcode') }}</th>
@@ -356,7 +368,7 @@ const thClass =
             </p>
             <nav class="inline-flex items-center gap-1">
                 <template v-for="link in products.links" :key="link.label">
-                    <Link v-if="link.url" :href="link.url"
+                    <Link v-if="link.url" preserve-state preserve-scroll :href="link.url"
                         :class="[
                             'inline-flex h-8 min-w-8 items-center justify-center rounded-md border px-2.5 text-xs font-medium transition-colors',
                             link.active ? 'border-brand bg-brand text-brand-foreground' : 'border-border-subtle bg-surface-canvas text-text-secondary hover:bg-surface-overlay',

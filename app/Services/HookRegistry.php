@@ -687,6 +687,11 @@ final class HookRegistry
             // ========================================
             // EMAIL FILTERS
             // ========================================
+            'shipment_should_notify_customer' => [
+                'description' => 'Return false when an integration owns a shipment notification. Cannot override notify_customer=false. Runs after commit before the email is claimed.',
+                'parameters' => ['$should_notify', '$shipment'],
+                'example' => "add_filter('shipment_should_notify_customer', function (\$send, \$shipment) { return \$send; });",
+            ],
             'email_notification_data' => [
                 'description' => 'Modify the data passed to a notification email',
                 'parameters' => ['$data', '$type', '$user'],

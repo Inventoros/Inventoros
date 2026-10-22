@@ -1,4 +1,8 @@
 {
+  "inventoryCleanup": {
+    "perPage": "Productos por página",
+    "selectionHint": "La selección se mantiene al cambiar de página."
+  },
   "auditLabels": {
     "notCounted": "Sin contar",
     "never": "Nunca"

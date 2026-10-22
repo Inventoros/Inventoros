@@ -15,13 +15,14 @@ use App\Models\Inventory\ProductLocation;
 use App\Models\Inventory\Supplier;
 use App\Models\Inventory\SupplierPriceHistory;
 use App\Services\ProductLocationStockService;
-use App\Services\WarehouseStockLevelService;
 use App\Services\ProductService;
 use App\Services\StockReservationService;
+use App\Services\WarehouseStockLevelService;
 use App\Support\PluginQueryGuard;
 use App\Support\ProductSearch;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -92,7 +93,9 @@ class ProductController extends Controller
         // the query past the caller's organization (e.g. via withoutGlobalScope).
         $query = PluginQueryGuard::organizationScoped($query, Product::class, $organizationId);
 
-        $products = $query->paginate(config('limits.pagination.default'))->withQueryString();
+        $perPage = (int) $request->input('per_page', 15);
+        $perPage = in_array($perPage, [15, 25, 50, 100], true) ? $perPage : 15;
+        $products = $query->paginate($perPage)->withQueryString();
 
         // Display values run the product_display_name / product_price_display filters.
         $products->getCollection()->each->withDisplayValues();
@@ -110,7 +113,7 @@ class ProductController extends Controller
 
         $data = [
             'products' => $products,
-            'filters' => $request->only(['search', 'category', 'location', 'low_stock']),
+            'filters' => $request->only(['search', 'category', 'location', 'low_stock', 'per_page']),
             'categories' => $categories,
             'locations' => $locations,
             'pluginComponents' => [
@@ -468,7 +471,7 @@ class ProductController extends Controller
     /**
      * Active suppliers of the organization, for the product form's supplier picker.
      *
-     * @return \Illuminate\Support\Collection<int, Supplier>
+     * @return Collection<int, Supplier>
      */
     private function supplierOptions(int $organizationId)
     {
