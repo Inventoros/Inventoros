@@ -19,14 +19,15 @@ Everything in this guide is backed by code and tests: the hook tables are checke
 11. [MCP tools](#mcp-tools)
 12. [Outbound webhook events](#outbound-webhook-events)
 13. [Organizations and memberships](#organizations-and-memberships)
-14. [Core PHP API](#core-php-api)
-15. [Building and packaging a plugin](#building-and-packaging-a-plugin)
-16. [Publishing to the marketplace](#publishing-to-the-marketplace)
-17. [Licences for paid plugins](#licences-for-paid-plugins)
-18. [Examples](#examples)
-19. [Best practices](#best-practices)
-20. [Security notes](#security-notes)
-21. [Debugging](#debugging)
+14. [Stock reservations](#stock-reservations)
+15. [Core PHP API](#core-php-api)
+16. [Building and packaging a plugin](#building-and-packaging-a-plugin)
+17. [Publishing to the marketplace](#publishing-to-the-marketplace)
+18. [Licences for paid plugins](#licences-for-paid-plugins)
+19. [Examples](#examples)
+20. [Best practices](#best-practices)
+21. [Security notes](#security-notes)
+22. [Debugging](#debugging)
 
 ## Plugin structure
 
@@ -246,8 +247,10 @@ add_action('stock_changed', function ($product, $variant, array $change) {
     //     'locations' => [                // bins that moved, by location id
     //         4 => ['before' => 12, 'after' => 9],
     //     ],
+    //     'reserved' => ['before' => 5, 'after' => 2], // only when stock reservations changed
     // ];
     // A move between two bins leaves before === after and lists both bins.
+    // Available to promise is after - reserved['after'] (when present).
     my_plugin_queue_inventory_push($product->id, $variant?->id);
 });
 
@@ -276,6 +279,10 @@ add_action('stock_changed', function ($product, $variant, array $change) {
 | `variant_deleted` | `$variant`, `$user` | A product variant is deleted on any surface, after commit. |
 | `stock_changed` | `$product`, `$variant`, `$change` | A product's or variant's on-hand stock, or one of the product's location bins, changed on any surface (adjustments, orders, receipts, transfers, returns, audits, imports, commands). Once per product or variant per transaction, after commit. See [Domain change hooks](#domain-change-hooks). |
 | `stock_adjusted` | `$stock_adjustment`, `$product` | A stock adjustment is committed. `$product` is null for a variant adjustment. |
+| `stock_reserved` | `$reservation` | A stock reservation (hold) is placed and committed. Not fired when a retried `reserve()` returns the existing hold. See [Stock reservations](#stock-reservations). |
+| `stock_reservation_released` | `$reservation` | A hold is released and committed: by its owner, by an admin from the holds list, on expiry, or because its plugin was uninstalled. `$reservation->release_reason` is `released`, `admin`, `expired` or `uninstalled`. |
+| `stock_reservation_consumed` | `$reservation`, `$by` | A hold is consumed and committed: an order carrying it was created (`$by` is the order), or its owner called `consume()` (`$by` is what it passed, or null). |
+| `reservation_shortfall` | `$product`, `$variant`, `$shortfall` | After commit, when a physical correction (a recount, a damage or loss write-off) left fewer units on hand than active holds promise, for the product total, a variant or one location bin. See [Stock reservations](#stock-reservations). |
 | `low_stock_alert` | `$product` | A product's stock drops to or below its minimum. |
 | `out_of_stock_alert` | `$product` | A product's stock reaches zero. |
 | `variant_low_stock_alert` | `$variant` | A variant with its own minimum stock drops to or below it. Variants without one count toward the product's `low_stock_alert`. |
@@ -343,6 +350,7 @@ A filter callback receives the value first, then the listed context, and must re
 |--------|-----------|-----------------|
 | `product_display_name` | `$name`, `$product` | The product name shown on the product list and detail pages, in global search and as `display_name` in the REST product resource. The stored `name` is unchanged. |
 | `product_price_display` | `$price`, `$product` | The price shown on the product list and detail pages and as `display_price` in the REST product resource. `$price` is a float (or null). The stored `price`, order pricing and reports are unchanged. |
+| `product_available_quantity` | `$available`, `$product`, `$variant` | The available-to-promise figure shown for a product or variant (on hand less stock reservations): on the product page, as `available_stock` in the REST resource, and in GraphQL and MCP product payloads. `$variant` is null for a product. Display only: no stock check reads it. |
 | `product_search_query` | `$query`, `$search_term` | Product search on the product list, global search and `GET /api/v1/products?search=`. `$query` is the nested group of OR conditions that match the term: add alternatives with `orWhere()`. Tenant and other filters sit outside the group, so a plugin cannot widen them. |
 | `product_list_query` | `$query`, `$request` | The product list query. The organization scope is re-applied afterwards. |
 | `product_list_data` | `$products`, `$request` | The paginated products before the list page renders. |
@@ -787,7 +795,7 @@ app(OrganizationMembershipService::class)->add($organization, $user, 'member', $
 
 ### Moving stock between organizations
 
-`InterCompanyTransferService::transfer($actor, $fromOrganizationId, $toOrganizationId, $lines, $notes, $idempotencyKey)` moves stock as one atomic operation: an `inter_company_out` adjustment in the source organization (never below zero) and an `inter_company_in` adjustment in the destination, both referencing one `InterCompanyTransfer`, so each organization's ledger shows its side. The actor must be a member of both organizations holding `transfer_stock` in each, with warehouse access to every location named (a user restricted to some warehouses must name a location on both sides, and cannot move variant stock, which has no locations). Each line names `from_product_id`, `to_product_id` and `quantity`, and optionally the variants (required for a product sold by variant) and the locations on each side; products and locations of the wrong organization are refused as not found. Pass an idempotency key so a retried call returns the first transfer instead of moving the stock twice. Read transfers with `InterCompanyTransfer::involving($organizationId)`, never unfiltered.
+`InterCompanyTransferService::transfer($actor, $fromOrganizationId, $toOrganizationId, $lines, $notes, $idempotencyKey)` moves stock as one atomic operation: an `inter_company_out` adjustment in the source organization (never below zero) and an `inter_company_in` adjustment in the destination, both referencing one `InterCompanyTransfer`, so each organization's ledger shows its side. The actor must be a member of both organizations holding `transfer_stock` in each, with warehouse access to every location named (a user restricted to some warehouses must name a location on both sides, including when moving variants between their location bins). Each line names `from_product_id`, `to_product_id` and `quantity`, and optionally the variants (required for a product sold by variant) and the locations on each side; products and locations of the wrong organization are refused as not found. Pass an idempotency key so a retried call returns the first transfer instead of moving the stock twice. Read transfers with `InterCompanyTransfer::involving($organizationId)`, never unfiltered.
 
 ```php
 use App\Services\Organizations\InterCompanyTransferService;
@@ -815,6 +823,108 @@ $transfer = app(InterCompanyTransferService::class)->transfer($user, $holdingId,
 
 Hooks that a core service fires after commit (`stock_changed`, `stock_adjusted` and the other domain hooks) run in the request's active organization, which can differ from the record's when the change was made inside `runAs()`. Listeners must use the record's own `organization_id`, as they already must in queued jobs.
 
+## Stock reservations
+
+A plugin that promises stock (a rental booking, a wave being picked, a kit run, units published to a sales channel) holds it with a stock reservation. Core then keeps every other path from selling, transferring out of a held bin, allocating or writing off those units:
+
+```
+available = on hand - SUM(active holds)
+```
+
+Available is computed under the same row lock as every decrement and never stored. With no holds, available equals on hand and nothing changes.
+
+| Hold | Constrains |
+|------|------------|
+| Product (no location) | The product total. It does not pin units to a bin, so transfers between bins are not limited by it. |
+| Bin (`$locationId`) | That bin, and the product total. |
+| Variant (`$variant`) | The variant's stock. A product sold by variant is reserved by variant. Variant holds may name a location bin; they cannot name a serial or batch. |
+| Serial (`serial:`) | One available serial (quantity 1). It is skipped by order allocation and cannot be marked sold, reserved or damaged until the hold is consumed or released. Counts toward the product total. |
+| Batch (`batch:`) | Units of one batch. Order allocation leaves them in the batch. Counts toward the product total. |
+
+Every core path that takes stock out checks against available: order create (web, REST, GraphQL, MCP, import) and edit, adjustments that refuse negative stock (manual adjustments on every surface, inter-company transfers out, work order component consumption, approval execution), bin removals and depletion, stock transfers out of a held bin, serial and batch allocation, and starting a work order. An inter-company transfer cannot name a held serial or take held batch units, and a kit's component lines are checked like any other line. A request above available fails and changes nothing.
+
+Physical corrections are the exception: a recount (`recount`, `count`) and a damage or loss write-off (`damage`, `loss`) record what is really on the shelf, so they are never refused because stock is promised (a bookkeeping `correction` is not one of them). They may take available below zero; core then fires `reservation_shortfall` after commit, and leaves the holds to their owner.
+
+### Reserving, releasing and consuming
+
+```php
+use App\Services\StockReservationService;
+
+$reservations = app(StockReservationService::class);
+
+// Hold 3 drills for booking B-1042 until the hire starts. Throws
+// InsufficientStockException when fewer than 3 are available.
+$hold = $reservations->reserve($drill, null, 3, 'my-rental', 'B-1042', expiresAt: $booking->starts_at);
+
+// Hold one specific camera body, or units in one bin.
+$reservations->reserve($camera, null, 1, 'my-rental', 'B-1043', serial: $serial);
+$reservations->reserve($drill, null, 2, 'my-rental', 'B-1044', locationId: $bin->id);
+
+// The booking was cancelled.
+$reservations->release('my-rental', 'B-1042');
+
+$reservations->available($drill);                  // on hand less holds
+$reservations->available($drill, null, $bin->id);  // in one bin
+$reservations->reserved($shirt, $large);           // held on a variant
+```
+
+- The owner is your plugin slug; holds are released when your plugin is uninstalled (`release_reason` `uninstalled`). `core` is reserved for core.
+- The reference is yours (a booking id, a wave id). One reference may hold several products: call `reserve()` once per product, variant, bin, serial or batch, then release or consume them together.
+- A retried `reserve()` with the same owner, reference and target returns the existing hold instead of holding twice. A different quantity under the same reference is refused (`InvalidStateException`, `reservation_conflict`): release it first. A released or expired reference can be reserved again; a consumed one cannot.
+- An expired hold stops counting the moment `expires_at` passes. The scheduled `reservations:release-expired` command (every five minutes) records the release and fires `stock_reservation_released`.
+- Outside a request (queued jobs, commands) no organization is active: pass `$organizationId` to `release()`, `consume()` and `holds()`.
+- Never write the `stock_reservations` table yourself.
+
+### Turning a hold into a sale
+
+Create the order with the reservation. It is checked against available plus that reservation's holds, draws the held bins, serials and batch units, and consumes the holds in the same transaction, exactly once:
+
+```php
+$order = app(OrderService::class)->create([
+    'customer_name' => $booking->customer_name,
+    'items' => [['product_id' => $drill->id, 'quantity' => 3]],
+    'reservation_owner' => 'my-rental',
+    'reservation_reference' => 'B-1042',
+], $actor, 'my-rental');
+```
+
+A reservation that is no longer active (consumed, released or expired) is refused with `InvalidStateException` (`reservation_not_active`). For any other core operation that takes the units out, call `consume()` inside the same transaction, before the operation:
+
+```php
+DB::transaction(function () use ($reservations, $drill, $actor) {
+    $reservations->consume('my-rental', 'B-1042');
+    StockAdjustment::adjust($drill, -3, 'rental_out', 'Hire B-1042', allowNegative: false, actor: $actor);
+});
+```
+
+### Hooks
+
+```php
+add_action('reservation_shortfall', function ($product, $variant, array $shortfall) {
+    // $shortfall = [
+    //     'location_id' => null,      // or the bin that is short
+    //     'on_hand' => 5,
+    //     'reserved' => 7,
+    //     'short' => 2,
+    //     'reservations' => $holds,   // the active holds in that scope
+    // ];
+    foreach ($shortfall['reservations']->where('owner_type', 'my-rental') as $hold) {
+        my_rental_flag_booking($hold->owner_reference, $shortfall['short']);
+    }
+});
+
+// A channel sync publishes available stock rather than on hand.
+add_action('stock_changed', function ($product, $variant, array $change) {
+    if (isset($change['reserved'])) {
+        my_channel_push($product->id, $variant?->id, $change['after'] - $change['reserved']['after']);
+    }
+});
+```
+
+`stock_reserved`, `stock_reservation_released` and `stock_reservation_consumed` fire after commit, and never for a rolled-back transaction. `product_available_quantity` changes only the figure shown on product pages and in the REST, GraphQL and MCP payloads (`available_stock`), never a check.
+
+Admins see every active hold under Inventory > Reservations, with its owner, reference and expiry; a user with `manage_stock` can release one there.
+
 ## Core PHP API
 
 Plugins change data through the same services the web screens, REST, GraphQL and MCP use, so stock, bins, tracked units, ledgers and hooks stay consistent. The methods below are the supported PHP API: each carries an `@api` tag in its docblock, and `tests/Feature/CorePhpApiContractTest.php` fails if one disappears or changes incompatibly. Between releases they only gain trailing optional parameters; anything else is a breaking change called out in the changelog. Every other public method in `app/` is internal and may change without notice.
@@ -829,6 +939,7 @@ Resolve services from the container (`app(OrderService::class)`). Methods that t
 | `App\Services\Shipping\ShipmentService` | `create()`, `markShipped()`, `applyTrackingStatus()`, `cancel()`, `remainingQuantities()` |
 | `App\Services\StockAuditService` | `create()`, `start()`, `recordCount()`, `complete()` |
 | `App\Services\ProductLocationStockService` | `quantityAt()`, `onHandAt()`, `breakdown()`, `totalAssigned()`, `move()`, `consume()`, `receive()`, `applyDelta()` |
+| `App\Services\StockReservationService` | `reserve()`, `release()`, `consume()`, `available()`, `reserved()`, `holds()` |
 | `App\Services\TrackedStockAllocationService` | `allocateForOrderItem()`, `releaseForOrderItem()` |
 | `App\Services\ScanLookupService` | `resolve()`, `locationSummary()` |
 | `App\Services\ReorderService` | `primarySupplier()`, `suggestedQuantity()`, `createDraftPurchaseOrder()` |
@@ -1059,6 +1170,9 @@ Schema::dropIfExists('plugin_analytics_views');
 - **Catch your own errors** in hooks that talk to other systems, so a failing mail server does not break product saves.
 - **Namespace your PHP classes** (`namespace MyPlugin;`) and prefix custom hook names and tables with your slug. Name routes `plg.{slug}.*` under `/p/{slug}/` (see [Route names and URIs](#route-names-and-uris)).
 - **Change stock only through `StockAdjustment::adjust()`** (or `StockAuditService`, `OrderService` and the other core services). It keeps the location bins in step with the on-hand total: pass `locationId` to book one bin; without it a decrease drains the bins in the order fulfilment uses (warehouse priority, then the primary location, then the fullest bin) and an increase lands in the primary bin. Pass `syncBins: false` only if you move the bins yourself with `ProductLocationStockService`.
+- **Variant location balances** use `variant_location_stocks`, independently of product bins. `ProductLocationStockService` accepts a `Product` or `ProductVariant` for reads and moves. `StockAdjustment::adjustVariant()` accepts `locationId`, `syncBins` and `preferWarehouseId`; the same bin rules as product adjustments apply. Holds, orders, receipts, returns and production keep the variant total and its bins in step. A variant's `stock_changed` payload includes its location changes, including moves that leave its total unchanged. Existing variant stock is assigned to the parent's primary location when upgrading; new variants seed there on creation. Unlocated stock remains unassigned.
+- **Prepared transfers:** `StockTransferService::prepare()` reserves source bins under `core` / `stock-transfer:{id}`. `ship()` consumes those holds and records `transfer_shipped` adjustments; `complete()` records `transfer_received` into the destination. `cancel()` releases unshipped holds; dispatched transfers must be received and returned with a reverse transfer. Existing pending immediate completions and old in-transit records keep their original bin-move semantics. New transfer lines accept `product_variant_id`.
+- **Warehouse and variant audits:** Stock audit creation accepts an optional `warehouse_id` in the web, REST and PHP service paths. Warehouse-scoped audits seed separate count lines per stocked bin, including variants. `product_variant_id` identifies a variant line; do not also count its parent as a second stock pool. With neither warehouse nor location selected, each active variant is counted once at its total. The existing location scope remains available.
 - **Return a registration closure from `Plugin.php`**, and keep named functions and classes in files you `require_once` (see [The main file](#the-main-file)).
 - **Declare `requires`** with the lowest Inventoros version you tested against.
 

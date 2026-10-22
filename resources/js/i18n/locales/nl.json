@@ -135,6 +135,7 @@
     }
   },
   "common": {
+    "pagination": "Paginering",
     "save": "Opslaan",
     "saveChanges": "Wijzigingen opslaan",
     "saving": "Opslaan...",
@@ -241,6 +242,7 @@
     "webhooks": "Webhooks",
     "warehouses": "Magazijnen",
     "workOrders": "Werkorders",
+    "reservations": "Reserveringen",
     "account": "Account",
     "profile": "Profiel",
     "logOut": "Uitloggen",
@@ -439,6 +441,10 @@
       "variantCount": "{count} varianten",
       "variantStockTracked": "Voorraad wordt per variant bijgehouden. Totale variantvoorraad",
       "stockInfo": "Voorraadinformatie",
+      "reservedStock": "Gereserveerd",
+      "availableStock": "Beschikbaar",
+      "reservationsHint": "Gereserveerde eenheden zijn toegezegd en kunnen door niemand anders worden verkocht, verplaatst of afgeboekt.",
+      "viewReservations": "Reserveringen bekijken",
       "currentStock": "Huidige voorraad",
       "minStock": "Minimale voorraad",
       "maxStock": "Maximale voorraad",
@@ -473,7 +479,10 @@
         "updateQuantityFailed": "Aantal bijwerken mislukt",
         "confirmRemove": "Dit component uit de stuklijst verwijderen?",
         "removeFailed": "Component verwijderen mislukt"
-      }
+      },
+      "prepareTransfer": "Voorraad voorbereiden",
+      "shipTransfer": "Transfer verzenden",
+      "receiveTransfer": "Transfer ontvangen"
     },
     "quickAddCategory": {
       "title": "Snel categorie toevoegen",
@@ -1413,7 +1422,8 @@
         "processing": "In verwerking",
         "completed": "Voltooid",
         "failed": "Mislukt",
-        "expired": "Verlopen"
+        "expired": "Verlopen",
+        "prepared": "Voorbereid"
       }
     }
   },
@@ -2547,6 +2557,8 @@
       "sku": "SKU",
       "price": "Prijs",
       "stock": "Voorraad",
+      "reserved": "Gereserveerd",
+      "available": "Beschikbaar",
       "noVariants": "Geen varianten gevonden",
       "totalVariants": "Totaal varianten",
       "totalStock": "Totale voorraad"
@@ -3740,6 +3752,42 @@
     "licensedUnder": "Gelicentieerd onder de {license}",
     "sourceCode": "Broncode"
   },
+  "reservations": {
+    "title": "Voorraadreserveringen",
+    "subtitle": "Eenheden op voorraad die zijn toegezegd aan een order, een plug-in of een boeking, en dus niet beschikbaar zijn om te verkopen of te verplaatsen.",
+    "searchPlaceholder": "Zoeken op referentie",
+    "owner": "Eigenaar",
+    "allOwners": "Alle eigenaars",
+    "filter": "Filteren",
+    "product": "Product",
+    "quantity": "Gereserveerd",
+    "heldIn": "Gereserveerd in",
+    "productTotal": "Producttotaal",
+    "serial": "Serienummer {number}",
+    "batch": "Partij {number}",
+    "reference": "Referentie",
+    "expires": "Verloopt",
+    "noExpiry": "Verloopt niet",
+    "release": "Vrijgeven",
+    "confirmRelease": "Reservering {reference} van {owner} vrijgeven? De eenheden worden weer beschikbaar.",
+    "empty": "Geen overeenkomende reserveringen.",
+    "forProduct": "Reserveringen voor {product}",
+    "allProducts": "Alle producten",
+    "showing": "{from} tot {to} van {total}",
+    "statuses": {
+      "active": "Actief",
+      "expired": "Verlopen",
+      "consumed": "Verbruikt",
+      "released": "Vrijgegeven",
+      "all": "Alle"
+    },
+    "reasons": {
+      "released": "Vrijgegeven door eigenaar",
+      "admin": "Vrijgegeven door een beheerder",
+      "expired": "Verlopen",
+      "uninstalled": "Plug-in verwijderd"
+    }
+  },
   "stockTransfers": {
     "title": "Voorraadoverboekingen",
     "subtitle": "Verplaats voorraad tussen locaties.",
@@ -3799,5 +3847,9 @@
     "amount": "Belastingbedrag",
     "rate": "Tarief",
     "rateHint": "Optioneel: voer een belastingtarief in om het bedrag te berekenen op basis van het subtotaal na kortingen. Alleen het bedrag wordt opgeslagen."
+  },
+  "warehouseStock": {
+    "title": "Voorraad per magazijn",
+    "includeZero": "Nulstanden tonen"
   }
 }

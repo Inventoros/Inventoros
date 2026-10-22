@@ -20,17 +20,20 @@ const { t } = useI18n();
 const props = defineProps({
     pluginComponents: Object,
     transfer: Object,
+    canDispatch: { type: Boolean, default: true },
+    canReceive: { type: Boolean, default: true },
     approval: { type: Object, default: () => ({}) },
 });
 
 // A transfer held for approval (or rejected) cannot ship or complete.
-const awaitingApproval = ['pending', 'rejected'].includes(props.transfer.approval_status);
+const awaitingApproval = computed(() => ['pending', 'rejected'].includes(props.transfer.approval_status));
 
 const processing = ref(false);
 
 const statusVariant = (status) =>
     ({
         pending: 'warning',
+        prepared: 'info',
         in_transit: 'info',
         completed: 'success',
         cancelled: 'danger',
@@ -39,6 +42,7 @@ const statusVariant = (status) =>
 const getStatusLabel = (status) => {
     const labels = {
         'pending': t('stockTransfers.statuses.pending'),
+        'prepared': t('stockTransfers.statuses.prepared'),
         'in_transit': t('stockTransfers.statuses.in_transit'),
         'completed': t('stockTransfers.statuses.completed'),
         'cancelled': t('stockTransfers.statuses.cancelled'),
@@ -48,8 +52,20 @@ const getStatusLabel = (status) => {
 
 const formatDate = (dateStr) => displayDateTime(dateStr);
 
-const canComplete = ['pending', 'in_transit'].includes(props.transfer.status) && !awaitingApproval;
-const canCancel = ['pending', 'in_transit'].includes(props.transfer.status);
+const canPrepare = computed(() => props.canDispatch && props.transfer.status === 'pending' && !awaitingApproval.value);
+const canShip = computed(() => props.canDispatch && props.transfer.status === 'prepared' && !awaitingApproval.value);
+const canComplete = computed(() => !awaitingApproval.value && (
+    (props.transfer.status === 'in_transit' && props.canReceive)
+    || (!props.transfer.is_inter_warehouse && ['pending', 'prepared'].includes(props.transfer.status))
+));
+const canCancel = computed(() => ['pending', 'prepared', 'in_transit'].includes(props.transfer.status) && !props.transfer.stock_dispatched_at);
+const shipping = ref({ shipping_method: props.transfer.shipping_method || '', tracking_number: props.transfer.tracking_number || '' });
+const prepareTransfer = () => transitionTransfer('prepare');
+const shipTransfer = () => transitionTransfer('ship', shipping.value);
+const transitionTransfer = (action, data = {}) => {
+    processing.value = true;
+    router.post(route(`stock-transfers.${action}`, props.transfer.id), data, { onFinish: () => { processing.value = false; } });
+};
 
 const completeTransfer = () => {
     if (!confirm(t('stockTransfers.show.confirmComplete'))) return;
@@ -90,12 +106,17 @@ const allLinesMatch = computed(() =>
     && props.transfer.items.every(item => scannedFor(item) === item.quantity)
 );
 
-const onVerifyProduct = (product) => {
+const onVerifyProduct = (product, variant = null) => {
     showScanner.value = false;
     const items = props.transfer.items || [];
-    // Prefer a line that still needs units, so duplicate lines fill in order.
-    const item = items.find(i => i.product_id === product.id && scannedFor(i) < i.quantity)
-        || items.find(i => i.product_id === product.id);
+    if (!variant && items.some(item => item.product_id === product.id && item.product_variant_id)) {
+        scanMessage.value = t('orders.create.chooseVariant');
+        scanMessageTone.value = 'warning';
+        return;
+    }
+    // Match the exact variant, filling duplicate lines in order.
+    const item = items.find(i => i.product_id === product.id && (i.product_variant_id || null) === (variant?.id || null) && scannedFor(i) < i.quantity)
+        || items.find(i => i.product_id === product.id && (i.product_variant_id || null) === (variant?.id || null));
     if (!item) {
         scanMessage.value = t('scanning.notOnTransfer', { name: product.name });
         scanMessageTone.value = 'warning';
@@ -117,7 +138,7 @@ const onVerifyCode = async (code) => {
             scanMessageTone.value = 'danger';
             return;
         }
-        onVerifyProduct(found.product);
+        onVerifyProduct(found.product, found.variant);
     } catch (error) {
         scanMessage.value = t('scanning.lookupFailed');
         scanMessageTone.value = 'danger';
@@ -129,7 +150,7 @@ const resetVerification = () => {
     scanMessage.value = '';
 };
 
-useBarcodeWedge(onVerifyCode, { enabled: () => verifying.value && canComplete && !showScanner.value });
+useBarcodeWedge(onVerifyCode, { enabled: () => verifying.value && canComplete.value && !showScanner.value });
 
 const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-text-secondary';
 </script>
@@ -341,10 +362,16 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-t
             </Card>
 
             <!-- Actions -->
-            <Card v-if="canComplete || canCancel" :padded="false">
+            <Card v-if="canPrepare || canShip || canComplete || canCancel" :padded="false">
                 <div class="px-5 pt-5"><h3 class="text-sm font-semibold text-text-primary">{{ t('common.actions') }}</h3></div>
                 <div class="p-5">
+                    <div v-if="canShip" class="mb-4 grid gap-3 sm:grid-cols-2">
+                        <label class="text-sm">{{ t('shipping.service') }}<input v-model="shipping.shipping_method" class="mt-1 block w-full rounded-md border border-border-subtle bg-surface-canvas px-3 py-2 ds-focus-ring" /></label>
+                        <label class="text-sm">{{ t('shipping.trackingNumber') }}<input v-model="shipping.tracking_number" class="mt-1 block w-full rounded-md border border-border-subtle bg-surface-canvas px-3 py-2 ds-focus-ring" /></label>
+                    </div>
                     <div class="flex flex-wrap gap-3">
+                        <Button v-if="canPrepare" :loading="processing" :disabled="processing" @click="prepareTransfer">{{ t('stockTransfers.show.prepareTransfer') }}</Button>
+                        <Button v-if="canShip" :loading="processing" :disabled="processing" @click="shipTransfer">{{ t('stockTransfers.show.shipTransfer') }}</Button>
                         <Button
                             v-if="canComplete"
                             variant="default"
@@ -353,7 +380,7 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-t
                             @click="completeTransfer"
                         >
                             <CheckCircle2 :size="16" />
-                            {{ processing ? t('stockTransfers.show.processing') : t('stockTransfers.show.completeTransfer') }}
+                            {{ processing ? t('stockTransfers.show.processing') : transfer.stock_dispatched_at ? t('stockTransfers.show.receiveTransfer') : t('stockTransfers.show.completeTransfer') }}
                         </Button>
                         <Button
                             v-if="canCancel"
@@ -366,7 +393,7 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-t
                             {{ processing ? t('stockTransfers.show.processing') : t('stockTransfers.show.cancelTransfer') }}
                         </Button>
                     </div>
-                    <p v-if="canComplete" class="mt-3 text-xs text-text-tertiary">
+                    <p v-if="canComplete && !transfer.stock_dispatched_at" class="mt-3 text-xs text-text-tertiary">
                         {{ t('stockTransfers.show.completeHint') }}
                     </p>
                 </div>

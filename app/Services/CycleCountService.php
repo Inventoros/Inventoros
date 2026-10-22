@@ -177,7 +177,11 @@ final class CycleCountService
                 ->orWhereIn('products.id', ProductLocationStock::withoutGlobalScope(OrganizationScope::class)
                     ->select('product_id')
                     ->whereIn('location_id', $locationIds)
-                    ->where('quantity', '>', 0));
+                    ->where('quantity', '>', 0))
+                ->orWhereIn('products.id', \Illuminate\Support\Facades\DB::table('product_variants as cv')
+                    ->join('variant_location_stocks as cb', 'cb.product_variant_id', '=', 'cv.id')
+                    ->whereIn('cb.location_id', $locationIds)->where('cb.quantity', '>', 0)
+                    ->where('cv.is_active', true)->whereNull('cv.deleted_at')->select('cv.product_id'));
         });
     }
 
@@ -236,6 +240,7 @@ final class CycleCountService
             'audit_type' => 'cycle',
             'cycle_count_schedule_id' => $schedule->id,
             'assigned_to' => $schedule->assigned_to,
+            'warehouse_id' => $schedule->scope_type === 'warehouse' ? $schedule->scope_id : null,
             'warehouse_location_id' => $schedule->scope_type === 'location' ? $schedule->scope_id : null,
             'created_by' => $creator->id,
         ]);

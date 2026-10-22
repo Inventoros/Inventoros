@@ -180,7 +180,7 @@ final class StockAdjustmentVariantTest extends TestCase
         $this->assertSame(40, (int) $this->shirt->fresh()->stock);
     }
 
-    public function test_a_location_cannot_be_combined_with_a_variant(): void
+    public function test_variant_adjustment_can_target_a_location(): void
     {
         $location = ProductLocation::create([
             'organization_id' => $this->org->id, 'name' => 'Main', 'code' => 'MAIN',
@@ -191,10 +191,12 @@ final class StockAdjustmentVariantTest extends TestCase
                 'product_id' => $this->shirt->id,
                 'product_variant_id' => $this->small->id,
                 'location_id' => $location->id,
+                'adjustment_quantity' => 3,
             ]))
-            ->assertSessionHasErrors('location_id');
+            ->assertSessionHasNoErrors();
 
-        $this->assertSame(10, (int) $this->small->fresh()->stock);
+        $this->assertSame(13, (int) $this->small->fresh()->stock);
+        $this->assertDatabaseHas('variant_location_stocks', ['product_variant_id' => $this->small->id, 'location_id' => $location->id, 'quantity' => 3]);
     }
 
     public function test_a_plain_product_adjustment_is_unchanged(): void

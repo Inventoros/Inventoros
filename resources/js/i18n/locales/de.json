@@ -135,6 +135,7 @@
     }
   },
   "common": {
+    "pagination": "Seitennavigation",
     "save": "Speichern",
     "saveChanges": "Änderungen speichern",
     "saving": "Wird gespeichert...",
@@ -241,6 +242,7 @@
     "webhooks": "Webhooks",
     "warehouses": "Lager",
     "workOrders": "Arbeitsaufträge",
+    "reservations": "Reservierungen",
     "account": "Konto",
     "profile": "Profil",
     "logOut": "Abmelden",
@@ -439,6 +441,10 @@
       "variantCount": "{count} Varianten",
       "variantStockTracked": "Der Bestand wird pro Variante verfolgt. Gesamtbestand der Varianten",
       "stockInfo": "Bestandsinformationen",
+      "reservedStock": "Reserviert",
+      "availableStock": "Verfügbar",
+      "reservationsHint": "Reservierte Einheiten sind zugesagt und können von niemand anderem verkauft, umgelagert oder ausgebucht werden.",
+      "viewReservations": "Reservierungen anzeigen",
       "currentStock": "Aktueller Bestand",
       "minStock": "Mindestbestand",
       "maxStock": "Höchstbestand",
@@ -473,7 +479,10 @@
         "updateQuantityFailed": "Menge konnte nicht aktualisiert werden",
         "confirmRemove": "Diese Komponente aus der Stückliste entfernen?",
         "removeFailed": "Komponente konnte nicht entfernt werden"
-      }
+      },
+      "prepareTransfer": "Bestand reservieren",
+      "shipTransfer": "Transfer versenden",
+      "receiveTransfer": "Transfer empfangen"
     },
     "quickAddCategory": {
       "title": "Kategorie schnell hinzufügen",
@@ -1413,7 +1422,8 @@
         "processing": "In Bearbeitung",
         "completed": "Abgeschlossen",
         "failed": "Fehlgeschlagen",
-        "expired": "Abgelaufen"
+        "expired": "Abgelaufen",
+        "prepared": "Vorbereitet"
       }
     }
   },
@@ -2547,6 +2557,8 @@
       "sku": "SKU",
       "price": "Preis",
       "stock": "Bestand",
+      "reserved": "Reserviert",
+      "available": "Verfügbar",
       "noVariants": "Keine Varianten gefunden",
       "totalVariants": "Varianten gesamt",
       "totalStock": "Gesamtbestand"
@@ -3740,6 +3752,42 @@
     "licensedUnder": "Lizenziert unter der {license}",
     "sourceCode": "Quellcode"
   },
+  "reservations": {
+    "title": "Bestandsreservierungen",
+    "subtitle": "Vorhandene Einheiten, die einem Auftrag, einem Plugin oder einer Buchung zugesagt sind und daher nicht verkauft oder umgelagert werden können.",
+    "searchPlaceholder": "Nach Referenz suchen",
+    "owner": "Inhaber",
+    "allOwners": "Alle Inhaber",
+    "filter": "Filtern",
+    "product": "Produkt",
+    "quantity": "Reserviert",
+    "heldIn": "Reserviert in",
+    "productTotal": "Produktbestand gesamt",
+    "serial": "Seriennummer {number}",
+    "batch": "Charge {number}",
+    "reference": "Referenz",
+    "expires": "Läuft ab",
+    "noExpiry": "Kein Ablauf",
+    "release": "Freigeben",
+    "confirmRelease": "Reservierung {reference} von {owner} freigeben? Die Einheiten werden wieder verfügbar.",
+    "empty": "Keine passenden Reservierungen.",
+    "forProduct": "Reservierungen für {product}",
+    "allProducts": "Alle Produkte",
+    "showing": "{from} bis {to} von {total}",
+    "statuses": {
+      "active": "Aktiv",
+      "expired": "Abgelaufen",
+      "consumed": "Verbraucht",
+      "released": "Freigegeben",
+      "all": "Alle"
+    },
+    "reasons": {
+      "released": "Vom Inhaber freigegeben",
+      "admin": "Von einem Admin freigegeben",
+      "expired": "Abgelaufen",
+      "uninstalled": "Plugin deinstalliert"
+    }
+  },
   "stockTransfers": {
     "title": "Umlagerungen",
     "subtitle": "Bestand zwischen Lagerorten umlagern.",
@@ -3799,5 +3847,9 @@
     "amount": "Steuerbetrag",
     "rate": "Satz",
     "rateHint": "Optional: Geben Sie einen Steuersatz ein, um den Betrag aus der Zwischensumme nach Rabatten zu berechnen. Gespeichert wird nur der Betrag."
+  },
+  "warehouseStock": {
+    "title": "Bestand nach Lager",
+    "includeZero": "Nullbestände anzeigen"
   }
 }

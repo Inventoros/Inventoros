@@ -30,6 +30,7 @@ final class StoreStockTransferRequest extends FormRequest
             'estimated_arrival' => 'nullable|date',
             'items' => 'required|array|min:1',
             'items.*.product_id' => 'required|exists:products,id',
+            'items.*.product_variant_id' => ['nullable', 'integer', 'exists:product_variants,id'],
             'items.*.quantity' => 'required|integer|min:1',
             'items.*.notes' => 'nullable|string|max:500',
         ];

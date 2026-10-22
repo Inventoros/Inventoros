@@ -31,6 +31,7 @@ final class StoreStockTransferRequest extends FormRequest
             'estimated_arrival' => ['nullable', 'date'],
             'items' => ['required', 'array', 'min:1', 'max:500'],
             'items.*.product_id' => ['required', 'integer', Rule::exists('products', 'id')->where('organization_id', $organizationId)->whereNull('deleted_at')],
+            'items.*.product_variant_id' => ['nullable', 'integer', 'exists:product_variants,id'],
             'items.*.quantity' => ['required', 'integer', 'min:1'],
             'items.*.notes' => ['nullable', 'string', 'max:500'],
         ];

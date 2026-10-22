@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Models\Inventory;
 
 use App\Models\Auth\Organization;
+use App\Models\Inventory\Concerns\HasStockReservations;
 use App\Traits\LogsActivity;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -48,7 +49,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  */
 class ProductVariant extends Model
 {
-    use HasFactory, SoftDeletes, LogsActivity;
+    use HasFactory, HasStockReservations, SoftDeletes, LogsActivity;
 
     /**
      * The attributes that are mass assignable.
@@ -116,6 +117,11 @@ class ProductVariant extends Model
     public function organization(): BelongsTo
     {
         return $this->belongsTo(Organization::class);
+    }
+
+    public function locationStocks(): HasMany
+    {
+        return $this->hasMany(VariantLocationStock::class, 'product_variant_id');
     }
 
     /**

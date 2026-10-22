@@ -8,6 +8,7 @@ use App\Exceptions\InsufficientStockException;
 use App\Exceptions\InvalidStateException;
 use App\Models\Inventory\Product;
 use App\Models\Inventory\ProductLocation;
+use App\Models\Inventory\ProductVariant;
 use App\Models\Inventory\StockAdjustment;
 use App\Models\Inventory\StockTransfer;
 use App\Models\Inventory\StockTransferItem;
@@ -84,11 +85,19 @@ final class StockTransferService
 
             foreach ($data['items'] as $item) {
                 // Verify product belongs to organization
-                Product::where('id', $item['product_id'])
+                $product = Product::where('id', $item['product_id'])
                     ->forOrganization($organizationId)
                     ->firstOrFail();
 
+                $variantId = ! empty($item['product_variant_id']) ? (int) $item['product_variant_id'] : null;
+                if ($variantId !== null) {
+                    ProductVariant::where('organization_id', $organizationId)->where('product_id', $product->id)->findOrFail($variantId);
+                } elseif ($product->has_variants && $product->variants()->exists()) {
+                    throw \Illuminate\Validation\ValidationException::withMessages(['items' => 'Choose a variant for each product sold by variant.']);
+                }
+
                 StockTransferItem::create([
+                    'product_variant_id' => $variantId,
                     'stock_transfer_id' => $transfer->id,
                     'product_id' => $item['product_id'],
                     'quantity' => $item['quantity'],
@@ -105,6 +114,27 @@ final class StockTransferService
         return $transfer;
     }
 
+    /** Reserve source-bin stock without moving the on-hand total. */
+    public function prepare(StockTransfer $transfer, User $actor): StockTransfer
+    {
+        $this->authorizeTransfer($actor, $transfer);
+        return DB::transaction(function () use ($transfer, $actor): StockTransfer {
+            $locked = StockTransfer::whereKey($transfer->id)->lockForUpdate()->firstOrFail();
+            $this->warehouseAccess->authorizeLocation($actor, $locked->from_location_id);
+            if (! in_array($locked->status, ['pending', 'prepared'], true)) {
+                throw new InvalidStateException('Only pending or prepared transfers can be prepared.', 'invalid_status');
+            }
+            $this->approvals->assertTransferMayProceed($locked);
+            $holds = app(StockReservationService::class);
+            foreach ($this->stockTargets($locked) as $line) {
+                $holds->reserve($line['product'], $line['variant'], $line['quantity'], 'core', $this->holdReference($locked), $locked->from_location_id);
+            }
+            $locked->update(['status' => 'prepared', 'prepared_at' => $locked->prepared_at ?? now()]);
+            $transfer->setRawAttributes($locked->getAttributes(), true);
+            return $transfer;
+        });
+    }
+
     /**
      * Mark a pending transfer as shipped (in transit).
      *
@@ -118,8 +148,15 @@ final class StockTransferService
             $locked = StockTransfer::whereKey($transfer->getKey())->lockForUpdate()->firstOrFail();
             $this->authorizeTransfer($actor, $locked);
 
-            if ($locked->status !== 'pending') {
-                throw new InvalidStateException('Only pending transfers can be marked as in transit.', 'invalid_status');
+            if (! in_array($locked->status, ['pending', 'prepared'], true)) {
+                throw new InvalidStateException('Only pending or prepared transfers can be shipped.', 'invalid_status');
+            }
+            $this->warehouseAccess->authorizeLocation($actor, $locked->from_location_id);
+            $this->prepare($locked, $actor);
+            $lines = $this->stockTargets($locked);
+            app(StockReservationService::class)->consume('core', $this->holdReference($locked), $locked, $locked->organization_id);
+            foreach ($lines as $line) {
+                $this->adjustLine($locked, $line, -$line['quantity'], 'transfer_shipped', $locked->from_location_id, $actor);
             }
 
             // Serialize with completion and approval decisions. A stale ship
@@ -129,6 +166,7 @@ final class StockTransferService
             $updateData = [
                 'status' => 'in_transit',
                 'shipped_at' => now(),
+                'stock_dispatched_at' => now(),
             ];
 
             foreach (['shipping_method', 'tracking_number', 'estimated_arrival'] as $field) {
@@ -152,7 +190,7 @@ final class StockTransferService
     {
         $this->authorizeTransfer($actor, $stockTransfer);
 
-        if (! in_array($stockTransfer->status, ['pending', 'in_transit'], true)) {
+        if (! in_array($stockTransfer->status, ['pending', 'prepared', 'in_transit'], true)) {
             throw new InvalidStateException('Only pending or in-transit transfers can be completed.', 'invalid_status');
         }
 
@@ -165,7 +203,7 @@ final class StockTransferService
             // moving the goods twice.
             $locked = StockTransfer::whereKey($stockTransfer->getKey())->lockForUpdate()->firstOrFail();
 
-            if (! in_array($locked->status, ['pending', 'in_transit'], true)) {
+            if (! in_array($locked->status, ['pending', 'prepared', 'in_transit'], true)) {
                 throw new InvalidStateException('Only pending or in-transit transfers can be completed.', 'invalid_status');
             }
 
@@ -173,7 +211,23 @@ final class StockTransferService
             // hold (or rejection) that landed since must still stop the move.
             $this->approvals->assertTransferMayProceed($locked);
 
-            $stockTransfer->load('items', 'fromLocation', 'toLocation');
+            if ($locked->stock_dispatched_at !== null) {
+                $this->warehouseAccess->authorizeLocation($actor, $locked->to_location_id);
+                foreach ($this->stockTargets($locked, true) as $line) {
+                    $this->adjustLine($locked, $line, $line['quantity'], 'transfer_received', $locked->to_location_id, $actor);
+                    if ($line['variant'] === null) {
+                        $line['product']->update(['location_id' => $locked->to_location_id]);
+                    }
+                }
+                $locked->update(['status' => 'completed', 'completed_at' => now(), 'completed_by' => $actor->id]);
+                $stockTransfer->setRawAttributes($locked->getAttributes(), true);
+                return;
+            }
+            $this->stockTargets($locked);
+            if ($locked->status === 'prepared') {
+                app(StockReservationService::class)->consume('core', $this->holdReference($locked), $locked, $locked->organization_id);
+            }
+            $stockTransfer->load('items.variant', 'fromLocation', 'toLocation');
 
             // Lock every product row up front in ascending id order (products
             // before bins, the convention every stock path follows), so two
@@ -193,7 +247,8 @@ final class StockTransferService
                 $product = $products->get($item->product_id)
                     ?? throw (new ModelNotFoundException)->setModel(Product::class, [$item->product_id]);
 
-                if ($product->stock < $item->quantity) {
+                $target = $item->product_variant_id !== null ? ProductVariant::where('product_id', $product->id)->whereKey($item->product_variant_id)->lockForUpdate()->firstOrFail() : $product;
+                if ($target->stock < $item->quantity) {
                     throw new InsufficientStockException(
                         "Insufficient stock for {$product->name}: have {$product->stock}, transfer requires {$item->quantity}."
                     );
@@ -206,7 +261,7 @@ final class StockTransferService
                 // bin can no longer be over-drawn by a later transfer. Guards
                 // the source bin (throws if short).
                 $this->locationStock->move(
-                    $product,
+                    $target,
                     $stockTransfer->from_location_id,
                     $stockTransfer->to_location_id,
                     $item->quantity,
@@ -215,7 +270,9 @@ final class StockTransferService
                 // Repoint the product's primary location to the destination so
                 // single-location views keep matching where the bulk of the
                 // goods moved.
-                $product->update(['location_id' => $stockTransfer->to_location_id]);
+                if ($item->product_variant_id === null) {
+                    $product->update(['location_id' => $stockTransfer->to_location_id]);
+                }
 
                 // Record one audit row per item. products.stock does not change
                 // on a transfer (the move is between locations, tracked in
@@ -224,10 +281,11 @@ final class StockTransferService
                 StockAdjustment::create([
                     'organization_id' => $stockTransfer->organization_id,
                     'product_id' => $product->id,
+                    'product_variant_id' => $item->product_variant_id,
                     'user_id' => $actor->id,
                     'type' => 'transfer',
-                    'quantity_before' => $product->stock,
-                    'quantity_after' => $product->stock,
+                    'quantity_before' => $target->stock,
+                    'quantity_after' => $target->stock,
                     'adjustment_quantity' => 0,
                     'reason' => "Transfer {$item->quantity} from {$stockTransfer->fromLocation->name} to {$stockTransfer->toLocation->name}",
                     'notes' => "Transfer #{$stockTransfer->transfer_number}",
@@ -257,10 +315,14 @@ final class StockTransferService
             $locked = StockTransfer::whereKey($transfer->getKey())->lockForUpdate()->firstOrFail();
             $this->authorizeTransfer($actor, $locked);
 
-            if (! in_array($locked->status, ['pending', 'in_transit'], true)) {
+            if (! in_array($locked->status, ['pending', 'prepared', 'in_transit'], true)) {
                 throw new InvalidStateException('Only pending or in-transit transfers can be cancelled.', 'invalid_status');
             }
 
+            if ($locked->stock_dispatched_at !== null) {
+                throw new InvalidStateException('A shipped transfer must be received. Use a reverse transfer to return its goods.', 'already_shipped');
+            }
+            app(StockReservationService::class)->release('core', $this->holdReference($locked), $locked->organization_id);
             $locked->update(['status' => 'cancelled']);
             $transfer->setRawAttributes($locked->getAttributes(), true);
 
@@ -275,6 +337,50 @@ final class StockTransferService
      */
     public function authorizeTransfer(User $actor, StockTransfer $transfer): void
     {
+        if ((int) $actor->organization_id !== (int) $transfer->organization_id) {
+            throw new AuthorizationException('This transfer belongs to another organization.');
+        }
         $this->warehouseAccess->authorizeAnyLocation($actor, [$transfer->from_location_id, $transfer->to_location_id]);
     }
+    private function holdReference(StockTransfer $transfer): string
+    {
+        return 'stock-transfer:'.$transfer->id;
+    }
+
+    /** @return list<array{product: Product, variant: ?ProductVariant, quantity: int}> */
+    private function stockTargets(StockTransfer $transfer, bool $allowArchived = false): array
+    {
+        $transfer->load('items');
+        $products = Product::query()->when($allowArchived, fn ($q) => $q->withTrashed())
+            ->where('organization_id', $transfer->organization_id)->whereIn('id', $transfer->items->pluck('product_id')->unique()->sort()->values()->all())
+            ->orderBy('id')->lockForUpdate()->get()->keyBy('id');
+        $variants = ProductVariant::query()->when($allowArchived, fn ($q) => $q->withTrashed())
+            ->where('organization_id', $transfer->organization_id)->whereIn('id', $transfer->items->pluck('product_variant_id')->filter()->unique()->sort()->values()->all())
+            ->orderBy('id')->lockForUpdate()->get()->keyBy('id');
+        $targets = [];
+        foreach ($transfer->items as $item) {
+            $product = $products->get($item->product_id) ?? throw (new ModelNotFoundException)->setModel(Product::class, [$item->product_id]);
+            $variant = $item->product_variant_id !== null ? $variants->get($item->product_variant_id) : null;
+            if ($item->product_variant_id !== null && ($variant === null || (int) $variant->product_id !== (int) $product->id)) {
+                throw new InvalidStateException('A transfer variant no longer matches its product.', 'invalid_variant');
+            }
+            if ($variant === null && $product->has_variants && $product->variants()->exists()) {
+                throw new InvalidStateException('Choose a variant for each product sold by variant.', 'variant_required');
+            }
+            $key = $product->id.':'.($variant?->id ?? 0);
+            $targets[$key] ??= ['product' => $product, 'variant' => $variant, 'quantity' => 0];
+            $targets[$key]['quantity'] += (int) $item->quantity;
+        }
+        return array_values($targets);
+    }
+
+    private function adjustLine(StockTransfer $transfer, array $line, int $quantity, string $type, int $locationId, User $actor): void
+    {
+        if ($line['variant'] !== null) {
+            StockAdjustment::adjustVariant($line['variant'], $quantity, $type, 'Transfer '.$transfer->transfer_number, reference: $transfer, allowNegative: false, actor: $actor, locationId: $locationId);
+        } else {
+            StockAdjustment::adjust($line['product'], $quantity, $type, 'Transfer '.$transfer->transfer_number, reference: $transfer, allowNegative: false, actor: $actor, locationId: $locationId);
+        }
+    }
+
 }

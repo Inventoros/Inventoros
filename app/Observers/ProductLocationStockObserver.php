@@ -6,6 +6,7 @@ namespace App\Observers;
 
 use App\Models\Inventory\ProductLocation;
 use App\Models\Inventory\ProductLocationStock;
+use App\Models\Inventory\VariantLocationStock;
 use App\Models\Inventory\WarehouseReorderPoint;
 use App\Services\Hooks\DomainHooks;
 use App\Services\NotificationService;
@@ -25,13 +26,13 @@ class ProductLocationStockObserver
         private readonly DomainHooks $hooks,
     ) {}
 
-    public function created(ProductLocationStock $bin): void
+    public function created(ProductLocationStock|VariantLocationStock $bin): void
     {
         $this->recordForStockChanged($bin, 0);
         $this->check($bin, 0);
     }
 
-    public function updated(ProductLocationStock $bin): void
+    public function updated(ProductLocationStock|VariantLocationStock $bin): void
     {
         if (! $bin->wasChanged('quantity')) {
             return;
@@ -41,9 +42,9 @@ class ProductLocationStockObserver
         $this->check($bin, (int) $bin->getOriginal('quantity'));
     }
 
-    public function deleted(ProductLocationStock $bin): void
+    public function deleted(ProductLocationStock|VariantLocationStock $bin): void
     {
-        $this->hooks->locationStockChanged($bin, (int) $bin->product_id, (int) $bin->location_id, (int) $bin->getOriginal('quantity'), 0);
+        $this->hooks->locationStockChanged($bin, $this->productId($bin), (int) $bin->location_id, (int) $bin->getOriginal('quantity'), 0, $this->variantId($bin));
     }
 
     /**
@@ -51,16 +52,20 @@ class ProductLocationStockObserver
      * `locations`), so a move between two bins, which leaves the total
      * unchanged, is still announced.
      */
-    private function recordForStockChanged(ProductLocationStock $bin, int $before): void
+    private function recordForStockChanged(ProductLocationStock|VariantLocationStock $bin, int $before): void
     {
         if ($before !== (int) $bin->quantity) {
-            $this->hooks->locationStockChanged($bin, (int) $bin->product_id, (int) $bin->location_id, $before, (int) $bin->quantity);
+            $this->hooks->locationStockChanged($bin, $this->productId($bin), (int) $bin->location_id, $before, (int) $bin->quantity, $this->variantId($bin));
         }
     }
 
-    private function check(ProductLocationStock $bin, int $before): void
+    private function check(ProductLocationStock|VariantLocationStock $bin, int $before): void
     {
         $delta = (int) $bin->quantity - $before;
+
+        if ($bin instanceof VariantLocationStock && ! $bin->variant?->is_active) {
+            return;
+        }
 
         // Only a falling bin can cross into low stock.
         if ($delta >= 0) {
@@ -75,7 +80,7 @@ class ProductLocationStockObserver
 
         $row = WarehouseReorderPoint::withoutGlobalScopes()
             ->with(['product' => fn ($q) => $q->withoutGlobalScopes(), 'warehouse' => fn ($q) => $q->withoutGlobalScopes()])
-            ->where('product_id', $bin->product_id)
+            ->where('product_id', $this->productId($bin))
             ->where('warehouse_id', $warehouseId)
             ->first();
 
@@ -89,7 +94,7 @@ class ProductLocationStockObserver
             return;
         }
 
-        $after = $this->levels->onHandInWarehouse($bin->product_id, (int) $warehouseId);
+        $after = $this->levels->onHandInWarehouse($this->productId($bin), (int) $warehouseId);
         $previous = $after - $delta;
 
         if ($previous > $minimum && $after <= $minimum) {
@@ -102,4 +107,14 @@ class ProductLocationStockObserver
             });
         }
     }
+    private function productId(ProductLocationStock|VariantLocationStock $bin): int
+    {
+        return (int) ($bin instanceof VariantLocationStock ? $bin->variant->product_id : $bin->product_id);
+    }
+
+    private function variantId(ProductLocationStock|VariantLocationStock $bin): ?int
+    {
+        return $bin instanceof VariantLocationStock ? (int) $bin->product_variant_id : null;
+    }
+
 }

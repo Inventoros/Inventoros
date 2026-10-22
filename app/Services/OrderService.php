@@ -95,6 +95,15 @@ final class OrderService
      *                          historical orders (and on request), which are
      *                          records of past sales, not new ones.
      *
+     * Availability is checked against available stock: on hand less the
+     * active stock reservations (StockReservationService). An order that
+     * fulfils a reservation passes `reservation_owner` and
+     * `reservation_reference` in $data: it is checked against available plus
+     * that reservation's holds, draws the held bins, serials and batch units,
+     * and consumes the holds in the same transaction (exactly once; a
+     * reservation that is no longer active is refused). Ignored when
+     * $adjustStock is false.
+     *
      * @throws \Exception When a product is missing or stock is insufficient.
      * @throws QueryException On unrecoverable DB errors.
      *
@@ -111,8 +120,10 @@ final class OrderService
         $this->assertCreatableWhileAwaitingApproval($data);
         // Orders are in the organization's currency unless the caller names one.
         $data['currency'] = $this->currencyCode($data['currency'] ?? null, (int) $creator->organization_id);
+        [$reservationOwner, $reservationReference] = $this->reservationFrom($data);
+        unset($data['reservation_owner'], $data['reservation_reference']);
 
-        $order = SequenceNumberRetry::create(fn () => DB::transaction(function () use ($data, $creator, $adjustStock) {
+        $order = SequenceNumberRetry::create(fn () => DB::transaction(function () use ($data, $creator, $adjustStock, $reservationOwner, $reservationReference) {
             $orgId = $data['organization_id'];
             $data['order_number'] = Order::generateOrderNumber($orgId);
 
@@ -173,17 +184,29 @@ final class OrderService
                     + ['qty' => (int) $item['quantity']];
             }
 
+            // An order fulfilling a reservation consumes its holds first, so
+            // the checks below count it against available plus those holds.
+            // Rolled back with the order if anything below fails.
+            $reservations = app(StockReservationService::class);
+            $claimed = $adjustStock && $reservationOwner !== null
+                ? $reservations->claim((int) $orgId, $reservationOwner, (string) $reservationReference)
+                : null;
+
             // Validate availability across ALL lines first. Lines sharing a
             // target (same product, or same variant) accumulate against one
-            // running balance.
+            // running balance, which starts at the target's available stock
+            // (on hand less active reservations), read under the row lock.
             $running = [];
+            $available = [];
             foreach ($adjustStock ? $lines : [] as $line) {
                 $key = $line['key'];
-                $running[$key] = ($running[$key] ?? (int) $line['target']->stock) - $line['qty'];
+                $available[$key] ??= (int) $line['target']->stock
+                    - $reservations->reservedTotal((int) $line['product']->id, $line['variant']?->id);
+                $running[$key] = ($running[$key] ?? $available[$key]) - $line['qty'];
                 if ($running[$key] < 0) {
                     throw new InsufficientStockException(
                         'Insufficient stock for '.$this->lineLabel($line)
-                        .". Available: {$line['target']->stock}, Requested: {$line['qty']}"
+                        .'. Available: '.max(0, $available[$key]).", Requested: {$line['qty']}"
                     );
                 }
             }
@@ -291,13 +314,8 @@ final class OrderService
             foreach ($adjustStock ? $perTargetQty : [] as $key => $totalQty) {
                 $target = $targets[$key];
 
-                // Draw the sold units out of the product's location bins before
-                // dropping the total, so the per-location breakdown never claims
-                // more than exists. Products only (bins are per-product; variant
-                // stock has no location breakdown).
-                if ($target instanceof Product) {
-                    $locationStock->consume($target, $totalQty, $this->fulfillingWarehouseId($order));
-                }
+                // Each stock target has its own bins, including variants.
+                $locationStock->consume($target, $totalQty, $this->fulfillingWarehouseId($order));
 
                 $target->decrement('stock', $totalQty);
             }
@@ -314,8 +332,12 @@ final class OrderService
                 // A variant line draws on the variant's stock, never the
                 // parent's serials/batches (replaceItems skips them too).
                 if ($product !== null && $orderItem->product_variant_id === null) {
-                    $allocator->allocateForOrderItem($product, (int) $orderItem->quantity, $orderItem);
+                    $allocator->allocateForOrderItem($product, (int) $orderItem->quantity, $orderItem, $claimed);
                 }
+            }
+
+            if ($claimed !== null) {
+                $reservations->recordConsumer($claimed, $order);
             }
 
             return $order;
@@ -823,9 +845,12 @@ final class OrderService
                 ->keyBy('id');
 
         // 3. Resolve each line's target (variant vs product) and validate
-        //    availability across all lines against a running balance.
+        //    availability across all lines against a running balance that
+        //    starts at available stock (on hand less active reservations).
+        $reservations = app(StockReservationService::class);
         $resolved = [];
         $running = [];
+        $available = [];
         foreach (array_values($items) as $index => $item) {
             $product = $products->get($item['product_id']);
             if (! $product) {
@@ -850,10 +875,11 @@ final class OrderService
             }
 
             $qty = (int) $item['quantity'];
-            $running[$key] = ($running[$key] ?? (int) $target->stock) - $qty;
+            $available[$key] ??= (int) $target->stock - $reservations->reservedTotal((int) $product->id, $variant?->id);
+            $running[$key] = ($running[$key] ?? $available[$key]) - $qty;
             if ($commitsStock && $running[$key] < 0) {
                 throw new InsufficientStockException(
-                    "Insufficient stock for {$product->name}. Available: {$target->stock}, requested: {$qty}"
+                    "Insufficient stock for {$product->name}. Available: ".max(0, $available[$key]).", requested: {$qty}"
                 );
             }
 
@@ -907,6 +933,7 @@ final class OrderService
                     $variant, -$qty, 'order_fulfillment',
                     "Order {$order->order_number} edited", null, $order, allowNegative: false,
                     actor: $this->restockActor($order, $actor),
+                    preferWarehouseId: $this->fulfillingWarehouseId($order),
                 );
             } else {
                 // consume() before adjust() so the lazy bin seed reads the
@@ -1360,6 +1387,33 @@ final class OrderService
         }
 
         return [$type->value, $value, $value];
+    }
+
+    /**
+     * The reservation an order fulfils: both `reservation_owner` and
+     * `reservation_reference`, or neither.
+     *
+     * @param  array<string, mixed>  $data
+     * @return array{0: string|null, 1: string|null}
+     *
+     * @throws ValidationException
+     */
+    private function reservationFrom(array $data): array
+    {
+        $owner = trim((string) ($data['reservation_owner'] ?? ''));
+        $reference = trim((string) ($data['reservation_reference'] ?? ''));
+
+        if ($owner === '' && $reference === '') {
+            return [null, null];
+        }
+
+        if ($owner === '' || $reference === '') {
+            throw ValidationException::withMessages([
+                'reservation_reference' => 'An order fulfilling a reservation needs both reservation_owner and reservation_reference.',
+            ]);
+        }
+
+        return [$owner, $reference];
     }
 
     /**

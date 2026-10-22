@@ -201,8 +201,7 @@ class PurchaseOrderItem extends Model
 
         if ($this->variant !== null) {
             // A variant line credits the variant's own stock, through the same
-            // ledger path order fulfilment and restocks use. Variant stock has
-            // no per-location breakdown, so there is no bin to book into.
+            // ledger path order fulfilment and restocks use, including its bins.
             $adjustment = StockAdjustment::adjustVariant(
                 variant: $this->variant,
                 quantity: $quantityToReceive,

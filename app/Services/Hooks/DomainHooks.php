@@ -39,7 +39,7 @@ final class DomainHooks
     /**
      * Accumulated stock changes, keyed like $pending.
      *
-     * @var array<string, array{product_id: int, variant_id: int|null, before: int|null, after: int|null, locations: array<int, array{before: int, after: int}>}>
+     * @var array<string, array{product_id: int, variant_id: int|null, before: int|null, after: int|null, locations: array<int, array{before: int, after: int}>, reserved: array{before: int, after: int}|null}>
      */
     private array $stock = [];
 
@@ -107,14 +107,36 @@ final class DomainHooks
     /**
      * Record a change of a product's quantity at one location bin.
      */
-    public function locationStockChanged(Model $subject, int $productId, int $locationId, int $before, int $after): void
+    public function locationStockChanged(Model $subject, int $productId, int $locationId, int $before, int $after, ?int $variantId = null): void
     {
-        $key = $this->stockKey($productId, null);
+        $key = $this->stockKey($productId, $variantId);
         $new = ! isset($this->stock[$key]);
 
-        $this->stock[$key] ??= $this->emptyStockEntry($productId, null);
+        $this->stock[$key] ??= $this->emptyStockEntry($productId, $variantId);
         $this->stock[$key]['locations'][$locationId] = [
             'before' => $this->stock[$key]['locations'][$locationId]['before'] ?? $before,
+            'after' => $after,
+        ];
+
+        if ($new) {
+            $this->register($key, $subject->getConnection(), fn () => $this->fireStockChanged($key));
+        }
+    }
+
+    /**
+     * Record a change of the units held by stock reservations on a product
+     * total (variant null) or a variant. stock_changed then carries
+     * `reserved` => [before, after], so channel syncs can publish available
+     * stock.
+     */
+    public function reservedChanged(Model $subject, int $productId, ?int $variantId, int $before, int $after): void
+    {
+        $key = $this->stockKey($productId, $variantId);
+        $new = ! isset($this->stock[$key]);
+
+        $this->stock[$key] ??= $this->emptyStockEntry($productId, $variantId);
+        $this->stock[$key]['reserved'] = [
+            'before' => $this->stock[$key]['reserved']['before'] ?? $before,
             'after' => $after,
         ];
 
@@ -129,7 +151,7 @@ final class DomainHooks
     }
 
     /**
-     * @return array{product_id: int, variant_id: int|null, before: int|null, after: int|null, locations: array<int, array{before: int, after: int}>}
+     * @return array{product_id: int, variant_id: int|null, before: int|null, after: int|null, locations: array<int, array{before: int, after: int}>, reserved: array{before: int, after: int}|null}
      */
     private function emptyStockEntry(int $productId, ?int $variantId): array
     {
@@ -139,6 +161,7 @@ final class DomainHooks
             'before' => null,
             'after' => null,
             'locations' => [],
+            'reserved' => null,
         ];
     }
 
@@ -167,8 +190,14 @@ final class DomainHooks
             'locations' => $entry['locations'],
         ];
 
+        // Present only when reservations changed in the transaction.
+        if ($entry['reserved'] !== null) {
+            $change['reserved'] = $entry['reserved'];
+        }
+
         $unchanged = $change['before'] === $change['after']
-            && array_filter($change['locations'], fn (array $bin) => $bin['before'] !== $bin['after']) === [];
+            && array_filter($change['locations'], fn (array $bin) => $bin['before'] !== $bin['after']) === []
+            && ($entry['reserved'] === null || $entry['reserved']['before'] === $entry['reserved']['after']);
 
         if ($unchanged) {
             return;

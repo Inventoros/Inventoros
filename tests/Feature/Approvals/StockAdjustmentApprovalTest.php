@@ -256,7 +256,7 @@ class StockAdjustmentApprovalTest extends TestCase
         $this->assertSame(3, $variant->fresh()->stock);
     }
 
-    public function test_api_rejects_a_variant_of_another_product_or_with_a_location(): void
+    public function test_api_rejects_an_unrelated_variant_and_accepts_a_variant_location(): void
     {
         $variant = $this->makeVariant();
         $other = \App\Models\Inventory\Product::create([
@@ -271,10 +271,10 @@ class StockAdjustmentApprovalTest extends TestCase
         $this->postJson('/api/v1/stock-adjustments', [
             'product_id' => $this->product->id, 'product_variant_id' => $variant->id, 'quantity' => 1, 'type' => 'manual',
             'location_id' => $this->locationA->id,
-        ])->assertStatus(422)->assertJsonValidationErrors('location_id');
+        ])->assertCreated();
 
-        $this->assertSame(20, $variant->fresh()->stock);
-        $this->assertSame(0, StockAdjustment::count());
+        $this->assertSame(21, $variant->fresh()->stock);
+        $this->assertSame(1, StockAdjustment::count());
     }
 
     public function test_api_holds_a_variant_adjustment_for_approval_and_applies_it_to_the_variant(): void

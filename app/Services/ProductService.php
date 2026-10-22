@@ -187,7 +187,7 @@ final class ProductService
 
     /**
      * Record a newly created variant's starting stock as a ledger row
-     * (0 -> stock). Variant stock has no location bins. Same attribution
+     * (0 -> stock). Variant bins are seeded by its observer. Same attribution
      * rules as recordOpeningStock().
      */
     public function recordOpeningVariantStock(ProductVariant $variant, ?User $actor = null): void
@@ -610,7 +610,7 @@ final class ProductService
             return [];
         }
 
-        $referenced = collect(['order_items', 'purchase_order_items', 'return_order_items', 'stock_adjustment_requests'])
+        $referenced = collect(['order_items', 'purchase_order_items', 'return_order_items', 'stock_adjustment_requests', 'stock_transfer_items', 'stock_audit_items'])
             ->flatMap(fn (string $table) => DB::table($table)->whereIn('product_variant_id', $variantIds)->distinct()->pluck('product_variant_id'))
             ->map(fn ($id) => (int) $id)
             ->all();

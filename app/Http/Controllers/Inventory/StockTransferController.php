@@ -94,7 +94,8 @@ class StockTransferController extends Controller
         $products = Product::forOrganization($organizationId)
             ->active()
             ->orderBy('name')
-            ->get(['id', 'name', 'sku', 'stock']);
+            ->with('activeVariants:id,product_id,title,sku,stock')
+            ->get(['id', 'name', 'sku', 'stock', 'has_variants']);
 
         return Inertia::render('StockTransfers/Create', [
             'locations' => $locations,
@@ -135,11 +136,13 @@ class StockTransferController extends Controller
 
         $this->warehouseAccess->authorizeAnyLocation($request->user(), [$stockTransfer->from_location_id, $stockTransfer->to_location_id]);
 
-        $stockTransfer->load(['fromLocation', 'toLocation', 'transferredBy', 'completer', 'items.product', 'approver']);
+        $stockTransfer->load(['fromLocation', 'toLocation', 'transferredBy', 'completer', 'items.product', 'items.variant', 'approver']);
 
         return Inertia::render('StockTransfers/Show', [
             'pluginComponents' => plugin_slots('stock-transfers.show', ['header', 'actions', 'footer']),
             'transfer' => $stockTransfer,
+            'canDispatch' => $this->warehouseAccess->canAccessLocation($request->user(), $stockTransfer->from_location_id),
+            'canReceive' => $this->warehouseAccess->canAccessLocation($request->user(), $stockTransfer->to_location_id),
             'approval' => [
                 'can_decide' => $stockTransfer->approval_status === StockTransfer::APPROVAL_PENDING
                     && app(ApprovalService::class)->canDecide($request->user(), ApprovalService::STOCK_TRANSFER, $stockTransfer),
@@ -168,6 +171,19 @@ class StockTransferController extends Controller
         }
 
         return redirect()->route('stock-transfers.show', $stockTransfer);
+    }
+
+    public function prepare(Request $request, StockTransfer $stockTransfer, StockTransferService $transfers)
+    {
+        $this->authorizeTransfer($request, $stockTransfer);
+        return $this->transition($stockTransfer, fn () => $transfers->prepare($stockTransfer, $request->user()), 'Stock reserved for transfer.');
+    }
+
+    public function ship(Request $request, StockTransfer $stockTransfer, StockTransferService $transfers)
+    {
+        $this->authorizeTransfer($request, $stockTransfer);
+        $data = $request->validate(['shipping_method' => 'nullable|string|max:255', 'tracking_number' => 'nullable|string|max:255', 'estimated_arrival' => 'nullable|date']);
+        return $this->transition($stockTransfer, fn () => $transfers->ship($stockTransfer, $request->user(), $data), 'Stock transfer shipped.');
     }
 
     /**

@@ -34,6 +34,10 @@ class ProductResource extends JsonResource
             'price_in_currencies' => $this->price_in_currencies,
             'stock' => $this->stock,
             'total_stock' => $this->total_stock,
+            // Held by stock reservations, and on hand less that (shown
+            // through the product_available_quantity filter).
+            'reserved_stock' => $this->reserved_stock,
+            'available_stock' => $this->available_stock,
             'min_stock' => $this->min_stock,
             'max_stock' => $this->max_stock,
             'barcode' => $this->barcode,

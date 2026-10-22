@@ -206,8 +206,9 @@ final class WorkOrderService
                 $target = $item->variant ?? $item->product;
                 $required = (int) ceil($quantity);
 
-                if ($target->stock < $required) {
-                    throw new InsufficientStockException("Insufficient stock for component '{$this->lineName($item)}'. Available: {$target->stock}, Required: {$required}.");
+                $available = app(StockReservationService::class)->available($item->product, $item->variant);
+                if ($available < $required) {
+                    throw new InsufficientStockException("Insufficient stock for component '{$this->lineName($item)}'. Available: {$available}, Required: {$required}.");
                 }
 
                 if ($item->variant === null) {

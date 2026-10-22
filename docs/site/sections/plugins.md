@@ -77,8 +77,48 @@ The created, updated and deleted hooks of products, variants, orders, purchase o
 ```php
 add_action('stock_changed', function ($product, $variant, $change) {
     // $change['before'], $change['after'], and $change['locations'][$locationId]['before'|'after'].
+    // $change['reserved']['before'|'after'] when stock reservations changed.
 });
 ```
+
+## Reservations
+
+A plugin that promises stock (a rental booking, a pick wave, a kit run, units published to a sales channel) holds it with a stock reservation, so nothing else in Inventoros sells, transfers out of a held bin, allocates or writes off those units. Available to promise is on hand less the active holds, checked under the same lock as every stock movement. With no holds, available equals on hand.
+
+```php
+use App\Services\StockReservationService;
+
+$reservations = app(StockReservationService::class);
+
+// Hold 3 units for booking B-1042 until the hire starts (throws when fewer are available).
+$reservations->reserve($product, null, 3, 'my-rental', 'B-1042', expiresAt: $booking->starts_at);
+
+// Hold one serial, or units in one bin.
+$reservations->reserve($camera, null, 1, 'my-rental', 'B-1043', serial: $serial);
+$reservations->reserve($product, null, 2, 'my-rental', 'B-1044', locationId: $bin->id);
+
+$reservations->available($product);         // on hand less holds
+$reservations->release('my-rental', 'B-1042');
+```
+
+An order that fulfils the hold carries it, and is checked against available plus that hold, which it consumes exactly once:
+
+```php
+app(OrderService::class)->create([
+    'customer_name' => 'Pat',
+    'items' => [['product_id' => $product->id, 'quantity' => 3]],
+    'reservation_owner' => 'my-rental',
+    'reservation_reference' => 'B-1042',
+], $actor);
+```
+
+- A product hold limits the product total; a bin hold also limits that bin; variant, serial and batch holds limit those records.
+- A retried `reserve()` with the same owner, reference and target holds once. Expired holds stop counting at once and are released by a scheduled command.
+- Recounts and damage or loss write-offs are never refused because stock is promised. When one leaves fewer units than are held, `reservation_shortfall` fires so the owner can react.
+- `stock_reserved`, `stock_reservation_released` and `stock_reservation_consumed` fire after commit. `product_available_quantity` changes the available figure shown on product pages and in the API, never a check.
+- A plugin's holds are released when it is uninstalled. Admins see active holds under Inventory, Reservations, and can release one there.
+
+The plugin development guide has the full reference.
 
 ## Adding UI
 

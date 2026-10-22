@@ -82,10 +82,6 @@ class RequestStockAdjustmentApprovalMutation extends Mutation
             throw new Error('Location not found');
         }
 
-        if ($locationId !== null && $variant) {
-            throw new Error('Variant stock is not tracked by location. Leave the location empty for a variant.');
-        }
-
         // A restricted user may only adjust a bin in one of their warehouses.
         app(WarehouseAccessService::class)->authorizeLocation($user, $locationId);
 

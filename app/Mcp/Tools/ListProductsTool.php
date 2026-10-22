@@ -6,6 +6,7 @@ namespace App\Mcp\Tools;
 
 use App\Mcp\Concerns\AuthenticatesMcpRequest;
 use App\Models\Inventory\Product;
+use App\Services\StockReservationService;
 use Illuminate\Contracts\JsonSchema\JsonSchema;
 use Laravel\Mcp\Request;
 use Laravel\Mcp\Response;
@@ -68,6 +69,7 @@ class ListProductsTool extends Tool
         $page = max((int) ($request->get('page') ?? 1), 1);
 
         $paginator = $query->paginate(perPage: $perPage, page: $page);
+        app(StockReservationService::class)->preloadReserved($paginator->items());
 
         return Response::json([
             'data' => collect($paginator->items())->map(fn (Product $p) => [
@@ -78,6 +80,8 @@ class ListProductsTool extends Tool
                 'price' => $p->price,
                 'selling_price' => $p->selling_price,
                 'stock' => $p->stock,
+                'reserved_stock' => $p->reserved_stock,
+                'available_stock' => $p->available_stock,
                 'min_stock' => $p->min_stock,
                 'is_active' => (bool) $p->is_active,
                 'category' => $p->category?->only(['id', 'name']),

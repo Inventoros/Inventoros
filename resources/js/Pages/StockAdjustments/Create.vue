@@ -69,13 +69,6 @@ watch(() => form.product_id, () => {
     }
 });
 
-// Variant stock is not tracked by location, so a variant clears the location.
-watch(() => form.product_variant_id, (variantId) => {
-    if (variantId) {
-        form.location_id = null;
-    }
-});
-
 // The count being adjusted: the variant's when one is chosen. A product sold
 // by variant has no count of its own until a variant is picked.
 const currentStock = computed(() => {
@@ -240,7 +233,7 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                         </div>
 
                         <!-- Location (optional) -->
-                        <div v-if="locations.length && !form.product_variant_id">
+                        <div v-if="locations.length">
                             <label :class="fieldLabel">{{ t('stockAdjustments.create.locationOptional') }}</label>
                             <select
                                 v-model="form.location_id"

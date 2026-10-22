@@ -354,6 +354,20 @@ final class DomainChangeHooksTest extends TestCase
         $this->assertTrue($hookProduct->is($product));
         $this->assertTrue($hookVariant->is($variant));
         $this->assertSame(['before' => 3, 'after' => 7], ['before' => $change['before'], 'after' => $change['after']]);
+        $this->assertSame(['before' => 3, 'after' => 7], $change['locations'][$this->location->id]);
+
+        $destination = ProductLocation::create(['organization_id' => $this->org->id, 'name' => 'Other shelf', 'code' => 'OTHER']);
+        $this->fired = [];
+        DB::transaction(function () use ($variant, $destination): void {
+            $locked = ProductVariant::whereKey($variant->id)->lockForUpdate()->firstOrFail();
+            app(ProductLocationStockService::class)->move($locked, $this->location->id, $destination->id, 2);
+        });
+        $this->assertSame(1, count($this->fired['stock_changed']));
+        [$hookProduct, $hookVariant, $change] = $this->fired['stock_changed'][0];
+        $this->assertTrue($hookVariant->is($variant));
+        $this->assertSame(['before' => 7, 'after' => 5], $change['locations'][$this->location->id]);
+        $this->assertSame(['before' => 0, 'after' => 2], $change['locations'][$destination->id]);
+
     }
 
     // ---------------------------------------------------------------

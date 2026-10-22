@@ -44,6 +44,7 @@ const statusVariant = (status) =>
 const getStatusLabel = (status) => {
     const labels = {
         'pending': t('stockTransfers.statuses.pending'),
+        'prepared': t('stockTransfers.statuses.prepared'),
         'in_transit': t('stockTransfers.statuses.in_transit'),
         'completed': t('stockTransfers.statuses.completed'),
         'cancelled': t('stockTransfers.statuses.cancelled'),
@@ -105,6 +106,7 @@ const thClass =
                         <select id="status" v-model="selectedStatus" :class="selectClass" @change="applyFilters">
                             <option value="">{{ t('common.allStatuses') }}</option>
                             <option value="pending">{{ t('stockTransfers.statuses.pending') }}</option>
+                            <option value="prepared">{{ t('stockTransfers.statuses.prepared') }}</option>
                             <option value="in_transit">{{ t('stockTransfers.statuses.in_transit') }}</option>
                             <option value="completed">{{ t('stockTransfers.statuses.completed') }}</option>
                             <option value="cancelled">{{ t('stockTransfers.statuses.cancelled') }}</option>

@@ -224,7 +224,7 @@ TOKEN="1|paste-your-token-here"
 curl -G "${APP_URL}/api/v1/products" \
   -H "Authorization: Bearer ${TOKEN}" \
   -H "Accept: application/json" \
-  --data-urlencode "low_stock=1" \
+  --data-urlencode "out_of_stock=1" \
   --data-urlencode "per_page=25"
 ```
 
@@ -408,7 +408,7 @@ Queries: `products`, `product`, `orders`, `order`, `suppliers`, `supplier`, `pur
 
 Orders carry their `shipments`, and their `payments`, `amount_paid`, `balance_due` and `payment_status` when the user and token hold `view_payments`.
 
-Mutations: `createProduct`, `updateProduct`, `deleteProduct`, `createOrder`, `updateOrder`, `createStockAdjustment`, `requestStockAdjustmentApproval`, `createSupplier`, `updateSupplier`, `createCustomer`, `updateCustomer`, `createReturnOrder`, `approveReturnOrder`, `receiveReturnOrder`, `createStockTransfer`, `completeStockTransfer`, `createPurchaseOrder`, `updatePurchaseOrder`, `receivePurchaseOrder` and `decideApproval`.
+Mutations: `createProduct`, `updateProduct`, `deleteProduct`, `createOrder`, `updateOrder`, `createStockAdjustment`, `requestStockAdjustmentApproval`, `createSupplier`, `updateSupplier`, `createCustomer`, `updateCustomer`, `createReturnOrder`, `approveReturnOrder`, `receiveReturnOrder`, `createStockTransfer`, `completeStockTransfer`, `transitionStockTransfer`, `createPurchaseOrder`, `updatePurchaseOrder`, `receivePurchaseOrder` and `decideApproval`.
 
 Every field is gated like the matching REST route: the user must hold the permission and the token must allow it, so a scoped token is enforced the same way over GraphQL. Mutations call the same services as the web app and REST API, so a return received or a transfer completed over GraphQL restocks and moves bins exactly as it would anywhere else. List queries accept `limit` (default 50, max 100). The endpoint shares the REST rate limit of 60 requests per minute.
 
@@ -422,3 +422,9 @@ curl -X POST "${APP_URL}/graphql" \
 ## Versioning
 
 The current API is `v1`, served at `/api/v1`. Future incompatible changes will be released under `/api/v2`; `v1` will continue to receive non-breaking additions.
+
+### Warehouse stock balances
+
+`GET /api/v1/stock-balances` requires `view_products` and lists stock per product or variant SKU and location. Filter by `search`, `warehouse_id`, `location_id`, `out_of_stock` or `include_zero`; sort by any displayed column with `sort_by` and `sort_dir`. Pagination defaults to 25 and is capped at 100. Warehouse assignments are enforced, including for filters. Unassigned units are visible only to unrestricted users.
+
+Rows include `on_hand`, location-scoped `reserved`, `available` and `in_transit`. Available is capped by total SKU availability; when unlocated reservations also constrain that total, availability at different bins must not be summed. Incoming stock is unavailable until receipt. The Stock by warehouse screen and its permission-gated CSV export use the same query; MCP exposes `list_stock_balances`.
