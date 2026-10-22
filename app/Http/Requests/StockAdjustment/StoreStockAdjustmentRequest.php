@@ -16,8 +16,7 @@ use Illuminate\Validation\Validator;
  *
  * product_variant_id targets a variant (picked, or resolved from a scanned
  * variant barcode). A product sold by variant needs one, it must belong to
- * the product, and it cannot be combined with a location: variant stock has
- * no per-location breakdown.
+ * the product. An optional location targets that variant's bin.
  */
 final class StoreStockAdjustmentRequest extends FormRequest
 {
@@ -67,12 +66,7 @@ final class StoreStockAdjustmentRequest extends FormRequest
                     $validator->errors()->add('product_variant_id', $errors[0]);
                 }
 
-                if ($this->filled('product_variant_id') && $this->filled('location_id')) {
-                    $validator->errors()->add(
-                        'location_id',
-                        'Variant stock is not tracked by location. Leave the location empty for a variant.'
-                    );
-                }
+
             },
         ];
     }

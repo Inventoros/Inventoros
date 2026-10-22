@@ -109,7 +109,7 @@ class StockAdjustmentController extends Controller
                 type: $validated['type'],
                 reason: $validated['reason'] ?? null,
                 notes: $validated['notes'] ?? null,
-                locationId: $variant ? null : ($validated['location_id'] ?? null),
+                locationId: $validated['location_id'] ?? null,
             );
         } catch (InsufficientStockException $e) {
             return response()->json([

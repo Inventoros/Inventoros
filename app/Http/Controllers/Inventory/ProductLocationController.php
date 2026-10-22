@@ -170,6 +170,10 @@ class ProductLocationController extends Controller
                 ->withErrors(['location' => 'Cannot delete a location that still holds stock. Transfer its stock elsewhere first.']);
         }
 
+        if (\App\Models\Inventory\VariantLocationStock::query()->where('location_id', $location->id)->where('quantity', '>', 0)->exists()) {
+            return redirect()->back()->withErrors(['location' => 'Cannot delete a location that still holds variant stock. Transfer its stock elsewhere first.']);
+        }
+
         $location->delete();
 
         return redirect()->route('locations.index')

@@ -297,9 +297,14 @@ class StockAdjustment extends Model
         ?string $notes = null,
         ?Model $reference = null,
         bool $allowNegative = true,
-        ?User $actor = null
+        ?User $actor = null,
+        ?int $locationId = null,
+        bool $syncBins = true,
+        ?int $preferWarehouseId = null,
     ): self {
-        return DB::transaction(function () use ($variant, $quantity, $type, $reason, $notes, $reference, $allowNegative, $actor) {
+        return DB::transaction(function () use ($variant, $quantity, $type, $reason, $notes, $reference, $allowNegative, $actor, $locationId, $syncBins, $preferWarehouseId) {
+            Product::withTrashed()->whereKey($variant->product_id)->lockForUpdate()->firstOrFail();
+
             // Re-fetch the variant with a row lock — same race protection as
             // adjust() above.
             $locked = ProductVariant::withTrashed()->where('id', $variant->id)->lockForUpdate()->firstOrFail();
@@ -317,6 +322,7 @@ class StockAdjustment extends Model
                 'organization_id' => $locked->organization_id,
                 'product_id' => $locked->product_id,
                 'product_variant_id' => $locked->id,
+                'location_id' => $locationId,
                 // Same actor rule as adjust(): an explicit actor wins.
                 'user_id' => $actor?->id ?? auth()->id(),
                 'type' => $type,
@@ -329,7 +335,18 @@ class StockAdjustment extends Model
                 'reference_id' => $reference?->id,
             ]);
 
+            $bins = app(ProductLocationStockService::class);
+            if ($locationId !== null) {
+                $bins->applyDelta($locked, $locationId, $quantity, allowNegativeBin: $allowNegative);
+            } elseif ($syncBins && $quantity < 0) {
+                $bins->consume($locked, -$quantity, $preferWarehouseId);
+            }
+
             $locked->update(['stock' => $quantityAfter]);
+
+            if ($locationId === null && $syncBins && $quantity > 0) {
+                $bins->receive($locked, $quantity);
+            }
 
             $variant->setRawAttributes(
                 array_merge($variant->getAttributes(), ['stock' => $quantityAfter])

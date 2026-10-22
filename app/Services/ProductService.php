@@ -187,7 +187,7 @@ final class ProductService
 
     /**
      * Record a newly created variant's starting stock as a ledger row
-     * (0 -> stock). Variant stock has no location bins. Same attribution
+     * (0 -> stock). Variant bins are seeded by its observer. Same attribution
      * rules as recordOpeningStock().
      */
     public function recordOpeningVariantStock(ProductVariant $variant, ?User $actor = null): void

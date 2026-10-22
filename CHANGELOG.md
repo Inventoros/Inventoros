@@ -8,6 +8,7 @@ Full release notes, with the pull request behind each change, are on [GitHub Rel
 
 ### Added
 
+- Variant stock per location and warehouse: opening balances, adjustments, sales, receipts, returns and production keep variant bins in step with variant totals. Product pages show variant location balances; warehouse thresholds use active variant balances.
 - `TRUSTED_PROXIES` names the reverse proxies (nginx, Traefik, Caddy, a load balancer) whose `X-Forwarded-*` headers are believed, so the app builds https URLs and Secure cookies behind a TLS-terminating proxy. No proxy is trusted unless configured; the Docker image and compose files default to `private_ranges`.
 - Order and purchase order forms have an optional tax rate (%) beside the tax amount, which fills the amount in from the subtotal after discounts. Only the amount is saved, as before.
 - Queued exports now expire after `EXPORT_RETENTION_DAYS` (default 7): the download link says the export has expired, and a nightly `exports:prune` deletes the file and its record.

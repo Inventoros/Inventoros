@@ -609,7 +609,7 @@ final class ReturnOrderService
                 // A line sold as a variant decremented the variant, so the
                 // return credits the variant back (lines raised before the
                 // column existed fall back to their order line's variant).
-                // Variant stock has no location bins.
+                // Its primary bin receives the returned units with the total.
                 $variant = $item->variant ?? $item->orderItem?->variant;
 
                 if ($item->restock && $item->product && $variant !== null) {

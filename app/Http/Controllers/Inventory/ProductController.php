@@ -271,6 +271,11 @@ class ProductController extends Controller
             // Per-location on-hand breakdown (location name + quantity), richest
             // bin first. Empty for products that hold no binned stock.
             // Restricted to the bins in warehouses the viewer can access.
+            'variantLocationBreakdown' => \App\Models\Inventory\VariantLocationStock::query()
+                ->where('organization_id', $product->organization_id)
+                ->whereHas('variant', fn ($q) => $q->where('product_id', $product->id)->whereNull('deleted_at'))
+                ->tap(fn ($q) => app(\App\Services\WarehouseAccessService::class)->scopeByLocation($q, auth()->user(), 'location_id'))
+                ->with(['variant:id,sku,title', 'location.warehouse:id,name'])->orderBy('product_variant_id')->get(),
             'locationBreakdown' => app(ProductLocationStockService::class)->breakdown($product, auth()->user()),
             // On-hand and thresholds per warehouse the viewer can access.
             'warehouseStockLevels' => app(WarehouseStockLevelService::class)->levelsForProduct($product, auth()->user()),

@@ -45,6 +45,7 @@ const props = defineProps({
     product: Object,
     activities: Array,
     locationBreakdown: { type: Array, default: () => [] },
+    variantLocationBreakdown: { type: Array, default: () => [] },
     warehouseStockLevels: { type: Array, default: () => [] },
     priceHistory: { type: Array, default: () => [] },
     pluginComponents: Object,
@@ -474,6 +475,26 @@ const fieldInput = 'h-9 w-full rounded-md border border-border-subtle bg-surface
                                     </div>
                                 </div>
                             </div>
+                        </div>
+                    </Card>
+
+                    <Card v-if="product.has_variants && variantLocationBreakdown.length">
+                        <h3 class="mb-3 text-sm font-semibold text-text-primary">{{ t('products.show.stockByLocation') }}</h3>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left text-sm">
+                                <thead><tr class="border-b border-border-subtle text-text-secondary">
+                                    <th class="p-2">{{ t('products.sku') }}</th>
+                                    <th class="p-2">{{ t('locations.warehouse') }}</th>
+                                    <th class="p-2">{{ t('products.location') }}</th>
+                                    <th class="p-2 text-right">{{ t('products.stock') }}</th>
+                                </tr></thead>
+                                <tbody><tr v-for="bin in variantLocationBreakdown" :key="bin.id" class="border-b border-border-subtle last:border-0">
+                                    <td class="p-2">{{ bin.variant?.sku || bin.variant?.title }}</td>
+                                    <td class="p-2">{{ bin.location?.warehouse?.name || t('locations.noWarehouse') }}</td>
+                                    <td class="p-2">{{ bin.location?.name }}</td>
+                                    <td class="p-2 text-right tabular-nums">{{ bin.quantity }}</td>
+                                </tr></tbody>
+                            </table>
                         </div>
                     </Card>
 

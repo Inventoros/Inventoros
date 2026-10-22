@@ -36,6 +36,7 @@ final class ProductVariantObserver
 
     public function created(ProductVariant $variant): void
     {
+        app(\App\Services\ProductLocationStockService::class)->ensureBinned($variant);
         $user = auth()->user();
 
         $this->hooks->afterCommit('variant_created', $variant, fn () => do_action('variant_created', $variant, $user));

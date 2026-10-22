@@ -26,39 +26,35 @@ final class WarehouseStockLevelService
      */
     public function onHandByWarehouse(Product $product): array
     {
-        return DB::table('product_location_stocks as pls')
-            ->join('product_locations as pl', 'pl.id', '=', 'pls.location_id')
-            ->where('pls.product_id', $product->id)
-            ->whereNotNull('pl.warehouse_id')
-            ->whereNull('pl.deleted_at')
-            ->groupBy('pl.warehouse_id')
-            ->selectRaw('pl.warehouse_id, sum(pls.quantity) as on_hand')
-            ->pluck('on_hand', 'warehouse_id')
-            ->map(fn ($qty) => (int) $qty)
-            ->all();
+        return $this->onHandByProducts([(int) $product->id])[$product->id] ?? [];
     }
 
-    /**
-     * Warehouse balances for a bounded product list, loaded together instead
-     * of issuing an aggregate query for every reorder suggestion.
-     *
-     * @param  array<int, int>  $productIds
-     * @return array<int, array<int, int>> product id => warehouse id => on-hand
-     */
+    /** @return array<int, array<int, int>> product id => warehouse id => on-hand */
     public function onHandByProducts(array $productIds): array
     {
         if ($productIds === []) {
             return [];
         }
 
-        $balances = DB::table('product_location_stocks as pls')
-            ->join('product_locations as pl', 'pl.id', '=', 'pls.location_id')
-            ->whereIntegerInRaw('pls.product_id', $productIds)
-            ->whereNotNull('pl.warehouse_id')
-            ->whereNull('pl.deleted_at')
-            ->groupBy('pls.product_id', 'pl.warehouse_id')
-            ->selectRaw('pls.product_id, pl.warehouse_id, sum(pls.quantity) as on_hand')
-            ->get();
+        $plain = DB::table('product_location_stocks as s')
+            ->join('products as p', 'p.id', '=', 's.product_id')
+            ->whereIntegerInRaw('p.id', $productIds)->whereNull('p.deleted_at')
+            ->whereRaw('NOT (p.has_variants = TRUE AND EXISTS (SELECT 1 FROM product_variants v WHERE v.product_id = p.id AND v.deleted_at IS NULL))')
+            ->selectRaw('p.id as product_id, s.location_id, s.quantity');
+
+        $variants = DB::table('variant_location_stocks as s')
+            ->join('product_variants as v', 'v.id', '=', 's.product_variant_id')
+            ->join('products as p', 'p.id', '=', 'v.product_id')
+            ->whereIntegerInRaw('p.id', $productIds)->where('p.has_variants', true)
+            ->where('v.is_active', true)->whereNull('v.deleted_at')->whereNull('p.deleted_at')
+            ->whereColumn('s.organization_id', 'p.organization_id')->whereColumn('v.organization_id', 'p.organization_id')
+            ->selectRaw('p.id as product_id, s.location_id, s.quantity');
+
+        $balances = DB::query()->fromSub($plain->unionAll($variants), 'b')
+            ->join('product_locations as pl', 'pl.id', '=', 'b.location_id')
+            ->whereNotNull('pl.warehouse_id')->whereNull('pl.deleted_at')
+            ->groupBy('b.product_id', 'pl.warehouse_id')
+            ->selectRaw('b.product_id, pl.warehouse_id, sum(b.quantity) as on_hand')->get();
 
         $result = [];
         foreach ($balances as $balance) {
@@ -70,12 +66,7 @@ final class WarehouseStockLevelService
 
     public function onHandInWarehouse(int $productId, int $warehouseId): int
     {
-        return (int) DB::table('product_location_stocks as pls')
-            ->join('product_locations as pl', 'pl.id', '=', 'pls.location_id')
-            ->where('pls.product_id', $productId)
-            ->where('pl.warehouse_id', $warehouseId)
-            ->whereNull('pl.deleted_at')
-            ->sum('pls.quantity');
+        return $this->onHandByProducts([$productId])[$productId][$warehouseId] ?? 0;
     }
 
     /**

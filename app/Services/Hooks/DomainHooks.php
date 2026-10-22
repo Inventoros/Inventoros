@@ -107,12 +107,12 @@ final class DomainHooks
     /**
      * Record a change of a product's quantity at one location bin.
      */
-    public function locationStockChanged(Model $subject, int $productId, int $locationId, int $before, int $after): void
+    public function locationStockChanged(Model $subject, int $productId, int $locationId, int $before, int $after, ?int $variantId = null): void
     {
-        $key = $this->stockKey($productId, null);
+        $key = $this->stockKey($productId, $variantId);
         $new = ! isset($this->stock[$key]);
 
-        $this->stock[$key] ??= $this->emptyStockEntry($productId, null);
+        $this->stock[$key] ??= $this->emptyStockEntry($productId, $variantId);
         $this->stock[$key]['locations'][$locationId] = [
             'before' => $this->stock[$key]['locations'][$locationId]['before'] ?? $before,
             'after' => $after,

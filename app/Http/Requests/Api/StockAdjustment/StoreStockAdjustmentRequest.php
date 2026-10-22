@@ -52,7 +52,7 @@ final class StoreStockAdjustmentRequest extends FormRequest
 
     /**
      * Same variant checks as the web form: the variant must belong to the
-     * product, and variant stock is not tracked per location.
+     * product; an optional location targets that variant's bin.
      *
      * @return array<int, \Closure(Validator): void>
      */
@@ -73,12 +73,7 @@ final class StoreStockAdjustmentRequest extends FormRequest
                     $validator->errors()->add('product_variant_id', $errors[0]);
                 }
 
-                if ($this->filled('location_id')) {
-                    $validator->errors()->add(
-                        'location_id',
-                        'Variant stock is not tracked by location. Leave the location empty for a variant.'
-                    );
-                }
+
             },
         ];
     }

@@ -7,6 +7,10 @@ namespace App\Services;
 use App\Exceptions\InsufficientStockException;
 use App\Models\Inventory\Product;
 use App\Models\Inventory\ProductLocationStock;
+use App\Models\Inventory\ProductLocation;
+use App\Models\Inventory\ProductVariant;
+use App\Models\Inventory\VariantLocationStock;
+use Illuminate\Database\Eloquent\Builder;
 use App\Models\User;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
@@ -15,9 +19,8 @@ use Illuminate\Support\Facades\DB;
  * Reads the per-location on-hand breakdown behind products.stock, and can
  * (re)seed it from the products' assigned locations.
  *
- * This slice is read-only with respect to live stock: it never changes
- * products.stock. Location-aware writes (adjustments, transfers) land in
- * later slices.
+ * Supports product and variant balances independently. Callers hold the
+ * stock target row lock while writing; this service never changes totals.
  */
 final class ProductLocationStockService
 {
@@ -26,10 +29,9 @@ final class ProductLocationStockService
      *
      * @api
      */
-    public function quantityAt(Product $product, int $locationId): int
+    public function quantityAt(Product|ProductVariant $product, int $locationId): int
     {
-        return (int) (ProductLocationStock::query()
-            ->where('product_id', $product->id)
+        return (int) ($this->bins($product)
             ->where('location_id', $locationId)
             ->value('quantity') ?? 0);
     }
@@ -42,12 +44,12 @@ final class ProductLocationStockService
      *
      * @api
      */
-    public function onHandAt(Product $product, int $locationId): int
+    public function onHandAt(Product|ProductVariant $product, int $locationId): int
     {
-        $binned = ProductLocationStock::query()->where('product_id', $product->id)->exists();
+        $binned = $this->bins($product)->exists();
 
         if (! $binned) {
-            return $product->location_id === $locationId ? (int) $product->stock : 0;
+            return $this->primaryLocation($product) === $locationId ? (int) $product->stock : 0;
         }
 
         return $this->quantityAt($product, $locationId);
@@ -58,15 +60,14 @@ final class ProductLocationStockService
      * location eager-loaded for display. Given a viewer, only the bins in
      * warehouses they may access are returned.
      *
-     * @return Collection<int, ProductLocationStock>
+     * @return Collection<int, ProductLocationStock|VariantLocationStock>
      *
      * @api
      */
-    public function breakdown(Product $product, ?User $viewer = null): Collection
+    public function breakdown(Product|ProductVariant $product, ?User $viewer = null): Collection
     {
-        return ProductLocationStock::query()
+        return $this->bins($product)
             ->with('location.warehouse:id,name,code')
-            ->where('product_id', $product->id)
             ->when($viewer, fn ($q) => app(WarehouseAccessService::class)->scopeByLocation($q, $viewer, 'location_id'))
             ->orderByDesc('quantity')
             ->get();
@@ -79,10 +80,9 @@ final class ProductLocationStockService
      *
      * @api
      */
-    public function totalAssigned(Product $product): int
+    public function totalAssigned(Product|ProductVariant $product): int
     {
-        return (int) ProductLocationStock::query()
-            ->where('product_id', $product->id)
+        return (int) $this->bins($product)
             ->sum('quantity');
     }
 
@@ -102,16 +102,17 @@ final class ProductLocationStockService
      *
      * @api
      */
-    public function move(Product $product, int $fromLocationId, int $toLocationId, int $quantity): void
+    public function move(Product|ProductVariant $product, int $fromLocationId, int $toLocationId, int $quantity): void
     {
         if ($quantity <= 0) {
             return;
         }
 
+        $this->assertLocation($product, $fromLocationId);
+        $this->assertLocation($product, $toLocationId);
         $this->ensureBinned($product);
 
-        $fromRow = ProductLocationStock::query()
-            ->where('product_id', $product->id)
+        $fromRow = $this->bins($product)
             ->where('location_id', $fromLocationId)
             ->first();
 
@@ -119,14 +120,14 @@ final class ProductLocationStockService
 
         if ($available < $quantity) {
             throw new InsufficientStockException(
-                "Insufficient stock at the source location for {$product->name}: have {$available}, transfer requires {$quantity}."
+                "Insufficient stock at the source location for item {$product->id}: have {$available}, transfer requires {$quantity}."
             );
         }
 
         $fromRow->decrement('quantity', $quantity);
 
-        $toRow = ProductLocationStock::firstOrCreate(
-            ['product_id' => $product->id, 'location_id' => $toLocationId],
+        $toRow = $this->bins($product)->firstOrCreate(
+            [$this->targetColumn($product) => $product->id, 'location_id' => $toLocationId],
             ['organization_id' => $product->organization_id, 'quantity' => 0],
         );
         $toRow->increment('quantity', $quantity);
@@ -155,7 +156,7 @@ final class ProductLocationStockService
      *
      * @api
      */
-    public function consume(Product $product, int $quantity, ?int $preferWarehouseId = null): void
+    public function consume(Product|ProductVariant $product, int $quantity, ?int $preferWarehouseId = null): void
     {
         if ($quantity <= 0) {
             return;
@@ -163,12 +164,11 @@ final class ProductLocationStockService
 
         $this->ensureBinned($product);
 
-        $bins = ProductLocationStock::query()
-            ->where('product_id', $product->id)
+        $bins = $this->bins($product)
             ->where('quantity', '>', 0)
             // The fulfilling warehouse's bins first, when one is named.
             ->when($preferWarehouseId !== null, fn ($query) => $query->orderByRaw(
-                'case when product_location_stocks.location_id in (select product_locations.id from product_locations where product_locations.warehouse_id = ?) then 0 else 1 end',
+                'case when '.$this->bins($product)->getModel()->getTable().'.location_id in (select product_locations.id from product_locations where product_locations.warehouse_id = ?) then 0 else 1 end',
                 [$preferWarehouseId],
             ))
             // Then the highest-priority warehouse, then the primary location,
@@ -179,10 +179,10 @@ final class ProductLocationStockService
                         $join->on('warehouses.id', '=', 'product_locations.warehouse_id')
                             ->whereNull('warehouses.deleted_at');
                     })
-                    ->whereColumn('product_locations.id', 'product_location_stocks.location_id')
+                    ->whereColumn('product_locations.id', $this->bins($product)->getModel()->getTable().'.location_id')
                     ->selectRaw('coalesce(max(warehouses.priority), 0)')
             )
-            ->orderByRaw('location_id = ? desc', [$product->location_id ?? 0])
+            ->orderByRaw('location_id = ? desc', [$this->primaryLocation($product) ?? 0])
             ->orderByDesc('quantity')
             ->orderBy('id')
             ->lockForUpdate()
@@ -216,23 +216,24 @@ final class ProductLocationStockService
      *
      * @api
      */
-    public function receive(Product $product, int $quantity, ?int $locationId = null): void
+    public function receive(Product|ProductVariant $product, int $quantity, ?int $locationId = null): void
     {
         if ($quantity <= 0) {
             return;
         }
 
-        $locationId ??= $product->location_id;
+        $locationId ??= $this->primaryLocation($product);
 
         if ($locationId === null) {
             return;
         }
 
-        $onHand = (int) Product::withoutGlobalScopes()->whereKey($product->id)->value('stock');
+        $this->assertLocation($product, $locationId);
+        $onHand = (int) $product->newQueryWithoutScopes()->whereKey($product->id)->value('stock');
         $this->ensureBinned($product, max(0, $onHand - $quantity));
 
-        ProductLocationStock::firstOrCreate(
-            ['product_id' => $product->id, 'location_id' => $locationId],
+        $this->bins($product)->firstOrCreate(
+            [$this->targetColumn($product) => $product->id, 'location_id' => $locationId],
             ['organization_id' => $product->organization_id, 'quantity' => 0],
         )->increment('quantity', $quantity);
     }
@@ -251,12 +252,13 @@ final class ProductLocationStockService
      *
      * @api
      */
-    public function applyDelta(Product $product, int $locationId, int $delta, bool $allowNegativeBin = false): int
+    public function applyDelta(Product|ProductVariant $product, int $locationId, int $delta, bool $allowNegativeBin = false): int
     {
+        $this->assertLocation($product, $locationId);
         $this->ensureBinned($product);
 
-        $row = ProductLocationStock::firstOrCreate(
-            ['product_id' => $product->id, 'location_id' => $locationId],
+        $row = $this->bins($product)->firstOrCreate(
+            [$this->targetColumn($product) => $product->id, 'location_id' => $locationId],
             ['organization_id' => $product->organization_id, 'quantity' => 0],
         );
 
@@ -264,7 +266,7 @@ final class ProductLocationStockService
 
         if (! $allowNegativeBin && $after < 0) {
             throw new InsufficientStockException(
-                'Cannot remove '.abs($delta)." units from that location for {$product->name}: only {$row->quantity} on hand there."
+                'Cannot remove '.abs($delta)." units from that location for item {$product->id}: only {$row->quantity} on hand there."
             );
         }
 
@@ -282,14 +284,13 @@ final class ProductLocationStockService
      * moved products.stock (receive(), opening stock); by default the
      * product's current stock is seeded.
      */
-    public function ensureBinned(Product $product, ?int $seedQuantity = null): void
+    public function ensureBinned(Product|ProductVariant $product, ?int $seedQuantity = null): void
     {
-        if ($product->location_id === null) {
+        if ($this->primaryLocation($product) === null) {
             return;
         }
 
-        $alreadyBinned = ProductLocationStock::query()
-            ->where('product_id', $product->id)
+        $alreadyBinned = $this->bins($product)
             ->exists();
 
         if ($alreadyBinned) {
@@ -301,8 +302,8 @@ final class ProductLocationStockService
         // unique key rather than throwing a duplicate-key error. Callers hold
         // the product row lock, which already serializes this per product; this
         // is defence in depth.
-        ProductLocationStock::firstOrCreate(
-            ['product_id' => $product->id, 'location_id' => $product->location_id],
+        $this->bins($product)->firstOrCreate(
+            [$this->targetColumn($product) => $product->id, 'location_id' => $this->primaryLocation($product)],
             ['organization_id' => $product->organization_id, 'quantity' => $seedQuantity ?? (int) $product->stock],
         );
     }
@@ -352,4 +353,31 @@ final class ProductLocationStockService
 
         return $created;
     }
+
+    private function assertLocation(Product|ProductVariant $product, int $locationId): void
+    {
+        ProductLocation::query()->where('organization_id', $product->organization_id)->findOrFail($locationId);
+    }
+
+    private function bins(Product|ProductVariant $product): Builder
+    {
+        $model = $product instanceof ProductVariant ? VariantLocationStock::class : ProductLocationStock::class;
+
+        return $model::query()
+            ->where('organization_id', $product->organization_id)
+            ->where($this->targetColumn($product), $product->id);
+    }
+
+    private function targetColumn(Product|ProductVariant $product): string
+    {
+        return $product instanceof ProductVariant ? 'product_variant_id' : 'product_id';
+    }
+
+    private function primaryLocation(Product|ProductVariant $product): ?int
+    {
+        $id = $product instanceof ProductVariant ? $product->product?->location_id : $product->location_id;
+
+        return $id === null ? null : (int) $id;
+    }
+
 }

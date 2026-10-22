@@ -196,15 +196,14 @@ class ProductVariantController extends Controller
 
         $validated = $request->validate([
             'quantity' => ['required', 'integer'],
+            'location_id' => ['nullable', 'integer', \Illuminate\Validation\Rule::exists('product_locations', 'id')->where('organization_id', $product->organization_id)->whereNull('deleted_at')],
             'type' => ['required', 'string', 'in:increase,decrease,recount,damage,return,received'],
             'reason' => ['nullable', 'string', 'max:255'],
             'notes' => ['nullable', 'string'],
         ]);
 
-        // A variant's stock sits at its parent's location, so a restricted
-        // user may only adjust variants of products in their warehouses (the
-        // same rule the stock adjustment surfaces apply to a bin).
-        app(WarehouseAccessService::class)->authorizeLocation($request->user(), $product->location_id);
+        $locationId = isset($validated['location_id']) ? (int) $validated['location_id'] : $product->location_id;
+        app(WarehouseAccessService::class)->authorizeLocation($request->user(), $locationId);
 
         // Applied now, or held for approval (202) when the organization's
         // approval rules cover it: the same path every other manual
@@ -218,6 +217,7 @@ class ProductVariantController extends Controller
                 type: $validated['type'],
                 reason: $validated['reason'] ?? null,
                 notes: $validated['notes'] ?? null,
+                locationId: $locationId,
             );
         } catch (InsufficientStockException $e) {
             return response()->json([

@@ -118,6 +118,11 @@ class ProductVariant extends Model
         return $this->belongsTo(Organization::class);
     }
 
+    public function locationStocks(): HasMany
+    {
+        return $this->hasMany(VariantLocationStock::class, 'product_variant_id');
+    }
+
     /**
      * Get stock adjustments for this variant.
      *

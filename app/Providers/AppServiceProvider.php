@@ -110,6 +110,7 @@ class AppServiceProvider extends ServiceProvider
         Product::observe(ProductObserver::class);
         ProductVariant::observe(ProductVariantObserver::class);
         ProductLocationStock::observe(ProductLocationStockObserver::class);
+        \App\Models\Inventory\VariantLocationStock::observe(ProductLocationStockObserver::class);
         Order::observe(OrderObserver::class);
         PurchaseOrder::observe(PurchaseOrderObserver::class);
         Customer::observe(CustomerObserver::class);

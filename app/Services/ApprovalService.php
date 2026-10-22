@@ -444,6 +444,7 @@ final class ApprovalService
                 reference: $reference,
                 allowNegative: false,
                 actor: $actor,
+                locationId: $locationId,
             );
         }
 

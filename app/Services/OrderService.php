@@ -291,13 +291,8 @@ final class OrderService
             foreach ($adjustStock ? $perTargetQty : [] as $key => $totalQty) {
                 $target = $targets[$key];
 
-                // Draw the sold units out of the product's location bins before
-                // dropping the total, so the per-location breakdown never claims
-                // more than exists. Products only (bins are per-product; variant
-                // stock has no location breakdown).
-                if ($target instanceof Product) {
-                    $locationStock->consume($target, $totalQty, $this->fulfillingWarehouseId($order));
-                }
+                // Each stock target has its own bins, including variants.
+                $locationStock->consume($target, $totalQty, $this->fulfillingWarehouseId($order));
 
                 $target->decrement('stock', $totalQty);
             }
@@ -907,6 +902,7 @@ final class OrderService
                     $variant, -$qty, 'order_fulfillment',
                     "Order {$order->order_number} edited", null, $order, allowNegative: false,
                     actor: $this->restockActor($order, $actor),
+                    preferWarehouseId: $this->fulfillingWarehouseId($order),
                 );
             } else {
                 // consume() before adjust() so the lazy bin seed reads the

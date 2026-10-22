@@ -270,7 +270,7 @@ final class InterCompanyTransferService
     private function adjust(Product $product, ?ProductVariant $variant, int $quantity, string $type, string $reason, ?string $notes, InterCompanyTransfer $transfer, User $actor, ?int $locationId): StockAdjustment
     {
         if ($variant !== null) {
-            return StockAdjustment::adjustVariant($variant, $quantity, $type, $reason, $notes, $transfer, allowNegative: false, actor: $actor);
+            return StockAdjustment::adjustVariant($variant, $quantity, $type, $reason, $notes, $transfer, allowNegative: false, actor: $actor, locationId: $locationId);
         }
 
         return StockAdjustment::adjust($product, $quantity, $type, $reason, $notes, $transfer, allowNegative: false, actor: $actor, locationId: $locationId);
@@ -657,9 +657,6 @@ final class InterCompanyTransferService
                 throw ValidationException::withMessages(["lines.{$index}.{$side}_variant_id" => 'The variant was not found on that product.']);
             }
 
-            if ($line["{$side}_location_id"] !== null) {
-                throw ValidationException::withMessages(["lines.{$index}.{$side}_location_id" => 'Variant stock is not held per location.']);
-            }
         }
 
         $locationId = $line["{$side}_location_id"];
