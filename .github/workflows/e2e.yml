@@ -62,6 +62,7 @@ jobs:
             e2e/tests/plugins.spec.ts \
             e2e/tests/mobile-layout.spec.ts \
             e2e/tests/restricted-controls.spec.ts \
+            e2e/tests/workspace-preferences.spec.ts \
             e2e/tests/global-search.spec.ts \
             --project=setup --project=chromium
         env:
