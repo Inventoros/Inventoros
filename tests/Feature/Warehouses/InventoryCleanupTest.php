@@ -39,7 +39,7 @@ final class InventoryCleanupTest extends TestCase
     {
         $this->productB->update(['stock' => 0]);
         ProductLocationStock::where('product_id', $this->productB->id)->update(['quantity' => 0]);
-        $this->actingAs($this->admin)->delete(route('warehouses.destroy', $this->warehouseB))->assertSessionHasErrors('warehouse');
+        $this->actingAs($this->admin)->delete(route('warehouses.destroy', $this->warehouseB))->assertSessionHasErrors('warehouse')->assertSessionHas('error');
         Sanctum::actingAs($this->admin);
         $this->deleteJson('/api/v1/warehouses/'.$this->warehouseB->id)->assertUnprocessable();
         $this->assertNotSoftDeleted($this->warehouseB);
@@ -50,7 +50,7 @@ final class InventoryCleanupTest extends TestCase
         $this->productB->update(['stock' => 0]);
         ProductLocationStock::where('location_id', $this->locationB->id)->update(['quantity' => 0]);
         $audit = $this->makeAudit($this->locationB, 'Count before warehouse retirement');
-        $this->actingAs($this->admin)->delete(route('warehouses.destroy', $this->warehouseB))->assertSessionHasErrors('warehouse');
+        $this->actingAs($this->admin)->delete(route('warehouses.destroy', $this->warehouseB))->assertSessionHasErrors('warehouse')->assertSessionHas('error');
         $this->assertNotSoftDeleted($this->warehouseB);
         $audit->update(['status' => 'completed']);
         $this->actingAs($this->admin)->delete(route('warehouses.destroy', $this->warehouseB))->assertSessionHasNoErrors();
