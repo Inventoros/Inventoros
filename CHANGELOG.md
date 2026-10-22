@@ -8,6 +8,7 @@ Full release notes, with the pull request behind each change, are on [GitHub Rel
 
 ### Added
 
+- Stock by warehouse screen with sortable product/variant SKU and location balances, reserved and available quantities, incoming transfers, search, warehouse filters and CSV export. The same warehouse-scoped query backs REST stock-balances and MCP list_stock_balances.
 - Prepared warehouse transfers reserve source-bin stock, shipping removes it from on-hand, and receiving credits the destination. Transfer lines can name variants. Web, REST, GraphQL and MCP transitions share the same checks; existing in-transit transfers retain their original completion behavior.
 - Stock audits count individual variant SKUs. Select a whole warehouse to count each location separately, including variants held away from their parent product's primary location; discrepancies adjust only the counted bins. Scheduled warehouse cycle counts use the same scope.
 - Variant stock per location and warehouse: opening balances, adjustments, sales, receipts, returns and production keep variant bins in step with variant totals. Product pages show variant location balances; warehouse thresholds use active variant balances.

@@ -1636,6 +1636,25 @@ paths:
         '404': { $ref: '#/components/responses/NotFound' }
         '422': { description: "Not pending (`invalid_status`)" }
 
+  /stock-balances:
+    get:
+      tags: [Products]
+      summary: Stock by warehouse, location and SKU
+      description: "Requires view_products. Product and variant bins are separate; warehouse assignments restrict results. Available is capped by the SKU's total availability, so it must not be summed across bins with unlocated holds."
+      parameters:
+        - { name: search, in: query, schema: { type: string } }
+        - { name: warehouse_id, in: query, schema: { type: integer } }
+        - { name: location_id, in: query, schema: { type: integer } }
+        - { name: out_of_stock, in: query, schema: { type: boolean } }
+        - { name: include_zero, in: query, schema: { type: boolean } }
+        - { name: sort_by, in: query, schema: { type: string, enum: [sku, product_name, variant_title, warehouse_name, location_name, on_hand, reserved, available, in_transit] } }
+        - { name: sort_dir, in: query, schema: { type: string, enum: [asc, desc] } }
+        - $ref: '#/components/parameters/PerPage'
+        - $ref: '#/components/parameters/Page'
+      responses:
+        '200': { description: "Paginated SKU/location balances: data includes product_id, product_variant_id, sku, product_name, variant_title, warehouse_id/name, location_id/name, on_hand, reserved, available, in_transit and min_stock; current_page, per_page, total and links provide pagination." }
+        '403': { description: Warehouse access or permission denied }
+
   /stock-transfers:
     get:
       tags: [Stock Transfers]

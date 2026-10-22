@@ -131,6 +131,7 @@
     }
   },
   "common": {
+    "pagination": "Stronicowanie",
     "save": "Zapisz",
     "saveChanges": "Zapisz zmiany",
     "saving": "Zapisywanie...",
@@ -3842,5 +3843,9 @@
     "amount": "Kwota podatku",
     "rate": "Stawka",
     "rateHint": "Opcjonalnie: wpisz stawkę podatku, aby obliczyć kwotę od sumy częściowej po rabatach. Zapisywana jest tylko kwota."
+  },
+  "warehouseStock": {
+    "title": "Stan według magazynu",
+    "includeZero": "Uwzględnij stany zerowe"
   }
 }

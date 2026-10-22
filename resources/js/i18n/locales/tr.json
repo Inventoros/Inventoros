@@ -131,6 +131,7 @@
     }
   },
   "common": {
+    "pagination": "Sayfalama",
     "save": "Kaydet",
     "saveChanges": "Değişiklikleri Kaydet",
     "saving": "Kaydediliyor...",
@@ -3842,5 +3843,9 @@
     "amount": "Vergi tutarı",
     "rate": "Oran",
     "rateHint": "İsteğe bağlı: tutarı indirimlerden sonraki ara toplamdan hesaplamak için bir vergi oranı girin. Yalnızca tutar kaydedilir."
+  },
+  "warehouseStock": {
+    "title": "Depoya göre stok",
+    "includeZero": "Sıfır bakiyeleri dahil et"
   }
 }

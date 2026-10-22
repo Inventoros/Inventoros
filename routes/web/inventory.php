@@ -28,6 +28,9 @@ use Illuminate\Support\Facades\Route;
  * every route here is already authenticated.
  */
 
+Route::get('/stock', [\App\Http\Controllers\Inventory\StockBalanceController::class, 'index'])->name('stock.index')->middleware('permission:view_products');
+Route::get('/stock/export', [\App\Http\Controllers\Inventory\StockBalanceController::class, 'export'])->name('stock.export')->middleware(['permission:view_products', 'permission:export_data']);
+
 // Inventory Management - Permission based
 Route::get('/products', [ProductController::class, 'index'])->name('products.index')->middleware('permission:view_products');
 Route::get('/products/create', [ProductController::class, 'create'])->name('products.create')->middleware('permission:create_products');

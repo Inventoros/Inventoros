@@ -32,6 +32,7 @@
     "showing": "Showing {from} to {to} of {total}"
   },
   "common": {
+    "pagination": "Pagination",
     "save": "Save",
     "saveChanges": "Save Changes",
     "saving": "Saving...",
@@ -3842,5 +3843,9 @@
     "amount": "Tax amount",
     "rate": "Rate",
     "rateHint": "Optional: enter a tax rate to calculate the amount from the subtotal after discounts. Only the amount is saved."
+  },
+  "warehouseStock": {
+    "title": "Stock by warehouse",
+    "includeZero": "Include zero balances"
   }
 }

@@ -131,6 +131,7 @@
     }
   },
   "common": {
+    "pagination": "Seitennavigation",
     "save": "Speichern",
     "saveChanges": "Änderungen speichern",
     "saving": "Wird gespeichert...",
@@ -3842,5 +3843,9 @@
     "amount": "Steuerbetrag",
     "rate": "Satz",
     "rateHint": "Optional: Geben Sie einen Steuersatz ein, um den Betrag aus der Zwischensumme nach Rabatten zu berechnen. Gespeichert wird nur der Betrag."
+  },
+  "warehouseStock": {
+    "title": "Bestand nach Lager",
+    "includeZero": "Nullbestände anzeigen"
   }
 }

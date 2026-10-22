@@ -131,6 +131,7 @@
     }
   },
   "common": {
+    "pagination": "ページ送り",
     "save": "保存",
     "saveChanges": "変更を保存",
     "saving": "保存中...",
@@ -3842,5 +3843,9 @@
     "amount": "税額",
     "rate": "税率",
     "rateHint": "任意: 税率を入力すると、割引後の小計から税額を計算します。保存されるのは税額のみです。"
+  },
+  "warehouseStock": {
+    "title": "倉庫別在庫",
+    "includeZero": "在庫ゼロを含める"
   }
 }

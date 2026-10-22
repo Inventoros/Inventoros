@@ -131,6 +131,7 @@
     }
   },
   "common": {
+    "pagination": "Paginazione",
     "save": "Salva",
     "saveChanges": "Salva modifiche",
     "saving": "Salvataggio...",
@@ -3842,5 +3843,9 @@
     "amount": "Importo dell'imposta",
     "rate": "Aliquota",
     "rateHint": "Facoltativo: inserisci un'aliquota per calcolare l'importo dal subtotale dopo gli sconti. Viene salvato solo l'importo."
+  },
+  "warehouseStock": {
+    "title": "Scorte per magazzino",
+    "includeZero": "Includi saldi a zero"
   }
 }

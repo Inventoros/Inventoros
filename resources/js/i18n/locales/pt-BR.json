@@ -131,6 +131,7 @@
     }
   },
   "common": {
+    "pagination": "Paginação",
     "save": "Salvar",
     "saveChanges": "Salvar Alterações",
     "saving": "Salvando...",
@@ -3842,5 +3843,9 @@
     "amount": "Valor do imposto",
     "rate": "Alíquota",
     "rateHint": "Opcional: informe uma alíquota para calcular o valor a partir do subtotal após os descontos. Somente o valor é salvo."
+  },
+  "warehouseStock": {
+    "title": "Estoque por depósito",
+    "includeZero": "Incluir saldos zerados"
   }
 }
